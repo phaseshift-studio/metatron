@@ -66,6 +66,7 @@ public final class MtronDocPreprocessor {
     private static final Pattern NOHDR = Pattern.compile("\\[NO_HEADER]");
     private static final Pattern ERROR = Pattern.compile("\\[ERROR]");
     private static final Pattern NOOUT = Pattern.compile("\\[NO_OUTPUT]");
+    private static final Pattern NOPROMPT = Pattern.compile("\\[NO_PROMPT]");
 
     private static final ObjmtronSerializer SER = new ObjmtronSerializer(35);
     private static final GraphittyLogger LOG = Graphitty.log(MtronDocPreprocessor.class);
@@ -139,6 +140,7 @@ public final class MtronDocPreprocessor {
         boolean noHeader = false;
         final StringBuilder acc = new StringBuilder();
 
+        boolean noPrompt = false;
         for (String raw : body.split("\n")) {
             raw = raw.stripTrailing();
             // ── Callout number: [-- <N> --] ──
@@ -160,6 +162,7 @@ public final class MtronDocPreprocessor {
             if (NOHDR.matcher(raw).find()) noHeader = true;
             if (ERROR.matcher(raw).find()) error = true;
             if (NOOUT.matcher(raw).find()) noOutput = true;
+            if (NOPROMPT.matcher(raw).find()) noPrompt = true;
             final boolean hidden = HIDDEN.matcher(raw).find();
 
             // ── Line continuation ──
@@ -174,12 +177,13 @@ public final class MtronDocPreprocessor {
             expr = NOHDR.matcher(expr).replaceAll("");
             expr = NOOUT.matcher(expr).replaceAll("");
             expr = CALLOUT.matcher(expr).replaceAll("");
+            expr = NOPROMPT.matcher(expr).replaceAll("");
             acc.setLength(0);
             if (expr.isEmpty()) continue;
 
             // ── Build input line ──
             if (!hidden) {
-                String prefix = "mtron> " + expr;
+                String prefix = (noPrompt ? "" : "mtron> ") + expr;
                 if (calloutNumber != null)
                     prefix += " ".repeat(5) + "<" + calloutNumber + ">";
                 lines.add(prefix);
@@ -202,11 +206,12 @@ public final class MtronDocPreprocessor {
             } catch (final Exception e) {
                 if (!hidden) lines.add("==>ERROR: " + e.getMessage());
             }
+            noPrompt = false;
         }
 
         // ── Prepend headers ──
         if (!headers.isEmpty()) {
-            final var all = new ArrayList<String>(headers);
+            final var all = new ArrayList<>(headers);
             all.addAll(lines);
             return new EvalResult(all, noHeader);
         }
@@ -218,7 +223,7 @@ public final class MtronDocPreprocessor {
     /**
      * Evaluate prefix expressions (piggy-format blocks) for side-effects.
      */
-    public static void evalPrefixBlocks(final List<String> prefixLines) {
+ /*   public static void evalPrefixBlocks(final List<String> prefixLines) {
         if (prefixLines == null || prefixLines.isEmpty()) return;
         final Matcher m = PIggy.matcher(String.join("\n", prefixLines));
         while (m.find()) {
@@ -241,5 +246,5 @@ public final class MtronDocPreprocessor {
                     "\\h*<!-- \\uD83D\\uDC16(?:\\h+([^\\r\\n]+))?\\R" +
                     "(.*?)" +
                     "\\R\\h*-->\\R\\h*\\+\\+\\+\\+",
-            Pattern.DOTALL);
+            Pattern.DOTALL);*/
 }

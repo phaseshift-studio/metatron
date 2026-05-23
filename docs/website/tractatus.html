@@ -2442,7 +2442,7 @@ mtron&gt; 4.as(int::T[?&gt;0]@nat)
 ==&gt;nat::4
 mtron&gt;  -4.as(nat::T)
 ==&gt;fail::[-4 is not a is(gt(0))
-  -4=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/478
+  -4=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/456
 mtron&gt; [-- refining rec::T  --]
 mtron&gt; [name=&gt;'snowbutt',age=&gt;7].as(rec::T[?[name=&gt;str::T,age=&gt;int::T]@chicken)
 ==&gt;ERROR: [name=&gt;'snowbutt',age=&gt;7].as(rec::T[?[name=&gt;str::T,age=&gt;int::T]@chicken)
@@ -2508,11 +2508,11 @@ mtron&gt; 2.as(nat::T)     <i class="conum" data-value="5"></i><b>(5)</b>
 ==&gt;2
 mtron&gt;  -2.as(nat::T)     <i class="conum" data-value="6"></i><b>(6)</b>
 ==&gt;fail::[-2 is not a is(gt(0))
-  -2=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/484
+  -2=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/462
 mtron&gt;  nat::2 * -1     <i class="conum" data-value="7"></i><b>(7)</b>
 ==&gt;fail::[nat::-2 is not a int::T[is(gt(0))][choose([
   is(lt(0))=&gt;mult(-1),
-  id()=&gt;id()]).rshift()]][...]@/sys/fail/490</code></pre>
+  id()=&gt;id()]).rshift()]][...]@/sys/fail/468</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -2539,7 +2539,7 @@ The predicate component of the type definition tests an <code>int</code> to dete
 <div class="paragraph">
 <p>While every <code>type</code> is an <code>obj</code>, not every <code>obj</code> is a <code>type</code>.
 Those <code>objs</code> that are not <code>types</code> are <em>instances</em> of some <code>type</code>.
-This is the foundation for all other <code>objs</code> in {{g}}m{{r}}E{{m}}t{{r}}a{{m}}T{{b}}r{{b}}O{{r}}n{{X}}.</p>
+This is the foundation for all other <code>objs</code> in {{g}}m{{r}}E{{y}}T{{b}}A{{r}}t{{g}}r{{c}}O{{b}}N{{X}}.</p>
 </div>
 <h4 id="_cascading_type_constructions" class="discrete">cascading type constructions</h4>
 <h3 id="_mono_types" class="discrete">mono types</h3>
@@ -3195,7 +3195,7 @@ mtron&gt;  nat::-10
 ==&gt;ERROR: nat::-10 is not a int::T[is(gt(0))]
 mtron&gt;  int::-10.as(nat::T)
 ==&gt;fail::[-10 is not a is(gt(0))
-  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/612</code></pre>
+  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/590</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -3294,7 +3294,7 @@ mtron&gt;  nat::-10
 ==&gt;ERROR: nat::-10 is not a int::T[is(gt(0))]
 mtron&gt;  int::-10.as(nat::T)
 ==&gt;fail::[-10 is not a is(gt(0))
-  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/618</code></pre>
+  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/596</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -3317,10 +3317,10 @@ mtron&gt; age::125
 ==&gt;ERROR: age::125 is not a int::T[is(lt(120))]
 mtron&gt;  nat::125.as(age::T)
 ==&gt;fail::[nat::125 is not a is(lt(120))
-  nat::125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/624
+  nat::125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/602
 mtron&gt;  125.as(nat::T).as(age::T)
 ==&gt;fail::[125 is not a is(lt(120))
-  125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/630</code></pre>
+  125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/608</code></pre>
 </div>
 </div>
 <div class="listingblock">
@@ -4809,7 +4809,7 @@ mtron&gt; */usr/notes/#?subq
   mqtt::T,
   haos::T]]@/m/iot
 mtron&gt;  import(/m/llm)
-{{b}}.{{r}}.{{y}}.{{X}}</code></pre>
+{{b}}.{{m}}.{{y}}.{{X}}</code></pre>
 </div>
 </div>
 </div>
@@ -6449,7 +6449,7 @@ mtron&gt; */m/llm/inst/+?dom=model</code></pre>
   	dev.langchain4j.internal.ValidationUtils [line 169]
   	dev.langchain4j.internal.ValidationUtils [line 156]
   	dev.langchain4j.model.input.PromptTemplate [line 83]
-  	dev.langchain4j.model.input.PromptTemplate [line 186]][...]@/sys/fail/658
+  	dev.langchain4j.model.input.PromptTemplate [line 186]][...]@/sys/fail/636
 ==&gt;fail::[[
  type=&gt;model,
  provider=&gt;!*/sys/space/localai] is not a isa([
@@ -6480,7 +6480,7 @@ mtron&gt; */m/llm/inst/+?dom=model</code></pre>
    in=&gt;currency::T,
    out=&gt;currency::T],
    noobj=&gt;(==&gt;{?}size)=&gt;noobj=&gt;/=&gt;bB::T,
-   noobj=&gt;(==&gt;{?}feature)=&gt;noobj=&gt;/=&gt;feature::T]][...]@/sys/fail/652</code></pre>
+   noobj=&gt;(==&gt;{?}feature)=&gt;noobj=&gt;/=&gt;feature::T]][...]@/sys/fail/630</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -6768,7 +6768,7 @@ mtron&gt; */m/llm/inst/+?dom=model</code></pre>
   	dev.langchain4j.internal.ValidationUtils [line 169]
   	dev.langchain4j.internal.ValidationUtils [line 156]
   	dev.langchain4j.model.input.PromptTemplate [line 83]
-  	dev.langchain4j.model.input.PromptTemplate [line 186]][...]@/sys/fail/658
+  	dev.langchain4j.model.input.PromptTemplate [line 186]][...]@/sys/fail/636
 ==&gt;fail::[[
  type=&gt;model,
  provider=&gt;!*/sys/space/localai] is not a isa([
@@ -6799,7 +6799,7 @@ mtron&gt; */m/llm/inst/+?dom=model</code></pre>
    in=&gt;currency::T,
    out=&gt;currency::T],
    noobj=&gt;(==&gt;{?}size)=&gt;noobj=&gt;/=&gt;bB::T,
-   noobj=&gt;(==&gt;{?}feature)=&gt;noobj=&gt;/=&gt;feature::T]][...]@/sys/fail/652</code></pre>
+   noobj=&gt;(==&gt;{?}feature)=&gt;noobj=&gt;/=&gt;feature::T]][...]@/sys/fail/630</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -7178,23 +7178,23 @@ mtron&gt; lite:score/1 -&gt; [player=&gt;'marko', points=&gt;42]     <i class="c
   	org.sqlite.jdbc4.JDBC4Connection [line 31]
   	org.sqlite.jdbc3.JDBC3Connection [line 225]
   	org.sqlite.jdbc3.JDBC3Connection [line 205]
-  	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 191]][...]@/sys/fail/208
+  	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 191]][...]@/sys/fail/240
 mtron&gt; lite:score/2 -&gt; [player=&gt;'grant', points=&gt;99]     <i class="conum" data-value="3"></i><b>(3)</b>
 ==&gt;fail::[sqlexception: database connection closed
   	org.sqlite.SQLiteConnection [line 418]
   	org.sqlite.jdbc4.JDBC4Connection [line 31]
   	org.sqlite.jdbc3.JDBC3Connection [line 225]
   	org.sqlite.jdbc3.JDBC3Connection [line 205]
-  	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 191]][...]@/sys/fail/214
+  	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 191]][...]@/sys/fail/246
 mtron&gt; *lite:score/+.?==[player=&gt;'marko']     <i class="conum" data-value="4"></i><b>(4)</b>
-==&gt;fail::[failed to execute native where operation[studio.phaseshift.metatron.util.MTronException:52]][...]@/sys/fail/220
+==&gt;fail::[failed to execute native where operation[studio.phaseshift.metatron.util.MTronException:52]][...]@/sys/fail/252
 mtron&gt; */sys/space/lite.sql("SELECT p.name,p.age,s.points FROM person p JOIN score s ON p.name=s.player")     <i class="conum" data-value="5"></i><b>(5)</b>
 ==&gt;fail::[sqlexception: database connection closed
   	org.sqlite.SQLiteConnection [line 418]
   	org.sqlite.jdbc4.JDBC4Connection [line 23]
   	org.sqlite.jdbc3.JDBC3Connection [line 169]
   	studio.phaseshift.metatron.isa.tble.tbleInstSet [line 114]
-  	studio.phaseshift.metatron.isa.m.type.Inst$f [line 689]][...]@/sys/fail/226</code></pre>
+  	studio.phaseshift.metatron.isa.m.type.Inst$f [line 689]][...]@/sys/fail/258</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -7234,35 +7234,35 @@ Unlike a matching column value, the pointer encodes the full address of the link
   	studio.phaseshift.metatron.isa.tble.tbleSpace [line 170]
   	studio.phaseshift.metatron.isa.tble.tbleSpace [line 153]
   	studio.phaseshift.metatron.isa.tble.tbleSpace [line 122]
-  	studio.phaseshift.metatron.isa.m.type.Inst$f [line 689]][...]@/sys/fail/238
+  	studio.phaseshift.metatron.isa.m.type.Inst$f [line 689]][...]@/sys/fail/270
 mtron&gt; lite:award/1 -&gt; [trophy=&gt;'gold',   recipient=&gt;!*lite:person/1]     <i class="conum" data-value="2"></i><b>(2)</b>
 ==&gt;fail::[sqlexception: database connection closed
   	org.sqlite.SQLiteConnection [line 418]
   	org.sqlite.jdbc4.JDBC4Connection [line 31]
   	org.sqlite.jdbc3.JDBC3Connection [line 225]
   	org.sqlite.jdbc3.JDBC3Connection [line 205]
-  	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 191]][...]@/sys/fail/298
+  	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 191]][...]@/sys/fail/330
 mtron&gt; lite:award/2 -&gt; [trophy=&gt;'silver', recipient=&gt;!*lite:person/2]     <i class="conum" data-value="3"></i><b>(3)</b>
 ==&gt;fail::[sqlexception: database connection closed
   	org.sqlite.SQLiteConnection [line 418]
   	org.sqlite.jdbc4.JDBC4Connection [line 31]
   	org.sqlite.jdbc3.JDBC3Connection [line 225]
   	org.sqlite.jdbc3.JDBC3Connection [line 205]
-  	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 191]][...]@/sys/fail/358
+  	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 191]][...]@/sys/fail/390
 mtron&gt; *lite:award/+     <i class="conum" data-value="4"></i><b>(4)</b>
 ==&gt;fail::[sqlexception: database connection closed
   	org.sqlite.SQLiteConnection [line 418]
   	org.sqlite.jdbc4.JDBC4Connection [line 31]
   	org.sqlite.jdbc3.JDBC3Connection [line 225]
   	org.sqlite.jdbc3.JDBC3Connection [line 205]
-  	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 187]][...]@/sys/fail/364
+  	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 187]][...]@/sys/fail/396
 mtron&gt; *lite:award/1/recipient     <i class="conum" data-value="5"></i><b>(5)</b>
 ==&gt;fail::[sqlexception: database connection closed
   	org.sqlite.SQLiteConnection [line 418]
   	org.sqlite.jdbc4.JDBC4Connection [line 31]
   	org.sqlite.jdbc3.JDBC3Connection [line 225]
   	org.sqlite.jdbc3.JDBC3Connection [line 205]
-  	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 191]][...]@/sys/fail/370</code></pre>
+  	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 191]][...]@/sys/fail/402</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -7306,28 +7306,28 @@ mtron&gt; */sys/space/lite&gt;&gt;=[table=&gt;[person,score,award,venue]]     <i
   	studio.phaseshift.metatron.isa.tble.tbleSpace [line 170]
   	studio.phaseshift.metatron.isa.tble.tbleSpace [line 153]
   	studio.phaseshift.metatron.isa.tble.tbleSpace [line 122]
-  	studio.phaseshift.metatron.isa.m.type.Inst$f [line 689]][...]@/sys/fail/382
+  	studio.phaseshift.metatron.isa.m.type.Inst$f [line 689]][...]@/sys/fail/414
 mtron&gt; lite:venue/1 -&gt; [name=&gt;'main_stage',location=&gt;!*area:V/1]     <i class="conum" data-value="4"></i><b>(4)</b>
 ==&gt;fail::[sqlexception: database connection closed
   	org.sqlite.SQLiteConnection [line 418]
   	org.sqlite.jdbc4.JDBC4Connection [line 31]
   	org.sqlite.jdbc3.JDBC3Connection [line 225]
   	org.sqlite.jdbc3.JDBC3Connection [line 205]
-  	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 191]][...]@/sys/fail/388
+  	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 191]][...]@/sys/fail/420
 mtron&gt; *lite:venue/1     <i class="conum" data-value="5"></i><b>(5)</b>
 ==&gt;fail::[sqlexception: database connection closed
   	org.sqlite.SQLiteConnection [line 418]
   	org.sqlite.jdbc4.JDBC4Connection [line 31]
   	org.sqlite.jdbc3.JDBC3Connection [line 225]
   	org.sqlite.jdbc3.JDBC3Connection [line 205]
-  	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 191]][...]@/sys/fail/394
+  	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 191]][...]@/sys/fail/426
 mtron&gt; *lite:venue/1/location     <i class="conum" data-value="6"></i><b>(6)</b>
 ==&gt;fail::[sqlexception: database connection closed
   	org.sqlite.SQLiteConnection [line 418]
   	org.sqlite.jdbc4.JDBC4Connection [line 31]
   	org.sqlite.jdbc3.JDBC3Connection [line 225]
   	org.sqlite.jdbc3.JDBC3Connection [line 205]
-  	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 191]][...]@/sys/fail/400</code></pre>
+  	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 191]][...]@/sys/fail/432</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -7370,21 +7370,21 @@ pointing back at the row&#8217;s own table.</p>
   	org.sqlite.jdbc4.JDBC4Connection [line 31]
   	org.sqlite.jdbc3.JDBC3Connection [line 225]
   	org.sqlite.jdbc3.JDBC3Connection [line 205]
-  	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 191]][...]@/sys/fail/460
+  	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 191]][...]@/sys/fail/438
 mtron&gt; *lite:venue/2     <i class="conum" data-value="2"></i><b>(2)</b>
 ==&gt;fail::[sqlexception: database connection closed
   	org.sqlite.SQLiteConnection [line 418]
   	org.sqlite.jdbc4.JDBC4Connection [line 31]
   	org.sqlite.jdbc3.JDBC3Connection [line 225]
   	org.sqlite.jdbc3.JDBC3Connection [line 205]
-  	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 191]][...]@/sys/fail/466
+  	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 191]][...]@/sys/fail/444
 mtron&gt; *lite:venue/2/parent/location     <i class="conum" data-value="3"></i><b>(3)</b>
 ==&gt;fail::[sqlexception: database connection closed
   	org.sqlite.SQLiteConnection [line 418]
   	org.sqlite.jdbc4.JDBC4Connection [line 31]
   	org.sqlite.jdbc3.JDBC3Connection [line 225]
   	org.sqlite.jdbc3.JDBC3Connection [line 205]
-  	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 191]][...]@/sys/fail/472</code></pre>
+  	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 191]][...]@/sys/fail/450</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -7733,6 +7733,46 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
  obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
  inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
    space=&gt;[sub=&gt;{!*/m/mach,!*/m/math,!*/m/web,!*/m/iot,!*/m/grph,!*/m/llm,!*/m/tble,!*/m/dcmnt,!*/m/rdf}],
+   const=&gt;[
+    noobj,
+    none@none],
+   type=&gt;[
+    #::T,
+    bool::T,
+    int::T,
+    real::T,
+    bytes::T,
+    str::T,
+    uri::T,
+    rel::T,
+    lst::T,
+    rec::T,
+    instset::T,
+    inst::T,
+    code::T,
+    fail::T,
+    space{*}::T,
+    memspace::T,
+    stack::T,
+    qproc::T,
+    subq::T,
+    sub::T,
+    typeq::T,
+    docs::T,
+    docq::T,
+    mintq::T,
+    incrq::T,
+    constq::T,
+    mimeq::T],
+   rewrite=&gt;[
+    /m/inst/rewrite/id_removal?code{?}&lt;=code(),
+    /m/inst/rewrite/map_nest?code{?}&lt;=code(),
+    /m/inst/rewrite/else_after_count?code{?}&lt;=code(),
+    /m/inst/rewrite/plus_zero?code{?}&lt;=code(),
+    /m/inst/rewrite/mult_one?code{?}&lt;=code(),
+    /m/inst/rewrite/split_merge_collapse?code{?}&lt;=code(),
+    /m/inst/rewrite/split_merge_left_factor?code{?}&lt;=code(),
+    /m/inst/rewrite/split_merge_right_factor?code{?}&lt;=code()],
    inst=&gt;[
     as?bool&lt;=bool(bool::T),
     as?bytes&lt;=bool(bytes::T),
@@ -7959,47 +7999,7 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
     rshift?B{*}&lt;=A(C{*}::T),
     lshift?B{*}&lt;=A(),
     start?A{**}&lt;=noobj{0}(A{**}::T),
-    ctor()],
-   rewrite=&gt;[
-    /m/inst/rewrite/id_removal?code{?}&lt;=code(),
-    /m/inst/rewrite/map_nest?code{?}&lt;=code(),
-    /m/inst/rewrite/else_after_count?code{?}&lt;=code(),
-    /m/inst/rewrite/plus_zero?code{?}&lt;=code(),
-    /m/inst/rewrite/mult_one?code{?}&lt;=code(),
-    /m/inst/rewrite/split_merge_collapse?code{?}&lt;=code(),
-    /m/inst/rewrite/split_merge_left_factor?code{?}&lt;=code(),
-    /m/inst/rewrite/split_merge_right_factor?code{?}&lt;=code()],
-   type=&gt;[
-    #::T,
-    bool::T,
-    int::T,
-    real::T,
-    bytes::T,
-    str::T,
-    uri::T,
-    rel::T,
-    lst::T,
-    rec::T,
-    instset::T,
-    inst::T,
-    code::T,
-    fail::T,
-    space{*}::T,
-    memspace::T,
-    stack::T,
-    qproc::T,
-    subq::T,
-    sub::T,
-    typeq::T,
-    docs::T,
-    docq::T,
-    mintq::T,
-    incrq::T,
-    constq::T,
-    mimeq::T],
-   const=&gt;[
-    noobj,
-    none@none]]@/m,
+    ctor()]]@/m,
   /m/iot=&gt;instset::[
    pattern=&gt;/m/iot/#,
    q=&gt;[docq::[
@@ -8260,8 +8260,8 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
   constq=&gt;[/m/space/qproc/constq],
   lrow=&gt;[/m/tble/lrow],
   monad=&gt;[/m/mach/monad],
-  auto=&gt;[/m/inst/auto],
   inst=&gt;[/m/inst],
+  auto=&gt;[/m/inst/auto],
   machine=&gt;[/m/mach/machine],
   dcmntspace=&gt;[/m/dcmnt/space/dcmntspace],
   rshift=&gt;[/m/inst/rshift],
@@ -8312,15 +8312,15 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
   reduce=&gt;[/m/inst/reduce],
   to=&gt;[/m/inst/to],
   skip=&gt;[/m/inst/skip],
-  port=&gt;[/m/inst/port],
   space=&gt;[/m/space],
+  port=&gt;[/m/inst/port],
   bothV=&gt;[/m/grph/inst/bothV],
   inE=&gt;[/m/grph/inst/inE],
   println=&gt;[/m/inst/println],
   instset=&gt;[/m/instset],
   gte=&gt;[/m/inst/gte],
-  scheme=&gt;[/m/inst/scheme],
   real=&gt;[/m/real],
+  scheme=&gt;[/m/inst/scheme],
   rrow=&gt;[/m/tble/rrow],
   start=&gt;[/m/inst/start],
   tblespace=&gt;[/m/tble/space/tblespace],

@@ -31,10 +31,22 @@ mjx-container {
 h1, h2, h3, h4 {
     color: var(--mred) !important;
 }
-h1 { font-size: 3.5rem; }
-h2 { font-size: 2.25rem; }
-h3 { font-size: 1.75rem; }
-h4 { font-size: 1.35rem; }
+
+h1 {
+    font-size: 3.5rem;
+}
+
+h2 {
+    font-size: 2.25rem;
+}
+
+h3 {
+    font-size: 1.75rem;
+}
+
+h4 {
+    font-size: 1.35rem;
+}
 
 .float-left-code {
     float: left;
@@ -49,6 +61,11 @@ h4 { font-size: 1.35rem; }
 .center-code {
     justify-self: center;
     background-color: transparent;
+}
+
+.center {
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .bg-warning {
@@ -672,6 +689,7 @@ em {
 .navbar .navbar-nav .quickstart-link {
     color: #796c6c;
 }
+
 .navbar .navbar-nav .quickstart-link:hover {
     color: var(--primary);
 }
@@ -758,13 +776,9 @@ body::before {
     inset: 0;
     z-index: 0;
     pointer-events: none;
-    background:
-        /* red glow bleeding down from top-center */
-        radial-gradient(ellipse 80% 42% at 50% 0%, rgba(151, 2, 7, 0.24) 0%, transparent 58%),
-        /* warm accent from right */
-        radial-gradient(ellipse 30% 35% at 85% 55%, rgba(151, 2, 7, 0.06) 0%, transparent 70%),
-        /* teal whisper bottom-left */
-        radial-gradient(circle at 15% 85%, rgba(77, 182, 172, 0.04) 0%, transparent 50%);
+    background: /* red glow bleeding down from top-center */ radial-gradient(ellipse 80% 42% at 50% 0%, rgba(151, 2, 7, 0.24) 0%, transparent 58%),
+        /* warm accent from right */ radial-gradient(ellipse 30% 35% at 85% 55%, rgba(151, 2, 7, 0.06) 0%, transparent 70%),
+        /* teal whisper bottom-left */ radial-gradient(circle at 15% 85%, rgba(77, 182, 172, 0.04) 0%, transparent 50%);
 }
 
 body::after {
@@ -1500,18 +1514,21 @@ strong {
     width: 26px;
     height: 24px;
 }
+
 .hljs-copy-button::before {
     content: '🦇';
     font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;
     color: var(--mlightgray);
     font-size: 12px;
 }
+
 .hljs-copy-button[data-copied="true"]::before {
     content: 'copied';
     font-family: var(--font-mono);
     color: var(--light);
     font-size: 8px;
 }
+
 .hljs-copy-button:hover::before {
     color: var(--mred);
 }

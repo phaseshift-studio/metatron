@@ -250,23 +250,28 @@ bin/metatron</code></pre>
 <i class="fa icon-warning" title="Warning"></i>
 </td>
 <td class="content">
-<strong>metatron</strong> is a large, involved software system composed of many interacting parts. Many of these components are packaged with the main metatron distribution while others are custom extensions written in mtron (the core language of metatron).
+<strong>metatron</strong> is a large, involved software system composed of many interacting parts.
+Many of these components are packaged with the main metatron distribution while others are custom extensions written in mtron (the core language of metatron).
 </td>
 </tr>
 </table>
 </div>
-<img src="images/metatron-character-ansi.png" width="150px" style="float:left; margin:10px;"></a>
+<img src="images/metatron-character-ansi.png" width="250px" style="float:left; margin:10px;"></a>
 <div class="paragraph">
-<p>Software is an endless maze of attempts to organize and understand the nature of data and processes that act upon it&#8201;&#8212;&#8201;encapsulated in sharable artifacts generally known as <em>code</em>. This world is the epitome of rational human thought and in being so, acts as a "legoland" for the well tuned mind that finds joy in discovering and manipulating novel conceptual structures via cold, discrete mechanical processes, where one is able to control a massive amounts of energy and data without breaking a sweat nor leaving the comfort of one&#8217;s home. From web technologies, to database technologies, to AI technologies, and so forth, millions of developers are <em>clickity clacking</em> away collectively writing a story of a wholly different sort. metatron offers one such realization of this world via a distillation of a few fundamental patterns that seems to render a seemingly morass of technologies to almost laughably similar expression that&#8217;s repeated over and over. This focused interpretation enables technological compositions that are naturally expressed in what can only honestly be said to be an extremely terse language known as mtron.</p>
+<p>Software is an endless maze of standards, specifications, packages, frameworks, utilities&#8201;&#8212;&#8201;all providing a particular reconceptualization of computer in search of problems here, now, and the more general and elegant, into the future.
+This world is the epitome of rational human thought and in being so, acts as a "legoland" for the well-tuned mind that finds joy in discovering and manipulating abstract structures using cold, discrete mechanical processes all without breaking a sweat nor leaving the comfort of one&#8217;s home.
+From web technologies, to database technologies, to AI technologies, and so forth, millions of developers are <em>clickity clacking</em> away collectively writing a story of a wholly different sort. metatron is one such  contribution that provides a distillation of computing to a few fundamental patterns that, when used together, transform the complex morass into an easily comprehensible and usable set of constructs.</p>
 </div>
 <div class="paragraph">
-<p>Exploring metatron takes the user through the wonderful world of computing touching on fundamental concepts in languages, compilers, operating systems, networks, databases, web technologies, and more –– all from the vantage point of a perspective codified in mtron that enables one to speak to this world, using simple, utilitarian terms.</p>
+<p>From this system emerges a natural way to express structural compositions not easily realized nor written using prior art.</p>
 </div>
 <div class="paragraph">
-<p>In short, metatron is an <em>experience</em> –– an experience that offers a delightful merging of mathematics, computer science, and the mind.</p>
+<p>metatron touches on fundamental concepts in languages, compilers, operating systems, networks, databases, web technologies, and more –– all from the vantage point of a perspective codified in mtron which enables one to speak to this world at large, simply and effectively.</p>
 </div>
-<div class="paragraph">
-<p>With that said, a short whirlwind introduction to metatron will now be presented.</p>
+<div class="listingblock">
+<div class="content">
+<pre>With that said, a whirlwind tour of the core concepts behind metatron will now be presented.</pre>
+</div>
 </div>
 <h3 id="_core_concepts" class="discrete">Core Concepts</h3>
 <div class="paragraph">
@@ -274,7 +279,8 @@ bin/metatron</code></pre>
 </div>
 <h4 id="_core_data_types" class="discrete">Core Data Types</h4>
 <div class="paragraph">
-<p>In metatron, everything is an <strong>obj</strong> (an object). There are 3 kinds of core types of objs.</p>
+<p>In metatron, everything is an <strong>obj</strong> (an object).
+There are 3 categories of objs:</p>
 </div>
 <div class="olist arabic">
 <ol class="arabic">
@@ -312,21 +318,100 @@ bin/metatron</code></pre>
 </div>
 <div class="paragraph">
 <p>\[
-\tt lhs \underbrace{\Rightarrow}_* call(\underbrace{arg0,arg1,&#8230;&#8203;,argN}_+) \Rightarrow rhs
-\]</p>
+\tt lhs \underbrace{\Rightarrow}_* inst(\underbrace{arg_0,arg_1,\ldots,arg_n}_+) \underbrace{\Rightarrow}_= rhs \]</p>
 </div>
 <div class="paragraph">
-<p>Finally, there is one "psuedo-obj" that is a mono, a poly, and a call. It is named <code>noobj</code> and it can be seen as the <code>null</code> in other programming environments save that it has an operational semantic aligned with its role as the 0-object (zero) of the algebraic ring formed by the set of all objs along with two meta operators: <code>*</code> and <code>+</code> (apply/compose and branch/split, respectively).</p>
+<p>\[
+\tt lhs \underbrace{\Rightarrow}_* code\{{\underbrace{inst_0 \cdot \underbrace{(inst_1 + inst_2)}_+ \cdot \ldots \cdot inst_n}_*}\} \underbrace{\Rightarrow}_= rhs \]</p>
+</div>
+<div class="paragraph">
+<p>There is one <a href="https://en.wikipedia.org/wiki/Universal_property">universal</a> obj that is a mono, a poly, and a call: <code>noobj</code>. <code>noobj</code> is similar to the <a href="https://en.wikipedia.org/wiki/Null_pointer">null</a> value found in many programming languages save that it has an operational semantic aligned with its role as the <a href="https://en.wikipedia.org/wiki/Zero_object_(algebra)">0-object</a> (zero) of the algebraic ring formed by the set of all objs along with the two ring operators: <code>*</code> and <code>+</code> (apply/compose and branch/split, respectively). Finally, at the other end of the spectrum, there is an obj which serves as the 1-object (one) called "all" and denoted <code>#</code>.</p>
+</div>
+<table class="tableblock frame-all grid-all table-bordered small center" style="width: 70%;">
+<colgroup>
+<col style="width: 40%;">
+<col style="width: 60%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>Any obj with <code>c</code> of <code>{0}</code> is isomorphic to <code>noobj</code>.</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; noobj-&lt;[noobj]&gt;-  [-- noobj * noobj --]
+mtron&gt; [noobj,noobj]&gt;-   [-- noobj + noobj --]
+mtron&gt; noobj-&lt;[#]&gt;-      [-- noobj * #     --]
+mtron&gt; [noobj, #]&gt;-      [-- noobj + #     --]
+==&gt;&lt;#&gt;</code></pre>
+</div>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>Any obj applied to <code>#</code> is that obj. Hence why <code>noobj * # =&gt; noobj</code>.</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; #.-&lt;[#]&gt;-          [-- # * #     --]
+==&gt;&lt;#&gt;
+mtron&gt; [#,#]&gt;-            [-- # + #     --]
+==&gt;{2}&lt;#&gt;
+mtron&gt; #.-&lt;[noobj]&gt;-      [-- # * noobj --]
+mtron&gt; [#,noobj]&gt;-        [-- # + noobj --]
+==&gt;&lt;#&gt;</code></pre>
+</div>
+</div></div></td>
+</tr>
+</tbody>
+</table>
+<div class="openblock card">
+<div class="content">
+<h4 id="_ring_theory" class="discrete">Ring Theory</h4>
+<div class="paragraph">
+<p><a href="https://en.wikipedia.org/wiki/Ring_theory">Ring theory</a> is the beating heart of metatron. Its axioms and subsequent theorems are carefully woven throughout the design, where rings are coupled with rings through the various layers of computing abstraction. The most prominent uses are found in:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>the <a href="https://en.wikipedia.org/wiki/Function_composition_(computer_science)">composition</a> of instructions to form code.</p>
+</li>
+<li>
+<p>the <a href="https://en.wikipedia.org/wiki/Function_application">application</a> of objs to other objs.</p>
+</li>
+<li>
+<p>the <a href="https://en.wikipedia.org/wiki/Object_composition">joining</a> of objs to form poly(nomial) structures.</p>
+</li>
+<li>
+<p>the <a href="https://en.wikipedia.org/wiki/Optimizing_compiler">optimization</a> of machine execution via rewrite equivalences.</p>
+</li>
+<li>
+<p>the <a href="https://en.wikipedia.org/wiki/Type_theory">construction</a> of types and their constraints on values.</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>There is nothing "difficult" about ring theory.
+In fact, grade school has already ingrained the most important concepts&#8201;&#8212;&#8201;namely, how <code>*</code> and <code>+</code> operate on objects (e.g. numbers) individually and in concert with one another (e.g. the <a href="https://en.wikipedia.org/wiki/FOIL_method">foil method</a>). In metatron, its not just numbers that are constrained by these axioms, but more generally, objs and various constructions of objs.</p>
+</div>
+<div class="paragraph">
+<p>For a gentle, yet thorough presentation on ring theory and its use in metatron, please review <a href="http://metatron.phaseshift.studio/articles/stream-ring-theory">stream ring theory</a>.</p>
+</div>
+</div>
 </div>
 <h4 id="_router_and_space" class="discrete">Router and Space</h4>
 <div class="paragraph">
-<p>There are 2 "special" <code>rec</code> structures called <strong>router</strong> and <strong>space</strong>. They are special in that while they appear as <code>rec</code> objs, they maintain auxiliary data structures (with little reflection enabling reification) accessible only through a particular api not available to other objs.</p>
+<p>There are 2 "special" <code>rec</code> structures called <strong>router</strong> and <strong>space</strong>.
+They are special in that while they appear as <code>rec</code> objs, they maintain auxiliary data structures (with little reflection enabling reification) accessible only through a particular api not available to other objs.</p>
 </div>
 <div class="paragraph">
-<p><strong>router</strong>: the purpose of the router is to handle namespace prefix rewrites for local and remote dispatching of read and write calls to spaces. Every instance of metatron has a single running router.</p>
+<p><strong>router</strong>: the purpose of the router is to handle namespace prefix rewrites for local and remote dispatching of read and write calls to spaces.
+Every instance of metatron has a single running router.</p>
 </div>
 <div class="paragraph">
-<p><strong>space</strong>: the purpose of a space is to store objs and manage process execution. It is up to the space to determine how objs will be indexed and persisted. However, within metatron, all spaces behave in the same manner as dictated by a well-defined read/write contract.</p>
+<p><strong>space</strong>: the purpose of a space is to store objs and manage process execution.
+It is up to the space implementation to determine how objs will be indexed and persisted.
+However, within metatron, all spaces are functionally equivalent as dictated by a well-defined read/write contract.</p>
 </div>
 <h3 id="_installation" class="discrete">Installation</h3>
 <div class="olist arabic">
@@ -335,25 +420,27 @@ bin/metatron</code></pre>
 <p>Download metatron either as an <code>npm</code> package, a <code>docker</code> container, or a <code>maven</code> project.</p>
 </li>
 <li>
-<p>Load metatron using a boot file. To run a headless boot in the background, don&#8217;t add any UI objs to your boot file. For now, create the following boot loader as plain text&#8201;&#8212;&#8201;it will spawn a <code>console::T</code>.</p>
+<p>Load metatron using a boot file.
+To run a headless boot in the background, don&#8217;t add any UI objs to your boot file.
+For now, create the following bootloader as plain text&#8201;&#8212;&#8201;it will spawn an interactive <code>console::T</code> <a href="https://en.wikipedia.org/wiki/Read%E2%80%93eval%E2%80%93print_loop">REPL</a>.</p>
 </li>
 </ol>
 </div>
 <div class="listingblock">
-<div class="title">start.mtron boot loader</div>
+<div class="title">start.mtron bootloader</div>
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">import(/m/web);
-memspace::[pattern  =&gt;/usr/#, q     =&gt;[docq::[=&gt;],subq::[=&gt;]]]@/sys/space/usr;
-memspace::[pattern  =&gt;g:#,    q     =&gt;[subq::[=&gt;]]]           @/sys/space/graph;
-fsspace::[pattern   =&gt;local:#,route =&gt;[local: =&gt; &lt;~/&gt;]]       @/sys/space/fs;
-httpspace::[pattern =&gt;http://#,
-            host    =&gt;http://localhost:8765,
-            route   =&gt;[/            =&gt;local:]]@/sys/space/http;
-console::[=&gt;]@/usr/ui/console;</code></pre>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron"> import(/m/web);
+ memspace::[pattern  =&gt;/usr/#, q     =&gt;[docq::[=&gt;],subq::[=&gt;]]]@/sys/space/usr;
+ memspace::[pattern  =&gt;g:#,    q     =&gt;[subq::[=&gt;]]]           @/sys/space/graph;
+ fsspace::[pattern   =&gt;local:#,route =&gt;[local: =&gt; &lt;~/&gt;]]       @/sys/space/fs;
+ httpspace::[pattern =&gt;http://#,
+             host    =&gt;http://localhost:8765,
+             route   =&gt;[/            =&gt;local:]]@/sys/space/http;
+ console::[=&gt;]@/usr/ui/console;</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>To start a metatron instance with <code>start.boot</code>, in a terminal, execute:</p>
+<p>To boot a metatron instance from the terminal using <code>start.boot</code>, execute:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -362,12 +449,33 @@ console::[=&gt;]@/usr/ui/console;</code></pre>
 </div>
 <h3 id="_console" class="discrete">Console</h3>
 <div class="paragraph">
-<p>After metatron boots, the cursor should be to the right of a <code>mtron&gt;</code> prompt. This is a <code>console::T</code>. The console takes mtron expressions and creates <strong>machines</strong> to execute them. A machine can be thought of as an executing process.</p>
+<p>After metatron boots, the cursor should be to the right of a <code>mtron&gt;</code> prompt.
+This is a <code>console::T</code>.
+The console takes mtron expressions and creates <strong>machines</strong> to execute them.
+A machine can be thought of as an executing process.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">1 + 2
-1-&lt;[_,+2,*5]&gt;-.sum()</code></pre>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; 1 + 2
+==&gt;3
+mtron&gt; ab * xyz * mn?i=1&amp;j=2
+==&gt;ab/xyz/mn?i=1&amp;j=2
+mtron&gt; 1-&lt;[_,+ 2,* 5]&gt;-.sum()
+==&gt;9
+mtron&gt; {1,2,3}-&lt;|[?&gt;1 =&gt; +20, _ =&gt; * -1]&gt;&gt;
+==&gt;-1
+==&gt;22
+==&gt;23
+mtron&gt; 1873-&lt;[http://localhost:${+10}/mcp]
+==&gt;[http://localhost:1883/mcp]
+mtron&gt; 10.inst(a=&gt;+2,b=&gt;?int::T){ *a + *b }
+==&gt;22
+mtron&gt; a=&gt;b=&gt;c=&gt;d=&gt;e=&gt;f
+==&gt;a=&gt;(b=&gt;(c=&gt;(d=&gt;(e=&gt;f))))
+mtron&gt; a=&gt;b=&gt;c=&gt;d=&gt;e=&gt;f.&gt;&gt;.&gt;&gt;.&gt;&gt;.&gt;&gt;.&gt;&gt;
+==&gt;f
+mtron&gt; [a=&gt;1,b=&gt;[c=&gt;[5,6,7]]]&gt;&gt;b/c/1
+==&gt;6</code></pre>
 </div>
 </div>
 <h3 id="_space" class="discrete">Space</h3>
@@ -375,24 +483,38 @@ console::[=&gt;]@/usr/ui/console;</code></pre>
 <div class="content">
 <h4 id="_the_nature_of_space" class="discrete">The Nature of Space</h4>
 <div class="paragraph">
-<p>Simply put, metatron provides a distributed address space for reading and writing objs, where the values can have different internal structures (<strong>a key/value store</strong>), such that the internals are still uniquely identified globally (<strong>a column store</strong>). An address space that can address structures at various scales of complexity implies a single self-referential space: the address space formed by the set of all uniform resource identifiers (<strong>a web server</strong>). The particular uri scheme used offers more than just the ability to denote the location of an obj, it can also refer to an obj type (<strong>a relational database</strong>), an instruction obj&#8217;s signature (<strong>a lambda server</strong>), and read/write modulators (<strong>a semantic web</strong>). Atop a global address space, <code>poly</code> objs add an interesting twist in that they maintain an internal NAT-like address scheme for routing requests to the objs contained therein (<strong>an ldap server</strong>). In this way, polys control not just a point in space, but regions of space that can overlap, blurring the line between where one poly ends and another begins (<strong>an mqtt broker</strong>). But the objs in space aren&#8217;t just static datum (monos) or diffuse collections (polys) either, they are also active processes (calls) (<strong>a lisp interpreter</strong>). Amongst the set of calls, there is a particular kind of instruction known as an <code>auto</code> which has the peculiar behavior of dereferencing itself to its referent upon access which yields colocation semantics amongst physically distributed objs (<strong>a graph database</strong>). And that&#8217;s just the beginning&#8230;&#8203;</p>
+<p>At its core, metatron is the infrastructure of a distributed address space used for reading and writing objs, where an address is a key and an obj is the value (<strong>a key/value store</strong>). This space is aware of the internal structure of the value and supports uniquely identifying substructures in the value (<strong>a column store</strong>).</p>
+</div>
+<div class="paragraph">
+<p>For metatron, the set of all uniform resource identifiers is the address space as it can reference structures at various nested levels of complexity (<strong>a web server</strong>). The particular uri scheme used by metatron offers more than just the ability to denote the location of an obj, it can also refer to an obj&#8217;s type (<strong>a semantic web</strong>), an obj&#8217;s functional signature (<strong>a lambda server</strong>), and any pre/post-processing read/write modulators (<strong>a rest server</strong>).</p>
+</div>
+<div class="paragraph">
+<p>Nested poly objs provide an interesting twist in that they maintain an internal NAT-like address scheme for routing requests to the objs contained therein (<strong>an ldap server</strong>). In this way, polys control not just a point in space, but regions of space (<strong>a document store</strong>) that can overlap, blurring the line between where one poly ends and another begins (<strong>an mqtt broker</strong>).</p>
+</div>
+<div class="paragraph">
+<p>Finally, the objs embedded in space aren&#8217;t just static datum (monos) or diffuse collections (polys), they are also active processes (calls) (<strong>a lisp interpreter</strong>). Amongst the set of calls, there is a useful type of instruction called an <code>auto</code> which has the peculiar behavior of dereferencing itself to its referent upon access which yields colocation semantics amongst physically distributed objs (<strong>a graph database</strong>).</p>
+</div>
+<div class="paragraph">
+<p>And that&#8217;s just the beginning&#8230;&#8203;</p>
 </div>
 </div>
 </div>
 <div class="paragraph">
-<p>The above description may lead one to conclude that metatron, if functional, is too complex to be of practical value. Note that the features articular above are simply epiphenomena of a more fundamental notion of reference. In metatron, the uri is called a <em>fURI</em> (<strong>functional uniform resource identifier</strong>) and an extreme example of sucj a fURI is presented below.</p>
+<p>The above description may lead one to conclude that metatron, if functional, is too complex to be of practical value.
+Note that the features articular above are simply epiphenomena of a more fundamental notion of reference.
+In metatron, the uri is called a <em>fURI</em> (<strong>functional uniform resource identifier</strong>) and an extreme example of a contrived, fURI is presented below (overly bloated for the sake of coverage).</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">abc://phaseshift.studio:8777/seg1/+/segN[a,b,c]{*}?q0=a&amp;q1=b
- |              |           |     |   |    |    |      |___
- |              |           |     |   |    |    |__________
- |              |           |     |   |    |_______________
- |              |           |     |   |____________________
- |              |           |     |________________________
- |              |           |______________________________
- |              |__________________________________________
- |_________________________________________________________</code></pre>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">abc://example.com:8777/seg1/+/segN[a,b,c]{*}?dom&lt;=rng&amp;k0=v0&amp;k1=v1
+ │           │              │   │     │   │     │         └─────── qprocs (query processors)
+ │           │              │   │     │   │     └───────────────── domain/range (signature)
+ │           │              │   │     │   └─────────────────────── coefficient (cardinality)
+ │           │              │   │     └─────────────────────────── polynomial types (generics)
+ │           │              │   └───────────────────────────────── hierachial path (navigation)
+ │           │              └───────────────────────────────────── wildcard (branching path)
+ │           └──────────────────────────────────────────────────── physical location (authority)
+ └──────────────────────────────────────────────────────────────── scheme (means of referent access)</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -401,12 +523,13 @@ console::[=&gt;]@/usr/ui/console;</code></pre>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys/space/+.count()
-==&gt;19
+==&gt;21
 mtron&gt; */sys/space/+.&gt;&gt;pattern
 ==&gt;&lt;+/#&gt;
+==&gt;{2}g:#
 ==&gt;serial:#
 ==&gt;/usr/#
-==&gt;g:#
+==&gt;http://#
 ==&gt;localai:#
 ==&gt;deep:#
 ==&gt;mqtt:#
@@ -423,9 +546,10 @@ mtron&gt; */sys/space/+.&gt;&gt;pattern
 ==&gt;mtronfs:#
 ==&gt;local:#
 mtron&gt; */sys/space/+.-&lt;[&gt;&gt;pattern=&gt;&gt;&gt;route]
-==&gt;{4}[=&gt;]
+==&gt;{5}[=&gt;]
 ==&gt;[serial:#=&gt;[serial:=&gt;&lt;&gt;]]
 ==&gt;[g:#=&gt;[g:=&gt;&lt;&gt;,g:V=&gt;V,g:E=&gt;E,g:S=&gt;/m/grph/schema/modern]]
+==&gt;[http://#=&gt;[/=&gt;local:]]
 ==&gt;[localai:#=&gt;[localai:=&gt;&lt;&gt;]]
 ==&gt;[deep:#=&gt;[deep:=&gt;&lt;&gt;]]
 ==&gt;[mqtt:#=&gt;[mqtt:=&gt;&lt;&gt;]]

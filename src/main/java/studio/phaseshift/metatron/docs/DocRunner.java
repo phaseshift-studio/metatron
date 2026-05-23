@@ -45,8 +45,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.*;
 
-import static studio.phaseshift.metatron.Tokens.BOOT;
-import static studio.phaseshift.metatron.Tokens.LOGG;
+import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
@@ -177,7 +176,7 @@ public class DocRunner {
         TypeCheck.disable(TypeCheck.code_resolve);
         BootLoader.BOOTING = true;
         BootLoader.TESTING = true;
-        BootLoader.load(MRec.rec(uri(LOGG), uri("info"), uri(BOOT), uri(boot)));
+        BootLoader.load(MRec.rec(uri(LOGG), uri(INFO), uri(BOOT), uri(boot)));
         for (final InstSet is : new InstSet[] {
                 new mathInstSet(), new webInstSet(), new iotInstSet(),
                 new grphInstSet(), new llmInstSet(), new tbleInstSet(),
@@ -189,7 +188,7 @@ public class DocRunner {
         }
 
         // ── Evaluate prefix expressions for side-effects ───────────
-        MtronDocPreprocessor.evalPrefixBlocks(prefixLines);
+       // MtronDocPreprocessor.evalPrefixBlocks(prefixLines);
 
         // ── Copy adoc files and preprocess ──────────────────────
         final MtronDocPreprocessor preprocessor = new MtronDocPreprocessor();

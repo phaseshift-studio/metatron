@@ -240,6 +240,10 @@ public final class Tokens {
     public static final String WEB_ROOT = "web_root";
     public static final String DEFAULT_PAGE = "default_page";
     public static final String READ_ONLY = "read_only";
+    public static final String INFO = "info";
+    public static final String WARN = "warn";
+    public static final String ERROR = "error";
+    public static final String DEBUG = "debug";
 
 
 }

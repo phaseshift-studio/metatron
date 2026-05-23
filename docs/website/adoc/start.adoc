@@ -38,19 +38,25 @@ include::header.html[]
 [discrete]
 == Quick Start
 
-WARNING: **metatron** is a large, involved software system composed of many interacting parts. Many of these components are packaged with the main metatron distribution while others are custom extensions written in mtron (the core language of metatron).
+WARNING: **metatron** is a large, involved software system composed of many interacting parts.
+Many of these components are packaged with the main metatron distribution while others are custom extensions written in mtron (the core language of metatron).
 
 ++++
-<img src="images/metatron-character-ansi.png" width="150px" style="float:left; margin:10px;"></a>
+<img src="images/metatron-character-ansi.png" width="250px" style="float:left; margin:10px;"></a>
 ++++
 
-Software is an endless maze of attempts to organize and understand the nature of data and processes that act upon it -- encapsulated in sharable artifacts generally known as __code__. This world is the epitome of rational human thought and in being so, acts as a "legoland" for the well tuned mind that finds joy in discovering and manipulating novel conceptual structures via cold, discrete mechanical processes, where one is able to control a massive amounts of energy and data without breaking a sweat nor leaving the comfort of one's home. From web technologies, to database technologies, to AI technologies, and so forth, millions of developers are __clickity clacking__ away collectively writing a story of a wholly different sort. metatron offers one such realization of this world via a distillation of a few fundamental patterns that seems to render a seemingly morass of technologies to almost laughably similar expression that's repeated over and over. This focused interpretation enables technological compositions that are naturally expressed in what can only honestly be said to be an extremely terse language known as mtron.
+Software is an endless maze of standards, specifications, packages, frameworks, utilities -- all providing a particular reconceptualization of computer in search of problems here, now, and the more general and elegant, into the future.
+This world is the epitome of rational human thought and in being so, acts as a "legoland" for the well-tuned mind that finds joy in discovering and manipulating abstract structures using cold, discrete mechanical processes all without breaking a sweat nor leaving the comfort of one's home.
+From web technologies, to database technologies, to AI technologies, and so forth, millions of developers are __clickity clacking__ away collectively writing a story of a wholly different sort. metatron is one such  contribution that provides a distillation of computing to a few fundamental patterns that, when used together, transform the complex morass into an easily comprehensible and usable set of constructs.
 
-Exploring metatron takes the user through the wonderful world of computing touching on fundamental concepts in languages, compilers, operating systems, networks, databases, web technologies, and more –– all from the vantage point of a perspective codified in mtron that enables one to speak to this world, using simple, utilitarian terms.
+From this system emerges a natural way to express structural compositions not easily realized nor written using prior art.
 
-In short, metatron is an __experience__ –– an experience that offers a delightful merging of mathematics, computer science, and the mind.
+metatron touches on fundamental concepts in languages, compilers, operating systems, networks, databases, web technologies, and more –– all from the vantage point of a perspective codified in mtron which enables one to speak to this world at large, simply and effectively.
 
-With that said, a short whirlwind introduction to metatron will now be presented.
+[quote]
+----
+With that said, a whirlwind tour of the core concepts behind metatron will now be presented.
+----
 
 [discrete]
 === Core Concepts
@@ -60,7 +66,8 @@ metatron is a data-oriented programming environment with its own data-flow langu
 [discrete]
 ==== Core Data Types
 
-In metatron, everything is an **obj** (an object). There are 3 categories of objs:
+In metatron, everything is an **obj** (an object).
+There are 3 categories of objs:
 
 . **mono**: objs not composed of other objs:
 ** **bytes**, **bool**, **int**, **real**, **str**, and **uri**.
@@ -70,40 +77,95 @@ In metatron, everything is an **obj** (an object). There are 3 categories of obj
 ** **inst** and **code**.
 
 \[
-\tt lhs \underbrace{\Rightarrow}_* call(\underbrace{arg0,arg1,...,argN}_+) \Rightarrow rhs
-\]
+\tt lhs \underbrace{\Rightarrow}_* inst(\underbrace{arg_0,arg_1,\ldots,arg_n}_+) \underbrace{\Rightarrow}_= rhs \]
 
-Finally, there is one "psuedo-obj" that is a mono, a poly, and a call. It is named `noobj` and it can be seen as the `null` in other programming environments save that it has an operational semantic aligned with its role as the 0-object (zero) of the algebraic ring formed by the set of all objs along with two meta operators: `*` and `+` (apply/compose and branch/split, respectively).
+\[
+\tt lhs \underbrace{\Rightarrow}_* code\{{\underbrace{inst_0 \cdot \underbrace{(inst_1 + inst_2)}_+ \cdot \ldots \cdot inst_n}_*}\} \underbrace{\Rightarrow}_= rhs \]
+
+There is one https://en.wikipedia.org/wiki/Universal_property[universal] obj that is a mono, a poly, and a call: `noobj`. `noobj` is similar to the https://en.wikipedia.org/wiki/Null_pointer[null] value found in many programming languages save that it has an operational semantic aligned with its role as the https://en.wikipedia.org/wiki/Zero_object_(algebra)[0-object] (zero) of the algebraic ring formed by the set of all objs along with the two ring operators: `*` and `+` (apply/compose and branch/split, respectively). Finally, at the other end of the spectrum, there is an obj which serves as the 1-object (one) called "all" and denoted `#`.
+
+[.center]
+[cols="4a,6a",separator=🧱,role="table-bordered small center",width=70]
+|===
+🧱
+Any obj with `c` of `{0}` is isomorphic to `noobj`.
+🧱
+[mtron]
+----
+noobj-<[noobj]>-  [-- noobj * noobj --]
+[noobj,noobj]>-   [-- noobj + noobj --]
+noobj-<[#]>-      [-- noobj * #     --]
+[noobj, #]>-      [-- noobj + #     --]
+----
+🧱
+Any obj applied to `#` is that obj. Hence why `noobj * # \=> noobj`.
+
+🧱
+[mtron]
+----
+#.-<[#]>-          [-- # * #     --]
+[#,#]>-            [-- # + #     --]
+#.-<[noobj]>-      [-- # * noobj --]
+[#,noobj]>-        [-- # + noobj --]
+----
+|===
+
+
+[.card]
+--
+[discrete,.center]
+==== Ring Theory
+
+https://en.wikipedia.org/wiki/Ring_theory[Ring theory] is the beating heart of metatron. Its axioms and subsequent theorems are carefully woven throughout the design, where rings are coupled with rings through the various layers of computing abstraction. The most prominent uses are found in:
+
+. the https://en.wikipedia.org/wiki/Function_composition_(computer_science)[composition] of instructions to form code.
+. the https://en.wikipedia.org/wiki/Function_application[application] of objs to other objs.
+. the https://en.wikipedia.org/wiki/Object_composition[joining] of objs to form poly(nomial) structures.
+. the https://en.wikipedia.org/wiki/Optimizing_compiler[optimization] of machine execution via rewrite equivalences.
+. the https://en.wikipedia.org/wiki/Type_theory[construction] of types and their constraints on values.
+
+There is nothing "difficult" about ring theory.
+In fact, grade school has already ingrained the most important concepts -- namely, how `*` and `+` operate on objects (e.g. numbers) individually and in concert with one another (e.g. the https://en.wikipedia.org/wiki/FOIL_method[foil method]). In metatron, its not just numbers that are constrained by these axioms, but more generally, objs and various constructions of objs.
+
+For a gentle, yet thorough presentation on ring theory and its use in metatron, please review http://metatron.phaseshift.studio/articles/stream-ring-theory[stream ring theory].
+
+--
 
 [discrete]
 ==== Router and Space
 
-There are 2 "special" `rec` structures called **router** and **space**. They are special in that while they appear as `rec` objs, they maintain auxiliary data structures (with little reflection enabling reification) accessible only through a particular api not available to other objs.
+There are 2 "special" `rec` structures called **router** and **space**.
+They are special in that while they appear as `rec` objs, they maintain auxiliary data structures (with little reflection enabling reification) accessible only through a particular api not available to other objs.
 
-**router**: the purpose of the router is to handle namespace prefix rewrites for local and remote dispatching of read and write calls to spaces. Every instance of metatron has a single running router.
+**router**: the purpose of the router is to handle namespace prefix rewrites for local and remote dispatching of read and write calls to spaces.
+Every instance of metatron has a single running router.
 
-**space**: the purpose of a space is to store objs and manage process execution. It is up to the space to determine how objs will be indexed and persisted. However, within metatron, all spaces behave in the same manner as dictated by a well-defined read/write contract.
+**space**: the purpose of a space is to store objs and manage process execution.
+It is up to the space implementation to determine how objs will be indexed and persisted.
+However, within metatron, all spaces are functionally equivalent as dictated by a well-defined read/write contract.
 
 [discrete]
 === Installation
 
 . Download metatron either as an `npm` package, a `docker` container, or a `maven` project.
-. Load metatron using a boot file. To run a headless boot in the background, don't add any UI objs to your boot file. For now, create the following boot loader as plain text -- it will spawn a `console::T`.
+. Load metatron using a boot file.
+To run a headless boot in the background, don't add any UI objs to your boot file.
+For now, create the following bootloader as plain text -- it will spawn an interactive `console::T` https://en.wikipedia.org/wiki/Read%E2%80%93eval%E2%80%93print_loop[REPL].
 
-.start.mtron boot loader
-[source,mtron]
+.start.mtron bootloader
+[mtron]
 ----
-import(/m/web);
-memspace::[pattern  =>/usr/#, q     =>[docq::[=>],subq::[=>]]]@/sys/space/usr;
-memspace::[pattern  =>g:#,    q     =>[subq::[=>]]]           @/sys/space/graph;
-fsspace::[pattern   =>local:#,route =>[local: => <~/>]]       @/sys/space/fs;
-httpspace::[pattern =>http://#,
-            host    =>http://localhost:8765,
-            route   =>[/            =>local:]]@/sys/space/http;
-console::[=>]@/usr/ui/console;
+[NO_PROMPT] import(/m/web);
+[NO_PROMPT] memspace::[pattern  =>/usr/#, q     =>[docq::[=>],subq::[=>]]]@/sys/space/usr;
+[NO_PROMPT] memspace::[pattern  =>g:#,    q     =>[subq::[=>]]]           @/sys/space/graph;
+[NO_PROMPT] fsspace::[pattern   =>local:#,route =>[local: => <~/>]]       @/sys/space/fs;
+[NO_PROMPT] httpspace::[pattern =>http://#,                               /
+[NO_PROMPT]      host    =>http://localhost:8765,                  /
+[NO_PROMPT]      route   =>[/            =>local:]]@/sys/space/http;
+[NO_PROMPT] console::[=>]@/usr/ui/console;
 ----
 
-To start a metatron instance with `start.boot`, in a terminal, execute:
+To boot a metatron instance from the terminal using `start.boot`, execute:
 
 [source,mtron]
 ----
@@ -113,12 +175,22 @@ $ bin/metatron "[boot=>start.mtron,log=>info]"
 [discrete]
 === Console
 
-After metatron boots, the cursor should be to the right of a `mtron>` prompt. This is a `console::T`. The console takes mtron expressions and creates **machines** to execute them. A machine can be thought of as an executing process.
+After metatron boots, the cursor should be to the right of a `mtron>` prompt.
+This is a `console::T`.
+The console takes mtron expressions and creates **machines** to execute them.
+A machine can be thought of as an executing process.
 
-[source,mtron]
+[mtron]
 ----
 1 + 2
-1-<[_,+2,*5]>-.sum()
+ab * xyz * mn?i=1&j=2
+1-<[_,+ 2,* 5]>-.sum()
+{1,2,3}-<|[?>1 => +20, _ => * -1]>>
+1873-<[http://localhost:${+10}/mcp]
+10.inst(a=>+2,b=>?int::T){ *a + *b }
+a=>b=>c=>d=>e=>f
+a=>b=>c=>d=>e=>f.>>.>>.>>.>>.>>
+[a=>1,b=>[c=>[5,6,7]]]>>b/c/1
 ----
 
 [discrete]
@@ -127,23 +199,34 @@ After metatron boots, the cursor should be to the right of a `mtron>` prompt. Th
 [.card]
 --
 [discrete,.center]
-==== The Nature of Space
-Simply put, metatron provides a distributed address space for reading and writing objs, where the values can have different internal structures (**a key/value store**), such that the internals are still uniquely identified globally (**a column store**). An address space that can address structures at various scales of complexity implies a single self-referential space: the address space formed by the set of all uniform resource identifiers (**a web server**). The particular uri scheme used offers more than just the ability to denote the location of an obj, it can also refer to an obj type (**a relational database**), an instruction obj's signature (**a lambda server**), and read/write modulators (**a semantic web**). Atop a global address space, `poly` objs add an interesting twist in that they maintain an internal NAT-like address scheme for routing requests to the objs contained therein (**an ldap server**). In this way, polys control not just a point in space, but regions of space that can overlap, blurring the line between where one poly ends and another begins (**an mqtt broker**). But the objs in space aren't just static datum (monos) or diffuse collections (polys) either, they are also active processes (calls) (**a lisp interpreter**). Amongst the set of calls, there is a particular kind of instruction known as an `auto` which has the peculiar behavior of dereferencing itself to its referent upon access which yields colocation semantics amongst physically distributed objs (**a graph database**). And that's just the beginning...
+==== The Nature of Space 
+
+At its core, metatron is the infrastructure of a distributed address space used for reading and writing objs, where an address is a key and an obj is the value (**a key/value store**). This space is aware of the internal structure of the value and supports uniquely identifying substructures in the value (**a column store**). 
+
+For metatron, the set of all uniform resource identifiers is the address space as it can reference structures at various nested levels of complexity (**a web server**). The particular uri scheme used by metatron offers more than just the ability to denote the location of an obj, it can also refer to an obj's type (**a semantic web**), an obj's functional signature (**a lambda server**), and any pre/post-processing read/write modulators (**a rest server**). 
+
+Nested poly objs provide an interesting twist in that they maintain an internal NAT-like address scheme for routing requests to the objs contained therein (**an ldap server**). In this way, polys control not just a point in space, but regions of space (**a document store**) that can overlap, blurring the line between where one poly ends and another begins (**an mqtt broker**).
+
+Finally, the objs embedded in space aren't just static datum (monos) or diffuse collections (polys), they are also active processes (calls) (**a lisp interpreter**). Amongst the set of calls, there is an interesting instruction called an `auto` which has the peculiar behavior of dereferencing itself to its referent upon access which yields colocation semantics amongst physically distributed objs (**a graph database**).
+
+And that's just the beginning...
 --
 
-The above description may lead one to conclude that metatron, if functional, is too complex to be of practical value. Note that the features articular above are simply epiphenomena of a more fundamental notion of reference. In metatron, the uri is called a __fURI__ (**functional uniform resource identifier**) and an extreme example of sucj a fURI is presented below.
+The above description may lead one to conclude that metatron, if functional, is too complex to be of practical value.
+Note that the features articular above are simply epiphenomena of a more fundamental notion of reference.
+In metatron, the uri is called a __fURI__ (**functional uniform resource identifier**) and an extreme example of a contrived, fURI is presented below (overly bloated for the sake of coverage).
 
 [source,mtron]
 ----
-abc://phaseshift.studio:8777/seg1/+/segN[a,b,c]{*}?q0=a&q1=b
- |              |           |     |   |    |    |      |___
- |              |           |     |   |    |    |__________
- |              |           |     |   |    |_______________
- |              |           |     |   |____________________
- |              |           |     |________________________
- |              |           |______________________________
- |              |__________________________________________
- |_________________________________________________________
+abc://example.com:8777/seg1/+/segN[a,b,c]{*}?dom<=rng&k0=v0&k1=v1
+ │           │              │   │     │   │     │         └─────── qprocs (query processors)
+ │           │              │   │     │   │     └───────────────── domain/range (signature)
+ │           │              │   │     │   └─────────────────────── coefficient (cardinality)
+ │           │              │   │     └─────────────────────────── polynomial types (generics)
+ │           │              │   └───────────────────────────────── hierachial path (navigation)
+ │           │              └───────────────────────────────────── wildcard (branching path)
+ │           └──────────────────────────────────────────────────── physical location (authority)
+ └──────────────────────────────────────────────────────────────── scheme (means of referent access)
 ----
 
 Up to this point, there are currently 4 spaces maintained by metatron.
