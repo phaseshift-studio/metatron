@@ -21,10 +21,10 @@ Non-base types will be notated `B::T < A::T`: " `B::T` shares the same, though f
 
 A type predicate is any `inst` of the form
 
-[stem,role=".center"]
-++++
-\tt{pred?A{?\} \Leftarrow A(){ code },
-++++
+\[
+\tt pred?A\{?\} \Leftarrow A()\{ code \},
+\]
+
 such that the lhs `A` is inspected by the `code` of `pred` and emits either an `A::T` (pass) or `A{0}::T` (fail) as the rhs obj. The most overloaded instruction in mtron is `as()`. This instruction alters the https://en.wikipedia.org/wiki/Nominal_type_system[nominal type] of an obj. This doesn't change it's existential type as an obj has an infinite amount of types and such naming is practical as the "working type" of the obj. Examples of `pred()` and `as()` in action are presented below.
 
 [mtron]

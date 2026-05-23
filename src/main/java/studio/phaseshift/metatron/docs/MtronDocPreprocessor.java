@@ -185,7 +185,7 @@ public final class MtronDocPreprocessor {
             if (!hidden) {
                 String prefix = (noPrompt ? "" : "mtron> ") + expr;
                 if (calloutNumber != null)
-                    prefix += " ".repeat(5) + "<" + calloutNumber + ">";
+                    prefix += " ".repeat(5) + "​" + calloutNumber + "​";
                 lines.add(prefix);
             }
 

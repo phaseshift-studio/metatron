@@ -84,6 +84,7 @@ a/b/c -> [x,[y=>[z=>2]]]
          │└──────────────── a/b/c/0       <2>
          └───────────────── a/b/c         <1>
 ----
+
 [mtron]
 ----
 a/b/c -> [x,[y=>[z=>2]]]   
@@ -129,41 +130,46 @@ a->[b=>1,c=>2]
 !
 [mtron,source]
 ----
-a/b->1
-a/c->2  
-----
-!
-[mtron,source]
-----
 a->[b=>1,c=>2]
 ----
 !
 [mtron,source]
 ----
-a__b->1
- \_c->2
+     ┌──b──⮞1
+   a─┤
+     └──c──⮞2
+----
+!
+[mtron,source]
+----
+    a──b──⮞1
+
+    a──c──⮞2  
 ----
 !===
-<1> the uri ring defines multiplcation as "extension", where \$ a \cdot b \$ is `a/b`.
-<2> the uri ring defines addition as "branching", where \$ab + ac\$ is `{a/b,a/c}`. 
+<1> the uri ring defines multiplcation as "extension", where latexmath:[x \cdot y] is `x/y`.
+<2> the uri ring defines addition as "branching", where latexmath:[x + y] is `{x,y}`. 
 
 |
-The two examples represent the equivalent data because there exists a bijection that maps **A** to **B** and **B** to **A**. In other words, they are isomorphic structures within the category of ring. The first form is the equation:
+The two examples represent the equivalent data because there exists a bijection that maps **A** to **B** and **B** to **A**. In other words, they are isomorphic structures within the category of ring. The form **A** is captured by the equation:
 
 \[
-a \cdot (b + c)
+a \cdot (b + c) = \{1,2\}
 \]
 
-The second is written:
+Form **B** has the equation:
 
 \[
-(a + b) \cdot (a + c)
+(a \cdot b) + (a \cdot c) = \{1,2\}
 \]
 
-Thus, due to the fact that multiplication distributes over addition, the two equations, while typographically different are in fact the same data.
+Thus, due to the ring axiom that states multiplication distributes over addition, the two equations, while typographically different, are, in fact, algebraically equivalent.
 
 \[
-a \cdot (b + c) = (a + b) \cdot (a + c)
+\begin{align*}
+a \cdot (b + c)           &=&         \\
+(a \cdot b) + (a \cdot c) &= ab + ac \\
+\end{align*}
 \]
 
 |
@@ -176,13 +182,13 @@ a \cdot (b + c) = (a + b) \cdot (a + c)
 !
 [mtron,source]
 ----
-*a/
+    *a/
 ----
 !
 [mtron,source]
 ----
-*a/b/
-*a/c/
+    *a/b/
+    *a/c/
 ----
 !
 [mtron,source]
@@ -195,8 +201,8 @@ a=>[b=1,c=>2]
 {a/b=>1,a/c=>2}
 ----
 !===
-
 |
+The inverse holds as well. That is, when reading from space, `*a/` and *a/b 
 The two examples are "equal" because they can be rewritten into each using the ring algebra. The first form is the equation:
 
 \[
@@ -216,6 +222,27 @@ a \cdot (b + c) = (a + b) \cdot (a + c)
 \]
 
 |===
+
+If the implication of these equalities is not readily apparent, then understand the following. The multiplicative union of uris to an obj is a dependent relationship. There exists a colocational requirement where `a` is coupling `b` and `c` together into a single structure that then references/contains `1` and `2`.
+
+[mtron,source]
+----
+     ┌──b──⮞1
+   a─┤
+     └──c──⮞2
+----
+
+On the other hand, the additive union of the uris is an independent relationship. There are two representations of `a` and thus, `a/b \=> 1` is distinct, requiring no colocation with `a/c \=> 2`. This means that `a/b` can be stored in a document database in Japan and `a/c` an be stored in `.txt` file on some file system in Ohio and when resolved, the same `{1,2}` result is yielded (albeit with different time/space characteristics compared to the multiplicative, colocated representation of the data).
+
+[mtron,source]
+----
+    a──b──⮞1
+
+    a──c──⮞2  
+----
+
+
+A further entailment states that a dataset can be rewritten from a **concatenative/multiplicative** form to a **union/additive** form so as to maintain one subset of the data in a specialized space optimized for the demands of its production requirements and the other subset in some other specialized space according to its requirements. More specifically, some data needs to be "hot in cache" in order to satisfy demand, and some data should be "iced in archive" when the production usage doesn't require rapid response times and its possible to reduce production costs with cheap disk storage. With metatron, expressing such partitions while also ensuring said partitions are resolved correctly is built into the fundamental mathematics/algorithm of the system -- **the ring algebra for structural composition**.  
 
 [discrete]
 ==== Isomorphic \$ \ne \$ Identical

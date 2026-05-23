@@ -44,16 +44,15 @@ The following mtron snippet constructs a `grphspace`. A few routes are provided 
 
 [mtron]
 ----
-grphspace::[                                   /
-  pattern => g:#,                              /
-  route   => [ g:=><>,                         /
-              g:V=>V,                          / 
-              g:E=>E,                          /
-              g:S=>/m/grph/schema/modern],     /
-  native  => [factory  => mfactory::[=>],      /
-              load     => modern]              /
-]@/sys/space/modern                        [-- <1> --]
-*g:S                                       [-- <2> --]
+grphspace::[                                            /
+  pattern => g:#,                                       /
+  route   => [g:  => <>,                                /
+              g:V => V,                                 /
+              g:E => E,                                 /
+              g:S => /m/grph/schema/modern],            /
+  native  => [factory  => mfactory::[=>],               /
+              load     => modern]]@/sys/space/modern [-- <1> --]
+*g:S                                                 [-- <2> --]
 ----
 
 For those familiar with graph database and Gremlin graph traversal language, an assortment of common property graph traversals is provided below -- written in mtron.
@@ -84,7 +83,7 @@ graph encodings (discussed later when presenting hypergraphs).
 === /m/grph/inst
 
 .`/m/grph` instructions
-[cols=".^3a,.^4,.^4a",separator=🧱,options=header,role="table-bordered small center"]
+[cols=".^4a,.^3,.^4a",separator=🧱,options=header,role="table-bordered small center"]
 |===
 ^🧱 inst ^🧱 description ^🧱 diagram
 🧱 `out?vrtx{+*+}\<=vrtx(uri{+*+}::T})`   🧱 traverse to the outgoing adjacent vertices of the lhs vertex 1.8+a🧱
@@ -125,11 +124,11 @@ traversals.
 
 [mtron]
 ----
-tblespace::[pattern => acme:#,                                                              /
-       host         => <mariadb://localhost:3306/acme?user=mtron&password=mtron>,  /
-       route        => [<acme:>=><>],                                                       /
-       table        => [,],                                                                 /
-       driver       => <org.mariadb.jdbc.Driver>]@/sys/space/acme;
+tblespace::[pattern => acme:#,                                                     /
+            host    => <mariadb://localhost:3306/acme?user=mtron&password=mtron>,  /
+            route   => [<acme:>=><>],                                              /
+            table   => [,],                                                        /
+            driver  => <org.mariadb.jdbc.Driver>]@/sys/space/acme;
 ----
 
 [indent=0,subs="verbatim,attributes",role="primary"]
@@ -240,7 +239,7 @@ The two data sources have a very particular understanding of how data should be 
 ----
 *g:V/1                                                             [-- <1> --]
 *acme:customers/357                                                [-- <2> --]
-*g:V/1.addE(consulted,|*acme:customers/357)                        [-- <3> --]
+@g:V/1.addE(consulted,|*acme:customers/357)                        [-- <3> --]
 *g:V/1.out(consulted)                                              [-- <4> --]
 *g:V/1.out(consulted).matches(vrtx::T)                             [-- <5> --]
 ----
@@ -543,7 +542,7 @@ v1 -> [                                                    /
   name=>'marko',age=>29,                                   /
   outE_=>[knows=>{[weight=>0.5,inV_=>!*v2, outV_=>!*v1],   /
                   [weight=>0.5,inV_=>!*v4, outV_=>!*v1]}], /
-          created=>[weight=>0.2,inV_=>!*v3, outV_=>!*v1]]]
+          created=>[weight=>0.2,inV_=>!*v3, outV_=>!*v1]]
 v2 -> [name=>'vadas']
 v3 -> [name=>'josh']
 v4 -> [name=>'lop']
@@ -604,17 +603,17 @@ Typically, in real-world scenarios, not every vertex and edge of a graph are tra
 🧱
 [source,mtron]
 ----
-fsspace::[pattern=>fs:#]@/sys/space/fs
+fsspace::[pattern=>fs:#]
 ----
 🧱
 [source,mtron]
 ----
-memspace::[pattern=>mem:#]@/sys/space/mem
+memspace::[pattern=>mem:#]
 ----
 🧱
 [source,mtron]
 ----
-dcmtspace::[pattern=>dcmt:#]@/sys/space/dcmt
+dcmtspace::[pattern=>dcmt:#]
 ----
 🧱
 * slow

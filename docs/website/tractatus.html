@@ -457,18 +457,18 @@ aid the compiler instruction selection, enable code path compression, facilitate
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; 1.plus(2)     <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; 1.plus(2)     ​1​
 ==&gt;3
-mtron&gt; 1.plus(id())     <i class="conum" data-value="2"></i><b>(2)</b>
+mtron&gt; 1.plus(id())     ​2​
 ==&gt;2
-mtron&gt; 1.plus(plus(2))     <i class="conum" data-value="3"></i><b>(3)</b>
+mtron&gt; 1.plus(plus(2))     ​3​
 ==&gt;4
-mtron&gt; 1.map(matches(bool::T))     <i class="conum" data-value="4"></i><b>(4)</b>
+mtron&gt; 1.map(matches(bool::T))     ​4​
 ==&gt;false
-mtron&gt; 1.map(isa(bool::T))     <i class="conum" data-value="5"></i><b>(5)</b>
-mtron&gt; 1.as(bool::T)     <i class="conum" data-value="6"></i><b>(6)</b>
+mtron&gt; 1.map(isa(bool::T))     ​5​
+mtron&gt; 1.as(bool::T)     ​6​
 ==&gt;true
-mtron&gt; 1.isa(as(bool::T))     <i class="conum" data-value="7"></i><b>(7)</b>
+mtron&gt; 1.isa(as(bool::T))     ​7​
 ==&gt;1</code></pre>
 </div>
 </div>
@@ -560,9 +560,6 @@ lhs =&gt; inst(arg1,...,argN){ inst1...instN } =&gt; rhs
   reportsTo=&gt;int::T,
   jobTitle=&gt;str::T]]@employees
 ==&gt;v5/name=&gt;'ripple'
-==&gt;v1/out_=&gt;[
- knows=&gt;{!*v2,!*v3},
- created=&gt;!*v4]
 ==&gt;testy/name=&gt;!*deep:deepseek-v4-pro/name
 ==&gt;boot/args/local=&gt;booger
 ==&gt;v6/age=&gt;35
@@ -587,6 +584,13 @@ lhs =&gt; inst(arg1,...,argN){ inst1...instN } =&gt; rhs
   htmlDescription=&gt;str::T,
   image=&gt;str::T]]@productlines
 ==&gt;testy/desc=&gt;'testy the agent'
+==&gt;v1/outE_=&gt;[knows=&gt;{[
+ weight=&gt;0.5000,
+ inV_=&gt;!*v2,
+ outV_=&gt;!*v1],[
+ weight=&gt;0.5000,
+ inV_=&gt;!*v4,
+ outV_=&gt;!*v1]}]
 ==&gt;testy=&gt;model::[
  desc=&gt;'testy the agent',
  provider=&gt;!*deep:deepseek-v4-pro/provider,
@@ -606,7 +610,25 @@ lhs =&gt; inst(arg1,...,argN){ inst1...instN } =&gt; rhs
   skill=&gt;[!@mtronfs:skills/mtron.as(skill::T)],
   response=&gt;[to=&gt;print(id())]]]@testy
 ==&gt;v2/name=&gt;'vadas'
+==&gt;v1/created=&gt;[
+ weight=&gt;0.2000,
+ inV_=&gt;!*v3,
+ outV_=&gt;!*v1]
 ==&gt;v4=&gt;[name=&gt;'lop']
+==&gt;v1=&gt;[
+ name=&gt;'marko',
+ age=&gt;29,
+ outE_=&gt;[knows=&gt;{[
+ weight=&gt;0.5000,
+ inV_=&gt;!*v2,
+ outV_=&gt;!*v1],[
+ weight=&gt;0.5000,
+ inV_=&gt;!*v4,
+ outV_=&gt;!*v1]}],
+ created=&gt;[
+  weight=&gt;0.2000,
+  inV_=&gt;!*v3,
+  outV_=&gt;!*v1]]
 ==&gt;v6/out_=&gt;[created=&gt;!*v4]
 ==&gt;testy/feature=&gt;[
  think=&gt;block(/usr/ui/console/pane/0/stream(id())),
@@ -654,12 +676,6 @@ lhs =&gt; inst(arg1,...,argN){ inst1...instN } =&gt; rhs
 ==&gt;equipment=&gt;rec{*}::T[?[
   model=&gt;uri::T,
   year=&gt;int::T]]@equipment
-==&gt;v1=&gt;[
- name=&gt;'marko',
- age=&gt;29,
- out_=&gt;[
-  knows=&gt;{!*v2,!*v3},
-  created=&gt;!*v4]]
 ==&gt;v6=&gt;[
  name=&gt;'peter',
  age=&gt;35,
@@ -735,13 +751,13 @@ Given the filtering behavior of the instruction, the signature of <code>band</co
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; |inst?int{?}&lt;=int(_,_){ is(and(gte(*0),lte(*1))) }@band     <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; |inst?int{?}&lt;=int(_,_){ is(and(gte(*0),lte(*1))) }@band     ​1​
 ==&gt;inst?rng=int{?}&amp;dom=int(id(),id()){is(and(gte(*0),lte(*1)))}@band
-mtron&gt; *band     <i class="conum" data-value="2"></i><b>(2)</b>
+mtron&gt; *band     ​2​
 ==&gt;inst?rng=int{?}&amp;dom=int(id(),id()){is(and(gte(*0),lte(*1)))}
-mtron&gt; 3.band(2,8)     <i class="conum" data-value="3"></i><b>(3)</b>
+mtron&gt; 3.band(2,8)     ​3​
 ==&gt;3
-mtron&gt; 10.band(2,8)     <i class="conum" data-value="4"></i><b>(4)</b></code></pre>
+mtron&gt; 10.band(2,8)     ​4​</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -794,13 +810,13 @@ arguments are resolved from the stack via their furi name.</p>
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; |inst?int{?}&lt;=int(min=&gt;_,max=&gt;_){ is(and(gte(*min),lte(*max))) }@band
 ==&gt;inst?rng=int{?}&amp;dom=int(min=&gt;id(),max=&gt;id()){is(and(gte(*min),lte(*max)))}@band
-mtron&gt; 3.band(min=&gt;2,max=&gt;4)     <i class="conum" data-value="1"></i><b>(1)</b>
+mtron&gt; 3.band(min=&gt;2,max=&gt;4)     ​1​
 ==&gt;3
-mtron&gt; 3.band(2,8)     <i class="conum" data-value="2"></i><b>(2)</b>
+mtron&gt; 3.band(2,8)     ​2​
 ==&gt;3
-mtron&gt; 3.band(max=&gt;8,min=&gt;2)     <i class="conum" data-value="3"></i><b>(3)</b>
+mtron&gt; 3.band(max=&gt;8,min=&gt;2)     ​3​
 ==&gt;3
-mtron&gt; 'abc'.band(2,8)     <i class="conum" data-value="4"></i><b>(4)</b></code></pre>
+mtron&gt; 'abc'.band(2,8)     ​4​</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -856,10 +872,10 @@ If the incoming <code>obj</code> to <code>else</code> is <code>noobj</code>, the
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; |inst?int{?}&lt;=int(min=&gt;else(2),max=&gt;else(8)){ is(and(gte(*min),lte(*max))) }@band
 ==&gt;inst?rng=int{?}&amp;dom=int(min=&gt;else(2),max=&gt;else(8)){is(and(gte(*min),lte(*max)))}@band
-mtron&gt; 1.band(min=&gt;1)     <i class="conum" data-value="1"></i><b>(1)</b>
+mtron&gt; 1.band(min=&gt;1)     ​1​
 ==&gt;1
-mtron&gt; 10.band()     <i class="conum" data-value="2"></i><b>(2)</b>
-mtron&gt; {2,3,4,5}.band(min=&gt;3,max=&gt;4)     <i class="conum" data-value="3"></i><b>(3)</b></code></pre>
+mtron&gt; 10.band()     ​2​
+mtron&gt; {2,3,4,5}.band(min=&gt;3,max=&gt;4)     ​3​</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -907,29 +923,29 @@ can be any arbitrary <code>obj</code> (thus, <code>code</code>). Type arguments 
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; nat  -&gt; int::T[?&gt;0]@nat     <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; nat  -&gt; int::T[?&gt;0]@nat     ​1​
 ==&gt;int::T[is(gt(0))]@nat
 mtron&gt; |inst?int{?}&lt;=int(min=&gt;?nat::T,max=&gt;?nat::T){ is(and(gte(*min),lte(*max))) }@band
 ==&gt;inst?rng=int{?}&amp;dom=int(min=&gt;?nat::T,max=&gt;?nat::T){is(and(gte(*min),lte(*max)))}@band
-mtron&gt; 15.band(10,20)     <i class="conum" data-value="2"></i><b>(2)</b>
+mtron&gt; 15.band(10,20)     ​2​
 ==&gt;15
-mtron&gt; -15.band(-20,-10)     <i class="conum" data-value="3"></i><b>(3)</b>
+mtron&gt; -15.band(-20,-10)     ​3​
 ==&gt;-15
 mtron&gt; band -&gt; |inst?int{?}&lt;=int(min=&gt;as(nat::T),max=&gt;as(nat::T)){ is(and(gte(*min),lte(*max))) }
 ==&gt;inst?rng=int{?}&amp;dom=int(min=&gt;as(nat::T),max=&gt;as(nat::T)){is(and(gte(*min),lte(*max)))}
-mtron&gt; 15.band(10,20)     <i class="conum" data-value="4"></i><b>(4)</b>
+mtron&gt; 15.band(10,20)     ​4​
 ==&gt;15
-mtron&gt; -15.band(-20,-10)     <i class="conum" data-value="5"></i><b>(5)</b>
+mtron&gt; -15.band(-20,-10)     ​5​
 mtron&gt; band -&gt; |inst?int{?}&lt;=int(min=&gt;?nat::T.else(throw()),max=&gt;?nat::T.else(throw())){ is(and(gte(*min),lte(*max))) }
 ==&gt;inst?rng=int{?}&amp;dom=int(min=&gt;isa(nat::T).else(throw()),max=&gt;isa(nat::T).else(throw())){is(and(gte(*min),lte(*max)))}
-mtron&gt; 15.band(10,20)     <i class="conum" data-value="6"></i><b>(6)</b>
+mtron&gt; 15.band(10,20)     ​6​
 ==&gt;15
-mtron&gt; -15.band(-20,-10)     <i class="conum" data-value="7"></i><b>(7)</b>
+mtron&gt; -15.band(-20,-10)     ​7​
 mtron&gt; band -&gt; |inst?int{?}&lt;=int(min=&gt;?nat::T.else(-100),max=&gt;?nat::T.else(100)){ is(and(gte(*min),lte(*max))) }
 ==&gt;inst?rng=int{?}&amp;dom=int(min=&gt;isa(nat::T).else(-100),max=&gt;isa(nat::T).else(100)){is(and(gte(*min),lte(*max)))}
-mtron&gt; 15.band(10,20)     <i class="conum" data-value="8"></i><b>(8)</b>
+mtron&gt; 15.band(10,20)     ​8​
 ==&gt;15
-mtron&gt; -15.band(-20,-10)     <i class="conum" data-value="9"></i><b>(9)</b>
+mtron&gt; -15.band(-20,-10)     ​9​
 ==&gt;-15</code></pre>
 </div>
 </div>
@@ -974,18 +990,18 @@ Finally, a degenerate anonymous <code>inst</code> with no specified variable fra
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;  10.(min=&gt;2,max=&gt;8){ is(and(gte(*min),lte(*max))) }     <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;  10.(min=&gt;2,max=&gt;8){ is(and(gte(*min),lte(*max))) }     ​1​
 ==&gt;fail::[rhs does not match inst range:
 	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/108
-mtron&gt;  10.(min=&gt;minus(1),max=&gt;plus(1)){ is(and(gte(*min),lte(*max))) }     <i class="conum" data-value="2"></i><b>(2)</b>
+mtron&gt;  10.(min=&gt;minus(1),max=&gt;plus(1)){ is(and(gte(*min),lte(*max))) }     ​2​
 ==&gt;10
-mtron&gt;  10.(min=&gt;2,max=&gt;8){ is(and(gte(*bad_min),lte(*bad_max))) }     <i class="conum" data-value="3"></i><b>(3)</b>
+mtron&gt;  10.(min=&gt;2,max=&gt;8){ is(and(gte(*bad_min),lte(*bad_max))) }     ​3​
 ==&gt;fail::[rhs does not match inst range:
 	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/110
-mtron&gt;  10.(){ is(and(gte(*min),lte(*max))) }     <i class="conum" data-value="4"></i><b>(4)</b>
+mtron&gt;  10.(){ is(and(gte(*min),lte(*max))) }     ​4​
 ==&gt;fail::[rhs does not match inst range:
 	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/112
-mtron&gt; 10.is(and(gte(minus(1)),lte(plus(1))))     <i class="conum" data-value="5"></i><b>(5)</b>
+mtron&gt; 10.is(and(gte(minus(1)),lte(plus(1))))     ​5​
 ==&gt;10</code></pre>
 </div>
 </div>
@@ -1046,7 +1062,7 @@ is_divisible -> |is_divisble?bool<=int(by?int=>_)[mod(*by).eq(0)]
 ==&gt;ERROR: band -&gt; |band?int{?}&lt;=int(min=&gt;_,max=&gt;is(gt(*min)).else(*min.plus(1)))[is(gte(*min)).is(lte(*max))]
                                                                       ^ end of input expected
 
-mtron&gt; 2.band(min=&gt;1,max=&gt;1)     <i class="conum" data-value="1"></i><b>(1)</b></code></pre>
+mtron&gt; 2.band(min=&gt;1,max=&gt;1)     ​1​</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -1125,11 +1141,11 @@ This ensures the uri <code>trpl</code> is not applied to the <code>inst</code> p
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;  trpl -&gt; inst?lst[int,int,int]&lt;=int{3}(){&gt;-[,]}     <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;  trpl -&gt; inst?lst[int,int,int]&lt;=int{3}(){&gt;-[,]}     ​1​
 ==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(){merge([,])}]][...]@/sys/fail/118
-mtron&gt; trpl -&gt; |inst?lst[int,int,int]&lt;=int{3}(){&gt;-[,]}     <i class="conum" data-value="2"></i><b>(2)</b>
+mtron&gt; trpl -&gt; |inst?lst[int,int,int]&lt;=int{3}(){&gt;-[,]}     ​2​
 ==&gt;inst?rng=lst[int,int,int]&amp;dom=int{3}(){merge([,])}
-mtron&gt; *trpl     <i class="conum" data-value="3"></i><b>(3)</b>
+mtron&gt; *trpl     ​3​
 ==&gt;inst?rng=lst[int,int,int]&amp;dom=int{3}(){merge([,])}</code></pre>
 </div>
 </div>
@@ -1302,7 +1318,7 @@ That is, given <code>rec</code> relations,</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; {1,2}     <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; {1,2}     ​1​
 ==&gt;1
 ==&gt;2
 mtron&gt; {1,2}.split([is(lt(2))  =&gt; plus(9),
@@ -1310,7 +1326,7 @@ mtron&gt; {1,2}.split([is(lt(2))  =&gt; plus(9),
 ==&gt;[1=&gt;10]
 ==&gt;[2=&gt;5]
 mtron&gt; {1,2}.split([is(lt(2))  =&gt; plus(9),
-                    is(gte(2)) =&gt; plus(3)]).rshift()     <i class="conum" data-value="2"></i><b>(2)</b>
+                    is(gte(2)) =&gt; plus(3)]).rshift()     ​2​
 ==&gt;10
 ==&gt;5</code></pre>
 </div>
@@ -1383,17 +1399,17 @@ mtron&gt; {1,2}-&lt;[?&lt;2=&gt;+9,?&gt;=2=&gt;+3]&gt;&gt;
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; {1,2}-&lt;[gte(2),gt(3)]     <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; {1,2}-&lt;[gte(2),gt(3)]     ​1​
 ==&gt;[false,false]
 ==&gt;[true,false]
-mtron&gt; {1,2}-&lt;[?&gt;=2,?&gt;3]     <i class="conum" data-value="2"></i><b>(2)</b>
+mtron&gt; {1,2}-&lt;[?&gt;=2,?&gt;3]     ​2​
 ==&gt;[
  noobj,
  noobj]
 ==&gt;[
  2,
  noobj]
-mtron&gt; {1,2}-&lt;[?&gt;=2,?&gt;3]&gt;-     <i class="conum" data-value="3"></i><b>(3)</b>
+mtron&gt; {1,2}-&lt;[?&gt;=2,?&gt;3]&gt;-     ​3​
 ==&gt;2</code></pre>
 </div>
 </div>
@@ -1626,7 +1642,7 @@ mtron&gt; import(/m/web)
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *&lt;mtronfs:agent.mtron&gt;     <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *&lt;mtronfs:agent.mtron&gt;     ​1​
 ==&gt;['add the word DRAGON to your final ...']
 mtron&gt; */usr/agent/feature</code></pre>
 </div>
@@ -1657,13 +1673,13 @@ mtron&gt; */usr/agent/feature</code></pre>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; [,]@/usr/mem     <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; [,]@/usr/mem     ​1​
 ==&gt;[,]@/usr/mem
 mtron&gt; *ollama:+/+
         .where([skill=&gt;has(thinking),
                 size=&gt;?&gt;mB::1000.0.?&lt;mB::5000.0])
         .order(&gt;&gt;size * -1.0)
-        .take(1).to(ai)     <i class="conum" data-value="2"></i><b>(2)</b>
+        .take(1).to(ai)     ​2​
 ==&gt;model::[
  provider=&gt;!*/sys/space/ollama,
  name=&gt;nebulamodules/nebula-small:latest,
@@ -1674,7 +1690,7 @@ mtron&gt; @ai&gt;&gt;=+[feature=&gt;[
                 memory=&gt;[mem=&gt;!@/usr/mem,max=&gt;5],
                 tools =&gt;[!*eval],
                 think=&gt;print(_),
-                response=&gt;[to=&gt;to(/usr/ai/response)]]]     <i class="conum" data-value="3"></i><b>(3)</b>
+                response=&gt;[to=&gt;to(/usr/ai/response)]]]     ​3​
 ==&gt;model::[
  provider=&gt;!*/sys/space/ollama,
  name=&gt;nebulamodules/nebula-small:latest,
@@ -1689,14 +1705,14 @@ mtron&gt; @ai&gt;&gt;=+[feature=&gt;[
   think=&gt;print(id()),
   response=&gt;[to=&gt;to(/usr/ai/response)]]]@ai
 mtron&gt; @ai.chat("Remember the word 'metatron'.
-                 I'll ask you to recall this word later.")     <i class="conum" data-value="4"></i><b>(4)</b>
+                 I'll ask you to recall this word later.")     ​4​
 ==&gt;fail::[illegalargumentexception: template cannot be null or blank
   	dev.langchain4j.internal.Exceptions [line 25]
   	dev.langchain4j.internal.ValidationUtils [line 169]
   	dev.langchain4j.internal.ValidationUtils [line 156]
   	dev.langchain4j.model.input.PromptTemplate [line 83]
   	dev.langchain4j.model.input.PromptTemplate [line 186]][...]@/sys/fail/178
-mtron&gt; */usr/ai/response     <i class="conum" data-value="5"></i><b>(5)</b>
+mtron&gt; */usr/ai/response     ​5​
 ==&gt;5</code></pre>
 </div>
 </div>
@@ -1756,7 +1772,7 @@ mtron&gt; */usr/ai/response     <i class="conum" data-value="5"></i><b>(5)</b>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */m/math.&gt;&gt;type.&gt;&gt;     <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */m/math.&gt;&gt;type.&gt;&gt;     ​1​
 ==&gt;real::T@/m/math/data_size
 ==&gt;data_size::T[][/m/math/bB/ctor?bB&lt;=#{?}(#::T)]@/m/math/bB
 ==&gt;data_size::T[][/m/math/kB/ctor?kB&lt;=#{?}(#::T)]@/m/math/kB
@@ -1779,11 +1795,11 @@ mtron&gt; */usr/ai/response     <i class="conum" data-value="5"></i><b>(5)</b>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; gB::500.0.as(mB::T)     <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; gB::500.0.as(mB::T)     ​1​
 ==&gt;mB::512000.0000
-mtron&gt; gB::500.0.as(kB::T)     <i class="conum" data-value="2"></i><b>(2)</b>
+mtron&gt; gB::500.0.as(kB::T)     ​2​
 ==&gt;kB::524288000.0000
-mtron&gt; tB::1.0.as(mB::T)     <i class="conum" data-value="3"></i><b>(3)</b>
+mtron&gt; tB::1.0.as(mB::T)     ​3​
 ==&gt;mB::1048576.0000</code></pre>
 </div>
 </div>
@@ -2335,11 +2351,11 @@ can access it accordingly and naturally.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;  1.plus(b)     <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;  1.plus(b)     ​1​
 ==&gt;fail::[1 [int::T] unable to convert uri::T][...]@/sys/fail/46
-mtron&gt; */sys/fail/+     <i class="conum" data-value="2"></i><b>(2)</b>
-mtron&gt; */sys/fail/+.catch(_)     <i class="conum" data-value="3"></i><b>(3)</b>
-mtron&gt; */sys/fail     <i class="conum" data-value="4"></i><b>(4)</b></code></pre>
+mtron&gt; */sys/fail/+     ​2​
+mtron&gt; */sys/fail/+.catch(_)     ​3​
+mtron&gt; */sys/fail     ​4​</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -2371,9 +2387,9 @@ mtron&gt; */sys/fail     <i class="conum" data-value="4"></i><b>(4)</b></code></
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *cause     <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *cause     ​1​
 ==&gt;cause?rng=fail{?}&amp;dom=fail(){&lt;j&gt;}
-mtron&gt; 1+b.catch(cause())     <i class="conum" data-value="2"></i><b>(2)</b>
+mtron&gt; 1+b.catch(cause())     ​2​
 ==&gt;fail::[unable to evaluate inst: plus?rng=uri{?}&amp;dom=int(b){&lt;j&gt;}@&lt;1&gt;]
     \_fail::[apply failure:
 	[lhs]    | 1
@@ -2382,7 +2398,7 @@ mtron&gt; 1+b.catch(cause())     <i class="conum" data-value="2"></i><b>(2)</b>
 	[inst]   | plus?rng=uri{?}&amp;dom=int(b){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
 	 \_dom   | int::T
 	 \_args  | [b][studio.phaseshift.metatron.util.MTronException:56]]
-mtron&gt; throw('bad').catch(cause())     <i class="conum" data-value="3"></i><b>(3)</b></code></pre>
+mtron&gt; throw('bad').catch(cause())     ​3​</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -2427,10 +2443,10 @@ mtron&gt; throw('bad').catch(cause())     <i class="conum" data-value="3"></i><b
 <div class="paragraph">
 <p>A type predicate is any <code>inst</code> of the form</p>
 </div>
-<div class="stemblock .center">
-<div class="content">
-\[\tt{pred?A{?\} \Leftarrow A(){ code },\]
-</div>
+<div class="paragraph">
+<p>\[
+\tt pred?A\{?\} \Leftarrow A()\{ code \},
+\]</p>
 </div>
 <div class="paragraph">
 <p>such that the lhs <code>A</code> is inspected by the <code>code</code> of <code>pred</code> and emits either an <code>A::T</code> (pass) or <code>A{0}::T</code> (fail) as the rhs obj. The most overloaded instruction in mtron is <code>as()</code>. This instruction alters the <a href="https://en.wikipedia.org/wiki/Nominal_type_system">nominal type</a> of an obj. This doesn&#8217;t change it&#8217;s existential type as an obj has an infinite amount of types and such naming is practical as the "working type" of the obj. Examples of <code>pred()</code> and <code>as()</code> in action are presented below.</p>
@@ -2492,24 +2508,24 @@ Yield the <em>range</em> (<code>&gt;&gt;</code>) of the relation constructed (th
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; nat -&gt; int::T[?&gt;0][-&lt;|[is(lt(0)) =&gt; * -1,_ =&gt; _]&gt;&gt;]     <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; nat -&gt; int::T[?&gt;0][-&lt;|[is(lt(0)) =&gt; * -1,_ =&gt; _]&gt;&gt;]     ​1​
 ==&gt;int::T[is(gt(0))][choose([
   is(lt(0))=&gt;mult(-1),
   id()=&gt;id()]).rshift()]
-mtron&gt; *nat     <i class="conum" data-value="2"></i><b>(2)</b>
+mtron&gt; *nat     ​2​
 ==&gt;int::T[is(gt(0))][choose([
   is(lt(0))=&gt;mult(-1),
   id()=&gt;id()]).rshift()]
-mtron&gt; nat::2     <i class="conum" data-value="3"></i><b>(3)</b>
+mtron&gt; nat::2     ​3​
 ==&gt;nat::2
-mtron&gt; nat::-2     <i class="conum" data-value="4"></i><b>(4)</b>
+mtron&gt; nat::-2     ​4​
 ==&gt;nat::2
-mtron&gt; 2.as(nat::T)     <i class="conum" data-value="5"></i><b>(5)</b>
+mtron&gt; 2.as(nat::T)     ​5​
 ==&gt;2
-mtron&gt;  -2.as(nat::T)     <i class="conum" data-value="6"></i><b>(6)</b>
+mtron&gt;  -2.as(nat::T)     ​6​
 ==&gt;fail::[-2 is not a is(gt(0))
   -2=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/462
-mtron&gt;  nat::2 * -1     <i class="conum" data-value="7"></i><b>(7)</b>
+mtron&gt;  nat::2 * -1     ​7​
 ==&gt;fail::[nat::-2 is not a int::T[is(gt(0))][choose([
   is(lt(0))=&gt;mult(-1),
   id()=&gt;id()]).rshift()]][...]@/sys/fail/468</code></pre>
@@ -2539,7 +2555,7 @@ The predicate component of the type definition tests an <code>int</code> to dete
 <div class="paragraph">
 <p>While every <code>type</code> is an <code>obj</code>, not every <code>obj</code> is a <code>type</code>.
 Those <code>objs</code> that are not <code>types</code> are <em>instances</em> of some <code>type</code>.
-This is the foundation for all other <code>objs</code> in {{c}}m{{y}}E{{y}}t{{b}}a{{g}}T{{g}}R{{c}}O{{b}}N{{X}}.</p>
+This is the foundation for all other <code>objs</code> in {{c}}m{{m}}e{{g}}T{{y}}A{{c}}t{{m}}R{{r}}o{{g}}N{{X}}.</p>
 </div>
 <h4 id="_cascading_type_constructions" class="discrete">cascading type constructions</h4>
 <h3 id="_mono_types" class="discrete">mono types</h3>
@@ -2601,17 +2617,17 @@ This is the foundation for all other <code>objs</code> in {{c}}m{{y}}E{{y}}t{{b}
 </table></div></td>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; 0xabcd + 0x1234     <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; 0xabcd + 0x1234     ​1​
 ==&gt;0xabcd1234
-mtron&gt; true + false     <i class="conum" data-value="2"></i><b>(2)</b>
+mtron&gt; true + false     ​2​
 ==&gt;true
-mtron&gt; 1 + 2     <i class="conum" data-value="3"></i><b>(3)</b>
+mtron&gt; 1 + 2     ​3​
 ==&gt;3
-mtron&gt; 1.34 + 2.45     <i class="conum" data-value="4"></i><b>(4)</b>
+mtron&gt; 1.34 + 2.45     ​4​
 ==&gt;3.7900
-mtron&gt; "abc" + "def"     <i class="conum" data-value="5"></i><b>(5)</b>
+mtron&gt; "abc" + "def"     ​5​
 ==&gt;'abcdef'
-mtron&gt; a/b/c * d/e/f     <i class="conum" data-value="6"></i><b>(6)</b>
+mtron&gt; a/b/c * d/e/f     ​6​
 ==&gt;a/b/c/d/e/f</code></pre>
 </div>
 </div></div></td>
@@ -2630,9 +2646,9 @@ mtron&gt; a/b/c * d/e/f     <i class="conum" data-value="6"></i><b>(6)</b>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; 'metatron'.as(bytes::T)     <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; 'metatron'.as(bytes::T)     ​1​
 ==&gt;0x6d65746174726f6e
-mtron&gt; bytes::'48656c6c6f'     <i class="conum" data-value="2"></i><b>(2)</b>
+mtron&gt; bytes::'48656c6c6f'     ​2​
 ==&gt;ERROR: '48656c6c6f' is not a bytes::T</code></pre>
 </div>
 </div>
@@ -2656,13 +2672,13 @@ mtron&gt; bytes::'48656c6c6f'     <i class="conum" data-value="2"></i><b>(2)</b>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; kB::1024.as(mB::T)     <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; kB::1024.as(mB::T)     ​1​
 ==&gt;ERROR: unable to convert int::T to real::T[studio.phaseshift.metatron.isa.m.type.Obj:584]
-mtron&gt; mB::1.as(kB::T)     <i class="conum" data-value="2"></i><b>(2)</b>
+mtron&gt; mB::1.as(kB::T)     ​2​
 ==&gt;ERROR: unable to convert int::T to real::T[studio.phaseshift.metatron.isa.m.type.Obj:584]
-mtron&gt; gB::5.as(mB::T)     <i class="conum" data-value="3"></i><b>(3)</b>
+mtron&gt; gB::5.as(mB::T)     ​3​
 ==&gt;ERROR: unable to convert int::T to real::T[studio.phaseshift.metatron.isa.m.type.Obj:584]
-mtron&gt; pB::1.as(tB::T)     <i class="conum" data-value="4"></i><b>(4)</b>
+mtron&gt; pB::1.as(tB::T)     ​4​
 ==&gt;ERROR: unable to convert int::T to real::T[studio.phaseshift.metatron.isa.m.type.Obj:584]</code></pre>
 </div>
 </div>
@@ -2694,13 +2710,13 @@ mtron&gt; pB::1.as(tB::T)     <i class="conum" data-value="4"></i><b>(4)</b>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; mB::1024.eq(gB::1)     <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; mB::1024.eq(gB::1)     ​1​
 ==&gt;ERROR: unable to convert int::T to real::T[studio.phaseshift.metatron.isa.m.type.Obj:584]
-mtron&gt; kB::1024.eq(mB::1)     <i class="conum" data-value="2"></i><b>(2)</b>
+mtron&gt; kB::1024.eq(mB::1)     ​2​
 ==&gt;ERROR: unable to convert int::T to real::T[studio.phaseshift.metatron.isa.m.type.Obj:584]
-mtron&gt; gB::2.eq(mB::2048)     <i class="conum" data-value="3"></i><b>(3)</b>
+mtron&gt; gB::2.eq(mB::2048)     ​3​
 ==&gt;ERROR: unable to convert int::T to real::T[studio.phaseshift.metatron.isa.m.type.Obj:584]
-mtron&gt; tB::1.eq(gB::1024)     <i class="conum" data-value="4"></i><b>(4)</b>
+mtron&gt; tB::1.eq(gB::1024)     ​4​
 ==&gt;ERROR: unable to convert int::T to real::T[studio.phaseshift.metatron.isa.m.type.Obj:584]</code></pre>
 </div>
 </div>
@@ -2778,11 +2794,11 @@ The two primary poly types are:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; [a,b,c]     <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; [a,b,c]     ​1​
 ==&gt;[a,b,c]
-mtron&gt; [1,2,3]     <i class="conum" data-value="2"></i><b>(2)</b>
+mtron&gt; [1,2,3]     ​2​
 ==&gt;[1,2,3]
-mtron&gt; [,]     <i class="conum" data-value="3"></i><b>(3)</b>
+mtron&gt; [,]     ​3​
 ==&gt;[,]</code></pre>
 </div>
 </div>
@@ -2807,11 +2823,11 @@ mtron&gt; [,]     <i class="conum" data-value="3"></i><b>(3)</b>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; [a=&gt;1,b=&gt;2,c=&gt;3]     <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; [a=&gt;1,b=&gt;2,c=&gt;3]     ​1​
 ==&gt;[a=&gt;1,b=&gt;2,c=&gt;3]
-mtron&gt; [name=&gt;'Alice',age=&gt;30]     <i class="conum" data-value="2"></i><b>(2)</b>
+mtron&gt; [name=&gt;'Alice',age=&gt;30]     ​2​
 ==&gt;[name=&gt;'Alice',age=&gt;30]
-mtron&gt; [=&gt;]     <i class="conum" data-value="3"></i><b>(3)</b>
+mtron&gt; [=&gt;]     ​3​
 ==&gt;[=&gt;]</code></pre>
 </div>
 </div>
@@ -2858,15 +2874,15 @@ mtron&gt; [=&gt;]     <i class="conum" data-value="3"></i><b>(3)</b>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; [1,2,3]     <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; [1,2,3]     ​1​
 ==&gt;[1,2,3]
-mtron&gt; [1,2,3].count()     <i class="conum" data-value="2"></i><b>(2)</b>
+mtron&gt; [1,2,3].count()     ​2​
 ==&gt;1
-mtron&gt; [1,2,3]&gt;-.count()     <i class="conum" data-value="3"></i><b>(3)</b>
+mtron&gt; [1,2,3]&gt;-.count()     ​3​
 ==&gt;3
-mtron&gt; [a=&gt;1,b=&gt;2].count()     <i class="conum" data-value="4"></i><b>(4)</b>
+mtron&gt; [a=&gt;1,b=&gt;2].count()     ​4​
 ==&gt;1
-mtron&gt; [a=&gt;1,b=&gt;2]&gt;-.count()     <i class="conum" data-value="5"></i><b>(5)</b>
+mtron&gt; [a=&gt;1,b=&gt;2]&gt;-.count()     ​5​
 ==&gt;2</code></pre>
 </div>
 </div>
@@ -2899,26 +2915,26 @@ mtron&gt; [a=&gt;1,b=&gt;2]&gt;-.count()     <i class="conum" data-value="5"></i
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; [1,2,3].reverse()     <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; [1,2,3].reverse()     ​1​
 ==&gt;[3,2,1]
-mtron&gt; [1,2,3].plus([4,5])     <i class="conum" data-value="2"></i><b>(2)</b>
+mtron&gt; [1,2,3].plus([4,5])     ​2​
 ==&gt;[
  1,
  2,
  3,
  4,
  5]
-mtron&gt; [1,2,3].merge()     <i class="conum" data-value="3"></i><b>(3)</b>
+mtron&gt; [1,2,3].merge()     ​3​
 ==&gt;1
 ==&gt;2
 ==&gt;3
-mtron&gt; [a=&gt;1,b=&gt;2].dom()     <i class="conum" data-value="4"></i><b>(4)</b>
+mtron&gt; [a=&gt;1,b=&gt;2].dom()     ​4​
 ==&gt;a
 ==&gt;b
-mtron&gt; [a=&gt;1,b=&gt;2].rng()     <i class="conum" data-value="5"></i><b>(5)</b>
+mtron&gt; [a=&gt;1,b=&gt;2].rng()     ​5​
 ==&gt;1
 ==&gt;2
-mtron&gt; [a=&gt;1,b=&gt;2,c=&gt;3].select([a=&gt;_,b=&gt;_])     <i class="conum" data-value="6"></i><b>(6)</b>
+mtron&gt; [a=&gt;1,b=&gt;2,c=&gt;3].select([a=&gt;_,b=&gt;_])     ​6​
 ==&gt;[a=&gt;1,b=&gt;2]</code></pre>
 </div>
 </div>
@@ -3022,13 +3038,13 @@ Functions can be composed using the ring multiplication operator (<code>.</code>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; x -&gt; 42     <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; x -&gt; 42     ​1​
 ==&gt;42
-mtron&gt; *x     <i class="conum" data-value="2"></i><b>(2)</b>
+mtron&gt; *x     ​2​
 ==&gt;42
-mtron&gt; y -&gt; [a=&gt;1,b=&gt;2,c=&gt;3]     <i class="conum" data-value="3"></i><b>(3)</b>
+mtron&gt; y -&gt; [a=&gt;1,b=&gt;2,c=&gt;3]     ​3​
 ==&gt;[a=&gt;1,b=&gt;2,c=&gt;3]
-mtron&gt; *y     <i class="conum" data-value="4"></i><b>(4)</b>
+mtron&gt; *y     ​4​
 ==&gt;[a=&gt;1,b=&gt;2,c=&gt;3]</code></pre>
 </div>
 </div>
@@ -3057,11 +3073,11 @@ mtron&gt; *y     <i class="conum" data-value="4"></i><b>(4)</b>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; base -&gt; 10     <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; base -&gt; 10     ​1​
 ==&gt;10
-mtron&gt; result -&gt; *base.plus(5).mult(2)     <i class="conum" data-value="2"></i><b>(2)</b>
+mtron&gt; result -&gt; *base.plus(5).mult(2)     ​2​
 ==&gt;30
-mtron&gt; *result     <i class="conum" data-value="3"></i><b>(3)</b>
+mtron&gt; *result     ​3​
 ==&gt;10</code></pre>
 </div>
 </div>
@@ -3086,17 +3102,17 @@ mtron&gt; *result     <i class="conum" data-value="3"></i><b>(3)</b>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; nums -&gt; {1,2,3,4,5}     <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; nums -&gt; {1,2,3,4,5}     ​1​
 ==&gt;1
 ==&gt;2
 ==&gt;3
 ==&gt;4
 ==&gt;5
-mtron&gt; filtered -&gt; *nums-&lt;[?&gt;3 =&gt; _, _ =&gt; noobj]&gt;&gt;     <i class="conum" data-value="2"></i><b>(2)</b>
+mtron&gt; filtered -&gt; *nums-&lt;[?&gt;3 =&gt; _, _ =&gt; noobj]&gt;&gt;     ​2​
 ==&gt;ERROR: filtered -&gt; *nums-&lt;[?&gt;3 =&gt; _, _ =&gt; noobj]&gt;&gt;
                   ^ end of input expected
 
-mtron&gt; *filtered     <i class="conum" data-value="3"></i><b>(3)</b></code></pre>
+mtron&gt; *filtered     ​3​</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -3130,13 +3146,13 @@ odd::T ....... nat::T ......even::T
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; nat  -&gt; int::T[?&gt;0]     <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; nat  -&gt; int::T[?&gt;0]     ​1​
 ==&gt;int::T[is(gt(0))]
-mtron&gt; age  -&gt; nat::T[?&lt;120]     <i class="conum" data-value="2"></i><b>(2)</b>
+mtron&gt; age  -&gt; nat::T[?&lt;120]     ​2​
 ==&gt;int::T[is(lt(120))]
-mtron&gt; odd  -&gt; int::T[is(mod(2).eq(1))]     <i class="conum" data-value="3"></i><b>(3)</b>
+mtron&gt; odd  -&gt; int::T[is(mod(2).eq(1))]     ​3​
 ==&gt;int::T[is(mod(2).eq(1))]
-mtron&gt; even -&gt; int::T[is(mod(2).eq(0))]     <i class="conum" data-value="4"></i><b>(4)</b>
+mtron&gt; even -&gt; int::T[is(mod(2).eq(0))]     ​4​
 ==&gt;int::T[is(mod(2).eq(0))]</code></pre>
 </div>
 </div>
@@ -3591,7 +3607,7 @@ mtron&gt; memspace::[
   focus=&gt;inst?noobj&lt;=#{?}(),
   panes=&gt;inst?noobj&lt;=#{?}(),
   subq=&gt;inst?noobj&lt;=#{?}()]]@/usr/ui/console
-mtron&gt; */usr/ui/console     <i class="conum" data-value="1"></i><b>(1)</b>
+mtron&gt; */usr/ui/console     ​1​
 ==&gt;console::[
  metatron_version=&gt;&lt;0.1-alpha&gt;,
  history=&gt;!history(#::T),
@@ -3635,12 +3651,12 @@ mtron&gt; */usr/ui/console     <i class="conum" data-value="1"></i><b>(1)</b>
   focus=&gt;inst?noobj&lt;=#{?}(),
   panes=&gt;inst?noobj&lt;=#{?}(),
   subq=&gt;inst?noobj&lt;=#{?}()]]
-mtron&gt; */usr/ui/console/pane/0     <i class="conum" data-value="2"></i><b>(2)</b>
+mtron&gt; */usr/ui/console/pane/0     ​2​
 ==&gt;/m/mach/console/pane::[
  result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
  prompt=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
  stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]
-mtron&gt; /usr/ui/console/pane/0/result('printed at ==&gt;xyz')     <i class="conum" data-value="3"></i><b>(3)</b></code></pre>
+mtron&gt; /usr/ui/console/pane/0/result('printed at ==&gt;xyz')     ​3​</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -3737,14 +3753,14 @@ together. Via the colocation of two objs within the confines of a <code>poly</co
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; 1-&lt;[?&gt;0,?&gt;2,*/usr/${_}]     <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; 1-&lt;[?&gt;0,?&gt;2,*/usr/${_}]     ​1​
 ==&gt;[
  1,
  noobj,
  noobj]
-mtron&gt; 1-&lt;[?&gt;0,?&gt;2,*/usr/${_}]&gt;-     <i class="conum" data-value="2"></i><b>(2)</b>
+mtron&gt; 1-&lt;[?&gt;0,?&gt;2,*/usr/${_}]&gt;-     ​2​
 ==&gt;1
-mtron&gt; 1-&lt;[?&gt;0,?&gt;2,*/usr/${_}]&gt;-.map(&lt;${g:V/_}&gt;)&gt;&gt;+     <i class="conum" data-value="3"></i><b>(3)</b></code></pre>
+mtron&gt; 1-&lt;[?&gt;0,?&gt;2,*/usr/${_}]&gt;-.map(&lt;${g:V/_}&gt;)&gt;&gt;+     ​3​</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -3767,13 +3783,13 @@ mtron&gt; 1-&lt;[?&gt;0,?&gt;2,*/usr/${_}]&gt;-.map(&lt;${g:V/_}&gt;)&gt;&gt;+  
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; a=&gt;b=&gt;c     <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; a=&gt;b=&gt;c     ​1​
 ==&gt;a=&gt;(b=&gt;c)
 mtron&gt; [a=&gt;{b,c},
         b=&gt;{a,c},
-        c=&gt;{a,b}]     <i class="conum" data-value="2"></i><b>(2)</b>
+        c=&gt;{a,b}]     ​2​
 ==&gt;[a=&gt;{b,c},b=&gt;{a,c},c=&gt;{a,b}]
-mtron&gt; [a,b,c]     <i class="conum" data-value="3"></i><b>(3)</b>
+mtron&gt; [a,b,c]     ​3​
 ==&gt;[a,b,c]</code></pre>
 </div>
 </div>
@@ -3801,9 +3817,9 @@ mtron&gt; [a,b,c]     <i class="conum" data-value="3"></i><b>(3)</b>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; a=&gt;b=&gt;c     <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; a=&gt;b=&gt;c     ​1​
 ==&gt;a=&gt;(b=&gt;c)
-mtron&gt; a-&gt;b-&gt;c     <i class="conum" data-value="2"></i><b>(2)</b>
+mtron&gt; a-&gt;b-&gt;c     ​2​
 ==&gt;c</code></pre>
 </div>
 </div>
@@ -3821,13 +3837,13 @@ mtron&gt; a-&gt;b-&gt;c     <i class="conum" data-value="2"></i><b>(2)</b>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; a=&gt;b=&gt;c.&gt;&gt;     <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; a=&gt;b=&gt;c.&gt;&gt;     ​1​
 ==&gt;b=&gt;c
-mtron&gt; a=&gt;b=&gt;c.&gt;&gt;.&gt;&gt;     <i class="conum" data-value="2"></i><b>(2)</b>
+mtron&gt; a=&gt;b=&gt;c.&gt;&gt;.&gt;&gt;     ​2​
 ==&gt;c
-mtron&gt; a-&gt;b-&gt;c.*a     <i class="conum" data-value="3"></i><b>(3)</b>
+mtron&gt; a-&gt;b-&gt;c.*a     ​3​
 ==&gt;b
-mtron&gt; a-&gt;b-&gt;c.**a     <i class="conum" data-value="4"></i><b>(4)</b>
+mtron&gt; a-&gt;b-&gt;c.**a     ​4​
 ==&gt;c</code></pre>
 </div>
 </div>
@@ -3859,7 +3875,7 @@ This is due to the fact that <code>&lt;+/#&gt;</code> is the stack&#8217;s patte
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; [== a-&gt;(b-&gt;c) ==]     <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; [== a-&gt;(b-&gt;c) ==]     ​1​
 mtron&gt; *a
 ==&gt;b
 mtron&gt; **a
@@ -3990,17 +4006,17 @@ from(a) [-- read 1 from a --]</code></pre>
 ==&gt;[
  x,
  [y=&gt;[z=&gt;2]]]
-mtron&gt; *a/b/c     <i class="conum" data-value="1"></i><b>(1)</b>
+mtron&gt; *a/b/c     ​1​
 ==&gt;[
  x,
  [y=&gt;[z=&gt;2]]]
-mtron&gt; *a/b/c/0     <i class="conum" data-value="2"></i><b>(2)</b>
+mtron&gt; *a/b/c/0     ​2​
 ==&gt;x
-mtron&gt; *a/b/c/1     <i class="conum" data-value="3"></i><b>(3)</b>
+mtron&gt; *a/b/c/1     ​3​
 ==&gt;[y=&gt;[z=&gt;2]]
-mtron&gt; *a/b/c/1/y     <i class="conum" data-value="4"></i><b>(4)</b>
+mtron&gt; *a/b/c/1/y     ​4​
 ==&gt;[z=&gt;2]
-mtron&gt; *a/b/c/1/y/z     <i class="conum" data-value="5"></i><b>(5)</b>
+mtron&gt; *a/b/c/1/y/z     ​5​
 ==&gt;2</code></pre>
 </div>
 </div></div></td>
@@ -4065,21 +4081,23 @@ mtron&gt; *a/b/c/1/y/z     <i class="conum" data-value="5"></i><b>(5)</b>
 </div></div></td>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
-<pre>a/b-&gt;1
-a/c-&gt;2</pre>
+<pre>a-&gt;[b=&gt;1,c=&gt;2]</pre>
 </div>
 </div></div></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
-<pre>a-&gt;[b=&gt;1,c=&gt;2]</pre>
+<pre>     ┌──b──⮞1
+   a─┤
+     └──c──⮞2</pre>
 </div>
 </div></div></td>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
-<pre>a__b-&gt;1
- \_c-&gt;2</pre>
+<pre>    a──b──⮞1
+
+    a──c──⮞2</pre>
 </div>
 </div></div></td>
 </tr>
@@ -4089,36 +4107,39 @@ a/c-&gt;2</pre>
 <table>
 <tr>
 <td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>the uri ring defines multiplcation as "extension", where \$ a \cdot b \$ is <code>a/b</code>.</td>
+<td>the uri ring defines multiplcation as "extension", where \(x \cdot y\) is <code>x/y</code>.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="2"></i><b>2</b></td>
-<td>the uri ring defines addition as "branching", where \$ab + ac\$ is <code>{a/b,a/c}</code>.</td>
+<td>the uri ring defines addition as "branching", where \(x + y\) is <code>{x,y}</code>.</td>
 </tr>
 </table>
 </div></div></td>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p>The two examples represent the equivalent data because there exists a bijection that maps <strong>A</strong> to <strong>B</strong> and <strong>B</strong> to <strong>A</strong>. In other words, they are isomorphic structures within the category of ring. The first form is the equation:</p>
+<p>The two examples represent the equivalent data because there exists a bijection that maps <strong>A</strong> to <strong>B</strong> and <strong>B</strong> to <strong>A</strong>. In other words, they are isomorphic structures within the category of ring. The form <strong>A</strong> is captured by the equation:</p>
 </div>
 <div class="paragraph">
 <p>\[
-a \cdot (b + c)
+a \cdot (b + c) = \{1,2\}
 \]</p>
 </div>
 <div class="paragraph">
-<p>The second is written:</p>
+<p>Form <strong>B</strong> has the equation:</p>
 </div>
 <div class="paragraph">
 <p>\[
-(a + b) \cdot (a + c)
+(a \cdot b) + (a \cdot c) = \{1,2\}
 \]</p>
 </div>
 <div class="paragraph">
-<p>Thus, due to the fact that multiplication distributes over addition, the two equations, while typographically different are in fact the same data.</p>
+<p>Thus, due to the ring axiom that states multiplication distributes over addition, the two equations, while typographically different, are, in fact, algebraically equivalent.</p>
 </div>
 <div class="paragraph">
 <p>\[
-a \cdot (b + c) = (a + b) \cdot (a + c)
+\begin{align*}
+a \cdot (b + c)           &amp;=&amp;         \\
+(a \cdot b) + (a \cdot c) &amp;= ab + ac \\
+\end{align*}
 \]</p>
 </div></div></td>
 </tr>
@@ -4140,13 +4161,13 @@ a \cdot (b + c) = (a + b) \cdot (a + c)
 <tr>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
-<pre>*a/</pre>
+<pre>    *a/</pre>
 </div>
 </div></div></td>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
-<pre>*a/b/
-*a/c/</pre>
+<pre>    *a/b/
+    *a/c/</pre>
 </div>
 </div></div></td>
 </tr>
@@ -4165,7 +4186,8 @@ a \cdot (b + c) = (a + b) \cdot (a + c)
 </tbody>
 </table></div></td>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p>The two examples are "equal" because they can be rewritten into each using the ring algebra. The first form is the equation:</p>
+<p>The inverse holds as well. That is, when reading from space, <code>*a/</code> and *a/b
+The two examples are "equal" because they can be rewritten into each using the ring algebra. The first form is the equation:</p>
 </div>
 <div class="paragraph">
 <p>\[
@@ -4191,6 +4213,29 @@ a \cdot (b + c) = (a + b) \cdot (a + c)
 </tr>
 </tbody>
 </table>
+<div class="paragraph">
+<p>If the implication of these equalities is not readily apparent, then understand the following. The multiplicative union of uris to an obj is a dependent relationship. There exists a colocational dependence where <code>a</code> is coupling <code>b</code> and <code>c</code> together into a single structure that then references/contains <code>1</code> and <code>2</code>.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>     ┌──b──⮞1
+   a─┤
+     └──c──⮞2</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>On the other hand, the additive union of the uris is an independent relationship. There are two representations of <code>a</code> and thus, <code>a/b =&gt; 1</code> is distinct, requiring no colocation with <code>a/c =&gt; 2</code>. This means that <code>a/b</code> can be stored in a document database in Japan and <code>a/c</code> an be stored in <code>.txt</code> file on some file system in Ohio and when resolved, the same <code>{1,2}</code> result is yielded (albeit with different time/space characteristics compared to the multiplicative, colocated representation of the data).</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>    a──b──⮞1
+
+    a──c──⮞2</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>A further entailment states that a dataset can be rewritten from a <strong>concatenative/multiplicative</strong> form to a <strong>union/additive</strong> form so as to maintain one subset of the data in a specialized space optimized for the production requirements of that data and the other subset in some other specialized space according to its requirements. More specifically, some data needs to be "hot in cache" in order to meet response time requirements, and some data should be "iced in archive" when the production requirements don&#8217;t require rapid response times and reducing production costs with cheap disk storage. With metatron, expressing such partitions while also ensuring said partitions are resolved correctly is built into the fundamental mathematics/algorithm of the sytem&#8201;&#8212;&#8201;<strong>the ring algebra for structural composition</strong>.</p>
+</div>
 <h4 id="_isomorphic_ne_identical" class="discrete">Isomorphic \$ \ne \$ Identical</h4>
 <div class="paragraph">
 <p>A <em>matrix</em> is an \$n \times m\$ data structure composed of \$n\$ vectors/row, each with \$m\$ elements/columns. A relational database <em>table</em> is an example of a matrix, where the entries typically span numeric and non-numeric data types.
@@ -4265,14 +4310,14 @@ mtron&gt; m/2/2 -&gt; 10
 ==&gt;10
 mtron&gt; m/2/3 -&gt; 11
 ==&gt;11
-mtron&gt; *m/0/0     <i class="conum" data-value="1"></i><b>(1)</b>
+mtron&gt; *m/0/0     ​1​
 ==&gt;0
-mtron&gt; *m/0/+     <i class="conum" data-value="2"></i><b>(2)</b>
+mtron&gt; *m/0/+     ​2​
 ==&gt;2
 ==&gt;3
 ==&gt;0
 ==&gt;1
-mtron&gt; *m/+/0     <i class="conum" data-value="3"></i><b>(3)</b>
+mtron&gt; *m/+/0     ​3​
 ==&gt;0
 ==&gt;4
 ==&gt;8</code></pre>
@@ -4286,14 +4331,14 @@ mtron&gt; m/1 -&gt; [4,5,6,7]
 ==&gt;[4,5,6,7]
 mtron&gt; m/2 -&gt; [8,9,10,11]
 ==&gt;[8,9,10,11]
-mtron&gt; *m/0/0     <i class="conum" data-value="1"></i><b>(1)</b>
+mtron&gt; *m/0/0     ​1​
 ==&gt;0
-mtron&gt; *m/0/+     <i class="conum" data-value="2"></i><b>(2)</b>
+mtron&gt; *m/0/+     ​2​
 ==&gt;2
 ==&gt;3
 ==&gt;0
 ==&gt;1
-mtron&gt; *m/+/0     <i class="conum" data-value="3"></i><b>(3)</b>
+mtron&gt; *m/+/0     ​3​
 ==&gt;0
 ==&gt;4
 ==&gt;8</code></pre>
@@ -4308,14 +4353,14 @@ mtron&gt; *m/+/0     <i class="conum" data-value="3"></i><b>(3)</b>
  [0,1,2,3],
  [4,5,6,7],
  [8,9,10,11]]
-mtron&gt; *m/0/0     <i class="conum" data-value="1"></i><b>(1)</b>
+mtron&gt; *m/0/0     ​1​
 ==&gt;0
-mtron&gt; *m/0/+     <i class="conum" data-value="2"></i><b>(2)</b>
+mtron&gt; *m/0/+     ​2​
 ==&gt;2
 ==&gt;3
 ==&gt;0
 ==&gt;1
-mtron&gt; *m/+/0     <i class="conum" data-value="3"></i><b>(3)</b>
+mtron&gt; *m/+/0     ​3​
 ==&gt;0
 ==&gt;4
 ==&gt;8</code></pre>
@@ -4809,7 +4854,7 @@ mtron&gt; */usr/notes/#?subq
   mqtt::T,
   haos::T]]@/m/iot
 mtron&gt;  import(/m/llm)
-{{b}}.{{g}}.{{b}}.{{X}}</code></pre>
+{{m}}.{{b}}.{{c}}.{{X}}</code></pre>
 </div>
 </div>
 </div>
@@ -4843,7 +4888,7 @@ The inspiration for metatron&#8217;s URI addressing schema was inspired by the v
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; mqtt::[pattern =&gt; &lt;ha:#&gt;,
               host    =&gt; mqtt://localhost:1883,
-              route   =&gt; [ha:=&gt;&lt;/home/chips&gt;]]@/sys/space/esp32     <i class="conum" data-value="1"></i><b>(1)</b>
+              route   =&gt; [ha:=&gt;&lt;/home/chips&gt;]]@/sys/space/esp32     ​1​
 ==&gt;ERROR: com.hivemq.client.mqtt.exceptions.ConnectionFailedException: io.netty.channel.AbstractChannel$AnnotatedConnectException: Connection refused: localhost/127.0.0.1:1883: com.hivemq.client.mqtt.exceptions.ConnectionFailedException: io.netty.channel.AbstractChannel$AnnotatedConnectException: Connection refused: localhost/127.0.0.1:1883
   	java.util.concurrent.CompletableFuture [line 345]
   	java.util.concurrent.CompletableFuture [line 440]
@@ -4854,10 +4899,10 @@ mtron&gt; *ha:main_field/sensor/+.-&lt;|[
          &gt;&gt;temp.?&lt;50  =&gt; print('too cold for watering'),
          &gt;&gt;humid.?&gt;30 =&gt; print('too humid for watering'),
          _            =&gt; print('starting drip system').
-                         ha:main_field/actuator/drip(minutes::25)]     <i class="conum" data-value="2"></i><b>(2)</b>
-mtron&gt; ha:main_field/actuator/+/active?subq -&gt; sub::[on_recv=&gt;print(_)]     <i class="conum" data-value="3"></i><b>(3)</b>
+                         ha:main_field/actuator/drip(minutes::25)]     ​2​
+mtron&gt; ha:main_field/actuator/+/active?subq -&gt; sub::[on_recv=&gt;print(_)]     ​3​
 ==&gt;sub::[on_recv=&gt;print(id())]
-mtron&gt; *ha:main_field/actuator/#?subq     <i class="conum" data-value="4"></i><b>(4)</b></code></pre>
+mtron&gt; *ha:main_field/actuator/#?subq     ​4​</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -4963,7 +5008,7 @@ mtron&gt; *ha:main_field/actuator/#?subq     <i class="conum" data-value="4"></i
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; fsspace::[pattern  =&gt; fs:#,
                  route    =&gt; [fs:m =&gt; &lt;~/software/metatron&gt;,
                               fs:  =&gt; &lt;~/&gt; ],
-                 script   =&gt; !*boot/script]@/sys/space/localfs     <i class="conum" data-value="1"></i><b>(1)</b></code></pre>
+                 script   =&gt; !*boot/script]@/sys/space/localfs     ​1​</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -4988,7 +5033,7 @@ mtron&gt; *ha:main_field/actuator/#?subq     <i class="conum" data-value="4"></i
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys/space/localfs     <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys/space/localfs     ​1​
 ==&gt;fsspace::[
  pattern=&gt;fs:#,
  route=&gt;[
@@ -4996,9 +5041,9 @@ mtron&gt; *ha:main_field/actuator/#?subq     <i class="conum" data-value="4"></i
   fs:=&gt;/home/killswitch/],
  script=&gt;!*boot/script,
  space=&gt;[=&gt;]]
-mtron&gt; *fs:software/metatron     <i class="conum" data-value="2"></i><b>(2)</b>
+mtron&gt; *fs:software/metatron     ​2​
 ==&gt;dir::fs:m
-mtron&gt; *fs:m     <i class="conum" data-value="3"></i><b>(3)</b>
+mtron&gt; *fs:m     ​3​
 ==&gt;dir::fs:m</code></pre>
 </div>
 </div>
@@ -5020,7 +5065,7 @@ mtron&gt; *fs:m     <i class="conum" data-value="3"></i><b>(3)</b>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys/space/localfs     <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys/space/localfs     ​1​
 ==&gt;fsspace::[
  pattern=&gt;fs:#,
  route=&gt;[
@@ -5028,8 +5073,8 @@ mtron&gt; *fs:m     <i class="conum" data-value="3"></i><b>(3)</b>
   fs:=&gt;/home/killswitch/],
  script=&gt;!*boot/script,
  space=&gt;[=&gt;]]
-mtron&gt; */sys/space/localfs/script     <i class="conum" data-value="2"></i><b>(2)</b>
-mtron&gt; *&lt;fs:m/bin/metatron&gt;     <i class="conum" data-value="3"></i><b>(3)</b>
+mtron&gt; */sys/space/localfs/script     ​2​
+mtron&gt; *&lt;fs:m/bin/metatron&gt;     ​3​
 ==&gt;fail::[#!/bin/sh
 
 set -e
@@ -5042,7 +5087,7 @@ java -Dlogback.configurationFile=conf/logback.xml \
         studio.phaseshift.metatron.BootLoader "$1"
          ^ end of input expected
 ]
-mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T)     <i class="conum" data-value="4"></i><b>(4)</b>
+mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T)     ​4​
 ==&gt;fail::[#!/bin/sh
 
 set -e
@@ -5055,7 +5100,7 @@ java -Dlogback.configurationFile=conf/logback.xml \
         studio.phaseshift.metatron.BootLoader "$1"
          ^ end of input expected
 ]
-mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T).as(str::T)     <i class="conum" data-value="5"></i><b>(5)</b>
+mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T).as(str::T)     ​5​
 ==&gt;fail::[#!/bin/sh
 
 set -e
@@ -5183,14 +5228,13 @@ The <code>graphspace</code> of <code>/m/grph</code> uses <a href="http://tinkerp
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; grphspace::[
          pattern =&gt; g:#,
-         route   =&gt; [ g:=&gt;&lt;&gt;,
-                     g:V=&gt;V,
-                     g:E=&gt;E,
-                     g:S=&gt;/m/grph/schema/modern],
+         route   =&gt; [g:  =&gt; &lt;&gt;,
+                     g:V =&gt; V,
+                     g:E =&gt; E,
+                     g:S =&gt; /m/grph/schema/modern],
          native  =&gt; [factory  =&gt; mfactory::[=&gt;],
-                     load     =&gt; modern]
-       ]@/sys/space/modern     <i class="conum" data-value="1"></i><b>(1)</b>
-mtron&gt; *g:S     <i class="conum" data-value="2"></i><b>(2)</b>
+                     load     =&gt; modern]]@/sys/space/modern     ​1​
+mtron&gt; *g:S     ​2​
 ==&gt;S::T</code></pre>
 </div>
 </div>
@@ -5199,13 +5243,13 @@ mtron&gt; *g:S     <i class="conum" data-value="2"></i><b>(2)</b>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *g:V/1     <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *g:V/1     ​1​
 ==&gt;person::[age=&gt;29,name=&gt;'marko']
-mtron&gt; *g:V/1.outE()     <i class="conum" data-value="2"></i><b>(2)</b>
-mtron&gt; *g:V/1.outE().inV()     <i class="conum" data-value="3"></i><b>(3)</b>
-mtron&gt; *g:V/1.out()     <i class="conum" data-value="4"></i><b>(4)</b>
-mtron&gt; *g:V/1.out(knows).out(created)     <i class="conum" data-value="5"></i><b>(5)</b>
-mtron&gt; *g:V/1.out(knows).out(created)&gt;&gt;name     <i class="conum" data-value="6"></i><b>(6)</b></code></pre>
+mtron&gt; *g:V/1.outE()     ​2​
+mtron&gt; *g:V/1.outE().inV()     ​3​
+mtron&gt; *g:V/1.out()     ​4​
+mtron&gt; *g:V/1.out(knows).out(created)     ​5​
+mtron&gt; *g:V/1.out(knows).out(created)&gt;&gt;name     ​6​</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -5245,8 +5289,8 @@ graph encodings (discussed later when presenting hypergraphs).</p>
 <table class="tableblock frame-all grid-all stretch table-bordered small center">
 <caption class="title">Table 3. <code>/m/grph</code> instructions</caption>
 <colgroup>
-<col style="width: 27.2727%;">
 <col style="width: 36.3636%;">
+<col style="width: 27.2727%;">
 <col style="width: 36.3637%;">
 </colgroup>
 <thead>
@@ -5347,10 +5391,10 @@ traversals.</p>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; tblespace::[pattern =&gt; acme:#,
-              host         =&gt; &lt;mariadb://localhost:3306/acme?user=mtron&amp;password=mtron&gt;,
-              route        =&gt; [&lt;acme:&gt;=&gt;&lt;&gt;],
-              table        =&gt; [,],
-              driver       =&gt; &lt;org.mariadb.jdbc.Driver&gt;]@/sys/space/acme;</code></pre>
+                   host    =&gt; &lt;mariadb://localhost:3306/acme?user=mtron&amp;password=mtron&gt;,
+                   route   =&gt; [&lt;acme:&gt;=&gt;&lt;&gt;],
+                   table   =&gt; [,],
+                   driver  =&gt; &lt;org.mariadb.jdbc.Driver&gt;]@/sys/space/acme;</code></pre>
 </div>
 </div>
 <div class="exampleblock primary">
@@ -5363,19 +5407,19 @@ The following examples demonstrate selection and filtering using multi-segment u
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; @g:V/1&gt;&gt;=+[address/home/city =&gt; 'santa fe',
-                  address/work/city =&gt; 'nomansland']     <i class="conum" data-value="1"></i><b>(1)</b>
+                  address/work/city =&gt; 'nomansland']     ​1​
 ==&gt;person::[address/work/city=&gt;'nomansland',age=&gt;29,name=&gt;'marko',address/home/city=&gt;'santa fe']@g:V/1
-mtron&gt; *g:V/1/address/home/city     <i class="conum" data-value="2"></i><b>(2)</b>
+mtron&gt; *g:V/1/address/home/city     ​2​
 ==&gt;'santa fe'
-mtron&gt; *g:V/+.?==[address/+/city =&gt; 'santa fe']     <i class="conum" data-value="3"></i><b>(3)</b>
+mtron&gt; *g:V/+.?==[address/+/city =&gt; 'santa fe']     ​3​
 ==&gt;person::[address/work/city=&gt;'nomansland',age=&gt;29,name=&gt;'marko',address/home/city=&gt;'santa fe']@g:V/1
-mtron&gt; *g:V/+.==[address/+/city/ =&gt; _]     <i class="conum" data-value="4"></i><b>(4)</b>
+mtron&gt; *g:V/+.==[address/+/city/ =&gt; _]     ​4​
 ==&gt;[address/+/city/=&gt;{address/work/city=&gt;'nomansland',address/home/city=&gt;'santa fe'}]
 mtron&gt; *g:V/+.&gt;&gt;address/+/city
-       *g:V/+.&gt;&gt;address/+/city     <i class="conum" data-value="6"></i><b>(6)</b>
+       *g:V/+.&gt;&gt;address/+/city     ​6​
 ==&gt;{7}'nomansland'
 ==&gt;{7}'santa fe'
-mtron&gt; *g:V/+.&gt;&gt;address/#     <i class="conum" data-value="7"></i><b>(7)</b>
+mtron&gt; *g:V/+.&gt;&gt;address/#     ​7​
 ==&gt;'nomansland'
 ==&gt;'santa fe'</code></pre>
 </div>
@@ -5419,12 +5463,12 @@ mtron&gt; *g:V/+.&gt;&gt;address/#     <i class="conum" data-value="7"></i><b>(7
 <div class="content">
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *g:V/1==[_=&gt;_]     <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *g:V/1==[_=&gt;_]     ​1​
 ==&gt;[address/work/city=&gt;'nomansland',age=&gt;29,name=&gt;'marko',address/home/city=&gt;'santa fe']
 mtron&gt; @g:V/1&gt;&gt;=+[address=&gt;[
                     home =&gt; [city =&gt;'santa fe',
                              state=&gt;NM],
-                    work =&gt; !*&lt;../home&gt;]]     <i class="conum" data-value="2"></i><b>(2)</b>
+                    work =&gt; !*&lt;../home&gt;]]     ​2​
 ==&gt;person::[
  :address=&gt;[
   home=&gt;[city=&gt;'santa fe',state=&gt;NM],
@@ -5433,9 +5477,9 @@ mtron&gt; @g:V/1&gt;&gt;=+[address=&gt;[
  age=&gt;29,
  name=&gt;'marko',
  address/home/city=&gt;'santa fe']@g:V/1
-mtron&gt; *g:V/1/address/home/city     <i class="conum" data-value="3"></i><b>(3)</b>
+mtron&gt; *g:V/1/address/home/city     ​3​
 ==&gt;'santa fe'
-mtron&gt; *g:V/+.?==[address=&gt;[_ =&gt; [state=&gt;NM]]]     <i class="conum" data-value="4"></i><b>(4)</b>
+mtron&gt; *g:V/+.?==[address=&gt;[_ =&gt; [state=&gt;NM]]]     ​4​
 ==&gt;person::[
  :address=&gt;[
   home=&gt;[city=&gt;'santa fe',state=&gt;NM],
@@ -5444,7 +5488,7 @@ mtron&gt; *g:V/+.?==[address=&gt;[_ =&gt; [state=&gt;NM]]]     <i class="conum" 
  age=&gt;29,
  name=&gt;'marko',
  address/home/city=&gt;'santa fe']@g:V/1
-mtron&gt; *g:V/+.?==[address=&gt;[_ =&gt; [state=&gt;NM]]].&gt;&gt;address/+/city     <i class="conum" data-value="5"></i><b>(5)</b>
+mtron&gt; *g:V/+.?==[address=&gt;[_ =&gt; [state=&gt;NM]]].&gt;&gt;address/+/city     ​5​
 ==&gt;'santa fe'</code></pre>
 </div>
 </div>
@@ -5542,7 +5586,7 @@ mtron&gt; *g:V/+.?==[address=&gt;[_ =&gt; [state=&gt;NM]]].&gt;&gt;address/+/cit
 <tr>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *g:V/1     <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *g:V/1     ​1​
 ==&gt;person::[
  :address=&gt;[
   home=&gt;[city=&gt;'santa fe',state=&gt;NM],
@@ -5551,7 +5595,7 @@ mtron&gt; *g:V/+.?==[address=&gt;[_ =&gt; [state=&gt;NM]]].&gt;&gt;address/+/cit
  age=&gt;29,
  name=&gt;'marko',
  address/home/city=&gt;'santa fe']
-mtron&gt; *acme:customers/357     <i class="conum" data-value="2"></i><b>(2)</b>
+mtron&gt; *acme:customers/357     ​2​
 ==&gt;[
  customerName=&gt;'GiftsForHim.com',
  contactLastName=&gt;'MacKinlay',
@@ -5562,10 +5606,10 @@ mtron&gt; *acme:customers/357     <i class="conum" data-value="2"></i><b>(2)</b>
  country=&gt;'New Zealand',
  salesRepEmployeeNumber=&gt;!*acme:employees/1612,
  creditLimit=&gt;77700.0000]
-mtron&gt; *g:V/1.addE(consulted,|*acme:customers/357)     <i class="conum" data-value="3"></i><b>(3)</b>
-==&gt;fail::[unable to convert linkedhashmap to vertexmap[studio.phaseshift.metatron.isa.grph.grphInstSet:222]][...]@/sys/fail/84
-mtron&gt; *g:V/1.out(consulted)     <i class="conum" data-value="4"></i><b>(4)</b>
-mtron&gt; *g:V/1.out(consulted).matches(vrtx::T)     <i class="conum" data-value="5"></i><b>(5)</b>
+mtron&gt; @g:V/1.addE(consulted,|*acme:customers/357)     ​3​
+==&gt;fail::[unable to convert vertexmap to rec::T[studio.phaseshift.metatron.isa.grph.grphInstSet:222]][...]@/sys/fail/84
+mtron&gt; *g:V/1.out(consulted)     ​4​
+mtron&gt; *g:V/1.out(consulted).matches(vrtx::T)     ​5​
 ==&gt;false</code></pre>
 </div>
 </div>
@@ -5751,9 +5795,9 @@ mtron&gt; v5 -&gt; [,]
 ==&gt;[,]
 mtron&gt; v6 -&gt; [!*v4]
 ==&gt;[!*v4]
-mtron&gt; v1     <i class="conum" data-value="1"></i><b>(1)</b>
+mtron&gt; v1     ​1​
 ==&gt;v1
-mtron&gt; *v1     <i class="conum" data-value="2"></i><b>(2)</b>
+mtron&gt; *v1     ​2​
 ==&gt;[
  !*v2,
  !*v3,
@@ -5839,16 +5883,16 @@ mtron&gt; v5 -&gt; [,]
 ==&gt;[,]
 mtron&gt; v6 -&gt; [created=&gt;{!*v4}]
 ==&gt;[created=&gt;!*v4]
-mtron&gt; v1     <i class="conum" data-value="1"></i><b>(1)</b>
+mtron&gt; v1     ​1​
 ==&gt;v1
-mtron&gt; *v1     <i class="conum" data-value="2"></i><b>(2)</b>
+mtron&gt; *v1     ​2​
 ==&gt;[
  knows=&gt;{!*v2,!*v3},
  created=&gt;!*v4]
-mtron&gt; *v1.&gt;&gt;knows     <i class="conum" data-value="3"></i><b>(3)</b>
+mtron&gt; *v1.&gt;&gt;knows     ​3​
 ==&gt;[,]
 ==&gt;[created=&gt;{!*v4,!*v5}]
-mtron&gt; *v1.&gt;&gt;knows.&gt;&gt;created     <i class="conum" data-value="4"></i><b>(4)</b>
+mtron&gt; *v1.&gt;&gt;knows.&gt;&gt;created     ​4​
 ==&gt;{2}[,]</code></pre>
 </div>
 </div></div></td>
@@ -5913,37 +5957,37 @@ mtron&gt; v6 -&gt; [name=&gt;'peter',age=&gt;35,
  name=&gt;'peter',
  age=&gt;35,
  out_=&gt;[created=&gt;!*v4]]
-mtron&gt; v1     <i class="conum" data-value="1"></i><b>(1)</b>
+mtron&gt; v1     ​1​
 ==&gt;v1
-mtron&gt; *v1     <i class="conum" data-value="2"></i><b>(2)</b>
+mtron&gt; *v1     ​2​
 ==&gt;[
  name=&gt;'marko',
  age=&gt;29,
  out_=&gt;[
   knows=&gt;{!*v2,!*v3},
   created=&gt;!*v4]]
-mtron&gt; *v1.&gt;&gt;out_.&gt;&gt;knows     <i class="conum" data-value="3"></i><b>(3)</b>
+mtron&gt; *v1.&gt;&gt;out_.&gt;&gt;knows     ​3​
 ==&gt;[name=&gt;'vadas',age=&gt;27]
 ==&gt;[
  name=&gt;'josh',
  age=&gt;32,
  out_=&gt;[created=&gt;{!*v4,!*v5}]]
-mtron&gt; *v1.&gt;&gt;out_.&gt;&gt;knows.&gt;&gt;out_.&gt;&gt;created     <i class="conum" data-value="4"></i><b>(4)</b>
+mtron&gt; *v1.&gt;&gt;out_.&gt;&gt;knows.&gt;&gt;out_.&gt;&gt;created     ​4​
 ==&gt;[name=&gt;'lop',lang=&gt;java]
 ==&gt;[name=&gt;'ripple',lang=&gt;java]
-mtron&gt; *v1.&gt;&gt;out_.&gt;&gt;knows.&gt;&gt;out_.&gt;&gt;created.&gt;&gt;name     <i class="conum" data-value="5"></i><b>(5)</b>
+mtron&gt; *v1.&gt;&gt;out_.&gt;&gt;knows.&gt;&gt;out_.&gt;&gt;created.&gt;&gt;name     ​5​
 ==&gt;'lop'
 ==&gt;'ripple'
-mtron&gt; *v1.&gt;&gt;out_/knows     <i class="conum" data-value="3"></i><b>(3)</b>
+mtron&gt; *v1.&gt;&gt;out_/knows     ​3​
 ==&gt;[name=&gt;'vadas',age=&gt;27]
 ==&gt;[
  name=&gt;'josh',
  age=&gt;32,
  out_=&gt;[created=&gt;{!*v4,!*v5}]]
-mtron&gt; *v1.&gt;&gt;out_/knows.&gt;&gt;out_/created     <i class="conum" data-value="4"></i><b>(4)</b>
+mtron&gt; *v1.&gt;&gt;out_/knows.&gt;&gt;out_/created     ​4​
 ==&gt;[name=&gt;'lop',lang=&gt;java]
 ==&gt;[name=&gt;'ripple',lang=&gt;java]
-mtron&gt; *v1.&gt;&gt;out_/knows.&gt;&gt;out_/created.&gt;&gt;name     <i class="conum" data-value="5"></i><b>(5)</b>
+mtron&gt; *v1.&gt;&gt;out_/knows.&gt;&gt;out_/created.&gt;&gt;name     ​5​
 ==&gt;'lop'
 ==&gt;'ripple'</code></pre>
 </div>
@@ -5977,18 +6021,18 @@ knows  vadas       │          ripple
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; out -&gt; |outE?rec{*}&lt;=rec(label=&gt;uri{*}::T){ &gt;&gt;(out_).&gt;&gt;(*label) }
 ==&gt;outE?rng=rec{*}&amp;dom=rec(label=&gt;uri{*}::T){rshift(out_).rshift(*label)}
-mtron&gt; v1     <i class="conum" data-value="1"></i><b>(1)</b>
+mtron&gt; v1     ​1​
 ==&gt;v1
-mtron&gt; *v1     <i class="conum" data-value="2"></i><b>(2)</b>
+mtron&gt; *v1     ​2​
 ==&gt;[
  name=&gt;'marko',
  age=&gt;29,
  out_=&gt;[
   knows=&gt;{!*v2,!*v3},
   created=&gt;!*v4]]
-mtron&gt; *v1.outE(knows)     <i class="conum" data-value="3"></i><b>(3)</b>
-mtron&gt; *v1.outE(knows).outE(created)     <i class="conum" data-value="4"></i><b>(4)</b>
-mtron&gt; *v1.outE(knows).outE(created).&gt;&gt;name     <i class="conum" data-value="5"></i><b>(5)</b></code></pre>
+mtron&gt; *v1.outE(knows)     ​3​
+mtron&gt; *v1.outE(knows).outE(created)     ​4​
+mtron&gt; *v1.outE(knows).outE(created).&gt;&gt;name     ​5​</code></pre>
 </div>
 </div>
 </div>
@@ -6014,31 +6058,48 @@ will be developed and diagrammed.</p>
          name=&gt;'marko',age=&gt;29,
          outE_=&gt;[knows=&gt;{[weight=&gt;0.5,inV_=&gt;!*v2, outV_=&gt;!*v1],
                          [weight=&gt;0.5,inV_=&gt;!*v4, outV_=&gt;!*v1]}],
-                 created=&gt;[weight=&gt;0.2,inV_=&gt;!*v3, outV_=&gt;!*v1]]]
-==&gt;ERROR: v1 -&gt; [
-         name=&gt;'marko',age=&gt;29,
-         outE_=&gt;[knows=&gt;{[weight=&gt;0.5,inV_=&gt;!*v2, outV_=&gt;!*v1],
-                         [weight=&gt;0.5,inV_=&gt;!*v4, outV_=&gt;!*v1]}],
-                 created=&gt;[weight=&gt;0.2,inV_=&gt;!*v3, outV_=&gt;!*v1]]]
-                                                                                                                                                                                                                                          ^ end of input expected
-
+                 created=&gt;[weight=&gt;0.2,inV_=&gt;!*v3, outV_=&gt;!*v1]]
+==&gt;[
+ name=&gt;'marko',
+ age=&gt;29,
+ outE_=&gt;[knows=&gt;{[
+ weight=&gt;0.5000,
+ inV_=&gt;!*v2,
+ outV_=&gt;!*v1],[
+ weight=&gt;0.5000,
+ inV_=&gt;!*v4,
+ outV_=&gt;!*v1]}],
+ created=&gt;[
+  weight=&gt;0.2000,
+  inV_=&gt;!*v3,
+  outV_=&gt;!*v1]]
 mtron&gt; v2 -&gt; [name=&gt;'vadas']
 ==&gt;[name=&gt;'vadas']
 mtron&gt; v3 -&gt; [name=&gt;'josh']
 ==&gt;[name=&gt;'josh']
 mtron&gt; v4 -&gt; [name=&gt;'lop']
 ==&gt;[name=&gt;'lop']
-mtron&gt; v1     <i class="conum" data-value="1"></i><b>(1)</b>
+mtron&gt; v1     ​1​
 ==&gt;v1
-mtron&gt; *v1     <i class="conum" data-value="2"></i><b>(2)</b>
+mtron&gt; *v1     ​2​
 ==&gt;[
  name=&gt;'marko',
  age=&gt;29,
- out_=&gt;[
-  knows=&gt;{!*v2,!*v3},
-  created=&gt;!*v4]]
-mtron&gt; *v1.&gt;&gt;outE_.&gt;&gt;knows.&gt;&gt;inV_     <i class="conum" data-value="3"></i><b>(3)</b>
-mtron&gt; *v1.&gt;&gt;outE_.&gt;&gt;created.&gt;&gt;inV_     <i class="conum" data-value="4"></i><b>(4)</b></code></pre>
+ outE_=&gt;[knows=&gt;{[
+ weight=&gt;0.5000,
+ inV_=&gt;!*v2,
+ outV_=&gt;!*v1],[
+ weight=&gt;0.5000,
+ inV_=&gt;!*v4,
+ outV_=&gt;!*v1]}],
+ created=&gt;[
+  weight=&gt;0.2000,
+  inV_=&gt;!*v3,
+  outV_=&gt;!*v1]]
+mtron&gt; *v1.&gt;&gt;outE_.&gt;&gt;knows.&gt;&gt;inV_     ​3​
+==&gt;[name=&gt;'vadas']
+==&gt;[name=&gt;'lop']
+mtron&gt; *v1.&gt;&gt;outE_.&gt;&gt;created.&gt;&gt;inV_     ​4​</code></pre>
 </div>
 </div></div></td>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
@@ -6070,18 +6131,26 @@ knows     0.5    └────┘
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; out -&gt; |out?rec{*}&lt;=rec(label=&gt;uri{*}::T){
                  &gt;&gt;(outE_).&gt;&gt;(*label).&gt;&gt;(inV_) }
 ==&gt;out?rng=rec{*}&amp;dom=rec(label=&gt;uri{*}::T){rshift(outE_).rshift(*label).rshift(inV_)}
-mtron&gt; v1     <i class="conum" data-value="1"></i><b>(1)</b>
+mtron&gt; v1     ​1​
 ==&gt;v1
-mtron&gt; *v1     <i class="conum" data-value="2"></i><b>(2)</b>
+mtron&gt; *v1     ​2​
 ==&gt;[
  name=&gt;'marko',
  age=&gt;29,
- out_=&gt;[
-  knows=&gt;{!*v2,!*v3},
-  created=&gt;!*v4]]
-mtron&gt; *v1.out(knows)     <i class="conum" data-value="3"></i><b>(3)</b>
-mtron&gt; *v1.out(knows).out(created)     <i class="conum" data-value="4"></i><b>(4)</b>
-mtron&gt; *v1.out(knows).out(created).&gt;&gt;name     <i class="conum" data-value="5"></i><b>(5)</b></code></pre>
+ outE_=&gt;[knows=&gt;{[
+ weight=&gt;0.5000,
+ inV_=&gt;!*v2,
+ outV_=&gt;!*v1],[
+ weight=&gt;0.5000,
+ inV_=&gt;!*v4,
+ outV_=&gt;!*v1]}],
+ created=&gt;[
+  weight=&gt;0.2000,
+  inV_=&gt;!*v3,
+  outV_=&gt;!*v1]]
+mtron&gt; *v1.out(knows)     ​3​
+mtron&gt; *v1.out(knows).out(created)     ​4​
+mtron&gt; *v1.out(knows).out(created).&gt;&gt;name     ​5​</code></pre>
 </div>
 </div>
 </div>
@@ -6111,17 +6180,17 @@ mtron&gt; *v1.out(knows).out(created).&gt;&gt;name     <i class="conum" data-val
 <tr>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">fsspace::[pattern=&gt;fs:#]@/sys/space/fs</code></pre>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">fsspace::[pattern=&gt;fs:#]</code></pre>
 </div>
 </div></div></td>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">memspace::[pattern=&gt;mem:#]@/sys/space/mem</code></pre>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">memspace::[pattern=&gt;mem:#]</code></pre>
 </div>
 </div></div></td>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">dcmtspace::[pattern=&gt;dcmt:#]@/sys/space/dcmt</code></pre>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">dcmtspace::[pattern=&gt;dcmt:#]</code></pre>
 </div>
 </div></div></td>
 </tr>
@@ -6254,8 +6323,8 @@ mtron&gt; *v1.out(knows).out(created).&gt;&gt;name     <i class="conum" data-val
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; html::T     <i class="conum" data-value="1"></i><b>(1)</b>
-mtron&gt; *&lt;http://phaseshift.studio/splash.html&gt;     <i class="conum" data-value="2"></i><b>(2)</b>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; html::T     ​1​
+mtron&gt; *&lt;http://phaseshift.studio/splash.html&gt;     ​2​
 ==&gt;html::[html=&gt;[
  head=&gt;[
   title=&gt;'PhaseShift Studio',
@@ -6278,9 +6347,9 @@ mtron&gt; *&lt;http://phaseshift.studio/splash.html&gt;     <i class="conum" dat
     src=&gt;&lt;http://metatron.phaseshift.studio/images/metatron-character.png&gt;,
     width=&gt;'500px']],
   style=&gt;'background-color: black;']]]
-mtron&gt; *&lt;http://phaseshift.studio/splash.html/html/head/title&gt;     <i class="conum" data-value="3"></i><b>(3)</b>
+mtron&gt; *&lt;http://phaseshift.studio/splash.html/html/head/title&gt;     ​3​
 ==&gt;'PhaseShift Studio'
-mtron&gt; *&lt;http://phaseshift.studio/splash.html&gt;.as(str::T)     <i class="conum" data-value="4"></i><b>(4)</b>
+mtron&gt; *&lt;http://phaseshift.studio/splash.html&gt;.as(str::T)     ​4​
 ==&gt;"""&lt;html&gt;
  &lt;head&gt;
   &lt;link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet"&gt;
@@ -6341,42 +6410,29 @@ mtron&gt; *&lt;http://localhost:8088/api/models/config-json/${
          *&lt;http://localhost:8088/v1/models/data/0/id&gt;}&gt;
 ==&gt;[
  parameters=&gt;[
-  model=&gt;'mistralai_Devstral-Small-2507-Q4_K...',
+  model=&gt;qwen3__latest,
   top_p=&gt;0.9500,
-  top_k=&gt;-1,
-  min_p=&gt;0.0100,
-  temperature=&gt;0.7000,
+  top_k=&gt;20,
+  min_p=&gt;0,
+  temperature=&gt;0.6000,
   max_tokens=&gt;0,
   repeat_penalty=&gt;1,
   tfz=&gt;1,
   typical_p=&gt;1,
   seed=&gt;-1,
   logprobs=&gt;false],
- name=&gt;mistralai_devstral-small-2507,
+ name=&gt;qwen3:latest,
  f16=&gt;false,
  threads=&gt;8,
  debug=&gt;false,
  embeddings=&gt;false,
  backend=&gt;llama-cpp,
- template=&gt;[
-  chat=&gt;"""{{.Input -}}
-""",
-  chat_message=&gt;"""{{if eq .RoleName "user" -}}
-[INST...""",
-  completion=&gt;"""{{.Input}}
-""",
-  function=&gt;'[AVAILABLE_TOOLS] [{{range .Functi...'],
- known_usecases=&gt;[FLAG_CHAT,FLAG_COMPLETION],
+ template=&gt;[use_tokenizer_template=&gt;true],
+ known_usecases=&gt;[FLAG_CHAT],
  pipeline=&gt;[=&gt;],
  function=&gt;[
-  disable_no_action=&gt;true,
-  grammar=&gt;[parallel_calls=&gt;true,disable_parallel_new_lines=&gt;true,disable=&gt;true],
-  json_regex_match=&gt;['(?s)\[TOOL\_CALLS\](.*)'],
-  replace_function_results=&gt;[
-   [key=&gt;'(?s)^[^{\[]*'],
-   [key=&gt;'(?s)[^}\]]*$'],
-   [key=&gt;'(?s)\[TOOL\_CALLS\]'],
-   [key=&gt;'(?s)\[\/TOOL\_CALLS\]']]],
+  grammar=&gt;[disable=&gt;true],
+  automatic_tool_parsing_fallback=&gt;true],
  reasoning=&gt;[=&gt;],
  mirostat_eta=&gt;0.1000,
  mirostat_tau=&gt;5,
@@ -6386,21 +6442,13 @@ mtron&gt; *&lt;http://localhost:8088/api/models/config-json/${
  mmlock=&gt;false,
  low_vram=&gt;false,
  reranking=&gt;false,
- stopwords=&gt;[
-  |im_end|,
-  dummy32000,
-  /tool_call,
-  |eot_id|,
-  |end_of_text|,
-  /s,
-  [/TOOL_CALLS],
-  [/ACTIONS]],
  context_size=&gt;8192,
  limit_mm_per_prompt=&gt;[=&gt;],
  diffusers=&gt;[=&gt;],
  grpc=&gt;[=&gt;],
  tts=&gt;[=&gt;],
- options=&gt;[gpu],
+ description=&gt;'Imported from ollama://qwen3:latest',
+ options=&gt;[use_jinja:true],
  mcp=&gt;[=&gt;],
  agent=&gt;[=&gt;]]</code></pre>
 </div>
@@ -6594,8 +6642,8 @@ mtron&gt; */m/llm/inst/+?dom=model</code></pre>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; html::T     <i class="conum" data-value="1"></i><b>(1)</b>
-mtron&gt; *&lt;http://phaseshift.studio/splash.html&gt;     <i class="conum" data-value="2"></i><b>(2)</b>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; html::T     ​1​
+mtron&gt; *&lt;http://phaseshift.studio/splash.html&gt;     ​2​
 ==&gt;html::[html=&gt;[
  head=&gt;[
   title=&gt;'PhaseShift Studio',
@@ -6618,9 +6666,9 @@ mtron&gt; *&lt;http://phaseshift.studio/splash.html&gt;     <i class="conum" dat
     src=&gt;&lt;http://metatron.phaseshift.studio/images/metatron-character.png&gt;,
     width=&gt;'500px']],
   style=&gt;'background-color: black;']]]
-mtron&gt; *&lt;http://phaseshift.studio/splash.html/html/head/title&gt;     <i class="conum" data-value="3"></i><b>(3)</b>
+mtron&gt; *&lt;http://phaseshift.studio/splash.html/html/head/title&gt;     ​3​
 ==&gt;'PhaseShift Studio'
-mtron&gt; *&lt;http://phaseshift.studio/splash.html&gt;.as(str::T)     <i class="conum" data-value="4"></i><b>(4)</b>
+mtron&gt; *&lt;http://phaseshift.studio/splash.html&gt;.as(str::T)     ​4​
 ==&gt;"""&lt;html&gt;
  &lt;head&gt;
   &lt;link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet"&gt;
@@ -6681,42 +6729,29 @@ mtron&gt; *&lt;http://localhost:8088/api/models/config-json/${
          *&lt;http://localhost:8088/v1/models/data/0/id&gt;}&gt;
 ==&gt;[
  parameters=&gt;[
-  model=&gt;'mistralai_Devstral-Small-2507-Q4_K...',
+  model=&gt;qwen3__latest,
   top_p=&gt;0.9500,
-  top_k=&gt;-1,
-  min_p=&gt;0.0100,
-  temperature=&gt;0.7000,
+  top_k=&gt;20,
+  min_p=&gt;0,
+  temperature=&gt;0.6000,
   max_tokens=&gt;0,
   repeat_penalty=&gt;1,
   tfz=&gt;1,
   typical_p=&gt;1,
   seed=&gt;-1,
   logprobs=&gt;false],
- name=&gt;mistralai_devstral-small-2507,
+ name=&gt;qwen3:latest,
  f16=&gt;false,
  threads=&gt;8,
  debug=&gt;false,
  embeddings=&gt;false,
  backend=&gt;llama-cpp,
- template=&gt;[
-  chat=&gt;"""{{.Input -}}
-""",
-  chat_message=&gt;"""{{if eq .RoleName "user" -}}
-[INST...""",
-  completion=&gt;"""{{.Input}}
-""",
-  function=&gt;'[AVAILABLE_TOOLS] [{{range .Functi...'],
- known_usecases=&gt;[FLAG_CHAT,FLAG_COMPLETION],
+ template=&gt;[use_tokenizer_template=&gt;true],
+ known_usecases=&gt;[FLAG_CHAT],
  pipeline=&gt;[=&gt;],
  function=&gt;[
-  disable_no_action=&gt;true,
-  grammar=&gt;[parallel_calls=&gt;true,disable_parallel_new_lines=&gt;true,disable=&gt;true],
-  json_regex_match=&gt;['(?s)\[TOOL\_CALLS\](.*)'],
-  replace_function_results=&gt;[
-   [key=&gt;'(?s)^[^{\[]*'],
-   [key=&gt;'(?s)[^}\]]*$'],
-   [key=&gt;'(?s)\[TOOL\_CALLS\]'],
-   [key=&gt;'(?s)\[\/TOOL\_CALLS\]']]],
+  grammar=&gt;[disable=&gt;true],
+  automatic_tool_parsing_fallback=&gt;true],
  reasoning=&gt;[=&gt;],
  mirostat_eta=&gt;0.1000,
  mirostat_tau=&gt;5,
@@ -6726,21 +6761,13 @@ mtron&gt; *&lt;http://localhost:8088/api/models/config-json/${
  mmlock=&gt;false,
  low_vram=&gt;false,
  reranking=&gt;false,
- stopwords=&gt;[
-  |im_end|,
-  dummy32000,
-  /tool_call,
-  |eot_id|,
-  |end_of_text|,
-  /s,
-  [/TOOL_CALLS],
-  [/ACTIONS]],
  context_size=&gt;8192,
  limit_mm_per_prompt=&gt;[=&gt;],
  diffusers=&gt;[=&gt;],
  grpc=&gt;[=&gt;],
  tts=&gt;[=&gt;],
- options=&gt;[gpu],
+ description=&gt;'Imported from ollama://qwen3:latest',
+ options=&gt;[use_jinja:true],
  mcp=&gt;[=&gt;],
  agent=&gt;[=&gt;]]</code></pre>
 </div>
@@ -6933,16 +6960,16 @@ rows. In metatron, a relational database is a <strong>tblespace</strong> backed 
                    host    =&gt; &lt;sqlite:target/test&gt;,
                    driver  =&gt; &lt;org.sqlite.JDBC&gt;,
                    table   =&gt; [person,score,award,venue],
-                   route   =&gt; [lite:=&gt;&lt;&gt;]]@/sys/space/lite     <i class="conum" data-value="1"></i><b>(1)</b>
-mtron&gt; lite:person/1 -&gt; [name=&gt;'marko', age=&gt;29]     <i class="conum" data-value="2"></i><b>(2)</b>
+                   route   =&gt; [lite:=&gt;&lt;&gt;]]@/sys/space/lite     ​1​
+mtron&gt; lite:person/1 -&gt; [name=&gt;'marko', age=&gt;29]     ​2​
 ==&gt;[name=&gt;'marko',age=&gt;29]
-mtron&gt; lite:person/2 -&gt; [name=&gt;'grant', age=&gt;25]     <i class="conum" data-value="3"></i><b>(3)</b>
+mtron&gt; lite:person/2 -&gt; [name=&gt;'grant', age=&gt;25]     ​3​
 ==&gt;[name=&gt;'grant',age=&gt;25]
 mtron&gt; *lite:person
-       *lite:person/+/name     <i class="conum" data-value="5"></i><b>(5)</b>
+       *lite:person/+/name     ​5​
 ==&gt;'grant'
 ==&gt;'marko'
-mtron&gt; *lite:person/+/id     <i class="conum" data-value="6"></i><b>(6)</b>
+mtron&gt; *lite:person/+/id     ​6​
 ==&gt;1
 ==&gt;2</code></pre>
 </div>
@@ -6992,7 +7019,7 @@ mtron&gt; *lite:person/+/id     <i class="conum" data-value="6"></i><b>(6)</b>
 ==&gt;[
  instset=&gt;instset::[
   pattern=&gt;/sys/space/lite/schema/instset/#,
-  type=&gt;[,],
+  type=&gt;[person::T],
   q=&gt;[docq::[
  pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
  pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
@@ -7003,7 +7030,14 @@ mtron&gt; *lite:person/+/id     <i class="conum" data-value="6"></i><b>(6)</b>
  native=&gt;[
   pattern=&gt;/sys/space/lite/schema/instset/#,
   name=&gt;'instset',
-  tables=&gt;[,],
+  tables=&gt;[[
+ name=&gt;'person',
+ uri=&gt;/sys/space/lite/schema/instset/person,
+ schema/schema=&gt;[
+  id=&gt;int::T,
+  name=&gt;str::T,
+  age=&gt;int::T],
+ type=&gt;person::T]],
   references=&gt;[,]]]
 mtron&gt; */sys/space/lite/schema/type/+</code></pre>
 </div>
@@ -7094,12 +7128,12 @@ code''' └────────────────┘ └────�
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *lite:person/+.?==[age=&gt;?&lt;30]     <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *lite:person/+.?==[age=&gt;?&lt;30]     ​1​
 ==&gt;rrow::[id=&gt;1,name=&gt;'marko',age=&gt;29]@lite:/sys/space/lite/person/1
 ==&gt;rrow::[id=&gt;2,name=&gt;'grant',age=&gt;25]@lite:/sys/space/lite/person/2
-mtron&gt; *lite:person/+/name.count()     <i class="conum" data-value="2"></i><b>(2)</b>
+mtron&gt; *lite:person/+/name.count()     ​2​
 ==&gt;2
-mtron&gt; *lite:person/+.==[name=&gt;_]     <i class="conum" data-value="3"></i><b>(3)</b>
+mtron&gt; *lite:person/+.==[name=&gt;_]     ​3​
 ==&gt;[name=&gt;'grant']
 ==&gt;[name=&gt;'marko']</code></pre>
 </div>
@@ -7125,10 +7159,10 @@ mtron&gt; *lite:person/+.==[name=&gt;_]     <i class="conum" data-value="3"></i>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys/space/lite.sql("SELECT name,age FROM person WHERE age &lt; 30")     <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys/space/lite.sql("SELECT name,age FROM person WHERE age &lt; 30")     ​1​
 ==&gt;[name=&gt;'marko',age=&gt;29]
 ==&gt;[name=&gt;'grant',age=&gt;25]
-mtron&gt; */sys/space/lite.sql("SELECT name,age FROM person WHERE age &lt; 30")&gt;&gt;age.sum()     <i class="conum" data-value="2"></i><b>(2)</b>
+mtron&gt; */sys/space/lite.sql("SELECT name,age FROM person WHERE age &lt; 30")&gt;&gt;age.sum()     ​2​
 ==&gt;54</code></pre>
 </div>
 </div>
@@ -7176,7 +7210,7 @@ whose values happen to match <code>person.name</code> — the link is purely alg
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys/space/lite&gt;&gt;=[table=&gt;[person,score]]     <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys/space/lite&gt;&gt;=[table=&gt;[person,score]]     ​1​
 ==&gt;tblespace::[
  table=&gt;[person,score,award,venue],
  pattern=&gt;lite:#,
@@ -7187,7 +7221,7 @@ whose values happen to match <code>person.name</code> — the link is purely alg
  schema=&gt;[
   instset=&gt;instset::[
    pattern=&gt;/sys/space/lite/schema/instset/#,
-   type=&gt;[,],
+   type=&gt;[person::T],
    q=&gt;[docq::[
  pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
  pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
@@ -7207,23 +7241,23 @@ whose values happen to match <code>person.name</code> — the link is purely alg
   age=&gt;int::T],
  type=&gt;person::T]],
    references=&gt;[,]]]]
-mtron&gt; lite:score/1 -&gt; [player=&gt;'marko', points=&gt;42]     <i class="conum" data-value="2"></i><b>(2)</b>
+mtron&gt; lite:score/1 -&gt; [player=&gt;'marko', points=&gt;42]     ​2​
 ==&gt;fail::[sqlexception: database connection closed
   	org.sqlite.SQLiteConnection [line 418]
   	org.sqlite.jdbc4.JDBC4Connection [line 31]
   	org.sqlite.jdbc3.JDBC3Connection [line 225]
   	org.sqlite.jdbc3.JDBC3Connection [line 205]
   	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 191]][...]@/sys/fail/240
-mtron&gt; lite:score/2 -&gt; [player=&gt;'grant', points=&gt;99]     <i class="conum" data-value="3"></i><b>(3)</b>
+mtron&gt; lite:score/2 -&gt; [player=&gt;'grant', points=&gt;99]     ​3​
 ==&gt;fail::[sqlexception: database connection closed
   	org.sqlite.SQLiteConnection [line 418]
   	org.sqlite.jdbc4.JDBC4Connection [line 31]
   	org.sqlite.jdbc3.JDBC3Connection [line 225]
   	org.sqlite.jdbc3.JDBC3Connection [line 205]
   	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 191]][...]@/sys/fail/246
-mtron&gt; *lite:score/+.?==[player=&gt;'marko']     <i class="conum" data-value="4"></i><b>(4)</b>
+mtron&gt; *lite:score/+.?==[player=&gt;'marko']     ​4​
 ==&gt;fail::[failed to execute native where operation[studio.phaseshift.metatron.util.MTronException:52]][...]@/sys/fail/252
-mtron&gt; */sys/space/lite.sql("SELECT p.name,p.age,s.points FROM person p JOIN score s ON p.name=s.player")     <i class="conum" data-value="5"></i><b>(5)</b>
+mtron&gt; */sys/space/lite.sql("SELECT p.name,p.age,s.points FROM person p JOIN score s ON p.name=s.player")     ​5​
 ==&gt;fail::[sqlexception: database connection closed
   	org.sqlite.SQLiteConnection [line 418]
   	org.sqlite.jdbc4.JDBC4Connection [line 23]
@@ -7263,35 +7297,35 @@ Unlike a matching column value, the pointer encodes the full address of the link
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys/space/lite&gt;&gt;=[table=&gt;[person,score,award]]     <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys/space/lite&gt;&gt;=[table=&gt;[person,score,award]]     ​1​
 ==&gt;fail::[nullpointerexception: Cannot invoke "studio.phaseshift.metatron.furi.fURI.extend(String)" because the return value of "studio.phaseshift.metatron.isa.tble.tbleSpace.vid()" is null
   	studio.phaseshift.metatron.isa.tble.tbleSpace [line 246]
   	studio.phaseshift.metatron.isa.tble.tbleSpace [line 170]
   	studio.phaseshift.metatron.isa.tble.tbleSpace [line 153]
   	studio.phaseshift.metatron.isa.tble.tbleSpace [line 122]
   	studio.phaseshift.metatron.isa.m.type.Inst$f [line 689]][...]@/sys/fail/270
-mtron&gt; lite:award/1 -&gt; [trophy=&gt;'gold',   recipient=&gt;!*lite:person/1]     <i class="conum" data-value="2"></i><b>(2)</b>
+mtron&gt; lite:award/1 -&gt; [trophy=&gt;'gold',   recipient=&gt;!*lite:person/1]     ​2​
 ==&gt;fail::[sqlexception: database connection closed
   	org.sqlite.SQLiteConnection [line 418]
   	org.sqlite.jdbc4.JDBC4Connection [line 31]
   	org.sqlite.jdbc3.JDBC3Connection [line 225]
   	org.sqlite.jdbc3.JDBC3Connection [line 205]
   	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 191]][...]@/sys/fail/330
-mtron&gt; lite:award/2 -&gt; [trophy=&gt;'silver', recipient=&gt;!*lite:person/2]     <i class="conum" data-value="3"></i><b>(3)</b>
+mtron&gt; lite:award/2 -&gt; [trophy=&gt;'silver', recipient=&gt;!*lite:person/2]     ​3​
 ==&gt;fail::[sqlexception: database connection closed
   	org.sqlite.SQLiteConnection [line 418]
   	org.sqlite.jdbc4.JDBC4Connection [line 31]
   	org.sqlite.jdbc3.JDBC3Connection [line 225]
   	org.sqlite.jdbc3.JDBC3Connection [line 205]
   	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 191]][...]@/sys/fail/390
-mtron&gt; *lite:award/+     <i class="conum" data-value="4"></i><b>(4)</b>
+mtron&gt; *lite:award/+     ​4​
 ==&gt;fail::[sqlexception: database connection closed
   	org.sqlite.SQLiteConnection [line 418]
   	org.sqlite.jdbc4.JDBC4Connection [line 31]
   	org.sqlite.jdbc3.JDBC3Connection [line 225]
   	org.sqlite.jdbc3.JDBC3Connection [line 205]
   	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 187]][...]@/sys/fail/396
-mtron&gt; *lite:award/1/recipient     <i class="conum" data-value="5"></i><b>(5)</b>
+mtron&gt; *lite:award/1/recipient     ​5​
 ==&gt;fail::[sqlexception: database connection closed
   	org.sqlite.SQLiteConnection [line 418]
   	org.sqlite.jdbc4.JDBC4Connection [line 31]
@@ -7332,31 +7366,31 @@ carries a <code>!*area:V/1</code> pointer in its <code>location</code> cell — 
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; memspace::[pattern =&gt; area:#]@/sys/space/area     <i class="conum" data-value="1"></i><b>(1)</b>
-mtron&gt; area:V/1 -&gt; [label=&gt;'downtown',capacity=&gt;5000]     <i class="conum" data-value="2"></i><b>(2)</b>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; memspace::[pattern =&gt; area:#]@/sys/space/area     ​1​
+mtron&gt; area:V/1 -&gt; [label=&gt;'downtown',capacity=&gt;5000]     ​2​
 ==&gt;[label=&gt;'downtown',capacity=&gt;5000]
-mtron&gt; */sys/space/lite&gt;&gt;=[table=&gt;[person,score,award,venue]]     <i class="conum" data-value="3"></i><b>(3)</b>
+mtron&gt; */sys/space/lite&gt;&gt;=[table=&gt;[person,score,award,venue]]     ​3​
 ==&gt;fail::[nullpointerexception: Cannot invoke "studio.phaseshift.metatron.furi.fURI.extend(String)" because the return value of "studio.phaseshift.metatron.isa.tble.tbleSpace.vid()" is null
   	studio.phaseshift.metatron.isa.tble.tbleSpace [line 246]
   	studio.phaseshift.metatron.isa.tble.tbleSpace [line 170]
   	studio.phaseshift.metatron.isa.tble.tbleSpace [line 153]
   	studio.phaseshift.metatron.isa.tble.tbleSpace [line 122]
   	studio.phaseshift.metatron.isa.m.type.Inst$f [line 689]][...]@/sys/fail/414
-mtron&gt; lite:venue/1 -&gt; [name=&gt;'main_stage',location=&gt;!*area:V/1]     <i class="conum" data-value="4"></i><b>(4)</b>
+mtron&gt; lite:venue/1 -&gt; [name=&gt;'main_stage',location=&gt;!*area:V/1]     ​4​
 ==&gt;fail::[sqlexception: database connection closed
   	org.sqlite.SQLiteConnection [line 418]
   	org.sqlite.jdbc4.JDBC4Connection [line 31]
   	org.sqlite.jdbc3.JDBC3Connection [line 225]
   	org.sqlite.jdbc3.JDBC3Connection [line 205]
   	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 191]][...]@/sys/fail/420
-mtron&gt; *lite:venue/1     <i class="conum" data-value="5"></i><b>(5)</b>
+mtron&gt; *lite:venue/1     ​5​
 ==&gt;fail::[sqlexception: database connection closed
   	org.sqlite.SQLiteConnection [line 418]
   	org.sqlite.jdbc4.JDBC4Connection [line 31]
   	org.sqlite.jdbc3.JDBC3Connection [line 225]
   	org.sqlite.jdbc3.JDBC3Connection [line 205]
   	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 191]][...]@/sys/fail/426
-mtron&gt; *lite:venue/1/location     <i class="conum" data-value="6"></i><b>(6)</b>
+mtron&gt; *lite:venue/1/location     ​6​
 ==&gt;fail::[sqlexception: database connection closed
   	org.sqlite.SQLiteConnection [line 418]
   	org.sqlite.jdbc4.JDBC4Connection [line 31]
@@ -7399,21 +7433,21 @@ pointing back at the row&#8217;s own table.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; lite:venue/2 -&gt; [name=&gt;'side_hall',location=&gt;!*g:V/1,parent=&gt;!*lite:venue/1]     <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; lite:venue/2 -&gt; [name=&gt;'side_hall',location=&gt;!*g:V/1,parent=&gt;!*lite:venue/1]     ​1​
 ==&gt;fail::[sqlexception: database connection closed
   	org.sqlite.SQLiteConnection [line 418]
   	org.sqlite.jdbc4.JDBC4Connection [line 31]
   	org.sqlite.jdbc3.JDBC3Connection [line 225]
   	org.sqlite.jdbc3.JDBC3Connection [line 205]
   	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 191]][...]@/sys/fail/438
-mtron&gt; *lite:venue/2     <i class="conum" data-value="2"></i><b>(2)</b>
+mtron&gt; *lite:venue/2     ​2​
 ==&gt;fail::[sqlexception: database connection closed
   	org.sqlite.SQLiteConnection [line 418]
   	org.sqlite.jdbc4.JDBC4Connection [line 31]
   	org.sqlite.jdbc3.JDBC3Connection [line 225]
   	org.sqlite.jdbc3.JDBC3Connection [line 205]
   	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 191]][...]@/sys/fail/444
-mtron&gt; *lite:venue/2/parent/location     <i class="conum" data-value="3"></i><b>(3)</b>
+mtron&gt; *lite:venue/2/parent/location     ​3​
 ==&gt;fail::[sqlexception: database connection closed
   	org.sqlite.SQLiteConnection [line 418]
   	org.sqlite.jdbc4.JDBC4Connection [line 31]
