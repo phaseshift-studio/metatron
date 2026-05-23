@@ -29,11 +29,15 @@ import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.m.type.impl.MStr;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.thread.VirtualThread;
+import studio.phaseshift.metatron.isa.web.type.Content;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
+import studio.phaseshift.metatron.util.Tuple;
 
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.QProc.QPROC_TID;
@@ -67,6 +71,10 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  */
 public final class QCollection {
 
+    public static final fURI MIMEQ_PATTERN = f("mimeq");
+    public static final fURI MIMEQ_TID = QPROC_TID.extend("mimeq");
+    public static final Type MIMEQ_TYPE = Type.Builder.build().tid(QPROC_TID).vid(MIMEQ_TID).constructor(QCollection::mimeQ).create();
+    //
     public static final fURI MINTQ_PATTERN = f("mintq");
     public static final fURI MINTQ_TID = QPROC_TID.extend("mintq");
     public static final Type MINTQ_TYPE = Type.Builder.build().tid(QPROC_TID).vid(MINTQ_TID).constructor(QCollection::mintQ).create();
@@ -123,6 +131,24 @@ public final class QCollection {
 
     private QCollection() {
         // do nothing 
+    }
+
+    /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public static QProc mimeQ() {
+        return QProc.Helper.build(MIMEQ_TID, MIMEQ_PATTERN)
+                .postRead((furi, obj) -> {
+                    final String mime = furi.q(MIMEQ_PATTERN.toString());
+                    final Content.ContentType contentType = Content.ContentType.of(mime);
+                    if (null == contentType)
+                        throw MTronException.of("unknown mime type: %s", mime);
+                    LOG.error("MTRON: %s", obj);
+                    final Object nativeObject = contentType.serializer().write(obj);
+                    LOG.error("NATIVE: %s", nativeObject);
+                    return str(nativeObject.toString());
+                }).create();
     }
 
     /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -372,6 +398,19 @@ public final class QCollection {
 
     public static Inst docWrap(final Inst inst, final String domDesc, final String rngDesc, final Map<Obj, String> argDescription, final String description, final String... examples) {
         internalDocWrap(inst, domDesc, rngDesc, argDescription, description, examples);
+        return inst;
+    }
+
+    public static Inst docWrap(final Inst inst, final String description, final String... examples) {
+        internalDocWrap(inst, inst.tid().dom().toString(), inst.tid().rng().toString(),
+                inst.args().isRec() ?
+                        inst.args().asRec().elements()
+                                .map(r -> Tuple.Pair.with(r.first(), r.second().tid().toString()))
+                                .collect(Collectors.<Tuple.Pair<Obj, String>, Obj, String>toMap(Tuple.Pair::get0, Tuple.Pair::get1)) :
+                        inst.args().asLst().indexedStream().map(r -> Tuple.Pair.with(r.first(), r.second().tid().toString()))
+                                .collect(Collectors.<Tuple.Pair<Obj, String>, Obj, String>toMap(Tuple.Pair::get0, Tuple.Pair::get1)),
+                description,
+                examples);
         return inst;
     }
 

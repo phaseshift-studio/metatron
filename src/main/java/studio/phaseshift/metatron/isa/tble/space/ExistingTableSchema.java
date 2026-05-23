@@ -1,12 +1,12 @@
 /*
- * metatron: A Distributed Computing Language and Virtual Machine
+ * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *
+ *  
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
+ *  
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.tble.schema.domain;
+package studio.phaseshift.metatron.isa.tble.space;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
@@ -83,7 +83,51 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
                                 List<String> primaryKeys, List<ForeignKeyMetadata> foreignKeys) {
     }
 
-    public record ColumnMetadata(String name, int sqlType, String typeName) {
+    public record ColumnMetadata(String name, int sqlType, String typeName, boolean nullable) {
+        public ColumnMetadata(String name, int sqlType, String typeName) {
+            this(name, sqlType, typeName, true);
+        }
+
+        public boolean isNumeric() {
+            return sqlType == Types.INTEGER || sqlType == Types.BIGINT ||
+                   sqlType == Types.SMALLINT || sqlType == Types.TINYINT ||
+                   sqlType == Types.REAL || sqlType == Types.FLOAT ||
+                   sqlType == Types.DOUBLE || sqlType == Types.DECIMAL ||
+                   sqlType == Types.NUMERIC;
+        }
+    }
+
+    /**
+     * Validates that {@code value} is compatible with the column's schema before writing.
+     * Throws {@link MTronException} with a clear message for constraint violations
+     * and type mismatches that would otherwise fail with cryptic JDBC errors.
+     */
+    private void validateColumnWrite(final Obj value, final ColumnMetadata column,
+                                     final String tableName) {
+        // NULL into a NOT NULL column
+        if (value.isNone() && !column.nullable()) {
+            throw MTronException.of(
+                    "Cannot set column '%s.%s' to NULL: column has a NOT NULL constraint",
+                    tableName, column.name());
+        }
+        // Complex types (Rec, Lst, Rel) into scalar columns — toString() fallback
+        // produces garbage like "[field=>'val',...]" that can't parse as a number
+        if (value.isPoly() && column.isNumeric()) {
+            throw MTronException.of(
+                    "Cannot write %s to column '%s.%s': column type is %s (numeric). "
+                    + "Numbers, strings, and booleans are supported.",
+                    value.tid().name(), tableName, column.name(), column.typeName());
+        }
+        // Non-numeric string into a numeric column
+        if (value.isStr() && column.isNumeric()) {
+            try {
+                Double.parseDouble(value.asStr().jvm());
+            } catch (final NumberFormatException e) {
+                throw MTronException.of(
+                        "Cannot write string '%s' to column '%s.%s': column type is %s (numeric).",
+                        value.asStr().jvm(), tableName, column.name(), column.typeName());
+            }
+        }
     }
 
     public record ForeignKeyMetadata(String fromTable, String fromColumn,
@@ -129,7 +173,8 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
                         columns.add(new ColumnMetadata(
                                 cols.getString("COLUMN_NAME"),
                                 cols.getInt("DATA_TYPE"),
-                                cols.getString("TYPE_NAME")));
+                                cols.getString("TYPE_NAME"),
+                                !"NO".equalsIgnoreCase(cols.getString("IS_NULLABLE"))));
                     }
                 }
                 final List<String> primaryKeys = new ArrayList<>();
@@ -304,7 +349,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
         } else if (obj.isLst()) {
             return writeRowFromList(conn, metadata, rowId, obj.asLst());
         } else {
-            throw new SQLException("expected record or list for row write, got: " + obj.tid());
+            throw new SQLException("expected rec or lst for row write: " + obj.tid());
         }
     }
 
@@ -381,6 +426,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
 
         try (final PreparedStatement stmt = conn.prepareStatement(sql)) {
             trackLogicalType(metadata, column.name, value, column.sqlType);
+            validateColumnWrite(value, column, metadata.tableName);
             writeParameter(stmt, 1, value, column.sqlType);
 
             final ColumnMetadata pkColMeta = metadata.columns.stream()
@@ -464,7 +510,10 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
         try (final PreparedStatement stmt = conn.prepareStatement(sql)) {
             for (int i = 0; i < values.size(); i++) {
                 final Tuple.Pair<Obj, ColumnMetadata> pair = values.get(i);
-                writeParameter(stmt, i + 1, pair.get0(), pair.get1().sqlType);
+                final Obj value = pair.get0();
+                final ColumnMetadata column = pair.get1();
+                validateColumnWrite(value, column, metadata.tableName);
+                writeParameter(stmt, i + 1, value, column.sqlType);
             }
 
             final ColumnMetadata pkColMeta = metadata.columns.stream()
@@ -531,7 +580,10 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
         try (final PreparedStatement stmt = conn.prepareStatement(sql)) {
             for (int i = 0; i < values.size(); i++) {
                 final Tuple.Pair<Obj, ColumnMetadata> pair = values.get(i);
-                writeParameter(stmt, i + 1, pair.get0(), pair.get1().sqlType);
+                final Obj value = pair.get0();
+                final ColumnMetadata column = pair.get1();
+                validateColumnWrite(value, column, metadata.tableName);
+                writeParameter(stmt, i + 1, value, column.sqlType);
             }
             final int inserted = stmt.executeUpdate();
             this.space.logger().debug("inserted row into %s with id %s: %s rows affected",
@@ -709,7 +761,8 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
                 columns.add(new ColumnMetadata(
                         cols.getString("COLUMN_NAME"),
                         cols.getInt("DATA_TYPE"),
-                        cols.getString("TYPE_NAME")));
+                        cols.getString("TYPE_NAME"),
+                        !"NO".equalsIgnoreCase(cols.getString("IS_NULLABLE"))));
             }
         }
 

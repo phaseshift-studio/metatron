@@ -104,7 +104,7 @@ public interface DatabaseConfig {
         return """
                CREATE TABLE people (
                    id INTEGER PRIMARY KEY,
-                   name TEXT NOT NULL,
+                   name TEXT,
                    age INTEGER,
                    title TEXT,
                    salary REAL,

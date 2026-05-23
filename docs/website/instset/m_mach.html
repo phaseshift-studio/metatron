@@ -301,16 +301,14 @@ bin/metatron</code></pre>
   one?A&lt;=A(),
   which(uri::T),
   inject(int::T,#::T),
-  /m/inst/thread(#::T),
-  stop?/m/mach/thread&lt;=/m/mach/thread(),
-  pause?/m/mach/thread&lt;=/m/mach/thread()]]@/m/mach</code></pre>
+  /m/inst/thread?/m/mach/thread&lt;=#{?}(#::T)]]@/m/mach</code></pre>
                 </div>
             </div>
         </div>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <button class="btn btn-outline-secondary" disabled>Consts <span class="pill-label badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">14</span></a><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">11</span></a><button class="btn btn-outline-secondary" disabled>Spaces <span class="pill-label badge bg-dark">0</span></button><button class="btn btn-outline-secondary" disabled>Rewrites <span class="pill-label badge bg-dark">0</span></button>
+        <button class="btn btn-outline-secondary" disabled>Consts <span class="pill-label badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">14</span></a><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">9</span></a><button class="btn btn-outline-secondary" disabled>Spaces <span class="pill-label badge bg-dark">0</span></button><button class="btn btn-outline-secondary" disabled>Rewrites <span class="pill-label badge bg-dark">0</span></button>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="card">
@@ -380,14 +378,8 @@ bin/metatron</code></pre>
 </a><a href="#inst-one" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">one</span>
     <span class="pill-label badge bg-success ms-2">I</span>
-</a><a href="#inst-pause" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">pause</span>
-    <span class="pill-label badge bg-success ms-2">I</span>
 </a><a href="#inst-rewrite" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">rewrite</span>
-    <span class="pill-label badge bg-success ms-2">I</span>
-</a><a href="#inst-stop" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">stop</span>
     <span class="pill-label badge bg-success ms-2">I</span>
 </a><a href="#inst-which" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">which</span>
@@ -556,7 +548,7 @@ bin/metatron</code></pre>
     
 </div>
 </div><div class="container-xxl mb-4" id="instructions">
-    <h3 class="text-primary mb-3">Instructions <span class="pill-label badge bg-success">11</span></h3>
+    <h3 class="text-primary mb-3">Instructions <span class="pill-label badge bg-success">9</span></h3>
     <div class="card mb-3" id="inst-close">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
@@ -630,17 +622,6 @@ bin/metatron</code></pre>
     <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-one-doc-0-tab').click();document.getElementById('inst-one-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">one?rng=A&amp;dom=A(){&lt;j&gt;}</code></pre>
 </div>
     
-</div><div class="card mb-3" id="inst-pause">
-    <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
-        <span>
-            <span class="code text-primary fw-bold">pause</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-thread" data-bs-toggle="tooltip" title="domain" class="code text-info">thread</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-thread" data-bs-toggle="tooltip" title="range" class="code text-success">thread</a></span></span>
-        </span>
-        <small class="text-muted code">/m/mach/inst/pause?rng=/m/mach/thread&amp;dom=/m/mach/thread</small>
-    </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-pause-doc-0-tab').click();document.getElementById('inst-pause-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">pause?rng=/m/mach/thread&amp;dom=/m/mach/thread(){&lt;j&gt;}</code></pre>
-</div>
-    
 </div><div class="card mb-3" id="inst-rewrite">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
@@ -650,17 +631,6 @@ bin/metatron</code></pre>
         <small class="text-muted code">/m/mach/inst/rewrite?rng=/m/rec[short=&gt;uri,long=&gt;uri]&amp;dom=#{?}</small>
     </div>
     <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-rewrite-doc-0-tab').click();document.getElementById('inst-rewrite-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">rewrite?rng=rec[short=&gt;uri,long=&gt;uri]&amp;dom=#{?}(uri::T){&lt;j&gt;}</code></pre>
-</div>
-    
-</div><div class="card mb-3" id="inst-stop">
-    <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
-        <span>
-            <span class="code text-primary fw-bold">stop</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-thread" data-bs-toggle="tooltip" title="domain" class="code text-info">thread</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-thread" data-bs-toggle="tooltip" title="range" class="code text-success">thread</a></span></span>
-        </span>
-        <small class="text-muted code">/m/mach/inst/stop?rng=/m/mach/thread&amp;dom=/m/mach/thread</small>
-    </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-stop-doc-0-tab').click();document.getElementById('inst-stop-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">stop?rng=/m/mach/thread&amp;dom=/m/mach/thread(){&lt;j&gt;}</code></pre>
 </div>
     
 </div><div class="card mb-3" id="inst-which">
@@ -689,7 +659,7 @@ bin/metatron</code></pre>
 </div><div class="container-xxl py-3 text-center">
     <hr class="border-secondary">
     <small class="text-muted">
-        generated by metatron instset doc generator on build 0-2026-05-21 22:48:03<br>
+        generated by metatron instset doc generator on build 0-2026-05-23 06:39:33<br>
         (c) PhaseShift Studio, LLC
     </small>
 </div></main>
@@ -823,11 +793,10 @@ bin/metatron</code></pre>
         setTimeout(initTabs, 200);
     });
 </script>
+
+<!------------ FEATURES MODAL -------------->
+<div id="modalPanel" class="modal fade" tabindex="-1"></div>
+<!------------------------------------------>
+
 </body>
 </html>
-
-<!-- RECOMMENDED TO STAY OUTSIDE HTML TAG -->
-<!------------ FEATURES MODAL -------------->
-<div id="modalPanel" class="modal fade" tabindex="-1"/>
-<!------------------------------------------>
-<!------------------------------------------>

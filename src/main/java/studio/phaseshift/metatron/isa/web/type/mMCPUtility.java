@@ -39,7 +39,7 @@ import static studio.phaseshift.metatron.Tokens.RESOURCE;
 import static studio.phaseshift.metatron.Tokens.TOOL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
+import static studio.phaseshift.metatron.furi.q.QCollection.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.NOOBJ_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_;
@@ -144,15 +144,29 @@ public final class mMCPUtility {
                                 uri("io_stats"), router.stats().ioStats());
                     }), MUTABLE);
 
-            // list_inst — list loaded /m instructions
-            tools.at(uri("list_inst"), instC(
-                    vid.extend("list_inst").dom(NOOBJ_TID.zero()).rng(ALL.maybe()),
-                    rec(uri(DOC), BOOL_TYPE.maybe()), (lhs, inst) -> {
-                        final Obj docArg = inst.arg(f(DOC), 0);
-                        final boolean withDoc = docArg.isBool() && docArg.boolValue()
-                                || !docArg.isNoObj() && docArg.toCleanString().equalsIgnoreCase("true");
-                        return lst(Router.global().read(withDoc ? "/m/inst/#?doc" : "/m/inst/+"));
-                    }), MUTABLE);
+            // find_inst — gets lst of loaded /m instructions and documentation
+            tools.at(uri("find_inst"), docWrap(instC(
+                            vid.extend("find_inst").dom(NOOBJ_TID.zero()).rng(ALL.maybe()),
+                            rec(uri(PATTERN), URI_TYPE,
+                                    uri(DOM).maybe(), URI_TYPE,
+                                    uri(RNG).maybe(), URI_TYPE), (lhs, inst) -> {
+                                fURI pattern = inst.arg(f(PATTERN), 0).uriValue();
+                                if (inst.args().has(DOM))
+                                    pattern = pattern.dom(inst.arg(f(DOM), 1).uriValue());
+                                if (inst.args().has(RNG))
+                                    pattern = pattern.rng(inst.arg(f(RNG), 2).uriValue());
+                                return lst(Router.global().read(pattern.addQ(DOCQ))
+                                        .stream()
+                                        .map(Obj::asRec)
+                                        .filter(o -> o.at(OBJ).isInst())
+                                        .map(o -> o));
+                            }), "maybe an obj", "lst of inst matching arg specification",
+                    Map.of(uri(PATTERN), "the inst tid to match",
+                            uri(DOM), "the dom of inst to match (can be added to pattern arg)",
+                            uri(RNG), "the rng of inst to match (can be added to pattern arg"),
+                    "returns a lst of all instruction pattern matches w/ documentation",
+                    "find_inst(plus,int,int)",
+                    "find_inst(plus?int<=int)"), MUTABLE);
             // spawn_wsclient — create a websocket client
             tools.at(uri("spawn_wsclient"), docWrap(instC(
                             vid.extend("spawn_wsclient").dom(NOOBJ_TID.zero()).rng(WS_CLIENT_TID),

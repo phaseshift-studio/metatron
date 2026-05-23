@@ -1,1582 +1,3 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta http-equiv="X-UA-Compatible" content="IE=edge">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="generator" content="Asciidoctor 2.0.26">
-<meta name="application-name" content="metatron">
-<meta name="author" content="Marko A. Rodriguez">
-<meta name="copyright" content="PhaseShift Studio">
-<link rel="icon" type="image/x-icon" href="./favicon.ico">
-<title>metatron</title>
-<style>
-:root {
-    --maincolor: #000000;
-    --primarycolor: #952e1e;
-    --secondarycolor: #191C24;
-    --tertiarycolor: #6565f3;
-    --sidebarbackground: #191C24;
-    --linkcolor: var(--mmagenta);
-    --linkcoloralternate: #2652e5;
-    --white: #c2c2c2;
-    --primary: #a30000;
-    --secondary: #191C24;
-    --light: #6C7293;
-    --dark: #000000;
-    /*------------------------*/
-    --mblue: #4669dd;
-    --mmagenta: #9f4040; /*#825181;*/
-    --mred: #7a2518;
-    --mgreen: #457b02;
-    --mdarkgray: #494554;
-    --mlightgray: #797585;
-    --myellow: #edbf73;
-    --maqua: #0082ae;
-}
-
-.stemblock {
-    color: var(--white);
-}
-
-h1, h1. h2, h2. h3, h3. h4, h4. {
-    color: var(--mred) !important;
-    scale: 1.5 !important;
-}
-
-.float-left-code {
-    float: left;
-    background-color: transparent;
-}
-
-.float-right-code {
-    float: right;
-    background-color: transparent;
-}
-
-.center-code {
-    justify-self: center;
-    background-color: transparent;
-}
-
-.bg-warning {
-    background-color: #b98b00 !important
-}
-
-.btn:disabled {
-    border-color: var(--bs-gray-dark);
-    color: var(--bs-gray);
-}
-
-.pill-label {
-    font-size: 0.85rem;
-}
-
-.mini-label {
-    color: #6C7293 !important;
-}
-
-.micro-label {
-    color: #6C7293 !important;
-    font-size: 0.85rem;
-}
-
-main {
-    max-width: 1600px;
-}
-
-table .paragraph {
-    margin-left: 0.5rem;
-}
-
-.colist table {
-    margin-left: 0.5rem;
-}
-
-table .ulist {
-    line-height: 0.9rem;
-}
-
-.card {
-    padding: 0.5rem;
-    margin: 2rem;
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-    word-wrap: break-word;
-    background-color: var(--secondarycolor);
-    background-clip: border-box;
-    border: 2px solid;
-    border-color: var(--mred);
-    border-radius: 2px;
-}
-
-.service-item,
-.flip-box-back {
-    border: 1px solid rgba(122, 37, 24, 0.35);
-    transition: border-color 0.3s ease;
-}
-
-.service-item:hover,
-.flip-box-back:hover {
-    border-color: rgba(151, 2, 7, 0.5);
-}
-
-.card-tight {
-    padding: 0;
-    margin: 0.25rem;
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-    word-wrap: break-word;
-    background-color: var(--secondarycolor);
-    background-clip: border-box;
-    border: 2px solid;
-    border-color: var(--mred);
-    border-radius: 1px;
-}
-
-.terminal-box {
-    border: 1px solid #444;
-    background-color: #000;
-    color: #0F0;
-    font-family: 'Courier New', monospace;
-    padding: 1px;
-    margin: 1px 0;
-    border-radius: 4px;
-    box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.5);
-}
-
-.terminal-box code {
-    font-size: 12px;
-    /*white-space: pre;*/
-}
-
-
-.icon-color {
-    /* #EB1616 */
-    filter: invert(17%) sepia(67%) saturate(5238%) hue-rotate(356deg) brightness(97%) contrast(91%);
-}
-
-.logo-text {
-    opacity: 0.45;
-    -webkit-text-stroke: 0.5px gray;
-}
-
-.logo-text a {
-    text-decoration: none;
-}
-
-.logo-text a:hover {
-    color: var(--primary);
-}
-
-.page-header {
-    font-size: 1.35rem;
-}
-
-table {
-    vertical-align: middle;
-    caption-side: top;
-    padding: 0 !important;
-    margin-top: 2rem !important;
-    margin-bottom: 2rem !important;
-}
-
-.table {
-    vertical-align: middle;
-    caption-side: top;
-    padding: 0 !important;
-    margin-top: 2rem !important;
-    margin-bottom: 2rem !important;
-}
-
-.table-borderless {
-    block-size: 0 !important;
-}
-
-.carousel-control-prev, .carousel-control-next {
-    width: 2%;
-}
-
-.glow-text {
-    opacity: 0.45;
-    text-shadow: 0 0 1px rgba(255, 255, 255, 0.7), 0 0 5px rgba(255, 255, 255, 0.5), 0 0 8px rgba(255, 255, 255, 0.3);
-    margin-bottom: 0 !important;
-    padding-bottom: 0.5rem !important;
-}
-
-/* unified red-leather glow bridging title through grid */
-.container-fluid.wow.fadeIn {
-    background: radial-gradient(ellipse at 50% 38%, transparent 25%, rgba(160, 60, 30, 0.025) 45%, rgba(180, 75, 45, 0.05) 65%, transparent 85%);
-}
-
-/* bridge the title glow and parchment */
-.glow-text + hr {
-    border: none;
-    height: 1px;
-    background: linear-gradient(to right, transparent, rgba(180, 75, 45, 0.10) 20%, rgba(180, 75, 45, 0.10) 80%, transparent);
-    margin: 0 0 3rem 0;
-}
-
-.tutorial-grid .btn {
-    font-family: 'Fira Mono', Consolas, Menlo, Monaco, 'Courier New', Courier, monospace;
-    box-shadow: 0 0 5px rgba(255, 255, 255, 0.5), 0 0 10px rgba(200, 0, 0, 0.4);
-    transition: box-shadow 0.3s ease-in-out;
-}
-
-.tutorial-grid .btn:hover {
-    color: #000 !important;
-    box-shadow: 0 0 10px rgba(255, 255, 255, 0.7), 0 0 20px rgba(200, 0, 0, 0.6);
-}
-
-.tutorial-grid .btn[aria-expanded="true"] {
-    color: #000 !important;
-}
-
-#custom-docs-button {
-    color: #6C7293;
-}
-
-/* Bootstrap 5 only ships row-cols-1..6; extend to 8 */
-.row-cols-8 > .col {
-    flex: 0 0 auto;
-    width: 12.5%;
-}
-
-/*** TERMINAL LOOK-AND-FEEL ***/
-[data-termynal] {
-    width: 100%;
-    height: 1000px;
-    max-height: 100%;
-    background: #191C24;
-    color: var(--primary);
-    font-size: 12px;
-    font-family: 'Fira Mono', Consolas, Menlo, Monaco, 'Courier New', Courier, monospace;
-    border-radius: 4px;
-    padding: 15px 15px 15px;
-    position: relative;
-    -webkit-box-sizing: border-box;
-    box-sizing: border-box;
-}
-
-[data-ty="input"]:before {
-    content: 'mtron>';
-}
-
-[data-termynal]:before {
-    content: '';
-    position: absolute;
-    top: 0px;
-    left: 0px;
-    display: inline-block;
-    width: 0px;
-    height: 0px;
-    border-radius: 0%;
-    /* A little hack to display the window buttons in one pseudo element. */
-    -webkit-box-shadow: 0px 0 0 #f4c025, 0px 0 0 #3ec930;
-    box-shadow: 0px 0 0 #f4c025, 0px 0 0 #3ec930;
-}
-
-[data-termynal]:after {
-    content: '';
-    position: absolute;
-    color: var(--color-text-subtle);
-    top: 0px;
-    left: 0;
-    width: 100%;
-    text-align: center;
-}
-
-/*** ROTATING FEATURE BOXES ***/
-.flip-box {
-    background-color: transparent;
-    perspective: 1000px; /* Remove this if you don't want the 3D effect */
-    height: 250px;
-}
-
-/* This container is needed to position the front and back side */
-.flip-box-inner {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    transition: transform 0.8s;
-    transform-style: preserve-3d;
-}
-
-/* Do an horizontal flip when you move the mouse over the flip box container */
-.flip-box:hover .flip-box-inner {
-    transform: rotateY(180deg);
-}
-
-/* Position the front and back side */
-.flip-box-front, .flip-box-back {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    -webkit-backface-visibility: hidden; /* Safari */
-    backface-visibility: hidden;
-}
-
-/* Style the front side */
-.flip-box-front {
-
-}
-
-/* Style the back side */
-.flip-box-back {
-    transform: rotateY(180deg);
-}
-
-#mtron_feature .flip-box-front img {
-    width: 54px;
-    height: 54px;
-    margin-left: -8px;
-}
-
-#ring_feature .flip-box-front img {
-    width: 40px;
-    height: 40px;
-}
-
-#ring_feature .flip-box-back img {
-    margin-top: -30px;
-    margin-left: -10px;
-    transform: scale(1.5);
-}
-
-#console_feature .flip-box-back img {
-    margin-top: -20px;
-    margin-left: -10px;
-    transform: scale(1.75);
-}
-
-#oltp_feature .flip-box-back img {
-    transform: scale(1.25);
-    margin-top: -20px;
-    margin-left: -30px;
-}
-
-#olrp_feature .flip-box-back img {
-    transform: scale(1.15);
-    margin-top: -20px;
-    margin-left: -15px;
-}
-
-#iot_feature .flip-box-back img {
-    transform: scale(1.50);
-    margin-top: -20px;
-    margin-left: -15px;
-}
-
-#mtron_feature .flip-box-back img,
-#uri_feature .flip-box-back img {
-    transform: scale(2);
-    margin-top: -20px;
-    margin-left: -10px;
-}
-
-#llm_feature .flip-box-back img {
-    transform: scale(1.6);
-    margin-top: -20px;
-    margin-left: -15px;
-}
-
-#web_feature .flip-box-back img {
-    transform: scale(1.85);
-    margin-top: -10px;
-    margin-left: -20px;
-}
-
-#instset_feature .flip-box-back img {
-    transform: scale(1.55);
-    margin-top: -10px;
-    margin-left: -20px;
-}
-
-.zoomable {
-    cursor: zoom-in;
-    transition: transform 0.3s ease;
-}
-
-.zoomable.zoomed {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%) scale(2.6);
-    z-index: 10000;
-    max-width: 90vw;
-    max-height: 90vh;
-    cursor: zoom-out;
-    box-shadow: 0 0 50px rgba(0, 0, 0, 0.8);
-    background-color: var(--maincolor);
-}
-
-/* TERMNYNAL TABS */
-
-.tabrow {
-    text-align: right;
-    list-style: none;
-    margin: 0px 0 1px;
-    padding: 0px 140px;
-    line-height: 24px;
-    height: 26px;
-    overflow: hidden;
-    font-size: 12px;
-    /*font-family: verdana;*/
-    position: relative;
-}
-
-.tabrow li {
-    border: 1px solid #AAA;
-    background: #D1D1D1;
-    background: -o-linear-gradient(top, #ECECEC 50%, #D1D1D1 100%);
-    background: -ms-linear-gradient(top, #ECECEC 50%, #D1D1D1 100%);
-    background: -moz-linear-gradient(top, #ECECEC 50%, #D1D1D1 100%);
-    background: -webkit-linear-gradient(top, #ECECEC 50%, #D1D1D1 100%);
-    background: linear-gradient(top, #ECECEC 50%, #D1D1D1 100%);
-    display: inline-block;
-    position: relative;
-    z-index: 0;
-    border-top-left-radius: 6px;
-    border-top-right-radius: 6px;
-    box-shadow: 0 3px 3px rgba(0, 0, 0, 0.4), inset 0 1px 0 #FFF;
-    text-shadow: 0 1px #FFF;
-    margin: 0 -5px;
-    padding: 0 50px; /* adjust tab size */
-}
-
-.tabrow a {
-    color: #555;
-    text-decoration: none;
-}
-
-.tabrow li.selected {
-    background: #FFF;
-    color: #333;
-    z-index: 2;
-    border-bottom-color: #FFF;
-}
-
-.tabrow:before {
-    position: absolute;
-    content: " ";
-    width: 100%;
-    bottom: 0;
-    left: 0;
-    /*border-bottom: 1px solid #AAA;*/
-    z-index: 1;
-}
-
-.tabrow li:before,
-.tabrow li:after {
-    border: 1px solid #AAA;
-    position: absolute;
-    bottom: -1px;
-    width: 5px;
-    height: 5px;
-    content: " ";
-}
-
-.tabrow li:before {
-    left: -6px;
-    border-bottom-right-radius: 6px;
-    border-width: 0 1px 1px 0;
-    box-shadow: 2px 2px 0 #D1D1D1;
-}
-
-.tabrow li:after {
-    right: -6px;
-    border-bottom-left-radius: 6px;
-    border-width: 0 0 1px 1px;
-    box-shadow: -2px 2px 0 #D1D1D1;
-}
-
-.tabrow li.selected:before {
-    box-shadow: 2px 2px 0 #FFF;
-}
-
-.tabrow li.selected:after {
-    box-shadow: -2px 2px 0 #FFF;
-}
-
-code.hljs {
-    font-size: 1.1rem;
-    display: inline;
-    /*width: 90%;*/
-    overflow: hidden;
-    text-overflow: clip;
-}
-
-.code {
-    font-family: 'Courier', Courier, monospace;
-    font-size: 1.5rem;
-}
-
-h1 {
-    font-size: 3.5rem;
-    line-height: 0.1rem;
-}
-
-em {
-    color: var(--primary)
-}
-
-.subtitle {
-    font-size: 1.5rem;
-    margin-bottom: 0.75rem;
-}
-
-/*** Spinner ***/
-
-#spinner {
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 1.0s ease-out, visibility 0s linear .5s;
-    z-index: 99999;
-}
-
-#spinner.show {
-    transition: opacity 1.0s ease-out, visibility 0s linear 0s;
-    visibility: visible;
-    opacity: 1;
-}
-
-/*** Image Growth Effect ***/
-
-.overlap-layers {
-    position: relative;
-    display: inline-block; /* Make the width of box same as image */
-}
-
-.overlap-layers .top-layer {
-    position: absolute;
-    margin: 0 auto;
-    left: 0;
-    right: 0;
-    top: -3%; /* Adjust this value to move the positioned div up and down */
-    text-align: center;
-    width: 100%; /* Set the width of the positioned div */
-}
-
-.c0 {
-    opacity: 1;
-    transition: opacity 4s;
-}
-
-.c0:hover {
-    opacity: 0;
-}
-
-
-.grow {
-    transition: all 4s ease-in-out;
-    z-index: 999;
-}
-
-.grow:hover {
-    z-index: 999;
-    transform: scale(2.0);
-}
-
-
-/*** Button ***/
-
-.btn {
-    font-weight: 500;
-    transition: .5s;
-}
-
-.btn-square {
-    padding: 5px;
-    width: 38px;
-    height: 38px;
-}
-
-.btn-sm-square {
-    padding: 5px;
-    width: 32px;
-    height: 32px;
-}
-
-.btn-lg-square {
-    padding-top: 10px;
-    width: 48px;
-    height: 48px;
-}
-
-.btn-square,
-.btn-sm-square,
-.btn-lg-square {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: normal;
-}
-
-.neon-text {
-    color: #fff !important;
-    text-shadow: 0 0 5px #fff, 0 0 5px var(--primary), 0 0 5px var(--primary);
-    /* #0fa neat green color */
-}
-
-.neon-box {
-    box-shadow: 0 0 5px #fff, 0 0 5px var(--primary), 0 0 5px var(--primary);
-    /* #0fa neat green color */
-}
-
-.btn-dark:has(.bi-terminal) {
-    opacity: 0.45;
-    font-size: 1.75rem;
-    background-color: transparent;
-    border: none;
-    position: relative;
-    top: -3px;
-}
-
-
-/*** Navbar ***/
-
-.navbar {
-    min-height: 50px;
-    max-height: 50px;
-    padding: 2rem 2rem;
-    padding-bottom: 1rem;
-    background: linear-gradient(to bottom, #040404, #000000 85%);
-    border-bottom: 1px solid rgba(122, 37, 24, 0.28);
-    box-shadow: 0 1px 18px rgba(151, 2, 7, 0.06);
-}
-
-.dropdown {
-    position: unset;
-}
-
-.navbar .dropdown-toggle::after {
-    border: none;
-    content: "\f107";
-    font-family: "Font Awesome 5 Free";
-    font-weight: 900;
-    vertical-align: middle;
-    margin-left: 8px;
-}
-
-.navbar .navbar-nav .nav-link {
-    margin-right: 30px;
-    padding: 40px 0;
-    color: var(--light);
-    font-family: 'Oswald', sans-serif;
-    font-size: 18px;
-    font-weight: 600;
-    text-transform: uppercase;
-    outline: none;
-}
-
-.navbar .navbar-nav .nav-link:hover,
-.navbar .navbar-nav .nav-link.active {
-    color: var(--primary);
-}
-
-.navbar .navbar-nav .quickstart-link {
-    color: #796c6c;
-}
-.navbar .navbar-nav .quickstart-link:hover {
-    color: var(--primary);
-}
-
-.metatron-name {
-    color: var(--primary);
-    font-weight: bolder;
-}
-
-.navbar.sticky-top {
-    top: -100px;
-    transition: .5s;
-}
-
-@media (max-width: 991.98px) {
-    .navbar .navbar-nav .nav-link,
-    .navbar.shadow-sm .navbar-nav .nav-link {
-        margin-right: 0;
-    }
-
-    .navbar .navbar-nav {
-        margin-top: 8px;
-        border-top: 1px solid var(--light);
-    }
-}
-
-@media (min-width: 992px) {
-    .navbar.shadow-sm .navbar-nav .nav-link {
-    }
-
-    .navbar .nav-item .dropdown-menu {
-        display: block;
-        border: 1px solid rgba(122, 37, 24, 0.3);
-        margin-top: 0;
-        top: 150%;
-        opacity: 0;
-        visibility: hidden;
-        transition: .5s;
-        background: linear-gradient(180deg, rgba(15, 12, 12, 0.98), rgba(0, 0, 0, 0.98));
-        box-shadow: 0 4px 24px rgba(151, 2, 7, 0.12), 0 0 8px rgba(180, 75, 45, 0.08);
-    }
-
-    .navbar .nav-item:hover .dropdown-menu {
-        top: 100%;
-        visibility: visible;
-        transition: .5s;
-        opacity: 1;
-    }
-}
-
-.dropdown-menu-dark .dropdown-item {
-    color: var(--white);
-    font-size: 1rem;
-    padding: 0.5rem 1.4rem;
-    transition: background 0.15s, color 0.15s;
-}
-
-.dropdown-menu-dark .dropdown-item:hover {
-    background: rgba(122, 37, 24, 0.2);
-    color: var(--primary);
-}
-
-.breadcrumb-item + .breadcrumb-item::before {
-    color: var(--light);
-}
-
-html {
-    overflow-y: scroll;
-}
-
-body {
-    margin: 0;
-    padding: 0;
-    min-height: 100vh;
-    background: var(--dark);
-    line-height: 1.4rem;
-    font-size: 1.2rem;
-}
-
-/* ── atmospheric backdrop: radial glows + dot-grid ── */
-body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    z-index: 0;
-    pointer-events: none;
-    background:
-        /* red glow bleeding down from top-center */
-        radial-gradient(ellipse 80% 42% at 50% 0%, rgba(151, 2, 7, 0.24) 0%, transparent 58%),
-        /* warm accent from right */
-        radial-gradient(ellipse 30% 35% at 85% 55%, rgba(151, 2, 7, 0.06) 0%, transparent 70%),
-        /* teal whisper bottom-left */
-        radial-gradient(circle at 15% 85%, rgba(77, 182, 172, 0.04) 0%, transparent 50%);
-}
-
-body::after {
-    content: '';
-    position: fixed;
-    inset: 0;
-    z-index: 0;
-    pointer-events: none;
-    opacity: 0.7;
-    background-image: radial-gradient(circle, rgba(108, 114, 147, 0.2) 0.65px, transparent 0.65px);
-    background-size: 22px 22px;
-}
-
-/* ensure content sits above the backdrop pseudo-elements */
-#content,
-main,
-footer {
-    position: relative;
-    z-index: 1;
-}
-
-/*** Footer ***/
-
-.footer .btn.btn-link {
-    display: block;
-    margin-bottom: 5px;
-    padding: 0;
-    text-align: left;
-    color: var(--light);
-    font-size: 15px;
-    font-weight: normal;
-    text-transform: capitalize;
-    transition: .3s;
-}
-
-.footer .btn.btn-link::before {
-    position: relative;
-    content: "\f105";
-    font-family: "Font Awesome 5 Free";
-    font-weight: 900;
-    margin-right: 10px;
-}
-
-.footer .btn.btn-link:hover {
-    color: var(--primary);
-    letter-spacing: 1px;
-    box-shadow: none;
-}
-
-.footer {
-    background: linear-gradient(to top, #040404, #000000 85%) #000 !important;
-    border-top: 1px solid rgba(122, 37, 24, 0.28);
-    box-shadow: 0 -1px 18px rgba(151, 2, 7, 0.06);
-}
-
-.footer .btn-dark {
-    opacity: 0.45;
-    position: relative;
-    top: -3px;
-    background: transparent;
-    border: none;
-    width: 32px;
-    height: 32px;
-    padding: 0;
-    font-size: 0.9rem;
-}
-
-.footer .small {
-    font-size: 0.85rem;
-}
-
-.footer .d-flex {
-    padding-top: 4px !important;
-    padding-bottom: 4px !important;
-}
-
-.footer .small {
-    opacity: 0.45;
-}
-
-.footer .copyright {
-    padding: 1.5rem;
-    font-size: 15px;
-    background: transparent;
-}
-
-.footer .copyright a {
-    color: var(--light);
-}
-
-.footer .copyright a:hover {
-    color: var(--primary);
-}
-
-.modal-content {
-    width: unset;
-}
-
-.modal-text {
-    font-size: 1.3rem;
-}
-
-.isa-row {
-    width: 24px;
-    height: 24px;
-    object-fit: contain;
-    flex-shrink: 0;
-}
-
-/******************************************************************/
-/******************************************************************/
-/************************* HIGHLIGHT-JS ***************************/
-/******************************************************************/
-/******************************************************************/
-
-.custom-docs {
-    padding: 20px;
-    background: var(--secondarycolor);
-    border: 1px solid var(--mred);
-}
-
-.discrete {
-    color: #796c6c !important;
-    border-bottom: 1px solid #7a2518;
-    padding-bottom: 0.35rem;
-    margin-bottom: 0.75rem;
-}
-
-.custom-docs .collapse {
-    border-bottom: 1px solid var(--mred);
-    padding-bottom: 2rem;
-    margin-bottom: 2rem;
-}
-
-.custom-docs .collapse:last-child {
-    border-bottom: none;
-}
-
-.btn-close:focus {
-    box-shadow: none;
-}
-
-.btn-copy-url {
-    filter: invert(0) grayscale(100%) brightness(35%);
-    opacity: 0.8;
-    /*  width: 0.15em;
-      height: 0.15em; */
-    position: relative !important;
-    top: -16px !important;
-    left: -35px !important;
-}
-
-.btn-close-white {
-    filter: invert(1) grayscale(100%) brightness(35%);
-    opacity: 0.8;
-    width: 0.15em;
-    height: 0.15em;
-    position: relative !important;
-    top: -20px !important;
-    left: -20px !important;
-}
-
-.btn-close-white:hover {
-    opacity: 1;
-}
-
-/* ACADEMIC PDF EXPORT MODE (B&W) */
-.pdf-export-mode {
-    background: #ffffff !important;
-    color: #000000 !important;
-    font-family: 'Times New Roman', Times, serif !important;
-    padding: 20px !important;
-}
-
-.pdf-export-mode .btn-close {
-    display: none !important;
-}
-
-.pdf-export-mode h1,
-.pdf-export-mode h2,
-.pdf-export-mode h3,
-.pdf-export-mode h4,
-.pdf-export-mode h5,
-.pdf-export-mode h6 {
-    color: #000000 !important;
-    font-family: 'Times New Roman', Times, serif !important;
-    border-bottom: 1px solid #000 !important;
-    padding-bottom: 5px !important;
-    text-shadow: none !important;
-    -webkit-text-stroke: 0 !important;
-}
-
-.pdf-export-mode p,
-.pdf-export-mode li,
-.pdf-export-mode div {
-    color: #000000 !important;
-    background: transparent !important;
-    font-size: 11pt !important;
-    line-height: 1.25 !important;
-    text-shadow: none !important;
-}
-
-.pdf-export-mode pre,
-.pdf-export-mode code {
-    background: #f0f0f0 !important;
-    color: #000000 !important;
-    border: 1px solid #ccc !important;
-    white-space: pre-wrap !important;
-    word-wrap: break-word !important;
-    font-size: 9pt !important;
-    box-shadow: none !important;
-    text-shadow: none !important;
-}
-
-.pdf-export-mode .hljs {
-    background: #f0f0f0 !important;
-    color: #000000 !important;
-}
-
-/* Reset syntax highlighting for B&W export */
-.pdf-export-mode .hljs-comment,
-.pdf-export-mode .hljs-quote,
-.pdf-export-mode .hljs-mtron-comment {
-    color: #555 !important;
-    font-style: italic !important;
-}
-
-.pdf-export-mode .hljs-keyword,
-.pdf-export-mode .hljs-selector-tag,
-.pdf-export-mode .hljs-subst,
-.pdf-export-mode .hljs-mtron-keyword,
-.pdf-export-mode .hljs-mtron-inst {
-    color: #000 !important;
-    font-weight: bold !important;
-}
-
-.pdf-export-mode .hljs-number,
-.pdf-export-mode .hljs-literal,
-.pdf-export-mode .hljs-variable,
-.pdf-export-mode .hljs-template-variable,
-.pdf-export-mode .hljs-tag .hljs-attr,
-.pdf-export-mode .hljs-mtron-real,
-.pdf-export-mode .hljs-mtron-int,
-.pdf-export-mode .hljs-mtron-bool {
-    color: #000 !important;
-}
-
-.pdf-export-mode .hljs-string,
-.pdf-export-mode .hljs-doctag,
-.pdf-export-mode .hljs-mtron-str {
-    color: #000 !important;
-}
-
-.pdf-export-mode .hljs-title,
-.pdf-export-mode .hljs-section,
-.pdf-export-mode .hljs-selector-id,
-.pdf-export-mode .hljs-mtron-uri,
-.pdf-export-mode .hljs-mtron-type {
-    color: #000 !important;
-    font-weight: bold !important;
-}
-
-.pdf-export-mode .conum + b {
-    background: #000 !important;
-    color: #fff !important;
-    border: 1px solid #000 !important;
-}
-
-/* ── Callout badge in colist / annotation tables ──────────────────── */
-
-.conum + b {
-    display: inline-flex !important;
-    align-items: center;
-    justify-content: center;
-    width: 26px !important;
-    height: 20px !important;
-    font-size: 12px !important;
-    line-height: 20px !important;
-    text-align: center !important;
-    background: var(--mred) !important;
-    color: var(--myellow);
-    font-weight: bold;
-    border-radius: 100px;
-    margin-right: 6px;
-}
-
-pre.highlight {
-    position: relative !important;
-}
-
-pre.highlight > code[data-lang] {
-    display: block !important;
-    padding-right: 44px;
-}
-
-/* ── Result-line dimming / input brightness ──────────────────── */
-
-.hljs-mtron-result-line {
-    opacity: 0.62;
-}
-
-.hljs-mtron-prompt-begin,
-.hljs-mtron-prompt-end {
-    filter: brightness(1.4);
-}
-
-/* Linearize Tabs for PDF Export */
-.pdf-export-mode .primary {
-    display: block !important;
-    margin-bottom: 2em !important;
-}
-
-.pdf-export-mode .switch {
-    display: none !important;
-}
-
-.pdf-export-mode .content.hidden {
-    display: block !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    height: auto !important;
-}
-
-.pdf-export-mode .content {
-    display: block !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    height: auto !important;
-    margin-bottom: 1.5em !important;
-    padding: 10px !important;
-    border: 1px solid #eee !important;
-}
-
-.pdf-export-mode hr {
-    border-top: 1px solid #000 !important;
-    opacity: 1 !important;
-}
-
-@media print {
-    .custom-docs {
-        background: #ffffff !important;
-        color: #000000 !important;
-        font-family: 'Times New Roman', Times, serif !important;
-        padding: 0 !important;
-    }
-
-    .custom-docs h1, .custom-docs h2, .custom-docs h3, .custom-docs h4, .custom-docs h5, .custom-docs h6 {
-        color: #000000 !important;
-        font-family: 'Times New Roman', Times, serif !important;
-        border-bottom: 1px solid #eee;
-        padding-bottom: 5px;
-    }
-
-    .custom-docs p, .custom-docs li {
-        font-size: 11pt !important;
-        line-height: 1.25 !important;
-    }
-
-    .collapse {
-        display: block !important;
-        height: auto !important;
-        visibility: visible !important;
-        page-break-after: always;
-        break-after: page;
-        border: none !important;
-        box-shadow: none !important;
-    }
-
-    .collapse:last-child {
-        page-break-after: avoid;
-        break-after: avoid;
-    }
-
-    pre, code {
-        background: #f8f9fa !important;
-        color: #000000 !important;
-        border: 1px solid #ddd !important;
-        white-space: pre-wrap !important;
-        word-wrap: break-word !important;
-        font-size: 1rem !important;
-    }
-
-    .hljs {
-        background: #f8f9fa !important;
-        color: #FFF !important;
-    }
-
-    /* Reset syntax highlighting for a more academic look */
-    .hljs-comment, .hljs-quote {
-        color: #666 !important;
-        font-style: italic !important;
-    }
-
-    .hljs-keyword, .hljs-selector-tag, .hljs-subst {
-        color: #000 !important;
-        font-weight: bold !important;
-    }
-
-    .hljs-number, .hljs-literal, .hljs-variable, .hljs-template-variable, .hljs-tag .hljs-attr {
-        color: #000 !important;
-    }
-
-    .hljs-string, .hljs-doctag {
-        color: #000 !important;
-    }
-
-    .hljs-title, .hljs-section, .hljs-selector-id {
-        color: #000 !important;
-        font-weight: bold !important;
-    }
-
-    .hljs-subst {
-        font-weight: normal !important;
-    }
-
-    .hljs-type, .hljs-class .hljs-title {
-        color: #000 !important;
-        font-weight: bold !important;
-    }
-
-    .hljs-tag, .hljs-name, .hljs-attribute {
-        color: #000 !important;
-    }
-
-    .hljs-regexp, .hljs-link {
-        color: #000 !important;
-    }
-
-    .hljs-symbol, .hljs-bullet {
-        color: #000 !important;
-    }
-
-    .hljs-built_in, .hljs-builtin-name {
-        color: #000 !important;
-    }
-
-    .hljs-meta {
-        color: #666 !important;
-        font-weight: bold !important;
-    }
-
-    .hljs-deletion {
-        background: #fdd !important;
-    }
-
-    .hljs-addition {
-        background: #dfd !important;
-    }
-
-    .hljs-emphasis {
-        font-style: italic !important;
-    }
-
-    .hljs-mtron-template {
-        color: var(--tertiarycolor);
-    }
-
-    .hljs-mtron-comment {
-        color: #666 !important;
-        font-style: italic !important;
-    }
-
-    .hljs-mtron-at-vid,
-    .hljs-mtron-real,
-    .hljs-mtron-bytes,
-    .hljs-mtron-int,
-    .hljs-mtron-str,
-    .hljs-mtron-bool,
-    .hljs-mtron-sugar-inst,
-    .hljs-mtron-dom-rng-query,
-    .hljs-mtron-sys-furi,
-    .hljs-mtron-coefficient,
-    .hljs-mtron-log-warn,
-    .hljs-mtron-auto-from,
-    .hljs-mtron-query-key,
-    .hljs-mtron-keyword,
-    .hljs-mtron-query-value,
-    .hljs-mtron-inst,
-    .hljs-mtron-uri,
-    .hljs-mtron-type,
-    .hljs-mtron-type-prefix,
-    .hljs-mtron-punctuation,
-    .hljs-mtron-result-prefix,
-    .hljs-mtron-prompt-end,
-    .hljs-mtron-log-info,
-    .hljs-mtron-prompt-begin,
-    .hljs-mtron-pipe,
-    .hljs-mtron-log-error,
-    .hljs-mtron-match-fail,
-    .hljs-mtron-fail,
-    .hljs-mtron-fail-bar,
-    .hljs-mtron-thrown {
-        color: #000 !important;
-        font-weight: bold !important;
-    }
-
-    .conum + b {
-        background: #000 !important;
-        color: #fff !important;
-    }
-}
-
-pre {
-    margin-bottom: 0px;
-    color: #fff !important;
-}
-
-.switch {
-    border: none;
-}
-
-.content {
-    margin: 0.15rem;
-}
-
-details {
-    float: right;
-    display: inline-block;
-    max-width: max-content;
-    border: 1px solid #7a2518;
-    margin: 0 0 0.75em 1em;
-    padding: 0.5em 0.85em;
-    background: rgba(122, 37, 24, 0.06);
-    cursor: pointer;
-    transition: background 0.2s, box-shadow 0.2s;
-}
-
-details:hover {
-    background: rgba(122, 37, 24, 0.12);
-    box-shadow: 0 0 8px rgba(180, 75, 45, 0.15);
-}
-
-details summary {
-    color: #796c6c;
-    list-style: none;
-    font-size: 0.85rem;
-    font-weight: bold;
-}
-
-details summary::-webkit-details-marker {
-    display: none;
-}
-
-details summary::before {
-    content: '\25B8';
-    color: #7a2518;
-    font-size: 0.75rem;
-    margin-right: 8px;
-    transition: transform 0.2s;
-}
-
-details[open] summary::before {
-    content: '\25BE ';
-}
-
-.switch ~ div:nth-of-type(2),
-.switch ~ div:nth-of-type(3),
-.switch ~ div:nth-of-type(4),
-.switch ~ div:nth-of-type(5),
-.switch ~ div:nth-of-type(6),
-.switch ~ div:nth-of-type(7),
-.switch ~ div:nth-of-type(8),
-.switch ~ div:nth-of-type(9) {
-    border-style: solid;
-    border-color: var(--light);
-    border-width: 1px;
-    margin-bottom: 1em;
-    padding: 1em;
-}
-
-.switch--item.selected {
-    background-color: #7a2518 !important;
-}
-
-.switch--item {
-    padding: 0.25em 1em;
-    border-radius: 0.35em;
-    position: relative;
-    border-color: #7a2518 !important;
-    border-width: 1px;
-    background-color: var(--secondarycolor) !important;
-    border-style: solid;
-}
-
-
-th {
-    font-size: 1.2rem;
-    color: var(--mred);
-}
-
-.halign-center {
-    display: table-cell;
-    text-align: center; /* centers horizontally */
-    padding: 0.25rem;
-}
-
-.valign-middle {
-    display: table-cell;
-    align-items: center; /* centers vertically */
-    padding: 0.25rem;
-}
-
-.hljs {
-    background: var(--secondarycolor);
-    font-size: 100%;
-    display: block;
-    padding: 0;
-    overflow-y: scroll;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-}
-
-.hljs::-webkit-scrollbar {
-    display: none;
-}
-
-
-.hljs-phaseshift-studio-header {
-    color: var(--secondarycolor) !important;
-    font-weight: bolder;
-}
-
-.hljs-mtron-at-vid,
-.hljs-mtron-real,
-.hljs-mtron-bytes,
-.hljs-mtron-int,
-.hljs-mtron-str,
-.hljs-mtron-bool,
-.hljs-mtron-sugar-inst,
-.hljs-mtron-dom-rng-query,
-.hljs-mtron-sys-furi,
-.hljs-mtron-coefficient,
-.hljs-mtron-log-warn {
-    color: var(--myellow);
-}
-
-.hljs-mtron-auto-from,
-.h {
-    color: #d4de68;
-    font-weight: bold !important;
-}
-
-.hljs-mtron-form,
-.hljs-mtron-rec-key,
-.hljs-mtron-query-key {
-    color: var(--maqua);
-}
-
-#header,
-.hljs-punctuation,
-.hljs-mtron-result-prefix,
-.hljs-mtron-type-prefix,
-.hljs-mtron-prompt-end,
-.hljs-mtron-log-info {
-    color: var(--white);
-}
-
-.hljs-mtron-noobj,
-.hljs-mtron-T {
-    color: var(--mmagenta);
-}
-
-.hljs-mtron-rec,
-.hljs-mtron-prompt-begin,
-.hljs-mtron-pipe,
-.hljs-mtron-log-error,
-.hljs-mtron-match-fail,
-.hljs-mtron-fail,
-.hljs-mtron-fail-bar,
-.hljs-mtron-thrown {
-    color: var(--mred);
-}
-
-.hljs-mtron-inst-f-jvm,
-.hljs-comment {
-    color: var(--mlightgray);
-}
-
-.hljs-mtron-keyword,
-.hljs-mtron-query-value,
-.hljs-mtron-inst {
-    color: var(--tertiarycolor);
-}
-
-.hljs-mtron-uri,
-.hljs-mtron-type,
-.hljs-mtron-type-prefix {
-    color: var(--mblue);
-}
-
-.colist {
-    margin-bottom: 2em;
-}
-
-/* ── Callout badge in code blocks (via highlight.js mtron-doc-callout) ── */
-
-.hljs-mtron-doc-callout {
-    float: right !important;
-    width: 26px !important;
-    height: 20px !important;
-    font-size: 12px !important;
-    line-height: 20px !important;
-    text-align: center !important;
-    background: var(--mred) !important;
-    color: var(--myellow);
-    font-weight: bold;
-    border-radius: 100px;
-    display: inline-flex !important;
-    align-items: center;
-    justify-content: center;
-    margin-right: -2px;
-}
-
-strong {
-    color: var(--mred);
-}
-
-.hljs-fos-docs-if-else-then-case-do,
-.hljs-mtron-comment {
-    color: #797979;
-}
-
-.MathJax_Display {
-    color: var(--mred);
-}
-
-/* ── highlight.js copy button ── */
-.hljs-copy-button {
-    color: transparent;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 26px;
-    height: 24px;
-}
-.hljs-copy-button::before {
-    content: '🦇';
-    font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;
-    color: var(--mlightgray);
-    font-size: 12px;
-}
-.hljs-copy-button[data-copied="true"]::before {
-    content: 'copied';
-    font-family: var(--font-mono);
-    color: var(--light);
-    font-size: 8px;
-}
-.hljs-copy-button:hover::before {
-    color: var(--mred);
-}
-
-/* PAGE SWEEP EFFECT */
-.page-sweep {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: #000000;
-    z-index: 9999;
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.4s ease-in-out, visibility 0.4s;
-}
-
-.page-sweep.active {
-    opacity: 1;
-    visibility: visible;
-}
-
-.page-sweep.exit {
-    opacity: 0;
-    visibility: hidden;
-}
-
-/*** Back to Top ***/
-.back-to-top {
-    position: fixed;
-    display: block;
-    left: 0;
-    bottom: 55px;
-    z-index: 99;
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.5s ease-in-out, visibility 0.5s;
-}
-
-.back-to-top.show {
-    opacity: 0.45;
-    visibility: visible;
-}
-
-@media (max-width: 991.98px) {
-    .back-to-top {
-        left: 0;
-        bottom: 20px;
-    }
-}
-</style>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-</head>
-<body class="article">
-<div id="content" style="max-width: 100%;">
 <!--
   ~ Metatron: A Distributed Computing Language and Virtual Machine
   ~  Copyright (C) 2025- PhaseShift Studio, LLC
@@ -2178,6 +599,7 @@ lhs =&gt; inst(arg1,...,argN){ inst1...instN } =&gt; rhs
   tool=&gt;[
    !*eval,
    !*sql,
+   !*/usr/ai/mcp/index-mcp,
    !*/usr/ai/mcp/intellij,
    !*/usr/ai/mcp/mtron],
   note=&gt;!@/usr/agent/notes,
@@ -2186,6 +608,20 @@ lhs =&gt; inst(arg1,...,argN){ inst1...instN } =&gt; rhs
 ==&gt;v2/name=&gt;'vadas'
 ==&gt;v4=&gt;[name=&gt;'lop']
 ==&gt;v6/out_=&gt;[created=&gt;!*v4]
+==&gt;testy/feature=&gt;[
+ think=&gt;block(/usr/ui/console/pane/0/stream(id())),
+ memory=&gt;memory::[
+  max=&gt;20,
+  mem=&gt;!@/usr/agent/memory],
+ tool=&gt;[
+  !*eval,
+  !*sql,
+  !*/usr/ai/mcp/index-mcp,
+  !*/usr/ai/mcp/intellij,
+  !*/usr/ai/mcp/mtron],
+ note=&gt;!@/usr/agent/notes,
+ skill=&gt;[!@mtronfs:skills/mtron.as(skill::T)],
+ response=&gt;[to=&gt;print(id())]]
 ==&gt;v1/name=&gt;'marko'
 ==&gt;offices=&gt;rrow::T[?[
   officeCode=&gt;str::T,
@@ -2245,19 +681,6 @@ lhs =&gt; inst(arg1,...,argN){ inst1...instN } =&gt; rhs
 ==&gt;testy/provider=&gt;!*deep:deepseek-v4-pro/provider
 ==&gt;v6/name=&gt;'peter'
 ==&gt;v3/name=&gt;'josh'
-==&gt;testy/feature=&gt;[
- think=&gt;block(/usr/ui/console/pane/0/stream(id())),
- memory=&gt;memory::[
-  max=&gt;20,
-  mem=&gt;!@/usr/agent/memory],
- tool=&gt;[
-  !*eval,
-  !*sql,
-  !*/usr/ai/mcp/intellij,
-  !*/usr/ai/mcp/mtron],
- note=&gt;!@/usr/agent/notes,
- skill=&gt;[!@mtronfs:skills/mtron.as(skill::T)],
- response=&gt;[to=&gt;print(id())]]
 ==&gt;out=&gt;out?rng=rec{*}&amp;dom=rec(label=&gt;uri{*}::T){rshift(outE_).rshift(*label).rshift(inV_)}
 ==&gt;v5=&gt;[name=&gt;'ripple',lang=&gt;java]</code></pre>
 </div>
@@ -3408,7 +1831,7 @@ mtron&gt; tB::1.0.as(mB::T)     <i class="conum" data-value="3"></i><b>(3)</b>
   eval_mtron=&gt;/usr/ai/mcp/mtron/eval_mtron?#{*}&lt;=noobj{0}(code=&gt;str::T),
   list_space=&gt;/usr/ai/mcp/mtron/list_space?#{?}&lt;=noobj{0}(),
   router_info=&gt;/usr/ai/mcp/mtron/router_info?#{?}&lt;=noobj{0}(),
-  list_inst=&gt;/usr/ai/mcp/mtron/list_inst?#{?}&lt;=noobj{0}(doc=&gt;bool{?}::T),
+  find_inst=&gt;/usr/ai/mcp/mtron/find_inst?#{?}&lt;=noobj{0}(pattern=&gt;uri::T,{?}dom=&gt;uri::T,{?}rng=&gt;uri::T),
   spawn_wsclient=&gt;/usr/ai/mcp/mtron/spawn_wsclient?wsclient&lt;=noobj{0}(host=&gt;uri::T,on_message=&gt;inst::T),
   spawn_wshandler=&gt;/usr/ai/mcp/mtron/spawn_wshandler?wshandler&lt;=noobj{0}(host=&gt;uri::T,on_message=&gt;inst::T)],
  send=&gt;/usr/ai/mcp/mtron/send?noobj&lt;=#{?}(A{?}::T),
@@ -4019,7 +2442,7 @@ mtron&gt; 4.as(int::T[?&gt;0]@nat)
 ==&gt;nat::4
 mtron&gt;  -4.as(nat::T)
 ==&gt;fail::[-4 is not a is(gt(0))
-  -4=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/292
+  -4=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/478
 mtron&gt; [-- refining rec::T  --]
 mtron&gt; [name=&gt;'snowbutt',age=&gt;7].as(rec::T[?[name=&gt;str::T,age=&gt;int::T]@chicken)
 ==&gt;ERROR: [name=&gt;'snowbutt',age=&gt;7].as(rec::T[?[name=&gt;str::T,age=&gt;int::T]@chicken)
@@ -4085,11 +2508,11 @@ mtron&gt; 2.as(nat::T)     <i class="conum" data-value="5"></i><b>(5)</b>
 ==&gt;2
 mtron&gt;  -2.as(nat::T)     <i class="conum" data-value="6"></i><b>(6)</b>
 ==&gt;fail::[-2 is not a is(gt(0))
-  -2=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/298
+  -2=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/484
 mtron&gt;  nat::2 * -1     <i class="conum" data-value="7"></i><b>(7)</b>
 ==&gt;fail::[nat::-2 is not a int::T[is(gt(0))][choose([
   is(lt(0))=&gt;mult(-1),
-  id()=&gt;id()]).rshift()]][...]@/sys/fail/304</code></pre>
+  id()=&gt;id()]).rshift()]][...]@/sys/fail/490</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -4116,7 +2539,7 @@ The predicate component of the type definition tests an <code>int</code> to dete
 <div class="paragraph">
 <p>While every <code>type</code> is an <code>obj</code>, not every <code>obj</code> is a <code>type</code>.
 Those <code>objs</code> that are not <code>types</code> are <em>instances</em> of some <code>type</code>.
-This is the foundation for all other <code>objs</code> in {{r}}m{{r}}e{{y}}t{{r}}a{{c}}t{{c}}r{{g}}O{{c}}n{{X}}.</p>
+This is the foundation for all other <code>objs</code> in {{m}}m{{r}}e{{c}}t{{c}}A{{g}}T{{b}}R{{m}}o{{c}}n{{X}}.</p>
 </div>
 <h4 id="_cascading_type_constructions" class="discrete">cascading type constructions</h4>
 <h3 id="_mono_types" class="discrete">mono types</h3>
@@ -4772,7 +3195,7 @@ mtron&gt;  nat::-10
 ==&gt;ERROR: nat::-10 is not a int::T[is(gt(0))]
 mtron&gt;  int::-10.as(nat::T)
 ==&gt;fail::[-10 is not a is(gt(0))
-  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/426</code></pre>
+  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/612</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -4871,7 +3294,7 @@ mtron&gt;  nat::-10
 ==&gt;ERROR: nat::-10 is not a int::T[is(gt(0))]
 mtron&gt;  int::-10.as(nat::T)
 ==&gt;fail::[-10 is not a is(gt(0))
-  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/432</code></pre>
+  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/618</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -4894,10 +3317,10 @@ mtron&gt; age::125
 ==&gt;ERROR: age::125 is not a int::T[is(lt(120))]
 mtron&gt;  nat::125.as(age::T)
 ==&gt;fail::[nat::125 is not a is(lt(120))
-  nat::125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/438
+  nat::125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/624
 mtron&gt;  125.as(nat::T).as(age::T)
 ==&gt;fail::[125 is not a is(lt(120))
-  125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/444</code></pre>
+  125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/630</code></pre>
 </div>
 </div>
 <div class="listingblock">
@@ -5078,9 +3501,7 @@ mtron&gt; *#.as[name      =&gt; _,
   one?A&lt;=A(),
   which(uri::T),
   inject(int::T,#::T),
-  /m/inst/thread(#::T),
-  stop?/m/mach/thread&lt;=/m/mach/thread(),
-  pause?/m/mach/thread&lt;=/m/mach/thread()]]@/m/mach
+  /m/inst/thread?/m/mach/thread&lt;=#{?}(#::T)]]@/m/mach
 mtron&gt; memspace::[
         pattern   =&gt; /usr/#,
         q         =&gt; [
@@ -6388,7 +4809,7 @@ mtron&gt; */usr/notes/#?subq
   mqtt::T,
   haos::T]]@/m/iot
 mtron&gt;  import(/m/llm)
-{{c}}.{{c}}.{{m}}.{{X}}</code></pre>
+{{c}}.{{b}}.{{y}}.{{X}}</code></pre>
 </div>
 </div>
 </div>
@@ -6423,18 +4844,17 @@ The inspiration for metatron&#8217;s URI addressing schema was inspired by the v
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; mqtt::[pattern =&gt; &lt;ha:#&gt;,
               host    =&gt; mqtt://localhost:1883,
               route   =&gt; [ha:=&gt;&lt;/home/chips&gt;]]@/sys/space/esp32     <i class="conum" data-value="1"></i><b>(1)</b>
+==&gt;ERROR: com.hivemq.client.mqtt.exceptions.ConnectionFailedException: io.netty.channel.AbstractChannel$AnnotatedConnectException: Connection refused: localhost/127.0.0.1:1883: com.hivemq.client.mqtt.exceptions.ConnectionFailedException: io.netty.channel.AbstractChannel$AnnotatedConnectException: Connection refused: localhost/127.0.0.1:1883
+  	java.util.concurrent.CompletableFuture [line 345]
+  	java.util.concurrent.CompletableFuture [line 440]
+  	java.util.concurrent.CompletableFuture [line 2117]
+  	studio.phaseshift.metatron.isa.iot.space.mqtt.mqttSpace [line 110]
+  	studio.phaseshift.metatron.isa.iot.space.mqtt.mqttSpace [line 136]
 mtron&gt; *ha:main_field/sensor/+.-&lt;|[
          &gt;&gt;temp.?&lt;50  =&gt; print('too cold for watering'),
          &gt;&gt;humid.?&gt;30 =&gt; print('too humid for watering'),
          _            =&gt; print('starting drip system').
-                         ha:main_field/actuator/drip.run(minutes::25)]     <i class="conum" data-value="2"></i><b>(2)</b>
-==&gt;ERROR: *ha:main_field/sensor/+.-&lt;|[
-         &gt;&gt;temp.?&lt;50  =&gt; print('too cold for watering'),
-         &gt;&gt;humid.?&gt;30 =&gt; print('too humid for watering'),
-         _            =&gt; print('starting drip system').
-                         ha:main_field/actuator/drip.run(minutes::25)]
-                        ^ end of input expected
-
+                         ha:main_field/actuator/drip(minutes::25)]     <i class="conum" data-value="2"></i><b>(2)</b>
 mtron&gt; ha:main_field/actuator/+/active?subq -&gt; sub::[on_recv=&gt;print(_)]     <i class="conum" data-value="3"></i><b>(3)</b>
 ==&gt;sub::[on_recv=&gt;print(id())]
 mtron&gt; *ha:main_field/actuator/#?subq     <i class="conum" data-value="4"></i><b>(4)</b></code></pre>
@@ -6530,9 +4950,7 @@ mtron&gt; *ha:main_field/actuator/#?subq     <i class="conum" data-value="4"></i
   one?A&lt;=A(),
   which(uri::T),
   inject(int::T,#::T),
-  /m/inst/thread(#::T),
-  stop?/m/mach/thread&lt;=/m/mach/thread(),
-  pause?/m/mach/thread&lt;=/m/mach/thread()]]@/m/mach</code></pre>
+  /m/inst/thread?/m/mach/thread&lt;=#{?}(#::T)]]@/m/mach</code></pre>
 </div>
 </div>
 </div>
@@ -7910,11 +6328,11 @@ mtron&gt; *&lt;http://localhost:8088/v1/models&gt;
 ==&gt;[
  object=&gt;list,
  data=&gt;[
-  [id=&gt;qwen3:latest,object=&gt;model],
-  [id=&gt;'smollm:1.7b',object=&gt;model],
   [id=&gt;mistralai_devstral-small-2507,object=&gt;model],
   [id=&gt;qwen3-coder-30b-a3b-instruct,object=&gt;model],
   [id=&gt;qwen3-tts-cpp,object=&gt;model],
+  [id=&gt;qwen3:latest,object=&gt;model],
+  [id=&gt;'smollm:1.7b',object=&gt;model],
   [id=&gt;MeetAISmall__latest,object=&gt;model],
   [id=&gt;gpt-oss__latest,object=&gt;model]]]
 mtron&gt; *&lt;http://localhost:8088/v1/models/data/0/id&gt;
@@ -7948,7 +6366,7 @@ mtron&gt; *&lt;http://localhost:8088/api/models/config-json/${
   completion=&gt;"""{{.Input}}
 """,
   function=&gt;'[AVAILABLE_TOOLS] [{{range .Functions}}{"type": "...'],
- known_usecases=&gt;[FLAG_COMPLETION,FLAG_CHAT],
+ known_usecases=&gt;[FLAG_CHAT,FLAG_COMPLETION],
  pipeline=&gt;[=&gt;],
  function=&gt;[
   disable_no_action=&gt;true,
@@ -8052,7 +6470,7 @@ mtron&gt; */m/llm/inst/+?dom=model</code></pre>
   	dev.langchain4j.internal.ValidationUtils [line 169]
   	dev.langchain4j.internal.ValidationUtils [line 156]
   	dev.langchain4j.model.input.PromptTemplate [line 83]
-  	dev.langchain4j.model.input.PromptTemplate [line 186]][...]@/sys/fail/472
+  	dev.langchain4j.model.input.PromptTemplate [line 186]][...]@/sys/fail/658
 ==&gt;fail::[[
  type=&gt;model,
  provider=&gt;!*/sys/space/localai] is not a isa([
@@ -8083,7 +6501,7 @@ mtron&gt; */m/llm/inst/+?dom=model</code></pre>
    in=&gt;currency::T,
    out=&gt;currency::T],
    noobj=&gt;(==&gt;{?}size)=&gt;noobj=&gt;/=&gt;bB::T,
-   noobj=&gt;(==&gt;{?}feature)=&gt;noobj=&gt;/=&gt;feature::T]][...]@/sys/fail/466</code></pre>
+   noobj=&gt;(==&gt;{?}feature)=&gt;noobj=&gt;/=&gt;feature::T]][...]@/sys/fail/652</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -8250,11 +6668,11 @@ mtron&gt; *&lt;http://localhost:8088/v1/models&gt;
 ==&gt;[
  object=&gt;list,
  data=&gt;[
-  [id=&gt;qwen3:latest,object=&gt;model],
-  [id=&gt;'smollm:1.7b',object=&gt;model],
   [id=&gt;mistralai_devstral-small-2507,object=&gt;model],
   [id=&gt;qwen3-coder-30b-a3b-instruct,object=&gt;model],
   [id=&gt;qwen3-tts-cpp,object=&gt;model],
+  [id=&gt;qwen3:latest,object=&gt;model],
+  [id=&gt;'smollm:1.7b',object=&gt;model],
   [id=&gt;MeetAISmall__latest,object=&gt;model],
   [id=&gt;gpt-oss__latest,object=&gt;model]]]
 mtron&gt; *&lt;http://localhost:8088/v1/models/data/0/id&gt;
@@ -8288,7 +6706,7 @@ mtron&gt; *&lt;http://localhost:8088/api/models/config-json/${
   completion=&gt;"""{{.Input}}
 """,
   function=&gt;'[AVAILABLE_TOOLS] [{{range .Functions}}{"type": "...'],
- known_usecases=&gt;[FLAG_COMPLETION,FLAG_CHAT],
+ known_usecases=&gt;[FLAG_CHAT,FLAG_COMPLETION],
  pipeline=&gt;[=&gt;],
  function=&gt;[
   disable_no_action=&gt;true,
@@ -8392,7 +6810,7 @@ mtron&gt; */m/llm/inst/+?dom=model</code></pre>
   	dev.langchain4j.internal.ValidationUtils [line 169]
   	dev.langchain4j.internal.ValidationUtils [line 156]
   	dev.langchain4j.model.input.PromptTemplate [line 83]
-  	dev.langchain4j.model.input.PromptTemplate [line 186]][...]@/sys/fail/472
+  	dev.langchain4j.model.input.PromptTemplate [line 186]][...]@/sys/fail/658
 ==&gt;fail::[[
  type=&gt;model,
  provider=&gt;!*/sys/space/localai] is not a isa([
@@ -8423,7 +6841,7 @@ mtron&gt; */m/llm/inst/+?dom=model</code></pre>
    in=&gt;currency::T,
    out=&gt;currency::T],
    noobj=&gt;(==&gt;{?}size)=&gt;noobj=&gt;/=&gt;bB::T,
-   noobj=&gt;(==&gt;{?}feature)=&gt;noobj=&gt;/=&gt;feature::T]][...]@/sys/fail/466</code></pre>
+   noobj=&gt;(==&gt;{?}feature)=&gt;noobj=&gt;/=&gt;feature::T]][...]@/sys/fail/652</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -8574,11 +6992,7 @@ mtron&gt; *lite:person/+/id     <i class="conum" data-value="6"></i><b>(6)</b>
 ==&gt;[
  instset=&gt;instset::[
   pattern=&gt;/sys/space/lite/schema/instset/#,
-  type=&gt;[
-   award::T,
-   person::T,
-   score::T,
-   venue::T],
+  type=&gt;[person::T],
   q=&gt;[docq::[
  pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
  pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
@@ -8589,52 +7003,15 @@ mtron&gt; *lite:person/+/id     <i class="conum" data-value="6"></i><b>(6)</b>
  native=&gt;[
   pattern=&gt;/sys/space/lite/schema/instset/#,
   name=&gt;'instset',
-  tables=&gt;[
-   [
-    name=&gt;'award',
-    uri=&gt;/sys/space/lite/schema/instset/award,
-    schema/schema=&gt;[
-     id=&gt;int::T,
-     trophy=&gt;str::T,
-     recipient=&gt;int::T],
-    type=&gt;award::T],
-   [
-    name=&gt;'person',
-    uri=&gt;/sys/space/lite/schema/instset/person,
-    schema/schema=&gt;[
-     id=&gt;int::T,
-     name=&gt;str::T,
-     age=&gt;int::T],
-    type=&gt;person::T],
-   [
-    name=&gt;'score',
-    uri=&gt;/sys/space/lite/schema/instset/score,
-    schema/schema=&gt;[
-     id=&gt;int::T,
-     player=&gt;str::T,
-     points=&gt;int::T],
-    type=&gt;score::T],
-   [
-    name=&gt;'venue',
-    uri=&gt;/sys/space/lite/schema/instset/venue,
-    schema/schema=&gt;[
-     id=&gt;int::T,
-     name=&gt;str::T,
-     location=&gt;int::T],
-    type=&gt;venue::T]],
-  references=&gt;[
-   [
-    from_table=&gt;'award',
-    from_column=&gt;'recipient',
-    to_table=&gt;'person',
-    to_column=&gt;'id',
-    type=&gt;'FOREIGN_KEY'],
-   [
-    from_table=&gt;'venue',
-    from_column=&gt;'location',
-    to_table=&gt;'area:V',
-    to_column=&gt;'id',
-    type=&gt;'FOREIGN_KEY']]]]
+  tables=&gt;[[
+ name=&gt;'person',
+ uri=&gt;/sys/space/lite/schema/instset/person,
+ schema/schema=&gt;[
+  id=&gt;int::T,
+  name=&gt;str::T,
+  age=&gt;int::T],
+ type=&gt;person::T]],
+  references=&gt;[,]]]
 mtron&gt; */sys/space/lite/schema/type/+</code></pre>
 </div>
 </div></div></td>
@@ -8807,21 +7184,59 @@ whose values happen to match <code>person.name</code> — the link is purely alg
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys/space/lite&gt;&gt;=[table=&gt;[person,score]]     <i class="conum" data-value="1"></i><b>(1)</b>
-==&gt;fail::[nullpointerexception: Cannot invoke "studio.phaseshift.metatron.furi.fURI.extend(String)" because the return value of "studio.phaseshift.metatron.isa.tble.tbleSpace.vid()" is null
-  	studio.phaseshift.metatron.isa.tble.tbleSpace [line 244]
-  	studio.phaseshift.metatron.isa.tble.tbleSpace [line 168]
-  	studio.phaseshift.metatron.isa.tble.tbleSpace [line 151]
-  	studio.phaseshift.metatron.isa.tble.tbleSpace [line 122]
-  	studio.phaseshift.metatron.isa.m.type.Inst$f [line 683]][...]@/sys/fail/208
+==&gt;tblespace::[
+ table=&gt;[person,score,award,venue],
+ pattern=&gt;lite:#,
+ host=&gt;sqlite:target/test,
+ driver=&gt;&lt;org.sqlite.JDBC&gt;,
+ route=&gt;[lite:=&gt;&lt;&gt;],
+ space=&gt;[super=&gt;lite:#],
+ schema=&gt;[
+  instset=&gt;instset::[
+   pattern=&gt;/sys/space/lite/schema/instset/#,
+   type=&gt;[person::T],
+   q=&gt;[docq::[
+ pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
+ pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+ pattern=&gt;docq,
+ obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
+ inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
+   space=&gt;[super=&gt;!*/sys]]@/sys/space/lite/schema/instset,
+  native=&gt;[
+   pattern=&gt;/m/tble/space/tblespace/default/schema/instset/#,
+   name=&gt;'instset',
+   tables=&gt;[[
+ name=&gt;'person',
+ uri=&gt;/m/tble/space/tblespace/default/schema/instset/person,
+ schema/schema=&gt;[
+  id=&gt;int::T,
+  name=&gt;str::T,
+  age=&gt;int::T],
+ type=&gt;person::T]],
+   references=&gt;[,]]]]
 mtron&gt; lite:score/1 -&gt; [player=&gt;'marko', points=&gt;42]     <i class="conum" data-value="2"></i><b>(2)</b>
-==&gt;[player=&gt;'marko',points=&gt;42]
+==&gt;fail::[sqlexception: database connection closed
+  	org.sqlite.SQLiteConnection [line 418]
+  	org.sqlite.jdbc4.JDBC4Connection [line 31]
+  	org.sqlite.jdbc3.JDBC3Connection [line 225]
+  	org.sqlite.jdbc3.JDBC3Connection [line 205]
+  	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 191]][...]@/sys/fail/208
 mtron&gt; lite:score/2 -&gt; [player=&gt;'grant', points=&gt;99]     <i class="conum" data-value="3"></i><b>(3)</b>
-==&gt;[player=&gt;'grant',points=&gt;99]
+==&gt;fail::[sqlexception: database connection closed
+  	org.sqlite.SQLiteConnection [line 418]
+  	org.sqlite.jdbc4.JDBC4Connection [line 31]
+  	org.sqlite.jdbc3.JDBC3Connection [line 225]
+  	org.sqlite.jdbc3.JDBC3Connection [line 205]
+  	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 191]][...]@/sys/fail/214
 mtron&gt; *lite:score/+.?==[player=&gt;'marko']     <i class="conum" data-value="4"></i><b>(4)</b>
-==&gt;fail::[failed to execute native where operation[studio.phaseshift.metatron.util.MTronException:52]][...]@/sys/fail/214
+==&gt;fail::[failed to execute native where operation[studio.phaseshift.metatron.util.MTronException:52]][...]@/sys/fail/220
 mtron&gt; */sys/space/lite.sql("SELECT p.name,p.age,s.points FROM person p JOIN score s ON p.name=s.player")     <i class="conum" data-value="5"></i><b>(5)</b>
-==&gt;[name=&gt;'marko',age=&gt;29,points=&gt;42]
-==&gt;[name=&gt;'grant',age=&gt;25,points=&gt;99]</code></pre>
+==&gt;fail::[sqlexception: database connection closed
+  	org.sqlite.SQLiteConnection [line 418]
+  	org.sqlite.jdbc4.JDBC4Connection [line 23]
+  	org.sqlite.jdbc3.JDBC3Connection [line 169]
+  	studio.phaseshift.metatron.isa.tble.tbleInstSet [line 114]
+  	studio.phaseshift.metatron.isa.m.type.Inst$f [line 689]][...]@/sys/fail/226</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -8857,28 +7272,39 @@ Unlike a matching column value, the pointer encodes the full address of the link
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys/space/lite&gt;&gt;=[table=&gt;[person,score,award]]     <i class="conum" data-value="1"></i><b>(1)</b>
 ==&gt;fail::[nullpointerexception: Cannot invoke "studio.phaseshift.metatron.furi.fURI.extend(String)" because the return value of "studio.phaseshift.metatron.isa.tble.tbleSpace.vid()" is null
-  	studio.phaseshift.metatron.isa.tble.tbleSpace [line 244]
-  	studio.phaseshift.metatron.isa.tble.tbleSpace [line 168]
-  	studio.phaseshift.metatron.isa.tble.tbleSpace [line 151]
+  	studio.phaseshift.metatron.isa.tble.tbleSpace [line 246]
+  	studio.phaseshift.metatron.isa.tble.tbleSpace [line 170]
+  	studio.phaseshift.metatron.isa.tble.tbleSpace [line 153]
   	studio.phaseshift.metatron.isa.tble.tbleSpace [line 122]
-  	studio.phaseshift.metatron.isa.m.type.Inst$f [line 683]][...]@/sys/fail/226
+  	studio.phaseshift.metatron.isa.m.type.Inst$f [line 689]][...]@/sys/fail/238
 mtron&gt; lite:award/1 -&gt; [trophy=&gt;'gold',   recipient=&gt;!*lite:person/1]     <i class="conum" data-value="2"></i><b>(2)</b>
-==&gt;[
- trophy=&gt;'gold',
- recipient=&gt;!*lite:person/1]
+==&gt;fail::[sqlexception: database connection closed
+  	org.sqlite.SQLiteConnection [line 418]
+  	org.sqlite.jdbc4.JDBC4Connection [line 31]
+  	org.sqlite.jdbc3.JDBC3Connection [line 225]
+  	org.sqlite.jdbc3.JDBC3Connection [line 205]
+  	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 191]][...]@/sys/fail/298
 mtron&gt; lite:award/2 -&gt; [trophy=&gt;'silver', recipient=&gt;!*lite:person/2]     <i class="conum" data-value="3"></i><b>(3)</b>
-==&gt;[
- trophy=&gt;'silver',
- recipient=&gt;!*lite:person/2]
+==&gt;fail::[sqlexception: database connection closed
+  	org.sqlite.SQLiteConnection [line 418]
+  	org.sqlite.jdbc4.JDBC4Connection [line 31]
+  	org.sqlite.jdbc3.JDBC3Connection [line 225]
+  	org.sqlite.jdbc3.JDBC3Connection [line 205]
+  	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 191]][...]@/sys/fail/358
 mtron&gt; *lite:award/+     <i class="conum" data-value="4"></i><b>(4)</b>
-==&gt;[
- trophy=&gt;'gold',
- recipient=&gt;!*lite:person/1]
-==&gt;[
- trophy=&gt;'silver',
- recipient=&gt;!*lite:person/2]
+==&gt;fail::[sqlexception: database connection closed
+  	org.sqlite.SQLiteConnection [line 418]
+  	org.sqlite.jdbc4.JDBC4Connection [line 31]
+  	org.sqlite.jdbc3.JDBC3Connection [line 225]
+  	org.sqlite.jdbc3.JDBC3Connection [line 205]
+  	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 187]][...]@/sys/fail/364
 mtron&gt; *lite:award/1/recipient     <i class="conum" data-value="5"></i><b>(5)</b>
-==&gt;[name=&gt;'marko',age=&gt;29]</code></pre>
+==&gt;fail::[sqlexception: database connection closed
+  	org.sqlite.SQLiteConnection [line 418]
+  	org.sqlite.jdbc4.JDBC4Connection [line 31]
+  	org.sqlite.jdbc3.JDBC3Connection [line 225]
+  	org.sqlite.jdbc3.JDBC3Connection [line 205]
+  	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 191]][...]@/sys/fail/370</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -8918,21 +7344,32 @@ mtron&gt; area:V/1 -&gt; [label=&gt;'downtown',capacity=&gt;5000]     <i class="
 ==&gt;[label=&gt;'downtown',capacity=&gt;5000]
 mtron&gt; */sys/space/lite&gt;&gt;=[table=&gt;[person,score,award,venue]]     <i class="conum" data-value="3"></i><b>(3)</b>
 ==&gt;fail::[nullpointerexception: Cannot invoke "studio.phaseshift.metatron.furi.fURI.extend(String)" because the return value of "studio.phaseshift.metatron.isa.tble.tbleSpace.vid()" is null
-  	studio.phaseshift.metatron.isa.tble.tbleSpace [line 244]
-  	studio.phaseshift.metatron.isa.tble.tbleSpace [line 168]
-  	studio.phaseshift.metatron.isa.tble.tbleSpace [line 151]
+  	studio.phaseshift.metatron.isa.tble.tbleSpace [line 246]
+  	studio.phaseshift.metatron.isa.tble.tbleSpace [line 170]
+  	studio.phaseshift.metatron.isa.tble.tbleSpace [line 153]
   	studio.phaseshift.metatron.isa.tble.tbleSpace [line 122]
-  	studio.phaseshift.metatron.isa.m.type.Inst$f [line 683]][...]@/sys/fail/238
+  	studio.phaseshift.metatron.isa.m.type.Inst$f [line 689]][...]@/sys/fail/382
 mtron&gt; lite:venue/1 -&gt; [name=&gt;'main_stage',location=&gt;!*area:V/1]     <i class="conum" data-value="4"></i><b>(4)</b>
-==&gt;[
- name=&gt;'main_stage',
- location=&gt;!*area:V/1]
+==&gt;fail::[sqlexception: database connection closed
+  	org.sqlite.SQLiteConnection [line 418]
+  	org.sqlite.jdbc4.JDBC4Connection [line 31]
+  	org.sqlite.jdbc3.JDBC3Connection [line 225]
+  	org.sqlite.jdbc3.JDBC3Connection [line 205]
+  	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 191]][...]@/sys/fail/388
 mtron&gt; *lite:venue/1     <i class="conum" data-value="5"></i><b>(5)</b>
-==&gt;[
- name=&gt;'main_stage',
- location=&gt;!*area:V/1]
+==&gt;fail::[sqlexception: database connection closed
+  	org.sqlite.SQLiteConnection [line 418]
+  	org.sqlite.jdbc4.JDBC4Connection [line 31]
+  	org.sqlite.jdbc3.JDBC3Connection [line 225]
+  	org.sqlite.jdbc3.JDBC3Connection [line 205]
+  	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 191]][...]@/sys/fail/394
 mtron&gt; *lite:venue/1/location     <i class="conum" data-value="6"></i><b>(6)</b>
-==&gt;[label=&gt;'downtown',capacity=&gt;5000]</code></pre>
+==&gt;fail::[sqlexception: database connection closed
+  	org.sqlite.SQLiteConnection [line 418]
+  	org.sqlite.jdbc4.JDBC4Connection [line 31]
+  	org.sqlite.jdbc3.JDBC3Connection [line 225]
+  	org.sqlite.jdbc3.JDBC3Connection [line 205]
+  	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 191]][...]@/sys/fail/400</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -8970,21 +7407,26 @@ pointing back at the row&#8217;s own table.</p>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; lite:venue/2 -&gt; [name=&gt;'side_hall',location=&gt;!*g:V/1,parent=&gt;!*lite:venue/1]     <i class="conum" data-value="1"></i><b>(1)</b>
-==&gt;[
- name=&gt;'side_hall',
- location=&gt;!*g:V/1,
- parent=&gt;!*lite:venue/1]
+==&gt;fail::[sqlexception: database connection closed
+  	org.sqlite.SQLiteConnection [line 418]
+  	org.sqlite.jdbc4.JDBC4Connection [line 31]
+  	org.sqlite.jdbc3.JDBC3Connection [line 225]
+  	org.sqlite.jdbc3.JDBC3Connection [line 205]
+  	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 191]][...]@/sys/fail/460
 mtron&gt; *lite:venue/2     <i class="conum" data-value="2"></i><b>(2)</b>
-==&gt;[
- name=&gt;'side_hall',
- location=&gt;!*area:V/1]
+==&gt;fail::[sqlexception: database connection closed
+  	org.sqlite.SQLiteConnection [line 418]
+  	org.sqlite.jdbc4.JDBC4Connection [line 31]
+  	org.sqlite.jdbc3.JDBC3Connection [line 225]
+  	org.sqlite.jdbc3.JDBC3Connection [line 205]
+  	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 191]][...]@/sys/fail/466
 mtron&gt; *lite:venue/2/parent/location     <i class="conum" data-value="3"></i><b>(3)</b>
-==&gt;fail::[sqliteexception: [SQLITE_ERROR] SQL error or missing database (no such column: parent)
-  	org.sqlite.core.DB [line 1182]
-  	org.sqlite.core.DB [line 1193]
-  	org.sqlite.core.DB [line 1153]
-  	org.sqlite.core.NativeDB [line -2]
-  	org.sqlite.core.NativeDB [line 135]][...]@/sys/fail/286</code></pre>
+==&gt;fail::[sqlexception: database connection closed
+  	org.sqlite.SQLiteConnection [line 418]
+  	org.sqlite.jdbc4.JDBC4Connection [line 31]
+  	org.sqlite.jdbc3.JDBC3Connection [line 225]
+  	org.sqlite.jdbc3.JDBC3Connection [line 205]
+  	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 191]][...]@/sys/fail/472</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -9333,15 +7775,6 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
  obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
  inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
    space=&gt;[sub=&gt;{!*/m/mach,!*/m/math,!*/m/web,!*/m/iot,!*/m/grph,!*/m/llm,!*/m/tble,!*/m/dcmnt,!*/m/rdf}],
-   rewrite=&gt;[
-    /m/inst/rewrite/id_removal?code{?}&lt;=code(),
-    /m/inst/rewrite/map_nest?code{?}&lt;=code(),
-    /m/inst/rewrite/else_after_count?code{?}&lt;=code(),
-    /m/inst/rewrite/plus_zero?code{?}&lt;=code(),
-    /m/inst/rewrite/mult_one?code{?}&lt;=code(),
-    /m/inst/rewrite/split_merge_collapse?code{?}&lt;=code(),
-    /m/inst/rewrite/split_merge_left_factor?code{?}&lt;=code(),
-    /m/inst/rewrite/split_merge_right_factor?code{?}&lt;=code()],
    inst=&gt;[
     as?bool&lt;=bool(bool::T),
     as?bytes&lt;=bool(bytes::T),
@@ -9567,10 +8000,17 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
     swap?A&lt;=A(B::T),
     rshift?B{*}&lt;=A(C{*}::T),
     lshift?B{*}&lt;=A(),
-    start?A{**}&lt;=noobj{0}(A{**}::T)],
-   const=&gt;[
-    noobj,
-    none@none],
+    start?A{**}&lt;=noobj{0}(A{**}::T),
+    ctor()],
+   rewrite=&gt;[
+    /m/inst/rewrite/id_removal?code{?}&lt;=code(),
+    /m/inst/rewrite/map_nest?code{?}&lt;=code(),
+    /m/inst/rewrite/else_after_count?code{?}&lt;=code(),
+    /m/inst/rewrite/plus_zero?code{?}&lt;=code(),
+    /m/inst/rewrite/mult_one?code{?}&lt;=code(),
+    /m/inst/rewrite/split_merge_collapse?code{?}&lt;=code(),
+    /m/inst/rewrite/split_merge_left_factor?code{?}&lt;=code(),
+    /m/inst/rewrite/split_merge_right_factor?code{?}&lt;=code()],
    type=&gt;[
     #::T,
     bool::T,
@@ -9597,7 +8037,11 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
     docq::T,
     mintq::T,
     incrq::T,
-    constq::T]]@/m,
+    constq::T,
+    mimeq::T],
+   const=&gt;[
+    noobj,
+    none@none]]@/m,
   /m/iot=&gt;instset::[
    pattern=&gt;/m/iot/#,
    q=&gt;[docq::[
@@ -9649,9 +8093,7 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
     one?A&lt;=A(),
     which(uri::T),
     inject(int::T,#::T),
-    /m/inst/thread(#::T),
-    stop?/m/mach/thread&lt;=/m/mach/thread(),
-    pause?/m/mach/thread&lt;=/m/mach/thread()]]@/m/mach,
+    /m/inst/thread?/m/mach/thread&lt;=#{?}(#::T)]]@/m/mach,
   /m/web=&gt;instset::[
    pattern=&gt;/m/web/#,
    q=&gt;[docq::[
@@ -9879,6 +8321,7 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
   factory=&gt;[/m/mach/factory],
   typeq=&gt;[/m/space/qproc/typeq],
   docq=&gt;[/m/space/qproc/docq],
+  mimeq=&gt;[/m/space/qproc/mimeq],
   xml=&gt;[/m/web/xml],
   json=&gt;[/m/web/json],
   uri=&gt;[/m/uri],
@@ -9932,7 +8375,6 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
   minus=&gt;[/m/inst/minus],
   tid=&gt;[/m/inst/tid],
   end=&gt;[/m/inst/end],
-  pause=&gt;[/m/mach/inst/pause],
   close=&gt;[/m/mach/inst/close],
   socket=&gt;[/m/web/space/httpspace/socket],
   quad=&gt;[/m/rdf/space/quad],
@@ -9965,10 +8407,10 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
   feature=&gt;[/m/llm/feature],
   memspace=&gt;[/m/space/memspace],
   rewrite=&gt;[/m/mach/inst/rewrite],
-  stop=&gt;[/m/mach/inst/stop],
   format=&gt;[/m/web/inst/format],
   both=&gt;[/m/grph/inst/both],
   grphspace=&gt;[/m/grph/space/grphspace],
+  ctor=&gt;[/m/inst/ctor],
   else=&gt;[/m/inst/else],
   sql_sum=&gt;[/m/tble/inst/rewrite/sql_sum],
   and=&gt;[/m/inst/and],
@@ -10067,9 +8509,9 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
 ==&gt;/sys/env/GNOME_DESKTOP_SESSION_ID=&gt;'this-is-deprecated'
 ==&gt;/sys/env/HOMEBREW_CELLAR=&gt;'/home/linuxbrew/.linuxbrew/Cellar'
 ==&gt;/sys/env/JBANG_HOME=&gt;'/home/killswitch/.sdkman/candidates/jbang/current'
+==&gt;/sys/env/GNOME_TERMINAL_SCREEN=&gt;'/org/gnome/Terminal/screen/af4a9b66_7bc5_4e4b_bb71_67730afa180b'
 ==&gt;/sys/env/USER=&gt;'killswitch'
-==&gt;/sys/env/HOMEBREW_PREFIX=&gt;'/home/linuxbrew/.linuxbrew'
-==&gt;/sys/env/LIBVIRT_DEFAULT_URI=&gt;'qemu:///system'</code></pre>
+==&gt;/sys/env/HOMEBREW_PREFIX=&gt;'/home/linuxbrew/.linuxbrew'</code></pre>
 </div>
 </div>
 <h3 id="_boot_loader" class="discrete">Boot Loader</h3>
@@ -10337,38 +8779,10 @@ console::[        =&gt; ]@/sys/console;
         setTimeout(initTabs, 200);
     });
 </script>
-</body>
-</html>
 
-<!-- RECOMMENDED TO STAY OUTSIDE HTML TAG -->
 <!------------ FEATURES MODAL -------------->
-<div id="modalPanel" class="modal fade" tabindex="-1"/>
+<div id="modalPanel" class="modal fade" tabindex="-1"></div>
 <!------------------------------------------>
-<!------------------------------------------>
-</div>
-<script type="text/x-mathjax-config">
-MathJax.Hub.Config({
-  messageStyle: "none",
-  tex2jax: {
-    inlineMath: [["\\(", "\\)"]],
-    displayMath: [["\\[", "\\]"]],
-    ignoreClass: "nostem|nolatexmath"
-  },
-  asciimath2jax: {
-    delimiters: [["\\$", "\\$"]],
-    ignoreClass: "nostem|noasciimath"
-  },
-  TeX: { equationNumbers: { autoNumber: "none" } }
-})
-MathJax.Hub.Register.StartupHook("AsciiMath Jax Ready", function () {
-  MathJax.InputJax.AsciiMath.postfilterHooks.Add(function (data, node) {
-    if ((node = data.script.parentNode) && (node = node.parentNode) && node.classList.contains("stemblock")) {
-      data.math.root.display = "block"
-    }
-    return data
-  })
-})
-</script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+
 </body>
 </html>

@@ -26,16 +26,16 @@ The MQTT space is a client of the MQTT broker referenced by `host`. This client 
 
 [mtron]
 ----
-mqtt::[pattern => <ha:#>,                                /
+mqtt::[pattern => <ha:#>,                                   /
        host    => mqtt://localhost:1883,                    /
        route   => [ha:=></home/chips>]]@/sys/space/esp32          [-- <1> --]
 
 
-*ha:main_field/sensor/+.-<|[                             /
+*ha:main_field/sensor/+.-<|[                                /
   >>temp.?<50  => print('too cold for watering'),           /
   >>humid.?>30 => print('too humid for watering'),          /
   _            => print('starting drip system').            /
-                  ha:main_field/actuator/drip.run(minutes::25)]    [-- <2> --]
+                  ha:main_field/actuator/drip(minutes::25)]        [-- <2> --]
 
 ha:main_field/actuator/+/active?subq -> sub::[on_recv=>print(_)]   [-- <3> --]
 *ha:main_field/actuator/#?subq                                     [-- <4> --]

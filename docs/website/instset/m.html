@@ -271,45 +271,6 @@ bin/metatron</code></pre>
  obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
  inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
  space=&gt;[sub=&gt;{!*/m/mach,!*/m/math,!*/m/web,!*/m/iot,!*/m/grph,!*/m/llm,!*/m/tble,!*/m/dcmnt,!*/m/rdf}],
- const=&gt;[
-  noobj,
-  none@none],
- type=&gt;[
-  #::T,
-  bool::T,
-  int::T,
-  real::T,
-  bytes::T,
-  str::T,
-  uri::T,
-  rel::T,
-  lst::T,
-  rec::T,
-  instset::T,
-  inst::T,
-  code::T,
-  fail::T,
-  space::T,
-  memspace::T,
-  stack::T,
-  qproc::T,
-  subq::T,
-  sub::T,
-  typeq::T,
-  docs::T,
-  docq::T,
-  mintq::T,
-  incrq::T,
-  constq::T],
- rewrite=&gt;[
-  /m/inst/rewrite/id_removal?code{?}&lt;=code(),
-  /m/inst/rewrite/map_nest?code{?}&lt;=code(),
-  /m/inst/rewrite/else_after_count?code{?}&lt;=code(),
-  /m/inst/rewrite/plus_zero?code{?}&lt;=code(),
-  /m/inst/rewrite/mult_one?code{?}&lt;=code(),
-  /m/inst/rewrite/split_merge_collapse?code{?}&lt;=code(),
-  /m/inst/rewrite/split_merge_left_factor?code{?}&lt;=code(),
-  /m/inst/rewrite/split_merge_right_factor?code{?}&lt;=code()],
  inst=&gt;[
   as?bool&lt;=bool(bool::T),
   as?bytes&lt;=bool(bytes::T),
@@ -535,14 +496,55 @@ bin/metatron</code></pre>
   swap?A&lt;=A(B::T),
   rshift?B{*}&lt;=A(C{*}::T),
   lshift?B{*}&lt;=A(),
-  start?A{**}&lt;=noobj{0}(A{**}::T)]]@/m</code></pre>
+  start?A{**}&lt;=noobj{0}(A{**}::T),
+  ctor()],
+ rewrite=&gt;[
+  /m/inst/rewrite/id_removal?code{?}&lt;=code(),
+  /m/inst/rewrite/map_nest?code{?}&lt;=code(),
+  /m/inst/rewrite/else_after_count?code{?}&lt;=code(),
+  /m/inst/rewrite/plus_zero?code{?}&lt;=code(),
+  /m/inst/rewrite/mult_one?code{?}&lt;=code(),
+  /m/inst/rewrite/split_merge_collapse?code{?}&lt;=code(),
+  /m/inst/rewrite/split_merge_left_factor?code{?}&lt;=code(),
+  /m/inst/rewrite/split_merge_right_factor?code{?}&lt;=code()],
+ type=&gt;[
+  #::T,
+  bool::T,
+  int::T,
+  real::T,
+  bytes::T,
+  str::T,
+  uri::T,
+  rel::T,
+  lst::T,
+  rec::T,
+  instset::T,
+  inst::T,
+  code::T,
+  fail::T,
+  space::T,
+  memspace::T,
+  stack::T,
+  qproc::T,
+  subq::T,
+  sub::T,
+  typeq::T,
+  docs::T,
+  docq::T,
+  mintq::T,
+  incrq::T,
+  constq::T,
+  mimeq::T],
+ const=&gt;[
+  noobj,
+  none@none]]@/m</code></pre>
                 </div>
             </div>
         </div>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <a href="#consts" class="btn btn-outline-primary">Consts <span class="pill-label badge bg-secondary">12</span></a><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">40</span></a><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">261</span></a><button class="btn btn-outline-secondary" disabled>Spaces <span class="pill-label badge bg-dark">0</span></button><a href="#rewrites" class="btn btn-outline-primary">Rewrites <span class="pill-label badge bg-warning">8</span></a>
+        <a href="#consts" class="btn btn-outline-primary">Consts <span class="pill-label badge bg-secondary">12</span></a><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">41</span></a><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">262</span></a><button class="btn btn-outline-secondary" disabled>Spaces <span class="pill-label badge bg-dark">0</span></button><a href="#rewrites" class="btn btn-outline-primary">Rewrites <span class="pill-label badge bg-warning">8</span></a>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="card">
@@ -651,6 +653,9 @@ bin/metatron</code></pre>
 </a><a href="#type-incrq" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">incrq</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#type-mimeq" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">mimeq</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
 </a><a href="#type-mintq" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">mintq</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
@@ -731,6 +736,9 @@ bin/metatron</code></pre>
     <span class="pill-label badge bg-success ms-2">I</span>
 </a><a href="#inst-count" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">count</span>
+    <span class="pill-label badge bg-success ms-2">I</span>
+</a><a href="#inst-ctor" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">ctor</span>
     <span class="pill-label badge bg-success ms-2">I</span>
 </a><a href="#inst-dedup" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">dedup</span>
@@ -1027,45 +1035,6 @@ bin/metatron</code></pre>
  obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
  inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
  space=&gt;[sub=&gt;{!*/m/mach,!*/m/math,!*/m/web,!*/m/iot,!*/m/grph,!*/m/llm,!*/m/tble,!*/m/dcmnt,!*/m/rdf}],
- const=&gt;[
-  noobj,
-  none@none],
- type=&gt;[
-  #::T,
-  bool::T,
-  int::T,
-  real::T,
-  bytes::T,
-  str::T,
-  uri::T,
-  rel::T,
-  lst::T,
-  rec::T,
-  instset::T,
-  inst::T,
-  code::T,
-  fail::T,
-  space::T,
-  memspace::T,
-  stack::T,
-  qproc::T,
-  subq::T,
-  sub::T,
-  typeq::T,
-  docs::T,
-  docq::T,
-  mintq::T,
-  incrq::T,
-  constq::T],
- rewrite=&gt;[
-  /m/inst/rewrite/id_removal?code{?}&lt;=code(),
-  /m/inst/rewrite/map_nest?code{?}&lt;=code(),
-  /m/inst/rewrite/else_after_count?code{?}&lt;=code(),
-  /m/inst/rewrite/plus_zero?code{?}&lt;=code(),
-  /m/inst/rewrite/mult_one?code{?}&lt;=code(),
-  /m/inst/rewrite/split_merge_collapse?code{?}&lt;=code(),
-  /m/inst/rewrite/split_merge_left_factor?code{?}&lt;=code(),
-  /m/inst/rewrite/split_merge_right_factor?code{?}&lt;=code()],
  inst=&gt;[
   as?bool&lt;=bool(bool::T),
   as?bytes&lt;=bool(bytes::T),
@@ -1291,7 +1260,48 @@ bin/metatron</code></pre>
   swap?A&lt;=A(B::T),
   rshift?B{*}&lt;=A(C{*}::T),
   lshift?B{*}&lt;=A(),
-  start?A{**}&lt;=noobj{0}(A{**}::T)]]@/m</code></pre></div>
+  start?A{**}&lt;=noobj{0}(A{**}::T),
+  ctor()],
+ rewrite=&gt;[
+  /m/inst/rewrite/id_removal?code{?}&lt;=code(),
+  /m/inst/rewrite/map_nest?code{?}&lt;=code(),
+  /m/inst/rewrite/else_after_count?code{?}&lt;=code(),
+  /m/inst/rewrite/plus_zero?code{?}&lt;=code(),
+  /m/inst/rewrite/mult_one?code{?}&lt;=code(),
+  /m/inst/rewrite/split_merge_collapse?code{?}&lt;=code(),
+  /m/inst/rewrite/split_merge_left_factor?code{?}&lt;=code(),
+  /m/inst/rewrite/split_merge_right_factor?code{?}&lt;=code()],
+ type=&gt;[
+  #::T,
+  bool::T,
+  int::T,
+  real::T,
+  bytes::T,
+  str::T,
+  uri::T,
+  rel::T,
+  lst::T,
+  rec::T,
+  instset::T,
+  inst::T,
+  code::T,
+  fail::T,
+  space::T,
+  memspace::T,
+  stack::T,
+  qproc::T,
+  subq::T,
+  sub::T,
+  typeq::T,
+  docs::T,
+  docq::T,
+  mintq::T,
+  incrq::T,
+  constq::T,
+  mimeq::T],
+ const=&gt;[
+  noobj,
+  none@none]]@/m</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">the core instruction set of metatron containing the base types and useful instructions to manipulate them</p>
 </div>
@@ -1313,7 +1323,7 @@ bin/metatron</code></pre>
     
 </div>
 </div><div class="container-xxl mb-4" id="types">
-    <h3 class="text-primary mb-3">Types <span class="pill-label badge bg-primary">40</span></h3>
+    <h3 class="text-primary mb-3">Types <span class="pill-label badge bg-primary">41</span></h3>
     <div class="card mb-3" id="type-#">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -1409,7 +1419,7 @@ true.or(_,not(_))  [-- true -- ]</code></pre>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">qproc::T[][/m/space/qproc/constq/ctor?constq&lt;=#{?}()]@/m/space/qproc/constq</code></pre></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">a query that returns a constant</p>
+    <p class="mb-0 text-light">prevents the vid from being mutated once set</p>
 </div>
 </div><div class="card mb-3" id="type-content_type">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1526,7 +1536,7 @@ html::[html=&gt;
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">qproc::T[][/m/space/qproc/incrq/ctor?incrq&lt;=#{?}()]@/m/space/qproc/incrq</code></pre></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">a query that returns an increment</p>
+    <p class="mb-0 text-light">internal counter increments and appends value to vid</p>
 </div>
 </div><div class="card mb-3" id="type-inst">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1665,6 +1675,18 @@ abc(a=&gt;?int::T,b=&gt;|(*a +10)){ _.*b }       [-- dependent arg inst    --]
  {?}persist=&gt;file::T])]@/m/space/memspace</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">an in-memory space with objs indexed by a topic trie</p>
+</div>
+</div><div class="card mb-3" id="type-mimeq">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">mimeq::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m_space.html#type-qproc" class="instset-doc-small-code text-info code">/m/space/qproc::T</a></span>
+        </span>
+        <small class="text-muted code">/m/space/qproc/mimeq</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">qproc::T[][/m/space/qproc/mimeq/ctor?mimeq&lt;=#{?}()]@/m/space/qproc/mimeq</code></pre></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">maps the obj to the specified mime type</p>
 </div>
 </div><div class="card mb-3" id="type-mintq">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1967,7 +1989,7 @@ a/b/c/                           [-- relative/branch uri            --]
 </div>
 </div>
 </div><div class="container-xxl mb-4" id="instructions">
-    <h3 class="text-primary mb-3">Instructions <span class="pill-label badge bg-success">261</span></h3>
+    <h3 class="text-primary mb-3">Instructions <span class="pill-label badge bg-success">262</span></h3>
     <div class="card mb-3" id="inst-and">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
@@ -2315,6 +2337,17 @@ a/b/c/                           [-- relative/branch uri            --]
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">any objs <span class="text-light">=&gt;</span> the count of objs</pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"></pre>
 </div>
+</div><div class="card mb-3" id="inst-ctor">
+    <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
+        <span>
+            <span class="code text-primary fw-bold">ctor</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="#" data-bs-toggle="tooltip" title="generic domain" class="code text-info">#</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#" data-bs-toggle="tooltip" title="generic range" class="code text-success">#</a></span></span>
+        </span>
+        <small class="text-muted code">/m/inst/ctor</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-ctor-doc-0-tab').click();document.getElementById('inst-ctor-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">ctor()</code></pre>
+</div>
+    
 </div><div class="card mb-3" id="inst-dedup">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
@@ -3405,12 +3438,12 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">thread</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="#" data-bs-toggle="tooltip" title="generic domain" class="code text-info">#</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m_mach.html#type-thread" data-bs-toggle="tooltip" title="range" class="code text-success">thread</a></span></span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="#" data-bs-toggle="tooltip" title="maybe generic domain" class="code text-info">#{?}</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m_mach.html#type-thread" data-bs-toggle="tooltip" title="range" class="code text-success">thread</a></span></span>
         </span>
-        <small class="text-muted code">/m/inst/thread?rng=/m/mach/thread&amp;dom=#</small>
+        <small class="text-muted code">/m/inst/thread?rng=/m/mach/thread&amp;dom=#{?}</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-thread-doc-0-tab').click();document.getElementById('inst-thread-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">/m/inst/thread?rng=/m/mach/thread&amp;dom=#(#::T){&lt;j&gt;}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-thread-doc-0-tab').click();document.getElementById('inst-thread-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">/m/inst/thread?rng=/m/mach/thread&amp;dom=#(#::T){&lt;j&gt;}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-thread-doc-0-tab').click();document.getElementById('inst-thread-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">/m/inst/thread?rng=/m/mach/thread&amp;dom=#{?}(#::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-thread-doc-0-tab').click();document.getElementById('inst-thread-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">/m/inst/thread?rng=/m/mach/thread&amp;dom=#{?}(#::T){&lt;j&gt;}</code></pre>
 </div>
     
 </div><div class="card mb-3" id="inst-throw">
@@ -3647,6 +3680,10 @@ nat::6.type()-&lt;[tid(),vid()] [-- [/m/int, nat] non-base types tids are the ty
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/inst/rewrite/id_removal?rng=code{?}&amp;dom=code(){&lt;j&gt;}</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">removes identity instructions</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">/m/code <span class="text-light">=&gt;</span> /m/code{?}</pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"></pre>
 </div>
 </div><div class="card mb-3" id="rewrite-map_nest">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -3659,6 +3696,10 @@ nat::6.type()-&lt;[tid(),vid()] [-- [/m/int, nat] non-base types tids are the ty
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/inst/rewrite/map_nest?rng=code{?}&amp;dom=code(){&lt;j&gt;}</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">flattens nested map instructions</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">/m/code <span class="text-light">=&gt;</span> /m/code{?}</pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"></pre>
 </div>
 </div><div class="card mb-3" id="rewrite-mult_one">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -3691,6 +3732,10 @@ nat::6.type()-&lt;[tid(),vid()] [-- [/m/int, nat] non-base types tids are the ty
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/inst/rewrite/split_merge_collapse?rng=code{?}&amp;dom=code(){&lt;j&gt;}</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">applies abelian monoid law on split code paths</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">/m/code <span class="text-light">=&gt;</span> /m/code{?}</pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"></pre>
 </div>
 </div><div class="card mb-3" id="rewrite-split_merge_left_factor">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -3703,6 +3748,10 @@ nat::6.type()-&lt;[tid(),vid()] [-- [/m/int, nat] non-base types tids are the ty
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/inst/rewrite/split_merge_left_factor?rng=code{?}&amp;dom=code(){&lt;j&gt;}</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">leverages distributive ring law to pull common monoidally bound components to the right</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">/m/code <span class="text-light">=&gt;</span> /m/code{?}</pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"></pre>
 </div>
 </div><div class="card mb-3" id="rewrite-split_merge_right_factor">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -3715,12 +3764,16 @@ nat::6.type()-&lt;[tid(),vid()] [-- [/m/int, nat] non-base types tids are the ty
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/inst/rewrite/split_merge_right_factor?rng=code{?}&amp;dom=code(){&lt;j&gt;}</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">leverages distributive ring law to pull common monoidally bound components to the left</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">/m/code <span class="text-light">=&gt;</span> /m/code{?}</pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"></pre>
 </div>
 </div>
 </div><div class="container-xxl py-3 text-center">
     <hr class="border-secondary">
     <small class="text-muted">
-        generated by metatron instset doc generator on build 0-2026-05-21 22:48:03<br>
+        generated by metatron instset doc generator on build 0-2026-05-23 06:39:33<br>
         (c) PhaseShift Studio, LLC
     </small>
 </div></main>
@@ -3854,11 +3907,10 @@ nat::6.type()-&lt;[tid(),vid()] [-- [/m/int, nat] non-base types tids are the ty
         setTimeout(initTabs, 200);
     });
 </script>
+
+<!------------ FEATURES MODAL -------------->
+<div id="modalPanel" class="modal fade" tabindex="-1"></div>
+<!------------------------------------------>
+
 </body>
 </html>
-
-<!-- RECOMMENDED TO STAY OUTSIDE HTML TAG -->
-<!------------ FEATURES MODAL -------------->
-<div id="modalPanel" class="modal fade" tabindex="-1"/>
-<!------------------------------------------>
-<!------------------------------------------>

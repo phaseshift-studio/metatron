@@ -84,6 +84,7 @@ public class mInstSet extends AbstractInstSet {
     public static final fURI ALL_STAR = ALL.maybeSome();
     public static final fURI SPACE_TID = M_ISA_TID.extend("space");
     /// ////////////////////////////////////////////////////////
+    public static final fURI INST_CTOR_TID = M_ISA_INST_TID.extend(CTOR); 
     public static final fURI LIKE_INST_TID = M_ISA_INST_TID.extend("like");
     public static final fURI CAUSE_INST_TID = M_ISA_INST_TID.extend("cause");
     public static final fURI NATIVE_INST_TID = M_ISA_INST_TID.extend("native");
@@ -303,7 +304,7 @@ public class mInstSet extends AbstractInstSet {
                                 "[a=>1,b=>2]           [-- 2 uri=>int rec --]",
                                 "[a=>[b=>1,c=>[d=>3]]] [-- nested rec     --]",
                                 "[a=>[b=>+1,c=>_]]     [-- inst values    --]"),
-                        docWrap(INSTSET_TYPE, "", "",  mutableMap(
+                        docWrap(INSTSET_TYPE, "", "", mutableMap(
                                         uri(CONST).maybe(), "constants used across the instset",
                                         uri(TYPE).maybe(), "types used to structure objs of the instset",
                                         uri(INST).maybe(), "instructions associated with the types of the instset",
@@ -359,8 +360,9 @@ public class mInstSet extends AbstractInstSet {
                                 "*int?docq  [-- documentation for int::T --]"),
                         docWrap(MINTQ_TYPE, "mint a unique uri extension to obj vid",
                                 "1@abc?mintq [-- 1@abc/235ae3 --]"),
-                        docWrap(INCRQ_TYPE, "a query that returns an increment"),
-                        docWrap(CONSTQ_TYPE, "a query that returns a constant")),
+                        docWrap(INCRQ_TYPE, "internal counter increments and appends value to vid"),
+                        docWrap(CONSTQ_TYPE, "prevents the vid from being mutated once set"),
+                        docWrap(MIMEQ_TYPE, "maps the obj to the specified mime type")),
                 uri(CONST), lst(
                         docWrap(noobj(), "a no object. if an inst domain is no zeroable (e.g. {0}/{?}/{*}) then the inst will not evaluate."),
                         docWrap(NONE, "a token uri denoting nothing. used for deleting obj in space.")),
@@ -380,7 +382,8 @@ public class mInstSet extends AbstractInstSet {
                         //  Objs.ObjsType.insts().stream(),
                         SpaceType.insts().stream(),
                         ObjType.insts().stream(),
-                        NoObj.NoObjType.insts().stream()
+                        NoObj.NoObjType.insts().stream(),
+                        Stream.of(instA(INST_CTOR_TID))
                 ).flatMap(i -> i)),
                 uri(REWRITE), lst(
                         // Remove identity instructions (no-op)

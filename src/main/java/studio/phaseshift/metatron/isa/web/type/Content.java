@@ -89,7 +89,7 @@ public class Content {
         }
 
         public static ContentType of(final String contentType) {
-            return null == contentType ? null : Arrays.stream(ContentType.values()).filter(ct -> (contentType.contains(ct.value))).findAny().orElse(null);
+            return null == contentType ? null : Arrays.stream(ContentType.values()).filter(ct -> (contentType.equalsIgnoreCase(ct.value))).findAny().orElse(null);
         }
 
         public static ContentType fromProbe(final File file, final ContentType defaultType) {

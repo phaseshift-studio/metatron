@@ -318,8 +318,24 @@ function refreshTermynal(id) {
 }
 
 function modalPanel(title, icon, htmlBody) {
-    $(document).ready(function () {
-        $("#modalPanel").html(`
+    // Move modal to body to escape stacking context traps
+    // (e.g., #content { position: relative; z-index: 1 } would otherwise
+    // trap the modal's z-index below the backdrop's, rendering it unclickable)
+    const panel = document.getElementById('modalPanel');
+    if (panel && panel.parentElement !== document.body) {
+        document.body.appendChild(panel);
+    }
+
+    // Destroy any existing modal instance to avoid state issues
+    const existingModal = bootstrap.Modal.getInstance(panel);
+    if (existingModal) {
+        existingModal.dispose();
+    }
+    // Defense in depth: ensure no leftover backdrop or body state
+    $('.modal-backdrop').remove();
+    $('body').removeClass('modal-open');
+
+    $("#modalPanel").html(`
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content bg-secondary text-light">
             <div class="modal-header border-bottom border-primary">
@@ -335,8 +351,13 @@ function modalPanel(title, icon, htmlBody) {
         </div>
     </div>
 `);
-        $("#modalPanel").modal("show");
+    
+    // Create a new modal instance and show it
+    const modal = new bootstrap.Modal($('#modalPanel')[0], {
+        backdrop: true,
+        keyboard: true
     });
+    modal.show();
 }
 
 function featurePanel(id) {

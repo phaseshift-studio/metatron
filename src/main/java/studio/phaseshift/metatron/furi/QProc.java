@@ -236,7 +236,7 @@ public interface QProc extends Rec {
                     .filter(q -> vid.hasQ(q.pattern()))
                     .map(QProc::onRead)
                     .filter(Optional::isPresent)
-                    // .peek(q -> LOG.debug("handling {{c}}post read{{X}} of %s for %s", source, vid))
+                    .peek(q -> current.logger().error("handling {{c}}post read{{X}} of %s for %s", current, vid))
                     .map(Optional::get)
                     .map(q -> q.postRead(vid, current))
                     .filter(Optional::isPresent)

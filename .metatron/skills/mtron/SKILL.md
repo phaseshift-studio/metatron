@@ -39,10 +39,20 @@ Either of the two `eval()` options above can be used for **all** mtron expressio
 ## Step 1: Gather Context
 
 ```mtron
-*/sys/space/+/                                    # List user's spaces
+*/sys/space/+/                                    # List user's spaces (returns relation: uri=>obj)
+*/sys/space/+/.dom()                              # Extract just the URIs (domain) from the relation
 */sys/space/${space}                              # View space config (pattern, route, etc.)
 */sys/console                                     # Console info (version, etc.)
 */sys/console/history                             # User's command history (structured: time, entry)
+```
+
+### Relations & Domain Extraction
+
+When dereferencing a URI with a trailing `/` (e.g., `*/path/+/`), the result is a **relation** (`uri=>obj`). 
+To extract just the keys (URIs), use the `.dom()` (domain) function:
+
+```mtron
+*/sys/space/+/.dom()  # Returns: {/sys/space/db, /sys/space/mongo, /sys/space/usr, ...}
 ```
 
 ### Important Concepts

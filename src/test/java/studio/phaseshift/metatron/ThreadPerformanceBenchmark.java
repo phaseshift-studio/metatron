@@ -56,13 +56,13 @@ public class ThreadPerformanceBenchmark extends AbstractMetatronTest {
     @Test
     public void testVirtualThreadConcurrency() throws InterruptedException {
         // Adjust this number to stress test harder (e.g., 5000, 10000)
-        int threadCount = 800;
+        int threadCount = 2000;
         LOG.info("Starting benchmark with %d virtual threads", threadCount);
         LOG.info(ObjmtronSerializer.parse("*virtual").apply());
 
-        CountDownLatch latch = new CountDownLatch(threadCount);
-        AtomicInteger successCount = new AtomicInteger(0);
-        AtomicInteger failCount = new AtomicInteger(0);
+        final CountDownLatch latch = new CountDownLatch(threadCount);
+        final AtomicInteger successCount = new AtomicInteger(0);
+        final AtomicInteger failCount = new AtomicInteger(0);
 
         long start = System.currentTimeMillis();
 
@@ -76,7 +76,7 @@ public class ThreadPerformanceBenchmark extends AbstractMetatronTest {
                     VirtualThread mtronThread = ObjmtronSerializer.parse("virtual::[code=>_.repeat(code=>plus(1),until=>is(gt(100)))]@thread_" + threadId).as();
                     mtronThread.apply(jnt(1));
                     //LOG.info(mtronThread);
-                    if (!mtronThread.isFail() && mtronThread.result(45, TimeUnit.SECONDS).equals(jnt(101))) {
+                    if (!mtronThread.isFail() && mtronThread.result(60, TimeUnit.SECONDS).equals(jnt(101))) {
                         successCount.incrementAndGet();
                     } else {
                         failCount.incrementAndGet();
@@ -93,7 +93,7 @@ public class ThreadPerformanceBenchmark extends AbstractMetatronTest {
         }
 
         // Wait for all threads to finish
-        boolean completed = latch.await(60, TimeUnit.SECONDS);
+        boolean completed = latch.await(120, TimeUnit.SECONDS);
         long duration = System.currentTimeMillis() - start;
 
         LOG.info("========================================");

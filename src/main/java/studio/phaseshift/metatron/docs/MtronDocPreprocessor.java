@@ -67,7 +67,7 @@ public final class MtronDocPreprocessor {
     private static final Pattern ERROR = Pattern.compile("\\[ERROR]");
     private static final Pattern NOOUT = Pattern.compile("\\[NO_OUTPUT]");
 
-    private static final ObjmtronSerializer SER = ObjmtronSerializer.single();
+    private static final ObjmtronSerializer SER = new ObjmtronSerializer(35);
     private static final GraphittyLogger LOG = Graphitty.log(MtronDocPreprocessor.class);
 
     // ── Process entry point ─────────────────────────────────────────

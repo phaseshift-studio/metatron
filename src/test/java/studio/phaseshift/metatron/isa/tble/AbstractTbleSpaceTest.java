@@ -37,6 +37,7 @@ import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.util.MTronException;
 
 import java.lang.reflect.Method;
 import java.sql.Connection;
@@ -1068,6 +1069,57 @@ public abstract class AbstractTbleSpaceTest extends AbstractSpaceTest implements
                  final Statement stmt = conn.createStatement()) {
                 stmt.executeUpdate("DROP TABLE IF EXISTS employee");
                 stmt.executeUpdate("DROP TABLE IF EXISTS org");
+            }
+            Router.global().removeSpace(testSpace.vid());
+            testSpace.close();
+        }
+    }
+
+    /**
+     * Verifies that writing {@code none} to a NOT NULL column throws a clear
+     * {@link studio.phaseshift.metatron.util.MTronException} rather than
+     * silently ignoring the constraint violation.
+     */
+    @Test
+    public void testNoneWriteToNotNullColumnThrowsException() throws Exception {
+        final String tableName = "notnull_test";
+        final fURI spaceVid = f("/sys/space/tble/nn_test");
+
+        // Create table with explicit NOT NULL constraint
+        try (final Connection conn = staticDbConfig.getConnection();
+             final Statement stmt = conn.createStatement()) {
+            stmt.executeUpdate("DROP TABLE IF EXISTS " + tableName);
+            stmt.executeUpdate("CREATE TABLE " + tableName +
+                    " (id INTEGER PRIMARY KEY, required_field TEXT NOT NULL)");
+            stmt.executeUpdate("INSERT INTO " + tableName + " VALUES (1, 'hello')");
+        }
+
+        final tbleSpace testSpace = tbleSpace.of(
+                rec(
+                        uri(PATTERN), uri("nn:#"),
+                        uri(HOST), uri(staticDbConfig.getJdbcHost()),
+                        uri(DRIVER), uri(staticDbConfig.getDriverClass()),
+                        uri(TABLE), lst(uri(tableName)),
+                        uri(ROUTE), rec(uri("nn:"), uri(""))
+                ).jvm(),
+                spaceVid
+        );
+
+        try {
+            final MTronException ex = assertThrows(MTronException.class, () ->
+                    Router.writeToSpace(f("nn:" + tableName + "/1"),
+                            rec(uri("required_field"), Obj.none()))
+            );
+            assertTrue(ex.getMessage().contains("NOT NULL"),
+                    "exception should mention NOT NULL constraint, got: " + ex.getMessage());
+            assertTrue(ex.getMessage().contains("required_field"),
+                    "exception should name the column, got: " + ex.getMessage());
+            assertTrue(ex.getMessage().contains(tableName),
+                    "exception should name the table, got: " + ex.getMessage());
+        } finally {
+            try (final Connection conn = staticDbConfig.getConnection();
+                 final Statement stmt = conn.createStatement()) {
+                stmt.executeUpdate("DROP TABLE IF EXISTS " + tableName);
             }
             Router.global().removeSpace(testSpace.vid());
             testSpace.close();

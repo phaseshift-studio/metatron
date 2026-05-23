@@ -29,6 +29,7 @@
 :title: metatron
 :nofooter:
 :noheader:
+:!header-footer:
 :!example-caption:
 
 
@@ -73,9 +74,25 @@ include::header.html[]
                         </p>
                     </div>
                 </div>
-                <!--<div class="row g-4">
-                    <img src="images/external/docker.svg" width="50%" alt="docker"/>
-                </div>-->
+<!-- ------ REMOVE WHEN STABLE ---------- -->
+                <div class="row">
+                <div class="col-md-12">
+<div class="openblock card">
+<div class="content">
+<div class="paragraph">
+  <p><small><b class="metatron-name">metatron</b> is in its pre-release
+                                                development stage. Documentation, source code, and artifact distributions
+                                                are in flux. For those interested in using the codebase, track the project via <a
+                                                        href="https://github.com/phaseshift-studio/metatron">github</a>
+                                                and build with <code>mvn</code> (as <code>npm</code> and
+                                                <code>docker</code> snapshots are not automatically sychronized).</small></p>
+</div>
+</div>
+</div>
+
+                </div>
+                </div>
+<!-- ----------------------------------  -->
             </div>
             <div class="col-lg-4 wow fadeIn" data-wow-delay="0.1s">
                 <img src="images/metatron-character.png" width="100%" style="opacity:75%"/>

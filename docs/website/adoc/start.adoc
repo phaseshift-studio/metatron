@@ -28,6 +28,7 @@
 :title: Quick Start — metatron
 :nofooter:
 :noheader:
+:!header-footer:
 
 ++++
 include::header.html[]

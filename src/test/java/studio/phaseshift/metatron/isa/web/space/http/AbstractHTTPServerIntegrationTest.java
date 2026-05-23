@@ -32,6 +32,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.time.Duration;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.HOST;
@@ -126,6 +127,7 @@ public abstract class AbstractHTTPServerIntegrationTest extends AbstractMetatron
         final HttpRequest req = HttpRequest.newBuilder()
                 .uri(URI.create(baseUrl() + path))
                 .GET()
+                .timeout(Duration.ofSeconds(10))
                 .build();
         return httpClient.send(req, HttpResponse.BodyHandlers.ofString());
     }
@@ -135,7 +137,8 @@ public abstract class AbstractHTTPServerIntegrationTest extends AbstractMetatron
         final HttpRequest.Builder builder = HttpRequest.newBuilder()
                 .uri(URI.create(baseUrl() + path))
                 .header("Content-Type", "application/json")
-                .POST(HttpRequest.BodyPublishers.ofString(body));
+                .POST(HttpRequest.BodyPublishers.ofString(body))
+                .timeout(Duration.ofSeconds(10));
         if (sessionId != null) {
             builder.header("Mcp-Session-Id", sessionId);
         }
@@ -146,6 +149,7 @@ public abstract class AbstractHTTPServerIntegrationTest extends AbstractMetatron
             throws IOException, InterruptedException {
         final HttpRequest.Builder builder = HttpRequest.newBuilder()
                 .uri(URI.create(baseUrl() + path))
+                .timeout(Duration.ofSeconds(10))
                 .DELETE();
         if (sessionId != null) {
             builder.header("Mcp-Session-Id", sessionId);

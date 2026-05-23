@@ -43,7 +43,7 @@ import static studio.phaseshift.metatron.isa.web.space.http.httpSpace.HTTP_SPACE
  * MCP HTTP handler pre-populated with metatron-native tools.
  * Analogous to {@code mcp_wsHandler} but for HTTP transport.
  * <p>
- * Tools include: eval_mtron, list_space, router_info, list_inst,
+ * Tools include: eval_mtron, list_space, router_info, find_inst,
  * spawn_wsclient, spawn_wsserver.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)

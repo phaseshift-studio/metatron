@@ -28,11 +28,11 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.tble.space.ExistingTableSchema;
 import studio.phaseshift.metatron.util.DatabasePath;
 
 import java.util.*;
 
-import static studio.phaseshift.metatron.Tokens.TYPE;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
@@ -42,7 +42,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * Schema for discovering existing MongoDB collections and their document structures.
  * Samples documents from each collection to infer field types and detect references.
  * <p>
- * This is analogous to {@link studio.phaseshift.metatron.isa.tble.schema.domain.ExistingTableSchema}
+ * This is analogous to {@link ExistingTableSchema}
  * for SQL databases, but uses document sampling since MongoDB is schema-less.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)

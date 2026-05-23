@@ -78,7 +78,7 @@ public class dcmntInstSet extends AbstractInstSet {
     public static final fURI COLLECTION_TID = DCMNT_ISA_TID.extend(COLLECTION);
     public static final fURI ID_FIELD = f("_id");
     public static fURI DCMNT_SPACE_TID = DCMNT_ISA_TID.extend(SPACE).extend("dcmntspace");
-
+    public static Type DCMNT_SPACE_TYPE;
 
     public static final Type COLLECTION_TYPE = Type.Builder.build()
             .tid(URI_TID)
@@ -97,7 +97,7 @@ public class dcmntInstSet extends AbstractInstSet {
                 uri(CONSTQ), lst(ObjSimpleJSONSerializer.single(), uri(ID_FIELD, URI_TID, DCMNT_ISA_TID.extend(ID_FIELD))),
                 uri(TYPE), lst(
                         COLLECTION_TYPE,
-                        docWrap(Type.Builder.build()
+                        DCMNT_SPACE_TYPE = docWrap(Type.Builder.build()
                                         .tid(SPACE_TID)
                                         .vid(DCMNT_SPACE_TID)
                                         .isaPredicate(rec(

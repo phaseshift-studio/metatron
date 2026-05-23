@@ -197,15 +197,15 @@ public class mcp_mtron_wsHandlerIntegrationTest extends AbstractWebSocketServerI
     }
 
     @Test
-    public void testToolsListContainsListInst() {
+    public void testToolsListContainsFindInst() {
         final Rec res = mcpRequest(rec(
                 uri(JSONRPC), str("2.0"),
                 uri(ID), jnt(4),
                 uri("method"), uri("tools/list")));
         final boolean hasListInst = res.at(uri(RESULT)).asRec().at(uri("tools")).asLst().lstValue()
                 .stream()
-                .anyMatch(t -> t.isRec() && str("list_inst").equals(t.asRec().at(uri(NAME))));
-        assertTrue(hasListInst, "tools/list should include 'list_inst'");
+                .anyMatch(t -> t.isRec() && str("find_inst").equals(t.asRec().at(uri(NAME))));
+        assertTrue(hasListInst, "tools/list should include 'find_inst'");
     }
 
     // =========================================================
@@ -245,22 +245,9 @@ public class mcp_mtron_wsHandlerIntegrationTest extends AbstractWebSocketServerI
         assertTrue(text.contains("router_vid"), "router_info text should include router_vid");
         assertTrue(text.contains("space_count"), "router_info text should include space_count");
     }
-
+    
     @Test
-    public void testCallListInstNoDoc() {
-        final Rec res = mcpRequest(rec(
-                uri(JSONRPC), str("2.0"),
-                uri(ID), jnt(12),
-                uri("method"), uri("tools/call"),
-                uri("params"), rec(
-                        uri(NAME), str("list_inst"),
-                        uri("arguments"), rec())));
-        assertFalse(res.at(uri(RESULT)).isNoObj(), "list_inst should return a result");
-        assertFalse(res.at(uri("error")).isRec(), "list_inst should not error");
-    }
-
-    @Test
-    public void testCallListInstWithDocTrue() {
+    public void testCallFindInstWithDocTrue() {
         // ObjSimpleJSONSerializer is URI-biased, so "true" → uri("true").
         // The list_inst tool accepts both bool(true) and uri("true").
         final Rec res = mcpRequest(rec(
@@ -268,10 +255,10 @@ public class mcp_mtron_wsHandlerIntegrationTest extends AbstractWebSocketServerI
                 uri(ID), jnt(13),
                 uri("method"), uri("tools/call"),
                 uri("params"), rec(
-                        uri(NAME), str("list_inst"),
-                        uri("arguments"), rec(uri("doc"), uri("true")))));
-        assertFalse(res.at(uri(RESULT)).isNoObj(), "list_inst(doc=true) should return a result");
-        assertFalse(res.at(uri("error")).isRec(), "list_inst(doc=true) should not error");
+                        uri(NAME), str("find_inst"),
+                        uri("arguments"), rec(uri(PATTERN), uri("plus")))));
+        assertFalse(res.at(uri(RESULT)).isNoObj(), "find_inst(pattern=>plus) should return a result");
+        assertFalse(res.at(uri("error")).isRec(), "find_inst(pattern=>plus) should not error");
     }
 
     @Test
@@ -418,14 +405,14 @@ public class mcp_mtron_wsHandlerIntegrationTest extends AbstractWebSocketServerI
     }
 
     @Test
-    public void testCallListInstRoundTrip() throws Exception {
+    public void testCallFindInstRoundTrip() throws Exception {
         connectToServer("/mcp-mtron");
         final String req = "{\"jsonrpc\":\"2.0\",\"id\":5,\"method\":\"tools/call\","
-                + "\"params\":{\"name\":\"list_inst\",\"arguments\":{}}}";
+                + "\"params\":{\"name\":\"find_inst\",\"arguments\":{\"pattern\":\"plus\"}}}";
         final String resp = sendAndReceive(req);
-        assertNotNull(resp, "list_inst call should return a response");
-        assertFalse(resp.contains("\"error\""), "list_inst should not error: " + resp);
-        assertTrue(resp.contains("\"result\""), "list_inst should return a result");
+        assertNotNull(resp, "find_inst call should return a response");
+        assertFalse(resp.contains("\"error\""), "find_inst should not error: " + resp);
+        assertTrue(resp.contains("\"result\""), "find_inst should return a result");
     }
 
     @Test

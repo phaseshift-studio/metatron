@@ -265,8 +265,6 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
                     return lhsValue;
                 if (rhsValue.isNoObj())
                     return noobj();
-                else if (rhsValue.isNone())
-                    return null;
                 return rhsValue;
 
             }));

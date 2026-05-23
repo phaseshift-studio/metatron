@@ -50,8 +50,9 @@ import static studio.phaseshift.metatron.util.Tuple.Triplet;
 
 public interface Inst extends Call {
 
-    public record ArgsFunction(Poly<?,?> args, f f){}
-    
+    public record ArgsFunction(Poly<?, ?> args, f f) {
+    }
+
     String ARGS = "args";
     String DOM = "dom";
     String RNG = "rng";
@@ -155,7 +156,7 @@ public interface Inst extends Call {
     default Inst c(final cInt c) {
         return this.tid(this.tid().c(c));
     }
-    
+
     default Obj arg(final fURI key, final int index) {
         return this.args().isRec() ? this.args().<Rec>as().at(key.toUri()) : this.arg(index);
     }
@@ -417,6 +418,11 @@ public interface Inst extends Call {
     final class Helper {
         private Helper() {
             // do nothing
+        }
+
+        public static Rec rectifyLstArgs(final Lst lstArgs, final Rec recArgs) {
+            final AtomicInteger counter = new AtomicInteger(0);
+            return recArgs.elements().map(r -> rel(r.first(), lstArgs.at(counter.getAndIncrement()))).collect(new CommonUtil.RecCollector());
         }
 
         public static boolean filterOnDomainAllowUnique(final Obj lhs, final Inst apiInst) {

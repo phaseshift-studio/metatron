@@ -27,9 +27,9 @@ import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
-import studio.phaseshift.metatron.isa.tble.schema.domain.ExistingTableSchema;
-import studio.phaseshift.metatron.isa.tble.schema.domain.SQLSchemaGenerator;
-import studio.phaseshift.metatron.isa.tble.schema.domain.SQLSchemaInstSet;
+import studio.phaseshift.metatron.isa.tble.space.ExistingTableSchema;
+import studio.phaseshift.metatron.isa.tble.space.SQLSchemaGenerator;
+import studio.phaseshift.metatron.isa.tble.space.SQLSchemaInstSet;
 import studio.phaseshift.metatron.isa.tble.schema.storage.TableSchema;
 import studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema;
 import studio.phaseshift.metatron.isa.tble.schema.storage.fURIAwareIndexedSchema;
@@ -140,6 +140,8 @@ public class tbleSpace extends AbstractSpace<Connection> implements SchemaSpace 
      * {@code jdbc:} prefix — it is prepended automatically.
      */
     public static tbleSpace of(final Map<Obj, Obj> config, final fURI vid) {
+        // Ensure vid is never null — generate a default from tid if missing
+        final fURI effectiveVid = null != vid ? vid : TBLE_SPACE_TID.extend("default");
         MTronException.wrap(() -> Class.forName(config.get(uri(DRIVER)).uriValue().toString()));
         try {
             final Connection conn = DriverManager.getConnection(
@@ -148,7 +150,7 @@ public class tbleSpace extends AbstractSpace<Connection> implements SchemaSpace 
             // entries).  The original map is the shared jvm() of the caller's Rec —
             // modifying it concurrently while another thread iterates it causes
             // ConcurrentModificationException.
-            return new tbleSpace(conn, new LinkedHashMap<>(config), TBLE_SPACE_TID, vid);
+            return new tbleSpace(conn, new LinkedHashMap<>(config), TBLE_SPACE_TID, effectiveVid);
         } catch (final SQLException ex) {
             throw MTronException.of(ex);
         }

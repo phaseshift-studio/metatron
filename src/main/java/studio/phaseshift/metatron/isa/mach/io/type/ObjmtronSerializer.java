@@ -342,7 +342,7 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
 
     private StringBuilder generateType(final StringBuilder sb, final Type type, final int depth) {
         sb.append(
-                (Router.loaded() ? Router.global().redirect(type.tid(), false) : type.tid()).toString())
+                        (Router.loaded() ? Router.global().redirect(type.tid(), false) : type.tid()).toString())
                 .append("::T");
         if (type.hasPredicate()) {
             if (type.predicate().isObjInst() && type.predicate().tid().basePath().equals(ISA_INST_TID) && type.predicate().asInst().arg(0).isPoly()) {
@@ -360,7 +360,7 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
                 sb.append("[]");
             sb.append("[");
             StringBuilder temp = new StringBuilder();
-           // temp.append(" ".repeat((depth + 1) * INDENT_SIZE));
+            // temp.append(" ".repeat((depth + 1) * INDENT_SIZE));
             renderValue(temp, depth + 1, type.constructor());
             cleanEnding(temp);
             sb.append(temp);
@@ -414,7 +414,9 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
             if (obj.failValue().get1() != null)
                 writeClip(sb, obj.failValue().get1());
             else {
-                sb.append(writeFail(fail(obj.asFail().message().getMessage().split("\n")[0])));
+                String message = obj.asFail().message().getMessage().split("\n")[0];
+                message = message.length() > this.clip ? (message.substring(0, this.clip - 1) + "...") : message;
+                sb.append(writeFail(fail(message)));
             }
         } else {
             sb.append(obj.toShortString());

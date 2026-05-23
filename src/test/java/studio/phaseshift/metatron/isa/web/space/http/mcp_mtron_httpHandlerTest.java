@@ -166,8 +166,8 @@ public class mcp_mtron_httpHandlerTest extends AbstractHTTPServerIntegrationTest
                 uri(ID), jnt(4),
                 uri("method"), uri("tools/list")));
         final boolean has = res.at(uri(RESULT)).asRec().at(uri("tools")).asLst().lstValue()
-                .stream().anyMatch(t -> t.isRec() && str("list_inst").equals(t.asRec().at(uri(NAME))));
-        assertTrue(has, "tools/list should include 'list_inst'");
+                .stream().anyMatch(t -> t.isRec() && str("find_inst").equals(t.asRec().at(uri(NAME))));
+        assertTrue(has, "tools/list should include 'find_inst'");
     }
 
     // =========================================================
@@ -200,13 +200,13 @@ public class mcp_mtron_httpHandlerTest extends AbstractHTTPServerIntegrationTest
     }
 
     @Test
-    public void testCallListInst() {
+    public void testCallFindInst() {
         final Rec res = mcpRequest(rec(
                 uri(JSONRPC), str("2.0"),
                 uri(ID), jnt(12),
                 uri("method"), uri("tools/call"),
-                uri("params"), rec(uri(NAME), str("list_inst"), uri("arguments"), rec())));
-        assertFalse(res.at(uri(RESULT)).isNoObj(), "list_inst should return a result");
+                uri("params"), rec(uri(NAME), str("find_inst"), uri("arguments"), rec(uri(PATTERN),uri("plus")))));
+        assertFalse(res.at(uri(RESULT)).isNoObj(), "find_inst should return a result");
     }
 
     @Test

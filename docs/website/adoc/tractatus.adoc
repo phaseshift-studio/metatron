@@ -27,6 +27,7 @@
 :title: metatron
 :nofooter:
 :noheader:
+:!header-footer:
 :!example-caption:
 
 ++++

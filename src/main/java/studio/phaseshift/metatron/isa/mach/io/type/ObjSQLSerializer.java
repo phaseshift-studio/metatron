@@ -407,7 +407,7 @@ public class ObjSQLSerializer extends AbstractObjSerializer<ResultSet> {
      */
     protected void writeParameter(final PreparedStatement stmt, final int paramIndex,
                                   final Obj value, final int sqlType) throws SQLException {
-        if (value.isNoObj()) {
+        if (value.isNoObj() || value.isNone()) {
             stmt.setNull(paramIndex, sqlType);
             return;
         }
