@@ -2555,7 +2555,7 @@ The predicate component of the type definition tests an <code>int</code> to dete
 <div class="paragraph">
 <p>While every <code>type</code> is an <code>obj</code>, not every <code>obj</code> is a <code>type</code>.
 Those <code>objs</code> that are not <code>types</code> are <em>instances</em> of some <code>type</code>.
-This is the foundation for all other <code>objs</code> in {{c}}m{{m}}e{{g}}T{{y}}A{{c}}t{{m}}R{{r}}o{{g}}N{{X}}.</p>
+This is the foundation for all other <code>objs</code> in {{c}}M{{g}}e{{g}}t{{b}}A{{r}}T{{y}}R{{g}}o{{c}}n{{X}}.</p>
 </div>
 <h4 id="_cascading_type_constructions" class="discrete">cascading type constructions</h4>
 <h3 id="_mono_types" class="discrete">mono types</h3>
@@ -4214,7 +4214,7 @@ a \cdot (b + c) = (a + b) \cdot (a + c)
 </tbody>
 </table>
 <div class="paragraph">
-<p>If the implication of these equalities is not readily apparent, then understand the following. The multiplicative union of uris to an obj is a dependent relationship. There exists a colocational dependence where <code>a</code> is coupling <code>b</code> and <code>c</code> together into a single structure that then references/contains <code>1</code> and <code>2</code>.</p>
+<p>If the implication of these equalities is not readily apparent, then understand the following. The multiplicative union of uris to an obj is a <strong>dependent relationship</strong>. There exists a colocational requirement where <code>a</code> is coupling <code>b</code> and <code>c</code> together into a single structure that then refers to <code>1</code> and <code>2</code>.</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -4224,7 +4224,7 @@ a \cdot (b + c) = (a + b) \cdot (a + c)
 </div>
 </div>
 <div class="paragraph">
-<p>On the other hand, the additive union of the uris is an independent relationship. There are two representations of <code>a</code> and thus, <code>a/b =&gt; 1</code> is distinct, requiring no colocation with <code>a/c =&gt; 2</code>. This means that <code>a/b</code> can be stored in a document database in Japan and <code>a/c</code> an be stored in <code>.txt</code> file on some file system in Ohio and when resolved, the same <code>{1,2}</code> result is yielded (albeit with different time/space characteristics compared to the multiplicative, colocated representation of the data).</p>
+<p>On the other hand, the additive union of the uris is an <strong>independent relationship</strong>. There are two representations of <code>a</code> and thus, <code>a/b =&gt; 1</code> is distinct, requiring no colocation with <code>a/c =&gt; 2</code>. This means that <code>a/b</code> can be stored in a document database in Japan and <code>a/c</code> an be stored in <code>.txt</code> file on some file system in Ohio and when resolved, the same <code>{1,2}</code> result is returned upon query (albeit with different time/space characteristics compared to the multiplicative, colocated representation of the data).</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -4234,11 +4234,11 @@ a \cdot (b + c) = (a + b) \cdot (a + c)
 </div>
 </div>
 <div class="paragraph">
-<p>A further entailment states that a dataset can be rewritten from a <strong>concatenative/multiplicative</strong> form to a <strong>union/additive</strong> form so as to maintain one subset of the data in a specialized space optimized for the production requirements of that data and the other subset in some other specialized space according to its requirements. More specifically, some data needs to be "hot in cache" in order to meet response time requirements, and some data should be "iced in archive" when the production requirements don&#8217;t require rapid response times and reducing production costs with cheap disk storage. With metatron, expressing such partitions while also ensuring said partitions are resolved correctly is built into the fundamental mathematics/algorithm of the sytem&#8201;&#8212;&#8201;<strong>the ring algebra for structural composition</strong>.</p>
+<p>A further entailment states that a dataset can be rewritten from a <strong>concatenative/multiplicative</strong> form to a <strong>union/additive</strong> form so as to maintain one subset of the data in a specialized space optimized for the demands of its production requirements and the other subset in some other specialized space according to its requirements. More specifically, some data needs to be "hot in cache" in order to satisfy demand, and some data should be "iced in archive" when the production usage doesn&#8217;t require rapid response times and its possible to reduce production costs with cheap disk storage. With metatron, expressing such partitions while also ensuring said partitions resolve correctly is built into the fundamental mathematics/algorithm of the system&#8201;&#8212;&#8201;<strong>the ring algebra for structural composition</strong>.</p>
 </div>
-<h4 id="_isomorphic_ne_identical" class="discrete">Isomorphic \$ \ne \$ Identical</h4>
+<h4 id="_isomorphic_identical" class="discrete">Isomorphic != Identical</h4>
 <div class="paragraph">
-<p>A <em>matrix</em> is an \$n \times m\$ data structure composed of \$n\$ vectors/row, each with \$m\$ elements/columns. A relational database <em>table</em> is an example of a matrix, where the entries typically span numeric and non-numeric data types.
+<p>A <em>matrix</em> is an \(n \times m\) data structure composed of \(n\) vectors/row, each with \(m\) elements/columns. A relational database <em>table</em> is an example of a matrix, where the entries typically span numeric and non-numeric data types.
 Three general approaches to embedding a matrix or table into a space are presented below, where each makes different space/time tradeoffs, while remaining isomorphic in the stream ring.</p>
 </div>
 <table class="tableblock frame-none grid-cols stretch center">
@@ -4854,7 +4854,7 @@ mtron&gt; */usr/notes/#?subq
   mqtt::T,
   haos::T]]@/m/iot
 mtron&gt;  import(/m/llm)
-{{m}}.{{b}}.{{c}}.{{X}}</code></pre>
+{{y}}.{{y}}.{{b}}.{{X}}</code></pre>
 </div>
 </div>
 </div>
@@ -6405,34 +6405,47 @@ mtron&gt; *&lt;http://localhost:8088/v1/models&gt;
   [id=&gt;MeetAISmall__latest,object=&gt;model],
   [id=&gt;gpt-oss__latest,object=&gt;model]]]
 mtron&gt; *&lt;http://localhost:8088/v1/models/data/0/id&gt;
-==&gt;qwen3:latest
+==&gt;qwen3-coder-30b-a3b-instruct
 mtron&gt; *&lt;http://localhost:8088/api/models/config-json/${
          *&lt;http://localhost:8088/v1/models/data/0/id&gt;}&gt;
 ==&gt;[
  parameters=&gt;[
-  model=&gt;qwen3__latest,
+  model=&gt;'mistralai_Devstral-Small-2507-Q4_K...',
   top_p=&gt;0.9500,
-  top_k=&gt;20,
-  min_p=&gt;0,
-  temperature=&gt;0.6000,
+  top_k=&gt;-1,
+  min_p=&gt;0.0100,
+  temperature=&gt;0.7000,
   max_tokens=&gt;0,
   repeat_penalty=&gt;1,
   tfz=&gt;1,
   typical_p=&gt;1,
   seed=&gt;-1,
   logprobs=&gt;false],
- name=&gt;qwen3:latest,
+ name=&gt;mistralai_devstral-small-2507,
  f16=&gt;false,
  threads=&gt;8,
  debug=&gt;false,
  embeddings=&gt;false,
  backend=&gt;llama-cpp,
- template=&gt;[use_tokenizer_template=&gt;true],
- known_usecases=&gt;[FLAG_CHAT],
+ template=&gt;[
+  chat=&gt;"""{{.Input -}}
+""",
+  chat_message=&gt;"""{{if eq .RoleName "user" -}}
+[INST...""",
+  completion=&gt;"""{{.Input}}
+""",
+  function=&gt;'[AVAILABLE_TOOLS] [{{range .Functi...'],
+ known_usecases=&gt;[FLAG_CHAT,FLAG_COMPLETION],
  pipeline=&gt;[=&gt;],
  function=&gt;[
-  grammar=&gt;[disable=&gt;true],
-  automatic_tool_parsing_fallback=&gt;true],
+  disable_no_action=&gt;true,
+  grammar=&gt;[parallel_calls=&gt;true,disable_parallel_new_lines=&gt;true,disable=&gt;true],
+  json_regex_match=&gt;['(?s)\[TOOL\_CALLS\](.*)'],
+  replace_function_results=&gt;[
+   [key=&gt;'(?s)^[^{\[]*'],
+   [key=&gt;'(?s)[^}\]]*$'],
+   [key=&gt;'(?s)\[TOOL\_CALLS\]'],
+   [key=&gt;'(?s)\[\/TOOL\_CALLS\]']]],
  reasoning=&gt;[=&gt;],
  mirostat_eta=&gt;0.1000,
  mirostat_tau=&gt;5,
@@ -6442,13 +6455,21 @@ mtron&gt; *&lt;http://localhost:8088/api/models/config-json/${
  mmlock=&gt;false,
  low_vram=&gt;false,
  reranking=&gt;false,
+ stopwords=&gt;[
+  |im_end|,
+  dummy32000,
+  /tool_call,
+  |eot_id|,
+  |end_of_text|,
+  /s,
+  [/TOOL_CALLS],
+  [/ACTIONS]],
  context_size=&gt;8192,
  limit_mm_per_prompt=&gt;[=&gt;],
  diffusers=&gt;[=&gt;],
  grpc=&gt;[=&gt;],
  tts=&gt;[=&gt;],
- description=&gt;'Imported from ollama://qwen3:latest',
- options=&gt;[use_jinja:true],
+ options=&gt;[gpu],
  mcp=&gt;[=&gt;],
  agent=&gt;[=&gt;]]</code></pre>
 </div>
@@ -6724,34 +6745,47 @@ mtron&gt; *&lt;http://localhost:8088/v1/models&gt;
   [id=&gt;MeetAISmall__latest,object=&gt;model],
   [id=&gt;gpt-oss__latest,object=&gt;model]]]
 mtron&gt; *&lt;http://localhost:8088/v1/models/data/0/id&gt;
-==&gt;qwen3:latest
+==&gt;qwen3-coder-30b-a3b-instruct
 mtron&gt; *&lt;http://localhost:8088/api/models/config-json/${
          *&lt;http://localhost:8088/v1/models/data/0/id&gt;}&gt;
 ==&gt;[
  parameters=&gt;[
-  model=&gt;qwen3__latest,
+  model=&gt;'mistralai_Devstral-Small-2507-Q4_K...',
   top_p=&gt;0.9500,
-  top_k=&gt;20,
-  min_p=&gt;0,
-  temperature=&gt;0.6000,
+  top_k=&gt;-1,
+  min_p=&gt;0.0100,
+  temperature=&gt;0.7000,
   max_tokens=&gt;0,
   repeat_penalty=&gt;1,
   tfz=&gt;1,
   typical_p=&gt;1,
   seed=&gt;-1,
   logprobs=&gt;false],
- name=&gt;qwen3:latest,
+ name=&gt;mistralai_devstral-small-2507,
  f16=&gt;false,
  threads=&gt;8,
  debug=&gt;false,
  embeddings=&gt;false,
  backend=&gt;llama-cpp,
- template=&gt;[use_tokenizer_template=&gt;true],
- known_usecases=&gt;[FLAG_CHAT],
+ template=&gt;[
+  chat=&gt;"""{{.Input -}}
+""",
+  chat_message=&gt;"""{{if eq .RoleName "user" -}}
+[INST...""",
+  completion=&gt;"""{{.Input}}
+""",
+  function=&gt;'[AVAILABLE_TOOLS] [{{range .Functi...'],
+ known_usecases=&gt;[FLAG_CHAT,FLAG_COMPLETION],
  pipeline=&gt;[=&gt;],
  function=&gt;[
-  grammar=&gt;[disable=&gt;true],
-  automatic_tool_parsing_fallback=&gt;true],
+  disable_no_action=&gt;true,
+  grammar=&gt;[parallel_calls=&gt;true,disable_parallel_new_lines=&gt;true,disable=&gt;true],
+  json_regex_match=&gt;['(?s)\[TOOL\_CALLS\](.*)'],
+  replace_function_results=&gt;[
+   [key=&gt;'(?s)^[^{\[]*'],
+   [key=&gt;'(?s)[^}\]]*$'],
+   [key=&gt;'(?s)\[TOOL\_CALLS\]'],
+   [key=&gt;'(?s)\[\/TOOL\_CALLS\]']]],
  reasoning=&gt;[=&gt;],
  mirostat_eta=&gt;0.1000,
  mirostat_tau=&gt;5,
@@ -6761,13 +6795,21 @@ mtron&gt; *&lt;http://localhost:8088/api/models/config-json/${
  mmlock=&gt;false,
  low_vram=&gt;false,
  reranking=&gt;false,
+ stopwords=&gt;[
+  |im_end|,
+  dummy32000,
+  /tool_call,
+  |eot_id|,
+  |end_of_text|,
+  /s,
+  [/TOOL_CALLS],
+  [/ACTIONS]],
  context_size=&gt;8192,
  limit_mm_per_prompt=&gt;[=&gt;],
  diffusers=&gt;[=&gt;],
  grpc=&gt;[=&gt;],
  tts=&gt;[=&gt;],
- description=&gt;'Imported from ollama://qwen3:latest',
- options=&gt;[use_jinja:true],
+ options=&gt;[gpu],
  mcp=&gt;[=&gt;],
  agent=&gt;[=&gt;]]</code></pre>
 </div>
@@ -7802,37 +7844,15 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
  obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
  inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
    space=&gt;[sub=&gt;{!*/m/mach,!*/m/math,!*/m/web,!*/m/iot,!*/m/grph,!*/m/llm,!*/m/tble,!*/m/dcmnt,!*/m/rdf}],
-   type=&gt;[
-    #::T,
-    bool::T,
-    int::T,
-    real::T,
-    bytes::T,
-    str::T,
-    uri::T,
-    rel::T,
-    lst::T,
-    rec::T,
-    instset::T,
-    inst::T,
-    code::T,
-    fail::T,
-    space{*}::T,
-    memspace::T,
-    stack::T,
-    qproc::T,
-    subq::T,
-    sub::T,
-    typeq::T,
-    docs::T,
-    docq::T,
-    mintq::T,
-    incrq::T,
-    constq::T,
-    mimeq::T],
-   const=&gt;[
-    noobj,
-    none@none],
+   rewrite=&gt;[
+    /m/inst/rewrite/id_removal?code{?}&lt;=code(),
+    /m/inst/rewrite/map_nest?code{?}&lt;=code(),
+    /m/inst/rewrite/else_after_count?code{?}&lt;=code(),
+    /m/inst/rewrite/plus_zero?code{?}&lt;=code(),
+    /m/inst/rewrite/mult_one?code{?}&lt;=code(),
+    /m/inst/rewrite/split_merge_collapse?code{?}&lt;=code(),
+    /m/inst/rewrite/split_merge_left_factor?code{?}&lt;=code(),
+    /m/inst/rewrite/split_merge_right_factor?code{?}&lt;=code()],
    inst=&gt;[
     as?bool&lt;=bool(bool::T),
     as?bytes&lt;=bool(bytes::T),
@@ -8060,15 +8080,37 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
     lshift?B{*}&lt;=A(),
     start?A{**}&lt;=noobj{0}(A{**}::T),
     ctor()],
-   rewrite=&gt;[
-    /m/inst/rewrite/id_removal?code{?}&lt;=code(),
-    /m/inst/rewrite/map_nest?code{?}&lt;=code(),
-    /m/inst/rewrite/else_after_count?code{?}&lt;=code(),
-    /m/inst/rewrite/plus_zero?code{?}&lt;=code(),
-    /m/inst/rewrite/mult_one?code{?}&lt;=code(),
-    /m/inst/rewrite/split_merge_collapse?code{?}&lt;=code(),
-    /m/inst/rewrite/split_merge_left_factor?code{?}&lt;=code(),
-    /m/inst/rewrite/split_merge_right_factor?code{?}&lt;=code()]]@/m,
+   const=&gt;[
+    noobj,
+    none@none],
+   type=&gt;[
+    #::T,
+    bool::T,
+    int::T,
+    real::T,
+    bytes::T,
+    str::T,
+    uri::T,
+    rel::T,
+    lst::T,
+    rec::T,
+    instset::T,
+    inst::T,
+    code::T,
+    fail::T,
+    space{*}::T,
+    memspace::T,
+    stack::T,
+    qproc::T,
+    subq::T,
+    sub::T,
+    typeq::T,
+    docs::T,
+    docq::T,
+    mintq::T,
+    incrq::T,
+    constq::T,
+    mimeq::T]]@/m,
   /m/iot=&gt;instset::[
    pattern=&gt;/m/iot/#,
    q=&gt;[docq::[
@@ -8329,8 +8371,8 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
   constq=&gt;[/m/space/qproc/constq],
   lrow=&gt;[/m/tble/lrow],
   monad=&gt;[/m/mach/monad],
-  inst=&gt;[/m/inst],
   auto=&gt;[/m/inst/auto],
+  inst=&gt;[/m/inst],
   machine=&gt;[/m/mach/machine],
   dcmntspace=&gt;[/m/dcmnt/space/dcmntspace],
   rshift=&gt;[/m/inst/rshift],
@@ -8381,15 +8423,15 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
   reduce=&gt;[/m/inst/reduce],
   to=&gt;[/m/inst/to],
   skip=&gt;[/m/inst/skip],
-  space=&gt;[/m/space],
   port=&gt;[/m/inst/port],
+  space=&gt;[/m/space],
   bothV=&gt;[/m/grph/inst/bothV],
   inE=&gt;[/m/grph/inst/inE],
   println=&gt;[/m/inst/println],
   instset=&gt;[/m/instset],
   gte=&gt;[/m/inst/gte],
-  real=&gt;[/m/real],
   scheme=&gt;[/m/inst/scheme],
+  real=&gt;[/m/real],
   rrow=&gt;[/m/tble/rrow],
   start=&gt;[/m/inst/start],
   tblespace=&gt;[/m/tble/space/tblespace],
