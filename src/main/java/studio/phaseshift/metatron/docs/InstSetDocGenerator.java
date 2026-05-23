@@ -375,26 +375,28 @@ public class InstSetDocGenerator {
 
         return """
                <div class="container-xxl py-4">
-                   <div class="text-center mb-4">
-                       <h1 class="text-primary glow-text">
-                           <span class="text-light">%s/</span>%s
+                   <div class="text-center mb-2">
+                       <h1 class="text-primary glow-text mb-1">
+                           <span class="text-light">%1$s/</span>%2$s
                        </h1>
-                       <p style="line-height:5rem;" class="subtitle text-light">instruction set reference</p>
+                       <p style="margin-top:0;margin-bottom:0;" class="subtitle text-light">instruction set reference</p>
                    </div>
-                   <div class="text-light">%s</div>
-                   <div class="accordion" id="accordianInstSet">
-                       <div class="accordion-item">
-                           <h2 class="accordion-header" id="headingOne">
-                               <button class="accordion-button collapsed" type="button"
-                                   data-bs-toggle="collapse" data-bs-target="#flush-collapseOne"
-                                   aria-expanded="false" aria-controls="flush-collapseOne">
-                                   instset obj
-                               </button>
-                           </h2>
-                           <div id="flush-collapseOne" class="accordion-collapse collapse"
-                               aria-labelledby="flush-headingOne" data-bs-parent="#accordianInstSet">
-                               <div class="accordion-body">
-                                   <pre><code>%s</code></pre>
+                   <div class="text-light">%3$s</div>
+                   <div class="instset-accordion-wrapper">
+                       <div class="accordion accordion-flush" id="accordianInstSet">
+                           <div class="accordion-item">
+                               <h2 class="accordion-header" id="headingOne">
+                                   <button class="accordion-button collapsed" type="button"
+                                       data-bs-toggle="collapse" data-bs-target="#flush-collapseOne"
+                                       aria-expanded="false" aria-controls="flush-collapseOne">
+                                       <i class="bi bi-code-slash me-2"></i>%1$s/%2$s instset obj
+                                   </button>
+                               </h2>
+                               <div id="flush-collapseOne" class="accordion-collapse collapse"
+                                   aria-labelledby="flush-headingOne" data-bs-parent="#accordianInstSet">
+                                   <div class="accordion-body">
+                                       <pre><code>%4$s</code></pre>
+                                   </div>
                                </div>
                            </div>
                        </div>
@@ -772,7 +774,7 @@ public class InstSetDocGenerator {
                                      <span class="code text-warning fw-bold">%s</span>
                                      %s
                                  </span>
-                                 <small style="font-size:0.8rem;" class="text-muted code">%s</small>
+                                 <small class="text-muted code">%s</small>
                              </div>
                              %s
                              %s

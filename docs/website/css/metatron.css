@@ -79,6 +79,7 @@ h4 {
 
 .pill-label {
     font-size: 0.85rem;
+    vertical-align: middle;
 }
 
 .mini-label {
@@ -180,6 +181,14 @@ table .ulist {
 
 .logo-text a:hover {
     color: var(--primary);
+}
+
+.navbar-nav .nav-link {
+    font-size: 0.85rem;
+}
+
+.footer .small {
+    font-size: 0.95rem;
 }
 
 .page-header {
@@ -1292,6 +1301,47 @@ pre {
 
 .content {
     margin: 0.15rem;
+}
+
+/* ── Instset accordion (instset obj toggle) ── */
+.instset-accordion-wrapper {
+    max-width: 900px;
+    margin: 1.5rem auto 0 auto;
+}
+.instset-accordion-wrapper .accordion-item {
+    background-color: var(--secondary);
+    border: 2px solid rgba(122, 37, 24, 0.35);
+    border-radius: 4px;
+    overflow: hidden;
+}
+.instset-accordion-wrapper .accordion-button {
+    background-color: rgba(25, 28, 36, 0.8);
+    color: var(--light);
+    font-size: 0.85rem;
+    padding: 0.2rem 1rem;
+    box-shadow: none;
+    border: none;
+}
+.instset-accordion-wrapper .accordion-button:not(.collapsed) {
+    background-color: var(--secondary);
+    color: var(--primary);
+    box-shadow: none;
+}
+.instset-accordion-wrapper .accordion-button::after {
+    filter: invert(0.5);
+}
+.instset-accordion-wrapper .accordion-body {
+    padding: 0;
+}
+.instset-accordion-wrapper .accordion-body pre {
+    margin: 0;
+    padding: 1rem;
+    background: transparent;
+}
+
+/* ── Consistent URI size across all instset card headers ── */
+.card-header small.text-muted.code {
+    font-size: 0.85rem;
 }
 
 details {
