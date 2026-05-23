@@ -122,7 +122,7 @@ bin/metatron</code></pre>
             --------------------------------------- QUICK START LINK ----------------------------------------------------
             ----------------------------------------------------------------------------------------------------------->
             <li class="nav-item">
-                <a class="nav-link quickstart-link" href="start.html" onclick="location.href=location.href.replace(/(\/instset)?\/[^/]*\.html$/,'/start.html');return false;">
+                <a class="nav-link quickstart-link" href="start.html" onclick="location.href=location.href.replace(/(\/instset)?\/([^/]*\.html)?$/,'/start.html');return false;">
                     <i class="bi bi-book me-1"></i> quick start
                 </a>
             </li>
@@ -185,7 +185,7 @@ bin/metatron</code></pre>
              ----------------------------------- TRACTATUS LINK --------------------------------------------------------
              ---------------------------------------------------------------------------------------------------------->
             <li class="nav-item">
-                <a class="nav-link" href="tractatus.html" onclick="location.href=location.href.replace(/(\/instset)?\/[^/]*\.html$/,'/tractatus.html');return false;">the tractatus</a>
+                <a class="nav-link" href="tractatus.html" onclick="location.href=location.href.replace(/(\/instset)?\/([^/]*\.html)?$/,'/tractatus.html');return false;">the tractatus</a>
             </li>
             <!----------------------------------------------------------------------------------------------------------
             ----------------------------------- ARTICLES DROPDOWN ------------------------------------------------------
@@ -242,7 +242,7 @@ bin/metatron</code></pre>
     </div>
 </nav>
 <main class="container my-4 flex-grow-1">
-<h1 id="_quick_start" class="discrete">Quick Start</h1>
+<h2 id="_quick_start" class="discrete">Quick Start</h2>
 <div class="admonitionblock warning">
 <table>
 <tr>
@@ -268,11 +268,11 @@ bin/metatron</code></pre>
 <div class="paragraph">
 <p>With that said, a short whirlwind introduction to metatron will now be presented.</p>
 </div>
-<h2 id="_core_concepts" class="discrete">Core Concepts</h2>
+<h3 id="_core_concepts" class="discrete">Core Concepts</h3>
 <div class="paragraph">
 <p>metatron is a data-oriented programming environment with its own data-flow language called <strong>mtron</strong>.</p>
 </div>
-<h3 id="_core_data_types" class="discrete">Core Data Types</h3>
+<h4 id="_core_data_types" class="discrete">Core Data Types</h4>
 <div class="paragraph">
 <p>In metatron, everything is an <strong>obj</strong> (an object). There are 3 kinds of core types of objs.</p>
 </div>
@@ -318,7 +318,7 @@ bin/metatron</code></pre>
 <div class="paragraph">
 <p>Finally, there is one "psuedo-obj" that is a mono, a poly, and a call. It is named <code>noobj</code> and it can be seen as the <code>null</code> in other programming environments save that it has an operational semantic aligned with its role as the 0-object (zero) of the algebraic ring formed by the set of all objs along with two meta operators: <code>*</code> and <code>+</code> (apply/compose and branch/split, respectively).</p>
 </div>
-<h3 id="_router_and_space" class="discrete">Router and Space</h3>
+<h4 id="_router_and_space" class="discrete">Router and Space</h4>
 <div class="paragraph">
 <p>There are 2 "special" <code>rec</code> structures called <strong>router</strong> and <strong>space</strong>. They are special in that while they appear as <code>rec</code> objs, they maintain auxiliary data structures (with little reflection enabling reification) accessible only through a particular api not available to other objs.</p>
 </div>
@@ -328,7 +328,7 @@ bin/metatron</code></pre>
 <div class="paragraph">
 <p><strong>space</strong>: the purpose of a space is to store objs and manage process execution. It is up to the space to determine how objs will be indexed and persisted. However, within metatron, all spaces behave in the same manner as dictated by a well-defined read/write contract.</p>
 </div>
-<h2 id="_installation" class="discrete">Installation</h2>
+<h3 id="_installation" class="discrete">Installation</h3>
 <div class="olist arabic">
 <ol class="arabic">
 <li>
@@ -360,7 +360,7 @@ console::[=&gt;]@/usr/ui/console;</code></pre>
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">$ bin/metatron "[boot=&gt;start.mtron,log=&gt;info]"</code></pre>
 </div>
 </div>
-<h2 id="_console" class="discrete">Console</h2>
+<h3 id="_console" class="discrete">Console</h3>
 <div class="paragraph">
 <p>After metatron boots, the cursor should be to the right of a <code>mtron&gt;</code> prompt. This is a <code>console::T</code>. The console takes mtron expressions and creates <strong>machines</strong> to execute them. A machine can be thought of as an executing process.</p>
 </div>
@@ -370,7 +370,7 @@ console::[=&gt;]@/usr/ui/console;</code></pre>
 1-&lt;[_,+2,*5]&gt;-.sum()</code></pre>
 </div>
 </div>
-<h2 id="_space" class="discrete">Space</h2>
+<h3 id="_space" class="discrete">Space</h3>
 <div class="openblock card">
 <div class="content">
 <h4 id="_the_nature_of_space" class="discrete">The Nature of Space</h4>

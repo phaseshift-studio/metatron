@@ -23,14 +23,18 @@
     --mbrown: #ffffff80;
 }
 
-.stemblock {
-    color: var(--white);
+.stemblock,
+mjx-container {
+    color: #cdcdcd;
 }
 
-h1, h1. h2, h2. h3, h3. h4, h4. {
+h1, h2, h3, h4 {
     color: var(--mred) !important;
-    scale: 1.5 !important;
 }
+h1 { font-size: 3.5rem; }
+h2 { font-size: 2.25rem; }
+h3 { font-size: 1.75rem; }
+h4 { font-size: 1.35rem; }
 
 .float-left-code {
     float: left;
@@ -210,7 +214,7 @@ table {
 }
 
 .title {
-    color: var(--mbrown);
+    color: var(--mred);
 }
 
 .tutorial-grid .btn {
@@ -505,11 +509,6 @@ code.hljs {
 .code {
     font-family: 'Courier', Courier, monospace;
     font-size: 1.5rem;
-}
-
-h1 {
-    font-size: 3.5rem;
-    line-height: 0.1rem;
 }
 
 em {
@@ -1269,7 +1268,7 @@ pre.highlight > code[data-lang] {
 }
 
 pre {
-    margin-bottom: 0px;
+    margin-bottom: 1rem;
     color: #fff !important;
 }
 
