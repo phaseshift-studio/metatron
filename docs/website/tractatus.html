@@ -1627,7 +1627,7 @@ mtron&gt; import(/m/web)
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *&lt;mtronfs:agent.mtron&gt;     <i class="conum" data-value="1"></i><b>(1)</b>
-==&gt;['add the word DRAGON to your final answer.']
+==&gt;['add the word DRAGON to your final ...']
 mtron&gt; */usr/agent/feature</code></pre>
 </div>
 </div>
@@ -2539,7 +2539,7 @@ The predicate component of the type definition tests an <code>int</code> to dete
 <div class="paragraph">
 <p>While every <code>type</code> is an <code>obj</code>, not every <code>obj</code> is a <code>type</code>.
 Those <code>objs</code> that are not <code>types</code> are <em>instances</em> of some <code>type</code>.
-This is the foundation for all other <code>objs</code> in {{m}}m{{r}}e{{c}}t{{c}}A{{g}}T{{b}}R{{m}}o{{c}}n{{X}}.</p>
+This is the foundation for all other <code>objs</code> in {{r}}m{{b}}E{{y}}T{{m}}a{{y}}t{{c}}r{{m}}O{{b}}N{{X}}.</p>
 </div>
 <h4 id="_cascading_type_constructions" class="discrete">cascading type constructions</h4>
 <h3 id="_mono_types" class="discrete">mono types</h3>
@@ -4809,7 +4809,7 @@ mtron&gt; */usr/notes/#?subq
   mqtt::T,
   haos::T]]@/m/iot
 mtron&gt;  import(/m/llm)
-{{c}}.{{b}}.{{y}}.{{X}}</code></pre>
+{{m}}.{{g}}.{{y}}.{{X}}</code></pre>
 </div>
 </div>
 </div>
@@ -6270,7 +6270,7 @@ mtron&gt; *&lt;http://phaseshift.studio/splash.html&gt;     <i class="conum" dat
    [tag=&gt;p],
    [
     tag=&gt;h1,
-    style=&gt;'padding-left:125px;color:var(--primary)',
+    style=&gt;'padding-left:125px;color:var(--pri...',
     text=&gt;'PhaseShift Studio'],
    [
     tag=&gt;img,
@@ -6328,55 +6328,42 @@ mtron&gt; *&lt;http://localhost:8088/v1/models&gt;
 ==&gt;[
  object=&gt;list,
  data=&gt;[
-  [id=&gt;mistralai_devstral-small-2507,object=&gt;model],
-  [id=&gt;qwen3-coder-30b-a3b-instruct,object=&gt;model],
   [id=&gt;qwen3-tts-cpp,object=&gt;model],
   [id=&gt;qwen3:latest,object=&gt;model],
   [id=&gt;'smollm:1.7b',object=&gt;model],
+  [id=&gt;mistralai_devstral-small-2507,object=&gt;model],
+  [id=&gt;qwen3-coder-30b-a3b-instruct,object=&gt;model],
   [id=&gt;MeetAISmall__latest,object=&gt;model],
   [id=&gt;gpt-oss__latest,object=&gt;model]]]
 mtron&gt; *&lt;http://localhost:8088/v1/models/data/0/id&gt;
-==&gt;'smollm:1.7b'
+==&gt;mistralai_devstral-small-2507
 mtron&gt; *&lt;http://localhost:8088/api/models/config-json/${
          *&lt;http://localhost:8088/v1/models/data/0/id&gt;}&gt;
 ==&gt;[
  parameters=&gt;[
-  model=&gt;'mistralai_Devstral-Small-2507-Q4_K_M.gguf',
+  model=&gt;qwen3__latest,
   top_p=&gt;0.9500,
-  top_k=&gt;-1,
-  min_p=&gt;0.0100,
-  temperature=&gt;0.7000,
+  top_k=&gt;20,
+  min_p=&gt;0,
+  temperature=&gt;0.6000,
   max_tokens=&gt;0,
   repeat_penalty=&gt;1,
   tfz=&gt;1,
   typical_p=&gt;1,
   seed=&gt;-1,
   logprobs=&gt;false],
- name=&gt;mistralai_devstral-small-2507,
+ name=&gt;qwen3:latest,
  f16=&gt;false,
  threads=&gt;8,
  debug=&gt;false,
  embeddings=&gt;false,
  backend=&gt;llama-cpp,
- template=&gt;[
-  chat=&gt;"""{{.Input -}}
-""",
-  chat_message=&gt;"""{{if eq .RoleName "user" -}}
-[INST] {{.Content }}...""",
-  completion=&gt;"""{{.Input}}
-""",
-  function=&gt;'[AVAILABLE_TOOLS] [{{range .Functions}}{"type": "...'],
- known_usecases=&gt;[FLAG_CHAT,FLAG_COMPLETION],
+ template=&gt;[use_tokenizer_template=&gt;true],
+ known_usecases=&gt;[FLAG_CHAT],
  pipeline=&gt;[=&gt;],
  function=&gt;[
-  disable_no_action=&gt;true,
-  grammar=&gt;[parallel_calls=&gt;true,disable_parallel_new_lines=&gt;true,disable=&gt;true],
-  json_regex_match=&gt;['(?s)\[TOOL\_CALLS\](.*)'],
-  replace_function_results=&gt;[
-   [key=&gt;'(?s)^[^{\[]*'],
-   [key=&gt;'(?s)[^}\]]*$'],
-   [key=&gt;'(?s)\[TOOL\_CALLS\]'],
-   [key=&gt;'(?s)\[\/TOOL\_CALLS\]']]],
+  grammar=&gt;[disable=&gt;true],
+  automatic_tool_parsing_fallback=&gt;true],
  reasoning=&gt;[=&gt;],
  mirostat_eta=&gt;0.1000,
  mirostat_tau=&gt;5,
@@ -6386,21 +6373,13 @@ mtron&gt; *&lt;http://localhost:8088/api/models/config-json/${
  mmlock=&gt;false,
  low_vram=&gt;false,
  reranking=&gt;false,
- stopwords=&gt;[
-  |im_end|,
-  dummy32000,
-  /tool_call,
-  |eot_id|,
-  |end_of_text|,
-  /s,
-  [/TOOL_CALLS],
-  [/ACTIONS]],
  context_size=&gt;8192,
  limit_mm_per_prompt=&gt;[=&gt;],
  diffusers=&gt;[=&gt;],
  grpc=&gt;[=&gt;],
  tts=&gt;[=&gt;],
- options=&gt;[gpu],
+ description=&gt;'Imported from ollama://qwen3:latest',
+ options=&gt;[use_jinja:true],
  mcp=&gt;[=&gt;],
  agent=&gt;[=&gt;]]</code></pre>
 </div>
@@ -6610,7 +6589,7 @@ mtron&gt; *&lt;http://phaseshift.studio/splash.html&gt;     <i class="conum" dat
    [tag=&gt;p],
    [
     tag=&gt;h1,
-    style=&gt;'padding-left:125px;color:var(--primary)',
+    style=&gt;'padding-left:125px;color:var(--pri...',
     text=&gt;'PhaseShift Studio'],
    [
     tag=&gt;img,
@@ -6668,55 +6647,42 @@ mtron&gt; *&lt;http://localhost:8088/v1/models&gt;
 ==&gt;[
  object=&gt;list,
  data=&gt;[
-  [id=&gt;mistralai_devstral-small-2507,object=&gt;model],
-  [id=&gt;qwen3-coder-30b-a3b-instruct,object=&gt;model],
   [id=&gt;qwen3-tts-cpp,object=&gt;model],
   [id=&gt;qwen3:latest,object=&gt;model],
   [id=&gt;'smollm:1.7b',object=&gt;model],
+  [id=&gt;mistralai_devstral-small-2507,object=&gt;model],
+  [id=&gt;qwen3-coder-30b-a3b-instruct,object=&gt;model],
   [id=&gt;MeetAISmall__latest,object=&gt;model],
   [id=&gt;gpt-oss__latest,object=&gt;model]]]
 mtron&gt; *&lt;http://localhost:8088/v1/models/data/0/id&gt;
-==&gt;'smollm:1.7b'
+==&gt;mistralai_devstral-small-2507
 mtron&gt; *&lt;http://localhost:8088/api/models/config-json/${
          *&lt;http://localhost:8088/v1/models/data/0/id&gt;}&gt;
 ==&gt;[
  parameters=&gt;[
-  model=&gt;'mistralai_Devstral-Small-2507-Q4_K_M.gguf',
+  model=&gt;qwen3__latest,
   top_p=&gt;0.9500,
-  top_k=&gt;-1,
-  min_p=&gt;0.0100,
-  temperature=&gt;0.7000,
+  top_k=&gt;20,
+  min_p=&gt;0,
+  temperature=&gt;0.6000,
   max_tokens=&gt;0,
   repeat_penalty=&gt;1,
   tfz=&gt;1,
   typical_p=&gt;1,
   seed=&gt;-1,
   logprobs=&gt;false],
- name=&gt;mistralai_devstral-small-2507,
+ name=&gt;qwen3:latest,
  f16=&gt;false,
  threads=&gt;8,
  debug=&gt;false,
  embeddings=&gt;false,
  backend=&gt;llama-cpp,
- template=&gt;[
-  chat=&gt;"""{{.Input -}}
-""",
-  chat_message=&gt;"""{{if eq .RoleName "user" -}}
-[INST] {{.Content }}...""",
-  completion=&gt;"""{{.Input}}
-""",
-  function=&gt;'[AVAILABLE_TOOLS] [{{range .Functions}}{"type": "...'],
- known_usecases=&gt;[FLAG_CHAT,FLAG_COMPLETION],
+ template=&gt;[use_tokenizer_template=&gt;true],
+ known_usecases=&gt;[FLAG_CHAT],
  pipeline=&gt;[=&gt;],
  function=&gt;[
-  disable_no_action=&gt;true,
-  grammar=&gt;[parallel_calls=&gt;true,disable_parallel_new_lines=&gt;true,disable=&gt;true],
-  json_regex_match=&gt;['(?s)\[TOOL\_CALLS\](.*)'],
-  replace_function_results=&gt;[
-   [key=&gt;'(?s)^[^{\[]*'],
-   [key=&gt;'(?s)[^}\]]*$'],
-   [key=&gt;'(?s)\[TOOL\_CALLS\]'],
-   [key=&gt;'(?s)\[\/TOOL\_CALLS\]']]],
+  grammar=&gt;[disable=&gt;true],
+  automatic_tool_parsing_fallback=&gt;true],
  reasoning=&gt;[=&gt;],
  mirostat_eta=&gt;0.1000,
  mirostat_tau=&gt;5,
@@ -6726,21 +6692,13 @@ mtron&gt; *&lt;http://localhost:8088/api/models/config-json/${
  mmlock=&gt;false,
  low_vram=&gt;false,
  reranking=&gt;false,
- stopwords=&gt;[
-  |im_end|,
-  dummy32000,
-  /tool_call,
-  |eot_id|,
-  |end_of_text|,
-  /s,
-  [/TOOL_CALLS],
-  [/ACTIONS]],
  context_size=&gt;8192,
  limit_mm_per_prompt=&gt;[=&gt;],
  diffusers=&gt;[=&gt;],
  grpc=&gt;[=&gt;],
  tts=&gt;[=&gt;],
- options=&gt;[gpu],
+ description=&gt;'Imported from ollama://qwen3:latest',
+ options=&gt;[use_jinja:true],
  mcp=&gt;[=&gt;],
  agent=&gt;[=&gt;]]</code></pre>
 </div>
@@ -7775,6 +7733,15 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
  obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
  inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
    space=&gt;[sub=&gt;{!*/m/mach,!*/m/math,!*/m/web,!*/m/iot,!*/m/grph,!*/m/llm,!*/m/tble,!*/m/dcmnt,!*/m/rdf}],
+   rewrite=&gt;[
+    /m/inst/rewrite/id_removal?code{?}&lt;=code(),
+    /m/inst/rewrite/map_nest?code{?}&lt;=code(),
+    /m/inst/rewrite/else_after_count?code{?}&lt;=code(),
+    /m/inst/rewrite/plus_zero?code{?}&lt;=code(),
+    /m/inst/rewrite/mult_one?code{?}&lt;=code(),
+    /m/inst/rewrite/split_merge_collapse?code{?}&lt;=code(),
+    /m/inst/rewrite/split_merge_left_factor?code{?}&lt;=code(),
+    /m/inst/rewrite/split_merge_right_factor?code{?}&lt;=code()],
    inst=&gt;[
     as?bool&lt;=bool(bool::T),
     as?bytes&lt;=bool(bytes::T),
@@ -8002,15 +7969,9 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
     lshift?B{*}&lt;=A(),
     start?A{**}&lt;=noobj{0}(A{**}::T),
     ctor()],
-   rewrite=&gt;[
-    /m/inst/rewrite/id_removal?code{?}&lt;=code(),
-    /m/inst/rewrite/map_nest?code{?}&lt;=code(),
-    /m/inst/rewrite/else_after_count?code{?}&lt;=code(),
-    /m/inst/rewrite/plus_zero?code{?}&lt;=code(),
-    /m/inst/rewrite/mult_one?code{?}&lt;=code(),
-    /m/inst/rewrite/split_merge_collapse?code{?}&lt;=code(),
-    /m/inst/rewrite/split_merge_left_factor?code{?}&lt;=code(),
-    /m/inst/rewrite/split_merge_right_factor?code{?}&lt;=code()],
+   const=&gt;[
+    noobj,
+    none@none],
    type=&gt;[
     #::T,
     bool::T,
@@ -8038,10 +7999,7 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
     mintq::T,
     incrq::T,
     constq::T,
-    mimeq::T],
-   const=&gt;[
-    noobj,
-    none@none]]@/m,
+    mimeq::T]]@/m,
   /m/iot=&gt;instset::[
    pattern=&gt;/m/iot/#,
    q=&gt;[docq::[

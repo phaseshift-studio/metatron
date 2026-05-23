@@ -1,11 +1,3 @@
-<div id="toc" class="toc">
-<div id="toctitle">Table of Contents</div>
-<ul class="sectlevel1">
-<li><a href="#_installation">Installation</a></li>
-<li><a href="#_console">Console</a></li>
-<li><a href="#_space">Space</a></li>
-</ul>
-</div>
 <!--
   ~ Metatron: A Distributed Computing Language and Virtual Machine
   ~  Copyright (C) 2025- PhaseShift Studio, LLC
@@ -250,7 +242,6 @@ bin/metatron</code></pre>
     </div>
 </nav>
 <main class="container my-4 flex-grow-1">
-<br><br>
 <h1 id="_quick_start" class="discrete">Quick Start</h1>
 <div class="admonitionblock warning">
 <table>
@@ -337,9 +328,7 @@ bin/metatron</code></pre>
 <div class="paragraph">
 <p><strong>space</strong>: the purpose of a space is to store objs and manage process execution. It is up to the space to determine how objs will be indexed and persisted. However, within metatron, all spaces behave in the same manner as dictated by a well-defined read/write contract.</p>
 </div>
-<div class="sect1">
-<h2 id="_installation">Installation</h2>
-<div class="sectionbody">
+<h2 id="_installation" class="discrete">Installation</h2>
 <div class="olist arabic">
 <ol class="arabic">
 <li>
@@ -371,11 +360,7 @@ console::[=&gt;]@/usr/ui/console;</code></pre>
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">$ bin/metatron "[boot=&gt;start.mtron,log=&gt;info]"</code></pre>
 </div>
 </div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_console">Console</h2>
-<div class="sectionbody">
+<h2 id="_console" class="discrete">Console</h2>
 <div class="paragraph">
 <p>After metatron boots, the cursor should be to the right of a <code>mtron&gt;</code> prompt. This is a <code>console::T</code>. The console takes mtron expressions and creates <strong>machines</strong> to execute them. A machine can be thought of as an executing process.</p>
 </div>
@@ -385,11 +370,7 @@ console::[=&gt;]@/usr/ui/console;</code></pre>
 1-&lt;[_,+2,*5]&gt;-.sum()</code></pre>
 </div>
 </div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_space">Space</h2>
-<div class="sectionbody">
+<h2 id="_space" class="discrete">Space</h2>
 <div class="openblock card">
 <div class="content">
 <h4 id="_the_nature_of_space" class="discrete">The Nature of Space</h4>
@@ -606,5 +587,3 @@ mtron&gt; */sys/space/+.-&lt;[&gt;&gt;pattern=&gt;&gt;&gt;route]
 
 </body>
 </html>
-</div>
-</div>

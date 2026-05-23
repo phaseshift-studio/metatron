@@ -16,7 +16,7 @@
 :data-uri:
 :experimental:
 :sectnums!:
-:toc: none
+:!toc:
 :linkcss!:
 :license-url: https://www.gnu.org/licenses/agpl-3.0.html
 :license-title: AGPLv3

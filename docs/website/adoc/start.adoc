@@ -15,7 +15,7 @@
 :stem: latexmath
 :experimental:
 :sectnums!:
-:toc: none
+:!toc:
 :linkcss!:
 :license-url: https://www.gnu.org/licenses/agpl-3.0.html
 :license-title: AGPLv3
@@ -34,9 +34,6 @@
 include::header.html[]
 ++++
 
-++++
-<br><br>
-++++
 
 [discrete]
 = Quick Start
@@ -87,6 +84,7 @@ There are 2 "special" `rec` structures called **router** and **space**. They are
 
 **space**: the purpose of a space is to store objs and manage process execution. It is up to the space to determine how objs will be indexed and persisted. However, within metatron, all spaces behave in the same manner as dictated by a well-defined read/write contract.
 
+[discrete]
 == Installation
 
 . Download metatron either as an `npm` package, a `docker` container, or a `maven` project.
@@ -112,6 +110,7 @@ To start a metatron instance with `start.boot`, in a terminal, execute:
 $ bin/metatron "[boot=>start.mtron,log=>info]"
 ----
 
+[discrete]
 == Console
 
 After metatron boots, the cursor should be to the right of a `mtron>` prompt. This is a `console::T`. The console takes mtron expressions and creates **machines** to execute them. A machine can be thought of as an executing process.
@@ -122,6 +121,7 @@ After metatron boots, the cursor should be to the right of a `mtron>` prompt. Th
 1-<[_,+2,*5]>-.sum()
 ----
 
+[discrete]
 == Space
 
 [.card]

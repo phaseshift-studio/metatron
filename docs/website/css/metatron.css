@@ -20,6 +20,7 @@
     --mlightgray: #797585;
     --myellow: #edbf73;
     --maqua: #0082ae;
+    --mbrown: #ffffff80;
 }
 
 .stemblock {
@@ -206,6 +207,10 @@ table {
     height: 1px;
     background: linear-gradient(to right, transparent, rgba(180, 75, 45, 0.10) 20%, rgba(180, 75, 45, 0.10) 80%, transparent);
     margin: 0 0 3rem 0;
+}
+
+.title {
+    color: var(--mbrown);
 }
 
 .tutorial-grid .btn {
