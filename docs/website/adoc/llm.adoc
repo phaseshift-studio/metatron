@@ -86,38 +86,58 @@ The design makes a distinction between the **LLM** (general-purpose reasoning en
 [discrete]
 === llm interactions
 
-The following example demonstrates how to search for an appropriate LLM for the given task, then query it, and finally, have its memory of the interaction stored in space for future use (to provide the agent context over longer interactions).
+The following example demonstrates how to search for an appropriate LLM for a given task, then query it, and finally, have its memory of the interaction stored in space for future use (to provide the agent context over longer interactions). This example relies on an agent `SKILL.md` file stored on the local file system. Thus, we need a space.
 
 [mtron]
 ----
-[,]@/usr/ai/notes                                        
-[,]@/usr/ai/memory                                       
-*ollama:+                                                 /
- .where(>>skill.has(thinking).has(tools))                 /
- .where(>>size.?>gB::1.0.?<gB::5.0)                       /
- .order(>>size * -1.0)                                    /
- .take(1)                                                 /
- .>>=+[feature=>[                                         /
-         memory  => [mem=>!@/usr/ai/memory,max=>5],       /   
-         tools   => [!*eval],                             /   
-         think   => print(_),                             /
-         note    => !@/usr/ai/notes,                      /     
-         response=> [to=>to(/usr/ai/response)]]]          /         
- .to(ai) 
+fsspace::[pattern => fs:#,
+          route   => [fs: => <~/software/metatron/.metatron/>]]@/sys/space/fs
+*<fs:skills/mtron/SKILL.md>
 ----
-<1> a
-<2> b
-<3> c
-<4> d
-<5> e
-<6> f
-<7> g
-<8> h
-<9> i
-<10> j
-<11> k
-<12> l
-<13> m
+
+++++
+<!--   skill   => [!*<fs:skills/mtron>.as(skill::T)],     -->
+++++
+
+[mtron]
+----
+[,]@/usr/ai/memory                                        [-- <1> --]
+*ollama:+.                                                /
+ where(>>skill.has(thinking).has(tools)).                 /
+ where(>>size.?>gB::1.0.?<gB::5.0).                       /
+ order(>>size * -1.0).                                    /
+ take(1).                                                 /
+ >>=+[feature=>[                                          /
+       memory  => [mem=>!@/usr/ai/memory,max=>5],         /   
+       tool    => [!*eval],                               /
+       think   => print(_),                               /
+       response=> [to=>to(/usr/ai/response)]]].           /
+ to(ai) 
+----
+<1> create a `lst` to server as the an ordered sequence of chat interactions. 
+<2> stream all the models currently available on the local ollama server.
+<3> filter out those models that don't support thinking and tool use.
+<4> filter out models too small (for ollama, the cloud models) and models too big.
+<5> reverse sort the models by their size.
+<6> select the smallest model of those remaining.
+<7> now a serious of enrichements will be attached to the model.
+<8> give the model a memory structure for extended context.
+<9> give the model access to mtron's eval instruction.
+<10> have the model print its thoughts to the console terminal
+<11> have the model store its responses to the `/usr/ai` space.
+<12> write the model to `ai`.
+
+The first part of the stream above was about widdling the set of available models down to those that meet the requirements for this documentation -- namely, a model that is not too big (as building the docs would take too long) and has some useful skills for demonstrating how model features work.
+
+Once a model was selected, then the second phase served to enrich the model with a memory structure (embedded in space), some tools to use if need be (embedded in space), a place for its thought (ephemeral to the console's stdout), and location to place its response (embedded in space).
+
+With the model loaded and equipped, it's possible to communicate with it to the level of complexity as facilitated by its base training and the set of features attached to it.
+
+[mtron]
+----
+@ai.chat("I need you evaluate the mtron expresion `1-<[_=>_>>.>-[,]>-`. Please don't tell me the result of the evaluation until I ask for it sometime in the near future.")
+----
+
 
 [.card]
 --
@@ -152,17 +172,11 @@ tB::1.0.as(mB::T)      [-- <3> --]
 <3> convert terabytes to megabytes
 --
 
-[mtron]
-----
-@ai.chat("I need you to remember the word 'metatron'. I'll ask you for it in the future.")
-----
-
-
 The content and metadata associated with the chat interaction are stored at the specified location, where it is both read (the previous interaction) and written to (the current interaction).
 
 [mtron]
 ----
-@ai.chat("What was the word I needed you to recall?")
+@ai.chat("Many things have come and gone over the years that have brought me to who I am now -- an tired, old man. Before I let my last breathe flutter into this world, I must know one more thing. And that is why I've come back to this computer looking for you. Please tell me, what was the result of the mtron expression I provided you all those years ago?")
 */usr/ai/memory/+
 ----
 

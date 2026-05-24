@@ -1,4 +1,0 @@
-
-WEBSOCKET ws://{{host}}:{{port}}
-
-# > {% client.close() %}

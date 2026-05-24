@@ -1,2 +1,0 @@
-potentially use this for a terminal for the web demo and for the docs:
-    https://terminal.jcubic.pl/

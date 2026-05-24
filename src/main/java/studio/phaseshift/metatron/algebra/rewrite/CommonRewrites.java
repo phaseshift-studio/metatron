@@ -861,32 +861,5 @@ public final class CommonRewrites {
         }
     }
 
-    // ==================== TODO: Future Rewrite Implementations ====================
-    //
-    // 1. skipRewrite - Offset/Skip rows
-    //    Pattern: from(table).skip(n)
-    //    SQL: SELECT * FROM table OFFSET n
-    //    Similar to limitRewrite but extracts offset from skip() instruction
-    //
-    // 2. dedupRewrite - Distinct rows
-    //    Pattern: from(table).dedup()
-    //    SQL: SELECT DISTINCT * FROM table
-    //    Simple pattern match like count/sum/mean
-    //
-    // 3. paginationRewrite - Combined skip+take for pagination
-    //    Pattern: from(table).skip(m).take(n)
-    //    SQL: SELECT * FROM table LIMIT n OFFSET m
-    //    Requires matching 3-instruction sequence and extracting both values
-    //
-    // 4. orderRewrite - Sorting rows
-    //    Pattern: from(table).order(column)
-    //    SQL: SELECT * FROM table ORDER BY column [ASC|DESC]
-    //    Needs to extract column name from order() argument and map to SQL column
-    //
-    // 5. Combined order+take - Top N queries
-    //    Pattern: from(table).order(column).take(n)
-    //    SQL: SELECT * FROM table ORDER BY column LIMIT n
-    //    Very common pattern for "top N" queries, significant optimization
-    //
-    // =============================================================================
+    // Planned rewrite implementations: see docs/ai/rewrite-roadmap.md
 }

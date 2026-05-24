@@ -288,7 +288,7 @@
             <artifactId>jsoup</artifactId>
             <version>${jsoup.version}</version>
         </dependency>
-        <!-- DOCS: asciidoctorj for DocRunner HTML generation -->
+        <!-- DOCS -->
         <dependency>
             <groupId>org.asciidoctor</groupId>
             <artifactId>asciidoctorj</artifactId>
@@ -389,19 +389,6 @@
             <artifactId>testcontainers-mariadb</artifactId>
             <scope>test</scope>
         </dependency>
-        <!-- Apache Commons dependencies for TestContainers
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-compress</artifactId>
-            <version>1.26.0</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-lang3</artifactId>
-            <version>3.12.0</version>
-            <scope>test</scope>
-        </dependency> -->
         <!-- PostgreSQL JDBC Driver -->
         <dependency>
             <groupId>org.postgresql</groupId>
@@ -456,19 +443,6 @@
                     <include>ansi_headers.txt</include>
                 </includes>
             </resource>
-            <!--<resource>
-                <directory>src/main/resources/META-INF/services</directory>
-                <targetPath>${project.build.directory}/classes/META-INF/services</targetPath>
-            </resource>-->
-            <!--
-             <resource>
-                 <directory>src/main/resources</directory>
-                 <excludes>
-                     <exclude>logback.xml</exclude>
-                     <exclude>ansi_headers.txt</exclude>
-                     <exclude>META-INF/**</exclude>
-                 </excludes>
-             </resource>-->
         </resources>
         <!--
         ####################################################################################################
@@ -537,7 +511,6 @@
                             </arguments>
                         </configuration>
                     </execution>
-                    <!-- Generate Instruction Set Reference Documentation (Java, in-process; replaces python instset_doc_generator.py) -->
                     <execution>
                         <id>run-instset-doc-generator</id>
                         <phase>site</phase>
@@ -690,51 +663,8 @@
                             </resources>
                         </configuration>
                     </execution>
-                    <!-- <execution>
-                         <id>copy-resources-post-site</id>
-                         <phase>post-site</phase>
-                         <goals>
-                             <goal>copy-resources</goal>
-                         </goals>
-                         <configuration>
-                             <outputDirectory>${project.basedir}/docs/website</outputDirectory>
-                             <resources>
-                                 <resource>
-                                     <directory>${project.build.directory}/temp</directory>
-                                     <includes>
-                                         <include>index.html</include>
-                                     </includes>
-                                 </resource>
-                             </resources>
-                         </configuration>
-                     </execution>-->
                 </executions>
             </plugin>
-            <!--<plugin>
-                <groupId>uk.bot-by.maven-plugin</groupId>
-                <artifactId>ijhttp-maven-plugin</artifactId>
-                <version>1.0.1</version>
-                <executions>
-                    <execution>
-                        <configuration>
-                            <environmentFile>${project.basedir}/src/test/resources/ijhttp/http-client.env.json
-                            </environmentFile>
-                            <environmentName>dev</environmentName>
-                            <files>
-                                <file>${project.basedir}/src/test/resources/ijhttp/mtron-server.http</file>
-                            </files>
-                            <logLevel>HEADERS</logLevel>
-                            <report>true</report>
-                            <workingDirectory>target</workingDirectory>
-                        </configuration>
-                        <phase>test</phase>
-                        <goals>
-                            <goal>run</goal>
-                        </goals>
-                        <id>simple-run-with-report</id>
-                    </execution>
-                </executions>
-            </plugin>-->
             <plugin>
                 <groupId>com.spotify</groupId>
                 <artifactId>dockerfile-maven-plugin</artifactId>

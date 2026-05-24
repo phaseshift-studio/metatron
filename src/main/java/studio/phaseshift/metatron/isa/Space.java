@@ -61,7 +61,7 @@ public interface Space extends Rec, Closeable {
     }
 
     default Space addQ(final QProc qProc) {
-        this.at(uri(QPROC), this.at(uri(QPROC)).orElse(lst()).add(qProc, MUTABLE), MUTABLE);
+        this.at(uri(QPROC)).orElse(lst()).add(qProc, MUTABLE);
         return this;
     }
 

@@ -153,6 +153,7 @@ public class web_httpHandler extends HttpRec {
                     try {
                         sendError(404, "Not Found: " + requestURI);
                     } catch (final IOException e) {
+                        LOG.warn("unable to send 404 response: %s", e.getMessage());
                     }
                     return noobj();
                 }
@@ -186,7 +187,8 @@ public class web_httpHandler extends HttpRec {
                 if (Boolean.TRUE.equals(this.at(uri(READ_ONLY)).orElse(bool(true)).jvm())) {
                     try {
                         sendError(403, "Read-only");
-                    } catch (final IOException ignored) {
+                    } catch (final IOException e) {
+                        LOG.warn("unable to send error response: %s", e.getMessage());
                     }
                     return noobj();
                 }
@@ -208,12 +210,14 @@ public class web_httpHandler extends HttpRec {
                     Router.writeToSpace(fileURI, bodyObj);
                     try {
                         this.exchange.sendResponseHeaders(201, -1);
-                    } catch (final IOException ignored) {
+                    } catch (final IOException e) {
+                        LOG.warn("unable to send error response: %s", e.getMessage());
                     }
                 } else {
                     try {
                         sendError(400, "No body");
-                    } catch (final IOException ignored) {
+                    } catch (final IOException e) {
+                        LOG.warn("unable to send error response: %s", e.getMessage());
                     }
                 }
                 return noobj();

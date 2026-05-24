@@ -319,8 +319,6 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         if (this.isObjCall())
             return this.tid().c().within(rhs.tid().c()); // TODO: this is really flimsy.
         if (rhs.isObjCall()) {
-            //if (!this.testByID(rhs.dom()))
-            //  return false;
             return rhs.apply(this).test(rhs.rng());
         }
         if (!this.c().within(rhs.c()))
@@ -972,7 +970,6 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                     instC(BARRIER_INST_TID.dom(ALL_STAR).rng(LST_TID), lst(LST_TYPE), (lhs, inst) -> lhs.stream().reduce(inst.arg(0), (a, b) -> a.asLst().add(b))),
                     docWrap(instC(BARRIER_INST_TID.dom(REL_TID.maybeSome()).rng(REC_TID), lst(REC_TYPE), (lhs, inst) -> lhs.stream().reduce(inst.arg(0), (a, b) -> a.asRec().at(b.asRel().first(), b.asRel().second()))),
                             "any objs", "the objs as a rec", Map.of(jnt(0), "the rec to merge into"), "a rec merging function \\(f(X)\\to X\\)"),
-                    //  instC(BARRIER_INST_TID.dom(A.maybeSome()).rng(B), lst(T(B.maybeSome())), (lhs, inst) -> inst.arg(0).apply(lhs)),
                     docWrap(instC(BARRIER_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(), (lhs, inst) -> lhs),
                             "any objs", "the objs as is", Map.of(), "a passthrough function \\(f(X) \\to \\parallel X \\)"),
                     docWrap(instC(BARRIER_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(T(A.maybeSome())), (lhs, inst) -> inst.arg(0).append(lhs)),
@@ -1038,7 +1035,6 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                     instC(APPLY_INST_TID.dom(ALL).rng(ALL_STAR), lst(T(ALL_STAR)), (lhs, inst) -> lhs.isInst() ?
                             lhs.asInst().apply(inst.args()) :
                             Router.global().read(lhs.uriValue().basePath().extend("apply")).apply(inst.args())),
-                    // TODO: get rid of one of the maps
                     instC(MAP_INST_TID.dom(A).rng(B), lst(T(B)), (lhs, inst) -> inst.arg(0)),
                     docWrap(instC(MAP_INST_TID.dom(A.maybe()).rng(B.maybe()), lst(T(B.maybe())), (lhs, inst) -> inst.arg(0)), "maybe some obj", "the lhs obj applied to the arg obj", Map.of(jnt(0), "any obj"), "applies the lhs obj to the arg obj to yield the rhs obj"),
                     instC(FILTER_INST_TID.dom(A).rng(A.maybe()), lst(T(ALL.maybe())), (lhs, inst) -> inst.arg(0).isNoObj() ? noobj() : lhs),
@@ -1092,7 +1088,6 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                                 return contentType.exec(source);
                             }),
                             "maybe an obj", "result of evaluating source code", Map.of(jnt(0), "the source code to evaluate"), "evaluates source code"),
-                    //  instC(TYPE_INST_TID.dom(A).rng(B), lst(), (lhs, inst) -> lhs.type()),
                     docWrap(instC(TYPE_INST_TID.dom(ALL).rng(ALL), lst(), (lhs, inst) -> lhs.isType() ? lhs.asType().parentType() : lhs.type()),
                             "any obj", "the lhs obj type", Map.of(), "the type of the lhs obj",
                             "6.type()-<[tid(),vid()]      [-- [/m/int, /m/int] base types are those where vid==tid --]",
@@ -1171,7 +1166,6 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                         else if (lhs.isObjs())
                             return objs(lhs.asObjs().stream().flatMap(o -> inst.apply(o).stream()));
                         else return noobj();
-                        // lhs.isPoly() ? lhs.<Poly<?, ?>>as().at(uri("+")) : noobj()
                     }),
                     instC(LSHIFT_INST_TID.dom(A).rng(B.maybeSome()), lst(), (lhs, inst) -> lhs.parent())));
         }

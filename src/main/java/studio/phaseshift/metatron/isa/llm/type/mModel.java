@@ -223,7 +223,7 @@ public class mModel extends MRec {
         //////////////////////////////////////////
         ///////////////   SKILLS /////////////////
         //////////////////////////////////////////
-        if (this.skills().isPresent() && !this.skills().get().elements().allMatch(Obj::isUri)) {
+        if (this.skills().isPresent()) {
             try {
                 final Skills skills = new Skills.Builder().skills(
                         this.skills().get()

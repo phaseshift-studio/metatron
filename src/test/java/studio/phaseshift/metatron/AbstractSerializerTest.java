@@ -160,7 +160,7 @@ public abstract class AbstractSerializerTest<T> extends AbstractMetatronTest {
                 else
                     LOG.debug("ignoring fail for %s <=> %s", objString, obj);
             } else {
-                assertEquals(obj, obj);
+                assertEquals(obj, obj2);
                 assertEquals(obj.type(), obj2.type());
             }
 

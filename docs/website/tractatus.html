@@ -1525,74 +1525,7 @@ ultimately dependent on the incoming lhs <code>obj</code>, where</p>
   as?skill&lt;=dir(skill::T),
   chat?str&lt;=model(str::T),
   embed?/m/vec/vec&lt;=model(#::T),
-  chat?rec&lt;=model(str::T,rec::T)]]@/m/llm
-mtron&gt; catalog::[host     =&gt; &lt;http://localhost:11434&gt;,
-                  pattern =&gt; &lt;ollama:#&gt;,
-                  name    =&gt; &lt;ollama&gt;,
-                  route   =&gt; [ollama:=&gt;&lt;&gt;]]@/sys/space/ollama
-mtron&gt; catalog::[host         =&gt; &lt;https://api.openai.com/v1&gt;,
-                 organization =&gt; !*&lt;/sys/env/OPENAI_ORG_ID&gt;,
-                 api_key      =&gt; !*&lt;/sys/env/OPENAI_API_KEY&gt;,
-                 pattern      =&gt; &lt;openai:#&gt;,
-                 name         =&gt; &lt;openai&gt;,
-                 route        =&gt; [&lt;openai:&gt;=&gt;&lt;&gt;]]@/sys/space/openai
-mtron&gt; catalog::[host         =&gt; &lt;https://api.deepseek.com/&gt;,
-                 api_key      =&gt; !*&lt;/sys/env/DEEPSEEK_API_KEY&gt;,
-                 pattern      =&gt; &lt;deep:#&gt;,
-                 name         =&gt; &lt;openai&gt;,
-                 route        =&gt; [&lt;deep:&gt;=&gt;&lt;&gt;]]@/sys/space/deepseek
-mtron&gt; catalog::[host         =&gt; &lt;http://localhost:8088/v1&gt;,
-                  pattern      =&gt; &lt;localai:#&gt;,
-                  name         =&gt; &lt;localai&gt;,
-                  route        =&gt; [&lt;localai:&gt;=&gt;&lt;&gt;]]@/sys/space/localai
-mtron&gt; import(/m/web)
-==&gt;[
- pattern=&gt;/m/web/#,
- q=&gt;[docq::[
- pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
- pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
- pattern=&gt;docq,
- obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
- inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
- space=&gt;[super=&gt;!*/m],
- const=&gt;[
-  !*/m/mach/io/serializer/xml,
-  !*/m/mach/io/serializer/html,
-  !*/m/mach/io/serializer/json,
-  !*/m/mach/io/serializer/markdown,
-  !*/m/mach/io/serializer/plain/text],
- type=&gt;[
-  content_type::T,
-  xml::T,
-  html::T,
-  json::T,
-  css::T,
-  markdown::T,
-  httpspace::T,
-  wsspace::T,
-  websocket::T,
-  wshandler::T,
-  wsclient::T,
-  mtron_ws::T,
-  mcp_ws::T,
-  mcp_mtron_ws::T,
-  socket::T,
-  http_handler::T,
-  http_client::T,
-  mtron_http::T,
-  mcp_http::T,
-  mcp_mtron_http::T,
-  base::T],
- inst=&gt;[
-  format?str&lt;=markdown(),
-  as?xml&lt;=str(xml::T),
-  as?html&lt;=str(html::T),
-  as?markdown&lt;=str(markdown::T),
-  as?str&lt;=html(str::T),
-  as?str&lt;=markdown(str::T),
-  as?html&lt;=markdown(html::T),
-  as?json&lt;=str(json::T),
-  as(json_str::T)]]@/m/web</code></pre>
+  chat?rec&lt;=model(str::T,rec::T)]]@/m/llm</code></pre>
 </div>
 </div>
 </div>
@@ -1640,6 +1573,29 @@ mtron&gt; import(/m/web)
 <p><strong>MCP Servers</strong>: Developing and deploying MCP servers in mtron as well as interacting with remote MCP servers as a client is straightforward. Such simplicity provides a countless number of ways in which LLMs can interact with the underlying spaces.</p>
 </li>
 </ol>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; catalog::[host         =&gt; &lt;http://localhost:11434&gt;,
+                  pattern     =&gt; &lt;ollama:#&gt;,
+                  name        =&gt; &lt;ollama&gt;,
+                  route       =&gt; [ollama:=&gt;&lt;&gt;]]@/sys/space/ollama
+mtron&gt; catalog::[host         =&gt; &lt;https://api.openai.com/v1&gt;,
+                 organization =&gt; !*&lt;/sys/env/OPENAI_ORG_ID&gt;,
+                 api_key      =&gt; !*&lt;/sys/env/OPENAI_API_KEY&gt;,
+                 pattern      =&gt; &lt;openai:#&gt;,
+                 name         =&gt; &lt;openai&gt;,
+                 route        =&gt; [&lt;openai:&gt;=&gt;&lt;&gt;]]@/sys/space/openai
+mtron&gt; catalog::[host         =&gt; &lt;https://api.deepseek.com/&gt;,
+                 api_key      =&gt; !*&lt;/sys/env/DEEPSEEK_API_KEY&gt;,
+                 pattern      =&gt; &lt;deep:#&gt;,
+                 name         =&gt; &lt;openai&gt;,
+                 route        =&gt; [&lt;deep:&gt;=&gt;&lt;&gt;]]@/sys/space/deepseek
+mtron&gt; catalog::[host         =&gt; &lt;http://localhost:8088/v1&gt;,
+                 pattern      =&gt; &lt;localai:#&gt;,
+                 name         =&gt; &lt;localai&gt;,
+                 route        =&gt; [&lt;localai:&gt;=&gt;&lt;&gt;]]@/sys/space/localai</code></pre>
+</div>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -1713,26 +1669,37 @@ mtron&gt; */usr/agent/feature</code></pre>
 </div>
 <h3 id="_llm_interactions" class="discrete">llm interactions</h3>
 <div class="paragraph">
-<p>The following example demonstrates how to search for an appropriate LLM for the given task, then query it, and finally, have its memory of the interaction stored in space for future use (to provide the agent context over longer interactions).</p>
+<p>The following example demonstrates how to search for an appropriate LLM for a given task, then query it, and finally, have its memory of the interaction stored in space for future use (to provide the agent context over longer interactions). This example relies on an agent <code>SKILL.md</code> file stored on the local file system. Thus, we need a space.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; [,]@/usr/ai/notes
-==&gt;[,]@/usr/ai/notes
-mtron&gt; [,]@/usr/ai/memory
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; fsspace::[pattern =&gt; fs:#,
+==&gt;ERROR: fsspace::[pattern =&gt; fs:#,
+^ end of input expected
+
+mtron&gt; route   =&gt; [fs: =&gt; &lt;~/software/metatron/.metatron/&gt;]]@/sys/space/fs
+==&gt;ERROR: route   =&gt; [fs: =&gt; &lt;~/software/metatron/.metatron/&gt;]]@/sys/space/fs
+                                                    ^ end of input expected
+
+mtron&gt; *&lt;fs:skills/mtron/SKILL.md&gt;</code></pre>
+</div>
+</div>
+<!--   skill   => [!*<fs:skills/mtron>.as(skill::T)],     -->
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; [,]@/usr/ai/memory     ​1​
 ==&gt;[,]@/usr/ai/memory
-mtron&gt; *ollama:+
-        .where(&gt;&gt;skill.has(thinking).has(tools))
-        .where(&gt;&gt;size.?&gt;gB::1.0.?&lt;gB::5.0)
-        .order(&gt;&gt;size * -1.0)
-        .take(1)
-        .&gt;&gt;=+[feature=&gt;[
-                memory  =&gt; [mem=&gt;!@/usr/ai/memory,max=&gt;5],
-                tools   =&gt; [!*eval],
-                think   =&gt; print(_),
-                note    =&gt; !@/usr/ai/notes,
-                response=&gt; [to=&gt;to(/usr/ai/response)]]]
-        .to(ai)
+mtron&gt; *ollama:+.
+        where(&gt;&gt;skill.has(thinking).has(tools)).
+        where(&gt;&gt;size.?&gt;gB::1.0.?&lt;gB::5.0).
+        order(&gt;&gt;size * -1.0).
+        take(1).
+        &gt;&gt;=+[feature=&gt;[
+              memory  =&gt; [mem=&gt;!@/usr/ai/memory,max=&gt;5],
+              tool    =&gt; [!*eval],
+              think   =&gt; print(_),
+              response=&gt; [to=&gt;to(/usr/ai/response)]]].
+        to(ai)
 ==&gt;model::[
  provider=&gt;!*/sys/space/ollama,
  name=&gt;qwen3:latest,
@@ -1743,9 +1710,8 @@ mtron&gt; *ollama:+
   memory=&gt;[
    mem=&gt;!@/usr/ai/memory,
    max=&gt;5],
-  tools=&gt;[!*eval],
+  tool=&gt;[!*eval],
   think=&gt;print(id()),
-  note=&gt;!@/usr/ai/notes,
   response=&gt;[to=&gt;to(/usr/ai/response)]]]@ai</code></pre>
 </div>
 </div>
@@ -1753,57 +1719,73 @@ mtron&gt; *ollama:+
 <table>
 <tr>
 <td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>a</td>
+<td>create a <code>lst</code> to server as the an ordered sequence of chat interactions.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="2"></i><b>2</b></td>
-<td>b</td>
+<td>stream all the models currently available on the local ollama server.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="3"></i><b>3</b></td>
-<td>c</td>
+<td>filter out those models that don&#8217;t support thinking and tool use.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="4"></i><b>4</b></td>
-<td>d</td>
+<td>filter out models too small (for ollama, the cloud models) and models too big.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="5"></i><b>5</b></td>
-<td>e</td>
+<td>reverse sort the models by their size.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="6"></i><b>6</b></td>
-<td>f</td>
+<td>select the smallest model of those remaining.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="7"></i><b>7</b></td>
-<td>g</td>
+<td>now a serious of enrichements will be attached to the model.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="8"></i><b>8</b></td>
-<td>h</td>
+<td>give the model a memory structure for extended context.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="9"></i><b>9</b></td>
-<td>i</td>
+<td>give the model access to mtron&#8217;s eval instruction.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="10"></i><b>10</b></td>
-<td>j</td>
+<td>have the model print its thoughts to the console terminal</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="11"></i><b>11</b></td>
-<td>k</td>
+<td>have the model store its responses to the <code>/usr/ai</code> space.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="12"></i><b>12</b></td>
-<td>l</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="13"></i><b>13</b></td>
-<td>m</td>
+<td>write the model to <code>ai</code>.</td>
 </tr>
 </table>
+</div>
+<div class="paragraph">
+<p>The first part of the stream above was about widdling the set of available models down to those that meet the requirements for this documentation&#8201;&#8212;&#8201;namely, a model that is not too big (as building the docs would take too long) and has some useful skills for demonstrating how model features work.</p>
+</div>
+<div class="paragraph">
+<p>Once a model was selected, then the second phase served to enrich the model with a memory structure (embedded in space), some tools to use if need be (embedded in space), a place for its thought (ephemeral to the console&#8217;s stdout), and location to place its response (embedded in space).</p>
+</div>
+<div class="paragraph">
+<p>With the model loaded and equipped, it&#8217;s possible to communicate with it to the level of complexity as facilitated by its base training and the set of features attached to it.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; @ai.chat("I need you evaluate the mtron expresion `1-&lt;[_=&gt;_&gt;&gt;.&gt;-[,]&gt;-`. Please don't tell me the result of the evaluation until I ask for it sometime in the near future.")
+==&gt;fail::[illegalargumentexception: template cannot be null or blank
+  	dev.langchain4j.internal.Exceptions [line 25]
+  	dev.langchain4j.internal.ValidationUtils [line 169]
+  	dev.langchain4j.internal.ValidationUtils [line 156]
+  	dev.langchain4j.model.input.PromptTemplate [line 83]
+  	dev.langchain4j.model.input.PromptTemplate [line 186]][...]@/sys/fail/130</code></pre>
+</div>
 </div>
 <div class="openblock card">
 <div class="content">
@@ -1910,60 +1892,19 @@ mtron&gt; tB::1.0.as(mB::T)     ​3​
 </div>
 </div>
 </div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; @ai.chat("I need you to remember the word 'metatron'. I'll ask you for it in the future.")
-==&gt;"""I'll remember the word 'metatron' for you. Let me know when you need it!
-
-(Note: I checked for any notes using the specified method and found none at this time. I'll remain vigilant for any additional instructions.)"""
-mtron&gt; */usr/ai/response
-==&gt;"""I'll remember the word 'metatron' for you. Let me know when you need it!
-
-(Note: I checked for any notes using the specified method and found none at this time. I'll remain vigilant for any additional instructions.)"""</code></pre>
-</div>
-</div>
 <div class="paragraph">
 <p>The content and metadata associated with the chat interaction are stored at the specified location, where it is both read (the previous interaction) and written to (the current interaction).</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; @ai.chat("What was the word I needed you to recall?")
-==&gt;"""The word you needed me to recall is **"metatron"**.
-
-(Note: I checked for any notes using the specified method and found none at this time. I'll remain vigilant for any additional instructions.)"""
-mtron&gt; */usr/ai/response
-==&gt;"""The word you needed me to recall is **"metatron"**.
-
-(Note: I checked for any notes using the specified method and found none at this time. I'll remain vigilant for any additional instructions.)"""
-mtron&gt; */usr/ai/memory/+
-==&gt;[
- text=&gt;"I'll remember the word 'metatron' ...",
- thinking=&gt;'Okay, the user wants me to remembe...',
- toolExecutionRequests=&gt;[,],
- attributes=&gt;[=&gt;],
- type=&gt;AI]
-==&gt;[
- text=&gt;'The word you needed me to recall i...',
- thinking=&gt;'Okay, the user is asking for the w...',
- toolExecutionRequests=&gt;[,],
- attributes=&gt;[=&gt;],
- type=&gt;AI]
-==&gt;[
- text=&gt;"""
-
-### IMPORTANT ###
-Always check f...""",
- type=&gt;SYSTEM]
-==&gt;[
- contents=&gt;[[
- text=&gt;'What was the word I needed you to ...',
- type=&gt;'TEXT']],
- type=&gt;USER]
-==&gt;[
- contents=&gt;[[
- text=&gt;"I need you to remember the word 'm...",
- type=&gt;'TEXT']],
- type=&gt;USER]</code></pre>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; @ai.chat("Many things have come and gone over the years that have brought me to who I am now -- an tired, old man. Before I let my last breathe flutter into this world, I must know one more thing. And that is why I've come back to this computer looking for you. Please tell me, what was the result of the mtron expression I provided you all those years ago?")
+==&gt;fail::[illegalargumentexception: template cannot be null or blank
+  	dev.langchain4j.internal.Exceptions [line 25]
+  	dev.langchain4j.internal.ValidationUtils [line 169]
+  	dev.langchain4j.internal.ValidationUtils [line 156]
+  	dev.langchain4j.model.input.PromptTemplate [line 83]
+  	dev.langchain4j.model.input.PromptTemplate [line 186]][...]@/sys/fail/136
+mtron&gt; */usr/ai/memory/+</code></pre>
 </div>
 </div>
 <h3 id="_llm_tools_skills_and_mcp_servers" class="discrete">llm tools, skills, and mcp servers</h3>
@@ -2589,7 +2530,7 @@ mtron&gt; 4.as(int::T[?&gt;0]@nat)
 ==&gt;nat::4
 mtron&gt;  -4.as(nat::T)
 ==&gt;fail::[-4 is not a is(gt(0))
-  -4=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/408
+  -4=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/420
 mtron&gt; [-- refining rec::T  --]
 mtron&gt; [name=&gt;'snowbutt',age=&gt;7].as(rec::T[?[name=&gt;str::T,age=&gt;int::T]@chicken)
 ==&gt;ERROR: [name=&gt;'snowbutt',age=&gt;7].as(rec::T[?[name=&gt;str::T,age=&gt;int::T]@chicken)
@@ -2655,11 +2596,11 @@ mtron&gt; 2.as(nat::T)     ​5​
 ==&gt;2
 mtron&gt;  -2.as(nat::T)     ​6​
 ==&gt;fail::[-2 is not a is(gt(0))
-  -2=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/414
+  -2=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/426
 mtron&gt;  nat::2 * -1     ​7​
 ==&gt;fail::[nat::-2 is not a int::T[is(gt(0))][choose([
   is(lt(0))=&gt;mult(-1),
-  id()=&gt;id()]).rshift()]][...]@/sys/fail/420</code></pre>
+  id()=&gt;id()]).rshift()]][...]@/sys/fail/432</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -2686,7 +2627,7 @@ The predicate component of the type definition tests an <code>int</code> to dete
 <div class="paragraph">
 <p>While every <code>type</code> is an <code>obj</code>, not every <code>obj</code> is a <code>type</code>.
 Those <code>objs</code> that are not <code>types</code> are <em>instances</em> of some <code>type</code>.
-This is the foundation for all other <code>objs</code> in {{m}}m{{g}}e{{y}}T{{c}}A{{c}}t{{g}}r{{c}}o{{b}}N{{X}}.</p>
+This is the foundation for all other <code>objs</code> in {{m}}M{{b}}e{{c}}t{{r}}a{{r}}t{{g}}r{{r}}O{{b}}n{{X}}.</p>
 </div>
 <h4 id="_cascading_type_constructions" class="discrete">cascading type constructions</h4>
 <h3 id="_mono_types" class="discrete">mono types</h3>
@@ -3342,7 +3283,7 @@ mtron&gt;  nat::-10
 ==&gt;ERROR: nat::-10 is not a int::T[is(gt(0))]
 mtron&gt;  int::-10.as(nat::T)
 ==&gt;fail::[-10 is not a is(gt(0))
-  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/542</code></pre>
+  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/554</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -3441,7 +3382,7 @@ mtron&gt;  nat::-10
 ==&gt;ERROR: nat::-10 is not a int::T[is(gt(0))]
 mtron&gt;  int::-10.as(nat::T)
 ==&gt;fail::[-10 is not a is(gt(0))
-  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/548</code></pre>
+  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/560</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -3464,10 +3405,10 @@ mtron&gt; age::125
 ==&gt;ERROR: age::125 is not a int::T[is(lt(120))]
 mtron&gt;  nat::125.as(age::T)
 ==&gt;fail::[nat::125 is not a is(lt(120))
-  nat::125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/554
+  nat::125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/566
 mtron&gt;  125.as(nat::T).as(age::T)
 ==&gt;fail::[125 is not a is(lt(120))
-  125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/560</code></pre>
+  125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/572</code></pre>
 </div>
 </div>
 <div class="listingblock">
@@ -3702,9 +3643,9 @@ mtron&gt; memspace::[
  prefix=&gt;'',
  postfix=&gt;'',
  pane=&gt;lst[/m/mach/console/pane{*}]::[/m/mach/console/pane::[
- result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
  prompt=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
- stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]@/usr/ui/console/pane/0],
+ stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
+ result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]@/usr/ui/console/pane/0],
  menu=&gt;[
   console=&gt;console::[
    metatron_version=&gt;&lt;0.1-alpha&gt;,
@@ -3713,9 +3654,9 @@ mtron&gt; memspace::[
    prefix=&gt;'',
    postfix=&gt;'',
    pane=&gt;lst[/m/mach/console/pane{*}]::[/m/mach/console/pane::[
- result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
  prompt=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
- stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]@/usr/ui/console/pane/0]]@/usr/ui/console,
+ stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
+ result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]@/usr/ui/console/pane/0]]@/usr/ui/console,
   help=&gt;inst?noobj&lt;=#{?}(),
   chat=&gt;inst?noobj&lt;=#{?}(),
   connect=&gt;inst?noobj&lt;=#{?}(),
@@ -3746,9 +3687,9 @@ mtron&gt; */usr/ui/console     ​1​
  prefix=&gt;'',
  postfix=&gt;'',
  pane=&gt;lst[/m/mach/console/pane{*}]::[/m/mach/console/pane::[
- result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
  prompt=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
- stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]@/usr/ui/console/pane/0],
+ stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
+ result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]@/usr/ui/console/pane/0],
  menu=&gt;[
   console=&gt;console::[
    metatron_version=&gt;&lt;0.1-alpha&gt;,
@@ -3757,9 +3698,9 @@ mtron&gt; */usr/ui/console     ​1​
    prefix=&gt;'',
    postfix=&gt;'',
    pane=&gt;lst[/m/mach/console/pane{*}]::[/m/mach/console/pane::[
- result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
  prompt=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
- stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]@/usr/ui/console/pane/0]]@/usr/ui/console,
+ stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
+ result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]@/usr/ui/console/pane/0]]@/usr/ui/console,
   help=&gt;inst?noobj&lt;=#{?}(),
   chat=&gt;inst?noobj&lt;=#{?}(),
   connect=&gt;inst?noobj&lt;=#{?}(),
@@ -3784,9 +3725,9 @@ mtron&gt; */usr/ui/console     ​1​
   subq=&gt;inst?noobj&lt;=#{?}()]]
 mtron&gt; */usr/ui/console/pane/0     ​2​
 ==&gt;/m/mach/console/pane::[
- result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
  prompt=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
- stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]
+ stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
+ result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]
 mtron&gt; /usr/ui/console/pane/0/result('printed at ==&gt;xyz')     ​3​</code></pre>
 </div>
 </div>
@@ -4852,7 +4793,7 @@ mtron&gt; */usr/notes/#?subq
   mqtt::T,
   haos::T]]@/m/iot
 mtron&gt;  import(/m/llm)
-{{b}}.{{m}}.{{g}}.{{X}}</code></pre>
+{{g}}.{{g}}.{{g}}.{{X}}</code></pre>
 </div>
 </div>
 </div>
@@ -6531,64 +6472,53 @@ mtron&gt; *&lt;http://localhost:8088/v1/models&gt;
 ==&gt;[
  object=&gt;list,
  data=&gt;[
-  [id=&gt;qwen3:latest,object=&gt;model],
-  [id=&gt;'smollm:1.7b',object=&gt;model],
   [id=&gt;mistralai_devstral-small-2507,object=&gt;model],
   [id=&gt;qwen3-coder-30b-a3b-instruct,object=&gt;model],
   [id=&gt;qwen3-tts-cpp,object=&gt;model],
+  [id=&gt;qwen3:latest,object=&gt;model],
+  [id=&gt;'smollm:1.7b',object=&gt;model],
   [id=&gt;MeetAISmall__latest,object=&gt;model],
   [id=&gt;gpt-oss__latest,object=&gt;model]]]
 mtron&gt; *&lt;http://localhost:8088/v1/models/data/0/id&gt;
-==&gt;'smollm:1.7b'
+==&gt;mistralai_devstral-small-2507
 mtron&gt; *&lt;http://localhost:8088/api/models/config-json/${
          *&lt;http://localhost:8088/v1/models/data/0/id&gt;}&gt;
 ==&gt;[
  parameters=&gt;[
-  model=&gt;'Qwen3-Coder-30B-A3B-Instruct-Q4_K_...',
-  top_p=&gt;0.8000,
+  model=&gt;qwen3-tts-cpp,
+  top_p=&gt;0.9500,
   top_k=&gt;20,
   min_p=&gt;0,
-  temperature=&gt;0.7000,
+  temperature=&gt;0.6000,
   max_tokens=&gt;0,
   repeat_penalty=&gt;1,
   tfz=&gt;1,
   typical_p=&gt;1,
   seed=&gt;-1,
   logprobs=&gt;false],
- name=&gt;qwen3-coder-30b-a3b-instruct,
+ name=&gt;qwen3-tts-cpp,
  f16=&gt;false,
  threads=&gt;8,
  debug=&gt;false,
  embeddings=&gt;false,
- backend=&gt;llama-cpp,
- template=&gt;[
-  chat=&gt;"""{{.Input -}}
-&lt;|im_start|&gt;assistant
-""",
-  chat_message=&gt;'&lt;|im_start|&gt;{{if eq .RoleName "too...',
-  completion=&gt;"""{{.Input}}
-""",
-  function=&gt;"""&lt;|im_start|&gt;system
-You are a funct..."""],
- known_usecases=&gt;[FLAG_COMPLETION,FLAG_CHAT],
+ backend=&gt;qwen3-tts-cpp,
+ template=&gt;[=&gt;],
+ known_usecases=&gt;[FLAG_TTS],
  pipeline=&gt;[=&gt;],
  function=&gt;[grammar=&gt;[=&gt;]],
  reasoning=&gt;[=&gt;],
  mirostat_eta=&gt;0.1000,
  mirostat_tau=&gt;5,
  mirostat=&gt;0,
- gpu_layers=&gt;99999999,
  mmap=&gt;true,
  mmlock=&gt;false,
  low_vram=&gt;false,
  reranking=&gt;false,
- stopwords=&gt;[|im_end|,dummy32000,/s,|endoftext|],
  context_size=&gt;8192,
  limit_mm_per_prompt=&gt;[=&gt;],
  diffusers=&gt;[=&gt;],
  grpc=&gt;[=&gt;],
  tts=&gt;[=&gt;],
- options=&gt;[gpu],
  mcp=&gt;[=&gt;],
  agent=&gt;[=&gt;]]</code></pre>
 </div>
@@ -6658,7 +6588,7 @@ mtron&gt; */m/llm/inst/+?dom=model</code></pre>
   	dev.langchain4j.internal.ValidationUtils [line 169]
   	dev.langchain4j.internal.ValidationUtils [line 156]
   	dev.langchain4j.model.input.PromptTemplate [line 83]
-  	dev.langchain4j.model.input.PromptTemplate [line 186]][...]@/sys/fail/588
+  	dev.langchain4j.model.input.PromptTemplate [line 186]][...]@/sys/fail/600
 ==&gt;fail::[[
  type=&gt;model,
  provider=&gt;!*/sys/space/localai] is not a isa([
@@ -6689,7 +6619,7 @@ mtron&gt; */m/llm/inst/+?dom=model</code></pre>
    in=&gt;currency::T,
    out=&gt;currency::T],
    noobj=&gt;(==&gt;{?}size)=&gt;noobj=&gt;/=&gt;bB::T,
-   noobj=&gt;(==&gt;{?}feature)=&gt;noobj=&gt;/=&gt;feature::T]][...]@/sys/fail/582</code></pre>
+   noobj=&gt;(==&gt;{?}feature)=&gt;noobj=&gt;/=&gt;feature::T]][...]@/sys/fail/594</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -6856,64 +6786,53 @@ mtron&gt; *&lt;http://localhost:8088/v1/models&gt;
 ==&gt;[
  object=&gt;list,
  data=&gt;[
-  [id=&gt;qwen3:latest,object=&gt;model],
-  [id=&gt;'smollm:1.7b',object=&gt;model],
   [id=&gt;mistralai_devstral-small-2507,object=&gt;model],
   [id=&gt;qwen3-coder-30b-a3b-instruct,object=&gt;model],
   [id=&gt;qwen3-tts-cpp,object=&gt;model],
+  [id=&gt;qwen3:latest,object=&gt;model],
+  [id=&gt;'smollm:1.7b',object=&gt;model],
   [id=&gt;MeetAISmall__latest,object=&gt;model],
   [id=&gt;gpt-oss__latest,object=&gt;model]]]
 mtron&gt; *&lt;http://localhost:8088/v1/models/data/0/id&gt;
-==&gt;'smollm:1.7b'
+==&gt;mistralai_devstral-small-2507
 mtron&gt; *&lt;http://localhost:8088/api/models/config-json/${
          *&lt;http://localhost:8088/v1/models/data/0/id&gt;}&gt;
 ==&gt;[
  parameters=&gt;[
-  model=&gt;'Qwen3-Coder-30B-A3B-Instruct-Q4_K_...',
-  top_p=&gt;0.8000,
+  model=&gt;qwen3-tts-cpp,
+  top_p=&gt;0.9500,
   top_k=&gt;20,
   min_p=&gt;0,
-  temperature=&gt;0.7000,
+  temperature=&gt;0.6000,
   max_tokens=&gt;0,
   repeat_penalty=&gt;1,
   tfz=&gt;1,
   typical_p=&gt;1,
   seed=&gt;-1,
   logprobs=&gt;false],
- name=&gt;qwen3-coder-30b-a3b-instruct,
+ name=&gt;qwen3-tts-cpp,
  f16=&gt;false,
  threads=&gt;8,
  debug=&gt;false,
  embeddings=&gt;false,
- backend=&gt;llama-cpp,
- template=&gt;[
-  chat=&gt;"""{{.Input -}}
-&lt;|im_start|&gt;assistant
-""",
-  chat_message=&gt;'&lt;|im_start|&gt;{{if eq .RoleName "too...',
-  completion=&gt;"""{{.Input}}
-""",
-  function=&gt;"""&lt;|im_start|&gt;system
-You are a funct..."""],
- known_usecases=&gt;[FLAG_COMPLETION,FLAG_CHAT],
+ backend=&gt;qwen3-tts-cpp,
+ template=&gt;[=&gt;],
+ known_usecases=&gt;[FLAG_TTS],
  pipeline=&gt;[=&gt;],
  function=&gt;[grammar=&gt;[=&gt;]],
  reasoning=&gt;[=&gt;],
  mirostat_eta=&gt;0.1000,
  mirostat_tau=&gt;5,
  mirostat=&gt;0,
- gpu_layers=&gt;99999999,
  mmap=&gt;true,
  mmlock=&gt;false,
  low_vram=&gt;false,
  reranking=&gt;false,
- stopwords=&gt;[|im_end|,dummy32000,/s,|endoftext|],
  context_size=&gt;8192,
  limit_mm_per_prompt=&gt;[=&gt;],
  diffusers=&gt;[=&gt;],
  grpc=&gt;[=&gt;],
  tts=&gt;[=&gt;],
- options=&gt;[gpu],
  mcp=&gt;[=&gt;],
  agent=&gt;[=&gt;]]</code></pre>
 </div>
@@ -6983,7 +6902,7 @@ mtron&gt; */m/llm/inst/+?dom=model</code></pre>
   	dev.langchain4j.internal.ValidationUtils [line 169]
   	dev.langchain4j.internal.ValidationUtils [line 156]
   	dev.langchain4j.model.input.PromptTemplate [line 83]
-  	dev.langchain4j.model.input.PromptTemplate [line 186]][...]@/sys/fail/588
+  	dev.langchain4j.model.input.PromptTemplate [line 186]][...]@/sys/fail/600
 ==&gt;fail::[[
  type=&gt;model,
  provider=&gt;!*/sys/space/localai] is not a isa([
@@ -7014,7 +6933,7 @@ mtron&gt; */m/llm/inst/+?dom=model</code></pre>
    in=&gt;currency::T,
    out=&gt;currency::T],
    noobj=&gt;(==&gt;{?}size)=&gt;noobj=&gt;/=&gt;bB::T,
-   noobj=&gt;(==&gt;{?}feature)=&gt;noobj=&gt;/=&gt;feature::T]][...]@/sys/fail/582</code></pre>
+   noobj=&gt;(==&gt;{?}feature)=&gt;noobj=&gt;/=&gt;feature::T]][...]@/sys/fail/594</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -7165,7 +7084,7 @@ mtron&gt; *lite:person/+/id     ​6​
 ==&gt;[
  instset=&gt;instset::[
   pattern=&gt;/sys/space/lite/schema/instset/#,
-  type=&gt;[person::T],
+  type=&gt;[,],
   q=&gt;[docq::[
  pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
  pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
@@ -7176,14 +7095,7 @@ mtron&gt; *lite:person/+/id     ​6​
  native=&gt;[
   pattern=&gt;/sys/space/lite/schema/instset/#,
   name=&gt;'instset',
-  tables=&gt;[[
- name=&gt;'person',
- uri=&gt;/sys/space/lite/schema/instset/person,
- schema/schema=&gt;[
-  id=&gt;int::T,
-  name=&gt;str::T,
-  age=&gt;int::T],
- type=&gt;person::T]],
+  tables=&gt;[,],
   references=&gt;[,]]]
 mtron&gt; */sys/space/lite/schema/type/+</code></pre>
 </div>
@@ -7367,7 +7279,7 @@ whose values happen to match <code>person.name</code> — the link is purely alg
  schema=&gt;[
   instset=&gt;instset::[
    pattern=&gt;/sys/space/lite/schema/instset/#,
-   type=&gt;[person::T],
+   type=&gt;[,],
    q=&gt;[docq::[
  pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
  pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
@@ -7393,23 +7305,23 @@ mtron&gt; lite:score/1 -&gt; [player=&gt;'marko', points=&gt;42]     ​2​
   	org.sqlite.jdbc4.JDBC4Connection [line 31]
   	org.sqlite.jdbc3.JDBC3Connection [line 225]
   	org.sqlite.jdbc3.JDBC3Connection [line 205]
-  	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 191]][...]@/sys/fail/192
+  	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 191]][...]@/sys/fail/204
 mtron&gt; lite:score/2 -&gt; [player=&gt;'grant', points=&gt;99]     ​3​
 ==&gt;fail::[sqlexception: database connection closed
   	org.sqlite.SQLiteConnection [line 418]
   	org.sqlite.jdbc4.JDBC4Connection [line 31]
   	org.sqlite.jdbc3.JDBC3Connection [line 225]
   	org.sqlite.jdbc3.JDBC3Connection [line 205]
-  	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 191]][...]@/sys/fail/198
+  	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 191]][...]@/sys/fail/210
 mtron&gt; *lite:score/+.?==[player=&gt;'marko']     ​4​
-==&gt;fail::[failed to execute native where operation[studio.phaseshift.metatron.util.MTronException:52]][...]@/sys/fail/204
+==&gt;fail::[failed to execute native where operation[studio.phaseshift.metatron.util.MTronException:52]][...]@/sys/fail/216
 mtron&gt; */sys/space/lite.sql("SELECT p.name,p.age,s.points FROM person p JOIN score s ON p.name=s.player")     ​5​
 ==&gt;fail::[sqlexception: database connection closed
   	org.sqlite.SQLiteConnection [line 418]
   	org.sqlite.jdbc4.JDBC4Connection [line 23]
   	org.sqlite.jdbc3.JDBC3Connection [line 169]
   	studio.phaseshift.metatron.isa.tble.tbleInstSet [line 114]
-  	studio.phaseshift.metatron.isa.m.type.Inst$f [line 689]][...]@/sys/fail/210</code></pre>
+  	studio.phaseshift.metatron.isa.m.type.Inst$f [line 689]][...]@/sys/fail/222</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -7449,35 +7361,35 @@ Unlike a matching column value, the pointer encodes the full address of the link
   	studio.phaseshift.metatron.isa.tble.tbleSpace [line 170]
   	studio.phaseshift.metatron.isa.tble.tbleSpace [line 153]
   	studio.phaseshift.metatron.isa.tble.tbleSpace [line 122]
-  	studio.phaseshift.metatron.isa.m.type.Inst$f [line 689]][...]@/sys/fail/222
+  	studio.phaseshift.metatron.isa.m.type.Inst$f [line 689]][...]@/sys/fail/234
 mtron&gt; lite:award/1 -&gt; [trophy=&gt;'gold',   recipient=&gt;!*lite:person/1]     ​2​
 ==&gt;fail::[sqlexception: database connection closed
   	org.sqlite.SQLiteConnection [line 418]
   	org.sqlite.jdbc4.JDBC4Connection [line 31]
   	org.sqlite.jdbc3.JDBC3Connection [line 225]
   	org.sqlite.jdbc3.JDBC3Connection [line 205]
-  	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 191]][...]@/sys/fail/282
+  	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 191]][...]@/sys/fail/294
 mtron&gt; lite:award/2 -&gt; [trophy=&gt;'silver', recipient=&gt;!*lite:person/2]     ​3​
 ==&gt;fail::[sqlexception: database connection closed
   	org.sqlite.SQLiteConnection [line 418]
   	org.sqlite.jdbc4.JDBC4Connection [line 31]
   	org.sqlite.jdbc3.JDBC3Connection [line 225]
   	org.sqlite.jdbc3.JDBC3Connection [line 205]
-  	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 191]][...]@/sys/fail/342
+  	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 191]][...]@/sys/fail/354
 mtron&gt; *lite:award/+     ​4​
 ==&gt;fail::[sqlexception: database connection closed
   	org.sqlite.SQLiteConnection [line 418]
   	org.sqlite.jdbc4.JDBC4Connection [line 31]
   	org.sqlite.jdbc3.JDBC3Connection [line 225]
   	org.sqlite.jdbc3.JDBC3Connection [line 205]
-  	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 187]][...]@/sys/fail/348
+  	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 187]][...]@/sys/fail/360
 mtron&gt; *lite:award/1/recipient     ​5​
 ==&gt;fail::[sqlexception: database connection closed
   	org.sqlite.SQLiteConnection [line 418]
   	org.sqlite.jdbc4.JDBC4Connection [line 31]
   	org.sqlite.jdbc3.JDBC3Connection [line 225]
   	org.sqlite.jdbc3.JDBC3Connection [line 205]
-  	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 191]][...]@/sys/fail/354</code></pre>
+  	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 191]][...]@/sys/fail/366</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -7521,28 +7433,28 @@ mtron&gt; */sys/space/lite&gt;&gt;=[table=&gt;[person,score,award,venue]]     �
   	studio.phaseshift.metatron.isa.tble.tbleSpace [line 170]
   	studio.phaseshift.metatron.isa.tble.tbleSpace [line 153]
   	studio.phaseshift.metatron.isa.tble.tbleSpace [line 122]
-  	studio.phaseshift.metatron.isa.m.type.Inst$f [line 689]][...]@/sys/fail/366
+  	studio.phaseshift.metatron.isa.m.type.Inst$f [line 689]][...]@/sys/fail/378
 mtron&gt; lite:venue/1 -&gt; [name=&gt;'main_stage',location=&gt;!*area:V/1]     ​4​
 ==&gt;fail::[sqlexception: database connection closed
   	org.sqlite.SQLiteConnection [line 418]
   	org.sqlite.jdbc4.JDBC4Connection [line 31]
   	org.sqlite.jdbc3.JDBC3Connection [line 225]
   	org.sqlite.jdbc3.JDBC3Connection [line 205]
-  	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 191]][...]@/sys/fail/372
+  	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 191]][...]@/sys/fail/384
 mtron&gt; *lite:venue/1     ​5​
 ==&gt;fail::[sqlexception: database connection closed
   	org.sqlite.SQLiteConnection [line 418]
   	org.sqlite.jdbc4.JDBC4Connection [line 31]
   	org.sqlite.jdbc3.JDBC3Connection [line 225]
   	org.sqlite.jdbc3.JDBC3Connection [line 205]
-  	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 191]][...]@/sys/fail/378
+  	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 191]][...]@/sys/fail/390
 mtron&gt; *lite:venue/1/location     ​6​
 ==&gt;fail::[sqlexception: database connection closed
   	org.sqlite.SQLiteConnection [line 418]
   	org.sqlite.jdbc4.JDBC4Connection [line 31]
   	org.sqlite.jdbc3.JDBC3Connection [line 225]
   	org.sqlite.jdbc3.JDBC3Connection [line 205]
-  	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 191]][...]@/sys/fail/384</code></pre>
+  	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 191]][...]@/sys/fail/396</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -7585,21 +7497,21 @@ pointing back at the row&#8217;s own table.</p>
   	org.sqlite.jdbc4.JDBC4Connection [line 31]
   	org.sqlite.jdbc3.JDBC3Connection [line 225]
   	org.sqlite.jdbc3.JDBC3Connection [line 205]
-  	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 191]][...]@/sys/fail/390
+  	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 191]][...]@/sys/fail/402
 mtron&gt; *lite:venue/2     ​2​
 ==&gt;fail::[sqlexception: database connection closed
   	org.sqlite.SQLiteConnection [line 418]
   	org.sqlite.jdbc4.JDBC4Connection [line 31]
   	org.sqlite.jdbc3.JDBC3Connection [line 225]
   	org.sqlite.jdbc3.JDBC3Connection [line 205]
-  	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 191]][...]@/sys/fail/396
+  	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 191]][...]@/sys/fail/408
 mtron&gt; *lite:venue/2/parent/location     ​3​
 ==&gt;fail::[sqlexception: database connection closed
   	org.sqlite.SQLiteConnection [line 418]
   	org.sqlite.jdbc4.JDBC4Connection [line 31]
   	org.sqlite.jdbc3.JDBC3Connection [line 225]
   	org.sqlite.jdbc3.JDBC3Connection [line 205]
-  	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 191]][...]@/sys/fail/402</code></pre>
+  	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 191]][...]@/sys/fail/414</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -7948,15 +7860,37 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
  obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
  inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
    space=&gt;[sub=&gt;{!*/m/mach,!*/m/math,!*/m/web,!*/m/iot,!*/m/grph,!*/m/llm,!*/m/tble,!*/m/dcmnt,!*/m/rdf}],
-   rewrite=&gt;[
-    /m/inst/rewrite/id_removal?code{?}&lt;=code(),
-    /m/inst/rewrite/map_nest?code{?}&lt;=code(),
-    /m/inst/rewrite/else_after_count?code{?}&lt;=code(),
-    /m/inst/rewrite/plus_zero?code{?}&lt;=code(),
-    /m/inst/rewrite/mult_one?code{?}&lt;=code(),
-    /m/inst/rewrite/split_merge_collapse?code{?}&lt;=code(),
-    /m/inst/rewrite/split_merge_left_factor?code{?}&lt;=code(),
-    /m/inst/rewrite/split_merge_right_factor?code{?}&lt;=code()],
+   type=&gt;[
+    #::T,
+    bool::T,
+    int::T,
+    real::T,
+    bytes::T,
+    str::T,
+    uri::T,
+    rel::T,
+    lst::T,
+    rec::T,
+    instset::T,
+    inst::T,
+    code::T,
+    fail::T,
+    space{*}::T,
+    memspace::T,
+    stack::T,
+    qproc::T,
+    subq::T,
+    sub::T,
+    typeq::T,
+    docs::T,
+    docq::T,
+    mintq::T,
+    incrq::T,
+    constq::T,
+    mimeq::T],
+   const=&gt;[
+    noobj,
+    none@none],
    inst=&gt;[
     as?bool&lt;=bool(bool::T),
     as?bytes&lt;=bool(bytes::T),
@@ -8184,37 +8118,15 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
     lshift?B{*}&lt;=A(),
     start?A{**}&lt;=noobj{0}(A{**}::T),
     ctor()],
-   const=&gt;[
-    noobj,
-    none@none],
-   type=&gt;[
-    #::T,
-    bool::T,
-    int::T,
-    real::T,
-    bytes::T,
-    str::T,
-    uri::T,
-    rel::T,
-    lst::T,
-    rec::T,
-    instset::T,
-    inst::T,
-    code::T,
-    fail::T,
-    space{*}::T,
-    memspace::T,
-    stack::T,
-    qproc::T,
-    subq::T,
-    sub::T,
-    typeq::T,
-    docs::T,
-    docq::T,
-    mintq::T,
-    incrq::T,
-    constq::T,
-    mimeq::T]]@/m,
+   rewrite=&gt;[
+    /m/inst/rewrite/id_removal?code{?}&lt;=code(),
+    /m/inst/rewrite/map_nest?code{?}&lt;=code(),
+    /m/inst/rewrite/else_after_count?code{?}&lt;=code(),
+    /m/inst/rewrite/plus_zero?code{?}&lt;=code(),
+    /m/inst/rewrite/mult_one?code{?}&lt;=code(),
+    /m/inst/rewrite/split_merge_collapse?code{?}&lt;=code(),
+    /m/inst/rewrite/split_merge_left_factor?code{?}&lt;=code(),
+    /m/inst/rewrite/split_merge_right_factor?code{?}&lt;=code()]]@/m,
   /m/iot=&gt;instset::[
    pattern=&gt;/m/iot/#,
    q=&gt;[docq::[
@@ -8475,8 +8387,8 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
   constq=&gt;[/m/space/qproc/constq],
   lrow=&gt;[/m/tble/lrow],
   monad=&gt;[/m/mach/monad],
-  auto=&gt;[/m/inst/auto],
   inst=&gt;[/m/inst],
+  auto=&gt;[/m/inst/auto],
   machine=&gt;[/m/mach/machine],
   dcmntspace=&gt;[/m/dcmnt/space/dcmntspace],
   rshift=&gt;[/m/inst/rshift],
@@ -8527,15 +8439,15 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
   reduce=&gt;[/m/inst/reduce],
   to=&gt;[/m/inst/to],
   skip=&gt;[/m/inst/skip],
-  port=&gt;[/m/inst/port],
   space=&gt;[/m/space],
+  port=&gt;[/m/inst/port],
   bothV=&gt;[/m/grph/inst/bothV],
   inE=&gt;[/m/grph/inst/inE],
   println=&gt;[/m/inst/println],
   instset=&gt;[/m/instset],
   gte=&gt;[/m/inst/gte],
-  scheme=&gt;[/m/inst/scheme],
   real=&gt;[/m/real],
+  scheme=&gt;[/m/inst/scheme],
   rrow=&gt;[/m/tble/rrow],
   start=&gt;[/m/inst/start],
   tblespace=&gt;[/m/tble/space/tblespace],
@@ -8680,9 +8592,9 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
 ==&gt;/sys/env/JAVA_HOME=&gt;'/home/killswitch/.sdkman/candidates/java/current'
 ==&gt;/sys/env/QT_IM_MODULE=&gt;'ibus'
 ==&gt;/sys/env/GNOME_DESKTOP_SESSION_ID=&gt;'this-is-deprecated'
-==&gt;/sys/env/GNOME_TERMINAL_SCREEN=&gt;'/org/gnome/Terminal/screen/5322bc79_880b_4756_8bf4_05dcc050a5f0'
 ==&gt;/sys/env/HOMEBREW_CELLAR=&gt;'/home/linuxbrew/.linuxbrew/Cellar'
 ==&gt;/sys/env/JBANG_HOME=&gt;'/home/killswitch/.sdkman/candidates/jbang/current'
+==&gt;/sys/env/GNOME_TERMINAL_SCREEN=&gt;'/org/gnome/Terminal/screen/af4a9b66_7bc5_4e4b_bb71_67730afa180b'
 ==&gt;/sys/env/USER=&gt;'killswitch'
 ==&gt;/sys/env/HOMEBREW_PREFIX=&gt;'/home/linuxbrew/.linuxbrew'</code></pre>
 </div>

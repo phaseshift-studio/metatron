@@ -59,11 +59,6 @@ public abstract class AbstractSpace<SJVM> extends MRec implements Space {
         InstSet.JREService.Helper.verifyClass(this.getClass(), vid);
         this.sjvm = sjvm;
         this.pattern = this.at(PATTERN).uriValue();
-        /// //////////// BAD
-        //final Lst qprocs = this.at(uri(QPROC)).orElse(lst());
-        //this.jvm().remove(uri(QPROC));
-        //qprocs.elements().forEach(q -> this.addQ(QProc.Helper.wrap(q.asRec())));
-        /// //////////// BAD
         this.ioStats = new MStats();
         LOG = Graphitty.log(this);
         // Don't auto-register InstSets - they're registered via importInstSetStream AFTER full construction

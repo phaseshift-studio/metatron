@@ -31,7 +31,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 
 public class MTronException extends RuntimeException {
 
-    public static final int MAX_STACK_TRACE = 5;
 
     private MTronException(final String message, final Throwable cause) {
         super(null == cause ? Graphitty.string(message) : Graphitty.string(message + "[%s:%d]",
@@ -81,7 +80,7 @@ public class MTronException extends RuntimeException {
             return new MTronException("unable to convert " + convertName(leftClass.substring(leftClass.lastIndexOf('.') + 1)) + " to " + convertName(rightClass.substring(rightClass.lastIndexOf('.') + 1)), throwable);
         } else {
             final StringBuilder stack = new StringBuilder();
-            for (int i = 0; i < Math.min(throwable.getStackTrace().length, MAX_STACK_TRACE); i++)
+            for (int i = 0; i < throwable.getStackTrace().length; i++)
                 stack.append("\t")
                         .append(throwable.getStackTrace()[i].getClassName())
                         .append(" [line ").append(throwable.getStackTrace()[i].getLineNumber()).append("]\n");
