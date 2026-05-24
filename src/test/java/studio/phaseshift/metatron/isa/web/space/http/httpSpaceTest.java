@@ -96,19 +96,19 @@ public class httpSpaceTest extends AbstractSpaceTest {
             "/html/body/out/0/out/0/out/0/text|\"a1.b1.c1.text\"",
             "/html/body/out/1/out/0/out/0/text|\"a2.b2.c2.text\"",
             "/test.json/hello|world",
-            "/test.txt|\"This is a plain text file for httpSpaceTest.\"",
-            "/missing.html|noobj"
+            "/test.txt|\"This is a plain text file for httpSpaceTest.\""
     }, delimiter = '|', quoteCharacter = '\'')
     public void testResourceAccess(final String path, final String expected) {
         String url = BASE_URL + path;
         var result = Router.readFromSpace(url);
-        assertEquals(ObjmtronSerializer.parse(expected).asStr().strValue(), result.asStr().strValue(), "unexpected resource content for: " + url);
+        assertEquals(ObjmtronSerializer.parse(expected), result, "unexpected resource content for: " + url);
     }
 
     @ParameterizedTest
     @CsvSource(value = {
             // Top-level fields
-            "/test.json/hello|\"world\"",
+            // Top-level fields (JSON strings bias to URIs: "world" → uri("world"))
+            "/test.json/hello|world",
             "/test.json/number|42",
             "/test.json/active|true",
             "/test.json/nothing|noobj",

@@ -122,31 +122,34 @@ public class web_httpHandler extends HttpRec {
                 Obj requestObj = Router.global().read(requestURI);
 
                 // 2 — locateBaseObj: walk up the URI path to find a containing object, then navigate into it
+                boolean foundBase = false;
                 if (requestObj.isNoObj()) {
                     final Space space = Router.global().getSpaceFor(requestURI);
                     if (space != null) {
                         final Space.IdObj baseObj = Space.Helper.locateBaseObj(space, requestURI, f(""));
-                        if (baseObj != null) {
+                        // Only accept navigable base objects (rec/lst) — directories
+                        // and other non-content types can't be used for field-level access.
+                        if (baseObj != null && (baseObj.obj().isRec() || baseObj.obj().isLst())) {
+                            foundBase = true;
                             String subPath = requestURI.toString().replaceFirst(baseObj.furi().toString(), "");
                             subPath = subPath.startsWith("/") ? subPath.substring(1) : subPath;
                             if (baseObj.obj().isRec())
                                 requestObj = baseObj.obj().asRec().at(subPath);
-                            else if (baseObj.obj().isLst())
-                                requestObj = baseObj.obj().asLst().at(subPath);
                             else
-                                requestObj = baseObj.obj();
+                                requestObj = baseObj.obj().asLst().at(subPath);
                         }
                     }
                 }
 
-                // 3 — DEFAULT_PAGE fallback (e.g. serve index.html for directory requests)
-                if (requestObj.isNoObj()) {
+                // 3 — DEFAULT_PAGE fallback (skip when a base document was found — the noobj
+                //     represents a null field value or missing key within that document)
+                if (requestObj.isNoObj() && !foundBase) {
                     final String defaultPage = this.at(uri(DEFAULT_PAGE)).orElse(str("index.html")).strValue();
                     requestObj = Router.global().read(requestURI.extend(defaultPage));
                 }
 
-                // 4 — 404 if still nothing
-                if (requestObj.isNoObj()) {
+                // 4 — 404 if still nothing (skip when a base document was found — see above)
+                if (requestObj.isNoObj() && !foundBase) {
                     try {
                         sendError(404, "Not Found: " + requestURI);
                     } catch (final IOException e) {
@@ -155,11 +158,15 @@ public class web_httpHandler extends HttpRec {
                 }
 
                 // 5 — Detect Content-Type: query param > object type > file extension > text/plain
+                // Structured rec values use type-specific serializers (HTML, JSON).
+                // Leaf values (str, jnt, bool, noobj, etc.) use APPLICATION_MTRON
+                // so type information is preserved through the serialization round-trip.
                 final Content.ContentType contentType = requestURI.hasQ(OUT) ?
                         Content.ContentType.of(requestURI.q(OUT)) :
-                        Content.ContentType.fromType(requestObj,
-                                Content.ContentType.fromExtension(contentTypeHint.name(),
-                                        Content.ContentType.TEXT_PLAIN));
+                        (requestObj.isRec()
+                                ? Content.ContentType.fromType(requestObj,
+                                        Content.ContentType.fromExtension(contentTypeHint.name(), Content.ContentType.TEXT_PLAIN))
+                                : Content.ContentType.APPLICATION_MTRON);
                 this.send(requestObj, contentType);
                 return requestObj;
 

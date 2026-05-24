@@ -152,7 +152,7 @@ public interface Router extends Space {
 
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
-
+                    
             ));
         }
 
