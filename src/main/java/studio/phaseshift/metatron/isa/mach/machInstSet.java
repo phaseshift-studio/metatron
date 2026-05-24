@@ -181,16 +181,6 @@ public class machInstSet extends AbstractInstSet {
                         IMAGE_FILE_TYPE,
                         FACTORY_TYPE,
                         M_FACTORY_TYPE,
-                        /// ////////////////////////////
-                        /// QProc PROCESSORS ///////////////
-                        /// ////////////////////////////
-                        /*INCRQ_TYPE,
-                        CONSTQ_TYPE,
-                        DOCQ_TYPE,
-                        DOCS_TYPE,
-                        SUB_TYPE,
-                        SUBQ_TYPE,
-                        TYPEQ_TYPE,*/
                         /// /////////////////////
                         MACH_CORE_THREAD_TYPE,
                         MACH_VIRTUAL_THREAD_TYPE,

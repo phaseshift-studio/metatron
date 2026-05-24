@@ -39,6 +39,28 @@ mvn clean package
 - Test logging: `src/test/resources/logback-testing.xml`
 - All tests extend `AbstractMetatronTest` which handles boot/shutdown
 
+### Test Styles — `@ParameterizedTest` Preferred
+- **Use `@ParameterizedTest` + `@CsvSource`** as the default pattern for new tests. Each CSV row is a self-contained scenario using mtron string expressions. This keeps tests data-extensible — corner cases are one CSV line, not new Java methods.
+- Use standalone `@Test` methods only for multi-step orchestration (e.g., concurrency tests, complex setup/teardown) or non-tabular scenarios.
+- The `%` delimiter avoids collision with mtron syntax (commas, pipes, semicolons).
+
+**Example** — three scenarios, one test method:
+```java
+@ParameterizedTest(name = "[{index}] {4}")
+@CsvSource(value = {
+    "/c1 | \"immutable\" | \"mutated\" | blocks overwrite after constQ",
+    "/c2 | \"first\"     | \"second\"  | preserves initial value",
+}, delimiter = '%')
+void testConstQ(String uri, String initial, String mutate, String desc) { ... }
+```
+
+- **Leverage static helpers** from `AbstractMetatronTest` for assertion logic:
+  - `checkCodeParseApply(LOG, code, expected)` — parse + apply mtron, assert result
+  - `checkCodeEvaluate(LOG, evaluate, fetch, expected)` — evaluate, fetch read-back, assert
+  - `checkEquality(LOG, a, b, equals)` — compare two objs with log output
+  - `<ERROR>` as an expected value triggers the fail-expected assertion path.
+  - avoid `assertTrue/False` assertions as they provide information back to user on failure.
+
 ### Test Bootstrap (Important)
 Every test class must extend `AbstractMetatronTest`. In `@BeforeAll`:
 1. `TypeCheck.disable(TypeCheck.code_resolve)` — disables code resolution in tests
@@ -139,7 +161,7 @@ Docker build is **disabled by default** (`skipDocker=true` in pom). Enable with 
 1. **Packages**: `studio.phaseshift.metatron.isa.<domain>`
 2. **New instruction sets**: `isa/<domain>/<domain>InstSet.java`
 3. **New spaces**: Extend `AbstractSpace` or `Space`, register with router
-4. **Tests**: Mirror main packages; use `@SkipInheritedTests` for selective skipping
+4. **Tests**: Mirror main packages; prefer `@ParameterizedTest` + `@CsvSource` with `%` delimiter; use mtron string expressions in CSV rows; leverage `checkCodeParseApply`/`checkCodeEvaluate`/`checkEquality` from `AbstractMetatronTest`; use `@SkipInheritedTests` for selective skipping
 5. **Docker**: Skipped by default. Run `-DskipDocker=false` to build.
 
 ---

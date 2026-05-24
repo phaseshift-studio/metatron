@@ -45,6 +45,7 @@ import java.util.function.Function;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.mInstSet.INST_CTOR_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.SPACE_TID;
 import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
@@ -117,7 +118,7 @@ public class tbleSpace extends AbstractSpace<Connection> implements SchemaSpace 
                             uri(TABLE).maybe(), LST_TYPE,
                             uri(ROOT).maybe(), REC_TYPE,
                             uri(SCHEMA).maybe(), SCHEMA_CONFIG))
-                    .constructor(instC(TBLE_SPACE_TID.extend(CTOR).dom(ALL.maybe()).rng(TBLE_SPACE_TID),
+                    .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(TBLE_SPACE_TID),
                             lst(REC_TYPE),
                             (lhs, inst) -> tbleSpace.of(inst.arg(0).asRec().jvm(), inst.arg(0).vid())))
                     .create();

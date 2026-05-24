@@ -40,7 +40,7 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-import static studio.phaseshift.metatron.Tokens.QPROC;
+import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -61,7 +61,10 @@ public interface Space extends Rec, Closeable {
     }
 
     default Space addQ(final QProc qProc) {
-        this.at(uri(QPROC)).orElse(lst()).add(qProc, MUTABLE);
+        final Obj key = uri(QPROC);
+        if (this.at(key).isNoObj())
+            this.at(key, lst(), MUTABLE);
+        this.at(key).asLst().add(qProc, MUTABLE);
         return this;
     }
 
@@ -261,8 +264,9 @@ public interface Space extends Rec, Closeable {
             return results;
         }
 
-        public static Obj resolveRead(final Space space, final fURI pattern, final Function<fURI, Iterator<IdObj>> directReader) { //final Map<fURI, Obj> store) {
+        public static Obj resolveRead(final Space space, final fURI patternPre, final Function<fURI, Iterator<IdObj>> directReader) { //final Map<fURI, Obj> store) {
             final Set<UriObj> listing = new HashSet<>();
+            final fURI pattern = patternPre.qLessExceptDomRng();
             directReader.apply(pattern).forEachRemaining(kv -> listing.add(UriObj.of(kv.furi().toUri(), kv.obj())));
             if (listing.isEmpty()) {
                 if (pattern.isBranch() && !pattern.hasPattern()) {

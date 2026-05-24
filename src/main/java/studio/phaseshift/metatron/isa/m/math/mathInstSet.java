@@ -95,7 +95,6 @@ public class mathInstSet extends AbstractInstSet {
 
     public mathInstSet() {
         super(mutableMap(uri(PATTERN), uri(MATH_ISA_TID.extend(HASH_FURI))), INSTSET_TID, MATH_ISA_TID);
-        //this.at(Tokens.QProc, this.at(Tokens.QProc).asLst().add(QCollection.constQ(), MUTABLE), MUTABLE);
     }
 
     public static final Type DATA_SIZE_TYPE = Type.Builder.build()

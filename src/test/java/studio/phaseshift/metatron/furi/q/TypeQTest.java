@@ -22,15 +22,20 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.TestData;
+import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static studio.phaseshift.metatron.Tokens.PATTERN;
+import static studio.phaseshift.metatron.Tokens.QPROC;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -48,38 +53,36 @@ public class TypeQTest extends AbstractMetatronTest {
     private final Space space;
 
     public TypeQTest() {
-        //super(() -> {
-        InstSet.importInstSet(MACH_ISA_TID, null);
-        this.space = memSpace.of(rec(uri("pattern"), uri("/t/#"), uri("q"), lst(QCollection.typeQ())), f("test"));
-        //});
+        this.space = memSpace.of(rec(uri(PATTERN), uri("/t/#"), uri(QPROC), lst(QCollection.typeQ())), f("test"));
     }
 
     @ParameterizedTest
     @TestData(oneTime = true, value = {"nat -> int::T[?>0]"})
     @CsvSource(value = {
-         //   "1                     % /t/a -> 1          % */t/a        % 1",
-            "/t/a?T -> int::T      % /t/a -> 123         % */t/a        % 123",
-            "/t/b?T -> str::T      % /t/b ->\"hello\"    % */t/b        % \"hello\"",
-            "/t/c?T -> bool::T     % /t/c -> 23          % */t/c        % <ERROR>",
-            "/t/d?T -> bool::T     % /t/d -> noobj       % */t/d        % <ERROR>",
-          //  "/t/e?T -> bool{?}::T  % /t/e -> noobj       % */t/e        % noobj",
-            "/t/f?T -> int{2}::T   % /t/f -> 32          % */t/f        % <ERROR>",
-            "/t/g?T -> int{2}::T   % /t/g -> {12,34}     % */t/g        % {12,34}",
-            "/t/h?T -> nat::T      % /t/h -> -12         % */t/h        % <ERROR>",
-            "/t/i?T -> nat::T      % /t/i -> nat::-12    % */t/i        % <ERROR>",
-            "/t/j?T -> nat::T      % /t/j -> nat::15     % */t/j        % nat::15",
-            //  "/t/k?T -> #::T        % /t/k -> \"hello\"   % */t/k        % \"hello\"",
+            "int::T       % /t/a  % /t/a -> 123         % */t/a        % 123",
+            "str::T       % /t/b  % /t/b ->\"hello\"    % */t/b        % \"hello\"",
+            "bool::T      % /t/c  % /t/c -> 23          % */t/c        % <ERROR>",
+            "bool::T      % /t/d  % /t/d -> noobj       % */t/d        % <ERROR>",
+           // "bool{0}::T   % /t/e  % /t/e -> noobj       % */t/e        % noobj",
+            "int{2}::T    % /t/f  % /t/f -> 32          % */t/f        % <ERROR>",
+            "int{2}::T    % /t/g  % /t/g -> {12,34}     % */t/g        % {12,34}",
+            "int{3}::T    % /t/g  % /t/g -> {12,34}     % */t/g        % <ERROR>",
+            "nat::T       % /t/h  % /t/h -> -12         % */t/h        % <ERROR>",
+            "nat::T       % /t/i  % /t/i -> nat::-12    % */t/i        % <ERROR>",
+            "nat::T       % /t/j  % /t/j -> nat::15     % */t/j        % nat::15",
+            "#::T         % /t/k  % /t/k -> \"hello\"   % */t/k        % \"hello\"",
     }, delimiter = '%')
-    public void testTypedVID(final String specifyType, final String writeTo, final String readFrom, final String result) {
+    public void testTypedVID(final String specifyType, final String writeVID, final String writeTo, final String readFrom, final String result) {
         LOG.warn("%s\n%s", this.space, Router.global().spaces());
-        final Obj obj = ObjmtronSerializer.parse(specifyType).apply();
-        if (obj.isType())
-            assertEquals(obj.isType() ? obj : T(ALL).maybeSome(), Router.global().read(readFrom.substring(1).trim() + "?T"));
+        final Type type = ObjmtronSerializer.parse(specifyType);
+        final fURI write = f(writeVID);
+        Router.writeToSpace(write.addQ("T"), type);
+        assertEquals(type, Router.readFromSpace(write.addQ("T")));
+        assertTrue(type.isType());
         checkCodeParseApply(LOG, writeTo, result);
         if (!result.trim().equals("<ERROR>"))
             checkCodeEvaluate(LOG, readFrom, result);
         else
             assertEquals(noobj(), ObjmtronSerializer.parse(readFrom).apply());
-        assertEquals(obj.isType() ? obj : T(ALL).maybeSome(), ObjmtronSerializer.parse(readFrom + "?T").apply());
     }
 }

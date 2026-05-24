@@ -90,6 +90,10 @@ public interface QProc extends Rec {
             return Optional.empty();
         }
 
+        default boolean hasQlessHandler() {
+            return false;
+        }
+
         @Override
         default Rec clone(final Object jvm, final fURI tid, final fURI vid) {
             return this;
@@ -204,74 +208,67 @@ public interface QProc extends Rec {
         }
 
         public static Optional<Obj> processPreWrite(final Lst qs, final fURI vid, final Obj obj) {
-            return vid.hasQ() && !qs.isEmpty() ? qs.<QProc>elements()
-                    .filter(q -> vid.hasQ(q.pattern()))
-                    .map(QProc::onWrite)
-                    .filter(Optional::isPresent)
-                    // .peek(q -> LOG.info("handling {{y}}pre write{{X}} of %s for %s %s", source, vid, obj))
-                    .map(Optional::get)
-                    .map(q -> q.preWrite(vid, obj))
-                    .filter(Optional::isPresent)
-                    .map(Optional::get)
-                    .reduce(Obj::append) : Optional.empty();
+            if (!vid.hasQ() || qs.isEmpty()) return Optional.empty();
+            Obj acc = null;
+            for (final QProc q : qs.<QProc>elements().toList()) {
+                if (vid.hasQ(q.pattern()) && q.onWrite().isPresent()) {
+                    final Optional<Obj> r = q.onWrite().get().preWrite(vid, obj);
+                    if (r.isPresent())
+                        acc = acc == null ? r.get() : acc.append(r.get());
+                }
+            }
+            return Optional.ofNullable(acc);
         }
 
         public static Optional<Obj> processPreRead(final Lst qs, final fURI vid) {
-            return vid.hasQ() && !qs.isEmpty() ?
-                    qs.<QProc>elements()
-                            .filter(q -> vid.hasQ(q.pattern()))
-                            .map(QProc::onRead)
-                            .filter(Optional::isPresent)
-                            //.peek(q -> LOG.debug("handling {{m}}pre read{{X}} of %s for %s", source, vid))
-                            .map(Optional::get)
-                            .map(q -> q.preRead(vid))
-                            .filter(Optional::isPresent)
-                            .map(Optional::get)
-                            .reduce(Obj::append) :
-                    Optional.empty();
+            if (!vid.hasQ() || qs.isEmpty()) return Optional.empty();
+            Obj acc = null;
+            for (final QProc q : qs.<QProc>elements().toList()) {
+                if (vid.hasQ(q.pattern()) && q.onRead().isPresent()) {
+                    final Optional<Obj> r = q.onRead().get().preRead(vid);
+                    if (r.isPresent())
+                        acc = acc == null ? r.get() : acc.append(r.get());
+                }
+            }
+            return Optional.ofNullable(acc);
         }
 
         public static Optional<Obj> processPostRead(final Lst qs, final fURI vid, final Obj current) {
-            return vid.hasQ() && !qs.isEmpty() ? qs.<QProc>elements()
-                    .filter(q -> vid.hasQ(q.pattern()))
-                    .map(QProc::onRead)
-                    .filter(Optional::isPresent)
-                   // .peek(q -> current.logger().info("handling {{c}}post read{{X}} of %s for %s", current, vid))
-                    .map(Optional::get)
-                    .map(q -> q.postRead(vid, current))
-                    .filter(Optional::isPresent)
-                    .map(Optional::get)
-                    .reduce(Obj::append)
-                    .filter(q -> !q.isNoObj()) : Optional.empty();
+            if (!vid.hasQ() || qs.isEmpty()) return Optional.empty();
+            Obj acc = null;
+            for (final QProc q : qs.<QProc>elements().toList()) {
+                if (vid.hasQ(q.pattern()) && q.onRead().isPresent()) {
+                    final Optional<Obj> r = q.onRead().get().postRead(vid, current);
+                    if (r.isPresent())
+                        acc = acc == null ? r.get() : acc.append(r.get());
+                }
+            }
+            return Optional.ofNullable(acc).filter(a -> !a.isNoObj());
         }
 
         public static Optional<Obj> processQlessWrite(final Lst qs, final fURI vid, final Obj obj) {
-            return qs.<QProc>elements()
-                    .map(QProc::onWrite)
-                    .filter(Optional::isPresent)
-                    // .peek(q -> LOG.debug("handling {{g}}qless write{{X}} of %s for %s", source, vid))
-                    .map(Optional::get)
-
-                    .map(q -> q.qlessWrite(vid, obj))
-
-                    .filter(Optional::isPresent)
-                    .map(Optional::get)
-                    .reduce(Obj::append)
-                    .filter(q -> !q.isNoObj());
+            Obj acc = null;
+            for (final QProc q : qs.<QProc>elements().toList()) {
+                if (q.onWrite().filter(QProc.OnWrite::hasQlessHandler).isPresent()) {
+                    final Optional<Obj> r = q.onWrite().get().qlessWrite(vid, obj);
+                    if (r.isPresent())
+                        acc = acc == null ? r.get() : acc.append(r.get());
+                }
+            }
+            return Optional.ofNullable(acc).filter(a -> !a.isNoObj());
         }
 
         public static Optional<Obj> processPostWrite(final Lst qs, final fURI vid, final Obj obj) {
-            return vid.hasQ() && !qs.isEmpty() ? qs.<QProc>elements()
-                    .filter(q -> vid.hasQ(q.pattern()))
-                    .map(QProc::onWrite)
-                    .filter(Optional::isPresent)
-                    //.peek(q -> LOG.trace("handling {{b}}post write{{X}} of %s for %s %s", source, vid, obj))
-                    .map(Optional::get)
-                    .map(q -> q.postWrite(vid, obj, obj))
-                    .filter(Optional::isPresent)
-                    .map(Optional::get)
-                    .reduce(Obj::append)
-                    .filter(q -> !q.isNoObj()) : Optional.empty();
+            if (!vid.hasQ() || qs.isEmpty()) return Optional.empty();
+            Obj acc = null;
+            for (final QProc q : qs.<QProc>elements().toList()) {
+                if (vid.hasQ(q.pattern()) && q.onWrite().isPresent()) {
+                    final Optional<Obj> r = q.onWrite().get().postWrite(vid, obj, obj);
+                    if (r.isPresent())
+                        acc = acc == null ? r.get() : acc.append(r.get());
+                }
+            }
+            return Optional.ofNullable(acc).filter(a -> !a.isNoObj());
         }
 
         private Helper() {

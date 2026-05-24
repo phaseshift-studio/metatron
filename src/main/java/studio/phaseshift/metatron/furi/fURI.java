@@ -35,6 +35,7 @@ import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.COEFFICIENT;
 import static studio.phaseshift.metatron.Tokens.CONSTQ;
@@ -353,7 +354,7 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
             if (f(pre).equals(this))
                 return f("");
             final fURI newURI = Singleton.of(newPath.substring(pre.length() + (newPath.charAt(pre.length()) == '/' ? 1 : 0)));
-           // final fURI newURI = f(newPath.substring(pre.length()));
+            // final fURI newURI = f(newPath.substring(pre.length()));
             return newURI;
         }
     }
@@ -462,6 +463,20 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
 
     default fURI qLess() {
         return this.q(Map.of());
+    }
+
+    default fURI qLessExceptDomRng() {
+        return this.qLess(DOM, RNG);
+    }
+
+    default fURI qLess(final String... except) {
+        if (!this.hasQ())
+            return this;
+        return this.q(this.qMap()
+                .entrySet()
+                .stream()
+                .filter(kv -> Stream.of(except).anyMatch(e -> e.equals(kv.getKey())))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> b)));
     }
 
     fURI removeQ(final String key);

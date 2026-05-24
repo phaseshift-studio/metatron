@@ -144,9 +144,11 @@ public final class QCollection {
                     final Content.ContentType contentType = Content.ContentType.of(mime);
                     if (null == contentType)
                         throw MTronException.of("unknown mime type: %s", mime);
-                    LOG.error("MTRON: %s", obj);
+                    if (!mime.equals(contentType.value))
+                        throw MTronException.of("content_type mismatch: %s %s", mime, contentType.value);
+                    LOG.debug("MTRON obj for %s: %s (%s)", mime, obj, contentType.value);
                     final Object nativeObject = contentType.serializer().write(obj);
-                    LOG.error("NATIVE: %s", nativeObject);
+                    LOG.debug("NATIVE serialized: %s", nativeObject);
                     return str(nativeObject.toString());
                 }).create();
     }

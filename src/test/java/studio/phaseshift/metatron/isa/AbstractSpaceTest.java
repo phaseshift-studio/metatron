@@ -130,27 +130,6 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
         return data;
     }
 
-    /*@TestCategory.Crud
-    @TestCategory.Concurrent
-    @ParameterizedTest(name = "[{index}] String: {0}")
-    @CsvSource(value = {
-            "$$/xyz?subq     ->(||(>>1.to($$/abc)))             % $$/xyz -> 32            % *$$/abc.eq(32)",
-            "$$/xyz?subq     ->(||(>>1.plus(10).to($$/abc)))    % $$/xyz -> 12            % *$$/abc.eq(22)",
-            "$$/xyz/a?subq   ->(||(>>0.to($$/abc)))             % $$/xyz/a -> 12          % *$$/abc.eq($$/xyz/a)",
-            "$$/xyz/#?subq   ->(||(>>0.to($$/abc)))             % $$/xyz/a -> 12          % *$$/abc.eq($$/xyz/a)",
-            "$$/xyz/+/+?subq ->(||(>>0.to($$/abc)))             % $$/xyz/a -> 12          % *$$/abc.else(true)",
-            "$$/xyz/+/+?subq ->(||(>>1.to($$/abc)))             % $$/xyz/a/b -> 12        % *$$/abc.eq(12)"
-    }, delimiter = '%')
-    public void testSubQ(String subscription, String writing, String expecting) {
-        space.addQ(QCollection.subq());
-        final Obj sub = mParser.eval(make(subscription));
-        assertEquals(SUBSCRIPTION_TID, sub.tid());
-        final Obj writeObj = mParser.eval(make(writing));
-        //LOG.info("SUBSCRIPTIONS: %s", mParser.eval(make("*$$/xyz?subq")));
-        CommonUtil.sleepThread(100);
-        assertTrue(mParser.eval(make(expecting)).boolValue());
-    }*/
-
     @TestCategory.Crud
     @TestCategory.ReadWrite
     @ParameterizedTest

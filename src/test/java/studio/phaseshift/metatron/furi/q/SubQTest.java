@@ -55,7 +55,10 @@ public interface SubQTest {
             "$$/xyz/+/+?subq ->sub::[on_recv=>>>1.to($$/abc)]             % $$/xyz/a/b -> 12        % *$$/abc.eq(12)"
     }, delimiter = '%')
     default void testSubQ(String subscription, String writing, String expecting) {
-        getSpace().qs().lstValue().stream().filter(x -> x.tid().equals(SUBQ_TID)).findAny().orElseThrow(() -> MTronException.of("%s doesn't have a subq::T attachment", this.getSpace()));
+        final Space space = this.getSpace();
+        if(getSpace().qs().lstValue().stream().noneMatch(x -> x.tid().equals(SUBQ_TID))) {
+            space.addQ(QCollection.subq());
+        }
         final Obj sub = ObjmtronSerializer.parse(make(subscription)).apply();
         assertEquals(SUBSCRIPTION_TID, sub.tid());
         final Obj writeObj = ObjmtronSerializer.parse(make(writing)).apply();

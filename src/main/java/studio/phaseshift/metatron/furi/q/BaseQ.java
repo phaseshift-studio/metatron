@@ -156,6 +156,11 @@ public class BaseQ extends MRec implements QProc {
             final Obj result = i.args(lst(uri(vid), obj)).apply();
             return result.isNoObj() ? Optional.empty() : Optional.of(result);
         }
+
+        @Override
+        public boolean hasQlessHandler() {
+            return !this.at(QLESS_WRITE).isNoObj();
+        }
     }
 
     public static QProc create(final fURI tid, final fURI pattern,

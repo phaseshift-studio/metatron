@@ -500,8 +500,13 @@ public class dcmntSpace extends AbstractSpace<MongoClient> implements SchemaSpac
     public void close() {
         try {
             // Close all change stream watchers first
-            if (this.dcmntSpaceSubQ != null)
-                this.dcmntSpaceSubQ.closeAll();
+            if (this.dcmntSpaceSubQ != null) {
+                try {
+                    this.dcmntSpaceSubQ.closeAll();
+                } catch (final Exception e) {
+                    LOG.error("failed to close change stream watchers", e);
+                }
+            }
             if (this.sjvm() != null) {
                 this.sjvm().close();
                 LOG.info("closed document store connection at {{b}}%s{{X}}", this.databaseName);
