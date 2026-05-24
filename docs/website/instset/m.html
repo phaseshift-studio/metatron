@@ -272,46 +272,6 @@ bin/metatron</code></pre>
  obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
  inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
  space=&gt;[sub=&gt;{!*/m/mach,!*/m/math,!*/m/web,!*/m/iot,!*/m/grph,!*/m/llm,!*/m/tble,!*/m/dcmnt,!*/m/rdf}],
- const=&gt;[
-  noobj,
-  none@none],
- type=&gt;[
-  #::T,
-  bool::T,
-  int::T,
-  real::T,
-  bytes::T,
-  str::T,
-  uri::T,
-  rel::T,
-  lst::T,
-  rec::T,
-  instset::T,
-  inst::T,
-  code::T,
-  fail::T,
-  space::T,
-  memspace::T,
-  stack::T,
-  qproc::T,
-  subq::T,
-  sub::T,
-  typeq::T,
-  docs::T,
-  docq::T,
-  mintq::T,
-  incrq::T,
-  constq::T,
-  mimeq::T],
- rewrite=&gt;[
-  /m/inst/rewrite/id_removal?code{?}&lt;=code(),
-  /m/inst/rewrite/map_nest?code{?}&lt;=code(),
-  /m/inst/rewrite/else_after_count?code{?}&lt;=code(),
-  /m/inst/rewrite/plus_zero?code{?}&lt;=code(),
-  /m/inst/rewrite/mult_one?code{?}&lt;=code(),
-  /m/inst/rewrite/split_merge_collapse?code{?}&lt;=code(),
-  /m/inst/rewrite/split_merge_left_factor?code{?}&lt;=code(),
-  /m/inst/rewrite/split_merge_right_factor?code{?}&lt;=code()],
  inst=&gt;[
   as?bool&lt;=bool(bool::T),
   as?bytes&lt;=bool(bytes::T),
@@ -439,7 +399,7 @@ bin/metatron</code></pre>
   merge?A{*}&lt;=lst(),
   merge?A{*}&lt;=lst(uri::T),
   merge?A{*}&lt;=lst(str::T),
-  has?lst{?}&lt;=lst(#::T),
+  has?lst{?}&lt;=lst(#::T,#{?}::T,#{?}::T),
   within?lst&lt;=lst(#{*}::T),
   sum?lst&lt;=lst{*}(),
   select?lst{?}&lt;=lst(lst::T),
@@ -538,7 +498,47 @@ bin/metatron</code></pre>
   rshift?B{*}&lt;=A(C{*}::T),
   lshift?B{*}&lt;=A(),
   start?A{**}&lt;=noobj{0}(A{**}::T),
-  ctor()]]@/m</code></pre>
+  ctor()],
+ rewrite=&gt;[
+  /m/inst/rewrite/id_removal?code{?}&lt;=code(),
+  /m/inst/rewrite/map_nest?code{?}&lt;=code(),
+  /m/inst/rewrite/else_after_count?code{?}&lt;=code(),
+  /m/inst/rewrite/plus_zero?code{?}&lt;=code(),
+  /m/inst/rewrite/mult_one?code{?}&lt;=code(),
+  /m/inst/rewrite/split_merge_collapse?code{?}&lt;=code(),
+  /m/inst/rewrite/split_merge_left_factor?code{?}&lt;=code(),
+  /m/inst/rewrite/split_merge_right_factor?code{?}&lt;=code()],
+ type=&gt;[
+  #::T,
+  bool::T,
+  int::T,
+  real::T,
+  bytes::T,
+  str::T,
+  uri::T,
+  rel::T,
+  lst::T,
+  rec::T,
+  instset::T,
+  inst::T,
+  code::T,
+  fail::T,
+  space::T,
+  memspace::T,
+  stack::T,
+  qproc::T,
+  subq::T,
+  sub::T,
+  typeq::T,
+  docs::T,
+  docq::T,
+  mintq::T,
+  incrq::T,
+  constq::T,
+  mimeq::T],
+ const=&gt;[
+  noobj,
+  none@none]]@/m</code></pre>
                     </div>
                 </div>
             </div>
@@ -1037,46 +1037,6 @@ bin/metatron</code></pre>
  obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
  inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
  space=&gt;[sub=&gt;{!*/m/mach,!*/m/math,!*/m/web,!*/m/iot,!*/m/grph,!*/m/llm,!*/m/tble,!*/m/dcmnt,!*/m/rdf}],
- const=&gt;[
-  noobj,
-  none@none],
- type=&gt;[
-  #::T,
-  bool::T,
-  int::T,
-  real::T,
-  bytes::T,
-  str::T,
-  uri::T,
-  rel::T,
-  lst::T,
-  rec::T,
-  instset::T,
-  inst::T,
-  code::T,
-  fail::T,
-  space::T,
-  memspace::T,
-  stack::T,
-  qproc::T,
-  subq::T,
-  sub::T,
-  typeq::T,
-  docs::T,
-  docq::T,
-  mintq::T,
-  incrq::T,
-  constq::T,
-  mimeq::T],
- rewrite=&gt;[
-  /m/inst/rewrite/id_removal?code{?}&lt;=code(),
-  /m/inst/rewrite/map_nest?code{?}&lt;=code(),
-  /m/inst/rewrite/else_after_count?code{?}&lt;=code(),
-  /m/inst/rewrite/plus_zero?code{?}&lt;=code(),
-  /m/inst/rewrite/mult_one?code{?}&lt;=code(),
-  /m/inst/rewrite/split_merge_collapse?code{?}&lt;=code(),
-  /m/inst/rewrite/split_merge_left_factor?code{?}&lt;=code(),
-  /m/inst/rewrite/split_merge_right_factor?code{?}&lt;=code()],
  inst=&gt;[
   as?bool&lt;=bool(bool::T),
   as?bytes&lt;=bool(bytes::T),
@@ -1204,7 +1164,7 @@ bin/metatron</code></pre>
   merge?A{*}&lt;=lst(),
   merge?A{*}&lt;=lst(uri::T),
   merge?A{*}&lt;=lst(str::T),
-  has?lst{?}&lt;=lst(#::T),
+  has?lst{?}&lt;=lst(#::T,#{?}::T,#{?}::T),
   within?lst&lt;=lst(#{*}::T),
   sum?lst&lt;=lst{*}(),
   select?lst{?}&lt;=lst(lst::T),
@@ -1303,7 +1263,47 @@ bin/metatron</code></pre>
   rshift?B{*}&lt;=A(C{*}::T),
   lshift?B{*}&lt;=A(),
   start?A{**}&lt;=noobj{0}(A{**}::T),
-  ctor()]]@/m</code></pre></div>
+  ctor()],
+ rewrite=&gt;[
+  /m/inst/rewrite/id_removal?code{?}&lt;=code(),
+  /m/inst/rewrite/map_nest?code{?}&lt;=code(),
+  /m/inst/rewrite/else_after_count?code{?}&lt;=code(),
+  /m/inst/rewrite/plus_zero?code{?}&lt;=code(),
+  /m/inst/rewrite/mult_one?code{?}&lt;=code(),
+  /m/inst/rewrite/split_merge_collapse?code{?}&lt;=code(),
+  /m/inst/rewrite/split_merge_left_factor?code{?}&lt;=code(),
+  /m/inst/rewrite/split_merge_right_factor?code{?}&lt;=code()],
+ type=&gt;[
+  #::T,
+  bool::T,
+  int::T,
+  real::T,
+  bytes::T,
+  str::T,
+  uri::T,
+  rel::T,
+  lst::T,
+  rec::T,
+  instset::T,
+  inst::T,
+  code::T,
+  fail::T,
+  space::T,
+  memspace::T,
+  stack::T,
+  qproc::T,
+  subq::T,
+  sub::T,
+  typeq::T,
+  docs::T,
+  docq::T,
+  mintq::T,
+  incrq::T,
+  constq::T,
+  mimeq::T],
+ const=&gt;[
+  noobj,
+  none@none]]@/m</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">the core instruction set of metatron containing the base types and useful instructions to manipulate them</p>
 </div>
@@ -2581,7 +2581,7 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
     <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-has-doc-0-tab').click();document.getElementById('inst-has-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">has?rng=str{?}&amp;dom=str(str::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-has-doc-0-tab').click();document.getElementById('inst-has-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">has?rng=uri{?}&amp;dom=uri(str::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-has-doc-0-tab').click();document.getElementById('inst-has-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">has?rng=uri{?}&amp;dom=uri(uri::T){&lt;j&gt;}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-has-doc-0-tab').click();document.getElementById('inst-has-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">has?rng=lst{?}&amp;dom=lst(#::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-has-doc-0-tab').click();document.getElementById('inst-has-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">has?rng=lst{?}&amp;dom=lst(#::T,#{?}::T,#{?}::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-has-doc-0-tab').click();document.getElementById('inst-has-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">has?rng=rec{?}&amp;dom=rec(#::T,#::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-has-doc-0-tab').click();document.getElementById('inst-has-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">has?rng=rec{?}&amp;dom=rec(#::T){&lt;j&gt;}</code></pre>
 </div>
@@ -3775,7 +3775,7 @@ nat::6.type()-&lt;[tid(),vid()] [-- [/m/int, nat] non-base types tids are the ty
 </div><div class="container-xxl py-3 text-center">
     <hr class="border-secondary">
     <small class="text-muted">
-        generated by metatron instset doc generator on build 0-2026-05-23 16:52:12<br>
+        generated by metatron instset doc generator on build 0-2026-05-23 18:49:15<br>
         (c) PhaseShift Studio, LLC
     </small>
 </div></main>

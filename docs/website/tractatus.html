@@ -269,7 +269,7 @@ bin/metatron</code></pre>
 <div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-12" aria-expanded="false" aria-controls="card-12" >fs</button></div>
 <div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-13" aria-expanded="false" aria-controls="card-13" disabled>router</button></div>
 <div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-14" aria-expanded="false" aria-controls="card-14" >grph</button></div>
-<div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-15" aria-expanded="false" aria-controls="card-15" disabled>c</button></div>
+<div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-15" aria-expanded="false" aria-controls="card-15" >c</button></div>
 <div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-16" aria-expanded="false" aria-controls="card-16" disabled>router</button></div>
 <div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-17" aria-expanded="false" aria-controls="card-17" disabled>thread</button></div>
 <div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-18" aria-expanded="false" aria-controls="card-18" disabled>serial</button></div>
@@ -560,8 +560,8 @@ lhs =&gt; inst(arg1,...,argN){ inst1...instN } =&gt; rhs
   reportsTo=&gt;int::T,
   jobTitle=&gt;str::T]]@employees
 ==&gt;v5/name=&gt;'ripple'
-==&gt;testy/name=&gt;!*deep:deepseek-v4-pro/name
 ==&gt;boot/args/local=&gt;booger
+==&gt;testy/name=&gt;!*deep:deepseek-v4-pro/name
 ==&gt;v6/age=&gt;35
 ==&gt;&lt;1&gt;=&gt;plus?rng=int&amp;dom=int(3){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
 ==&gt;orders=&gt;rrow::T[?[
@@ -573,16 +573,16 @@ lhs =&gt; inst(arg1,...,argN){ inst1...instN } =&gt; rhs
   comments=&gt;str::T,
   customerNumber=&gt;int::T]]@orders
 ==&gt;v5/lang=&gt;java
-==&gt;animals=&gt;rec::T[?[
-  __mtron_tid=&gt;str::T,
-  name=&gt;str::T,
-  age=&gt;int::T,
-  {?}shelter=&gt;rec::T]]@animals
 ==&gt;productlines=&gt;rrow::T[?[
   productLine=&gt;str::T,
   textDescription=&gt;str::T,
   htmlDescription=&gt;str::T,
   image=&gt;str::T]]@productlines
+==&gt;animals=&gt;rec::T[?[
+  __mtron_tid=&gt;str::T,
+  name=&gt;str::T,
+  age=&gt;int::T,
+  {?}shelter=&gt;rec::T]]@animals
 ==&gt;testy/desc=&gt;'testy the agent'
 ==&gt;v1/outE_=&gt;[knows=&gt;{[
  weight=&gt;0.5000,
@@ -610,10 +610,38 @@ lhs =&gt; inst(arg1,...,argN){ inst1...instN } =&gt; rhs
   skill=&gt;[!@mtronfs:skills/mtron.as(skill::T)],
   response=&gt;[to=&gt;print(id())]]]@testy
 ==&gt;v2/name=&gt;'vadas'
+==&gt;testy2=&gt;model::[
+ desc=&gt;'testy the agent',
+ provider=&gt;!*ollama:qwen3:latest/provider,
+ name=&gt;!*ollama:qwen3:latest/name,
+ feature=&gt;[
+  think=&gt;print(id()),
+  memory=&gt;memory::[
+   max=&gt;20,
+   mem=&gt;!@/usr/agent/memory],
+  tool=&gt;[
+   !*eval,
+   !*sql,
+   !*/usr/ai/mcp/index-mcp,
+   !*/usr/ai/mcp/mtron],
+  note=&gt;!@/usr/agent/notes,
+  response=&gt;[to=&gt;print(id())]]]@testy2
 ==&gt;v1/created=&gt;[
  weight=&gt;0.2000,
  inV_=&gt;!*v3,
  outV_=&gt;!*v1]
+==&gt;testy2/feature=&gt;[
+ think=&gt;print(id()),
+ memory=&gt;memory::[
+  max=&gt;20,
+  mem=&gt;!@/usr/agent/memory],
+ tool=&gt;[
+  !*eval,
+  !*sql,
+  !*/usr/ai/mcp/index-mcp,
+  !*/usr/ai/mcp/mtron],
+ note=&gt;!@/usr/agent/notes,
+ response=&gt;[to=&gt;print(id())]]
 ==&gt;v4=&gt;[name=&gt;'lop']
 ==&gt;v1=&gt;[
  name=&gt;'marko',
@@ -676,6 +704,7 @@ lhs =&gt; inst(arg1,...,argN){ inst1...instN } =&gt; rhs
 ==&gt;equipment=&gt;rec{*}::T[?[
   model=&gt;uri::T,
   year=&gt;int::T]]@equipment
+==&gt;testy2/provider=&gt;!*ollama:qwen3:latest/provider
 ==&gt;v6=&gt;[
  name=&gt;'peter',
  age=&gt;35,
@@ -691,10 +720,12 @@ lhs =&gt; inst(arg1,...,argN){ inst1...instN } =&gt; rhs
   quantityOrdered=&gt;int::T,
   priceEach=&gt;real::T,
   orderLineNumber=&gt;int::T]]@orderdetails
-==&gt;v1/age=&gt;29
+==&gt;testy2/name=&gt;!*ollama:qwen3:latest/name
 ==&gt;boot/args/log=&gt;info
+==&gt;v1/age=&gt;29
 ==&gt;v3=&gt;[name=&gt;'josh']
 ==&gt;testy/provider=&gt;!*deep:deepseek-v4-pro/provider
+==&gt;testy2/desc=&gt;'testy the agent'
 ==&gt;v6/name=&gt;'peter'
 ==&gt;v3/name=&gt;'josh'
 ==&gt;out=&gt;out?rng=rec{*}&amp;dom=rec(label=&gt;uri{*}::T){rshift(outE_).rshift(*label).rshift(inV_)}
@@ -992,15 +1023,15 @@ Finally, a degenerate anonymous <code>inst</code> with no specified variable fra
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;  10.(min=&gt;2,max=&gt;8){ is(and(gte(*min),lte(*max))) }     ​1​
 ==&gt;fail::[rhs does not match inst range:
-	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/108
+	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/114
 mtron&gt;  10.(min=&gt;minus(1),max=&gt;plus(1)){ is(and(gte(*min),lte(*max))) }     ​2​
 ==&gt;10
 mtron&gt;  10.(min=&gt;2,max=&gt;8){ is(and(gte(*bad_min),lte(*bad_max))) }     ​3​
 ==&gt;fail::[rhs does not match inst range:
-	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/110
+	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/116
 mtron&gt;  10.(){ is(and(gte(*min),lte(*max))) }     ​4​
 ==&gt;fail::[rhs does not match inst range:
-	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/112
+	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/118
 mtron&gt; 10.is(and(gte(minus(1)),lte(plus(1))))     ​5​
 ==&gt;10</code></pre>
 </div>
@@ -1085,9 +1116,9 @@ mtron&gt; 2.band(min=&gt;1,max=&gt;1)     ​1​</code></pre>
                                       ^ end of input expected
 
 mtron&gt;  10.is_divisible(2)
-==&gt;fail::[unable to locate inst-f of is_divisible(2)@&lt;1&gt;][...]@/sys/fail/114
+==&gt;fail::[unable to locate inst-f of is_divisible(2)@&lt;1&gt;][...]@/sys/fail/120
 mtron&gt;  10.is_divisible('abc')
-==&gt;fail::[unable to locate inst-f of is_divisible('abc')@&lt;1&gt;][...]@/sys/fail/116</code></pre>
+==&gt;fail::[unable to locate inst-f of is_divisible('abc')@&lt;1&gt;][...]@/sys/fail/122</code></pre>
 </div>
 </div>
 </div>
@@ -1142,7 +1173,7 @@ This ensures the uri <code>trpl</code> is not applied to the <code>inst</code> p
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;  trpl -&gt; inst?lst[int,int,int]&lt;=int{3}(){&gt;-[,]}     ​1​
-==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(){merge([,])}]][...]@/sys/fail/118
+==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(){merge([,])}]][...]@/sys/fail/124
 mtron&gt; trpl -&gt; |inst?lst[int,int,int]&lt;=int{3}(){&gt;-[,]}     ​2​
 ==&gt;inst?rng=lst[int,int,int]&amp;dom=int{3}(){merge([,])}
 mtron&gt; *trpl     ​3​
@@ -1643,7 +1674,20 @@ mtron&gt; import(/m/web)
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *&lt;mtronfs:agent.mtron&gt;     ​1​
-==&gt;['add the word DRAGON to your final ...']
+==&gt;model::[
+ provider=&gt;!*/sys/space/ollama,
+ name=&gt;qwen3:latest,
+ think=&gt;[=&gt;],
+ skill=&gt;[completion,tools,thinking],
+ size=&gt;gB::4.8665,
+ feature=&gt;[
+  memory=&gt;[
+   mem=&gt;!@usr/mem,
+   max=&gt;5],
+  tools=&gt;[!*eval],
+  think=&gt;print(id()),
+  note=&gt;!@/usr/agent/notes,
+  response=&gt;[to=&gt;to(/usr/agent/response)]]]
 mtron&gt; */usr/agent/feature</code></pre>
 </div>
 </div>
@@ -1673,48 +1717,93 @@ mtron&gt; */usr/agent/feature</code></pre>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; [,]@/usr/mem     ​1​
-==&gt;[,]@/usr/mem
-mtron&gt; *ollama:+/+
-        .where([skill=&gt;has(thinking),
-                size=&gt;?&gt;mB::1000.0.?&lt;mB::5000.0])
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; [,]@/usr/ai/notes
+==&gt;[,]@/usr/ai/notes
+mtron&gt; [,]@/usr/ai/memory
+==&gt;[,]@/usr/ai/memory
+mtron&gt; *ollama:+
+        .where(&gt;&gt;skill.has(thinking).has(tools))
+        .where(&gt;&gt;size.?&gt;gB::1.0.?&lt;gB::5.0)
         .order(&gt;&gt;size * -1.0)
-        .take(1).to(ai)     ​2​
+        .take(1)
+        .&gt;&gt;=+[feature=&gt;[
+                memory  =&gt; [mem=&gt;!@/usr/ai/memory,max=&gt;5],
+                tools   =&gt; [!*eval],
+                think   =&gt; print(_),
+                note    =&gt; !@/usr/ai/notes,
+                response=&gt; [to=&gt;to(/usr/ai/response)]]]
+        .to(ai)
 ==&gt;model::[
  provider=&gt;!*/sys/space/ollama,
- name=&gt;nebulamodules/nebula-small:latest,
+ name=&gt;qwen3:latest,
  think=&gt;[=&gt;],
  skill=&gt;[completion,tools,thinking],
- size=&gt;gB::2.4408]@ollama:nebulamodules/nebula-small:latest
-mtron&gt; @ai&gt;&gt;=+[feature=&gt;[
-                memory=&gt;[mem=&gt;!@/usr/mem,max=&gt;5],
-                tools =&gt;[!*eval],
-                think=&gt;print(_),
-                response=&gt;[to=&gt;to(/usr/ai/response)]]]     ​3​
-==&gt;model::[
- provider=&gt;!*/sys/space/ollama,
- name=&gt;nebulamodules/nebula-small:latest,
- think=&gt;[=&gt;],
- skill=&gt;[completion,tools,thinking],
- size=&gt;gB::2.4408,
+ size=&gt;gB::4.8665,
  feature=&gt;[
   memory=&gt;[
-   mem=&gt;!@/usr/mem,
+   mem=&gt;!@/usr/ai/memory,
    max=&gt;5],
   tools=&gt;[!*eval],
   think=&gt;print(id()),
-  response=&gt;[to=&gt;to(/usr/ai/response)]]]@ai
-mtron&gt; @ai.chat("Remember the word 'metatron'.
-                 I'll ask you to recall this word later.")     ​4​
-==&gt;fail::[illegalargumentexception: template cannot be null or blank
-  	dev.langchain4j.internal.Exceptions [line 25]
-  	dev.langchain4j.internal.ValidationUtils [line 169]
-  	dev.langchain4j.internal.ValidationUtils [line 156]
-  	dev.langchain4j.model.input.PromptTemplate [line 83]
-  	dev.langchain4j.model.input.PromptTemplate [line 186]][...]@/sys/fail/178
-mtron&gt; */usr/ai/response     ​5​
-==&gt;5</code></pre>
+  note=&gt;!@/usr/ai/notes,
+  response=&gt;[to=&gt;to(/usr/ai/response)]]]@ai</code></pre>
 </div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>a</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>b</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>c</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>d</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="5"></i><b>5</b></td>
+<td>e</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="6"></i><b>6</b></td>
+<td>f</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="7"></i><b>7</b></td>
+<td>g</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="8"></i><b>8</b></td>
+<td>h</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="9"></i><b>9</b></td>
+<td>i</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="10"></i><b>10</b></td>
+<td>j</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="11"></i><b>11</b></td>
+<td>k</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="12"></i><b>12</b></td>
+<td>l</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="13"></i><b>13</b></td>
+<td>m</td>
+</tr>
+</table>
 </div>
 <div class="openblock card">
 <div class="content">
@@ -1821,18 +1910,60 @@ mtron&gt; tB::1.0.as(mB::T)     ​3​
 </div>
 </div>
 </div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; @ai.chat("I need you to remember the word 'metatron'. I'll ask you for it in the future.")
+==&gt;"""I'll remember the word 'metatron' for you. Let me know when you need it!
+
+(Note: I checked for any notes using the specified method and found none at this time. I'll remain vigilant for any additional instructions.)"""
+mtron&gt; */usr/ai/response
+==&gt;"""I'll remember the word 'metatron' for you. Let me know when you need it!
+
+(Note: I checked for any notes using the specified method and found none at this time. I'll remain vigilant for any additional instructions.)"""</code></pre>
+</div>
+</div>
 <div class="paragraph">
 <p>The content and metadata associated with the chat interaction are stored at the specified location, where it is both read (the previous interaction) and written to (the current interaction).</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; @ai.chat("What was the special word I needed you to recall?")
-==&gt;fail::[illegalargumentexception: template cannot be null or blank
-  	dev.langchain4j.internal.Exceptions [line 25]
-  	dev.langchain4j.internal.ValidationUtils [line 169]
-  	dev.langchain4j.internal.ValidationUtils [line 156]
-  	dev.langchain4j.model.input.PromptTemplate [line 83]
-  	dev.langchain4j.model.input.PromptTemplate [line 186]][...]@/sys/fail/184</code></pre>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; @ai.chat("What was the word I needed you to recall?")
+==&gt;"""The word you needed me to recall is **"metatron"**.
+
+(Note: I checked for any notes using the specified method and found none at this time. I'll remain vigilant for any additional instructions.)"""
+mtron&gt; */usr/ai/response
+==&gt;"""The word you needed me to recall is **"metatron"**.
+
+(Note: I checked for any notes using the specified method and found none at this time. I'll remain vigilant for any additional instructions.)"""
+mtron&gt; */usr/ai/memory/+
+==&gt;[
+ text=&gt;"I'll remember the word 'metatron' ...",
+ thinking=&gt;'Okay, the user wants me to remembe...',
+ toolExecutionRequests=&gt;[,],
+ attributes=&gt;[=&gt;],
+ type=&gt;AI]
+==&gt;[
+ text=&gt;'The word you needed me to recall i...',
+ thinking=&gt;'Okay, the user is asking for the w...',
+ toolExecutionRequests=&gt;[,],
+ attributes=&gt;[=&gt;],
+ type=&gt;AI]
+==&gt;[
+ text=&gt;"""
+
+### IMPORTANT ###
+Always check f...""",
+ type=&gt;SYSTEM]
+==&gt;[
+ contents=&gt;[[
+ text=&gt;'What was the word I needed you to ...',
+ type=&gt;'TEXT']],
+ type=&gt;USER]
+==&gt;[
+ contents=&gt;[[
+ text=&gt;"I need you to remember the word 'm...",
+ type=&gt;'TEXT']],
+ type=&gt;USER]</code></pre>
 </div>
 </div>
 <h3 id="_llm_tools_skills_and_mcp_servers" class="discrete">llm tools, skills, and mcp servers</h3>
@@ -1867,9 +1998,9 @@ mtron&gt; mcp_ws::[host =&gt; &lt;http://127.0.0.1:29170/index-mcp/streamable-ht
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *&lt;openai:gpt-4o&gt;.at(robotron).
         side([,].at(&lt;local:.agent/robotron/memory&gt;)).
-        &gt;&gt;=[feature=&gt;[think=&gt;print(_),
-            tool=&gt;[!*eval],
-            skill=&gt;[
+        &gt;&gt;=+[feature=&gt;[think=&gt;print(_),
+             tool=&gt;[!*eval],
+             skill=&gt;[
          !*&lt;local:.agent/skills/mtron&gt;.as(skill::T)],
             response=&gt;[to=&gt;print(_)],
             memory=&gt;[mem=&gt;!@&lt;local:.agent/robotron/memory&gt;,max=&gt;20]]].
@@ -2458,7 +2589,7 @@ mtron&gt; 4.as(int::T[?&gt;0]@nat)
 ==&gt;nat::4
 mtron&gt;  -4.as(nat::T)
 ==&gt;fail::[-4 is not a is(gt(0))
-  -4=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/456
+  -4=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/408
 mtron&gt; [-- refining rec::T  --]
 mtron&gt; [name=&gt;'snowbutt',age=&gt;7].as(rec::T[?[name=&gt;str::T,age=&gt;int::T]@chicken)
 ==&gt;ERROR: [name=&gt;'snowbutt',age=&gt;7].as(rec::T[?[name=&gt;str::T,age=&gt;int::T]@chicken)
@@ -2524,11 +2655,11 @@ mtron&gt; 2.as(nat::T)     ​5​
 ==&gt;2
 mtron&gt;  -2.as(nat::T)     ​6​
 ==&gt;fail::[-2 is not a is(gt(0))
-  -2=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/462
+  -2=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/414
 mtron&gt;  nat::2 * -1     ​7​
 ==&gt;fail::[nat::-2 is not a int::T[is(gt(0))][choose([
   is(lt(0))=&gt;mult(-1),
-  id()=&gt;id()]).rshift()]][...]@/sys/fail/468</code></pre>
+  id()=&gt;id()]).rshift()]][...]@/sys/fail/420</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -2555,7 +2686,7 @@ The predicate component of the type definition tests an <code>int</code> to dete
 <div class="paragraph">
 <p>While every <code>type</code> is an <code>obj</code>, not every <code>obj</code> is a <code>type</code>.
 Those <code>objs</code> that are not <code>types</code> are <em>instances</em> of some <code>type</code>.
-This is the foundation for all other <code>objs</code> in {{c}}M{{g}}e{{g}}t{{b}}A{{r}}T{{y}}R{{g}}o{{c}}n{{X}}.</p>
+This is the foundation for all other <code>objs</code> in {{m}}m{{g}}e{{y}}T{{c}}A{{c}}t{{g}}r{{c}}o{{b}}N{{X}}.</p>
 </div>
 <h4 id="_cascading_type_constructions" class="discrete">cascading type constructions</h4>
 <h3 id="_mono_types" class="discrete">mono types</h3>
@@ -3211,7 +3342,7 @@ mtron&gt;  nat::-10
 ==&gt;ERROR: nat::-10 is not a int::T[is(gt(0))]
 mtron&gt;  int::-10.as(nat::T)
 ==&gt;fail::[-10 is not a is(gt(0))
-  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/590</code></pre>
+  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/542</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -3310,7 +3441,7 @@ mtron&gt;  nat::-10
 ==&gt;ERROR: nat::-10 is not a int::T[is(gt(0))]
 mtron&gt;  int::-10.as(nat::T)
 ==&gt;fail::[-10 is not a is(gt(0))
-  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/596</code></pre>
+  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/548</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -3333,10 +3464,10 @@ mtron&gt; age::125
 ==&gt;ERROR: age::125 is not a int::T[is(lt(120))]
 mtron&gt;  nat::125.as(age::T)
 ==&gt;fail::[nat::125 is not a is(lt(120))
-  nat::125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/602
+  nat::125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/554
 mtron&gt;  125.as(nat::T).as(age::T)
 ==&gt;fail::[125 is not a is(lt(120))
-  125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/608</code></pre>
+  125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/560</code></pre>
 </div>
 </div>
 <div class="listingblock">
@@ -4238,8 +4369,7 @@ a \cdot (b + c) = (a + b) \cdot (a + c)
 </div>
 <h4 id="_isomorphic_identical" class="discrete">Isomorphic != Identical</h4>
 <div class="paragraph">
-<p>A <em>matrix</em> is an \(n \times m\) data structure composed of \(n\) vectors/row, each with \(m\) elements/columns. A relational database <em>table</em> is an example of a matrix, where the entries typically span numeric and non-numeric data types.
-Three general approaches to embedding a matrix or table into a space are presented below, where each makes different space/time tradeoffs, while remaining isomorphic in the stream ring.</p>
+<p>A <em>matrix</em> is an \(n \times m\) data structure composed of \(n\) vectors/row, each with \(m\) elements/columns. A relational database <em>table</em> is an example of a matrix, where the entries typically span numeric and non-numeric data types. Three general approaches to embedding a matrix or table into a space are presented below, where each makes different space/time tradeoffs, while remaining isomorphic with respect to the structural ring algebra.</p>
 </div>
 <table class="tableblock frame-none grid-cols stretch center">
 <colgroup>
@@ -4387,9 +4517,9 @@ mtron&gt; *m/+/0     ​3​
 </div>
 <div class="paragraph">
 <p>The above example demonstrates the power of structural embeddings.
-The platonic matrix <code>m</code> was embedded in a structure using 3 different representations: <em>entry-wise</em>, <em>row-wise</em>, and <em>row-column wise</em>.
+The platonic matrix \(m\) was embedded in a space using 3 different representations: <em>entry-wise</em>, <em>row-wise</em>, and <em>row-column wise</em>.
 Next, each embedding was read: an <em>element read</em>, a <em>row read</em> and a <em>column read</em>.
-The expression used to read from each of the three embeddings is the same and so is the result.
+The expression used to read from each of the three embeddings is the same (typographically verbatim) and so is the result (algebraically isomorphic).
 This is possible because a structure resolves up the fURI path hierarchy until it finds a match.
 Once found, it then traverses within the match to resolve the remaining path segments.</p>
 </div>
@@ -4467,138 +4597,6 @@ Once found, it then traverses within the match to resolve the remaining path seg
 <td class="tableblock halign-left valign-top"><p class="tableblock">\[O(n+m)\]</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">\[O(n+m)\]</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">\[O(n+m)\]</p></td>
-</tr>
-</tbody>
-</table>
-<h3 id="_coefficients" class="discrete">Coefficients</h3>
-<table class="tableblock frame-all grid-all stretch table-bordered small center">
-<colgroup>
-<col style="width: 33.3333%;">
-<col style="width: 33.3333%;">
-<col style="width: 33.3334%;">
-</colgroup>
-<thead>
-<tr>
-<th class="tableblock halign-left valign-top"><span class="red">coefficient</span></th>
-<th class="tableblock halign-left valign-top"><span class="red">shorthand</span></th>
-<th class="tableblock halign-left valign-top"><span class="red">name</span></th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p>{0,0}</p>
-</div></div></td>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p>{0}</p>
-</div></div></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">noobj</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p>{1,1}</p>
-</div></div></td>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p>{1} or</p>
-</div></div></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">an-obj</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p>{-1,-1}</p>
-</div></div></td>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p>{-1}</p>
-</div></div></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">anti-obj</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p>{±n,±n}</p>
-</div></div></td>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p>{±n}</p>
-</div></div></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">exactly ±n</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p>{±n,±m}</p>
-</div></div></td>
-<td class="tableblock halign-left valign-top"><div class="content"></div></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">between ±n and ±m</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p>{0,1}</p>
-</div></div></td>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p>{?}</p>
-</div></div></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">maybe</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p>{1,}</p>
-</div></div></td>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p>{+}</p>
-</div></div></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">some</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p>{0,}</p>
-</div></div></td>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p>{*}</p>
-</div></div></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">maybe some</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p>{-,+}</p>
-</div></div></td>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p>{**}</p>
-</div></div></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">polar maybe some</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p>{-1,1}</p>
-</div></div></td>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p>{??}</p>
-</div></div></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">polar maybe</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p>{-1,0}</p>
-</div></div></td>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p>{-?}</p>
-</div></div></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">anti-maybe</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p>{,-1}</p>
-</div></div></td>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p>{-}</p>
-</div></div></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">anti-some</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p>{,0}</p>
-</div></div></td>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p>{-*}</p>
-</div></div></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">anti-maybe some</p></td>
 </tr>
 </tbody>
 </table>
@@ -4854,7 +4852,7 @@ mtron&gt; */usr/notes/#?subq
   mqtt::T,
   haos::T]]@/m/iot
 mtron&gt;  import(/m/llm)
-{{y}}.{{y}}.{{b}}.{{X}}</code></pre>
+{{b}}.{{m}}.{{g}}.{{X}}</code></pre>
 </div>
 </div>
 </div>
@@ -6241,6 +6239,142 @@ mtron&gt; *v1.out(knows).out(created).&gt;&gt;name     ​5​</code></pre>
 <p>The space constructor above uses the space route table to route <code>person</code>-vertex and <code>knows</code>-edge traversals to another space, namely <code>h:#</code>. Once specified, any <code>knows</code>-edge created between a <code>person</code>-vertex in <code>g:</code> to a <code>person</code>-vertex in <code>h:</code> is automatically configured with the appropriate <code>!*</code> reference. This ensures a smooth, user agnostic transition between two spaces being leveraged for their particular performance for various subgraphs of the large platonic graph as a whole.</p>
 </div>
 </div>
+<div class="collapse position-relative" id="card-15">
+<button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-15" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
+<button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
+<h2 id="_coefficients" class="discrete">Coefficients</h2>
+<table class="tableblock frame-all grid-all stretch table-bordered small center">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top"><span class="red">coefficient</span></th>
+<th class="tableblock halign-left valign-top"><span class="red">shorthand</span></th>
+<th class="tableblock halign-left valign-top"><span class="red">name</span></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>{0,0}</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>{0}</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">noobj</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>{1,1}</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>{1} or</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">an-obj</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>{-1,-1}</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>{-1}</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">anti-obj</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>{±n,±n}</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>{±n}</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">exactly ±n</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>{±n,±m}</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"></div></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">between ±n and ±m</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>{0,1}</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>{?}</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">maybe</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>{1,}</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>{+}</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">some</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>{0,}</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>{*}</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">maybe some</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>{-,+}</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>{**}</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">polar maybe some</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>{-1,1}</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>{??}</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">polar maybe</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>{-1,0}</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>{-?}</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">anti-maybe</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>{,-1}</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>{-}</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">anti-some</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>{,0}</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>{-*}</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">anti-maybe some</p></td>
+</tr>
+</tbody>
+</table>
+</div>
 <div class="collapse position-relative" id="card-19">
 <button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-19" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
 <button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
@@ -6397,23 +6531,23 @@ mtron&gt; *&lt;http://localhost:8088/v1/models&gt;
 ==&gt;[
  object=&gt;list,
  data=&gt;[
+  [id=&gt;qwen3:latest,object=&gt;model],
+  [id=&gt;'smollm:1.7b',object=&gt;model],
   [id=&gt;mistralai_devstral-small-2507,object=&gt;model],
   [id=&gt;qwen3-coder-30b-a3b-instruct,object=&gt;model],
   [id=&gt;qwen3-tts-cpp,object=&gt;model],
-  [id=&gt;qwen3:latest,object=&gt;model],
-  [id=&gt;'smollm:1.7b',object=&gt;model],
   [id=&gt;MeetAISmall__latest,object=&gt;model],
   [id=&gt;gpt-oss__latest,object=&gt;model]]]
 mtron&gt; *&lt;http://localhost:8088/v1/models/data/0/id&gt;
-==&gt;qwen3-coder-30b-a3b-instruct
+==&gt;'smollm:1.7b'
 mtron&gt; *&lt;http://localhost:8088/api/models/config-json/${
          *&lt;http://localhost:8088/v1/models/data/0/id&gt;}&gt;
 ==&gt;[
  parameters=&gt;[
-  model=&gt;'mistralai_Devstral-Small-2507-Q4_K...',
-  top_p=&gt;0.9500,
-  top_k=&gt;-1,
-  min_p=&gt;0.0100,
+  model=&gt;'Qwen3-Coder-30B-A3B-Instruct-Q4_K_...',
+  top_p=&gt;0.8000,
+  top_k=&gt;20,
+  min_p=&gt;0,
   temperature=&gt;0.7000,
   max_tokens=&gt;0,
   repeat_penalty=&gt;1,
@@ -6421,7 +6555,7 @@ mtron&gt; *&lt;http://localhost:8088/api/models/config-json/${
   typical_p=&gt;1,
   seed=&gt;-1,
   logprobs=&gt;false],
- name=&gt;mistralai_devstral-small-2507,
+ name=&gt;qwen3-coder-30b-a3b-instruct,
  f16=&gt;false,
  threads=&gt;8,
  debug=&gt;false,
@@ -6429,23 +6563,16 @@ mtron&gt; *&lt;http://localhost:8088/api/models/config-json/${
  backend=&gt;llama-cpp,
  template=&gt;[
   chat=&gt;"""{{.Input -}}
+&lt;|im_start|&gt;assistant
 """,
-  chat_message=&gt;"""{{if eq .RoleName "user" -}}
-[INST...""",
+  chat_message=&gt;'&lt;|im_start|&gt;{{if eq .RoleName "too...',
   completion=&gt;"""{{.Input}}
 """,
-  function=&gt;'[AVAILABLE_TOOLS] [{{range .Functi...'],
- known_usecases=&gt;[FLAG_CHAT,FLAG_COMPLETION],
+  function=&gt;"""&lt;|im_start|&gt;system
+You are a funct..."""],
+ known_usecases=&gt;[FLAG_COMPLETION,FLAG_CHAT],
  pipeline=&gt;[=&gt;],
- function=&gt;[
-  disable_no_action=&gt;true,
-  grammar=&gt;[parallel_calls=&gt;true,disable_parallel_new_lines=&gt;true,disable=&gt;true],
-  json_regex_match=&gt;['(?s)\[TOOL\_CALLS\](.*)'],
-  replace_function_results=&gt;[
-   [key=&gt;'(?s)^[^{\[]*'],
-   [key=&gt;'(?s)[^}\]]*$'],
-   [key=&gt;'(?s)\[TOOL\_CALLS\]'],
-   [key=&gt;'(?s)\[\/TOOL\_CALLS\]']]],
+ function=&gt;[grammar=&gt;[=&gt;]],
  reasoning=&gt;[=&gt;],
  mirostat_eta=&gt;0.1000,
  mirostat_tau=&gt;5,
@@ -6455,15 +6582,7 @@ mtron&gt; *&lt;http://localhost:8088/api/models/config-json/${
  mmlock=&gt;false,
  low_vram=&gt;false,
  reranking=&gt;false,
- stopwords=&gt;[
-  |im_end|,
-  dummy32000,
-  /tool_call,
-  |eot_id|,
-  |end_of_text|,
-  /s,
-  [/TOOL_CALLS],
-  [/ACTIONS]],
+ stopwords=&gt;[|im_end|,dummy32000,/s,|endoftext|],
  context_size=&gt;8192,
  limit_mm_per_prompt=&gt;[=&gt;],
  diffusers=&gt;[=&gt;],
@@ -6539,7 +6658,7 @@ mtron&gt; */m/llm/inst/+?dom=model</code></pre>
   	dev.langchain4j.internal.ValidationUtils [line 169]
   	dev.langchain4j.internal.ValidationUtils [line 156]
   	dev.langchain4j.model.input.PromptTemplate [line 83]
-  	dev.langchain4j.model.input.PromptTemplate [line 186]][...]@/sys/fail/636
+  	dev.langchain4j.model.input.PromptTemplate [line 186]][...]@/sys/fail/588
 ==&gt;fail::[[
  type=&gt;model,
  provider=&gt;!*/sys/space/localai] is not a isa([
@@ -6570,7 +6689,7 @@ mtron&gt; */m/llm/inst/+?dom=model</code></pre>
    in=&gt;currency::T,
    out=&gt;currency::T],
    noobj=&gt;(==&gt;{?}size)=&gt;noobj=&gt;/=&gt;bB::T,
-   noobj=&gt;(==&gt;{?}feature)=&gt;noobj=&gt;/=&gt;feature::T]][...]@/sys/fail/630</code></pre>
+   noobj=&gt;(==&gt;{?}feature)=&gt;noobj=&gt;/=&gt;feature::T]][...]@/sys/fail/582</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -6737,23 +6856,23 @@ mtron&gt; *&lt;http://localhost:8088/v1/models&gt;
 ==&gt;[
  object=&gt;list,
  data=&gt;[
+  [id=&gt;qwen3:latest,object=&gt;model],
+  [id=&gt;'smollm:1.7b',object=&gt;model],
   [id=&gt;mistralai_devstral-small-2507,object=&gt;model],
   [id=&gt;qwen3-coder-30b-a3b-instruct,object=&gt;model],
   [id=&gt;qwen3-tts-cpp,object=&gt;model],
-  [id=&gt;qwen3:latest,object=&gt;model],
-  [id=&gt;'smollm:1.7b',object=&gt;model],
   [id=&gt;MeetAISmall__latest,object=&gt;model],
   [id=&gt;gpt-oss__latest,object=&gt;model]]]
 mtron&gt; *&lt;http://localhost:8088/v1/models/data/0/id&gt;
-==&gt;qwen3-coder-30b-a3b-instruct
+==&gt;'smollm:1.7b'
 mtron&gt; *&lt;http://localhost:8088/api/models/config-json/${
          *&lt;http://localhost:8088/v1/models/data/0/id&gt;}&gt;
 ==&gt;[
  parameters=&gt;[
-  model=&gt;'mistralai_Devstral-Small-2507-Q4_K...',
-  top_p=&gt;0.9500,
-  top_k=&gt;-1,
-  min_p=&gt;0.0100,
+  model=&gt;'Qwen3-Coder-30B-A3B-Instruct-Q4_K_...',
+  top_p=&gt;0.8000,
+  top_k=&gt;20,
+  min_p=&gt;0,
   temperature=&gt;0.7000,
   max_tokens=&gt;0,
   repeat_penalty=&gt;1,
@@ -6761,7 +6880,7 @@ mtron&gt; *&lt;http://localhost:8088/api/models/config-json/${
   typical_p=&gt;1,
   seed=&gt;-1,
   logprobs=&gt;false],
- name=&gt;mistralai_devstral-small-2507,
+ name=&gt;qwen3-coder-30b-a3b-instruct,
  f16=&gt;false,
  threads=&gt;8,
  debug=&gt;false,
@@ -6769,23 +6888,16 @@ mtron&gt; *&lt;http://localhost:8088/api/models/config-json/${
  backend=&gt;llama-cpp,
  template=&gt;[
   chat=&gt;"""{{.Input -}}
+&lt;|im_start|&gt;assistant
 """,
-  chat_message=&gt;"""{{if eq .RoleName "user" -}}
-[INST...""",
+  chat_message=&gt;'&lt;|im_start|&gt;{{if eq .RoleName "too...',
   completion=&gt;"""{{.Input}}
 """,
-  function=&gt;'[AVAILABLE_TOOLS] [{{range .Functi...'],
- known_usecases=&gt;[FLAG_CHAT,FLAG_COMPLETION],
+  function=&gt;"""&lt;|im_start|&gt;system
+You are a funct..."""],
+ known_usecases=&gt;[FLAG_COMPLETION,FLAG_CHAT],
  pipeline=&gt;[=&gt;],
- function=&gt;[
-  disable_no_action=&gt;true,
-  grammar=&gt;[parallel_calls=&gt;true,disable_parallel_new_lines=&gt;true,disable=&gt;true],
-  json_regex_match=&gt;['(?s)\[TOOL\_CALLS\](.*)'],
-  replace_function_results=&gt;[
-   [key=&gt;'(?s)^[^{\[]*'],
-   [key=&gt;'(?s)[^}\]]*$'],
-   [key=&gt;'(?s)\[TOOL\_CALLS\]'],
-   [key=&gt;'(?s)\[\/TOOL\_CALLS\]']]],
+ function=&gt;[grammar=&gt;[=&gt;]],
  reasoning=&gt;[=&gt;],
  mirostat_eta=&gt;0.1000,
  mirostat_tau=&gt;5,
@@ -6795,15 +6907,7 @@ mtron&gt; *&lt;http://localhost:8088/api/models/config-json/${
  mmlock=&gt;false,
  low_vram=&gt;false,
  reranking=&gt;false,
- stopwords=&gt;[
-  |im_end|,
-  dummy32000,
-  /tool_call,
-  |eot_id|,
-  |end_of_text|,
-  /s,
-  [/TOOL_CALLS],
-  [/ACTIONS]],
+ stopwords=&gt;[|im_end|,dummy32000,/s,|endoftext|],
  context_size=&gt;8192,
  limit_mm_per_prompt=&gt;[=&gt;],
  diffusers=&gt;[=&gt;],
@@ -6879,7 +6983,7 @@ mtron&gt; */m/llm/inst/+?dom=model</code></pre>
   	dev.langchain4j.internal.ValidationUtils [line 169]
   	dev.langchain4j.internal.ValidationUtils [line 156]
   	dev.langchain4j.model.input.PromptTemplate [line 83]
-  	dev.langchain4j.model.input.PromptTemplate [line 186]][...]@/sys/fail/636
+  	dev.langchain4j.model.input.PromptTemplate [line 186]][...]@/sys/fail/588
 ==&gt;fail::[[
  type=&gt;model,
  provider=&gt;!*/sys/space/localai] is not a isa([
@@ -6910,7 +7014,7 @@ mtron&gt; */m/llm/inst/+?dom=model</code></pre>
    in=&gt;currency::T,
    out=&gt;currency::T],
    noobj=&gt;(==&gt;{?}size)=&gt;noobj=&gt;/=&gt;bB::T,
-   noobj=&gt;(==&gt;{?}feature)=&gt;noobj=&gt;/=&gt;feature::T]][...]@/sys/fail/630</code></pre>
+   noobj=&gt;(==&gt;{?}feature)=&gt;noobj=&gt;/=&gt;feature::T]][...]@/sys/fail/582</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -7289,23 +7393,23 @@ mtron&gt; lite:score/1 -&gt; [player=&gt;'marko', points=&gt;42]     ​2​
   	org.sqlite.jdbc4.JDBC4Connection [line 31]
   	org.sqlite.jdbc3.JDBC3Connection [line 225]
   	org.sqlite.jdbc3.JDBC3Connection [line 205]
-  	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 191]][...]@/sys/fail/240
+  	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 191]][...]@/sys/fail/192
 mtron&gt; lite:score/2 -&gt; [player=&gt;'grant', points=&gt;99]     ​3​
 ==&gt;fail::[sqlexception: database connection closed
   	org.sqlite.SQLiteConnection [line 418]
   	org.sqlite.jdbc4.JDBC4Connection [line 31]
   	org.sqlite.jdbc3.JDBC3Connection [line 225]
   	org.sqlite.jdbc3.JDBC3Connection [line 205]
-  	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 191]][...]@/sys/fail/246
+  	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 191]][...]@/sys/fail/198
 mtron&gt; *lite:score/+.?==[player=&gt;'marko']     ​4​
-==&gt;fail::[failed to execute native where operation[studio.phaseshift.metatron.util.MTronException:52]][...]@/sys/fail/252
+==&gt;fail::[failed to execute native where operation[studio.phaseshift.metatron.util.MTronException:52]][...]@/sys/fail/204
 mtron&gt; */sys/space/lite.sql("SELECT p.name,p.age,s.points FROM person p JOIN score s ON p.name=s.player")     ​5​
 ==&gt;fail::[sqlexception: database connection closed
   	org.sqlite.SQLiteConnection [line 418]
   	org.sqlite.jdbc4.JDBC4Connection [line 23]
   	org.sqlite.jdbc3.JDBC3Connection [line 169]
   	studio.phaseshift.metatron.isa.tble.tbleInstSet [line 114]
-  	studio.phaseshift.metatron.isa.m.type.Inst$f [line 689]][...]@/sys/fail/258</code></pre>
+  	studio.phaseshift.metatron.isa.m.type.Inst$f [line 689]][...]@/sys/fail/210</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -7345,35 +7449,35 @@ Unlike a matching column value, the pointer encodes the full address of the link
   	studio.phaseshift.metatron.isa.tble.tbleSpace [line 170]
   	studio.phaseshift.metatron.isa.tble.tbleSpace [line 153]
   	studio.phaseshift.metatron.isa.tble.tbleSpace [line 122]
-  	studio.phaseshift.metatron.isa.m.type.Inst$f [line 689]][...]@/sys/fail/270
+  	studio.phaseshift.metatron.isa.m.type.Inst$f [line 689]][...]@/sys/fail/222
 mtron&gt; lite:award/1 -&gt; [trophy=&gt;'gold',   recipient=&gt;!*lite:person/1]     ​2​
 ==&gt;fail::[sqlexception: database connection closed
   	org.sqlite.SQLiteConnection [line 418]
   	org.sqlite.jdbc4.JDBC4Connection [line 31]
   	org.sqlite.jdbc3.JDBC3Connection [line 225]
   	org.sqlite.jdbc3.JDBC3Connection [line 205]
-  	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 191]][...]@/sys/fail/330
+  	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 191]][...]@/sys/fail/282
 mtron&gt; lite:award/2 -&gt; [trophy=&gt;'silver', recipient=&gt;!*lite:person/2]     ​3​
 ==&gt;fail::[sqlexception: database connection closed
   	org.sqlite.SQLiteConnection [line 418]
   	org.sqlite.jdbc4.JDBC4Connection [line 31]
   	org.sqlite.jdbc3.JDBC3Connection [line 225]
   	org.sqlite.jdbc3.JDBC3Connection [line 205]
-  	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 191]][...]@/sys/fail/390
+  	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 191]][...]@/sys/fail/342
 mtron&gt; *lite:award/+     ​4​
 ==&gt;fail::[sqlexception: database connection closed
   	org.sqlite.SQLiteConnection [line 418]
   	org.sqlite.jdbc4.JDBC4Connection [line 31]
   	org.sqlite.jdbc3.JDBC3Connection [line 225]
   	org.sqlite.jdbc3.JDBC3Connection [line 205]
-  	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 187]][...]@/sys/fail/396
+  	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 187]][...]@/sys/fail/348
 mtron&gt; *lite:award/1/recipient     ​5​
 ==&gt;fail::[sqlexception: database connection closed
   	org.sqlite.SQLiteConnection [line 418]
   	org.sqlite.jdbc4.JDBC4Connection [line 31]
   	org.sqlite.jdbc3.JDBC3Connection [line 225]
   	org.sqlite.jdbc3.JDBC3Connection [line 205]
-  	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 191]][...]@/sys/fail/402</code></pre>
+  	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 191]][...]@/sys/fail/354</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -7417,28 +7521,28 @@ mtron&gt; */sys/space/lite&gt;&gt;=[table=&gt;[person,score,award,venue]]     �
   	studio.phaseshift.metatron.isa.tble.tbleSpace [line 170]
   	studio.phaseshift.metatron.isa.tble.tbleSpace [line 153]
   	studio.phaseshift.metatron.isa.tble.tbleSpace [line 122]
-  	studio.phaseshift.metatron.isa.m.type.Inst$f [line 689]][...]@/sys/fail/414
+  	studio.phaseshift.metatron.isa.m.type.Inst$f [line 689]][...]@/sys/fail/366
 mtron&gt; lite:venue/1 -&gt; [name=&gt;'main_stage',location=&gt;!*area:V/1]     ​4​
 ==&gt;fail::[sqlexception: database connection closed
   	org.sqlite.SQLiteConnection [line 418]
   	org.sqlite.jdbc4.JDBC4Connection [line 31]
   	org.sqlite.jdbc3.JDBC3Connection [line 225]
   	org.sqlite.jdbc3.JDBC3Connection [line 205]
-  	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 191]][...]@/sys/fail/420
+  	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 191]][...]@/sys/fail/372
 mtron&gt; *lite:venue/1     ​5​
 ==&gt;fail::[sqlexception: database connection closed
   	org.sqlite.SQLiteConnection [line 418]
   	org.sqlite.jdbc4.JDBC4Connection [line 31]
   	org.sqlite.jdbc3.JDBC3Connection [line 225]
   	org.sqlite.jdbc3.JDBC3Connection [line 205]
-  	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 191]][...]@/sys/fail/426
+  	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 191]][...]@/sys/fail/378
 mtron&gt; *lite:venue/1/location     ​6​
 ==&gt;fail::[sqlexception: database connection closed
   	org.sqlite.SQLiteConnection [line 418]
   	org.sqlite.jdbc4.JDBC4Connection [line 31]
   	org.sqlite.jdbc3.JDBC3Connection [line 225]
   	org.sqlite.jdbc3.JDBC3Connection [line 205]
-  	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 191]][...]@/sys/fail/432</code></pre>
+  	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 191]][...]@/sys/fail/384</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -7481,21 +7585,21 @@ pointing back at the row&#8217;s own table.</p>
   	org.sqlite.jdbc4.JDBC4Connection [line 31]
   	org.sqlite.jdbc3.JDBC3Connection [line 225]
   	org.sqlite.jdbc3.JDBC3Connection [line 205]
-  	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 191]][...]@/sys/fail/438
+  	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 191]][...]@/sys/fail/390
 mtron&gt; *lite:venue/2     ​2​
 ==&gt;fail::[sqlexception: database connection closed
   	org.sqlite.SQLiteConnection [line 418]
   	org.sqlite.jdbc4.JDBC4Connection [line 31]
   	org.sqlite.jdbc3.JDBC3Connection [line 225]
   	org.sqlite.jdbc3.JDBC3Connection [line 205]
-  	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 191]][...]@/sys/fail/444
+  	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 191]][...]@/sys/fail/396
 mtron&gt; *lite:venue/2/parent/location     ​3​
 ==&gt;fail::[sqlexception: database connection closed
   	org.sqlite.SQLiteConnection [line 418]
   	org.sqlite.jdbc4.JDBC4Connection [line 31]
   	org.sqlite.jdbc3.JDBC3Connection [line 225]
   	org.sqlite.jdbc3.JDBC3Connection [line 205]
-  	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 191]][...]@/sys/fail/450</code></pre>
+  	studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema [line 191]][...]@/sys/fail/402</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -7980,7 +8084,7 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
     merge?A{*}&lt;=lst(),
     merge?A{*}&lt;=lst(uri::T),
     merge?A{*}&lt;=lst(str::T),
-    has?lst{?}&lt;=lst(#::T),
+    has?lst{?}&lt;=lst(#::T,#{?}::T,#{?}::T),
     within?lst&lt;=lst(#{*}::T),
     sum?lst&lt;=lst{*}(),
     select?lst{?}&lt;=lst(lst::T),
@@ -8576,9 +8680,9 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
 ==&gt;/sys/env/JAVA_HOME=&gt;'/home/killswitch/.sdkman/candidates/java/current'
 ==&gt;/sys/env/QT_IM_MODULE=&gt;'ibus'
 ==&gt;/sys/env/GNOME_DESKTOP_SESSION_ID=&gt;'this-is-deprecated'
+==&gt;/sys/env/GNOME_TERMINAL_SCREEN=&gt;'/org/gnome/Terminal/screen/5322bc79_880b_4756_8bf4_05dcc050a5f0'
 ==&gt;/sys/env/HOMEBREW_CELLAR=&gt;'/home/linuxbrew/.linuxbrew/Cellar'
 ==&gt;/sys/env/JBANG_HOME=&gt;'/home/killswitch/.sdkman/candidates/jbang/current'
-==&gt;/sys/env/GNOME_TERMINAL_SCREEN=&gt;'/org/gnome/Terminal/screen/af4a9b66_7bc5_4e4b_bb71_67730afa180b'
 ==&gt;/sys/env/USER=&gt;'killswitch'
 ==&gt;/sys/env/HOMEBREW_PREFIX=&gt;'/home/linuxbrew/.linuxbrew'</code></pre>
 </div>

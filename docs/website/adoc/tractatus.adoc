@@ -126,7 +126,7 @@ include::grid-button.adoc[]
 
 :card-id: 15
 :card-title: c
-:card-disabled: disabled
+:card-disabled:
 include::grid-button.adoc[]
 
 :card-id: 16
@@ -291,6 +291,11 @@ include::card.adoc[]
 :card-id: 14
 :card-file: grph.adoc
 include::card.adoc[]
+
+:card-id: 15
+:card-file: c.adoc
+include::card.adoc[]
+
 
 :card-id: 19
 :card-file: web.adoc

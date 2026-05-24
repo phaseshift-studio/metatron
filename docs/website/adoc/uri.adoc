@@ -375,27 +375,3 @@ The different embeddings also have different space costs, where space is defined
 | [.red]#row#            | \[O(n)\]       | \[O(n)\]      | \[O(n+m)\]
 | [.red]#row_column#     | \[O(n+m)\]     | \[O(n+m)\]    | \[O(n+m)\]
 |===
-
-[discrete]
-=== Coefficients
-
-[cols="3a,3a,3",separator=🧱,options=header,role="table-bordered small center"]
-|===
-🧱 [.red]#coefficient# 🧱 [.red]#shorthand# 🧱 [.red]#name#
-🧱 {0,0}       🧱 {0}       🧱 noobj
-🧱 {1,1}       🧱 {1} or    🧱 an-obj
-🧱 {-1,-1}     🧱 {-1}      🧱 anti-obj
-🧱 {±n,±n}     🧱 {±n}      🧱 exactly ±n
-🧱 {±n,±m}     🧱           🧱  between ±n and ±m
-
-🧱 {0,1}       🧱 {?}      🧱 maybe
-🧱 {1,}        🧱 {+}      🧱 some
-🧱 {0,}        🧱 {*}      🧱 maybe some
-
-🧱 {-,+}       🧱 {**}     🧱 polar maybe some
-🧱 {-1,1}      🧱 {??}     🧱 polar maybe
-
-🧱 {-1,0}      🧱 {-?}     🧱 anti-maybe
-🧱 {,-1}       🧱 {-}      🧱 anti-some
-🧱 {,0}        🧱 {-*}     🧱 anti-maybe some
-|===

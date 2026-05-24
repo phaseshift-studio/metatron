@@ -8,26 +8,6 @@
 ----
 [HIDDEN] import(/m/web)
 import(/m/llm)
-catalog::[host     => <http://localhost:11434>,             /
-           pattern => <ollama:#>,                           /
-           name    => <ollama>,                             /
-           route   => [ollama:=><>]]@/sys/space/ollama
-catalog::[host         => <https://api.openai.com/v1>,     /
-          organization => !*</sys/env/OPENAI_ORG_ID>,      /
-          api_key      => !*</sys/env/OPENAI_API_KEY>,     /
-          pattern      => <openai:#>,                      /
-          name         => <openai>,                        /
-          route        => [<openai:>=><>]]@/sys/space/openai
-catalog::[host         => <https://api.deepseek.com/>,     /
-          api_key      => !*</sys/env/DEEPSEEK_API_KEY>,   /
-          pattern      => <deep:#>,                        /
-          name         => <openai>,                        /
-          route        => [<deep:>=><>]]@/sys/space/deepseek
-catalog::[host         => <http://localhost:8088/v1>,      /
-           pattern      => <localai:#>,                    /
-           name         => <localai>,                      /
-           route        => [<localai:>=><>]]@/sys/space/localai
-import(/m/web)
 ----
 ====
 
@@ -44,6 +24,30 @@ Modern AI techniques are heavily leveraged across various aspects of metatron, w
  - **response formats**: a mtron `rec` can serve as a schema object instructing the LLM to populate the `rec` with their answer to avoid arbitrary string responses in favor of structured responses.
  - **gguff vector files**: ...
 . **MCP Servers**: Developing and deploying MCP servers in mtron as well as interacting with remote MCP servers as a client is straightforward. Such simplicity provides a countless number of ways in which LLMs can interact with the underlying spaces.
+
+[mtron]
+----
+catalog::[host         => <http://localhost:11434>,            /
+           pattern     => <ollama:#>,                          /
+           name        => <ollama>,                            /
+           route       => [ollama:=><>]]@/sys/space/ollama
+catalog::[host         => <https://api.openai.com/v1>,          /
+          organization => !*</sys/env/OPENAI_ORG_ID>,           /
+          api_key      => !*</sys/env/OPENAI_API_KEY>,          /
+          pattern      => <openai:#>,                           /
+          name         => <openai>,                             /
+          route        => [<openai:>=><>]]@/sys/space/openai
+catalog::[host         => <https://api.deepseek.com/>,          /
+          api_key      => !*</sys/env/DEEPSEEK_API_KEY>,        /   
+          pattern      => <deep:#>,                             /
+          name         => <openai>,                             /
+          route        => [<deep:>=><>]]@/sys/space/deepseek
+catalog::[host         => <http://localhost:8088/v1>,           /
+          pattern      => <localai:#>,                          /
+          name         => <localai>,                            /
+          route        => [<localai:>=><>]]@/sys/space/localai
+----
+
 
 [mtron]
 ----
@@ -86,21 +90,34 @@ The following example demonstrates how to search for an appropriate LLM for the 
 
 [mtron]
 ----
-[,]@/usr/mem                                              [-- <1> --]
-*ollama:+/+                                               /
- .where([skill=>has(thinking),                            /
-         size=>?>mB::1000.0.?<mB::5000.0])                /
+[,]@/usr/ai/notes                                        
+[,]@/usr/ai/memory                                       
+*ollama:+                                                 /
+ .where(>>skill.has(thinking).has(tools))                 /
+ .where(>>size.?>gB::1.0.?<gB::5.0)                       /
  .order(>>size * -1.0)                                    /
- .take(1).to(ai)                                          [-- <2> --]     
-@ai>>=+[feature=>[                                        /
-         memory=>[mem=>!@/usr/mem,max=>5],                /
-         tools =>[!*eval],                                /
-         think=>print(_),                                 /
-         response=>[to=>to(/usr/ai/response)]]]           [-- <3> --]            
-@ai.chat("Remember the word 'metatron'.                   /
-          I'll ask you to recall this word later.")       [-- <4> --]
-*/usr/ai/response                                         [-- <5> --]
+ .take(1)                                                 /
+ .>>=+[feature=>[                                         /
+         memory  => [mem=>!@/usr/ai/memory,max=>5],       /   
+         tools   => [!*eval],                             /   
+         think   => print(_),                             /
+         note    => !@/usr/ai/notes,                      /     
+         response=> [to=>to(/usr/ai/response)]]]          /         
+ .to(ai) 
 ----
+<1> a
+<2> b
+<3> c
+<4> d
+<5> e
+<6> f
+<7> g
+<8> h
+<9> i
+<10> j
+<11> k
+<12> l
+<13> m
 
 [.card]
 --
@@ -135,11 +152,18 @@ tB::1.0.as(mB::T)      [-- <3> --]
 <3> convert terabytes to megabytes
 --
 
+[mtron]
+----
+@ai.chat("I need you to remember the word 'metatron'. I'll ask you for it in the future.")
+----
+
+
 The content and metadata associated with the chat interaction are stored at the specified location, where it is both read (the previous interaction) and written to (the current interaction).
 
 [mtron]
 ----
-@ai.chat("What was the special word I needed you to recall?")
+@ai.chat("What was the word I needed you to recall?")
+*/usr/ai/memory/+
 ----
 
 [discrete]
@@ -155,9 +179,9 @@ mcp_ws::[host => <http://127.0.0.1:29170/index-mcp/streamable-http>]@/usr/ai/mcp
 ----
 *<openai:gpt-4o>.at(robotron).                                   /  
  side([,].at(<local:.agent/robotron/memory>)).                   /  
- >>=[feature=>[think=>print(_),                                            /  
-     tool=>[!*eval],                                             / 
-     skill=>[                                                    /  
+ >>=+[feature=>[think=>print(_),                                 /  
+      tool=>[!*eval],                                             / 
+      skill=>[                                                    /  
   !*<local:.agent/skills/mtron>.as(skill::T)],                   / 
      response=>[to=>print(_)],                                   / 
      memory=>[mem=>!@<local:.agent/robotron/memory>,max=>20]]].  / 

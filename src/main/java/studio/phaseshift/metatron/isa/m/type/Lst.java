@@ -93,9 +93,9 @@ public interface Lst extends Poly<Lst, List<Obj>>, PlusMonoid.O<Lst> {
     default boolean has(final Obj key) {
         return key.isInt() ? this.jvm().size() > key.intValue().intValue() :
                 key.isUri() &&
-                        !key.uriValue().isEmpty() &&
+                !key.uriValue().isEmpty() &&
                         CommonUtil.isInt(key.uriValue().path().getFirst()) &&
-                        this.jvm().size() > Integer.valueOf(key.uriValue().path().getFirst());
+                this.jvm().size() > Integer.valueOf(key.uriValue().path().getFirst());
     }
 
     default <OBJ extends Obj> Stream<OBJ> elements() {
@@ -238,7 +238,7 @@ public interface Lst extends Poly<Lst, List<Obj>>, PlusMonoid.O<Lst> {
                     instC(MERGE_INST_TID.dom(LST_TID).rng(A.maybeSome()), lst(), (lhs, inst) -> objs(lhs.elements())),
                     instC(MERGE_INST_TID.dom(LST_TID).rng(A.maybeSome()), lst(URI_TYPE), (lhs, inst) -> uri(lhs.elements().map(e -> e.uriValue().toString()).reduce("", (a, b) -> a + inst.arg(0).uriValue().toString() + b).substring(1))),
                     instC(MERGE_INST_TID.dom(LST_TID).rng(A.maybeSome()), lst(STR_TYPE), (lhs, inst) -> str(lhs.elements().map(Obj::strValue).reduce("", (a, b) -> a + inst.arg(0).strValue() + b).substring(1))),
-                    instC(HAS_INST_TID.dom(LST_TID).rng(LST_TID.maybe()), lst(T(ALL)), (lhs, inst) -> lhs.<Lst>as().elements().anyMatch(r -> r.test(inst.arg(0))) ? lhs : noobj()),
+                    instC(HAS_INST_TID.dom(LST_TID).rng(LST_TID.maybe()), lst(T(ALL), T(ALL).maybe(), T(ALL).maybe()), (lhs, inst) -> lhs.<Lst>as().elements().anyMatch(r -> r.test(inst.arg(0)) || r.test(inst.arg(1)) || r.test(inst.arg(2))) ? lhs : noobj()),
                     instC(WITHIN_INST_TID.dom(LST_TID).rng(LST_TID), lst(T(ALL_STAR)), (lhs, inst) -> lst(inst.arg(0).apply(objs(lhs.stream().flatMap(Obj::elements))).stream().toList())),
                     instC(SUM_INST_TID.dom(LST_TID.maybeSome()).rng(LST_TID), lst(), (lhs, inst) -> inst.seed().jvm(lhs.stream().reduce(inst.seed(), (a, b) -> ((Lst) a).plus((Lst) b)).lstValue()), lst()),
                     instC(SELECT_INST_TID.dom(LST_TID).rng(LST_TID.maybe()), lst(T(LST_TID)), (lhs, inst) -> Poly.Helper.selectLstRecursion(lhs.asLst(), inst.arg(0).asLst())),
