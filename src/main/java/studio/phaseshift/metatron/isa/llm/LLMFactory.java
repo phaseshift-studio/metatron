@@ -202,7 +202,7 @@ public final class LLMFactory {
                     .logResponses(true)
                     .build();
             case OLLAMA -> {
-                final OllamaStreamingChatModel.OllamaStreamingChatModelBuilder builder =
+                OllamaStreamingChatModel.OllamaStreamingChatModelBuilder builder =
                         OllamaStreamingChatModel.builder()
                                 .baseUrl(host)
                                 .modelName(name)
@@ -211,8 +211,9 @@ public final class LLMFactory {
                                 .logRequests(true)
                                 .logResponses(true)
                                 // .listeners(model.cost().isPresent() ? List.of(new CostCalculator(model.cost().get())) : null)
-                                .logger(Graphitty.log(OllamaStreamingChatModel.class).logger(Level.WARN))
-                                .responseFormat(createResponseFormat(responseFormat2));
+                                .logger(Graphitty.log(OllamaStreamingChatModel.class).logger(Level.WARN));
+                if (hasResponseFormat)
+                    builder = builder.responseFormat(createResponseFormat(responseFormat2));
                 if (model.cost().isPresent())
                     builder.listeners(List.of(new CostCalculator(model.cost().get())));
                 yield builder.build();

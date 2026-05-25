@@ -183,15 +183,19 @@ public class mModel extends MRec {
     }
 
     public AiServices<mAgent> agent() {
-        final List<String> systemMessage = new ArrayList<>();
+        final List<String> systemMessages = new ArrayList<>();
         final AiServices<mAgent> service = AiServices.builder(mAgent.class);
         //////////////////////////////////////////
         /////////////// PROMPT ///////////////////
         //////////////////////////////////////////
         this.prompt().ifPresent(p -> {
+            if (p.isStr() && p.strValue().isBlank())
+                return;
+            if (p.toString().isBlank())
+                return;
             try {
                 service.userMessage(p.isStr() ? p.strValue() : p.toString());
-            } catch(Exception e) {
+            } catch (Exception e) {
                 throw MTronException.of("unable to setup prompt: %s", e);
             }
         });
@@ -232,7 +236,7 @@ public class mModel extends MRec {
                                 .map(s -> mSkill.of(s.apply().asRec()).toSkill())
                                 .toList()).build();
                 service.toolProvider(skills.toolProvider());
-                systemMessage.add("You have access to the following skills:\n" + skills.formatAvailableSkills()
+                systemMessages.add("You have access to the following skills:\n" + skills.formatAvailableSkills()
                         + "\nWhen the user's request relates to one of these skills, activate it first using the `activate_skill` tool before proceeding.");
             } catch (Exception e) {
                 throw MTronException.of("unable to setup skills: %s", e);
@@ -266,8 +270,8 @@ public class mModel extends MRec {
                                     final Tuple.Pair<ToolSpecification, ToolExecutor> pair = mTool.mtronInstToolSpecification(t.asRec());
                                     tools.put(pair.get0(), pair.get1());
                                 }
-                            } catch(final Exception e) {
-                                this.logger().error("unable to set up tool: %s [%s]",t,e);
+                            } catch (final Exception e) {
+                                this.logger().error("unable to set up tool: %s [%s]", t, e);
                             }
                         });
                 if (!tools.isEmpty())
@@ -279,12 +283,12 @@ public class mModel extends MRec {
         /////////////////////////////////////////////
         ///////////////   NOTES   //////////////////
         ////////////////////////////////////////////
-        if (this.notes().isPresent()) {
+        if (this.notes().isPresent() && this.vid() != null) {
             try {
                 if (null == this.vid())
                     this.logger().warn("llm has no vid (ignoring): %s", this.notes());
                 else
-                    systemMessage.add("""
+                    systemMessages.add("""
                                       ### IMPORTANT ###
                                       Always check for any notes the user has provided you.
                                       Do this before, during, and after completing your task.
@@ -315,8 +319,10 @@ public class mModel extends MRec {
         }
         // merge all system messages into a single system message
         try {
-            service.systemMessage(String.join("\n", systemMessage));
-        } catch(Exception e) {
+            final String finalSystemMessage = String.join("\n", systemMessages);
+            if (!finalSystemMessage.isBlank())
+                service.systemMessage(finalSystemMessage);
+        } catch (Exception e) {
             throw MTronException.of("unable to setup system message: %s", e);
         }
         /// ////////////////////////////////////////////////////////////////////////////////////////
@@ -348,10 +354,13 @@ public class mModel extends MRec {
         final AtomicReference<MTronException> isError = new AtomicReference<>();
 
         try {
-            final mAgent agent = this.agent()
-                    .systemMessageTransformer((current, content) -> this.at(DESC).orElse(str0()).strValue() + "\n\n" + current)
+            final mAgent agent = (this.has(DESC) && !this.at(DESC).strValue().isBlank() ?
+                    this.agent().systemMessageTransformer((current, content) -> this.at(DESC).orElse(str0()).strValue() + "\n\n" + current) :
+                    this.agent())
                     .streamingChatModel(LLMFactory.createChatInteraction(this, this.model(), responseFormat)).build();
             final AtomicReference<String> STAGE = new AtomicReference<>("START");
+            if (message.isBlank())
+                throw MTronException.of("no message provided: %s", this.vid());
             agent.chat(message)
                     .onToolExecuted(tool -> {
                         STAGE.set("TOOLING");

@@ -73,15 +73,10 @@ The design makes a distinction between the **LLM** (general-purpose reasoning en
 [mtron]
 ----
 *<mtronfs:agent.mtron>           [-- <1> --]
-*/usr/agent/feature
-
-
+*<mtronfs:agent.mtron/feature>   [-- <2> --]
 ----
-
-[mtron]
-----
-*ollama:+.take(3)
-----
+<1> if a file contains mtron source, the mtron source is the obj referred to by the file uri.
+<2> the previous callout entails that a file path can be extended beyond the file boundary.
 
 [discrete]
 === llm interactions
@@ -90,7 +85,7 @@ The following example demonstrates how to search for an appropriate LLM for a gi
 
 [mtron]
 ----
-fsspace::[pattern => fs:#,
+fsspace::[pattern => fs:#,  /
           route   => [fs: => <~/software/metatron/.metatron/>]]@/sys/space/fs
 *<fs:skills/mtron/SKILL.md>
 ----
@@ -127,15 +122,15 @@ fsspace::[pattern => fs:#,
 <11> have the model store its responses to the `/usr/ai` space.
 <12> write the model to `ai`.
 
-The first part of the stream above was about widdling the set of available models down to those that meet the requirements for this documentation -- namely, a model that is not too big (as building the docs would take too long) and has some useful skills for demonstrating how model features work.
+The first part of the stream above was about widdling the set of available models down to those that meet the requirements for this documentation -- namely, a model that is not too big (as building the docs would take too long) and has some useful capabilities for demonstrating how model features work.
 
-Once a model was selected, then the second phase served to enrich the model with a memory structure (embedded in space), some tools to use if need be (embedded in space), a place for its thought (ephemeral to the console's stdout), and location to place its response (embedded in space).
+Once a model was selected, then the second phase served to enrich the model with a memory structure (embedded in space), some tools to use if need be (embedded in space), a place for its thought (ephemeral to the console's stdout), and a location to place its response (embedded in space).
 
 With the model loaded and equipped, it's possible to communicate with it to the level of complexity as facilitated by its base training and the set of features attached to it.
 
 [mtron]
 ----
-@ai.chat("I need you evaluate the mtron expresion `1-<[_=>_>>.>-[,]>-`. Please don't tell me the result of the evaluation until I ask for it sometime in the near future.")
+@ai.chat("I need you evaluate the mtron expresion `-<[_=>_]>>.>-[,]-<[_,-<[_=>_]>>]>>.>-` with a lhs of `1`. Please don't tell me the result of the evaluation until I ask for it sometime in the near future.")
 ----
 
 
@@ -176,18 +171,26 @@ The content and metadata associated with the chat interaction are stored at the 
 
 [mtron]
 ----
-@ai.chat("Many things have come and gone over the years that have brought me to who I am now -- an tired, old man. Before I let my last breathe flutter into this world, I must know one more thing. And that is why I've come back to this computer looking for you. Please tell me, what was the result of the mtron expression I provided you all those years ago?")
+@ai.chat("Many things have come and gone over the years that have brought me to who I am now -- an tired, old man. Before I let my last breathe flutter into this world, I must know one last thing. And that is why I've come back to this computer looking for you. Please tell me, what was the result of the mtron expression I provided you all those years ago?")
 */usr/ai/memory/+
 ----
 
 [discrete]
 === llm tools, skills, and mcp servers
 
+LLM tools provide the model a way of calling predefined functions as deemed necessary during chat interactions. In metatron, any `inst` can be a tool. Simply place an `!*` reference to the `inst` into the model's "tool box" (`lst`) at `features/tool`. Next, should MCP tools be required, realize that MCP servers expose their tools as `insts` in metatron as well. Thus, adding an `inst` from an `instset` and adding an `inst` from a `http` or `ws` MCP server endpoint, ultimately boils down to pointing the model towards `insts` it can use to solve problems.
+
 [mtron]
 ----
-mcp_mtron_ws::[host => <ws://localhost:8555/mcp>]@/usr/ai/mcp/mtron
-mcp_ws::[host => <http://127.0.0.1:29170/index-mcp/streamable-http>]@/usr/ai/mcp/mtron
+mcp_client::[host =>                                /
+ <ws://localhost:8555/mcp>                          /
+]@/usr/ai/mcp/mtron                                 [-- <1> --]
+mcp_client::[host =>                                /
+ <http://127.0.0.1:29170/index-mcp/streamable-http> /
+]@/usr/ai/mcp/intellij                              [-- <2> --]
+*/usr/ai/mcp/intellij>>tool.dom()                   [-- <3> --]
 ----
+
 
 [mtron]
 ----
@@ -221,6 +224,14 @@ mcp_ws::[host => <http://127.0.0.1:29170/index-mcp/streamable-http>]@/usr/ai/mcp
 <1> providing a response format `rec` yields a structured response.
 <2> without a response format, the agent replies in free, unstructured text.
 <3> the agent's memory records structured responses.
+
+Given that an `mcp_client::T` is an index of `insts`. Nothing prevents their `insts` being used by other processes.
+
+[mtron]
+----
+
+----
+
 
 [discrete]
 === agent notes

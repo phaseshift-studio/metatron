@@ -192,7 +192,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
             }
             final fURI SYS_VID = f("/sys");
             final Space sysSpace = memSpace.of(SYS_VID.extend(ALL), null);
-            sysSpace.jvm().put(uri(QPROC), lst(QCollection.docQ(), QCollection.subq(), QCollection.incrQ()));
+            sysSpace.jvm().put(uri(QPROC), lst(QCollection.docQ(), QCollection.subq(), QCollection.incrQ(), QCollection.mimeQ()));
             /// CREATE A ROUTER AND ATTACH IT TO SYS
             ROUTER = new BasicRouter(SYS_VID.extend("router"));
             sysSpace.write(ROUTER.vid(), ROUTER);

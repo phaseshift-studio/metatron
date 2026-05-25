@@ -14,33 +14,5 @@ model::[ desc     => "testy the agent",
                                    !*</usr/ai/mcp/intellij>,
                                    !*</usr/ai/mcp/mtron>],
                       note     => !@</usr/agent/notes>,
-                      skill    => [!@<mtronfs:skills/mtron>.as(skill::T)],
+                      skill    => [!*<mtronfs:skills/mtron>.as(skill::T)],
                       response => [to=>print(_)]]]@<testy>;
-*/usr/agent/notes>>= + ['add the word DRAGON to your final answer.'];
-
-
-model::[ desc     => "testy the agent",
-         provider => !*<ollama:qwen3:latest/provider>,
-         name     => !*<ollama:qwen3:latest/name>,
-         feature  => [think    => print(_), 
-                      memory   => memory::[max=>20,mem=>!@</usr/agent/memory>],
-                      tool     => [!*eval,
-                                   !*sql,
-                                   !*</usr/ai/mcp/index-mcp>,
-                                   !*</usr/ai/mcp/mtron>],
-                      note     => !@</usr/agent/notes>,
-                      response => [to=>print(_)]]]@<testy2>;
-                      
-                      
-[,]@/usr/mem;                                             
-*ollama:+   
- .where(>>skill.has(thinking).has(tools))
- .where(>>size.?>gB::1.0.?<gB::5.0)                      
- .order(>>size * -1.0)                                   
- .take(1).to(ai);                                          
-@ai>>=+[feature=>[                                       
-         memory  => [mem=>!@<usr/mem>,max=>5],               
-         tools   => [!*eval],                               
-         think   => print(_),         
-         note    => !@</usr/agent/notes>,                       
-         response=> [to=>to(/usr/agent/response)]]]          

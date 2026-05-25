@@ -45,6 +45,7 @@ import java.util.stream.Stream;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.furi.q.QCollection.MIMEQ_PATTERN;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
@@ -128,8 +129,8 @@ public class fsSpace extends AbstractSpace<FileSystem> {
     }
 
     private Obj readFileAsObj(final File file, final Map<String, String> qMap) throws IOException {
-        MIME.MIMEType contentType = qMap.containsKey("content_type") ?
-                MIME.MIMEType.of(qMap.get("content_type")) :
+        MIME.MIMEType contentType = qMap.containsKey(MIMEQ_PATTERN.toString()) ?
+                MIME.MIMEType.of(qMap.get(MIMEQ_PATTERN.toString())) :
                 MIME.MIMEType.fromProbe(file, null);
         contentType = null == contentType ?
                 MIME.MIMEType.fromExtension(file.getName(), MIME.MIMEType.APPLICATION_MTRON) : contentType;
@@ -160,8 +161,8 @@ public class fsSpace extends AbstractSpace<FileSystem> {
             final fURI selfVID = obj.vid();
             try (final FileOutputStream writer = new FileOutputStream(file, vid.hasQ("append"))) {
                 if (contentType.isMtron() && !vid.hasQ("append")) {
-                  //  final String at_vid = selfVID == null ? null : "[-- @<" + selfVID + "> --]\n";
-                   // if (null != at_vid) writer.write(at_vid.getBytes(StandardCharsets.UTF_8));
+                    //  final String at_vid = selfVID == null ? null : "[-- @<" + selfVID + "> --]\n";
+                    // if (null != at_vid) writer.write(at_vid.getBytes(StandardCharsets.UTF_8));
                 }
                 writer.write(contentType.toBytes(obj.selfVID(null)));
                 writer.flush();
@@ -346,11 +347,11 @@ public class fsSpace extends AbstractSpace<FileSystem> {
             if (keyQless.name().equals("apply")) {
                 return file.exists() && file.canExecute()
                         ? Stream.of(IdObj.of(pattern,
-                            instC(keyQless.retract(1).dom(ALL.maybe()).rng(ALL_STAR),
-                                    lst(T(ALL_STAR)), (lhs, inst) -> {
-                                        final Uri toExec = makeFile(vidPath);
-                                        return this.internalApply(toExec, inst.args());
-                                    })))
+                        instC(keyQless.retract(1).dom(ALL.maybe()).rng(ALL_STAR),
+                                lst(T(ALL_STAR)), (lhs, inst) -> {
+                                    final Uri toExec = makeFile(vidPath);
+                                    return this.internalApply(toExec, inst.args());
+                                })))
                         : Stream.empty();
             }
             final Obj value = this.fileToObj(file, pattern.qMap());
