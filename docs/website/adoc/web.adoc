@@ -25,7 +25,6 @@ httpspace::[                                                   /
               /console => src/main/resources/web/console]      /
 ]@/sys/space/web/http
 ----
-====
 
 
 [discrete]
@@ -49,7 +48,7 @@ html::T                                                    [-- <1> --]
 [discrete]
 === Accessing REST APIs
 
-When a https://en.wikipedia.org/wiki/REST[REST] endpoint has a URL address that matches an `httpspace` pattern, the REST resources can be used in metatron. This is possible because `httpspace` transforms data "in the wild" (e.g. `application/json`) into an isomorphic `obj`. If the newly mapped `obj` is typed, then it inherits the instructions for that type as defined by the `instset` of the type. As such, REST resources can be enriched/typed to serve as active computational objs in metatron.
+When a https://en.wikipedia.org/wiki/REST[REST] endpoint has a URL address that matches an `httpspace` pattern, the REST resources can be used in metatron. This is possible because `httpspace` transforms data "in the wild" (e.g. `application/json`) into an isomorphic `obj`. If the newly mapped `obj` is typed, then it inherits the instructions for that type as defined by the `instset` of the type. As such, REST resources can be enriched/typed to become active computational objs in metatron.
 
 A https://localai.io/[LocalAI] service will serve to demonstrate how to leverage foreign resources in metatron. LocalAI exposes an https://www.openapis.org/[OpenAPI]-compliant endpoint at `http://localhost:8088/v1` (this is specific to the author's local deployment of LocalAI).
 

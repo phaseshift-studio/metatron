@@ -183,7 +183,7 @@ public class memSpace extends AbstractSpace<TopicTrie> {
                 }
             }
             return Stream.concat(directMatches.stream(), polyParents)
-                    .flatMap(kv -> kv.getValue().stream().map(kk -> new AbstractMap.SimpleEntry<>(kv.getKey(),kk)))
+                    .flatMap(kv -> kv.getValue().stream().map(kk -> new AbstractMap.SimpleEntry<>(kv.getKey(), kk)))
                     .flatMap(kv -> Stream.concat(
                             kv.getKey().test(nodePattern) ?
                                     Stream.of(IdObj.of(kv.getKey(), kv.getValue())) :
@@ -193,7 +193,11 @@ public class memSpace extends AbstractSpace<TopicTrie> {
                                     Stream.empty()));
         }
         final Obj value = this.sjvm().get(pattern);
-        return null == value ? Stream.empty() : Stream.of(IdObj.of(pattern, value));
+        return null == value ?
+                Stream.empty() :
+                value.isObjs() ?
+                        value.stream().flatMap(o -> Stream.of(IdObj.of(pattern, o))) :
+                        Stream.of(IdObj.of(pattern, value));
     }
 
     @Override

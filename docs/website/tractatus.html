@@ -726,7 +726,7 @@ lhs =&gt; inst(arg1,...,argN){ inst1...instN } =&gt; rhs
 <div class="content">
 <div class="stemblock">
 <div class="content">
-\[\large \tt{obj}_\tt{lhs} \cdot f(\color{yellow}{\__{0}}, \color{yellow}{\__{1}},\ldots,\color{yellow}{\__{n}}) \mapsto \tt{obj}_\tt{rhs}\]
+\[\tt{obj}_\tt{lhs} \cdot f(\color{yellow}{\__0}, \color{yellow}{\__1},\ldots,\color{yellow}{\__n}) \mapsto \tt{obj}_\tt{rhs}\]
 </div>
 </div>
 </div>
@@ -789,7 +789,7 @@ mtron&gt; 10.band(2,8)     ​4​</code></pre>
 <div class="content">
 <div class="stemblock">
 <div class="content">
-\[\large \tt{obj}_\tt{lhs} \cdot f(\color{yellow}{a_1} \Rightarrow x, \color{yellow}{a_2} \Rightarrow y,\ldots,a_n) \mapsto \tt{obj}_\tt{rhs}\]
+\[\tt{obj}_\tt{lhs} \cdot f(\color{yellow}{a_0} \Rightarrow x, \color{yellow}{a_1} \Rightarrow y,\ldots,a_n) \mapsto \tt{obj}_\tt{rhs}\]
 </div>
 </div>
 </div>
@@ -849,7 +849,7 @@ Note where the error is thrown when <code>str['abc']</code> is provided.</td>
 <div class="content">
 <div class="stemblock">
 <div class="content">
-\[\large \tt{obj}_\text{lhs} \cdot f(a_1 \Rightarrow \color{yellow}{else(x)},a_2 \Rightarrow \color{yellow}{else(y)},\ldots,a_n) \mapsto \tt{obj}_\tt{rhs}\]
+\[\tt{obj}_\tt{lhs} \cdot f(a_0 \Rightarrow \color{yellow}{\tt{else}(x)},a_1 \Rightarrow \color{yellow}{\tt{else}(y)},\ldots,a_n) \mapsto \tt{obj}_\tt{rhs}\]
 </div>
 </div>
 </div>
@@ -903,7 +903,7 @@ mtron&gt; {2,3,4,5}.band(min=&gt;3,max=&gt;4)     ​3​</code></pre>
 <div class="content">
 <div class="stemblock">
 <div class="content">
-\[\large \tt{obj_{\text{lhs}} \cdot f(a_1 \Rightarrow \color{yellow}{?type_1}, a_2 \Rightarrow \color{yellow}{?type_2},\ldots,a_n \Rightarrow \color{yellow}{?type_3}) \mapsto obj_{rhs}}\]
+\[\tt{obj}_\tt{lhs} \cdot f(a_0 \Rightarrow \color{yellow}{?\tt{type}_0}, a_2 \Rightarrow \color{yellow}{?\tt{type}_1},\ldots,a_n \Rightarrow \color{yellow}{?\tt{type}_2}) \mapsto \tt{obj}_\tt{rhs}}\]
 </div>
 </div>
 </div>
@@ -974,7 +974,7 @@ mtron&gt; -15.band(-20,-10)     ​9​
 <div class="content">
 <div class="stemblock">
 <div class="content">
-\[\large \tt{obj}_\tt{lhs} \cdot \color{yellow}{\lambda}(a_1 \Rightarrow x, a_2 \Rightarrow y,\ldots,a_n) \mapsto \tt{obj}_\tt{rhs}\]
+\[\tt{obj}_\tt{lhs} \cdot \color{yellow}{\lambda}(a_0 \Rightarrow x, a_1 \Rightarrow y,\ldots,a_n) \mapsto \tt{obj}_\tt{rhs}\]
 </div>
 </div>
 </div>
@@ -1048,7 +1048,7 @@ is_divisible -> |is_divisble?bool<=int(by?int=>_)[mod(*by).eq(0)]
 <div class="content">
 <div class="stemblock">
 <div class="content">
-\[\large \tt{obj}_\tt{in}.f(a_1 \Rightarrow x,a_2 \Rightarrow \color{yellow}{g(*a_1)},\ldots,a_n) \mapsto \tt{obj}_\tt{out}\]
+\[\tt{obj}_\tt{in} \cdot f(a_0 \Rightarrow x,a_1 \Rightarrow \color{yellow}{g(\ast a_1)},\ldots,a_n) \mapsto \tt{obj}_\tt{out}\]
 </div>
 </div>
 </div>
@@ -1752,7 +1752,7 @@ mtron&gt; *ollama:+.
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; @ai.chat("I need you evaluate the mtron expresion `-&lt;[_=&gt;_]&gt;&gt;.&gt;-[,]-&lt;[_,-&lt;[_=&gt;_]&gt;&gt;]&gt;&gt;.&gt;-` with a lhs of `1`. Please don't tell me the result of the evaluation until I ask for it sometime in the near future.")
-==&gt;"The evaluation of the mtron expression has been successfully completed. The result is ready and will be provided to you when you request it. Let me know when you're prepared to see the outcome!"</code></pre>
+==&gt;"The evaluation has been completed. The result is securely held and will be provided to you when you request it. Let me know when you're ready to retrieve the outcome!"</code></pre>
 </div>
 </div>
 <div class="openblock card">
@@ -1866,38 +1866,38 @@ mtron&gt; tB::1.0.as(mB::T)     ​3​
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; @ai.chat("Many things have come and gone over the years that have brought me to who I am now -- an tired, old man. Before I let my last breathe flutter into this world, I must know one last thing. And that is why I've come back to this computer looking for you. Please tell me, what was the result of the mtron expression I provided you all those years ago?")
-==&gt;"Ah, my weary friend... the answer you seek is **1**. The mtron expression, when evaluated with the left-hand side of `1`, resolves to the simplest possible truth: *one*. As if the universe itself whispered this number in the quiet moments between breaths. Rest now, and may your final journey be light. 🌙"
+==&gt;'The result of the evaluation was **1**. Let me know if you need further details or have more questions!'
 mtron&gt; */usr/ai/memory/+
 ==&gt;[
- id=&gt;call_az11f26n,
- toolName=&gt;m_inst_eval,
- contents=&gt;[[text=&gt;1,type=&gt;'TEXT']],
- isError=&gt;false,
+ text=&gt;'The evaluation has been completed....',
+ thinking=&gt;'Okay, the user asked me to evaluat...',
+ toolExecutionRequests=&gt;[,],
  attributes=&gt;[=&gt;],
- type=&gt;'TOOL_EXECUTION_RESULT']
+ type=&gt;AI]
 ==&gt;[
  contents=&gt;[[
  text=&gt;'Many things have come and gone ove...',
  type=&gt;'TEXT']],
  type=&gt;USER]
 ==&gt;[
- text=&gt;'The evaluation of the mtron expres...',
- thinking=&gt;'Okay, the user asked me to evaluat...',
- toolExecutionRequests=&gt;[,],
+ thinking=&gt;'Okay, the user wants me to evaluat...',
+ toolExecutionRequests=&gt;[[
+ id=&gt;call_p9c6xz50,
+ name=&gt;m_inst_eval,
+ arguments=&gt;'{"0":"-&lt;[_=&gt;_]&gt;&gt;.&gt;-[,]-&lt;[_,-&lt;[_=&gt;_...']],
  attributes=&gt;[=&gt;],
  type=&gt;AI]
 ==&gt;[
- text=&gt;'Ah, my weary friend... the answer ...',
+ id=&gt;call_p9c6xz50,
+ toolName=&gt;m_inst_eval,
+ contents=&gt;[[text=&gt;1,type=&gt;'TEXT']],
+ isError=&gt;false,
+ attributes=&gt;[=&gt;],
+ type=&gt;'TOOL_EXECUTION_RESULT']
+==&gt;[
+ text=&gt;'The result of the evaluation was *...',
  thinking=&gt;'Okay, the user is asking for the r...',
  toolExecutionRequests=&gt;[,],
- attributes=&gt;[=&gt;],
- type=&gt;AI]
-==&gt;[
- thinking=&gt;"Okay, let's see. The user wants me...",
- toolExecutionRequests=&gt;[[
- id=&gt;call_az11f26n,
- name=&gt;m_inst_eval,
- arguments=&gt;'{"object":"-&lt;[_=&gt;_]&gt;&gt;.&gt;-[,]-&lt;[_,-&lt;...']],
  attributes=&gt;[=&gt;],
  type=&gt;AI]</code></pre>
 </div>
@@ -2679,7 +2679,7 @@ The predicate component of the type definition tests an <code>int</code> to dete
 <div class="paragraph">
 <p>While every <code>type</code> is an <code>obj</code>, not every <code>obj</code> is a <code>type</code>.
 Those <code>objs</code> that are not <code>types</code> are <em>instances</em> of some <code>type</code>.
-This is the foundation for all other <code>objs</code> in {{y}}m{{m}}E{{b}}t{{c}}a{{g}}t{{m}}r{{b}}O{{r}}n{{X}}.</p>
+This is the foundation for all other <code>objs</code> in {{r}}m{{r}}e{{m}}t{{b}}A{{c}}t{{c}}r{{b}}o{{c}}n{{X}}.</p>
 </div>
 <h4 id="_cascading_type_constructions" class="discrete">cascading type constructions</h4>
 <h3 id="_mono_types" class="discrete">mono types</h3>
@@ -3695,8 +3695,8 @@ mtron&gt; memspace::[
  prefix=&gt;'',
  postfix=&gt;'',
  pane=&gt;lst[/m/mach/console/pane{*}]::[/m/mach/console/pane::[
- stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
  prompt=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
+ stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
  result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]@/usr/ui/console/pane/0],
  menu=&gt;[
   console=&gt;console::[
@@ -3706,8 +3706,8 @@ mtron&gt; memspace::[
    prefix=&gt;'',
    postfix=&gt;'',
    pane=&gt;lst[/m/mach/console/pane{*}]::[/m/mach/console/pane::[
- stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
  prompt=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
+ stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
  result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]@/usr/ui/console/pane/0]]@/usr/ui/console,
   help=&gt;inst?noobj&lt;=#{?}(),
   chat=&gt;inst?noobj&lt;=#{?}(),
@@ -3739,8 +3739,8 @@ mtron&gt; */usr/ui/console     ​1​
  prefix=&gt;'',
  postfix=&gt;'',
  pane=&gt;lst[/m/mach/console/pane{*}]::[/m/mach/console/pane::[
- stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
  prompt=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
+ stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
  result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]@/usr/ui/console/pane/0],
  menu=&gt;[
   console=&gt;console::[
@@ -3750,8 +3750,8 @@ mtron&gt; */usr/ui/console     ​1​
    prefix=&gt;'',
    postfix=&gt;'',
    pane=&gt;lst[/m/mach/console/pane{*}]::[/m/mach/console/pane::[
- stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
  prompt=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
+ stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
  result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]@/usr/ui/console/pane/0]]@/usr/ui/console,
   help=&gt;inst?noobj&lt;=#{?}(),
   chat=&gt;inst?noobj&lt;=#{?}(),
@@ -3777,8 +3777,8 @@ mtron&gt; */usr/ui/console     ​1​
   subq=&gt;inst?noobj&lt;=#{?}()]]
 mtron&gt; */usr/ui/console/pane/0     ​2​
 ==&gt;/m/mach/console/pane::[
- stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
  prompt=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
+ stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
  result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]
 mtron&gt; /usr/ui/console/pane/0/result('printed at ==&gt;xyz')     ​3​</code></pre>
 </div>
@@ -4178,8 +4178,8 @@ mtron&gt; *a/b/c/1/y/z     ​5​
 </div>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
-<col style="width: 42.8571%;">
-<col style="width: 57.1429%;">
+<col style="width: 50%;">
+<col style="width: 50%;">
 </colgroup>
 <tbody>
 <tr>
@@ -4200,28 +4200,29 @@ mtron&gt; *a/b/c/1/y/z     ​5​
 <tr>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
-<pre>a-&gt;[b=&gt;1,c=&gt;2]</pre>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">[a=&gt;[b=&gt;1,c=&gt;2]]</code></pre>
 </div>
 </div></div></td>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
-<pre>a-&gt;[b=&gt;1,c=&gt;2]</pre>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">{[a=&gt;[b=&gt;1]],
+ [a=&gt;[c=&gt;2]]}</code></pre>
 </div>
 </div></div></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
-<pre>     ┌──b──⮞1
-   a─┤
-     └──c──⮞2</pre>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">  ┌──b──⮞1
+a─┤
+  └──c──⮞2</code></pre>
 </div>
 </div></div></td>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
-<pre>    a──b──⮞1
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">a──b──⮞1
 
-    a──c──⮞2</pre>
+a──c──⮞2</code></pre>
 </div>
 </div></div></td>
 </tr>
@@ -4238,9 +4239,13 @@ mtron&gt; *a/b/c/1/y/z     ​5​
 <td>the uri ring defines addition as "branching", where \(x + y\) is <code>{x,y}</code>.</td>
 </tr>
 </table>
+</div>
+<div class="paragraph">
+<p>The characteristic marks of \(\ast\) are <code>.</code>,<code>=&gt;</code>.<br>
+The characteristic marks of \(+\) are <code>,</code>, <code>-&lt;</code>/<code>&gt;-</code>.</p>
 </div></div></td>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p>The two examples represent the equivalent data because there exists a bijection that maps <strong>A</strong> to <strong>B</strong> and <strong>B</strong> to <strong>A</strong>. In other words, they are isomorphic structures within the category of ring. The form <strong>A</strong> is captured by the equation:</p>
+<p>The two examples represent the equivalent data because there exists a bijection that maps <strong>A</strong> to <strong>B</strong> and <strong>B</strong> to <strong>A</strong>. In other words, they are isomorphic structures within the category of the obj ring. The form <strong>A</strong> is captured by the equation:</p>
 </div>
 <div class="paragraph">
 <p>\[
@@ -4260,105 +4265,118 @@ a \cdot (b + c) = \{1,2\}
 </div>
 <div class="paragraph">
 <p>\[
-\begin{align*}
-a \cdot (b + c)           &amp;=&amp;         \\
-(a \cdot b) + (a \cdot c) &amp;= ab + ac \\
-\end{align*}
-\]</p>
-</div></div></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><div class="content"><table class="tableblock frame-all grid-all stretch">
-<colgroup>
-<col style="width: 50%;">
-<col style="width: 50%;">
-</colgroup>
-<tbody>
-<tr>
-<td class="tableblock halign-center valign-top"><div class="content"><div class="paragraph">
-<p><strong>form A</strong></p>
-</div></div></td>
-<td class="tableblock halign-center valign-top"><div class="content"><div class="paragraph">
-<p><strong>form B</strong></p>
-</div></div></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
-<div class="content">
-<pre>    *a/</pre>
-</div>
-</div></div></td>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
-<div class="content">
-<pre>    *a/b/
-    *a/c/</pre>
-</div>
-</div></div></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
-<div class="content">
-<pre>a=&gt;[b=1,c=&gt;2]</pre>
-</div>
-</div></div></td>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
-<div class="content">
-<pre>{a/b=&gt;1,a/c=&gt;2}</pre>
-</div>
-</div></div></td>
-</tr>
-</tbody>
-</table></div></td>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p>The inverse holds as well. That is, when reading from space, <code>*a/</code> and *a/b
-The two examples are "equal" because they can be rewritten into each using the ring algebra. The first form is the equation:</p>
-</div>
-<div class="paragraph">
-<p>\[
-a \cdot (b + c)
-\]</p>
-</div>
-<div class="paragraph">
-<p>The second is written:</p>
-</div>
-<div class="paragraph">
-<p>\[
-(a + b) \cdot (a + c)
-\]</p>
-</div>
-<div class="paragraph">
-<p>Thus, due to the fact that multiplication distributes over addition, the two equations, while typographically different are in fact the same data.</p>
-</div>
-<div class="paragraph">
-<p>\[
-a \cdot (b + c) = (a + b) \cdot (a + c)
+\begin{align}
+a \cdot (b + c)  &amp;= (a \cdot b) + (a \cdot c)         \\
+a (b + c)        &amp;= ab + ac \\
+\end{align}
 \]</p>
 </div></div></td>
 </tr>
 </tbody>
 </table>
 <div class="paragraph">
-<p>If the implication of these equalities is not readily apparent, then understand the following. The multiplicative union of uris to an obj is a <strong>dependent relationship</strong>. There exists a colocational requirement where <code>a</code> is coupling <code>b</code> and <code>c</code> together into a single structure that then refers to <code>1</code> and <code>2</code>.</p>
+<p>If the implication of these equalities is not readily apparent, then understand the following. The multiplicative union of uris to an obj is a <strong>dependent relationship</strong>. There exists a colocational requirement that <code>a</code> couples <code>b</code> and <code>c</code> into a single structure.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre>     ┌──b──⮞1
-   a─┤
-     └──c──⮞2</pre>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">  ┌──b──⮞1
+a─┤
+  └──c──⮞2</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>On the other hand, the additive union of the uris is an <strong>independent relationship</strong>. There are two representations of <code>a</code> and thus, <code>a/b =&gt; 1</code> is distinct, requiring no colocation with <code>a/c =&gt; 2</code>. This means that <code>a/b</code> can be stored in a document database in Japan and <code>a/c</code> an be stored in <code>.txt</code> file on some file system in Ohio and when resolved, the same <code>{1,2}</code> result is returned upon query (albeit with different time/space characteristics compared to the multiplicative, colocated representation of the data).</p>
+<p>On the other hand, the additive union of the uris is an <strong>independent relationship</strong>. There are two representations of <code>a</code> and thus, <code>a/b =&gt; 1</code> is distinct, requiring no colocation with <code>a/c =&gt; 2</code>. This means that <code>a/b</code> can be stored in a document database in Japan and <code>a/c</code> an be stored in <code>.txt</code> file on some file system in Ohio and when resolved, the same <code>{1,2}</code> result is returned upon query (albeit with different space/time characteristics compared to the multiplicative, colocated representation of the data).</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre>    a──b──⮞1
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">a──b──⮞1
 
-    a──c──⮞2</pre>
+a──c──⮞2</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; x0 -&gt; [a=&gt;[b=&gt;1,c=&gt;2]]
+==&gt;[a=&gt;[b=&gt;1,c=&gt;2]]
+mtron&gt; x1 -&gt; {[a=&gt;[b=&gt;1]],[a=&gt;[c=&gt;2]]}
+==&gt;[a=&gt;[b=&gt;1]]
+==&gt;[a=&gt;[c=&gt;2]]</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; [x0,x1]&gt;-.-&lt;[*(* /a/b)]&gt;-
+==&gt;{2}1
+mtron&gt; [x0,x1]&gt;-.-&lt;[*(* /a/c)]&gt;-
+==&gt;{2}2
+mtron&gt; [x0,x1]&gt;-.-&lt;[*(* /a/+)]&gt;-
+==&gt;{2}1
+==&gt;{2}2
+mtron&gt; [x0,x1]&gt;-.-&lt;[*(* /+/+)]&gt;-
+==&gt;{2}1
+==&gt;{2}2
+mtron&gt; [x0,x1]&gt;-.-&lt;[*(* /+/b)]&gt;-
+==&gt;{2}1
+mtron&gt; [x0,x1]&gt;-.-&lt;[*(* /+/c)]&gt;-
+==&gt;{2}2</code></pre>
+</div>
+</div>
+<h5 id="_leftright_factors" class="discrete">Left/Right Factors</h5>
+<div class="paragraph">
+<p>Factorization can happen to the left and to the right. Assume, for the sake of an example, that the additive branches of the running example thus far both end with a <code>d</code> entry. If so, then the following equalities hold.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">a──b──d──⮞1           ┌──b──d──⮞1          ┌──b──┐
+                =   a─┤              =   a─┤      ├─d──⮞{1,2}
+a──c──d──⮞2           └──c──d──⮞2          └──c──┘</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>A further entailment states that a dataset can be rewritten from a <strong>concatenative/multiplicative</strong> form to a <strong>union/additive</strong> form so as to maintain one subset of the data in a specialized space optimized for the demands of its production requirements and the other subset in some other specialized space according to its requirements. More specifically, some data needs to be "hot in cache" in order to satisfy demand, and some data should be "iced in archive" when the production usage doesn&#8217;t require rapid response times and its possible to reduce production costs with cheap disk storage. With metatron, expressing such partitions while also ensuring said partitions resolve correctly is built into the fundamental mathematics/algorithm of the system&#8201;&#8212;&#8201;<strong>the ring algebra for structural composition</strong>.</p>
+<p>The equalities below reiterate what is stated diagramatically above.</p>
+</div>
+<div class="paragraph">
+<p>\[
+\begin{align}
+\;         &amp; (a \cdot b \cdot d) &amp; + \;\; &amp; (a \cdot c \cdot d) &amp;            &amp;=&amp; \{1,2\} \\
+a \cdot \; &amp; ( (b \cdot d)       &amp; + \;\; &amp; (c \cdot d) )       &amp;            &amp;=&amp; \{1,2\} \\
+a \cdot \; &amp; ( b                 &amp; + \;\; &amp; c )                 &amp;  \cdot d   &amp;=&amp; \{1,2\}
+\end{align}
+\]</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; x0 -&gt; [a=&gt;[b=&gt;[d=&gt;1],c=&gt;[d=&gt;2]]]
+==&gt;[a=&gt;[
+ b=&gt;[d=&gt;1],
+ c=&gt;[d=&gt;2]]]
+mtron&gt; x1 -&gt; {[a=&gt;[b=&gt;[d=&gt;1]]],[a=&gt;[c=&gt;[d=&gt;2]]]}
+==&gt;[a=&gt;[b=&gt;[d=&gt;1]]]
+==&gt;[a=&gt;[c=&gt;[d=&gt;2]]]</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; [x0,x1]&gt;-.-&lt;[*(* /a/b/d)]
+==&gt;{2}[1]
+mtron&gt; [x0,x1]&gt;-.-&lt;[*(* /a/b/+)]
+==&gt;{2}[1]
+mtron&gt; [x0,x1]&gt;-.-&lt;[*(* /a/+/+)]
+==&gt;{2}[{1,2}]
+mtron&gt; [x0,x1]&gt;-.-&lt;[*(* /+/+/+)]
+==&gt;{2}[{1,2}]
+mtron&gt; [x0,x1]&gt;-.-&lt;[*(* /+/+/d)]
+==&gt;{2}[{1,2}]
+mtron&gt; [x0,x1]&gt;-.-&lt;[*(* /+/c/d)]
+==&gt;{2}[2]
+mtron&gt; [x0,x1]&gt;-.-&lt;[*(* /+/c/+)]
+==&gt;{2}[2]
+mtron&gt; [x0,x1]&gt;-.-&lt;[*(* /a/+/d)]
+==&gt;{2}[{1,2}]</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>A subsequent, practical entailment states that a ring-based dataset can be transformed from a <strong>concatenative/multiplicative</strong> form to a <strong>union/additive</strong> form so as to maintain one subset of the data in a specialized space optimized for the demands of its production requirements and the other subset in another space specialized accordingly to its requirements. For example, some data should be "hot in cache" in order to satisfy demand, while some other data should be "iced in an archive" when the production usage doesn&#8217;t require a rapid response time and production costs can be reduced with cheaper disk storage. With metatron, expressing such partitions while also ensuring said partitions resolve correctly is built into the fundamental mathematics/algorithm of the system&#8201;&#8212;&#8201;<strong>the ring algebra for structural composition</strong>.</p>
 </div>
 <h4 id="_isomorphic_identical" class="discrete">Isomorphic != Identical</h4>
 <div class="paragraph">
@@ -4593,6 +4611,111 @@ Once found, it then traverses within the match to resolve the remaining path seg
 </tr>
 </tbody>
 </table>
+<h3 id="_the_algebraic_structure_of_data" class="discrete">The Algebraic Structure of Data</h3>
+<div class="paragraph">
+<p>The examples thus far using algebra to construct and deconstruct data structures have been relatively basic. It&#8217;s important to note that such equalities are recursive, and to demonstrate the point, a more complicated factorization will be presetented.</p>
+</div>
+<div class="paragraph">
+<p>In mathematics, addition is denoted with a \(+\) as in \(a + b\). In code, addition represented with a <code>,</code>. A <code>,</code> separates two independent <code>objs</code> as in <code>[a,b]</code>. For multiplication, mathematical notation uses \(a \cdot b\) or \(a \ast b\) or simply character incidence as in \(ab\). In code, <code>.</code> denotes multiplication. For instance, <code>a.b</code>. Given this rule, the following metatron <code>rec</code></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; x0 -&gt; [a=&gt;[b=&gt;[c=&gt;1,d=&gt;2],
+==&gt;ERROR: null
+mtron&gt; e=&gt;[c=&gt;3,d=&gt;4,f=&gt;5]],
+==&gt;ERROR: e=&gt;[c=&gt;3,d=&gt;4,f=&gt;5]],
+                   ^ end of input expected
+
+mtron&gt; g=&gt;[b=&gt;[c=&gt;6]]]
+==&gt;ERROR: g=&gt;[b=&gt;[c=&gt;6]]]
+              ^ end of input expected</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>can be systematically and unambiguously transformed into the equation:</p>
+</div>
+<div class="paragraph">
+<p>\[
+\begin{align}
+    a(b(c \cdot 1) + (d \cdot 2)) + (e( (c \cdot 3)  + (d \cdot 4) +  (f \cdot 5) )) +  (g(b(c \cdot 6))) \\
+(a+e+g)(b(c\cdot 1) + b(c\cdot 3) + b(c \cdot 6)) + (a+e)(d\cdot 2 + d \cdot 4) \\
+(a+e+g)(b(c(1+3))) + (a+e)(d(2 + 4))
+\end{align}
+\]</p>
+</div>
+<div class="paragraph">
+<p>Common left side variables amongst summed components can be factored to the left. Likewise, right side variable can be factored to the right. From the inverse of distributivity, the <code>rec</code> can be written:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; x1 -&gt; [a/b =&gt; [c=&gt;1,d=&gt;2],
+==&gt;ERROR: x1 -&gt; [a/b =&gt; [c=&gt;1,d=&gt;2],
+  ^ end of input expected
+
+mtron&gt; a/e/c =&gt; 3,
+==&gt;ERROR: a/e/c =&gt; 3,
+          ^ end of input expected
+
+mtron&gt; a/e/d =&gt; 4,
+==&gt;ERROR: a/e/d =&gt; 4,
+          ^ end of input expected
+
+mtron&gt; a/e/f =&gt; 5,
+==&gt;ERROR: a/e/f =&gt; 5,
+          ^ end of input expected
+
+mtron&gt; g/b =&gt; [c=&gt;6]]
+==&gt;ERROR: g/b =&gt; [c=&gt;6]]
+             ^ end of input expected
+
+mtron&gt; x2 -&gt; [a/b/c =&gt; 1,
+==&gt;ERROR: x2 -&gt; [a/b/c =&gt; 1,
+  ^ end of input expected
+
+mtron&gt; a/b/d =&gt; 2,
+==&gt;ERROR: a/b/d =&gt; 2,
+          ^ end of input expected
+
+mtron&gt; a/e/c =&gt; 3,
+==&gt;ERROR: a/e/c =&gt; 3,
+          ^ end of input expected
+
+mtron&gt; a/e/d =&gt; 4,
+==&gt;ERROR: a/e/d =&gt; 4,
+          ^ end of input expected
+
+mtron&gt; a/e/f =&gt; 5,
+==&gt;ERROR: a/e/f =&gt; 5,
+          ^ end of input expected
+
+mtron&gt; g/b/c =&gt; 6]
+==&gt;ERROR: g/b/c =&gt; 6]
+          ^ end of input expected</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; [x0,x1,x2]&gt;-.-&lt;[*(* /a/b/c)]
+==&gt;{3}[noobj]
+mtron&gt; [x0,x1,x2]&gt;-.-&lt;[*(* /a/b/+)]
+==&gt;{2}[1]
+==&gt;[noobj]
+mtron&gt; [x0,x1,x2]&gt;-.-&lt;[*(* /a/+/+)]
+==&gt;{2}[{1,2}]
+==&gt;[noobj]
+mtron&gt; [x0,x1,x2]&gt;-.-&lt;[*(* /+/b/+)]
+==&gt;{2}[1]
+==&gt;[noobj]
+mtron&gt; [x0,x1,x2]&gt;-.-&lt;[*(* /+/b/c)]
+==&gt;{3}[noobj]
+mtron&gt; [x0,x1,x2]&gt;-.-&lt;[*(* /a/+/c)]
+==&gt;{3}[noobj]
+mtron&gt; [x0,x1,x2]&gt;-.-&lt;[*(* /+/+/c)]
+==&gt;{3}[noobj]
+mtron&gt; [x0,x1,x2]&gt;-.-&lt;[*(* /g/+/+)]
+==&gt;{3}[noobj]</code></pre>
+</div>
+</div>
 </div>
 <div class="collapse position-relative" id="card-10">
 <button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-10" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
@@ -4845,7 +4968,7 @@ mtron&gt; */usr/notes/#?subq
   mqtt::T,
   haos::T]]@/m/iot
 mtron&gt;  import(/m/llm)
-{{b}}.{{y}}.{{r}}.{{X}}</code></pre>
+{{y}}.{{g}}.{{r}}.{{X}}</code></pre>
 </div>
 </div>
 </div>
@@ -6469,8 +6592,6 @@ mtron&gt; *v1.out(knows).out(created).&gt;&gt;name     ​5​</code></pre>
        ]@/sys/space/web/http</code></pre>
 </div>
 </div>
-<div class="exampleblock">
-<div class="content">
 <h3 id="_html_type" class="discrete">HTML Type</h3>
 <div class="paragraph">
 <p>The type <code>html::T &lt; rec::T</code> (a refinement of <code>rec::T</code>) represents an <a href="https://en.wikipedia.org/wiki/HTML">HTML</a> document.</p>
@@ -6539,7 +6660,7 @@ mtron&gt; *&lt;http://phaseshift.studio/splash.html&gt;.as(str::T)     ​4​
 </div>
 <h3 id="_accessing_rest_apis" class="discrete">Accessing REST APIs</h3>
 <div class="paragraph">
-<p>When a <a href="https://en.wikipedia.org/wiki/REST">REST</a> endpoint has a URL address that matches an <code>httpspace</code> pattern, the REST resources can be used in metatron. This is possible because <code>httpspace</code> transforms data "in the wild" (e.g. <code>application/json</code>) into an isomorphic <code>obj</code>. If the newly mapped <code>obj</code> is typed, then it inherits the instructions for that type as defined by the <code>instset</code> of the type. As such, REST resources can be enriched/typed to serve as active computational objs in metatron.</p>
+<p>When a <a href="https://en.wikipedia.org/wiki/REST">REST</a> endpoint has a URL address that matches an <code>httpspace</code> pattern, the REST resources can be used in metatron. This is possible because <code>httpspace</code> transforms data "in the wild" (e.g. <code>application/json</code>) into an isomorphic <code>obj</code>. If the newly mapped <code>obj</code> is typed, then it inherits the instructions for that type as defined by the <code>instset</code> of the type. As such, REST resources can be enriched/typed to become active computational objs in metatron.</p>
 </div>
 <div class="paragraph">
 <p>A <a href="https://localai.io/">LocalAI</a> service will serve to demonstrate how to leverage foreign resources in metatron. LocalAI exposes an <a href="https://www.openapis.org/">OpenAPI</a>-compliant endpoint at <code><a href="http://localhost:8088/v1" class="bare">http://localhost:8088/v1</a></code> (this is specific to the author&#8217;s local deployment of LocalAI).</p>
@@ -6551,53 +6672,79 @@ mtron&gt; *&lt;http://localhost:8088/v1/models&gt;
 ==&gt;[
  object=&gt;list,
  data=&gt;[
+  [id=&gt;mistralai_devstral-small-2507,object=&gt;model],
+  [id=&gt;qwen3-coder-30b-a3b-instruct,object=&gt;model],
   [id=&gt;qwen3-tts-cpp,object=&gt;model],
   [id=&gt;qwen3:latest,object=&gt;model],
   [id=&gt;'smollm:1.7b',object=&gt;model],
-  [id=&gt;mistralai_devstral-small-2507,object=&gt;model],
-  [id=&gt;qwen3-coder-30b-a3b-instruct,object=&gt;model],
   [id=&gt;MeetAISmall__latest,object=&gt;model],
   [id=&gt;gpt-oss__latest,object=&gt;model]]]
 mtron&gt; *&lt;http://localhost:8088/v1/models/data/0/id&gt;
-==&gt;'smollm:1.7b'
+==&gt;qwen3:latest
 mtron&gt; *&lt;http://localhost:8088/api/models/config-json/${
          *&lt;http://localhost:8088/v1/models/data/0/id&gt;}&gt;
 ==&gt;[
  parameters=&gt;[
-  model=&gt;qwen3-tts-cpp,
+  model=&gt;'mistralai_Devstral-Small-2507-Q4_K...',
   top_p=&gt;0.9500,
-  top_k=&gt;20,
-  min_p=&gt;0,
-  temperature=&gt;0.6000,
+  top_k=&gt;-1,
+  min_p=&gt;0.0100,
+  temperature=&gt;0.7000,
   max_tokens=&gt;0,
   repeat_penalty=&gt;1,
   tfz=&gt;1,
   typical_p=&gt;1,
   seed=&gt;-1,
   logprobs=&gt;false],
- name=&gt;qwen3-tts-cpp,
+ name=&gt;mistralai_devstral-small-2507,
  f16=&gt;false,
  threads=&gt;8,
  debug=&gt;false,
  embeddings=&gt;false,
- backend=&gt;qwen3-tts-cpp,
- template=&gt;[=&gt;],
- known_usecases=&gt;[FLAG_TTS],
+ backend=&gt;llama-cpp,
+ template=&gt;[
+  chat=&gt;"""{{.Input -}}
+""",
+  chat_message=&gt;"""{{if eq .RoleName "user" -}}
+[INST...""",
+  completion=&gt;"""{{.Input}}
+""",
+  function=&gt;'[AVAILABLE_TOOLS] [{{range .Functi...'],
+ known_usecases=&gt;[FLAG_CHAT,FLAG_COMPLETION],
  pipeline=&gt;[=&gt;],
- function=&gt;[grammar=&gt;[=&gt;]],
+ function=&gt;[
+  disable_no_action=&gt;true,
+  grammar=&gt;[parallel_calls=&gt;true,disable_parallel_new_lines=&gt;true,disable=&gt;true],
+  json_regex_match=&gt;['(?s)\[TOOL\_CALLS\](.*)'],
+  replace_function_results=&gt;[
+   [key=&gt;'(?s)^[^{\[]*'],
+   [key=&gt;'(?s)[^}\]]*$'],
+   [key=&gt;'(?s)\[TOOL\_CALLS\]'],
+   [key=&gt;'(?s)\[\/TOOL\_CALLS\]']]],
  reasoning=&gt;[=&gt;],
  mirostat_eta=&gt;0.1000,
  mirostat_tau=&gt;5,
  mirostat=&gt;0,
+ gpu_layers=&gt;99999999,
  mmap=&gt;true,
  mmlock=&gt;false,
  low_vram=&gt;false,
  reranking=&gt;false,
+ stopwords=&gt;[
+  |im_end|,
+  dummy32000,
+  /tool_call,
+  |eot_id|,
+  |end_of_text|,
+  /s,
+  [/TOOL_CALLS],
+  [/ACTIONS]],
  context_size=&gt;8192,
  limit_mm_per_prompt=&gt;[=&gt;],
  diffusers=&gt;[=&gt;],
  grpc=&gt;[=&gt;],
  tts=&gt;[=&gt;],
+ options=&gt;[gpu],
  mcp=&gt;[=&gt;],
  agent=&gt;[=&gt;]]</code></pre>
 </div>
@@ -6662,7 +6809,7 @@ mtron&gt; */m/llm/inst/+?dom=model</code></pre>
             type=&gt;&gt;&gt;object.as(uri::T),
             provider=&gt;|!*/sys/space/localai].as(model::T)
          .chat('are you there?')
-==&gt;"YesYes, I'm here! How can I assist you today?"
+==&gt;''
 ==&gt;fail::[[
  type=&gt;model,
  provider=&gt;!*/sys/space/localai] is not a isa([
@@ -6708,14 +6855,15 @@ mtron&gt; */m/llm/inst/+?dom=model</code></pre>
 <div class="collapse position-relative" id="card-20">
 <button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-20" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
 <button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
-<h2 id="_web_technologies_with_mweb_2" class="discrete">Web Technologies with /m/web</h2>
-</div>
-</div>
+<h2 id="_dcmnt_space" class="discrete">Dcmnt Space</h2>
+<details>
+<summary class="title">/m/dcmnt instset import</summary>
+<div class="content">
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; import(/m/web)
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; import(/m/dcmnt)
 ==&gt;[
- pattern=&gt;/m/web/#,
+ pattern=&gt;/m/dcmnt/#,
  q=&gt;[docq::[
  pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
  pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
@@ -6723,295 +6871,378 @@ mtron&gt; */m/llm/inst/+?dom=model</code></pre>
  obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
  inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
  space=&gt;[super=&gt;!*/m],
- const=&gt;[
-  !*/m/mach/io/serializer/xml,
-  !*/m/mach/io/serializer/html,
-  !*/m/mach/io/serializer/json,
-  !*/m/mach/io/serializer/markdown,
-  !*/m/mach/io/serializer/plain/text],
+ constq=&gt;[
+  !*/m/mach/io/serializer/json/simple,
+  _id@/m/dcmnt/_id],
  type=&gt;[
-  content_type::T,
-  xml::T,
-  html::T,
-  json::T,
-  css::T,
-  markdown::T,
-  httpspace::T,
-  wsspace::T,
-  websocket::T,
-  wshandler::T,
-  wsclient::T,
-  mtron_ws::T,
-  mcp_ws::T,
-  mcp_mtron_ws::T,
-  socket::T,
-  http_handler::T,
-  http_client::T,
-  mtron_http::T,
-  mcp_http::T,
-  mcp_mtron_http::T,
-  base::T],
+  collection::T,
+  dcmntspace::T],
  inst=&gt;[
-  format?str&lt;=markdown(),
-  as?xml&lt;=str(xml::T),
-  as?html&lt;=str(html::T),
-  as?markdown&lt;=str(markdown::T),
-  as?str&lt;=html(str::T),
-  as?str&lt;=markdown(str::T),
-  as?html&lt;=markdown(html::T),
-  as?json&lt;=str(json::T),
-  as(json_str::T)]]@/m/web</code></pre>
-</div>
-</div>
-<div class="exampleblock">
-<div class="content">
-<h3 id="_http_space_2" class="discrete">HTTP Space</h3>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; httpspace::[
-        host     =&gt; http://localhost:8777,
-        pattern  =&gt; http://#,
-        route    =&gt; [/        =&gt; &lt;&gt;,
-                     /mcp     =&gt; mcp_mtron_http,
-                     /docs    =&gt; target/docs,
-                     /console =&gt; src/main/resources/web/console]
-       ]@/sys/space/web/http</code></pre>
+  mql?rec{*}&lt;=dcmntspace(uri::T,rec::T),
+  mql?rec{*}&lt;=collection(rec::T)],
+ rewrite=&gt;[
+  /m/dcmnt/inst/rewrite/mql_count?code{?}&lt;=code(),
+  /m/dcmnt/inst/rewrite/mql_sum?code{?}&lt;=code(),
+  /m/dcmnt/inst/rewrite/mql_mean?code{?}&lt;=code(),
+  /m/dcmnt/inst/rewrite/mql_limit?code{?}&lt;=code(),
+  /m/dcmnt/inst/rewrite/mql_has?code{?}&lt;=code(),
+  /m/dcmnt/inst/rewrite/mql_where?code{?}&lt;=code(),
+  /m/dcmnt/inst/rewrite/mql_where_count?code{?}&lt;=code(),
+  /m/dcmnt/inst/rewrite/mql_select?code{?}&lt;=code()]]@/m/dcmnt</code></pre>
 </div>
 </div>
 </div>
-</div>
-<h3 id="_html_type_2" class="discrete">HTML Type</h3>
+</details>
 <div class="paragraph">
-<p>The type <code>html::T &lt; rec::T</code> (a refinement of <code>rec::T</code>) represents an <a href="https://en.wikipedia.org/wiki/HTML">HTML</a> document.</p>
+<p>A <a href="https://en.wikipedia.org/wiki/Document-oriented_database">document database</a> models a domain as a set of "<a href="https://www.json.org/">JSON</a>"-ish documents&#8201;&#8212;&#8201;in the lexicon of formality, such databases are understood as a collection of <a href="https://en.wikipedia.org/wiki/Associative_array">associative arrays</a>/dictionary/hashmap composed of string keys and object values, where values can be nested indefinitely. In metatron, a document database is best captured by a  <strong>dcmntspace</strong> of type <code>rec::T</code>. The mapping between JSON and metatron is quite natural. Two semantically equivalent structures are provided below.</p>
 </div>
-<div class="listingblock">
+<table class="tableblock frame-all grid-all stretch mx-auto">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-center valign-middle">JSON</th>
+<th class="tableblock halign-center valign-middle">mtron</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-middle"><div class="content"><div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; html::T     ​1​
-mtron&gt; *&lt;http://phaseshift.studio/splash.html&gt;     ​2​
-==&gt;html::[html=&gt;[
- head=&gt;[
-  title=&gt;'PhaseShift Studio',
-  out=&gt;[
-   [
-    tag=&gt;link,
-    href=&gt;&lt;https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css&gt;,
-    rel=&gt;'stylesheet'],
-   [tag=&gt;link,href=&gt;&lt;css/metatron.css&gt;,rel=&gt;'stylesheet']]],
- body=&gt;[
-  out=&gt;[
-   [tag=&gt;p],
-   [
-    tag=&gt;h1,
-    style=&gt;'padding-left:125px;color:var(--pri...',
-    text=&gt;'PhaseShift Studio'],
-   [
-    tag=&gt;img,
-    style=&gt;'padding-left:100px',
-    src=&gt;&lt;http://metatron.phaseshift.studio/images/metatron-character.png&gt;,
-    width=&gt;'500px']],
-  style=&gt;'background-color: black;']]]
-mtron&gt; *&lt;http://phaseshift.studio/splash.html/html/head/title&gt;     ​3​
-==&gt;'PhaseShift Studio'
-mtron&gt; *&lt;http://phaseshift.studio/splash.html&gt;.as(str::T)     ​4​
-==&gt;"""&lt;html&gt;
- &lt;head&gt;
-  &lt;link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet"&gt;
-  &lt;link href="css/metatron.css" rel="stylesheet"&gt;
- &lt;/head&gt;
- &lt;body style="background-color: black;"&gt;
-  &lt;p&gt;&lt;/p&gt;
-  &lt;h1 style="padding-left:125px;color:var(--primary)"&gt;PhaseShift Studio&lt;/h1&gt;
-  &lt;img style="padding-left:100px" src="http://metatron.phaseshift.studio/images/metatron-character.png" width="500px"&gt;
- &lt;/body&gt;
-&lt;/html&gt;"""</code></pre>
+<pre class="highlight"><code class="language-json" data-lang="json">{ "databases" : {
+  "graphdb": {"vertices":10234,"edges":1234545 },
+  "docdb": {"collections": 2, "documents":{
+   "users": 102,
+   "data": 234335
+  }},
+  "tabledb": {"tables": 2,"rows": [1334,34345]}
+}}</code></pre>
 </div>
+</div></div></td>
+<td class="tableblock halign-left valign-middle"><div class="content"><div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">[ databases =&gt; [
+  graphdb =&gt; [vertices =&gt; 10234, edges =&gt; 1234545],
+  docdb =&gt; [collections =&gt; 2, documents =&gt; [
+    users =&gt; 102,
+    data =&gt; 234335
+  ]],
+  tabledb =&gt; [tables =&gt; 2, rows =&gt; [1334,34345]]
+]]</code></pre>
 </div>
-<div class="colist arabic">
-<table>
-<tr>
-<td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>The structural definition of <code>html::T</code>.</td>
+</div></div></td>
 </tr>
-<tr>
-<td><i class="conum" data-value="2"></i><b>2</b></td>
-<td>Retrieve the <code>index.html</code> of the website. Content-type yields <code>text/html</code> which for metatron maps to <code>html::T</code>.</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="3"></i><b>3</b></td>
-<td>The <code>title</code> element of the <code>index.html</code> of the website.</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="4"></i><b>4</b></td>
-<td>The <code>index.html</code> of the website as a <code>str::T</code> (<code>string &#8658; rec &#8658; string</code>).</td>
-</tr>
+</tbody>
 </table>
-</div>
-<h3 id="_accessing_rest_apis_2" class="discrete">Accessing REST APIs</h3>
+<div class="openblock card">
+<div class="content">
+<h4 id="_uri_keys_vs_str_keys" class="discrete">uri keys vs str keys</h4>
 <div class="paragraph">
-<p>When a <a href="https://en.wikipedia.org/wiki/REST">REST</a> endpoint has a URL address that matches an <code>httpspace</code> pattern, the REST resources can be used in metatron. This is possible because <code>httpspace</code> transforms data "in the wild" (e.g. <code>application/json</code>) into an isomorphic <code>obj</code>. If the newly mapped <code>obj</code> is typed, then it inherits the instructions for that type as defined by the <code>instset</code> of the type. As such, REST resources can be enriched/typed to serve as active computational objs in metatron.</p>
+<p>one nicety that immediately jumps out when comparing JSON and mtron is mtron&#8217;s lack of quotes. this is because the mtron keys are not strings, but URIs. it is typically best to use URIs over strings for the following reasons:</p>
 </div>
-<div class="paragraph">
-<p>A <a href="https://localai.io/">LocalAI</a> service will serve to demonstrate how to leverage foreign resources in metatron. LocalAI exposes an <a href="https://www.openapis.org/">OpenAPI</a>-compliant endpoint at <code><a href="http://localhost:8088/v1" class="bare">http://localhost:8088/v1</a></code> (this is specific to the author&#8217;s local deployment of LocalAI).</p>
+<div class="ulist">
+<ul>
+<li>
+<p>URIs are <strong>less verbose</strong> as they don&#8217;t require quotes.</p>
+</li>
+<li>
+<p>URIs have a well-defined <strong>hierarchical structure</strong> that is useful for referencing nested structures.</p>
+</li>
+<li>
+<p>URIs support <strong>wildcards and templates</strong> for pattern matching and bulk read/writes.</p>
+</li>
+</ul>
+</div>
+</div>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *&lt;http://localhost:8088/v1&gt;
-mtron&gt; *&lt;http://localhost:8088/v1/models&gt;
-==&gt;[
- object=&gt;list,
- data=&gt;[
-  [id=&gt;qwen3-tts-cpp,object=&gt;model],
-  [id=&gt;qwen3:latest,object=&gt;model],
-  [id=&gt;'smollm:1.7b',object=&gt;model],
-  [id=&gt;mistralai_devstral-small-2507,object=&gt;model],
-  [id=&gt;qwen3-coder-30b-a3b-instruct,object=&gt;model],
-  [id=&gt;MeetAISmall__latest,object=&gt;model],
-  [id=&gt;gpt-oss__latest,object=&gt;model]]]
-mtron&gt; *&lt;http://localhost:8088/v1/models/data/0/id&gt;
-==&gt;'smollm:1.7b'
-mtron&gt; *&lt;http://localhost:8088/api/models/config-json/${
-         *&lt;http://localhost:8088/v1/models/data/0/id&gt;}&gt;
-==&gt;[
- parameters=&gt;[
-  model=&gt;qwen3-tts-cpp,
-  top_p=&gt;0.9500,
-  top_k=&gt;20,
-  min_p=&gt;0,
-  temperature=&gt;0.6000,
-  max_tokens=&gt;0,
-  repeat_penalty=&gt;1,
-  tfz=&gt;1,
-  typical_p=&gt;1,
-  seed=&gt;-1,
-  logprobs=&gt;false],
- name=&gt;qwen3-tts-cpp,
- f16=&gt;false,
- threads=&gt;8,
- debug=&gt;false,
- embeddings=&gt;false,
- backend=&gt;qwen3-tts-cpp,
- template=&gt;[=&gt;],
- known_usecases=&gt;[FLAG_TTS],
- pipeline=&gt;[=&gt;],
- function=&gt;[grammar=&gt;[=&gt;]],
- reasoning=&gt;[=&gt;],
- mirostat_eta=&gt;0.1000,
- mirostat_tau=&gt;5,
- mirostat=&gt;0,
- mmap=&gt;true,
- mmlock=&gt;false,
- low_vram=&gt;false,
- reranking=&gt;false,
- context_size=&gt;8192,
- limit_mm_per_prompt=&gt;[=&gt;],
- diffusers=&gt;[=&gt;],
- grpc=&gt;[=&gt;],
- tts=&gt;[=&gt;],
- mcp=&gt;[=&gt;],
- agent=&gt;[=&gt;]]</code></pre>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */m/dcmnt/space/dcmntspace
+==&gt;space::T[?[
+  pattern=&gt;uri::T,
+  host=&gt;uri::T,
+  {?}serializer=&gt;uri::T,
+  route=&gt;[uri::T=&gt;uri::T],
+  {?}root=&gt;type::T,
+  {?}schema=&gt;[
+   {?}instset=&gt;instset::T,
+   {?}native=&gt;rec{?}::T]]][inst?dcmntspace&lt;=#{?}(rec::T)]</code></pre>
 </div>
 </div>
-<div class="colist arabic">
-<table>
+<table class="tableblock frame-all grid-all stretch table-bordered center">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<tbody>
 <tr>
-<td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>No result, but also no connection <code>fail::T</code>. The endpoint is alive.</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="2"></i><b>2</b></td>
-<td>The <code>/models</code> resource contains a list of all LLM models available for use in LocalAI.</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="3"></i><b>3</b></td>
-<td>Traversing the data within the resource is a function of extending the URI accordingly.</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="4"></i><b>4</b></td>
-<td>Using URI template parameters to fetch more information about the model.</td>
-</tr>
-</table>
-</div>
-<div class="paragraph">
-<p>Once the desired REST resource has been accessed, it&#8217;s possible to map the resource into a form that meets the structural requirements of an mtron <code>type</code>. In doing so, the resource then acquires the behaviors defined in the type&#8217;s respective <code>instset</code>. For this example, that <code>instset</code> is <code>/m/llm</code>.</p>
-</div>
-<div class="listingblock">
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>when creating a <code>dcmntspace</code>, it is useful to define a <strong>schema</strong>. a schema is simply an <code>instset</code> by another name. a
+type from the schema is selected to be the root. for schemaless behavior (where arbitrary collections can be created),
+the root should simply be <code>rec::T</code>. should the database enforce closed-world semantics,
+the root is <code>rec::T[?[collection_name=&gt;collection_type{*}::T]]</code>.</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */m/llm/model
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *instset
 ==&gt;rec::T[?[
-  provider=&gt;catalog::T,
-  name=&gt;uri::T,
-  {?}desc=&gt;str::T,
-  {?}cost=&gt;{?}[
-   in=&gt;currency::T,
-   out=&gt;currency::T],
-  {?}size=&gt;bB::T,
-  {?}feature=&gt;feature::T]]
-mtron&gt; */m/llm/inst/+?dom=model</code></pre>
+  {?}pattern=&gt;uri::T,
+  {?}constq=&gt;[#{?}::T],
+  {?}type=&gt;{?}[#{*}::T],
+  {?}inst=&gt;{?}[inst::T],
+  {?}rewrite=&gt;{?}[inst::T],
+  {?}sugar=&gt;{?}[lst::T]]][/m/instset/ctor?instset&lt;=#{?}(#::T)]</code></pre>
+</div>
+</div></div></td>
+</tr>
+</tbody>
+</table>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; animal    -&gt; rec::T[?[name=&gt;str::T,  age=&gt;int::T]]@animal     ​1​
+==&gt;rec::T[?[
+  name=&gt;str::T,
+  age=&gt;int::T]]@animal
+mtron&gt; chicken   -&gt; animal::T@chicken     ​2​
+==&gt;animal::T@chicken
+mtron&gt; equipment -&gt; rec::T[?[model=&gt;uri::T, year=&gt;int::T]]@equipment     ​3​
+==&gt;rec::T[?[
+  model=&gt;uri::T,
+  year=&gt;int::T]]@equipment
+mtron&gt; farmset::[type=&gt;[animal::T,equipment::T,chicken::T]]@/m/dcmnt/schema/farmset     ​4​
+==&gt;farmset::[type=&gt;[
+ animal::T,
+ equipment::T,
+ chicken::T]]@/m/dcmnt/schema/farmset</code></pre>
 </div>
 </div>
 <div class="colist arabic">
 <table>
 <tr>
 <td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>The <code>model::T</code> type in <code>/m/llm</code>.</td>
+<td>an <code>animal::T &lt; rec::T</code> (<strong>refinement type</strong>) is defined.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="2"></i><b>2</b></td>
-<td>The <code>/m/llm</code> instructions with a domain of <code>model::T</code>  (an object oriented perspective&#8201;&#8212;&#8201;<code>obj.f()</code>).</td>
+<td>a <code>chicken::T == animal::T</code> (<strong>nominal type</strong>) is defined.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>an <code>equipment::T &lt; rec::T</code> (<strong>refinement type</strong>) is defined.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>a <code>farmset</code> instset is defined containing <code>animal::T</code>, <code>equipment::T</code>, and <code>chicken::T</code>.</td>
+</tr>
+</table>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; dcmntspace::[pattern     =&gt; farm:#,
+                    host        =&gt; mongodb://localhost:27017/farm,
+                    schema      =&gt; !*farmset,
+                    root        =&gt; rec::T[?[animals   =&gt; animal{*}::T,
+                                            equipment =&gt; equipment{*}::T]],
+                    route       =&gt; [farm:=&gt;&lt;&gt;]]@/sys/space/farm</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>a <code>dcmntspace</code> with <code>farmset</code> as the schema. the root type maps each collection to its element type with <code>{*}</code> cardinality.</td>
+</tr>
+</table>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;  farm:animals/1 -&gt; 'a chicken named trill'     ​1​
+==&gt;fail::[space /sys/space/farm requires rec::T[?[{?}animals=&gt;animals::T]] at root; got str::T][...]@/sys/fail/2
+mtron&gt; farm:animals/1 -&gt; chicken::[name=&gt;'trill',age=&gt;7]     ​2​
+==&gt;chicken::[name=&gt;'trill',age=&gt;7]
+mtron&gt; *farm:animals/1     ​3​
+==&gt;chicken::[name=&gt;'trill',age=&gt;7]</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>writing a <code>str::T</code> to a collection that expects <code>animal{*}::T</code> — rejected at the space level.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>a <code>chicken::T</code> document satisfies <code>animal::T</code> (chicken is-a animal) — accepted.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>reading the document back.</td>
+</tr>
+</table>
+</div>
+<h3 id="_typing_documents" class="discrete">Typing Documents</h3>
+<div class="paragraph">
+<p>BSON (MongoDB&#8217;s binary JSON format) has no concept of a type&#8212;&#8203;for example, <code>chicken::[name=&gt;'trill', age=&gt;7]</code>
+stored in MongoDB would ordinarily come back as a plain <code>rec::[name=&gt;'trill', age=&gt;7]</code>, losing the <code>chicken::T</code>
+identity. metatron preserves type information transparently on the way in and restores it on the way out.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; farm:animals/1 -&gt; chicken::[name=&gt;'trill',age=&gt;7]     ​1​
+==&gt;chicken::[name=&gt;'trill',age=&gt;7]
+mtron&gt; *farm:animals/1     ​2​
+==&gt;chicken::[name=&gt;'trill',age=&gt;7]
+mtron&gt; *farm:animals/1/name     ​3​
+==&gt;'trill'</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>write a <code>chicken::T</code> document to the <code>animals</code> collection.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>read it back — <code>chicken::T</code> is preserved through the round-trip.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>subfield reads navigate into the document without loading the whole record.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>a branch read lists all documents in <code>animals</code> as a <code>uri=&gt;obj</code> map.</td>
 </tr>
 </table>
 </div>
 <div class="paragraph">
-<p>When the REST resource is manipulated to fit the structural specification of <code>model::T</code>, then  <code><a href="http://localhost:8088/v1/models/data/0" class="bare">http://localhost:8088/v1/models/data/0</a></code> can be the source of <code>chat?#&lt;=model</code>.</p>
+<p>An <code>auto_from</code> cell in a dcmntspace document is stored as a native MongoDB
+<a href="https://www.mongodb.com/docs/manual/reference/database-references/#dbrefs">DBRef</a> — <code>$ref</code> carries the collection
+(or <code>scheme:collection</code> for external targets) and <code>$id</code> carries the document id.
+No metatron-specific footprint is left in the stored data.</p>
+</div>
+<h3 id="_inter_space_references" class="discrete">Inter-Space References</h3>
+<div class="paragraph">
+<p>A <code>dcmntspace</code> cell can carry an <code>!*</code> pointer to any URI in metatron.
+Below, a <code>loc:</code> memspace holds barn information, and <code>farm:animals/1</code> (the chicken named Trill) is
+updated with a <code>shelter</code> cell pointing at <code>loc:barns/1</code> — a <strong>cross-space</strong> reference.
+On write, the serializer encodes the external pointer as <code>$ref: "loc:barns"</code> in MongoDB;
+on read, the <code>loc:</code> scheme is detected and the reference is routed to the memspace.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *&lt;http://localhost:8088/v1/models/data/0&gt;&gt;-.
-         -&lt;[name=&gt;&gt;&gt;id.as(uri::T),
-            type=&gt;&gt;&gt;object.as(uri::T),
-            provider=&gt;|!*/sys/space/localai].as(model::T)
-         .chat('are you there?')
-==&gt;"YesYes, I'm here! How can I assist you today?"
-==&gt;fail::[[
- type=&gt;model,
- provider=&gt;!*/sys/space/localai] is not a isa([
-  provider=&gt;catalog::T,
-  name=&gt;uri::T,
-  {?}desc=&gt;str::T,
-  {?}cost=&gt;{?}[
-   in=&gt;currency::T,
-   out=&gt;currency::T],
-  {?}size=&gt;bB::T,
-  {?}feature=&gt;feature::T])
-  [
-   provider=&gt;(==&gt;provider)=&gt;[
-   host=&gt;http://localhost:8088/v1,
-   pattern=&gt;localai:#,
-   name=&gt;localai,
-   route=&gt;[localai:=&gt;&lt;&gt;],
-   space=&gt;[=&gt;],
-   q=&gt;[subq::[
-   pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
-   pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
-   qless_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
-   pattern=&gt;subq,
-   obj=&gt;[,]]]]=&gt;==&gt;catalog::T,
-   noobj=&gt;(X=&gt;name)=&gt;noobj=&gt;X=&gt;uri::T,
-   noobj=&gt;(==&gt;{?}desc)=&gt;noobj=&gt;/=&gt;str::T,
-   noobj=&gt;(==&gt;{?}cost)=&gt;noobj=&gt;==&gt;{?}[
-   in=&gt;currency::T,
-   out=&gt;currency::T],
-   noobj=&gt;(==&gt;{?}size)=&gt;noobj=&gt;/=&gt;bB::T,
-   noobj=&gt;(==&gt;{?}feature)=&gt;noobj=&gt;/=&gt;feature::T]][...]@/sys/fail/408</code></pre>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; memspace::[pattern =&gt; loc:#]@/sys/space/loc     ​1​
+mtron&gt; loc:barns/1 -&gt; [label=&gt;'old_red_barn',capacity=&gt;12]     ​2​
+==&gt;[label=&gt;'old_red_barn',capacity=&gt;12]
+mtron&gt; farm:animals/1 &gt;&gt;= [shelter=&gt;!*loc:barns/1]     ​3​
+==&gt;[shelter=&gt;!*loc:barns/1]
+mtron&gt; *farm:animals/1     ​4​
+==&gt;chicken::[name=&gt;'trill',age=&gt;7]
+mtron&gt; *farm:animals/1/shelter     ​5​
+mtron&gt; farm:animals/2 -&gt; chicken::[name=&gt;'cluck',age=&gt;3,shelter=&gt;!*loc:barns/1]     ​6​
+==&gt;chicken::[
+ name=&gt;'cluck',
+ age=&gt;3,
+ shelter=&gt;!*loc:barns/1]
+mtron&gt; *farm:animals/2     ​7​
+==&gt;chicken::[
+ name=&gt;'cluck',
+ age=&gt;3,
+ shelter=&gt;!*loc:barns/1]
+mtron&gt; *farm:animals/2/shelter     ​8​
+==&gt;[label=&gt;'old_red_barn',capacity=&gt;12]</code></pre>
 </div>
 </div>
 <div class="colist arabic">
 <table>
 <tr>
 <td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>The OpenAPI <code>application/json</code> resource is morphed into a metatron <code>model::T</code> and then the model is `chat`ted with.</td>
+<td>a <code>loc:</code> memspace serves as the cross-space target — any space type (grphSpace, tbleSpace, etc.) works the same way.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>write the barn record into <code>loc:</code> memspace.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>update the existing <code>animals/1</code> document (<code>&gt;&gt;=</code>) with a <code>shelter</code> reference — <code>!*loc:barns/1</code> is an <code>auto_from</code> pointer.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>read the updated document — <code>shelter</code> renders as <code>!*loc:barns/1</code> with the <code>loc:</code> scheme intact (not rewritten to <code>farm:</code>).</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="5"></i><b>5</b></td>
+<td>traversing the cross-space FK: the <code>shelter</code> path segment forces <code>auto_from</code> to read from <code>loc:barns/1</code> via the router, returning the full barn record.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="6"></i><b>6</b></td>
+<td>create a second animal with both a nominal <code>chicken::T</code> type and a cross-space reference in a single write.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="7"></i><b>7</b></td>
+<td>both the type and the reference are preserved through the BSON round-trip.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="8"></i><b>8</b></td>
+<td>the same <code>shelter</code> traversal resolves identically — cross-space routing is transparent to the reader.</td>
 </tr>
 </table>
+</div>
+<div class="openblock card">
+<div class="content">
+<h4 id="_bson_dbref_encoding" class="discrete">bson dbref encoding</h4>
+<div class="paragraph">
+<p>metatron serializes <code>auto_from</code> references as native
+<a href="https://www.mongodb.com/docs/manual/reference/database-references/#dbrefs">MongoDB DBRef</a> documents.
+A DBRef is a plain BSON <code>{$ref, $id}</code> object (no custom fields, no proprietary envelope) so collections with references remain fully compatible with external MongoDB tooling.</p>
+</div>
+<div class="paragraph">
+<p><strong>intra-space references</strong> store a bare collection name in <code>$ref</code> and the document id in <code>$id</code>:</p>
+</div>
+<div class="listingblock center-code">
+<div class="content">
+<pre class="highlight"><code class="language-json" data-lang="json">{
+  "_id": "trill",
+  "name": "Trill",
+  "age": 7,
+  "shelter": { "$ref": "barns", "$id": 1 }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>inter-space references</strong> prefix the <code>$ref</code> field with the target scheme — the colon is the
+discriminator that tells the serializer to route through metatron&#8217;s router rather than the local database:</p>
+</div>
+<div class="listingblock center-code">
+<div class="content">
+<pre class="highlight"><code class="language-json" data-lang="json">{
+  "_id": "trill",
+  "name": "Trill",
+  "age": 7,
+  "shelter": { "$ref": "loc:barns", "$id": 1 }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><code>$id</code> can be an <code>ObjectId</code> (24-char hex), a string, or most numeric types — the
+serializer auto-detects the format and the deserializer recovers the original id value.
+<code>$db</code> is deliberately left unused so that existing MongoDB drivers interpret cross-space
+refs as ordinary references to a collection named <code>"loc:barns"</code> (valid under
+<a href="https://www.mongodb.com/docs/manual/reference/limits/#naming-restrictions">MongoDB naming rules</a>)
+until metatron traverses them.</p>
+</div>
+<div class="paragraph">
+<p>The <code>loc:</code> prefix in <code>$ref</code> is the <strong>only place</strong> metatron stores cross-space routing
+information. There is no <code>_mtron_meta</code> table, no side-channel metadata, and no
+proprietary BSON type. The reference is a standard DBRef — metatron simply reads
+the <code>$ref</code> field and checks for a colon. If none is found, the space-local pattern is used;
+if one is found, the reference is routed to the named scheme&#8217;s space.</p>
+</div>
+</div>
 </div>
 </div>
 <div class="collapse position-relative" id="card-21">
@@ -7153,7 +7384,11 @@ mtron&gt; *lite:person/+/id     ​6​
 ==&gt;[
  instset=&gt;instset::[
   pattern=&gt;/sys/space/lite/schema/instset/#,
-  type=&gt;[,],
+  type=&gt;[
+   award::T,
+   person::T,
+   score::T,
+   venue::T],
   q=&gt;[docq::[
  pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
  pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
@@ -7164,8 +7399,53 @@ mtron&gt; *lite:person/+/id     ​6​
  native=&gt;[
   pattern=&gt;/sys/space/lite/schema/instset/#,
   name=&gt;'instset',
-  tables=&gt;[,],
-  references=&gt;[,]]]
+  tables=&gt;[
+   [
+    name=&gt;'award',
+    uri=&gt;/sys/space/lite/schema/instset/award,
+    schema/schema=&gt;[
+     id=&gt;int::T,
+     trophy=&gt;str::T,
+     recipient=&gt;int::T],
+    type=&gt;award::T],
+   [
+    name=&gt;'person',
+    uri=&gt;/sys/space/lite/schema/instset/person,
+    schema/schema=&gt;[
+     id=&gt;int::T,
+     name=&gt;str::T,
+     age=&gt;int::T],
+    type=&gt;person::T],
+   [
+    name=&gt;'score',
+    uri=&gt;/sys/space/lite/schema/instset/score,
+    schema/schema=&gt;[
+     id=&gt;int::T,
+     player=&gt;str::T,
+     points=&gt;int::T],
+    type=&gt;score::T],
+   [
+    name=&gt;'venue',
+    uri=&gt;/sys/space/lite/schema/instset/venue,
+    schema/schema=&gt;[
+     id=&gt;int::T,
+     name=&gt;str::T,
+     location=&gt;int::T,
+     parent=&gt;str::T],
+    type=&gt;venue::T]],
+  references=&gt;[
+   [
+    from_table=&gt;'award',
+    from_column=&gt;'recipient',
+    to_table=&gt;'person',
+    to_column=&gt;'id',
+    type=&gt;'FOREIGN_KEY'],
+   [
+    from_table=&gt;'venue',
+    from_column=&gt;'location',
+    to_table=&gt;'area:V',
+    to_column=&gt;'id',
+    type=&gt;'FOREIGN_KEY']]]]
 mtron&gt; */sys/space/lite/schema/type/+</code></pre>
 </div>
 </div></div></td>
@@ -7351,7 +7631,11 @@ whose values happen to match <code>person.name</code> — the link is purely alg
  schema=&gt;[
   instset=&gt;instset::[
    pattern=&gt;/sys/space/lite/schema/instset/#,
-   type=&gt;[,],
+   type=&gt;[
+    award::T,
+    person::T,
+    score::T,
+    venue::T],
    q=&gt;[docq::[
  pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
  pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
@@ -7362,15 +7646,53 @@ whose values happen to match <code>person.name</code> — the link is purely alg
   native=&gt;[
    pattern=&gt;/m/tble/space/tblespace/default/schema/instset/#,
    name=&gt;'instset',
-   tables=&gt;[[
- name=&gt;'person',
- uri=&gt;/m/tble/space/tblespace/default/schema/instset/person,
- schema/schema=&gt;[
-  id=&gt;int::T,
-  name=&gt;str::T,
-  age=&gt;int::T],
- type=&gt;person::T]],
-   references=&gt;[,]]]]@/sys/space/lite
+   tables=&gt;[
+    [
+     name=&gt;'award',
+     uri=&gt;/m/tble/space/tblespace/default/schema/instset/award,
+     schema/schema=&gt;[
+      id=&gt;int::T,
+      trophy=&gt;str::T,
+      recipient=&gt;int::T],
+     type=&gt;award::T],
+    [
+     name=&gt;'person',
+     uri=&gt;/m/tble/space/tblespace/default/schema/instset/person,
+     schema/schema=&gt;[
+      id=&gt;int::T,
+      name=&gt;str::T,
+      age=&gt;int::T],
+     type=&gt;person::T],
+    [
+     name=&gt;'score',
+     uri=&gt;/m/tble/space/tblespace/default/schema/instset/score,
+     schema/schema=&gt;[
+      id=&gt;int::T,
+      player=&gt;str::T,
+      points=&gt;int::T],
+     type=&gt;score::T],
+    [
+     name=&gt;'venue',
+     uri=&gt;/m/tble/space/tblespace/default/schema/instset/venue,
+     schema/schema=&gt;[
+      id=&gt;int::T,
+      name=&gt;str::T,
+      location=&gt;int::T,
+      parent=&gt;str::T],
+     type=&gt;venue::T]],
+   references=&gt;[
+    [
+     from_table=&gt;'award',
+     from_column=&gt;'recipient',
+     to_table=&gt;'person',
+     to_column=&gt;'id',
+     type=&gt;'FOREIGN_KEY'],
+    [
+     from_table=&gt;'venue',
+     from_column=&gt;'location',
+     to_table=&gt;'area:V',
+     to_column=&gt;'id',
+     type=&gt;'FOREIGN_KEY']]]]]@/sys/space/lite
 mtron&gt; lite:score/1 -&gt; [player=&gt;'marko', points=&gt;42]     ​2​
 ==&gt;[player=&gt;'marko',points=&gt;42]
 mtron&gt; lite:score/2 -&gt; [player=&gt;'grant', points=&gt;99]     ​3​
@@ -7888,37 +8210,15 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
  obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
  inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
    space=&gt;[sub=&gt;{!*/m/mach,!*/m/math,!*/m/web,!*/m/iot,!*/m/grph,!*/m/llm,!*/m/tble,!*/m/dcmnt,!*/m/rdf}],
-   type=&gt;[
-    #::T,
-    bool::T,
-    int::T,
-    real::T,
-    bytes::T,
-    str::T,
-    uri::T,
-    rel::T,
-    lst::T,
-    rec::T,
-    instset::T,
-    inst::T,
-    code::T,
-    fail::T,
-    space{*}::T,
-    memspace::T,
-    stack::T,
-    qproc::T,
-    subq::T,
-    sub::T,
-    typeq::T,
-    docs::T,
-    docq::T,
-    mintq::T,
-    incrq::T,
-    constq::T,
-    mimeq::T],
-   const=&gt;[
-    noobj,
-    none@none],
+   rewrite=&gt;[
+    /m/inst/rewrite/id_removal?code{?}&lt;=code(),
+    /m/inst/rewrite/map_nest?code{?}&lt;=code(),
+    /m/inst/rewrite/else_after_count?code{?}&lt;=code(),
+    /m/inst/rewrite/plus_zero?code{?}&lt;=code(),
+    /m/inst/rewrite/mult_one?code{?}&lt;=code(),
+    /m/inst/rewrite/split_merge_collapse?code{?}&lt;=code(),
+    /m/inst/rewrite/split_merge_left_factor?code{?}&lt;=code(),
+    /m/inst/rewrite/split_merge_right_factor?code{?}&lt;=code()],
    inst=&gt;[
     as?bool&lt;=bool(bool::T),
     as?bytes&lt;=bool(bytes::T),
@@ -8146,15 +8446,37 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
     lshift?B{*}&lt;=A(),
     start?A{**}&lt;=noobj{0}(A{**}::T),
     ctor()],
-   rewrite=&gt;[
-    /m/inst/rewrite/id_removal?code{?}&lt;=code(),
-    /m/inst/rewrite/map_nest?code{?}&lt;=code(),
-    /m/inst/rewrite/else_after_count?code{?}&lt;=code(),
-    /m/inst/rewrite/plus_zero?code{?}&lt;=code(),
-    /m/inst/rewrite/mult_one?code{?}&lt;=code(),
-    /m/inst/rewrite/split_merge_collapse?code{?}&lt;=code(),
-    /m/inst/rewrite/split_merge_left_factor?code{?}&lt;=code(),
-    /m/inst/rewrite/split_merge_right_factor?code{?}&lt;=code()]]@/m,
+   const=&gt;[
+    noobj,
+    none@none],
+   type=&gt;[
+    #::T,
+    bool::T,
+    int::T,
+    real::T,
+    bytes::T,
+    str::T,
+    uri::T,
+    rel::T,
+    lst::T,
+    rec::T,
+    instset::T,
+    inst::T,
+    code::T,
+    fail::T,
+    space{*}::T,
+    memspace::T,
+    stack::T,
+    qproc::T,
+    subq::T,
+    sub::T,
+    typeq::T,
+    docs::T,
+    docq::T,
+    mintq::T,
+    incrq::T,
+    constq::T,
+    mimeq::T]]@/m,
   /m/iot=&gt;instset::[
    pattern=&gt;/m/iot/#,
    q=&gt;[docq::[
@@ -8415,8 +8737,8 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
   constq=&gt;[/m/space/qproc/constq],
   lrow=&gt;[/m/tble/lrow],
   monad=&gt;[/m/mach/monad],
-  inst=&gt;[/m/inst],
   auto=&gt;[/m/inst/auto],
+  inst=&gt;[/m/inst],
   machine=&gt;[/m/mach/machine],
   dcmntspace=&gt;[/m/dcmnt/space/dcmntspace],
   rshift=&gt;[/m/inst/rshift],
@@ -8467,15 +8789,15 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
   reduce=&gt;[/m/inst/reduce],
   to=&gt;[/m/inst/to],
   skip=&gt;[/m/inst/skip],
-  space=&gt;[/m/space],
   port=&gt;[/m/inst/port],
+  space=&gt;[/m/space],
   bothV=&gt;[/m/grph/inst/bothV],
   inE=&gt;[/m/grph/inst/inE],
   println=&gt;[/m/inst/println],
   instset=&gt;[/m/instset],
   gte=&gt;[/m/inst/gte],
-  real=&gt;[/m/real],
   scheme=&gt;[/m/inst/scheme],
+  real=&gt;[/m/real],
   rrow=&gt;[/m/tble/rrow],
   start=&gt;[/m/inst/start],
   tblespace=&gt;[/m/tble/space/tblespace],

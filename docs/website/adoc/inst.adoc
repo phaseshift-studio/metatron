@@ -126,7 +126,7 @@ When an instruction is called, the associated https://en.wikipedia.org/wiki/Para
 --
 [stem]
 ++++
-\large \tt{obj}_\tt{lhs} \cdot f(\color{yellow}{\__{0}}, \color{yellow}{\__{1}},\ldots,\color{yellow}{\__{n}}) \mapsto \tt{obj}_\tt{rhs}
+\tt{obj}_\tt{lhs} \cdot f(\color{yellow}{\__0}, \color{yellow}{\__1},\ldots,\color{yellow}{\__n}) \mapsto \tt{obj}_\tt{rhs}
 ++++
 --
 
@@ -168,7 +168,7 @@ Given the filtering behavior of the instruction, the signature of `band` is `int
 --
 [stem]
 ++++
-\large \tt{obj}_\tt{lhs} \cdot f(\color{yellow}{a_1} \Rightarrow x, \color{yellow}{a_2} \Rightarrow y,\ldots,a_n) \mapsto \tt{obj}_\tt{rhs}
+\tt{obj}_\tt{lhs} \cdot f(\color{yellow}{a_0} \Rightarrow x, \color{yellow}{a_1} \Rightarrow y,\ldots,a_n) \mapsto \tt{obj}_\tt{rhs}
 ++++
 --
 
@@ -206,7 +206,7 @@ Note where the error is thrown when `str['abc']` is provided.
 --
 [stem]
 ++++
-\large \tt{obj}_\text{lhs} \cdot f(a_1 \Rightarrow \color{yellow}{else(x)},a_2 \Rightarrow \color{yellow}{else(y)},\ldots,a_n) \mapsto \tt{obj}_\tt{rhs}
+\tt{obj}_\tt{lhs} \cdot f(a_0 \Rightarrow \color{yellow}{\tt{else}(x)},a_1 \Rightarrow \color{yellow}{\tt{else}(y)},\ldots,a_n) \mapsto \tt{obj}_\tt{rhs}
 ++++
 --
 
@@ -244,7 +244,7 @@ If the incoming `obj` to `else` is `noobj`, then `else` returns it's argument, o
 --
 [stem]
 ++++
-\large \tt{obj_{\text{lhs}} \cdot f(a_1 \Rightarrow \color{yellow}{?type_1}, a_2 \Rightarrow \color{yellow}{?type_2},\ldots,a_n \Rightarrow \color{yellow}{?type_3}) \mapsto obj_{rhs}}
+\tt{obj}_\tt{lhs} \cdot f(a_0 \Rightarrow \color{yellow}{?\tt{type}_0}, a_2 \Rightarrow \color{yellow}{?\tt{type}_1},\ldots,a_n \Rightarrow \color{yellow}{?\tt{type}_2}) \mapsto \tt{obj}_\tt{rhs}}
 ++++
 --
 
@@ -290,7 +290,7 @@ band -> |inst?int{?}<=int(min=>?nat::T.else(-100),max=>?nat::T.else(100)){ is(an
 --
 [stem]
 ++++
-\large \tt{obj}_\tt{lhs} \cdot \color{yellow}{\lambda}(a_1 \Rightarrow x, a_2 \Rightarrow y,\ldots,a_n) \mapsto \tt{obj}_\tt{rhs}
+\tt{obj}_\tt{lhs} \cdot \color{yellow}{\lambda}(a_0 \Rightarrow x, a_1 \Rightarrow y,\ldots,a_n) \mapsto \tt{obj}_\tt{rhs}
 ++++
 --
 
@@ -340,7 +340,7 @@ is_divisible -> |is_divisble?bool<=int(by?int=>_)[mod(*by).eq(0)]
 --
 [stem]
 ++++
-\large \tt{obj}_\tt{in}.f(a_1 \Rightarrow x,a_2 \Rightarrow \color{yellow}{g(*a_1)},\ldots,a_n) \mapsto \tt{obj}_\tt{out}
+\tt{obj}_\tt{in} \cdot f(a_0 \Rightarrow x,a_1 \Rightarrow \color{yellow}{g(\ast a_1)},\ldots,a_n) \mapsto \tt{obj}_\tt{out}
 ++++
 --
 

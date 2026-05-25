@@ -112,46 +112,49 @@ a/b/c -> [x,[y=>[z=>2]]]
 
 When a poly containing nested poly structures is written to space an ambiguity emerges. A example will elucidate this point. Assume the two ways in which to encode "the same" data in space.
 
-[cols="6a,8a"]
+[cols="8a,8a"]
 |===
 |
 
-[cols="3a,3a",option="header"]
+[cols="5a,5a",option="header"]
 !===
 ^!
 **form A**
 ^!
 **form B**
 !
-[mtron,source]
+[source,mtron]
 ----
-a->[b=>1,c=>2] 
-----
-!
-[mtron,source]
-----
-a->[b=>1,c=>2]
+[a=>[b=>1,c=>2]] 
 ----
 !
-[mtron,source]
+[source,mtron]
 ----
-     ┌──b──⮞1
-   a─┤
-     └──c──⮞2
+{[a=>[b=>1]],
+ [a=>[c=>2]]}
 ----
 !
-[mtron,source]
+[source,mtron]
 ----
-    a──b──⮞1
+  ┌──b──⮞1
+a─┤
+  └──c──⮞2
+----
+!
+[source,mtron]
+----
+a──b──⮞1
 
-    a──c──⮞2  
+a──c──⮞2  
 ----
 !===
 <1> the uri ring defines multiplcation as "extension", where latexmath:[x \cdot y] is `x/y`.
 <2> the uri ring defines addition as "branching", where latexmath:[x + y] is `{x,y}`. 
 
+The characteristic marks of latexmath:[\ast] are `.`,`\=>`. +
+The characteristic marks of latexmath:[+] are `,`, `-<`/`>-`.
 |
-The two examples represent the equivalent data because there exists a bijection that maps **A** to **B** and **B** to **A**. In other words, they are isomorphic structures within the category of ring. The form **A** is captured by the equation:
+The two examples represent the equivalent data because there exists a bijection that maps **A** to **B** and **B** to **A**. In other words, they are isomorphic structures within the category of the obj ring. The form **A** is captured by the equation:
 
 \[
 a \cdot (b + c) = \{1,2\}
@@ -166,83 +169,89 @@ Form **B** has the equation:
 Thus, due to the ring axiom that states multiplication distributes over addition, the two equations, while typographically different, are, in fact, algebraically equivalent.
 
 \[
-\begin{align*}
-a \cdot (b + c)           &=&         \\
-(a \cdot b) + (a \cdot c) &= ab + ac \\
-\end{align*}
-\]
-
-|
-[cols="3a,3a",option="header"]
-!===
-^!
-**form A**
-^!
-**form B**
-!
-[mtron,source]
-----
-    *a/
-----
-!
-[mtron,source]
-----
-    *a/b/
-    *a/c/
-----
-!
-[mtron,source]
-----
-a=>[b=1,c=>2]
-----
-!
-[mtron,source]
-----
-{a/b=>1,a/c=>2}
-----
-!===
-|
-The inverse holds as well. That is, when reading from space, `*a/` and *a/b 
-The two examples are "equal" because they can be rewritten into each using the ring algebra. The first form is the equation:
-
-\[
-a \cdot (b + c)
-\]
-
-The second is written:
-
-\[
-(a + b) \cdot (a + c)
-\]
-
-Thus, due to the fact that multiplication distributes over addition, the two equations, while typographically different are in fact the same data.
-
-\[
-a \cdot (b + c) = (a + b) \cdot (a + c)
+\begin{align}
+a \cdot (b + c)  &= (a \cdot b) + (a \cdot c)         \\
+a (b + c)        &= ab + ac \\
+\end{align}
 \]
 
 |===
 
-If the implication of these equalities is not readily apparent, then understand the following. The multiplicative union of uris to an obj is a **dependent relationship**. There exists a colocational requirement where `a` is coupling `b` and `c` together into a single structure that then refers to `1` and `2`.
+If the implication of these equalities is not readily apparent, then understand the following. The multiplicative union of uris to an obj is a **dependent relationship**. There exists a colocational requirement that `a` couples `b` and `c` into a single structure.
 
-[mtron,source]
+[source,mtron]
 ----
-     ┌──b──⮞1
-   a─┤
-     └──c──⮞2
-----
-
-On the other hand, the additive union of the uris is an **independent relationship**. There are two representations of `a` and thus, `a/b \=> 1` is distinct, requiring no colocation with `a/c \=> 2`. This means that `a/b` can be stored in a document database in Japan and `a/c` an be stored in `.txt` file on some file system in Ohio and when resolved, the same `{1,2}` result is returned upon query (albeit with different time/space characteristics compared to the multiplicative, colocated representation of the data).
-
-[mtron,source]
-----
-    a──b──⮞1
-
-    a──c──⮞2  
+  ┌──b──⮞1
+a─┤
+  └──c──⮞2
 ----
 
+On the other hand, the additive union of the uris is an **independent relationship**. There are two representations of `a` and thus, `a/b \=> 1` is distinct, requiring no colocation with `a/c \=> 2`. This means that `a/b` can be stored in a document database in Japan and `a/c` an be stored in `.txt` file on some file system in Ohio and when resolved, the same `{1,2}` result is returned upon query (albeit with different space/time characteristics compared to the multiplicative, colocated representation of the data).
 
-A further entailment states that a dataset can be rewritten from a **concatenative/multiplicative** form to a **union/additive** form so as to maintain one subset of the data in a specialized space optimized for the demands of its production requirements and the other subset in some other specialized space according to its requirements. More specifically, some data needs to be "hot in cache" in order to satisfy demand, and some data should be "iced in archive" when the production usage doesn't require rapid response times and its possible to reduce production costs with cheap disk storage. With metatron, expressing such partitions while also ensuring said partitions resolve correctly is built into the fundamental mathematics/algorithm of the system -- **the ring algebra for structural composition**.  
+[source,mtron]
+----
+a──b──⮞1
+
+a──c──⮞2  
+----
+
+[mtron]
+----
+x0 -> [a=>[b=>1,c=>2]]
+x1 -> {[a=>[b=>1]],[a=>[c=>2]]}
+----
+
+[mtron]
+----
+[x0,x1]>-.-<[*(* /a/b)]>-
+[x0,x1]>-.-<[*(* /a/c)]>-
+[x0,x1]>-.-<[*(* /a/+)]>-
+[x0,x1]>-.-<[*(* /+/+)]>-
+[x0,x1]>-.-<[*(* /+/b)]>-
+[x0,x1]>-.-<[*(* /+/c)]>-
+----
+
+[discrete]
+===== Left/Right Factors
+
+Factorization can happen to the left and to the right. Assume, for the sake of an example, that the additive branches of the running example thus far both end with a `d` entry. If so, then the following equalities hold.
+
+[source,mtron]
+----
+a──b──d──⮞1           ┌──b──d──⮞1          ┌──b──┐
+                =   a─┤              =   a─┤      ├─d──⮞{1,2}
+a──c──d──⮞2           └──c──d──⮞2          └──c──┘
+----
+
+The equalities below reiterate what is stated diagramatically above.
+
+\[
+\begin{align}
+\;         & (a \cdot b \cdot d) & + \;\; & (a \cdot c \cdot d) &            &=& \{1,2\} \\
+a \cdot \; & ( (b \cdot d)       & + \;\; & (c \cdot d) )       &            &=& \{1,2\} \\
+a \cdot \; & ( b                 & + \;\; & c )                 &  \cdot d   &=& \{1,2\}
+\end{align}
+\]
+
+[mtron]
+----
+x0 -> [a=>[b=>[d=>1],c=>[d=>2]]]
+x1 -> {[a=>[b=>[d=>1]]],[a=>[c=>[d=>2]]]}
+----
+
+[mtron]
+----
+[x0,x1]>-.-<[*(* /a/b/d)]
+[x0,x1]>-.-<[*(* /a/b/+)]
+[x0,x1]>-.-<[*(* /a/+/+)]
+[x0,x1]>-.-<[*(* /+/+/+)]
+[x0,x1]>-.-<[*(* /+/+/d)]
+[x0,x1]>-.-<[*(* /+/c/d)]
+[x0,x1]>-.-<[*(* /+/c/+)]
+[x0,x1]>-.-<[*(* /a/+/d)]
+----
+
+A subsequent, practical entailment states that a ring-based dataset can be transformed from a **concatenative/multiplicative** form to a **union/additive** form so as to maintain one subset of the data in a specialized space optimized for the demands of its production requirements and the other subset in another space specialized accordingly to its requirements. For example, some data should be "hot in cache" in order to satisfy demand, while some other data should be "iced in an archive" when the production usage doesn't require a rapid response time and production costs can be reduced with cheaper disk storage. With metatron, expressing such partitions while also ensuring said partitions resolve correctly is built into the fundamental mathematics/algorithm of the system -- **the ring algebra for structural composition**.  
 
 [discrete]
 ==== Isomorphic != Identical
@@ -375,3 +384,56 @@ The different embeddings also have different space costs, where space is defined
 | [.red]#row#            | \[O(n)\]       | \[O(n)\]      | \[O(n+m)\]
 | [.red]#row_column#     | \[O(n+m)\]     | \[O(n+m)\]    | \[O(n+m)\]
 |===
+
+[discrete]
+=== The Algebraic Structure of Data
+
+The examples thus far using algebra to construct and deconstruct data structures have been relatively basic. It's important to note that such equalities are recursive, and to demonstrate the point, a more complicated factorization will be presetented.
+
+In mathematics, addition is denoted with a latexmath:[+] as in latexmath:[a + b]. In code, addition represented with a `,`. A `,` separates two independent `objs` as in `[a,b]`. For multiplication, mathematical notation uses latexmath:[a \cdot b] or latexmath:[a \ast b] or simply character incidence as in latexmath:[ab]. In code, `.` denotes multiplication. For instance, `a.b`. Given this rule, the following metatron `rec`
+
+[mtron]
+----
+x0 -> [a=>[b=>[c=>1,d=>2],
+           e=>[c=>3,d=>4,f=>5]],
+       g=>[b=>[c=>6]]]
+----
+
+can be systematically and unambiguously transformed into the equation:
+
+\[
+\begin{align}
+    a(b(c \cdot 1) + (d \cdot 2)) + (e( (c \cdot 3)  + (d \cdot 4) +  (f \cdot 5) )) +  (g(b(c \cdot 6))) \\
+(a+e+g)(b(c\cdot 1) + b(c\cdot 3) + b(c \cdot 6)) + (a+e)(d\cdot 2 + d \cdot 4) \\
+(a+e+g)(b(c(1+3))) + (a+e)(d(2 + 4))
+\end{align}
+\]
+
+Common left side variables amongst summed components can be factored to the left. Likewise, right side variable can be factored to the right. From the inverse of distributivity, the `rec` can be written:
+
+[mtron]
+----
+x1 -> [a/b => [c=>1,d=>2],
+       a/e/c => 3,
+       a/e/d => 4,
+       a/e/f => 5,
+       g/b => [c=>6]]
+x2 -> [a/b/c => 1, 
+       a/b/d => 2, 
+       a/e/c => 3, 
+       a/e/d => 4, 
+       a/e/f => 5, 
+       g/b/c => 6]
+----
+
+[mtron]
+----
+[x0,x1,x2]>-.-<[*(* /a/b/c)] 
+[x0,x1,x2]>-.-<[*(* /a/b/+)]
+[x0,x1,x2]>-.-<[*(* /a/+/+)]
+[x0,x1,x2]>-.-<[*(* /+/b/+)]
+[x0,x1,x2]>-.-<[*(* /+/b/c)]
+[x0,x1,x2]>-.-<[*(* /a/+/c)]
+[x0,x1,x2]>-.-<[*(* /+/+/c)]
+[x0,x1,x2]>-.-<[*(* /g/+/+)]
+----

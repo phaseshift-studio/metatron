@@ -332,12 +332,12 @@ The MCP notifications specification notes the following method specs:
 [cols=".^2a,.^6",separator=🧱,options=header,role="table-bordered small center"]
 |===
 ^🧱 method ^🧱 description
-🧱 `resources/updated`  🧱 Sent when the content of a specific subscribed resource changes; the params include the resource uri, and the client should perform a resources/read to get the new data. 
+🧱 `resources/updated`      🧱 Sent when the content of a specific subscribed resource changes; the params include the resource uri, and the client should perform a resources/read to get the new data. 
 🧱 `resources/list_changed` 🧱 Sent when the list of available resources has changed, prompting the client to refresh its resource list.
-🧱 `prompts/list_changed` 🧱 Sent when the list of available prompt templates has changed.
-🧱 `tools/list_changed` 🧱 Sent when the list of available tools has changed (typically when the server declares the listChanged capability).
-🧱 `logging/message` 🧱 Sent by the server to provide log output to the client, triggered when the client has configured logging via logging/setLevel.
-🧱 `roots/list_changed` 🧱 Sent when the list of filesystem roots accessible to the server has changed.
+🧱 `prompts/list_changed`   🧱 Sent when the list of available prompt templates has changed.
+🧱 `tools/list_changed`     🧱 Sent when the list of available tools has changed (typically when the server declares the listChanged capability).
+🧱 `logging/message`        🧱 Sent by the server to provide log output to the client, triggered when the client has configured logging via logging/setLevel.
+🧱 `roots/list_changed`     🧱 Sent when the list of filesystem roots accessible to the server has changed.
 |===
 
 If an MCP session is spawned at `ws://localhost:8555/mcp/0`, then writing an obj to `ws://localhost:8555/mcp/0/notification/x/y` will automatically be routed to the MCP client in a proper https://www.jsonrpc.org/[JSON-RPC 2.0] transport object.
@@ -380,7 +380,7 @@ can access it accordingly and naturally.
 
 The mtron example below contains two structured response calls to the agent used in the running examples thus far. Note the use of the tools provided to the agent.
 
-[mtron,source]
+[source,mtron]
 ----
 *robotron                                                                         
 *robotron.chat('what is 6 + 23?',[answer=>int::T])                                 /
