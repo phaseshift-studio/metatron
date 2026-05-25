@@ -34,7 +34,7 @@ import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.web.space.ws.handler.mcp_mtron_wsHandler;
 import studio.phaseshift.metatron.isa.web.space.ws.handler.mcp_wsHandler;
-import studio.phaseshift.metatron.isa.web.type.Content;
+import studio.phaseshift.metatron.isa.web.type.MIME;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -104,8 +104,8 @@ public class mcp_mtron_wsHandlerIntegrationTest extends AbstractWebSocketServerI
         final fURI vid = f("/test/" + getClass().getSimpleName() + "/" + System.nanoTime());
         this.server = new mcp_mtron_wsHandler(
                 new LinkedHashMap<>(Map.of(
-                        uri(IN), uri(Content.ContentType.APPLICATION_JSON.value),
-                        uri(OUT), uri(Content.ContentType.APPLICATION_JSON.value))),
+                        uri(IN), uri(MIME.MIMEType.APPLICATION_JSON.value),
+                        uri(OUT), uri(MIME.MIMEType.APPLICATION_JSON.value))),
                 vid);
     }
 
@@ -281,8 +281,8 @@ public class mcp_mtron_wsHandlerIntegrationTest extends AbstractWebSocketServerI
         final fURI vid = f("/test/" + getClass().getSimpleName() + "/custom-" + System.nanoTime());
         final mcp_mtron_wsHandler customServer = new mcp_mtron_wsHandler(
                 new LinkedHashMap<>(Map.of(
-                        uri(IN), uri(Content.ContentType.APPLICATION_JSON.value),
-                        uri(OUT), uri(Content.ContentType.APPLICATION_JSON.value),
+                        uri(IN), uri(MIME.MIMEType.APPLICATION_JSON.value),
+                        uri(OUT), uri(MIME.MIMEType.APPLICATION_JSON.value),
                         uri(TOOL), rec(uri("custom_only"),
                                 instC(
                                         f("custom_only")

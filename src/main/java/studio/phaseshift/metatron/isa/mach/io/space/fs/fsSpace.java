@@ -26,7 +26,7 @@ import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjs;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
-import studio.phaseshift.metatron.isa.web.type.Content;
+import studio.phaseshift.metatron.isa.web.type.MIME;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -128,17 +128,17 @@ public class fsSpace extends AbstractSpace<FileSystem> {
     }
 
     private Obj readFileAsObj(final File file, final Map<String, String> qMap) throws IOException {
-        Content.ContentType contentType = qMap.containsKey("content_type") ?
-                Content.ContentType.of(qMap.get("content_type")) :
-                Content.ContentType.fromProbe(file, null);
+        MIME.MIMEType contentType = qMap.containsKey("content_type") ?
+                MIME.MIMEType.of(qMap.get("content_type")) :
+                MIME.MIMEType.fromProbe(file, null);
         contentType = null == contentType ?
-                Content.ContentType.fromExtension(file.getName(), Content.ContentType.APPLICATION_MTRON) : contentType;
+                MIME.MIMEType.fromExtension(file.getName(), MIME.MIMEType.APPLICATION_MTRON) : contentType;
         final FileInputStream fs = new FileInputStream(file);
         byte[] fileBytes = fs.readAllBytes();
         fs.close();
         final String source = new String(fileBytes, StandardCharsets.UTF_8);
         final fURI vid = source.startsWith("[-- @<") ? f(source.substring(6, source.indexOf("> --]\n")).trim()) : null;
-        if (vid != null) contentType = Content.ContentType.APPLICATION_MTRON;
+        if (vid != null) contentType = MIME.MIMEType.APPLICATION_MTRON;
         LOG.debug("fileToObj: %s => %s", file.getPath(), vid);
         return contentType.hasSerializer() ? contentType.fromBytes(fileBytes) : uri(this.redirect(f(file.getPath()), false), FILE_TID, null).selfVID(vid);
     }
@@ -150,7 +150,7 @@ public class fsSpace extends AbstractSpace<FileSystem> {
 
     public Obj objToFile(final fURI vid, final Obj obj) {
         try {
-            final Content.ContentType contentType = Content.ContentType.fromType(obj, Content.ContentType.APPLICATION_MTRON);
+            final MIME.MIMEType contentType = MIME.MIMEType.fromType(obj, MIME.MIMEType.APPLICATION_MTRON);
             final File file = new File(this.redirect(vid, true).toString());
             LOG.info("writing %s to %s", obj, file.getPath());
             if (!file.exists()) {

@@ -28,10 +28,9 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.impl.*;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.mach.type.Monad;
 import studio.phaseshift.metatron.isa.mach.type.PCMonad;
 import studio.phaseshift.metatron.isa.mach.type.Router;
-import studio.phaseshift.metatron.isa.web.type.Content;
+import studio.phaseshift.metatron.isa.web.type.MIME;
 import studio.phaseshift.metatron.util.*;
 
 import java.nio.ByteBuffer;
@@ -74,7 +73,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer.OBJ_SERIAL_TID;
-import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_MONAD_TID;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_MONAD_TYPE;
 import static studio.phaseshift.metatron.isa.mach.type.monad.BasicPCMonad.pcmonad;
 import static studio.phaseshift.metatron.util.CommonUtil.indent;
@@ -1084,7 +1082,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                     */
                     docWrap(instC(SOURCE_INST_TID.dom(A.maybe()).rng(B.maybeSome()), lst(STR_TYPE), (lhs, inst) -> {
                                 final Str source = inst.arg(0).asStr();
-                                final Content.ContentType contentType = Content.ContentType.fromType(source, Content.ContentType.APPLICATION_MTRON);
+                                final MIME.MIMEType contentType = MIME.MIMEType.fromType(source, MIME.MIMEType.APPLICATION_MTRON);
                                 return contentType.exec(source);
                             }),
                             "maybe an obj", "result of evaluating source code", Map.of(jnt(0), "the source code to evaluate"), "evaluates source code"),

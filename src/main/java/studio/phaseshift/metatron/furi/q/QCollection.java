@@ -29,12 +29,11 @@ import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.m.type.impl.MStr;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.thread.VirtualThread;
-import studio.phaseshift.metatron.isa.web.type.Content;
+import studio.phaseshift.metatron.isa.web.type.MIME;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
@@ -141,13 +140,13 @@ public final class QCollection {
         return QProc.Helper.build(MIMEQ_TID, MIMEQ_PATTERN)
                 .postRead((furi, obj) -> {
                     final String mime = furi.q(MIMEQ_PATTERN.toString());
-                    final Content.ContentType contentType = Content.ContentType.of(mime);
-                    if (null == contentType)
+                    final MIME.MIMEType mimeType = MIME.MIMEType.of(mime);
+                    if (null == mimeType)
                         throw MTronException.of("unknown mime type: %s", mime);
-                    if (!mime.equals(contentType.value))
-                        throw MTronException.of("content_type mismatch: %s %s", mime, contentType.value);
-                    LOG.debug("MTRON obj for %s: %s (%s)", mime, obj, contentType.value);
-                    final Object nativeObject = contentType.serializer().write(obj);
+                    if (!mime.equals(mimeType.value))
+                        throw MTronException.of("mime-type mismatch: %s %s", mime, mimeType.value);
+                    LOG.debug("MTRON obj for %s: %s (%s)", mime, obj, mimeType.value);
+                    final Object nativeObject = mimeType.serializer().write(obj);
                     LOG.debug("NATIVE serialized: %s", nativeObject);
                     return str(nativeObject.toString());
                 }).create();

@@ -25,7 +25,7 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.web.space.ws.handler.mcp_wsHandler;
-import studio.phaseshift.metatron.isa.web.type.Content;
+import studio.phaseshift.metatron.isa.web.type.MIME;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -51,7 +51,7 @@ public class mcp_wsHandlerTest extends AbstractWebSocketServerTest {
 
     @Override
     protected WebSocketRec createServer(final fURI vid) {
-        return new mcp_wsHandler(new LinkedHashMap<>(Map.of(uri(IN), uri(Content.ContentType.APPLICATION_JSON.value), uri(OUT), uri(Content.ContentType.APPLICATION_JSON.value))), WS_MCP_HANDLER_TID, vid);
+        return new mcp_wsHandler(new LinkedHashMap<>(Map.of(uri(IN), uri(MIME.MIMEType.APPLICATION_JSON.value), uri(OUT), uri(MIME.MIMEType.APPLICATION_JSON.value))), WS_MCP_HANDLER_TID, vid);
     }
 
     /**
@@ -204,8 +204,8 @@ public class mcp_wsHandlerTest extends AbstractWebSocketServerTest {
         final fURI vid = createTestVid();
         final mcp_wsHandler withTool = new mcp_wsHandler(
                 mutableMap(
-                        uri(IN), uri(Content.ContentType.APPLICATION_JSON.value),
-                        uri(OUT), uri(Content.ContentType.APPLICATION_JSON.value)),
+                        uri(IN), uri(MIME.MIMEType.APPLICATION_JSON.value),
+                        uri(OUT), uri(MIME.MIMEType.APPLICATION_JSON.value)),
                 WS_MCP_HANDLER_TID, vid);
         // Manually add a tool: addTool => instC that echoes the arguments back
         withTool.jvm().put(uri(TOOL), rec(

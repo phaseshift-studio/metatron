@@ -18,18 +18,14 @@
 
 package studio.phaseshift.metatron.isa.web.space.ws;
 
-import kotlin.internal.InlineOnly;
-import org.java_websocket.WebSocket;
 import org.java_websocket.client.WebSocketClient;
-import org.java_websocket.handshake.Handshakedata;
 import org.java_websocket.handshake.ServerHandshake;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
-import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
-import studio.phaseshift.metatron.isa.web.type.Content;
+import studio.phaseshift.metatron.isa.web.type.MIME;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.io.Closeable;
@@ -39,10 +35,7 @@ import java.util.concurrent.TimeUnit;
 
 import static studio.phaseshift.metatron.Tokens.HOST;
 import static studio.phaseshift.metatron.Tokens.ON_MESSAGE;
-import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.m.mInstSet.ALL_TYPE;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.print_;
-import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
@@ -101,7 +94,7 @@ public class WebSocketRecClient extends WebSocketClient implements Rec, Closeabl
 
 
     public WebSocketObj.IO getIO() {
-        return WebSocketObj.IO.of(this.wsclient, Content.ContentType.APPLICATION_MTRON);
+        return WebSocketObj.IO.of(this.wsclient, MIME.MIMEType.APPLICATION_MTRON);
     }
 
     @Override

@@ -1,23 +1,20 @@
 [discrete]
 == poly
 
-The **poly** types have much to offer. They are found everywhere: from structuring data's skeleton, to the shaping of types, to the nesting of spaces, to controlling code flow, to documenting instructions composed of interlinking polys, to the passing of messages between poly threads that are split and merged according a polynomial algebra, and -- to this and to the all so important that -- the wonderful world of poly enable concise expressions of structure and process.
-
-There are 3 **poly** types in metatron: `rec` (record), `lst` (list), and `rel` (relation).
-These are the most versatile types -- the linchpins of metatron.
+The **poly** types are one of the more interesting aspects of metatron. They are used to structure data (serving as collections) and for for flow control (code branching). There are 3 **poly** types in metatron: `rec` (record), `lst` (list), and `rel` (relation) -- the linchpins of metatron.
 
 [discrete]
 === data structures
 
 The obvious application of a `poly` is as the scaffolding for a data structure. A `poly` is a https://en.wikipedia.org/wiki/Collection_(abstract_data_type)[collection] able to bundle multiple objs
-together. Via the colocation of two objs within the confines of a `poly`, two objs are bound. This primordial glue is fundamental to the structuring of data into a data structure. Another way to bind two objs together is via explicit uri referencing. This method is a form of https://en.wikipedia.org/wiki/Lazy_evaluation[lazy binding] in that "colocation" is computed through dereferencing, and as such,
-https://en.wikipedia.org/wiki/Dangling_pointer[dangling pointers] are possible. With `poly`, there can be no "dangling pointers" -- either two objs are colocated in the `poly` or not. However, mtron is lenient on lazy pointers. A pointer to an obj that doesn't exist is a pointer to an `noobj`.
+together. Via the colocation of two objs within the confines of a `poly`, two objs are bound. Another way to bind two objs together is via explicit uri referencing. This method is a form of https://en.wikipedia.org/wiki/Lazy_evaluation[lazy binding] in which "colocation" is computed through dereferencing, and as such,
+https://en.wikipedia.org/wiki/Dangling_pointer[dangling pointers] are possible. With `poly`, there can be no "dangling pointers" -- either two objs are colocated in the `poly` or not. However, mtron is lenient on lazy pointers. It is important to realize the ramifications of the fail-free aspect of `noobj` resolved pointers.
 
 [.card]
 --
 [discrete,.center]
 ==== graceful degradation in the void with noobj
-The intended use of metatron is to connect disparate datasets and processor into a cohesive structure bound by loose structural similarities. From resources on the web, to LLMs on networked GPU, to vertices linked within a graph database, **data entropy** will come to fragment structural bonds as different stakeholders within the larger computing infrastructure independently alter their sphere of "data influence." In such an uncertain data environment, `noobj` and it's manifestation in maybe (some) coefficients `{?}`/`{*}` make dangling pointers and type assumptions more natural for the user than in a programming enviroment fully controlled by a single individual.
+The intended use of metatron is to connect disparate datasets and processors into a cohesive structure bound by loose structural similarities. From resources on the web, to LLMs on networked GPU, to vertices linked within a graph database, **data entropy** will come to fragment structural bonds as different stakeholders within the larger data infrastructure independently alter their sphere of "data influence." In uncertain data environments, `noobj` and it's manifestation in maybe/maybe_some coefficients `{?}`/`{*}` make dangling pointers and type assumptions convenient for the user.
 
 [mtron]
 ----
@@ -25,10 +22,19 @@ The intended use of metatron is to connect disparate datasets and processor into
 1-<[?>0,?>2,*/usr/${_}]>-                       [-- <2> --]
 1-<[?>0,?>2,*/usr/${_}]>-.map(<${g:V/_}>)>>+    [-- <3> --]
 ----
-<1> dangling pointers leading to nowhere, lead to `noobj`.
+<1> dangling pointers that lead to nowhere, lead to `noobj`.
 <2> mtron silently ignores `noobj` and continues with those objs it knows.
 <3> address wildcards (`+`) are a foothold in a `noobj`-world.
 --
+
+[discrete]
+=== Poly Types
+
+[discrete]
+==== Lists
+
+[discrete]
+==== Relations
 
 [mtron]
 ----
@@ -70,7 +76,7 @@ a->b->c.**a      [-- <4> --]
 
 The third expression constructs and traverses its data structure on the stack.
 The fourth expression constructs and traverses its data structure in space. 
-It just so happens that the space the fourth expression is operating in is the stack.
+It just so happens that the space that the fourth expression is operating in is the stack.
 This is due to the fact that `<+/#>` is the stack's pattern, and therefore, matches `a`, `b`, `c`.
 
 [mtron]
@@ -83,6 +89,8 @@ This is due to the fact that `<+/#>` is the stack's pattern, and therefore, matc
 <2> `*a` resolves to the instruction `b->c` which, as an auto (`!`), immediately applies `a` to `b` yielding `c`.
 --
 
+[discrete]
+==== Records
 
 [discrete]
 === Control Structures

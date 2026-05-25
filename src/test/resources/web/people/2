@@ -1,0 +1,7 @@
+[
+ name=>'Bob',
+ age=>25,
+ title=>'Designer',
+ salary=>60000.0000,
+ company=>!*http://localhost:14986/companies/101,
+ active=>true]

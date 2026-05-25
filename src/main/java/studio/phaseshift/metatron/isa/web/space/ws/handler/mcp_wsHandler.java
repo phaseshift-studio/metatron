@@ -22,9 +22,9 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.isa.web.type.MIME;
 import studio.phaseshift.metatron.isa.web.type.mcp_Server;
 import studio.phaseshift.metatron.isa.web.space.ws.WebSocketRec;
-import studio.phaseshift.metatron.isa.web.type.Content;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -83,8 +83,8 @@ public class mcp_wsHandler extends WebSocketRec {
                     uri(PROMPT).maybe().asUri(), T(ALL)))
             .constructor(instC(WS_MCP_HANDLER_TID.extend(CTOR).dom(ALL.maybe()).rng(WS_MCP_HANDLER_TID), lst(T(REC_TID)), (lhs, inst) ->
                     new mcp_wsHandler(new LinkedHashMap<>(inst.arg(0).asRec()
-                            .at(uri(IN), uri(Content.ContentType.APPLICATION_JSON.value))
-                            .at(uri(OUT), uri(Content.ContentType.APPLICATION_JSON.value)).jvm()), WS_MCP_HANDLER_TID, inst.arg(0).vid()))).create();
+                            .at(uri(IN), uri(MIME.MIMEType.APPLICATION_JSON.value))
+                            .at(uri(OUT), uri(MIME.MIMEType.APPLICATION_JSON.value)).jvm()), WS_MCP_HANDLER_TID, inst.arg(0).vid()))).create();
 
     // Transport-agnostic protocol handler (composition)
     private final mcp_Server mcp;
@@ -113,8 +113,8 @@ public class mcp_wsHandler extends WebSocketRec {
     @Override
     public IO getIO() {
         return new IO(
-                Content.ContentType.of(this.at(IN).orElse(uri(Content.ContentType.APPLICATION_JSON.value)).uriValue().toString()),
-                Content.ContentType.of(this.at(OUT).orElse(uri(Content.ContentType.APPLICATION_JSON.value)).uriValue().toString()));
+                MIME.MIMEType.of(this.at(IN).orElse(uri(MIME.MIMEType.APPLICATION_JSON.value)).uriValue().toString()),
+                MIME.MIMEType.of(this.at(OUT).orElse(uri(MIME.MIMEType.APPLICATION_JSON.value)).uriValue().toString()));
     }
 
     public Rec getToolList() {

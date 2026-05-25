@@ -26,7 +26,7 @@ import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
-import studio.phaseshift.metatron.isa.web.type.Content;
+import studio.phaseshift.metatron.isa.web.type.MIME;
 
 import java.io.*;
 import java.nio.ByteBuffer;
@@ -274,7 +274,7 @@ public class HttpRec extends MRec {
         try {
             final HttpIO io = getHttpIO();
             final byte[] bytes = io.output().serializer().outputBytes(message).array();
-            this.exchange.getResponseHeaders().set(Content.ContentType.VALUE, io.output().value);
+            this.exchange.getResponseHeaders().set(MIME.MIMEType.VALUE, io.output().value);
             this.exchange.sendResponseHeaders(200, bytes.length);
             try (final OutputStream os = this.exchange.getResponseBody()) {
                 os.write(bytes);
@@ -293,14 +293,14 @@ public class HttpRec extends MRec {
      * This is used by web_httpHandler to serve files with dynamic content types
      * (text/html, text/css, application/json, etc.) rather than the configured OUT type.
      */
-    public void send(final Obj message, final Content.ContentType contentType) {
+    public void send(final Obj message, final MIME.MIMEType contentType) {
         if (this.exchange == null) {
             LOG.error("no exchange available to send response");
             return;
         }
         try {
             final byte[] bytes = contentType.toBytes(message);
-            this.exchange.getResponseHeaders().set(Content.ContentType.VALUE, contentType.value);
+            this.exchange.getResponseHeaders().set(MIME.MIMEType.VALUE, contentType.value);
             this.exchange.sendResponseHeaders(200, bytes.length);
             try (final OutputStream os = this.exchange.getResponseBody()) {
                 os.write(bytes);
@@ -334,11 +334,11 @@ public class HttpRec extends MRec {
     /**
      * Returns the serialization IO config (JSON in/out by default).
      */
-    public record HttpIO(Content.ContentType input, Content.ContentType output) {
+    public record HttpIO(MIME.MIMEType input, MIME.MIMEType output) {
         public static HttpIO of(final Rec obj) {
             return new HttpIO(
-                    Content.ContentType.of(obj.at(uri(IN)).orElse(uri(Content.ContentType.APPLICATION_JSON.value)).uriValue().toString()),
-                    Content.ContentType.of(obj.at(uri(OUT)).orElse(uri(Content.ContentType.APPLICATION_JSON.value)).uriValue().toString()));
+                    MIME.MIMEType.of(obj.at(uri(IN)).orElse(uri(MIME.MIMEType.APPLICATION_JSON.value)).uriValue().toString()),
+                    MIME.MIMEType.of(obj.at(uri(OUT)).orElse(uri(MIME.MIMEType.APPLICATION_JSON.value)).uriValue().toString()));
         }
     }
 

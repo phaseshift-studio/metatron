@@ -25,7 +25,7 @@ import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.web.space.http.HttpRec;
 import studio.phaseshift.metatron.isa.web.type.mcp_Server;
-import studio.phaseshift.metatron.isa.web.type.Content;
+import studio.phaseshift.metatron.isa.web.type.MIME;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -44,7 +44,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.web.space.http.httpSpace.HTTP_SPACE_TID;
-import static studio.phaseshift.metatron.isa.web.type.Content.ContentType.APPLICATION_JSON;
+import static studio.phaseshift.metatron.isa.web.type.MIME.MIMEType.APPLICATION_JSON;
 
 /**
  * Streamable HTTP MCP transport handler. Composes a {@link mcp_Server} for JSON-RPC
@@ -133,7 +133,7 @@ public class mcp_httpHandler extends HttpRec {
             // Response
             final String jsonStr = JSON.write(result).toString();
             final byte[] bytes = jsonStr.getBytes(StandardCharsets.UTF_8);
-            exchange.getResponseHeaders().set(Content.ContentType.VALUE, APPLICATION_JSON.value);
+            exchange.getResponseHeaders().set(MIME.MIMEType.VALUE, APPLICATION_JSON.value);
             if (sessionId != null) {
                 exchange.getResponseHeaders().set("Mcp-Session-Id", sessionId);
             }
@@ -150,7 +150,7 @@ public class mcp_httpHandler extends HttpRec {
 
     @Override
     protected void doGet(final HttpExchange exchange) throws IOException {
-        exchange.getResponseHeaders().set(Content.ContentType.VALUE, "text/event-stream");
+        exchange.getResponseHeaders().set(MIME.MIMEType.VALUE, "text/event-stream");
         sendError(501, "SSE streaming not yet implemented");
     }
 

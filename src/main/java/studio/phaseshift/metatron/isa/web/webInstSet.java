@@ -23,7 +23,7 @@ import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
 import studio.phaseshift.metatron.isa.web.parser.*;
-import studio.phaseshift.metatron.isa.web.type.Content;
+import studio.phaseshift.metatron.isa.web.type.MIME;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
@@ -73,14 +73,14 @@ public class webInstSet extends AbstractInstSet {
             .tid(URI_TID)
             .vid(CONTENT_TYPE_TID)
             .isaPredicate(inside_(lst(
-                    uri(Content.ContentType.TEXT_PLAIN.value),
-                    uri(Content.ContentType.TEXT_HTML.value),
-                    uri(Content.ContentType.TEXT_CSS.value),
-                    uri(Content.ContentType.TEXT_MARKDOWN.value),
-                    uri(Content.ContentType.TEXT_JAVASCRIPT.value),
-                    uri(Content.ContentType.APPLICATION_MTRON.value),
-                    uri(Content.ContentType.TEXT_X_SHELLSCRIPT.value),
-                    uri(Content.ContentType.APPLICATION_JSON.value))))
+                    uri(MIME.MIMEType.TEXT_PLAIN.value),
+                    uri(MIME.MIMEType.TEXT_HTML.value),
+                    uri(MIME.MIMEType.TEXT_CSS.value),
+                    uri(MIME.MIMEType.TEXT_MARKDOWN.value),
+                    uri(MIME.MIMEType.TEXT_JAVASCRIPT.value),
+                    uri(MIME.MIMEType.APPLICATION_MTRON.value),
+                    uri(MIME.MIMEType.TEXT_X_SHELLSCRIPT.value),
+                    uri(MIME.MIMEType.APPLICATION_JSON.value))))
             .create();
 
     public static final Type XML_TYPE = Type.Builder.build()

@@ -18,12 +18,10 @@
 
 package studio.phaseshift.metatron.isa.web.space.http;
 
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.web.space.http.handler.mtron_httpHandler;
-import studio.phaseshift.metatron.isa.web.type.Content;
+import studio.phaseshift.metatron.isa.web.type.MIME;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -31,7 +29,6 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.web.space.http.handler.mtron_httpHandler.MTRON_HTTP_TID;
@@ -44,8 +41,8 @@ public class mtron_httpHandlerTest extends AbstractHTTPServerTest {
     @Override
     protected HttpRec createHandler(final fURI vid) {
         return new mtron_httpHandler(new LinkedHashMap<>(Map.of(
-                uri(IN), uri(Content.ContentType.APPLICATION_MTRON.value),
-                uri(OUT), uri(Content.ContentType.APPLICATION_MTRON.value))), vid);
+                uri(IN), uri(MIME.MIMEType.APPLICATION_MTRON.value),
+                uri(OUT), uri(MIME.MIMEType.APPLICATION_MTRON.value))), vid);
     }
 
     // ========================================

@@ -20,7 +20,7 @@ package studio.phaseshift.metatron.isa.web.space.ws;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.web.space.ws.handler.mtron_wsHandler;
-import studio.phaseshift.metatron.isa.web.type.Content;
+import studio.phaseshift.metatron.isa.web.type.MIME;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -38,8 +38,8 @@ public class mtron_wsHandlerTest extends AbstractWebSocketServerTest {
     @Override
     protected WebSocketRec createServer(final fURI vid) {
         return new mtron_wsHandler(new LinkedHashMap<>(Map.of(
-                uri(IN), uri(Content.ContentType.APPLICATION_MTRON.value),
-                uri(OUT), uri(Content.ContentType.APPLICATION_MTRON.value))), vid);
+                uri(IN), uri(MIME.MIMEType.APPLICATION_MTRON.value),
+                uri(OUT), uri(MIME.MIMEType.APPLICATION_MTRON.value))), vid);
     }
 
     public static class mtron_wsHandlerIntegrationTest extends AbstractWebSocketServerIntegrationTest {

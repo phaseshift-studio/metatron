@@ -24,7 +24,7 @@ import dev.langchain4j.model.ModelProvider;
 import dev.langchain4j.model.catalog.ModelCatalog;
 import dev.langchain4j.model.catalog.ModelDescription;
 import studio.phaseshift.metatron.Tokens;
-import studio.phaseshift.metatron.isa.web.type.Content;
+import studio.phaseshift.metatron.isa.web.type.MIME;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.io.BufferedReader;
@@ -58,7 +58,7 @@ public class LocalAiModelCatalog implements ModelCatalog {
 
             // Connect and read response
             conn.setRequestMethod("GET");
-            conn.setRequestProperty(ACCEPT, Content.ContentType.APPLICATION_JSON.value);
+            conn.setRequestProperty(ACCEPT, MIME.MIMEType.APPLICATION_JSON.value);
             conn.connect();
 
             final BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));

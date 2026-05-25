@@ -29,7 +29,7 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
-import studio.phaseshift.metatron.isa.web.type.Content;
+import studio.phaseshift.metatron.isa.web.type.MIME;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -75,8 +75,8 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
             .tid(REC_TID)
             .vid(WS_WEBSOCKET_TID)
             .isaPredicate(rec(
-                    uri(IN).maybe().asUri(), isa_(CONTENT_TYPE).orElse(uri(Content.ContentType.APPLICATION_MTRON.value)),
-                    uri(OUT).maybe().asUri(), isa_(CONTENT_TYPE).orElse(uri(Content.ContentType.APPLICATION_MTRON.value)),
+                    uri(IN).maybe().asUri(), isa_(CONTENT_TYPE).orElse(uri(MIME.MIMEType.APPLICATION_MTRON.value)),
+                    uri(OUT).maybe().asUri(), isa_(CONTENT_TYPE).orElse(uri(MIME.MIMEType.APPLICATION_MTRON.value)),
                     uri(SEND).maybe().asUri(), INST_TYPE,
                     uri(ON_OPEN).maybe(), T(ALL),
                     uri(ON_ERROR).maybe(), T(ALL),

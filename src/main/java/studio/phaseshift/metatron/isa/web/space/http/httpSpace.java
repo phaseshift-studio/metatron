@@ -19,7 +19,6 @@
 package studio.phaseshift.metatron.isa.web.space.http;
 
 import com.google.gson.JsonElement;
-import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
@@ -34,7 +33,7 @@ import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.Uri;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
-import studio.phaseshift.metatron.isa.web.type.Content;
+import studio.phaseshift.metatron.isa.web.type.MIME;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -43,7 +42,6 @@ import java.net.InetSocketAddress;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
@@ -101,8 +99,8 @@ public class httpSpace extends AbstractSpace<HttpServer> {
             .tid(REC_TID)
             .vid(HTTP_SOCKET_TID)
             .isaPredicate(rec(
-                    uri(IN).maybe().asUri(), isa_(CONTENT_TYPE).orElse(uri(Content.ContentType.APPLICATION_MTRON.value)),
-                    uri(OUT).maybe().asUri(), isa_(CONTENT_TYPE).orElse(uri(Content.ContentType.APPLICATION_MTRON.value)),
+                    uri(IN).maybe().asUri(), isa_(CONTENT_TYPE).orElse(uri(MIME.MIMEType.APPLICATION_MTRON.value)),
+                    uri(OUT).maybe().asUri(), isa_(CONTENT_TYPE).orElse(uri(MIME.MIMEType.APPLICATION_MTRON.value)),
                     uri(SEND).maybe().asUri(), INST_TYPE,
                     uri(ON_GET).maybe(), T(ALL),
                     uri(ON_POST).maybe(), T(ALL),
@@ -185,8 +183,8 @@ public class httpSpace extends AbstractSpace<HttpServer> {
                 Obj handler = cache.read(sessionVid);
                 if (handler.isNoObj()) {
                     final Map<Obj, Obj> config = mutableMap(
-                            uri(IN), uri(Content.ContentType.APPLICATION_JSON.value),
-                            uri(OUT), uri(Content.ContentType.APPLICATION_JSON.value)
+                            uri(IN), uri(MIME.MIMEType.APPLICATION_JSON.value),
+                            uri(OUT), uri(MIME.MIMEType.APPLICATION_JSON.value)
                     );
                     config.putAll(handlerConfig);
                     handler = rec(config, typeVID, sessionVid);
@@ -285,9 +283,9 @@ public class httpSpace extends AbstractSpace<HttpServer> {
                     } else {
                         // Use file extension as a hint when the server sends text/plain
                         // (e.g. .json files served without application/json content type)
-                        Content.ContentType contentType = Content.ContentType.of(response.contentType());
-                        if (null == contentType || contentType == Content.ContentType.TEXT_PLAIN) {
-                            contentType = Content.ContentType.fromExtension(runningPattern.name(), contentType);
+                        MIME.MIMEType contentType = MIME.MIMEType.of(response.contentType());
+                        if (null == contentType || contentType == MIME.MIMEType.TEXT_PLAIN) {
+                            contentType = MIME.MIMEType.fromExtension(runningPattern.name(), contentType);
                         }
                         final Obj docObj = null != contentType ? contentType.fromBytes(response.body()) : str(response.body());
                         final Uri key = uri(pattern.scheme(null).host(null).tail(steps).asRelative());
@@ -328,7 +326,7 @@ public class httpSpace extends AbstractSpace<HttpServer> {
             try {
                 final JsonElement json = JSON_TRANSLATOR.write(obj);
                 final HttpRequest request = HttpRequest.newBuilder()
-                        .header(Content.ContentType.VALUE, Content.ContentType.APPLICATION_JSON.value)
+                        .header(MIME.MIMEType.VALUE, MIME.MIMEType.APPLICATION_JSON.value)
                         .uri(java.net.URI.create(pattern.toString()))
                         .POST(HttpRequest.BodyPublishers.ofString(json.toString()))
                         .build();
@@ -336,9 +334,9 @@ public class httpSpace extends AbstractSpace<HttpServer> {
                 try (final HttpClient client = HttpClient.newHttpClient()) {
                     response = client.send(request, HttpResponse.BodyHandlers.ofByteArray());
                 }
-                final Optional<String> contentType = response.headers().firstValue(Content.ContentType.VALUE);
+                final Optional<String> contentType = response.headers().firstValue(MIME.MIMEType.VALUE);
                 if (contentType.isPresent())
-                    return Content.ContentType.of(contentType.get()).fromBytes(response.body());
+                    return MIME.MIMEType.of(contentType.get()).fromBytes(response.body());
                 return jnt(response.statusCode());
             } catch (final Exception e) {
                 throw MTronException.of(e);

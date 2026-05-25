@@ -25,7 +25,7 @@ import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.web.space.ws.WebSocketRec;
-import studio.phaseshift.metatron.isa.web.type.Content;
+import studio.phaseshift.metatron.isa.web.type.MIME;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -57,8 +57,8 @@ public class mtron_wsHandler extends WebSocketRec {
             .tid(WS_HANDLER_TID)
             .vid(WS_MTRON_HANDLER_TID)
             .isaPredicate(rec(
-                    uri(IN).maybe().asUri(), isa_(CONTENT_TYPE).else_(uri(Content.ContentType.APPLICATION_MTRON.value)),
-                    uri(OUT).maybe().asUri(), isa_(CONTENT_TYPE).else_(uri(Content.ContentType.APPLICATION_MTRON.value))))
+                    uri(IN).maybe().asUri(), isa_(CONTENT_TYPE).else_(uri(MIME.MIMEType.APPLICATION_MTRON.value)),
+                    uri(OUT).maybe().asUri(), isa_(CONTENT_TYPE).else_(uri(MIME.MIMEType.APPLICATION_MTRON.value))))
             .constructor(instC(WS_MTRON_HANDLER_TID.extend(CTOR).dom(ALL.maybe()).rng(WS_MTRON_HANDLER_TID), lst(T(REC_TID)), (lhs, inst) -> {
                 final Map<Obj, Obj> config = new LinkedHashMap<>(inst.arg(0).asRec().jvm());
                 return new mtron_wsHandler(config, inst.arg(0).asRec().vid());

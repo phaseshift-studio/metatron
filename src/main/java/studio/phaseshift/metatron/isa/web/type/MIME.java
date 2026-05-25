@@ -43,8 +43,8 @@ import static studio.phaseshift.metatron.isa.web.webInstSet.*;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class Content {
-    public enum ContentType {
+public class MIME {
+    public enum MIMEType {
         APPLICATION_BSON("application/bson"),
         APPLICATION_JSON("application/json"),
         APPLICATION_LD_JSON("application/ld+json"),
@@ -69,7 +69,7 @@ public class Content {
         APPLICATION_XHTML_XML("application/xhtml+xml");
         public final String value;
 
-        ContentType(final String value) {
+        MIMEType(final String value) {
             this.value = value;
         }
 
@@ -88,15 +88,15 @@ public class Content {
                     || this == APPLICATION_ATOM_XML;
         }
 
-        public static ContentType of(final String contentType) {
+        public static MIMEType of(final String contentType) {
             if (null == contentType) return null;
             final String normalized = contentType.contains(";") ? contentType.substring(0, contentType.indexOf(';')).trim() : contentType;
-            return Arrays.stream(ContentType.values()).filter(ct -> (normalized.equalsIgnoreCase(ct.value))).findAny().orElse(null);
+            return Arrays.stream(MIMEType.values()).filter(ct -> (normalized.equalsIgnoreCase(ct.value))).findAny().orElse(null);
         }
 
-        public static ContentType fromProbe(final File file, final ContentType defaultType) {
+        public static MIMEType fromProbe(final File file, final MIMEType defaultType) {
             try {
-                final ContentType contentType = of(Files.probeContentType(file.toPath()));
+                final MIMEType contentType = of(Files.probeContentType(file.toPath()));
                 LOG.debug("probed content type: %s", contentType);
                 return contentType == null ? defaultType : contentType;
             } catch (final IOException e) {
@@ -109,7 +109,7 @@ public class Content {
          * determine the content type from the obj type. e.g. json::T, html::T, markdown::T.
          * defaults to application/mtron.
          */
-        public static ContentType fromType(final Obj obj, final Content.ContentType defaultType) {
+        public static MIMEType fromType(final Obj obj, final MIMEType defaultType) {
             if (obj.type().vid().basePath().equals(HTML_TID)) return TEXT_HTML;
             if (obj.type().vid().basePath().equals(MARKDOWN_TID)) return TEXT_MARKDOWN;
             if (obj.type().vid().basePath().equals(JSON_TID)) return APPLICATION_JSON;
@@ -121,7 +121,7 @@ public class Content {
         /**
          * determine the content type from a file extension
          */
-        public static ContentType fromExtension(final String filename, final ContentType defaultType) {
+        public static MIMEType fromExtension(final String filename, final MIMEType defaultType) {
             if (filename == null) return defaultType;
             final String lower = filename.toLowerCase();
             if (lower.endsWith(".mtron")) return APPLICATION_MTRON;

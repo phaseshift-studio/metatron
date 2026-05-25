@@ -25,7 +25,7 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.web.space.http.HttpRec;
-import studio.phaseshift.metatron.isa.web.type.Content;
+import studio.phaseshift.metatron.isa.web.type.MIME;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -63,8 +63,8 @@ public class web_httpHandler extends HttpRec {
             .tid(HTTP_HANDLER_TID)
             .vid(WEB_HTTP_TID)
             .isaPredicate(rec(
-                    uri(IN).maybe().asUri(), isa_(CONTENT_TYPE).else_(uri(Content.ContentType.APPLICATION_MTRON.value)),
-                    uri(OUT).maybe().asUri(), isa_(CONTENT_TYPE).else_(uri(Content.ContentType.APPLICATION_MTRON.value)),
+                    uri(IN).maybe().asUri(), isa_(CONTENT_TYPE).else_(uri(MIME.MIMEType.APPLICATION_MTRON.value)),
+                    uri(OUT).maybe().asUri(), isa_(CONTENT_TYPE).else_(uri(MIME.MIMEType.APPLICATION_MTRON.value)),
                     uri(WEB_ROOT).maybe(), T(ALL),
                     uri(DEFAULT_PAGE).maybe(), T(ALL),
                     uri(READ_ONLY).maybe(), T(ALL)))
@@ -114,7 +114,7 @@ public class web_httpHandler extends HttpRec {
                 // for content-type detection (e.g. /test.json/number → test.json → application/json)
                 fURI contentTypeHint = requestURI;
                 while (contentTypeHint.segmentLength() > 0
-                        && Content.ContentType.fromExtension(contentTypeHint.name(), null) == null) {
+                        && MIME.MIMEType.fromExtension(contentTypeHint.name(), null) == null) {
                     contentTypeHint = contentTypeHint.retract(1);
                 }
 
@@ -162,12 +162,12 @@ public class web_httpHandler extends HttpRec {
                 // Structured rec values use type-specific serializers (HTML, JSON).
                 // Leaf values (str, jnt, bool, noobj, etc.) use APPLICATION_MTRON
                 // so type information is preserved through the serialization round-trip.
-                final Content.ContentType contentType = requestURI.hasQ(OUT) ?
-                        Content.ContentType.of(requestURI.q(OUT)) :
+                final MIME.MIMEType contentType = requestURI.hasQ(OUT) ?
+                        MIME.MIMEType.of(requestURI.q(OUT)) :
                         (requestObj.isRec()
-                                ? Content.ContentType.fromType(requestObj,
-                                        Content.ContentType.fromExtension(contentTypeHint.name(), Content.ContentType.TEXT_PLAIN))
-                                : Content.ContentType.APPLICATION_MTRON);
+                                ? MIME.MIMEType.fromType(requestObj,
+                                        MIME.MIMEType.fromExtension(contentTypeHint.name(), MIME.MIMEType.TEXT_PLAIN))
+                                : MIME.MIMEType.APPLICATION_MTRON);
                 this.send(requestObj, contentType);
                 return requestObj;
 
@@ -205,7 +205,7 @@ public class web_httpHandler extends HttpRec {
 
                 final String bodyStr = readBody(exchange);
                 if (!bodyStr.isEmpty()) {
-                    final Content.ContentType ct = Content.ContentType.fromExtension(fileURI.name(), Content.ContentType.TEXT_PLAIN);
+                    final MIME.MIMEType ct = MIME.MIMEType.fromExtension(fileURI.name(), MIME.MIMEType.TEXT_PLAIN);
                     final Obj bodyObj = ct.serializer().inputBytes(ByteBuffer.wrap(bodyStr.getBytes(StandardCharsets.UTF_8)));
                     Router.writeToSpace(fileURI, bodyObj);
                     try {

@@ -21,15 +21,12 @@ package studio.phaseshift.metatron.isa.web.space.http;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
-import studio.phaseshift.metatron.isa.m.type.InstSet;
-import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.web.space.http.handler.web_httpHandler;
-import studio.phaseshift.metatron.isa.web.type.Content;
+import studio.phaseshift.metatron.isa.web.type.MIME;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -40,7 +37,6 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -73,8 +69,8 @@ public class web_httpHandlerTest extends AbstractHTTPServerTest {
     @Override
     protected HttpRec createHandler(final fURI vid) {
         return new web_httpHandler(new LinkedHashMap<>(Map.of(
-                uri(IN), uri(Content.ContentType.APPLICATION_MTRON.value),
-                uri(OUT), uri(Content.ContentType.APPLICATION_MTRON.value),
+                uri(IN), uri(MIME.MIMEType.APPLICATION_MTRON.value),
+                uri(OUT), uri(MIME.MIMEType.APPLICATION_MTRON.value),
                 uri(WEB_ROOT), uri("mem:test-pages")
         )), vid);
     }

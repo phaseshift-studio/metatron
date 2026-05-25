@@ -29,7 +29,7 @@ import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
-import studio.phaseshift.metatron.isa.web.type.Content;
+import studio.phaseshift.metatron.isa.web.type.MIME;
 import studio.phaseshift.metatron.util.CommonUtil;
 
 import java.nio.ByteBuffer;
@@ -143,7 +143,7 @@ public class QProcIntegrationTest extends AbstractMetatronTest {
     }, delimiter = '%')
     void testMimeQ(final String uri, final String contentType, final String writeExpr,
                    final String desc) {
-        final Content.ContentType expectedContentType = Content.ContentType.of(contentType);
+        final MIME.MIMEType expectedContentType = MIME.MIMEType.of(contentType);
         final Obj mtronObj = ObjmtronSerializer.parse(writeExpr);
         assertEquals(mtronObj, space.write(f(BASE + uri), mtronObj));
         assertEquals(mtronObj, space.read(f(BASE + uri)));

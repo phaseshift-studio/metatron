@@ -28,11 +28,9 @@ import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
-import studio.phaseshift.metatron.isa.web.type.Content;
+import studio.phaseshift.metatron.isa.web.type.MIME;
 
-import java.nio.ByteBuffer;
 import java.util.Map;
-import java.util.Objects;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
@@ -78,7 +76,7 @@ public class WebSocketRec extends MRec implements WebSocketObj {
 
     @Override
     public IO getIO() {
-        return IO.of(this, Content.ContentType.APPLICATION_MTRON);
+        return IO.of(this, MIME.MIMEType.APPLICATION_MTRON);
     }
     
     @Override

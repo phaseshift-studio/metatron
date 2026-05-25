@@ -30,7 +30,7 @@ import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.web.space.http.handler.mcp_mtron_httpHandler;
 import studio.phaseshift.metatron.isa.web.type.mMCPUtility;
 import studio.phaseshift.metatron.isa.web.type.mcp_Server;
-import studio.phaseshift.metatron.isa.web.type.Content;
+import studio.phaseshift.metatron.isa.web.type.MIME;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -78,8 +78,8 @@ public class mcp_mtron_httpHandlerTest extends AbstractHTTPServerIntegrationTest
         final fURI vid = f("/test/" + getClass().getSimpleName() + "/" + System.nanoTime());
         this.mcp = new mcp_Server(mMCPUtility.buildMetatronTools(
                 new LinkedHashMap<>(Map.of(
-                        uri(IN), uri(Content.ContentType.APPLICATION_JSON.value),
-                        uri(OUT), uri(Content.ContentType.APPLICATION_JSON.value))), vid),
+                        uri(IN), uri(MIME.MIMEType.APPLICATION_JSON.value),
+                        uri(OUT), uri(MIME.MIMEType.APPLICATION_JSON.value))), vid),
                 mcp_Server.MCP_SERVER_TID, vid);
     }
 
