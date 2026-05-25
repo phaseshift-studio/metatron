@@ -11,7 +11,7 @@ import(/m/tble)
 ====
 
 A https://en.wikipedia.org/wiki/Relational_database#RDBMS[relational database] (https://en.wikipedia.org/wiki/SQL[SQL]) stores structured data in named **tables**, where each table is a collection of typed
-rows. In metatron, a relational database is a **tblespace** backed by any https://en.wikipedia.org/wiki/Java_Database_Connectivity[JDBC]-compliant driver. Each table maps to a `rec::T` https://en.wikipedia.org/wiki/Refinement_type[refinement] whose `rel::T` elements correspond to columns. The `instset` schema is auto-generated at connection time from live database metadata. As of the time of this writing, metatron has been tested against and is deployed with https://sqlite.org/[SQLite], https://www.postgresql.org/[PostgreSQL],
+rows. In metatron, a relational database is a **tblespace** backed by any https://en.wikipedia.org/wiki/Java_Database_Connectivity[JDBC]-compliant driver. Each table maps to a `rec::T` https://en.wikipedia.org/wiki/Refinement_type[refinement] whose `rel::T` elements correspond to columns. The `instset` schema is auto-generated at connection time from live database metadata. As of the time of this writing, metatron has been tested against https://sqlite.org/[SQLite], https://www.postgresql.org/[PostgreSQL],
 https://mariadb.org/[MariaDB], and https://www.mysql.com/[MySQL]. 
 
 [cols="5a,6a",separator=🧱,role="table-bordered center"]
@@ -113,8 +113,10 @@ lite:kv/nest -> [a=>[b=>[c=>2,d=>!*lite:kv/nest]]]
 Regardless of the language, when querying data, the fundamental primitives of the expression ultimately boil down to a collection of  `aggregate`, `filter`, `project`, `update`, etc. operations. Universals ensure that what can be expressed in mtron can also be expressed in SQL and vice versa (almost). Since relational databases are optimized for processing SQL, it's best to leverage the backend's SQL-query engine within the mtron expression. The https://en.wikipedia.org/wiki/Rewriting[rewrite] `insts` of  `/m/tble` do just that. In general, all rewrites are instructions of the form:
 
 \[
-\texttt{rewrite?code{?}<=code(arg_1,arg_2,\ldots,arg_n)}.
+\tt rewrite?code\{?\}<=code(arg_0,arg_1,\ldots,arg_n).
 \]
+
+That is, a rewrite `inst` takes `code` (__lhs__), some rewrite-specific parameters (__args__), and returns `code` or `noobj` (`code{?}`). The __lhs__ code emerges the __rhs__ code. A semantically equivalent form. But then the process continues. Rewrite after rewrite, sculpting the structural embodiment of a process into a leaner, faster, more efficient form until at some point in time, it stops -- the `code` has reached a https://en.wikipedia.org/wiki/Steady_state[stable state distribution]. Immune to mutation, timeless by definition, it is ready to be fed to a machine that will use it to guide itself through space in search of a solution it was designed to find. Its destiny awaits.
 
 [source,mtron]
 ----
@@ -170,7 +172,7 @@ whose values happen to match `person.name` — the link is purely algorithmic, e
 
 [mtron]
 ----
-*/sys/space/lite>>=[table=>[person,score]]                                                              [-- <1> --]
+@/sys/space/lite >>= [table=>[person,score]]                                                            [-- <1> --]
 lite:score/1 -> [player=>'marko', points=>42]                                                           [-- <2> --]
 lite:score/2 -> [player=>'grant', points=>99]                                                           [-- <3> --]
 *lite:score/+.?==[player=>'marko']                                                                      [-- <4> --]
@@ -188,7 +190,7 @@ Unlike a matching column value, the pointer encodes the full address of the link
 
 [mtron]
 ----
-*/sys/space/lite>>=[table=>[person,score,award]]                                                        [-- <1> --]
+@/sys/space/lite >>= [table=>[person,score,award]];                                                     [-- <1> --]
 lite:award/1 -> [trophy=>'gold',   recipient=>!*lite:person/1]                                          [-- <2> --]
 lite:award/2 -> [trophy=>'silver', recipient=>!*lite:person/2]                                          [-- <3> --]
 *lite:award/+                                                                                           [-- <4> --]
@@ -200,28 +202,27 @@ lite:award/2 -> [trophy=>'silver', recipient=>!*lite:person/2]                  
 <4> reading all awards — each `recipient` cell renders as an unresolved `!*lite:person/N` pointer.
 <5> traversing the FK: the path segment `recipient` forces `auto_from` to read `lite:person/1` and return the full person row.
 
-The `award -> person` examples above are **intra-space** references — both tables live under the same `lite:` pattern.
+The `award \=> person` examples above are **intra-space** references — both tables live under the same `lite:` pattern.
 An `auto_from` pointer can also cross space boundaries, linking a `tblespace` row directly to an obj in another space.
-Below, a `memspace` holds a venue `rec`, and a `lite:venue` row
-carries a `!*area:V/1` pointer in its `location` cell — an **inter-space** FK.
+Below, a `memspace` holds a venue `rec`, and a `lite:venue` row carries a `!*area:V/1` pointer in its `location` cell an **inter-space** reference.
 
 [mtron]
 ----
 memspace::[pattern => area:#]@/sys/space/area                                                 [-- <1> --]
 area:V/1 -> [label=>'downtown',capacity=>5000]                                                [-- <2> --]
-*/sys/space/lite>>=[table=>[person,score,award,venue]]                                        [-- <3> --]
-lite:venue/1 -> [name=>'main_stage',location=>!*area:V/1]                                     [-- <4> --]
+@/sys/space/lite >>= [table=>[person,score,award,venue]];                                     [-- <3> --]
+lite:venue/1 -> [name=>'main_stage',location=>!*area:V/1,parent=>none]                        [-- <4> --]
 *lite:venue/1                                                                                 [-- <5> --]
 *lite:venue/1/location                                                                        [-- <6> --]
 ----
-<1> a `memspace` at `area:` provides the cross-space target — any space type (`grphspace`, `fsspace`, etc.) works the same way.
+<1> a `memspace` at `area:` provides the inter-space target — any space type (`grphspace`, `fsspace`, etc.) works the same way.
 <2> writing the venue vertex into `area:` memspace — this is the row that `!*area:V/1` will target.
 <3> patch the `table` config to register the new `venue` table.
-<4> `location` stores a cross-space `!*area:V/1` pointer — the `area:` prefix is preserved in storage, not rewritten to `lite:`.
+<4> `location` stores an inter-space `!*area:V/1` pointer — the `area:` prefix is preserved in storage, not rewritten to `lite:`.
 <5> reading the venue row — `location` renders as the unresolved `!*area:V/1` pointer with its original scheme intact.
-<6> traversing the cross-space FK: `location` forces `auto_from` to read `area:V/1` from the memspace and returns the full vertex record.
+<6> traversing the inter-space foreign key reference and `location` forces `auto_from` to read `area:V/1` from the memspace and returns the full vertex record.
 
-A single row can mix both reference styles. A `self` column demonstrates an **intra-space self-referencing** FK
+A single row can mix both reference styles. A `self` column demonstrates an **intra-space self-referencing** foreign key
 pointing back at the row's own table.
 
 [mtron]
@@ -230,17 +231,15 @@ lite:venue/2 -> [name=>'side_hall',location=>!*g:V/1,parent=>!*lite:venue/1]    
 *lite:venue/2                                                                                 [-- <2> --]
 *lite:venue/2/parent/location                                                                 [-- <3> --]
 ----
-<1> `venue/2` mixes cross-space (`g:V/1`) and intra-space self-referencing (`lite:venue/1`) pointers in one row.
-<2> both pointers render unresolved: `!*g:V/1 // !*lite:venue/1`.
-<3> two-hop traversal: `parent` resolves to `venue/1`, then `location` resolves to `g:V/1` — cross-space resolution chains.
+<1> `venue/2` mixes inter-space (`g:V/1`) and intra-space referencing (`lite:venue/1`) pointers in one row.
+<2> both references render unresolved: `!*g:V/1` and `!*lite:venue/1`.
+<3> two-hop traversal: `parent` resolves to `venue/1`, then `location` resolves to `g:V/1` — inter-space resolution chains.
 
 [.card]
 --
 [discrete,.center]
 ==== foreign key internals
-A `tblespace` has two storage layers for FK pointers. The cell value itself is a plain
-`INTEGER` column — no `REFERENCES` clause, no proprietary SQL type. Routing metadata
-lives in a single companion table.
+A `tblespace` has two storage layers for foreign key pointers. The cell value itself is a plain `INTEGER` column — no `REFERENCES` clause, no proprietary SQL type. Routing metadata lives in a single companion table.
 
 [discrete]
 ===== _mtron_meta table
@@ -265,34 +264,34 @@ Each `auto_from` column gets a row in `_mtron_meta`:
 |===
 
 [discrete]
-===== intra- vs inter-space discrimination
+===== intra- vs. inter-space discrimination
 
-On **write**, the cell URI is tested against the space's pattern:
+On **write**, the cell uri is tested against the space's pattern:
 
 [source,mtron,role="center-code"]
 ----
-refURI.test(space.pattern())  -- true → intra-space, store bare table name in _mtron_meta
-                              -- false → inter-space, store scheme:segment in _mtron_meta
+ref_uri.matches(*space>>pattern)  [-- true → intra-space, store bare table name in _mtron_meta --]
+                                  [-- false → inter-space, store scheme:segment in _mtron_meta --]
 ----
 
-`f("lite:person/1").test(f("lite:#"))` returns `true` (same scheme, pattern `#` matches all).
-`f("area:V/1").test(f("lite:#"))` returns `false` (scheme mismatch: `area` vs `lite`).
+* `lite:person/1.matches(lite:#")` returns `true` (same scheme, pattern `#` matches all).
+* `area:V/1.matches(lite:#)` returns `false` (scheme mismatch: `area` vs `lite`).
 
 On **read**, the `ref_table` value is checked for a colon:
 
 [source,mtron,role="center-code"]
 ----
-refTable.indexOf(':') >= 0  -- true → inter-space, parse as full URI and extend with FK id
-                            -- false → intra-space, reconstruct from space pattern
+*ref_table.has(':') [-- true → inter-space, parse as full uri and extend with foreign key id --]
+                    [-- false → intra-space, reconstruct from space pattern --]
 ----
 
-An intra-space `ref_table = "person"` is combined with the space pattern to produce `lite:person/1`.
-An inter-space `ref_table = "area:V"` is parsed as `f("g:V/1")` — the `area:` scheme routes through the metatron router.
+* an intra-space `ref_table ?= person` is combined with the space pattern to produce `lite:person/1`.
+* an inter-space `ref_table ?= area:V` is parsed as `g:V/1` — the `area:` scheme routes through the metatron router.
 
 [discrete]
 ===== sql footprint
 
-The FK column is a bare `INTEGER` (or `TEXT` for string keys). There are no SQL `FOREIGN KEY`
+The foreign key column is a bare `INTEGER` (or `TEXT` for string keys). There are no SQL `FOREIGN KEY`
 constraints and the `_mtron_meta` table is the only metatron-specific schema artifact.
 If the database is queried by external SQL tooling, FK columns appear as ordinary integers
 and `_mtron_meta` is a readable lookup table — nothing is opaque or encoded.
