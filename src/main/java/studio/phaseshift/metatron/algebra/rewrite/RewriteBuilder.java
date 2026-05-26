@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.algebra.rewrite;
 
 import studio.phaseshift.metatron.furi.C;
+import studio.phaseshift.metatron.furi.DataPath;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
@@ -222,12 +223,13 @@ public class RewriteBuilder<S extends Space> {
      * Create the optimized instruction that executes the native database operation.
      */
     protected Inst createOptimizedInst(final S typedSpace, final fURI expandedfURI, final C<?,?> coeff) {
+        final DataPath dp = DataPath.ofSpaceRelative(expandedfURI, null);
         return instC(
                 this.rewriteTid.dom(ALL.zero()).rng(this.resultTid),
                 lst(uri(expandedfURI)),
                 (lhs, inst) -> {
                     try {
-                        return this.optimization.execute(typedSpace, expandedfURI, coeff);
+                        return this.optimization.execute(typedSpace, dp, coeff);
                     } catch (final Exception e) {
                         throw MTronException.of(e, "failed to execute native %s operation", this.rewriteName);
                     }
@@ -245,12 +247,12 @@ public class RewriteBuilder<S extends Space> {
         /**
          * Execute the native database operation.
          *
-         * @param space The database space
-         * @param furi The resolved fURI for the operation
+         * @param space  The database space
+         * @param dp     The decomposed DataPath for the operation target
          * @param coefficient The coefficient from the instruction chain
          * @return The result object
          * @throws Exception if the operation fails
          */
-        Obj execute(final S space, final fURI furi, final C<?,?> coefficient) throws Exception;
+        Obj execute(final S space, final DataPath dp, final C<?,?> coefficient) throws Exception;
     }
 }

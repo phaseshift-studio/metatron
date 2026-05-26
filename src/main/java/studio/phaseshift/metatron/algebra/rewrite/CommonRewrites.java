@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.algebra.rewrite;
 
+import studio.phaseshift.metatron.furi.DataPath;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
@@ -93,7 +94,7 @@ public final class CommonRewrites {
     public static <S extends Space> Inst countRewrite(
             final Class<S> spaceType,
             final fURI rewriteTid,
-            final BiFunction<S, fURI, Long> countFunction) {
+            final BiFunction<S, DataPath, Long> countFunction) {
 
         return RewriteBuilder.forDatabase(spaceType)
                 .tid(rewriteTid)
@@ -104,8 +105,8 @@ public final class CommonRewrites {
                     // patterns operate across collections/tables and require different rewrtting
                     return !ref.isUri() || !ref.uriValue().retract(1).hasPattern();
                 })
-                .optimize("mql_count", (space, furi, coeff) -> {
-                    final long count = countFunction.apply(space, furi);
+                .optimize("mql_count", (space, dp, coeff) -> {
+                    final long count = countFunction.apply(space, dp);
                     return jnt(count).c(c -> c.mult((cInt) coeff));
                 })
                 .build();
@@ -126,14 +127,14 @@ public final class CommonRewrites {
     public static <S extends Space> Inst sumRewrite(
             final Class<S> spaceType,
             final fURI rewriteTID,
-            final BiFunction<S, fURI, Number> sumFunction) {
+            final BiFunction<S, DataPath, Number> sumFunction) {
 
         return RewriteBuilder.forDatabase(spaceType)
                 .tid(rewriteTID)
                 .rng(A)
                 .match(FROM_INST_TID, SUM_INST_TID)
-                .optimize("mql_sum", (space, furi, coeff) -> {
-                    final Number sum = sumFunction.apply(space, furi);
+                .optimize("mql_sum", (space, dp, coeff) -> {
+                    final Number sum = sumFunction.apply(space, dp);
                     return (sum instanceof Double || sum instanceof Float)
                             ? real(sum.doubleValue())
                             : jnt(sum.longValue());
@@ -156,14 +157,14 @@ public final class CommonRewrites {
     public static <S extends Space> Inst meanRewrite(
             final Class<S> spaceType,
             final fURI rewriteTID,
-            final BiFunction<S, fURI, Double> meanFunction) {
+            final BiFunction<S, DataPath, Double> meanFunction) {
 
         return RewriteBuilder.forDatabase(spaceType)
                 .tid(rewriteTID)
                 .rng(REAL_TID)
                 .match(FROM_INST_TID, MEAN_INST_TID)
-                .optimize("mql_mean", (space, furi, coeff) -> {
-                    final double mean = meanFunction.apply(space, furi);
+                .optimize("mql_mean", (space, dp, coeff) -> {
+                    final double mean = meanFunction.apply(space, dp);
                     return real(mean);
                 })
                 .build();
@@ -180,12 +181,12 @@ public final class CommonRewrites {
          * Execute the native limit operation.
          *
          * @param space The database space
-         * @param furi  The resolved fURI for the table/collection
+         * @param dp    The decomposed DataPath for the table/collection
          * @param limit The limit value from take(n)
          * @return The result (typically an Objs of rows)
          * @throws Exception if the operation fails
          */
-        Obj execute(S space, fURI furi, long limit) throws Exception;
+        Obj execute(S space, DataPath dp, long limit) throws Exception;
     }
 
     /**
@@ -258,6 +259,7 @@ public final class CommonRewrites {
                 if (this.spaceType.isInstance(space) && (this.matchPredicate == null || this.matchPredicate.test(matchedInsts))) {
                     final S typedSpace = this.spaceType.cast(space);
                     final fURI expandedfURI = space.redirect(oldfURI, true);
+                    final DataPath dp = DataPath.ofSpaceRelative(expandedfURI, null);
 
                     // Extract limit value from take() instruction
                     final long limitValue = takeInst.arg(0).asInt().jvm();
@@ -269,7 +271,7 @@ public final class CommonRewrites {
                     return List.of(instC(this.rewriteTid.dom(ALL.zero()).rng(this.resultTid), lst(uri(expandedfURI), jnt(limitValue)),
                                     (lhs, inst) -> {
                                         try {
-                                            return this.limitOperation.execute(typedSpace, expandedfURI, limitValue);
+                                            return this.limitOperation.execute(typedSpace, dp, limitValue);
                                         } catch (final Exception e) {
                                             throw MTronException.of(e);
                                         }
@@ -299,14 +301,14 @@ public final class CommonRewrites {
     public static <S extends Space> Inst prodRewrite(
             final Class<S> spaceType,
             final fURI rewriteTID,
-            final BiFunction<S, fURI, Number> prodFunction) {
+            final BiFunction<S, DataPath, Number> prodFunction) {
 
         return RewriteBuilder.forDatabase(spaceType)
                 .tid(rewriteTID)
                 .rng(INT_TID.maybe().some())
                 .match(FROM_INST_TID, PROD_INST_TID)
-                .optimize("from_prod", (space, furi, coeff) -> {
-                    final Number prod = prodFunction.apply(space, furi);
+                .optimize("from_prod", (space, dp, coeff) -> {
+                    final Number prod = prodFunction.apply(space, dp);
                     return (prod instanceof Double || prod instanceof Float)
                             ? real(prod.doubleValue())
                             : jnt(prod.longValue());
@@ -331,7 +333,7 @@ public final class CommonRewrites {
     public static <S extends Space> Inst hasRewrite(
             final Class<S> spaceType,
             final fURI rewriteTID,
-            final BiFunction<S, fURI, Boolean> hasFunction) {
+            final BiFunction<S, DataPath, Boolean> hasFunction) {
 
         return RewriteBuilder.forDatabase(spaceType)
                 .tid(rewriteTID)
@@ -342,8 +344,8 @@ public final class CommonRewrites {
                     // patterns operate across collections/tables and require different rewriting
                     return !ref.isUri() || !ref.uriValue().retract(1).hasPattern();
                 })
-                .optimize("from_has", (space, furi, coeff) -> {
-                    final boolean exists = hasFunction.apply(space, furi);
+                .optimize("from_has", (space, dp, coeff) -> {
+                    final boolean exists = hasFunction.apply(space, dp);
                     return studio.phaseshift.metatron.isa.m.type.impl.MBool.bool(exists);
                 })
                 .build();
@@ -365,7 +367,7 @@ public final class CommonRewrites {
          * @return The projected results (typically an Objs of rows with only selected fields)
          * @throws Exception if the operation fails
          */
-        Obj execute(S space, fURI furi, java.util.List<String> columns) throws Exception;
+        Obj execute(S space, DataPath dp, java.util.List<String> columns) throws Exception;
     }
 
     /**
@@ -439,6 +441,7 @@ public final class CommonRewrites {
 
                 final S typedSpace = this.spaceType.cast(space);
                 final fURI expandedfURI = space.redirect(oldfURI, true);
+                final DataPath dp = DataPath.ofSpaceRelative(expandedfURI, null);
 
                 LOG.debug("evaluating native select operation on %s with columns %s in space %s",
                         expandedfURI, columns, space);
@@ -456,7 +459,7 @@ public final class CommonRewrites {
                                         lst(colObjs)),
                                 (lhs, inst) -> {
                                     try {
-                                        return this.selectOperation.execute(typedSpace, expandedfURI, columns);
+                                        return this.selectOperation.execute(typedSpace, dp, columns);
                                     } catch (final Exception e) {
                                         throw studio.phaseshift.metatron.util.MTronException.of(e,
                                                 "failed to execute native select operation");
@@ -531,7 +534,7 @@ public final class CommonRewrites {
          * @return The filtered results (typically an Objs of rows)
          * @throws Exception if the operation fails
          */
-        Obj execute(S space, fURI furi, String sqlWhere) throws Exception;
+        Obj execute(S space, DataPath dp, String sqlWhere) throws Exception;
     }
 
     /**
@@ -610,6 +613,7 @@ public final class CommonRewrites {
 
                 final S typedSpace = this.spaceType.cast(space);
                 final fURI expandedfURI = space.redirect(oldfURI, true);
+                final DataPath dp = DataPath.ofSpaceRelative(expandedfURI, null);
 
                 LOG.debug("evaluating native where operation on %s with clause '%s' in space %s",
                         expandedfURI, sqlWhere, space);
@@ -622,7 +626,7 @@ public final class CommonRewrites {
                                         studio.phaseshift.metatron.isa.m.type.impl.MStr.str(sqlWhere)),
                                 (lhs, inst) -> {
                                     try {
-                                        return this.whereOperation.execute(typedSpace, expandedfURI, sqlWhere);
+                                        return this.whereOperation.execute(typedSpace, dp, sqlWhere);
                                     } catch (final Exception e) {
                                         throw studio.phaseshift.metatron.util.MTronException.of(e,
                                                 "failed to execute native where operation");
@@ -759,7 +763,7 @@ public final class CommonRewrites {
          * @return The count of matching rows
          * @throws Exception if the operation fails
          */
-        long execute(S space, fURI furi, String sqlWhere) throws Exception;
+        long execute(S space, DataPath dp, String sqlWhere) throws Exception;
     }
 
     /**
@@ -836,6 +840,7 @@ public final class CommonRewrites {
                 }
 
                 final S typedSpace = this.spaceType.cast(space);
+                final DataPath dp = DataPath.ofSpaceRelative(furi, null);
 
                 LOG.debug("evaluating native where+count on %s with clause '%s' in space %s",
                         furi, sqlWhere, space);
@@ -848,7 +853,7 @@ public final class CommonRewrites {
                                         studio.phaseshift.metatron.isa.m.type.impl.MStr.str(sqlWhere)),
                                 (lhs, inst) -> {
                                     try {
-                                        final long count = this.whereCountOperation.execute(typedSpace, furi, sqlWhere);
+                                        final long count = this.whereCountOperation.execute(typedSpace, dp, sqlWhere);
                                         return jnt(count);
                                     } catch (final Exception e) {
                                         throw studio.phaseshift.metatron.util.MTronException.of(e,

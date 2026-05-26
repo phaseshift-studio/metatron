@@ -23,6 +23,7 @@ import com.mongodb.client.model.Filters;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import studio.phaseshift.metatron.algebra.rewrite.CommonRewrites;
+import studio.phaseshift.metatron.furi.DataPath;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.dcmnt.space.dcmntSpace;
@@ -147,8 +148,8 @@ public class dcmntInstSet extends AbstractInstSet {
                         CommonRewrites.countRewrite(
                                 dcmntSpace.class,
                                 DCMNT_ISA_REWRITE_TID.extend("mql_count"),
-                                (space, furi) -> {
-                                    final String collectionName = furi.segments().getFirst();
+                                (space, dp) -> {
+                                    final String collectionName = dp.collection();
                                     final MongoCollection<Document> collection = space.getDatabase().getCollection(collectionName);
                                     return collection.countDocuments();
                                 }
@@ -158,8 +159,8 @@ public class dcmntInstSet extends AbstractInstSet {
                         CommonRewrites.sumRewrite(
                                 dcmntSpace.class,
                                 DCMNT_ISA_REWRITE_TID.extend("mql_sum"),
-                                (space, furi) -> {
-                                    final String collectionName = furi.segments().getFirst();
+                                (space, dp) -> {
+                                    final String collectionName = dp.collection();
                                     final MongoCollection<Document> collection = space.getDatabase().getCollection(collectionName);
                                     // MongoDB aggregation pipeline: [{$group: {_id: null, total: {$sum: 1}}}]
                                     final Document result = collection.aggregate(Arrays.asList(
@@ -177,8 +178,8 @@ public class dcmntInstSet extends AbstractInstSet {
                         CommonRewrites.meanRewrite(
                                 dcmntSpace.class,
                                 DCMNT_ISA_REWRITE_TID.extend("mql_mean"),
-                                (space, furi) -> {
-                                    final String collectionName = furi.segments().getFirst();
+                                (space, dp) -> {
+                                    final String collectionName = dp.collection();
                                     final MongoCollection<Document> collection = space.getDatabase().getCollection(collectionName);
                                     // MongoDB aggregation pipeline: [{$group: {_id: null, average: {$avg: 1}}}]
                                     final Document result = collection.aggregate(Arrays.asList(
@@ -196,10 +197,10 @@ public class dcmntInstSet extends AbstractInstSet {
                         CommonRewrites.limitRewrite(
                                 dcmntSpace.class,
                                 DCMNT_ISA_REWRITE_TID.extend("mql_limit"),
-                                (space, furi, limit) -> {
-                                    final String collectionName = furi.segments().getFirst();
+                                (space, dp, limit) -> {
+                                    final String collectionName = dp.collection();
                                     final MongoCollection<Document> collection = space.getDatabase().getCollection(collectionName);
-                                    final fURI baseUri = furi.retract(1);
+                                    final fURI baseUri = dp.spaceURI();
                                     return readDocumentsAsObjs(collection, baseUri, space, (int) limit);
                                 }
                         ),
@@ -208,8 +209,8 @@ public class dcmntInstSet extends AbstractInstSet {
                         CommonRewrites.hasRewrite(
                                 dcmntSpace.class,
                                 DCMNT_ISA_REWRITE_TID.extend("mql_has"),
-                                (space, furi) -> {
-                                    final String collectionName = furi.segments().getFirst();
+                                (space, dp) -> {
+                                    final String collectionName = dp.collection();
                                     final MongoCollection<Document> collection = space.getDatabase().getCollection(collectionName);
                                     // Use limit(1) for efficiency - we only need to know if at least one exists
                                     return collection.find().limit(1).first() != null;
@@ -220,10 +221,10 @@ public class dcmntInstSet extends AbstractInstSet {
                         CommonRewrites.whereRewrite(
                                 dcmntSpace.class,
                                 DCMNT_ISA_REWRITE_TID.extend("mql_where"),
-                                (space, furi, predicateStr) -> {
-                                    final String collectionName = furi.segments().getFirst();
+                                (space, dp, predicateStr) -> {
+                                    final String collectionName = dp.collection();
                                     final MongoCollection<Document> collection = space.getDatabase().getCollection(collectionName);
-                                    final fURI baseUri = furi.retract(1);
+                                    final fURI baseUri = dp.spaceURI();
                                     final Bson filter = parseMongoFilter(predicateStr);
                                     if (filter == null) {
                                         throw new IllegalArgumentException("Could not parse filter: " + predicateStr);
@@ -237,8 +238,8 @@ public class dcmntInstSet extends AbstractInstSet {
                                 dcmntSpace.class,
                                 DCMNT_ISA_REWRITE_TID.extend("mql_where"),
                                 DCMNT_ISA_REWRITE_TID.extend("mql_where_count"),
-                                (space, furi, predicateStr) -> {
-                                    final String collectionName = furi.segments().getFirst();
+                                (space, dp, predicateStr) -> {
+                                    final String collectionName = dp.collection();
                                     final MongoCollection<Document> collection = space.getDatabase().getCollection(collectionName);
                                     final Bson filter = parseMongoFilter(predicateStr);
                                     if (filter == null) {
@@ -252,8 +253,8 @@ public class dcmntInstSet extends AbstractInstSet {
                         CommonRewrites.selectRewrite(
                                 dcmntSpace.class,
                                 DCMNT_ISA_REWRITE_TID.extend("mql_select"),
-                                (space, furi, columns) -> {
-                                    final String collectionName = furi.segments().getFirst();
+                                (space, dp, columns) -> {
+                                    final String collectionName = dp.collection();
                                     final MongoCollection<Document> collection = space.getDatabase().getCollection(collectionName);
 
                                     // Build MongoDB projection: {field1: 1, field2: 1, _id: 0}

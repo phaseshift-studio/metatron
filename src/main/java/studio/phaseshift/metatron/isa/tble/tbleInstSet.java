@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.isa.tble;
 
 import studio.phaseshift.metatron.algebra.rewrite.CommonRewrites;
+import studio.phaseshift.metatron.furi.DataPath;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.Space;
@@ -159,8 +160,8 @@ public class tbleInstSet extends AbstractInstSet {
                         docWrap(CommonRewrites.countRewrite(
                                 tbleSpace.class,
                                 TBLE_ISA_REWRITE_TID.extend("sql_count"),
-                                (space, furi) -> {
-                                    final String tableName = furi.segments().getFirst();
+                                (space, dp) -> {
+                                    final String tableName = dp.collection();
                                     try (final Statement stmt = space.sjvm().createStatement();
                                          final ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM " + tableName)) {
                                         return rs.next() ? (long) rs.getInt(1) : 0L;
@@ -176,9 +177,10 @@ public class tbleInstSet extends AbstractInstSet {
                         docWrap(CommonRewrites.sumRewrite(
                                 tbleSpace.class,
                                 TBLE_ISA_REWRITE_TID.extend("sql_sum"),
-                                (space, furi) -> {
-                                    final String tableName = furi.segments().getFirst();
-                                    final String columnName = furi.segments().get(2);
+                                (space, dp) -> {
+                                    final String tableName = dp.collection();
+                                    if (!dp.hasField()) return 0L;
+                                    final String columnName = dp.field();
                                     final String query = "SELECT SUM(" + columnName + ") FROM " + tableName;
                                     LOG.debug("sql_sum query %s", query);
                                     try (final Statement stmt = space.sjvm().createStatement();
@@ -199,9 +201,10 @@ public class tbleInstSet extends AbstractInstSet {
                         docWrap(CommonRewrites.meanRewrite(
                                 tbleSpace.class,
                                 TBLE_ISA_REWRITE_TID.extend("sql_mean"),
-                                (space, furi) -> {
-                                    final String tableName = furi.segments().getFirst();
-                                    final String columnName = furi.segments().get(2);
+                                (space, dp) -> {
+                                    final String tableName = dp.collection();
+                                    if (!dp.hasField()) return 0.0;
+                                    final String columnName = dp.field();
                                     final String query = "SELECT AVG(" + columnName + ") FROM " + tableName;
                                     LOG.debug("sql_mean %s", query);
                                     try (final Statement stmt = space.sjvm().createStatement();
@@ -215,8 +218,8 @@ public class tbleInstSet extends AbstractInstSet {
                         docWrap(CommonRewrites.limitRewrite(
                                 tbleSpace.class,
                                 TBLE_ISA_REWRITE_TID.extend("sql_limit"),
-                                (space, furi, limit) -> {
-                                    final String tableName = furi.segments().getFirst();
+                                (space, dp, limit) -> {
+                                    final String tableName = dp.collection();
                                     final String sql = "SELECT * FROM " + tableName + " LIMIT " + limit;
                                     try (final Statement stmt = space.sjvm().createStatement();
                                          final ResultSet rs = stmt.executeQuery(sql)) {
@@ -264,8 +267,8 @@ public class tbleInstSet extends AbstractInstSet {
                         docWrap(CommonRewrites.hasRewrite(
                                 tbleSpace.class,
                                 TBLE_ISA_REWRITE_TID.extend("sql_has"),
-                                (space, furi) -> {
-                                    final String tableName = furi.segments().getFirst();
+                                (space, dp) -> {
+                                    final String tableName = dp.collection();
                                     try (final Statement stmt = space.sjvm().createStatement();
                                          final ResultSet rs = stmt.executeQuery("SELECT EXISTS(SELECT 1 FROM " + tableName + " LIMIT 1)")) {
                                         return rs.next() && rs.getBoolean(1);
@@ -281,10 +284,10 @@ public class tbleInstSet extends AbstractInstSet {
                         docWrap(CommonRewrites.whereRewrite(
                                 tbleSpace.class,
                                 TBLE_ISA_REWRITE_TID.extend("sql_where"),
-                                (space, furi, sqlWhere) -> {
-                                    if (furi.segments().isEmpty())
-                                        throw MTronException.of("uri must contain a table reference: $s", furi);
-                                    final String tableName = furi.segments().getFirst();
+                                (space, dp, sqlWhere) -> {
+                                    if (!dp.hasCollection())
+                                        throw MTronException.of("uri must contain a table reference: $s", dp);
+                                    final String tableName = dp.collection();
                                     final String sql = "SELECT * FROM " + tableName + " WHERE " + sqlWhere;
                                     try (final Statement stmt = space.sjvm().createStatement();
                                          final ResultSet rs = stmt.executeQuery(sql)) {
@@ -332,8 +335,8 @@ public class tbleInstSet extends AbstractInstSet {
                                 tbleSpace.class,
                                 TBLE_ISA_REWRITE_TID.extend("sql_where"),
                                 TBLE_ISA_REWRITE_TID.extend("sql_where_count"),
-                                (space, furi, sqlWhere) -> {
-                                    final String tableName = furi.segments().getFirst();
+                                (space, dp, sqlWhere) -> {
+                                    final String tableName = dp.collection();
                                     final String sql = "SELECT COUNT(*) FROM " + tableName + " WHERE " + sqlWhere;
                                     try (final Statement stmt = space.sjvm().createStatement();
                                          final ResultSet rs = stmt.executeQuery(sql)) {
@@ -350,8 +353,8 @@ public class tbleInstSet extends AbstractInstSet {
                         docWrap(CommonRewrites.selectRewrite(
                                 tbleSpace.class,
                                 TBLE_ISA_REWRITE_TID.extend("sql_select"),
-                                (space, furi, columns) -> {
-                                    final String tableName = furi.segments().getFirst();
+                                (space, dp, columns) -> {
+                                    final String tableName = dp.collection();
                                     final String columnList = String.join(", ", columns);
                                     final String sql = "SELECT " + columnList + " FROM " + tableName;
                                     try (final Statement stmt = space.sjvm().createStatement();
