@@ -266,8 +266,8 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
             return rec;
         }
 
-        public static Obj rshiftRec(final Rec lhs, final Inst inst) {
-            return inst.arg(0).isNoObj() ? objs(lhs.asRec().valueElements()) : objs(inst.arg(0).stream().map(k -> lhs.asRec().at(k)));
+        public static Obj rshiftRec(final Rec lhs, final Obj arg) {
+            return arg.isNoObj() ? objs(lhs.asRec().valueElements()) : objs(arg.stream().map(k -> lhs.asRec().at(k)));
         }
     }
 

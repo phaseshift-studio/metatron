@@ -127,7 +127,7 @@ public class BasicRouter extends AbstractSpace<Map<Obj, Obj>> implements Router 
             return;
         this.smallToBigRoutes.computeRaw(small, (k, v) -> {
             if (null == v) {
-                final Set<fURI> set = new HashSet<>();
+                final Set<fURI> set = new TreeSet<>(Comparator.comparingInt(fURI::pathLength));
                 set.add(big.basePath());
                 return set;
             } else {
@@ -160,11 +160,7 @@ public class BasicRouter extends AbstractSpace<Map<Obj, Obj>> implements Router 
             if (set.isEmpty()) {
                 temp = this.getSpaceFor(furi).redirect(furi, true);
             } else if (set.size() > 1) {
-                // when multiple redirects exist, prefer shorter paths (closer to primary instruction set)
-                // this ensures /m/inst/zero is preferred over /m/mach/inst/ring/const/zero
-                final Optional<fURI> preferred = set.stream()
-                        .filter(f -> f.hasPrefix(this.primary.toString()))
-                        .min(Comparator.comparingInt(fURI::pathLength));
+                final Optional<fURI> preferred = set.stream().filter(f -> f.hasPrefix(this.primary.toString())).findFirst();
                 temp = preferred.orElse(set.iterator().next());
             } else {
                 temp = set.iterator().next();

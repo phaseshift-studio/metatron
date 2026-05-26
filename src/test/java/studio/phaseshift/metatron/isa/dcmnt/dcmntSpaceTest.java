@@ -64,7 +64,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
  * Test suite for dcmntSpace with in-memory MongoDB.
- * Excludes abstract tests as dcmntSpace has its own comprehensive MongoDB-specific tests.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
@@ -1116,20 +1115,7 @@ public class dcmntSpaceTest extends AbstractSpaceTest implements CommonRewritesT
     static Stream<Arguments> provideAllRewriteTestCases() {
         return new dcmntSpaceTest().generateAllRewriteTestCases();
     }
-
-    // Plan verification tests disabled - mParser.parse().rewrite() doesn't trigger space-specific rewrites
-    // The rewrites are registered in dcmntInstSet and only apply during actual evaluation through a space
-    //
-    // @ParameterizedTest(name = "[{index}] {0}")
-    // @MethodSource("providePlanVerificationTestCases")
-    // public void testRewritePlanContainsNative(String description, String code, String expectedNativeInst) throws Exception {
-    //     runRewritePlanTest(description, code, expectedNativeInst);
-    // }
-    //
-    // static Stream<Arguments> providePlanVerificationTestCases() {
-    //     return new dcmntSpaceTest().generatePlanVerificationTestCases();
-    // }
-
+    
     // ========================================
     // DateTime Tests
     // ========================================

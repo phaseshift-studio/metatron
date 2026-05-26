@@ -43,7 +43,15 @@ public interface Router extends Space {
 
     enum Reference {
         ATTACHED,
-        DETACHED
+        DETACHED;
+
+        public boolean isDetached() {
+            return this == DETACHED;
+        }
+
+        public boolean isAttached() {
+            return this == ATTACHED;
+        }
     }
 
     fURI STACK_PATTERN = f("+/#");
@@ -129,7 +137,7 @@ public interface Router extends Space {
     void addSpace(final Space space);
 
     void removeSpace(final fURI vid);
-    
+
     <SPACE extends Space> SPACE getSpace(final fURI pattern);
 
     void registerRedirect(final fURI small, final fURI big);
@@ -152,7 +160,7 @@ public interface Router extends Space {
 
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
-                    
+
             ));
         }
 

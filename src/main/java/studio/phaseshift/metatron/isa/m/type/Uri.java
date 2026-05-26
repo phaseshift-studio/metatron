@@ -403,8 +403,8 @@ public interface Uri extends Mono, Ring.O<Uri>, Comparable<Uri> {
             // do nothing
         }
 
-        public static Obj rshiftUri(final Uri lhs, final Inst inst) {
-            return objs(inst.arg(0).stream().map(u -> {
+        public static Obj rshiftUri(final Uri lhs, final Obj arg) {
+            return objs(arg.stream().map(u -> {
                 if (u.isInt()) {
                     return lhs.uriValue().segmentLength() > u.intValue().intValue() ? uri(lhs.uriValue().asRelativeNode().segments().get(u.intValue().intValue())) : noobj();
                 } else {

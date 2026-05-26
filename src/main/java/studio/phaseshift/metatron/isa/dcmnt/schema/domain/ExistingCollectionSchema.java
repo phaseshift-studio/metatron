@@ -29,7 +29,7 @@ import studio.phaseshift.metatron.isa.m.type.Type;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.tble.space.ExistingTableSchema;
-import studio.phaseshift.metatron.util.DatabasePath;
+import studio.phaseshift.metatron.furi.DataPath;
 
 import java.util.*;
 
@@ -218,42 +218,29 @@ public class ExistingCollectionSchema {
     }
 
     // =======================================================================
-    // Path resolution via DatabasePath
+    // Path resolution via DataPath
     // =======================================================================
 
     /**
-     * Parse a fURI (route prefix already stripped) into a {@link DatabasePath},
-     * prepending the MongoDB database name so the canonical
-     * {@code /db/aggregate/element/field/value...} hierarchy is preserved.
+     * Resolve a space-relative fURI into a {@link DataPath} when the
+     * collection is known to this schema.  Returns {@code null} when the
+     * collection name is not a recognised collection.
      */
-    public DatabasePath resolvePath(final fURI furi) {
-        final List<String> segs = furi.segments();
-        final List<String> fullSegs = new ArrayList<>(segs.size() + 1);
-        fullSegs.add(this.space.getDatabase().getName());
-        fullSegs.addAll(segs);
-        return new DatabasePath(f("/" + String.join("/", fullSegs)));
-    }
-
-    /**
-     * Like {@link #resolvePath(fURI)} but returns {@code null} when the aggregate
-     * (collection) name is not a known collection in this schema.  The wildcard
-     * {@code +} is always accepted so collection-listing queries work.
-     */
-    public DatabasePath resolveCollectionPath(final fURI furi) {
-        final DatabasePath path = resolvePath(furi);
-        if (path.getAggregateName() == null)
+    public DataPath resolveDataPath(final fURI furi) {
+        final DataPath dp = DataPath.ofSpaceRelative(furi.asNode(), this.space.getDatabase().getName());
+        if (dp.collection() == null)
             return null;
-        if (!path.getAggregateName().equals("+")
-                && !this.collectionSchemas.containsKey(path.getAggregateName().toLowerCase()))
+        if (!dp.collectionIsWildcard()
+                && !this.collectionSchemas.containsKey(dp.collection().toLowerCase()))
             return null;
-        return path;
+        return dp;
     }
 
     /**
      * Check if a fURI path refers to a collection managed by this schema.
      */
     public boolean isCollectionPath(final fURI furi) {
-        return resolveCollectionPath(furi.asNode()) != null;
+        return resolveDataPath(furi.asNode()) != null;
     }
 
     /**
@@ -261,8 +248,8 @@ public class ExistingCollectionSchema {
      * Returns {@code null} when the path does not map to a known collection.
      */
     public String getCollectionName(final fURI furi) {
-        final DatabasePath path = resolveCollectionPath(furi.asNode());
-        return path != null ? path.getAggregateName() : null;
+        final DataPath dp = resolveDataPath(furi.asNode());
+        return dp != null ? dp.collection() : null;
     }
 
     /**
@@ -270,26 +257,20 @@ public class ExistingCollectionSchema {
      * Returns {@code null} when the path does not map to a known collection.
      */
     public String getDocumentId(final fURI furi) {
-        final DatabasePath path = resolveCollectionPath(furi.asNode());
-        if (path == null || path.getElementName() == null)
+        final DataPath dp = resolveDataPath(furi.asNode());
+        if (dp == null || !dp.hasEntry())
             return null;
-        return path.getElementName();
+        return dp.entry();
     }
 
     /**
-     * Get the remaining path segments after collection/document.
-     * Used for field-level access like /collection/doc/field/subfield.
-     * Returns {@code null} if no additional segments.
+     * Get the full field path (field through extension) as a dot-joined string.
+     * Used for field-level access like collection/doc/field/subfield.
+     * Returns {@code null} if no field segment.
      */
-    public List<String> getFieldPath(final fURI furi) {
-        final DatabasePath path = resolveCollectionPath(furi.asNode());
-        if (path == null || path.getFieldName() == null)
-            return null;
-        final List<String> fieldPath = new ArrayList<>();
-        fieldPath.add(path.getFieldName());
-        if (path.getValuePath() != null)
-            fieldPath.addAll(path.getValuePath().segments());
-        return fieldPath;
+    public String getFieldPath(final fURI furi) {
+        final DataPath dp = resolveDataPath(furi.asNode());
+        return dp != null ? dp.fieldPathStr() : null;
     }
 
     // =======================================================================

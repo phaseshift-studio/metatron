@@ -270,8 +270,8 @@ public interface Lst extends Poly<Lst, List<Obj>>, PlusMonoid.O<Lst> {
             // do nothing
         }
 
-        public static Obj rshiftLst(final Lst lhs, final Inst inst) {
-            return inst.arg(0).isNoObj() ? objs(lhs.valueElements()) : objs(inst.arg(0).stream().map(lhs::at));
+        public static Obj rshiftLst(final Lst lhs, final Obj arg) {
+            return arg.isNoObj() ? objs(lhs.valueElements()) : objs(arg.stream().map(lhs::at));
         }
 
 

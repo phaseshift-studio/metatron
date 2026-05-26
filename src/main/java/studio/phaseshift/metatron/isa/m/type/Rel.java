@@ -330,8 +330,8 @@ public interface Rel extends Poly<Rel, Tuple.Pair<Obj, Obj>>, MultMonoid.O<Rel>,
             // do nothing
         }
 
-        public static Obj rshiftRel(final Rel lhs, final Inst inst) {
-            return inst.arg(0).isNoObj() ? lhs.asRel().second() : lhs.asRel().at(inst.arg(0));
+        public static Obj rshiftRel(final Rel lhs, final Obj arg) {
+            return arg.isNoObj() ? lhs.asRel().second() : lhs.asRel().at(arg);
         }
     }
 

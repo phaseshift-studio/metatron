@@ -27,6 +27,7 @@ import com.mongodb.client.model.ReplaceOptions;
 import org.bson.*;
 import org.bson.types.ObjectId;
 import org.javatuples.Pair;
+import studio.phaseshift.metatron.furi.DataPath;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractSpace;
 import studio.phaseshift.metatron.isa.SchemaSpace;
@@ -249,6 +250,26 @@ public class dcmntSpace extends AbstractSpace<MongoClient> implements SchemaSpac
     // Collection stream resolution
     // =======================================================================
 
+    // =======================================================================
+    // DataPath resolution
+    // =======================================================================
+
+    /**
+     * Resolve a space-relative fURI into a {@link DataPath}.
+     * Delegates to {@link ExistingCollectionSchema} when the collection is known;
+     * otherwise falls back to structural decomposition via {@link DataPath#ofSpaceRelative}.
+     */
+    private DataPath resolveDataPath(final fURI relativePath) {
+        if (this.existingCollectionSchema != null) {
+            final DataPath dp = this.existingCollectionSchema.resolveDataPath(relativePath);
+            if (dp != null)
+                return dp;
+        }
+        return DataPath.ofSpaceRelative(relativePath, this.database.getName());
+    }
+
+    // =======================================================================
+
     /**
      * Expand a collection name (possibly wildcard {@code #} or {@code +}) into
      * a stream of {@link MongoCollection} handles.
@@ -277,33 +298,18 @@ public class dcmntSpace extends AbstractSpace<MongoClient> implements SchemaSpac
             // Route from the space's external address pattern to the internal relative path
             final fURI relativePath = Space.Helper.routeFromSpace(pattern, this.routes());
 
-            // Determine collection name and document ID
-            final String collectionName;
-            final String documentID;
-            final List<String> fieldPath;
+            // Decompose the relative path using DataPath
+            final DataPath dp = this.resolveDataPath(relativePath);
 
-            if (this.existingCollectionSchema != null && this.existingCollectionSchema.isCollectionPath(relativePath)) {
-                // Known collection from schema
-                collectionName = this.existingCollectionSchema.getCollectionName(relativePath);
-                documentID = this.existingCollectionSchema.getDocumentId(relativePath);
-                fieldPath = this.existingCollectionSchema.getFieldPath(relativePath);
-            } else {
-                // Fall back to segment parsing
-                final List<String> segments = relativePath.segments();
-                collectionName = segments.isEmpty() ? null : segments.getFirst();
-                documentID = segments.size() > 1 ? segments.get(1) : null;
-                fieldPath = segments.size() > 2 ? segments.subList(2, segments.size()) : null;
-            }
-
-            if (collectionName == null)
+            if (dp.collection() == null)
                 return noobj();
 
-            resolveCollectionStream(collectionName).findFirst().ifPresent(collection -> {
-                LOG.debug("WRITING: %s %s", collectionName, documentID);
-                if (fieldPath == null || fieldPath.isEmpty()) {
-                    writeDocument(collection, documentID, obj);
+            resolveCollectionStream(dp.collection()).findFirst().ifPresent(collection -> {
+                LOG.debug("WRITING: %s %s", dp.collection(), dp.entry());
+                if (!dp.hasField()) {
+                    writeDocument(collection, dp.entry(), obj);
                 } else {
-                    writeField(collection, documentID, String.join(".", fieldPath), obj);
+                    writeField(collection, dp.entry(), dp.fieldPathStr(), obj);
                 }
             });
             return obj;
@@ -352,28 +358,18 @@ public class dcmntSpace extends AbstractSpace<MongoClient> implements SchemaSpac
     public Function<fURI, Iterator<IdObj>> directReader() {
         return (pattern) -> {
             final fURI alignedPattern = Space.Helper.routeFromSpace(pattern, this.routes());
-            final List<String> alignedSegments = alignedPattern.segments();
+            final DataPath dp = this.resolveDataPath(alignedPattern);
 
-            // For 3+ segment paths the first two segments identify the document
-            // (collection + docId) and the remainder is a sub-pattern within the
-            // document.  Mirror memSpace.directReader by doing inline poly-parent
-            // discovery: fetch the document and expand it with unrollPoly using the
-            // NODE form of the pattern (trailing slash stripped) so that test() works.
-            if (alignedSegments.size() > 2) {
-                final String collectionName = alignedSegments.get(0);
-                final String documentID = alignedSegments.get(1);
-                // Mirror memSpace.directReader: for each candidate document,
-                // test its VID against the pattern, then expand children via
-                // unrollPoly if the document is a poly (Rec or Lst).
+            // --- Field-level access (3+ segments): collection/doc/field[/deeper] ---
+            if (dp.hasField()) {
                 final fURI nodePattern = pattern.asNode();
-                if (!collectionName.equals("+") && !collectionName.equals("#") &&
-                        !documentID.equals("+") && !documentID.equals("#")) {
+                if (!dp.collectionIsWildcard() && !dp.entryIsWildcard()) {
                     // Specific collection + specific document
-                    final Document doc = this.database.getCollection(collectionName)
-                            .find(Filters.eq(ID_FIELD, parseObjectId(documentID))).first();
+                    final Document doc = this.database.getCollection(dp.collection())
+                            .find(Filters.eq(ID_FIELD, parseObjectId(dp.entry()))).first();
                     if (doc != null) {
                         final fURI docVID = f(this.pattern.retractPattern()
-                                .extend(collectionName).extend(documentID).toString());
+                                .extend(dp.collection()).extend(dp.entry()).toString());
                         final Obj docObj = processDocument(doc);
                         final List<IdObj> results = new ArrayList<>();
                         if (docVID.test(nodePattern))
@@ -382,12 +378,11 @@ public class dcmntSpace extends AbstractSpace<MongoClient> implements SchemaSpac
                             results.addAll(Space.Helper.unrollPoly(docVID, docObj.as(), nodePattern));
                         return results.iterator();
                     }
-                } else if (!collectionName.equals("+") && !collectionName.equals("#")) {
-                    // Specific collection, wildcard document — expand sub-pattern
-                    // within each matching document (e.g. col/+/field)
-                    return IteratorUtil.stream(this.database.getCollection(collectionName).find()).flatMap(x -> {
+                } else if (!dp.collectionIsWildcard()) {
+                    // Specific collection, wildcard document
+                    return IteratorUtil.stream(this.database.getCollection(dp.collection()).find()).flatMap(x -> {
                         final String idStr = x.getObjectId(ID_FIELD).toHexString();
-                        final fURI docVID = this.pattern.retractPattern().extend(collectionName).extend(idStr);
+                        final fURI docVID = this.pattern.retractPattern().extend(dp.collection()).extend(idStr);
                         final Obj docObj = processDocument(x);
                         final List<IdObj> results = new ArrayList<>();
                         if (docVID.test(nodePattern))
@@ -397,8 +392,7 @@ public class dcmntSpace extends AbstractSpace<MongoClient> implements SchemaSpac
                         return results.stream();
                     }).iterator();
                 } else {
-                    // Wildcard collection, wildcard document — expand sub-pattern
-                    // within every document in every collection (e.g. +/+/field)
+                    // Wildcard collection, wildcard document
                     return IteratorUtil.stream(this.database.listCollectionNames().iterator())
                             .map(this.database::getCollection)
                             .flatMap(collection -> IteratorUtil.stream(collection.find()).map(x -> Pair.with(collection, x)))
@@ -418,32 +412,16 @@ public class dcmntSpace extends AbstractSpace<MongoClient> implements SchemaSpac
                 return IteratorUtil.of();
             }
 
-            // For 2-segment BRANCH paths (trailing slash with no sub-pattern) return
-            // empty so that Space.Helper.resolveRead can re-call directReader with
-            // pattern.extend(WILD_ONE) and trigger the > 2 expansion above.
+            // --- Branch path guard: return empty so resolveRead retries with WILD_ONE ---
             if (alignedPattern.isBranch())
                 return IteratorUtil.of();
 
-            // Determine collection name and document ID
-            final String collectionName;
-            final String documentID;
-
-            if (this.existingCollectionSchema != null && this.existingCollectionSchema.isCollectionPath(alignedPattern)) {
-                // Known collection from schema
-                collectionName = this.existingCollectionSchema.getCollectionName(alignedPattern);
-                documentID = this.existingCollectionSchema.getDocumentId(alignedPattern);
-            } else {
-                // Fall back to segment parsing
-                collectionName = alignedSegments.isEmpty() ? null : alignedSegments.getFirst();
-                documentID = alignedSegments.size() > 1 ? alignedSegments.get(1) : null;
-            }
-
-            LOG.debug("searching [collection: %s][document: %s]", collectionName, documentID);
-            if (collectionName == null)
+            // --- Collection / document level ---
+            if (!dp.hasCollection())
                 return IteratorUtil.of();
 
-            if (documentID == null) {
-                return resolveCollectionStream(collectionName).map(collection -> {
+            if (!dp.hasEntry()) {
+                return resolveCollectionStream(dp.collection()).map(collection -> {
                             final fURI collectionVID = Space.Helper.routeToSpace(
                                     f(collection.getNamespace().getCollectionName()), this.routes());
                             LOG.debug("collection lookup: %s", collectionVID);
@@ -453,10 +431,10 @@ public class dcmntSpace extends AbstractSpace<MongoClient> implements SchemaSpac
             }
 
             final List<IdObj> allResults = new ArrayList<>();
-            resolveCollectionStream(collectionName).forEach(collection -> {
+            resolveCollectionStream(dp.collection()).forEach(collection -> {
                 final String collName = collection.getNamespace().getCollectionName();
-                LOG.debug("READING: %s %s", collName, documentID);
-                if (documentID.equals("+") || documentID.equals("#")) {
+                LOG.debug("READING: %s %s", collName, dp.entry());
+                if (dp.entryIsWildcard()) {
                     // Wildcard document: return all documents in the collection
                     LOG.debug("reading all documents from collection %s", collName);
                     IteratorUtil.stream(collection.find()).forEach(doc -> {
@@ -478,12 +456,11 @@ public class dcmntSpace extends AbstractSpace<MongoClient> implements SchemaSpac
                         }
                     });
                 } else {
-                    LOG.debug("reading document %s from collection %s", documentID, collName);
+                    LOG.debug("reading document %s from collection %s", dp.entry(), collName);
                     final Document doc = collection.find(
-                            Filters.eq(ID_FIELD, parseObjectId(documentID))).first();
+                            Filters.eq(ID_FIELD, parseObjectId(dp.entry()))).first();
                     if (doc != null) {
-                        final fURI docVID = f(this.pattern.retractPattern()
-                                .extend(collName).extend(documentID).toString());
+                        final fURI docVID = dp.vid(this.pattern);
                         allResults.add(IdObj.of(docVID, processDocument(doc)));
                     }
                 }

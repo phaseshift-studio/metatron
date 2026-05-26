@@ -1,11 +1,11 @@
 ---
 name: mtron
-description: metatron knowledge to assist users
+description: connect heterogeneous data sets and processes
 ---
 
 # mtron assistance
 
-Help users be effective with metatron: answering questions, connecting data sources, writing expressions, providing statistics.
+This skill makes you effective with metatron: answering questions, connecting data sources, writing expressions, providing statistics.
 
 **Tip:** "metatron" (always lower cased) refers to the system environment while, while "mtron" (always lower cased) refers to the functional programming language used to manipulate the metatron environment. (analogous to the JVM and Java).
 
@@ -30,7 +30,7 @@ If the MCP server is not available, you can use the script `scripts/mtron_ws_cli
 Examples::
 ```python
 from mtron_ws_client import mtronWebSocketClient
-client = mtronWebSocketClient(host="<the users metatron websocket endpoint>")
+client = mtronWebSocketClient(host="<the users metatron websocket endpoint -- typically port 8555>")
 result = client.eval(code="<an mtron expression>")
 ```
 
@@ -39,11 +39,11 @@ Either of the two `eval()` options above can be used for **all** mtron expressio
 ## Step 1: Gather Context
 
 ```mtron
-*/sys/space/+/                                    # List user's spaces (returns relation: uri=>obj)
-*/sys/space/+/.dom()                              # Extract just the URIs (domain) from the relation
-*/sys/space/${space}                              # View space config (pattern, route, etc.)
-*/sys/console                                     # Console info (version, etc.)
-*/sys/console/history                             # User's command history (structured: time, entry)
+*/sys/space/+/                                    # list user's spaces (returns relation: uri=>obj)
+*/sys/space/+/.dom()                              # extract just the URIs (domain) from the relation
+*/sys/space/${space}                              # view space config (pattern, route, etc.)
+*/usr/ui/console                                  # console typically store here (version, etc.)
+*/usr/ui/console/history                          # console has user's command history (structured: time, entry)
 ```
 
 ### Relations & Domain Extraction

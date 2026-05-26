@@ -34,13 +34,12 @@ The https://en.wikipedia.org/wiki/Read%E2%80%93eval%E2%80%93print_loop[console] 
 The console is also an `obj`.
 [mtron]
 ----
-console::[=>]@/usr/ui/console                 
-*/usr/ui/console                                     [-- <1> --]
+console::[=>]@/usr/ui/console                        [-- <1> --]
 */usr/ui/console/pane/0                              [-- <2> --]
 /usr/ui/console/pane/0/result('printed at ==>xyz')   [-- <3> --]
 ----
 
-<1> The console `obj` is typically referenced by `/sys/ui/console`.
+<1> A console `obj` is spawned at `/usr/ui/console`.
 <2> The console's pane system allows for multiple parallel views.
 <3> Console pane's have obj local instructions availale for updating views.
 
@@ -57,25 +56,25 @@ These functions are useful for creating remote consoles, separating log output, 
 🧱
 [source,mtron]
 ----
- ┌────────────────────┐┌────────────────────┐
- │[/usr/marko]        ││[/usr/ai/agent]     │
- │                    ││                    │
- │mtron> 1-<[_,_]>-   ││mtron> *subagent    │
- │==>1                ││==>[ desc     => .. │
- │==>2                ││     provider => .. │
- │mtron> *<http://..> ││     tool     => .. │
- │==>[ html =>    ..  ││     skill    => .. │
- │      head   => ..  ││     note     => .. │
- │       title => ..  ││     ... ]          │
- │      body=> ..     ││mtron>              │
- │     ...]           ││                    │
- │mtron>              ││                    │
- └────────────────────┘└────────────────────┘
- ┌──────────────────────────────────────────┐
- │[/sys/log/#]                              │
- │[INFO] agent2 spawned by /usr/ai/agent    │
- │[WARN] runtime inst resolution required   │
- └──────────────────────────────────────────┘
+ ┌────────────────────────────┐┌────────────────────────────┐
+ │[/usr/marko]                ││[/usr/ai/agent]             │
+ │                            ││                            │
+ │mtron> 1-<[_,_]>-           ││mtron> *subagent            │
+ │==>1                        ││==>[ desc     => ..         │
+ │==>2                        ││     provider => ..         │
+ │mtron> *<http://..>         ││     tool     => ..         │
+ │==>[ html =>    ..          ││     skill    => ..         │
+ │      head   => ..          ││     note     => ..         │
+ │       title => ..          ││     ... ]                  │
+ │      body=> ..             ││mtron>                      │
+ │     ...]                   ││                            │
+ │mtron>                      ││                            │
+ └────────────────────────────┘└────────────────────────────┘
+ ┌──────────────────────────────────────────────────────────┐
+ │[/sys/log/#]                                              │
+ │[INFO] agent2 spawned by /usr/ai/agent                    │
+ │[WARN] runtime inst resolution required                   │
+ └──────────────────────────────────────────────────────────┘
 ----
 🧱
 |===

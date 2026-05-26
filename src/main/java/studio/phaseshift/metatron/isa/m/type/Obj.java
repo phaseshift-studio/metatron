@@ -25,6 +25,7 @@ import studio.phaseshift.metatron.algebra.PlusMonoid;
 import studio.phaseshift.metatron.algebra.Ring;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.impl.*;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
@@ -79,7 +80,7 @@ import static studio.phaseshift.metatron.util.CommonUtil.indent;
 import static studio.phaseshift.metatron.util.CommonUtil.nullOrElse;
 import static studio.phaseshift.metatron.util.Tuple.Pair;
 
-public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>, Feature.HasLogger, Cloneable, Predicate<Obj> {
+public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>, Feature.HasLogger, Cloneable, Predicate<Obj> {
 
     default <O extends Obj> O maybe() {
         return (O) this.c(cInt::maybe);
@@ -108,12 +109,6 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
     default <O extends Obj> O antiSome() {
         return (O) this.c(cInt::antiSome);
     }
-
-    <J> J jvm();
-
-    fURI tid();
-
-    fURI vid();
 
     default <O extends Obj> O parent(final Poly<?, ?> parent) {
         return (O) this;
@@ -502,7 +497,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
     default Obj autoResolve(final Obj obj) {
         final fURI base = this.tid().basePath();
         return this.isInst() && (base.equals(AUTO_FROM_INST_TID) || base.equals(AUTO_AT_INST_TID) || base.equals(AUTO_INST_TID)) ?
-                this.apply(obj).c(c->obj.isNoObj() ? c : c.mult(obj.c())) :
+                this.apply(obj).c(c -> obj.isNoObj() ? c : c.mult(obj.c())) :
                 this;
         //   return Obj.Helper.getAutoPointer(this).map(Router::readFromSpace).orElse(this);
     }
@@ -517,6 +512,10 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
 
     default boolean isInstObj() {
         return this instanceof Inst && !this.isNoObj();
+    }
+
+    default boolean isSpace() {
+        return this instanceof Space;
     }
 
     default boolean isInstSet() {
@@ -1154,13 +1153,13 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                     instC(SWAP_TID.dom(A).rng(A), lst(T(B)), (lhs, inst) -> lhs.apply(inst.arg(0))),
                     instC(RSHIFT_INST_TID.dom(A).rng(B.maybeSome()), lst(T(C.maybeSome())), (lhs, inst) -> {
                         if (lhs.isRec())
-                            return Rec.Helper.rshiftRec(lhs.asRec(), inst);
+                            return Rec.Helper.rshiftRec(lhs.asRec(), inst.arg(0));
                         else if (lhs.isLst())
-                            return Lst.Helper.rshiftLst(lhs.asLst(), inst);
+                            return Lst.Helper.rshiftLst(lhs.asLst(), inst.arg(0));
                         else if (lhs.isUri())
-                            return Uri.Helper.rshiftUri(lhs.asUri(), inst);
+                            return Uri.Helper.rshiftUri(lhs.asUri(), inst.arg(0));
                         else if (lhs.isRel())
-                            return Rel.Helper.rshiftRel(lhs.asRel(), inst);
+                            return Rel.Helper.rshiftRel(lhs.asRel(), inst.arg(0));
                         else if (lhs.isObjs())
                             return objs(lhs.asObjs().stream().flatMap(o -> inst.apply(o).stream()));
                         else return noobj();
