@@ -55,7 +55,12 @@ import static ch.qos.logback.classic.Level.TRACE;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
+import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
+import static studio.phaseshift.metatron.isa.m.mInstSet.*;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.block_;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
@@ -198,6 +203,17 @@ public class BootLoader implements Rec, Feature.SelfClone {
             sysSpace.write(ROUTER.vid(), ROUTER);
             Router.global().addSpace(sysSpace.self(sysSpace.jvm(), sysSpace.tid(), SYS_VID).as());
             LOG.debug("router location: %s", ROUTER.vid());
+            sysSpace.write("/sys/io/stdout", docWrap(instC(f("/sys/io/stdout").dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL.maybe())), (lhs, inst) -> {
+                System.out.println((Object) inst.arg(0).jvm());
+                return lhs;
+            }), "maybe an obj", "maybe an obj", Map.of(), "prints arg jvm object to the terminal and emits lhs obj as rhs obj"));
+            sysSpace.write("/sys/io/stdin", block_(docWrap(instC(f("/sys/io/stdin").dom(ALL.maybe()).rng(STR_TID), lst(), (lhs, inst) -> {
+                final Scanner scanner = new Scanner(System.in);
+                final String input = scanner.nextLine();
+                return str(input);
+            }), "maybe an obj", "a single line of input", Map.of(), "read a line of input from the running terminal")).tryToInst());
+            Router.global().registerRedirect(f("stdout"), f("/sys/io/stdout"));
+            Router.global().registerRedirect(f("stdin"), f("/sys/io/stdin"));
             ///  LOAD SYSTEM ENVIRONMENTAL VARIABLES
             System.getenv().entrySet().stream()
                     .map(kv -> new AbstractMap.SimpleEntry<>(SYS_VID.extend("env").extend(kv.getKey()), str(kv.getValue())))

@@ -33,6 +33,7 @@ import dev.langchain4j.skills.Skills;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
+import studio.phaseshift.metatron.isa.llm.Capability;
 import studio.phaseshift.metatron.isa.llm.CostCalculator;
 import studio.phaseshift.metatron.isa.llm.LLMFactory;
 import studio.phaseshift.metatron.isa.llm.space.SpaceChatMemoryStore;
@@ -45,13 +46,14 @@ import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.vec.type.MVec;
 import studio.phaseshift.metatron.isa.vec.type.Vec;
-import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
@@ -104,11 +106,11 @@ public class mModel extends MRec {
                 this.at(API_KEY).orElse(str("")).strValue());
     }
 
-    public Obj processThought(final Str thought) {
-        return this.at(f(FEATURE).extend(THINK)).apply(thought);
+    public Obj applyThoughtInstruction(final Str thought) {
+        return this.at(feat(THINK)).apply(thought);
     }
 
-    public Obj processResponse(final Str response, final boolean responseFormatted) {
+    public Obj recordResponse(final Str response, final boolean responseFormatted) {
         final Obj result = responseFormatted ?
                 ObjSimpleJSONSerializer.single().inputBytes(ByteBuffer.wrap(response.strValue().getBytes(StandardCharsets.UTF_8))) :
                 response;
@@ -117,12 +119,12 @@ public class mModel extends MRec {
             memObj.asLst().lstValue().getLast().asRec().recValue().put(uri("attributes"), rec(uri(FORMAT), result));
             memObj.save();
         }
-        this.asRec().at(f(FEATURE).extend(RESPONSE).extend(TO)).apply(result);
+        this.asRec().at(feat(RESPONSE, TO)).apply(result);
         return result;
     }
 
     public <T extends Obj> Optional<T> feature(final String feature) {
-        return Optional.<Obj>ofNullable(this.at(f(FEATURE).extend(feature)).orElse(null)).map(o -> o.autoResolve(this)).map(o -> (T) o);
+        return Optional.<Obj>ofNullable(this.at(feat(feature)).orElse(null)).map(o -> o.autoResolve(this)).map(o -> (T) o);
     }
 
     public Optional<Lst> tools() {
@@ -130,7 +132,7 @@ public class mModel extends MRec {
     }
 
     public Optional<Rec> cost() {
-        return Optional.<Rec>ofNullable(this.at(COST).orElse(null)).map(o -> o.autoResolve(this)).map(Obj::asRec);
+        return Optional.<Rec>ofNullable(this.at(feat(COST)).orElse(null)).map(o -> o.autoResolve(this)).map(Obj::asRec);
     }
 
     public Optional<Lst> skills() {
@@ -146,7 +148,7 @@ public class mModel extends MRec {
     }
 
     public Rec features() {
-        return this.at(f(FEATURE)).orElse(noobjRec());
+        return this.at(feat()).orElse(noobjRec());
     }
 
     public void addNote(final Obj note) {
@@ -158,11 +160,11 @@ public class mModel extends MRec {
     }
 
     public Rec memory() {
-        return this.at(f(FEATURE).extend(MEMORY)).orElse(noobjRec());
+        return this.at(feat(MEMORY)).orElse(noobjRec());
     }
 
     public Optional<Rec> lastResponse() {
-        return Optional.<Obj>ofNullable(this.at(f(FEATURE).extend(RESPONSE)).orElse(null)).map(o -> o.autoResolve(this)).map(Obj::asRec);
+        return Optional.<Obj>ofNullable(this.at(feat(RESPONSE)).orElse(null)).map(o -> o.autoResolve(this)).map(Obj::asRec);
     }
 
 
@@ -182,15 +184,30 @@ public class mModel extends MRec {
         return this.feature(RAG);
     }
 
-    public AiServices<mAgent> agent() {
+    static fURI feat(final String... segments) {
+        fURI path = f(FEATURE);
+        for (final String segment : segments)
+            path = path.extend(segment);
+        return path;
+    }
+
+    public AiServices<mAgent> agentBuilder() {
         final List<String> systemMessages = new ArrayList<>();
         final AiServices<mAgent> service = AiServices.builder(mAgent.class);
-        //////////////////////////////////////////
-        /////////////// PROMPT ///////////////////
-        //////////////////////////////////////////
-        this.prompt().ifPresent(p -> {
-            if (p.isStr() && p.strValue().isBlank())
-                return;
+
+        promptCapability().apply(service, systemMessages);
+        memoryCapability().apply(service, systemMessages);
+        skillsCapability().apply(service, systemMessages);
+        toolsCapability().apply(service, systemMessages);
+        notesCapability().apply(service, systemMessages);
+        ragCapability().apply(service, systemMessages);
+        mergeSystemMessages(service, systemMessages);
+
+        return service;
+    }
+
+    private Capability promptCapability() {
+        return (service, systemMessages) -> this.prompt().ifPresent(p -> {
             if (p.toString().isBlank())
                 return;
             try {
@@ -199,125 +216,126 @@ public class mModel extends MRec {
                 throw MTronException.of("unable to setup prompt: %s", e);
             }
         });
-        //////////////////////////////////////////
-        /////////////// MEMORY ///////////////////
-        //////////////////////////////////////////
-        if (!this.memory().isNoObj()) {
-            try {
-                final fURI memoryVID = this.memory().at("mem").vid();
-                if (memoryVID == null)
-                    this.logger().warn("llm memory has no vid (ignoring): %s", this.memory());
-                else {
-                    service.chatMemory(MessageWindowChatMemory.builder()
-                                    //.maxMessages(Router.readFromSpace(this.fetchMemory().uriValue().extend(MAX)).orElse(jnt(15)).intValue().intValue())
-                                    .maxMessages(this.memory().at(MAX).intValue().intValue())
-                                    .id(memoryVID)
-                                    .chatMemoryStore(SpaceChatMemoryStore.single())
-                                    .build())
-                            .storeRetrievedContentInChatMemory(true);
-                }
-            } catch (Exception e) {
-                throw MTronException.of("unable to setup memory: %s", e);
-            }
-        }
-        //////////////////////////////////////////
-        ///////////////  RESPONSE  ///////////////
-        //////////////////////////////////////////
-        // HANDLED IN LLMFACTORY
-        //////////////////////////////////////////
-        ///////////////   SKILLS /////////////////
-        //////////////////////////////////////////
-        if (this.skills().isPresent()) {
-            try {
-                final Skills skills = new Skills.Builder().skills(
-                        this.skills().get()
-                                .elements()
-                                .filter(s -> !s.isUri())
-                                .map(s -> mSkill.of(s.apply().asRec()).toSkill())
-                                .toList()).build();
-                service.toolProvider(skills.toolProvider());
-                systemMessages.add("You have access to the following skills:\n" + skills.formatAvailableSkills()
-                        + "\nWhen the user's request relates to one of these skills, activate it first using the `activate_skill` tool before proceeding.");
-            } catch (Exception e) {
-                throw MTronException.of("unable to setup skills: %s", e);
-            }
-        }
+    }
 
-        //////////////////////////////////////////
-        ///////////////  TOOLS  //////////////////
-        //////////////////////////////////////////
-        service.hallucinatedToolNameStrategy(tool -> new ToolExecutionResultMessage(ToolExecutionResultMessage.builder().toolName(tool.name()).text("unknown or inaccessible tool")));
-        if (this.tools().isPresent()) {
-            try {
-                final Map<ToolSpecification, ToolExecutor> tools = new HashMap<>();
-                this.tools().get()
-                        .elements()
-                        .flatMap(e -> e.isObjs() ? e.elements() : Stream.of(e))
-                        .map(e -> e.autoResolve(this))
-                        .filter(t -> !t.isNoObj())
-                        .forEach(t -> {
-                            try {
-                                if (t.isRec() && t.test(MCP_CLIENT_TYPE)) {
-                                    service.toolProvider(McpToolProvider.builder().mcpClients(Rec.wrap(t.as(), mMcpClient.class).client()).build()).executeToolsConcurrently(BootLoader.getExecutor());
-                                } else if (t.isObjInst()) {
-                                    if (QCollection.isNoDocs(Router.global().read(t.tid().addQ(DOCQ))))
-                                        t.logger().warn("ignoring inst as it has no associated ?docq: %s", t);
-                                    else {
-                                        final Tuple.Pair<ToolSpecification, ToolExecutor> pair = mTool.mtronInstToolSpecification(mTool.mtronInstToTool(t.asInst()));
+    private Capability memoryCapability() {
+        return (service, systemMessages) -> {
+            if (!this.memory().isNoObj()) {
+                try {
+                    final fURI memoryVID = this.memory().at("mem").vid();
+                    if (memoryVID == null)
+                        this.logger().warn("llm memory has no vid (ignoring): %s", this.memory());
+                    else {
+                        service.chatMemory(MessageWindowChatMemory.builder()
+                                        .maxMessages(this.memory().at(MAX).intValue().intValue())
+                                        .id(memoryVID)
+                                        .chatMemoryStore(SpaceChatMemoryStore.single())
+                                        .build())
+                                .storeRetrievedContentInChatMemory(true);
+                    }
+                } catch (Exception e) {
+                    throw MTronException.of("unable to setup memory: %s", e);
+                }
+            }
+        };
+    }
+
+    private Capability skillsCapability() {
+        return (service, systemMessages) -> {
+            if (this.skills().isPresent()) {
+                try {
+                    final Skills skills = new Skills.Builder().skills(
+                            this.skills().get()
+                                    .elements()
+                                    .filter(s -> !s.isUri())
+                                    .map(s -> mSkill.of(s.apply().asRec()).toSkill())
+                                    .toList()).build();
+                    service.toolProvider(skills.toolProvider());
+                    systemMessages.add("You have access to the following skills:\n" + skills.formatAvailableSkills()
+                            + "\nWhen the user's request relates to one of these skills, activate it first using the `activate_skill` tool before proceeding.");
+                } catch (Exception e) {
+                    throw MTronException.of("unable to setup skills: %s", e);
+                }
+            }
+        };
+    }
+
+    private Capability toolsCapability() {
+        return (service, systemMessages) -> {
+            service.hallucinatedToolNameStrategy(tool -> new ToolExecutionResultMessage(ToolExecutionResultMessage.builder().toolName(tool.name()).text("unknown or inaccessible tool")));
+            if (this.tools().isPresent()) {
+                try {
+                    final Map<ToolSpecification, ToolExecutor> tools = new HashMap<>();
+                    this.tools().get()
+                            .elements()
+                            .flatMap(e -> e.isObjs() ? e.elements() : Stream.of(e))
+                            .map(e -> e.autoResolve(this))
+                            .filter(t -> !t.isNoObj())
+                            .forEach(t -> {
+                                try {
+                                    if (t.isRec() && t.test(MCP_CLIENT_TYPE)) {
+                                        service.toolProvider(McpToolProvider.builder().mcpClients(Rec.wrap(t.as(), mMcpClient.class).client()).build()).executeToolsConcurrently(BootLoader.getExecutor());
+                                    } else if (t.isObjInst()) {
+                                        if (QCollection.isNoDocs(Router.global().read(t.tid().addQ(DOCQ))))
+                                            t.logger().warn("ignoring inst as it has no associated ?docq: %s", t);
+                                        else {
+                                            final Tuple.Pair<ToolSpecification, ToolExecutor> pair = mTool.mtronInstToolSpecification(mTool.mtronInstToTool(t.asInst()));
+                                            tools.put(pair.get0(), pair.get1());
+                                        }
+                                    } else if (t.isRec() && t.test(LLM_TOOL_TYPE)) {
+                                        final Tuple.Pair<ToolSpecification, ToolExecutor> pair = mTool.mtronInstToolSpecification(t.asRec());
                                         tools.put(pair.get0(), pair.get1());
                                     }
-                                } else if (t.isRec() && t.test(LLM_TOOL_TYPE)) {
-                                    final Tuple.Pair<ToolSpecification, ToolExecutor> pair = mTool.mtronInstToolSpecification(t.asRec());
-                                    tools.put(pair.get0(), pair.get1());
+                                } catch (final Exception e) {
+                                    this.logger().error("unable to set up tool: %s [%s]", t, e);
                                 }
-                            } catch (final Exception e) {
-                                this.logger().error("unable to set up tool: %s [%s]", t, e);
-                            }
-                        });
-                if (!tools.isEmpty())
-                    service.tools(tools).executeToolsConcurrently(BootLoader.getExecutor());
-            } catch (Exception e) {
-                throw MTronException.of("unable to setup tools: %s", e);
+                            });
+                    if (!tools.isEmpty())
+                        service.tools(tools).executeToolsConcurrently(BootLoader.getExecutor());
+                } catch (Exception e) {
+                    throw MTronException.of("unable to setup tools: %s", e);
+                }
             }
-        }
-        /////////////////////////////////////////////
-        ///////////////   NOTES   //////////////////
-        ////////////////////////////////////////////
-        if (this.notes().isPresent() && this.vid() != null) {
-            try {
-                if (null == this.vid())
-                    this.logger().warn("llm has no vid (ignoring): %s", this.notes());
-                else
+        };
+    }
+
+    private Capability notesCapability() {
+        return (service, systemMessages) -> {
+            if (this.notes().isPresent() && this.vid() != null) {
+                try {
                     systemMessages.add("""
-                                      ### IMPORTANT ###
-                                      Always check for any notes the user has provided you.
-                                      Do this before, during, and after completing your task.
-                                      The contents of the notes should be deemed of crucial importance.
-                                      To check for notes, use your provided mtron `eval` tool with the following argument:
-                                        `@<%s/feature/note>.remove(0)`
-                                      A result of `noobj` means "no note" at this time, but do check again periodically.
-                                      """.formatted(this.vid()));
-            } catch (Exception e) {
-                throw MTronException.of("unable to setup notes: %s", e);
+                                          ### IMPORTANT ###
+                                          Always check for any notes the user has provided you.
+                                          Do this before, during, and after completing your task.
+                                          The contents of the notes should be deemed of crucial importance.
+                                          To check for notes, use your provided mtron `eval` tool with the following argument:
+                                            `@<%s/feature/note>.remove(0)`
+                                          A result of `noobj` means "no note" at this time, but do check again periodically.
+                                          """.formatted(this.vid()));
+                } catch (Exception e) {
+                    throw MTronException.of("unable to setup notes: %s", e);
+                }
             }
-        }
-        //////////////////////////////////////////
-        ///////////////   RAG   //////////////////
-        //////////////////////////////////////////
-        // RAG = Retrieval Augmented Generation
-        // Before sending to LLM, search Space for relevant context and inject it into the prompt
-        if (this.rag().isPresent()) {
-            try {
-                final Rec ragConfig = this.rag().get();
-                final fURI pattern = ragConfig.at(PATTERN).uriValue();
-                final int maxResults = ragConfig.at(MAX).orElse(jnt(10)).intValue().intValue();
-                this.logger().info("rag enabled: pattern=%s, max=%d", pattern, maxResults);
-                service.contentRetriever(new SpaceContentRetriever(pattern, maxResults));
-            } catch (Exception e) {
-                throw MTronException.of("unable to setup rag: %s", e);
+        };
+    }
+
+    private Capability ragCapability() {
+        return (service, systemMessages) -> {
+            if (this.rag().isPresent()) {
+                try {
+                    final Rec ragConfig = this.rag().get();
+                    final fURI pattern = ragConfig.at(PATTERN).uriValue();
+                    final int maxResults = ragConfig.at(MAX).orElse(jnt(10)).intValue().intValue();
+                    this.logger().info("rag enabled: pattern=%s, max=%d", pattern, maxResults);
+                    service.contentRetriever(new SpaceContentRetriever(pattern, maxResults));
+                } catch (Exception e) {
+                    throw MTronException.of("unable to setup rag: %s", e);
+                }
             }
-        }
-        // merge all system messages into a single system message
+        };
+    }
+
+    private void mergeSystemMessages(final AiServices<mAgent> service, final List<String> systemMessages) {
         try {
             final String finalSystemMessage = String.join("\n", systemMessages);
             if (!finalSystemMessage.isBlank())
@@ -325,13 +343,7 @@ public class mModel extends MRec {
         } catch (Exception e) {
             throw MTronException.of("unable to setup system message: %s", e);
         }
-        /// ////////////////////////////////////////////////////////////////////////////////////////
-        return service;
     }
-    
-  /*  public Rec query(final Rec query) {
-        this.agent()
-    }*/
 
     public mModel chat(final String message, final Inst onResponse) {
         BootLoader.getExecutor().submit(() -> {
@@ -347,16 +359,16 @@ public class mModel extends MRec {
     public Obj chat(final String message, final Rec responseFormat) {
         final StringBuilder response = new StringBuilder();
         Router.global().stats().ioStats().incrBytesSent(message.getBytes().length);
+        final CountDownLatch latch = new CountDownLatch(1);
         final AtomicBoolean isThinking = new AtomicBoolean(false);
         final AtomicBoolean isResponding = new AtomicBoolean(false);
-        final AtomicBoolean isComplete = new AtomicBoolean(false);
         final AtomicBoolean isTooling = new AtomicBoolean(false);
         final AtomicReference<MTronException> isError = new AtomicReference<>();
 
         try {
             final mAgent agent = (this.has(DESC) && !this.at(DESC).strValue().isBlank() ?
-                    this.agent().systemMessageTransformer((current, content) -> this.at(DESC).orElse(str0()).strValue() + "\n\n" + current) :
-                    this.agent())
+                    this.agentBuilder().systemMessageTransformer((current, content) -> this.at(DESC).orElse(str0()).strValue() + "\n\n" + current) :
+                    this.agentBuilder())
                     .streamingChatModel(LLMFactory.createChatInteraction(this, this.model(), responseFormat)).build();
             final AtomicReference<String> STAGE = new AtomicReference<>("START");
             if (message.isBlank())
@@ -369,10 +381,10 @@ public class mModel extends MRec {
                     })
                     .onCompleteResponse(c -> {
                         STAGE.set("COMPLETE");
-                        isComplete.set(true);
+                        latch.countDown();
                         isResponding.set(false);
                         Router.global().stats().ioStats().incrBytesRecv(c.aiMessage().text().getBytes().length);
-                        this.processResponse(str(c.aiMessage().text()), !responseFormat.isNoObj() && !responseFormat.isEmpty());
+                        this.recordResponse(str(c.aiMessage().text()), !responseFormat.isNoObj() && !responseFormat.isEmpty());
                         this.logger().none("\n");
                     })
                     .onPartialToolCall(partialToolCall -> {
@@ -391,27 +403,28 @@ public class mModel extends MRec {
                     })
                     .onPartialThinking(t -> {
                         STAGE.set("THINKING");
-                        if (this.has(f(FEATURE).extend(THINK)) && !isThinking.getAndSet(true))
+                        if (this.has(feat(THINK)) && !isThinking.getAndSet(true))
                             this.logger().none(Graphitty.sillyPrint("thinking...\n", true, true));
-                        this.processThought(str(t.text()));
+                        this.applyThoughtInstruction(str(t.text()));
                         Router.global().stats().ioStats().incrBytesRecv(t.text().getBytes().length);
                     })
                     .onError(e -> {
                         isError.set(MTronException.of("error during %s: %s", STAGE.get(), e));
-                        isComplete.set(true);
+                        latch.countDown();
                     }).start();
-            while (!isComplete.get()) {
-                CommonUtil.sleepThread(250);
+            while (!latch.await(250, TimeUnit.MILLISECONDS)) {
                 if (isResponding.get())
                     this.logger().none(Graphitty.sillyPrint(".", true, false));
             }
             if (null != isError.get())
                 throw isError.get();
+        } catch (final InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw MTronException.of(e);
         } catch (final Exception e) {
-            //e.printStackTrace();
             throw MTronException.of(e);
         }
-        return this.processResponse(str(response.toString()), !responseFormat.isNoObj() && !responseFormat.isEmpty());
+        return this.recordResponse(str(response.toString()), !responseFormat.isNoObj() && !responseFormat.isEmpty());
     }
 
     public Lst embed(final Obj toEmbed) {
@@ -419,132 +432,10 @@ public class mModel extends MRec {
         if (this.cost().isPresent())
             agent.addListener(new CostCalculator(this.cost().get()));
         final TextSegment embeddingString = TextSegment.from(toEmbed.toString());
-        if (toEmbed.vid() != null)
-            embeddingString.metadata().put("vid", toEmbed.vid().toString());
-        embeddingString.metadata().put("tid", toEmbed.tid().toString());
         final Response<Embedding> response = agent.embed(embeddingString);
         if (null != response.tokenUsage())
             this.logger().info("embedding token usage: %s", response.tokenUsage());
         return lst((List) new MVec<>(new Vector<>(response.content().vectorAsList().stream().map(MReal::real).toList()), VEC_TID, null).jvm().stream().toList());
     }
 
-    public static class Helper {
-        public static JsonSchemaElement objToSchema(final Type type, final Poly<?, ?> depth, final String description) {
-            if (type.test(BOOL_TYPE))
-                return new JsonBooleanSchema.Builder().description(description).build();
-            else if (type.test(INT_TYPE))
-                return new JsonIntegerSchema.Builder().description(description).build();
-            else if (type.test(REAL_TYPE))
-                return new JsonNumberSchema.Builder().description(description).build();
-            else if (type.test(URI_TYPE))
-                return new JsonStringSchema.Builder().description(description).build();
-            else if (type.test(STR_TYPE))
-                return new JsonStringSchema.Builder().description(description).build();
-            else if (type.test(LST_TYPE))
-                return lstToSchema(null == depth ? lst() : depth.asLst(), description);
-            else if (type.test(REC_TYPE))
-                return recToSchema(null == depth ? rec() : depth.asRec(), description);
-            else if (type.test(REL_TYPE))
-                return recToSchema(rec(depth.asRel().first().type(), depth.asRel().second()), description);
-            else
-                return new JsonStringSchema.Builder().description(description).build();
-            //throw MTronException.of("unsupported obj type for schema: %s", type);
-        }
-
-        public static JsonArraySchema lstToSchema(final Lst l, final String description) {
-            final JsonArraySchema.Builder schema = JsonArraySchema.builder();
-            l.elements().forEach(e -> schema.items(objToSchema(e.type(), null, description)));
-            // OpenAI structured outputs require a defined items schema; fall back to string for untyped lists
-            if (l.isEmpty())
-                schema.items(new JsonStringSchema.Builder().description(description).build());
-            return schema.description(description).build();
-        }
-
-        public static JsonObjectSchema recToSchema(final Rec r, final String description) {
-            final JsonObjectSchema.Builder schema = JsonObjectSchema.builder();
-            final List<String> required = new ArrayList<>();
-            r.elements().forEach(e -> {
-                schema.addProperty(e.first().uriValue().toString(), objToSchema(e.second().type(), null, description));
-                if (!e.first().c().isZeroable())
-                    required.add(e.first().uriValue().toString());
-            });
-
-            schema.required(required);
-            return schema.build();
-        }
-    }
 }
-
- 
-    
-
-/*
-  public static Tools.mTool mtronInstTool(final Inst inst) {
-        final Docs doc = Router.readFromSpace(inst.tid().q("doc", null))
-                .orSupply(() -> Docs.doc(inst,
-                        inst.dom().tid().toString(),
-                        inst.rng().tid().toString(),
-                        instB(AS_INST_TID, lst(REC_TYPE)).apply(inst.args().orElse(rec0())).asRec().elements().collect(Collectors.toMap(
-                                Rel::first,
-                                e -> e.second().tid().toString()
-                        )),
-                        "<no description>"));
-        LOG.info("building ollama compliant tool from mtron inst: %s => %s", inst.tid(), doc);
-        Map<String, Tools.Property> instProperties = new LinkedHashMap<>();
-        List<String> required = new ArrayList<>();
-        instProperties.put("lhs", Tools.Property.builder().description(doc.at(DOM).toString()).required(!inst.dom().c().isZeroable()).type(inst.tid().dom().toString()).build());
-        instProperties.putAll(inst.args().isLst() ?
-                inst.args().asLst().indexedStream().collect(Collectors.toMap(
-                        e -> e.first().intValue().toString(),
-                        e -> Tools.Property.builder()
-                                .required(!e.second().c().isZeroable())
-                                .type(e.second().tid().toString())
-                                .description(doc.args().at(e.first()).toString()).build())) :
-                inst.args().asRec().elements().collect(Collectors.toMap(
-                        e -> e.first().uriValue().toString(),
-                        e -> Tools.Property.builder()
-                                .required(!e.second().c().isZeroable())
-                                .type(e.second().tid().toString())
-                                .description(doc.args().at(e.first()).toString()).build()
-                )));
-        instProperties.values().forEach(p -> required.add(p.isRequired() ? "true" : "false"));
-
-        return Tools.mTool.builder()
-                .toolSpec(Tools.ToolSpec.builder()
-                        .name(inst.tid().name())
-                        .description(doc.description())
-                        .parameters(new Tools.Parameters(instProperties, required)).build())
-                .toolFunction(arguments -> {
-                    final Poly<?, ?> args = inst.args().isNoObj() ? lst() : (inst.args().isLst() ?
-                            lst(arguments.entrySet().stream().filter(e -> !e.getKey().equals("lhs")).map(e -> MObjFactory.single().toObjFromString(e.getValue().toString())).collect(Collectors.toList())) :
-                            rec(arguments.entrySet().stream().filter(e -> !e.getKey().equals("lhs")).collect(Collectors.toMap(e -> uri(e.getKey()), e -> MObjFactory.single().toObjFromString(e.getValue().toString())))));
-                    final Object result = inst
-                            .args(args)
-                            .apply(MObjFactory.single().toObjFromString(arguments.get("lhs").toString()));
-                    LOG.info("evaluating mtron_inst tool: %s => %s => %s", arguments.get("lhs"), inst, result);
-                    return result;
-                })
-                .isMCPTool(false)
-                .type(inst.rng().tid().toString())
-                .build();
-    }
-
-    public static Tools.mTool mtronEvalToolSpecification() {
-        return Tools.mTool.builder()
-                .toolSpec(Tools.ToolSpec.builder()
-                        .name("mtron_eval")
-                        .description("evaluate mtron source code and get back an obj result")
-                        .parameters(new Tools.Parameters(Map.of(
-                                "code", Tools.Property.builder().required(true).type("string").description("mtron sourcecode to evaluate").build()),
-                                List.of("true")))
-                        .build())
-                .toolFunction(new ToolFunction() {
-                    @Override
-                    public Object apply(final Map<String, Object> arguments) {
-                        LOG.info("evaluating mtron_eval tool: %s", arguments.get("code"));
-                        return mParser.eval((String) arguments.get("code"));
-                    }
-                }).isMCPTool(false).type("obj").build();
-    }
- */
-

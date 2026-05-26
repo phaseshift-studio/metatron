@@ -170,7 +170,7 @@ public final class LLMFactory {
                 new ResponseFormat.Builder()
                         .jsonSchema(new JsonSchema.Builder()
                                 .name(RESPONSE)
-                                .rootElement(mModel.Helper.objToSchema(REC_TYPE, responseFormat, RESPONSE))
+                                .rootElement(JsonSchemaGenerator.objToSchema(REC_TYPE, responseFormat, RESPONSE))
                                 .build())
                         .type(ResponseFormatType.JSON).build() :
                 null;

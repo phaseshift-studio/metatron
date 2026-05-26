@@ -42,7 +42,7 @@ import static studio.phaseshift.metatron.furi.q.QCollection.DOCQ;
 import static studio.phaseshift.metatron.furi.q.QCollection.Docs.doc;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_TOOL_TID;
-import static studio.phaseshift.metatron.isa.llm.type.mModel.Helper.objToSchema;
+import static studio.phaseshift.metatron.isa.llm.JsonSchemaGenerator.objToSchema;
 import static studio.phaseshift.metatron.isa.m.mInstSet.AS_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;

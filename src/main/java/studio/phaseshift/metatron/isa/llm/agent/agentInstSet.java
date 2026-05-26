@@ -24,12 +24,15 @@ import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.util.CommonUtil;
 
+import java.util.ArrayList;
 import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_ISA_TID;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.MODEL_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.INSTSET_TID;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
@@ -48,6 +51,7 @@ public class agentInstSet extends AbstractInstSet {
     public static final fURI AGENT_ISA_TID = LLM_ISA_TID.extend(AGENT);
     public static final fURI AGENT_INST_TID = AGENT_ISA_TID.extend(INST);
     public static final fURI AGENT_NOTE_INST_TID = AGENT_INST_TID.extend("note");
+    public static final fURI AGENT_FORGET_INST_TID = AGENT_INST_TID.extend("forget");
 
     public agentInstSet() {
         super(mutableMap(uri(PATTERN), uri(AGENT_ISA_TID.extend(ALL))), INSTSET_TID, AGENT_ISA_TID);
@@ -59,12 +63,18 @@ public class agentInstSet extends AbstractInstSet {
                 uri(PATTERN), uri(AGENT_ISA_TID.extend(ALL)),
                 //  uri(CONST), lst(MTRON_EVAL_TOOL)),
                 uri(INST), lst(
+                        docWrap(instC(AGENT_FORGET_INST_TID.dom(MODEL_TID).rng(MODEL_TID), lst(), (lhs, inst) -> {
+                            if (!lhs.asRec().has(f(FEATURE).extend(MEMORY).extend("mem")))
+                                return lhs;
+                            lhs.asRec().at(f(FEATURE).extend(MEMORY).extend("mem")).asLst().jvm(new ArrayList<>());
+                            return lhs;
+                        }), "an llm model with memory", "the llm model with no memory", Map.of(), "wipes the llms memory"),
                         docWrap(instC(AGENT_NOTE_INST_TID.dom(ALL.maybe()).rng(ALL), lst(URI_TYPE, T(ALL.maybe())),
                                         (lhs, inst) -> inst.arg(1).isNoObj() ?
                                                 Router.global().read(inst.arg(0).uriValue()) :
                                                 Router.global().write(inst.arg(0).uriValue(), inst.arg(1))),
                                 "dom is ignored", "the written note", Map.of(jnt(0), "the entry key", jnt(1), "the note"),
-                              //  CommonUtil.readResource(agentInstSet.class, "NOTE.md", "%s", "/usr/ai/note"),
+                                //  CommonUtil.readResource(agentInstSet.class, "NOTE.md", "%s", "/usr/ai/note"),
                                 "note(</usr/ai/note/an_entry>, 'this is a note')")
                 )));
         docWrap(this, "an agent-oriented instruction set to aid them in the manipulation and analysis of their environment");

@@ -1,5 +1,5 @@
 /*
- * metatron: a distributed virtual machine and language
+ * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
  *
  * This program is free software: you can redistribute it and/or modify
@@ -16,10 +16,18 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.llm.type;
+package studio.phaseshift.metatron.isa.llm;
+
+import dev.langchain4j.service.AiServices;
+import studio.phaseshift.metatron.isa.llm.type.mAgent;
+
+import java.util.List;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public interface Choices {
+@FunctionalInterface
+public interface Capability {
+
+    void apply(final AiServices<mAgent> service, final List<String> systemMessages);
 }
