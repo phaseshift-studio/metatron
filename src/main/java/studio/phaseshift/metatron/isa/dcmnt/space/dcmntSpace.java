@@ -381,7 +381,7 @@ public class dcmntSpace extends AbstractSpace<MongoClient> implements SchemaSpac
                 } else if (!dp.collectionIsWildcard()) {
                     // Specific collection, wildcard document
                     return IteratorUtil.stream(this.database.getCollection(dp.collection()).find()).flatMap(x -> {
-                        final String idStr = x.getObjectId(ID_FIELD).toHexString();
+                        final String idStr = idToString(x);
                         final fURI docVID = this.pattern.retractPattern().extend(dp.collection()).extend(idStr);
                         final Obj docObj = processDocument(x);
                         final List<IdObj> results = new ArrayList<>();
@@ -397,7 +397,7 @@ public class dcmntSpace extends AbstractSpace<MongoClient> implements SchemaSpac
                             .map(this.database::getCollection)
                             .flatMap(collection -> IteratorUtil.stream(collection.find()).map(x -> Pair.with(collection, x)))
                             .flatMap(pair -> {
-                                final String idStr = pair.getValue1().getObjectId(ID_FIELD).toHexString();
+                                final String idStr = idToString(pair.getValue1());
                                 final fURI docVID = this.pattern.retractPattern().extend(
                                         pair.getValue0().getNamespace().getCollectionName()).extend(idStr);
                                 final Obj docObj = processDocument(pair.getValue1());
@@ -584,5 +584,14 @@ public class dcmntSpace extends AbstractSpace<MongoClient> implements SchemaSpac
         if (OBJECT_ID_REGEX.matcher(id).matches())
             return new ObjectId(id);
         return id;
+    }
+
+    /**
+     * Safely extract a document's {@code _id} value as a string,
+     * supporting both ObjectId and plain String IDs.
+     */
+    private static String idToString(final Document doc) {
+        final Object id = doc.get(ID_FIELD);
+        return id instanceof ObjectId ? ((ObjectId) id).toHexString() : id != null ? id.toString() : "";
     }
 }
