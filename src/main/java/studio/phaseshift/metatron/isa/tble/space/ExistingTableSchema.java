@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.tble.space;
 
+import studio.phaseshift.metatron.furi.DataPath;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -225,19 +226,18 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
     }
 
     /**
-     * Parse a fURI to extract table name and row identifier.
-     * Format: /table_name/row_id or /table_name/+ for all rows.
-     * Returns null if not a table path.
+     * Resolve a space-relative fURI into a {@link DataPath} when the
+     * table is known to this schema.  Returns {@code null} when the
+     * table name is not a recognised table.
      */
-    private List<String> parseTablePath(final fURI furi) {
-        final List<String> segments = furi.segments();
-        if (segments.isEmpty())
+    private DataPath resolveDataPath(final fURI furi) {
+        final DataPath dp = DataPath.ofSpaceRelative(furi, null);
+        if (!dp.hasCollection())
             return null;
-        final String tableName = segments.getFirst();
-        if (!tableName.equals("+") && !this.tableSchemas.containsKey(tableName.toLowerCase()))
+        if (!dp.collectionIsWildcard()
+                && !this.tableSchemas.containsKey(dp.collection().toLowerCase()))
             return null;
-        final List<String> tablePath = new ArrayList<>(segments);
-        return tablePath;
+        return dp;
     }
 
     private Obj readTableRow(final ResultSet rs, final TableMetadata metadata, final String... rowNames) throws SQLException {
@@ -317,28 +317,27 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
     }
 
     public int write(final Connection conn, final fURI furi, final Obj obj) throws SQLException {
-        final List<String> tablePath = parseTablePath(furi.asNode());
-        if (tablePath == null) {
+        final DataPath dp = resolveDataPath(furi.asNode());
+        if (dp == null) {
             throw new SQLException("invalid table path: " + furi);
         }
 
-        final String tableName = tablePath.getFirst();
-        final String rowId = tablePath.size() > 1 ? tablePath.get(1) : null;
+        final String tableName = dp.collection();
+        final String rowId = dp.entry();
         final TableMetadata metadata = tableSchemas.get(tableName.toLowerCase());
 
         if (metadata == null) {
             throw new SQLException("table not found: " + tableName);
         }
-        if (rowId == null || rowId.equals("+")) {
+        if (rowId == null || dp.entryIsWildcard()) {
             throw new SQLException("cannot write without specific row ID: " + furi);
         }
         if (metadata.primaryKeys.isEmpty()) {
             throw new SQLException("table " + tableName + " has no primary key, cannot write");
         }
 
-        final List<String> segments = furi.segments();
-        if (segments.size() > 2) {
-            return writeField(conn, metadata, rowId, segments.get(2), obj);
+        if (dp.hasField()) {
+            return writeField(conn, metadata, rowId, dp.field(), obj);
         }
 
         if (obj.isNoObj() || obj.isNone()) {
@@ -594,12 +593,12 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
 
     @Override
     public Iterator<Space.IdObj> read(final Connection conn, final fURI pattern) throws SQLException {
-        final List<String> tablePath = parseTablePath(pattern);
-        if (tablePath == null)
+        final DataPath dp = resolveDataPath(pattern);
+        if (dp == null)
             return Collections.emptyIterator();
-        final String tableName = tablePath.getFirst();
-        if (tablePath.size() == 1) {
-            if (tableName.equals("+")) {
+        final String tableName = dp.collection();
+        if (!dp.hasEntry()) {
+            if (dp.collectionIsWildcard()) {
                 return this.tableSchemas.keySet().stream()
                         .map(s -> {
                             final fURI tableVID = Space.Helper.routeToSpace(pattern.retractPattern().extend(s), this.space.routes());
@@ -610,15 +609,14 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
                 return IteratorUtil.of(Space.IdObj.of(tableVID, uri(tableVID, TABLE_TID, null).selfVID(tableVID)));
             }
         } else {
-            final String rowId = tablePath.get(1);
             final TableMetadata metadata = tableSchemas.get(tableName.toLowerCase());
             if (metadata == null)
                 return Collections.emptyIterator();
             final List<Space.IdObj> results = new ArrayList<>();
-            if (rowId.equals("+") || rowId.equals("#")) {
-                if (tablePath.size() > 2 && !tablePath.get(2).equals("+")) {
+            if (dp.entryIsWildcard()) {
+                if (dp.hasField()) {
                     final String pkColumns = String.join(", ", metadata.primaryKeys);
-                    final String fieldName = tablePath.get(2);
+                    final String fieldName = dp.field();
                     final String sql = String.format("SELECT %s, %s FROM %s", pkColumns, fieldName, metadata.tableName);
                     try (final Statement stmt = conn.createStatement(); ResultSet rs = stmt.executeQuery(sql)) {
                         while (rs.next()) {
@@ -646,14 +644,15 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
                     }
                 }
             } else {
+                final String rowId = dp.entry();
                 if (metadata.primaryKeys.isEmpty()) {
                     this.space.logger().warn("table %s has no primary key, cannot read specific row", tableName);
                     return Collections.emptyIterator();
                 }
-                if (tablePath.size() > 2 && !tablePath.get(2).equals("+")) {
+                if (dp.hasField()) {
                     final String pkColumn = metadata.primaryKeys.getFirst();
                     final String pkColumns = String.join(", ", metadata.primaryKeys);
-                    final String fieldName = tablePath.get(2);
+                    final String fieldName = dp.field();
                     final String sql = String.format("SELECT %s, %s FROM %s WHERE %s = ?", pkColumns, fieldName, metadata.tableName, pkColumn);
                     try (final PreparedStatement stmt = conn.prepareStatement(sql)) {
                         final ColumnMetadata pkColMeta = metadata.columns.stream()
@@ -708,13 +707,14 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
 
     @Override
     public int delete(final Connection conn, final fURI furi) throws SQLException {
-        final String tableName = furi.segments().get(0);
-        final String rowId = furi.segments().size() >= 2 ? furi.segments().get(1) : null;
+        final DataPath dp = DataPath.ofSpaceRelative(furi, null);
+        if (!dp.hasEntry()) return 0;
 
-        if (rowId == null) return 0;
+        final String tableName = dp.collection();
+        final String rowId = dp.entry();
 
-        if (furi.segments().size() >= 3) {
-            final String column = furi.segments().get(2);
+        if (dp.hasField()) {
+            final String column = dp.field();
             final String pkCol = getPrimaryKeyColumn(conn, tableName);
             final String sql = "UPDATE \"" + tableName + "\" SET \"" + column
                     + "\" = NULL WHERE \"" + pkCol + "\" = ?";
@@ -881,7 +881,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
     }
 
     public boolean isTablePath(final fURI furi) {
-        return parseTablePath(furi.asNode()) != null;
+        return resolveDataPath(furi.asNode()) != null;
     }
 
     public Set<String> getTableNames() {

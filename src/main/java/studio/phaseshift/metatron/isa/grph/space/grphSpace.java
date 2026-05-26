@@ -28,7 +28,8 @@
  import org.apache.tinkerpop.gremlin.structure.util.GraphFactory;
  import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerFactory;
  import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerGraph;
- import studio.phaseshift.metatron.furi.fURI;
+ import studio.phaseshift.metatron.furi.DataPath;
+import studio.phaseshift.metatron.furi.fURI;
  import studio.phaseshift.metatron.isa.AbstractSpace;
  import studio.phaseshift.metatron.isa.SchemaSpace;
  import studio.phaseshift.metatron.isa.Space;
@@ -218,37 +219,38 @@
                  if (routed.hasScheme()) {
                      return new IdObj(routed, Router.global().read(routed)).iterator();
                  }
-                 final String first = routed.segments(0, null);
-                 if (null == first) return IteratorUtil.of();
-                 final String second = routed.segments(1, null);
-                 // LOG.info("parts: %s / %s",first,second);
-                 final boolean all = "#".equals(second) || "+".equals(second);
+                 final DataPath dp = DataPath.ofSpaceRelative(routed, null);
+                 if (!dp.hasCollection()) return IteratorUtil.of();
+
                  ////////////////////////////////////////////////////////////////////
-                 if (first.equals("V")) {
-                     //if (routed.segmentLength() > 2)
-                     //  return IteratorUtil.of();
+                 if ("V".equals(dp.collection())) {
                      Iterator<Vertex> iterator;
-                     if (CommonUtil.isInt(second)) iterator = this.sjvm.vertices(Integer.parseInt(second));
-                     else if (all) iterator = this.sjvm.vertices();
+                     if (!dp.entryIsWildcard() && CommonUtil.isInt(dp.entry()))
+                         iterator = this.sjvm.vertices(Integer.parseInt(dp.entry()));
+                     else if (dp.entryIsWildcard())
+                         iterator = this.sjvm.vertices();
                      else iterator = IteratorUtil.of();
-                     return IteratorUtil.stream(iterator).map(v -> IdObj.of(this.elementVID(v), VertexMap.vertexToRec(v, this))).map(idobj -> {
-                         if (routed.pathLength() > 2) {
-                             LOG.debug("searching for %s and %s", idobj.furi().extend(routed.pretract(2)), routed.pretract(2));
-                             // CommonUtil.sleepThread(10000);
-                             fURI remaining = routed.pretract(2);
-                             return IdObj.of(idobj.furi().extend(remaining), idobj.obj().asRec().at(remaining));
-                         } else {
-                             return idobj;
-                         }
-                     }).iterator();
-                 } else if (first.equals("E")) {
-                     //if (routed.segmentLength() > 2)
-                     //  return IteratorUtil.of();
+                     return IteratorUtil.stream(iterator)
+                             .map(v -> IdObj.of(this.elementVID(v), VertexMap.vertexToRec(v, this)))
+                             .map(idobj -> {
+                                 if (dp.hasField()) {
+                                     // remaining path after V/<id> — navigate into the vertex rec
+                                     fURI remaining = routed.pretract(2);
+                                     return IdObj.of(idobj.furi().extend(remaining), idobj.obj().asRec().at(remaining));
+                                 } else {
+                                     return idobj;
+                                 }
+                             }).iterator();
+                 } else if ("E".equals(dp.collection())) {
                      Iterator<Edge> iterator;
-                     if (CommonUtil.isInt(second)) iterator = this.sjvm.edges(Integer.parseInt(second));
-                     else if (all) iterator = this.sjvm.edges();
+                     if (!dp.entryIsWildcard() && CommonUtil.isInt(dp.entry()))
+                         iterator = this.sjvm.edges(Integer.parseInt(dp.entry()));
+                     else if (dp.entryIsWildcard())
+                         iterator = this.sjvm.edges();
                      else iterator = IteratorUtil.of();
-                     return (Iterator) IteratorUtil.stream(iterator).map(e -> IdObj.of(this.elementVID(e), EdgeMap.edgeToRec(e, this))).iterator();
+                     return (Iterator) IteratorUtil.stream(iterator)
+                             .map(e -> IdObj.of(this.elementVID(e), EdgeMap.edgeToRec(e, this)))
+                             .iterator();
                  } else {
                      LOG.debug("unknown tp3 vid: %s", pattern);
                      final fURI full = Space.Helper.routeFromSpace(pattern, this.routes());
@@ -274,8 +276,9 @@
                  }
                  final fURI routed = Space.Helper.routeFromSpace(pattern, this.routes());
                  LOG.debug("writing tp3 vid: %s => %s", pattern, routed);
-                 if (routed.test(V_SOME)) {
-                     final Integer id = Integer.parseInt(routed.name());
+                 final DataPath dp = DataPath.ofSpaceRelative(routed, null);
+                if ("V".equals(dp.collection()) && dp.hasEntry() && CommonUtil.isInt(dp.entry())) {
+                     final Integer id = Integer.parseInt(dp.entry());
                      try { //  a newly created vertex from a rec (if vertex doesn't exist)
                          final Vertex vertex = IteratorUtil.stream(this.sjvm.vertices(id)).findFirst().orElseGet(() ->
                                  this.sjvm.addVertex(

@@ -26,11 +26,54 @@ import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 
-/*
+/**
+ * Structural decomposition of an {@link fURI} into a four-component
+ * hierarchy plus an optional extension for deeper navigation.
+ * <p>
+ * <b>Component model</b>
+ * <pre>
+ *   /db/collection/entry/field/extension...
+ *    ─┬─  ───┬───  ──┬──  ──┬──  ────┬────
+ *     │      │       │      │        └─ segments 4+ (sub-field navigation)
+ *     │      │       │      └─ segment 3 (field / column / property)
+ *     │      │       └─ segment 2 (entry / document / row / element)
+ *     │      └─ segment 1 (collection / table / vertex-label)
+ *     └─ segment 0 (database / graph name)
+ * </pre>
+ * <p>
+ * <b>Two factory methods</b> — Which one you use encodes whether the
+ * database name lives inside the fURI or is known out-of-band:
+ * <ul>
+ *   <li>{@link #of(fURI)} — all four prefix components are positionally
+ *       extracted from the fURI segments.  Segment 0 is {@code db}.</li>
+ *   <li>{@link #ofSpaceRelative(fURI, String)} — the fURI is
+ *       space-relative (no database name segment).  {@code db} is supplied
+ *       explicitly by the caller, and segment 0 is {@code collection}.</li>
+ * </ul>
+ * Mixing the two will silently place data in the wrong component.
+ * <p>
+ * <b>Wildcard cascade</b> — The recursive wildcard {@code #} cascades to
+ * all descendant components.  If {@code collection} is {@code #} then
+ * {@code entry} and {@code field} are also considered wildcard, even when
+ * those segments are absent from the fURI.  The single-segment wildcard
+ * {@code +} affects only its own position.
+ * <p>
+ * <b>Space provider usage</b> — DataPath does structural decomposition
+ * only; it never performs database queries, ID parsing, or write
+ * operations.  The space provider uses the decomposed fields to decide
+ * <em>what</em> to do and implements <em>how</em> with its native
+ * database API.
+ *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public record DataPath(String db, String collection, String entry, String field, fURI extension) {
 
+    /**
+     * Decompose a fully-qualified fURI into a DataPath.
+     * Segment 0 → {@code db}, segment 1 → {@code collection},
+     * segment 2 → {@code entry}, segment 3 → {@code field},
+     * segments 4+ → {@code extension}.
+     */
     public static DataPath of(final fURI vid) {
         final fURI fprops;
         if (vid.pathLength() > 4) {
@@ -42,6 +85,12 @@ public record DataPath(String db, String collection, String entry, String field,
         return new DataPath(vid.segments(0, null), vid.segments(1, null), vid.segments(2, null), vid.segments(3, null), fprops);
     }
 
+    /**
+     * Decompose a space-relative fURI (no database-name segment) into a
+     * DataPath.  Segment 0 → {@code collection}, segment 1 → {@code entry},
+     * segment 2 → {@code field}, segments 3+ → {@code extension}.
+     * The {@code db} parameter is stored as-is.
+     */
     public static DataPath ofSpaceRelative(final fURI vid, final String db) {
         final fURI fprops;
         if (vid.pathLength() > 3) {
@@ -53,6 +102,12 @@ public record DataPath(String db, String collection, String entry, String field,
         return new DataPath(db, vid.segments(0, null), vid.segments(1, null), vid.segments(2, null), fprops);
     }
 
+    /**
+     * Reconstruct the space-prefix URI from the populated components,
+     * stopping at the first {@code null} field.  The result identifies
+     * the container to query (e.g. {@code mydb/users/abc}) but does not
+     * include the extension.
+     */
     public fURI spaceURI() {
         fURI path = f("");
         if (this.hasDb()) path = path.extend(this.db);
@@ -79,6 +134,11 @@ public record DataPath(String db, String collection, String entry, String field,
         return result;
     }
 
+    /**
+     * Recursively decomposes {@link #extension()} into a new DataPath
+     * using {@link #of(fURI)}.  Returns {@code null} when there is no
+     * extension, allowing chained descent for paths deeper than 4 segments.
+     */
     public DataPath extendedDataPath() {
         return null == this.extension ? null : DataPath.of(this.extension);
     }
@@ -119,7 +179,16 @@ public record DataPath(String db, String collection, String entry, String field,
     }
 
     // --- wildcard inspection ---
+    //
+    // The recursive wildcard '#' cascades to all descendant components.
+    // The single-segment wildcard '+' only affects its own position.
+    // For example, a path /mydb/# produces:
+    //   dbIsWildcard() = false, but all others = true (cascade from '#').
 
+    /**
+     * True when this component is {@code #} or {@code +}.
+     * Cascade from ancestor components is NOT checked here.
+     */
     public boolean dbIsWildcard() {
         return isWildcard(this.db);
     }
@@ -151,6 +220,14 @@ public record DataPath(String db, String collection, String entry, String field,
 
     // --- extension navigation ---
 
+    /**
+     * Navigate into each object in {@code objects} using {@code extension}
+     * as the sub-path.  Type-dispatches: {@link Space} objects are read via
+     * {@code readStream(extension)}; {@link Poly} objects via
+     * {@code at(extension)}; all others via the corresponding
+     * {@code rshift*} helper.  When {@code detached} is {@code true},
+     * returned objects have their VID stripped.
+     */
     public static Stream<Obj> navigateWithin(final Stream<Obj> objects, final fURI extension, final boolean detached) {
         if (null == extension)
             return objects;
@@ -171,6 +248,7 @@ public record DataPath(String db, String collection, String entry, String field,
         });
     }
 
+    /** Convenience that uses this DataPath's {@link #extension}. */
     public Stream<Obj> navigateWithin(final Stream<Obj> objects, final boolean detached) {
         return navigateWithin(objects, this.extension, detached);
     }

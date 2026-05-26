@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.tble;
 
+import studio.phaseshift.metatron.furi.DataPath;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractSpace;
 import studio.phaseshift.metatron.isa.SchemaSpace;
@@ -342,19 +343,20 @@ public class tbleSpace extends AbstractSpace<Connection> implements SchemaSpace 
                         // ── table-mapped path (existing table) ──
                         this.existingTableSchema.write(this.sjvm(), aligned, obj);
 
-                    } else if (obj.isRec() && aligned.segments().size() >= 2
-                            && isConfiguredTable(aligned.segments().getFirst())) {
-                        final String tableName = aligned.segments().getFirst();
-                        final String elementName = aligned.segments().get(1);
-                        if (!elementName.equals("+") && !elementName.equals("#")) {
+                    } else if (obj.isRec()) {
+                        final DataPath dp = DataPath.ofSpaceRelative(aligned, this.databaseName);
+                        if (dp.hasEntry() && isConfiguredTable(dp.collection())
+                                && !dp.entryIsWildcard()) {
                             lazyInitExistingTableSchema();
                             if (!this.existingTableSchema.getTableNames()
-                                    .contains(tableName.toLowerCase())) {
+                                    .contains(dp.collection().toLowerCase())) {
                                 this.existingTableSchema.createTableFromRecord(
-                                        this.sjvm(), tableName, obj.asRec());
-                                syncTableConfig(List.of(tableName));
+                                        this.sjvm(), dp.collection(), obj.asRec());
+                                syncTableConfig(List.of(dp.collection()));
                             }
                             this.existingTableSchema.write(this.sjvm(), aligned, obj);
+                        } else {
+                            writeKV(pattern, obj);
                         }
 
                     } else {
