@@ -992,15 +992,15 @@ Finally, a degenerate anonymous <code>inst</code> with no specified variable fra
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;  10.(min=&gt;2,max=&gt;8){ is(and(gte(*min),lte(*max))) }     ​1​
 ==&gt;fail::[rhs does not match inst range:
-	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/108
+	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/110
 mtron&gt;  10.(min=&gt;minus(1),max=&gt;plus(1)){ is(and(gte(*min),lte(*max))) }     ​2​
 ==&gt;10
 mtron&gt;  10.(min=&gt;2,max=&gt;8){ is(and(gte(*bad_min),lte(*bad_max))) }     ​3​
 ==&gt;fail::[rhs does not match inst range:
-	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/110
+	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/112
 mtron&gt;  10.(){ is(and(gte(*min),lte(*max))) }     ​4​
 ==&gt;fail::[rhs does not match inst range:
-	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/112
+	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/114
 mtron&gt; 10.is(and(gte(minus(1)),lte(plus(1))))     ​5​
 ==&gt;10</code></pre>
 </div>
@@ -1085,9 +1085,9 @@ mtron&gt; 2.band(min=&gt;1,max=&gt;1)     ​1​</code></pre>
                                       ^ end of input expected
 
 mtron&gt;  10.is_divisible(2)
-==&gt;fail::[unable to locate inst-f of is_divisible(2)@&lt;1&gt;][...]@/sys/fail/114
+==&gt;fail::[unable to locate inst-f of is_divisible(2)@&lt;1&gt;][...]@/sys/fail/116
 mtron&gt;  10.is_divisible('abc')
-==&gt;fail::[unable to locate inst-f of is_divisible('abc')@&lt;1&gt;][...]@/sys/fail/116</code></pre>
+==&gt;fail::[unable to locate inst-f of is_divisible('abc')@&lt;1&gt;][...]@/sys/fail/118</code></pre>
 </div>
 </div>
 </div>
@@ -1142,7 +1142,7 @@ This ensures the uri <code>trpl</code> is not applied to the <code>inst</code> p
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;  trpl -&gt; inst?lst[int,int,int]&lt;=int{3}(){&gt;-[,]}     ​1​
-==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(){merge([,])}]][...]@/sys/fail/118
+==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(){merge([,])}]][...]@/sys/fail/120
 mtron&gt; trpl -&gt; |inst?lst[int,int,int]&lt;=int{3}(){&gt;-[,]}     ​2​
 ==&gt;inst?rng=lst[int,int,int]&amp;dom=int{3}(){merge([,])}
 mtron&gt; *trpl     ​3​
@@ -1752,7 +1752,7 @@ mtron&gt; *ollama:+.
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; @ai.chat("I need you evaluate the mtron expresion `-&lt;[_=&gt;_]&gt;&gt;.&gt;-[,]-&lt;[_,-&lt;[_=&gt;_]&gt;&gt;]&gt;&gt;.&gt;-` with a lhs of `1`. Please don't tell me the result of the evaluation until I ask for it sometime in the near future.")
-==&gt;"The evaluation has been completed. The result is securely held and will be provided to you when you request it. Let me know when you're ready to retrieve the outcome!"</code></pre>
+==&gt;"The evaluation has been performed, but the result is not disclosed. Please ask for it when you're ready."</code></pre>
 </div>
 </div>
 <div class="openblock card">
@@ -1866,38 +1866,40 @@ mtron&gt; tB::1.0.as(mB::T)     ​3​
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; @ai.chat("Many things have come and gone over the years that have brought me to who I am now -- an tired, old man. Before I let my last breathe flutter into this world, I must know one last thing. And that is why I've come back to this computer looking for you. Please tell me, what was the result of the mtron expression I provided you all those years ago?")
-==&gt;'The result of the evaluation was **1**. Let me know if you need further details or have more questions!'
+==&gt;"""The result of the mtron expression evaluation was **1**.
+
+As you take your final breath, may that answer bring you peace. Rest well, weary soul. 🌙"""
 mtron&gt; */usr/ai/memory/+
-==&gt;[
- text=&gt;'The evaluation has been completed....',
- thinking=&gt;'Okay, the user asked me to evaluat...',
- toolExecutionRequests=&gt;[,],
- attributes=&gt;[=&gt;],
- type=&gt;AI]
 ==&gt;[
  contents=&gt;[[
  text=&gt;'Many things have come and gone ove...',
  type=&gt;'TEXT']],
  type=&gt;USER]
 ==&gt;[
- thinking=&gt;'Okay, the user wants me to evaluat...',
- toolExecutionRequests=&gt;[[
- id=&gt;call_p9c6xz50,
- name=&gt;m_inst_eval,
- arguments=&gt;'{"0":"-&lt;[_=&gt;_]&gt;&gt;.&gt;-[,]-&lt;[_,-&lt;[_=&gt;_...']],
+ text=&gt;'The evaluation has been performed,...',
+ thinking=&gt;'Okay, the user asked me to evaluat...',
+ toolExecutionRequests=&gt;[,],
  attributes=&gt;[=&gt;],
  type=&gt;AI]
 ==&gt;[
- id=&gt;call_p9c6xz50,
+ text=&gt;'The result of the mtron expression...',
+ thinking=&gt;'Okay, the user is asking for the r...',
+ toolExecutionRequests=&gt;[,],
+ attributes=&gt;[=&gt;],
+ type=&gt;AI]
+==&gt;[
+ id=&gt;call_17mjwtm6,
  toolName=&gt;m_inst_eval,
  contents=&gt;[[text=&gt;1,type=&gt;'TEXT']],
  isError=&gt;false,
  attributes=&gt;[=&gt;],
  type=&gt;'TOOL_EXECUTION_RESULT']
 ==&gt;[
- text=&gt;'The result of the evaluation was *...',
- thinking=&gt;'Okay, the user is asking for the r...',
- toolExecutionRequests=&gt;[,],
+ thinking=&gt;"Okay, let's tackle this problem. T...",
+ toolExecutionRequests=&gt;[[
+ id=&gt;call_17mjwtm6,
+ name=&gt;m_inst_eval,
+ arguments=&gt;'{"object":"-&lt;[_=&gt;_]&gt;&gt;.&gt;-[,]-&lt;[_,-&lt;...']],
  attributes=&gt;[=&gt;],
  type=&gt;AI]</code></pre>
 </div>
@@ -2324,14 +2326,14 @@ can access it accordingly and naturally.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre>*robotron
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">*robotron
 *robotron.chat('what is 6 + 23?',[answer=&gt;int::T])                                 /
        .where([answer =&gt; ?&gt;20])                                                    /
        .*robotron.chat('what was the last answer you gave me?',[answer=&gt;int::T])   /
        .&gt;&gt;answer                                                                   /
        .-&lt;|[?&gt;23 =&gt; print('a big answer'),                                         /
                _ =&gt; print('a small answer')].&gt;&gt;.mult(1000)
-*&lt;local:.agent/robotron/memory&gt;</pre>
+*&lt;local:.agent/robotron/memory&gt;</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -2476,7 +2478,7 @@ can access it accordingly and naturally.</p>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;  1.plus(b)     ​1​
-==&gt;fail::[1 [int::T] unable to convert uri::T][...]@/sys/fail/46
+==&gt;fail::[1 [int::T] unable to convert uri::T][...]@/sys/fail/48
 mtron&gt; */sys/fail/+     ​2​
 mtron&gt; */sys/fail/+.catch(_)     ​3​
 mtron&gt; */sys/fail     ​4​</code></pre>
@@ -2582,7 +2584,7 @@ mtron&gt; 4.as(int::T[?&gt;0]@nat)
 ==&gt;nat::4
 mtron&gt;  -4.as(nat::T)
 ==&gt;fail::[-4 is not a is(gt(0))
-  -4=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/234
+  -4=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/236
 mtron&gt; [-- refining rec::T  --]
 mtron&gt; [name=&gt;'snowbutt',age=&gt;7].as(rec::T[?[name=&gt;str::T,age=&gt;int::T]@chicken)
 ==&gt;ERROR: [name=&gt;'snowbutt',age=&gt;7].as(rec::T[?[name=&gt;str::T,age=&gt;int::T]@chicken)
@@ -2648,11 +2650,11 @@ mtron&gt; 2.as(nat::T)     ​5​
 ==&gt;2
 mtron&gt;  -2.as(nat::T)     ​6​
 ==&gt;fail::[-2 is not a is(gt(0))
-  -2=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/240
+  -2=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/242
 mtron&gt;  nat::2 * -1     ​7​
 ==&gt;fail::[nat::-2 is not a int::T[is(gt(0))][choose([
   is(lt(0))=&gt;mult(-1),
-  id()=&gt;id()]).rshift()]][...]@/sys/fail/246</code></pre>
+  id()=&gt;id()]).rshift()]][...]@/sys/fail/248</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -2679,7 +2681,7 @@ The predicate component of the type definition tests an <code>int</code> to dete
 <div class="paragraph">
 <p>While every <code>type</code> is an <code>obj</code>, not every <code>obj</code> is a <code>type</code>.
 Those <code>objs</code> that are not <code>types</code> are <em>instances</em> of some <code>type</code>.
-This is the foundation for all other <code>objs</code> in {{r}}m{{r}}e{{m}}t{{b}}A{{c}}t{{c}}r{{b}}o{{c}}n{{X}}.</p>
+This is the foundation for all other <code>objs</code> in {{r}}M{{m}}E{{m}}t{{y}}a{{m}}t{{g}}r{{b}}o{{r}}N{{X}}.</p>
 </div>
 <h4 id="_cascading_type_constructions" class="discrete">cascading type constructions</h4>
 <h3 id="_mono_types" class="discrete">mono types</h3>
@@ -2797,13 +2799,13 @@ mtron&gt; bytes::'48656c6c6f'     ​2​
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; kB::1024.as(mB::T)     ​1​
-==&gt;ERROR: unable to convert int::T to real::T[studio.phaseshift.metatron.isa.m.type.Obj:580]
+==&gt;ERROR: unable to convert int::T to real::T[studio.phaseshift.metatron.isa.m.type.Obj:579]
 mtron&gt; mB::1.as(kB::T)     ​2​
-==&gt;ERROR: unable to convert int::T to real::T[studio.phaseshift.metatron.isa.m.type.Obj:580]
+==&gt;ERROR: unable to convert int::T to real::T[studio.phaseshift.metatron.isa.m.type.Obj:579]
 mtron&gt; gB::5.as(mB::T)     ​3​
-==&gt;ERROR: unable to convert int::T to real::T[studio.phaseshift.metatron.isa.m.type.Obj:580]
+==&gt;ERROR: unable to convert int::T to real::T[studio.phaseshift.metatron.isa.m.type.Obj:579]
 mtron&gt; pB::1.as(tB::T)     ​4​
-==&gt;ERROR: unable to convert int::T to real::T[studio.phaseshift.metatron.isa.m.type.Obj:580]</code></pre>
+==&gt;ERROR: unable to convert int::T to real::T[studio.phaseshift.metatron.isa.m.type.Obj:579]</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -2835,13 +2837,13 @@ mtron&gt; pB::1.as(tB::T)     ​4​
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; mB::1024.eq(gB::1)     ​1​
-==&gt;ERROR: unable to convert int::T to real::T[studio.phaseshift.metatron.isa.m.type.Obj:580]
+==&gt;ERROR: unable to convert int::T to real::T[studio.phaseshift.metatron.isa.m.type.Obj:579]
 mtron&gt; kB::1024.eq(mB::1)     ​2​
-==&gt;ERROR: unable to convert int::T to real::T[studio.phaseshift.metatron.isa.m.type.Obj:580]
+==&gt;ERROR: unable to convert int::T to real::T[studio.phaseshift.metatron.isa.m.type.Obj:579]
 mtron&gt; gB::2.eq(mB::2048)     ​3​
-==&gt;ERROR: unable to convert int::T to real::T[studio.phaseshift.metatron.isa.m.type.Obj:580]
+==&gt;ERROR: unable to convert int::T to real::T[studio.phaseshift.metatron.isa.m.type.Obj:579]
 mtron&gt; tB::1.eq(gB::1024)     ​4​
-==&gt;ERROR: unable to convert int::T to real::T[studio.phaseshift.metatron.isa.m.type.Obj:580]</code></pre>
+==&gt;ERROR: unable to convert int::T to real::T[studio.phaseshift.metatron.isa.m.type.Obj:579]</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -3335,7 +3337,7 @@ mtron&gt;  nat::-10
 ==&gt;ERROR: nat::-10 is not a int::T[is(gt(0))]
 mtron&gt;  int::-10.as(nat::T)
 ==&gt;fail::[-10 is not a is(gt(0))
-  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/368</code></pre>
+  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/370</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -3434,7 +3436,7 @@ mtron&gt;  nat::-10
 ==&gt;ERROR: nat::-10 is not a int::T[is(gt(0))]
 mtron&gt;  int::-10.as(nat::T)
 ==&gt;fail::[-10 is not a is(gt(0))
-  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/374</code></pre>
+  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/376</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -3457,10 +3459,10 @@ mtron&gt; age::125
 ==&gt;ERROR: age::125 is not a int::T[is(lt(120))]
 mtron&gt;  nat::125.as(age::T)
 ==&gt;fail::[nat::125 is not a is(lt(120))
-  nat::125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/380
+  nat::125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/382
 mtron&gt;  125.as(nat::T).as(age::T)
 ==&gt;fail::[125 is not a is(lt(120))
-  125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/386</code></pre>
+  125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/388</code></pre>
 </div>
 </div>
 <div class="listingblock">
@@ -3687,7 +3689,7 @@ mtron&gt; memspace::[
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; console::[=&gt;]@/usr/ui/console
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; console::[=&gt;]@/usr/ui/console     ​1​
 ==&gt;console::[
  metatron_version=&gt;&lt;0.1-alpha&gt;,
  history=&gt;!history(#::T),
@@ -3695,9 +3697,9 @@ mtron&gt; memspace::[
  prefix=&gt;'',
  postfix=&gt;'',
  pane=&gt;lst[/m/mach/console/pane{*}]::[/m/mach/console/pane::[
+ result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
  prompt=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
- stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
- result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]@/usr/ui/console/pane/0],
+ stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]@/usr/ui/console/pane/0],
  menu=&gt;[
   console=&gt;console::[
    metatron_version=&gt;&lt;0.1-alpha&gt;,
@@ -3706,9 +3708,9 @@ mtron&gt; memspace::[
    prefix=&gt;'',
    postfix=&gt;'',
    pane=&gt;lst[/m/mach/console/pane{*}]::[/m/mach/console/pane::[
+ result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
  prompt=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
- stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
- result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]@/usr/ui/console/pane/0]]@/usr/ui/console,
+ stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]@/usr/ui/console/pane/0]]@/usr/ui/console,
   help=&gt;inst?noobj&lt;=#{?}(),
   chat=&gt;inst?noobj&lt;=#{?}(),
   connect=&gt;inst?noobj&lt;=#{?}(),
@@ -3731,55 +3733,11 @@ mtron&gt; memspace::[
   focus=&gt;inst?noobj&lt;=#{?}(),
   panes=&gt;inst?noobj&lt;=#{?}(),
   subq=&gt;inst?noobj&lt;=#{?}()]]@/usr/ui/console
-mtron&gt; */usr/ui/console     ​1​
-==&gt;console::[
- metatron_version=&gt;&lt;0.1-alpha&gt;,
- history=&gt;!history(#::T),
- input=&gt;/usr/ui/console/in,
- prefix=&gt;'',
- postfix=&gt;'',
- pane=&gt;lst[/m/mach/console/pane{*}]::[/m/mach/console/pane::[
- prompt=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
- stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
- result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]@/usr/ui/console/pane/0],
- menu=&gt;[
-  console=&gt;console::[
-   metatron_version=&gt;&lt;0.1-alpha&gt;,
-   history=&gt;!history(#::T),
-   input=&gt;/usr/ui/console/in,
-   prefix=&gt;'',
-   postfix=&gt;'',
-   pane=&gt;lst[/m/mach/console/pane{*}]::[/m/mach/console/pane::[
- prompt=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
- stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
- result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]@/usr/ui/console/pane/0]]@/usr/ui/console,
-  help=&gt;inst?noobj&lt;=#{?}(),
-  chat=&gt;inst?noobj&lt;=#{?}(),
-  connect=&gt;inst?noobj&lt;=#{?}(),
-  header=&gt;inst?noobj&lt;=#{?}(),
-  quit=&gt;inst?noobj&lt;=#{?}(),
-  clear=&gt;inst?noobj&lt;=#{?}(),
-  log=&gt;inst?noobj&lt;=#{?}(),
-  check=&gt;inst?noobj&lt;=#{?}(),
-  top=&gt;inst?noobj&lt;=#{?}(),
-  less=&gt;inst?noobj&lt;=#{?}(),
-  subs=&gt;inst?noobj&lt;=#{?}(),
-  justify=&gt;inst?noobj&lt;=#{?}(),
-  state=&gt;inst?noobj&lt;=#{?}(),
-  lang=&gt;inst?noobj&lt;=#{?}(),
-  prefix=&gt;inst?noobj&lt;=#{?}(),
-  postfix=&gt;inst?noobj&lt;=#{?}(),
-  split=&gt;inst?noobj&lt;=#{?}(),
-  unsplit=&gt;inst?noobj&lt;=#{?}(),
-  close=&gt;inst?noobj&lt;=#{?}(),
-  focus=&gt;inst?noobj&lt;=#{?}(),
-  panes=&gt;inst?noobj&lt;=#{?}(),
-  subq=&gt;inst?noobj&lt;=#{?}()]]
 mtron&gt; */usr/ui/console/pane/0     ​2​
 ==&gt;/m/mach/console/pane::[
+ result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
  prompt=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
- stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
- result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]
+ stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]
 mtron&gt; /usr/ui/console/pane/0/result('printed at ==&gt;xyz')     ​3​</code></pre>
 </div>
 </div>
@@ -3787,7 +3745,7 @@ mtron&gt; /usr/ui/console/pane/0/result('printed at ==&gt;xyz')     ​3​</cod
 <table>
 <tr>
 <td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>The console <code>obj</code> is typically referenced by <code>/sys/ui/console</code>.</td>
+<td>A console <code>obj</code> is spawned at <code>/usr/ui/console</code>.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="2"></i><b>2</b></td>
@@ -3827,25 +3785,25 @@ mtron&gt; /usr/ui/console/pane/0/result('printed at ==&gt;xyz')     ​3​</cod
 </div></div></td>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron"> ┌────────────────────┐┌────────────────────┐
- │[/usr/marko]        ││[/usr/ai/agent]     │
- │                    ││                    │
- │mtron&gt; 1-&lt;[_,_]&gt;-   ││mtron&gt; *subagent    │
- │==&gt;1                ││==&gt;[ desc     =&gt; .. │
- │==&gt;2                ││     provider =&gt; .. │
- │mtron&gt; *&lt;http://..&gt; ││     tool     =&gt; .. │
- │==&gt;[ html =&gt;    ..  ││     skill    =&gt; .. │
- │      head   =&gt; ..  ││     note     =&gt; .. │
- │       title =&gt; ..  ││     ... ]          │
- │      body=&gt; ..     ││mtron&gt;              │
- │     ...]           ││                    │
- │mtron&gt;              ││                    │
- └────────────────────┘└────────────────────┘
- ┌──────────────────────────────────────────┐
- │[/sys/log/#]                              │
- │[INFO] agent2 spawned by /usr/ai/agent    │
- │[WARN] runtime inst resolution required   │
- └──────────────────────────────────────────┘</code></pre>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron"> ┌────────────────────────────┐┌────────────────────────────┐
+ │[/usr/marko]                ││[/usr/ai/agent]             │
+ │                            ││                            │
+ │mtron&gt; 1-&lt;[_,_]&gt;-           ││mtron&gt; *subagent            │
+ │==&gt;1                        ││==&gt;[ desc     =&gt; ..         │
+ │==&gt;2                        ││     provider =&gt; ..         │
+ │mtron&gt; *&lt;http://..&gt;         ││     tool     =&gt; ..         │
+ │==&gt;[ html =&gt;    ..          ││     skill    =&gt; ..         │
+ │      head   =&gt; ..          ││     note     =&gt; ..         │
+ │       title =&gt; ..          ││     ... ]                  │
+ │      body=&gt; ..             ││mtron&gt;                      │
+ │     ...]                   ││                            │
+ │mtron&gt;                      ││                            │
+ └────────────────────────────┘└────────────────────────────┘
+ ┌──────────────────────────────────────────────────────────┐
+ │[/sys/log/#]                                              │
+ │[INFO] agent2 spawned by /usr/ai/agent                    │
+ │[WARN] runtime inst resolution required                   │
+ └──────────────────────────────────────────────────────────┘</code></pre>
 </div>
 </div></div></td>
 </tr>
@@ -4968,7 +4926,7 @@ mtron&gt; */usr/notes/#?subq
   mqtt::T,
   haos::T]]@/m/iot
 mtron&gt;  import(/m/llm)
-{{y}}.{{g}}.{{r}}.{{X}}</code></pre>
+{{b}}.{{g}}.{{m}}.{{X}}</code></pre>
 </div>
 </div>
 </div>
@@ -5013,7 +4971,7 @@ The inspiration for metatron&#8217;s URI addressing schema was inspired by the v
   	studio.phaseshift.metatron.isa.iot.space.mqtt.mqttSpace [line 84]
   	studio.phaseshift.metatron.isa.m.type.Inst$f [line 689]
   	studio.phaseshift.metatron.isa.m.type.Inst [line 330]
-  	studio.phaseshift.metatron.isa.m.type.Obj$Helper [line 895]
+  	studio.phaseshift.metatron.isa.m.type.Obj$Helper [line 894]
   	studio.phaseshift.metatron.isa.m.type.impl.MObj [line 46]
   	studio.phaseshift.metatron.isa.m.type.impl.MRec [line 72]
   	studio.phaseshift.metatron.isa.m.parser.mParser [line 201]
@@ -5748,7 +5706,7 @@ mtron&gt; *acme:customers/357     ​2​
  salesRepEmployeeNumber=&gt;!*acme:employees/1612,
  creditLimit=&gt;77700.0000]
 mtron&gt; @g:V/1.addE(consulted,|*acme:customers/357)     ​3​
-==&gt;fail::[unable to convert vertexmap to rec::T[studio.phaseshift.metatron.isa.grph.grphInstSet:222]][...]@/sys/fail/84
+==&gt;fail::[unable to convert vertexmap to rec::T[studio.phaseshift.metatron.isa.grph.grphInstSet:222]][...]@/sys/fail/86
 mtron&gt; *g:V/1.out(consulted)     ​4​
 mtron&gt; *g:V/1.out(consulted).matches(vrtx::T)     ​5​
 ==&gt;false</code></pre>
@@ -6680,7 +6638,7 @@ mtron&gt; *&lt;http://localhost:8088/v1/models&gt;
   [id=&gt;MeetAISmall__latest,object=&gt;model],
   [id=&gt;gpt-oss__latest,object=&gt;model]]]
 mtron&gt; *&lt;http://localhost:8088/v1/models/data/0/id&gt;
-==&gt;qwen3:latest
+==&gt;mistralai_devstral-small-2507
 mtron&gt; *&lt;http://localhost:8088/api/models/config-json/${
          *&lt;http://localhost:8088/v1/models/data/0/id&gt;}&gt;
 ==&gt;[
@@ -6840,7 +6798,7 @@ mtron&gt; */m/llm/inst/+?dom=model</code></pre>
    in=&gt;currency::T,
    out=&gt;currency::T],
    noobj=&gt;(==&gt;{?}size)=&gt;noobj=&gt;/=&gt;bB::T,
-   noobj=&gt;(==&gt;{?}feature)=&gt;noobj=&gt;/=&gt;feature::T]][...]@/sys/fail/408</code></pre>
+   noobj=&gt;(==&gt;{?}feature)=&gt;noobj=&gt;/=&gt;feature::T]][...]@/sys/fail/410</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -7059,7 +7017,7 @@ mtron&gt; farmset::[type=&gt;[animal::T,equipment::T,chicken::T]]@/m/dcmnt/schem
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;  farm:animals/1 -&gt; 'a chicken named trill'     ​1​
-==&gt;fail::[space /sys/space/farm requires rec::T[?[{?}animals=&gt;animals::T]] at root; got str::T][...]@/sys/fail/2
+==&gt;fail::[space /sys/space/farm requires rec::T[?[{?}animals=&gt;animals::T]] at root; got str::T][...]@/sys/fail/4
 mtron&gt; farm:animals/1 -&gt; chicken::[name=&gt;'trill',age=&gt;7]     ​2​
 ==&gt;chicken::[name=&gt;'trill',age=&gt;7]
 mtron&gt; *farm:animals/1     ​3​
@@ -7384,11 +7342,7 @@ mtron&gt; *lite:person/+/id     ​6​
 ==&gt;[
  instset=&gt;instset::[
   pattern=&gt;/sys/space/lite/schema/instset/#,
-  type=&gt;[
-   award::T,
-   person::T,
-   score::T,
-   venue::T],
+  type=&gt;[,],
   q=&gt;[docq::[
  pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
  pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
@@ -7399,53 +7353,8 @@ mtron&gt; *lite:person/+/id     ​6​
  native=&gt;[
   pattern=&gt;/sys/space/lite/schema/instset/#,
   name=&gt;'instset',
-  tables=&gt;[
-   [
-    name=&gt;'award',
-    uri=&gt;/sys/space/lite/schema/instset/award,
-    schema/schema=&gt;[
-     id=&gt;int::T,
-     trophy=&gt;str::T,
-     recipient=&gt;int::T],
-    type=&gt;award::T],
-   [
-    name=&gt;'person',
-    uri=&gt;/sys/space/lite/schema/instset/person,
-    schema/schema=&gt;[
-     id=&gt;int::T,
-     name=&gt;str::T,
-     age=&gt;int::T],
-    type=&gt;person::T],
-   [
-    name=&gt;'score',
-    uri=&gt;/sys/space/lite/schema/instset/score,
-    schema/schema=&gt;[
-     id=&gt;int::T,
-     player=&gt;str::T,
-     points=&gt;int::T],
-    type=&gt;score::T],
-   [
-    name=&gt;'venue',
-    uri=&gt;/sys/space/lite/schema/instset/venue,
-    schema/schema=&gt;[
-     id=&gt;int::T,
-     name=&gt;str::T,
-     location=&gt;int::T,
-     parent=&gt;str::T],
-    type=&gt;venue::T]],
-  references=&gt;[
-   [
-    from_table=&gt;'award',
-    from_column=&gt;'recipient',
-    to_table=&gt;'person',
-    to_column=&gt;'id',
-    type=&gt;'FOREIGN_KEY'],
-   [
-    from_table=&gt;'venue',
-    from_column=&gt;'location',
-    to_table=&gt;'area:V',
-    to_column=&gt;'id',
-    type=&gt;'FOREIGN_KEY']]]]
+  tables=&gt;[,],
+  references=&gt;[,]]]
 mtron&gt; */sys/space/lite/schema/type/+</code></pre>
 </div>
 </div></div></td>
@@ -7631,11 +7540,7 @@ whose values happen to match <code>person.name</code> — the link is purely alg
  schema=&gt;[
   instset=&gt;instset::[
    pattern=&gt;/sys/space/lite/schema/instset/#,
-   type=&gt;[
-    award::T,
-    person::T,
-    score::T,
-    venue::T],
+   type=&gt;[,],
    q=&gt;[docq::[
  pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
  pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
@@ -7646,53 +7551,15 @@ whose values happen to match <code>person.name</code> — the link is purely alg
   native=&gt;[
    pattern=&gt;/m/tble/space/tblespace/default/schema/instset/#,
    name=&gt;'instset',
-   tables=&gt;[
-    [
-     name=&gt;'award',
-     uri=&gt;/m/tble/space/tblespace/default/schema/instset/award,
-     schema/schema=&gt;[
-      id=&gt;int::T,
-      trophy=&gt;str::T,
-      recipient=&gt;int::T],
-     type=&gt;award::T],
-    [
-     name=&gt;'person',
-     uri=&gt;/m/tble/space/tblespace/default/schema/instset/person,
-     schema/schema=&gt;[
-      id=&gt;int::T,
-      name=&gt;str::T,
-      age=&gt;int::T],
-     type=&gt;person::T],
-    [
-     name=&gt;'score',
-     uri=&gt;/m/tble/space/tblespace/default/schema/instset/score,
-     schema/schema=&gt;[
-      id=&gt;int::T,
-      player=&gt;str::T,
-      points=&gt;int::T],
-     type=&gt;score::T],
-    [
-     name=&gt;'venue',
-     uri=&gt;/m/tble/space/tblespace/default/schema/instset/venue,
-     schema/schema=&gt;[
-      id=&gt;int::T,
-      name=&gt;str::T,
-      location=&gt;int::T,
-      parent=&gt;str::T],
-     type=&gt;venue::T]],
-   references=&gt;[
-    [
-     from_table=&gt;'award',
-     from_column=&gt;'recipient',
-     to_table=&gt;'person',
-     to_column=&gt;'id',
-     type=&gt;'FOREIGN_KEY'],
-    [
-     from_table=&gt;'venue',
-     from_column=&gt;'location',
-     to_table=&gt;'area:V',
-     to_column=&gt;'id',
-     type=&gt;'FOREIGN_KEY']]]]]@/sys/space/lite
+   tables=&gt;[[
+ name=&gt;'person',
+ uri=&gt;/m/tble/space/tblespace/default/schema/instset/person,
+ schema/schema=&gt;[
+  id=&gt;int::T,
+  name=&gt;str::T,
+  age=&gt;int::T],
+ type=&gt;person::T]],
+   references=&gt;[,]]]]@/sys/space/lite
 mtron&gt; lite:score/1 -&gt; [player=&gt;'marko', points=&gt;42]     ​2​
 ==&gt;[player=&gt;'marko',points=&gt;42]
 mtron&gt; lite:score/2 -&gt; [player=&gt;'grant', points=&gt;99]     ​3​
@@ -8210,6 +8077,34 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
  obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
  inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
    space=&gt;[sub=&gt;{!*/m/mach,!*/m/math,!*/m/web,!*/m/iot,!*/m/grph,!*/m/llm,!*/m/tble,!*/m/dcmnt,!*/m/rdf}],
+   type=&gt;[
+    #::T,
+    bool::T,
+    int::T,
+    real::T,
+    bytes::T,
+    str::T,
+    uri::T,
+    rel::T,
+    lst::T,
+    rec::T,
+    instset::T,
+    inst::T,
+    code::T,
+    fail::T,
+    space{*}::T,
+    memspace::T,
+    stack::T,
+    qproc::T,
+    subq::T,
+    sub::T,
+    typeq::T,
+    docs::T,
+    docq::T,
+    mintq::T,
+    incrq::T,
+    constq::T,
+    mimeq::T],
    rewrite=&gt;[
     /m/inst/rewrite/id_removal?code{?}&lt;=code(),
     /m/inst/rewrite/map_nest?code{?}&lt;=code(),
@@ -8448,35 +8343,7 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
     ctor()],
    const=&gt;[
     noobj,
-    none@none],
-   type=&gt;[
-    #::T,
-    bool::T,
-    int::T,
-    real::T,
-    bytes::T,
-    str::T,
-    uri::T,
-    rel::T,
-    lst::T,
-    rec::T,
-    instset::T,
-    inst::T,
-    code::T,
-    fail::T,
-    space{*}::T,
-    memspace::T,
-    stack::T,
-    qproc::T,
-    subq::T,
-    sub::T,
-    typeq::T,
-    docs::T,
-    docq::T,
-    mintq::T,
-    incrq::T,
-    constq::T,
-    mimeq::T]]@/m,
+    none@none]]@/m,
   /m/iot=&gt;instset::[
    pattern=&gt;/m/iot/#,
    q=&gt;[docq::[
@@ -8640,7 +8507,6 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
   bB=&gt;[/m/math/bB],
   which=&gt;[/m/mach/inst/which],
   base=&gt;[/m/web/space/wsspace/mcp_server/base],
-  zero=&gt;[/m/mach/inst/ring/const/zero,/m/inst/zero],
   atan2=&gt;[/m/math/inst/atan2],
   type=&gt;[/m/inst/type],
   httpspace=&gt;[/m/web/space/httpspace],
@@ -8658,6 +8524,7 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
   count=&gt;[/m/inst/count],
   within=&gt;[/m/inst/within],
   plus=&gt;[/m/inst/plus],
+  stdout=&gt;[/sys/io/stdout],
   less=&gt;[/m/mach/inst/less],
   values=&gt;[/m/grph/inst/values],
   inV=&gt;[/m/grph/inst/inV],
@@ -8669,6 +8536,7 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
   bothE=&gt;[/m/grph/inst/bothE],
   http_handler=&gt;[/m/web/space/httpspace/http_handler],
   inv=&gt;[/m/inst/inv],
+  stdin=&gt;[/sys/io/stdin],
   out=&gt;[/m/grph/inst/out],
   in=&gt;[/m/grph/inst/in],
   dedup=&gt;[/m/inst/dedup],
@@ -8677,7 +8545,6 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
   choose=&gt;[/m/inst/choose],
   cause=&gt;[/m/inst/cause],
   isa=&gt;[/m/inst/isa],
-  one=&gt;[/m/mach/inst/ring/const/one,/m/inst/one],
   dir=&gt;[/m/mach/dir],
   html=&gt;[/m/web/html],
   lt=&gt;[/m/inst/lt],
@@ -8737,8 +8604,8 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
   constq=&gt;[/m/space/qproc/constq],
   lrow=&gt;[/m/tble/lrow],
   monad=&gt;[/m/mach/monad],
-  auto=&gt;[/m/inst/auto],
   inst=&gt;[/m/inst],
+  auto=&gt;[/m/inst/auto],
   machine=&gt;[/m/mach/machine],
   dcmntspace=&gt;[/m/dcmnt/space/dcmntspace],
   rshift=&gt;[/m/inst/rshift],
@@ -8758,6 +8625,7 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
   docq=&gt;[/m/space/qproc/docq],
   mimeq=&gt;[/m/space/qproc/mimeq],
   xml=&gt;[/m/web/xml],
+  zero=&gt;[/m/inst/zero,/m/mach/inst/ring/const/zero],
   json=&gt;[/m/web/json],
   uri=&gt;[/m/uri],
   id_removal=&gt;[/m/inst/rewrite/id_removal],
@@ -8789,15 +8657,15 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
   reduce=&gt;[/m/inst/reduce],
   to=&gt;[/m/inst/to],
   skip=&gt;[/m/inst/skip],
-  port=&gt;[/m/inst/port],
   space=&gt;[/m/space],
+  port=&gt;[/m/inst/port],
   bothV=&gt;[/m/grph/inst/bothV],
   inE=&gt;[/m/grph/inst/inE],
   println=&gt;[/m/inst/println],
   instset=&gt;[/m/instset],
   gte=&gt;[/m/inst/gte],
-  scheme=&gt;[/m/inst/scheme],
   real=&gt;[/m/real],
+  scheme=&gt;[/m/inst/scheme],
   rrow=&gt;[/m/tble/rrow],
   start=&gt;[/m/inst/start],
   tblespace=&gt;[/m/tble/space/tblespace],
@@ -8834,6 +8702,7 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
   mqtt=&gt;[/m/iot/space/mqtt],
   from=&gt;[/m/inst/from],
   image=&gt;[/m/mach/file/image],
+  one=&gt;[/m/inst/one,/m/mach/inst/ring/const/one],
   split_merge_left_factor=&gt;[/m/inst/rewrite/split_merge_left_factor],
   split_merge_collapse=&gt;[/m/inst/rewrite/split_merge_collapse],
   usd=&gt;[/m/math/currency/usd],
