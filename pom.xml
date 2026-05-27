@@ -60,7 +60,7 @@
         <testcontainers.version>2.0.5</testcontainers.version>
         <java-websocket.version>1.6.0</java-websocket.version>
         <mariadb.version>3.5.8</mariadb.version>
-        <mongodb.version>5.7.0</mongodb.version>
+        <mongodb.version>5.7.1</mongodb.version>
         <langchain4j.version>1.15.0</langchain4j.version>
         <jlama.version>0.8.4</jlama.version>
         <langchain4j.beta.version>1.15.0-beta25</langchain4j.beta.version>
@@ -72,7 +72,7 @@
         <petitparser.version>2.4.0</petitparser.version>
         <jline.version>3.30.13</jline.version>
         <rdf4j.version>5.3.1</rdf4j.version>
-        <logback.version>1.5.32</logback.version>
+        <logback.version>1.5.33</logback.version>
         <slf4j.version>2.0.18</slf4j.version>
         <hive.version>1.3.14</hive.version>
         <jakarta.version>2.2.0</jakarta.version>
@@ -849,7 +849,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-plugin</artifactId>
-                    <version>3.5.5</version>
+                    <version>3.5.6</version>
                     <configuration>
                         <argLine>
                             --sun-misc-unsafe-memory-access=allow
@@ -893,7 +893,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-site-plugin</artifactId>
-                    <version>3.21.0</version>
+                    <version>3.22.0</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
