@@ -322,11 +322,10 @@ public class dcmntSpace extends AbstractSpace<MongoClient> implements SchemaSpac
             LOG.trace("deleting document %s", documentId);
             collection.deleteOne(Filters.eq(ID_FIELD, parseObjectId(documentId)));
         } else if (obj.isRec()) {
-            final Document doc = new Document(this.getSerializer().writeRec(obj.asRec()).asDocument());
-            doc.put(ID_FIELD, parseObjectId(documentId));
-            LOG.trace("upserting document %s", documentId);
-            collection.replaceOne(Filters.eq(ID_FIELD, parseObjectId(documentId)), doc,
-                    new ReplaceOptions().upsert(true));
+            final Rec newRec = obj.asRec();
+            // Decompose Rec writes into per-field $set/$unset to avoid full-doc replaceOne.
+            // Reads the current document, diffs field-by-field, and issues targeted operations.
+            writeRecDecomposed(collection, documentId, newRec);
         } else {
             final BsonDocument bsonDoc = new BsonDocument();
             bsonDoc.put(ID_FIELD, toBsonId(documentId));
@@ -336,6 +335,55 @@ public class dcmntSpace extends AbstractSpace<MongoClient> implements SchemaSpac
                     .replaceOne(Filters.eq(ID_FIELD, parseObjectId(documentId)), bsonDoc,
                             new ReplaceOptions().upsert(true));
         }
+    }
+
+    /**
+     * Decompose a document-level Rec write into targeted per-field {@code $set} and
+     * {@code $unset} operations.  Reads the current document, diffs against the new
+     * Rec at the top level, and emits only the changed fields to MongoDB.
+     * <p>
+     * For nested sub-documents and arrays the entire subtree is written via a single
+     * {@code $set} on the top-level key — deep leaf-level decomposition is left for
+     * future optimization.
+     */
+    private void writeRecDecomposed(final MongoCollection<Document> collection,
+                                    final String documentId,
+                                    final Rec newRec) {
+        final Object parsedId = parseObjectId(documentId);
+        final Document current = collection.find(Filters.eq(ID_FIELD, parsedId)).first();
+        final Document newDoc = new Document(this.getSerializer().writeRec(newRec).asDocument());
+        newDoc.put(ID_FIELD, parsedId);
+
+        if (current == null) {
+            LOG.trace("inserting new document %s", documentId);
+            collection.insertOne(newDoc);
+            return;
+        }
+
+        final Document setDoc = new Document();
+        final Document unsetDoc = new Document();
+
+        for (final String field : newDoc.keySet()) {
+            if (ID_FIELD.equals(field)) continue;
+            final Object newVal = newDoc.get(field);
+            final Object oldVal = current.get(field);
+            if (!Objects.equals(newVal, oldVal))
+                setDoc.put(field, newVal);
+        }
+        for (final String field : current.keySet()) {
+            if (ID_FIELD.equals(field)) continue;
+            if (!newDoc.containsKey(field))
+                unsetDoc.put(field, "");
+        }
+
+        LOG.debug("decomposed write on %s/%s: %d set(s), %d unset(s)",
+                collection.getNamespace().getCollectionName(), documentId,
+                setDoc.size(), unsetDoc.size());
+
+        if (!setDoc.isEmpty())
+            collection.updateOne(Filters.eq(ID_FIELD, parsedId), new Document("$set", setDoc));
+        if (!unsetDoc.isEmpty())
+            collection.updateOne(Filters.eq(ID_FIELD, parsedId), new Document("$unset", unsetDoc));
     }
 
     /** Write (or unset) a single field within a document. */
@@ -365,6 +413,13 @@ public class dcmntSpace extends AbstractSpace<MongoClient> implements SchemaSpac
                 final fURI nodePattern = pattern.asNode();
                 if (!dp.collectionIsWildcard() && !dp.entryIsWildcard()) {
                     // Specific collection + specific document
+                    // Fast path: concrete field path → push down to MongoDB projection
+                    if (!dp.fieldIsWildcard() && !dp.extensionIsWildcard()) {
+                        final IdObj result = readProjectedField(dp, nodePattern);
+                        if (result != null)
+                            return List.of(result).iterator();
+                    }
+                    // Slow path: wildcard in field/extension → fetch full document, traverse in Metatron
                     final Document doc = this.database.getCollection(dp.collection())
                             .find(Filters.eq(ID_FIELD, parseObjectId(dp.entry()))).first();
                     if (doc != null) {
@@ -548,7 +603,7 @@ public class dcmntSpace extends AbstractSpace<MongoClient> implements SchemaSpac
      * {@code __mtron_tid} field — restoring the nominal TID (e.g. {@code chicken::T})
      * that was written alongside the document fields for round-trip fidelity.
      */
-    private Obj processDocument(final Document doc) {
+    protected Obj processDocument(final Document doc) {
         final Document normalized = (Document) normalizeDBRefs(doc);
         final BsonDocument bsonDoc = normalized.toBsonDocument();
         if (bsonDoc.containsKey(MTRON_VALUE_FIELD)) {
@@ -559,6 +614,67 @@ public class dcmntSpace extends AbstractSpace<MongoClient> implements SchemaSpac
         // Regular document record — strip _id (already encoded in the URI)
         bsonDoc.remove(ID_FIELD);
         return this.getSerializer().readRec(bsonDoc);
+    }
+
+    /**
+     * Fast-path field read: uses MongoDB projection to fetch only the target field,
+     * avoiding full-document deserialization and Metatron-level Rec traversal.
+     *
+     * @return an {@link IdObj} with vid = {@code nodePattern} and obj = the leaf field value,
+     *         or {@code null} if the document or field does not exist
+     */
+    private IdObj readProjectedField(final DataPath dp, final fURI nodePattern) {
+        // Project only the top-level field; walk the full path locally (handles array indices)
+        final Document doc = this.database.getCollection(dp.collection())
+                .find(Filters.eq(ID_FIELD, parseObjectId(dp.entry())))
+                .projection(new Document(dp.field(), 1))
+                .first();
+        if (doc == null)
+            return null;
+
+        // Walk the projected document to the leaf value, crossing array boundaries
+        Object current = doc;
+        for (final String segment : dp.fieldPathStr().split("\\.")) {
+            if (current instanceof Document d) {
+                current = d.get(segment);
+            } else if (current instanceof List<?> l) {
+                try {
+                    final int idx = Integer.parseInt(segment);
+                    current = idx >= 0 && idx < l.size() ? l.get(idx) : null;
+                } catch (final NumberFormatException e) {
+                    return null;
+                }
+            } else {
+                return null;
+            }
+            if (current == null) return null;
+        }
+
+        final BsonValue bson = toBsonValue(current);
+        final Obj fieldValue = this.getSerializer().read(bson);
+        return IdObj.of(nodePattern, fieldValue);
+    }
+
+    /** Convert a Java value from a BSON {@link Document} to a {@link BsonValue} for the serializer. */
+    private static BsonValue toBsonValue(final Object value) {
+        if (value == null) return BsonNull.VALUE;
+        if (value instanceof String s) return new BsonString(s);
+        if (value instanceof Integer i) return new BsonInt32(i);
+        if (value instanceof Long l) return new BsonInt64(l);
+        if (value instanceof Double d) return new BsonDouble(d);
+        if (value instanceof Float f) return new BsonDouble(f.doubleValue());
+        if (value instanceof Boolean b) return new BsonBoolean(b);
+        if (value instanceof Document d) return d.toBsonDocument();
+        if (value instanceof List<?> l) {
+            final BsonArray arr = new BsonArray();
+            for (final Object item : l) arr.add(toBsonValue(item));
+            return arr;
+        }
+        if (value instanceof BsonValue b) return b;
+        if (value instanceof ObjectId o) return new BsonObjectId(o);
+        if (value instanceof org.bson.types.Binary bin) return new BsonBinary(bin.getType(), bin.getData());
+        if (value instanceof java.util.Date dt) return new BsonDateTime(dt.getTime());
+        return BsonNull.VALUE;
     }
 
     // =======================================================================

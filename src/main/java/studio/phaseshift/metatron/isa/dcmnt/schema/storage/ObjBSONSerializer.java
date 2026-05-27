@@ -54,12 +54,16 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import static studio.phaseshift.metatron.isa.mach.io.ioInstSet.OBJ_SERIALIZER_TID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class ObjBSONSerializer extends AbstractObjSerializer<BsonValue> {
+
+    private static final GraphittyLogger LOG = Graphitty.log(ObjBSONSerializer.class);
 
     public static final Byte BYTES_MAGIC_NUMBER = (byte) 0x00;
     public static final Byte URI_MAGIC_NUMBER = (byte) 0x01;
@@ -171,12 +175,15 @@ public class ObjBSONSerializer extends AbstractObjSerializer<BsonValue> {
             } else if (Objects.equals(magic, FAIL_MAGIC_NUMBER)) {
                 return this.readFail(bson);
             }
+            LOG.warn("unknown binary magic byte 0x%s — returning noobj: %s", Integer.toHexString(magic & 0xFF), bson);
+            return noobj();
         }
         if (bson.isDocument())
             return this.readRec(bson);
         if (bson.isArray())
             return this.readLst(bson);
-        throw MTronException.of("unknown bson type: %s", bson.getClass());
+        LOG.warn("unknown bson type — returning noobj: %s", bson.getClass());
+        return noobj();
     }
 
     @Override

@@ -22,9 +22,11 @@ import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.*;
 
 import java.util.List;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.mInstSet.PLUS_INST_TID;
 
 /**
  * Structural decomposition of an {@link fURI} into a four-component
@@ -251,5 +253,65 @@ public record DataPath(String db, String collection, String entry, String field,
     /** Convenience that uses this DataPath's {@link #extension}. */
     public Stream<Obj> navigateWithin(final Stream<Obj> objects, final boolean detached) {
         return navigateWithin(objects, this.extension, detached);
+    }
+
+    // =======================================================================
+    // Structural-to-URI decomposition
+    // =======================================================================
+
+    /**
+     * A leaf operation decomposed from a structural Rec/Lst pattern.
+     * The URI targets the exact leaf position; the value is the operation
+     * to apply there (a literal for SET, an instruction for ADD/MUL/etc.).
+     */
+    public record StructuralLeaf(fURI uri, Obj value) {}
+
+    /**
+     * Expand a structural {@link Rec} or {@link Lst} pattern into leaf-level
+     * {@code (URI, value)} pairs.  Each leaf URI extends {@code base} with
+     * the structural path through Rec keys and Lst indices.
+     * <p>
+     * Non-{@link Poly} values and {@link Inst} leaves are emitted as-is.
+     * The {@code +} prefix ({@link studio.phaseshift.metatron.isa.m.mInstSet#PLUS_INST_TID})
+     * wrapping a Rec/Lst is unwrapped so its fields are decomposed into
+     * individual leaf operations.
+     * <p>
+     * <b>Example:</b>
+     * <pre>{@code
+     *   expandStructural(f("mongo:users/user4"),
+     *     rec("[stats=>[[events=>[[score=>plus(345)]]]]]"))
+     *     → [(f("mongo:users/user4/stats/0/events/0/score"), plus(345))]
+     * }</pre>
+     *
+     * @param base the base URI to extend
+     * @param obj  the structural pattern ({@link Rec} or {@link Lst})
+     * @return stream of leaf URI–value pairs
+     */
+    public static Stream<StructuralLeaf> expandStructural(final fURI base, final Obj obj) {
+        if (obj.isInst() && obj.asInst().tid().basePath().equals(PLUS_INST_TID)
+                && obj.asInst().args().count() > 0) {
+            // Unwrap +[rec] / +[lst] to decompose the inner structure as per-field SETs
+            final Obj inner = obj.asInst().arg(0);
+            if (inner.isRec() || inner.isLst())
+                return expandStructural(base, inner);
+            // +345 on a scalar stays as a leaf — metatron handles the computation
+            return Stream.of(new StructuralLeaf(base, obj));
+        }
+        if (obj.isRec()) {
+            return obj.asRec().elements()
+                    .flatMap(rel -> {
+                        final String segment = rel.first().isUri()
+                                ? rel.first().uriValue().name()
+                                : rel.first().toString();
+                        return expandStructural(base.extend(segment), rel.second());
+                    });
+        }
+        if (obj.isLst()) {
+            final List<Obj> elems = obj.asLst().elements().toList();
+            return IntStream.range(0, elems.size())
+                    .mapToObj(i -> expandStructural(base.extend(String.valueOf(i)), elems.get(i)))
+                    .flatMap(s -> s);
+        }
+        return Stream.of(new StructuralLeaf(base, obj));
     }
 }

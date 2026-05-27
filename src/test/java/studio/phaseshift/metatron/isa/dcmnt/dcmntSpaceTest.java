@@ -32,6 +32,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.algebra.rewrite.CommonRewritesTestContract;
+import studio.phaseshift.metatron.furi.DataPath;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractSpaceTest;
 import studio.phaseshift.metatron.isa.dcmnt.space.dcmntSpace;
@@ -40,12 +41,15 @@ import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.impl.MStr;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 
 import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -53,6 +57,7 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
 import static studio.phaseshift.metatron.isa.dcmnt.dcmntInstSet.DCMNT_ISA_TID;
+import static studio.phaseshift.metatron.isa.dcmnt.dcmntInstSet.DCMNT_SPACE_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -225,6 +230,27 @@ public class dcmntSpaceTest extends AbstractSpaceTest implements CommonRewritesT
                     .append("email", "charlie@example.com")
                     .append("active", false));
 
+            users.insertOne(new Document()
+                    .append("_id", "user4")
+                    .append("name", "BillyBob")
+                    .append("age", 66)
+                    .append("email", "billy@bob.com")
+                    .append("active", false)
+                    .append("sports", new Document()
+                            .append("skating",true)
+                            .append("shooting",false))
+                    .append("stats", List.of(
+                            new Document()
+                                    .append("year", 2024)
+                                    .append("events", List.of(
+                                            new Document().append("name", "regionals").append("score", 85),
+                                            new Document().append("name", "nationals").append("score", 92))),
+                            new Document()
+                                    .append("year", 2025)
+                                    .append("events", List.of(
+                                            new Document().append("name", "regionals").append("score", 88),
+                                            new Document().append("name", "nationals").append("score", 95))))));
+
             // create products collection
             MongoCollection<Document> products = db.getCollection("products");
             products.drop();
@@ -259,6 +285,119 @@ public class dcmntSpaceTest extends AbstractSpaceTest implements CommonRewritesT
             }
 
             LOG.info("test data setup complete");
+        }
+    }
+
+    @Test
+    public void testReadSingleNestedDocument() {
+        LOG.warn("testing read single nested document");
+        final dcmntSpace space = (dcmntSpace) this.spaceSupplier.get();
+        try {
+            // Read a specific user
+            final Obj user4 = space.read(f("mongo:users/user4"));
+
+            assertFalse(user4.isNoObj(), "User1 should exist");
+            assertTrue(user4.isRec(), "User1 should be a record");
+
+            final Rec user4Rec = user4.asRec();
+            assertEquals(str("BillyBob"), user4Rec.at(uri(NAME)), "Name should be BillyBob");
+            assertEquals(jnt(66), user4Rec.at(uri("age")), "Age should be 66");
+            assertEquals(str("billy@bob.com"), user4Rec.at(uri("email")), "Email should match");
+            assertEquals(bool(false), user4Rec.at(uri("active")), "Should be inactive");
+
+            LOG.info("Successfully read user4: %s", user4);
+
+            assertEquals(bool(true), ObjmtronSerializer.parse("*mongo:users/user4/sports/skating").apply());
+            assertEquals(bool(false), ObjmtronSerializer.parse("*mongo:users/user4/sports/shooting").apply());
+            
+        } finally {
+            space.close();
+        }
+    }
+
+    @Test
+    public void testPushdownFieldDoesNotFetchFullDocument() {
+        final AtomicBoolean processDocumentCalled = new AtomicBoolean(false);
+
+        // Build an anonymous dcmntSpace that instruments processDocument().
+        // Uses a distinct route prefix ("pushdown-test:") so it doesn't clash
+        // with the main test space ("mongo:"), but connects to the same database.
+        final Map<Obj, Obj> config = rec(
+                uri(PATTERN), uri("pushdown-test:#"),
+                uri(HOST), uri(connectionString + "/" + DB_NAME),
+                uri(ROUTE), rec(uri("pushdown-test:"), uri("")),
+                uri(COLLECTION), lst()
+        ).jvm();
+
+        final dcmntSpace space = new dcmntSpace(
+                MongoClients.create(connectionString + "/" + DB_NAME),
+                config,
+                DCMNT_SPACE_TID,
+                f("/sys/space/doc/test_pushdown")
+        ) {
+            @Override
+            protected Obj processDocument(final Document doc) {
+                processDocumentCalled.set(true);
+                return super.processDocument(doc);
+            }
+        };
+        try {
+            // Concrete field path: should use MongoDB projection, NOT processDocument()
+            assertEquals(bool(true),
+                    ObjmtronSerializer.parse("*pushdown-test:users/user4/sports/skating").apply(),
+                    "sports.skating should be true");
+
+            assertFalse(processDocumentCalled.get(),
+                    "Field path MUST be pushed to MongoDB projection — processDocument() was called, "
+                    + "meaning the full document was fetched and traversed in Metatron");
+
+            // --- array of documents ---
+            processDocumentCalled.set(false);
+            final Obj stats = ObjmtronSerializer.parse("*pushdown-test:users/user4/stats").apply();
+            assertTrue(stats.isLst(), "stats should be a Lst");
+            assertFalse(processDocumentCalled.get(),
+                    "stats array should use projection, not processDocument()");
+
+            // --- specific array element (returns a sub-document) ---
+            processDocumentCalled.set(false);
+            final Obj firstYear = ObjmtronSerializer.parse("*pushdown-test:users/user4/stats/0").apply();
+            assertTrue(firstYear.isRec(), "stats/0 should be a Rec");
+            assertFalse(processDocumentCalled.get(),
+                    "stats/0 should use projection, not processDocument()");
+
+            // --- scalar inside array element ---
+            processDocumentCalled.set(false);
+            assertEquals(jnt(2024),
+                    ObjmtronSerializer.parse("*pushdown-test:users/user4/stats/0/year").apply(),
+                    "stats/0/year should be 2024");
+            assertFalse(processDocumentCalled.get(),
+                    "stats/0/year should use projection, not processDocument()");
+
+            // --- deeply nested: array → doc → array → doc → string ---
+            processDocumentCalled.set(false);
+            assertEquals(str("nationals"),
+                    ObjmtronSerializer.parse("*pushdown-test:users/user4/stats/1/events/1/name").apply(),
+                    "stats/1/events/1/name should be 'nationals'");
+            assertFalse(processDocumentCalled.get(),
+                    "stats/1/events/1/name should use projection, not processDocument()");
+
+            // --- deeply nested: array → doc → array → doc → int ---
+            processDocumentCalled.set(false);
+            assertEquals(jnt(95),
+                    ObjmtronSerializer.parse("*pushdown-test:users/user4/stats/1/events/1/score").apply(),
+                    "stats/1/events/1/score should be 95");
+            assertFalse(processDocumentCalled.get(),
+                    "stats/1/events/1/score should use projection, not processDocument()");
+
+            // Verify full-document reads still call processDocument (slow path still works)
+            processDocumentCalled.set(false);
+            final Obj user4 = ObjmtronSerializer.parse("*pushdown-test:users/user4").apply();
+            assertTrue(user4.isRec(), "Full user4 document should be a Rec");
+            assertTrue(processDocumentCalled.get(),
+                    "Full document read (no field path) MUST call processDocument()");
+
+        } finally {
+            space.close();
         }
     }
 
@@ -317,7 +456,7 @@ public class dcmntSpaceTest extends AbstractSpaceTest implements CommonRewritesT
                 assertTrue(user.isRec(), "Each user should be a record");
             }
 
-            assertEquals(3, count, "Should have 3 users");
+            assertEquals(4, count, "Should have 4 users");
             LOG.info("Successfully read %s users", count);
         } finally {
             space.close();
@@ -383,6 +522,111 @@ public class dcmntSpaceTest extends AbstractSpaceTest implements CommonRewritesT
         } finally {
             space.close();
         }
+    }
+
+    @Test
+    public void testUpdateExistingNestedDocument() {
+        LOG.info("Testing update existing nested document");
+
+        final dcmntSpace space = (dcmntSpace) this.spaceSupplier.get();
+        try {
+            ObjmtronSerializer.parse("@mongo:users/user4/sports >>= +[swimming=>true]").apply();
+            // Read it back
+            final Rec readBackUser = space.read(f("mongo:users/user4")).as();
+            final Rec readBackSports = space.read(f("mongo:users/user4/sports")).as();
+            assertEquals(readBackSports,readBackUser.at("sports"));
+            assertEquals(3,readBackSports.count());
+            assertEquals(bool(true), readBackSports.at(f("swimming")));
+            assertEquals(bool(true), readBackSports.at(f("skating")));
+            assertEquals(bool(false), readBackSports.at(f("shooting")));
+            assertEquals(jnt(66), readBackUser.at(uri("age")), "Age should be the same");
+            assertEquals(str("billy@bob.com"), readBackUser.at(uri("email")), "Email should be the same");
+
+            // --- update a scalar deep inside an array of documents ---
+            ObjmtronSerializer.parse("@mongo:users/user4/stats/0/events/0/score >>= 99").apply();
+            assertEquals(jnt(99),
+                    space.read(f("mongo:users/user4/stats/0/events/0/score")),
+                    "stats/0/events/0/score should be 99 after update");
+            // Verify sibling field in the same array element was untouched
+            assertEquals(str("regionals"),
+                    space.read(f("mongo:users/user4/stats/0/events/0/name")),
+                    "stats/0/events/0/name should be unchanged");
+
+            // --- update a field in a different array element ---
+            ObjmtronSerializer.parse("@mongo:users/user4/stats/1/events/1/name >>= 'worlds'").apply();
+            assertEquals(str("worlds"),
+                    space.read(f("mongo:users/user4/stats/1/events/1/name")),
+                    "stats/1/events/1/name should be 'worlds' after update");
+            // Sibling score untouched
+            assertEquals(jnt(95),
+                    space.read(f("mongo:users/user4/stats/1/events/1/score")),
+                    "stats/1/events/1/score should be unchanged");
+
+            // --- deeply nested structural merge via >>= ---
+            // Navigates through arrays and docs to set stats[0].events[0].score = 101
+            // without touching sibling fields or other array elements
+            ObjmtronSerializer.parse("@mongo:users/user4 >>= [stats=>[[events=>[[score=>101]]]]]").apply();
+
+            // Verify the targeted score was updated
+            assertEquals(jnt(101),
+                    space.read(f("mongo:users/user4/stats/0/events/0/score")),
+                    "stats/0/events/0/score should be 101 after structural merge");
+            // Sibling name in the same array element was untouched
+            assertEquals(str("regionals"),
+                    space.read(f("mongo:users/user4/stats/0/events/0/name")),
+                    "stats/0/events/0/name should be unchanged");
+            // Parent year field untouched
+            assertEquals(jnt(2024),
+                    space.read(f("mongo:users/user4/stats/0/year")),
+                    "stats/0/year should be unchanged");
+            // Second array element completely untouched
+            assertEquals(jnt(88),
+                    space.read(f("mongo:users/user4/stats/1/events/0/score")),
+                    "stats/1/events/0/score should be unchanged");
+
+            // --- relative mutation via + prefix: add 345 to current score ---
+            ObjmtronSerializer.parse("@mongo:users/user4 >>= [stats=>[[events=>[[score=>+345]]]]]").apply();
+
+            // 101 + 345 = 446
+            assertEquals(jnt(446),
+                    space.read(f("mongo:users/user4/stats/0/events/0/score")),
+                    "stats/0/events/0/score should be 101 + 345 = 446");
+            // Sibling name untouched
+            assertEquals(str("regionals"),
+                    space.read(f("mongo:users/user4/stats/0/events/0/name")),
+                    "stats/0/events/0/name should be unchanged after relative mutation");
+
+            LOG.info("Successfully updated user4");
+        } finally {
+            space.close();
+        }
+    }
+
+    @Test
+    public void testExpandStructuralDecomposition() {
+        // Verify expandStructural decomposes a deep structural pattern into URI leaves
+        final fURI base = f("mongo:users/user4");
+        final Obj structural = ObjmtronSerializer.parse("[stats=>[[events=>[[score=>+345]]]]]").apply();
+
+        final List<DataPath.StructuralLeaf> leaves = DataPath.expandStructural(base, structural).toList();
+        assertEquals(1, leaves.size(), "should decompose to one leaf");
+
+        final DataPath.StructuralLeaf leaf = leaves.get(0);
+        assertEquals(f("mongo:users/user4/stats/0/events/0/score"), leaf.uri(),
+                "leaf URI should be fully qualified through arrays and docs");
+        assertTrue(leaf.value().isInst(), "leaf value should be the +345 instruction");
+
+        // Rec with no + wrapper: each key-value pair becomes a leaf
+        final Obj flatRec = ObjmtronSerializer.parse("[swimming=>true,skating=>false]").apply();
+        final List<DataPath.StructuralLeaf> mergeLeaves =
+                DataPath.expandStructural(f("mongo:users/user4/sports"), flatRec).toList();
+        assertEquals(2, mergeLeaves.size(), "Rec with 2 fields should decompose to 2 leaves");
+        assertTrue(mergeLeaves.stream().anyMatch(l ->
+                l.uri().equals(f("mongo:users/user4/sports/swimming")) && l.value().isBool()),
+                "should contain swimming=>true leaf");
+        assertTrue(mergeLeaves.stream().anyMatch(l ->
+                l.uri().equals(f("mongo:users/user4/sports/skating")) && l.value().isBool()),
+                "should contain skating=>false leaf");
     }
 
     @Test

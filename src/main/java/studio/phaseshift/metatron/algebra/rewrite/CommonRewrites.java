@@ -53,7 +53,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * // In tbleInstSet:
  * CommonRewrites.countRewrite(
  *     tbleSpace.class,
- *     TBLE_ISA_REWRITE_TID.extend("mql_count"),
+ *     TBLE_ISA_REWRITE_TID.extend("sql_count"),
  *     (space, furi) -> {
  *         String table = furi.segments().getFirst();
  *         try (Statement stmt = space.sjvm().createStatement();
@@ -105,7 +105,7 @@ public final class CommonRewrites {
                     // patterns operate across collections/tables and require different rewrtting
                     return !ref.isUri() || !ref.uriValue().retract(1).hasPattern();
                 })
-                .optimize("mql_count", (space, dp, coeff) -> {
+                .optimize("from_count", (space, dp, coeff) -> {
                     final long count = countFunction.apply(space, dp);
                     return jnt(count).c(c -> c.mult((cInt) coeff));
                 })
@@ -133,7 +133,7 @@ public final class CommonRewrites {
                 .tid(rewriteTID)
                 .rng(A)
                 .match(FROM_INST_TID, SUM_INST_TID)
-                .optimize("mql_sum", (space, dp, coeff) -> {
+                .optimize("from_sum", (space, dp, coeff) -> {
                     final Number sum = sumFunction.apply(space, dp);
                     return (sum instanceof Double || sum instanceof Float)
                             ? real(sum.doubleValue())
@@ -163,7 +163,7 @@ public final class CommonRewrites {
                 .tid(rewriteTID)
                 .rng(REAL_TID)
                 .match(FROM_INST_TID, MEAN_INST_TID)
-                .optimize("mql_mean", (space, dp, coeff) -> {
+                .optimize("from_mean", (space, dp, coeff) -> {
                     final double mean = meanFunction.apply(space, dp);
                     return real(mean);
                 })
@@ -199,7 +199,7 @@ public final class CommonRewrites {
      * <pre>{@code
      * CommonRewrites.limitRewrite(
      *     tbleSpace.class,
-     *     TBLE_ISA_REWRITE_TID.extend("mql_limit"),
+     *     TBLE_ISA_REWRITE_TID.extend("sql_limit"),
      *     (space, furi, limit) -> {
      *         String table = furi.segments().getFirst();
      *         String sql = "SELECT * FROM " + table + " LIMIT " + limit;
