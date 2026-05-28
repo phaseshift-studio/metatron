@@ -1,7 +1,0 @@
-[
- name=>'Alice',
- age=>30,
- title=>'Engineer',
- salary=>75000.0000,
- company=>!*http://localhost:31884/companies/101,
- active=>true]
