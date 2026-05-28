@@ -356,12 +356,12 @@ public class tbleSpace extends AbstractSpace<Connection> implements SchemaSpace 
                             }
                             this.existingTableSchema.write(this.sjvm(), aligned, obj);
                         } else {
-                            writeKV(pattern, obj);
+                            writeKV(aligned, obj);
                         }
 
                     } else {
                         // ── key-value path ──
-                        writeKV(pattern, obj);
+                        writeKV(aligned, obj);
                     }
                 }
             } catch (final SQLException e) {
@@ -415,7 +415,7 @@ public class tbleSpace extends AbstractSpace<Connection> implements SchemaSpace 
                 }
 
                 // ── key-value path ──
-                return collectResults(this.schema.read(this.sjvm(), pattern), pattern);
+                return collectResults(this.schema.read(this.sjvm(), aligned), pattern);
 
             } catch (final Exception e) {
                 throw MTronException.of(e);
@@ -431,18 +431,21 @@ public class tbleSpace extends AbstractSpace<Connection> implements SchemaSpace 
                                            final fURI pattern) {
         final List<IdObj> all = new ArrayList<>();
         raw.forEachRemaining(kv -> {
+            // Convert internal URI (without scheme prefix) back to external URI
+            // so that fURI.test() and unrollPoly() work against the original pattern.
+            final fURI external = Space.Helper.routeToSpace(kv.furi(), this.routes());
             if (pattern.hasPattern()) {
                 // Wildcard query: include the base if it matches the pattern,
                 // then independently unroll any poly children (they may match
                 // even when the parent doesn't).
-                if (kv.furi().test(pattern.asNode()))
-                    all.add(kv);
+                if (external.test(pattern.asNode()))
+                    all.add(IdObj.of(external, kv.obj()));
                 if (kv.obj().isPoly())
                     all.addAll(Space.Helper.unrollPoly(
-                            kv.furi(), kv.obj().as(), pattern.asNode()));
+                            external, kv.obj().as(), pattern.asNode()));
             } else {
-                // Exact match — add directly
-                all.add(kv);
+                // Exact match — convert and add
+                all.add(IdObj.of(external, kv.obj()));
             }
         });
         return all.iterator();

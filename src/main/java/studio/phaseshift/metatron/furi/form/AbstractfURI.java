@@ -415,7 +415,6 @@ public abstract class AbstractfURI implements fURI {
         if (prefix.hasPattern()) {
             fURI running = this;
             while (!running.isEmpty() && running.segmentLength() > 0) {
-                //System.out.println("running: " + running + " prefix: " + prefix);
                 if (running.bimatches(prefix))
                     return this.hasPrefix(running);
                 running = running.isBranch() ? running.asNode() : running.retract(1).asBranch();

@@ -340,7 +340,6 @@ public class mParser {
     public static Parser m_call_prefix(final Parser objParser, final fURI headTID) {
         return seq(opt(objParser, null), opt(of(".").trim(), '.'), opt(m_code(), null), m_vid_postfix()).map(t -> {
             if (((List) t).get(0) instanceof List) {
-                System.out.println(t);
                 return noobj();
             }
             final Obj first = mParser.pick(t, 0);

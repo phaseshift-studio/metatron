@@ -56,7 +56,6 @@ public class MType extends MObj implements Type {
         final fURI bigTID = null == tid ? vid.big() : tid.big();
         final fURI bigVID = null == vid ? null : vid.big();
         final fURI checkID = null == bigVID ? bigTID : bigVID;
-        //System.out.println("CC: " + tid +"  "+ vid + "  "+ checkID);
         assert checkID != null;
         if (!checkID.basePath().equals(REL_TID) && !checkID.basePath().equals(LST_TID) && !checkID.basePath().equals(REC_TID) && !checkID.poly().isEmpty())
             throw MTronException.of("only poly types can have polynomials: %s {{r}}X=>{{X}} %s", checkID.basePath(), checkID.poly());

@@ -340,7 +340,6 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
         if (prefix.hasPattern()) {
             fURI running = this;
             while (!running.isEmpty() && running.segmentLength() > 0) {
-                //System.out.println("running: " + running + " prefix: " + prefix);
                 if (running.bimatches(prefix))
                     return this.removePrefix(running);
                 running = running.isBranch() ? running.asNode() : running.retract(1).asBranch();

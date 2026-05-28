@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -42,78 +42,79 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
  */
 public class fURIAwareIndexedSchema implements TableSchema {
 
-    private static final int MAX_SEGMENTS = 5;
+    private static final int MAX_SEGMENTS = 7;
     private static final String TABLE_NAME = "objs";
     private static final ObjmtronSerializer SERIALIZER = new ObjmtronSerializer();
 
     @Override
     public void initialize(final Connection conn) throws SQLException {
         final String createTable = """
-                CREATE TABLE IF NOT EXISTS objs (
-                    furi VARCHAR(512) NOT NULL PRIMARY KEY,
-                    obj TEXT NOT NULL,
-                    -- Virtual generated columns for path segments
-                    seg1 VARCHAR(128) AS (
-                        CASE
-                            WHEN SUBSTRING_INDEX(SUBSTRING_INDEX(furi, '/', 2), '/', -1) = '' THEN NULL
-                            ELSE SUBSTRING_INDEX(SUBSTRING_INDEX(furi, '/', 2), '/', -1)
-                        END
-                    ) VIRTUAL,
-                    seg2 VARCHAR(128) AS (
-                        CASE
-                            WHEN SUBSTRING_INDEX(SUBSTRING_INDEX(furi, '/', 3), '/', -1) = '' THEN NULL
-                            WHEN SUBSTRING_INDEX(SUBSTRING_INDEX(furi, '/', 3), '/', -1) = SUBSTRING_INDEX(SUBSTRING_INDEX(furi, '/', 2), '/', -1) THEN NULL
-                            ELSE SUBSTRING_INDEX(SUBSTRING_INDEX(furi, '/', 3), '/', -1)
-                        END
-                    ) VIRTUAL,
-                    seg3 VARCHAR(128) AS (
-                        CASE
-                            WHEN SUBSTRING_INDEX(SUBSTRING_INDEX(furi, '/', 4), '/', -1) = '' THEN NULL
-                            WHEN SUBSTRING_INDEX(SUBSTRING_INDEX(furi, '/', 4), '/', -1) = SUBSTRING_INDEX(SUBSTRING_INDEX(furi, '/', 3), '/', -1) THEN NULL
-                            ELSE SUBSTRING_INDEX(SUBSTRING_INDEX(furi, '/', 4), '/', -1)
-                        END
-                    ) VIRTUAL,
-                    seg4 VARCHAR(128) AS (
-                        CASE
-                            WHEN SUBSTRING_INDEX(SUBSTRING_INDEX(furi, '/', 5), '/', -1) = '' THEN NULL
-                            WHEN SUBSTRING_INDEX(SUBSTRING_INDEX(furi, '/', 5), '/', -1) = SUBSTRING_INDEX(SUBSTRING_INDEX(furi, '/', 4), '/', -1) THEN NULL
-                            ELSE SUBSTRING_INDEX(SUBSTRING_INDEX(furi, '/', 5), '/', -1)
-                        END
-                    ) VIRTUAL,
-                    seg5 VARCHAR(128) AS (
-                        CASE
-                            WHEN SUBSTRING_INDEX(SUBSTRING_INDEX(furi, '/', 6), '/', -1) = '' THEN NULL
-                            WHEN SUBSTRING_INDEX(SUBSTRING_INDEX(furi, '/', 6), '/', -1) = SUBSTRING_INDEX(SUBSTRING_INDEX(furi, '/', 5), '/', -1) THEN NULL
-                            ELSE SUBSTRING_INDEX(SUBSTRING_INDEX(furi, '/', 6), '/', -1)
-                        END
-                    ) VIRTUAL,
-                     seg6 VARCHAR(128) AS (
-                        CASE
-                            WHEN SUBSTRING_INDEX(SUBSTRING_INDEX(furi, '/', 7), '/', -1) = '' THEN NULL
-                            WHEN SUBSTRING_INDEX(SUBSTRING_INDEX(furi, '/', 7), '/', -1) = SUBSTRING_INDEX(SUBSTRING_INDEX(furi, '/', 6), '/', -1) THEN NULL
-                            ELSE SUBSTRING_INDEX(SUBSTRING_INDEX(furi, '/', 7), '/', -1)
-                        END
-                    ) VIRTUAL,
-                     seg7 VARCHAR(128) AS (
-                        CASE
-                            WHEN SUBSTRING_INDEX(SUBSTRING_INDEX(furi, '/', 8), '/', -1) = '' THEN NULL
-                            WHEN SUBSTRING_INDEX(SUBSTRING_INDEX(furi, '/', 8), '/', -1) = SUBSTRING_INDEX(SUBSTRING_INDEX(furi, '/', 7), '/', -1) THEN NULL
-                            ELSE SUBSTRING_INDEX(SUBSTRING_INDEX(furi, '/', 8), '/', -1)
-                        END
-                    ) VIRTUAL,
-                    -- Indexes on virtual columns for fast pattern matching
-                    INDEX idx_seg1 (seg1),
-                    INDEX idx_seg2 (seg2),
-                    INDEX idx_seg3 (seg3),
-                    INDEX idx_seg4 (seg4),
-                    INDEX idx_seg5 (seg5),
-                    INDEX idx_seg6 (seg6),
-                    INDEX idx_seg7 (seg7),
-                    -- Composite indexes for common multi-segment patterns
-                    INDEX idx_seg1_seg2 (seg1, seg2),
-                    INDEX idx_seg1_seg2_seg3 (seg1, seg2, seg3)
-                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-                """;
+                                   CREATE TABLE IF NOT EXISTS objs (
+                                       furi VARCHAR(512) NOT NULL PRIMARY KEY,
+                                       obj TEXT NOT NULL,
+                                       -- Virtual generated columns for path segments
+                                       seg1 VARCHAR(128) AS (
+                                           CASE
+                                               WHEN SUBSTRING_INDEX(SUBSTRING_INDEX(furi, '/', 2), '/', -1) = '' THEN NULL
+                                               ELSE SUBSTRING_INDEX(SUBSTRING_INDEX(furi, '/', 2), '/', -1)
+                                           END
+                                       ) VIRTUAL,
+                                       seg2 VARCHAR(128) AS (
+                                           CASE
+                                               WHEN SUBSTRING_INDEX(SUBSTRING_INDEX(furi, '/', 3), '/', -1) = '' THEN NULL
+                                               WHEN SUBSTRING_INDEX(SUBSTRING_INDEX(furi, '/', 3), '/', -1) = SUBSTRING_INDEX(SUBSTRING_INDEX(furi, '/', 2), '/', -1) THEN NULL
+                                               ELSE SUBSTRING_INDEX(SUBSTRING_INDEX(furi, '/', 3), '/', -1)
+                                           END
+                                       ) VIRTUAL,
+                                       seg3 VARCHAR(128) AS (
+                                           CASE
+                                               WHEN SUBSTRING_INDEX(SUBSTRING_INDEX(furi, '/', 4), '/', -1) = '' THEN NULL
+                                               WHEN SUBSTRING_INDEX(SUBSTRING_INDEX(furi, '/', 4), '/', -1) = SUBSTRING_INDEX(SUBSTRING_INDEX(furi, '/', 3), '/', -1) THEN NULL
+                                               ELSE SUBSTRING_INDEX(SUBSTRING_INDEX(furi, '/', 4), '/', -1)
+                                           END
+                                       ) VIRTUAL,
+                                       seg4 VARCHAR(128) AS (
+                                           CASE
+                                               WHEN SUBSTRING_INDEX(SUBSTRING_INDEX(furi, '/', 5), '/', -1) = '' THEN NULL
+                                               WHEN SUBSTRING_INDEX(SUBSTRING_INDEX(furi, '/', 5), '/', -1) = SUBSTRING_INDEX(SUBSTRING_INDEX(furi, '/', 4), '/', -1) THEN NULL
+                                               ELSE SUBSTRING_INDEX(SUBSTRING_INDEX(furi, '/', 5), '/', -1)
+                                           END
+                                       ) VIRTUAL,
+                                       seg5 VARCHAR(128) AS (
+                                           CASE
+                                               WHEN SUBSTRING_INDEX(SUBSTRING_INDEX(furi, '/', 6), '/', -1) = '' THEN NULL
+                                               WHEN SUBSTRING_INDEX(SUBSTRING_INDEX(furi, '/', 6), '/', -1) = SUBSTRING_INDEX(SUBSTRING_INDEX(furi, '/', 5), '/', -1) THEN NULL
+                                               ELSE SUBSTRING_INDEX(SUBSTRING_INDEX(furi, '/', 6), '/', -1)
+                                           END
+                                       ) VIRTUAL,
+                                        seg6 VARCHAR(128) AS (
+                                           CASE
+                                               WHEN SUBSTRING_INDEX(SUBSTRING_INDEX(furi, '/', 7), '/', -1) = '' THEN NULL
+                                               WHEN SUBSTRING_INDEX(SUBSTRING_INDEX(furi, '/', 7), '/', -1) = SUBSTRING_INDEX(SUBSTRING_INDEX(furi, '/', 6), '/', -1) THEN NULL
+                                               ELSE SUBSTRING_INDEX(SUBSTRING_INDEX(furi, '/', 7), '/', -1)
+                                           END
+                                       ) VIRTUAL,
+                                        seg7 VARCHAR(128) AS (
+                                           CASE
+                                               WHEN SUBSTRING_INDEX(SUBSTRING_INDEX(furi, '/', 8), '/', -1) = '' THEN NULL
+                                               WHEN SUBSTRING_INDEX(SUBSTRING_INDEX(furi, '/', 8), '/', -1) = SUBSTRING_INDEX(SUBSTRING_INDEX(furi, '/', 7), '/', -1) THEN NULL
+                                               ELSE SUBSTRING_INDEX(SUBSTRING_INDEX(furi, '/', 8), '/', -1)
+                                           END
+                                       ) VIRTUAL,
+                                       -- Indexes on virtual columns for fast pattern matching
+                                       INDEX idx_seg1 (seg1),
+                                       INDEX idx_seg2 (seg2),
+                                       INDEX idx_seg3 (seg3),
+                                       INDEX idx_seg4 (seg4),
+                                       INDEX idx_seg5 (seg5),
+                                       INDEX idx_seg6 (seg6),
+                                       INDEX idx_seg7 (seg7),
+                                       -- Composite indexes for common multi-segment patterns
+                                       INDEX idx_seg1_seg2 (seg1, seg2),
+                                       INDEX idx_seg1_seg2_seg3 (seg1, seg2, seg3),
+                                       INDEX idx_seg1_seg2_seg3_seg4 (seg1, seg2, seg3, seg4)
+                                   ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+                                   """;
 
         try (final Statement stmt = conn.createStatement()) {
             stmt.executeUpdate(createTable);
@@ -127,7 +128,7 @@ public class fURIAwareIndexedSchema implements TableSchema {
         }
 
         final String sql = "INSERT INTO " + TABLE_NAME + " (furi, obj) VALUES (?, ?) " +
-                           "ON DUPLICATE KEY UPDATE obj = VALUES(obj);";
+                "ON DUPLICATE KEY UPDATE obj = VALUES(obj);";
 
         try (final PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, furi.toString());
@@ -169,35 +170,40 @@ public class fURIAwareIndexedSchema implements TableSchema {
      * - /sensor/+/# -> matches /sensor/kitchen/temperature, /sensor/bedroom/humidity/current
      */
     private Iterator<Space.IdObj> readMqttPattern(final Connection conn, final fURI pattern) throws SQLException {
-        final String patternStr = pattern.toString();
-
         // Build WHERE clause based on pattern segments
         final StringBuilder whereClause = new StringBuilder();
         final List<String> params = new ArrayList<>();
         boolean hasMultiLevelWildcard = false;
+        boolean hasWildcard = false;
         int segmentIndex = 1; // Database columns are seg1, seg2, etc.
 
-        for (int i = 0; i < Math.min(pattern.segmentLength(), MAX_SEGMENTS + 1); i++) {
-            final String seg = pattern.asRelativeNode().path().get(i);
+        // DB generated columns use SUBSTRING_INDEX(furi, '/', N) where N = segmentIndex+1.
+        // For seg1, N=2 extracts the SECOND slash-delimited element, skipping element 0
+        // (the scheme+namespace prefix or leading empty for absolute URIs).
+        // Therefore we start from path index 1 to align with DB seg1.
+        final List<String> pathString = pattern.asRelativeNode().path();
+        for (int i = 1; i < Math.min(pathString.size(), MAX_SEGMENTS + 2); i++) {
+            final String seg = pathString.get(i);
 
             if (seg.isEmpty()) {
-                continue; // Skip empty segments (leading slash)
+                continue;
             }
 
             if (seg.equals("#")) {
                 // Multi-level wildcard - matches everything from here on
                 hasMultiLevelWildcard = true;
+                hasWildcard = true;
                 break;
             } else if (seg.equals("+")) {
-                // Single-level wildcard - segment must exist but can be anything
-                if (whereClause.length() > 0) {
-                    whereClause.append(" AND ");
-                }
-                whereClause.append("seg").append(segmentIndex).append(" IS NOT NULL");
-                segmentIndex++;
+                // Single-level wildcard — don't enforce IS NOT NULL in SQL.
+                // The KV store stores whole polys at parent URIs (e.g. kv/test/a
+                // contains [x=>1,y=>2,z=>3]), so sub-field paths (kv/test/a/x)
+                // don't exist as separate DB rows.  Java-level unrollPoly
+                // decomposes polys after the SQL returns the parent row.
+                hasWildcard = true;
             } else {
                 // Exact segment match
-                if (whereClause.length() > 0) {
+                if (!whereClause.isEmpty()) {
                     whereClause.append(" AND ");
                 }
                 whereClause.append("seg").append(segmentIndex).append(" = ?");
@@ -206,16 +212,18 @@ public class fURIAwareIndexedSchema implements TableSchema {
             }
         }
 
-        // If no multi-level wildcard, ensure no extra segments exist
-        if (!hasMultiLevelWildcard && segmentIndex <= MAX_SEGMENTS) {
-            if (whereClause.length() > 0) {
+        // Only enforce no-extra-segments when there are no wildcards.
+        // Wildcards signal "match anything deeper" so we must not restrict
+        // beyond the last exact segment.
+        if (!hasMultiLevelWildcard && !hasWildcard && segmentIndex <= MAX_SEGMENTS) {
+            if (!whereClause.isEmpty()) {
                 whereClause.append(" AND ");
             }
             whereClause.append("seg").append(segmentIndex).append(" IS NULL");
         }
 
         final String sql = "SELECT furi, obj FROM " + TABLE_NAME +
-                           (whereClause.length() > 0 ? " WHERE " + whereClause : "") + ";";
+                (whereClause.length() > 0 ? " WHERE " + whereClause : "") + ";";
 
         final PreparedStatement stmt = conn.prepareStatement(sql);
         for (int i = 0; i < params.size(); i++) {
@@ -226,11 +234,11 @@ public class fURIAwareIndexedSchema implements TableSchema {
         final List<Space.IdObj> results = new ArrayList<>();
 
         while (rs.next()) {
-            final String furiStr = rs.getString("furi");
+            final fURI furiStr = f(rs.getString("furi"));
             // Double-check pattern match (for patterns beyond MAX_SEGMENTS)
-            if (matchesMqttPattern(furiStr, patternStr)) {
-                results.add(Space.IdObj.of(f(furiStr), SERIALIZER.read(rs.getString("obj"))));
-            }
+            //if (f(furiStr.pathString()).test(f(pattern.asNode().pathString()))) {
+                results.add(Space.IdObj.of(furiStr, SERIALIZER.read(rs.getString("obj"))));
+            //}
         }
 
         rs.close();
@@ -256,49 +264,5 @@ public class fURIAwareIndexedSchema implements TableSchema {
     @Override
     public String version() {
         return "1.0-mqtt";
-    }
-
-    /**
-     * Check if a topic matches an MQTT pattern.
-     * Supports + (single-level wildcard) and # (multi-level wildcard).
-     *
-     * @param topic   the topic to test
-     * @param pattern the MQTT pattern
-     * @return true if topic matches pattern
-     */
-    public static boolean matchesMqttPattern(final String topic, final String pattern) {
-        if(Objects.equals(topic, pattern))
-            return true;
-        final fURI topicfURI = f(topic);
-        final fURI patternfURI = f(pattern);
-
-        int ti = 0, pi = 0;
-
-        while (ti < topicfURI.pathLength() && pi < patternfURI.pathLength()) {
-            final String patternSeg = patternfURI.path().get(pi);
-            if (patternSeg.equals("#")) {
-                // Multi-level wildcard matches everything remaining
-                return true;
-            } else if (patternSeg.equals("+")) {
-                // Single-level wildcard matches one segment
-                ti++;
-                pi++;
-            } else if (topicfURI.path().get(ti).equals(patternSeg)) {
-                // Exact match
-                ti++;
-                pi++;
-            } else {
-                // No match
-                return false;
-            }
-        }
-
-        // Check if we consumed both topic and pattern
-        // Special case: pattern ending with # can match shorter topics
-        if (pi < patternfURI.pathLength() && patternfURI.path().get(pi).equals("#")) {
-            return true;
-        }
-
-        return ti == topicfURI.pathLength() && pi == patternfURI.pathLength();
     }
 }

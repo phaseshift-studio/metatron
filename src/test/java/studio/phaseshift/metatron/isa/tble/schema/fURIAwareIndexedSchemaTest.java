@@ -194,7 +194,7 @@ public class fURIAwareIndexedSchemaTest extends AbstractMetatronTest {
             "/sensor/+/temperature/#         | /sensor/kitchen/humidity        | false",
     }, delimiter = '|')
     public void testMqttPatternMatching(final String pattern, final String topic, final boolean shouldMatch) {
-        final boolean matches = fURIAwareIndexedSchema.matchesMqttPattern(topic.trim(), pattern.trim());
+        final boolean matches = f(topic).test(f(pattern.trim()));
         LOG.debug("pattern: %s, topic: %s, matches: %s (expected: %s)", pattern.trim(), topic.trim(), matches, shouldMatch);
         assertEquals(shouldMatch, matches, String.format("Pattern %s does not match topic %s", pattern.trim(), topic.trim()));
     }
@@ -202,24 +202,24 @@ public class fURIAwareIndexedSchemaTest extends AbstractMetatronTest {
     @Test
     public void testMqttPatternEdgeCases() {
         // Empty segments
-        assertTrue(fURIAwareIndexedSchema.matchesMqttPattern("/a/b", "/a/b"));
-        assertFalse(fURIAwareIndexedSchema.matchesMqttPattern("/a/b", "/a/b/c"));
+        assertTrue(f("/a/b").test(f("/a/b")));
+        assertFalse(f("/a/b").test(f("/a/b/c")));
 
         // Multi-level wildcard at end
-        assertTrue(fURIAwareIndexedSchema.matchesMqttPattern("/a/b/c", "/a/#"));
-        assertTrue(fURIAwareIndexedSchema.matchesMqttPattern("/a", "/a/#"));
+        assertTrue(f("/a/b/c").test(f("/a/#")));
+        assertTrue(f("/a").test(f("/a/#")));
 
         // Single-level wildcard
-        assertTrue(fURIAwareIndexedSchema.matchesMqttPattern("/a/b/c", "/a/+/c"));
-        assertFalse(fURIAwareIndexedSchema.matchesMqttPattern("/a/b/c/d", "/a/+/c"));
+        assertTrue(f("/a/b/c").test(f("/a/+/c")));
+        assertFalse(f("/a/b/c/d").test(f("/a/+/c")));
 
         // Multiple single-level wildcards
-        assertTrue(fURIAwareIndexedSchema.matchesMqttPattern("/a/b/c/d", "/+/+/+/+"));
-        assertFalse(fURIAwareIndexedSchema.matchesMqttPattern("/a/b/c", "/+/+/+/+"));
+        assertTrue(f("/a/b/c/d").test(f("/+/+/+/+")));
+        assertFalse(f("/a/b/c").test(f("/+/+/+/+")));
 
         // Combination
-        assertTrue(fURIAwareIndexedSchema.matchesMqttPattern("/a/b/c/d/e", "/a/+/c/#"));
-        assertFalse(fURIAwareIndexedSchema.matchesMqttPattern("/a/b/d/e", "/a/+/c/#"));
+        assertTrue(f("/a/b/c/d/e").test(f("/a/+/c/#")));
+        assertFalse(f("/a/b/d/e").test(f("/a/+/c/#")));
     }
 
     private double extractValue(final String json) {

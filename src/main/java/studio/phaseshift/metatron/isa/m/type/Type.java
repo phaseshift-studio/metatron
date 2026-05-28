@@ -36,8 +36,7 @@ import static studio.phaseshift.metatron.Tokens.CTOR;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
-import static studio.phaseshift.metatron.isa.m.mInstSet.ALL_TYPE;
-import static studio.phaseshift.metatron.isa.m.mInstSet.ISA_INST_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
@@ -349,7 +348,7 @@ public interface Type extends Obj {
         public Builder predicate(final BiFunction<Obj, Inst, Obj> predicate) {
             if (null == this.vid)
                 throw MTronException.of("vid must be set prior to specifying predicate");
-            return this.predicate(instC(this.vid.extend("pred").dom(ALL.maybe()).rng(this.vid), lst(), predicate));
+            return this.predicate(instC(INST_PRED_TID.dom(ALL.maybe()).rng(this.vid), lst(), predicate));
         }
 
         public Builder isaPredicate(final Obj predicate) {
@@ -364,13 +363,13 @@ public interface Type extends Obj {
         public Builder constructor(final Function<Obj, Obj> function) {
             if (null == this.vid)
                 throw MTronException.of("vid must be set prior to specifying constructor");
-            return this.constructor(instC(this.vid.extend(CTOR).dom(ALL.maybe()).rng(this.vid), lst(T(ALL)), (lhs, inst) -> function.apply(inst.arg(0))));
+            return this.constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(this.vid), lst(T(ALL)), (lhs, inst) -> function.apply(inst.arg(0))));
         }
 
         public Builder constructor(final Supplier<Obj> supplier) {
             if (null == this.vid)
                 throw MTronException.of("vid must be set prior to specifying constructor");
-            return this.constructor(instC(this.vid.extend(CTOR).dom(ALL.maybe()).rng(this.vid), lst(), (lhs, inst) -> supplier.get()));
+            return this.constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(this.vid), lst(), (lhs, inst) -> supplier.get()));
         }
 
         public Builder inst(final fURI tid, final Poly<?, ?> args, final BiFunction<Obj, Inst, Obj> func) {

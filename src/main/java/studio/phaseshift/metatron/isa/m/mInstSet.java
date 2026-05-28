@@ -85,6 +85,7 @@ public class mInstSet extends AbstractInstSet {
     public static final fURI SPACE_TID = M_ISA_TID.extend("space");
     /// ////////////////////////////////////////////////////////
     public static final fURI INST_CTOR_TID = M_ISA_INST_TID.extend(CTOR);
+    public static final fURI INST_PRED_TID = M_ISA_INST_TID.extend("pred");
     public static final fURI LIKE_INST_TID = M_ISA_INST_TID.extend("like");
     public static final fURI CAUSE_INST_TID = M_ISA_INST_TID.extend("cause");
     public static final fURI NATIVE_INST_TID = M_ISA_INST_TID.extend("native");
