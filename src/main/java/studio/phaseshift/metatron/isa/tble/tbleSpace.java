@@ -101,7 +101,7 @@ public class tbleSpace extends AbstractSpace<Connection> implements SchemaSpace 
     public static final String MARIADB = "mariadb";
     public static final String MYSQL = "mysql";
     public static final String POSTGRESQL = "postgresql";
-    public static final String SQLITE = "sqlite";
+    //public static final String SQLITE = "sqlite";
 
     // ---- Type system -----------------------------------------------------------
 
