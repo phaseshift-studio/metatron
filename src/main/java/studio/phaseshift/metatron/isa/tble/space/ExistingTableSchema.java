@@ -54,16 +54,30 @@ import static studio.phaseshift.metatron.isa.tble.tbleInstSet.TABLE_TID;
  * Path format: /table_name/row_id[/field_name]
  * <p>
  * <b>Read operations:</b>
- * - /users/123 → reads row with primary key 123 from users table as a record
- * - /users/+ → reads all rows from users table
+ * <ul>
+ *   <li>{@code /users/123} → {@code SELECT * FROM users WHERE pk = ?}
+ *       — full row as a record</li>
+ *   <li>{@code /users/123/name} → {@code SELECT pk, name FROM users WHERE pk = ?}
+ *       — single-column read, no full-row fetch</li>
+ *   <li>{@code /users/+} → {@code SELECT * FROM users} — all rows</li>
+ *   <li>{@code /users/+/name} → {@code SELECT pk, name FROM users}
+ *       — single-column projection across all rows</li>
+ * </ul>
  * <p>
  * <b>Write operations:</b>
- * - /users/123 → [name=>marko,age=>29] (update/insert entire row)
- * - /users/123/name → marko (update single field)
+ * <ul>
+ *   <li>{@code /users/123 → [name=>marko,age=>29]}
+ *       — reads the current row, diffs against the incoming Rec, and
+ *       UPDATEs only the columns that actually changed (INSERT if new)</li>
+ *   <li>{@code /users/123/name → marko}
+ *       — {@code UPDATE users SET name = ? WHERE pk = ?} (single field)</li>
+ *   <li>{@code /users/123 → noobj}
+ *       — {@code DELETE FROM users WHERE pk = ?}</li>
+ * </ul>
  * <p>
  * SQL rows are converted to metatron records where column names are keys.
- * Writes support both full row updates and individual field updates.
- * The Space.Helper.resolveWrite() method handles poly unrolling automatically.
+ * The diff-based write optimization avoids rewriting unchanged columns,
+ * reducing write amplification for partial Rec updates.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
@@ -228,7 +242,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
     /**
      * Resolve a space-relative fURI into a {@link DataPath} when the
      * table is known to this schema.  Returns {@code null} when the
-     * table name is not a recognised table.
+     * table name is not a recognized table.
      */
     private DataPath resolveDataPath(final fURI furi) {
         final DataPath dp = DataPath.ofSpaceRelative(furi, null);
@@ -380,27 +394,25 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
             this.space.logger().debug("using primary key from URI: %s = %s", pkColumn, pkValue);
         }
 
-        final String checkSql = String.format("SELECT COUNT(*) FROM %s WHERE %s = ?", metadata.tableName, pkColumn);
-        final boolean exists;
-        try (final PreparedStatement stmt = conn.prepareStatement(checkSql)) {
-            final ColumnMetadata pkColMeta = metadata.columns.stream()
-                    .filter(c -> c.name.equals(pkColumn)).findFirst().orElseThrow();
-            if (pkColMeta.sqlType == Types.INTEGER || pkColMeta.sqlType == Types.BIGINT ||
-                    pkColMeta.sqlType == Types.SMALLINT || pkColMeta.sqlType == Types.TINYINT) {
-                stmt.setLong(1, Long.parseLong(pkValue));
-            } else {
-                stmt.setString(1, pkValue);
-            }
-            try (final ResultSet rs = stmt.executeQuery()) {
-                exists = rs.next() && rs.getInt(1) > 0;
-            }
+        final Rec current = readCurrentRow(conn, metadata, pkColumn, pkValue);
+        if (current == null)
+            return insertRow(conn, metadata, pkValue, rec);
+
+        // Diff: only write columns that changed from the current row
+        final Map<String, Obj> changed = new LinkedHashMap<>();
+        final Map<Obj, Obj> currentMap = current.recValue();
+        for (final Map.Entry<Obj, Obj> entry : rec.recValue().entrySet()) {
+            final String fieldName = entry.getKey().asUri().uriValue().name();
+            final ColumnMetadata col = metadata.columns.stream()
+                    .filter(c -> c.name.equalsIgnoreCase(fieldName)).findFirst().orElse(null);
+            if (col == null) continue;
+            final Obj currentVal = currentMap.get(entry.getKey());
+            if (!entry.getValue().equals(currentVal))
+                changed.put(col.name, entry.getValue());
         }
 
-        if (exists) {
-            return updateRow(conn, metadata, pkValue, rec);
-        } else {
-            return insertRow(conn, metadata, pkValue, rec);
-        }
+        if (changed.isEmpty()) return 0;
+        return updateRowDiffed(conn, metadata, pkColumn, pkValue, changed);
     }
 
     private void trackLogicalType(final TableMetadata metadata, final String columnName,
@@ -446,10 +458,48 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
 
     private int writeRow(final Connection conn, final TableMetadata metadata, final String rowId, final Rec rec) throws SQLException {
         final String pkColumn = metadata.primaryKeys.getFirst();
-        final String checkSql = String.format("SELECT COUNT(*) FROM %s WHERE %s = ?", metadata.tableName, pkColumn);
 
-        final boolean exists;
-        try (final PreparedStatement stmt = conn.prepareStatement(checkSql)) {
+        // Read the current row to diff against — replaces the old SELECT COUNT(*)
+        // and enables writing only columns that actually changed.
+        final Rec current = readCurrentRow(conn, metadata, pkColumn, rowId);
+        if (current == null)
+            return insertRow(conn, metadata, rowId, rec);
+
+        // Diff: only include fields whose values differ from the current row
+        final Map<String, Obj> changed = new LinkedHashMap<>();
+        final Map<Obj, Obj> currentMap = current.recValue();
+        for (final Map.Entry<Obj, Obj> entry : rec.recValue().entrySet()) {
+            if (!entry.getKey().isUri()) continue;
+            final String fieldName = entry.getKey().asUri().uriValue().name();
+            if (fieldName == null || fieldName.isEmpty()) continue;
+
+            final ColumnMetadata column = metadata.columns.stream()
+                    .filter(c -> c.name.equalsIgnoreCase(fieldName)).findFirst().orElse(null);
+            if (column == null) continue;
+
+            final Obj newValue = entry.getValue();
+            final Obj currentValue = currentMap.get(entry.getKey());
+            if (!newValue.equals(currentValue))
+                changed.put(column.name, newValue);
+        }
+
+        if (changed.isEmpty()) {
+            this.space.logger().debug("no changes for row %s in %s — skipping UPDATE", rowId, metadata.tableName);
+            return 0;
+        }
+
+        return updateRowDiffed(conn, metadata, pkColumn, rowId, changed);
+    }
+
+    /**
+     * Read the current row as a metatron {@link Rec}, or {@code null} if the row
+     * does not exist.
+     */
+    private Rec readCurrentRow(final Connection conn, final TableMetadata metadata,
+                               final String pkColumn, final String rowId) throws SQLException {
+        final String sql = String.format("SELECT * FROM %s WHERE %s = ?",
+                metadata.tableName, pkColumn);
+        try (final PreparedStatement stmt = conn.prepareStatement(sql)) {
             final ColumnMetadata pkColMeta = metadata.columns.stream()
                     .filter(c -> c.name.equals(pkColumn)).findFirst().orElseThrow();
             if (pkColMeta.sqlType == Types.INTEGER || pkColMeta.sqlType == Types.BIGINT ||
@@ -459,18 +509,60 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
                 stmt.setString(1, rowId);
             }
             try (final ResultSet rs = stmt.executeQuery()) {
-                exists = rs.next() && rs.getInt(1) > 0;
+                return rs.next() ? readTableRow(rs, metadata).asRec() : null;
             }
-        }
-
-        if (exists) {
-            return updateRow(conn, metadata, rowId, rec);
-        } else {
-            return insertRow(conn, metadata, rowId, rec);
         }
     }
 
-    private int updateRow(final Connection conn, final TableMetadata metadata, final String rowId, final Rec rec) throws SQLException {
+    /**
+     * Issue an {@code UPDATE} that {@code SET}s only the columns present in {@code changed}.
+     * Called after a diff against the current row determined which fields actually differ.
+     */
+    private int updateRowDiffed(final Connection conn, final TableMetadata metadata,
+                                final String pkColumn, final String rowId,
+                                final Map<String, Obj> changed) throws SQLException {
+        final List<String> setClauses = new ArrayList<>();
+        final List<Tuple.Pair<Obj, ColumnMetadata>> values = new ArrayList<>();
+
+        for (final Map.Entry<String, Obj> entry : changed.entrySet()) {
+            final String colName = entry.getKey();
+            final Obj value = entry.getValue();
+            final ColumnMetadata column = metadata.columns.stream()
+                    .filter(c -> c.name.equalsIgnoreCase(colName)).findFirst().orElseThrow();
+            trackLogicalType(metadata, column.name, value, column.sqlType);
+            setClauses.add(column.name + " = ?");
+            values.add(Tuple.Pair.with(value, column));
+        }
+
+        final String sql = String.format("UPDATE %s SET %s WHERE %s = ?",
+                metadata.tableName, String.join(", ", setClauses), pkColumn);
+
+        try (final PreparedStatement stmt = conn.prepareStatement(sql)) {
+            for (int i = 0; i < values.size(); i++) {
+                final Tuple.Pair<Obj, ColumnMetadata> pair = values.get(i);
+                final Obj value = pair.get0();
+                final ColumnMetadata column = pair.get1();
+                validateColumnWrite(value, column, metadata.tableName);
+                writeParameter(stmt, i + 1, value, column.sqlType);
+            }
+
+            final ColumnMetadata pkColMeta = metadata.columns.stream()
+                    .filter(c -> c.name.equals(pkColumn)).findFirst().orElseThrow();
+            if (pkColMeta.sqlType == Types.INTEGER || pkColMeta.sqlType == Types.BIGINT ||
+                    pkColMeta.sqlType == Types.SMALLINT || pkColMeta.sqlType == Types.TINYINT) {
+                stmt.setLong(values.size() + 1, Long.parseLong(rowId));
+            } else {
+                stmt.setString(values.size() + 1, rowId);
+            }
+
+            final int updated = stmt.executeUpdate();
+            this.space.logger().debug("updated row %s in %s: %d of %d columns changed — %d rows affected",
+                    rowId, metadata.tableName, changed.size(), metadata.columns.size(), updated);
+            return updated;
+        }
+    }
+
+   /* private int updateRow(final Connection conn, final TableMetadata metadata, final String rowId, final Rec rec) throws SQLException {
         final List<String> setClauses = new ArrayList<>();
         final List<Tuple.Pair<Obj, ColumnMetadata>> values = new ArrayList<>();
 
@@ -529,7 +621,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
                     metadata.tableName, rowId, updated);
             return updated;
         }
-    }
+    }*/
 
     private int insertRow(final Connection conn, final TableMetadata metadata, final String rowId, final Rec rec) throws SQLException {
         final List<String> columnNames = new ArrayList<>();
@@ -742,11 +834,6 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
     }
 
     @Override
-    public boolean supportsfURIPatterns() {
-        return false;
-    }
-
-    @Override
     public String version() {
         return "1.0-existing";
     }
@@ -900,7 +987,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
                 .findFirst().orElse(null);
     }
 
-    public List<ForeignKeyMetadata> getForeignKeysForTable(final String tableName) {
+    /*public List<ForeignKeyMetadata> getForeignKeysForTable(final String tableName) {
         final TableMetadata metadata = tableSchemas.get(tableName.toLowerCase());
         if (metadata == null) return Collections.emptyList();
         return metadata.foreignKeys();
@@ -910,5 +997,5 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
         return tableSchemas.values().stream()
                 .flatMap(table -> table.foreignKeys().stream())
                 .toList();
-    }
+    }*/
 }
