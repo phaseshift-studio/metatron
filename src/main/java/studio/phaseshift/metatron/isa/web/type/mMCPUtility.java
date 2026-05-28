@@ -90,7 +90,7 @@ public final class mMCPUtility {
         // ── tools ────────────────────────────────────────────────────────────
         if (!jvm.containsKey(uri(TOOL))) {
             final Rec tools = rec(mutableMap());
-            tools.at(uri("write_memory"), docWrap(instC(vid.extend("write_memory").dom(NOOBJ_TID.zero()).rng(ALL.maybeSome()),
+            tools.at(uri("write_memory"), docWrap(instC(M_ISA_INST_TID.dom(NOOBJ_TID.zero()).rng(ALL.maybeSome()),
                             rec(uri("current_memory"), ALL_TYPE,
                                     uri("previous_memory").maybe().asUri(), URI_TYPE), (lhs, inst) -> {
                                 final Obj previousMemory = Router.readFromSpace(inst.arg(f("previous_memory"), 1).uriValue());
@@ -101,7 +101,7 @@ public final class mMCPUtility {
                     Map.of(uri("current_memory"), "the memory to remember -- a str::T, a markdown::T, etc.",
                             uri("previous_memory"), "a previous memory vid to chain current memory to"),
                     "(experimental) returns a memory relation of the form(current@<vid> => previous@<vid>)@<vid>"), MUTABLE);
-            tools.at(uri("read_memory"), docWrap(instC(vid.extend("read_memory").dom(NOOBJ_TID.zero()).rng(ALL.maybeSome()),
+            tools.at(uri("read_memory"), docWrap(instC(M_ISA_INST_TID.dom(NOOBJ_TID.zero()).rng(ALL.maybeSome()),
                             rec(uri("memory_vid").maybe().asUri(), URI_TYPE), (lhs, inst) -> {
                                 final Obj memId = inst.arg(f("memory_vid"), 0);
                                 if (!memId.isNoObj())
@@ -113,7 +113,7 @@ public final class mMCPUtility {
                     "(experimental) returns the result of reading the provided memory"), MUTABLE);
             // eval_mtron — the foundational tool: evaluate metatron expressions
             tools.at(uri("eval_mtron"), docWrap(instC(
-                            vid.extend("eval_mtron").dom(NOOBJ_TID.zero()).rng(ALL.maybeSome()),
+                            M_ISA_INST_TID.dom(NOOBJ_TID.zero()).rng(ALL.maybeSome()),
                             rec(uri("code"), STR_TYPE), (lhs, inst) -> {
                                 final Obj codeArg = inst.arg(f("code"), 0);
                                 return ObjmtronSerializer.parse(codeArg.toCleanString()).apply();
@@ -121,7 +121,7 @@ public final class mMCPUtility {
                     Map.of(uri(CODE), "mtron code to evaluate"), "returns the result of evaluating the provided mtron expression"), MUTABLE);
             // list_space — return an index of currently accessible spaces
             tools.at(uri("list_space"), docWrap(instC(
-                            vid.extend("list_space").dom(NOOBJ_TID.zero()).rng(ALL.maybe()),
+                            M_ISA_INST_TID.dom(NOOBJ_TID.zero()).rng(ALL.maybe()),
                             lst(), (lhs, inst) -> {
                                 final Map<Obj, Obj> spaces = new LinkedHashMap<>();
                                 Router.global().spaces().jvm().entrySet().forEach(kv -> {
@@ -133,7 +133,7 @@ public final class mMCPUtility {
 
             // router_info — router vid, tid, and space count
             tools.at(uri("router_info"), instC(
-                    vid.extend("router_info").dom(NOOBJ_TID.zero()).rng(ALL.maybe()),
+                    M_ISA_INST_TID.dom(NOOBJ_TID.zero()).rng(ALL.maybe()),
                     lst(), (lhs, inst) -> {
                         if (!Router.loaded()) return str("router not loaded");
                         final Router router = Router.global();
@@ -146,7 +146,7 @@ public final class mMCPUtility {
 
             // find_inst — gets lst of loaded /m instructions and documentation
             tools.at(uri("find_inst"), docWrap(instC(
-                            vid.extend("find_inst").dom(NOOBJ_TID.zero()).rng(ALL.maybe()),
+                            M_ISA_INST_TID.dom(NOOBJ_TID.zero()).rng(ALL.maybe()),
                             rec(uri(PATTERN), URI_TYPE,
                                     uri(DOM).maybe(), URI_TYPE,
                                     uri(RNG).maybe(), URI_TYPE), (lhs, inst) -> {
@@ -169,7 +169,7 @@ public final class mMCPUtility {
                     "find_inst(plus?int<=int)"), MUTABLE);
             // spawn_wsclient — create a websocket client
             tools.at(uri("spawn_wsclient"), docWrap(instC(
-                            vid.extend("spawn_wsclient").dom(NOOBJ_TID.zero()).rng(WS_CLIENT_TID),
+                            M_ISA_INST_TID.dom(NOOBJ_TID.zero()).rng(WS_CLIENT_TID),
                             rec(uri(HOST), URI_TYPE, uri(ON_MESSAGE), INST_TYPE), (lhs, inst) -> new WebSocketRecClient(
                                     new WebSocketRec(
                                             new LinkedHashMap<>(inst.args().jvm()),
@@ -182,7 +182,7 @@ public final class mMCPUtility {
 
             // spawn_wshandler — create a websocket handler
             tools.at(uri("spawn_wshandler"), docWrap(instC(
-                            vid.extend("spawn_wshandler").dom(NOOBJ_TID.zero()).rng(WS_HANDLER_TID),
+                            M_ISA_INST_TID.dom(NOOBJ_TID.zero()).rng(WS_HANDLER_TID),
                             rec(uri(HOST), URI_TYPE, uri(ON_MESSAGE), INST_TYPE), (lhs, inst) -> {
                                 final WebSocketRec server = new WebSocketRec(
                                         new LinkedHashMap<>(inst.args().jvm()),

@@ -32,7 +32,7 @@ import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
-import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.type.InstSet.A;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -59,7 +59,7 @@ public class mtron_httpHandler extends HttpRec {
             .isaPredicate(rec(
                     uri(IN).maybe().asUri(), isa_(CONTENT_TYPE).else_(uri(MIME.MIMEType.APPLICATION_MTRON.value)),
                     uri(OUT).maybe().asUri(), isa_(CONTENT_TYPE).else_(uri(MIME.MIMEType.APPLICATION_MTRON.value))))
-            .constructor(instC(MTRON_HTTP_TID.extend(CTOR).dom(ALL.maybe()).rng(MTRON_HTTP_TID), lst(T(REC_TID)), (lhs, inst) -> {
+            .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(MTRON_HTTP_TID), lst(T(REC_TID)), (lhs, inst) -> {
                 final Map<Obj, Obj> config = new LinkedHashMap<>(inst.arg(0).asRec().jvm());
                 return new mtron_httpHandler(config, inst.arg(0).asRec().vid());
             })).create();
@@ -69,7 +69,7 @@ public class mtron_httpHandler extends HttpRec {
         super(jvm, MTRON_HTTP_TID, vid);
 
         // ON_GET — evaluate mtron code and send result (mirrors mtron_wsHandler.ON_MESSAGE)
-        this.jvm().put(uri(ON_GET), instC(vid.extend(ON_GET).dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL)), (lhs, inst) -> {
+        this.jvm().put(uri(ON_GET), instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL)), (lhs, inst) -> {
             try {
                 final Obj request = inst.arg(0);
                 final Obj rhs = lhs.apply(request);
@@ -85,7 +85,7 @@ public class mtron_httpHandler extends HttpRec {
         }));
 
         // ON_POST — evaluate mtron code and send result
-        this.jvm().put(uri(ON_POST), instC(vid.extend(ON_POST).dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL)), (lhs, inst) -> {
+        this.jvm().put(uri(ON_POST), instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL)), (lhs, inst) -> {
             try {
                 final Obj request = inst.arg(0);
                 final Obj rhs = lhs.apply(request);
@@ -101,7 +101,7 @@ public class mtron_httpHandler extends HttpRec {
         }));
 
         // ON_ERROR — send the error (mirrors mtron_wsHandler.ON_ERROR)
-        this.jvm().put(uri(ON_ERROR), instC(this.vid().extend(ON_ERROR).dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL)), (lhs, inst) -> {
+        this.jvm().put(uri(ON_ERROR), instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL)), (lhs, inst) -> {
             try {
                 this.send(lhs);
                 return noobj();
@@ -112,7 +112,7 @@ public class mtron_httpHandler extends HttpRec {
         }));
 
         // SEND — overrides the base HttpRec default to provide mtron-specific serialization
-        this.jvm().put(uri(SEND), instC(this.vid().extend(SEND).dom(A.maybe()).rng(A.maybe()), lst(T(ALL.maybe())), (lhs, inst) -> {
+        this.jvm().put(uri(SEND), instC(M_ISA_INST_TID.dom(A.maybe()).rng(A.maybe()), lst(T(ALL.maybe())), (lhs, inst) -> {
             try {
                 this.send(inst.arg(0));
                 return inst.arg(0);

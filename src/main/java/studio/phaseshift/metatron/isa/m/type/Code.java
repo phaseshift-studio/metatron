@@ -194,7 +194,7 @@ public interface Code extends Call {
         }
 
         public static Set<Inst> insts() {
-            return new LinkedHashSet<>(List.of(instC(AS_INST_TID.dom(CODE_TID).rng(LST_TID), lst(LST_TYPE), (lhs, inst) -> lst(lhs.asCode().codeValue().stream().map(Obj::<Obj>as).toList()))));
+            return new LinkedHashSet<>(List.of(instC(AS_INST_TID.dom(CODE_TID).rng(LST_TID), lst(LST_TYPE), (lhs, inst) -> lst(lhs.asCode().codeValue().stream().map(Obj::<Obj>as).toList()).c(c->c.mult(lhs.c())))));
         }
 
     }

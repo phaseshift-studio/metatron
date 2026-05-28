@@ -110,8 +110,8 @@ public interface Real extends Mono, Ring.O<Real>, MultGroup.O<Real> {
 
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
-                    instC(AS_INST_TID.dom(REAL_TID).rng(INT_TID), lst(T(INT_TID)), (lhs, inst) -> jnt(lhs.realValue().longValue(), inst.arg(0).tid(), lhs.vid())),
-                    instC(AS_INST_TID.dom(REAL_TID).rng(STR_TID), lst(T(STR_TID)), (lhs, inst) -> str(String.valueOf(lhs.realValue()), inst.arg(0).tid(), lhs.vid())),
+                    instC(AS_INST_TID.dom(REAL_TID).rng(INT_TID), lst(T(INT_TID)), (lhs, inst) -> jnt(lhs.realValue().longValue(), inst.arg(0).vidOrTid().c(c -> c.mult(lhs.c())), lhs.vid())),
+                    instC(AS_INST_TID.dom(REAL_TID).rng(STR_TID), lst(T(STR_TID)), (lhs, inst) -> str(String.valueOf(lhs.realValue()), inst.arg(0).vidOrTid().c(c -> c.mult(lhs.c())), lhs.vid())),
                     instC(GT_INST_TID.dom(REAL_TID).rng(BOOL_TID), lst(T(REAL_TID)), (lhs, inst) -> bool(Inst.Helper.alignLHSType(lhs, inst.arg(0)).filter(l -> l.realValue() > inst.arg(0).realValue()).isPresent())),
                     instC(GTE_INST_TID.dom(REAL_TID).rng(BOOL_TID), lst(T(REAL_TID)), (lhs, inst) -> bool(Inst.Helper.alignLHSType(lhs, inst.arg(0)).filter(l -> l.realValue() >= inst.arg(0).realValue()).isPresent())),
                     instC(LT_INST_TID.dom(REAL_TID).rng(BOOL_TID), lst(T(REAL_TID)), (lhs, inst) -> bool(Inst.Helper.alignLHSType(lhs, inst.arg(0)).filter(l -> l.realValue() < inst.arg(0).realValue()).isPresent())),

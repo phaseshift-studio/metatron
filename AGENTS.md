@@ -12,22 +12,22 @@ A distributed data-oriented computing language and virtual machine built in Java
 ### Commands
 ```bash
 # Build with tests
-mvn install
+./mvnw install
 
 # Skip tests (fast dev loop)
-mvn install -DskipTests
+./mvnw install -DskipTests
 
 # Run all tests
-mvn test
+./mvnw test
 
 # Single test class
-mvn test -Dtest=MemSpaceTest
+./mvnw test -Dtest=MemSpaceTest
 
 # Exclude tests (CI pattern)
-mvn test -Dtest='!httpSpaceTest,!fsSpaceTest'
+./mvnw test -Dtest='!httpSpaceTest,!fsSpaceTest'
 
 # Package uber-jar
-mvn clean package
+./mvnw clean package
 # Output: target/metatron-0.1-SNAPSHOT-jar-with-dependencies.jar
 ```
 
@@ -140,7 +140,7 @@ src/main/java/studio/phaseshift/metatron/
 
 ### Boot Loader Lifecycle
 1. `BootLoader.main()` → parses args, optionally loads boot file
-2. `BootLoader.load()` → creates `/sys` space, loads base ISA (`/m`, `/m/mach`)
+2. `BootLoader.load()` → creates `/sys` space, loads base instruction sets (`/m`, `/m/mach`)
 3. `BootLoader.close()` → teardown hook
 
 ---
@@ -151,7 +151,7 @@ src/main/java/studio/phaseshift/metatron/
 |--:|--:
 | Push/PR to `main` | Push to `*-snapshot` branches, `v*` tags |
 | Oracle JDK 24 | Temurin JDK 25 |
-| `mvn install -Dtest='!httpSpaceTest,!fsSpaceTest'` | `mvn package` + jDeploy bundler |
+| `./mvnw install -Dtest='!httpSpaceTest,!fsSpaceTest'` | `./mvnw package` + jDeploy bundler |
 
 Docker build is **disabled by default** (`skipDocker=true` in pom). Enable with `-DskipDocker=false`.
 

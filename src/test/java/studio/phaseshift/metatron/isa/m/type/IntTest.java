@@ -40,7 +40,11 @@ public class IntTest extends AbstractAlgebraTest<Int> {
             "1.as(str::T)                                                                   % \"1\"",
             "2.as(str::T)                                                                   % \"2\"",
             "1.as(real::T)                                                                  % 1.0",
-            "2.as(real::T)                                                                  % 2.0"
+            "2.as(real::T)                                                                  % 2.0",
+            "{3}2.as(int::T)                                                                % {3}2",
+            "{2}2.as(real::T)                                                               % {2}2.0",
+            "{54,200}2.as(str::T)                                                           % {54,200}\"2\"",
+            "{54,200}2.as(uri::T)                                                           % {54,200}<2>",
     }, delimiter = '%')
     public void testAsInst(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);

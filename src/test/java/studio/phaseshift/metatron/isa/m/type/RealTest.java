@@ -49,7 +49,12 @@ public class RealTest extends AbstractAlgebraTest<Real> {
             "\"metatron\".as(real::T)                 % <ERROR>",
             "\"12.3\".as(real::T)                     % 12.3",
             "false.as(real::T)                        % 0.0",
-            "true.as(real::T)                         % 1.0"
+            "true.as(real::T)                         % 1.0",
+            "{10}-2.0.as(real::T)                     % {10}-2.0",
+            "{15}2.as(real::T)                        % {15}2.0",
+            //"{5}6.as?real{+}<=int{+}(real{10}::T)     % {50}6.0",
+            "{2}false.as(real::T)                     % {2}0.0",
+
     }, delimiter = '%')
     public void testAs(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);

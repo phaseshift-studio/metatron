@@ -125,16 +125,6 @@ public interface Space extends Rec, Closeable {
 
     fURI redirect(final fURI furi, final boolean big);
 
-    default Obj[] write(final Object... kv) {
-        int count = (int) ((double) kv.length / 2.0d);
-        int running = 0;
-        final Obj[] results = new Obj[count];
-        for (int i = 0; i < kv.length; i = i + 2) {
-            results[running++] = this.write((fURI) kv[i], (Obj) kv[i + 1]);
-        }
-        return results;
-    }
-
     @Override
     default void close() {
         try {

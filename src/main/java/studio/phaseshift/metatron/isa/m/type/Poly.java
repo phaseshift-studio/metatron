@@ -239,6 +239,13 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
                 return noobj();
             if (rhs.isNone())
                 return null;
+            // Objs (coefficient collection) with a structural RHS: apply per-element
+            // BEFORE type-matched recursion — ALL_STAR.test(REC_TID) would otherwise
+            // route to updatePolyRecursion which doesn't know how to decompose Objs
+            if (lhs.isObjs() && rhs.isPoly())
+                return objs(lhs.asObjs().elements()
+                        .map(e -> updateRecursion(e, rhs, operation).vid(e.vid()))
+                        .filter(e -> !e.isNoObj()));
             if (lhs.isPoly() && rhs.isPoly() && lhs.type().test(rhs.type()))
                 return updatePolyRecursion(lhs.as(), rhs.as(), operation).vid(lhs.vid());
             return rhs.apply(lhs).vid(lhs.vid());

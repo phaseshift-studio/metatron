@@ -1306,7 +1306,7 @@ public class fURITest extends AbstractMetatronTest {
         final fURI furi = f(original);
         final fURI retracted = furi.retract(1);
         final fURI expectedFuri = f(expected);
-        LOG.warn("retract: %s -> %s (expected: %s)  class=%s  segments=%s  segmentLen=%d  pathLen=%d",
+        LOG.debug("retract: %s -> %s (expected: %s)  class=%s  segments=%s  segmentLen=%d  pathLen=%d",
                 furi, retracted, expectedFuri,
                 furi.getClass().getSimpleName(),
                 furi.segments(), furi.segmentLength(), furi.pathLength());
@@ -1348,7 +1348,7 @@ public class fURITest extends AbstractMetatronTest {
         final fURI vidF = f(vid);
         final fURI baseF = f(base);
         final fURI remainder = vidF.removePrefix(baseF);
-        LOG.warn("removePrefix: %s - %s = %s [actual: %s]", vidF, baseF, expected, remainder);
+        LOG.debug("removePrefix: %s - %s = %s [actual: %s]", vidF, baseF, expected, remainder);
         assertEquals(f(expected), remainder);
 
     }

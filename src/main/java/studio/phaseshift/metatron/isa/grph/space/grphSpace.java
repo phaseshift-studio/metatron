@@ -54,6 +54,7 @@ import studio.phaseshift.metatron.furi.fURI;
  import static studio.phaseshift.metatron.Tokens.*;
  import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
  import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+ import static studio.phaseshift.metatron.isa.m.mInstSet.INST_CTOR_TID;
  import static studio.phaseshift.metatron.isa.m.mInstSet.SPACE_TID;
  import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.failure_;
  import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
@@ -86,7 +87,7 @@ import studio.phaseshift.metatron.furi.fURI;
                      (Obj) uri(ROOT).maybe(), Rec.REC_TYPE,
                      uri(SCHEMA).maybe(), SCHEMA_CONFIG))
              .constructor(
-                     instC(mInstSet.M_ISA_INST_TID.dom(ALL.maybe()).rng(GRPH_SPACE_TID),
+                     instC(INST_CTOR_TID.dom(ALL.maybe()).rng(GRPH_SPACE_TID),
                              lst(isa_(GRAPH_CONFIG).else_(failure_(str("malformed tp3 config"))).tryToInst()),
                              (lhs, inst) -> {
                                  if (inst.arg(0).isFail())

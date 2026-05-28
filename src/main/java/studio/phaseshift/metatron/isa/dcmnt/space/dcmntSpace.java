@@ -290,8 +290,18 @@ public class dcmntSpace extends AbstractSpace<MongoClient> implements SchemaSpac
     public BiFunction<fURI, Obj, Obj> directWriter() {
         return (pattern, obj) -> {
             if (pattern.hasPattern()) {
-                // Pattern write: fan out to all matching fURIs via directReader
-                this.directReader().apply(pattern).forEachRemaining(kv -> this.write(kv.furi(), obj));
+                // Objs (coefficient collection): zip elements to matched keys by position
+                // so that bulk >>= on a wildcard URI writes each merged element to its
+                // corresponding key rather than writing the entire collection to every key
+                if (obj.isObjs()) {
+                    final List<Obj> elems = obj.asObjs().elements().toList();
+                    final Iterator<IdObj> keys = this.directReader().apply(pattern);
+                    int i = 0;
+                    while (keys.hasNext() && i < elems.size())
+                        this.write(keys.next().furi(), elems.get(i++));
+                } else {
+                    this.directReader().apply(pattern).forEachRemaining(kv -> this.write(kv.furi(), obj));
+                }
                 return noobj();
             }
 

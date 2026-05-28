@@ -139,7 +139,7 @@ public final class WidgetCanvas {
                     ? stripped.substring(0, contentWidth - 3) + "..."
                     : content);
         } else {
-            output.append(Graphitty.string("{{-X-}}")).append(content).append("\n");
+            output.append("\r").append(Graphitty.string("{{-X-}}")).append(content).append("\r\n");
         }
         currentLine++;
     }
@@ -174,7 +174,7 @@ public final class WidgetCanvas {
                     : Graphitty.string(content));
         } else {
             // No trailing newline – cursor remains on this line for erase bookkeeping.
-            output.append(Graphitty.string("{{-X-}}" + content));
+            output.append("\r").append(Graphitty.string("{{-X-}}" + content));
         }
     }
 
@@ -198,7 +198,7 @@ public final class WidgetCanvas {
         } else {
             // Clear extra lines left over from a previous, taller render.
             while (currentLine < previousHeight) {
-                output.append(Graphitty.string("{{X-}}\n"));
+                output.append("\r").append(Graphitty.string("{{X-}}\r\n"));
                 currentLine++;
             }
         }

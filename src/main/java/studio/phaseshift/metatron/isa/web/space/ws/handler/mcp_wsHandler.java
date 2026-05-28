@@ -31,7 +31,7 @@ import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
-import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.Inst.INST_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
@@ -81,7 +81,7 @@ public class mcp_wsHandler extends WebSocketRec {
                     uri(TOOL).maybe().asUri(), rec(URI_TYPE, INST_TYPE).maybe(),
                     uri(RESOURCE).maybe().asUri(), T(ALL),
                     uri(PROMPT).maybe().asUri(), T(ALL)))
-            .constructor(instC(WS_MCP_HANDLER_TID.extend(CTOR).dom(ALL.maybe()).rng(WS_MCP_HANDLER_TID), lst(T(REC_TID)), (lhs, inst) ->
+            .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(WS_MCP_HANDLER_TID), lst(T(REC_TID)), (lhs, inst) ->
                     new mcp_wsHandler(new LinkedHashMap<>(inst.arg(0).asRec()
                             .at(uri(IN), uri(MIME.MIMEType.APPLICATION_JSON.value))
                             .at(uri(OUT), uri(MIME.MIMEType.APPLICATION_JSON.value)).jvm()), WS_MCP_HANDLER_TID, inst.arg(0).vid()))).create();
@@ -96,7 +96,7 @@ public class mcp_wsHandler extends WebSocketRec {
     public mcp_wsHandler(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
         this.mcp = new mcp_Server(jvm, tid, vid);
-        this.jvm().put(uri(ON_MESSAGE), instC(vid.extend(ON_MESSAGE).dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL)), (lhs, inst) -> {
+        this.jvm().put(uri(ON_MESSAGE), instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL)), (lhs, inst) -> {
             try {
                 LOG.debug("incoming mcp message from %s: %s", this.getOtherVID(), lhs);
                 final Obj result = this.mcp.handleMessage(lhs);

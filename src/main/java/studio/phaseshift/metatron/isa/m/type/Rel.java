@@ -266,7 +266,7 @@ public interface Rel extends Poly<Rel, Tuple.Pair<Obj, Obj>>, MultMonoid.O<Rel>,
 
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
-                    instC(AS_INST_TID.dom(REL_TID).rng(LST_TID), lst(LST_TYPE), (lhs, inst) -> lst(lhs.asRel().jvm().get0(), lhs.asRel().jvm().get1())),
+                    instC(AS_INST_TID.dom(REL_TID).rng(LST_TID), lst(LST_TYPE), (lhs, inst) -> lst(List.of(lhs.asRel().jvm().get0(), lhs.asRel().jvm().get1()),inst.arg(0).vidOrTid().c(c->c.mult(lhs.c())),lhs.vid())),
                     instC(AS_INST_TID.dom(REL_TID).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> rec(lhs.asRel().jvm().get0(), lhs.asRel().jvm().get1())),
                     instC(MERGE_INST_TID.dom(REL_TID.maybeSome()).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> inst.arg(0).jvm(Stream.concat(lhs.stream().map(Obj::as), inst.arg(0).<Rec>as().elements().map(Obj::<Rel>as)).collect(Collectors.toMap(Rel::first, Rel::second, Obj::append, LinkedHashMap::new)))),
                     instC(SPLIT_INST_TID.dom(A).rng(REL_TID), lst(T(REL_TID)), (lhs, inst) -> rel(Tuple.Pair.with(inst.arg(0).asRel().first().apply(lhs), inst.arg(0).asRel().second().apply(lhs)), inst.arg(0).tid(), null)),

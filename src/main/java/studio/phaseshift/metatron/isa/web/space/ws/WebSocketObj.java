@@ -40,7 +40,7 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.NOOBJ_TID;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public interface WebSocketObj extends Closeable {
+public interface WebSocketObj extends Obj, Closeable {
 
     record IO(MIME.MIMEType input, MIME.MIMEType output) {
         public static IO of(final Rec obj, final MIME.MIMEType defaultType) {

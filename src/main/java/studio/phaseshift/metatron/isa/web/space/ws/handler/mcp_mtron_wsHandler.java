@@ -30,6 +30,7 @@ import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
+import static studio.phaseshift.metatron.isa.m.mInstSet.INST_CTOR_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
 import static studio.phaseshift.metatron.isa.m.type.Inst.INST_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
@@ -72,7 +73,7 @@ public class mcp_mtron_wsHandler extends mcp_wsHandler {
                     uri(TOOL).maybe().asUri(), rec(URI_TYPE, INST_TYPE),
                     uri(RESOURCE).maybe().asUri(), T(ALL),
                     uri(PROMPT).maybe().asUri(), T(ALL)))
-            .constructor(instC(WS_MTRON_MCP_HANDLER_TID.extend(CTOR).dom(ALL.maybe()).rng(WS_MTRON_MCP_HANDLER_TID), lst(T(REC_TID)), (lhs, inst) -> {
+            .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(WS_MTRON_MCP_HANDLER_TID), lst(T(REC_TID)), (lhs, inst) -> {
                 final Rec config = inst.arg(0).asRec();
                 return new mcp_mtron_wsHandler(new LinkedHashMap<>(config.jvm()), config.vid());
             })).create();

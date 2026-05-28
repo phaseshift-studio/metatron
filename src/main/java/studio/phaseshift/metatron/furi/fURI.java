@@ -31,6 +31,7 @@ import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -217,7 +218,7 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
 
     default fURI resolve(final Map<fURI, fURI> generics) {
         final fURI cless = this.one();
-        Graphitty.log(this).trace("resolving generics: %s", generics);
+        //Graphitty.log(this).trace("resolving generics: %s", generics);
         if (cless.isGeneric()) {
             fURI lhs = cless.basePath().isGeneric() ?
                     cless.basePath().path(cless.basePath().path().stream().map(s -> generics.computeIfAbsent(Singleton.f(s), k -> Singleton.f(s)).toString()).reduce("", (a, b) -> a + "/" + b).substring(1)) :
@@ -230,7 +231,7 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
                 lhs = cless.rng().isGeneric() ?
                         lhs.rng(cless.rng().path(cless.rng().path().stream().map(s -> generics.computeIfAbsent(Singleton.f(s), k -> Singleton.f(s)).toString()).reduce("", (a, b) -> a + "/" + b).substring(1))) :
                         lhs.rng(cless.rng());
-            Graphitty.log(this).trace("generics after resolution: %s", generics);
+            //Graphitty.log(this).trace("generics after resolution: %s", generics);
             return lhs.qString(this.hasQ() ? this.qString() : null).c(this.c());
         } else {
             return this;
@@ -438,6 +439,10 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
     cInt c();
 
     fURI c(final cInt coefficient);
+
+    default fURI c(final Function<cInt, cInt> func) {
+        return this.c(func.apply(this.c()));
+    }
 
     fURI dom();
 

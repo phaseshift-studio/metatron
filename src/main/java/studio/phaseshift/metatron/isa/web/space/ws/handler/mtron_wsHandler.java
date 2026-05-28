@@ -32,7 +32,7 @@ import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
-import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.type.InstSet.A;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -59,7 +59,7 @@ public class mtron_wsHandler extends WebSocketRec {
             .isaPredicate(rec(
                     uri(IN).maybe().asUri(), isa_(CONTENT_TYPE).else_(uri(MIME.MIMEType.APPLICATION_MTRON.value)),
                     uri(OUT).maybe().asUri(), isa_(CONTENT_TYPE).else_(uri(MIME.MIMEType.APPLICATION_MTRON.value))))
-            .constructor(instC(WS_MTRON_HANDLER_TID.extend(CTOR).dom(ALL.maybe()).rng(WS_MTRON_HANDLER_TID), lst(T(REC_TID)), (lhs, inst) -> {
+            .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(WS_MTRON_HANDLER_TID), lst(T(REC_TID)), (lhs, inst) -> {
                 final Map<Obj, Obj> config = new LinkedHashMap<>(inst.arg(0).asRec().jvm());
                 return new mtron_wsHandler(config, inst.arg(0).asRec().vid());
             })).create();
@@ -67,7 +67,7 @@ public class mtron_wsHandler extends WebSocketRec {
 
     public mtron_wsHandler(final Map<Obj, Obj> jvm, final fURI vid) {
         super(jvm, WS_MTRON_HANDLER_TID, vid);
-        this.jvm().put(uri(ON_MESSAGE), instC(vid.extend(ON_MESSAGE).dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL)), (lhs, inst) -> {
+        this.jvm().put(uri(ON_MESSAGE), instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL)), (lhs, inst) -> {
             try {
                 final Obj rhs = lhs.apply(noobj());
                 LOG.debug("processed mtron message: %s => %s", lhs, rhs);
@@ -80,7 +80,7 @@ public class mtron_wsHandler extends WebSocketRec {
                 return failure;
             }
         }));
-        this.jvm().put(uri(ON_ERROR), instC(this.vid().extend(ON_ERROR).dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL)), (lhs, inst) -> {
+        this.jvm().put(uri(ON_ERROR), instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL)), (lhs, inst) -> {
             try {
                 this.send(lhs);
                 return noobj();
@@ -89,7 +89,7 @@ public class mtron_wsHandler extends WebSocketRec {
                 return noobj();
             }
         }));
-        this.jvm().put(uri(SEND), instC(this.vid().extend(SEND).dom(A.maybe()).rng(A.maybe()), lst(T(ALL.maybe())), (lhs, inst) -> {
+        this.jvm().put(uri(SEND), instC(M_ISA_INST_TID.dom(A.maybe()).rng(A.maybe()), lst(T(ALL.maybe())), (lhs, inst) -> {
           try {
             this.send(inst.arg(0));
             return inst.arg(0);

@@ -220,7 +220,7 @@ public class ObjSimpleJSONSerializer extends AbstractObjSerializer<JsonElement> 
 
     @Override
     public JsonPrimitive writeUri(final Uri uri) {
-        return new JsonPrimitive(uri.uriValue().toString());
+        return new JsonPrimitive("<" + uri.uriValue().toString() + ">");
     }
 
     @Override

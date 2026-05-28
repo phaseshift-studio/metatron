@@ -32,8 +32,10 @@ public class BoolTest extends AbstractObjTest {
     @CsvSource(value = {
             "true.as(str::T)                                                               % \"true\"",
             "false.as(str::T)                                                              % \"false\"",
+            "{2,34}false.as(str::T)                                                        % {2,34}\"false\"",
             "true.as(int::T)                                                               % 1",
             "false.as(int::T)                                                              % 0",
+            "{23}false.as(int::T)                                                         % {23}0",
             "true.as(real::T)                                                              % 1.0",
             "false.as(real::T)                                                             % 0.0"
     }, delimiter = '%')

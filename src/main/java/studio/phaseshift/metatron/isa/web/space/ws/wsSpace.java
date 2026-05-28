@@ -45,8 +45,7 @@ import java.util.function.Function;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.SPACE_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.type.Inst.INST_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -87,14 +86,14 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
     public static final Type WS_HANDLER_TYPE = Type.Builder.build()
             .tid(WS_WEBSOCKET_TID)
             .vid(WS_HANDLER_TID)
-            .constructor(instC(WS_HANDLER_TID.extend(CTOR).dom(ALL.maybe()).rng(WS_WEBSOCKET_TID),
+            .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(WS_WEBSOCKET_TID),
                     lst(T(REC_TID)), (lhs, inst) ->
                             new WebSocketRec(inst.arg(0).asRec().jvm(), inst.arg(0).vid()))).create();
 
     public static final Type WS_CLIENT_TYPE = Type.Builder.build()
             .tid(WS_WEBSOCKET_TID)
             .vid(WS_CLIENT_TID)
-            .constructor(instC(WS_CLIENT_TID.extend(CTOR).dom(ALL.maybe()).rng(WS_WEBSOCKET_TID),
+            .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(WS_WEBSOCKET_TID),
                     lst(T(REC_TID)), (lhs, inst) -> {
                         final WebSocketRecClient client = new WebSocketRecClient(new WebSocketRec(inst.arg(0).asRec().jvm(), inst.arg(0).vid()));
                         return client;
@@ -107,7 +106,7 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
                     uri(HOST), URI_TYPE,
                     uri(PATTERN), URI_TYPE,
                     uri(ROUTE), REC_TYPE))
-            .constructor(instC(WS_SPACE_TID.extend(CTOR).dom(WS_SPACE_TID).rng(WS_SPACE_TID),
+            .constructor(instC(INST_CTOR_TID.dom(WS_SPACE_TID).rng(WS_SPACE_TID),
                     lst(T(REC_TID, isa_(CONFIG))), (lhs, inst) -> wsSpace.of(inst.arg(0).recValue(), inst.arg(0).vid()))).create();
 
     private final memSpace cache;

@@ -36,6 +36,7 @@ import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
+import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.NOOBJ_TID;
 import static studio.phaseshift.metatron.isa.m.type.InstSet.A;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -74,7 +75,7 @@ public class HttpRec extends MRec {
         super(map, tid, vid);
         // Default SEND — mirror WebSocketRec
         if (!map.containsKey(uri(SEND)))
-            this.jvm().put(uri(SEND), instC(this.vid().extend(SEND).dom(ALL.maybe()).rng(NOOBJ_TID), lst(T(A.maybe())), (lhs, inst) -> {
+            this.jvm().put(uri(SEND), instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(NOOBJ_TID), lst(T(A.maybe())), (lhs, inst) -> {
                 try {
                     this.send(inst.arg(0));
                     return noobj();
@@ -85,7 +86,7 @@ public class HttpRec extends MRec {
             }));
         // Default CLOSE — mirror WebSocketRec
         if (!map.containsKey(uri(CLOSE)))
-            this.jvm().put(uri(CLOSE), instC(this.vid().extend(CLOSE).dom(ALL.maybe()).rng(NOOBJ_TID), lst(), (lhs, inst) -> {
+            this.jvm().put(uri(CLOSE), instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(NOOBJ_TID), lst(), (lhs, inst) -> {
                 this.logger().info("closing %s", this.vid());
                 this.close();
                 return noobj();

@@ -73,11 +73,11 @@ public interface Bool extends Mono {
     final class BoolType {
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
-                    instC(AS_INST_TID.dom(BOOL_TID).rng(BOOL_TID), lst(BOOL_TYPE), (lhs, inst) -> lhs.tid(inst.arg(0).tid())),
-                    instC(AS_INST_TID.dom(BOOL_TID).rng(BYTES_TID), lst(BYTES_TYPE), (lhs, inst) -> bytes(lhs.boolValue() ? ByteBuffer.wrap(new byte[]{1}) : ByteBuffer.wrap(new byte[]{0}), inst.arg(0).tid(), lhs.vid())),
-                    instC(AS_INST_TID.dom(BOOL_TID).rng(INT_TID), lst(T(INT_TID)), (lhs, inst) -> jnt(lhs.boolValue() ? 1 : 0, inst.arg(0).tid(), lhs.vid())),
-                    instC(AS_INST_TID.dom(BOOL_TID).rng(REAL_TID), lst(T(REAL_TID)), (lhs, inst) -> real(lhs.boolValue() ? 1.0d : 0.0d, inst.arg(0).tid(), lhs.vid())),
-                    instC(AS_INST_TID.dom(BOOL_TID).rng(STR_TID), lst(T(STR_TID)), (lhs, inst) -> str(lhs.boolValue() ? "true" : "false", inst.arg(0).tid(), lhs.vid())),
+                    instC(AS_INST_TID.dom(BOOL_TID).rng(BOOL_TID), lst(BOOL_TYPE), (lhs, inst) -> lhs.tid(inst.arg(0).vidOrTid())),
+                    instC(AS_INST_TID.dom(BOOL_TID).rng(BYTES_TID), lst(BYTES_TYPE), (lhs, inst) -> bytes(lhs.boolValue() ? ByteBuffer.wrap(new byte[]{1}) : ByteBuffer.wrap(new byte[]{0}), inst.arg(0).vidOrTid(), lhs.vid())),
+                    instC(AS_INST_TID.dom(BOOL_TID).rng(INT_TID), lst(T(INT_TID)), (lhs, inst) -> jnt(lhs.boolValue() ? 1 : 0, inst.arg(0).vidOrTid(), lhs.vid())),
+                    instC(AS_INST_TID.dom(BOOL_TID).rng(REAL_TID), lst(T(REAL_TID)), (lhs, inst) -> real(lhs.boolValue() ? 1.0d : 0.0d, inst.arg(0).vidOrTid(), lhs.vid())),
+                    instC(AS_INST_TID.dom(BOOL_TID).rng(STR_TID), lst(T(STR_TID)), (lhs, inst) -> str(lhs.boolValue() ? "true" : "false", inst.arg(0).vidOrTid(), lhs.vid())),
                     instC(PLUS_INST_TID.dom(BOOL_TID).rng(BOOL_TID), lst(T(BOOL_TID)), (lhs, inst) -> lhs.jvm(lhs.boolValue() || inst.arg(0).boolValue())),
                     instC(MULT_INST_TID.dom(BOOL_TID).rng(BOOL_TID), lst(T(BOOL_TID)), (lhs, inst) -> lhs.jvm(lhs.boolValue() && inst.arg(0).boolValue())),
                     instC(NOT_INST_TID.dom(BOOL_TID).rng(BOOL_TID), lst(), (lhs, inst) -> lhs.jvm(!lhs.boolValue()))

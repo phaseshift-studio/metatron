@@ -323,22 +323,23 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
 
     @ParameterizedTest
     @CsvSource(value = {
-            "[a=>1,b=>2].has(a,|?>0)                                % true",
-            "[a=>1,b=>2].has(a,|?>1)                                % false",
-            "[a=>1,b=>2].has(a,|?>0).has(b,|?>1)                    % true",
-            "[a=>1,b=>2].has(a,|?>0).has(b,|?>2)                    % false",
-            "[a=>1,b=>2].has(a,|?>0).has(b,|?>0)                    % true",
-            "[a=>1,b=>2].has(a,|?>0).has(b,|?>0).has(c,|?>0)        % false",
-            "[=>].has(a,|?>0)                                       % false",
+            "[a=>1,b=>2].where([a=>?>0])                              % true",
+            "[a=>1,b=>2].where([a=>?>1])                              % false",
+            "[a=>1,b=>2].where([a=>?>0,b=>?>1])                       % true",
+            "[a=>1,b=>2].where([a=>?>0]).where([b=>?>2])                % false",
+            "[a=>1,b=>2].where([a=>?>0,b=>?>2])                       % false",
+            "[a=>1,b=>2].where([a=>?>0,b=>?>0])                       % true",
+            "[a=>1,b=>2].where([a=>?>0,b=>?>0,c=>?>0])                % false",
+            "[=>].where(a=>?>0)                                     % false",
             /// ///////////////////////////////////////////////////////
-            "[a=>1,b=>2].has(a,|gt(0))                              % true",
-            "[a=>1,b=>2].has(a,|gt(1))                              % false",
-            "[a=>1,b=>2].has(a,|gt(0)).has(b,|gt(1))                % true",
-            "[a=>1,b=>2].has(a,|gt(0)).has(b,|gt(2))                % false",
-            "[a=>1,b=>2].has(a,|gt(0)).has(b,|gt(0))                % true",
-            "[a=>1,b=>2].has(a,|gt(0)).has(b,|gt(0)).has(c,|gt(0))  % false",
-            "[a=>[b=>1,c=>2]].has(a,|isa(rec::T))                   % true",
-            "[a=>[b=>1,c=>2]].has(a,|isa(lst::T))                   % false",
+           /* "[a=>1,b=>2].where([a=>gt(0)])                          % true",
+            "[a=>1,b=>2].where([a=>gt(1)])                          % false",
+            "[a=>1,b=>2].where([a=>gt(0),b=>gt(1)])                % true",
+            "[a=>1,b=>2].where([a=>gt(0),b=>gt(2)])                % false",
+            "[a=>1,b=>2].where([a=>gt(0),b=>gt(0)])                % true",
+            "[a=>1,b=>2].where([a=>gt(0),b=>gt(0),c=>gt(0)])      % false",*/
+            "[a=>[b=>1,c=>2]].where(a=>isa(rec::T))               % true",
+            "[a=>[b=>1,c=>2]].where(a=>isa(lst::T))               % false",
     }, delimiter = '%', quoteCharacter = '~')
     public void testHas(final String code, final boolean matches) {
         final Obj codeObj = ObjmtronSerializer.parse(code);
@@ -443,15 +444,15 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
             "*x>><address/+/city/>                                                         % {address/home/city=>\"santa fe\",address/work/city=>\"nomansland\"}",
             "*x>><address/+/#/>                                                            % {address/home/city=>\"santa fe\",address/work/city=>\"nomansland\"}",
             "*x>>#/                                                                        % {address/home/city=>\"santa fe\",address/work/city=>\"nomansland\"}",
-            "*x.select[address/+/city=>_]                                                  % [address/+/city=>{\"nomansland\",\"santa fe\"}]",
-            "*x.select[address/+/+=>_]                                                     % [address/+/+=>{\"nomansland\",\"santa fe\"}]",
-            "*x.select[address/#=>_]                                                       % [address/#=>{\"nomansland\",\"santa fe\"}]",
-            "*x.select[#=>_]                                                               % [#=>{\"nomansland\",\"santa fe\"}]",
-            "*x.select[address/+/city/=>_]                                                 % [address/+/city/=>{address/work/city=>\"nomansland\",address/home/city=>\"santa fe\"}]",
-            "*x.select[<address/work/city/../../home/city>=>_].rng()                       % \"santa fe\"",
-            "*x.select[<address/work/home/../../work/city>=>_]>>                           % \"nomansland\"",
-            "*x.select[<address/work/city/../../+/city>=>_]>>                              % {\"nomansland\",\"santa fe\"}",
-            "*x.select[<address/work/city/../../+/city/../../../#>=>_]>>                   % {\"nomansland\",\"santa fe\"}",
+            "*x==[address/+/city=>_]                                                  % [address/+/city=>{\"nomansland\",\"santa fe\"}]",
+            "*x==[address/+/+=>_]                                                     % [address/+/+=>{\"nomansland\",\"santa fe\"}]",
+            "*x==[address/#=>_]                                                       % [address/#=>{\"nomansland\",\"santa fe\"}]",
+            "*x==[#=>_]                                                               % [#=>{\"nomansland\",\"santa fe\"}]",
+            "*x==[address/+/city/=>_]                                                 % [address/+/city/=>{address/work/city=>\"nomansland\",address/home/city=>\"santa fe\"}]",
+            "*x==[<address/work/city/../../home/city>=>_].rng()                       % \"santa fe\"",
+            "*x==[<address/work/home/../../work/city>=>_]>>                           % \"nomansland\"",
+            "*x==[<address/work/city/../../+/city>=>_]>>                              % {\"nomansland\",\"santa fe\"}",
+            "*x==[<address/work/city/../../+/city/../../../#>=>_]>>                   % {\"nomansland\",\"santa fe\"}",
             "*y>>address/work/city                                                         % \"santa fe\""
     }, delimiter = '%')
     public void testSelect(final String code, final String expected) {

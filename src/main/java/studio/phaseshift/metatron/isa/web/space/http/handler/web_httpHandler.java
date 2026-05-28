@@ -36,7 +36,7 @@ import java.util.Map;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.InstSet.A;
@@ -68,7 +68,7 @@ public class web_httpHandler extends HttpRec {
                     uri(WEB_ROOT).maybe(), T(ALL),
                     uri(DEFAULT_PAGE).maybe(), T(ALL),
                     uri(READ_ONLY).maybe(), T(ALL)))
-            .constructor(instC(WEB_HTTP_TID.extend(CTOR).dom(ALL.maybe()).rng(WEB_HTTP_TID), lst(T(REC_TID)), (lhs, inst) -> {
+            .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(WEB_HTTP_TID), lst(T(REC_TID)), (lhs, inst) -> {
                 final Map<Obj, Obj> config = new LinkedHashMap<>(inst.arg(0).asRec().jvm());
                 config.putIfAbsent(uri(DEFAULT_PAGE), str("index.html"));
                 config.putIfAbsent(uri(READ_ONLY), bool(true));
@@ -81,7 +81,7 @@ public class web_httpHandler extends HttpRec {
         super(jvm, WEB_HTTP_TID, vid);
 
         // ── ON_GET: serve objects from any Router-backed space ──
-        this.jvm().put(uri(ON_GET), instC(vid.extend(ON_GET).dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL)), (lhs, inst) -> {
+        this.jvm().put(uri(ON_GET), instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL)), (lhs, inst) -> {
             try {
                 final HttpExchange exchange = this.exchange;
                 if (exchange == null) {
@@ -182,7 +182,7 @@ public class web_httpHandler extends HttpRec {
         }));
 
         // ── ON_PUT: write objects back through Router ──
-        this.jvm().put(uri(ON_PUT), instC(vid.extend(ON_PUT).dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL)), (lhs, inst) -> {
+        this.jvm().put(uri(ON_PUT), instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL)), (lhs, inst) -> {
             try {
                 if (Boolean.TRUE.equals(this.at(uri(READ_ONLY)).orElse(bool(true)).jvm())) {
                     try {
@@ -232,7 +232,7 @@ public class web_httpHandler extends HttpRec {
         }));
 
         // ── ON_ERROR: send the error ──
-        this.jvm().put(uri(ON_ERROR), instC(this.vid().extend(ON_ERROR).dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL)), (lhs, inst) -> {
+        this.jvm().put(uri(ON_ERROR), instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL)), (lhs, inst) -> {
             try {
                 this.send(lhs);
                 return noobj();
@@ -243,7 +243,7 @@ public class web_httpHandler extends HttpRec {
         }));
 
         // ── SEND: override base default for proper mtron-style send ──
-        this.jvm().put(uri(SEND), instC(this.vid().extend(SEND).dom(A.maybe()).rng(A.maybe()), lst(T(ALL.maybe())), (lhs, inst) -> {
+        this.jvm().put(uri(SEND), instC(M_ISA_INST_TID.dom(A.maybe()).rng(A.maybe()), lst(T(ALL.maybe())), (lhs, inst) -> {
             try {
                 this.send(inst.arg(0));
                 return inst.arg(0);

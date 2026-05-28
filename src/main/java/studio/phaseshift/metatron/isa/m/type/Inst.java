@@ -239,8 +239,13 @@ public interface Inst extends Call {
         */
 
         try {
-            final Space space = Router.global().getSpaceFor(this.tid().basePath());
-            Obj fetched = space.read(this.tid().basePath());
+            Obj fetched = noobj();
+            if (fetched.isNoObj() && lhs.isRec()) // search obj stack structure
+                fetched = lhs.asRec().at(this.tid().basePath());
+            //if (null != lhs.vid()) // search obj space structure
+            //    fetched = Router.readFromSpace(lhs.vid().extend(this.tid().basePath()));
+            if (fetched.isNoObj()) // search inst space structure
+                fetched = Router.readFromSpace(this.tid().basePath());
             /// //////////////////////////////////////////////////
             /*if (fetched.stream().noneMatch(Obj::isInstObj)) {
                 fetched = space.read(this.tid().extend("apply"));
