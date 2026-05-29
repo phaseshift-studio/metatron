@@ -556,7 +556,7 @@ httpspace webserver is furi aware and will perform server-side extraction of nes
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/web/space/httpspace/httprec::T[?[
   {?}tool=&gt;{?}[uri::T=&gt;inst::T],
   {?}resource=&gt;#::T,
-  {?}prompt=&gt;#::T]][/m/web/space/httpspace/mcp_http/ctor?mcp_http&lt;=#{?}(rec::T)]@/m/web/space/httpspace/mcp_http</code></pre></div>
+  {?}prompt=&gt;#::T]][ctor?mcp_http&lt;=#{?}(rec::T)]@/m/web/space/httpspace/mcp_http</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">an abstract mcp http handler providing necessary json-rpc infrastructure for mcp servers to leverage</p>
 </div>
@@ -571,7 +571,7 @@ httpspace webserver is furi aware and will perform server-side extraction of nes
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">mcp_http::T[?[
   {?}tool=&gt;[uri::T=&gt;inst::T],
   {?}resource=&gt;#::T,
-  {?}prompt=&gt;#::T]][/m/web/space/httpspace/mcp_mtron_http/ctor?mcp_mtron_http&lt;=#{?}(rec::T)]@/m/web/space/httpspace/mcp_mtron_http</code></pre></div>
+  {?}prompt=&gt;#::T]][ctor?mcp_mtron_http&lt;=#{?}(rec::T)]@/m/web/space/httpspace/mcp_mtron_http</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">mcp streamable http transport handler with built-in metatron tools</p>
 </div>
@@ -586,7 +586,7 @@ httpspace webserver is furi aware and will perform server-side extraction of nes
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">mcp_ws::T[?[
   {?}tool=&gt;[uri::T=&gt;inst::T],
   {?}resource=&gt;#::T,
-  {?}prompt=&gt;#::T]][/m/web/space/wsspace/mcp_mtron_ws/ctor?mcp_mtron_ws&lt;=#{?}(rec::T)]@/m/web/space/wsspace/mcp_mtron_ws</code></pre></div>
+  {?}prompt=&gt;#::T]][ctor?mcp_mtron_ws&lt;=#{?}(rec::T)]@/m/web/space/wsspace/mcp_mtron_ws</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">an mcp handler server with built-in mtron eval, space listing, router info and instruction listing tools</p>
 </div>
@@ -601,7 +601,7 @@ httpspace webserver is furi aware and will perform server-side extraction of nes
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">wshandler::T[?[
   {?}tool=&gt;{?}[uri::T=&gt;inst::T],
   {?}resource=&gt;#::T,
-  {?}prompt=&gt;#::T]][/m/web/space/wsspace/mcp_ws/ctor?mcp_ws&lt;=#{?}(rec::T)]@/m/web/space/wsspace/mcp_ws</code></pre></div>
+  {?}prompt=&gt;#::T]][ctor?mcp_ws&lt;=#{?}(rec::T)]@/m/web/space/wsspace/mcp_ws</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">an abstract mcp websocket handler providing necessary json-rpc infrastructure for mcp servers to leverage</p>
 </div>
@@ -615,7 +615,7 @@ httpspace webserver is furi aware and will perform server-side extraction of nes
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">http_handler::T[?[
   {?}in=&gt;isa(content_type::T).else(application/mtron),
-  {?}out=&gt;isa(content_type::T).else(application/mtron)]][/m/web/space/httpspace/mtron_http/ctor?mtron_http&lt;=#{?}(rec::T)]@/m/web/space/httpspace/mtron_http</code></pre></div>
+  {?}out=&gt;isa(content_type::T).else(application/mtron)]][ctor?mtron_http&lt;=#{?}(rec::T)]@/m/web/space/httpspace/mtron_http</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a simple http handler accepting mtron expressions and return mtron results</p>
 </div><div class="card-body border-top py-2">
@@ -632,7 +632,7 @@ httpspace webserver is furi aware and will perform server-side extraction of nes
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">wshandler::T[?[
   {?}in=&gt;isa(content_type::T).else(application/mtron),
-  {?}out=&gt;isa(content_type::T).else(application/mtron)]][/m/web/space/wsspace/mtron_ws/ctor?mtron_ws&lt;=#{?}(rec::T)]@/m/web/space/wsspace/mtron_ws</code></pre></div>
+  {?}out=&gt;isa(content_type::T).else(application/mtron)]][ctor?mtron_ws&lt;=#{?}(rec::T)]@/m/web/space/wsspace/mtron_ws</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a simple websocket handler accepting mtron expressions and return mtron results</p>
 </div><div class="card-body border-top py-2">
@@ -690,7 +690,7 @@ httpspace webserver is furi aware and will perform server-side extraction of nes
         </span>
         <small class="text-muted code">/m/web/space/wsspace/wsclient</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">websocket::T[][/m/web/space/wsspace/wsclient/ctor?websocket&lt;=#{?}(rec::T)]@/m/web/space/wsspace/wsclient</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">websocket::T[][ctor?websocket&lt;=#{?}(rec::T)]@/m/web/space/wsspace/wsclient</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">an websocket client which should be refined to implement protocol specs</p>
 </div>
@@ -702,7 +702,7 @@ httpspace webserver is furi aware and will perform server-side extraction of nes
         </span>
         <small class="text-muted code">/m/web/space/wsspace/wshandler</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">websocket::T[][/m/web/space/wsspace/wshandler/ctor?websocket&lt;=#{?}(rec::T)]@/m/web/space/wsspace/wshandler</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">websocket::T[][ctor?websocket&lt;=#{?}(rec::T)]@/m/web/space/wsspace/wshandler</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a websocket server which should be refined to implement protocol specs</p>
 </div>
@@ -717,7 +717,7 @@ httpspace webserver is furi aware and will perform server-side extraction of nes
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">space::T[?[
   host=&gt;uri::T,
   pattern=&gt;uri::T,
-  route=&gt;rec::T]][/m/web/space/wsspace/ctor?wsspace&lt;=wsspace(rec::T)]@/m/web/space/wsspace</code></pre></div>
+  route=&gt;rec::T]][ctor?wsspace&lt;=wsspace(rec::T)]@/m/web/space/wsspace</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a space for exposing and managing web socket servers.</p>
 </div><div class="card-body border-top py-2">
@@ -777,7 +777,7 @@ httpspace webserver is furi aware and will perform server-side extraction of nes
     hljs.addPlugin(new CopyButtonPlugin({
         callback: function(text, el) {
             // Strip multi-line [== ... ==] comments
-            text = text.replace(/\[==[\s\S]*?==\]/g, '');
+            text = text.replace(/\[==[\s\S]*=?=\]/g, '');
             // Process line by line
             return text.split('\n')
                 .map(function(line) {

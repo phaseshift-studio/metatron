@@ -581,7 +581,7 @@ public class dcmntSpace extends AbstractSpace<MongoClient> implements SchemaSpac
 
     /**
      * Recursively convert {@code com.mongodb.DBRef} objects to embedded {@code {$ref, $id}}
-     * Documents. In-memory MongoDB (bwaldvogel) deserialises the DBRef pattern into the
+     * Documents. In-memory MongoDB (bwaldvogel) deserializes the DBRef pattern into the
      * legacy DBRef class which lacks a BSON codec and causes {@code toBsonDocument()} to
      * throw. Real MongoDB drivers keep them as plain nested Documents, so this is a no-op
      * in production.

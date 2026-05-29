@@ -33,6 +33,7 @@ import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -50,6 +51,7 @@ public class SpaceChatMemoryStore implements ChatMemoryStore {
 
     private static final SpaceChatMemoryStore INSTANCE = new SpaceChatMemoryStore();
     private static final GraphittyLogger LOG = Graphitty.log(SpaceChatMemoryStore.class);
+    private static final ObjSimpleJSONSerializer SERIALIZER = new ObjSimpleJSONSerializer(false);
 
     public static SpaceChatMemoryStore single() {
         return INSTANCE;
@@ -61,13 +63,13 @@ public class SpaceChatMemoryStore implements ChatMemoryStore {
 
     public List<ChatMessage> getMessages(final Object memoryId) {
         final Lst messages = Router.readFromSpace((fURI) memoryId).orSupply(() -> lst(new ArrayList<>(), LST_TID, (fURI) memoryId));
-        LOG.info("reading existing memory [messages:%d]",messages.count());
+        LOG.info("reading existing memory [messages:%d]", messages.count());
         final List<ChatMessage> llmMessages = messages.isEmpty() ?
                 new ArrayList<>() :
                 messages.elements().map(e -> {
                             try {
-                                final JsonObject element = ObjSimpleJSONSerializer.single().write(e).getAsJsonObject();
-                                if(element.has("contents")) { // necessary in case tool fails during evaluation or noobj results
+                                final JsonObject element = SERIALIZER.write(e).getAsJsonObject();
+                                if (element.has("contents")) { // necessary in case tool fails during evaluation or noobj results
                                     final JsonArray content = element.getAsJsonArray("contents");
                                     for (final JsonElement jo : content.asList()) {
                                         final JsonObject joObj = jo.getAsJsonObject();
@@ -80,7 +82,7 @@ public class SpaceChatMemoryStore implements ChatMemoryStore {
                                 return messageFromJson(element.toString());
                             } catch (final Exception ex) {
                                 LOG.warn("error making json chat messages (ignoring): %s %s", e, ex);
-                                return new ToolExecutionResultMessage("abc","abc","abc");
+                                return null;
                             }
                         })
                         .filter(Objects::nonNull)
@@ -94,8 +96,7 @@ public class SpaceChatMemoryStore implements ChatMemoryStore {
         final List<Obj> jsonMessages = new ArrayList<>();
         for (final ChatMessage message : messages) {
             try {
-                final String jsonMessage = ChatMessageSerializer.messageToJson(message);
-                final Obj obj = ObjSimpleJSONSerializer.parse(jsonMessage);
+                final Obj obj = SERIALIZER.inputBytes(ChatMessageSerializer.messageToJson(message));
                 jsonMessages.add(obj);
             } catch (final Exception e) {
                 LOG.warn("error making obj chat message (ignoring): %s %s", message, e);

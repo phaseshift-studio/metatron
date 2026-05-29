@@ -57,6 +57,7 @@ public class ObjSimpleJSONSerializer extends AbstractObjSerializer<JsonElement> 
     private static final String _TID = "_tid";
     private static final String _VID = "_vid";
 
+    private final boolean wrapURI;
     private final boolean biasTowardsURI = true;
     private final boolean biasTowardsObjs = false;
     private final boolean embedCandQ = false;
@@ -68,12 +69,17 @@ public class ObjSimpleJSONSerializer extends AbstractObjSerializer<JsonElement> 
     }
 
     private static final ObjSimpleJSONSerializer INSTANCE = new ObjSimpleJSONSerializer();
+    
+    public ObjSimpleJSONSerializer() {
+        this(true);
+    }
+
+    public ObjSimpleJSONSerializer(final boolean wrapURI) {
+        this.wrapURI = wrapURI;
+    }
 
     public static ObjSimpleJSONSerializer single() {
         return INSTANCE;
-    }
-
-    public ObjSimpleJSONSerializer() {
     }
 
     public static Obj parse(final String json) {
@@ -220,7 +226,7 @@ public class ObjSimpleJSONSerializer extends AbstractObjSerializer<JsonElement> 
 
     @Override
     public JsonPrimitive writeUri(final Uri uri) {
-        return new JsonPrimitive("<" + uri.uriValue().toString() + ">");
+        return new JsonPrimitive(this.wrapURI ?  ("<" + uri.uriValue().toString() + ">") : uri.uriValue().toString());
     }
 
     @Override

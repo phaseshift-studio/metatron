@@ -429,7 +429,7 @@ bin/metatron</code></pre>
         </span>
         <small class="text-muted code">/m/math/bB</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">data_size::T[][/m/math/bB/ctor?bB&lt;=#{?}(#::T)]@/m/math/bB</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">data_size::T[][ctor?bB&lt;=#{?}(#::T)]@/m/math/bB</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a byte of data</p>
 </div>
@@ -475,7 +475,7 @@ bin/metatron</code></pre>
         </span>
         <small class="text-muted code">/m/math/gB</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">data_size::T[][/m/math/gB/ctor?gB&lt;=#{?}(#::T)]@/m/math/gB</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">data_size::T[][ctor?gB&lt;=#{?}(#::T)]@/m/math/gB</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a gigabyte (1024 megabytes) of data</p>
 </div>
@@ -487,7 +487,7 @@ bin/metatron</code></pre>
         </span>
         <small class="text-muted code">/m/math/kB</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">data_size::T[][/m/math/kB/ctor?kB&lt;=#{?}(#::T)]@/m/math/kB</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">data_size::T[][ctor?kB&lt;=#{?}(#::T)]@/m/math/kB</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a kilobyte (1024 bytes) of data</p>
 </div>
@@ -499,7 +499,7 @@ bin/metatron</code></pre>
         </span>
         <small class="text-muted code">/m/math/mB</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">data_size::T[][/m/math/mB/ctor?mB&lt;=#{?}(#::T)]@/m/math/mB</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">data_size::T[][ctor?mB&lt;=#{?}(#::T)]@/m/math/mB</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a megabyte (1024 kilobytes) of data</p>
 </div>
@@ -511,7 +511,7 @@ bin/metatron</code></pre>
         </span>
         <small class="text-muted code">/m/math/pB</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">data_size::T[][/m/math/pB/ctor?pB&lt;=#{?}(#::T)]@/m/math/pB</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">data_size::T[][ctor?pB&lt;=#{?}(#::T)]@/m/math/pB</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a petabyte (1024 terabytes) of data</p>
 </div>
@@ -523,7 +523,7 @@ bin/metatron</code></pre>
         </span>
         <small class="text-muted code">/m/math/tB</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">data_size::T[][/m/math/tB/ctor?tB&lt;=#{?}(#::T)]@/m/math/tB</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">data_size::T[][ctor?tB&lt;=#{?}(#::T)]@/m/math/tB</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a terabyte (1024 gigabytes) of data</p>
 </div>
@@ -722,7 +722,7 @@ bin/metatron</code></pre>
     hljs.addPlugin(new CopyButtonPlugin({
         callback: function(text, el) {
             // Strip multi-line [== ... ==] comments
-            text = text.replace(/\[==[\s\S]*?==\]/g, '');
+            text = text.replace(/\[==[\s\S]*=?=\]/g, '');
             // Process line by line
             return text.split('\n')
                 .map(function(line) {

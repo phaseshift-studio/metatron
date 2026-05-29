@@ -508,6 +508,7 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
                 "*$$/people/1                                                         %  *$$/people/1/age                                                % 30",
                 "@$$/people/1 >>= [age=>29,title=> +' Specialist']                    %  *$$/people/1==[name=>_,age=>_,title=>_]                         % [name=>'Alice',age=>29,title=>'Engineer Specialist']",
                 "*$$/people/1 >>= [age=>30,title=>'NONE']                             %  *$$/people/1==[name=>_,age=>_,title=>_]                         % [name=>'Alice',age=>29,title=>'Engineer Specialist']",
+                "@$$/people/+=?=[salary=>?>72000.0]>>=[salary=>+100000.0]             %  *$$/people/+/salary.sum?real<=real{*}()                         % 490000.0",
                 "@$$/people/1/age >>= 45                                              %  *$$/people/1==[name=>_,age=>_,title=>_]                         % [name=>'Alice',age=>45,title=>'Engineer Specialist']",
                 "*$$/people/1/age >>= 55                                              %  *$$/people/1==[name=>_,age=>_,title=>_]                         % [name=>'Alice',age=>45,title=>'Engineer Specialist']",
                 "@$$/people/1/age >>=(+ 12 * 2)                                       %  *$$/people/1==[name=>_,age=>_,title=>_]                         % [name=>'Alice',age=>114,title=>'Engineer Specialist']",

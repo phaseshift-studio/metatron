@@ -419,7 +419,7 @@ bin/metatron</code></pre>
   {?}root=&gt;rec::T,
   {?}schema=&gt;[
    {?}instset=&gt;instset::T,
-   {?}native=&gt;rec{?}::T]]][inst?grphspace&lt;=#{?}(isa([{?}graph=&gt;uri::T]).else(throw(&#39;malformed tp3 config&#39;)))]@/m/grph/space/grphspace</code></pre></div>
+   {?}native=&gt;rec{?}::T]]][ctor?grphspace&lt;=#{?}(isa([{?}graph=&gt;uri::T]).else(throw(&#39;malformed tp3 config&#39;)))]@/m/grph/space/grphspace</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a space for graph traversal</p>
 </div>
@@ -723,7 +723,7 @@ bin/metatron</code></pre>
     hljs.addPlugin(new CopyButtonPlugin({
         callback: function(text, el) {
             // Strip multi-line [== ... ==] comments
-            text = text.replace(/\[==[\s\S]*?==\]/g, '');
+            text = text.replace(/\[==[\s\S]*=?=\]/g, '');
             // Process line by line
             return text.split('\n')
                 .map(function(line) {

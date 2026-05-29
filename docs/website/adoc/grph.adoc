@@ -143,7 +143,7 @@ The following examples demonstrate selection and filtering using multi-segment u
 @g:V/1>>=+[address/home/city => 'santa fe',        /
            address/work/city => 'nomansland']                   [-- <1> --]
 *g:V/1/address/home/city                                        [-- <2> --]
-*g:V/+.?==[address/+/city => 'santa fe']                        [-- <3> --]
+*g:V/+.=?=[address/+/city => 'santa fe']                        [-- <3> --]
 *g:V/+.==[address/+/city/ => _]                                 [-- <4> --]
 *g:V/+.>>address/+/city/                                        [-- <5> --]
 *g:V/+.>>address/+/city                                         [-- <6> --]
@@ -172,8 +172,8 @@ The following examples demonstrate selection and filtering using multi-segment u
                       state=>NM],            /
              work => !*<../home>]]                              [-- <2> --]
 *g:V/1/address/home/city                                        [-- <3> --]
-*g:V/+.?==[address=>[_ => [state=>NM]]]                         [-- <4> --]
-*g:V/+.?==[address=>[_ => [state=>NM]]].>>address/+/city        [-- <5> --]
+*g:V/+.=?=[address=>[_ => [state=>NM]]]                         [-- <4> --]
+*g:V/+.=?=[address=>[_ => [state=>NM]]].>>address/+/city        [-- <5> --]
 ----
 <1> select the properties of vertex 1.
 <2> update the properties of vertex 1 with a nested address `rec`.

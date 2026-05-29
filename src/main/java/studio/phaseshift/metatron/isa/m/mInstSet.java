@@ -657,15 +657,12 @@ public class mInstSet extends AbstractInstSet {
     @Override
     public Set<Sugar> sugars() {
         return new LinkedHashSet<>(List.of(
-                Sugar.prefix("select", List.of(SELECT_INST_TID), 1),
-                Sugar.prefix("where", List.of(WHERE_INST_TID), 1),
-                Sugar.prefix("update", List.of(UPDATE_INST_TID), 1),
-                Sugar.prefix("?==", List.of(WHERE_INST_TID), 1),
+                Sugar.prefix("=?=", List.of(WHERE_INST_TID), 1),
                 Sugar.prefix("%==", List.of(GROUP_INST_TID), 1),
                 Sugar.prefix("==", List.of(SELECT_INST_TID), 1),
-                Sugar.wrap("=", "=>", List.of(UPDATE_INST_TID), 2),
-                Sugar.prefix("=~", List.of(MATCHES_INST_TID), 1),
-                Sugar.prefix("?=~", List.of(IS_INST_TID, MATCHES_INST_TID), 1),
+                Sugar.wrap("=", "=>", List.of(UPDATE_INST_TID), 2), // TODO: gut
+                Sugar.prefix("=~", List.of(MATCHES_INST_TID), 1), // TODO: gut
+                Sugar.prefix("?=~", List.of(IS_INST_TID, MATCHES_INST_TID), 1), // TODO: gut
                 Sugar.prefix("?=", List.of(IS_INST_TID, EQ_INST_TID), 1),
                 Sugar.prefix("?>=", List.of(IS_INST_TID, GTE_INST_TID), 1),
                 Sugar.prefix("?>", List.of(IS_INST_TID, GT_INST_TID), 1),
@@ -682,7 +679,7 @@ public class mInstSet extends AbstractInstSet {
                 Sugar.prefix("*", List.of(FROM_INST_TID), 1),
                 Sugar.prefix(">|", List.of(BARRIER_INST_TID), 1),
                 Sugar.prefix(">|", List.of(BARRIER_INST_TID), 0),
-                Sugar.prefix(">>-", List.of(RNG_INST_TID), 0),
+                Sugar.prefix(">>-", List.of(RNG_INST_TID), 0), // TODO: gut
                 Sugar.prefix(">-", List.of(MERGE_INST_TID), 1),
                 Sugar.prefix(">-", List.of(MERGE_INST_TID), 0),
                 Sugar.prefix("-<|", List.of(CHOOSE_INST_TID), 1),
@@ -693,7 +690,7 @@ public class mInstSet extends AbstractInstSet {
                 Sugar.prefix(">>", List.of(RSHIFT_INST_TID), 0),
                 //Sugar.prefix("<<", List.of(LSHIFT_INST_TID), 1),
                 Sugar.prefix("<<", List.of(LSHIFT_INST_TID), 0),
-                Sugar.prefix("++", List.of(MPLUS_INST_TID), 1),
+                Sugar.prefix("++", List.of(MPLUS_INST_TID), 1), // TODO: gut
                 Sugar.prefix("+", List.of(PLUS_INST_TID), 1),
                 Sugar.prefix("-", List.of(MINUS_INST_TID), 1),
                 Sugar.prefix(";", List.of(END_INST_TID), 0),

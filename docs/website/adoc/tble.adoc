@@ -131,7 +131,7 @@ code''' └────────────────┘ └────�
 
 [mtron]
 ----
-*lite:person/+.?==[age=>?<30]      [-- <1> --]
+*lite:person/+.=?=[age=>?<30]      [-- <1> --]
 *lite:person/+/name.count()        [-- <2> --]
 *lite:person/+.==[name=>_]         [-- <3> --]
 ----
@@ -175,13 +175,13 @@ whose values happen to match `person.name` — the link is purely algorithmic, e
 @/sys/space/lite >>= [table=>[person,score]]                                                            [-- <1> --]
 lite:score/1 -> [player=>'marko', points=>42]                                                           [-- <2> --]
 lite:score/2 -> [player=>'grant', points=>99]                                                           [-- <3> --]
-*lite:score/+.?==[player=>'marko']                                                                      [-- <4> --]
+*lite:score/+.=?=[player=>'marko']                                                                      [-- <4> --]
 */sys/space/lite.sql("SELECT p.name,p.age,s.points FROM person p JOIN score s ON p.name=s.player")      [-- <5> --]
 ----
 <1> patch the live `table` config to tell the space about the new `score` table — on first write the table is created from the record's field types.
 <2> `score.player` is a plain `str` — no FK declaration; the correspondence to `person.name` is purely by shared value.
 <3> second score row.
-<4> find all scores for `'marko'` — `?==` (`where`) rewrites to `SELECT * FROM score WHERE player = 'marko'`; the join is computed on demand.
+<4> find all scores for `'marko'` — `=?=` (`where`) rewrites to `SELECT * FROM score WHERE player = 'marko'`; the join is computed on demand.
 <5> the `p.name = s.player` join expressed in native SQL; both paths return the same result, the first stays in mtron.
 
 An `auto_from` (`!*`) pointer embedded in a row cell is metatron's structural foreign key.

@@ -631,7 +631,7 @@ bin/metatron</code></pre>
     hljs.addPlugin(new CopyButtonPlugin({
         callback: function(text, el) {
             // Strip multi-line [== ... ==] comments
-            text = text.replace(/\[==[\s\S]*?==\]/g, '');
+            text = text.replace(/\[==[\s\S]*=?=\]/g, '');
             // Process line by line
             return text.split('\n')
                 .map(function(line) {

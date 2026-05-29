@@ -272,46 +272,6 @@ bin/metatron</code></pre>
  obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
  inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
  space=&gt;[sub=&gt;{!*/m/mach,!*/m/math,!*/m/web,!*/m/iot,!*/m/grph,!*/m/llm,!*/m/tble,!*/m/dcmnt,!*/m/rdf}],
- const=&gt;[
-  noobj,
-  none@none],
- type=&gt;[
-  #::T,
-  bool::T,
-  int::T,
-  real::T,
-  bytes::T,
-  str::T,
-  uri::T,
-  rel::T,
-  lst::T,
-  rec::T,
-  instset::T,
-  inst::T,
-  code::T,
-  fail::T,
-  space::T,
-  memspace::T,
-  stack::T,
-  qproc::T,
-  subq::T,
-  sub::T,
-  typeq::T,
-  docs::T,
-  docq::T,
-  mintq::T,
-  incrq::T,
-  constq::T,
-  mimeq::T],
- rewrite=&gt;[
-  /m/inst/rewrite/id_removal?code{?}&lt;=code(),
-  /m/inst/rewrite/map_nest?code{?}&lt;=code(),
-  /m/inst/rewrite/else_after_count?code{?}&lt;=code(),
-  /m/inst/rewrite/plus_zero?code{?}&lt;=code(),
-  /m/inst/rewrite/mult_one?code{?}&lt;=code(),
-  /m/inst/rewrite/split_merge_collapse?code{?}&lt;=code(),
-  /m/inst/rewrite/split_merge_left_factor?code{?}&lt;=code(),
-  /m/inst/rewrite/split_merge_right_factor?code{?}&lt;=code()],
  inst=&gt;[
   as?bool&lt;=bool(bool::T),
   as?bytes&lt;=bool(bytes::T),
@@ -538,7 +498,47 @@ bin/metatron</code></pre>
   rshift?B{*}&lt;=A(C{*}::T),
   lshift?B{*}&lt;=A(),
   start?A{**}&lt;=noobj{0}(A{**}::T),
-  ctor()]]@/m</code></pre>
+  ctor()],
+ const=&gt;[
+  noobj,
+  none@none],
+ type=&gt;[
+  #::T,
+  bool::T,
+  int::T,
+  real::T,
+  bytes::T,
+  str::T,
+  uri::T,
+  rel::T,
+  lst::T,
+  rec::T,
+  instset::T,
+  inst::T,
+  code::T,
+  fail::T,
+  space::T,
+  memspace::T,
+  stack::T,
+  qproc::T,
+  subq::T,
+  sub::T,
+  typeq::T,
+  docs::T,
+  docq::T,
+  mintq::T,
+  incrq::T,
+  constq::T,
+  mimeq::T],
+ rewrite=&gt;[
+  /m/inst/rewrite/id_removal?code{?}&lt;=code(),
+  /m/inst/rewrite/map_nest?code{?}&lt;=code(),
+  /m/inst/rewrite/else_after_count?code{?}&lt;=code(),
+  /m/inst/rewrite/plus_zero?code{?}&lt;=code(),
+  /m/inst/rewrite/mult_one?code{?}&lt;=code(),
+  /m/inst/rewrite/split_merge_collapse?code{?}&lt;=code(),
+  /m/inst/rewrite/split_merge_left_factor?code{?}&lt;=code(),
+  /m/inst/rewrite/split_merge_right_factor?code{?}&lt;=code()]]@/m</code></pre>
                     </div>
                 </div>
             </div>
@@ -1037,46 +1037,6 @@ bin/metatron</code></pre>
  obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
  inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
  space=&gt;[sub=&gt;{!*/m/mach,!*/m/math,!*/m/web,!*/m/iot,!*/m/grph,!*/m/llm,!*/m/tble,!*/m/dcmnt,!*/m/rdf}],
- const=&gt;[
-  noobj,
-  none@none],
- type=&gt;[
-  #::T,
-  bool::T,
-  int::T,
-  real::T,
-  bytes::T,
-  str::T,
-  uri::T,
-  rel::T,
-  lst::T,
-  rec::T,
-  instset::T,
-  inst::T,
-  code::T,
-  fail::T,
-  space::T,
-  memspace::T,
-  stack::T,
-  qproc::T,
-  subq::T,
-  sub::T,
-  typeq::T,
-  docs::T,
-  docq::T,
-  mintq::T,
-  incrq::T,
-  constq::T,
-  mimeq::T],
- rewrite=&gt;[
-  /m/inst/rewrite/id_removal?code{?}&lt;=code(),
-  /m/inst/rewrite/map_nest?code{?}&lt;=code(),
-  /m/inst/rewrite/else_after_count?code{?}&lt;=code(),
-  /m/inst/rewrite/plus_zero?code{?}&lt;=code(),
-  /m/inst/rewrite/mult_one?code{?}&lt;=code(),
-  /m/inst/rewrite/split_merge_collapse?code{?}&lt;=code(),
-  /m/inst/rewrite/split_merge_left_factor?code{?}&lt;=code(),
-  /m/inst/rewrite/split_merge_right_factor?code{?}&lt;=code()],
  inst=&gt;[
   as?bool&lt;=bool(bool::T),
   as?bytes&lt;=bool(bytes::T),
@@ -1303,7 +1263,47 @@ bin/metatron</code></pre>
   rshift?B{*}&lt;=A(C{*}::T),
   lshift?B{*}&lt;=A(),
   start?A{**}&lt;=noobj{0}(A{**}::T),
-  ctor()]]@/m</code></pre></div>
+  ctor()],
+ const=&gt;[
+  noobj,
+  none@none],
+ type=&gt;[
+  #::T,
+  bool::T,
+  int::T,
+  real::T,
+  bytes::T,
+  str::T,
+  uri::T,
+  rel::T,
+  lst::T,
+  rec::T,
+  instset::T,
+  inst::T,
+  code::T,
+  fail::T,
+  space::T,
+  memspace::T,
+  stack::T,
+  qproc::T,
+  subq::T,
+  sub::T,
+  typeq::T,
+  docs::T,
+  docq::T,
+  mintq::T,
+  incrq::T,
+  constq::T,
+  mimeq::T],
+ rewrite=&gt;[
+  /m/inst/rewrite/id_removal?code{?}&lt;=code(),
+  /m/inst/rewrite/map_nest?code{?}&lt;=code(),
+  /m/inst/rewrite/else_after_count?code{?}&lt;=code(),
+  /m/inst/rewrite/plus_zero?code{?}&lt;=code(),
+  /m/inst/rewrite/mult_one?code{?}&lt;=code(),
+  /m/inst/rewrite/split_merge_collapse?code{?}&lt;=code(),
+  /m/inst/rewrite/split_merge_left_factor?code{?}&lt;=code(),
+  /m/inst/rewrite/split_merge_right_factor?code{?}&lt;=code()]]@/m</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">the core instruction set of metatron containing the base types and useful instructions to manipulate them</p>
 </div>
@@ -1344,7 +1344,7 @@ bin/metatron</code></pre>
         </span>
         <small class="text-muted code">/m/math/bB</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">data_size::T[][/m/math/bB/ctor?bB&lt;=#{?}(#::T)]@/m/math/bB</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">data_size::T[][ctor?bB&lt;=#{?}(#::T)]@/m/math/bB</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a byte of data</p>
 </div>
@@ -1419,7 +1419,7 @@ true.or(_,not(_))  [-- true -- ]</code></pre>
         </span>
         <small class="text-muted code">/m/space/qproc/constq</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">qproc::T[][/m/space/qproc/constq/ctor?constq&lt;=#{?}()]@/m/space/qproc/constq</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">qproc::T[][ctor?constq&lt;=#{?}()]@/m/space/qproc/constq</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">prevents the vid from being mutated once set</p>
 </div>
@@ -1451,7 +1451,7 @@ true.or(_,not(_))  [-- true -- ]</code></pre>
         </span>
         <small class="text-muted code">/m/space/qproc/docq</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">qproc::T[][/m/space/qproc/docq/ctor?docq&lt;=#{?}()]@/m/space/qproc/docq</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">qproc::T[][ctor?docq&lt;=#{?}()]@/m/space/qproc/docq</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">addr documentation qproc</p>
 </div><div class="card-body border-top py-2">
@@ -1473,7 +1473,7 @@ true.or(_,not(_))  [-- true -- ]</code></pre>
   {?}rng=&gt;str::T,
   {?}args=&gt;#::T,
   desc=&gt;str::T,
-  {?}example=&gt;lst::T]][/m/space/qproc/docq/docs/ctor?docs&lt;=#{?}(#::T)]@/m/space/qproc/docq/docs</code></pre></div>
+  {?}example=&gt;lst::T]][ctor?docs&lt;=#{?}(#::T)]@/m/space/qproc/docq/docs</code></pre></div>
     
 </div><div class="card mb-3" id="type-fail">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1500,7 +1500,7 @@ fail::[dah] + 2 + catch(9)  [-- fail flattened to 9       --]</code></pre>
         </span>
         <small class="text-muted code">/m/math/gB</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">data_size::T[][/m/math/gB/ctor?gB&lt;=#{?}(#::T)]@/m/math/gB</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">data_size::T[][ctor?gB&lt;=#{?}(#::T)]@/m/math/gB</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a gigabyte (1024 megabytes) of data</p>
 </div>
@@ -1536,7 +1536,7 @@ html::[html=&gt;
         </span>
         <small class="text-muted code">/m/space/qproc/incrq</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">qproc::T[][/m/space/qproc/incrq/ctor?incrq&lt;=#{?}()]@/m/space/qproc/incrq</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">qproc::T[][ctor?incrq&lt;=#{?}()]@/m/space/qproc/incrq</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">internal counter increments and appends value to vid</p>
 </div>
@@ -1574,7 +1574,7 @@ abc(a=&gt;?int::T,b=&gt;|(*a +10)){ _.*b }       [-- dependent arg inst    --]
   {?}type=&gt;{?}[#{*}::T],
   {?}inst=&gt;{?}[inst::T],
   {?}rewrite=&gt;{?}[inst::T],
-  {?}sugar=&gt;{?}[lst::T]]][/m/instset/ctor?instset&lt;=#{?}(#::T)]@/m/instset</code></pre></div>
+  {?}sugar=&gt;{?}[lst::T]]][ctor?instset&lt;=#{?}(#::T)]@/m/instset</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">an aggregate of consts, types, insts, rewrites, and sugars structuring a domain of discourse</p>
 </div><div class="card-body py-2">
@@ -1630,7 +1630,7 @@ abc(a=&gt;?int::T,b=&gt;|(*a +10)){ _.*b }       [-- dependent arg inst    --]
         </span>
         <small class="text-muted code">/m/math/kB</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">data_size::T[][/m/math/kB/ctor?kB&lt;=#{?}(#::T)]@/m/math/kB</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">data_size::T[][ctor?kB&lt;=#{?}(#::T)]@/m/math/kB</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a kilobyte (1024 bytes) of data</p>
 </div>
@@ -1660,7 +1660,7 @@ abc(a=&gt;?int::T,b=&gt;|(*a +10)){ _.*b }       [-- dependent arg inst    --]
         </span>
         <small class="text-muted code">/m/math/mB</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">data_size::T[][/m/math/mB/ctor?mB&lt;=#{?}(#::T)]@/m/math/mB</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">data_size::T[][ctor?mB&lt;=#{?}(#::T)]@/m/math/mB</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a megabyte (1024 kilobytes) of data</p>
 </div>
@@ -1686,7 +1686,7 @@ abc(a=&gt;?int::T,b=&gt;|(*a +10)){ _.*b }       [-- dependent arg inst    --]
         </span>
         <small class="text-muted code">/m/space/qproc/mimeq</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">qproc::T[][/m/space/qproc/mimeq/ctor?mimeq&lt;=#{?}()]@/m/space/qproc/mimeq</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">qproc::T[][ctor?mimeq&lt;=#{?}()]@/m/space/qproc/mimeq</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">maps the obj to the specified mime type</p>
 </div>
@@ -1698,7 +1698,7 @@ abc(a=&gt;?int::T,b=&gt;|(*a +10)){ _.*b }       [-- dependent arg inst    --]
         </span>
         <small class="text-muted code">/m/space/qproc/mintq</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">qproc::T[][/m/space/qproc/mintq/ctor?mintq&lt;=#{?}()]@/m/space/qproc/mintq</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">qproc::T[][ctor?mintq&lt;=#{?}()]@/m/space/qproc/mintq</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">mint a unique uri extension to obj vid</p>
 </div><div class="card-body border-top py-2">
@@ -1713,7 +1713,7 @@ abc(a=&gt;?int::T,b=&gt;|(*a +10)){ _.*b }       [-- dependent arg inst    --]
         </span>
         <small class="text-muted code">/m/math/pB</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">data_size::T[][/m/math/pB/ctor?pB&lt;=#{?}(#::T)]@/m/math/pB</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">data_size::T[][ctor?pB&lt;=#{?}(#::T)]@/m/math/pB</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a petabyte (1024 terabytes) of data</p>
 </div>
@@ -1903,7 +1903,7 @@ a-&gt;2+*a                   [-- 4 via sugar&#39;d writing/reading a --]</code><
         </span>
         <small class="text-muted code">/m/space/qproc/subq</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">qproc::T[][/m/space/qproc/subq/ctor?subq&lt;=#{?}()]@/m/space/qproc/subq</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">qproc::T[][ctor?subq&lt;=#{?}()]@/m/space/qproc/subq</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">uri publish-subscribe qproc.
 when writing an inst to a subq uri, be sure to |-block prefix
@@ -1923,7 +1923,7 @@ a?subq         -&gt; |(&gt;&gt;1+1.println(_).to(a)) [-- infinite incr loop     
         </span>
         <small class="text-muted code">/m/math/tB</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">data_size::T[][/m/math/tB/ctor?tB&lt;=#{?}(#::T)]@/m/math/tB</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">data_size::T[][ctor?tB&lt;=#{?}(#::T)]@/m/math/tB</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a terabyte (1024 gigabytes) of data</p>
 </div>
@@ -1962,7 +1962,7 @@ a?subq         -&gt; |(&gt;&gt;1+1.println(_).to(a)) [-- infinite incr loop     
         </span>
         <small class="text-muted code">/m/space/qproc/typeq</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">qproc::T[][/m/space/qproc/typeq/ctor?typeq&lt;=#{?}()]@/m/space/qproc/typeq</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">qproc::T[][ctor?typeq&lt;=#{?}()]@/m/space/qproc/typeq</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">addr type constraint qproc</p>
 </div><div class="card-body border-top py-2">
@@ -3797,7 +3797,7 @@ nat::6.type()-&lt;[tid(),vid()] [-- [/m/int, nat] non-base types tids are the ty
     hljs.addPlugin(new CopyButtonPlugin({
         callback: function(text, el) {
             // Strip multi-line [== ... ==] comments
-            text = text.replace(/\[==[\s\S]*?==\]/g, '');
+            text = text.replace(/\[==[\s\S]*=?=\]/g, '');
             // Process line by line
             return text.split('\n')
                 .map(function(line) {

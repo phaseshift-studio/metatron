@@ -182,6 +182,8 @@ public class grphSpaceTest extends AbstractSpaceTest {
             //   "*/g/V/+/OUT/+/IN/name                                                          % {\"josh\",str{3}::\"lop\",\"vadas\",\"ripple\"}",
             "*/g/V/1/name                                                                   % \"marko\"",
             "*/g/V/1/OUT.dom()                                                              % {created,{2}knows}",
+            "*/g/V/1/OUT>>created.count()                                                    % 1",
+            "*/g/V/1/OUT>>knows.count()                                                      % 2",
             "*/g/V/1/OUT/created.count()                                                    % 1",
             "*/g/V/1/OUT/knows.count()                                                      % 2",
             // "*/g/V/1/OUT/+.count()                                                          % 3",

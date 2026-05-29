@@ -301,6 +301,8 @@ public class mModel extends MRec {
 
     private Capability notesCapability() {
         return (service, systemMessages) -> {
+            if(null == this.vid())
+                throw MTronException.of("notes requires a vid model");
             if (this.notes().isPresent() && this.vid() != null) {
                 try {
                     systemMessages.add("""

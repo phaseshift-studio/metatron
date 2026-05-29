@@ -37,6 +37,14 @@ public interface ObjSerializer<T> extends Uri {
     ByteBuffer outputBytes(final Obj obj) throws MTronException;
 
     Obj inputBytes(final ByteBuffer bytes) throws MTronException;
+    
+    default Obj inputBytes(final byte[] bytes) {
+        return this.inputBytes(ByteBuffer.wrap(bytes));
+    }
+
+    default Obj inputBytes(final String stringToBytes) {
+        return this.inputBytes(ByteBuffer.wrap(stringToBytes.getBytes()));
+    }
 
     default T write(final Obj obj) throws MTronException {
         try {

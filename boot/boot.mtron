@@ -50,8 +50,9 @@ print("{{y}}supported scripting environments:\n{{X}}", *<boot/script>.else(boot/
  memspace::[pattern   => /shared/#,
             persist   => </tmp/shared.mtron>]@/sys/space/shared;
  fsspace::[pattern  => local:#,
-            route   => [local:=><~/>],
-            script  => !*boot/script]@/sys/space/fs;
+            route   => [local:=><~/>]@/sys/space/fs;
+ fsspace::[pattern  => home:#,
+             route   => [home:=><~/.metatron/home>]]@/sys/space/home;
   fsspace::[pattern  => metatronfs:#,
              route   => [metatronfs:=><.>]]@/sys/space/metatronfs;
   fsspace::[pattern  => mtronfs:#,

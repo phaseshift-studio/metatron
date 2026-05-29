@@ -235,9 +235,7 @@ import studio.phaseshift.metatron.furi.fURI;
                              .map(v -> IdObj.of(this.elementVID(v), VertexMap.vertexToRec(v, this)))
                              .map(idobj -> {
                                  if (dp.hasField()) {
-                                     // remaining path after V/<id> — navigate into the vertex rec
-                                     fURI remaining = routed.pretract(2);
-                                     return IdObj.of(idobj.furi().extend(remaining), idobj.obj().asRec().at(remaining));
+                                     return IdObj.of(idobj.furi().extend(f(dp.field()).extend(dp.extension())), idobj.obj().asRec().at(f(dp.field()).extend(dp.extension())));
                                  } else {
                                      return idobj;
                                  }
@@ -251,6 +249,13 @@ import studio.phaseshift.metatron.furi.fURI;
                      else iterator = IteratorUtil.of();
                      return (Iterator) IteratorUtil.stream(iterator)
                              .map(e -> IdObj.of(this.elementVID(e), EdgeMap.edgeToRec(e, this)))
+                             .map(idobj -> {
+                                 if (dp.hasField()) {
+                                     return IdObj.of(idobj.furi().extend(f(dp.field()).extend(dp.extension())), idobj.obj().asRec().at(f(dp.field()).extend(dp.extension())));
+                                 } else {
+                                     return idobj;
+                                 }
+                             })
                              .iterator();
                  } else {
                      LOG.debug("unknown tp3 vid: %s", pattern);

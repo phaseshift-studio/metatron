@@ -383,7 +383,7 @@ public class mParser {
 
     public static <O extends Obj> O eval(final String code) {
         final AtomicReference<Obj> running = new AtomicReference<>(noobj());
-        splitOnNonQuotedSequence(code.replaceAll("\\[==.*?==]", ""), ';', false).stream()
+        splitOnNonQuotedSequence(code.replaceAll("\\[==.*=?=]", ""), ';', false).stream()
                 .filter(s -> !s.trim().isEmpty())
                 .map(s -> Arrays.stream(s.split("\n"))
                         .map(String::trim)
