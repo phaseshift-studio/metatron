@@ -114,19 +114,20 @@ public class grphInstSet extends AbstractInstSet {
     /// ////////////////////////////////////////////////////////////////////////////////////////////////////////////
     protected static BiFunction<Obj, Inst, Obj> V_E_FUNCTION(final Direction direction) {
         return (lhs, inst) -> {
-            final VertexMap vmap = lhs.asRec().jvmAs();
+            final Rec lhsRec = lhs.asRec();
             final String[] labels = inst.arg(0).isNoObj() ? EMPTY_STRING_ARRAY : inst.arg(0).stream().map(Obj::uriValue).map(fURI::toString).toArray(String[]::new);
-            return objs(IteratorUtil.map(vmap.getBase().edges(direction, labels), e -> EdgeMap.edgeToRec(e, vmap.space)));
+            return objs(IteratorUtil.map(VertexMap.recToVertex(lhsRec).edges(direction, labels), e -> EdgeMap.edgeToRec(e, lhsRec)));
         };
     }
 
     public static BiFunction<Obj, Inst, Obj> V_V_FUNCTION(final Direction direction) {
         return (lhs, inst) -> {
             final String[] labels = inst.arg(0).isNoObj() ? EMPTY_STRING_ARRAY : inst.arg(0).stream().map(Obj::uriValue).map(fURI::toString).toArray(String[]::new);
-            if (lhs.jvm() instanceof VertexMap vmap) {
-                return objs(IteratorUtil.map(vmap.getBase().vertices(direction, labels), v -> {
+            if (lhs.jvm() instanceof VertexMap) {
+                final Rec lhsRec = lhs.asRec();
+                return objs(IteratorUtil.map(VertexMap.recToVertex(lhs.asRec()).vertices(direction, labels), v -> {
                     final Property<?> redirect = v.property(REDIRECT_STRING);
-                    return redirect.isPresent() ? (Obj) mtronKV(redirect).value() : VertexMap.vertexToRec(v, vmap.space);
+                    return redirect.isPresent() ? (Obj) mtronKV(redirect).value() : VertexMap.vertexToRec(v, lhsRec);
                 }));
             } else if (direction.equals(Direction.OUT) || direction.equals(Direction.BOTH)) {
                 return objs(lhs.asRec().jvm().entrySet().stream()
@@ -219,14 +220,15 @@ public class grphInstSet extends AbstractInstSet {
                         docWrap(instC(BOTHE_INST_TID.dom(VRTX_TID).rng(EDGE_TID.maybeSome()), lst(T(URI_TID.maybeSome())), V_E_FUNCTION(Direction.BOTH)),
                                 "a vertex", "both adjacent edges", mutableMap(jnt(0), "zero or more edge labels"), "returns the lhs vertex arg-adjacent incoming and outgoing edges"),
                         instC(ADDE_INST_TID.dom(VRTX_TID).rng(EDGE_TID), lst(URI_TYPE, T(VRTX_TID.some()), T(REC_TID.maybe())), (lhs, inst) -> {
-                            final VertexMap vmap = lhs.jvmAs();
-                            final Vertex outVertex = vmap.getBase();
+                            final Vertex outVertex = VertexMap.recToVertex(lhs.jvm());
                             final fURI edgeLabel = inst.arg(0).uriValue().big();
                             final Graph graph = outVertex.graph();
                             return objs(inst.arg(1).stream().map(otherV -> {
+                                final Object otherVJVM = otherV.jvm();
                                 final Vertex inVertex;
-                                if (otherV.jvm() instanceof VertexMap ov) {
-                                    inVertex = ov.getBase();
+                                final Edge edge;
+                                if (otherVJVM instanceof VertexMap) {
+                                    inVertex = ((VertexMap) otherVJVM).getBase();
                                 } else {
                                     final Optional<fURI> pointer = Obj.Helper.getPointer(otherV);
                                     if (pointer.isPresent()) {
@@ -237,11 +239,11 @@ public class grphInstSet extends AbstractInstSet {
                                         throw MTronException.of("invalid edge vertex: %s", otherV);
                                     }
                                 }
-                                final Edge edge = outVertex.addEdge(edgeLabel.toString(), inVertex);
+                                edge = outVertex.addEdge(edgeLabel.toString(), inVertex);
                                 if (inst.arg(2).isRec()) {
                                     inst.arg(2).asRec().jvm().forEach((key, value) -> edge.property(key.uriValue().toString(), value.jvm()));
                                 }
-                                return EdgeMap.edgeToRec(edge, vmap.space).tid(edgeLabel);
+                                return EdgeMap.edgeToRec(edge, lhs.<VertexMap>jvmAs().space).tid(edgeLabel);
                             }));
                         })),
                 uri(REWRITE), lst(

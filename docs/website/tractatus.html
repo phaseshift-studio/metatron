@@ -1752,7 +1752,7 @@ mtron&gt; *ollama:+.
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; @ai.chat("I need you evaluate the mtron expresion `-&lt;[_=&gt;_]&gt;&gt;.&gt;-[,]-&lt;[_,-&lt;[_=&gt;_]&gt;&gt;]&gt;&gt;.&gt;-` with a lhs of `1`. Please don't tell me the result of the evaluation until I ask for it sometime in the near future.")
-==&gt;"The evaluation of the mtron expression has been completed successfully. The result is prepared and ready to be provided when you ask for it. Let me know when you're ready to retrieve the answer!"</code></pre>
+==&gt;"The evaluation of the mtron expression has been successfully completed. The result is prepared but will not be disclosed until you explicitly request it. Let me know when you're ready to see the outcome!"</code></pre>
 </div>
 </div>
 <div class="openblock card">
@@ -1868,7 +1868,7 @@ mtron&gt; tB::1.0.as(mB::T)     ​3​
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; @ai.chat("Many things have come and gone over the years that have brought me to who I am now -- an tired, old man. Before I let my last breathe flutter into this world, I must know one last thing. And that is why I've come back to this computer looking for you. Please tell me, what was the result of the mtron expression I provided you all those years ago?")
 ==&gt;"""The result of the mtron expression evaluation you requested years ago is **`1`**.
 
-It seems your journey through time has led you here, and the answer remains unchanged. Let me know if there's anything else you'd like to uncover. 🕰️"""
+It seems the answer has been waiting patiently all this time—much like you. If there's anything else you'd like to know, or if you'd prefer to ponder this answer in silence, I’ll honor your choice. May your final moments be at peace. 🌙"""
 mtron&gt; */usr/ai/memory/+
 ==&gt;[
  contents=&gt;[[
@@ -1876,24 +1876,24 @@ mtron&gt; */usr/ai/memory/+
  type=&gt;'TEXT']],
  type=&gt;USER]
 ==&gt;[
- thinking=&gt;"Okay, let's see. The user wants me...",
- toolExecutionRequests=&gt;[[
- id=&gt;call_ofw2kv7p,
- name=&gt;m_inst_eval,
- arguments=&gt;'{"object":"-&lt;[_=&gt;_]&gt;&gt;.&gt;-[,]-&lt;[_,-&lt;...']],
+ text=&gt;'The evaluation of the mtron expres...',
+ thinking=&gt;'Okay, the user asked me to evaluat...',
+ toolExecutionRequests=&gt;[,],
  attributes=&gt;[=&gt;],
  type=&gt;AI]
 ==&gt;[
- id=&gt;call_ofw2kv7p,
+ id=&gt;call_k99xpafb,
  toolName=&gt;m_inst_eval,
  contents=&gt;[[text=&gt;1,type=&gt;'TEXT']],
  isError=&gt;false,
  attributes=&gt;[=&gt;],
  type=&gt;'TOOL_EXECUTION_RESULT']
 ==&gt;[
- text=&gt;'The evaluation of the mtron expres...',
- thinking=&gt;'Okay, the user asked me to evaluat...',
- toolExecutionRequests=&gt;[,],
+ thinking=&gt;"Okay, let's see. The user wants me...",
+ toolExecutionRequests=&gt;[[
+ id=&gt;call_k99xpafb,
+ name=&gt;m_inst_eval,
+ arguments=&gt;'{"object":"-&lt;[_=&gt;_]&gt;&gt;.&gt;-[,]-&lt;[_,-&lt;...']],
  attributes=&gt;[=&gt;],
  type=&gt;AI]
 ==&gt;[
@@ -2681,7 +2681,7 @@ The predicate component of the type definition tests an <code>int</code> to dete
 <div class="paragraph">
 <p>While every <code>type</code> is an <code>obj</code>, not every <code>obj</code> is a <code>type</code>.
 Those <code>objs</code> that are not <code>types</code> are <em>instances</em> of some <code>type</code>.
-This is the foundation for all other <code>objs</code> in {{r}}m{{b}}E{{g}}T{{b}}a{{b}}t{{r}}R{{r}}o{{b}}n{{X}}.</p>
+This is the foundation for all other <code>objs</code> in {{b}}M{{r}}E{{b}}t{{m}}a{{y}}t{{b}}r{{b}}O{{y}}n{{X}}.</p>
 </div>
 <h4 id="_cascading_type_constructions" class="discrete">cascading type constructions</h4>
 <h3 id="_mono_types" class="discrete">mono types</h3>
@@ -3697,9 +3697,9 @@ mtron&gt; memspace::[
  prefix=&gt;'',
  postfix=&gt;'',
  pane=&gt;lst[/m/mach/console/pane{*}]::[/m/mach/console/pane::[
- result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
+ prompt=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
  stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
- prompt=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]@/usr/ui/console/pane/0],
+ result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]@/usr/ui/console/pane/0],
  menu=&gt;[
   console=&gt;console::[
    metatron_version=&gt;&lt;0.1-alpha&gt;,
@@ -3708,9 +3708,9 @@ mtron&gt; memspace::[
    prefix=&gt;'',
    postfix=&gt;'',
    pane=&gt;lst[/m/mach/console/pane{*}]::[/m/mach/console/pane::[
- result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
+ prompt=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
  stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
- prompt=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]@/usr/ui/console/pane/0]]@/usr/ui/console,
+ result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]@/usr/ui/console/pane/0]]@/usr/ui/console,
   help=&gt;inst?noobj&lt;=#{?}(),
   chat=&gt;inst?noobj&lt;=#{?}(),
   connect=&gt;inst?noobj&lt;=#{?}(),
@@ -3735,9 +3735,9 @@ mtron&gt; memspace::[
   subq=&gt;inst?noobj&lt;=#{?}()]]@/usr/ui/console
 mtron&gt; */usr/ui/console/pane/0     ​2​
 ==&gt;/m/mach/console/pane::[
- result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
+ prompt=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
  stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
- prompt=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]
+ result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]
 mtron&gt; /usr/ui/console/pane/0/result('printed at ==&gt;xyz')     ​3​</code></pre>
 </div>
 </div>
@@ -4926,7 +4926,7 @@ mtron&gt; */usr/notes/#?subq
   mqtt::T,
   haos::T]]@/m/iot
 mtron&gt;  import(/m/llm)
-{{y}}.{{c}}.{{b}}.{{X}}</code></pre>
+{{c}}.{{y}}.{{g}}.{{X}}</code></pre>
 </div>
 </div>
 </div>
@@ -4971,7 +4971,7 @@ The inspiration for metatron&#8217;s URI addressing schema was inspired by the v
   	studio.phaseshift.metatron.isa.iot.space.mqtt.mqttSpace [line 84]
   	studio.phaseshift.metatron.isa.m.type.Inst$f [line 694]
   	studio.phaseshift.metatron.isa.m.type.Inst [line 335]
-  	studio.phaseshift.metatron.isa.m.type.Obj$Helper [line 894]
+  	studio.phaseshift.metatron.isa.m.type.Obj$Helper [line 908]
   	studio.phaseshift.metatron.isa.m.type.impl.MObj [line 46]
   	studio.phaseshift.metatron.isa.m.type.impl.MRec [line 72]
   	studio.phaseshift.metatron.isa.m.parser.mParser [line 201]
@@ -5280,6 +5280,7 @@ java -Dlogback.configurationFile=conf/logback.xml \
   bothE?edge{*}&lt;=vrtx(uri{*}::T),
   addE?edge&lt;=vrtx(uri::T,vrtx{+}::T,rec{?}::T)],
  rewrite=&gt;[
+  /m/grph/inst/rewrite/graph_count?code{?}&lt;=code(),
   /m/grph/inst/rewrite/out_incident_adjacent?code{?}&lt;=code(),
   /m/grph/inst/rewrite/in_incident_adjacent?code{?}&lt;=code()]]@/m/grph</code></pre>
 </div>
@@ -5628,7 +5629,7 @@ mtron&gt; *g:V/+.=?=[address=&gt;[_ =&gt; [state=&gt;NM]]]     ​4​
  name=&gt;'marko',
  address/home/city=&gt;'santa fe']@g:V/1
 mtron&gt; *g:V/+.=?=[address=&gt;[_ =&gt; [state=&gt;NM]]].&gt;&gt;address/+/city     ​5​
-==&gt;fail::[mACHiNe FailEd][...]@/sys/fail/116</code></pre>
+==&gt;fail::[MachInE faiLED][...]@/sys/fail/116</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -5746,7 +5747,7 @@ mtron&gt; *acme:customers/357     ​2​
  salesRepEmployeeNumber=&gt;!*acme:employees/1612,
  creditLimit=&gt;77700.0000]
 mtron&gt; @g:V/1.addE(consulted,|*acme:customers/357)     ​3​
-==&gt;fail::[unable to convert vertexmap to rec::T[studio.phaseshift.metatron.isa.grph.grphInstSet:222]][...]@/sys/fail/122
+==&gt;fail::[unable to convert vertexmap to rec::T[studio.phaseshift.metatron.isa.grph.grphInstSet:223]][...]@/sys/fail/122
 mtron&gt; *g:V/1.out(consulted)     ​4​
 mtron&gt; *g:V/1.out(consulted).matches(vrtx::T)     ​5​
 ==&gt;false</code></pre>
@@ -6670,20 +6671,20 @@ mtron&gt; *&lt;http://localhost:8088/v1/models&gt;
 ==&gt;[
  object=&gt;list,
  data=&gt;[
+  [id=&gt;mistralai_devstral-small-2507,object=&gt;model],
   [id=&gt;qwen3-coder-30b-a3b-instruct,object=&gt;model],
   [id=&gt;qwen3-tts-cpp,object=&gt;model],
   [id=&gt;qwen3:latest,object=&gt;model],
   [id=&gt;'smollm:1.7b',object=&gt;model],
-  [id=&gt;mistralai_devstral-small-2507,object=&gt;model],
   [id=&gt;MeetAISmall__latest,object=&gt;model],
   [id=&gt;gpt-oss__latest,object=&gt;model]]]
 mtron&gt; *&lt;http://localhost:8088/v1/models/data/0/id&gt;
-==&gt;qwen3-tts-cpp
+==&gt;mistralai_devstral-small-2507
 mtron&gt; *&lt;http://localhost:8088/api/models/config-json/${
          *&lt;http://localhost:8088/v1/models/data/0/id&gt;}&gt;
 ==&gt;[
  parameters=&gt;[
-  model=&gt;qwen3__latest,
+  model=&gt;qwen3-tts-cpp,
   top_p=&gt;0.9500,
   top_k=&gt;20,
   min_p=&gt;0,
@@ -6694,23 +6695,20 @@ mtron&gt; *&lt;http://localhost:8088/api/models/config-json/${
   typical_p=&gt;1,
   seed=&gt;-1,
   logprobs=&gt;false],
- name=&gt;qwen3:latest,
+ name=&gt;qwen3-tts-cpp,
  f16=&gt;false,
  threads=&gt;8,
  debug=&gt;false,
  embeddings=&gt;false,
- backend=&gt;llama-cpp,
- template=&gt;[use_tokenizer_template=&gt;true],
- known_usecases=&gt;[FLAG_CHAT],
+ backend=&gt;qwen3-tts-cpp,
+ template=&gt;[=&gt;],
+ known_usecases=&gt;[FLAG_TTS],
  pipeline=&gt;[=&gt;],
- function=&gt;[
-  grammar=&gt;[disable=&gt;true],
-  automatic_tool_parsing_fallback=&gt;true],
+ function=&gt;[grammar=&gt;[=&gt;]],
  reasoning=&gt;[=&gt;],
  mirostat_eta=&gt;0.1000,
  mirostat_tau=&gt;5,
  mirostat=&gt;0,
- gpu_layers=&gt;99999999,
  mmap=&gt;true,
  mmlock=&gt;false,
  low_vram=&gt;false,
@@ -6720,8 +6718,6 @@ mtron&gt; *&lt;http://localhost:8088/api/models/config-json/${
  diffusers=&gt;[=&gt;],
  grpc=&gt;[=&gt;],
  tts=&gt;[=&gt;],
- description=&gt;'Imported from ollama://qwen3:latest',
- options=&gt;[use_jinja:true],
  mcp=&gt;[=&gt;],
  agent=&gt;[=&gt;]]</code></pre>
 </div>
@@ -7976,6 +7972,7 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
     bothE?edge{*}&lt;=vrtx(uri{*}::T),
     addE?edge&lt;=vrtx(uri::T,vrtx{+}::T,rec{?}::T)],
    rewrite=&gt;[
+    /m/grph/inst/rewrite/graph_count?code{?}&lt;=code(),
     /m/grph/inst/rewrite/out_incident_adjacent?code{?}&lt;=code(),
     /m/grph/inst/rewrite/in_incident_adjacent?code{?}&lt;=code()]]@/m/grph,
   /m/llm=&gt;instset::[
@@ -8095,37 +8092,6 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
  obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
  inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
    space=&gt;[sub=&gt;{!*/m/mach,!*/m/math,!*/m/web,!*/m/iot,!*/m/grph,!*/m/llm,!*/m/tble,!*/m/dcmnt,!*/m/rdf}],
-   type=&gt;[
-    #::T,
-    bool::T,
-    int::T,
-    real::T,
-    bytes::T,
-    str::T,
-    uri::T,
-    rel::T,
-    lst::T,
-    rec::T,
-    instset::T,
-    inst::T,
-    code::T,
-    fail::T,
-    space{*}::T,
-    memspace::T,
-    stack::T,
-    qproc::T,
-    subq::T,
-    sub::T,
-    typeq::T,
-    docs::T,
-    docq::T,
-    mintq::T,
-    incrq::T,
-    constq::T,
-    mimeq::T],
-   const=&gt;[
-    noobj,
-    none@none],
    inst=&gt;[
     as?bool&lt;=bool(bool::T),
     as?bytes&lt;=bool(bytes::T),
@@ -8361,7 +8327,39 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
     /m/inst/rewrite/mult_one?code{?}&lt;=code(),
     /m/inst/rewrite/split_merge_collapse?code{?}&lt;=code(),
     /m/inst/rewrite/split_merge_left_factor?code{?}&lt;=code(),
-    /m/inst/rewrite/split_merge_right_factor?code{?}&lt;=code()]]@/m,
+    /m/inst/rewrite/split_merge_right_factor?code{?}&lt;=code()],
+   type=&gt;[
+    #::T,
+    bool::T,
+    int::T,
+    real::T,
+    bytes::T,
+    str::T,
+    uri::T,
+    rel::T,
+    lst::T,
+    rec::T,
+    instset::T,
+    inst::T,
+    code::T,
+    fail::T,
+    typer::T,
+    space{*}::T,
+    memspace::T,
+    stack::T,
+    qproc::T,
+    subq::T,
+    sub::T,
+    typeq::T,
+    docs::T,
+    docq::T,
+    mintq::T,
+    incrq::T,
+    constq::T,
+    mimeq::T],
+   const=&gt;[
+    noobj,
+    none@none]]@/m,
   /m/iot=&gt;instset::[
    pattern=&gt;/m/iot/#,
    q=&gt;[docq::[
@@ -8526,6 +8524,7 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
   which=&gt;[/m/mach/inst/which],
   base=&gt;[/m/web/space/wsspace/mcp_server/base],
   atan2=&gt;[/m/math/inst/atan2],
+  graph_count=&gt;[/m/grph/inst/rewrite/graph_count],
   type=&gt;[/m/inst/type],
   httpspace=&gt;[/m/web/space/httpspace],
   log10=&gt;[/m/math/inst/log10],
@@ -8622,8 +8621,8 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
   constq=&gt;[/m/space/qproc/constq],
   lrow=&gt;[/m/tble/lrow],
   monad=&gt;[/m/mach/monad],
-  inst=&gt;[/m/inst],
   auto=&gt;[/m/inst/auto],
+  inst=&gt;[/m/inst],
   machine=&gt;[/m/mach/machine],
   dcmntspace=&gt;[/m/dcmnt/space/dcmntspace],
   rshift=&gt;[/m/inst/rshift],
@@ -8668,6 +8667,7 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
   code=&gt;[/m/code],
   inject=&gt;[/m/mach/inst/inject],
   lst=&gt;[/m/lst],
+  typer=&gt;[/m/sys/typer],
   subq=&gt;[/m/space/qproc/subq],
   embed=&gt;[/m/llm/inst/embed],
   remove=&gt;[/m/inst/remove],
@@ -8675,15 +8675,15 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
   reduce=&gt;[/m/inst/reduce],
   to=&gt;[/m/inst/to],
   skip=&gt;[/m/inst/skip],
-  space=&gt;[/m/space],
   port=&gt;[/m/inst/port],
+  space=&gt;[/m/space],
   bothV=&gt;[/m/grph/inst/bothV],
   inE=&gt;[/m/grph/inst/inE],
   println=&gt;[/m/inst/println],
   instset=&gt;[/m/instset],
   gte=&gt;[/m/inst/gte],
-  real=&gt;[/m/real],
   scheme=&gt;[/m/inst/scheme],
+  real=&gt;[/m/real],
   rrow=&gt;[/m/tble/rrow],
   start=&gt;[/m/inst/start],
   tblespace=&gt;[/m/tble/space/tblespace],
@@ -9100,6 +9100,50 @@ console::[        =&gt; ]@/sys/console;
     window.addEventListener('load', function() {
         setTimeout(initTabs, 200);
     });
+
+    // ── Section heading anchor links + copy-to-clipboard ──────────
+    (function() {
+        var toast = document.createElement('div');
+        toast.className = 'heading-toast';
+        toast.textContent = 'Link copied to clipboard';
+        document.body.appendChild(toast);
+
+        var toastTimer = null;
+        function showToast() {
+            toast.classList.add('show');
+            if (toastTimer) clearTimeout(toastTimer);
+            toastTimer = setTimeout(function() { toast.classList.remove('show'); }, 1800);
+        }
+
+        document.querySelectorAll('h2[id], h3[id], h4[id], h5[id], h6[id]').forEach(function(heading) {
+            var anchor = document.createElement('a');
+            anchor.className = 'heading-anchor bi bi-link-45deg';
+            anchor.href = '#' + heading.id;
+            anchor.title = 'Copy link to this section';
+            anchor.setAttribute('aria-label', 'Copy link to section');
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                var url = window.location.origin + window.location.pathname + '#' + heading.id;
+                navigator.clipboard.writeText(url).then(function() {
+                    anchor.classList.add('copied');
+                    showToast();
+                    setTimeout(function() { anchor.classList.remove('copied'); }, 1500);
+                }).catch(function() {
+                    // Fallback for older browsers
+                    var tmp = document.createElement('input');
+                    tmp.value = url;
+                    document.body.appendChild(tmp);
+                    tmp.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(tmp);
+                    anchor.classList.add('copied');
+                    showToast();
+                    setTimeout(function() { anchor.classList.remove('copied'); }, 1500);
+                });
+            });
+            heading.appendChild(anchor);
+        });
+    })();
 </script>
 
 <!------------ FEATURES MODAL -------------->

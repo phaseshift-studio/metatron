@@ -294,6 +294,7 @@ bin/metatron</code></pre>
   bothE?edge{*}&lt;=vrtx(uri{*}::T),
   addE?edge&lt;=vrtx(uri::T,vrtx{+}::T,rec{?}::T)],
  rewrite=&gt;[
+  /m/grph/inst/rewrite/graph_count?code{?}&lt;=code(),
   /m/grph/inst/rewrite/out_incident_adjacent?code{?}&lt;=code(),
   /m/grph/inst/rewrite/in_incident_adjacent?code{?}&lt;=code()]]@/m/grph</code></pre>
                     </div>
@@ -303,7 +304,7 @@ bin/metatron</code></pre>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <button class="btn btn-outline-secondary" disabled>Consts <span class="pill-label badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">5</span></a><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">13</span></a><button class="btn btn-outline-secondary" disabled>Spaces <span class="pill-label badge bg-dark">0</span></button><a href="#rewrites" class="btn btn-outline-primary">Rewrites <span class="pill-label badge bg-warning">2</span></a>
+        <button class="btn btn-outline-secondary" disabled>Consts <span class="pill-label badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">5</span></a><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">13</span></a><button class="btn btn-outline-secondary" disabled>Spaces <span class="pill-label badge bg-dark">0</span></button><a href="#rewrites" class="btn btn-outline-primary">Rewrites <span class="pill-label badge bg-warning">3</span></a>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="card">
@@ -370,7 +371,10 @@ bin/metatron</code></pre>
 </a></div>
 </div><div class="mb-3">
     <h6 class="text-primary mb-2">Rewrites</h6>
-    <div class="d-flex flex-wrap"><a href="#rewrite-in_incident_adjacent" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <div class="d-flex flex-wrap"><a href="#rewrite-graph_count" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">graph_count</span>
+    <span class="pill-label badge bg-warning text-dark ms-2">R</span>
+</a><a href="#rewrite-in_incident_adjacent" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">in_incident_adjacent</span>
     <span class="pill-label badge bg-warning text-dark ms-2">R</span>
 </a><a href="#rewrite-out_incident_adjacent" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
@@ -676,8 +680,24 @@ bin/metatron</code></pre>
 </div>
 </div>
 </div><div class="container-xxl mb-4" id="rewrites">
-    <h3 class="text-primary mb-3">Rewrites <span class="pill-label badge bg-warning text-dark">2</span></h3>
-    <div class="card mb-3" id="rewrite-in_incident_adjacent">
+    <h3 class="text-primary mb-3">Rewrites <span class="pill-label badge bg-warning text-dark">3</span></h3>
+    <div class="card mb-3" id="rewrite-graph_count">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-warning fw-bold">graph_count</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#type-code" data-bs-toggle="tooltip" title="domain" class="code text-info">code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#type-code" data-bs-toggle="tooltip" title="maybe range" class="code text-success">code{?}</a></span></span>
+        </span>
+        <small class="text-muted code">/m/grph/inst/rewrite/graph_count?rng=/m/code{?}&amp;dom=/m/code</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/grph/inst/rewrite/graph_count?rng=code{?}&amp;dom=code(){&lt;j&gt;}</code></pre></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">leverages native Gremlin count() for vertex/edge collections</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">pre-rewrite code <span class="text-light">=&gt;</span> post-rewrite code</pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"></pre>
+</div>
+</div><div class="card mb-3" id="rewrite-in_incident_adjacent">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-warning fw-bold">in_incident_adjacent</span>
@@ -834,6 +854,50 @@ bin/metatron</code></pre>
     window.addEventListener('load', function() {
         setTimeout(initTabs, 200);
     });
+
+    // ── Section heading anchor links + copy-to-clipboard ──────────
+    (function() {
+        var toast = document.createElement('div');
+        toast.className = 'heading-toast';
+        toast.textContent = 'Link copied to clipboard';
+        document.body.appendChild(toast);
+
+        var toastTimer = null;
+        function showToast() {
+            toast.classList.add('show');
+            if (toastTimer) clearTimeout(toastTimer);
+            toastTimer = setTimeout(function() { toast.classList.remove('show'); }, 1800);
+        }
+
+        document.querySelectorAll('h2[id], h3[id], h4[id], h5[id], h6[id]').forEach(function(heading) {
+            var anchor = document.createElement('a');
+            anchor.className = 'heading-anchor bi bi-link-45deg';
+            anchor.href = '#' + heading.id;
+            anchor.title = 'Copy link to this section';
+            anchor.setAttribute('aria-label', 'Copy link to section');
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                var url = window.location.origin + window.location.pathname + '#' + heading.id;
+                navigator.clipboard.writeText(url).then(function() {
+                    anchor.classList.add('copied');
+                    showToast();
+                    setTimeout(function() { anchor.classList.remove('copied'); }, 1500);
+                }).catch(function() {
+                    // Fallback for older browsers
+                    var tmp = document.createElement('input');
+                    tmp.value = url;
+                    document.body.appendChild(tmp);
+                    tmp.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(tmp);
+                    anchor.classList.add('copied');
+                    showToast();
+                    setTimeout(function() { anchor.classList.remove('copied'); }, 1500);
+                });
+            });
+            heading.appendChild(anchor);
+        });
+    })();
 </script>
 
 <!------------ FEATURES MODAL -------------->

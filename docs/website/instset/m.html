@@ -272,6 +272,38 @@ bin/metatron</code></pre>
  obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
  inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
  space=&gt;[sub=&gt;{!*/m/mach,!*/m/math,!*/m/web,!*/m/iot,!*/m/grph,!*/m/llm,!*/m/tble,!*/m/dcmnt,!*/m/rdf}],
+ type=&gt;[
+  #::T,
+  bool::T,
+  int::T,
+  real::T,
+  bytes::T,
+  str::T,
+  uri::T,
+  rel::T,
+  lst::T,
+  rec::T,
+  instset::T,
+  inst::T,
+  code::T,
+  fail::T,
+  typer::T,
+  space::T,
+  memspace::T,
+  stack::T,
+  qproc::T,
+  subq::T,
+  sub::T,
+  typeq::T,
+  docs::T,
+  docq::T,
+  mintq::T,
+  incrq::T,
+  constq::T,
+  mimeq::T],
+ const=&gt;[
+  noobj,
+  none@none],
  inst=&gt;[
   as?bool&lt;=bool(bool::T),
   as?bytes&lt;=bool(bytes::T),
@@ -499,37 +531,6 @@ bin/metatron</code></pre>
   lshift?B{*}&lt;=A(),
   start?A{**}&lt;=noobj{0}(A{**}::T),
   ctor()],
- const=&gt;[
-  noobj,
-  none@none],
- type=&gt;[
-  #::T,
-  bool::T,
-  int::T,
-  real::T,
-  bytes::T,
-  str::T,
-  uri::T,
-  rel::T,
-  lst::T,
-  rec::T,
-  instset::T,
-  inst::T,
-  code::T,
-  fail::T,
-  space::T,
-  memspace::T,
-  stack::T,
-  qproc::T,
-  subq::T,
-  sub::T,
-  typeq::T,
-  docs::T,
-  docq::T,
-  mintq::T,
-  incrq::T,
-  constq::T,
-  mimeq::T],
  rewrite=&gt;[
   /m/inst/rewrite/id_removal?code{?}&lt;=code(),
   /m/inst/rewrite/map_nest?code{?}&lt;=code(),
@@ -546,7 +547,7 @@ bin/metatron</code></pre>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <a href="#consts" class="btn btn-outline-primary">Consts <span class="pill-label badge bg-secondary">12</span></a><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">41</span></a><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">262</span></a><button class="btn btn-outline-secondary" disabled>Spaces <span class="pill-label badge bg-dark">0</span></button><a href="#rewrites" class="btn btn-outline-primary">Rewrites <span class="pill-label badge bg-warning">8</span></a>
+        <a href="#consts" class="btn btn-outline-primary">Consts <span class="pill-label badge bg-secondary">12</span></a><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">42</span></a><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">262</span></a><button class="btn btn-outline-secondary" disabled>Spaces <span class="pill-label badge bg-dark">0</span></button><a href="#rewrites" class="btn btn-outline-primary">Rewrites <span class="pill-label badge bg-warning">8</span></a>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="card">
@@ -621,6 +622,9 @@ bin/metatron</code></pre>
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a><a href="#type-stack" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">stack</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">sys</small></div><div class="d-flex flex-wrap"><a href="#type-typer" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">typer</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">tble</small></div><div class="d-flex flex-wrap"><a href="#type-rrow" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">rrow</span>
@@ -1037,6 +1041,38 @@ bin/metatron</code></pre>
  obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
  inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
  space=&gt;[sub=&gt;{!*/m/mach,!*/m/math,!*/m/web,!*/m/iot,!*/m/grph,!*/m/llm,!*/m/tble,!*/m/dcmnt,!*/m/rdf}],
+ type=&gt;[
+  #::T,
+  bool::T,
+  int::T,
+  real::T,
+  bytes::T,
+  str::T,
+  uri::T,
+  rel::T,
+  lst::T,
+  rec::T,
+  instset::T,
+  inst::T,
+  code::T,
+  fail::T,
+  typer::T,
+  space::T,
+  memspace::T,
+  stack::T,
+  qproc::T,
+  subq::T,
+  sub::T,
+  typeq::T,
+  docs::T,
+  docq::T,
+  mintq::T,
+  incrq::T,
+  constq::T,
+  mimeq::T],
+ const=&gt;[
+  noobj,
+  none@none],
  inst=&gt;[
   as?bool&lt;=bool(bool::T),
   as?bytes&lt;=bool(bytes::T),
@@ -1264,37 +1300,6 @@ bin/metatron</code></pre>
   lshift?B{*}&lt;=A(),
   start?A{**}&lt;=noobj{0}(A{**}::T),
   ctor()],
- const=&gt;[
-  noobj,
-  none@none],
- type=&gt;[
-  #::T,
-  bool::T,
-  int::T,
-  real::T,
-  bytes::T,
-  str::T,
-  uri::T,
-  rel::T,
-  lst::T,
-  rec::T,
-  instset::T,
-  inst::T,
-  code::T,
-  fail::T,
-  space::T,
-  memspace::T,
-  stack::T,
-  qproc::T,
-  subq::T,
-  sub::T,
-  typeq::T,
-  docs::T,
-  docq::T,
-  mintq::T,
-  incrq::T,
-  constq::T,
-  mimeq::T],
  rewrite=&gt;[
   /m/inst/rewrite/id_removal?code{?}&lt;=code(),
   /m/inst/rewrite/map_nest?code{?}&lt;=code(),
@@ -1325,7 +1330,7 @@ bin/metatron</code></pre>
     
 </div>
 </div><div class="container-xxl mb-4" id="types">
-    <h3 class="text-primary mb-3">Types <span class="pill-label badge bg-primary">41</span></h3>
+    <h3 class="text-primary mb-3">Types <span class="pill-label badge bg-primary">42</span></h3>
     <div class="card mb-3" id="type-#">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -1451,7 +1456,7 @@ true.or(_,not(_))  [-- true -- ]</code></pre>
         </span>
         <small class="text-muted code">/m/space/qproc/docq</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">qproc::T[][ctor?docq&lt;=#{?}()]@/m/space/qproc/docq</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">qproc::T[][ctor?docq&lt;=#{?}(#::T)]@/m/space/qproc/docq</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">addr documentation qproc</p>
 </div><div class="card-body border-top py-2">
@@ -1969,6 +1974,28 @@ a?subq         -&gt; |(&gt;&gt;1+1.println(_).to(a)) [-- infinite incr loop     
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">abc?typeq -&gt; int::T       [-- abc can only reference a single integer --]
 abc?typeq -&gt; &#39;not an int&#39; [-- yields a fail::T --]</code></pre>
+</div>
+</div><div class="card mb-3" id="type-typer">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">typer::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">/m/rec::T</span></span>
+        </span>
+        <small class="text-muted code">/m/sys/typer</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[
+  inst_dom=&gt;bool::T,
+  inst_rng=&gt;bool::T,
+  type_ctor=&gt;bool::T,
+  code_resolve=&gt;bool::T,
+  obj_write=&gt;bool::T]][ctor?typer&lt;=#{?}(#::T)]@/m/sys/typer</code></pre></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">stages where the type checker should be applied.
+the more stages that are active, the slower instructions evaluate.
+however, more active stages reduces potential for data corruption.
+typically use many stages when designing code and once stable,
+remove stages accordingly for increased performance.
+</p>
 </div>
 </div><div class="card mb-3" id="type-uri">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -3908,6 +3935,50 @@ nat::6.type()-&lt;[tid(),vid()] [-- [/m/int, nat] non-base types tids are the ty
     window.addEventListener('load', function() {
         setTimeout(initTabs, 200);
     });
+
+    // ── Section heading anchor links + copy-to-clipboard ──────────
+    (function() {
+        var toast = document.createElement('div');
+        toast.className = 'heading-toast';
+        toast.textContent = 'Link copied to clipboard';
+        document.body.appendChild(toast);
+
+        var toastTimer = null;
+        function showToast() {
+            toast.classList.add('show');
+            if (toastTimer) clearTimeout(toastTimer);
+            toastTimer = setTimeout(function() { toast.classList.remove('show'); }, 1800);
+        }
+
+        document.querySelectorAll('h2[id], h3[id], h4[id], h5[id], h6[id]').forEach(function(heading) {
+            var anchor = document.createElement('a');
+            anchor.className = 'heading-anchor bi bi-link-45deg';
+            anchor.href = '#' + heading.id;
+            anchor.title = 'Copy link to this section';
+            anchor.setAttribute('aria-label', 'Copy link to section');
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                var url = window.location.origin + window.location.pathname + '#' + heading.id;
+                navigator.clipboard.writeText(url).then(function() {
+                    anchor.classList.add('copied');
+                    showToast();
+                    setTimeout(function() { anchor.classList.remove('copied'); }, 1500);
+                }).catch(function() {
+                    // Fallback for older browsers
+                    var tmp = document.createElement('input');
+                    tmp.value = url;
+                    document.body.appendChild(tmp);
+                    tmp.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(tmp);
+                    anchor.classList.add('copied');
+                    showToast();
+                    setTimeout(function() { anchor.classList.remove('copied'); }, 1500);
+                });
+            });
+            heading.appendChild(anchor);
+        });
+    })();
 </script>
 
 <!------------ FEATURES MODAL -------------->

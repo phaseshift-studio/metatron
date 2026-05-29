@@ -1625,6 +1625,57 @@ strong {
     visibility: visible;
 }
 
+/* ── Section heading anchor links ── */
+.heading-anchor {
+    opacity: 0;
+    font-size: 0.7em;
+    margin-left: 0.35em;
+    color: var(--mlightgray);
+    text-decoration: none;
+    transition: opacity 0.2s, color 0.2s;
+    vertical-align: middle;
+    cursor: pointer;
+    display: inline-block;
+}
+
+h2:hover .heading-anchor,
+h3:hover .heading-anchor,
+h4:hover .heading-anchor,
+h5:hover .heading-anchor,
+h6:hover .heading-anchor {
+    opacity: 1;
+}
+
+.heading-anchor:hover {
+    color: var(--mred);
+}
+
+.heading-anchor.copied {
+    color: var(--mgreen);
+    opacity: 1;
+}
+
+/* Toast feedback for copy action */
+.heading-toast {
+    position: fixed;
+    bottom: 70px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--secondarycolor);
+    color: var(--mgreen);
+    border: 1px solid var(--mgreen);
+    padding: 6px 18px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    z-index: 9999;
+    opacity: 0;
+    transition: opacity 0.25s;
+    pointer-events: none;
+}
+.heading-toast.show {
+    opacity: 1;
+}
+
 @media (max-width: 991.98px) {
     .back-to-top {
         left: 0;
