@@ -77,7 +77,8 @@ public class dcmntInstSet extends AbstractInstSet {
     public static final fURI DCMNT_ISA_REWRITE_TID = DCMNT_ISA_INST_TID.extend(REWRITE);
     public static final fURI MQL_INST_TID = DCMNT_ISA_INST_TID.extend(MQL);
     public static final fURI COLLECTION_TID = DCMNT_ISA_TID.extend(COLLECTION);
-    public static final fURI ID_FIELD = f("_id");
+    public static final String ID_FIELD_STRING = "_id";
+    public static final fURI ID_FIELD = f(ID_FIELD_STRING);
     public static fURI DCMNT_SPACE_TID = DCMNT_ISA_TID.extend(SPACE).extend("dcmntspace");
     public static Type DCMNT_SPACE_TYPE;
 
@@ -164,7 +165,7 @@ public class dcmntInstSet extends AbstractInstSet {
                                     final MongoCollection<Document> collection = space.getDatabase().getCollection(collectionName);
                                     // MongoDB aggregation pipeline: [{$group: {_id: null, total: {$sum: 1}}}]
                                     final Document result = collection.aggregate(Arrays.asList(
-                                            new Document("$group", new Document("_id", null)
+                                            new Document("$group", new Document(ID_FIELD_STRING, null)
                                                     .append("total", new Document("$sum", 1)))
                                     )).first();
                                     if (result != null && result.containsKey("total")) {
@@ -183,7 +184,7 @@ public class dcmntInstSet extends AbstractInstSet {
                                     final MongoCollection<Document> collection = space.getDatabase().getCollection(collectionName);
                                     // MongoDB aggregation pipeline: [{$group: {_id: null, average: {$avg: 1}}}]
                                     final Document result = collection.aggregate(Arrays.asList(
-                                            new Document("$group", new Document("_id", null)
+                                            new Document("$group", new Document(ID_FIELD_STRING, null)
                                                     .append("average", new Document("$avg", 1)))
                                     )).first();
                                     if (result != null && result.containsKey("average")) {
@@ -263,8 +264,8 @@ public class dcmntInstSet extends AbstractInstSet {
                                         projection.append(col, 1);
                                     }
                                     // Exclude _id unless explicitly requested
-                                    if (!columns.contains("_id")) {
-                                        projection.append("_id", 0);
+                                    if (!columns.contains(ID_FIELD_STRING)) {
+                                        projection.append(ID_FIELD_STRING, 0);
                                     }
 
                                     return objs(IteratorUtil.stream(collection.find().projection(projection).iterator())
@@ -273,8 +274,11 @@ public class dcmntInstSet extends AbstractInstSet {
                         )
                 )));
         docWrap(this,
-                "nested documents, typed collections, and schema-enforced writes — all within the metatron",
-                "mongodb:people/6/address>>=[street=>Elm Street,city=>Gotham,zipcode=>90210]");
+                "nested documents, typed collections, and schema-enforced writes — all within metatron",
+                "@mongodb:people/6/address    >>=  [street=>Elm Street,city=>Gotham]",
+                "@mongodb:people/6/address    >>= +[zipcode=>90210]",
+                "*mongodb:people/6/address         [-- [street=>Elm Street,city=>Gotham,zipcode=>90210] --]",
+                "*mongodb:people/6/address/zipcode [-- 90210 --]");
         super.setup();
 
     }
@@ -289,7 +293,7 @@ public class dcmntInstSet extends AbstractInstSet {
                                            final dcmntSpace space,
                                            final int limit) {
         return objs(IteratorUtil.stream(collection.find().limit(limit).iterator()).map(doc -> {
-            final Object docId = doc.get("_id");
+            final Object docId = doc.get(ID_FIELD_STRING);
             final String idStr = docId instanceof org.bson.types.ObjectId oid
                     ? oid.toHexString() : docId.toString();
             final fURI docUri = baseUri.extend(collection.getNamespace().getCollectionName()).extend(idStr);
@@ -305,7 +309,7 @@ public class dcmntInstSet extends AbstractInstSet {
                                                    final dcmntSpace space,
                                                    final Bson filter) {
         return objs(IteratorUtil.stream(collection.find(filter).iterator()).map(doc -> {
-            final Object docId = doc.get("_id");
+            final Object docId = doc.get(ID_FIELD_STRING);
             final String idStr = docId instanceof org.bson.types.ObjectId oid
                     ? oid.toHexString() : docId.toString();
             final fURI docUri = baseUri.extend(collection.getNamespace().getCollectionName()).extend(idStr);

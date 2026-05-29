@@ -89,7 +89,11 @@ public final class QCollection {
     public static final String DOCQ = "docq";
     public static final fURI DOCQ_PATTERN = f(DOCQ);
     public static final fURI DOCQ_TID = QPROC_TID.extend("docq");
-    public static final Type DOCQ_TYPE = Type.Builder.build().tid(QPROC_TID).vid(DOCQ_TID).constructor(QCollection::docQ).create();
+    public static final Type DOCQ_TYPE = Type.Builder.build()
+            .tid(QPROC_TID)
+            .vid(DOCQ_TID)
+            .constructor(rec -> rec.isNoObj() || rec.asRec().isEmpty()? QCollection.docQ() : QCollection.docQ(rec))
+            .create();
     public static final fURI DOCS_TID = DOCQ_TID.extend("docs");
     public static final Type DOCS_TYPE =
             Type.Builder.build()
@@ -282,9 +286,13 @@ public final class QCollection {
     }
 
     public static QProc docQ() {
+        return docQ(noobj());
+    }
+
+    public static QProc docQ(final Obj initialDocs) {
         final memSpace OBJ_DOCS = memSpace.of(ALL, null);
         final InstSet INST_DOCS = new DocInstSet();
-        return QProc.Helper.build(DOCQ_TID, DOCQ_PATTERN)
+        final QProc docq = QProc.Helper.build(DOCQ_TID, DOCQ_PATTERN)
                 .obj(f(INST), INST_DOCS)
                 .obj(f(OBJ), OBJ_DOCS)
                 .preWrite((vid, obj) -> {
@@ -303,6 +311,12 @@ public final class QCollection {
                             doc;
                 })
                 .create();
+        if (!initialDocs.isNoObj()) {
+            initialDocs.asRec().elements().forEach(doc -> {
+                docq.onWrite().get().preWrite(doc.first().uriValue().addQ("docq"), doc.second());
+            });
+        }
+        return docq;
     }
 
     /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////

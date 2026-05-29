@@ -156,7 +156,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
 
     @Override
     public void initialize(final Connection conn) throws SQLException {
-        discoverTableSchemas(conn);
+        discoverEntities(conn);
     }
 
     private void ensureMetaTable(final Connection conn) throws SQLException {
@@ -172,7 +172,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
         }
     }
 
-    private void discoverTableSchemas(final Connection conn) throws SQLException {
+    private void discoverEntities(final Connection conn) throws SQLException {
         final DatabaseMetaData metaData = conn.getMetaData();
         final String catalog = conn.getCatalog();
 
@@ -199,15 +199,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
                     }
                 }
 
-                final List<ForeignKeyMetadata> foreignKeys = new ArrayList<>();
-                try (final ResultSet fks = metaData.getImportedKeys(catalog, null, tableName)) {
-                    while (fks.next()) {
-                        foreignKeys.add(new ForeignKeyMetadata(
-                                tableName, fks.getString("FKCOLUMN_NAME"),
-                                fks.getString("PKTABLE_NAME"), fks.getString("PKCOLUMN_NAME"),
-                                fks.getString("FK_NAME")));
-                    }
-                }
+                final List<ForeignKeyMetadata> foreignKeys = discoverReferences(conn, catalog, tableName);
 
                 this.tableSchemas.put(tableName.toLowerCase(),
                         new TableMetadata(catalog, tableName, columns, primaryKeys, foreignKeys));
@@ -218,6 +210,21 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
         this.space.logger().info("discovered {{b}}%s{{X}} tables: %s", tableSchemas.size(), tableSchemas.keySet());
         ensureMetaTable(conn);
         loadMetaForeignKeys(conn);
+    }
+
+    private List<ForeignKeyMetadata> discoverReferences(final Connection conn, final String catalog,
+                                                         final String tableName) throws SQLException {
+        final List<ForeignKeyMetadata> foreignKeys = new ArrayList<>();
+        final DatabaseMetaData metaData = conn.getMetaData();
+        try (final ResultSet fks = metaData.getImportedKeys(catalog, null, tableName)) {
+            while (fks.next()) {
+                foreignKeys.add(new ForeignKeyMetadata(
+                        tableName, fks.getString("FKCOLUMN_NAME"),
+                        fks.getString("PKTABLE_NAME"), fks.getString("PKCOLUMN_NAME"),
+                        fks.getString("FK_NAME")));
+            }
+        }
+        return foreignKeys;
     }
 
     private void loadMetaForeignKeys(final Connection conn) {
@@ -706,7 +713,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
                 return Collections.emptyIterator();
             final List<Space.IdObj> results = new ArrayList<>();
             if (dp.entryIsWildcard()) {
-                if (dp.hasField()) {
+                if (dp.hasField() && !dp.fieldIsWildcard()) {
                     final String pkColumns = String.join(", ", metadata.primaryKeys);
                     final String fieldName = dp.field();
                     final String sql = String.format("SELECT %s, %s FROM %s", pkColumns, fieldName, metadata.tableName);

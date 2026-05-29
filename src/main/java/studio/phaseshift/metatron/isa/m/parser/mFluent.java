@@ -23,6 +23,7 @@ import studio.phaseshift.metatron.isa.Fluent;
 import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MCode;
+import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.ArrayList;
@@ -742,6 +743,8 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
         }
 
         public static <F extends mFluent<F>> F auto_from_(final Uri uri, final Obj defaultObj) {
+            if(null == uri)
+                throw MTronException.of("uri can not be null");
             return new mFluent<F>().auto_from_(uri, defaultObj);
         }
 
@@ -750,6 +753,8 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
         }
 
         public static <F extends mFluent<F>> F auto_from_(final fURI uri) {
+            if(null == uri)
+                throw MTronException.of("uri can not be null");
             return auto_from_(uri.toUri());
         }
 

@@ -264,7 +264,7 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
             rec.recValue().entrySet().removeIf(e -> e.getValue().isNone());
             return rec;
         }
-
+        
         public static Obj rshiftRec(final Rec lhs, final Obj arg) {
             return arg.isNoObj() ? objs(lhs.asRec().valueElements()) : objs(arg.stream().map(k -> lhs.asRec().at(k)));
         }

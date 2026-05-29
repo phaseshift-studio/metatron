@@ -102,8 +102,8 @@ public final class CommonRewrites {
                 .match(FROM_INST_TID, COUNT_INST_TID)
                 .matchPredicate(matches -> {
                     final Obj ref = matches.getFirst().arg(0);
-                    // patterns operate across collections/tables and require different rewrtting
-                    return !ref.isUri() || !ref.uriValue().retract(1).hasPattern();
+                    // only skip when the collection/table name itself is a wildcard
+                    return !ref.isUri() || !DataPath.ofSpaceRelative(ref.uriValue(), null).collectionIsWildcard();
                 })
                 .optimize("from_count", (space, dp, coeff) -> {
                     final long count = countFunction.apply(space, dp);

@@ -105,12 +105,12 @@ public class HttpRec extends MRec {
         this.exchange = exchange;
         try {
             switch (exchange.getRequestMethod().toUpperCase()) {
-                case "GET"     -> doGet(exchange);
-                case "POST"    -> doPost(exchange);
-                case "PUT"     -> doPut(exchange);
-                case "DELETE"  -> doDelete(exchange);
-                case "PATCH"   -> doPatch(exchange);
-                case "HEAD"    -> doHead(exchange);
+                case "GET" -> doGet(exchange);
+                case "POST" -> doPost(exchange);
+                case "PUT" -> doPut(exchange);
+                case "DELETE" -> doDelete(exchange);
+                case "PATCH" -> doPatch(exchange);
+                case "HEAD" -> doHead(exchange);
                 case "OPTIONS" -> doOptions(exchange);
                 default -> sendError(405, "Method Not Allowed");
             }
@@ -184,10 +184,16 @@ public class HttpRec extends MRec {
                 handler.apply(fail(e));
             } catch (final Exception ex) {
                 LOG.error("error in on_error handler: %s", ex.getMessage());
-                try { sendError(500, "Internal Server Error"); } catch (final IOException ignored) {}
+                try {
+                    sendError(500, "Internal Server Error");
+                } catch (final IOException ignored) {
+                }
             }
         } else {
-            try { sendError(500, e.getMessage() == null ? "Internal Server Error" : e.getMessage()); } catch (final IOException ignored) {}
+            try {
+                sendError(500, e.getMessage() == null ? "Internal Server Error" : e.getMessage());
+            } catch (final IOException ignored) {
+            }
         }
     }
 
@@ -285,7 +291,8 @@ public class HttpRec extends MRec {
             try {
                 if (this.exchange != null)
                     sendError(500, "error sending response: " + e.getMessage());
-            } catch (final IOException ignored) {}
+            } catch (final IOException ignored) {
+            }
         }
     }
 
@@ -311,7 +318,8 @@ public class HttpRec extends MRec {
             try {
                 if (this.exchange != null)
                     sendError(500, "error sending response: " + e.getMessage());
-            } catch (final IOException ignored) {}
+            } catch (final IOException ignored) {
+            }
         }
     }
 
@@ -345,5 +353,10 @@ public class HttpRec extends MRec {
 
     public HttpIO getHttpIO() {
         return HttpIO.of(this);
+    }
+
+    @Override
+    public HttpRec clone() {
+        return this;
     }
 }

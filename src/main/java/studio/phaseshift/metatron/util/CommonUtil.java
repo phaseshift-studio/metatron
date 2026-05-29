@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.util;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
+import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Rel;
@@ -46,7 +47,9 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.mInstSet.LST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 
 /*
@@ -329,6 +332,50 @@ public final class CommonUtil {
             return applyGraphitty ? Graphitty.string(fetchHeader) : fetchHeader.toString();
         } catch (final Exception e) {
             throw MTronException.of(e);
+        }
+    }
+
+    public static class LstCollector implements Collector<Obj, List<Obj>, Lst> {
+
+        final fURI vid;
+        final fURI tid;
+
+        public LstCollector() {
+            this.vid = null;
+            this.tid = LST_TID;
+        }
+
+        public LstCollector(final fURI tid, final fURI vid) {
+            this.tid = tid;
+            this.vid = vid;
+        }
+
+        @Override
+        public Supplier<List<Obj>> supplier() {
+            return ArrayList::new;
+        }
+
+        @Override
+        public BiConsumer<List<Obj>, Obj> accumulator() {
+            return List::add;
+        }
+
+        @Override
+        public BinaryOperator<List<Obj>> combiner() {
+            return (a, b) -> {
+                a.addAll(b);
+                return a;
+            };
+        }
+
+        @Override
+        public Function<List<Obj>, Lst> finisher() {
+            return m -> lst(m, this.tid, this.vid);
+        }
+
+        @Override
+        public Set<Characteristics> characteristics() {
+            return Set.of();
         }
     }
 

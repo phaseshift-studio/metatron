@@ -193,17 +193,17 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
             this.space = space;
         }
 
-        protected WebSocketObj createServer(final WebSocket conn) {
+        protected WebSocketRec createServer(final WebSocket conn) {
             try {
                 if (null == conn)
                     return null;
                 final fURI routePath = f(conn.getResourceDescriptor().startsWith("/")
                         ? conn.getResourceDescriptor()
                         : "/" + conn.getResourceDescriptor());
-                final fURI wsHandlerTypeVID = Space.Helper.routeFromSpace(routePath.qLess(), this.space.routes());
-                final Obj wsHandlerType = Router.global().read(wsHandlerTypeVID);
+                final fURI wsHandlerTypeID = Space.Helper.routeFromSpace(routePath.qLess(), this.space.routes());
+                final Obj wsHandlerType = Router.global().read(wsHandlerTypeID);
                 if (!wsHandlerType.isType())
-                    throw MTronException.of("websocket handler type required: %s at %s", wsHandlerType, wsHandlerTypeVID);
+                    throw MTronException.of("websocket handler type required: %s at %s", wsHandlerType, wsHandlerTypeID);
                 this.space.LOG.info("starting session with websocket handler: %s", wsHandlerType);
                 final fURI vid = this.baseURI.extend(routePath.qLess()).extend(this.counter.getAndIncrement() + "");
 
@@ -215,7 +215,7 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
                 final Obj handler = rec(mutableMap(
                                 uri(IN), routePath.hasQ(IN) ? uri(routePath.q(IN)) : noobj(),
                                 uri(OUT), routePath.hasQ(OUT) ? uri(routePath.q(OUT)) : noobj()),
-                        wsHandlerTypeVID, vid);
+                        wsHandlerTypeID, vid);
                 if (handler.isNoObj() || handler.isFail()) {
                     conn.close(4000, "unable to construct server " + handler);
                     throw MTronException.of("client {{b}}%s{{X}} wsserver construction failed: {{y}}%s{{X}}", conn.getRemoteSocketAddress(), handler);
@@ -227,7 +227,7 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
         }
 
 
-        protected Optional<WebSocketObj> getSession(final WebSocket conn) {
+        protected Optional<WebSocketRec> getSession(final WebSocket conn) {
             if (null == conn)
                 return Optional.empty();
             final Obj session = this.space.cache.read(conn.<fURI>getAttachment());
@@ -235,7 +235,7 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
                 conn.closeConnection(1000, "no session found at " + session);
                 return Optional.empty();
             }
-            return Optional.of((WebSocketObj) session);
+            return Optional.of((WebSocketRec) session);
         }
 
         private boolean ignore(final WebSocket conn) {
@@ -254,7 +254,7 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
                     conn.send(this.space.at(ROUTE).toString());
                     conn.closeConnection(1000, "end transmission");
                 } else {
-                    final WebSocketObj server = this.createServer(conn);
+                    final WebSocketRec server = this.createServer(conn);
                     if (null != server) {
                         server.setWebSocket(conn);
                         this.space.cache.write(server.getThisVID(), server);

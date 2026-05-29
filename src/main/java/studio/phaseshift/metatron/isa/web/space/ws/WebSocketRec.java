@@ -47,7 +47,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 public class WebSocketRec extends MRec implements WebSocketObj {
-    
+
     protected WebSocket socket = null;
     protected final GraphittyLogger LOG = Graphitty.log(this);
 
@@ -79,7 +79,7 @@ public class WebSocketRec extends MRec implements WebSocketObj {
     public IO getIO() {
         return IO.of(this, MIME.MIMEType.APPLICATION_MTRON);
     }
-    
+
     @Override
     public void onOpen(final WebSocket conn, final Handshakedata handshake) {
         try {
@@ -112,7 +112,7 @@ public class WebSocketRec extends MRec implements WebSocketObj {
             LOG.error("error processing message: %s", this.vid(), e);
         }
     }
-    
+
     @Override
     public void onError(final WebSocket conn, final Exception ex) {
         try {
@@ -132,5 +132,10 @@ public class WebSocketRec extends MRec implements WebSocketObj {
     public void setWebSocket(final WebSocket socket) {
         this.socket = socket;
         this.socket.setAttachment(this.vid());
+    }
+
+    @Override
+    public WebSocketRec clone() {
+        return this;
     }
 }

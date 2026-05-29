@@ -835,6 +835,20 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
             return SERIALIZER.write(obj);
         }
 
+        /*public static Obj stripVID(final Obj obj) {
+            if (obj.isNoObj() || obj.isCall() || obj.isType() || obj.isSpace() || obj.isAutoFrom() || obj.isInstSet())
+                return obj;
+            if (obj.isMono())
+                return obj.selfVID(null);
+            if (obj.isRel())
+                return obj.self(Tuple.Pair.with(stripVID(obj.asRel().jvm().get0()), stripVID(obj.asRel().jvm().get1())), obj.tid(), null);
+            //if (obj.isLst())
+            //    return obj.self(obj.asLst().jvm().stream().map(Helper::stripVID).collect(Collectors.toList()), obj.tid(), null);
+            if (obj.isRec())
+                return obj.self(obj.asRec().jvm().entrySet().stream().map(kv -> rel(stripVID(kv.getKey()), stripVID(kv.getValue()))).collect(new CommonUtil.RecCollector()).jvm(), obj.tid(), null);
+            return obj;
+        }*/
+
         /**
          * Check that {@code obj} satisfies its declared type (when type-checking is enabled).
          * Throws {@link MTronException} on failure. Does NOT trigger a space write.

@@ -166,24 +166,23 @@ public class BootLoader implements Rec, Feature.SelfClone {
             // Re-create executor if a previous test run shut it down
             if (EXECUTOR == null || EXECUTOR.isShutdown())
                 EXECUTOR = THREAD_POOL_SUPPLIER.get();
-            if (args.has("type_check")) {
-                TypeCheck.disable(TypeCheck.values());
-                args.at("type_check").lstValue().stream().map(t -> TypeCheck.valueOf(t.uriValue().toString())).forEach(TypeCheck::enable);
-            }
             /// /// PARSING OF BOOT ARGUMENT REC /// ///
             LOG.info("final boot args:\n%s", args);
             if (args.has(BOOT))
                 args.at(uri(BOOT), f(Paths.get("").toAbsolutePath().normalize().toString()).extend(args.at(BOOT).uriValue()).toUri(), MUTABLE);
             LogObj.setSLF4J(args.at(uri("log")).orElse(uri("warn")).uriValue().toString());
             LOG.info("%s", Graphitty.sillyPrint("booting metatron", true, true));
+            /// /// INITIAL PHASE OF BOOT PROCESS /// ///
             Runtime.getRuntime().addShutdownHook(new Thread(BootLoader::close));
             LOG.info("available instruction sets\n\t(via %s%s)%s", "META-INF/services/",
                     InstSet.class.getCanonicalName(),
                     InstSet.loadInstSetProvider(ALL)
                             .map(p -> p.type().getAnnotation(InstSet.JREService.class).vid())
                             .reduce("", (a, b) -> a + "\n\t\t" + b));
-            fURI localAuthority = null;
-            /// /// START OF BOOTING PROCESS /// /// allow boot description to be read from a mtron file
+            final Rec typer = TYPER_TYPE.constructor().apply(args.at("typer/stages").orElse(rec())).as();
+            TypeCheck.init(typer);
+            LOG.info("initial enabled typer stages: %s", typer);
+            /// /// START OF BOOTING PROCESS /// ///
             String hostname = null;
             try {
                 hostname = InetAddress.getLocalHost().getHostName();
@@ -203,6 +202,8 @@ public class BootLoader implements Rec, Feature.SelfClone {
             sysSpace.write(ROUTER.vid(), ROUTER);
             Router.global().addSpace(sysSpace.self(sysSpace.jvm(), sysSpace.tid(), SYS_VID).as());
             LOG.debug("router location: %s", ROUTER.vid());
+            sysSpace.write("/sys/typer/stage", typer);
+            // LOAD STDIO INSTRUCTIONS
             sysSpace.write("/sys/io/stdout", docWrap(instC(f("/sys/io/stdout").dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL.maybe())), (lhs, inst) -> {
                 System.out.println((Object) inst.arg(0).jvm());
                 return lhs;

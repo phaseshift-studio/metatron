@@ -57,14 +57,14 @@ public class ExistingCollectionSchema {
      * Metadata about a MongoDB collection
      */
     public record CollectionMetadata(String dbName, String collectionName,
-                                     List<FieldMetadata> fields,
+                                     List<PropertyMetadata> fields,
                                      List<ReferenceMetadata> references) {
     }
 
     /**
      * Metadata about a document field (inferred from sampling)
      */
-    public record FieldMetadata(String path, BsonType bsonType, double probability) {
+    public record PropertyMetadata(String path, BsonType bsonType, double probability) {
     }
 
     /**
@@ -96,9 +96,9 @@ public class ExistingCollectionSchema {
      */
     public void initialize(final MongoDatabase database) {
         this.collectionSchemas.clear();
-        for (final String collectionName : database.listCollectionNames()) {
-            final List<FieldMetadata> fields = inferFieldTypes(database, collectionName);
-            final List<ReferenceMetadata> refs = detectReferences(collectionName, fields);
+        for (final String collectionName : discoverEntities(database)) {
+            final List<PropertyMetadata> fields = inferPropertyTypes(database, collectionName);
+            final List<ReferenceMetadata> refs = discoverReferences(collectionName, fields);
 
             this.collectionSchemas.put(collectionName.toLowerCase(),
                     new CollectionMetadata(database.getName(), collectionName, fields, refs));
@@ -110,7 +110,14 @@ public class ExistingCollectionSchema {
                 collectionSchemas.size(), collectionSchemas.keySet());
     }
 
-    private List<FieldMetadata> inferFieldTypes(final MongoDatabase database, final String collectionName) {
+    private List<String> discoverEntities(final MongoDatabase database) {
+        final List<String> names = new ArrayList<>();
+        database.listCollectionNames().forEach(names::add);
+        this.space.logger().debug("discovered {{b}}%d{{X}} collections", names.size());
+        return names;
+    }
+
+    private List<PropertyMetadata> inferPropertyTypes(final MongoDatabase database, final String collectionName) {
         final Map<String, Map<BsonType, Integer>> fieldTypeCounts = new LinkedHashMap<>();
         int docCount = 0;
 
@@ -121,7 +128,7 @@ public class ExistingCollectionSchema {
             docCount++;
         }
 
-        return buildFieldMetadata(fieldTypeCounts, docCount);
+        return buildPropertyMetadata(fieldTypeCounts, docCount);
     }
 
     private void analyzeDocument(final String prefix, final org.bson.BsonDocument doc,
@@ -145,9 +152,9 @@ public class ExistingCollectionSchema {
         return doc.containsKey("$ref") && doc.containsKey("$id");
     }
 
-    private List<FieldMetadata> buildFieldMetadata(final Map<String, Map<BsonType, Integer>> counts,
-                                                   final int docCount) {
-        final List<FieldMetadata> fields = new ArrayList<>();
+    private List<PropertyMetadata> buildPropertyMetadata(final Map<String, Map<BsonType, Integer>> counts,
+                                                         final int docCount) {
+        final List<PropertyMetadata> fields = new ArrayList<>();
 
         for (final Map.Entry<String, Map<BsonType, Integer>> entry : counts.entrySet()) {
             final String path = entry.getKey();
@@ -168,7 +175,7 @@ public class ExistingCollectionSchema {
 
             // probabilities based on sample size (higher means more confident that the schema is consistent for all documents in the collection)
             final double probability = docCount > 0 ? (double) totalCount / docCount : 0.0;
-            fields.add(new FieldMetadata(path, dominantType, probability));
+            fields.add(new PropertyMetadata(path, dominantType, probability));
         }
 
         return fields;
@@ -177,11 +184,11 @@ public class ExistingCollectionSchema {
     /**
      * Detect references from field metadata (DBRefs and *Id fields with ObjectIds)
      */
-    private List<ReferenceMetadata> detectReferences(final String collectionName,
-                                                     final List<FieldMetadata> fields) {
+    private List<ReferenceMetadata> discoverReferences(final String collectionName,
+                                                       final List<PropertyMetadata> fields) {
         final List<ReferenceMetadata> refs = new ArrayList<>();
 
-        for (final FieldMetadata field : fields) {
+        for (final PropertyMetadata field : fields) {
             // Detect ObjectId fields ending in "Id" (e.g., "userId" -> "users")
             if (field.bsonType() == BsonType.OBJECT_ID &&
                     field.path().endsWith("Id") &&
@@ -314,7 +321,7 @@ public class ExistingCollectionSchema {
     private Type generateCollectionType(final CollectionMetadata collection, final fURI typeVid) {
         final LinkedHashMap<Obj, Obj> fields = new LinkedHashMap<>();
 
-        for (final FieldMetadata field : collection.fields()) {
+        for (final PropertyMetadata field : collection.fields()) {
             // Skip sub-document paths (dot-notation) — only top-level fields in isaPredicate
             if (field.path().contains(".")) continue;
             // Skip internal _id — already encoded in the URI path, not part of the user-visible Rec

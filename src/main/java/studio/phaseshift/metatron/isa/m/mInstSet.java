@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.m;
 
+import studio.phaseshift.metatron.TypeCheck;
 import studio.phaseshift.metatron.algebra.MultMonoid;
 import studio.phaseshift.metatron.algebra.PlusMonoid;
 import studio.phaseshift.metatron.algebra.rewrite.Rewriter;
@@ -39,6 +40,7 @@ import static studio.phaseshift.metatron.furi.q.QCollection.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.space.memSpace.MEM_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.m.space.stackSpace.STACK_SPACE_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_FALSE;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Bytes.BYTES_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Code.CODE_TYPE;
@@ -51,6 +53,7 @@ import static studio.phaseshift.metatron.isa.m.type.Real.REAL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Rel.REL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instA;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -195,6 +198,7 @@ public class mInstSet extends AbstractInstSet {
     public static final fURI AUTHORITY_INST_TID = M_ISA_INST_TID.extend("authority");
     public static final fURI HOST_INST_TID = M_ISA_INST_TID.extend("host");
     public static final fURI PORT_INST_TID = M_ISA_INST_TID.extend("port");
+    public static final fURI TYPER_TYPE_TID = f("/m/sys/typer");
     /// ////////////
     /// ////////////
     public static final fURI POLY_TID = M_ISA_TID.extend("poly");
@@ -218,6 +222,22 @@ public class mInstSet extends AbstractInstSet {
                     uri(SCHEMA).maybe(), T(INSTSET_TID) // nominal-only: avoids structural recursion in InstSet
             )).create();
 
+    public static final Type TYPER_TYPE = Type.Builder.build()
+            .tid(REC_TID)
+            .vid(TYPER_TYPE_TID)
+            .isaPredicate(rec(
+                    uri(TypeCheck.inst_dom.name()), BOOL_TYPE,
+                    uri(TypeCheck.inst_rng.name()), BOOL_TYPE,
+                    uri(TypeCheck.type_ctor.name()), BOOL_TYPE,
+                    uri(TypeCheck.code_resolve.name()), BOOL_TYPE,
+                    uri(TypeCheck.obj_write.name()), BOOL_TYPE))
+            .constructor(stages -> rec(
+                    uri(TypeCheck.inst_dom.name()), stages.asRec().at(uri(TypeCheck.inst_dom.name())).orElse(BOOL_FALSE),
+                    uri(TypeCheck.inst_rng.name()), stages.asRec().at(uri(TypeCheck.inst_rng.name())).orElse(BOOL_FALSE),
+                    uri(TypeCheck.type_ctor.name()), stages.asRec().at(uri(TypeCheck.type_ctor.name())).orElse(BOOL_FALSE),
+                    uri(TypeCheck.code_resolve.name()), stages.asRec().at(uri(TypeCheck.code_resolve.name())).orElse(BOOL_FALSE),
+                    uri(TypeCheck.obj_write.name()), stages.asRec().at(uri(TypeCheck.obj_write.name())).orElse(BOOL_FALSE)))
+            .create();
    /* public static final Type MONO_TYPE = Type.Builder.build()
             .tid(MONO_TID)
             .vid(MONO_TID)
@@ -328,6 +348,13 @@ public class mInstSet extends AbstractInstSet {
                                 "fail::[doh] + 2             [-- plus(2) skipped over    --]",
                                 "fail::[dah] + 2 + catch(9)  [-- fail flattened to 9       --]"),
                         /// ///////////////////////////////////
+                        docWrap(TYPER_TYPE, """
+                                            stages where the type checker should be applied.
+                                            the more stages that are active, the slower instructions evaluate.
+                                            however, more active stages reduces potential for data corruption.
+                                            typically use many stages when designing code and once stable,
+                                            remove stages accordingly for increased performance.
+                                            """),
                         docWrap(SPACE_TYPE, "storage systems structured as uri addressed objs"),
                         docWrap(MEM_SPACE_TYPE, "an in-memory space with objs indexed by a topic trie"),
                         docWrap(STACK_SPACE_TYPE, "a thread local stack used for global variables and machine inst frames",
