@@ -489,6 +489,60 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
         }
     }
 
+    /**
+     * Tests that dereferencing a URI prefix (container) returns an aggregated Rec
+     * of all children stored beneath it, rather than {@code noobj}.
+     * <p>
+     * Uses the {@code testMonoUpdate} pattern: {@link TestData} writes seed data,
+     * then a sequential {@code for} loop evaluates each row without clearing between steps.
+     * <p>
+     * Row format: {@code writeExpression % readExpression % expectedExpression}
+     */
+    @Test
+    @TestData(value = {
+            // seed: two siblings under one container
+            "$$/rootless/a -> 1",
+            "$$/rootless/b -> 2",
+    })
+    public void testMonoRootlessReadWrites() {
+        final String[] value = {
+                // Single-level container aggregates siblings
+                "$$/rootless/c -> 3                                               % *$$/rootless                      % [a=>1,b=>2,c=>3]",
+                ".                                                                 % *$$/rootless/a                    % 1",
+                ".                                                                 % *$$/rootless/c                    % 3",
+                // Immediate child — depth-1 fallback finds p under x
+                "$$/rootless/nested/x/p -> 10                                      % *$$/rootless/nested/x             % [p=>10]",
+                ".                                                                 % *$$/rootless/nested/x/p           % 10",
+        };
+        int counter = 0;
+        try {
+            for (final String expression : value) {
+                counter++;
+                final String[] parts = expression.split("%");
+                final String writeExpression = parts[0].trim();
+                final String readExpression = parts[1].trim();
+                final String expectedExpression = parts[2].trim();
+
+                if (!writeExpression.equals("."))
+                    ObjmtronSerializer.parse(make(writeExpression)).apply();
+
+                if (this.sleepBetweenReads > 0)
+                    CommonUtil.sleepThread(this.sleepBetweenReads);
+
+                final Obj readObj = ObjmtronSerializer.parse(make(readExpression)).apply();
+                final Obj expectedObj = ObjmtronSerializer.parse(make(expectedExpression)).apply();
+
+                LOG.none("{{G}}TEST[%d]{{X}}\n\twrite [%s]\n\tread [%s]\n\texpected [%s]\n",
+                        counter, make(writeExpression), make(readExpression), make(expectedExpression));
+                assertEquals(expectedObj, readObj,
+                        Graphitty.string("{{R}}TEST[" + counter + "]{{X}}: write: " + make(writeExpression) + " | read: " + make(readExpression)));
+            }
+        } finally {
+            // clean up rootless data so it doesn't pollute other tests (shared DB backends)
+            Router.global().write(make("$$/rootless/#"), noobj());
+        }
+    }
+
     @Test
     @TestData(value = {
             // --- people (4 rows) ---
@@ -531,31 +585,35 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
                 // Foreign-key dereference: !*$$/people/1/company reads the linked company record
         };
         int counter = 0;
-        for (final String expression : value) {
-            counter++;
-            final String[] parts = expression.split("%");
-            final String updateExpression = parts[0].trim();
-            final String readExpression = parts[1].trim();
-            final String expectedExpression = parts[2].trim();
+        try {
+            for (final String expression : value) {
+                counter++;
+                final String[] parts = expression.split("%");
+                final String updateExpression = parts[0].trim();
+                final String readExpression = parts[1].trim();
+                final String expectedExpression = parts[2].trim();
 
-            ObjmtronSerializer.parse(make(updateExpression)).apply();
+                ObjmtronSerializer.parse(make(updateExpression)).apply();
 
-            if (this.sleepBetweenReads > 0)
-                CommonUtil.sleepThread(this.sleepBetweenReads);
+                if (this.sleepBetweenReads > 0)
+                    CommonUtil.sleepThread(this.sleepBetweenReads);
 
-            final Obj readObj = ObjmtronSerializer.parse(make(readExpression)).apply();
-            final Obj expectedObj = ObjmtronSerializer.parse(make(expectedExpression)).apply();
+                final Obj readObj = ObjmtronSerializer.parse(make(readExpression)).apply();
+                final Obj expectedObj = ObjmtronSerializer.parse(make(expectedExpression)).apply();
 
-            if (!updateExpression.equals("."))
-                PREVIOUS_LINE.set(0, make(updateExpression));
-            if (!readExpression.equals("."))
-                PREVIOUS_LINE.set(1, make(readExpression));
-            if (!expectedExpression.equals("."))
-                PREVIOUS_LINE.set(2, make(expectedExpression));
+                if (!updateExpression.equals("."))
+                    PREVIOUS_LINE.set(0, make(updateExpression));
+                if (!readExpression.equals("."))
+                    PREVIOUS_LINE.set(1, make(readExpression));
+                if (!expectedExpression.equals("."))
+                    PREVIOUS_LINE.set(2, make(expectedExpression));
 
-            LOG.none("{{G}}TEST[%d]{{X}}\n\tupdate [%s]\n\tread [%s]\n\texpected [%s]\n",
-                    counter, make(updateExpression), make(readExpression), make(expectedExpression));
-            assertEquals(expectedObj, readObj, Graphitty.string("{{R}}TEST[" + counter + "]{{X}}: update: " + make(updateExpression) + " | read: " + make(readExpression)));
+                LOG.none("{{G}}TEST[%d]{{X}}\n\tupdate [%s]\n\tread [%s]\n\texpected [%s]\n",
+                        counter, make(updateExpression), make(readExpression), make(expectedExpression));
+                assertEquals(expectedObj, readObj, Graphitty.string("{{R}}TEST[" + counter + "]{{X}}: update: " + make(updateExpression) + " | read: " + make(readExpression)));
+            }
+        } finally {
+            Router.global().write(make("$$/#"), noobj());
         }
     }
 

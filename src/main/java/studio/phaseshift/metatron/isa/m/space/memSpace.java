@@ -133,9 +133,10 @@ public class memSpace extends AbstractSpace<TopicTrie> {
                                             Space.Helper.unrollPoly(kv.getKey(), kv.getValue().as(), nodePattern).stream() :
                                             Stream.empty())).iterator();
                 } else {
-                    // exact lookup - trie navigates to node, get() if furi.equals()
                     final Obj value = this.sjvm().get(pattern);
-                    return null == value ? IteratorUtil.of() : IteratorUtil.of(IdObj.of(pattern, value));
+                    if (value != null)
+                        return IteratorUtil.of(IdObj.of(pattern, value));
+                    return readContainer(pattern);
                 }
             }
         };
@@ -161,6 +162,37 @@ public class memSpace extends AbstractSpace<TopicTrie> {
             }
             return obj;
         };
+    }
+
+    private Iterator<IdObj> readContainer(final fURI pattern) {
+        for (int depth = 1; depth <= 1; depth++) {
+            fURI wildcard = pattern;
+            for (int d = 0; d < depth; d++)
+                wildcard = wildcard.extend("+");
+            final List<Map.Entry<fURI, Obj>> matches = this.sjvm().match(wildcard.asNode());
+            if (!matches.isEmpty()) {
+                final Rec container = rec();
+                for (final Map.Entry<fURI, Obj> kv : matches) {
+                    final fURI childPath = kv.getKey().pretract(pattern.segmentLength()).asRelative();
+                    final List<String> segs = childPath.segments();
+                    if (segs.isEmpty()) continue;
+                    Map<Obj, Obj> level = container.jvm();
+                    for (int i = 0; i < segs.size() - 1; i++) {
+                        final Uri key = uri(segs.get(i));
+                        Obj child = level.get(key);
+                        if (child == null || !child.isRec()) {
+                            child = rec();
+                            level.put(key, child);
+                        }
+                        level = child.asRec().jvm();
+                    }
+                    level.put(uri(segs.getLast()), kv.getValue());
+                }
+                if (!container.isEmpty())
+                    return IteratorUtil.of(IdObj.of(pattern, container));
+            }
+        }
+        return IteratorUtil.of();
     }
 
     @Override
