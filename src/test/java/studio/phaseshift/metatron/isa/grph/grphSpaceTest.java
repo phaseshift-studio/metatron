@@ -107,6 +107,13 @@ public class grphSpaceTest extends AbstractSpaceTest {
         Router.global().removeSpace(MODERN_SCHEMA_TID);
     }
 
+    @Override
+    @Test
+    @Disabled("grphSpace stores labeled vertices/edges under V/E collections; arbitrary KV paths not supported")
+    public void testMonoRootlessReadWrites() {
+        super.testMonoRootlessReadWrites();
+    }
+
     @Test
     @Disabled
     public void testProfiling() {

@@ -46,10 +46,13 @@ import studio.phaseshift.metatron.furi.fURI;
  import studio.phaseshift.metatron.util.IteratorUtil;
  import studio.phaseshift.metatron.util.MTronException;
 
+ import java.util.ArrayList;
  import java.util.Iterator;
+ import java.util.List;
  import java.util.Map;
  import java.util.function.BiFunction;
  import java.util.function.Function;
+ import java.util.stream.Stream;
 
  import static studio.phaseshift.metatron.Tokens.*;
  import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
@@ -182,10 +185,15 @@ import studio.phaseshift.metatron.furi.fURI;
          return this.at(ROUTE).asRec().elements().filter(e -> e.first().uriValue().toString().endsWith("S")).findFirst().get().second().uriValue().extend(label);
      }
 
+     protected ExistingGraphSchema existingGraphSchema;
+
      protected grphSpace(final Graph graph, final Map<Obj, Obj> config, final fURI vid) {
          super(graph, config, GRPH_SPACE_TID, vid);
          LOG.debug("tp3 space: %s", this);
          graph.configuration().setProperty(GRAPH_CONFIGURATION_KEY, vid.toString());
+         // ── schema discovery ──
+         this.existingGraphSchema = new ExistingGraphSchema(this);
+         this.existingGraphSchema.initialize(graph);
          if (null == FACTORY) {
              LOG.warn("no obj factory specified. defaulting to an extended mobjfactory that assumes 64-bit long element ids");
              FACTORY = MObjFactory.of()
@@ -207,6 +215,28 @@ import studio.phaseshift.metatron.furi.fURI;
                          uri(VERTEX), uri(IteratorUtil.findFirst(this.sjvm.vertices()).map(i -> i.id().getClass().getSimpleName()).orElse("unknown")),
                          uri(EDGE), uri(IteratorUtil.findFirst(this.sjvm.edges()).map(i -> i.id().getClass().getSimpleName()).orElse("unknown")))), MUTABLE);
      }
+
+     // =========================================================================
+     //  I/O — readStream / writeStream (new API)
+     // =========================================================================
+
+     @Override
+     public Stream<IdObj> readStream(final fURI pattern) {
+         final List<IdObj> results = new ArrayList<>();
+         directReader().apply(pattern).forEachRemaining(results::add);
+         return results.stream();
+     }
+
+     @Override
+     public Stream<IdObj> writeStream(final fURI pattern, final Obj obj) {
+         directWriter().apply(pattern, obj);
+         if (obj.isNoObj()) return Stream.empty();
+         return Stream.of(IdObj.of(pattern, obj));
+     }
+
+     // =========================================================================
+     //  I/O — directReader / directWriter (delegated by *Stream)
+     // =========================================================================
 
      @Override
      public Function<fURI, Iterator<IdObj>> directReader() {
