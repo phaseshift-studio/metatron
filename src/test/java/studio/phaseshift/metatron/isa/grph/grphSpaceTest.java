@@ -114,6 +114,33 @@ public class grphSpaceTest extends AbstractSpaceTest {
         super.testMonoRootlessReadWrites();
     }
 
+    @ParameterizedTest
+    @CsvSource(value = {
+            // vertex → OUT edges
+            "*/g/V/1/OUT/+.count()                                                % 3",
+            "*/g/V/1/OUT/knows.count()                                            % 2",
+            "*/g/V/1/OUT/created.count()                                          % 1",
+            // vertex → IN edges
+            "*/g/V/2/IN.count()                                                   % 1",
+            "*/g/V/4/IN.count()                                                   % 1",
+            // edge → endpoint vertex
+            "*/g/E/7/IN/name                                                       % \"vadas\"",
+            "*/g/E/7/OUT/name                                                      % \"marko\"",
+            // OUT → IN cascade (vertex → edge → target vertex)
+            "*/g/V/1/OUT/created/IN/name                                           % \"lop\"",
+            "*/g/V/1/OUT/created/IN/lang                                           % \"java\"",
+            "*/g/V/1/OUT/knows/IN/+.count()                                        % 2",
+            "*/g/V/1/OUT/knows/IN/name                                             % {\"josh\",\"vadas\"}",
+            // edge property access
+            "*/g/V/1/OUT/created/weight                                            % 0.4000",
+            // OUT/IN without label filter — all edges → target vertices
+            "*/g/V/1/OUT/IN/+.count()                                               % 3",
+            "*/g/V/1/OUT/IN/name                                                    % {\"lop\",\"vadas\",\"josh\"}",
+    }, delimiter = '%')
+    public void testBasicTraversals(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
     @Test
     @Disabled
     public void testProfiling() {

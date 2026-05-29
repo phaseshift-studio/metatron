@@ -133,35 +133,80 @@
         // HANDLE URL FRAGMENTS (HASH) FOR DIRECT TUTORIAL ACCESS
         function handleHash() {
             var hash = window.location.hash;
-            if (hash && hash.length > 1) {
-                var tutorialName = decodeURIComponent(hash.substring(1)).toLowerCase();
-                var found = false;
-                
-                $('.tutorial-grid button').each(function() {
-                    var btnText = $(this).text().trim().toLowerCase();
-                    // Match by exact name or slugified name (replace spaces with dashes)
-                    if (btnText === tutorialName || btnText.replace(/\s+/g, '-') === tutorialName || btnText.replace(/\s+/g, '') === tutorialName) {
-                        // Only click if it's not already open (aria-expanded="false")
-                        if ($(this).attr('aria-expanded') === 'false') {
-                            $(this).click();
-                        }
-                        
-                        found = true;
-                        return false; // Break loop
+            if (!hash || hash.length <= 1) return;
+
+            var fragment = decodeURIComponent(hash.substring(1));
+
+            // ── Case 1: Fragment matches an element ID on the page ──
+            var targetEl = document.getElementById(fragment);
+            if (targetEl) {
+                // Find the enclosing .collapse panel (if any)
+                var panel = targetEl.closest('.collapse');
+                if (panel) {
+                    var panelId = panel.id; // e.g. "card-0"
+                    // Open the panel by clicking its grid button
+                    var btn = document.querySelector('.tutorial-grid button[data-bs-target="#' + panelId + '"]');
+                    if (btn && btn.getAttribute('aria-expanded') === 'false') {
+                        $(btn).click();
                     }
-                });
-                
-                if (found) {
-                    // Smooth scroll to the custom-docs area after a short delay
+                }
+                // Scroll to the target after the collapse animation completes
+                // (or immediately if no panel was opened)
+                var delay = panel ? 650 : 100;
+                setTimeout(function() {
+                    $('#custom-docs').show();
+                    $('#pdf-export-container').show();
+                    $('html, body').animate({
+                        scrollTop: $(targetEl).offset().top - 120
+                    }, 400);
+                }, delay);
+                return;
+            }
+
+            // ── Case 2: Fragment matches a card panel ID directly ──
+            if (/^card-\d+$/.test(fragment)) {
+                var cardBtn = document.querySelector('.tutorial-grid button[data-bs-target="#' + fragment + '"]');
+                if (cardBtn && cardBtn.getAttribute('aria-expanded') === 'false') {
+                    $(cardBtn).click();
                     setTimeout(function() {
-                        var $docs = $('#custom-docs');
-                        if ($docs.length > 0 && $docs.is(':visible')) {
-                            $('html, body').animate({
-                                scrollTop: $docs.offset().top - 100
-                            }, 500);
-                        }
+                        $('#custom-docs').show();
+                        $('#pdf-export-container').show();
+                        $('html, body').animate({
+                            scrollTop: $('#custom-docs').offset().top - 100
+                        }, 400);
                     }, 600);
                 }
+                return;
+            }
+
+            // ── Case 3: Fragment matches a tutorial name (legacy behavior) ──
+            var tutorialName = fragment.toLowerCase();
+            var found = false;
+
+            $('.tutorial-grid button').each(function() {
+                var btnText = $(this).text().trim().toLowerCase();
+                // Match by exact name or slugified name (replace spaces with dashes)
+                if (btnText === tutorialName || btnText.replace(/\s+/g, '-') === tutorialName || btnText.replace(/\s+/g, '') === tutorialName) {
+                    // Only click if it's not already open (aria-expanded="false")
+                    if ($(this).attr('aria-expanded') === 'false') {
+                        $(this).click();
+                    }
+
+                    found = true;
+                    return false; // Break loop
+                }
+            });
+
+            if (found) {
+                // Smooth scroll to the custom-docs area after a short delay
+                setTimeout(function() {
+                    var $docs = $('#custom-docs');
+                    if ($docs.length > 0 && $docs.is(':visible')) {
+                        $('html, body').animate({
+                            scrollTop: $docs.offset().top - 100
+                        }, 500);
+                    }
+                }, 600);
             }
         }
 

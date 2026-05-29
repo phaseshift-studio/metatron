@@ -21,6 +21,7 @@
  import org.apache.commons.configuration2.BaseConfiguration;
  import org.apache.commons.configuration2.Configuration;
  import org.apache.commons.configuration2.ConfigurationMap;
+ import org.apache.tinkerpop.gremlin.structure.Direction;
  import org.apache.tinkerpop.gremlin.structure.Edge;
  import org.apache.tinkerpop.gremlin.structure.Element;
  import org.apache.tinkerpop.gremlin.structure.Graph;
@@ -220,6 +221,65 @@ import studio.phaseshift.metatron.furi.fURI;
      //  I/O — readStream / writeStream (new API)
      // =========================================================================
 
+     private Iterator<IdObj> readVertexTraversal(final DataPath dp) {
+         final int id = Integer.parseInt(dp.entry());
+         final Vertex v = IteratorUtil.stream(this.sjvm.vertices(id)).findFirst().orElse(null);
+         if (v == null) return IteratorUtil.of();
+         final Direction dir = "OUT".equalsIgnoreCase(dp.field()) ? Direction.OUT : Direction.IN;
+         final String firstExt = dp.extension() != null ? dp.extension().segments().getFirst() : null;
+         final boolean firstExtIsDirection = "IN".equalsIgnoreCase(firstExt) || "OUT".equalsIgnoreCase(firstExt);
+         final boolean hasLabel = firstExt != null && !firstExt.equals("+") && !firstExt.equals("#") && !firstExtIsDirection;
+         final Iterator<Edge> edges = hasLabel
+                 ? v.edges(dir, firstExt)
+                 : v.edges(dir);
+         // cascade: skip label if present, include direction segments at start
+         final List<String> cascade = dp.extension() != null
+                 ? dp.extension().segments().subList(hasLabel ? 1 : 0, dp.extension().segmentLength())
+                 : List.of();
+         return IteratorUtil.stream(edges).flatMap(e -> {
+             Stream<Obj> stream = Stream.of((Obj) EdgeMap.edgeToRec(e, this));
+             for (final String seg : cascade) {
+                 if ("+".equals(seg) || "#".equals(seg)) break;
+                 stream = stream.flatMap(o -> o.asRec().at(uri(seg)).stream());
+             }
+             return stream.map(o -> IdObj.of(this.elementVID(e), o));
+         }).iterator();
+     }
+
+     private Iterator<IdObj> readEdgeTraversal(final DataPath dp) {
+         final int id = Integer.parseInt(dp.entry());
+         final Edge e = IteratorUtil.stream(this.sjvm.edges(id)).findFirst().orElse(null);
+         if (e == null) return IteratorUtil.of();
+         final Vertex target = "OUT".equalsIgnoreCase(dp.field()) ? e.outVertex() : e.inVertex();
+         Stream<Obj> stream = Stream.of((Obj) VertexMap.vertexToRec(target, this));
+         if (dp.hasExtension())
+             for (final String seg : dp.extension().segments()) {
+                 if ("+".equals(seg) || "#".equals(seg)) break;
+                 stream = stream.flatMap(o -> o.asRec().at(uri(seg)).stream());
+             }
+         return stream.map(o -> IdObj.of(this.elementVID(target), o)).iterator();
+     }
+
+     private Iterator<IdObj> readContainer(final fURI pattern) {
+         final fURI routed = Space.Helper.routeFromSpace(pattern, this.routes());
+         final DataPath dp = DataPath.ofSpaceRelative(routed, null);
+         if (!dp.hasCollection()) return IteratorUtil.of();
+
+         if ("V".equals(dp.collection())) {
+             final Rec container = rec();
+             IteratorUtil.stream(this.sjvm.vertices()).forEach(v ->
+                     container.jvm().put(uri(String.valueOf(v.id())), VertexMap.vertexToRec(v, this)));
+             return container.isEmpty() ? IteratorUtil.of() : IteratorUtil.of(IdObj.of(pattern, container));
+         }
+         if ("E".equals(dp.collection())) {
+             final Rec container = rec();
+             IteratorUtil.stream(this.sjvm.edges()).forEach(e ->
+                     container.jvm().put(uri(String.valueOf(e.id())), EdgeMap.edgeToRec(e, this)));
+             return container.isEmpty() ? IteratorUtil.of() : IteratorUtil.of(IdObj.of(pattern, container));
+         }
+         return IteratorUtil.of();
+     }
+
      @Override
      public Stream<IdObj> readStream(final fURI pattern) {
          final List<IdObj> results = new ArrayList<>();
@@ -251,16 +311,19 @@ import studio.phaseshift.metatron.furi.fURI;
                      return new IdObj(routed, Router.global().read(routed)).iterator();
                  }
                  final DataPath dp = DataPath.ofSpaceRelative(routed, null);
-                 if (!dp.hasCollection()) return IteratorUtil.of();
+                 if (!dp.hasCollection()) return readContainer(pattern);
 
-                 ////////////////////////////////////////////////////////////////////
                  if ("V".equals(dp.collection())) {
+                     // ── OUT/IN traversal — route through graph, not Rec ──
+                     if (dp.hasField() && ("OUT".equalsIgnoreCase(dp.field()) || "IN".equalsIgnoreCase(dp.field()))) {
+                         return readVertexTraversal(dp);
+                     }
                      Iterator<Vertex> iterator;
                      if (!dp.entryIsWildcard() && CommonUtil.isInt(dp.entry()))
                          iterator = this.sjvm.vertices(Integer.parseInt(dp.entry()));
                      else if (dp.entryIsWildcard())
                          iterator = this.sjvm.vertices();
-                     else iterator = IteratorUtil.of();
+                     else return readContainer(pattern);
                      return IteratorUtil.stream(iterator)
                              .map(v -> IdObj.of(this.elementVID(v), VertexMap.vertexToRec(v, this)))
                              .map(idobj -> {
@@ -271,12 +334,16 @@ import studio.phaseshift.metatron.furi.fURI;
                                  }
                              }).iterator();
                  } else if ("E".equals(dp.collection())) {
+                     // ── OUT/IN traversal on edge — route to endpoint vertex ──
+                     if (dp.hasField() && ("OUT".equalsIgnoreCase(dp.field()) || "IN".equalsIgnoreCase(dp.field()))) {
+                         return readEdgeTraversal(dp);
+                     }
                      Iterator<Edge> iterator;
                      if (!dp.entryIsWildcard() && CommonUtil.isInt(dp.entry()))
                          iterator = this.sjvm.edges(Integer.parseInt(dp.entry()));
                      else if (dp.entryIsWildcard())
                          iterator = this.sjvm.edges();
-                     else iterator = IteratorUtil.of();
+                     else return readContainer(pattern);
                      return (Iterator) IteratorUtil.stream(iterator)
                              .map(e -> IdObj.of(this.elementVID(e), EdgeMap.edgeToRec(e, this)))
                              .map(idobj -> {
@@ -287,12 +354,11 @@ import studio.phaseshift.metatron.furi.fURI;
                                  }
                              })
                              .iterator();
-                 } else {
-                     LOG.debug("unknown tp3 vid: %s", pattern);
-                     final fURI full = Space.Helper.routeFromSpace(pattern, this.routes());
-                     if (full.equals(pattern)) return IteratorUtil.of();
-                     return IdObj.of(full, Router.global().read(full)).iterator();
                  }
+                 LOG.debug("unknown tp3 vid: %s", pattern);
+                 final fURI full = Space.Helper.routeFromSpace(pattern, this.routes());
+                 if (full.equals(pattern)) return readContainer(pattern);
+                 return IdObj.of(full, Router.global().read(full)).iterator();
              }
          };
      }
