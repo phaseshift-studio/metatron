@@ -1,5 +1,5 @@
 [discrete]
-== Tble Space
+== Relational Databases
 
 [%collapsible]
 ./m/tble instset import

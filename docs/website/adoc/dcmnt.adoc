@@ -1,5 +1,5 @@
 [discrete]
-== Dcmnt Space
+== Document Databases
 
 [%collapsible]
 ./m/dcmnt instset import

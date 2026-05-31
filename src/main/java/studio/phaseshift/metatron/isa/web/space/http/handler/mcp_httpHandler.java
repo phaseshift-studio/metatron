@@ -24,7 +24,7 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.web.space.http.HttpRec;
-import studio.phaseshift.metatron.isa.web.type.mcp_Server;
+import studio.phaseshift.metatron.isa.web.type.mcpServer;
 import studio.phaseshift.metatron.isa.web.type.MIME;
 
 import java.io.IOException;
@@ -48,7 +48,7 @@ import static studio.phaseshift.metatron.isa.web.space.http.httpSpace.HTTP_SPACE
 import static studio.phaseshift.metatron.isa.web.type.MIME.MIMEType.APPLICATION_JSON;
 
 /**
- * Streamable HTTP MCP transport handler. Composes a {@link mcp_Server} for JSON-RPC
+ * Streamable HTTP MCP transport handler. Composes a {@link mcpServer} for JSON-RPC
  * protocol dispatch and implements the MCP Streamable HTTP transport over
  * {@link com.sun.net.httpserver.HttpServer}.
  * <p>
@@ -76,7 +76,7 @@ public class mcp_httpHandler extends HttpRec {
             .create();
 
     // Transport-agnostic protocol handler (composition)
-    private final mcp_Server mcp;
+    private final mcpServer mcp;
 
     // Session registry: sessionId → session metadata
     private final Map<String, fURI> sessions = new ConcurrentHashMap<>();
@@ -84,7 +84,7 @@ public class mcp_httpHandler extends HttpRec {
 
     public mcp_httpHandler(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
-        this.mcp = new mcp_Server(jvm, tid, vid);
+        this.mcp = new mcpServer(jvm, tid, vid);
     }
 
     // ========================================

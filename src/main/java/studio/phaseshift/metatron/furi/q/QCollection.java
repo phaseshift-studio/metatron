@@ -63,6 +63,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_CORE_THREAD_TID;
+import static studio.phaseshift.metatron.isa.mach.type.thread.VirtualThread.virtual;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /*
@@ -71,28 +72,33 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 public final class QCollection {
 
     public static final fURI MIMEQ_PATTERN = f("mimeq");
-    public static final fURI MIMEQ_TID = QPROC_TID.extend("mimeq");
+    public static final fURI MIMEQ_TID = QPROC_TID.extend(MIMEQ_PATTERN);
     public static final Type MIMEQ_TYPE = Type.Builder.build().tid(QPROC_TID).vid(MIMEQ_TID).constructor(QCollection::mimeQ).create();
     //
     public static final fURI MINTQ_PATTERN = f("mintq");
-    public static final fURI MINTQ_TID = QPROC_TID.extend("mintq");
+    public static final fURI MINTQ_TID = QPROC_TID.extend(MINTQ_PATTERN);
     public static final Type MINTQ_TYPE = Type.Builder.build().tid(QPROC_TID).vid(MINTQ_TID).constructor(QCollection::mintQ).create();
     //
     public static final fURI CONSTQ_PATTERN = f("constq");
-    public static final fURI CONSTQ_TID = QPROC_TID.extend("constq");
+    public static final fURI CONSTQ_TID = QPROC_TID.extend(CONSTQ_PATTERN);
     public static final Type CONSTQ_TYPE = Type.Builder.build().tid(QPROC_TID).vid(CONSTQ_TID).constructor(QCollection::constQ).create();
     //
+    public static final fURI SHORTQ_PATTERN = f("shortq");
+    public static final fURI SHORTQ_TID = QPROC_TID.extend(SHORTQ_PATTERN);
+    public static final Type SHORTQ_TYPE = Type.Builder.build().tid(QPROC_TID).vid(SHORTQ_TID).constructor(QCollection::shortQ).create();
+
+    //
     public static final fURI INCRQ_PATTERN = f("incrq");
-    public static final fURI INCRQ_TID = QPROC_TID.extend("incrq");
+    public static final fURI INCRQ_TID = QPROC_TID.extend(INCRQ_PATTERN);
     public static final Type INCRQ_TYPE = Type.Builder.build().tid(QPROC_TID).vid(INCRQ_TID).constructor(QCollection::incrQ).create();
     //
     public static final String DOCQ = "docq";
     public static final fURI DOCQ_PATTERN = f(DOCQ);
-    public static final fURI DOCQ_TID = QPROC_TID.extend("docq");
+    public static final fURI DOCQ_TID = QPROC_TID.extend(DOCQ_PATTERN);
     public static final Type DOCQ_TYPE = Type.Builder.build()
             .tid(QPROC_TID)
             .vid(DOCQ_TID)
-            .constructor(rec -> rec.isNoObj() || rec.asRec().isEmpty()? QCollection.docQ() : QCollection.docQ(rec))
+            .constructor(rec -> rec.isNoObj() || rec.asRec().isEmpty() ? QCollection.docQ() : QCollection.docQ(rec))
             .create();
     public static final fURI DOCS_TID = DOCQ_TID.extend("docs");
     public static final Type DOCS_TYPE =
@@ -116,13 +122,13 @@ public final class QCollection {
     public static final Type TYPEQ_TYPE = Type.Builder.build().tid(QPROC_TID).vid(TYPEQ_TID).constructor(QCollection::typeQ).create();
     //
     public static final fURI SUBQ_PATTERN = f("subq");
-    public static final fURI SUBQ_TID = QPROC_TID.extend("subq");
+    public static final fURI SUBQ_TID = QPROC_TID.extend(SUBQ_PATTERN);
     public static final fURI SUBSCRIPTION_TID = SUBQ_TID.extend("sub");
     public static final Type SUBQ_TYPE = Type.Builder.build().vid(SUBQ_TID).tid(QPROC_TID).constructor(QCollection::subq).create();
     public static final Type SUB_TYPE =
             docWrap(Type.Builder.build()
-                            .vid(SUBSCRIPTION_TID)
                             .tid(REC_TID)
+                            .vid(SUBSCRIPTION_TID)
                             .isaPredicate(rec(
                                     uri(TARGET).maybe().asUri(), URI_TYPE,
                                     uri(ON_RECV), T(ALL.dom(LST_TID))))
@@ -322,6 +328,38 @@ public final class QCollection {
     /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////
     /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////
     /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////
+    private static Obj shortObj(final Obj o, final int currentDepth, final int maxLength, final int maxDepth) {
+        if (currentDepth >= maxDepth)
+            return noobj();
+        if (o.isStr()) {
+            final String valueString = o.toCleanString();
+            return str(valueString.substring(0, Math.min(valueString.length(), maxLength)));
+        } else if (o.isUri()) {
+            final String valueString = o.toCleanString();
+            return uri(valueString.substring(0, Math.min(valueString.length(), maxLength)));
+        } else if (o.isMono()) {
+            return o;
+        } else if (o.isRec()) {
+            return o.asRec().jvm().entrySet().stream().map(kv -> rel(kv.getKey(), shortObj(kv.getValue(), currentDepth + 1, maxLength, maxDepth))).collect(new CommonUtil.RecCollector());
+        } else if (o.isLst()) {
+            return o.asLst().jvm().stream().map(e -> shortObj(e, currentDepth + 1, maxLength, maxDepth)).collect(new CommonUtil.LstCollector());
+        }
+        return o;
+    }
+
+    public static int DEFAULT_SHORTQ_MAX_LENGTH = 25;
+
+    public static QProc shortQ() {
+        return QProc.Helper.build(SHORTQ_TID, SHORTQ_PATTERN).
+                postRead((vid, obj) -> {
+                    final Integer maxLength = vid.q(SHORTQ_PATTERN.toString()).isBlank() ? DEFAULT_SHORTQ_MAX_LENGTH : vid.qValue(SHORTQ_PATTERN.toString(), Integer.class);
+                    return QCollection.shortObj(obj, 0, maxLength, 2);
+                }).create();
+    }
+
+    /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     public static QProc incrQ() {
         final AtomicLong counter = new AtomicLong(0);
@@ -345,7 +383,7 @@ public final class QCollection {
 
     public static QProc subq() {
         final Lst subscriptions = lst(new ArrayList<>());
-        return QProc.Helper.build(SUBQ_TID, f(SUBQ))
+        return QProc.Helper.build(SUBQ_TID, SUBQ_PATTERN)
                 .obj(f(OBJ), subscriptions)
                 .preRead(vid -> {
                     subscriptions.logger().debug("reading: %s", vid.basePath());
@@ -383,7 +421,7 @@ public final class QCollection {
                     subscriptions.elements().filter(e -> vid.basePath().test(e.asRec().at(TARGET).uriValue()))
                             .forEach(s -> {
                                 subscriptions.logger().debug("spawning virtual thread for subscription recv: %s", s);
-                                new VirtualThread(mutableMap(uri(CODE), code(s.asRec().at(ON_RECV).asCall()).as()), MACH_CORE_THREAD_TID, null).apply(lst(List.of(vid.basePath().toUri(), obj)));
+                                virtual(s.asRec().at(ON_RECV)).apply(lst(List.of(vid.basePath().toUri(), obj)));
                             });
                     return noobj();
                 }).create();

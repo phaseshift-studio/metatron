@@ -264,7 +264,7 @@ public interface Inst extends Call {
                 }*/
                 return resolved;
             } else {
-                LOG.debug("UNABLE TO RESOLVE: %s", this);
+                LOG.debug("unable to resolve: %s", this);
             }
         } catch (final Exception e) {
             this.logger().error(e);

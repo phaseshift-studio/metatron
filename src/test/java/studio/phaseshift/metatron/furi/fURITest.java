@@ -464,7 +464,7 @@ public class fURITest extends AbstractMetatronTest {
             "//x/a/b/c                  |  x        | false",
             "a/b/c/d                    |  a        | true",
             "a/b/c/d                    |  a/b     | true",
-           // "a/b/c/d                    |  a/b/     | true",
+            // "a/b/c/d                    |  a/b/     | true",
             "a/b/c/d                    |  a/+      | true",
             "a/b/c/d                    |  a/d      | false",
             "a/b/c/d                    |  a/+/c    | true",
@@ -1331,6 +1331,19 @@ public class fURITest extends AbstractMetatronTest {
 
     @ParameterizedTest
     @CsvSource(value = {
+            "/g/V/1/OUT/te:hot/+        % +          % te:hot"
+    },delimiterString = "%")
+    public void testEdgeCases(final String furi, final String name, final String penultimate) {
+        final fURI parse = idem(furi);
+        assertEquals(furi, parse.toString());
+        assertEquals(name, parse.name());
+        assertEquals(name, parse.segments(parse.segmentLength() - 1, ""));
+        assertEquals(penultimate, parse.segments(parse.segmentLength() - 2, ""));
+
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
             "test:/a/b/c     | #               | ",
             "test:/a/b/c     | test:/a/b/c     | ",
             "test:/a         | test:/a         | ",
@@ -1342,7 +1355,7 @@ public class fURITest extends AbstractMetatronTest {
             "test:/a/b/c     | test:/+/+/      | c",
             "test:/a/b/c?x=1 | test:/+/+/+?x=1 | ",
             "test:/a/b/c?x=1 | #               | ",
-           // TODO: query params "test:/a/b/c?x=1 | #?+=+           | "
+            // TODO: query params "test:/a/b/c?x=1 | #?+=+           | "
     }, delimiter = '|')
     public void testRemovePrefix(final String vid, final String base, final String expected) {
         final fURI vidF = f(vid);

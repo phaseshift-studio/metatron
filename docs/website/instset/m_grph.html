@@ -281,20 +281,20 @@ bin/metatron</code></pre>
   modern::T],
  inst=&gt;[
   gremlin?#{*}&lt;=grphspace(str::T),
-  label?uri&lt;=elmt(),
-  values?#{*}&lt;=elmt(uri{*}::T),
+  label?uri&lt;=rec(),
+  values?#{*}&lt;=rec(uri{*}::T),
   inV?vrtx&lt;=edge(),
   outV?vrtx&lt;=edge(),
-  bothV?vrtx&lt;=edge(),
-  out?vrtx{*}&lt;=vrtx(uri{*}::T),
-  in?vrtx{*}&lt;=vrtx(uri{*}::T),
-  both?vrtx{*}&lt;=vrtx(uri{*}::T),
+  bothV?vrtx{2}&lt;=edge(),
+  out?edge{*}&lt;=vrtx(uri{*}::T),
+  in?edge{*}&lt;=vrtx(uri{*}::T),
+  both?edge{*}&lt;=vrtx(uri{*}::T),
   outE?edge{*}&lt;=vrtx(uri{*}::T),
   inE?edge{*}&lt;=vrtx(uri{*}::T),
   bothE?edge{*}&lt;=vrtx(uri{*}::T),
-  addE?edge&lt;=vrtx(uri::T,vrtx{+}::T,rec{?}::T)],
+  addE?edge&lt;=vrtx(uri::T,rec{+}::T,rec{?}::T)],
  rewrite=&gt;[
-  /m/grph/inst/rewrite/graph_count?code{?}&lt;=code(),
+  /m/grph/inst/rewrite/graph_limit?code{?}&lt;=code(),
   /m/grph/inst/rewrite/out_incident_adjacent?code{?}&lt;=code(),
   /m/grph/inst/rewrite/in_incident_adjacent?code{?}&lt;=code()]]@/m/grph</code></pre>
                     </div>
@@ -371,8 +371,8 @@ bin/metatron</code></pre>
 </a></div>
 </div><div class="mb-3">
     <h6 class="text-primary mb-2">Rewrites</h6>
-    <div class="d-flex flex-wrap"><a href="#rewrite-graph_count" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">graph_count</span>
+    <div class="d-flex flex-wrap"><a href="#rewrite-graph_limit" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">graph_limit</span>
     <span class="pill-label badge bg-warning text-dark ms-2">R</span>
 </a><a href="#rewrite-in_incident_adjacent" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">in_incident_adjacent</span>
@@ -393,11 +393,9 @@ bin/metatron</code></pre>
         </span>
         <small class="text-muted code">/m/grph/edge</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">elmt::T[?[
-  IN=&gt;vrtx::T,
-  OUT=&gt;vrtx::T]]@/m/grph/edge</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">elmt::T@/m/grph/edge</code></pre></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">an directed key/value attributed binary edge</p>
+    <p class="mb-0 text-light">a directed key/value attributed binary edge</p>
 </div>
 </div><div class="card mb-3" id="type-elmt">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -447,9 +445,7 @@ bin/metatron</code></pre>
         </span>
         <small class="text-muted code">/m/grph/vrtx</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">elmt::T[?[
-  {?}IN=&gt;[uri::T=&gt;edge{*}::T],
-  {?}OUT=&gt;[uri::T=&gt;edge{*}::T]]]@/m/grph/vrtx</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">elmt::T@/m/grph/vrtx</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a key/value attributed vertex</p>
 </div>
@@ -464,18 +460,18 @@ bin/metatron</code></pre>
         </span>
         <small class="text-muted code">/m/grph/inst/addE?rng=/m/grph/edge&amp;dom=/m/grph/vrtx</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-addE-doc-0-tab').click();document.getElementById('inst-addE-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">addE?rng=edge&amp;dom=vrtx(uri::T,vrtx{+}::T,rec{?}::T){&lt;j&gt;}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-addE-doc-0-tab').click();document.getElementById('inst-addE-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">addE?rng=edge&amp;dom=vrtx(uri::T,rec{+}::T,rec{?}::T){&lt;j&gt;}</code></pre>
 </div>
     
 </div><div class="card mb-3" id="inst-both">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">both</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-vrtx" data-bs-toggle="tooltip" title="domain" class="code text-info">vrtx</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-vrtx" data-bs-toggle="tooltip" title="range" class="code text-success">vrtx</a></span></span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-vrtx" data-bs-toggle="tooltip" title="domain" class="code text-info">vrtx</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-edge" data-bs-toggle="tooltip" title="range" class="code text-success">edge</a></span></span>
         </span>
-        <small class="text-muted code">/m/grph/inst/both?rng=/m/grph/vrtx{*}&amp;dom=/m/grph/vrtx</small>
+        <small class="text-muted code">/m/grph/inst/both?rng=/m/grph/edge{*}&amp;dom=/m/grph/vrtx</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-both-doc-0-tab').click();document.getElementById('inst-both-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">both?rng=vrtx{*}&amp;dom=vrtx(uri{*}::T){&lt;j&gt;}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-both-doc-0-tab').click();document.getElementById('inst-both-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">both?rng=edge{*}&amp;dom=vrtx(uri{*}::T){&lt;j&gt;}</code></pre>
 </div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">returns the lhs vertex arg-adjacent incoming and outgoing vertices</p>
@@ -509,9 +505,9 @@ bin/metatron</code></pre>
             <span class="code text-primary fw-bold">bothV</span>
             <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-edge" data-bs-toggle="tooltip" title="domain" class="code text-info">edge</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-vrtx" data-bs-toggle="tooltip" title="range" class="code text-success">vrtx</a></span></span>
         </span>
-        <small class="text-muted code">/m/grph/inst/bothV?rng=/m/grph/vrtx&amp;dom=/m/grph/edge</small>
+        <small class="text-muted code">/m/grph/inst/bothV?rng=/m/grph/vrtx{2}&amp;dom=/m/grph/edge</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-bothV-doc-0-tab').click();document.getElementById('inst-bothV-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">bothV?rng=vrtx&amp;dom=edge(){&lt;j&gt;}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-bothV-doc-0-tab').click();document.getElementById('inst-bothV-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">bothV?rng=vrtx{2}&amp;dom=edge(){&lt;j&gt;}</code></pre>
 </div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">returns the lhs edge&#39;s head and tail vertices</p>
@@ -541,11 +537,11 @@ bin/metatron</code></pre>
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">in</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-vrtx" data-bs-toggle="tooltip" title="domain" class="code text-info">vrtx</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-vrtx" data-bs-toggle="tooltip" title="range" class="code text-success">vrtx</a></span></span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-vrtx" data-bs-toggle="tooltip" title="domain" class="code text-info">vrtx</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-edge" data-bs-toggle="tooltip" title="range" class="code text-success">edge</a></span></span>
         </span>
-        <small class="text-muted code">/m/grph/inst/in?rng=/m/grph/vrtx{*}&amp;dom=/m/grph/vrtx</small>
+        <small class="text-muted code">/m/grph/inst/in?rng=/m/grph/edge{*}&amp;dom=/m/grph/vrtx</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-in-doc-0-tab').click();document.getElementById('inst-in-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">in?rng=vrtx{*}&amp;dom=vrtx(uri{*}::T){&lt;j&gt;}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-in-doc-0-tab').click();document.getElementById('inst-in-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">in?rng=edge{*}&amp;dom=vrtx(uri{*}::T){&lt;j&gt;}</code></pre>
 </div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">returns the lhs vertex arg-adjacent incoming vertices</p>
@@ -594,11 +590,11 @@ bin/metatron</code></pre>
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">label</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-elmt" data-bs-toggle="tooltip" title="domain" class="code text-info">elmt</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#type-uri" data-bs-toggle="tooltip" title="range" class="code text-success">uri</a></span></span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#type-rec" data-bs-toggle="tooltip" title="domain" class="code text-info">rec</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#type-uri" data-bs-toggle="tooltip" title="range" class="code text-success">uri</a></span></span>
         </span>
-        <small class="text-muted code">/m/grph/inst/label?rng=/m/uri&amp;dom=/m/grph/elmt</small>
+        <small class="text-muted code">/m/grph/inst/label?rng=/m/uri&amp;dom=/m/rec</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-label-doc-0-tab').click();document.getElementById('inst-label-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">label?rng=uri&amp;dom=elmt(){&lt;j&gt;}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-label-doc-0-tab').click();document.getElementById('inst-label-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">label?rng=uri&amp;dom=rec(){&lt;j&gt;}</code></pre>
 </div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">returns the lhs element label (the tid)</p>
@@ -611,11 +607,11 @@ bin/metatron</code></pre>
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">out</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-vrtx" data-bs-toggle="tooltip" title="domain" class="code text-info">vrtx</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-vrtx" data-bs-toggle="tooltip" title="range" class="code text-success">vrtx</a></span></span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-vrtx" data-bs-toggle="tooltip" title="domain" class="code text-info">vrtx</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-edge" data-bs-toggle="tooltip" title="range" class="code text-success">edge</a></span></span>
         </span>
-        <small class="text-muted code">/m/grph/inst/out?rng=/m/grph/vrtx{*}&amp;dom=/m/grph/vrtx</small>
+        <small class="text-muted code">/m/grph/inst/out?rng=/m/grph/edge{*}&amp;dom=/m/grph/vrtx</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-out-doc-0-tab').click();document.getElementById('inst-out-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">out?rng=vrtx{*}&amp;dom=vrtx(uri{*}::T){&lt;j&gt;}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-out-doc-0-tab').click();document.getElementById('inst-out-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">out?rng=edge{*}&amp;dom=vrtx(uri{*}::T){&lt;j&gt;}</code></pre>
 </div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">returns the lhs vertex arg-adjacent outgoing vertices</p>
@@ -664,11 +660,11 @@ bin/metatron</code></pre>
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">values</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-elmt" data-bs-toggle="tooltip" title="domain" class="code text-info">elmt</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#" data-bs-toggle="tooltip" title="maybe some generic range" class="code text-success">#{*}</a></span></span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#type-rec" data-bs-toggle="tooltip" title="domain" class="code text-info">rec</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#" data-bs-toggle="tooltip" title="maybe some generic range" class="code text-success">#{*}</a></span></span>
         </span>
-        <small class="text-muted code">/m/grph/inst/values?rng=#{*}&amp;dom=/m/grph/elmt</small>
+        <small class="text-muted code">/m/grph/inst/values?rng=#{*}&amp;dom=/m/rec</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-values-doc-0-tab').click();document.getElementById('inst-values-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">values?rng=#{*}&amp;dom=elmt(uri{*}::T){&lt;j&gt;}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-values-doc-0-tab').click();document.getElementById('inst-values-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">values?rng=#{*}&amp;dom=rec(uri{*}::T){&lt;j&gt;}</code></pre>
 </div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">returns the lhs element arg-labeled values</p>
@@ -681,17 +677,17 @@ bin/metatron</code></pre>
 </div>
 </div><div class="container-xxl mb-4" id="rewrites">
     <h3 class="text-primary mb-3">Rewrites <span class="pill-label badge bg-warning text-dark">3</span></h3>
-    <div class="card mb-3" id="rewrite-graph_count">
+    <div class="card mb-3" id="rewrite-graph_limit">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
-            <span class="code text-warning fw-bold">graph_count</span>
+            <span class="code text-warning fw-bold">graph_limit</span>
             <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#type-code" data-bs-toggle="tooltip" title="domain" class="code text-info">code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#type-code" data-bs-toggle="tooltip" title="maybe range" class="code text-success">code{?}</a></span></span>
         </span>
-        <small class="text-muted code">/m/grph/inst/rewrite/graph_count?rng=/m/code{?}&amp;dom=/m/code</small>
+        <small class="text-muted code">/m/grph/inst/rewrite/graph_limit?rng=/m/code{?}&amp;dom=/m/code</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/grph/inst/rewrite/graph_count?rng=code{?}&amp;dom=code(){&lt;j&gt;}</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/grph/inst/rewrite/graph_limit?rng=code{?}&amp;dom=code(){&lt;j&gt;}</code></pre></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">leverages native Gremlin count() for vertex/edge collections</p>
+    <p class="mb-0 text-light">leverages native Gremlin limit() for vertex/edge collections</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">pre-rewrite code <span class="text-light">=&gt;</span> post-rewrite code</pre><small class="text-muted fw-bold mt-2 d-block">args:</small>

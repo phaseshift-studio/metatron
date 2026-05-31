@@ -23,7 +23,7 @@ import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.web.type.MIME;
-import studio.phaseshift.metatron.isa.web.type.mcp_Server;
+import studio.phaseshift.metatron.isa.web.type.mcpServer;
 import studio.phaseshift.metatron.isa.web.space.ws.WebSocketRec;
 
 import java.util.LinkedHashMap;
@@ -87,7 +87,7 @@ public class mcp_wsHandler extends WebSocketRec {
                             .at(uri(OUT), uri(MIME.MIMEType.APPLICATION_JSON.value)).jvm()), WS_MCP_HANDLER_TID, inst.arg(0).vid()))).create();
 
     // Transport-agnostic protocol handler (composition)
-    private final mcp_Server mcp;
+    private final mcpServer mcp;
 
     public mcp_wsHandler(final Rec recClone) {
         this(mutableMap(recClone.jvm()), recClone.tid(), recClone.vid());
@@ -95,7 +95,7 @@ public class mcp_wsHandler extends WebSocketRec {
 
     public mcp_wsHandler(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
-        this.mcp = new mcp_Server(jvm, tid, vid);
+        this.mcp = new mcpServer(jvm, tid, vid);
         this.jvm().put(uri(ON_MESSAGE), instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL)), (lhs, inst) -> {
             try {
                 LOG.debug("incoming mcp message from %s: %s", this.getOtherVID(), lhs);

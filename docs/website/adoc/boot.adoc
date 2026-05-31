@@ -1,5 +1,5 @@
 [discrete]
-== Boot 
+== The Boot Loader 
 
 The boot process for metatron loads a few core components and then hands control over to a user-provided boot script. What the user's boot script does determines the state and use of a particular metatron instance.
 

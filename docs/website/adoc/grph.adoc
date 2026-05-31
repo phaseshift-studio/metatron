@@ -1,5 +1,5 @@
 [discrete]
-== Graph Computing with /m/grph
+== Graph Computing
 
 [discrete]
 [%collapsible]
@@ -37,52 +37,92 @@ This classic structure has been extended in various ways since its inception in 
 
 NOTE: The `graphspace` of `/m/grph` uses http://tinkerpop.apache.org[Apache TinkerPop] as it's underlying storage framework. While useful for the time being, once metatron's approach to graphs is fully understood, the constraints imposed by Apache TinkerPop will be made salient. When that time arrives, a generalization will be presented demonstrating the depth of modeling, storage, and processing control one can wield with metatron. This fluidity, a naturalness of form, permeates throughout. It is here where the lines previously drawn between data structures/databases begin to blur, and what emerges renders concepts such as __multi-modal__, prosaic – a relic of the past.
 
-The following mtron snippet constructs a `grphspace`. A few routes are provided separating the elements of the graph into their common categories of vertics and edges. Moreover, with metatron's type system, schemas and type checking are available. `g:S` routes extending uris to the graph's schema (should one exist).
-
 [discrete]
 === /m/grph/space
 
-[mtron]
-----
-grphspace::[                                            /
-  pattern => g:#,                                       /
-  route   => [g:  => <>,                                /
-              g:V => V,                                 /
-              g:E => E,                                 /
-              g:S => /m/grph/schema/modern],            /
-  native  => [factory  => mfactory::[=>],               /
-              load     => modern]]@/sys/space/modern [-- <1> --]
-*g:S                                                 [-- <2> --]
-----
-
-For those familiar with graph database and Gremlin graph traversal language, an assortment of common property graph traversals is provided below -- written in mtron.
+The following mtron snippet constructs a `grphspace`. A few routes are provided separating the elements of the graph into their common categories of vertics and edges. Moreover, with metatron's type system, schemas and type checking are available. `g:S` routes extending uris to the graph's schema (should one exist).
 
 [mtron]
 ----
-*g:V/1                                [-- <1> --]
-*g:V/1.outE()                         [-- <2> --]
-*g:V/1.outE().inV()                   [-- <3> --]
-*g:V/1.out()                          [-- <4> --]
-*g:V/1.out(knows).out(created)        [-- <5> --]
-*g:V/1.out(knows).out(created)>>name  [-- <6> --]
+grphspace::[                                               /
+  pattern => g:#,                                          /
+  route   => [g:V => V,                                    /
+              g:E => E,                                    /
+              g:S => /m/grph/schema/modern],               /
+  native  => [factory  => mfactory::[=>],                  /
+              load     => modern]]@/sys/space/grph/modern  [-- <1> --]
+*g:S/+                                                     [-- <2> --]
+*g:S/person                                                [-- <3> --]
+----
+<1> spawning a `grphspace`.
+<2> the schema that refines the `grphspace`.
+<3> the `rec::T > elmnt::T > vrtx::T > person::T`.
+
+Graph traversals in mtron are expressed using either __instruction-call__ syntax or __uri-path__ syntax. The uri-path form treats `OUT` and `IN` as path segments that route through the graph engine directly, without requiring `out()`, `in()`, etc. instruction calls. The same traversals expressed using both forms:
+
+[cols="6a,6a",separator=🧱,role="table-bordered small center"]
+|===
+🧱
+
+.id-resolution traversals (path syntax)
+[mtron]
+----
+*g:V/1                           [-- <1> --]
+*g:V/1/OUT                       [-- <2> --]
+*g:V/1/OUT/created               [-- <3> --]
+*g:V/1/OUT/created/IN            [-- <4> --]
+*g:V/1/OUT/knows/IN/name         [-- <5> --]
+*g:V/1/OUT/knows/IN/+.count()    [-- <6> --]
+*g:E/7/IN/name                   [-- <7> --]
 ----
 
+🧱
+
+.instruction-call traversals (inst syntax)
+[mtron]
+----
+*g:V/1                          [-- <1> --]
+*g:V/1.out()                    [-- <2> --]
+*g:V/1.outE(created)            [-- <3> --]
+*g:V/1.out(created)             [-- <4> --]
+*g:V/1.out(knows)>>name         [-- <5> --]
+*g:V/1.out(knows).count()       [-- <6> --]
+*g:E/7.inV()>>name              [-- <7> --]
+----
+|===
 <1> Vertex `1` with associated properties.
 <2> The incident outgoing edges of vertex `1`.
-<3> The incoming vertex incident to the outgoing edges of vertex `1`.
-<4> The outgoing adjacent vertices to vertex `1`.
-<5> The vertices 2 steps away from vertex `1` whose relationship is created by people vertex `1` knows.
-<6> The incident name property value of the vertices 2 steps away.
+<3> Filter to only edges with label `created`.
+<4> Traverse to the incoming vertex of the `created` edge.
+<5> The name of the people that vertex `1` knows.
+<6> Count of the people that vertex `1` knows.
+<7> Edge 7's incoming vertex name.
+
+[.card]
+--
+[discrete,.center]
+==== graph traversal is uri resolution
+At its core, metatron is a system designed to __resolve identifiers__. Every piece of data has a unique id -- and in fact, many unique ids: for all the ways in which spaces inter- and intra-connect with one another and for what spaces allow semantically (space-dependent). In metatron, traversing a graph is ultimately about solving **path equations** (uri resolutions). 
+
+[source,mtron]
+----
+from()                  where()                          count()
+┌───┐               ┌──────────────┐                   ┌────────┐ 
+│ * │g:V/1/OUT/knows│=?=[age?>29]>>│OUT/created/IN/name│.count()│ 
+└───┘               └──────────────┘                   └────────┘ 
+         out(knows)                  out(created)>>name            
+----
 
 
-The `/m/grph` instruction extends the core `/m` instruction set with the following graph-oriented instructions. These
-navigations primitives hide the graph encoding specifics, enabling the same instructions to be used across different
-graph encodings (discussed later when presenting hypergraphs).
+For example: `*g:V/1/OUT/knows` traverses via **uri resolution**. `*g:V/1.out(knows)` traverses via **instruction evaluation**. Both yield the same set of edges. The distinction lies in the fact that instructions are simply wrappers around a subset of the uri. The instructions `outE()`, `inV()`, `out()` — inherited from Gremlin — are https://en.wikipedia.org/wiki/Syntactic_sugar[syntactic sugar].
+--
 
 [discrete]
-=== /m/grph/inst
+=== grph instset
 
-.`/m/grph` instructions
+The `/m/grph` instruction set extends the core `/m` instruction set with the following graph-oriented instructions. These navigation primitives hide the graph encoding specifics, enabling the same instructions to be used across different graph encodings (discussed later when presenting hypergraphs).
+
+[discrete]
 [cols=".^4a,.^3,.^4a",separator=🧱,options=header,role="table-bordered small center"]
 |===
 ^🧱 inst ^🧱 description ^🧱 diagram
@@ -112,15 +152,14 @@ graph encodings (discussed later when presenting hypergraphs).
 [discrete]
 === Property Graph Extensions
 
-mtron's design makes possible a swathe of natural extensions to both the standard property graph data model and associated traversal and pattern-matching query engines.
-The following itemization summarizes some of the more consequential realizations.
+mtron's design makes possible a swathe of natural extensions to both the standard property graph data model and associated traversal and pattern-matching query engines. The following itemization summarizes some of the more consequential realizations.
 
 . *hierarchical properties*: the folder-like structure of uris combined with mtron pattern matching enables hierarchical organization within the property graph model's flat namespace.
 . *nested properties*: mtron supports `poly` values meaning element property values can be nested (via `rec`, `rel`, or `lst`).
 . *interspace traversals*: `!+*+` instructions can be encapsulated as vertices and/or property values, enabling inter- and intra-space
 traversals.
-. *process encodings*: graph databases have historically been used for structuring data, where processing exists exogenous graph and executing only at query time. mtron's `inst` objs make possible the graph encoding of processes, where, for example, vertices can become active objects within the larger application.
-. *sympathetic partitions*: an mtron `poly` is not constrained to a single space nor within a single space, does an operation on the poly imply a particular physical layout of underlying data. In this way, mtron conveniently supports language agnostic retrieval of data across different physical layouts.
+. *process encodings*: graph databases have historically been used for structuring data, where processes are exogenous to the graph (and execute only at query time). mtron's `inst` objs make possible the graph encoding of processes, where, for example, vertices can become active objects within the larger application.
+. *sympathetic partitions*: an mtron `poly` is not constrained to a single space nor within a single space. Neither does an operation on the `poly` imply a particular physical layout of underlying data. In this way, mtron conveniently supports space agnostic retrieval of data across different physical layouts.
 
 [mtron]
 ----
@@ -164,9 +203,9 @@ The following examples demonstrate selection and filtering using multi-segment u
 
 [mtron]
 ----
-[HIDDEN] *g:V/1>>=+[address/home/city => noobj]
-[HIDDEN] *g:V/1>>=+[address/work/city => noobj]
-*g:V/1==[_=>_]                                                  [-- <1> --]
+[HIDDEN] @g:V/1>>=+[address/home/city => none]
+[HIDDEN] @g:V/1>>=+[address/work/city => none]
+@g:V/1==[_=>_]                                                  [-- <1> --]
 @g:V/1>>=+[address=>[                        /
              home => [city =>'santa fe',     /
                       state=>NM],            /
@@ -237,39 +276,43 @@ The two data sources have a very particular understanding of how data should be 
 🧱
 [mtron]
 ----
-*g:V/1                                                             [-- <1> --]
-*acme:customers/357                                                [-- <2> --]
-@g:V/1.addE(consulted,|*acme:customers/357)                        [-- <3> --]
-*g:V/1.out(consulted)                                              [-- <4> --]
-*g:V/1.out(consulted).matches(vrtx::T)                             [-- <5> --]
+*g:V/1                                                           [-- <1> --]
+*acme:customers/357                                              [-- <2> --]
+@g:V/1.addE(consulted,|*acme:customers/357)                      [-- <3> --]
+*g:V/1.out(consulted)                                            [-- <4> --]
+*g:V/1.out(consulted).matches(vrtx::T)                           [-- <5> --]
 ----
 <1> vertex `v[1]` in a graph database.
 <2> row `357` in a relational database.
-<3> an edge is created in the graph linking vertex `v[1]` and row `357`.
-<4> the edge is traverseable like any other edge.
+<3> an edge is created in the graph linking vertex `v[1]` to a reference vertex pointing to row `357`.
+<4> traverses the edge to the reference vertex carrying the relational pointer.
 <5> a `rrow::T` _is a_ `vrtx::T` according to metatron's structural type system.
 
-The new `consulted`-edge has a standard vertex on its tail, but a "reference vertex"
-on its head. On this reference vertex is an auto-from instruction (`!*`), that when
-accessed, immediately resolves the monad's data pointer to the respective relational database row.
+The `addE` instruction creates a native TinkerPop edge in the graph that links
+vertex `v[1]` to a newly created reference vertex. The reference vertex carries
+a `:redirect` property pointing into the relational database via an `!*` auto-from
+instruction. The `out(consulted)` instruction traverses the edge to the reference
+vertex, which can be type-checked against `vrtx::T` — the structural type system
+recognizes the reference vertex as a vertex. The `:redirect` pointer is resolved
+transparently when the vertex is dereferenced, bridging the two data sources.
 
 Some more expressions are provided below that extend what has been constructed in the previous example thus far.
 These expressions highlight the nested structural pattern matching and data manipulation capabilities of mtron.
 
 [mtron]
 ----
-*g:V/1.out(consulted).-<[                                  /
-  name    =>"${>>contactFirstName} ${>>contactLastName}",  /
+*g:V/1.out(consulted)-<[                                        /
+  name    =>"${>>contactFirstName} ${>>contactLastName}",       /
   address =>==[city=>_,country=>_]]
-*g:V/1.out(consulted)                                  /
-      .out(salesRepEmployeeNumber)                     /
-      .out(reportsTo)-<[                               /
-        name=>"${>>firstName} ${>>lastName}",          /
-        job=>-<[title=>>>jobTitle,email=>>>email]]            
+*g:V/1.out(consulted)                                           /
+  >>salesRepEmployeeNumber                                      /
+  >>reportsTo.-<[                                               /
+    name  =>"${>>firstName} ${>>lastName}",                       /
+    job   =>-<[title=>>>jobTitle,email=>>>email]]
 ----
 
-The examples highlight important concepts necessary to understand 
- in order to be effective at traversing and manipulating complex, 
+The examples highlight important concepts necessary to understand
+ in order to be effective at traversing and manipulating complex,
 nested structures existing across heterogeneous data sources.
 
 * `-<` (**copy apply**): copy the input `obj` across all slots of the arg `poly`.
@@ -356,13 +399,85 @@ g:V/1?sub -> |process_message?#{*}<=#(msg=>_) { print(*msg/trgt, "received messa
 ////
 =====
 
+[indent=0,subs="verbatim,attributes",role="secondary"]
+.sympathetic partitions
+=====
+
+A vertex's edges can span multiple storage backends. Hot edges (frequently traversed) live in an in-memory space; cold edges (archival) live in a disk-backed space. The vertex does not know the difference — `*/g/V/1/OUT/+` returns all edges regardless of where they reside.
+
+The following example configures the modern TinkerGraph dataset with two additional edge stores: `hot:` for in-memory edges and `cold:` for disk-backed edges.
+
+.hot and cold edge storage spaces
+[mtron]
+----
+memspace::[pattern  => </te/hot/#>,                          /
+           route    => [/te/hot/  => <>]]@/sys/space/hot
+tblespace::[pattern => </te/cold/#>,                          /
+            route   => [/te/cold/ => <>],                     /
+            table   => [,],                                   /
+            driver  => <org.sqlite.JDBC>,                     /
+            host    => <sqlite:/tmp/cold.db>]@/sys/space/cold
+----
+
+Edge data is written into each space keyed by the vertex identifier.
+
+[mtron]
+----
+/te/hot/1/a  -> [item   => 'laptop', /
+                total=>1200.0,      /
+                owner  => !*g:V/2]
+/te/hot/1/b  -> [item   => 'mouse',total=>25.0]
+/te/cold/1/x -> [item   => 'book',total=>15.0, /
+                seller => !*g:V/4]
+----
+
+Once seeded, the edges are accessible through the same `OUT` traversal used for native graph edges. The scheme prefix in the label (`te:hot`, `te:cold`) instructs the engine to route the read to the respective space.
+
+[cols="6a,6a",separator=🧱,role="table-bordered small center"]
+|===
+🧱
+
+.traversing a distributed edge set (path syntax)
+[mtron]
+----
+*g:V/1/OUT/te:hot/+.count()            [-- <1> --]
+*g:V/1/OUT/te:hot/a/item               [-- <2> --]
+*g:V/1/OUT/te:hot/a/owner/name         [-- <3> --]
+*g:V/1/OUT/te:cold/x/total             [-- <4> --]
+*g:V/1/OUT/knows.count()               [-- <5> --]
+----
+
+🧱
+
+.traversing a distributed edge set (instruction-call syntax)
+[mtron]
+----
+*g:V/1.outE(te:hot).count()            [-- <1> --]
+*g:V/1.outE(te:hot/a)>>item            [-- <2> --]
+*g:V/1.outE(te:hot/a)>>owner>>name     [-- <3> --]
+*g:V/1.outE(te:cold/x)>>total          [-- <4> --]
+*g:V/1.outE(knows).count()             [-- <5> --]
+----
+|===
+<1> Count of hot edges for vertex `1` — returns `2`.
+<2> Specific hot edge property value — `"laptop"`.
+<3> Passthrough: traverse hot edge → back to graph via `!*` reference → vertex name — `"vadas"`.
+<4> Cold edge property value — `15.0`.
+<5> Native graph edges coexist with external edges — returns `2`.
+
+The reference `!*g:V/2` in the hot edge's `owner` field creates an `auto_from` pointer back to the graph. When accessed via `/owner/name`, the pointer resolves to vertex `2` in the graph, and its `name` property returns `"vadas"`. The traversal path `graph → external edge → graph` is transparent to the user.
+
+The two syntactic forms — `*/g/V/1/OUT/te:hot/a/item` and `*g:V/1.outE(te:hot/a)>>item` — are dual representations of the same underlying identifier resolution. The __path form__ decomposes into `g:V` (collection), `1` (entry), `OUT` (direction), `te:hot` (external-space label), `a` (edge key), and `item` (field). The __instruction form__ wraps the same decomposition: `outE(te:hot/a)` encodes direction + label + key, and `>>item` projects the field. Both route through the graph engine's `readVertexTraversal`, where the scheme prefix `te:` triggers a read from the external `memspace`. Whether expressed as uri-path segments or instruction calls, the traversal graph `⎡vertex⎦ -> ⎡external edge⎦ -> ⎡property⎦` is identical — the instructions are simply an alternate notation for the same underlying path resolution.
+
+=====
+
 [discrete]
 === metatron Encoded Graphs
 
 It is possible to encode an arbitrary graph structure (i.e. any extension of latexmath:[G=(V,E)]) in space. There are four aaspects of mtron that make graph encodings natural and universal -- applicable in any metatron space, regardless of the underlying storage system.
 
 * `!*` (**auto_from**): ensures that simply accessing a reference yields the reference's referent. To the user, there is no difference between the graph elements being colocated in the same `poly`, within the same space, within the same computer, or across the web as a whole.
-* `>>` (**forward**): ensures monads move along the underlying data structure in a selective manner as needed to yield the desired resultant semantics.
+* `>>` (**forward**): ensures monads move along the underlying data structure in a manner respective of the provided argument.
 * `-<` (**split**): ensures that executing monads will split themselves across branching graph paths and branching code paths.
 * `>-` (**merge**): ensures that branching graph and code paths will linearize themselves within the execution path of the machine.
 
@@ -460,6 +575,7 @@ knows              │
 ----
 
 |===
+
 =====
 
 [indent=0,subs="verbatim,attributes",role="secondary"]
@@ -587,18 +703,11 @@ v1                                      [-- <1> --]
 =====
 
 [discrete]
-=== Multi-Spatial Graph Overlays
-
-[discrete]
-==== Universal Extensions
-
-mtron's reference-oriented meta-model offers near limitless opportunities for customizing standard data structures to meet specific needs. Customization can alter both the explicit structure (the user facing representation of the data) as well as the implicit structure (the way in which the data is layed out across the memory hierarchy).
-
-Typically, in real-world scenarios, not every vertex and edge of a graph are traversed with equal probability. Moreover, certain relations may require a faster query response time than others. mtron can be configured such that certain subgraphs are stored in an in-memory store while others are stored in a disk-based store.
+==== Performance Tiering
 
 [cols="4a,4a,4a",separator=🧱,options="header",role="table-bordered small center"]
 |===
-^🧱 **file system** ^🧱 **in-memory** ^🧱 **database** 
+^🧱 **file system** ^🧱 **in-memory** ^🧱 **database**
 
 🧱
 [source,mtron]
@@ -630,7 +739,6 @@ dcmtspace::[pattern=>dcmt:#]
 * complex
 * stable
 
-🧱
 |===
 
-The space constructor above uses the space route table to route `person`-vertex and `knows`-edge traversals to another space, namely `h:#`. Once specified, any `knows`-edge created between a `person`-vertex in `g:` to a `person`-vertex in `h:` is automatically configured with the appropriate `!*` reference. This ensures a smooth, user agnostic transition between two spaces being leveraged for their particular performance for various subgraphs of the large platonic graph as a whole.
+A typical configuration partitions subgraphs by access frequency. Frequently traversed `knows`-edges reside in `memspace` (sub-millisecond reads). Rarely queried `purchases`-edges reside in `tblespace` (disk-backed). The vertex's `OUT` traversal remains a single expression regardless of how many spaces contribute edges.

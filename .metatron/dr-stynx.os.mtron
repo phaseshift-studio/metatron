@@ -1,0 +1,99 @@
+stdout("""
+=======================================================
+      _          _   PhaseShift Presents                                
+   __| |_ __ ___| |_ _   _ _ __ __  __      ___  ___ 
+  / _` | '__/ __| __| | | | '_ \\ \/ /____ / _ \/ __|
+ | (_| | |_ \__ \ |_| |_| | | | |>  <_____| (_) \__ \
+  \__,_|_(_)|___/\__|\__, |_| |_/_/\_\     \___/|___/
+                     |___/              a metatron bomb                     
+=======================================================
+""")
+
+[== load instruction sets ==]
+      import(/m/io);
+        import(/m/web);
+          import(/m/llm);
+
+[--------------------------------------------]
+[-- a transient space for scratchpad objs  --]
+[--------------------------------------------]
+memspace::[pattern => /usr/#,                                 
+           q       => [typeq::[=>],mintq::[=>],docq::[=>],subq::[=>],incrq::[=>]]
+]@/sys/space/usr;
+
+[-----------------------------------------------]
+[-- use-computer docker container file system --]
+[-----------------------------------------------]
+fsspace::[pattern => home:#,
+          q       => [subq::[=>]], [-- enables subscribing to mutating files --]
+          route   => [home: => /home/assistant/]
+]@/sys/space/fs/home;
+
+[-------------------------------]
+[-- openai lm-studio endpoint --]
+[-------------------------------]
+catalog::[host         => <http://dr-stynx.phaseshift.studio>,          
+          pattern      =>  lm:#,                         
+          name         =>  lm-studio,                           
+          route        => [lm: => <http://dr-stynx.phaseshift.studio/v1>]
+]@/sys/space/ai/lm_studio;
+
+[--------------------------------------------------]
+[-- http server for static pages and mcp servers --]
+[--------------------------------------------------] 
+httpspace::[host     => <http://dr-stynx.phaseshift.studio:8777>,                                                         
+            q        => [mimeq::[=>]],                             [-- support for mapping objs to markdown, html, json, etc. --] 
+            pattern  => <http://#>,                                [-- access to any www web resources --]                                 
+            route    => [/          => home:dr-stynx-os/frontend/, [-- pulls files from fsspace --]                                                       
+                         /mtron     => mcp_mtron_http,             [-- mcp server with high-level metatron utilities --]  
+                         /docs      => home:dr-stynx-os/docs/]
+]@/sys/space/web/http; 
+[--------------------------------------------------]
+[-- websocket server for streaming metatron objs --]
+[--------------------------------------------------] 
+wsspace::[host     => <ws://dr-stynx.phaseshift.studio:8555>,                          
+          pattern  => ws://#,                                           
+          q        => [subq::[=>]],                          
+          route    => [/mtron => mtron_ws] [-- a console/repl via raw websocket text --]                           
+]@/sys/space/web/ws;       
+
+[------------------------------------------------------]
+[-- mosquitto mqtt server for robust message passing --]
+[------------------------------------------------------] 
+mqttspace::[pattern =>  mqtt:#,
+            host    => <mqtt://dr-stynx.phaseshift.studio:1883>, [-- a mosquitto endpoint --]
+            q       => [subq::[=>],
+            route   => [mqtt:  => <>]
+]@/sys/space/mqtt;
+
+[-----------------------------------------------------]
+[-- graph database for robust interspace references --]
+[-----------------------------------------------------] 
+grphspace::[pattern=>g:#,
+            route=>[g:V=>V,g:E=>E,g:S=>home:grph/schema],
+            native=>[
+              config =>[<gremlin.graph>  => <org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerGraph>],
+              id     =>[vertex           => <java.lang.Integer>,
+                       edge              => <java.lang.Integer>]]
+]@/sys/space/grph
+
+[================================]
+[==      agent embedding       ==]
+[================================]
+
+[-- heartbeat --]
+virtual::[code=>print('ping.'),loop=>second::10]@/usr/ai/heartbeat
+
+
+[-- define a dr-stynx.os mcp server type                        --]
+[-- type=>value at httpspace dereference creates server session --]
+mcp_http::T[][
+  tool=>[
+    gpu_check => inst(){ *<http://glances.phaseshift.studio> }
+    ...
+    ...
+  ]
+]@<home:mcp/dr-stynx.os>
+
+
+

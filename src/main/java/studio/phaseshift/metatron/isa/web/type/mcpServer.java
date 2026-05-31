@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -64,23 +64,13 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class mcp_Server extends MRec {
+public class mcpServer extends MRec {
 
     public static final fURI MCP_SERVER_TID = WS_SPACE_TID.extend("mcp_server");
     protected final GraphittyLogger LOG = Graphitty.log(this);
     private static final String DESCRIPTION = "description";
 
-    public static final Type MCP_SERVER_TYPE = Type.Builder.build()
-            .tid(MCP_SERVER_TID)
-            .vid(MCP_SERVER_TID.extend("base"))
-            .isaPredicate(rec(
-                    uri(TOOL).maybe().asUri(), rec(URI_TYPE, INST_TYPE).maybe(),
-                    uri(RESOURCE).maybe().asUri(), T(ALL),
-                    uri(PROMPT).maybe().asUri(), T(ALL)))
-            .constructor(instC(MCP_SERVER_TID.extend(CTOR).dom(ALL.maybe()).rng(MCP_SERVER_TID), lst(T(REC_TID)), (lhs, inst) ->
-                    new mcp_Server(new LinkedHashMap<>(inst.arg(0).asRec().jvm()), MCP_SERVER_TID, inst.arg(0).vid()))).create();
-
-    public mcp_Server(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
+    public mcpServer(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
     }
 
@@ -213,7 +203,7 @@ public class mcp_Server extends MRec {
                 // Unknown method
                 // ========================================
                 default -> {
-                    if(method.isBlank())
+                    if (method.isBlank())
                         yield noobj();
                     LOG.warn("unknown mcp method: %s", method);
                     yield mcpError(id, jnt(-32601), str("method not found: " + method));
@@ -371,5 +361,5 @@ public class mcp_Server extends MRec {
         return rec();
     }
 
-   
+
 }

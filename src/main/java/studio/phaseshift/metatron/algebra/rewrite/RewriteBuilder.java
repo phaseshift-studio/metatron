@@ -115,6 +115,7 @@ public class RewriteBuilder<S extends Space> {
      * @return This builder for chaining
      */
     public RewriteBuilder<S> rng(final fURI rngTID) {
+        this.rewriteTid=this.rewriteTid.rng(rngTID);
         this.resultTid = rngTID;
         return this;
     }

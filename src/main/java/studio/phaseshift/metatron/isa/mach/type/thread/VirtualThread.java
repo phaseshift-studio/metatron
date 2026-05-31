@@ -22,9 +22,12 @@ import dev.langchain4j.agent.tool.P;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
@@ -33,8 +36,12 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MILLIS_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_FALSE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_VIRTUAL_THREAD_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
@@ -57,14 +64,28 @@ public class VirtualThread extends AbstractThread implements NotDetachable {
                     .name(this.vid() == null ? "metatron-virtual-thread" : this.vid().toString())
                     .unstarted(() -> {
                         try {
-                            this.jvm().put(uri(STATE), uri(RUNNING));
-                            final Obj result = this.jvm().getOrDefault(uri(CODE), noobj()).apply(this.at(START));
-                            this.jvm().put(uri(RESULT), result);
+                            final Real loopInterval = this.has(LOOP) ? this.at(LOOP).as(MILLIS_TYPE).as() : real(-1.0d);
+                            boolean loop = true;
+                            this.jvm().put(uri(STATE), uri(RUN));
+                            while (loop) {
+                                loop = loopInterval.realValue() != -1.0d;
+                                final Obj result = this.jvm().getOrDefault(uri(CODE), noobj()).apply(this.at(START));
+                                this.jvm().put(uri(RESULT), result);
+                                if (this.thread.isInterrupted() || this.at(uri(STATE)).equals(uri(STOP))) {
+                                    loop = false;
+                                    if (!this.thread.isInterrupted())
+                                        this.thread.interrupt();
+                                    this.logger().warn("virtual thread {{y}}interrupted{{X}} at %s", LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+                                }
+                                if (loop) {
+                                    CommonUtil.sleepThread(loopInterval.realValue().intValue());
+                                }
+                            }
                         } catch (final Throwable e) {
                             this.jvm().put(uri(RESULT), fail(e));
-                            this.logger().error("thread execution failed: {}", e.getMessage(), e);
+                            this.logger().error("thread execution failed: %s", e.getMessage());
                         } finally {
-                            this.jvm().put(uri(STATE), uri(STOPPED));
+                            this.stop();
                             synchronized (VirtualThread.this) {
                                 VirtualThread.this.notifyAll();
                             }
@@ -112,7 +133,7 @@ public class VirtualThread extends AbstractThread implements NotDetachable {
         synchronized (this) {
             final long endTime = System.currentTimeMillis() + unit.toMillis(timeout);
             while (System.currentTimeMillis() < endTime) {
-                if (this.jvm().getOrDefault(uri(STATE), noobj()).equals(uri(STOPPED))) {
+                if (this.jvm().getOrDefault(uri(STATE), noobj()).equals(uri(STOP))) {
                     return this.jvm().getOrDefault(uri(RESULT), noobj());
                 }
                 try {
@@ -128,14 +149,14 @@ public class VirtualThread extends AbstractThread implements NotDetachable {
         }
         throw MTronException.of("result wait timeout for thread %s", this.vid());
     }
-    
-    public static VirtualThread of(final Rec vrec) {
-        if(vrec instanceof VirtualThread)
-            return (VirtualThread) vrec;
-        else {
-            return new VirtualThread(vrec.jvm(),MACH_VIRTUAL_THREAD_TID,vrec.vid());
-        }
-    } 
+
+    public static VirtualThread virtual(final Obj code, final fURI vid) {
+        return new VirtualThread(mutableMap(uri(CODE), code), MACH_VIRTUAL_THREAD_TID, vid);
+    }
+
+    public static VirtualThread virtual(final Obj code) {
+        return new VirtualThread(mutableMap(uri(CODE), code), MACH_VIRTUAL_THREAD_TID, null);
+    }
 
 
     @Override
@@ -145,8 +166,8 @@ public class VirtualThread extends AbstractThread implements NotDetachable {
                 this.logger().warn("thread currently running, ignoring %s", other);
                 return this;
             }
-            this.createUnstartedThread();
             this.jvm().put(uri(START), other);
+            this.createUnstartedThread();
             this.thread.start();
         }
         return this;

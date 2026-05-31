@@ -1,5 +1,5 @@
 [discrete]
-== FileSystems
+== The File System
 
 [%collapsible]
 ./m/mach instset import and space constructions

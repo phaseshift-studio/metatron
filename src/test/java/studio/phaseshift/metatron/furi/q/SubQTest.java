@@ -56,7 +56,8 @@ public interface SubQTest {
     }, delimiter = '%')
     default void testSubQ(String subscription, String writing, String expecting) {
         final Space space = this.getSpace();
-        if(getSpace().qs().lstValue().stream().noneMatch(x -> x.tid().equals(SUBQ_TID))) {
+        if (getSpace().qs().lstValue().stream().noneMatch(x -> x.tid().equals(SUBQ_TID))) {
+            space.logger().warn("manually adding subq to %s", space.vidOrTid());
             space.addQ(QCollection.subq());
         }
         final Obj sub = ObjmtronSerializer.parse(make(subscription)).apply();
@@ -64,6 +65,8 @@ public interface SubQTest {
         final Obj writeObj = ObjmtronSerializer.parse(make(writing)).apply();
         assertNotEquals(sub, writeObj);
         CommonUtil.sleepThread(500);
-        assertTrue(ObjmtronSerializer.parse(make(expecting)).apply().boolValue());
+        final Obj result = ObjmtronSerializer.parse(make(expecting)).apply();
+        assertFalse(result.isNoObj(), "subscription on_recv didn't fire (or didn't fire in time)");
+        assertTrue(result.boolValue());
     }
 }

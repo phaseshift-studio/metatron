@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -89,21 +89,30 @@ public class mqttSpaceTest extends AbstractSpaceTest implements SubQTest {
         CommonUtil.sleepThread(1000);
         AbstractMetatronTest.end();
     }
-    @Override @Disabled public void testMonoUpdate() {}
-    // Disable all abstract tests - mqttSpace uses pub/sub model, not traditional CRUD
-//    @Override @Disabled public void testMonoReadWrite(String writeExpression, String readExpression, String expectedExpression) {}
-    @Override @Disabled public void testStringCornerCases(String description, String value) {}
-    @Override @Disabled public void testIntegerBoundaries(String description, long value) {}
-    @Override @Disabled public void testRealBoundaries(String description, double value) {}
-    @Override @Disabled public void testBooleanValues(String description, boolean value) {}
- //   @Override @Disabled public void testNonExistentAccess(String key) {}
-   @Override @Disabled public void testSequentialUpdates(int iterations) {}
-    @Override @Disabled public void testBasicCRUD(String description, String key, String valueStr) {}
-    @Override @Disabled public void testTypePreservation(String description, Obj value) {}
-    @Override @Disabled public void testNestedRecords(int depth) {}
-    @Override @Disabled public void testListHandling(String description, studio.phaseshift.metatron.isa.m.type.Lst listValue, int expectedCount) {}
-    @Override @Disabled public void testTypeChanges(String description, Obj initialValue, Obj updatedValue) {}
-    @Override @Disabled public void testMultiFieldUpdates(int fieldCount) {}
-    @Override @Disabled public void testSpecialStringValues(String description, String value) {}
-    //@Override @Disabled public void testEmptyRecords(int testNumber) {}
+
+    @Override
+    @Disabled
+    public void testMonoUpdate() {
+    }
+
+    @Override
+    @Disabled
+    public void testSequentialUpdates(int iterations) {
+    }
+
+    @Override
+    @Disabled
+    public void testBasicCRUD(String description, String key, String valueStr) {
+    }
+
+    @Override
+    @Disabled
+    public void testTypeChanges(String description, Obj initialValue, Obj updatedValue) {
+    }
+
+    @Override
+    @Disabled
+    public void testMultiFieldUpdates(int fieldCount) {
+    }
+
 }

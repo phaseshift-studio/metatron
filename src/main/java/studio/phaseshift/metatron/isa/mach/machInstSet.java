@@ -56,8 +56,11 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
+import static studio.phaseshift.metatron.isa.m.math.mathInstSet.TIME_TYPE;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
+import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.Real.REAL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBytes.bytes;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
@@ -139,22 +142,13 @@ public class machInstSet extends AbstractInstSet {
 
     /// //////////////////////////////////////////////////////////////////////
     public static final Type MACH_MONAD_TYPE = Type.Builder.build().tid(LST_TID).vid(MACH_MONAD_TID).create();
-    public static final Type MACH_VIRTUAL_THREAD_TYPE = Type.Builder.build()
-            .tid(MACH_THREAD_TID)
-            .vid(MACH_VIRTUAL_THREAD_TID)
-            .isaPredicate(
-                    rec(uri(CODE), T(ALL),
-                            uri(STATE).maybe().asUri(), is_(or_(eq_(uri(STOPPED)), eq_(uri(RUNNING)), eq_(uri(PAUSED)))),
-                            uri(RESULT).maybe(), T(ALL).maybeSome()))
-            .constructor(instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(MACH_VIRTUAL_THREAD_TID), lst(T(REC_TID)),
-                    (lhs, inst) -> new VirtualThread(inst.arg(0).jvm(), MACH_VIRTUAL_THREAD_TID, inst.arg(0).vid()))) // TODO: need to handle vid
-            .create();
+    public static Type MACH_VIRTUAL_THREAD_TYPE;
     public static final Type MACH_CORE_THREAD_TYPE = Type.Builder.build()
             .tid(MACH_THREAD_TID)
             .vid(MACH_CORE_THREAD_TID)
             .isaPredicate(
                     rec(uri(CODE), T(ALL),
-                            uri(STATE).maybe().asUri(), is_(or_(eq_(uri(STOPPED)), eq_(uri(RUNNING)), eq_(uri(PAUSED)))),
+                            uri(STATE).maybe().asUri(), is_(or_(eq_(uri(STOP)), eq_(uri(RUN)), eq_(uri(PAUSE)))),
                             uri(RESULT).maybe(), T(ALL).maybeSome()))
             .constructor(instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(MACH_CORE_THREAD_TID), lst(T(REC_TID)),
                     (lhs, inst) -> new CoreThread(inst.arg(0).jvm(), MACH_CORE_THREAD_TID, inst.arg(0).vid()))) // TODO: need to handle vid
@@ -183,7 +177,23 @@ public class machInstSet extends AbstractInstSet {
                         M_FACTORY_TYPE,
                         /// /////////////////////
                         MACH_CORE_THREAD_TYPE,
-                        MACH_VIRTUAL_THREAD_TYPE,
+                        MACH_VIRTUAL_THREAD_TYPE = docWrap(Type.Builder.build()
+                                        .tid(MACH_THREAD_TID)
+                                        .vid(MACH_VIRTUAL_THREAD_TID)
+                                        .isaPredicate(
+                                                rec(uri(CODE), T(ALL),
+                                                        uri(LOOP).maybe(), TIME_TYPE,
+                                                        uri(STATE).maybe().asUri(), is_(or_(eq_(uri(STOP)), eq_(uri(RUN)), eq_(uri(PAUSE)))),
+                                                        uri(RESULT).maybe(), T(ALL).maybeSome()))
+                                        .constructor(instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(MACH_VIRTUAL_THREAD_TID), lst(T(REC_TID)),
+                                                (lhs, inst) -> new VirtualThread(inst.arg(0).jvm(), MACH_VIRTUAL_THREAD_TID, inst.arg(0).vid()))) // TODO: need to handle vid
+                                        .create(), null, null, Map.of(
+                                        uri(CODE), "the code the thread will execute",
+                                        uri(LOOP).maybe(), "delay to repeat code evaluation (default is evaluate once)",
+                                        uri(STATE).maybe(), "current state of the thread",
+                                        uri(RESULT).maybe(), "the last result produced by the thread"),
+                                "run a parallel virtual thread",
+                                "virtual::[code=>ping(<phaseshift.studio>),loop=>1000]@/sys/thread/ping"),
                         /////////////////////
                         MACH_MONAD_TYPE,
                         MACH_MACHINE_TYPE,

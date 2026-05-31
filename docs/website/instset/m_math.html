@@ -282,7 +282,11 @@ bin/metatron</code></pre>
   pB::T,
   currency::T,
   usd::T,
-  euro::T],
+  euro::T,
+  millis::T,
+  second::T,
+  minute::T,
+  hour::T],
  inst=&gt;[
   cos?real&lt;=#{?}(as(real::T)),
   sin?real&lt;=#{?}(real::T),
@@ -308,7 +312,7 @@ bin/metatron</code></pre>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <a href="#consts" class="btn btn-outline-primary">Consts <span class="pill-label badge bg-secondary">2</span></a><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">10</span></a><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">14</span></a><button class="btn btn-outline-secondary" disabled>Spaces <span class="pill-label badge bg-dark">0</span></button><button class="btn btn-outline-secondary" disabled>Rewrites <span class="pill-label badge bg-dark">0</span></button>
+        <a href="#consts" class="btn btn-outline-primary">Consts <span class="pill-label badge bg-secondary">2</span></a><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">14</span></a><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">14</span></a><button class="btn btn-outline-secondary" disabled>Spaces <span class="pill-label badge bg-dark">0</span></button><button class="btn btn-outline-secondary" disabled>Rewrites <span class="pill-label badge bg-dark">0</span></button>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="card">
@@ -327,14 +331,26 @@ bin/metatron</code></pre>
 </a><a href="#type-gB" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">gB</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#type-hour" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">hour</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
 </a><a href="#type-kB" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">kB</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a><a href="#type-mB" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">mB</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#type-millis" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">millis</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#type-minute" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">minute</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
 </a><a href="#type-pB" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">pB</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#type-second" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">second</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a><a href="#type-tB" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">tB</span>
@@ -420,7 +436,7 @@ bin/metatron</code></pre>
     
 </div>
 </div><div class="container-xxl mb-4" id="types">
-    <h3 class="text-primary mb-3">Types <span class="pill-label badge bg-primary">10</span></h3>
+    <h3 class="text-primary mb-3">Types <span class="pill-label badge bg-primary">14</span></h3>
     <div class="card mb-3" id="type-bB">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -479,6 +495,18 @@ bin/metatron</code></pre>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a gigabyte (1024 megabytes) of data</p>
 </div>
+</div><div class="card mb-3" id="type-hour">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">hour::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">/m/math/time::T</span></span>
+        </span>
+        <small class="text-muted code">/m/math/hour</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/math/time::T[][ctor?hour&lt;=#{?}(#::T)]@/m/math/hour</code></pre></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">an hour of time (60 minutes)</p>
+</div>
 </div><div class="card mb-3" id="type-kB">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -503,6 +531,30 @@ bin/metatron</code></pre>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a megabyte (1024 kilobytes) of data</p>
 </div>
+</div><div class="card mb-3" id="type-millis">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">millis::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">/m/math/time::T</span></span>
+        </span>
+        <small class="text-muted code">/m/math/millis</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/math/time::T[][ctor?millis&lt;=#{?}(#::T)]@/m/math/millis</code></pre></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">a millisecond of time</p>
+</div>
+</div><div class="card mb-3" id="type-minute">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">minute::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">/m/math/time::T</span></span>
+        </span>
+        <small class="text-muted code">/m/math/minute</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/math/time::T[][ctor?minute&lt;=#{?}(#::T)]@/m/math/minute</code></pre></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">a minute of time (60 seconds)</p>
+</div>
 </div><div class="card mb-3" id="type-pB">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -514,6 +566,18 @@ bin/metatron</code></pre>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">data_size::T[][ctor?pB&lt;=#{?}(#::T)]@/m/math/pB</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a petabyte (1024 terabytes) of data</p>
+</div>
+</div><div class="card mb-3" id="type-second">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">second::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">/m/math/time::T</span></span>
+        </span>
+        <small class="text-muted code">/m/math/second</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/math/time::T[][ctor?second&lt;=#{?}(#::T)]@/m/math/second</code></pre></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">a second of time (1000 millis)</p>
 </div>
 </div><div class="card mb-3" id="type-tB">
     <div class="card-header d-flex justify-content-between align-items-center py-2">

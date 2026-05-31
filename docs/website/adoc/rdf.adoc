@@ -1,2 +1,2 @@
 [discrete]
-== RDF Space
+== Resource Description Framework

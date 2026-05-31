@@ -179,8 +179,13 @@ public class BootLoader implements Rec, Feature.SelfClone {
                     InstSet.loadInstSetProvider(ALL)
                             .map(p -> p.type().getAnnotation(InstSet.JREService.class).vid())
                             .reduce("", (a, b) -> a + "\n\t\t" + b));
-            final Rec typer = TYPER_TYPE.constructor().apply(args.at("typer/stages").orElse(rec())).as();
-            TypeCheck.init(typer);
+            final Rec typer = args.at("typer/stage").orElse(rec());
+            if(false && !typer.isNoObj()) {
+                TypeCheck.init(typer.tid(TYPER_TYPE_TID).as());
+            } else {
+                TypeCheck.enable(TypeCheck.values());
+                TypeCheck.disable(TypeCheck.code_resolve);
+            }
             LOG.info("initial enabled typer stages: %s", typer);
             /// /// START OF BOOTING PROCESS /// ///
             String hostname = null;

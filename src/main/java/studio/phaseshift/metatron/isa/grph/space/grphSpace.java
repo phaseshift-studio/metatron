@@ -30,13 +30,12 @@
  import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerFactory;
  import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerGraph;
  import studio.phaseshift.metatron.furi.DataPath;
-import studio.phaseshift.metatron.furi.fURI;
+ import studio.phaseshift.metatron.furi.fURI;
  import studio.phaseshift.metatron.isa.AbstractSpace;
  import studio.phaseshift.metatron.isa.SchemaSpace;
  import studio.phaseshift.metatron.isa.Space;
  import studio.phaseshift.metatron.isa.grph.grphInstSet;
  import studio.phaseshift.metatron.isa.grph.space.schema.modernSchema;
- import studio.phaseshift.metatron.isa.m.mInstSet;
  import studio.phaseshift.metatron.isa.m.type.*;
  import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
  import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
@@ -62,7 +61,6 @@ import studio.phaseshift.metatron.furi.fURI;
  import static studio.phaseshift.metatron.isa.m.mInstSet.SPACE_TID;
  import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.failure_;
  import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
- import static studio.phaseshift.metatron.isa.m.type.InstSet.instset0;
  import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
  import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
  import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
@@ -198,8 +196,8 @@ import studio.phaseshift.metatron.furi.fURI;
          if (null == FACTORY) {
              LOG.warn("no obj factory specified. defaulting to an extended mobjfactory that assumes 64-bit long element ids");
              FACTORY = MObjFactory.of()
-                     .addExtension(Vertex.class, v -> VertexMap.vertexToRec(v, this))
-                     .addExtension(Edge.class, e -> EdgeMap.edgeToRec(e, this));
+                     .addExtension(Vertex.class, v -> new VertexRec(v, this))
+                     .addExtension(Edge.class, e -> new EdgeRec(e, this));
          }
          final Rec tp3Config = rec();
          new ConfigurationMap(sjvm.configuration()).forEach((key, value) -> {
@@ -222,28 +220,66 @@ import studio.phaseshift.metatron.furi.fURI;
      // =========================================================================
 
      private Iterator<IdObj> readVertexTraversal(final DataPath dp) {
-         final int id = Integer.parseInt(dp.entry());
-         final Vertex v = IteratorUtil.stream(this.sjvm.vertices(id)).findFirst().orElse(null);
-         if (v == null) return IteratorUtil.of();
+         final Iterator<Vertex> vertices = dp.entryIsWildcard()
+                 ? this.sjvm.vertices() : this.sjvm.vertices(Integer.parseInt(dp.entry()));
+         return IteratorUtil.stream(vertices).flatMap(v -> traverseVertex(v, dp)).iterator();
+     }
+
+     private Stream<IdObj> traverseVertex(final Vertex v, final DataPath dp) {
          final Direction dir = "OUT".equalsIgnoreCase(dp.field()) ? Direction.OUT : Direction.IN;
-         final String firstExt = dp.extension() != null ? dp.extension().segments().getFirst() : null;
+         final String firstExt = dp.extension() != null && dp.extension().segmentLength() > 0
+                 ? dp.extension().segments().getFirst() : null;
          final boolean firstExtIsDirection = "IN".equalsIgnoreCase(firstExt) || "OUT".equalsIgnoreCase(firstExt);
-         final boolean hasLabel = firstExt != null && !firstExt.equals("+") && !firstExt.equals("#") && !firstExtIsDirection;
+         final boolean isExternal = firstExt != null && firstExt.indexOf(':') > 0;
+         final boolean hasLabel = firstExt != null && !firstExt.equals("+") && !firstExt.equals("#") && !firstExtIsDirection && !isExternal;
+
+         // ── external space traversal: scheme-prefixed label → Router ──
+         if (isExternal) {
+             final fURI externalBase = f(firstExt.indexOf("://") > 0 ? firstExt : "/" + firstExt.replace(':', '/'))
+                     .extend(String.valueOf(dp.entry()));
+             final List<String> remainder = dp.extension().segmentLength() > 1
+                     ? dp.extension().segments().subList(1, dp.extension().segmentLength())
+                     : List.of();
+             // first remainder segment is the child key (if not a wildcard), skip in cascade
+             final String childKey = remainder.isEmpty() || "+".equals(remainder.get(0)) || "#".equals(remainder.get(0))
+                     ? "+" : remainder.get(0);
+             final List<String> cascadeSegs = remainder.size() <= 1 || "+".equals(remainder.get(0)) || "#".equals(remainder.get(0))
+                     ? List.of() : remainder.subList(1, remainder.size());
+             final fURI exactPattern = externalBase.extend(childKey);
+             final Obj readResult = Router.readFromSpace(exactPattern);
+             final List<IdObj> readResults = readResult.isObjs()
+                     ? IteratorUtil.stream(readResult.objsValue().iterator())
+                     .map(o -> IdObj.of(o.vid() != null ? o.vid() : exactPattern, o)).toList()
+                     : readResult.isNoObj() ? List.of()
+                       : List.of(IdObj.of(exactPattern, readResult));
+             return readResults.stream()
+                     .flatMap(kv -> {
+                         Obj result = kv.obj();
+                         for (final String seg : cascadeSegs) {
+                             if ("+".equals(seg)) continue;
+                 if ("#".equals(seg)) break;
+                             result = result.asRec().at(uri(seg));
+                         }
+                         return result.stream().map(o -> IdObj.of(kv.furi(), o));
+                     });
+         }
+
+         // ── local TinkerPop traversal ──
          final Iterator<Edge> edges = hasLabel
                  ? v.edges(dir, firstExt)
                  : v.edges(dir);
-         // cascade: skip label if present, include direction segments at start
          final List<String> cascade = dp.extension() != null
                  ? dp.extension().segments().subList(hasLabel ? 1 : 0, dp.extension().segmentLength())
                  : List.of();
          return IteratorUtil.stream(edges).flatMap(e -> {
-             Stream<Obj> stream = Stream.of((Obj) EdgeMap.edgeToRec(e, this));
+             Stream<Obj> stream = Stream.of(new EdgeRec(e, this));
              for (final String seg : cascade) {
-                 if ("+".equals(seg) || "#".equals(seg)) break;
+                 if ("+".equals(seg)) continue;
                  stream = stream.flatMap(o -> o.asRec().at(uri(seg)).stream());
+                 if ("#".equals(seg)) break;
              }
              return stream.map(o -> IdObj.of(this.elementVID(e), o));
-         }).iterator();
+         });
      }
 
      private Iterator<IdObj> readEdgeTraversal(final DataPath dp) {
@@ -251,32 +287,22 @@ import studio.phaseshift.metatron.furi.fURI;
          final Edge e = IteratorUtil.stream(this.sjvm.edges(id)).findFirst().orElse(null);
          if (e == null) return IteratorUtil.of();
          final Vertex target = "OUT".equalsIgnoreCase(dp.field()) ? e.outVertex() : e.inVertex();
-         Stream<Obj> stream = Stream.of((Obj) VertexMap.vertexToRec(target, this));
+         Stream<Obj> stream = Stream.of(new VertexRec(target, this));
          if (dp.hasExtension())
              for (final String seg : dp.extension().segments()) {
-                 if ("+".equals(seg) || "#".equals(seg)) break;
+                 if ("+".equals(seg)) continue;
+                 if ("#".equals(seg)) break;
                  stream = stream.flatMap(o -> o.asRec().at(uri(seg)).stream());
              }
          return stream.map(o -> IdObj.of(this.elementVID(target), o)).iterator();
      }
 
-     private Iterator<IdObj> readContainer(final fURI pattern) {
-         final fURI routed = Space.Helper.routeFromSpace(pattern, this.routes());
-         final DataPath dp = DataPath.ofSpaceRelative(routed, null);
+     private Iterator<IdObj> readCollection(final DataPath dp) {
          if (!dp.hasCollection()) return IteratorUtil.of();
-
-         if ("V".equals(dp.collection())) {
-             final Rec container = rec();
-             IteratorUtil.stream(this.sjvm.vertices()).forEach(v ->
-                     container.jvm().put(uri(String.valueOf(v.id())), VertexMap.vertexToRec(v, this)));
-             return container.isEmpty() ? IteratorUtil.of() : IteratorUtil.of(IdObj.of(pattern, container));
-         }
-         if ("E".equals(dp.collection())) {
-             final Rec container = rec();
-             IteratorUtil.stream(this.sjvm.edges()).forEach(e ->
-                     container.jvm().put(uri(String.valueOf(e.id())), EdgeMap.edgeToRec(e, this)));
-             return container.isEmpty() ? IteratorUtil.of() : IteratorUtil.of(IdObj.of(pattern, container));
-         }
+         if ("V".equals(dp.collection()))
+             return IteratorUtil.stream(this.sjvm.vertices()).map(v -> IdObj.of(this.elementVID(v), new VertexRec(v, this))).iterator();
+         if ("E".equals(dp.collection()))
+             return IteratorUtil.stream(this.sjvm.edges()).map(e -> IdObj.of(this.elementVID(e), new EdgeRec(e, this))).iterator();
          return IteratorUtil.of();
      }
 
@@ -303,7 +329,12 @@ import studio.phaseshift.metatron.furi.fURI;
          return (pattern) -> {
              LOG.debug("looking for tp3 vid: %s", pattern);
              if (pattern.equals(ALL)) {
-                 throw MTronException.of("cannot read all tp3 space");
+                 return Stream.concat(
+                                 IteratorUtil.stream(this.sjvm().vertices()),
+                                 IteratorUtil.stream(this.sjvm().edges()))
+                         .map(e -> IdObj.of(this.elementVID(e), e instanceof Vertex v ?
+                                 (Obj) new VertexRec(v, this) :
+                                 (Obj) new EdgeRec((Edge) e, this))).iterator();
              } else {
                  final fURI routed = Space.Helper.routeFromSpace(pattern, this.routes());
                  LOG.debug("reading tp3 vid: %s => %s", pattern, routed);
@@ -311,8 +342,7 @@ import studio.phaseshift.metatron.furi.fURI;
                      return new IdObj(routed, Router.global().read(routed)).iterator();
                  }
                  final DataPath dp = DataPath.ofSpaceRelative(routed, null);
-                 if (!dp.hasCollection()) return readContainer(pattern);
-
+                 if (!dp.hasCollection()) return readCollection(dp);
                  if ("V".equals(dp.collection())) {
                      // ── OUT/IN traversal — route through graph, not Rec ──
                      if (dp.hasField() && ("OUT".equalsIgnoreCase(dp.field()) || "IN".equalsIgnoreCase(dp.field()))) {
@@ -323,9 +353,9 @@ import studio.phaseshift.metatron.furi.fURI;
                          iterator = this.sjvm.vertices(Integer.parseInt(dp.entry()));
                      else if (dp.entryIsWildcard())
                          iterator = this.sjvm.vertices();
-                     else return readContainer(pattern);
+                     else return readCollection(dp);
                      return IteratorUtil.stream(iterator)
-                             .map(v -> IdObj.of(this.elementVID(v), VertexMap.vertexToRec(v, this)))
+                             .map(v -> IdObj.of(this.elementVID(v), new VertexRec(v, this)))
                              .map(idobj -> {
                                  if (dp.hasField()) {
                                      return IdObj.of(idobj.furi().extend(f(dp.field()).extend(dp.extension())), idobj.obj().asRec().at(f(dp.field()).extend(dp.extension())));
@@ -343,9 +373,9 @@ import studio.phaseshift.metatron.furi.fURI;
                          iterator = this.sjvm.edges(Integer.parseInt(dp.entry()));
                      else if (dp.entryIsWildcard())
                          iterator = this.sjvm.edges();
-                     else return readContainer(pattern);
+                     else return readCollection(dp);
                      return (Iterator) IteratorUtil.stream(iterator)
-                             .map(e -> IdObj.of(this.elementVID(e), EdgeMap.edgeToRec(e, this)))
+                             .map(e -> IdObj.of(this.elementVID(e), new EdgeRec(e, this)))
                              .map(idobj -> {
                                  if (dp.hasField()) {
                                      return IdObj.of(idobj.furi().extend(f(dp.field()).extend(dp.extension())), idobj.obj().asRec().at(f(dp.field()).extend(dp.extension())));
@@ -357,7 +387,7 @@ import studio.phaseshift.metatron.furi.fURI;
                  }
                  LOG.debug("unknown tp3 vid: %s", pattern);
                  final fURI full = Space.Helper.routeFromSpace(pattern, this.routes());
-                 if (full.equals(pattern)) return readContainer(pattern);
+                 if (full.equals(pattern)) return readCollection(dp);
                  return IdObj.of(full, Router.global().read(full)).iterator();
              }
          };
@@ -369,60 +399,44 @@ import studio.phaseshift.metatron.furi.fURI;
              if (obj.isNoObj()) {
                  this.read(pattern).stream().forEach(e -> {
                      LOG.debug("deleting element %s", e.vid());
-                     ((ElementMap) e.jvm()).getBase().remove();
+                     if (e instanceof ElementRec<?> er)
+                         er.element().remove();
                  });
                  return noobj();
-             } else {
-                 if (obj.jvm() instanceof ElementMap) { // vertex already exists, all updates already occurred, no need to write it again
-                     return obj;
-                 }
-                 final fURI routed = Space.Helper.routeFromSpace(pattern, this.routes());
-                 LOG.debug("writing tp3 vid: %s => %s", pattern, routed);
-                 final DataPath dp = DataPath.ofSpaceRelative(routed, null);
-                if ("V".equals(dp.collection()) && dp.hasEntry() && CommonUtil.isInt(dp.entry())) {
-                     final Integer id = Integer.parseInt(dp.entry());
-                     try { //  a newly created vertex from a rec (if vertex doesn't exist)
-                         final Vertex vertex = IteratorUtil.stream(this.sjvm.vertices(id)).findFirst().orElseGet(() ->
-                                 this.sjvm.addVertex(
-                                         org.apache.tinkerpop.gremlin.structure.T.label, obj.tid().basePath().toString(),
-                                         org.apache.tinkerpop.gremlin.structure.T.id, id));
-                         LOG.debug("writing vertex %s => %s", vid, vertex);
-                         /// SET VERTEX PROPERTIES
-                         obj.asRec().jvm().entrySet().stream()
-                                 .filter(e -> !e.getKey().equals(grphInstSet.IN) && !e.getValue().equals(grphInstSet.OUT))
-                                 .forEach(e -> {
-                                     LOG.debug("writing vertex property %s =%s=> %s", vertex, e.getKey(), e.getValue());
-                                     ElementMap.Helper.tp3KeyValue kv = new ElementMap.Helper.tp3KeyValue(e.getKey(), e.getValue());
-                                     if (e.getValue().isNone()) {
-                                         vertex.property(kv.key().toString()).remove();
-                                     } else {
-                                         vertex.property(kv.key().toString(), kv.value());
-                                     }
-                                 });
-                         /// SET VERTEX OUT EDGES
-                         obj.asRec().elements().filter(e -> e.first().equals(grphInstSet.OUT))
-                                 .forEach(label -> label.jvm().get1().asRec()
-                                         .elements()
-                                         .map(Rel::second)
-                                         .forEach(e -> {
-                                             LOG.debug("writing edge %s =%s=> %s", vertex, label, e);
-                                             try {
-                                                 LOG.debug("reading edge target %s", e);
-                                                 final Edge edge = vertex.addEdge(label.jvm().get0().uriValue().toString(), ((VertexMap) this.read(e.uriValue()).jvm()).getBase());
-                                                 LOG.debug("writing edge %s", edge);
-                                             } catch (final Exception ex) {
-                                                 LOG.warn("unable to write edge %s =%s=> %s: %s", vertex, label, e, ex);
-                                             }
-                                         }));
-                         return VertexMap.vertexToRec(vertex, this);
-                     } catch (final Exception e) {
-                         return fail(e);
-                     }
-                 } else {
-                     return obj;
-                     //   throw MTronException.of("unknown tp3 vid: %s", vid);
+             }
+             final fURI routed = Space.Helper.routeFromSpace(pattern, this.routes());
+             LOG.debug("writing tp3 vid: %s => %s", pattern, routed);
+             final DataPath dp = DataPath.ofSpaceRelative(routed, null);
+             if ("V".equals(dp.collection()) && dp.hasEntry() && CommonUtil.isInt(dp.entry())) {
+                 final Integer id = Integer.parseInt(dp.entry());
+                 try {
+                     final Vertex vertex = IteratorUtil.stream(this.sjvm.vertices(id)).findFirst().orElseGet(() ->
+                             this.sjvm.addVertex(
+                                     org.apache.tinkerpop.gremlin.structure.T.label,
+                                     obj.isRec() && obj.asRec().jvm().containsKey(grphInstSet.LABEL)
+                                             ? obj.asRec().jvm().get(grphInstSet.LABEL).uriValue().toString()
+                                             : obj.tid().basePath().toString(),
+                                     org.apache.tinkerpop.gremlin.structure.T.id, id));
+                     LOG.debug("writing vertex %s => %s", vid, vertex);
+                     // write properties from the Rec to the TinkerPop vertex
+                     obj.asRec().jvm().entrySet().stream()
+                             .filter(e -> !e.getKey().equals(grphInstSet.LABEL))
+                             .forEach(e -> {
+                                 final Obj value = e.getValue();
+                                 if (value.isNoObj() || value.isNone()) {
+                                     vertex.property(e.getKey().uriValue().toString()).remove();
+                                 } else if (!value.isAuto()) {
+                                     final Object jvm = value.jvm();
+                                     vertex.property(e.getKey().uriValue().toString(),
+                                             jvm instanceof String || jvm instanceof Number || jvm instanceof Boolean ? jvm : value);
+                                 }
+                             });
+                     return new VertexRec(vertex, this);
+                 } catch (final Exception e) {
+                     return fail(e);
                  }
              }
+             return obj;
          };
      }
 

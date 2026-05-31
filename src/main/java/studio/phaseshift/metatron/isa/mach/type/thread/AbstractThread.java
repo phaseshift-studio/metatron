@@ -22,7 +22,11 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Uri;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
+import studio.phaseshift.metatron.util.MTronException;
 
+import java.io.Closeable;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -33,7 +37,22 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public abstract class AbstractThread extends MRec {
+public abstract class AbstractThread extends MRec implements Closeable {
+
+    protected static Uri threadState(final Thread thread) {
+        if (null == thread)
+            return uri(STOP);
+        final Thread.State state = thread.getState();
+        if (state.equals(Thread.State.NEW) ||
+                state.equals(Thread.State.RUNNABLE) ||
+                state.equals(Thread.State.TERMINATED))
+            return uri(STOP);
+        if (state.equals(Thread.State.BLOCKED) ||
+                state.equals(Thread.State.WAITING) ||
+                state.equals(Thread.State.TIMED_WAITING))
+            return uri(RUN);
+        throw MTronException.of("unknown thread state: %s", state.name());
+    }
 
     protected Thread thread;
 
@@ -43,34 +62,24 @@ public abstract class AbstractThread extends MRec {
     }
 
     public Uri state() {
-        return this.thread == null ? uri(STOPPED) : uri(this.thread.getState().name());
-    }
-
-    public boolean isRunning() {
-        return this.at(STATE).equals(uri(RUNNING));
+        return threadState(this.thread);
     }
 
     public abstract Obj result();
-    
+
     public abstract Obj result(final long timeout, final TimeUnit unit);
-    
-    /*
-    public boolean isReady() {
-        return this.state().equals(thread_state.ready);
+
+    @Override
+    public void close() {
+        boolean running = this.state().equals(uri(RUN));
+        this.stop();
+        this.thread.interrupt();
+        if(!running)
+            this.logger().info("closing at %s", LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+        
     }
 
-    public boolean isRunning() {
-        return this.state().equals(thread_state.running);
+    public void stop() {
+        this.jvm().put(uri(STATE), uri(STOP));
     }
-
-    public boolean isPaused() {
-        return this.state().equals(thread_state.paused);
-    }
-
-    public boolean isStopped() {
-        return this.state().equals(thread_state.stopped);
-    }
-  
-     */
-
 }

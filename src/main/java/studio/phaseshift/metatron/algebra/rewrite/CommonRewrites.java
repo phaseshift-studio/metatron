@@ -111,7 +111,6 @@ public final class CommonRewrites {
                 })
                 .build();
     }
-
     /**
      * Create a sum optimization rewrite.
      *

@@ -63,7 +63,7 @@ public abstract class AbstractMachine implements Machine {
 
     @Override
     public Map<Obj, Obj> jvm() {
-        return Map.of(uri(CODE), this.code, uri(RUNNING), this.running, uri(BARRIER), this.barriers, uri(HALTED), this.halted);
+        return Map.of(uri(CODE), this.code, uri(RUN), this.running, uri(BARRIER), this.barriers, uri(HALTED), this.halted);
     }
 
     @Override
@@ -75,7 +75,7 @@ public abstract class AbstractMachine implements Machine {
     public <OBJ extends Obj> OBJ self(Object jvm, fURI tid, fURI vid) {
         final Map<Obj, Obj> map = (Map<Obj, Obj>) jvm;
         this.code = map.get(uri(CODE)).as();
-        this.running = map.getOrDefault(uri(RUNNING), RUNNING_SUPPLIER.get());
+        this.running = map.getOrDefault(uri(RUN), RUNNING_SUPPLIER.get());
         this.barriers = map.getOrDefault(uri(BARRIER), lst(new LinkedList<>())).as();
         this.halted = map.getOrDefault(uri(HALTED), MObjs.objs0());
         this.tid = tid;
@@ -121,7 +121,7 @@ public abstract class AbstractMachine implements Machine {
             else
                 this.halted.append(o);
         };
-        this.running = map.getOrDefault(uri(RUNNING), RUNNING_SUPPLIER.get());
+        this.running = map.getOrDefault(uri(RUN), RUNNING_SUPPLIER.get());
         this.barriers = map.getOrDefault(uri(BARRIER), lst(new LinkedList<>())).as();
         this.halted = map.getOrDefault(uri(HALTED), MObjs.objs0());
     }
@@ -172,7 +172,7 @@ public abstract class AbstractMachine implements Machine {
             clone.tid = tid;
             clone.vid = vid;
             clone.code = ((Map<Obj, Obj>) jvm).get(uri(CODE)).as();
-            clone.running = ((Map<Obj, Obj>) jvm).getOrDefault(uri(RUNNING), RUNNING_SUPPLIER.get());
+            clone.running = ((Map<Obj, Obj>) jvm).getOrDefault(uri(RUN), RUNNING_SUPPLIER.get());
             clone.barriers = ((Map<Obj, Obj>) jvm).getOrDefault(uri(BARRIER), lst(new LinkedList<>())).as();
             clone.halted = ((Map<Obj, Obj>) jvm).getOrDefault(uri(HALTED), MObjs.objs0());
             return clone;

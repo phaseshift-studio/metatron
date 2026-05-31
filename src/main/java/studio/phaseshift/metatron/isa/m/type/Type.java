@@ -105,6 +105,14 @@ public interface Type extends Obj {
         return false;
     }
 
+    default boolean isIsaPredicate() {
+        return this.hasPredicate() && this.predicate().isObjCall() && this.predicate().asCall().insts().size() == 1 &&
+                this.predicate().asCall().insts().getFirst().tid().equals(ISA_INST_TID);
+    }
+
+    default Obj isPredicateObj() {
+        return this.isIsaPredicate() ? this.predicate().asCall().insts().getFirst().arg(0) : null;
+    }
 
     default List<Call> predicateStack() {
         final List<Call> result = new ArrayList<>();

@@ -298,12 +298,19 @@ bin/metatron</code></pre>
   docs::T,
   docq::T,
   mintq::T,
+  shortq::T,
   incrq::T,
   constq::T,
   mimeq::T],
- const=&gt;[
-  noobj,
-  none@none],
+ rewrite=&gt;[
+  /m/inst/rewrite/id_removal?code{?}&lt;=code(),
+  /m/inst/rewrite/map_nest?code{?}&lt;=code(),
+  /m/inst/rewrite/else_after_count?code{?}&lt;=code(),
+  /m/inst/rewrite/plus_zero?code{?}&lt;=code(),
+  /m/inst/rewrite/mult_one?code{?}&lt;=code(),
+  /m/inst/rewrite/split_merge_collapse?code{?}&lt;=code(),
+  /m/inst/rewrite/split_merge_left_factor?code{?}&lt;=code(),
+  /m/inst/rewrite/split_merge_right_factor?code{?}&lt;=code()],
  inst=&gt;[
   as?bool&lt;=bool(bool::T),
   as?bytes&lt;=bool(bytes::T),
@@ -522,7 +529,7 @@ bin/metatron</code></pre>
   take?A{*}&lt;=A{*}(int::T),
   update?B&lt;=A(B::T),
   reify?rec&lt;=A(),
-  reduce(#::T),
+  reduce?A&lt;=A{*}(#{?}::T),
   where?A{?}&lt;=A(B::T),
   group?rec&lt;=#{*}(rec::T),
   eval?#{*}&lt;=#{?}(#::T),
@@ -531,15 +538,9 @@ bin/metatron</code></pre>
   lshift?B{*}&lt;=A(),
   start?A{**}&lt;=noobj{0}(A{**}::T),
   ctor()],
- rewrite=&gt;[
-  /m/inst/rewrite/id_removal?code{?}&lt;=code(),
-  /m/inst/rewrite/map_nest?code{?}&lt;=code(),
-  /m/inst/rewrite/else_after_count?code{?}&lt;=code(),
-  /m/inst/rewrite/plus_zero?code{?}&lt;=code(),
-  /m/inst/rewrite/mult_one?code{?}&lt;=code(),
-  /m/inst/rewrite/split_merge_collapse?code{?}&lt;=code(),
-  /m/inst/rewrite/split_merge_left_factor?code{?}&lt;=code(),
-  /m/inst/rewrite/split_merge_right_factor?code{?}&lt;=code()]]@/m</code></pre>
+ const=&gt;[
+  noobj,
+  none@none]]@/m</code></pre>
                     </div>
                 </div>
             </div>
@@ -547,7 +548,7 @@ bin/metatron</code></pre>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <a href="#consts" class="btn btn-outline-primary">Consts <span class="pill-label badge bg-secondary">12</span></a><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">42</span></a><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">262</span></a><button class="btn btn-outline-secondary" disabled>Spaces <span class="pill-label badge bg-dark">0</span></button><a href="#rewrites" class="btn btn-outline-primary">Rewrites <span class="pill-label badge bg-warning">8</span></a>
+        <a href="#consts" class="btn btn-outline-primary">Consts <span class="pill-label badge bg-secondary">12</span></a><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">47</span></a><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">262</span></a><button class="btn btn-outline-secondary" disabled>Spaces <span class="pill-label badge bg-dark">0</span></button><a href="#rewrites" class="btn btn-outline-primary">Rewrites <span class="pill-label badge bg-warning">8</span></a>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="card">
@@ -602,14 +603,26 @@ bin/metatron</code></pre>
 </a><a href="#type-gB" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">gB</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#type-hour" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">hour</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
 </a><a href="#type-kB" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">kB</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a><a href="#type-mB" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">mB</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#type-millis" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">millis</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#type-minute" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">minute</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
 </a><a href="#type-pB" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">pB</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#type-second" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">second</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a><a href="#type-tB" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">tB</span>
@@ -664,6 +677,9 @@ bin/metatron</code></pre>
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a><a href="#type-mintq" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">mintq</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#type-shortq" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">shortq</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a><a href="#type-subq" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">subq</span>
@@ -1067,12 +1083,19 @@ bin/metatron</code></pre>
   docs::T,
   docq::T,
   mintq::T,
+  shortq::T,
   incrq::T,
   constq::T,
   mimeq::T],
- const=&gt;[
-  noobj,
-  none@none],
+ rewrite=&gt;[
+  /m/inst/rewrite/id_removal?code{?}&lt;=code(),
+  /m/inst/rewrite/map_nest?code{?}&lt;=code(),
+  /m/inst/rewrite/else_after_count?code{?}&lt;=code(),
+  /m/inst/rewrite/plus_zero?code{?}&lt;=code(),
+  /m/inst/rewrite/mult_one?code{?}&lt;=code(),
+  /m/inst/rewrite/split_merge_collapse?code{?}&lt;=code(),
+  /m/inst/rewrite/split_merge_left_factor?code{?}&lt;=code(),
+  /m/inst/rewrite/split_merge_right_factor?code{?}&lt;=code()],
  inst=&gt;[
   as?bool&lt;=bool(bool::T),
   as?bytes&lt;=bool(bytes::T),
@@ -1291,7 +1314,7 @@ bin/metatron</code></pre>
   take?A{*}&lt;=A{*}(int::T),
   update?B&lt;=A(B::T),
   reify?rec&lt;=A(),
-  reduce(#::T),
+  reduce?A&lt;=A{*}(#{?}::T),
   where?A{?}&lt;=A(B::T),
   group?rec&lt;=#{*}(rec::T),
   eval?#{*}&lt;=#{?}(#::T),
@@ -1300,15 +1323,9 @@ bin/metatron</code></pre>
   lshift?B{*}&lt;=A(),
   start?A{**}&lt;=noobj{0}(A{**}::T),
   ctor()],
- rewrite=&gt;[
-  /m/inst/rewrite/id_removal?code{?}&lt;=code(),
-  /m/inst/rewrite/map_nest?code{?}&lt;=code(),
-  /m/inst/rewrite/else_after_count?code{?}&lt;=code(),
-  /m/inst/rewrite/plus_zero?code{?}&lt;=code(),
-  /m/inst/rewrite/mult_one?code{?}&lt;=code(),
-  /m/inst/rewrite/split_merge_collapse?code{?}&lt;=code(),
-  /m/inst/rewrite/split_merge_left_factor?code{?}&lt;=code(),
-  /m/inst/rewrite/split_merge_right_factor?code{?}&lt;=code()]]@/m</code></pre></div>
+ const=&gt;[
+  noobj,
+  none@none]]@/m</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">the core instruction set of metatron containing the base types and useful instructions to manipulate them</p>
 </div>
@@ -1330,7 +1347,7 @@ bin/metatron</code></pre>
     
 </div>
 </div><div class="container-xxl mb-4" id="types">
-    <h3 class="text-primary mb-3">Types <span class="pill-label badge bg-primary">42</span></h3>
+    <h3 class="text-primary mb-3">Types <span class="pill-label badge bg-primary">47</span></h3>
     <div class="card mb-3" id="type-#">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -1436,7 +1453,7 @@ true.or(_,not(_))  [-- true -- ]</code></pre>
         </span>
         <small class="text-muted code">/m/web/content_type</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">uri::T[isa(inside([
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">uri::T[?inside([
  text/plain,
  text/html,
  text/css,
@@ -1444,7 +1461,7 @@ true.or(_,not(_))  [-- true -- ]</code></pre>
  text/javascript,
  application/mtron,
  text/x-shellscript,
- application/json]))]@/m/web/content_type</code></pre></div>
+ application/json])]@/m/web/content_type</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">indicates the media type of the data as specified by RFC-9110</p>
 </div>
@@ -1508,6 +1525,18 @@ fail::[dah] + 2 + catch(9)  [-- fail flattened to 9       --]</code></pre>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">data_size::T[][ctor?gB&lt;=#{?}(#::T)]@/m/math/gB</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a gigabyte (1024 megabytes) of data</p>
+</div>
+</div><div class="card mb-3" id="type-hour">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">hour::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m_math.html#type-time" class="instset-doc-small-code text-info code">/m/math/time::T</a></span>
+        </span>
+        <small class="text-muted code">/m/math/hour</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/math/time::T[][ctor?hour&lt;=#{?}(#::T)]@/m/math/hour</code></pre></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">an hour of time (60 minutes)</p>
 </div>
 </div><div class="card mb-3" id="type-html">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1683,6 +1712,18 @@ abc(a=&gt;?int::T,b=&gt;|(*a +10)){ _.*b }       [-- dependent arg inst    --]
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">an in-memory space with objs indexed by a topic trie</p>
 </div>
+</div><div class="card mb-3" id="type-millis">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">millis::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m_math.html#type-time" class="instset-doc-small-code text-info code">/m/math/time::T</a></span>
+        </span>
+        <small class="text-muted code">/m/math/millis</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/math/time::T[][ctor?millis&lt;=#{?}(#::T)]@/m/math/millis</code></pre></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">a millisecond of time</p>
+</div>
 </div><div class="card mb-3" id="type-mimeq">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -1709,6 +1750,18 @@ abc(a=&gt;?int::T,b=&gt;|(*a +10)){ _.*b }       [-- dependent arg inst    --]
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">1@abc?mintq [-- 1@abc/235ae3 --]</code></pre>
+</div>
+</div><div class="card mb-3" id="type-minute">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">minute::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m_math.html#type-time" class="instset-doc-small-code text-info code">/m/math/time::T</a></span>
+        </span>
+        <small class="text-muted code">/m/math/minute</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/math/time::T[][ctor?minute&lt;=#{?}(#::T)]@/m/math/minute</code></pre></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">a minute of time (60 seconds)</p>
 </div>
 </div><div class="card mb-3" id="type-pB">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1831,6 +1884,33 @@ a=&gt;b=&gt;c=&gt;d&gt;&gt;.&gt;&gt;  [-- c=&gt;d           --]
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a table row indexed by column name</p>
 </div>
+</div><div class="card mb-3" id="type-second">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">second::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m_math.html#type-time" class="instset-doc-small-code text-info code">/m/math/time::T</a></span>
+        </span>
+        <small class="text-muted code">/m/math/second</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/math/time::T[][ctor?second&lt;=#{?}(#::T)]@/m/math/second</code></pre></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">a second of time (1000 millis)</p>
+</div>
+</div><div class="card mb-3" id="type-shortq">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">shortq::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m_space.html#type-qproc" class="instset-doc-small-code text-info code">/m/space/qproc::T</a></span>
+        </span>
+        <small class="text-muted code">/m/space/qproc/shortq</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">qproc::T[][ctor?shortq&lt;=#{?}()]@/m/space/qproc/shortq</code></pre></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">create an untyped smaller representation of obj referent</p>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*abc?shortq=10 [-- optional value is max length of obj components (default 25) --]</code></pre>
+</div>
 </div><div class="card mb-3" id="type-space">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -1940,7 +2020,7 @@ a?subq         -&gt; |(&gt;&gt;1+1.println(_).to(a)) [-- infinite incr loop     
         </span>
         <small class="text-muted code">/m/tble/table</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">uri::T[isa(lrow{*}::T)]@/m/tble/table</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">uri::T[?lrow{*}::T]@/m/tble/table</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a stream of equally wide rows</p>
 </div>
@@ -3177,11 +3257,11 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">reduce</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="#" data-bs-toggle="tooltip" title="maybe some generic domain" class="code text-info">#{*}</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#" data-bs-toggle="tooltip" title="generic range" class="code text-success">#</a></span></span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="#" data-bs-toggle="tooltip" title="maybe some generic domain" class="code text-info">A{*}</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#" data-bs-toggle="tooltip" title="generic range" class="code text-success">A</a></span></span>
         </span>
-        <small class="text-muted code">/m/inst/reduce?rng=#&amp;dom=#{*}</small>
+        <small class="text-muted code">/m/inst/reduce?rng=A&amp;dom=A{*}</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-reduce-doc-0-tab').click();document.getElementById('inst-reduce-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">reduce?rng=#&amp;dom=#{*}(#::T){&lt;j&gt;}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-reduce-doc-0-tab').click();document.getElementById('inst-reduce-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">reduce?rng=A&amp;dom=A{*}(#{?}::T){&lt;j&gt;}</code></pre>
 </div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a reduce function \(f(X) \to x\)</p>

@@ -3,7 +3,6 @@
 mcp_mtron_ws::[host => <ws://localhost:8555/mcp>]@/usr/ai/mcp/mtron;
 mcp_ws::[host => <http://127.0.0.1:29170/index-mcp/streamable-http>]@/usr/ai/mcp/index-mcp;
 mcp_http::[host => <http://127.0.0.1:64342/stream>]@/usr/ai/mcp/intellij;
-mcp_http::[host => <http://127.0.0.1:64342/stream>]@/usr/ai/mcp/intellij;
 model::[ desc     => "testy the agent",
          provider => !*deep:deepseek-v4-pro/provider,
          name     => !*deep:deepseek-v4-pro/name,

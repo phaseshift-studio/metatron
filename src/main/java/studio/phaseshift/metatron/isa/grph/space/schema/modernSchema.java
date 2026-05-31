@@ -71,17 +71,13 @@ public class modernSchema extends AbstractInstSet {
             .tid(EDGE_TID)
             .vid(KNOWS_TID)
             .isaPredicate(rec(
-                    uri("weight"), REAL_TYPE,
-                    OUT, PERSON_TYPE,
-                    IN, PERSON_TYPE)).create();
+                    uri("weight"), REAL_TYPE)).create();
 
     public static final Type CREATED_TYPE = Type.Builder.build()
             .tid(EDGE_TID)
             .vid(CREATED_TID)
             .isaPredicate(rec(
-                    uri("weight"), REAL_TYPE,
-                    OUT, PERSON_TYPE,
-                    IN, SOFTWARE_TYPE)).create();
+                    uri("weight"), REAL_TYPE)).create();
 
     public modernSchema() {
         super(mutableMap(uri(PATTERN), uri(MODERN_SCHEMA_TID.extend(ALL))), INSTSET_TID, MODERN_SCHEMA_TID);

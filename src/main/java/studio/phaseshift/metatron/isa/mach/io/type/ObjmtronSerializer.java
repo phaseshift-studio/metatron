@@ -46,11 +46,11 @@ import static studio.phaseshift.metatron.isa.mach.io.ioInstSet.OBJ_MTRON_STRING_
 public class ObjmtronSerializer extends AbstractObjSerializer<String> {
     private static final String NOOBJ_STRING = "noobj";
     protected boolean leftJustify;
-    public static final int CLIP_LENGTH = 50;
+    public static final int CLIP_LENGTH = 60;
     protected int clip = CLIP_LENGTH;
     public static String REAL_FORMAT = "%.4f";
     public static final int INDENT_SIZE = 1;
-    public static final int NESTED_STRING_THRESHOLD = 30;
+    public static final int NESTED_STRING_THRESHOLD = 35;
 
     private static final ObjmtronSerializer INSTANCE = new ObjmtronSerializer();
     private static final ObjmtronSerializer NO_CLIP_INSTANCE = new ObjmtronSerializer(Integer.MAX_VALUE);
@@ -142,6 +142,8 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
     @Override
     public String writeStr(final Str str) {
         final String string = str.jvm();
+        if(null == string)
+            return null;
         boolean doubleQuote = string.contains("\n") || (string.contains("\"") && string.contains("'"));
         final String quotes = doubleQuote ? "\"\"\"" : (string.contains("'") || string.contains("`") ? "\"" : "'");
         return handleIds(str, quotes + string + quotes);
@@ -345,10 +347,10 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
                         (Router.loaded() ? Router.global().redirect(type.tid(), false) : type.tid()).toString())
                 .append("::T");
         if (type.hasPredicate()) {
-            if (type.predicate().isObjInst() && type.predicate().tid().basePath().equals(ISA_INST_TID) && type.predicate().asInst().arg(0).isPoly()) {
+            if (type.isIsaPredicate()) {
                 sb.append("[?");
                 StringBuilder temp = new StringBuilder();
-                renderValue(temp, depth + 1, type.predicate().asInst().arg(0));
+                renderValue(temp, depth + 1, type.isPredicateObj());
                 sb.append(temp);
                 sb.append("]");
             } else {

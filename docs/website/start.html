@@ -523,12 +523,14 @@ In metatron, the uri is called a <em>fURI</em> (<strong>functional uniform resou
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys/space/+.count()
-==&gt;21
+==&gt;23
 mtron&gt; */sys/space/+.&gt;&gt;pattern
 ==&gt;&lt;+/#&gt;
 ==&gt;{2}g:#
+==&gt;/te/cold/#
 ==&gt;serial:#
 ==&gt;/usr/#
+==&gt;/te/hot/#
 ==&gt;http://#
 ==&gt;localai:#
 ==&gt;mqtt:#
@@ -543,12 +545,14 @@ mtron&gt; */sys/space/+.&gt;&gt;pattern
 ==&gt;loc:#
 ==&gt;fs:#
 ==&gt;farm:#
-==&gt;mtronfs:#
 ==&gt;local:#
+==&gt;mtronfs:#
 mtron&gt; */sys/space/+.-&lt;[&gt;&gt;pattern=&gt;&gt;&gt;route]
 ==&gt;{5}[=&gt;]
-==&gt;[serial:#=&gt;[serial:=&gt;&lt;&gt;]]
 ==&gt;[g:#=&gt;[g:=&gt;&lt;&gt;,g:V=&gt;V,g:E=&gt;E,g:S=&gt;/m/grph/schema/modern]]
+==&gt;[/te/cold/#=&gt;[/te/cold/=&gt;&lt;&gt;]]
+==&gt;[serial:#=&gt;[serial:=&gt;&lt;&gt;]]
+==&gt;[/te/hot/#=&gt;[/te/hot/=&gt;&lt;&gt;]]
 ==&gt;[http://#=&gt;[/=&gt;local:]]
 ==&gt;[localai:#=&gt;[localai:=&gt;&lt;&gt;]]
 ==&gt;[mqtt:#=&gt;[mqtt:=&gt;&lt;&gt;]]
@@ -564,12 +568,10 @@ mtron&gt; */sys/space/+.-&lt;[&gt;&gt;pattern=&gt;&gt;&gt;route]
  wd:=&gt;&lt;http://www.wikidata.org/entity/&gt;,
  wdt:=&gt;&lt;http://www.wikidata.org/prop/direct/&gt;,
  wikidata:=&gt;&lt;&gt;]]
-==&gt;[fs:#=&gt;[
- fs:m=&gt;/home/killswitch/software/metatron,
- fs:=&gt;/home/killswitch/]]
+==&gt;[fs:#=&gt;[fs:m=&gt;/home/killswitch/software/metatron,fs:=&gt;/home/killswitch/]]
 ==&gt;[farm:#=&gt;[farm:=&gt;&lt;&gt;]]
-==&gt;[mtronfs:#=&gt;[mtronfs:=&gt;&lt;.metatron&gt;]]
-==&gt;[local:#=&gt;[local:=&gt;/home/killswitch/]]</code></pre>
+==&gt;[local:#=&gt;[local:=&gt;/home/killswitch/]]
+==&gt;[mtronfs:#=&gt;[mtronfs:=&gt;&lt;.metatron&gt;]]</code></pre>
 </div>
 </div>
 <br><br>

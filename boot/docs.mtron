@@ -1,3 +1,14 @@
+[== boot args ==]
+[space  => /sys/space,
+ web    => [
+   http/host  => <http://localhost:8777>,
+   ws/host    => <ws://localhost:8555>],
+ typer/stage  => [inst_dom     => true, 
+                  inst_rng     => true,
+                  type_ctor    => true,
+                  obj_write    => true,
+                  code_resolve => false]]
+[===============]
 [== metatron example boot ==]
 print("""
 {{y}} ____    ___    ___   ______    ___ ___  ______  ____    ___   ____  

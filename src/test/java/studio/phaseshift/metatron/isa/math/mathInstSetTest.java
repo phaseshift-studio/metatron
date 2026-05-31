@@ -177,6 +177,100 @@ public class mathInstSetTest extends AbstractInstSetTest {
         assertEquals(shouldMatch, result.test(expected));
     }
 
+    @ParameterizedTest
+    @CsvSource(value = {
+            // raw real to time unit (no conversion — re-tagging only)
+            "30000.0.as(minute::T)                                                               % minute::30000.0",
+
+            // millis conversions (identity and upward)
+            "millis::1000.0.as(millis::T)                                                        % millis::1000.0",
+            "millis::1000.0.as(second::T)                                                        % second::1.0",
+            "millis::60000.0.as(minute::T)                                                       % minute::1.0",
+            "millis::3600000.0.as(hour::T)                                                       % hour::1.0",
+
+            // second conversions (downward, identity, and upward)
+            "second::1.0.as(millis::T)                                                           % millis::1000.0",
+            "second::60.0.as(second::T)                                                          % second::60.0",
+            "second::60.0.as(minute::T)                                                          % minute::1.0",
+            "second::3600.0.as(hour::T)                                                          % hour::1.0",
+
+            // minute conversions (downward, identity, and upward)
+            "minute::1.0.as(millis::T)                                                           % millis::1000.0.mult(60.0)",
+            "minute::1.0.as(second::T)                                                           % second::60.0",
+            "minute::1.0.as(minute::T)                                                           % minute::1.0",
+            "minute::60.0.as(hour::T)                                                            % hour::1.0",
+
+            // hour conversions (downward and identity)
+            "hour::1.0.as(millis::T)                                                             % millis::1000.0.mult(60.0).mult(60.0)",
+            "hour::1.0.as(second::T)                                                             % second::60.0.mult(60.0)",
+            "hour::1.0.as(minute::T)                                                             % minute::60.0",
+            "hour::1.0.as(hour::T)                                                               % hour::1.0",
+
+            // Multi-step conversions (skip levels)
+            "millis::3600000.0.as(hour::T)                                                       % hour::1.0",
+            "second::3600.0.as(hour::T)                                                          % hour::1.0",
+
+            // Larger / fractional values
+            "millis::1800000.0.as(minute::T)                                                     % minute::30.0",
+            "millis::7200000.0.as(hour::T)                                                       % hour::2.0",
+            "second::90.0.as(minute::T)                                                          % minute::1.5",
+            "second::5400.0.as(hour::T)                                                          % hour::1.5",
+            "minute::90.0.as(hour::T)                                                            % hour::1.5",
+            "hour::2.5.as(minute::T)                                                             % minute::150.0",
+            "hour::0.5.as(second::T)                                                             % second::1800.0",
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testTimeConversions(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            // eq() - Equality tests with exact conversions
+            "millis::1000.0.eq(second::1.0)                                                       % true",
+            "second::60.0.eq(minute::1.0)                                                         % true",
+            "minute::60.0.eq(hour::1.0)                                                           % true",
+            "millis::60000.0.eq(minute::1.0)                                                      % true",
+            "millis::3600000.0.eq(hour::1.0)                                                      % true",
+            "second::3600.0.eq(hour::1.0)                                                         % true",
+
+            // neq() - Not equal tests
+            "millis::1000.0.neq(second::1.0)                                                      % false",
+            "second::60.0.neq(minute::1.0)                                                        % false",
+
+            // lt() and gt() - Basic comparison tests
+            "millis::500.0.lt(second::1.0)                                                        % true",
+            "second::1.0.gt(millis::500.0)                                                        % true",
+            "millis::1000.0.lt(second::1.0)                                                       % false",
+            "millis::1000.0.gt(second::1.0)                                                       % false",
+
+            // lte() and gte() - Less/greater than or equal tests
+            "millis::1000.0.lte(second::1.0)                                                      % true",
+            "millis::1000.0.gte(second::1.0)                                                      % true",
+            "minute::60.0.lte(hour::1.0)                                                          % true",
+            "minute::60.0.gte(hour::1.0)                                                          % true",
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testTimeConversionRelations(final String code, final boolean match) {
+        assertEquals(match, ObjmtronSerializer.parse(code).apply().boolValue());
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            // Time unit as() conversions - verifies resolver picks correct as?X<=Y instruction
+            "millis::1000.0.as(second::T)   | *second   | true",
+            "second::60.0.as(minute::T)     | *minute   | true",
+            "minute::60.0.as(hour::T)       | *hour     | true",
+            // Downward conversions
+            "second::1.0.as(millis::T)       | *millis   | true",
+            "minute::1.0.as(second::T)       | *second   | true",
+            "hour::1.0.as(minute::T)         | *minute   | true",
+    }, delimiter = '|')
+    public void testTimeAs(String code, String expectedType, boolean shouldMatch) {
+        Obj result = ObjmtronSerializer.parse(code);
+        Obj expected = ObjmtronSerializer.parse(expectedType);
+        LOG.debug("result [%s] expected [%s] [should match: %b]", result, expected, shouldMatch);
+        assertEquals(shouldMatch, result.test(expected));
+    }
+
     @Test
     public void testConstants() {
         Router.global().addSpace(memSpace.of(rec(uri(PATTERN), uri("/abc/#"), uri(Tokens.QPROC), lst(QCollection.constQ())), f("abc")));

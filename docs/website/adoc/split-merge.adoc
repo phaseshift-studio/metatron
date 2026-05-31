@@ -180,9 +180,9 @@ In this way, the mechanics of `inst` lhs-resolution, `noobj` as the `0`-element 
 [mtron]
 ----
 [NO_HEADER]
-{1,2,3,4,5}-<[?>2 => '${_} greater than 2', /
-              ?>5 => '${_} greater than 5', /
-              _   => '${_} is something.']
+{1,2,3,4,5}-<[?>2 => "${_} greater than 2", /
+              ?>5 => "${_} greater than 5", /
+              _   => "${_} is something."]
 ----
 
 =====

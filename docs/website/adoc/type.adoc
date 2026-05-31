@@ -1,5 +1,5 @@
 [discrete]
-== The Type
+== Structural Type System
 
 Every obj in mtron has a **type**. A https://en.wikipedia.org/wiki/Data_type[type] is either a base type or some constraint on a base type. For instance, `int::5` is a https://en.wikipedia.org/wiki/Value_(computer_science)[value] with type `int::T` (a https://en.wikipedia.org/wiki/Primitive_data_type[base type]). However, it is also an `int::T[?<10]` (a https://en.wikipedia.org/wiki/Refinement_type[refinement] of `int::T`). In this case, the refinement states that a value of this type is any `int::T` less than 10. A similar, though more consequential example is the set of natural numbers latexmath:[\mathbb{N}] being a subset of the set of integers latexmath:[\mathbb{Z}]. That is, latexmath:[\mathbb{N} \subset \mathbb{Z}]. The set of natural numbers is defined in mtron by specifying a https://en.wikipedia.org/wiki/Predicate_(logic)[predicate] (or constraint) on the set of integers.
 

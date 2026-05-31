@@ -61,10 +61,10 @@ public enum TypeCheck {
     private static final Set<TypeCheck> TYPE_CHECKS = new LinkedHashSet<>(List.of(values()));
 
     public static void init(final Rec typer) {
-        /*TYPE_CHECKS.clear();
+        TYPE_CHECKS.clear();
         typer.elements().filter(r -> r.second().boolValue()).map(Rel::first).forEach(stages -> {
             TYPE_CHECKS.add(TypeCheck.valueOf(stages.uriValue().toString()));
-        });*/
+        });
     }
 
     public boolean enabled() {
@@ -73,16 +73,16 @@ public enum TypeCheck {
 
     public static void enable(final TypeCheck... stages) {
         TYPE_CHECKS.addAll(List.of(stages));
-        /*for (final TypeCheck stage : stages) {
+        for (final TypeCheck stage : stages) {
             Router.writeToSpace(f("/sys/typer/stage/" + stage.name()), BOOL_TRUE);
-        }*/
+        }
     }
 
     public static void disable(final TypeCheck... stages) {
         List.of(stages).forEach(TYPE_CHECKS::remove);
-        /*for (final TypeCheck stage : stages) {
+        for (final TypeCheck stage : stages) {
             Router.writeToSpace(f("/sys/typer/stage/" + stage.name()), BOOL_FALSE);
-        }*/
+        }
     }
 
     public static int level() {

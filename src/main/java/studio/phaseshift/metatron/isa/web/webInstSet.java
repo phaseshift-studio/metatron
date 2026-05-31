@@ -20,17 +20,32 @@ package studio.phaseshift.metatron.isa.web;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
+import studio.phaseshift.metatron.isa.llm.llmInstSet;
+import studio.phaseshift.metatron.isa.llm.type.mcpClient;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
 import studio.phaseshift.metatron.isa.web.parser.*;
 import studio.phaseshift.metatron.isa.web.type.MIME;
+import studio.phaseshift.metatron.isa.web.type.mcpServer;
+
+import java.net.InetSocketAddress;
+import java.nio.channels.SocketChannel;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_TOOL_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
+import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_MILLIS_TID;
+import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_TIME_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.inside_;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
+import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_FALSE;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.Inst.INST_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.NOOBJ_TYPE;
@@ -39,6 +54,7 @@ import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -47,7 +63,6 @@ import static studio.phaseshift.metatron.isa.web.space.http.handler.mcp_mtron_ht
 import static studio.phaseshift.metatron.isa.web.space.http.handler.mtron_httpHandler.HTTP_MTRON_HANDLER_TYPE;
 import static studio.phaseshift.metatron.isa.web.space.http.httpSpace.*;
 import static studio.phaseshift.metatron.isa.web.space.ws.handler.mcp_mtron_wsHandler.WS_MTRON_MCP_HANDLER_TYPE;
-import static studio.phaseshift.metatron.isa.web.type.mcp_Server.MCP_SERVER_TYPE;
 import static studio.phaseshift.metatron.isa.web.space.ws.handler.mcp_wsHandler.WS_MCP_HANDLER_TYPE;
 import static studio.phaseshift.metatron.isa.web.space.ws.handler.mtron_wsHandler.WS_MTRON_HANDLER_TYPE;
 import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.*;
@@ -108,6 +123,11 @@ public class webInstSet extends AbstractInstSet {
             .tid(REC_TID)
             .vid(CSS_TID).create();
     public static final Type MARKDOWN_TYPE = Type.Builder.build().tid(REC_TID).vid(MARKDOWN_TID).create();
+    public static final fURI MCP_SERVER_TID = WEB_ISA_TID.extend("mcp_server");
+    public static final fURI MCP_CLIENT_TID = WEB_ISA_TID.extend("mcp_client");
+    public static Type MCP_CLIENT_TYPE;
+    public static Type MCP_SERVER_TYPE;
+
 
     public webInstSet() {
         super(mutableMap(uri(PATTERN), uri(WEB_ISA_TID.extend(ALL))), INSTSET_TID, WEB_ISA_TID);
@@ -126,15 +146,15 @@ public class webInstSet extends AbstractInstSet {
                         docWrap(CONTENT_TYPE, "indicates the media type of the data as specified by RFC-9110"),
                         docWrap(XML_TYPE, "a rec encoding of an xml document"),
                         docWrap(HTML_TYPE, "a rec encoding of an html document",
-                        "*<http://metatron.phaseshift.studio> [-- yields an html::T --]",
-                        """
-                        html::[html=>
-                               [head=>
-                                [title=>\"metatron\"]],
-                                body=>
-                                 [out=>[
-                                  [tag=>a,href=>...],
-                                  [tag...]]]]"""),
+                                "*<http://metatron.phaseshift.studio> [-- yields an html::T --]",
+                                """
+                                html::[html=>
+                                       [head=>
+                                        [title=>\"metatron\"]],
+                                        body=>
+                                         [out=>[
+                                          [tag=>a,href=>...],
+                                          [tag...]]]]"""),
                         docWrap(JSON_TYPE, "a rec encoding of a json document"),
                         docWrap(CSS_TYPE, "a rec encoding of a css document"),
                         docWrap(MARKDOWN_TYPE, "a rec encoding of a markdown document"),
@@ -153,19 +173,60 @@ public class webInstSet extends AbstractInstSet {
                         docWrap(WS_WEBSOCKET_TYPE, "a generic websocket obj which can be refined with useful behaviors"),
                         docWrap(WS_HANDLER_TYPE, "a websocket server which should be refined to implement protocol specs"),
                         docWrap(WS_CLIENT_TYPE, "an websocket client which should be refined to implement protocol specs"),
-                        docWrap(WS_MTRON_HANDLER_TYPE, "a simple websocket handler accepting mtron expressions and return mtron results","mtron_ws::[=>]"),
+                        docWrap(WS_MTRON_HANDLER_TYPE, "a simple websocket handler accepting mtron expressions and return mtron results", "mtron_ws::[=>]"),
                         docWrap(WS_MCP_HANDLER_TYPE, "an abstract mcp websocket handler providing necessary json-rpc infrastructure for mcp servers to leverage"),
                         docWrap(WS_MTRON_MCP_HANDLER_TYPE, "an mcp handler server with built-in mtron eval, space listing, router info and instruction listing tools"),
                         /// //////////////////////////////
                         docWrap(HTTP_SOCKET_TYPE, "a generic http obj which can be refined with useful behaviors"),
                         docWrap(HTTP_HANDLER_TYPE, "a http server which should be refined to implement protocol specs"),
                         docWrap(HTTP_CLIENT_TYPE, "an http client which should be refined to implement protocol specs"),
-                        docWrap(HTTP_MTRON_HANDLER_TYPE, "a simple http handler accepting mtron expressions and return mtron results","mtron_http::[=>]"),
+                        docWrap(HTTP_MTRON_HANDLER_TYPE, "a simple http handler accepting mtron expressions and return mtron results", "mtron_http::[=>]"),
                         docWrap(HTTP_MCP_HANDLER_TYPE, "an abstract mcp http handler providing necessary json-rpc infrastructure for mcp servers to leverage"),
                         docWrap(HTTP_MTRON_MCP_TYPE, "mcp streamable http transport handler with built-in metatron tools"),
                         /// //////////////////////////////
-                        docWrap(MCP_SERVER_TYPE, "transport-agnostic mcp json-rpc protocol handler")),
+                        docWrap(MCP_SERVER_TYPE = Type.Builder.build()
+                                        .tid(REC_TID)
+                                        .vid(MCP_SERVER_TID)
+                                        .isaPredicate(rec(
+                                                uri(TOOL).maybe().asUri(), rec(URI_TYPE, INST_TYPE).maybe(),
+                                                uri(RESOURCE).maybe().asUri(), T(ALL),
+                                                uri(PROMPT).maybe().asUri(), T(ALL)))
+                                        .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(MCP_SERVER_TID), lst(T(REC_TID)), (lhs, inst) ->
+                                                new mcpServer(new LinkedHashMap<>(inst.arg(0).asRec().jvm()), MCP_SERVER_TID, inst.arg(0).vid()))).create(),
+                                "transport-agnostic mcp json-rpc protocol handler"),
+                        docWrap(MCP_CLIENT_TYPE = Type.Builder.build()
+                                        .tid(REC_TID)
+                                        .vid(MCP_CLIENT_TID)
+                                        .isaPredicate(rec(
+                                                uri(HOST), URI_TYPE,
+                                                uri(TRANSPORT).maybe(), URI_TYPE,
+                                                uri(TOOL).maybe(), rec(URI_TYPE, T(LLM_TOOL_TID)).maybe(),
+                                                uri(STATUS).maybe(), isa_(BOOL_TYPE).else_(BOOL_FALSE)))
+                                        .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(MCP_CLIENT_TID), lst(T(REC_TID)),
+                                                (x, inst) -> new mcpClient(inst.arg(0).asRec().jvm(), MCP_CLIENT_TID, inst.arg(0).vid())))
+                                        .create(), "a mcp client specification", "creates a connection to an existing mcp client",
+                                Map.of(
+                                        uri(HOST), "the mcp server endpoint",
+                                        uri(TRANSPORT).maybe(), "specify the transport if host schema resolution isn't sufficient",
+                                        uri(TOOL).maybe(), "the tools/functions available for use on the mcp server",
+                                        uri(STATUS).maybe(), "the current status of the mcp client/server connection"),
+                                "a client implementing the model content protocol used by llms for the acquisition of tools and access to external software systems",
+                                "mcp_client::[host => <http://127.0.0.1:29170/index-mcp/streamable-http>]@/usr/ai/mcp/intellij [-- connection populates tool and status      --]",
+                                "mcp_client::[host => <ws://localhost:8999>]@/usr/ai/mcp/mtron                                 [-- mtron router server exposes an mcp server --]")),
                 uri(INST), lst(
+                        instC(WEB_ISA_TID.extend("inst/ping").dom(ALL.maybe()).rng(MATH_TIME_TID), lst(URI_TYPE), (lhs, inst) -> {
+                            final fURI host = inst.arg(0).uriValue().hasScheme() ? inst.arg(0).uriValue() : f("http://" + inst.arg(0).uriValue());
+                            long start = System.currentTimeMillis();
+                            try (final SocketChannel sc = SocketChannel.open()) {
+                                sc.connect(new InetSocketAddress(host.host(), host.port()));
+                                long latency = System.currentTimeMillis() - start;
+                                LOG.info("%s available with latency %d ms", sc.getRemoteAddress(), latency);
+                                return real(Long.valueOf(latency).doubleValue(), MATH_MILLIS_TID, null);
+                            } catch (final Exception e) {
+                                LOG.error("%s unavailable", inst.arg(0).uriValue());
+                                return real(-1.0d, MATH_MILLIS_TID, null);
+                            }
+                        }),
                         instC(WEB_ISA_TID.extend("inst/format").dom(MARKDOWN_TID).rng(STR_TID), lst(), (lhs, inst) -> str(ObjMarkdownSerializer.format(ObjMarkdownSerializer.single().write(lhs).getChars().toString()))),
                         instC(AS_INST_TID.dom(STR_TID).rng(XML_TID), lst(T(XML_TID)), (lhs, inst) -> ObjXMLSerializer.parse(lhs.asStr().strValue())),
                         instC(AS_INST_TID.dom(STR_TID).rng(HTML_TID), lst(HTML_TYPE), (lhs, inst) -> ObjHTMLSerializer.parse(lhs.asStr().strValue())),

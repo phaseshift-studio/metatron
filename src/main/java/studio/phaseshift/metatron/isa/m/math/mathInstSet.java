@@ -74,7 +74,16 @@ public class mathInstSet extends AbstractInstSet {
     public static final String MATH_TBYTE_STRING = "/m/math/tB";
     public static final String MATH_PBYTE_STRING = "/m/math/pB";
     /// ///////////////////////
-
+    public static final fURI MATH_TIME_TID = MATH_ISA_TID.extend("time");
+    public static final fURI MATH_MILLIS_TID = MATH_ISA_TID.extend("millis");
+    public static final fURI MATH_SECOND_TID = MATH_ISA_TID.extend("second");
+    public static final fURI MATH_MINUTE_TID = MATH_ISA_TID.extend("minute");
+    public static final fURI MATH_HOUR_TID = MATH_ISA_TID.extend("hour");
+    public static final String MATH_MILLIS_STRING = "/m/math/millis";
+    public static final String MATH_SECOND_STRING = "/m/math/second";
+    public static final String MATH_MINUTE_STRING = "/m/math/minute";
+    public static final String MATH_HOUR_STRING = "/m/math/hour";
+    /// ///////////////////////
     public static final fURI MATH_CURRENCY_TID = f("/m/math/currency");
     public static final fURI MATH_USD_TID = MATH_CURRENCY_TID.extend("usd");
     public static final fURI MATH_EURO_TID = MATH_CURRENCY_TID.extend("euro");
@@ -96,6 +105,69 @@ public class mathInstSet extends AbstractInstSet {
     public mathInstSet() {
         super(mutableMap(uri(PATTERN), uri(MATH_ISA_TID.extend(HASH_FURI))), INSTSET_TID, MATH_ISA_TID);
     }
+
+    public static final Type TIME_TYPE = Type.Builder.build()
+            .tid(REAL_TID)
+            .vid(MATH_TIME_TID)
+            .create();
+
+    public static final Type MILLIS_TYPE = Type.Builder.build()
+            .tid(MATH_TIME_TID)
+            .vid(MATH_MILLIS_TID)
+            .constructor(lhs -> {
+                final Real arg = lhs.asReal();
+                final String tid = arg.tid().toString();
+                return switch (tid) {
+                    case MATH_SECOND_STRING -> arg.jvm(arg.asReal().jvm() * 1000.0d);
+                    case MATH_MINUTE_STRING -> arg.jvm(arg.asReal().jvm() * 1000.0d * 60.0d);
+                    case MATH_HOUR_STRING -> arg.jvm(arg.asReal().jvm() * 1000.0d * 60.0d * 60.0d);
+                    default -> arg;
+                };
+            }).create();
+
+    public static final Type SECOND_TYPE = Type.Builder.build()
+            .tid(MATH_TIME_TID)
+            .vid(MATH_SECOND_TID)
+            .constructor(lhs -> {
+                final Real arg = lhs.asReal();
+                final String tid = arg.tid().toString();
+                return switch (tid) {
+                    case MATH_MILLIS_STRING -> arg.jvm(arg.asReal().jvm() / 1000.0d);
+                    case MATH_MINUTE_STRING -> arg.jvm(arg.asReal().jvm() * 60.0d);
+                    case MATH_HOUR_STRING -> arg.jvm(arg.asReal().jvm() * 60.0d * 60.0d);
+                    default -> arg;
+                };
+            }).create();
+
+    public static final Type MINUTE_TYPE = Type.Builder.build()
+            .tid(MATH_TIME_TID)
+            .vid(MATH_MINUTE_TID)
+            .constructor(lhs -> {
+                final Real arg = lhs.asReal();
+                final String tid = arg.tid().toString();
+                return switch (tid) {
+                    case MATH_MILLIS_STRING -> arg.jvm(arg.asReal().jvm() / 60.0d / 1000.0d);
+                    case MATH_SECOND_STRING -> arg.jvm(arg.asReal().jvm() / 60.0d);
+                    case MATH_HOUR_STRING -> arg.jvm(arg.asReal().jvm() * 60.0d);
+                    default -> arg;
+                };
+            }).create();
+
+    public static final Type HOUR_TYPE = Type.Builder.build()
+            .tid(MATH_TIME_TID)
+            .vid(MATH_HOUR_TID)
+            .constructor(lhs -> {
+                final Real arg = lhs.asReal();
+                final String tid = arg.tid().toString();
+                return switch (tid) {
+                    case MATH_MILLIS_STRING -> arg.jvm(arg.asReal().jvm() / 60.0d / 60.0d / 1000.0d);
+                    case MATH_SECOND_STRING -> arg.jvm(arg.asReal().jvm() / 60.0d / 60.0d);
+                    case MATH_MINUTE_STRING -> arg.jvm(arg.asReal().jvm() / 60.0d);
+                    default -> arg;
+                };
+            }).create();
+
+    /// ////////////////////////////////////////////////////////////////////////
 
     public static final Type DATA_SIZE_TYPE = Type.Builder.build()
             .tid(REAL_TID)
@@ -212,7 +284,11 @@ public class mathInstSet extends AbstractInstSet {
                         docWrap(PBYTE_TYPE, "a petabyte (1024 terabytes) of data"),
                         docWrap(MATH_CURRENCY_TYPE, "a currency amount"),
                         docWrap(Type.Builder.build().tid(MATH_CURRENCY_TID).vid(MATH_USD_TID).create(), "united states currency"),
-                        docWrap(Type.Builder.build().tid(MATH_CURRENCY_TID).vid(MATH_EURO_TID).create(), "european union currency")),
+                        docWrap(Type.Builder.build().tid(MATH_CURRENCY_TID).vid(MATH_EURO_TID).create(), "european union currency"),
+                        docWrap(MILLIS_TYPE, "a millisecond of time"),
+                        docWrap(SECOND_TYPE, "a second of time (1000 millis)"),
+                        docWrap(MINUTE_TYPE, "a minute of time (60 seconds)"),
+                        docWrap(HOUR_TYPE, "an hour of time (60 minutes)")),
                 uri(INST), lst(
                         instC(MATH_COS_INST_TID.dom(ALL.maybe()).rng(REAL_TID), lst(as_(REAL_TYPE).tryToInst()), (lhs, inst) -> real(Math.cos(inst.arg(0).realValue()))),
                         instC(MATH_SIN_INST_TID.dom(ALL.maybe()).rng(REAL_TID), lst(REAL_TYPE), (lhs, inst) -> real(Math.sin(inst.arg(0).realValue()))),

@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.docs;
 
+import studio.phaseshift.metatron.TypeCheck;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
@@ -191,7 +192,9 @@ public final class MtronDocPreprocessor {
 
             // ── Evaluate ──
             try {
-                final Obj result = ObjmtronSerializer.parse(expr).apply();
+                TypeCheck.disable(TypeCheck.code_resolve,TypeCheck.inst_rng);
+                final Obj input = ObjmtronSerializer.parse(expr);
+                final Obj result = input.apply();
                 if (result.isFail() && !error) {
                     LOG.error("no [ERROR] modifier in code block (docs are buggy): %s\nfor expression:\n%s\n", result, expr);
                     //System.exit(1);
@@ -200,6 +203,8 @@ public final class MtronDocPreprocessor {
                     result.stream().forEach(o -> lines.add("==>" + SER.write(o)));
                 } else if (noOutput) {
                     lines.add(Graphitty.sillyPrint("...", true, true));
+                } else if (result.isNoObj() && input.isType()) {
+                    lines.add("==>" + SER.write(input));
                 }
                 // Clear fail stack so errors don't leak across blocks
                 if (!hidden) ObjmtronSerializer.parse("/sys/fail/+ -> noobj").apply();

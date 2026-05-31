@@ -1,5 +1,5 @@
 [discrete]
-== poly
+== Polynomial Data Structures
 
 The **poly** types are one of the more interesting aspects of metatron. They are used to structure data (serving as collections) and for for flow control (code branching). There are 3 **poly** types in metatron: `rec` (record), `lst` (list), and `rel` (relation) -- the linchpins of metatron.
 

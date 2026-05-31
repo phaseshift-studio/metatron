@@ -22,15 +22,16 @@ import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.mcp.client.DefaultMcpClient;
 import dev.langchain4j.mcp.client.McpClient;
 import dev.langchain4j.mcp.client.transport.McpTransport;
+import dev.langchain4j.mcp.client.transport.http.HttpMcpTransport;
 import dev.langchain4j.mcp.client.transport.http.StreamableHttpMcpTransport;
 import dev.langchain4j.mcp.client.transport.websocket.WebSocketMcpTransport;
 import dev.langchain4j.model.chat.request.json.JsonObjectSchema;
 import dev.langchain4j.service.tool.ToolExecutionResult;
+import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
-import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
@@ -39,7 +40,6 @@ import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -49,13 +49,9 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
-import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_TOOL_TID;
-import static studio.phaseshift.metatron.isa.llm.llmInstSet.MCP_SERVER_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.type.Bool.*;
-import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -67,30 +63,13 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class mMcpClient extends MRec {
+public class mcpClient extends MRec {
 
-    protected static final GraphittyLogger LOG = Graphitty.log(mMcpClient.class);
-
-    public static final fURI MCP_CLIENT_TID = MCP_SERVER_TID.extend("mcp_client");
-    public static final Type MCP_CLIENT_TYPE = docWrap(Type.Builder.build().tid(REC_TID).vid(MCP_CLIENT_TID)
-                    .isaPredicate(rec(
-                            uri(HOST), URI_TYPE,
-                            uri(TOOL).maybe(), rec(URI_TYPE, T(LLM_TOOL_TID)).maybe(),
-                            uri(STATUS).maybe(), isa_(BOOL_TYPE).else_(BOOL_FALSE)))
-                    .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(MCP_CLIENT_TID), lst(T(REC_TID)),
-                            (x, inst) -> new mMcpClient(inst.arg(0).asRec().jvm(), MCP_CLIENT_TID, inst.arg(0).vid())))
-                    .create(), "a mcp client specification", "creates a connection to an existing mcp client",
-            Map.of(
-                    uri(HOST), "the mcp server endpoint",
-                    uri(TOOL).maybe(), "the tools/functions available for use on the mcp server",
-                    uri(STATUS).maybe(), "the current status of the mcp client/server connection"),
-            "a client implementing the model content protocol used by llms for the acquisition of tools and access to external software systems",
-            "mcp_client::[host => <http://127.0.0.1:29170/index-mcp/streamable-http>]@/usr/ai/mcp/intellij [-- connection populates tool and status      --]",
-            "mcp_client::[host => <ws://localhost:8999>]@/usr/ai/mcp/mtron                                 [-- mtron router server exposes an mcp server --]");
+    protected static final GraphittyLogger LOG = Graphitty.log(mcpClient.class);
 
     protected final McpClient client;
 
-    public mMcpClient(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
+    public mcpClient(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
         this.client = DefaultMcpClient.builder()
                 .clientName(METATRON)
@@ -99,7 +78,7 @@ public class mMcpClient extends MRec {
                 //.roots(List.of(new McpRoot("metatron", "http://localhost:8999")))
                 .logHandler(message -> as().logger().debug("mcp log: %s", message))
                 .transport(createTransport(
-                        jvm.get(uri(TRANSPORT)),
+                        this.at(uri(TRANSPORT)),
                         jvm.getOrDefault(uri(HEADERS), rec0()).jvm(),
                         jvm.get(uri(HOST))))
                 //.autoHealthCheck(true)
@@ -189,7 +168,7 @@ public class mMcpClient extends MRec {
     }
 
     @Override
-    public mMcpClient clone() {
+    public mcpClient clone() {
         return this;
     }
 
@@ -198,7 +177,7 @@ public class mMcpClient extends MRec {
     }
 
     protected static McpTransport createTransport(final Obj transport, final Map<Obj, Obj> headers, final Obj host) {
-        if (null != transport) {
+        if (null != transport && !transport.isNoObj()) {
             if (f(STREAMABLE_HTTP).equals(transport.uriValue())) {
                 return StreamableHttpMcpTransport.builder()
                         .logRequests(true)
@@ -206,6 +185,7 @@ public class mMcpClient extends MRec {
                         .logger(LOG.logger(WARN))
                         .customHeaders(headers.keySet().stream().collect(Collectors.toMap(k -> k.uriValue().toString(), v -> v.uriValue().toString())))
                         .url(host.uriValue().toString())
+                        .executor(BootLoader.getExecutor())
                         .build();
             }
         } else {
@@ -215,13 +195,25 @@ public class mMcpClient extends MRec {
                         .logResponses(true)
                         .logger(LOG.logger(WARN))
                         .url(host.uriValue().toString())
+                        .executor(BootLoader.getExecutor())
                         .build();
+            if(host.uriValue().name().equals("sse")) {  // TODO: remove when sse is no longer supported
+                return HttpMcpTransport.builder()
+                        .sseUrl(host.uriValue().toString()) // The SSE endpoint
+                        .logger(LOG.logger(WARN))
+                        .logRequests(false)
+                        .logResponses(false)
+                        .customHeaders(headers.keySet().stream().collect(Collectors.toMap(k -> k.uriValue().toString(), v -> v.uriValue().toString())))
+                        .build();
+            }
             if (host.uriValue().scheme().equals(HTTP) || host.uriValue().scheme().equals(HTTPS)) {
                 return StreamableHttpMcpTransport.builder()
                         .logRequests(true)
                         .logResponses(true)
                         .logger(LOG.logger(WARN))
+                        .customHeaders(headers.keySet().stream().collect(Collectors.toMap(k -> k.uriValue().toString(), v -> v.uriValue().toString())))
                         .url(host.uriValue().toString())
+                        .executor(BootLoader.getExecutor())
                         .build();
             } else
                 throw MTronException.of("unsupported scheme: " + host.uriValue().scheme());

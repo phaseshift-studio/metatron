@@ -388,6 +388,8 @@ public class mInstSet extends AbstractInstSet {
                                 "*int?docq  [-- documentation for int::T --]"),
                         docWrap(MINTQ_TYPE, "mint a unique uri extension to obj vid",
                                 "1@abc?mintq [-- 1@abc/235ae3 --]"),
+                        docWrap(SHORTQ_TYPE, "create an untyped smaller representation of obj referent",
+                                "*abc?shortq=10 [-- optional value is max length of obj components (default " + DEFAULT_SHORTQ_MAX_LENGTH + ") --]"),
                         docWrap(INCRQ_TYPE, "internal counter increments and appends value to vid"),
                         docWrap(CONSTQ_TYPE, "prevents the vid from being mutated once set"),
                         docWrap(MIMEQ_TYPE, "maps the obj to the specified mime type")),

@@ -1,5 +1,5 @@
 [discrete]
-== iot
+== Internet of Things with MQTT
 
 [discrete]
 [%collapsible]

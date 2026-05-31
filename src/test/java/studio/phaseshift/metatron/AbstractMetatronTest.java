@@ -67,7 +67,7 @@ public abstract class AbstractMetatronTest {
     public static void begin() {
         memSpace.of(f("/sys/#"), null);
         TypeCheck.enable(TypeCheck.values());
-        TypeCheck.disable(TypeCheck.code_resolve);
+        TypeCheck.disable(TypeCheck.values());
         BootLoader.BOOTING = true;
         BootLoader.TESTING = true;
         BootLoader.load(rec(uri(LOGG), uri(LogObj.getSLF4J().toString().toLowerCase())));
@@ -247,7 +247,7 @@ public abstract class AbstractMetatronTest {
             final Obj cd = ObjmtronSerializer.parse(code);
             final Obj ex = ObjmtronSerializer.parse(expected).apply();
             final Obj actual = cd.apply(noobj());
-            LOG.debug("testing %s => %s => %s [expected:%s]", cd, code, actual, ex);
+            LOG.debug("testing %s => %s => %s [expected:%s]", code, code, actual, ex);
             if (!actual.equals(ex) && actual.stream().anyMatch(Obj::isFail))
                 LOG.error("expectation led to failure: %s", actual);
             if (ex.tid().hasPoly()) ///  TODO: how to handle generalization of a polynomial as it relates to equality

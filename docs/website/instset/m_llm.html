@@ -274,8 +274,6 @@ bin/metatron</code></pre>
  space=&gt;[super=&gt;/m/llm/#],
  type=&gt;[
   catalog::T,
-  base::T,
-  mcp_client::T,
   tool::T,
   memory::T,
   user::T,
@@ -297,7 +295,7 @@ bin/metatron</code></pre>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <button class="btn btn-outline-secondary" disabled>Consts <span class="pill-label badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">9</span></a><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">3</span></a><button class="btn btn-outline-secondary" disabled>Spaces <span class="pill-label badge bg-dark">0</span></button><button class="btn btn-outline-secondary" disabled>Rewrites <span class="pill-label badge bg-dark">0</span></button>
+        <button class="btn btn-outline-secondary" disabled>Consts <span class="pill-label badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">8</span></a><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">3</span></a><button class="btn btn-outline-secondary" disabled>Spaces <span class="pill-label badge bg-dark">0</span></button><button class="btn btn-outline-secondary" disabled>Rewrites <span class="pill-label badge bg-dark">0</span></button>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="card">
@@ -325,9 +323,6 @@ bin/metatron</code></pre>
 </a><a href="#type-user" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">user</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
-</a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">mcp</small></div><div class="d-flex flex-wrap"><a href="#type-mcp_client" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">mcp_client</span>
-    <span class="pill-label badge bg-primary ms-2">T</span>
 </a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">space</small></div><div class="d-flex flex-wrap"><a href="#type-catalog" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">catalog</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
@@ -344,7 +339,7 @@ bin/metatron</code></pre>
 </div></div>
     </div>
 </div><div class="container-xxl mb-4" id="types">
-    <h3 class="text-primary mb-3">Types <span class="pill-label badge bg-primary">9</span></h3>
+    <h3 class="text-primary mb-3">Types <span class="pill-label badge bg-primary">8</span></h3>
     <div class="card mb-3" id="type-AI">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -391,7 +386,7 @@ bin/metatron</code></pre>
    {?}cost=&gt;currency::T],
   {?}tool=&gt;{?}[split([
  isa(tool::T),
- isa(base::T)])],
+ isa(mcp_server::T)])],
   {?}skill=&gt;lst{?}::T,
   {?}rag=&gt;{?}[uri::T=&gt;isa(int::T).else(10)],
   {?}note=&gt;lst{?}::T]]@/m/llm/feature</code></pre></div>
@@ -410,19 +405,6 @@ bin/metatron</code></pre>
   {?}tool <span class="text-light">=&gt;</span> <span class="text-info">&#39;tool functions the llm can use to solve problems&#39;</span>
 </pre>
 </div>
-</div><div class="card mb-3" id="type-mcp_client">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <span>
-            <span class="code text-primary fw-bold">mcp_client::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#type-rec" class="instset-doc-small-code text-info code">/m/rec::T</a></span>
-        </span>
-        <small class="text-muted code">/m/llm/mcp/mcp_client</small>
-    </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[
-  host=&gt;uri::T,
-  {?}tool=&gt;{?}[uri::T=&gt;tool::T],
-  {?}status=&gt;isa(bool::T).else(false)]][ctor?mcp_client&lt;=#{?}(rec::T)]@/m/llm/mcp/mcp_client</code></pre></div>
-    
 </div><div class="card mb-3" id="type-memory">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>

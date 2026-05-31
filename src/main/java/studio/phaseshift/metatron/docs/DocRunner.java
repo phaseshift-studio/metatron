@@ -173,7 +173,6 @@ public class DocRunner {
         }
 
         // ── Bootstrap metatron VM ────────────────────────────────────────
-        TypeCheck.disable(TypeCheck.code_resolve);
         BootLoader.BOOTING = true;
         BootLoader.TESTING = true;
         BootLoader.load(MRec.rec(uri(LOGG), uri(INFO), uri(BOOT), uri(boot)));
@@ -186,7 +185,8 @@ public class DocRunner {
             Router.writeToSpace(is);
             is.setup();
         }
-
+        TypeCheck.enable(TypeCheck.values());
+        TypeCheck.disable(TypeCheck.code_resolve);
         // ── Evaluate prefix expressions for side-effects ───────────
        // MtronDocPreprocessor.evalPrefixBlocks(prefixLines);
 

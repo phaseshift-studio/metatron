@@ -1,0 +1,65 @@
+[discrete]
+== Math Instruction Set
+
+The `/m/math` instruction set offers a collection of constants, types, and instructions intended for the representation and manipulation of numbers.
+
+[discrete]
+=== Units of Measurement
+
+The subspace of __units of measurement__ offer sets of types that denote different scales of a particular physical metric. In particular, there are types for representing and converting between units of time, units of size, units of currency, units of distance, etc. A brief, example driven overview of these subspaces is provided below.
+
+[discrete]
+==== Time
+
+The `/m/math/time` branch of the math instruction set provides the following types:
+
+[cols="4a,8a",separator=🧱,role="table-bordered small center"]
+|===
+🧱
+[mtron]
+----
+millis::T
+second::T
+minute::T
+hour::T
+----
+
+🧱
+
+[mtron]
+----
+millis::1000.0.as(second::T)
+hour::1.5.as(minute::T)
+minute::60.0.as(hour::T)
+minute::1.0.gt(second::61.0)
+second::1.0.lt(millis::2000.0)
+----
+|===
+
+[discrete]
+==== Data Size
+
+[cols="4a,8a",separator=🧱,role="table-bordered small center"]
+|===
+🧱
+[mtron]
+----
+bB::T
+kB::T
+mB::T
+gB::T
+tB::T
+pB::T
+----
+
+🧱
+
+[mtron]
+----
+bB::1024.0.as(kB::T)
+kB::1.5.as(mB::T)
+mB::1000.0.as(tB::T)
+mB::1.0.gt(bB::600.0)
+gB::1.0.lt(kB::12000000.0)
+----
+|===

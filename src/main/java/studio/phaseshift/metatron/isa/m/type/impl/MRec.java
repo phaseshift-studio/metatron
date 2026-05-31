@@ -39,6 +39,10 @@ public class MRec extends MObj implements Rec {
         super(Rec.Helper.cleanMap(value), null == tid ? REC_TID : tid, vid);
     }
 
+    protected MRec() {
+        super();
+    }
+
     public static Rec rec(final Obj key, final Obj value, final Obj... kvs) {
         final Map<Obj, Obj> map = new LinkedHashMap<>();
         map.put(key, value);

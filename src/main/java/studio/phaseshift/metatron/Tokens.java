@@ -112,10 +112,10 @@ public final class Tokens {
     public static final String START = "start";
     public static final String METHOD = "method";
     public static final String MESSAGE = "message";
-    public static final String RUNNING = "running";
+    public static final String RUN = "run";
     public static final String HALTED = "halted";
-    public static final String STOPPED = "stopped";
-    public static final String PAUSED = "paused";
+    public static final String STOP = "stop";
+    public static final String PAUSE = "pause";
     public static final String BARRIER = "barrier";
     public static final String REASON = "reason";
     public static final String SUPER = "super";

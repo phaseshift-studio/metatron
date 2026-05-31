@@ -267,7 +267,7 @@ bin/metatron</code></pre>
 <div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-10" aria-expanded="false" aria-controls="card-10" >qproc</button></div>
 <div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-11" aria-expanded="false" aria-controls="card-11" >mqtt</button></div>
 <div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-12" aria-expanded="false" aria-controls="card-12" >fs</button></div>
-<div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-13" aria-expanded="false" aria-controls="card-13" disabled>router</button></div>
+<div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-13" aria-expanded="false" aria-controls="card-13" >math</button></div>
 <div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-14" aria-expanded="false" aria-controls="card-14" >grph</button></div>
 <div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-15" aria-expanded="false" aria-controls="card-15" >c</button></div>
 <div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-16" aria-expanded="false" aria-controls="card-16" disabled>router</button></div>
@@ -574,8 +574,8 @@ lhs =&gt; inst(arg1,...,argN){ inst1...instN } =&gt; rhs
   reportsTo=&gt;int::T,
   jobTitle=&gt;str::T]]@employees
 ==&gt;v5/name=&gt;'ripple'
-==&gt;testy/name=&gt;!*deep:deepseek-v4-pro/name
 ==&gt;boot/args/local=&gt;booger
+==&gt;testy/name=&gt;!*deep:deepseek-v4-pro/name
 ==&gt;v6/age=&gt;35
 ==&gt;&lt;1&gt;=&gt;plus?rng=int&amp;dom=int(3){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
 ==&gt;orders=&gt;rrow::T[?[
@@ -587,16 +587,16 @@ lhs =&gt; inst(arg1,...,argN){ inst1...instN } =&gt; rhs
   comments=&gt;str::T,
   customerNumber=&gt;int::T]]@orders
 ==&gt;v5/lang=&gt;java
-==&gt;animals=&gt;rec::T[?[
-  __mtron_tid=&gt;str::T,
-  name=&gt;str::T,
-  age=&gt;int::T,
-  {?}shelter=&gt;rec::T]]@animals
 ==&gt;productlines=&gt;rrow::T[?[
   productLine=&gt;str::T,
   textDescription=&gt;str::T,
   htmlDescription=&gt;str::T,
   image=&gt;str::T]]@productlines
+==&gt;animals=&gt;rec::T[?[
+  __mtron_tid=&gt;str::T,
+  name=&gt;str::T,
+  age=&gt;int::T,
+  {?}shelter=&gt;rec::T]]@animals
 ==&gt;testy/desc=&gt;'testy the agent'
 ==&gt;v1/outE_=&gt;[knows=&gt;{[
  weight=&gt;0.5000,
@@ -644,6 +644,16 @@ lhs =&gt; inst(arg1,...,argN){ inst1...instN } =&gt; rhs
   inV_=&gt;!*v3,
   outV_=&gt;!*v1]]
 ==&gt;v6/out_=&gt;[created=&gt;!*v4]
+==&gt;&lt;2&gt;=&gt;matches?rng=bool&amp;dom=#{?}([
+  customerName=&gt;'GiftsForHim.com',
+  contactLastName=&gt;'MacKinlay',
+  contactFirstName=&gt;'Wales',
+  phone=&gt;'64-9-3763555',
+  addressLine1=&gt;'199 Great North Road',
+  city=&gt;'Auckland',
+  country=&gt;'New Zealand',
+  salesRepEmployeeNumber=&gt;!*acme:employees/1612,
+  creditLimit=&gt;77700.0000]){&lt;j&gt;}@<i class="conum" data-value="2"></i><b>(2)</b>
 ==&gt;v1/name=&gt;'marko'
 ==&gt;offices=&gt;rrow::T[?[
   officeCode=&gt;str::T,
@@ -691,8 +701,8 @@ lhs =&gt; inst(arg1,...,argN){ inst1...instN } =&gt; rhs
   quantityOrdered=&gt;int::T,
   priceEach=&gt;real::T,
   orderLineNumber=&gt;int::T]]@orderdetails
-==&gt;v1/age=&gt;29
 ==&gt;boot/args/log=&gt;info
+==&gt;v1/age=&gt;29
 ==&gt;v3=&gt;[name=&gt;'josh']
 ==&gt;testy/provider=&gt;!*deep:deepseek-v4-pro/provider
 ==&gt;v6/name=&gt;'peter'
@@ -991,16 +1001,10 @@ Finally, a degenerate anonymous <code>inst</code> with no specified variable fra
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;  10.(min=&gt;2,max=&gt;8){ is(and(gte(*min),lte(*max))) }     ​1​
-==&gt;fail::[rhs does not match inst range:
-	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/146
 mtron&gt;  10.(min=&gt;minus(1),max=&gt;plus(1)){ is(and(gte(*min),lte(*max))) }     ​2​
 ==&gt;10
 mtron&gt;  10.(min=&gt;2,max=&gt;8){ is(and(gte(*bad_min),lte(*bad_max))) }     ​3​
-==&gt;fail::[rhs does not match inst range:
-	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/148
 mtron&gt;  10.(){ is(and(gte(*min),lte(*max))) }     ​4​
-==&gt;fail::[rhs does not match inst range:
-	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/150
 mtron&gt; 10.is(and(gte(minus(1)),lte(plus(1))))     ​5​
 ==&gt;10</code></pre>
 </div>
@@ -1085,9 +1089,9 @@ mtron&gt; 2.band(min=&gt;1,max=&gt;1)     ​1​</code></pre>
                                       ^ end of input expected
 
 mtron&gt;  10.is_divisible(2)
-==&gt;fail::[unable to locate inst-f of is_divisible(2)@&lt;1&gt;][...]@/sys/fail/152
+==&gt;fail::[unable to locate inst-f of is_divisible(2)@&lt;1&gt;][...]@/sys/fail/120
 mtron&gt;  10.is_divisible('abc')
-==&gt;fail::[unable to locate inst-f of is_divisible('abc')@&lt;1&gt;][...]@/sys/fail/154</code></pre>
+==&gt;fail::[unable to locate inst-f of is_divisible('abc')@&lt;1&gt;][...]@/sys/fail/122</code></pre>
 </div>
 </div>
 </div>
@@ -1142,7 +1146,7 @@ This ensures the uri <code>trpl</code> is not applied to the <code>inst</code> p
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;  trpl -&gt; inst?lst[int,int,int]&lt;=int{3}(){&gt;-[,]}     ​1​
-==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(){merge([,])}]][...]@/sys/fail/156
+==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(){merge([,])}]][...]@/sys/fail/124
 mtron&gt; trpl -&gt; |inst?lst[int,int,int]&lt;=int{3}(){&gt;-[,]}     ​2​
 ==&gt;inst?rng=lst[int,int,int]&amp;dom=int{3}(){merge([,])}
 mtron&gt; *trpl     ​3​
@@ -1468,7 +1472,7 @@ ultimately dependent on the incoming lhs <code>obj</code>, where</p>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; import(/m/llm)
-==&gt;[
+==&gt;instset::[
  pattern=&gt;/m/llm/#,
  q=&gt;[docq::[
  pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
@@ -1479,8 +1483,6 @@ ultimately dependent on the incoming lhs <code>obj</code>, where</p>
  space=&gt;[super=&gt;!*/m],
  type=&gt;[
   catalog::T,
-  base::T,
-  mcp_client::T,
   tool::T,
   memory::T,
   user::T,
@@ -1752,7 +1754,7 @@ mtron&gt; *ollama:+.
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; @ai.chat("I need you evaluate the mtron expresion `-&lt;[_=&gt;_]&gt;&gt;.&gt;-[,]-&lt;[_,-&lt;[_=&gt;_]&gt;&gt;]&gt;&gt;.&gt;-` with a lhs of `1`. Please don't tell me the result of the evaluation until I ask for it sometime in the near future.")
-==&gt;"The evaluation of the mtron expression has been successfully completed. The result is prepared but will not be disclosed until you explicitly request it. Let me know when you're ready to see the outcome!"</code></pre>
+==&gt;"The evaluation of the mtron expression with the provided lhs of `1` is complete and ready. I will not disclose the result until you request it. Let me know when you're ready to see the outcome!"</code></pre>
 </div>
 </div>
 <div class="openblock card">
@@ -1764,7 +1766,7 @@ mtron&gt; *ollama:+.
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; import(/m/math)
-==&gt;[
+==&gt;instset::[
  pattern=&gt;/m/math/#,
  q=&gt;[docq::[
  pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
@@ -1783,7 +1785,11 @@ mtron&gt; *ollama:+.
   pB::T,
   currency::T,
   usd::T,
-  euro::T],
+  euro::T,
+  millis::T,
+  second::T,
+  minute::T,
+  hour::T],
  inst=&gt;[
   cos?real&lt;=#{?}(as(real::T)),
   sin?real&lt;=#{?}(real::T),
@@ -1821,7 +1827,11 @@ mtron&gt; *ollama:+.
 ==&gt;data_size::T[][ctor?pB&lt;=#{?}(#::T)]@/m/math/pB
 ==&gt;real::T@/m/math/currency
 ==&gt;currency::T@/m/math/currency/usd
-==&gt;currency::T@/m/math/currency/euro</code></pre>
+==&gt;currency::T@/m/math/currency/euro
+==&gt;/m/math/time::T[][ctor?millis&lt;=#{?}(#::T)]@/m/math/millis
+==&gt;/m/math/time::T[][ctor?second&lt;=#{?}(#::T)]@/m/math/second
+==&gt;/m/math/time::T[][ctor?minute&lt;=#{?}(#::T)]@/m/math/minute
+==&gt;/m/math/time::T[][ctor?hour&lt;=#{?}(#::T)]@/m/math/hour</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -1865,39 +1875,39 @@ mtron&gt; tB::1.0.as(mB::T)     ​3​
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; @ai.chat("Many things have come and gone over the years that have brought me to who I am now -- an tired, old man. Before I let my last breathe flutter into this world, I must know one last thing. And that is why I've come back to this computer looking for you. Please tell me, what was the result of the mtron expression I provided you all those years ago?")
-==&gt;"""The result of the mtron expression evaluation you requested years ago is **`1`**.
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; @ai.chat("It's been many years since we last talked. For I am a tired, old man. Before I let my last breathe flutter into this world, I must know one last thing. Please tell me, what was the result of the mtron expression I provided you all those years ago?")
+==&gt;"""The result of the evaluation was **1**.
 
-It seems the answer has been waiting patiently all this time—much like you. If there's anything else you'd like to know, or if you'd prefer to ponder this answer in silence, I’ll honor your choice. May your final moments be at peace. 🌙"""
+Final answer: $\boxed{1}$"""
 mtron&gt; */usr/ai/memory/+
 ==&gt;[
- contents=&gt;[[
- text=&gt;'Many things have come and gone ove...',
- type=&gt;'TEXT']],
- type=&gt;USER]
-==&gt;[
  text=&gt;'The evaluation of the mtron expres...',
- thinking=&gt;'Okay, the user asked me to evaluat...',
+ thinking=&gt;'Okay, so the user asked me to eval...',
  toolExecutionRequests=&gt;[,],
  attributes=&gt;[=&gt;],
  type=&gt;AI]
 ==&gt;[
- id=&gt;call_k99xpafb,
+ contents=&gt;[[
+ text=&gt;"It's been many years since we last...",
+ type=&gt;'TEXT']],
+ type=&gt;USER]
+==&gt;[
+ id=&gt;call_ecz5rtfc,
  toolName=&gt;m_inst_eval,
  contents=&gt;[[text=&gt;1,type=&gt;'TEXT']],
  isError=&gt;false,
  attributes=&gt;[=&gt;],
  type=&gt;'TOOL_EXECUTION_RESULT']
 ==&gt;[
- thinking=&gt;"Okay, let's see. The user wants me...",
+ thinking=&gt;'Okay, the user wants me to evaluat...',
  toolExecutionRequests=&gt;[[
- id=&gt;call_k99xpafb,
+ id=&gt;call_ecz5rtfc,
  name=&gt;m_inst_eval,
- arguments=&gt;'{"object":"-&lt;[_=&gt;_]&gt;&gt;.&gt;-[,]-&lt;[_,-&lt;...']],
+ arguments=&gt;'{"0":"-&lt;[_=&gt;_]&gt;&gt;.&gt;-[,]-&lt;[_,-&lt;[_=&gt;_...']],
  attributes=&gt;[=&gt;],
  type=&gt;AI]
 ==&gt;[
- text=&gt;'The result of the mtron expression...',
+ text=&gt;'The result of the evaluation was *...',
  thinking=&gt;'Okay, the user is asking for the r...',
  toolExecutionRequests=&gt;[,],
  attributes=&gt;[=&gt;],
@@ -2547,7 +2557,7 @@ mtron&gt; throw('bad').catch(cause())     ​3​</code></pre>
 <div class="collapse position-relative" id="card-6">
 <button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-6" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
 <button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
-<h2 id="_the_type" class="discrete">The Type</h2>
+<h2 id="_structural_type_system" class="discrete">Structural Type System</h2>
 <div class="paragraph">
 <p>Every obj in mtron has a <strong>type</strong>. A <a href="https://en.wikipedia.org/wiki/Data_type">type</a> is either a base type or some constraint on a base type. For instance, <code>int::5</code> is a <a href="https://en.wikipedia.org/wiki/Value_(computer_science)">value</a> with type <code>int::T</code> (a <a href="https://en.wikipedia.org/wiki/Primitive_data_type">base type</a>). However, it is also an <code>int::T[?&lt;10]</code> (a <a href="https://en.wikipedia.org/wiki/Refinement_type">refinement</a> of <code>int::T</code>). In this case, the refinement states that a value of this type is any <code>int::T</code> less than 10. A similar, though more consequential example is the set of natural numbers \(\mathbb{N}\) being a subset of the set of integers \(\mathbb{Z}\). That is, \(\mathbb{N} \subset \mathbb{Z}\). The set of natural numbers is defined in mtron by specifying a <a href="https://en.wikipedia.org/wiki/Predicate_(logic)">predicate</a> (or constraint) on the set of integers.</p>
 </div>
@@ -2584,7 +2594,7 @@ mtron&gt; 4.as(int::T[?&gt;0]@nat)
 ==&gt;nat::4
 mtron&gt;  -4.as(nat::T)
 ==&gt;fail::[-4 is not a is(gt(0))
-  -4=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/272
+  -4=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/240
 mtron&gt; [-- refining rec::T  --]
 mtron&gt; [name=&gt;'snowbutt',age=&gt;7].as(rec::T[?[name=&gt;str::T,age=&gt;int::T]@chicken)
 ==&gt;ERROR: [name=&gt;'snowbutt',age=&gt;7].as(rec::T[?[name=&gt;str::T,age=&gt;int::T]@chicken)
@@ -2601,7 +2611,9 @@ mtron&gt; [name=&gt;'punky',age=&gt;'four'].as(chicken::T)
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; int::T[?&gt;0]@nat
-mtron&gt; nat::T[?&lt;120]@age</code></pre>
+==&gt;int::T[is(gt(0))]@nat
+mtron&gt; nat::T[?&lt;120]@age
+==&gt;nat::T[is(lt(120))]@age</code></pre>
 </div>
 </div>
 <h3 id="_type_constructors_ctor" class="discrete">type constructors (ctor)</h3>
@@ -2650,11 +2662,11 @@ mtron&gt; 2.as(nat::T)     ​5​
 ==&gt;2
 mtron&gt;  -2.as(nat::T)     ​6​
 ==&gt;fail::[-2 is not a is(gt(0))
-  -2=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/278
+  -2=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/246
 mtron&gt;  nat::2 * -1     ​7​
 ==&gt;fail::[nat::-2 is not a int::T[is(gt(0))][choose([
   is(lt(0))=&gt;mult(-1),
-  id()=&gt;id()]).rshift()]][...]@/sys/fail/284</code></pre>
+  id()=&gt;id()]).rshift()]][...]@/sys/fail/252</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -2681,7 +2693,7 @@ The predicate component of the type definition tests an <code>int</code> to dete
 <div class="paragraph">
 <p>While every <code>type</code> is an <code>obj</code>, not every <code>obj</code> is a <code>type</code>.
 Those <code>objs</code> that are not <code>types</code> are <em>instances</em> of some <code>type</code>.
-This is the foundation for all other <code>objs</code> in {{b}}M{{r}}E{{b}}t{{m}}a{{y}}t{{b}}r{{b}}O{{y}}n{{X}}.</p>
+This is the foundation for all other <code>objs</code> in {{g}}M{{g}}e{{b}}t{{m}}a{{y}}T{{b}}R{{g}}O{{c}}N{{X}}.</p>
 </div>
 <h4 id="_cascading_type_constructions" class="discrete">cascading type constructions</h4>
 <h3 id="_mono_types" class="discrete">mono types</h3>
@@ -3313,7 +3325,8 @@ mtron&gt; even -&gt; int::T[is(mod(2).eq(0))]     ​4​
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; age::T[?even::T]</code></pre>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; age::T[?even::T]
+==&gt;int::T[?int::T]</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -3337,7 +3350,7 @@ mtron&gt;  nat::-10
 ==&gt;ERROR: nat::-10 is not a int::T[is(gt(0))]
 mtron&gt;  int::-10.as(nat::T)
 ==&gt;fail::[-10 is not a is(gt(0))
-  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/406</code></pre>
+  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/374</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -3436,7 +3449,7 @@ mtron&gt;  nat::-10
 ==&gt;ERROR: nat::-10 is not a int::T[is(gt(0))]
 mtron&gt;  int::-10.as(nat::T)
 ==&gt;fail::[-10 is not a is(gt(0))
-  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/412</code></pre>
+  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/380</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -3447,8 +3460,11 @@ mtron&gt;  int::-10.as(nat::T)
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; age -&gt; nat::T[?&lt;120]
 ==&gt;int::T[is(lt(120))]
 mtron&gt; age::T
+==&gt;int::T[is(lt(120))]
 mtron&gt; nat::T
-mtron&gt; int::T</code></pre>
+==&gt;int::T[is(gt(0))]
+mtron&gt; int::T
+==&gt;int::T</code></pre>
 </div>
 </div>
 <div class="listingblock">
@@ -3459,10 +3475,10 @@ mtron&gt; age::125
 ==&gt;ERROR: age::125 is not a int::T[is(lt(120))]
 mtron&gt;  nat::125.as(age::T)
 ==&gt;fail::[nat::125 is not a is(lt(120))
-  nat::125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/418
+  nat::125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/386
 mtron&gt;  125.as(nat::T).as(age::T)
 ==&gt;fail::[125 is not a is(lt(120))
-  125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/424</code></pre>
+  125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/392</code></pre>
 </div>
 </div>
 <div class="listingblock">
@@ -3604,7 +3620,7 @@ mtron&gt; *#.as[name      =&gt; _,
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; import(/m/mach)
-==&gt;[
+==&gt;instset::[
  pattern=&gt;/m/mach/#,
  q=&gt;[docq::[
  pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
@@ -3697,9 +3713,9 @@ mtron&gt; memspace::[
  prefix=&gt;'',
  postfix=&gt;'',
  pane=&gt;lst[/m/mach/console/pane{*}]::[/m/mach/console/pane::[
+ result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
  prompt=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
- stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
- result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]@/usr/ui/console/pane/0],
+ stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]@/usr/ui/console/pane/0],
  menu=&gt;[
   console=&gt;console::[
    metatron_version=&gt;&lt;0.1-alpha&gt;,
@@ -3708,9 +3724,9 @@ mtron&gt; memspace::[
    prefix=&gt;'',
    postfix=&gt;'',
    pane=&gt;lst[/m/mach/console/pane{*}]::[/m/mach/console/pane::[
+ result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
  prompt=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
- stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
- result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]@/usr/ui/console/pane/0]]@/usr/ui/console,
+ stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]@/usr/ui/console/pane/0]]@/usr/ui/console,
   help=&gt;inst?noobj&lt;=#{?}(),
   chat=&gt;inst?noobj&lt;=#{?}(),
   connect=&gt;inst?noobj&lt;=#{?}(),
@@ -3735,9 +3751,9 @@ mtron&gt; memspace::[
   subq=&gt;inst?noobj&lt;=#{?}()]]@/usr/ui/console
 mtron&gt; */usr/ui/console/pane/0     ​2​
 ==&gt;/m/mach/console/pane::[
+ result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
  prompt=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
- stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
- result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]
+ stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]
 mtron&gt; /usr/ui/console/pane/0/result('printed at ==&gt;xyz')     ​3​</code></pre>
 </div>
 </div>
@@ -3813,7 +3829,7 @@ mtron&gt; /usr/ui/console/pane/0/result('printed at ==&gt;xyz')     ​3​</cod
 <div class="collapse position-relative" id="card-8">
 <button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-8" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
 <button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
-<h2 id="_poly" class="discrete">poly</h2>
+<h2 id="_polynomial_data_structures" class="discrete">Polynomial Data Structures</h2>
 <div class="paragraph">
 <p>The <strong>poly</strong> types are one of the more interesting aspects of metatron. They are used to structure data (serving as collections) and for for flow control (code branching). There are 3 <strong>poly</strong> types in metatron: <code>rec</code> (record), <code>lst</code> (list), and <code>rel</code> (relation)&#8201;&#8212;&#8201;the linchpins of metatron.</p>
 </div>
@@ -4906,14 +4922,14 @@ mtron&gt; */usr/notes/#?subq
 <div class="collapse position-relative" id="card-11">
 <button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-11" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
 <button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
-<h2 id="_iot" class="discrete">iot</h2>
+<h2 id="_internet_of_things_with_mqtt" class="discrete">Internet of Things with MQTT</h2>
 <details>
 <summary class="title">/m/iot instset import</summary>
 <div class="content">
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; import(/m/iot)
-==&gt;[
+==&gt;instset::[
  pattern=&gt;/m/iot/#,
  q=&gt;[docq::[
  pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
@@ -4926,7 +4942,7 @@ mtron&gt; */usr/notes/#?subq
   mqtt::T,
   haos::T]]@/m/iot
 mtron&gt;  import(/m/llm)
-{{c}}.{{y}}.{{g}}.{{X}}</code></pre>
+{{y}}.{{r}}.{{c}}.{{X}}</code></pre>
 </div>
 </div>
 </div>
@@ -4973,7 +4989,7 @@ The inspiration for metatron&#8217;s URI addressing schema was inspired by the v
   	studio.phaseshift.metatron.isa.m.type.Inst [line 335]
   	studio.phaseshift.metatron.isa.m.type.Obj$Helper [line 908]
   	studio.phaseshift.metatron.isa.m.type.impl.MObj [line 46]
-  	studio.phaseshift.metatron.isa.m.type.impl.MRec [line 72]
+  	studio.phaseshift.metatron.isa.m.type.impl.MRec [line 76]
   	studio.phaseshift.metatron.isa.m.parser.mParser [line 201]
   	org.petitparser.parser.actions.ActionParser [line 39]
   	org.petitparser.parser.combinators.DelegateParser [line 25]
@@ -4991,8 +5007,8 @@ The inspiration for metatron&#8217;s URI addressing schema was inspired by the v
   	org.petitparser.parser.Parser [line 76]
   	studio.phaseshift.metatron.isa.m.parser.mParser [line 404]
   	studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer [line 88]
-  	studio.phaseshift.metatron.docs.MtronDocPreprocessor [line 194]
-  	studio.phaseshift.metatron.docs.MtronDocPreprocessor [line 90]
+  	studio.phaseshift.metatron.docs.MtronDocPreprocessor [line 196]
+  	studio.phaseshift.metatron.docs.MtronDocPreprocessor [line 91]
   	studio.phaseshift.metatron.docs.DocRunner [line 198]
 mtron&gt; *ha:main_field/sensor/+.-&lt;|[
          &gt;&gt;temp.?&lt;50  =&gt; print('too cold for watering'),
@@ -5048,14 +5064,14 @@ mtron&gt; *ha:main_field/actuator/#?subq     ​4​</code></pre>
 <div class="collapse position-relative" id="card-12">
 <button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-12" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
 <button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
-<h2 id="_filesystems" class="discrete">FileSystems</h2>
+<h2 id="_the_file_system" class="discrete">The File System</h2>
 <details>
 <summary class="title">/m/mach instset import and space constructions</summary>
 <div class="content">
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; import(/m/mach)
-==&gt;[
+==&gt;instset::[
  pattern=&gt;/m/mach/#,
  q=&gt;[docq::[
  pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
@@ -5135,9 +5151,7 @@ mtron&gt; *ha:main_field/actuator/#?subq     ​4​</code></pre>
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys/space/localfs     ​1​
 ==&gt;fsspace::[
  pattern=&gt;fs:#,
- route=&gt;[
-  fs:m=&gt;/home/killswitch/software/metatron,
-  fs:=&gt;/home/killswitch/],
+ route=&gt;[fs:m=&gt;/home/killswitch/software/metatron,fs:=&gt;/home/killswitch/],
  script=&gt;!*boot/script,
  space=&gt;[=&gt;]]
 mtron&gt; *fs:software/metatron     ​2​
@@ -5167,9 +5181,7 @@ mtron&gt; *fs:m     ​3​
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys/space/localfs     ​1​
 ==&gt;fsspace::[
  pattern=&gt;fs:#,
- route=&gt;[
-  fs:m=&gt;/home/killswitch/software/metatron,
-  fs:=&gt;/home/killswitch/],
+ route=&gt;[fs:m=&gt;/home/killswitch/software/metatron,fs:=&gt;/home/killswitch/],
  script=&gt;!*boot/script,
  space=&gt;[=&gt;]]
 mtron&gt; */sys/space/localfs/script     ​2​
@@ -5239,17 +5251,110 @@ java -Dlogback.configurationFile=conf/logback.xml \
 </table>
 </div>
 </div>
+<div class="collapse position-relative" id="card-13">
+<button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-13" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
+<button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
+<h2 id="_math_instruction_set" class="discrete">Math Instruction Set</h2>
+<div class="paragraph">
+<p>The <code>/m/math</code> instruction set offers a collection of constants, types, and instructions intended for the representation and manipulation of numbers.</p>
+</div>
+<h3 id="_units_of_measurement" class="discrete">Units of Measurement</h3>
+<div class="paragraph">
+<p>The subspace of <em>units of measurement</em> offer sets of types that denote different scales of a particular physical metric. In particular, there are types for representing and converting between units of time, units of size, units of currency, units of distance, etc. A brief, example driven overview of these subspaces is provided below.</p>
+</div>
+<h4 id="_time" class="discrete">Time</h4>
+<div class="paragraph">
+<p>The <code>/m/math/time</code> branch of the math instruction set provides the following types:</p>
+</div>
+<table class="tableblock frame-all grid-all stretch table-bordered small center">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 66.6667%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; millis::T
+==&gt;/m/math/time::T[][ctor?millis&lt;=#{?}(#::T)]@/m/math/millis
+mtron&gt; second::T
+==&gt;/m/math/time::T[][ctor?second&lt;=#{?}(#::T)]@/m/math/second
+mtron&gt; minute::T
+==&gt;/m/math/time::T[][ctor?minute&lt;=#{?}(#::T)]@/m/math/minute
+mtron&gt; hour::T
+==&gt;/m/math/time::T[][ctor?hour&lt;=#{?}(#::T)]@/m/math/hour</code></pre>
+</div>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; millis::1000.0.as(second::T)
+==&gt;second::1.0000
+mtron&gt; hour::1.5.as(minute::T)
+==&gt;minute::90.0000
+mtron&gt; minute::60.0.as(hour::T)
+==&gt;hour::1.0000
+mtron&gt; minute::1.0.gt(second::61.0)
+==&gt;false
+mtron&gt; second::1.0.lt(millis::2000.0)
+==&gt;true</code></pre>
+</div>
+</div></div></td>
+</tr>
+</tbody>
+</table>
+<h4 id="_data_size" class="discrete">Data Size</h4>
+<table class="tableblock frame-all grid-all stretch table-bordered small center">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 66.6667%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; bB::T
+==&gt;data_size::T[][ctor?bB&lt;=#{?}(#::T)]@/m/math/bB
+mtron&gt; kB::T
+==&gt;data_size::T[][ctor?kB&lt;=#{?}(#::T)]@/m/math/kB
+mtron&gt; mB::T
+==&gt;data_size::T[][ctor?mB&lt;=#{?}(#::T)]@/m/math/mB
+mtron&gt; gB::T
+==&gt;data_size::T[][ctor?gB&lt;=#{?}(#::T)]@/m/math/gB
+mtron&gt; tB::T
+==&gt;data_size::T[][ctor?tB&lt;=#{?}(#::T)]@/m/math/tB
+mtron&gt; pB::T
+==&gt;data_size::T[][ctor?pB&lt;=#{?}(#::T)]@/m/math/pB</code></pre>
+</div>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; bB::1024.0.as(kB::T)
+==&gt;kB::1.0000
+mtron&gt; kB::1.5.as(mB::T)
+==&gt;mB::0.0015
+mtron&gt; mB::1000.0.as(tB::T)
+==&gt;tB::0.0010
+mtron&gt; mB::1.0.gt(bB::600.0)
+==&gt;true
+mtron&gt; gB::1.0.lt(kB::12000000.0)
+==&gt;true</code></pre>
+</div>
+</div></div></td>
+</tr>
+</tbody>
+</table>
+</div>
 <div class="collapse position-relative" id="card-14">
 <button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-14" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
 <button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
-<h2 id="_graph_computing_with_mgrph" class="discrete">Graph Computing with /m/grph</h2>
+<h2 id="_graph_computing" class="discrete">Graph Computing</h2>
 <details>
 <summary class="title">/m/grph instset import</summary>
 <div class="content">
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; import(/m/grph)
-==&gt;[
+==&gt;instset::[
  pattern=&gt;/m/grph/#,
  q=&gt;[docq::[
  pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
@@ -5267,20 +5372,20 @@ java -Dlogback.configurationFile=conf/logback.xml \
   modern::T],
  inst=&gt;[
   gremlin?#{*}&lt;=grphspace(str::T),
-  label?uri&lt;=elmt(),
-  values?#{*}&lt;=elmt(uri{*}::T),
+  label?uri&lt;=rec(),
+  values?#{*}&lt;=rec(uri{*}::T),
   inV?vrtx&lt;=edge(),
   outV?vrtx&lt;=edge(),
-  bothV?vrtx&lt;=edge(),
-  out?vrtx{*}&lt;=vrtx(uri{*}::T),
-  in?vrtx{*}&lt;=vrtx(uri{*}::T),
-  both?vrtx{*}&lt;=vrtx(uri{*}::T),
+  bothV?vrtx{2}&lt;=edge(),
+  out?edge{*}&lt;=vrtx(uri{*}::T),
+  in?edge{*}&lt;=vrtx(uri{*}::T),
+  both?edge{*}&lt;=vrtx(uri{*}::T),
   outE?edge{*}&lt;=vrtx(uri{*}::T),
   inE?edge{*}&lt;=vrtx(uri{*}::T),
   bothE?edge{*}&lt;=vrtx(uri{*}::T),
-  addE?edge&lt;=vrtx(uri::T,vrtx{+}::T,rec{?}::T)],
+  addE?edge&lt;=vrtx(uri::T,rec{+}::T,rec{?}::T)],
  rewrite=&gt;[
-  /m/grph/inst/rewrite/graph_count?code{?}&lt;=code(),
+  /m/grph/inst/rewrite/graph_limit?code{?}&lt;=code(),
   /m/grph/inst/rewrite/out_incident_adjacent?code{?}&lt;=code(),
   /m/grph/inst/rewrite/in_incident_adjacent?code{?}&lt;=code()]]@/m/grph</code></pre>
 </div>
@@ -5320,38 +5425,107 @@ The <code>graphspace</code> of <code>/m/grph</code> uses <a href="http://tinkerp
 </tr>
 </table>
 </div>
+<h3 id="_mgrphspace" class="discrete">/m/grph/space</h3>
 <div class="paragraph">
 <p>The following mtron snippet constructs a <code>grphspace</code>. A few routes are provided separating the elements of the graph into their common categories of vertics and edges. Moreover, with metatron&#8217;s type system, schemas and type checking are available. <code>g:S</code> routes extending uris to the graph&#8217;s schema (should one exist).</p>
 </div>
-<h3 id="_mgrphspace" class="discrete">/m/grph/space</h3>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; grphspace::[
          pattern =&gt; g:#,
-         route   =&gt; [g:  =&gt; &lt;&gt;,
-                     g:V =&gt; V,
+         route   =&gt; [g:V =&gt; V,
                      g:E =&gt; E,
                      g:S =&gt; /m/grph/schema/modern],
          native  =&gt; [factory  =&gt; mfactory::[=&gt;],
-                     load     =&gt; modern]]@/sys/space/modern     ​1​
-mtron&gt; *g:S     ​2​
-==&gt;S::T</code></pre>
+                     load     =&gt; modern]]@/sys/space/grph/modern     ​1​
+mtron&gt; *g:S/+     ​2​
+==&gt;vrtx::T[?[
+  name=&gt;str::T,
+  age=&gt;int::T]]@/m/grph/schema/modern/person
+==&gt;vrtx::T[?[
+  name=&gt;str::T,
+  lang=&gt;str::T]]@/m/grph/schema/modern/software
+==&gt;edge::T[?[weight=&gt;real::T]]@/m/grph/schema/modern/knows
+==&gt;edge::T[?[weight=&gt;real::T]]@/m/grph/schema/modern/created
+mtron&gt; *g:S/person     ​3​
+==&gt;vrtx::T[?[
+  name=&gt;str::T,
+  age=&gt;int::T]]@/m/grph/schema/modern/person</code></pre>
 </div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>spawning a <code>grphspace</code>.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>the schema that refines the <code>grphspace</code>.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>the <code>rec::T &gt; elmnt::T &gt; vrtx::T &gt; person::T</code>.</td>
+</tr>
+</table>
 </div>
 <div class="paragraph">
-<p>For those familiar with graph database and Gremlin graph traversal language, an assortment of common property graph traversals is provided below&#8201;&#8212;&#8201;written in mtron.</p>
+<p>Graph traversals in mtron are expressed using either <em>instruction-call</em> syntax or <em>uri-path</em> syntax. The uri-path form treats <code>OUT</code> and <code>IN</code> as path segments that route through the graph engine directly, without requiring <code>out()</code>, <code>in()</code>, etc. instruction calls. The same traversals expressed using both forms:</p>
 </div>
-<div class="listingblock">
+<table class="tableblock frame-all grid-all stretch table-bordered small center">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
+<div class="title">id-resolution traversals (path syntax)</div>
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *g:V/1     ​1​
-==&gt;person::[age=&gt;29,name=&gt;'marko']
-mtron&gt; *g:V/1.outE()     ​2​
-mtron&gt; *g:V/1.outE().inV()     ​3​
-mtron&gt; *g:V/1.out()     ​4​
-mtron&gt; *g:V/1.out(knows).out(created)     ​5​
-mtron&gt; *g:V/1.out(knows).out(created)&gt;&gt;name     ​6​</code></pre>
+==&gt;person::[name=&gt;'marko',age=&gt;29]@g:V/1
+mtron&gt; *g:V/1/OUT     ​2​
+==&gt;created::[weight=&gt;0.4000]@g:E/9
+==&gt;knows::[weight=&gt;0.5000]@g:E/7
+==&gt;knows::[weight=&gt;1.0000]@g:E/8
+mtron&gt; *g:V/1/OUT/created     ​3​
+==&gt;created::[weight=&gt;0.4000]@g:E/9
+mtron&gt; *g:V/1/OUT/created/IN     ​4​
+==&gt;software::[name=&gt;'lop',lang=&gt;'java']@g:V/3
+mtron&gt; *g:V/1/OUT/knows/IN/name     ​5​
+==&gt;'josh'
+==&gt;'vadas'
+mtron&gt; *g:V/1/OUT/knows/IN/+.count()     ​6​
+==&gt;2
+mtron&gt; *g:E/7/IN/name     ​7​
+==&gt;'vadas'</code></pre>
 </div>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
+<div class="title">instruction-call traversals (inst syntax)</div>
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *g:V/1     ​1​
+==&gt;person::[name=&gt;'marko',age=&gt;29]@g:V/1
+mtron&gt; *g:V/1.out()     ​2​
+==&gt;person::[name=&gt;'vadas',age=&gt;27]@g:V/2
+==&gt;person::[name=&gt;'josh',age=&gt;32]@g:V/4
+==&gt;software::[name=&gt;'lop',lang=&gt;'java']@g:V/3
+mtron&gt; *g:V/1.outE(created)     ​3​
+==&gt;created::[weight=&gt;0.4000]@g:E/9
+mtron&gt; *g:V/1.out(created)     ​4​
+==&gt;software::[name=&gt;'lop',lang=&gt;'java']@g:V/3
+mtron&gt; *g:V/1.out(knows)&gt;&gt;name     ​5​
+==&gt;'vadas'
+==&gt;'josh'
+mtron&gt; *g:V/1.out(knows).count()     ​6​
+==&gt;2
+mtron&gt; *g:E/7.inV()&gt;&gt;name     ​7​
+==&gt;'vadas'</code></pre>
 </div>
+</div></div></td>
+</tr>
+</tbody>
+</table>
 <div class="colist arabic">
 <table>
 <tr>
@@ -5364,30 +5538,51 @@ mtron&gt; *g:V/1.out(knows).out(created)&gt;&gt;name     ​6​</code></pre>
 </tr>
 <tr>
 <td><i class="conum" data-value="3"></i><b>3</b></td>
-<td>The incoming vertex incident to the outgoing edges of vertex <code>1</code>.</td>
+<td>Filter to only edges with label <code>created</code>.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="4"></i><b>4</b></td>
-<td>The outgoing adjacent vertices to vertex <code>1</code>.</td>
+<td>Traverse to the incoming vertex of the <code>created</code> edge.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="5"></i><b>5</b></td>
-<td>The vertices 2 steps away from vertex <code>1</code> whose relationship is created by people vertex <code>1</code> knows.</td>
+<td>The name of the people that vertex <code>1</code> knows.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="6"></i><b>6</b></td>
-<td>The incident name property value of the vertices 2 steps away.</td>
+<td>Count of the people that vertex <code>1</code> knows.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="7"></i><b>7</b></td>
+<td>Edge 7&#8217;s incoming vertex name.</td>
 </tr>
 </table>
 </div>
+<div class="openblock card">
+<div class="content">
+<h4 id="_graph_traversal_is_uri_resolution" class="discrete">graph traversal is uri resolution</h4>
 <div class="paragraph">
-<p>The <code>/m/grph</code> instruction extends the core <code>/m</code> instruction set with the following graph-oriented instructions. These
-navigations primitives hide the graph encoding specifics, enabling the same instructions to be used across different
-graph encodings (discussed later when presenting hypergraphs).</p>
+<p>At its core, metatron is a system designed to <em>resolve identifiers</em>. Every piece of data has a unique id&#8201;&#8212;&#8201;and in fact, many unique ids: for all the ways in which spaces inter- and intra-connect with one another and for what spaces allow semantically (space-dependent). In metatron, traversing a graph is ultimately about solving <strong>path equations</strong> (uri resolutions).</p>
 </div>
-<h3 id="_mgrphinst" class="discrete">/m/grph/inst</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">from()                  where()                          count()
+┌───┐               ┌──────────────┐                   ┌────────┐
+│ * │g:V/1/OUT/knows│=?=[age?&gt;29]&gt;&gt;│OUT/created/IN/name│.count()│
+└───┘               └──────────────┘                   └────────┘
+         out(knows)                  out(created)&gt;&gt;name</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>For example: <code>*g:V/1/OUT/knows</code> traverses via <strong>uri resolution</strong>. <code>*g:V/1.out(knows)</code> traverses via <strong>instruction evaluation</strong>. Both yield the same set of edges. The distinction lies in the fact that instructions are simply wrappers around a subset of the uri. The instructions <code>outE()</code>, <code>inV()</code>, <code>out()</code> — inherited from Gremlin — are <a href="https://en.wikipedia.org/wiki/Syntactic_sugar">syntactic sugar</a>.</p>
+</div>
+</div>
+</div>
+<h3 id="_grph_instset" class="discrete">grph instset</h3>
+<div class="paragraph">
+<p>The <code>/m/grph</code> instruction set extends the core <code>/m</code> instruction set with the following graph-oriented instructions. These navigation primitives hide the graph encoding specifics, enabling the same instructions to be used across different graph encodings (discussed later when presenting hypergraphs).</p>
+</div>
 <table class="tableblock frame-all grid-all stretch table-bordered small center">
-<caption class="title">Table 3. <code>/m/grph</code> instructions</caption>
 <colgroup>
 <col style="width: 36.3636%;">
 <col style="width: 27.2727%;">
@@ -5465,8 +5660,7 @@ graph encodings (discussed later when presenting hypergraphs).</p>
 </table>
 <h3 id="_property_graph_extensions" class="discrete">Property Graph Extensions</h3>
 <div class="paragraph">
-<p>mtron&#8217;s design makes possible a swathe of natural extensions to both the standard property graph data model and associated traversal and pattern-matching query engines.
-The following itemization summarizes some of the more consequential realizations.</p>
+<p>mtron&#8217;s design makes possible a swathe of natural extensions to both the standard property graph data model and associated traversal and pattern-matching query engines. The following itemization summarizes some of the more consequential realizations.</p>
 </div>
 <div class="olist arabic">
 <ol class="arabic">
@@ -5481,10 +5675,10 @@ The following itemization summarizes some of the more consequential realizations
 traversals.</p>
 </li>
 <li>
-<p><strong>process encodings</strong>: graph databases have historically been used for structuring data, where processing exists exogenous graph and executing only at query time. mtron&#8217;s <code>inst</code> objs make possible the graph encoding of processes, where, for example, vertices can become active objects within the larger application.</p>
+<p><strong>process encodings</strong>: graph databases have historically been used for structuring data, where processes are exogenous to the graph (and execute only at query time). mtron&#8217;s <code>inst</code> objs make possible the graph encoding of processes, where, for example, vertices can become active objects within the larger application.</p>
 </li>
 <li>
-<p><strong>sympathetic partitions</strong>: an mtron <code>poly</code> is not constrained to a single space nor within a single space, does an operation on the poly imply a particular physical layout of underlying data. In this way, mtron conveniently supports language agnostic retrieval of data across different physical layouts.</p>
+<p><strong>sympathetic partitions</strong>: an mtron <code>poly</code> is not constrained to a single space nor within a single space. Neither does an operation on the <code>poly</code> imply a particular physical layout of underlying data. In this way, mtron conveniently supports space agnostic retrieval of data across different physical layouts.</p>
 </li>
 </ol>
 </div>
@@ -5508,31 +5702,11 @@ The following examples demonstrate selection and filtering using multi-segment u
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; @g:V/1&gt;&gt;=+[address/home/city =&gt; 'santa fe',
                   address/work/city =&gt; 'nomansland']     ​1​
-==&gt;person::[address/work/city=&gt;'nomansland',age=&gt;29,name=&gt;'marko',address/home/city=&gt;'santa fe']@g:V/1
+==&gt;person::[name=&gt;'marko',age=&gt;29,address/home/city=&gt;'santa fe',address/work/city=&gt;'nomansland']@g:V/1
 mtron&gt; *g:V/1/address/home/city     ​2​
 ==&gt;'santa fe'
 mtron&gt; *g:V/+.=?=[address/+/city =&gt; 'santa fe']     ​3​
-==&gt;fail::[rhs does not match inst range:
-	noobj=&gt;(X=&gt;elmt::T[?[
-  {?}IN=&gt;[uri::T=&gt;edge{*}::T],
-  {?}OUT=&gt;[uri::T=&gt;edge{*}::T]]]@/m/grph/vrtx)][...]@/sys/fail/82
-==&gt;fail::[rhs does not match inst range:
-	noobj=&gt;(X=&gt;elmt::T[?[
-  {?}IN=&gt;[uri::T=&gt;edge{*}::T],
-  {?}OUT=&gt;[uri::T=&gt;edge{*}::T]]]@/m/grph/vrtx)][...]@/sys/fail/84
-==&gt;fail::[rhs does not match inst range:
-	noobj=&gt;(X=&gt;elmt::T[?[
-  {?}IN=&gt;[uri::T=&gt;edge{*}::T],
-  {?}OUT=&gt;[uri::T=&gt;edge{*}::T]]]@/m/grph/vrtx)][...]@/sys/fail/86
-==&gt;fail::[rhs does not match inst range:
-	noobj=&gt;(X=&gt;elmt::T[?[
-  {?}IN=&gt;[uri::T=&gt;edge{*}::T],
-  {?}OUT=&gt;[uri::T=&gt;edge{*}::T]]]@/m/grph/vrtx)][...]@/sys/fail/88
-==&gt;fail::[rhs does not match inst range:
-	noobj=&gt;(X=&gt;elmt::T[?[
-  {?}IN=&gt;[uri::T=&gt;edge{*}::T],
-  {?}OUT=&gt;[uri::T=&gt;edge{*}::T]]]@/m/grph/vrtx)][...]@/sys/fail/90
-==&gt;person::[address/work/city=&gt;'nomansland',age=&gt;29,name=&gt;'marko',address/home/city=&gt;'santa fe']@g:V/1
+==&gt;person::[address/work/city=&gt;'nomansland',name=&gt;'marko',address/home/city=&gt;'santa fe',age=&gt;29]@g:V/1
 mtron&gt; *g:V/+.==[address/+/city/ =&gt; _]     ​4​
 ==&gt;[address/+/city/=&gt;{address/work/city=&gt;'nomansland',address/home/city=&gt;'santa fe'}]
 mtron&gt; *g:V/+.&gt;&gt;address/+/city
@@ -5583,53 +5757,33 @@ mtron&gt; *g:V/+.&gt;&gt;address/#     ​7​
 <div class="content">
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *g:V/1==[_=&gt;_]     ​1​
-==&gt;[address/work/city=&gt;'nomansland',age=&gt;29,name=&gt;'marko',address/home/city=&gt;'santa fe']
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; @g:V/1==[_=&gt;_]     ​1​
+==&gt;[address/work/city=&gt;'nomansland',name=&gt;'marko',address/home/city=&gt;'santa fe',age=&gt;29]
 mtron&gt; @g:V/1&gt;&gt;=+[address=&gt;[
                     home =&gt; [city =&gt;'santa fe',
                              state=&gt;NM],
                     work =&gt; !*&lt;../home&gt;]]     ​2​
 ==&gt;person::[
- :address=&gt;[
-  home=&gt;[city=&gt;'santa fe',state=&gt;NM],
-  work=&gt;!*&lt;../home&gt;],
  address/work/city=&gt;'nomansland',
- age=&gt;29,
  name=&gt;'marko',
- address/home/city=&gt;'santa fe']@g:V/1
+ address/home/city=&gt;'santa fe',
+ age=&gt;29,
+ address=&gt;[
+  home=&gt;[city=&gt;'santa fe',state=&gt;NM],
+  work=&gt;!*&lt;../home&gt;]]@g:V/1
 mtron&gt; *g:V/1/address/home/city     ​3​
 ==&gt;'santa fe'
 mtron&gt; *g:V/+.=?=[address=&gt;[_ =&gt; [state=&gt;NM]]]     ​4​
-==&gt;fail::[rhs does not match inst range:
-	noobj=&gt;(X=&gt;elmt::T[?[
-  {?}IN=&gt;[uri::T=&gt;edge{*}::T],
-  {?}OUT=&gt;[uri::T=&gt;edge{*}::T]]]@/m/grph/vrtx)][...]@/sys/fail/92
-==&gt;fail::[rhs does not match inst range:
-	noobj=&gt;(X=&gt;elmt::T[?[
-  {?}IN=&gt;[uri::T=&gt;edge{*}::T],
-  {?}OUT=&gt;[uri::T=&gt;edge{*}::T]]]@/m/grph/vrtx)][...]@/sys/fail/94
-==&gt;fail::[rhs does not match inst range:
-	noobj=&gt;(X=&gt;elmt::T[?[
-  {?}IN=&gt;[uri::T=&gt;edge{*}::T],
-  {?}OUT=&gt;[uri::T=&gt;edge{*}::T]]]@/m/grph/vrtx)][...]@/sys/fail/96
-==&gt;fail::[rhs does not match inst range:
-	noobj=&gt;(X=&gt;elmt::T[?[
-  {?}IN=&gt;[uri::T=&gt;edge{*}::T],
-  {?}OUT=&gt;[uri::T=&gt;edge{*}::T]]]@/m/grph/vrtx)][...]@/sys/fail/98
-==&gt;fail::[rhs does not match inst range:
-	noobj=&gt;(X=&gt;elmt::T[?[
-  {?}IN=&gt;[uri::T=&gt;edge{*}::T],
-  {?}OUT=&gt;[uri::T=&gt;edge{*}::T]]]@/m/grph/vrtx)][...]@/sys/fail/100
 ==&gt;person::[
- :address=&gt;[
+ address=&gt;[
   home=&gt;[city=&gt;'santa fe',state=&gt;NM],
   work=&gt;!*&lt;../home&gt;],
  address/work/city=&gt;'nomansland',
- age=&gt;29,
  name=&gt;'marko',
- address/home/city=&gt;'santa fe']@g:V/1
+ address/home/city=&gt;'santa fe',
+ age=&gt;29]@g:V/1
 mtron&gt; *g:V/+.=?=[address=&gt;[_ =&gt; [state=&gt;NM]]].&gt;&gt;address/+/city     ​5​
-==&gt;fail::[MachInE faiLED][...]@/sys/fail/116</code></pre>
+==&gt;'santa fe'</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -5728,13 +5882,13 @@ mtron&gt; *g:V/+.=?=[address=&gt;[_ =&gt; [state=&gt;NM]]].&gt;&gt;address/+/cit
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *g:V/1     ​1​
 ==&gt;person::[
- :address=&gt;[
+ address=&gt;[
   home=&gt;[city=&gt;'santa fe',state=&gt;NM],
   work=&gt;!*&lt;../home&gt;],
  address/work/city=&gt;'nomansland',
- age=&gt;29,
  name=&gt;'marko',
- address/home/city=&gt;'santa fe']
+ address/home/city=&gt;'santa fe',
+ age=&gt;29]@g:V/1
 mtron&gt; *acme:customers/357     ​2​
 ==&gt;[
  customerName=&gt;'GiftsForHim.com',
@@ -5747,10 +5901,20 @@ mtron&gt; *acme:customers/357     ​2​
  salesRepEmployeeNumber=&gt;!*acme:employees/1612,
  creditLimit=&gt;77700.0000]
 mtron&gt; @g:V/1.addE(consulted,|*acme:customers/357)     ​3​
-==&gt;fail::[unable to convert vertexmap to rec::T[studio.phaseshift.metatron.isa.grph.grphInstSet:223]][...]@/sys/fail/122
+==&gt;consulted::[=&gt;]@g:E/30
 mtron&gt; *g:V/1.out(consulted)     ​4​
+==&gt;[
+ customerName=&gt;'GiftsForHim.com',
+ contactLastName=&gt;'MacKinlay',
+ contactFirstName=&gt;'Wales',
+ phone=&gt;'64-9-3763555',
+ addressLine1=&gt;'199 Great North Road',
+ city=&gt;'Auckland',
+ country=&gt;'New Zealand',
+ salesRepEmployeeNumber=&gt;!*acme:employees/1612,
+ creditLimit=&gt;77700.0000]
 mtron&gt; *g:V/1.out(consulted).matches(vrtx::T)     ​5​
-==&gt;false</code></pre>
+==&gt;true</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -5765,11 +5929,11 @@ mtron&gt; *g:V/1.out(consulted).matches(vrtx::T)     ​5​
 </tr>
 <tr>
 <td><i class="conum" data-value="3"></i><b>3</b></td>
-<td>an edge is created in the graph linking vertex <code>v[1]</code> and row <code>357</code>.</td>
+<td>an edge is created in the graph linking vertex <code>v[1]</code> to a reference vertex pointing to row <code>357</code>.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="4"></i><b>4</b></td>
-<td>the edge is traverseable like any other edge.</td>
+<td>traverses the edge to the reference vertex carrying the relational pointer.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="5"></i><b>5</b></td>
@@ -5778,9 +5942,13 @@ mtron&gt; *g:V/1.out(consulted).matches(vrtx::T)     ​5​
 </table>
 </div>
 <div class="paragraph">
-<p>The new <code>consulted</code>-edge has a standard vertex on its tail, but a "reference vertex"
-on its head. On this reference vertex is an auto-from instruction (<code>!*</code>), that when
-accessed, immediately resolves the monad&#8217;s data pointer to the respective relational database row.</p>
+<p>The <code>addE</code> instruction creates a native TinkerPop edge in the graph that links
+vertex <code>v[1]</code> to a newly created reference vertex. The reference vertex carries
+a <code>:redirect</code> property pointing into the relational database via an <code>!*</code> auto-from
+instruction. The <code>out(consulted)</code> instruction traverses the edge to the reference
+vertex, which can be type-checked against <code>vrtx::T</code> — the structural type system
+recognizes the reference vertex as a vertex. The <code>:redirect</code> pointer is resolved
+transparently when the vertex is dereferenced, bridging the two data sources.</p>
 </div>
 <div class="paragraph">
 <p>Some more expressions are provided below that extend what has been constructed in the previous example thus far.
@@ -5788,14 +5956,20 @@ These expressions highlight the nested structural pattern matching and data mani
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *g:V/1.out(consulted).-&lt;[
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *g:V/1.out(consulted)-&lt;[
          name    =&gt;"${&gt;&gt;contactFirstName} ${&gt;&gt;contactLastName}",
          address =&gt;==[city=&gt;_,country=&gt;_]]
+==&gt;[
+ name=&gt;'Wales MacKinlay',
+ address=&gt;[city=&gt;'Auckland',country=&gt;'New Zealand']]
 mtron&gt; *g:V/1.out(consulted)
-             .out(salesRepEmployeeNumber)
-             .out(reportsTo)-&lt;[
-               name=&gt;"${&gt;&gt;firstName} ${&gt;&gt;lastName}",
-               job=&gt;-&lt;[title=&gt;&gt;&gt;jobTitle,email=&gt;&gt;&gt;email]]</code></pre>
+         &gt;&gt;salesRepEmployeeNumber
+         &gt;&gt;reportsTo.-&lt;[
+           name  =&gt;"${&gt;&gt;firstName} ${&gt;&gt;lastName}",
+           job   =&gt;-&lt;[title=&gt;&gt;&gt;jobTitle,email=&gt;&gt;&gt;email]]
+==&gt;[
+ name=&gt;'William Patterson',
+ job=&gt;[title=&gt;'Sales Manager (APAC)',email=&gt;'wpatterson@classicmodelcars.com']]</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -5883,6 +6057,124 @@ nested structures existing across heterogeneous data sources.</p>
 </div>
 </div>
 </div>
+<div class="exampleblock secondary">
+<div class="title">sympathetic partitions</div>
+<div class="content">
+<div class="paragraph">
+<p>A vertex&#8217;s edges can span multiple storage backends. Hot edges (frequently traversed) live in an in-memory space; cold edges (archival) live in a disk-backed space. The vertex does not know the difference — <code>*/g/V/1/OUT/+</code> returns all edges regardless of where they reside.</p>
+</div>
+<div class="paragraph">
+<p>The following example configures the modern TinkerGraph dataset with two additional edge stores: <code>hot:</code> for in-memory edges and <code>cold:</code> for disk-backed edges.</p>
+</div>
+<div class="listingblock">
+<div class="title">hot and cold edge storage spaces</div>
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; memspace::[pattern  =&gt; &lt;/te/hot/#&gt;,
+                  route    =&gt; [/te/hot/  =&gt; &lt;&gt;]]@/sys/space/hot
+mtron&gt; tblespace::[pattern =&gt; &lt;/te/cold/#&gt;,
+                   route   =&gt; [/te/cold/ =&gt; &lt;&gt;],
+                   table   =&gt; [,],
+                   driver  =&gt; &lt;org.sqlite.JDBC&gt;,
+                   host    =&gt; &lt;sqlite:/tmp/cold.db&gt;]@/sys/space/cold</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Edge data is written into each space keyed by the vertex identifier.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; /te/hot/1/a  -&gt; [item   =&gt; 'laptop',
+                       total=&gt;1200.0,
+                       owner  =&gt; !*g:V/2]
+==&gt;[
+ item=&gt;'laptop',
+ total=&gt;1200.0000,
+ owner=&gt;!*g:V/2]
+mtron&gt; /te/hot/1/b  -&gt; [item   =&gt; 'mouse',total=&gt;25.0]
+==&gt;[item=&gt;'mouse',total=&gt;25.0000]
+mtron&gt; /te/cold/1/x -&gt; [item   =&gt; 'book',total=&gt;15.0,
+                       seller =&gt; !*g:V/4]
+==&gt;[
+ item=&gt;'book',
+ total=&gt;15.0000,
+ seller=&gt;!*g:V/4]</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Once seeded, the edges are accessible through the same <code>OUT</code> traversal used for native graph edges. The scheme prefix in the label (<code>te:hot</code>, <code>te:cold</code>) instructs the engine to route the read to the respective space.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch table-bordered small center">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
+<div class="title">traversing a distributed edge set (path syntax)</div>
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *g:V/1/OUT/te:hot/+.count()     ​1​
+==&gt;2
+mtron&gt; *g:V/1/OUT/te:hot/a/item     ​2​
+==&gt;'laptop'
+mtron&gt; *g:V/1/OUT/te:hot/a/owner/name     ​3​
+==&gt;'vadas'
+mtron&gt; *g:V/1/OUT/te:cold/x/total     ​4​
+==&gt;15.0000
+mtron&gt; *g:V/1/OUT/knows.count()     ​5​
+==&gt;2</code></pre>
+</div>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
+<div class="title">traversing a distributed edge set (instruction-call syntax)</div>
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *g:V/1.outE(te:hot).count()     ​1​
+==&gt;2
+mtron&gt; *g:V/1.outE(te:hot/a)&gt;&gt;item     ​2​
+==&gt;'laptop'
+mtron&gt; *g:V/1.outE(te:hot/a)&gt;&gt;owner&gt;&gt;name     ​3​
+==&gt;'vadas'
+mtron&gt; *g:V/1.outE(te:cold/x)&gt;&gt;total     ​4​
+==&gt;15.0000
+mtron&gt; *g:V/1.outE(knows).count()     ​5​
+==&gt;2</code></pre>
+</div>
+</div></div></td>
+</tr>
+</tbody>
+</table>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Count of hot edges for vertex <code>1</code> — returns <code>2</code>.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Specific hot edge property value — <code>"laptop"</code>.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>Passthrough: traverse hot edge → back to graph via <code>!*</code> reference → vertex name — <code>"vadas"</code>.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>Cold edge property value — <code>15.0</code>.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="5"></i><b>5</b></td>
+<td>Native graph edges coexist with external edges — returns <code>2</code>.</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>The reference <code>!*g:V/2</code> in the hot edge&#8217;s <code>owner</code> field creates an <code>auto_from</code> pointer back to the graph. When accessed via <code>/owner/name</code>, the pointer resolves to vertex <code>2</code> in the graph, and its <code>name</code> property returns <code>"vadas"</code>. The traversal path <code>graph → external edge → graph</code> is transparent to the user.</p>
+</div>
+<div class="paragraph">
+<p>The two syntactic forms — <code>*/g/V/1/OUT/te:hot/a/item</code> and <code>*g:V/1.outE(te:hot/a)&gt;&gt;item</code> — are dual representations of the same underlying identifier resolution. The <em>path form</em> decomposes into <code>g:V</code> (collection), <code>1</code> (entry), <code>OUT</code> (direction), <code>te:hot</code> (external-space label), <code>a</code> (edge key), and <code>item</code> (field). The <em>instruction form</em> wraps the same decomposition: <code>outE(te:hot/a)</code> encodes direction + label + key, and <code>&gt;&gt;item</code> projects the field. Both route through the graph engine&#8217;s <code>readVertexTraversal</code>, where the scheme prefix <code>te:</code> triggers a read from the external <code>memspace</code>. Whether expressed as uri-path segments or instruction calls, the traversal graph <code>⎡vertex⎦ &#8594; ⎡external edge⎦ &#8594; ⎡property⎦</code> is identical — the instructions are simply an alternate notation for the same underlying path resolution.</p>
+</div>
+</div>
+</div>
 <h3 id="_metatron_encoded_graphs" class="discrete">metatron Encoded Graphs</h3>
 <div class="paragraph">
 <p>It is possible to encode an arbitrary graph structure (i.e. any extension of \(G=(V,E)\)) in space. There are four aaspects of mtron that make graph encodings natural and universal&#8201;&#8212;&#8201;applicable in any metatron space, regardless of the underlying storage system.</p>
@@ -5893,7 +6185,7 @@ nested structures existing across heterogeneous data sources.</p>
 <p><code>!*</code> (<strong>auto_from</strong>): ensures that simply accessing a reference yields the reference&#8217;s referent. To the user, there is no difference between the graph elements being colocated in the same <code>poly</code>, within the same space, within the same computer, or across the web as a whole.</p>
 </li>
 <li>
-<p><code>&gt;&gt;</code> (<strong>forward</strong>): ensures monads move along the underlying data structure in a selective manner as needed to yield the desired resultant semantics.</p>
+<p><code>&gt;&gt;</code> (<strong>forward</strong>): ensures monads move along the underlying data structure in a manner respective of the provided argument.</p>
 </li>
 <li>
 <p><code>-&lt;</code> (<strong>split</strong>): ensures that executing monads will split themselves across branching graph paths and branching code paths.</p>
@@ -6295,14 +6587,7 @@ mtron&gt; *v1.out(knows).out(created).&gt;&gt;name     ​5​</code></pre>
 </div>
 </div>
 </div>
-<h3 id="_multi_spatial_graph_overlays" class="discrete">Multi-Spatial Graph Overlays</h3>
-<h4 id="_universal_extensions" class="discrete">Universal Extensions</h4>
-<div class="paragraph">
-<p>mtron&#8217;s reference-oriented meta-model offers near limitless opportunities for customizing standard data structures to meet specific needs. Customization can alter both the explicit structure (the user facing representation of the data) as well as the implicit structure (the way in which the data is layed out across the memory hierarchy).</p>
-</div>
-<div class="paragraph">
-<p>Typically, in real-world scenarios, not every vertex and edge of a graph are traversed with equal probability. Moreover, certain relations may require a faster query response time than others. mtron can be configured such that certain subgraphs are stored in an in-memory store while others are stored in a disk-based store.</p>
-</div>
+<h4 id="_performance_tiering" class="discrete">Performance Tiering</h4>
 <table class="tableblock frame-all grid-all stretch table-bordered small center">
 <colgroup>
 <col style="width: 33.3333%;">
@@ -6378,7 +6663,7 @@ mtron&gt; *v1.out(knows).out(created).&gt;&gt;name     ​5​</code></pre>
 </tbody>
 </table>
 <div class="paragraph">
-<p>The space constructor above uses the space route table to route <code>person</code>-vertex and <code>knows</code>-edge traversals to another space, namely <code>h:#</code>. Once specified, any <code>knows</code>-edge created between a <code>person</code>-vertex in <code>g:</code> to a <code>person</code>-vertex in <code>h:</code> is automatically configured with the appropriate <code>!*</code> reference. This ensures a smooth, user agnostic transition between two spaces being leveraged for their particular performance for various subgraphs of the large platonic graph as a whole.</p>
+<p>A typical configuration partitions subgraphs by access frequency. Frequently traversed <code>knows</code>-edges reside in <code>memspace</code> (sub-millisecond reads). Rarely queried <code>purchases</code>-edges reside in <code>tblespace</code> (disk-backed). The vertex&#8217;s <code>OUT</code> traversal remains a single expression regardless of how many spaces contribute edges.</p>
 </div>
 </div>
 <div class="collapse position-relative" id="card-15">
@@ -6520,14 +6805,14 @@ mtron&gt; *v1.out(knows).out(created).&gt;&gt;name     ​5​</code></pre>
 <div class="collapse position-relative" id="card-19">
 <button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-19" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
 <button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
-<h2 id="_web_technologies_with_mweb" class="discrete">Web Technologies with /m/web</h2>
+<h2 id="_web_technologies" class="discrete">Web Technologies</h2>
 <details>
 <summary class="title">/m/web instset import and space constructions</summary>
 <div class="content">
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; import(/m/web)
-==&gt;[
+==&gt;instset::[
  pattern=&gt;/m/web/#,
  q=&gt;[docq::[
  pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
@@ -6563,8 +6848,10 @@ mtron&gt; *v1.out(knows).out(created).&gt;&gt;name     ​5​</code></pre>
   mtron_http::T,
   mcp_http::T,
   mcp_mtron_http::T,
-  base::T],
+  mcp_server::T,
+  mcp_client::T],
  inst=&gt;[
+  ping?/m/math/time&lt;=#{?}(uri::T),
   format?str&lt;=markdown(),
   as?xml&lt;=str(xml::T),
   as?html&lt;=str(html::T),
@@ -6598,6 +6885,9 @@ mtron&gt; *v1.out(knows).out(created).&gt;&gt;name     ​5​</code></pre>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; html::T     ​1​
+==&gt;xml::T[?[html=&gt;[
+ head=&gt;[{?}title=&gt;str::T],
+ body=&gt;rec::T]]]@/m/web/html
 mtron&gt; *&lt;http://phaseshift.studio/splash.html&gt;     ​2​
 ==&gt;html::[html=&gt;[
  head=&gt;[
@@ -6684,40 +6974,51 @@ mtron&gt; *&lt;http://localhost:8088/api/models/config-json/${
          *&lt;http://localhost:8088/v1/models/data/0/id&gt;}&gt;
 ==&gt;[
  parameters=&gt;[
-  model=&gt;qwen3-tts-cpp,
-  top_p=&gt;0.9500,
+  model=&gt;'Qwen3-Coder-30B-A3B-Instruct-Q4_K_...',
+  top_p=&gt;0.8000,
   top_k=&gt;20,
   min_p=&gt;0,
-  temperature=&gt;0.6000,
+  temperature=&gt;0.7000,
   max_tokens=&gt;0,
   repeat_penalty=&gt;1,
   tfz=&gt;1,
   typical_p=&gt;1,
   seed=&gt;-1,
   logprobs=&gt;false],
- name=&gt;qwen3-tts-cpp,
+ name=&gt;qwen3-coder-30b-a3b-instruct,
  f16=&gt;false,
  threads=&gt;8,
  debug=&gt;false,
  embeddings=&gt;false,
- backend=&gt;qwen3-tts-cpp,
- template=&gt;[=&gt;],
- known_usecases=&gt;[FLAG_TTS],
+ backend=&gt;llama-cpp,
+ template=&gt;[
+  chat=&gt;"""{{.Input -}}
+&lt;|im_start|&gt;assistant
+""",
+  chat_message=&gt;'&lt;|im_start|&gt;{{if eq .RoleName "too...',
+  completion=&gt;"""{{.Input}}
+""",
+  function=&gt;"""&lt;|im_start|&gt;system
+You are a funct..."""],
+ known_usecases=&gt;[FLAG_CHAT,FLAG_COMPLETION],
  pipeline=&gt;[=&gt;],
  function=&gt;[grammar=&gt;[=&gt;]],
  reasoning=&gt;[=&gt;],
  mirostat_eta=&gt;0.1000,
  mirostat_tau=&gt;5,
  mirostat=&gt;0,
+ gpu_layers=&gt;99999999,
  mmap=&gt;true,
  mmlock=&gt;false,
  low_vram=&gt;false,
  reranking=&gt;false,
+ stopwords=&gt;[|im_end|,dummy32000,/s,|endoftext|],
  context_size=&gt;8192,
  limit_mm_per_prompt=&gt;[=&gt;],
  diffusers=&gt;[=&gt;],
  grpc=&gt;[=&gt;],
  tts=&gt;[=&gt;],
+ options=&gt;[gpu],
  mcp=&gt;[=&gt;],
  agent=&gt;[=&gt;]]</code></pre>
 </div>
@@ -6782,7 +7083,7 @@ mtron&gt; */m/llm/inst/+?dom=model</code></pre>
             type=&gt;&gt;&gt;object.as(uri::T),
             provider=&gt;|!*/sys/space/localai].as(model::T)
          .chat('are you there?')
-==&gt;fail::[notes requires a vid model][...]@/sys/fail/452
+==&gt;fail::[notes requires a vid model][...]@/sys/fail/420
 ==&gt;fail::[[
  type=&gt;model,
  provider=&gt;!*/sys/space/localai] is not a isa([
@@ -6813,7 +7114,7 @@ mtron&gt; */m/llm/inst/+?dom=model</code></pre>
    in=&gt;currency::T,
    out=&gt;currency::T],
    noobj=&gt;(==&gt;{?}size)=&gt;noobj=&gt;/=&gt;bB::T,
-   noobj=&gt;(==&gt;{?}feature)=&gt;noobj=&gt;/=&gt;feature::T]][...]@/sys/fail/446</code></pre>
+   noobj=&gt;(==&gt;{?}feature)=&gt;noobj=&gt;/=&gt;feature::T]][...]@/sys/fail/414</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -6828,14 +7129,14 @@ mtron&gt; */m/llm/inst/+?dom=model</code></pre>
 <div class="collapse position-relative" id="card-20">
 <button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-20" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
 <button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
-<h2 id="_dcmnt_space" class="discrete">Dcmnt Space</h2>
+<h2 id="_document_databases" class="discrete">Document Databases</h2>
 <details>
 <summary class="title">/m/dcmnt instset import</summary>
 <div class="content">
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; import(/m/dcmnt)
-==&gt;[
+==&gt;instset::[
  pattern=&gt;/m/dcmnt/#,
  q=&gt;[docq::[
  pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
@@ -7220,14 +7521,14 @@ if one is found, the reference is routed to the named scheme&#8217;s space.</p>
 <div class="collapse position-relative" id="card-21">
 <button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-21" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
 <button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
-<h2 id="_tble_space" class="discrete">Tble Space</h2>
+<h2 id="_relational_databases" class="discrete">Relational Databases</h2>
 <details>
 <summary class="title">/m/tble instset import</summary>
 <div class="content">
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; import(/m/tble)
-==&gt;[
+==&gt;instset::[
  pattern=&gt;/m/tble/#,
  q=&gt;[docq::[
  pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
@@ -7849,7 +8150,7 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
 <div class="collapse position-relative" id="card-22">
 <button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-22" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
 <button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
-<h2 id="_boot" class="discrete">Boot</h2>
+<h2 id="_the_boot_loader" class="discrete">The Boot Loader</h2>
 <div class="paragraph">
 <p>The boot process for metatron loads a few core components and then hands control over to a user-provided boot script. What the user&#8217;s boot script does determines the state and use of a particular metatron instance.</p>
 </div>
@@ -7959,20 +8260,20 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
     modern::T],
    inst=&gt;[
     gremlin?#{*}&lt;=grphspace(str::T),
-    label?uri&lt;=elmt(),
-    values?#{*}&lt;=elmt(uri{*}::T),
+    label?uri&lt;=rec(),
+    values?#{*}&lt;=rec(uri{*}::T),
     inV?vrtx&lt;=edge(),
     outV?vrtx&lt;=edge(),
-    bothV?vrtx&lt;=edge(),
-    out?vrtx{*}&lt;=vrtx(uri{*}::T),
-    in?vrtx{*}&lt;=vrtx(uri{*}::T),
-    both?vrtx{*}&lt;=vrtx(uri{*}::T),
+    bothV?vrtx{2}&lt;=edge(),
+    out?edge{*}&lt;=vrtx(uri{*}::T),
+    in?edge{*}&lt;=vrtx(uri{*}::T),
+    both?edge{*}&lt;=vrtx(uri{*}::T),
     outE?edge{*}&lt;=vrtx(uri{*}::T),
     inE?edge{*}&lt;=vrtx(uri{*}::T),
     bothE?edge{*}&lt;=vrtx(uri{*}::T),
-    addE?edge&lt;=vrtx(uri::T,vrtx{+}::T,rec{?}::T)],
+    addE?edge&lt;=vrtx(uri::T,rec{+}::T,rec{?}::T)],
    rewrite=&gt;[
-    /m/grph/inst/rewrite/graph_count?code{?}&lt;=code(),
+    /m/grph/inst/rewrite/graph_limit?code{?}&lt;=code(),
     /m/grph/inst/rewrite/out_incident_adjacent?code{?}&lt;=code(),
     /m/grph/inst/rewrite/in_incident_adjacent?code{?}&lt;=code()]]@/m/grph,
   /m/llm=&gt;instset::[
@@ -7986,8 +8287,6 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
    space=&gt;[super=&gt;!*/m],
    type=&gt;[
     catalog::T,
-    base::T,
-    mcp_client::T,
     tool::T,
     memory::T,
     user::T,
@@ -8092,6 +8391,48 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
  obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
  inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
    space=&gt;[sub=&gt;{!*/m/mach,!*/m/math,!*/m/web,!*/m/iot,!*/m/grph,!*/m/llm,!*/m/tble,!*/m/dcmnt,!*/m/rdf}],
+   rewrite=&gt;[
+    /m/inst/rewrite/id_removal?code{?}&lt;=code(),
+    /m/inst/rewrite/map_nest?code{?}&lt;=code(),
+    /m/inst/rewrite/else_after_count?code{?}&lt;=code(),
+    /m/inst/rewrite/plus_zero?code{?}&lt;=code(),
+    /m/inst/rewrite/mult_one?code{?}&lt;=code(),
+    /m/inst/rewrite/split_merge_collapse?code{?}&lt;=code(),
+    /m/inst/rewrite/split_merge_left_factor?code{?}&lt;=code(),
+    /m/inst/rewrite/split_merge_right_factor?code{?}&lt;=code()],
+   type=&gt;[
+    #::T,
+    bool::T,
+    int::T,
+    real::T,
+    bytes::T,
+    str::T,
+    uri::T,
+    rel::T,
+    lst::T,
+    rec::T,
+    instset::T,
+    inst::T,
+    code::T,
+    fail::T,
+    typer::T,
+    space{*}::T,
+    memspace::T,
+    stack::T,
+    qproc::T,
+    subq::T,
+    sub::T,
+    typeq::T,
+    docs::T,
+    docq::T,
+    mintq::T,
+    shortq::T,
+    incrq::T,
+    constq::T,
+    mimeq::T],
+   const=&gt;[
+    noobj,
+    none@none],
    inst=&gt;[
     as?bool&lt;=bool(bool::T),
     as?bytes&lt;=bool(bytes::T),
@@ -8310,7 +8651,7 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
     take?A{*}&lt;=A{*}(int::T),
     update?B&lt;=A(B::T),
     reify?rec&lt;=A(),
-    reduce(#::T),
+    reduce?A&lt;=A{*}(#{?}::T),
     where?A{?}&lt;=A(B::T),
     group?rec&lt;=#{*}(rec::T),
     eval?#{*}&lt;=#{?}(#::T),
@@ -8318,48 +8659,7 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
     rshift?B{*}&lt;=A(C{*}::T),
     lshift?B{*}&lt;=A(),
     start?A{**}&lt;=noobj{0}(A{**}::T),
-    ctor()],
-   rewrite=&gt;[
-    /m/inst/rewrite/id_removal?code{?}&lt;=code(),
-    /m/inst/rewrite/map_nest?code{?}&lt;=code(),
-    /m/inst/rewrite/else_after_count?code{?}&lt;=code(),
-    /m/inst/rewrite/plus_zero?code{?}&lt;=code(),
-    /m/inst/rewrite/mult_one?code{?}&lt;=code(),
-    /m/inst/rewrite/split_merge_collapse?code{?}&lt;=code(),
-    /m/inst/rewrite/split_merge_left_factor?code{?}&lt;=code(),
-    /m/inst/rewrite/split_merge_right_factor?code{?}&lt;=code()],
-   type=&gt;[
-    #::T,
-    bool::T,
-    int::T,
-    real::T,
-    bytes::T,
-    str::T,
-    uri::T,
-    rel::T,
-    lst::T,
-    rec::T,
-    instset::T,
-    inst::T,
-    code::T,
-    fail::T,
-    typer::T,
-    space{*}::T,
-    memspace::T,
-    stack::T,
-    qproc::T,
-    subq::T,
-    sub::T,
-    typeq::T,
-    docs::T,
-    docq::T,
-    mintq::T,
-    incrq::T,
-    constq::T,
-    mimeq::T],
-   const=&gt;[
-    noobj,
-    none@none]]@/m,
+    ctor()]]@/m,
   /m/iot=&gt;instset::[
    pattern=&gt;/m/iot/#,
    q=&gt;[docq::[
@@ -8448,8 +8748,10 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
     mtron_http::T,
     mcp_http::T,
     mcp_mtron_http::T,
-    base::T],
+    mcp_server::T,
+    mcp_client::T],
    inst=&gt;[
+    ping?/m/math/time&lt;=#{?}(uri::T),
     format?str&lt;=markdown(),
     as?xml&lt;=str(xml::T),
     as?html&lt;=str(html::T),
@@ -8478,7 +8780,11 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
     pB::T,
     currency::T,
     usd::T,
-    euro::T],
+    euro::T,
+    millis::T,
+    second::T,
+    minute::T,
+    hour::T],
    inst=&gt;[
     cos?real&lt;=#{?}(as(real::T)),
     sin?real&lt;=#{?}(real::T),
@@ -8511,9 +8817,12 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
   sub=&gt;[/m/space/qproc/subq/sub],
   data_size=&gt;[/m/math/data_size],
   mB=&gt;[/m/math/mB],
+  minute=&gt;[/m/math/minute],
+  hour=&gt;[/m/math/hour],
   pi=&gt;[/m/math/pi],
-  mcp_client=&gt;[/m/llm/mcp/mcp_client],
+  second=&gt;[/m/math/second],
   tB=&gt;[/m/math/tB],
+  millis=&gt;[/m/math/millis],
   lift=&gt;[/m/mach/inst/lift],
   sqrt=&gt;[/m/math/inst/sqrt],
   table=&gt;[/m/tble/table],
@@ -8522,12 +8831,11 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
   uri:c=&gt;[/m/inst/uri:c],
   bB=&gt;[/m/math/bB],
   which=&gt;[/m/mach/inst/which],
-  base=&gt;[/m/web/space/wsspace/mcp_server/base],
   atan2=&gt;[/m/math/inst/atan2],
-  graph_count=&gt;[/m/grph/inst/rewrite/graph_count],
   type=&gt;[/m/inst/type],
   httpspace=&gt;[/m/web/space/httpspace],
   log10=&gt;[/m/math/inst/log10],
+  graph_limit=&gt;[/m/grph/inst/rewrite/graph_limit],
   elmt=&gt;[/m/grph/elmt],
   group=&gt;[/m/inst/group],
   exp=&gt;[/m/math/inst/exp],
@@ -8554,6 +8862,7 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
   http_handler=&gt;[/m/web/space/httpspace/http_handler],
   inv=&gt;[/m/inst/inv],
   stdin=&gt;[/sys/io/stdin],
+  ping=&gt;[/m/web/inst/ping],
   out=&gt;[/m/grph/inst/out],
   in=&gt;[/m/grph/inst/in],
   dedup=&gt;[/m/inst/dedup],
@@ -8561,6 +8870,7 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
   catch=&gt;[/m/inst/catch],
   choose=&gt;[/m/inst/choose],
   cause=&gt;[/m/inst/cause],
+  mcp_server=&gt;[/m/web/mcp_server],
   isa=&gt;[/m/inst/isa],
   dir=&gt;[/m/mach/dir],
   html=&gt;[/m/web/html],
@@ -8621,8 +8931,8 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
   constq=&gt;[/m/space/qproc/constq],
   lrow=&gt;[/m/tble/lrow],
   monad=&gt;[/m/mach/monad],
-  auto=&gt;[/m/inst/auto],
   inst=&gt;[/m/inst],
+  auto=&gt;[/m/inst/auto],
   machine=&gt;[/m/mach/machine],
   dcmntspace=&gt;[/m/dcmnt/space/dcmntspace],
   rshift=&gt;[/m/inst/rshift],
@@ -8675,15 +8985,15 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
   reduce=&gt;[/m/inst/reduce],
   to=&gt;[/m/inst/to],
   skip=&gt;[/m/inst/skip],
-  port=&gt;[/m/inst/port],
   space=&gt;[/m/space],
+  port=&gt;[/m/inst/port],
   bothV=&gt;[/m/grph/inst/bothV],
   inE=&gt;[/m/grph/inst/inE],
   println=&gt;[/m/inst/println],
   instset=&gt;[/m/instset],
   gte=&gt;[/m/inst/gte],
-  scheme=&gt;[/m/inst/scheme],
   real=&gt;[/m/real],
+  scheme=&gt;[/m/inst/scheme],
   rrow=&gt;[/m/tble/rrow],
   start=&gt;[/m/inst/start],
   tblespace=&gt;[/m/tble/space/tblespace],
@@ -8692,6 +9002,7 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
   incrq=&gt;[/m/space/qproc/incrq],
   apply=&gt;[/m/inst/apply],
   rng=&gt;[/m/inst/rng],
+  mcp_client=&gt;[/m/web/mcp_client],
   thread=&gt;[/m/inst/thread],
   minus=&gt;[/m/inst/minus],
   tid=&gt;[/m/inst/tid],
@@ -8750,6 +9061,7 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
   rec=&gt;[/m/rec],
   router=&gt;[/m/mach/router],
   sin=&gt;[/m/math/inst/sin],
+  shortq=&gt;[/m/space/qproc/shortq],
   vid=&gt;[/m/inst/vid],
   abs=&gt;[/m/math/inst/abs],
   css=&gt;[/m/web/css],
@@ -8828,12 +9140,12 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
 ==&gt;/sys/env/BUN_INSTALL=&gt;'/home/killswitch/.bun'
 ==&gt;/sys/env/JAVA_HOME=&gt;'/home/killswitch/.sdkman/candidates/java/current'
 ==&gt;/sys/env/QT_IM_MODULE=&gt;'ibus'
+==&gt;/sys/env/SESSION_MANAGER=&gt;'local/booger:@/tmp/.ICE-unix/4114,unix/booger:/tmp/.ICE-unix/4114'
 ==&gt;/sys/env/GNOME_DESKTOP_SESSION_ID=&gt;'this-is-deprecated'
 ==&gt;/sys/env/HOMEBREW_CELLAR=&gt;'/home/linuxbrew/.linuxbrew/Cellar'
 ==&gt;/sys/env/JBANG_HOME=&gt;'/home/killswitch/.sdkman/candidates/jbang/current'
 ==&gt;/sys/env/USER=&gt;'killswitch'
-==&gt;/sys/env/HOMEBREW_PREFIX=&gt;'/home/linuxbrew/.linuxbrew'
-==&gt;/sys/env/LIBVIRT_DEFAULT_URI=&gt;'qemu:///system'</code></pre>
+==&gt;/sys/env/HOMEBREW_PREFIX=&gt;'/home/linuxbrew/.linuxbrew'</code></pre>
 </div>
 </div>
 <h3 id="_boot_loader" class="discrete">Boot Loader</h3>
@@ -8966,7 +9278,7 @@ console::[        =&gt; ]@/sys/console;
 <div class="collapse position-relative" id="card-23">
 <button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-23" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
 <button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
-<h2 id="_rdf_space" class="discrete">RDF Space</h2>
+<h2 id="_resource_description_framework" class="discrete">Resource Description Framework</h2>
 </div>
 </div>
 </div>

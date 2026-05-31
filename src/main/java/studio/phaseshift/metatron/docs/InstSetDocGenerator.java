@@ -198,7 +198,6 @@ public class InstSetDocGenerator {
     }
 
     private static void boot(final String bootFile) {
-        TypeCheck.disable(TypeCheck.code_resolve);
         BootLoader.BOOTING = true;
         BootLoader.TESTING = true;
         BootLoader.load(MRec.rec(MUri.uri(LOGG), MUri.uri("info"), MUri.uri(BOOT), MUri.uri(bootFile)));
@@ -211,6 +210,7 @@ public class InstSetDocGenerator {
             Router.writeToSpace(is);
             is.setup();
         }
+        TypeCheck.disable(TypeCheck.code_resolve);
     }
 
     // ========================================================================

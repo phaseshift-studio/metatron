@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.m.type;
 
+import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
@@ -144,7 +145,7 @@ public interface InstSet extends Space {
 
     static void importInstSet(final fURI vid, final fURI prefix) {
         importInstSetStream(vid, prefix).forEach(isa -> {
-            Graphitty.log(isa.getClass()).error("loading instruction set: %s", isa);
+            Graphitty.log(isa).info("loading instruction set: %s", isa.vidOrTid());
         });
     }
 

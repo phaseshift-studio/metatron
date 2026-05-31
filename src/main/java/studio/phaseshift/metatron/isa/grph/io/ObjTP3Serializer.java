@@ -22,8 +22,9 @@ import org.apache.tinkerpop.gremlin.structure.Edge;
 import org.apache.tinkerpop.gremlin.structure.Element;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.grph.space.EdgeMap;
-import studio.phaseshift.metatron.isa.grph.space.VertexMap;
+import studio.phaseshift.metatron.isa.grph.space.EdgeRec;
+import studio.phaseshift.metatron.isa.grph.space.VertexRec;
+import studio.phaseshift.metatron.isa.grph.space.grphSpace;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.io.type.AbstractObjSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjByteBufferSerializer;
@@ -64,7 +65,8 @@ public class ObjTP3Serializer extends AbstractObjSerializer<Element> {
 
     @Override
     public Obj read(final Element data) throws MTronException {
-        return data instanceof Vertex ? VertexMap.vertexToRec((Vertex) data) : EdgeMap.edgeToRec((Edge) data);
+        return data instanceof Vertex v ? (Obj) new VertexRec(v, grphSpace.from(v))
+                                      : (Obj) new EdgeRec((Edge) data, grphSpace.from((Edge) data));
     }
 
     @Override

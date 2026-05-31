@@ -46,7 +46,7 @@ public interface Machine extends Call, Ring<Call> {
             .vid(MACH_MACHINE_TID)
             .isaPredicate(rec(
                     uri(HALTED), T(ALL_STAR),
-                    uri(RUNNING), T(MACH_MONAD_TID.maybeSome()),
+                    uri(RUN), T(MACH_MONAD_TID.maybeSome()),
                     uri(BARRIER), LST_TYPE))
             .create();
 
@@ -77,7 +77,7 @@ public interface Machine extends Call, Ring<Call> {
     }
 
     default Obj running() {
-        return this.jvm().get(uri(RUNNING));
+        return this.jvm().get(uri(RUN));
     }
 
     default Code code() {
