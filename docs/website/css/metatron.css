@@ -1459,8 +1459,6 @@ th {
 .hljs-mtron-int,
 .hljs-mtron-str,
 .hljs-mtron-bool,
-.hljs-mtron-sugar-inst,
-.hljs-mtron-dom-rng-query,
 .hljs-mtron-sys-furi,
 .hljs-mtron-coefficient,
 .hljs-mtron-log-warn {
@@ -1494,6 +1492,8 @@ th {
 }
 
 .hljs-mtron-rec,
+.hljs-mtron-dom-rng-query,
+.hljs-mtron-sugar-inst,
 .hljs-mtron-prompt-begin,
 .hljs-mtron-pipe,
 .hljs-mtron-log-error,
