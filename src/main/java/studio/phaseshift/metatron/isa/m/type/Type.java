@@ -371,7 +371,7 @@ public interface Type extends Obj {
         public Builder constructor(final Function<Obj, Obj> function) {
             if (null == this.vid)
                 throw MTronException.of("vid must be set prior to specifying constructor");
-            return this.constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(this.vid), lst(T(ALL)), (lhs, inst) -> function.apply(inst.arg(0))));
+            return this.constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(this.vid), lst(T(this.tid)), (lhs, inst) -> function.apply(inst.arg(0))));
         }
 
         public Builder constructor(final Supplier<Obj> supplier) {

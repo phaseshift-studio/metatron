@@ -272,6 +272,9 @@ bin/metatron</code></pre>
  obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
  inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
  space=&gt;[sub=&gt;{!*/m/mach,!*/m/math,!*/m/web,!*/m/iot,!*/m/grph,!*/m/llm,!*/m/tble,!*/m/dcmnt,!*/m/rdf}],
+ const=&gt;[
+  noobj,
+  none@none],
  type=&gt;[
   #::T,
   bool::T,
@@ -537,10 +540,7 @@ bin/metatron</code></pre>
   rshift?B{*}&lt;=A(C{*}::T),
   lshift?B{*}&lt;=A(),
   start?A{**}&lt;=noobj{0}(A{**}::T),
-  ctor()],
- const=&gt;[
-  noobj,
-  none@none]]@/m</code></pre>
+  ctor()]]@/m</code></pre>
                     </div>
                 </div>
             </div>
@@ -1057,6 +1057,9 @@ bin/metatron</code></pre>
  obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
  inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
  space=&gt;[sub=&gt;{!*/m/mach,!*/m/math,!*/m/web,!*/m/iot,!*/m/grph,!*/m/llm,!*/m/tble,!*/m/dcmnt,!*/m/rdf}],
+ const=&gt;[
+  noobj,
+  none@none],
  type=&gt;[
   #::T,
   bool::T,
@@ -1322,10 +1325,7 @@ bin/metatron</code></pre>
   rshift?B{*}&lt;=A(C{*}::T),
   lshift?B{*}&lt;=A(),
   start?A{**}&lt;=noobj{0}(A{**}::T),
-  ctor()],
- const=&gt;[
-  noobj,
-  none@none]]@/m</code></pre></div>
+  ctor()]]@/m</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">the core instruction set of metatron containing the base types and useful instructions to manipulate them</p>
 </div>
@@ -1366,7 +1366,7 @@ bin/metatron</code></pre>
         </span>
         <small class="text-muted code">/m/math/bB</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">data_size::T[][ctor?bB&lt;=#{?}(#::T)]@/m/math/bB</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">data_size::T[][ctor?bB&lt;=#{?}(data_size::T)]@/m/math/bB</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a byte of data</p>
 </div>
@@ -1473,7 +1473,7 @@ true.or(_,not(_))  [-- true -- ]</code></pre>
         </span>
         <small class="text-muted code">/m/space/qproc/docq</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">qproc::T[][ctor?docq&lt;=#{?}(#::T)]@/m/space/qproc/docq</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">qproc::T[][ctor?docq&lt;=#{?}(qproc::T)]@/m/space/qproc/docq</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">addr documentation qproc</p>
 </div><div class="card-body border-top py-2">
@@ -1495,7 +1495,7 @@ true.or(_,not(_))  [-- true -- ]</code></pre>
   {?}rng=&gt;str::T,
   {?}args=&gt;#::T,
   desc=&gt;str::T,
-  {?}example=&gt;lst::T]][ctor?docs&lt;=#{?}(#::T)]@/m/space/qproc/docq/docs</code></pre></div>
+  {?}example=&gt;lst::T]][ctor?docs&lt;=#{?}(rec::T)]@/m/space/qproc/docq/docs</code></pre></div>
     
 </div><div class="card mb-3" id="type-fail">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1522,7 +1522,7 @@ fail::[dah] + 2 + catch(9)  [-- fail flattened to 9       --]</code></pre>
         </span>
         <small class="text-muted code">/m/math/gB</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">data_size::T[][ctor?gB&lt;=#{?}(#::T)]@/m/math/gB</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">data_size::T[][ctor?gB&lt;=#{?}(data_size::T)]@/m/math/gB</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a gigabyte (1024 megabytes) of data</p>
 </div>
@@ -1534,7 +1534,7 @@ fail::[dah] + 2 + catch(9)  [-- fail flattened to 9       --]</code></pre>
         </span>
         <small class="text-muted code">/m/math/hour</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/math/time::T[][ctor?hour&lt;=#{?}(#::T)]@/m/math/hour</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/math/time::T[][ctor?hour&lt;=#{?}(time::T)]@/m/math/hour</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">an hour of time (60 minutes)</p>
 </div>
@@ -1608,7 +1608,7 @@ abc(a=&gt;?int::T,b=&gt;|(*a +10)){ _.*b }       [-- dependent arg inst    --]
   {?}type=&gt;{?}[#{*}::T],
   {?}inst=&gt;{?}[inst::T],
   {?}rewrite=&gt;{?}[inst::T],
-  {?}sugar=&gt;{?}[lst::T]]][ctor?instset&lt;=#{?}(#::T)]@/m/instset</code></pre></div>
+  {?}sugar=&gt;{?}[lst::T]]][ctor?instset&lt;=#{?}(rec::T)]@/m/instset</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">an aggregate of consts, types, insts, rewrites, and sugars structuring a domain of discourse</p>
 </div><div class="card-body py-2">
@@ -1664,7 +1664,7 @@ abc(a=&gt;?int::T,b=&gt;|(*a +10)){ _.*b }       [-- dependent arg inst    --]
         </span>
         <small class="text-muted code">/m/math/kB</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">data_size::T[][ctor?kB&lt;=#{?}(#::T)]@/m/math/kB</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">data_size::T[][ctor?kB&lt;=#{?}(data_size::T)]@/m/math/kB</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a kilobyte (1024 bytes) of data</p>
 </div>
@@ -1694,7 +1694,7 @@ abc(a=&gt;?int::T,b=&gt;|(*a +10)){ _.*b }       [-- dependent arg inst    --]
         </span>
         <small class="text-muted code">/m/math/mB</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">data_size::T[][ctor?mB&lt;=#{?}(#::T)]@/m/math/mB</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">data_size::T[][ctor?mB&lt;=#{?}(data_size::T)]@/m/math/mB</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a megabyte (1024 kilobytes) of data</p>
 </div>
@@ -1720,7 +1720,7 @@ abc(a=&gt;?int::T,b=&gt;|(*a +10)){ _.*b }       [-- dependent arg inst    --]
         </span>
         <small class="text-muted code">/m/math/millis</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/math/time::T[][ctor?millis&lt;=#{?}(#::T)]@/m/math/millis</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/math/time::T[][ctor?millis&lt;=#{?}(time::T)]@/m/math/millis</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a millisecond of time</p>
 </div>
@@ -1759,7 +1759,7 @@ abc(a=&gt;?int::T,b=&gt;|(*a +10)){ _.*b }       [-- dependent arg inst    --]
         </span>
         <small class="text-muted code">/m/math/minute</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/math/time::T[][ctor?minute&lt;=#{?}(#::T)]@/m/math/minute</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/math/time::T[][ctor?minute&lt;=#{?}(time::T)]@/m/math/minute</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a minute of time (60 seconds)</p>
 </div>
@@ -1771,7 +1771,7 @@ abc(a=&gt;?int::T,b=&gt;|(*a +10)){ _.*b }       [-- dependent arg inst    --]
         </span>
         <small class="text-muted code">/m/math/pB</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">data_size::T[][ctor?pB&lt;=#{?}(#::T)]@/m/math/pB</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">data_size::T[][ctor?pB&lt;=#{?}(data_size::T)]@/m/math/pB</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a petabyte (1024 terabytes) of data</p>
 </div>
@@ -1892,7 +1892,7 @@ a=&gt;b=&gt;c=&gt;d&gt;&gt;.&gt;&gt;  [-- c=&gt;d           --]
         </span>
         <small class="text-muted code">/m/math/second</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/math/time::T[][ctor?second&lt;=#{?}(#::T)]@/m/math/second</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/math/time::T[][ctor?second&lt;=#{?}(time::T)]@/m/math/second</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a second of time (1000 millis)</p>
 </div>
@@ -2008,7 +2008,7 @@ a?subq         -&gt; |(&gt;&gt;1+1.println(_).to(a)) [-- infinite incr loop     
         </span>
         <small class="text-muted code">/m/math/tB</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">data_size::T[][ctor?tB&lt;=#{?}(#::T)]@/m/math/tB</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">data_size::T[][ctor?tB&lt;=#{?}(data_size::T)]@/m/math/tB</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a terabyte (1024 gigabytes) of data</p>
 </div>
@@ -2068,7 +2068,7 @@ abc?typeq -&gt; &#39;not an int&#39; [-- yields a fail::T --]</code></pre>
   inst_rng=&gt;bool::T,
   type_ctor=&gt;bool::T,
   code_resolve=&gt;bool::T,
-  obj_write=&gt;bool::T]][ctor?typer&lt;=#{?}(#::T)]@/m/sys/typer</code></pre></div>
+  obj_write=&gt;bool::T]][ctor?typer&lt;=#{?}(rec::T)]@/m/sys/typer</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">stages where the type checker should be applied.
 the more stages that are active, the slower instructions evaluate.

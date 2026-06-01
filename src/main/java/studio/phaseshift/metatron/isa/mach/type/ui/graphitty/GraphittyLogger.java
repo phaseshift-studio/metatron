@@ -164,11 +164,7 @@ public class GraphittyLogger extends LayoutBase<ILoggingEvent> {
                 level.name().length() == 4 ? " " : "",
                 msg));
     }
-
-    public void ero() {
-
-    }
-
+    
     public enum OtherLevel {NONE, EXCEPT}
 
     protected final Object source;

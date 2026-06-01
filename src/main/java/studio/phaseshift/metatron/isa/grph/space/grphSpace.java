@@ -257,7 +257,7 @@
                          Obj result = kv.obj();
                          for (final String seg : cascadeSegs) {
                              if ("+".equals(seg)) continue;
-                 if ("#".equals(seg)) break;
+                             if ("#".equals(seg)) break;
                              result = result.asRec().at(uri(seg));
                          }
                          return result.stream().map(o -> IdObj.of(kv.furi(), o));
@@ -333,8 +333,8 @@
                                  IteratorUtil.stream(this.sjvm().vertices()),
                                  IteratorUtil.stream(this.sjvm().edges()))
                          .map(e -> IdObj.of(this.elementVID(e), e instanceof Vertex v ?
-                                 (Obj) new VertexRec(v, this) :
-                                 (Obj) new EdgeRec((Edge) e, this))).iterator();
+                                 new VertexRec(v, this) :
+                                 new EdgeRec((Edge) e, this))).iterator();
              } else {
                  final fURI routed = Space.Helper.routeFromSpace(pattern, this.routes());
                  LOG.debug("reading tp3 vid: %s => %s", pattern, routed);

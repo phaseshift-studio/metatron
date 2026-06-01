@@ -28,15 +28,25 @@ import studio.phaseshift.metatron.util.MTronException;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_FALSE;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TRUE;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
  * A metatron global type-checking configuration for specifying varying levels of type-safety.
  */
 public enum TypeCheck {
+    /**
+     * require code to be fully resolved pre-evaluation
+     */
+    code_resolve,
+    /**
+     * require inst range type match post-evaluation
+     */
+    inst_rng,
     /**
      * require type constructor match for obj creation
      */
@@ -46,25 +56,16 @@ public enum TypeCheck {
      */
     obj_write,
     /**
-     * require inst range type match post-evaluation
-     */
-    inst_rng,
-    /**
      * require inst domain type match pre-evaluation
      */
-    inst_dom,
-    /**
-     * require code to be fully resolved pre-evaluation
-     */
-    code_resolve;
+    inst_dom;
+
 
     private static final Set<TypeCheck> TYPE_CHECKS = new LinkedHashSet<>(List.of(values()));
 
     public static void init(final Rec typer) {
         TYPE_CHECKS.clear();
-        typer.elements().filter(r -> r.second().boolValue()).map(Rel::first).forEach(stages -> {
-            TYPE_CHECKS.add(TypeCheck.valueOf(stages.uriValue().toString()));
-        });
+        Stream.of(TypeCheck.values()).filter(tc -> typer.at(uri(tc.name())).orElse(BOOL_FALSE).boolValue()).forEachOrdered(TYPE_CHECKS::add);
     }
 
     public boolean enabled() {

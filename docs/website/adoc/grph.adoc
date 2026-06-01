@@ -82,7 +82,7 @@ Graph traversals in mtron are expressed using either __instruction-call__ syntax
 [mtron]
 ----
 *g:V/1                          [-- <1> --]
-*g:V/1.out()                    [-- <2> --]
+*g:V/1.outE()                   [-- <2> --]
 *g:V/1.outE(created)            [-- <3> --]
 *g:V/1.out(created)             [-- <4> --]
 *g:V/1.out(knows)>>name         [-- <5> --]
@@ -251,6 +251,8 @@ grphspace::
               g:E => E,
               g:S => /m/grph/inst/schema/modern],
   native  => [factory => mfactory::[=>],
+              gremlin =>
+                graph => <org.apache..TinkerGraph>
               load    => modern]]@/sys/space/modern
 ----
 🧱
@@ -292,11 +294,11 @@ The `addE` instruction creates a native TinkerPop edge in the graph that links
 vertex `v[1]` to a newly created reference vertex. The reference vertex carries
 a `:redirect` property pointing into the relational database via an `!*` auto-from
 instruction. The `out(consulted)` instruction traverses the edge to the reference
-vertex, which can be type-checked against `vrtx::T` — the structural type system
-recognizes the reference vertex as a vertex. The `:redirect` pointer is resolved
-transparently when the vertex is dereferenced, bridging the two data sources.
+vertex — the structural type system recognizes the reference vertex as a `vrtx::T`. 
+The `:redirect` pointer is resolved transparently when the vertex is accessed, 
+bridging the two data sources.
 
-Some more expressions are provided below that extend what has been constructed in the previous example thus far.
+Some more expressions are provided below that extend what has been constructed thus far.
 These expressions highlight the nested structural pattern matching and data manipulation capabilities of mtron.
 
 [mtron]

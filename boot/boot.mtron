@@ -3,11 +3,11 @@
  web    => [
    http/host  => <http://localhost:8777>,
    ws/host    => <ws://localhost:8555>],
- typer/stage  => [inst_dom     => true, 
+ typer/stage  => [code_resolve => false,
                   inst_rng     => true,
                   type_ctor    => true,
                   obj_write    => true,
-                  code_resolve => false]]
+                  inst_dom     => true]]
 [===============]
 [== inst_rng,type_ctor,obj_write] ==]
 [== metatron example boot ==]
@@ -177,7 +177,6 @@ mqttspace::[pattern => <ha:#>,
 *<mtronfs:instset/ai.mtron>;
 *<mtronfs:agent.mtron>;
 console::[=>]@/usr/ui/console;
-*boot/args.print(_,'\n');
-print('\n{{y}}mounting {{b}}boot/usr/# {{y}}to {{b}}/usr/# {{g}}(count:{{y}}${*x}{{g}}){{X}}\n');
+*boot/args.print("*boot/args:\n",_,"\n");
  
 

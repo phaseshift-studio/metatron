@@ -191,7 +191,7 @@ public interface Space extends Rec, Closeable {
             final Uri vidURI = uri(vid);
             return routes.entrySet().stream()
                     //.sorted(Map.Entry.comparingByKey(Comparator.reverseOrder()))
-                    .filter(e -> vid.hasPrefix(e.getValue().apply(vidURI).uriValue()))
+                    .filter(e -> vid.toString().startsWith(e.getValue().apply(vidURI).uriValue().toString()))
                     .map(e -> e.getKey().apply(vidURI).uriValue().extend(vid.toString().replaceFirst(e.getValue().apply(vidURI).uriValue().toString(), "")).q(vid.qMap()))
                     .findFirst()
                     .orElse(vid);

@@ -89,8 +89,12 @@ public class fsSpace extends AbstractSpace<FileSystem> {
 
     public static File staticObjToFile(final Obj obj) {
         try {
-            final fsSpace space = Router.global().getSpaceFor(obj.uriValue().basePath()).as();
-            return new File(space.redirect(obj.uriValue().basePath(), true).toString());
+            final Space space = Router.global().getSpaceFor(obj.uriValue().basePath());
+            if (space instanceof fsSpace) {
+                return new File(space.redirect(obj.uriValue().basePath(), true).toString());
+            } else {
+                throw MTronException.of("obj not embedded in a %s: %s", FS_SPACE_TID, obj);
+            }
         } catch (final Exception e) {
             throw MTronException.of(e);
         }

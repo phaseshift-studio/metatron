@@ -65,8 +65,9 @@ public class ObjTP3Serializer extends AbstractObjSerializer<Element> {
 
     @Override
     public Obj read(final Element data) throws MTronException {
-        return data instanceof Vertex v ? (Obj) new VertexRec(v, grphSpace.from(v))
-                                      : (Obj) new EdgeRec((Edge) data, grphSpace.from((Edge) data));
+        return data instanceof Vertex v ?
+                new VertexRec(v, grphSpace.from(v))
+                : new EdgeRec((Edge) data, grphSpace.from(data));
     }
 
     @Override

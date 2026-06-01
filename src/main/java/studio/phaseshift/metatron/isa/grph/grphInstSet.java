@@ -114,16 +114,18 @@ public class grphInstSet extends AbstractInstSet {
     /// ////////////////////////////////////////////////////////////////////////////////////////////////////////////
     /// ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    /** Resolve the element VID: prefer Obj VID, check ElementRec fields, unwrap Objs. */
+    /**
+     * Resolve the element VID: prefer Obj VID, check ElementRec fields, unwrap Objs.
+     */
     private static fURI resolveVid(final Obj lhs) {
         fURI base = lhs.vid();
         if (base == null && lhs instanceof ElementRec<?> er)
-            base = er.elementVid();
+            base = er.elementVID();
         // lhs could be an Objs wrapping multiple vertices — search inside for ElementRec
         if (base == null && lhs.isObjs()) {
             base = lhs.stream()
                     .filter(o -> o instanceof ElementRec<?>)
-                    .map(o -> ((ElementRec<?>) o).elementVid())
+                    .map(o -> ((ElementRec<?>) o).elementVID())
                     .findFirst().orElse(null);
         }
         return base;
@@ -288,19 +290,19 @@ public class grphInstSet extends AbstractInstSet {
                             return objs(inst.arg(1).stream().map(otherV -> {
                                 final Vertex inVertex;
                                 final Edge edge;
-                                if (otherV instanceof VertexRec ovr) {
-                                    inVertex = ovr.vertex();
+                                if (otherV instanceof VertexRec otherVRec) {
+                                    inVertex = otherVRec.vertex();
                                 } else {
                                     final Optional<fURI> pointer = Obj.Helper.getPointer(otherV);
                                     if (pointer.isPresent()) {
                                         inVertex = graph.addVertex(
-                                                org.apache.tinkerpop.gremlin.structure.T.label, otherV.apply(noobj()).tid().toString(),
+                                                org.apache.tinkerpop.gremlin.structure.T.label, otherV.apply(noobj()).tid().big().toString(),
                                                 REDIRECT_STRING, SERIALIZER.write(auto_from_(pointer.get())));
                                     } else {
                                         throw MTronException.of("invalid edge vertex: %s", otherV);
                                     }
                                 }
-                                edge = outVertex.addEdge(edgeLabel.toString(), inVertex);
+                                edge = outVertex.addEdge(edgeLabel.small().toString(), inVertex);
                                 if (inst.arg(2).isRec()) {
                                     inst.arg(2).asRec().jvm().forEach((key, value) -> edge.property(key.uriValue().toString(), value.jvm()));
                                 }
@@ -326,11 +328,7 @@ public class grphInstSet extends AbstractInstSet {
                                     final Iterator<? extends Element> elements = "V".equals(dp.collection())
                                             ? space.sjvm().traversal().V().limit(limit)
                                             : space.sjvm().traversal().E().limit(limit);
-                                    return objs(IteratorUtil.stream(elements).map(e -> {
-                                        if (e instanceof Vertex v)
-                                            return (Obj) new VertexRec(v, space);
-                                        return (Obj) new EdgeRec((Edge) e, space);
-                                    }));
+                                    return objs(IteratorUtil.stream(elements).map(e -> (e instanceof Vertex v) ? new VertexRec(v, space) : new EdgeRec((Edge) e, space)));
                                 }
                         ), "pre-rewrite code", "post-rewrite code", Map.of(), "leverages native Gremlin limit() for vertex/edge collections"),
                         InstSet.Helper.rewriter(GRPH_REWRITE_TID.extend("out_incident_adjacent"), code -> code.selfJVM(

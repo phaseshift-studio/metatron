@@ -1086,6 +1086,7 @@ pre.highlight > code[data-lang] {
 /* ── Result-line dimming / input brightness ──────────────────── */
 
 .hljs-mtron-result-line {
+    color: var(--mred);
     opacity: 0.62;
 }
 

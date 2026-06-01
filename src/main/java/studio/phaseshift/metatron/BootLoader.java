@@ -180,7 +180,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
                             .map(p -> p.type().getAnnotation(InstSet.JREService.class).vid())
                             .reduce("", (a, b) -> a + "\n\t\t" + b));
             final Rec typer = args.at("typer/stage").orElse(rec());
-            if(false && !typer.isNoObj()) {
+            if (!BootLoader.TESTING && !typer.isNoObj()) {
                 TypeCheck.init(typer.tid(TYPER_TYPE_TID).as());
             } else {
                 TypeCheck.enable(TypeCheck.values());

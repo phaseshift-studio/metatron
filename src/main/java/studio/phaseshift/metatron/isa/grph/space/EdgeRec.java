@@ -45,8 +45,10 @@ public class EdgeRec extends ElementRec<Edge> {
         return this.element;
     }
 
-    /** Return the endpoint vertex, auto-resolving through {@code :redirect}
-     *  if the vertex is a reference to an object in another space. */
+    /**
+     * Return the endpoint vertex, auto-resolving through {@code :redirect}
+     * if the vertex is a reference to an object in another space.
+     */
     private Obj resolveEndpoint(final org.apache.tinkerpop.gremlin.structure.Vertex v) {
         final var redirectProp = v.property(grphInstSet.REDIRECT_STRING);
         if (redirectProp.isPresent()) {
@@ -77,9 +79,11 @@ public class EdgeRec extends ElementRec<Edge> {
         return direction == Direction.IN ? inVertex() : outVertex();
     }
 
-    /** Intercept IN/OUT key access — handles both single-segment keys and
-     *  multi-segment cascade paths like /IN/name by decomposing the first
-     *  segment as a structural direction, then cascading the remainder. */
+    /**
+     * Intercept IN/OUT key access — handles both single-segment keys and
+     * multi-segment cascade paths like /IN/name by decomposing the first
+     * segment as a structural direction, then cascading the remainder.
+     */
     @Override
     public Obj at(final Obj key) {
         if (!(key instanceof Uri u)) return super.at(key);
@@ -94,7 +98,7 @@ public class EdgeRec extends ElementRec<Edge> {
 
         java.util.stream.Stream<Obj> stream = dir != null
                 ? java.util.stream.Stream.of(resolveEndpoint(
-                    dir == Direction.IN ? this.element.inVertex() : this.element.outVertex()))
+                dir == Direction.IN ? this.element.inVertex() : this.element.outVertex()))
                 : java.util.stream.Stream.concat(inVertex().stream(), outVertex().stream());
 
         for (int i = 1; i < segs.size(); i++) {

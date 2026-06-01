@@ -19,15 +19,10 @@
 package studio.phaseshift.metatron.isa.grph.space;
 
 import org.apache.tinkerpop.gremlin.structure.Direction;
-import org.apache.tinkerpop.gremlin.structure.Edge;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.grph.grphInstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Uri;
-import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
-import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.util.IteratorUtil;
 
 import java.util.List;
@@ -35,7 +30,6 @@ import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
-import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -55,21 +49,27 @@ public class VertexRec extends ElementRec<Vertex> {
         return this.element;
     }
 
-    /** Edge lookup by direction with label filter — traverses live graph. */
+    /**
+     * Edge lookup by direction with label filter — traverses live graph.
+     */
     public Stream<Obj> edges(final Direction direction, final String... labels) {
         return IteratorUtil.stream(this.element.edges(direction, labels))
-                .map(e -> (Obj) new EdgeRec(e, this.space));
+                .map(e -> new EdgeRec(e, this.space));
     }
 
-    /** Adjacent vertex lookup by direction with label filter. */
+    /**
+     * Adjacent vertex lookup by direction with label filter.
+     */
     public Stream<Obj> vertices(final Direction direction, final String... labels) {
         return IteratorUtil.stream(this.element.vertices(direction, labels))
-                .map(v -> (Obj) new VertexRec(v, this.space));
+                .map(v -> new VertexRec(v, this.space));
     }
 
-    /** Intercept OUT/IN key access — handles both single-segment keys and
-     *  multi-segment cascade paths like /OUT/+/IN/name by decomposing the
-     *  first segment as a structural direction, then cascading the remainder. */
+    /**
+     * Intercept OUT/IN key access — handles both single-segment keys and
+     * multi-segment cascade paths like /OUT/+/IN/name by decomposing the
+     * first segment as a structural direction, then cascading the remainder.
+     */
     @Override
     public Obj at(final Obj key) {
         if (!(key instanceof Uri u)) return super.at(key);

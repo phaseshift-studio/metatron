@@ -533,7 +533,7 @@ bin/metatron</code></pre>
         </span>
         <small class="text-muted code">/m/mach/machine/swarm</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">machine::T[][ctor?swarm&lt;=#{?}(#::T)]@/m/mach/machine/swarm</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">machine::T[][ctor?swarm&lt;=#{?}(machine::T)]@/m/mach/machine/swarm</code></pre></div>
     
 </div><div class="card mb-3" id="type-virtual">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -552,10 +552,10 @@ bin/metatron</code></pre>
     <p class="mb-0 text-light">run a parallel virtual thread</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  {?}state <span class="text-light">=&gt;</span> <span class="text-info">&#39;current state of the thread&#39;</span>
-  {?}result <span class="text-light">=&gt;</span> <span class="text-info">&#39;the last result produced by the thread&#39;</span>
-  code <span class="text-light">=&gt;</span> <span class="text-info">&#39;the code the thread will execute&#39;</span>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  code <span class="text-light">=&gt;</span> <span class="text-info">&#39;the code the thread will execute&#39;</span>
   {?}loop <span class="text-light">=&gt;</span> <span class="text-info">&#39;delay to repeat code evaluation (default is evaluate once)&#39;</span>
+  {?}state <span class="text-light">=&gt;</span> <span class="text-info">&#39;current state of the thread&#39;</span>
+  {?}result <span class="text-light">=&gt;</span> <span class="text-info">&#39;the last result produced by the thread&#39;</span>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>

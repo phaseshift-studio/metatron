@@ -37,10 +37,11 @@ import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.PATTERN;
 import static studio.phaseshift.metatron.Tokens.ROUTE;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SKILL_TYPE;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_ISA_TID;
+import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -54,6 +55,7 @@ public class llmInstSetTest extends AbstractInstSetTest {
     @BeforeAll
     public static void loadFileSystem() {
         InstSet.importInstSet(MACH_ISA_TID);
+        InstSet.importInstSet(WEB_ISA_TID);
         fsSpace.of(FileSystems.getDefault(), rec(
                 uri(PATTERN), uri("local:#"),
                 uri(ROUTE), rec(uri("local:"), uri("src/test/resources/isa/sys/space/llm/"))
@@ -71,14 +73,18 @@ public class llmInstSetTest extends AbstractInstSetTest {
     }, delimiter = '|')
     public void testAs(final String noNoObjCode, final String expectedType, final boolean shouldMatch) {
         Obj result = ObjmtronSerializer.parse(noNoObjCode).apply();
+        assertFalse(result.isFail());
+        assertFalse(result.isNoObj());
         assertTrue(result.test(LLM_SKILL_TYPE));
         assertTrue(result.type().test(LLM_SKILL_TYPE));
+        assertEquals(LLM_SKILL_TID,result.type().vid());
         assertNotNull(result.tid());
         Obj expected = ObjmtronSerializer.parse(expectedType).apply();
         LOG.info("result [%s] expected [%s] [should match: %b]", result, expected, shouldMatch);
         assertEquals(shouldMatch, result.test(expected));
     }
     
+    // TODO: need to create a mock LLM ? (sounds painful)
     @Disabled
     @ParameterizedTest
     @CsvSource(value = {

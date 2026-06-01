@@ -200,11 +200,11 @@ public final class MtronDocPreprocessor {
                     //System.exit(1);
                 }
                 if (!hidden && !noOutput && !result.isNoObj()) {
-                    result.stream().forEach(o -> lines.add("==>" + SER.write(o)));
+                    result.stream().forEach(o -> lines.add("==>" + SER.write(o).replace("\n","\n   ")));
                 } else if (noOutput) {
                     lines.add(Graphitty.sillyPrint("...", true, true));
                 } else if (result.isNoObj() && input.isType()) {
-                    lines.add("==>" + SER.write(input));
+                    lines.add("==>" + SER.write(input).replace("\n", "\n   ")); // replacement so second+ lines are indented past the result prompt
                 }
                 // Clear fail stack so errors don't leak across blocks
                 if (!hidden) ObjmtronSerializer.parse("/sys/fail/+ -> noobj").apply();
@@ -222,34 +222,4 @@ public final class MtronDocPreprocessor {
         }
         return new EvalResult(lines, noHeader);
     }
-
-    // ── Public helpers (used by DocRunner) ──────────────────────────
-
-    /**
-     * Evaluate prefix expressions (piggy-format blocks) for side-effects.
-     */
- /*   public static void evalPrefixBlocks(final List<String> prefixLines) {
-        if (prefixLines == null || prefixLines.isEmpty()) return;
-        final Matcher m = PIggy.matcher(String.join("\n", prefixLines));
-        while (m.find()) {
-            for (String raw : m.group(2).split("\n")) {
-                final String expr = HIDDEN.matcher(raw).replaceAll("").replace("%", "").strip();
-                if (!expr.isEmpty()) {
-                    try {
-                        ObjmtronSerializer.parse(expr).apply();
-                    } catch (final Exception ignored) {
-                    }
-                }
-            }
-        }
-    }
-
-    // ── Piggy-block pattern (prefix only) ───────────────────────
-
-    private static final Pattern PIggy = Pattern.compile(
-            "\\+\\+\\+\\+\\h*\\R" +
-                    "\\h*<!-- \\uD83D\\uDC16(?:\\h+([^\\r\\n]+))?\\R" +
-                    "(.*?)" +
-                    "\\R\\h*-->\\R\\h*\\+\\+\\+\\+",
-            Pattern.DOTALL);*/
 }
