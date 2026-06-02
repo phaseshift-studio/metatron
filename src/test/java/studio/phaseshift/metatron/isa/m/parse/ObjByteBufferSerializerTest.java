@@ -23,8 +23,6 @@ import studio.phaseshift.metatron.isa.mach.io.type.ObjByteBufferSerializer;
 
 import java.nio.ByteBuffer;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */

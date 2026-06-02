@@ -1,12 +1,12 @@
 /*
- * Metatron: A Distributed Computing Language and Virtual Machine
+ * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *
+ *  
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
+ *  
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -21,28 +21,21 @@ package studio.phaseshift.metatron.docs;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.TypeCheck;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.type.Inst;
-import studio.phaseshift.metatron.isa.m.type.InstSet;
-import studio.phaseshift.metatron.isa.m.type.Lst;
-import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.Rec;
-import studio.phaseshift.metatron.isa.m.type.Str;
-import studio.phaseshift.metatron.isa.m.type.Type;
+import studio.phaseshift.metatron.isa.dcmnt.dcmntInstSet;
+import studio.phaseshift.metatron.isa.grph.grphInstSet;
+import studio.phaseshift.metatron.isa.iot.iotInstSet;
+import studio.phaseshift.metatron.isa.llm.llmInstSet;
+import studio.phaseshift.metatron.isa.m.math.mathInstSet;
+import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.m.type.impl.MUri;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
-
-import studio.phaseshift.metatron.isa.m.math.mathInstSet;
-import studio.phaseshift.metatron.isa.web.webInstSet;
-import studio.phaseshift.metatron.isa.iot.iotInstSet;
-import studio.phaseshift.metatron.isa.grph.grphInstSet;
-import studio.phaseshift.metatron.isa.llm.llmInstSet;
-import studio.phaseshift.metatron.isa.tble.tbleInstSet;
-import studio.phaseshift.metatron.isa.dcmnt.dcmntInstSet;
 import studio.phaseshift.metatron.isa.rdf.rdfInstSet;
+import studio.phaseshift.metatron.isa.tble.tbleInstSet;
+import studio.phaseshift.metatron.isa.web.webInstSet;
 
 import java.io.IOException;
 import java.nio.file.Files;

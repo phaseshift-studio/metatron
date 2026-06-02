@@ -1,31 +1,27 @@
  /*
-  * metatron: a distributed virtual machine and language
-  *  Copyright (C) 2025- PhaseShift Studio, LLC
-  *
-  * This program is free software: you can redistribute it and/or modify
-  * it under the terms of the GNU Affero General Public License as published by
-  * the Free Software Foundation, either version 3 of the License, or
-  * (at your option) any later version.
-  *
-  * This program is distributed in the hope that it will be useful,
-  * but WITHOUT ANY WARRANTY; without even the implied warranty of
-  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  * GNU Affero General Public License for more details.
-  *
-  * You should have received a copy of the GNU Affero General Public License
-  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-  */
+ * metatron: a distributed virtual machine and language
+ *  Copyright (C) 2025- PhaseShift Studio, LLC
+ *  
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *  
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
  package studio.phaseshift.metatron.isa.grph.space;
 
  import org.apache.commons.configuration2.BaseConfiguration;
  import org.apache.commons.configuration2.Configuration;
  import org.apache.commons.configuration2.ConfigurationMap;
- import org.apache.tinkerpop.gremlin.structure.Direction;
- import org.apache.tinkerpop.gremlin.structure.Edge;
- import org.apache.tinkerpop.gremlin.structure.Element;
- import org.apache.tinkerpop.gremlin.structure.Graph;
- import org.apache.tinkerpop.gremlin.structure.Vertex;
+ import org.apache.tinkerpop.gremlin.structure.*;
  import org.apache.tinkerpop.gremlin.structure.util.GraphFactory;
  import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerFactory;
  import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerGraph;
@@ -36,7 +32,10 @@
  import studio.phaseshift.metatron.isa.Space;
  import studio.phaseshift.metatron.isa.grph.grphInstSet;
  import studio.phaseshift.metatron.isa.grph.space.schema.modernSchema;
- import studio.phaseshift.metatron.isa.m.type.*;
+ import studio.phaseshift.metatron.isa.m.type.Obj;
+ import studio.phaseshift.metatron.isa.m.type.ObjFactory;
+ import studio.phaseshift.metatron.isa.m.type.Rec;
+ import studio.phaseshift.metatron.isa.m.type.Type;
  import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
  import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
  import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;

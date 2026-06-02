@@ -1,5 +1,5 @@
 /*
- * Metatron: A Distributed Computing Language and Virtual Machine
+ * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
  *  
  * This program is free software: you can redistribute it and/or modify
@@ -18,7 +18,6 @@
 
 package studio.phaseshift.metatron.isa.llm.type;
 
-import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.invocation.InvocationParameters;
 import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.service.TokenStream;

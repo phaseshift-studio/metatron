@@ -1,4 +1,4 @@
-#  Metatron: A Distributed Computing Language and Virtual Machine
+#  metatron: a distributed virtual machine and language
 #   Copyright (C) 2025- PhaseShift Studio, LLC
 # 
 #  This program is free software: you can redistribute it and/or modify
@@ -20,7 +20,6 @@ import uasyncio as asyncio
 
 from lib.ws import AsyncWebsocketClient as WSClient
 from metatron.obj import *
-from metatron.soc.device.device import Device
 from metatron.util.graphitty import LOG
 
 MTRON_SPACE = f("/iot/space/mtron")

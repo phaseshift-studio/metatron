@@ -19,12 +19,14 @@
 package studio.phaseshift.metatron.isa.web.space.ws.handler;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.isa.web.space.ws.WebSocketRec;
 import studio.phaseshift.metatron.isa.web.type.MIME;
 import studio.phaseshift.metatron.isa.web.type.mcpServer;
-import studio.phaseshift.metatron.isa.web.space.ws.WebSocketRec;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -39,7 +41,8 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.*;
+import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_HANDLER_TID;
+import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_SPACE_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /**

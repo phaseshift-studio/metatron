@@ -1,4 +1,4 @@
-#  Metatron: A Distributed Computing Language and Virtual Machine
+#  metatron: a distributed virtual machine and language
 #   Copyright (C) 2025- PhaseShift Studio, LLC
 # 
 #  This program is free software: you can redistribute it and/or modify
@@ -17,10 +17,10 @@
 import machine
 
 import metatron.util.graphitty
+from metatron.furi import f
 from metatron.obj import Rec
 from metatron.soc.device.device import Device
 from metatron.soc.device.wifi import Wifi
-from metatron.furi import f
 from metatron.util.graphitty import LOG, string, strip
 from metatron.util.mach import router
 

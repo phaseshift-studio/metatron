@@ -21,7 +21,6 @@ package studio.phaseshift.metatron.isa.tble.space;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
-import java.util.ArrayList;
 
 import java.sql.Types;
 import java.util.*;

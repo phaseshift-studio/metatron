@@ -1,4 +1,4 @@
-#  Metatron: A Distributed Computing Language and Virtual Machine
+#  metatron: a distributed virtual machine and language
 #   Copyright (C) 2025- PhaseShift Studio, LLC
 # 
 #  This program is free software: you can redistribute it and/or modify
@@ -13,9 +13,7 @@
 # 
 #  You should have received a copy of the GNU Affero General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
-from lib.mtron.playtron import Playtron
 from lib.mtron.pondbox import PondBox
-from lib.mtron.walltron import Walltron
 
 
 # this function determines which machine architecture is flashed to hardware

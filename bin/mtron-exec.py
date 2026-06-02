@@ -4,8 +4,9 @@ Simple mtron executor via WebSocket
 Usage: ./mtron-exec.py "1.plus(2)"
 """
 import asyncio
-import websockets
 import sys
+import websockets
+
 
 async def execute(code: str, host: str = 'ws://localhost:8999'):
     try:

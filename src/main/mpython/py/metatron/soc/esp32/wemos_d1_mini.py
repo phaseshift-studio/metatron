@@ -1,4 +1,4 @@
-#  Metatron: A Distributed Computing Language and Virtual Machine
+#  metatron: a distributed virtual machine and language
 #   Copyright (C) 2025- PhaseShift Studio, LLC
 # 
 #  This program is free software: you can redistribute it and/or modify
@@ -14,8 +14,8 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from metatron.soc.esp32.esp32 import ESP32
 from metatron.furi import f
+from metatron.soc.esp32.esp32 import ESP32
 
 WEMOS_D1_MINI_TID = f("/soc/esp32/wemos_d1_mini")
 

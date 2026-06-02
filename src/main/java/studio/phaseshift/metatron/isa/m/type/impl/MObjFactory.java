@@ -1,5 +1,5 @@
 /*
- * Metatron: A Distributed Computing Language and Virtual Machine
+ * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
  *  
  * This program is free software: you can redistribute it and/or modify
@@ -43,7 +43,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.FACTORY_TID;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_ISA_TID;
-import static studio.phaseshift.metatron.isa.mach.type.monad.BasicPCMonad.*;
+import static studio.phaseshift.metatron.isa.mach.type.monad.BasicPCMonad.MACH_BASIC_MONAD_TID;
 import static studio.phaseshift.metatron.util.Tuple.Pair;
 import static studio.phaseshift.metatron.util.Tuple.Triplet;
 

@@ -1,7 +1,7 @@
 #! /usr/bin/env sh
 
 #
-# Metatron: A Distributed Computing Language and Virtual Machine
+# metatron: a distributed virtual machine and language
 #  Copyright (C) 2025- PhaseShift Studio, LLC
 #  
 # This program is free software: you can redistribute it and/or modify

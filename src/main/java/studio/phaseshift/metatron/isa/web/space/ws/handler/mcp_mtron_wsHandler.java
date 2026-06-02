@@ -37,7 +37,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.*;
+import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_SPACE_TID;
 
 /*
  * MCP server pre-loaded with metatron-native tools, resources, and prompts.

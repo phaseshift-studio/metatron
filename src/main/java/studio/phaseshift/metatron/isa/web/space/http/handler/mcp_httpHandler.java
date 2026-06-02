@@ -24,8 +24,8 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.web.space.http.HttpRec;
-import studio.phaseshift.metatron.isa.web.type.mcpServer;
 import studio.phaseshift.metatron.isa.web.type.MIME;
+import studio.phaseshift.metatron.isa.web.type.mcpServer;
 
 import java.io.IOException;
 import java.io.OutputStream;

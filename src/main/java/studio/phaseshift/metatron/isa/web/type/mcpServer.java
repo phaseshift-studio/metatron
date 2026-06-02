@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *
+ *  
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
+ *  
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -20,7 +20,10 @@ package studio.phaseshift.metatron.isa.web.type;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
-import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.m.type.Inst;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Poly;
+import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
@@ -38,7 +41,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.*;
+import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_SPACE_TID;
 
 /**
  * Transport-agnostic MCP (Model Context Protocol) JSON-RPC protocol handler.
@@ -87,15 +90,13 @@ public class mcpServer extends MRec {
                 // ========================================
                 // Tools
                 // ========================================
-                case "tools/list" -> {
-                    yield mcpResponse(id, rec(
-                            uri("tools"), lst(this.at(TOOL).orElse(rec0()).elements()
-                                    .map(kv -> (Obj) rec(
-                                            uri(NAME), str(kv.first().uriValue().toString()),
-                                            uri(DESCRIPTION), str(toolDescription(kv.second())),
-                                            uri("inputSchema"), buildInputSchema(kv.second())))
-                                    .toList())));
-                }
+                case "tools/list" -> mcpResponse(id, rec(
+                        uri("tools"), lst(this.at(TOOL).orElse(rec0()).elements()
+                                .map(kv -> (Obj) rec(
+                                        uri(NAME), str(kv.first().uriValue().toString()),
+                                        uri(DESCRIPTION), str(toolDescription(kv.second())),
+                                        uri("inputSchema"), buildInputSchema(kv.second())))
+                                .toList())));
                 case "tools/call" -> {
                     final String toolName = params.at(uri(NAME)).isNoObj() ? "" : params.at(uri(NAME)).toCleanString();
                     final Rec arguments = params.at(uri("arguments")).isNoObj() ? rec() : params.at(uri("arguments")).asRec();
@@ -114,15 +115,13 @@ public class mcpServer extends MRec {
                 // ========================================
                 // Resources
                 // ========================================
-                case "resources/list" -> {
-                    yield mcpResponse(id, rec(
-                            uri("resources"), lst(this.at(RESOURCE).orElse(rec0()).elements()
-                                    .map(kv -> (Obj) rec(
-                                            uri(URI), uri(kv.first().uriValue().toString()),
-                                            uri(NAME), str(kv.first().uriValue().toString()),
-                                            uri(DESCRIPTION), str(kv.second().toShortString())))
-                                    .toList())));
-                }
+                case "resources/list" -> mcpResponse(id, rec(
+                        uri("resources"), lst(this.at(RESOURCE).orElse(rec0()).elements()
+                                .map(kv -> (Obj) rec(
+                                        uri(URI), uri(kv.first().uriValue().toString()),
+                                        uri(NAME), str(kv.first().uriValue().toString()),
+                                        uri(DESCRIPTION), str(kv.second().toShortString())))
+                                .toList())));
                 case "resources/read" -> {
                     final String resourceUri = params.at(uri(URI)).isNoObj() ? "" : params.at(uri(URI)).toCleanString();
                     final Obj resourceEntry = this.at(RESOURCE).orElse(rec0()).at(uri(resourceUri));
@@ -140,14 +139,12 @@ public class mcpServer extends MRec {
                 // ========================================
                 // Prompts
                 // ========================================
-                case "prompts/list" -> {
-                    yield mcpResponse(id, rec(
-                            uri("prompts"), lst(this.at(PROMPT).orElse(rec0()).elements()
-                                    .map(kv -> (Obj) rec(
-                                            uri(NAME), str(kv.first().uriValue().toString()),
-                                            uri(DESCRIPTION), str(kv.second().toShortString())))
-                                    .toList())));
-                }
+                case "prompts/list" -> mcpResponse(id, rec(
+                        uri("prompts"), lst(this.at(PROMPT).orElse(rec0()).elements()
+                                .map(kv -> (Obj) rec(
+                                        uri(NAME), str(kv.first().uriValue().toString()),
+                                        uri(DESCRIPTION), str(kv.second().toShortString())))
+                                .toList())));
                 case "prompts/get" -> {
                     final String promptName = params.at(uri(NAME)).isNoObj() ? "" : params.at(uri(NAME)).toCleanString();
                     final Obj promptEntry = this.at(PROMPT).orElse(rec0()).at(uri(promptName));
@@ -181,12 +178,9 @@ public class mcpServer extends MRec {
                                     uri(NAME), str("metatron-mcp"),
                                     uri("version"), str("0.1.0"))));
                 }
-                case "ping" -> {
-                    yield mcpResponse(id, rec());
-                }
-                case "notifications/initialized", "notifications/cancelled" -> {
-                    yield noobj(); // no response for notifications
-                }
+                case "ping" -> mcpResponse(id, rec());
+                case "notifications/initialized", "notifications/cancelled" -> // no response for notifications
+                        noobj();
 
                 // ========================================
                 // Unknown method
@@ -194,7 +188,7 @@ public class mcpServer extends MRec {
                 default -> {
                     if (method.isBlank())
                         yield noobj();
-                    LOG.warn("unknown mcp method: %s", method);
+                    LOG.error("unknown mcp method: %s", method);
                     yield mcpError(id, jnt(-32601), str("method not found: " + method));
                 }
             };
