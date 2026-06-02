@@ -1,26 +1,29 @@
 [== boot args ==]
 [space  => /sys/space,
  web    => [
-   http/host  => <http://localhost:8777>,
-   ws/host    => <ws://localhost:8555>],
- typer/stage  => [code_resolve => false,
+   http/host  => <http://0.0.0.0:8777>,
+   ws/host    => <ws://0.0.0.0:8555>],
+ typer/stages => [inst_dom     => true, 
                   inst_rng     => true,
                   type_ctor    => true,
                   obj_write    => true,
-                  inst_dom     => true]]
+                  code_resolve => false] 
+]
 [===============]
 [== inst_rng,type_ctor,obj_write] ==]
 [== metatron example boot ==]
-print("""{{g}}
-  __                   __                  __                       
- |  |--..-----..-----.|  |_     .--------.|  |_ .----..-----..-----.
- |  _  ||  _  ||  _  ||   _| __ |        ||   _||   _||  _  ||     |
- |_____||_____||_____||____||__||__|__|__||____||__|  |_____||__|__|
-                                                 PhaseShift Presents                                                                                                                                                                                                                        
-{{r}}------------
-{{g}}*{{y}}boot/args{{X}}: ${*boot/args} 
-{{r}}------------{{X}}
-""");
+print("""
+{{y}} ____    ___    ___   ______    ___ ___  ______  ____    ___   ____  
+|    \  /   \  /   \ |      |  |   T   T|      ||    \  /   \ |    \ 
+|  o  )(     YY     )|      |  | _   _ ||      ||  D  )(     )|  _  )
+|     T|  O  ||  O  |l_j  l_j {{g}} |  \_/  |l_j  l_j|    / |  O  ||  |  |
+|  O  ||     ||     |  |  | __ |   |   |  |  |  |    \ |     ||  |  |
+|     |l     !l     !  |  ||  T|   |   |  |  |  |  .  \l    {{b}} !|  |  |
+l_____j \___/  \___/   l__jl__jl___j___j  l__j  l__j\_j \___/ l__j__j                                                                     
+""")
+print("{{r}}------------\n{{g}}*{{y}}boot/args{{X}}: ",
+      *boot/args, 
+     "\n{{r}}------------{{X}}\n");
 [== mount instruction sets ==]
 print("{{y}}mounting instruction sets\n{{X}}");
 import(/m/mach/io);
@@ -47,7 +50,7 @@ print("{{y}}supported scripting environments:\n{{X}}", *<boot/script>.else(boot/
   mtron  => /bin/mtron]),"\n");
 [== mount computing spaces ==]
  memspace::[pattern   => /usr/#,                                 
-                  q   => [mintq::[=>],docq::[=>],subq::[=>],incrq::[=>],shortq::[=>]]]@/sys/space/usr;       
+                  q   => [mintq::[=>],docq::[=>],subq::[=>],incrq::[=>]]]@/sys/space/usr;       
  memspace::[pattern   => /shared/#,
             persist   => </tmp/shared.mtron>]@/sys/space/shared;
  fsspace::[pattern    => local:#,
@@ -55,7 +58,6 @@ print("{{y}}supported scripting environments:\n{{X}}", *<boot/script>.else(boot/
  fsspace::[pattern    => home:#,
              route    => [home:=><~/.metatron/home>]]@/sys/space/fs/m_home;
   fsspace::[pattern   => mtronfs:#,
-            q         => [mimeq::[=>]],
              route    => [mtronfs:=><.metatron>]]@/sys/space/fs/mtronfs;
  httpspace::[host     => !*boot/args/web/http/host,
              pattern  => <http://#>,
@@ -79,6 +81,7 @@ print("{{y}}supported scripting environments:\n{{X}}", *<boot/script>.else(boot/
         route    => [</h/+/>=><>],
         native   => [factory  => mfactory::[=>],
                      load     => grateful]]@/sys/space/grateful;                    
+  memspace::[pattern => /storage/mail/#]@/sys/space/mail;
   grphspace::[pattern  => g:#,
         route    => [g:V/+/mail => </storage/mail/${>>1}>,
                      g:V        => V,
@@ -176,6 +179,7 @@ mqttspace::[pattern => <ha:#>,
 *<mtronfs:instset/ai.mtron>;
 *<mtronfs:agent.mtron>;
 console::[=>]@/usr/ui/console;
-*boot/args.print("*boot/args:\n",_,"\n");
+*boot/args.print(_,'\n');
+print('\n{{y}}mounting {{b}}boot/usr/# {{y}}to {{b}}/usr/# {{g}}(count:{{y}}${*x}{{g}}){{X}}\n');
  
 
