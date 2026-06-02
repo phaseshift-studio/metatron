@@ -765,7 +765,15 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
 
     class Helper {
 
+        private Helper() {
+            // do nothing
+        }
+
         private static final ObjSerializer<String> SERIALIZER = new ObjmtronSerializer();
+
+        public static fURI specificTypeId(final Obj obj) {
+            return obj.isType() && null != obj.vid() ? obj.vid() : obj.tid();
+        }
 
         public static boolean isAuto(final Obj obj) {
             return obj.isObjCall() && obj.tid().basePath().toString().startsWith("auto");
@@ -950,7 +958,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
     final class ObjType {
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
-                    instC(INSIDE_INST_TID.dom(A).rng(A.maybe()), lst(LST_TYPE), (lhs, inst) -> inst.arg(0).lstValue().contains(lhs) ? lhs : noobj()),
+                    instC(INSIDE_INST_TID.dom(A).rng(A.maybe()), lst(LST_TYPE), (lhs, inst) -> inst.arg(0).lstValue().stream().anyMatch(o -> o.test(lhs)) ? lhs : noobj()),
                     instC(SERIALIZE_INST_TID.dom(A).rng(B), lst(T(OBJ_SERIAL_TID)), (lhs, inst) -> {
                         final Object serialization = inst.arg(0).<ObjSerializer<?>>as().write(lhs);
                         try {

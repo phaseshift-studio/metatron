@@ -112,13 +112,13 @@ public class webInstSet extends AbstractInstSet {
             .tid(REC_TID)
             .vid(JSON_TID)
             .isaPredicate(rec(URI_TYPE, inside_(lst(
-                    NOOBJ_TYPE,
-                    BOOL_TYPE,
-                    INT_TYPE,
-                    STR_TYPE,
-                    URI_TYPE,
-                    LST_TYPE,
-                    REC_TYPE)))).create();
+                    isa_(NOOBJ_TYPE),
+                    isa_(BOOL_TYPE),
+                    isa_(INT_TYPE),
+                    isa_(STR_TYPE),
+                    isa_(URI_TYPE),
+                    isa_(LST_TYPE),
+                    isa_(REC_TYPE))))).create();
     public static final Type CSS_TYPE = Type.Builder.build()
             .tid(REC_TID)
             .vid(CSS_TID).create();
@@ -200,14 +200,16 @@ public class webInstSet extends AbstractInstSet {
                                         .isaPredicate(rec(
                                                 uri(HOST), URI_TYPE,
                                                 uri(TRANSPORT).maybe(), URI_TYPE,
+                                                uri(COMMAND).maybe(), LST_TYPE,
                                                 uri(TOOL).maybe(), rec(URI_TYPE, T(LLM_TOOL_TID)).maybe(),
                                                 uri(STATUS).maybe(), isa_(BOOL_TYPE).else_(BOOL_FALSE)))
                                         .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(MCP_CLIENT_TID), lst(T(REC_TID)),
                                                 (x, inst) -> new mcpClient(inst.arg(0).asRec().jvm(), MCP_CLIENT_TID, inst.arg(0).vid())))
-                                        .create(), "a mcp client specification", "creates a connection to an existing mcp client",
+                                        .create(), "an mcp client type specification", "a connection to an existing mcp server",
                                 Map.of(
                                         uri(HOST), "the mcp server endpoint",
                                         uri(TRANSPORT).maybe(), "specify the transport if host schema resolution isn't sufficient",
+                                        uri(COMMAND).maybe(), "only necessary for stdio mcp servers, where the client is the server",
                                         uri(TOOL).maybe(), "the tools/functions available for use on the mcp server",
                                         uri(STATUS).maybe(), "the current status of the mcp client/server connection"),
                                 "a client implementing the model content protocol used by llms for the acquisition of tools and access to external software systems",
@@ -228,13 +230,13 @@ public class webInstSet extends AbstractInstSet {
                             }
                         }),
                         instC(WEB_ISA_TID.extend("inst/format").dom(MARKDOWN_TID).rng(STR_TID), lst(), (lhs, inst) -> str(ObjMarkdownSerializer.format(ObjMarkdownSerializer.single().write(lhs).getChars().toString()))),
+                        instC(AS_INST_TID.dom(STR_TID).rng(JSON_TID), lst(JSON_TYPE), (lhs, inst) -> ObjSimpleJSONSerializer.parse(lhs.asStr().strValue())),
                         instC(AS_INST_TID.dom(STR_TID).rng(XML_TID), lst(T(XML_TID)), (lhs, inst) -> ObjXMLSerializer.parse(lhs.asStr().strValue())),
                         instC(AS_INST_TID.dom(STR_TID).rng(HTML_TID), lst(HTML_TYPE), (lhs, inst) -> ObjHTMLSerializer.parse(lhs.asStr().strValue())),
                         instC(AS_INST_TID.dom(STR_TID).rng(MARKDOWN_TID), lst(MARKDOWN_TYPE), (lhs, inst) -> ObjMarkdownSerializer.parse(lhs.asStr().strValue())),
                         instC(AS_INST_TID.dom(HTML_TID).rng(STR_TID), lst(STR_TYPE), (lhs, inst) -> str(ObjHTMLSerializer.single().write(lhs).outerHtml())),
                         instC(AS_INST_TID.dom(MARKDOWN_TID).rng(STR_TID), lst(STR_TYPE), (lhs, inst) -> str(ObjMarkdownSerializer.single().write(lhs).getChars().toString())),
                         instC(AS_INST_TID.dom(MARKDOWN_TID).rng(HTML_TID), lst(HTML_TYPE), (lhs, inst) -> ObjMarkdownSerializer.single().toHTML(ObjMarkdownSerializer.single().write(lhs))),
-                        instC(AS_INST_TID.dom(STR_TID).rng(JSON_TID), lst(JSON_TYPE), (lhs, inst) -> ObjSimpleJSONSerializer.parse(lhs.asStr().strValue())),
                         instC(AS_INST_TID.dom(ALL).rng(STR_TID), lst(JSON_STR_TYPE), (lhs, inst) -> str(ObjSimpleJSONSerializer.single().write(lhs).toString())))));
         docWrap(this,
                 "the world of the web within the metatron",

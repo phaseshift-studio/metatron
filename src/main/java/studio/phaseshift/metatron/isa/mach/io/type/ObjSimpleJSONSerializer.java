@@ -35,6 +35,7 @@ import java.util.regex.Pattern;
 
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.BASE_TYPES;
+import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBytes.bytes;
@@ -46,6 +47,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.io.ioInstSet.OBJ_SIMPLE_JSON_SERIALIZER_VID;
+import static studio.phaseshift.metatron.isa.web.webInstSet.JSON_TID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -69,7 +71,7 @@ public class ObjSimpleJSONSerializer extends AbstractObjSerializer<JsonElement> 
     }
 
     private static final ObjSimpleJSONSerializer INSTANCE = new ObjSimpleJSONSerializer();
-    
+
     public ObjSimpleJSONSerializer() {
         this(true);
     }
@@ -167,13 +169,13 @@ public class ObjSimpleJSONSerializer extends AbstractObjSerializer<JsonElement> 
                     }
                 }
                 if (null != tid || null != vid)
-                    LOG.info("embedded tid/vid: %s/%s", tid, vid);
+                    LOG.debug("embedded tid/vid: %s/%s", tid, vid);
                 final Map<Obj, Obj> map = new LinkedHashMap<>();
                 for (var kv : jp.getAsJsonObject().asMap().entrySet()) {
                     if (!kv.getKey().equals(_TID) && !kv.getKey().equals(_VID))
                         map.put(uri(kv.getKey()), this.read(kv.getValue()));
                 }
-                return null == tid ? rec(map) : rec(map, tid, vid);
+                return rec(map, null == tid ? REC_TID : JSON_TID, vid);
             }
             throw new IllegalStateException("unknown type: " + json + "::" + json.getAsInt());
         } catch (final Exception e) {
@@ -226,7 +228,7 @@ public class ObjSimpleJSONSerializer extends AbstractObjSerializer<JsonElement> 
 
     @Override
     public JsonPrimitive writeUri(final Uri uri) {
-        return new JsonPrimitive(this.wrapURI ?  ("<" + uri.uriValue().toString() + ">") : uri.uriValue().toString());
+        return new JsonPrimitive(this.wrapURI ? ("<" + uri.uriValue().toString() + ">") : uri.uriValue().toString());
     }
 
     @Override

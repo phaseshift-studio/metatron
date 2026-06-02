@@ -60,6 +60,10 @@ public interface Space extends Rec, Closeable {
         return this.at(uri(QPROC)).orElse(lst());
     }
 
+    default boolean hasQ(final fURI qPattern) {
+        return this.qs().lstValue().stream().anyMatch(q -> qPattern.test(q.<QProc>as().pattern()));
+    }
+
     default Space addQ(final QProc qProc) {
         final Obj key = uri(QPROC);
         if (this.at(key).isNoObj())

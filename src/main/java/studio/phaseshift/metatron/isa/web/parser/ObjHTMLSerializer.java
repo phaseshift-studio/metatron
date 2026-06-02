@@ -41,6 +41,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.io.ioInstSet.OBJ_SERIALIZER_TID;
+import static studio.phaseshift.metatron.isa.web.webInstSet.HTML_TID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -171,7 +172,6 @@ public class ObjHTMLSerializer extends AbstractObjSerializer<Document> {
 
         return rec;
     }
-
 
 
     private Element writeElement(final Rec rec, final Element element) {
@@ -317,8 +317,6 @@ public class ObjHTMLSerializer extends AbstractObjSerializer<Document> {
     }
 
 
-
-
     @Override
     public Obj read(final Document document) {
         // Find the html element in the document
@@ -326,7 +324,7 @@ public class ObjHTMLSerializer extends AbstractObjSerializer<Document> {
 
         if (htmlElement != null) {
             // Return rec with html as key: [html => [...]]
-            return rec().at(uri(HTML), readHtmlElement(htmlElement));
+            return rec().at(uri(HTML), readHtmlElement(htmlElement)).selfTID(HTML_TID);
         }
 
         // Fallback: empty rec if html not found

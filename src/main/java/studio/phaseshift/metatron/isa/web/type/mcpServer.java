@@ -28,28 +28,17 @@ import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.web.space.ws.WebSocketRec;
 import studio.phaseshift.metatron.isa.web.space.ws.handler.mcp_wsHandler;
 
-import java.util.LinkedHashMap;
 import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.q.QCollection.DOCQ;
-import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
-import static studio.phaseshift.metatron.isa.m.mInstSet.*;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
-import static studio.phaseshift.metatron.isa.m.type.Inst.INST_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
-import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.*;
-import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /**
  * Transport-agnostic MCP (Model Context Protocol) JSON-RPC protocol handler.

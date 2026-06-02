@@ -133,19 +133,19 @@ public class fsSpace extends AbstractSpace<FileSystem> {
     }
 
     private Obj readFileAsObj(final File file, final Map<String, String> qMap) throws IOException {
-        MIME.MIMEType contentType = qMap.containsKey(MIMEQ_PATTERN.toString()) ?
+        MIME.MIMEType mimeType = qMap.containsKey(MIMEQ_PATTERN.toString()) ?
                 MIME.MIMEType.of(qMap.get(MIMEQ_PATTERN.toString())) :
                 MIME.MIMEType.fromProbe(file, null);
-        contentType = null == contentType ?
-                MIME.MIMEType.fromExtension(file.getName(), MIME.MIMEType.APPLICATION_MTRON) : contentType;
+        mimeType = null == mimeType ?
+                MIME.MIMEType.fromExtension(file.getName(), MIME.MIMEType.APPLICATION_MTRON) : mimeType;
         final FileInputStream fs = new FileInputStream(file);
         byte[] fileBytes = fs.readAllBytes();
         fs.close();
         final String source = new String(fileBytes, StandardCharsets.UTF_8);
         final fURI vid = source.startsWith("[-- @<") ? f(source.substring(6, source.indexOf("> --]\n")).trim()) : null;
-        if (vid != null) contentType = MIME.MIMEType.APPLICATION_MTRON;
+        if (vid != null) mimeType = MIME.MIMEType.APPLICATION_MTRON;
         LOG.debug("fileToObj: %s => %s", file.getPath(), vid);
-        return contentType.hasSerializer() ? contentType.fromBytes(fileBytes) : uri(this.redirect(f(file.getPath()), false), FILE_TID, null).selfVID(vid);
+        return mimeType.hasSerializer() ? mimeType.fromBytes(fileBytes) : uri(this.redirect(f(file.getPath()), false), FILE_TID, null).selfVID(vid);
     }
 
     @Override

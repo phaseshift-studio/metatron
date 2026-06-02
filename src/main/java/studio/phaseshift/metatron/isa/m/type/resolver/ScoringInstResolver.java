@@ -144,21 +144,21 @@ public class ScoringInstResolver implements InstResolver {
      */
     private int scoreSpecificity(final Obj lhs, final Inst userInst, final Inst apiInst) {
         int score = 0;
-        final fURI apiDomTid = apiInst.dom().tid();
-        final fURI apiRngTid = apiInst.rng().tid();
-        final fURI lhsTid = lhs.tid();
+        final fURI apiDomID = Obj.Helper.specificTypeId(apiInst.dom());
+        final fURI apiRngID = Obj.Helper.specificTypeId(apiInst.rng());
+        final fURI lhsID = Obj.Helper.specificTypeId(lhs);
 
         // domain specificity (most important - 1000 points)
-        if (!apiDomTid.isGeneric() && !apiDomTid.hasPattern()) {
+        if (!apiDomID.isGeneric() && !apiDomID.hasPattern()) {
             score += 1000;
             // bpnus for exact domain match (500 points)
-            if (lhsTid.basePath().equals(apiDomTid.basePath())) {
+            if (lhsID.basePath().equals(apiDomID.basePath())) {
                 score += 500;
             }
             // bonus for more specific dom/rng matches
-            if(!apiInst.dom().isBaseType())
+            if (!apiInst.dom().isBaseType())
                 score += 500;
-            if(!apiInst.rng().isBaseType())
+            if (!apiInst.rng().isBaseType())
                 score += 500;
         }
 
@@ -166,11 +166,11 @@ public class ScoringInstResolver implements InstResolver {
         if (!apiInst.args().isEmpty() && !userInst.args().isEmpty()) {
             final Obj apiFirstArg = apiInst.arg(0);
             final Obj userFirstArg = userInst.arg(0);
-            if (apiFirstArg != null && !apiFirstArg.isNoObj() && !apiFirstArg.tid().isGeneric()) {
+            if (apiFirstArg != null && !apiFirstArg.isNoObj() && !Obj.Helper.specificTypeId(apiFirstArg).isGeneric()) {
                 score += 500;
                 // Bonus for exact argument match (250 points)
                 if (userFirstArg != null && !userFirstArg.isNoObj()
-                        && userFirstArg.tid().basePath().equals(apiFirstArg.tid().basePath())) {
+                        && Obj.Helper.specificTypeId(userFirstArg).basePath().equals(Obj.Helper.specificTypeId(apiFirstArg).basePath())) {
                     score += 250;
                 }
             }
@@ -179,10 +179,10 @@ public class ScoringInstResolver implements InstResolver {
             // When user passes a Type argument to as(), heavily favor instructions whose range matches that type
             // e.g., as(skill::T) should strongly prefer as?skill<=dir over as?file<=uri
             // IMPORTANT: Only apply this to actual 'as' instructions, not constructors or other instructions
-            if (apiInst.tid().basePath().equals(AS_INST_TID) && userFirstArg != null && userFirstArg.isType() && !apiRngTid.isGeneric()) {
+            if (Obj.Helper.specificTypeId(apiInst).basePath().equals(AS_INST_TID) && userFirstArg != null && userFirstArg.isType() && !apiRngID.isGeneric()) {
                 // Extract the actual type being requested (the Type's tid, not the Type object's own tid)
-                final fURI requestedTypeTid = userFirstArg.asType().tid();
-                if (!requestedTypeTid.isGeneric() && apiRngTid.basePath().equals(requestedTypeTid.basePath())) {
+                final fURI requestedTypeTid = Obj.Helper.specificTypeId(userFirstArg);
+                if (!requestedTypeTid.isGeneric() && apiRngID.basePath().equals(requestedTypeTid.basePath())) {
                     // Huge bonus: the API's output type matches what the user asked for
                     score += 2000;
                 }
@@ -190,7 +190,7 @@ public class ScoringInstResolver implements InstResolver {
         }
 
         // Range specificity (100 points - less important than dom/args)
-        if (!apiRngTid.isGeneric()) {
+        if (!apiRngID.isGeneric()) {
             score += 100;
         }
 

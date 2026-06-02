@@ -116,7 +116,16 @@ public final class mMCPUtility {
                             M_ISA_INST_TID.dom(NOOBJ_TID.zero()).rng(ALL.maybeSome()),
                             rec(uri("code"), STR_TYPE), (lhs, inst) -> {
                                 final Obj codeArg = inst.arg(f("code"), 0);
-                                return ObjmtronSerializer.parse(codeArg.toCleanString()).apply();
+                                if (codeArg.isCall())
+                                    return codeArg.apply();
+                                else {
+                                    try {
+                                        return ObjmtronSerializer.parse(codeArg.strValue()).apply();
+                                    } catch (final Exception e) {
+                                        // non-mtron text (e.g. already-evaluated result) — return as-is
+                                        return codeArg;
+                                    }
+                                }
                             }), "noobj lhs", "the result of the code evaluation",
                     Map.of(uri(CODE), "mtron code to evaluate"), "returns the result of evaluating the provided mtron expression"), MUTABLE);
             // list_space — return an index of currently accessible spaces

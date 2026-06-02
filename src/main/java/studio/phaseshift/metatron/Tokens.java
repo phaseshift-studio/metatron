@@ -173,6 +173,7 @@ public final class Tokens {
     public static final String HOST = "host";
     public static final String HEADERS = "headers";
     public static final String TRANSPORT = "transport";
+    public static final String COMMAND = "command";
     public static final String SERVER = "server";
     public static final String LOCAL = "local";
     public static final String PORT = "port";
@@ -195,6 +196,7 @@ public final class Tokens {
     public static final String HTTP = "http";
     public static final String HTTPS = "https";
     public static final String STREAMABLE_HTTP = "streamable-http";
+    public static final String STDIO = "stdio";
     public static final String WS = "ws";
     public static final String WSS = "wss";
     public static final String MQTT = "mqtt";

@@ -405,7 +405,7 @@ public class mParser {
         long parseTime = System.nanoTime() - start;
 
         if (result.isFailure()) {
-            LOG.except(result.getBuffer() + "\n" + " ".repeat(result.getPosition()) + "^ " + result.getMessage() + "\n");
+            throw MTronException.of((Object) (result.getBuffer() + "\n" + " ".repeat(result.getPosition()) + "^ " + result.getMessage() + "\n"));
         }
 
         start = System.nanoTime();

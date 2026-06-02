@@ -272,6 +272,51 @@ public class mcp_mtron_wsHandlerIntegrationTest extends AbstractWebSocketServerI
     }
 
     // =========================================================
+    // eval_mtron — regression tests for fail:: wrapping
+    // =========================================================
+
+    @Test
+    public void testEvalMtronWithValidExpression() {
+        final Rec res = mcpRequest(rec(
+                uri(JSONRPC), str("2.0"),
+                uri(ID), jnt(20),
+                uri("method"), uri("tools/call"),
+                uri("params"), rec(
+                        uri(NAME), str("eval_mtron"),
+                        uri("arguments"), rec(uri("code"), str("\"hello\"")))));
+        assertFalse(res.at(uri(RESULT)).isNoObj(), "eval_mtron('\"hello\"') should return a result");
+        assertFalse(res.at(uri("error")).isRec(), "eval_mtron('\"hello\"') should not error");
+    }
+
+    @Test
+    public void testEvalMtronWithNonMtronText() {
+        // Plain text that is not valid mtron — should be returned as-is, not wrapped in fail::
+        final Rec res = mcpRequest(rec(
+                uri(JSONRPC), str("2.0"),
+                uri(ID), jnt(21),
+                uri("method"), uri("tools/call"),
+                uri("params"), rec(
+                        uri(NAME), str("eval_mtron"),
+                        uri("arguments"), rec(uri("code"), str("## Search Results\n\nmethod at line 79")))));
+        assertFalse(res.at(uri(RESULT)).isNoObj(), "eval_mtron(non-mtron text) should return a result");
+        assertFalse(res.at(uri("error")).isRec(), "eval_mtron(non-mtron text) should not error");
+    }
+
+    @Test
+    public void testEvalMtronWithLiteralPercentS() {
+        // Text containing literal %s — used to crash via String.format() in MTronException
+        final Rec res = mcpRequest(rec(
+                uri(JSONRPC), str("2.0"),
+                uri(ID), jnt(22),
+                uri("method"), uri("tools/call"),
+                uri("params"), rec(
+                        uri(NAME), str("eval_mtron"),
+                        uri("arguments"), rec(uri("code"), str("text with literal %s placeholder")))));
+        assertFalse(res.at(uri(RESULT)).isNoObj(), "eval_mtron(literal %s) should return a result");
+        assertFalse(res.at(uri("error")).isRec(), "eval_mtron(literal %s) should not error");
+    }
+
+    // =========================================================
     // Caller-supplied tools override the defaults (direct invocation)
     // =========================================================
 

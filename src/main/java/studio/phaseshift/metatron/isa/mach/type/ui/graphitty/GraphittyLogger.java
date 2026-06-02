@@ -26,7 +26,6 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.event.Level;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Highlighter;
-import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -52,7 +51,7 @@ public class GraphittyLogger extends LayoutBase<ILoggingEvent> {
     // -----------------------------------------------------------------------
 
     private static BiConsumer<Integer, String> paneWriter = (id, msg) -> {}; // no-op until Console registers
-    /** Writer for {@link OtherLevel#NONE} messages — mirrors {@code System.out.print()}
+    /** Writer for messages — mirrors {@code System.out.print()}
      *  semantics (append without a trailing line break). */
     private static BiConsumer<Integer, String> appendPaneWriter = (id, msg) -> {};
 
@@ -164,8 +163,6 @@ public class GraphittyLogger extends LayoutBase<ILoggingEvent> {
                 level.name().length() == 4 ? " " : "",
                 msg));
     }
-    
-    public enum OtherLevel {NONE, EXCEPT}
 
     protected final Object source;
 
@@ -220,23 +217,6 @@ public class GraphittyLogger extends LayoutBase<ILoggingEvent> {
         return this.makeMessage(true, f, args);
     }
 
-    private GraphittyLogger otherLevel(final OtherLevel level, final Object f, final Object... args) {
-        if (OtherLevel.NONE == level) {
-            final String msg = this.makeMessage(false, f, args);
-            if (hasTargetPane()) {
-                // Use append writer — mirrors System.out.print() (no trailing line break).
-                // This lets waiting dots (.) accumulate horizontally rather than each dot
-                // becoming its own buffer line.
-                appendPaneWriter.accept(effectivePaneId(), msg);
-            } else {
-                System.out.print(msg);
-            }
-        } else if (OtherLevel.EXCEPT == level) {
-            throw MTronException.of(f, args);
-        }
-        return this;
-    }
-
     public Optional<String> localInfo(final Object f, final Object... args) {
         return Optional.ofNullable(this.logger().isEnabledForLevel(Level.INFO) ? this.localLog(Level.INFO, f, args) : null);
     }
@@ -268,12 +248,13 @@ public class GraphittyLogger extends LayoutBase<ILoggingEvent> {
     /// ///////////////////////////////
 
     public GraphittyLogger none(final Object f, final Object... args) {
-        return this.otherLevel(OtherLevel.NONE, f, args);
-    }
-
-    public MTronException except(final Object f, final Object... args) throws MTronException {
-        this.otherLevel(OtherLevel.EXCEPT, f, args);
-        return MTronException.of("dummy");
+        final String msg = this.makeMessage(false, f, args);
+        if (hasTargetPane()) {
+            appendPaneWriter.accept(effectivePaneId(), msg);
+        } else {
+            System.out.print(msg);
+        }
+        return this;
     }
 
     public Logger logger(final Level level) {

@@ -48,24 +48,26 @@ public class MTronException extends RuntimeException {
     }
 
     public static MTronException of(final Throwable cause, final String format, final Object... args) {
-        return new MTronException(Graphitty.string(format.formatted(args)), convert(cause));
+        return new MTronException(Graphitty.string(args.length == 0 ? format : format.formatted(args)), convert(cause));
     }
 
     public static MTronException of(final String format, final Object... args) {
-        return new MTronException(Graphitty.string(format.formatted(args)));
+        return new MTronException(Graphitty.string(args.length == 0 ? format : format.formatted(args)));
     }
 
     public static MTronException of(final fURI source, final String format, final Object... args) {
-        return new MTronException("[%s] %s".formatted(source, Graphitty.string(format.formatted(args))));
+        return new MTronException(args.length == 0
+                ? "[%s] %s".formatted(source, format)
+                : "[%s] %s".formatted(source, Graphitty.string(format.formatted(args))));
     }
 
     public static MTronException of(final Object throwableOrformat, final Object... args) {
         //if (throwableOrformat instanceof Throwable)
         //   ((Throwable) throwableOrformat).printStackTrace();
         return throwableOrformat instanceof Throwable ?
-                new MTronException(Graphitty.string(((String) args[0]).formatted(Arrays.copyOfRange(args, 1, args.length))),
+                new MTronException(Graphitty.string(args.length <= 1 ? (String) args[0] : ((String) args[0]).formatted(Arrays.copyOfRange(args, 1, args.length))),
                         convert((Throwable) throwableOrformat)) :
-                new MTronException(Graphitty.string(throwableOrformat.toString().formatted(args)));
+                new MTronException(Graphitty.string(args.length == 0 ? throwableOrformat.toString() : throwableOrformat.toString().formatted(args)));
     }
 
     private static MTronException convert(final Throwable throwable) {

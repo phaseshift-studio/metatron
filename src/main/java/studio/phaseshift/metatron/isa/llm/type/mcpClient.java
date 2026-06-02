@@ -18,37 +18,44 @@
 
 package studio.phaseshift.metatron.isa.llm.type;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
+import dev.langchain4j.data.message.TextContent;
 import dev.langchain4j.mcp.client.DefaultMcpClient;
 import dev.langchain4j.mcp.client.McpClient;
+import dev.langchain4j.mcp.client.McpRoot;
 import dev.langchain4j.mcp.client.transport.McpTransport;
 import dev.langchain4j.mcp.client.transport.http.HttpMcpTransport;
 import dev.langchain4j.mcp.client.transport.http.StreamableHttpMcpTransport;
+import dev.langchain4j.mcp.client.transport.stdio.StdioMcpTransport;
 import dev.langchain4j.mcp.client.transport.websocket.WebSocketMcpTransport;
 import dev.langchain4j.model.chat.request.json.JsonObjectSchema;
 import dev.langchain4j.service.tool.ToolExecutionResult;
+import org.slf4j.event.Level;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.m.type.Str;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
+import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.slf4j.event.Level.WARN;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
+import static studio.phaseshift.metatron.furi.q.QCollection.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_;
 import static studio.phaseshift.metatron.isa.m.type.Bool.*;
@@ -79,8 +86,9 @@ public class mcpClient extends MRec {
                 .logHandler(message -> as().logger().debug("mcp log: %s", message))
                 .transport(createTransport(
                         this.at(uri(TRANSPORT)),
-                        jvm.getOrDefault(uri(HEADERS), rec0()).jvm(),
-                        jvm.get(uri(HOST))))
+                        this.at(uri(HEADERS)).orElse(rec()).jvm(),
+                        this.at(uri(HOST)),
+                        this.at(COMMAND).orElse(lst()).jvm()))
                 //.autoHealthCheck(true)
                 .cacheToolList(true)
                 .build();
@@ -95,18 +103,19 @@ public class mcpClient extends MRec {
         final Rec tools = rec();
         this.client.listTools().stream().forEach(t -> {
             try {
-                final Rec args = Optional.ofNullable(t.parameters())
+                final Map<Obj, String> documentationArgs = Optional.ofNullable(t.parameters())
+                        .map(JsonObjectSchema::properties)
+                        .map(p -> p.entrySet().stream()
+                                .map(kv -> new AbstractMap.SimpleEntry<Obj, String>(uri(kv.getKey()), kv.getValue().description()))
+                                .collect(Collectors.toMap(kv -> kv.getKey(), kv -> kv.getValue()))).orElse(null);
+                final Rec evaluationArgs = Optional.ofNullable(t.parameters())
                         .map(JsonObjectSchema::properties)
                         .map(p -> p.entrySet().stream()
                                 .map(kv -> rel(uri(kv.getKey()), str(kv.getValue().description())))
                                 .collect(new CommonUtil.RecCollector())).orElse(rec());
-                final Rec tool = rec(
-                        uri(NAME), uri(t.name()),
-                        uri(DESC), str(t.description()),
-                        uri(ARG), args);
-
-                tools.at(f(t.name()), instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(ALL.maybe()),
-                        args, (lhs2, inst2) -> {
+                //////////////////////////////////////////////////////////////////////////////////////
+                final Inst toolInst = instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(ALL.maybe()),
+                        evaluationArgs, (lhs2, inst2) -> {
                             final ToolExecutionResult result =
                                     this.client.executeTool(ToolExecutionRequest.builder()
                                             .name(t.name())
@@ -117,54 +126,31 @@ public class mcpClient extends MRec {
                                                             .outputBytes(inst2.args())
                                                             .array()) :
                                                     new String(ObjSimpleJSONSerializer.single()
-                                                            .outputBytes(Inst.Helper.rectifyLstArgs(inst2.args().asLst(), args.asRec()))
+                                                            .outputBytes(Inst.Helper.rectifyLstArgs(inst2.args().asLst(), evaluationArgs))
                                                             .array()))
                                             .build());
                             if (result.isError())
-                                return fail(result.resultContents().toString());
+                                return fail(result.resultText());
                             else {
                                 try {
-                                    return ObjSimpleJSONSerializer.parse(result.resultText());
+                                    return ObjSimpleJSONSerializer.single().read(JsonParser.parseString(result.resultText()));
                                 } catch (final Exception e) {
-                                    return ObjmtronSerializer.parse(result.resultText());
+                                    return str(result.resultText());
                                 }
                             }
-                        }), MUTABLE);
+                        });
+                tools.at(f(t.name()), toolInst, MUTABLE);
+                if (vid != null && Router.global().getSpaceFor(vid).hasQ(DOCQ_PATTERN)) {
+                    final fURI toolDocQ = vid.extend("tool").extend(t.name()).addQ(DOCQ);
+                    Router.writeToSpace(toolDocQ, Docs.doc(toolInst, null, null, documentationArgs, t.description()));
+                    this.logger().info("tool documentation available at %s", toolDocQ);
+                }
             } catch (final Exception e) {
                 throw MTronException.of(e, "error build server: " + t.name());
             }
         });
         if (!tools.isEmpty())
             this.jvm().put(uri(TOOL), tools);
-        /*this.jvm().put(uri(TOOL), auto_(instC(
-                M_ISA_INST_TID.dom(ALL.maybe()).rng(REC_TID), lst(),
-                (lhs, inst) -> this.client.listTools().stream()
-                        .map(t -> {
-                            try {
-                                final Rec args = Optional.ofNullable(t.parameters())
-                                        .map(JsonObjectSchema::properties)
-                                        .map(p -> p.entrySet().stream()
-                                                .map(kv -> rel(uri(kv.getKey()), str(kv.getValue().description())))
-                                                .collect(new CommonUtil.RecCollector())).orElse(rec());
-                                final Rec tool = rec(
-                                        uri(NAME), uri(t.name()),
-                                        uri(DESC), str(t.description()),
-                                        uri(ARG), args);
-                                this.jvm().put(uri(EVAL_INST_TID.name()), instC(f(t.name()), args, (lhs2, inst2) -> {
-                                    final ToolExecutionResult result = this.client.executeTool(ToolExecutionRequest.builder()
-                                            .name(t.name())
-                                            .arguments(ObjSimpleJSONSerializer.single().write(lst(inst2.args().values().toList())).getAsJsonArray().toString()).build());
-                                    if (result.isError())
-                                        return fail(result.resultText());
-                                    else
-                                        return ObjSimpleJSONSerializer.parse(result.resultText());
-                                }));
-                                return tool;
-                            } catch (final Exception e) {
-                                throw MTronException.of(e, "error build server: " + t.name());
-                            }
-                        })
-                        .reduce(rec(), (a, b) -> a.at(b.at(uri(NAME)).asUri(), b)))));*/
     }
 
     @Override
@@ -176,47 +162,54 @@ public class mcpClient extends MRec {
         return this.client;
     }
 
-    protected static McpTransport createTransport(final Obj transport, final Map<Obj, Obj> headers, final Obj host) {
-        if (null != transport && !transport.isNoObj()) {
-            if (f(STREAMABLE_HTTP).equals(transport.uriValue())) {
-                return StreamableHttpMcpTransport.builder()
-                        .logRequests(true)
-                        .logResponses(true)
-                        .logger(LOG.logger(WARN))
-                        .customHeaders(headers.keySet().stream().collect(Collectors.toMap(k -> k.uriValue().toString(), v -> v.uriValue().toString())))
-                        .url(host.uriValue().toString())
-                        .executor(BootLoader.getExecutor())
-                        .build();
-            }
-        } else {
-            if (host.uriValue().scheme().equals(WS) || host.uriValue().scheme().equals(WSS))
-                return WebSocketMcpTransport.builder()
-                        .logRequests(true)
-                        .logResponses(true)
-                        .logger(LOG.logger(WARN))
-                        .url(host.uriValue().toString())
-                        .executor(BootLoader.getExecutor())
-                        .build();
-            if(host.uriValue().name().equals("sse")) {  // TODO: remove when sse is no longer supported
-                return HttpMcpTransport.builder()
-                        .sseUrl(host.uriValue().toString()) // The SSE endpoint
-                        .logger(LOG.logger(WARN))
-                        .logRequests(false)
-                        .logResponses(false)
-                        .customHeaders(headers.keySet().stream().collect(Collectors.toMap(k -> k.uriValue().toString(), v -> v.uriValue().toString())))
-                        .build();
-            }
-            if (host.uriValue().scheme().equals(HTTP) || host.uriValue().scheme().equals(HTTPS)) {
-                return StreamableHttpMcpTransport.builder()
-                        .logRequests(true)
-                        .logResponses(true)
-                        .logger(LOG.logger(WARN))
-                        .customHeaders(headers.keySet().stream().collect(Collectors.toMap(k -> k.uriValue().toString(), v -> v.uriValue().toString())))
-                        .url(host.uriValue().toString())
-                        .executor(BootLoader.getExecutor())
-                        .build();
-            } else
-                throw MTronException.of("unsupported scheme: " + host.uriValue().scheme());
+    protected static McpTransport createTransport(final Obj transport, final Map<Obj, Obj> headers, final Obj host, final List<Obj> command) {
+        final Map<String, String> stringHeaders = headers.entrySet().stream()
+                .map(e -> new AbstractMap.SimpleEntry<>(Str.Helper.cleanString(e.getKey()), Str.Helper.cleanString(e.getValue())))
+                .collect(Collectors.toMap(AbstractMap.SimpleEntry::getKey, AbstractMap.SimpleEntry::getValue));
+
+        if (null != transport && !transport.isNoObj() && f(STREAMABLE_HTTP).equals(transport.uriValue())) {
+            return StreamableHttpMcpTransport.builder()
+                    .logRequests(true)
+                    .logResponses(true)
+                    .logger(LOG.logger(WARN))
+                    .customHeaders(stringHeaders)
+                    .url(host.uriValue().toString())
+                    .executor(BootLoader.getExecutor())
+                    .build();
+        } else if (!command.isEmpty()) {  // STDIO
+            return new StdioMcpTransport.Builder()
+                    .command(command.stream().map(Str.Helper::cleanString).toList())
+                    //.logEvents(false)
+                    .logger(LOG.logger(WARN))
+                    .executorService(BootLoader.getExecutor())
+                    .environment(stringHeaders)
+                    .build();
+        } else if (host.uriValue().scheme().equals(WS) || host.uriValue().scheme().equals(WSS)) {
+            return WebSocketMcpTransport.builder() // WEBSOCKET
+                    .logRequests(true)
+                    .logResponses(true)
+                    .logger(LOG.logger(WARN))
+                    .url(host.uriValue().toString())
+                    .executor(BootLoader.getExecutor())
+                    .build();
+        } else if (host.uriValue().name().equals("sse")) {  // TODO: remove when sse is no longer supported
+            return HttpMcpTransport.builder() // SSE
+                    .sseUrl(host.uriValue().toString())
+                    .logger(LOG.logger(WARN))
+                    .logRequests(false)
+                    .logResponses(false)
+                    .customHeaders(stringHeaders)
+                    .build();
+        } else if (host.uriValue().scheme().equals(HTTP) || host.uriValue().scheme().equals(HTTPS)) {
+            return StreamableHttpMcpTransport.builder() // HTTP
+                    .logRequests(true)
+                    .logResponses(true)
+                    .logger(LOG.logger(WARN))
+                    .customHeaders(stringHeaders)
+                    .url(host.uriValue().toString())
+                    .executor(BootLoader.getExecutor())
+                    .build();
+
         }
         throw MTronException.of("unsupported transport for %s: %s %s", host, transport, headers);
     }

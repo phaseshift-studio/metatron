@@ -90,9 +90,9 @@ public interface Str extends Mono, PlusMonoid.O<Str> {
                 final String strVal = templateResult.isStr() ? templateResult.strValue() : templateResult.toString();
                 matcher.appendReplacement(result, Matcher.quoteReplacement(strVal));
             } catch (Exception e) {
-               throw MTronException.of("failed to expand template ${%s}: %s", exprStr, e.getMessage());
+                throw MTronException.of("failed to expand template ${%s}: %s", exprStr, e.getMessage());
                 /// // On error, leave template unchanged
-               /// matcher.appendReplacement(result, Matcher.quoteReplacement(matcher.group(0)));
+                /// matcher.appendReplacement(result, Matcher.quoteReplacement(matcher.group(0)));
             }
         }
         matcher.appendTail(result);
@@ -108,17 +108,29 @@ public interface Str extends Mono, PlusMonoid.O<Str> {
         return ZERO;
     }
 
+    class Helper {
+        private Helper() {
+            // do nothing
+        }
+
+        public static String cleanString(final Obj obj) {
+            if (obj.isStr()) return obj.strValue();
+            if (obj.isUri()) return obj.uriValue().toString();
+            return String.valueOf(obj.jvm());
+        }
+    }
+
     class StrType {
         private final static Map<String, Pattern> REGEX_CACHE = new HashMap<>();
 
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
-                    instC(AS_INST_TID.dom(STR_TID).rng(STR_TID), lst(STR_TYPE), (lhs, inst) -> lhs.tid(inst.arg(0).vidOrTid().c(c->c.mult(lhs.c())))),
-                    instC(AS_INST_TID.dom(STR_TID).rng(BYTES_TID), lst(BYTES_TYPE), (lhs, inst) -> bytes(ByteBuffer.wrap(lhs.strValue().getBytes()), inst.arg(0).vidOrTid().c(c->c.mult(lhs.c())), lhs.vid())),
-                    instC(AS_INST_TID.dom(STR_TID).rng(BOOL_TID), lst(BOOL_TYPE), (lhs, inst) -> bool(lhs.strValue().equalsIgnoreCase("true"), inst.arg(0).vidOrTid().c(c->c.mult(lhs.c())), lhs.vid())),
-                    instC(AS_INST_TID.dom(STR_TID).rng(INT_TID), lst(INT_TYPE), (lhs, inst) -> jnt(Long.parseLong(lhs.strValue()), inst.arg(0).vidOrTid().c(c->c.mult(lhs.c())), lhs.vid())),
-                    instC(AS_INST_TID.dom(STR_TID).rng(REAL_TID), lst(REAL_TYPE), (lhs, inst) -> real(Double.parseDouble(lhs.strValue()), inst.arg(0).vidOrTid().c(c->c.mult(lhs.c())), lhs.vid())),
-                    instC(AS_INST_TID.dom(STR_TID).rng(URI_TID), lst(URI_TYPE), (lhs, inst) -> uri(f(lhs.strValue()), inst.arg(0).vidOrTid().c(c->c.mult(lhs.c())), lhs.vid())),
+                    instC(AS_INST_TID.dom(STR_TID).rng(STR_TID), lst(STR_TYPE), (lhs, inst) -> lhs.tid(inst.arg(0).vidOrTid().c(c -> c.mult(lhs.c())))),
+                    instC(AS_INST_TID.dom(STR_TID).rng(BYTES_TID), lst(BYTES_TYPE), (lhs, inst) -> bytes(ByteBuffer.wrap(lhs.strValue().getBytes()), inst.arg(0).vidOrTid().c(c -> c.mult(lhs.c())), lhs.vid())),
+                    instC(AS_INST_TID.dom(STR_TID).rng(BOOL_TID), lst(BOOL_TYPE), (lhs, inst) -> bool(lhs.strValue().equalsIgnoreCase("true"), inst.arg(0).vidOrTid().c(c -> c.mult(lhs.c())), lhs.vid())),
+                    instC(AS_INST_TID.dom(STR_TID).rng(INT_TID), lst(INT_TYPE), (lhs, inst) -> jnt(Long.parseLong(lhs.strValue()), inst.arg(0).vidOrTid().c(c -> c.mult(lhs.c())), lhs.vid())),
+                    instC(AS_INST_TID.dom(STR_TID).rng(REAL_TID), lst(REAL_TYPE), (lhs, inst) -> real(Double.parseDouble(lhs.strValue()), inst.arg(0).vidOrTid().c(c -> c.mult(lhs.c())), lhs.vid())),
+                    instC(AS_INST_TID.dom(STR_TID).rng(URI_TID), lst(URI_TYPE), (lhs, inst) -> uri(f(lhs.strValue()), inst.arg(0).vidOrTid().c(c -> c.mult(lhs.c())), lhs.vid())),
                     instC(REVERSE_INST_TID.dom(STR_TID).rng(STR_TID), lst(), (lhs, inst) -> lhs.jvm(new StringBuilder(lhs.strValue()).reverse().toString())),
                     instC(ZERO_INST_TID.dom(STR_TID).rng(STR_TID), lst(), (lhs, inst) -> lhs.asStr().zero()),
                     docWrap(instC(HAS_INST_TID.dom(STR_TID).rng(STR_TID.maybe()), lst(T(STR_TID)), (lhs, inst) -> REGEX_CACHE.compute(inst.arg(0).strValue(), (k, v) -> null == v ? Pattern.compile(k) : v).matcher(lhs.strValue()).find() ? lhs : noobj()),
