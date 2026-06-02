@@ -1,26 +1,32 @@
 print("""
-=======================================================
+======================================================
       _          _   PhaseShift Presents                                
    __| |_ __ ___| |_ _   _ _ __ __  __      ___  ___ 
   / _` | '__/ __| __| | | | '_ \\ \/ /____ / _ \/ __|
  | (_| | |_ \__ \ |_| |_| | | | |>  <_____| (_) \__ \
   \__,_|_(_)|___/\__|\__, |_| |_/_/\_\     \___/|___/
-                     |___/              a metatron bomb                     
-=======================================================
+                     |___/             a metatron bomb                     
+======================================================
+
 """)
 
-[== load instruction sets ==]
-      import(/m/io);
-        import(/m/web);
-          import(/m/llm);
+[-- load instruction sets --]
+      import(/m/mach/io);
+        import(/m/math);
+          import(/m/web);
+            import(/m/llm);
 
 [--------------------------------------------]
 [-- a transient space for scratchpad objs  --]
 [--------------------------------------------]
 memspace::[pattern => /usr/#,                                 
-           q       => [typeq::[=>],mintq::[=>],docq::[=>],subq::[=>],incrq::[=>]]
-]@/sys/space/usr;
+           q       => [typeq::[=>],
+                       mintq::[=>],
+                       docq::[=>],
+                       subq::[=>],
+                       incrq::[=>]]]@/sys/space/usr;
 
+[==
 [-----------------------------------------------]
 [-- use-computer docker container file system --]
 [-----------------------------------------------]
@@ -28,26 +34,27 @@ fsspace::[pattern => home:#,
           q       => [subq::[=>]], [-- enables subscribing to mutating files --]
           route   => [home: => /home/assistant/]
 ]@/sys/space/fs/home;
+==]
 
 [-------------------------------]
 [-- openai lm-studio endpoint --]
 [-------------------------------]
-catalog::[host         => <http://dr-stynx.phaseshift.studio>,          
-          pattern      =>  lm:#,                         
-          name         =>  lm-studio,                           
-          route        => [lm: => <http://dr-stynx.phaseshift.studio/v1>]
+catalog::[host         => <http://192.168.1.61:1234/v1>,          
+          pattern      => lm:#,                         
+          name         => openai,                           
+          route        => [lm:rest => <http://192.168.1.61:1234/v1/>] [-- TODO: should internal route tables support external routing? why not? --]
 ]@/sys/space/ai/lm_studio;
 
 [--------------------------------------------------]
 [-- http server for static pages and mcp servers --]
 [--------------------------------------------------] 
-httpspace::[host     => <http://dr-stynx.phaseshift.studio:8777>,                                                         
+httpspace::[host     => <http://localhost:8777>,                                                         
             q        => [mimeq::[=>]],                             [-- support for mapping objs to markdown, html, json, etc. --] 
             pattern  => <http://#>,                                [-- access to any www web resources --]                                 
             route    => [/          => home:dr-stynx-os/frontend/, [-- pulls files from fsspace --]                                                       
                          /mtron     => mcp_mtron_http,             [-- mcp server with high-level metatron utilities --]  
-                         /docs      => home:dr-stynx-os/docs/]
-]@/sys/space/web/http; 
+                         /docs      => home:dr-stynx-os/docs/]]@/sys/space/web/http; 
+[==
 [--------------------------------------------------]
 [-- websocket server for streaming metatron objs --]
 [--------------------------------------------------] 
@@ -80,20 +87,29 @@ grphspace::[pattern=>g:#,
 [================================]
 [==      agent embedding       ==]
 [================================]
-
+glances -> <http://glances.phaseshift.studio>;
+[-- check if gpu is idle --]
+asleep -> |(asleep?bool{?}<=#{?}(uri::T){
+*<0>.mult(</api/4/gpu>).*(_).
+  else(throw('glances server down')).
+  >-.=?=[gpu_id=>nvidia0].
+  -<[proc  => >>proc,
+     fan   => >>fan_speed,
+     sleep => >>proc.lt(50)].
+  >>sleep
+});
 [-- heartbeat --]
-virtual::[code=>print('ping.'),loop=>second::10]@/usr/ai/heartbeat
+virtual::[code=>asleep(*glances).
+                catch("glances server error").
+                println("beat: ", _),
+          loop=>second::5.0,
+          start=>1]@/usr/ai/heartbeat.
+          >>state.
+          -<|[?=run => println('{{b}}heartbeat{{X}}: {{y}}${_}{{X}}'), 
+                  _ => throw('{{r}}thread not started{{X}}')].catch(print(_));
 
-
-[-- define a dr-stynx.os mcp server type                        --]
-[-- type=>value at httpspace dereference creates server session --]
-mcp_http::T[][
-  tool=>[
-    gpu_check => inst(){ *<http://glances.phaseshift.studio> }
-    ...
-    ...
-  ]
-]@<home:mcp/dr-stynx.os>
+print("\nrunning heartbeat ${*/usr/ai/heartbeat}\n");
+console::[=>]@/usr/ui/console;
 
 
 

@@ -79,7 +79,6 @@ print("{{y}}supported scripting environments:\n{{X}}", *<boot/script>.else(boot/
         route    => [</h/+/>=><>],
         native   => [factory  => mfactory::[=>],
                      load     => grateful]]@/sys/space/grateful;                    
-  memspace::[pattern => /storage/mail/#]@/sys/space/mail;
   grphspace::[pattern  => g:#,
         route    => [g:V/+/mail => </storage/mail/${>>1}>,
                      g:V        => V,

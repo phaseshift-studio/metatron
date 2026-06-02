@@ -59,38 +59,41 @@ public class VirtualThread extends AbstractThread implements NotDetachable {
     }
 
     private void createUnstartedThread() {
-        if (null == this.thread)
-            this.thread = Thread.ofVirtual()
-                    .name(this.vid() == null ? "metatron-virtual-thread" : this.vid().toString())
-                    .unstarted(() -> {
-                        try {
-                            final Real loopInterval = this.has(LOOP) ? this.at(LOOP).as(MILLIS_TYPE).as() : real(-1.0d);
-                            boolean loop = true;
-                            this.jvm().put(uri(STATE), uri(RUN));
-                            while (loop) {
-                                loop = loopInterval.realValue() != -1.0d;
-                                final Obj result = this.jvm().getOrDefault(uri(CODE), noobj()).apply(this.at(START));
-                                this.jvm().put(uri(RESULT), result);
-                                if (this.thread.isInterrupted() || this.at(uri(STATE)).equals(uri(STOP))) {
-                                    loop = false;
-                                    if (!this.thread.isInterrupted())
-                                        this.thread.interrupt();
-                                    this.logger().warn("virtual thread {{y}}interrupted{{X}} at %s", LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
-                                }
-                                if (loop) {
-                                    CommonUtil.sleepThread(loopInterval.realValue().intValue());
-                                }
+        if (null != this.thread)
+            return;
+        this.thread = Thread.ofVirtual()
+                .name(this.vid() == null ? "metatron-virtual-thread" : this.vid().toString())
+                .unstarted(() -> {
+                    try {
+                        final Real loopInterval = this.has(LOOP) ? this.at(LOOP).as(MILLIS_TYPE).as() : real(-1.0d);
+                        boolean loop = true;
+                        this.jvm().put(uri(STATE), uri(RUN));
+                        while (loop) {
+                            loop = loopInterval.realValue() != -1.0d;
+                            final Obj result = this.jvm().getOrDefault(uri(CODE), noobj()).apply(this.at(START));
+                            this.jvm().put(uri(RESULT), result);
+                            if (this.thread.isInterrupted() || this.at(uri(STATE)).equals(uri(STOP))) {
+                                loop = false;
+                                if (!this.thread.isInterrupted())
+                                    this.thread.interrupt();
+                                this.logger().warn("virtual thread {{y}}interrupted{{X}} at %s", LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
                             }
-                        } catch (final Throwable e) {
-                            this.jvm().put(uri(RESULT), fail(e));
-                            this.logger().error("thread execution failed: %s", e.getMessage());
-                        } finally {
-                            this.stop();
-                            synchronized (VirtualThread.this) {
-                                VirtualThread.this.notifyAll();
+                            if (loop) {
+                                CommonUtil.sleepThread(loopInterval.realValue().intValue());
                             }
                         }
-                    });
+                    } catch (final Exception e) {
+                        if (null != this.thread && !(e.getMessage().contains("nterrupt"))) {
+                            this.jvm().put(uri(RESULT), fail(e));
+                            this.logger().error("thread execution failed: %s", e.getMessage());
+                        }
+                    } finally {
+                        this.stop();
+                        synchronized (VirtualThread.this) {
+                            VirtualThread.this.notifyAll();
+                        }
+                    }
+                });
     }
 
 
@@ -142,7 +145,7 @@ public class VirtualThread extends AbstractThread implements NotDetachable {
                         this.wait(waitTime);
                     }
                 } catch (final InterruptedException e) {
-                    Thread.currentThread().interrupt();
+                    this.thread.interrupt();
                     throw MTronException.of("interrupted while waiting for result");
                 }
             }
@@ -166,7 +169,8 @@ public class VirtualThread extends AbstractThread implements NotDetachable {
                 this.logger().warn("thread currently running, ignoring %s", other);
                 return this;
             }
-            this.jvm().put(uri(START), other);
+            if (this.at(START).isNoObj())
+                this.jvm().put(uri(START), other);
             this.createUnstartedThread();
             this.thread.start();
         }

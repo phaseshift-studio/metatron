@@ -102,19 +102,19 @@ Graph traversals in mtron are expressed using either __instruction-call__ syntax
 --
 [discrete,.center]
 ==== graph traversal is uri resolution
-At its core, metatron is a system designed to __resolve identifiers__. Every piece of data has a unique id -- and in fact, many unique ids: for all the ways in which spaces inter- and intra-connect with one another and for what spaces allow semantically (space-dependent). In metatron, traversing a graph is ultimately about solving **path equations** (uri resolutions). 
+At its core, metatron is a system designed __to map a reference to its referent__ -- i.e., to resolve identifiers. In metatron, every piece of data has a unique id -- and in fact, many unique ids: as an id is a uri which denotes a particular path through space from point **A** to point **B** (and many such paths may exist). However, not all potential paths can be solved with a URI. As such, when a URI segment requires more expressivity than what an explicit selection or wildcard pattern can offer, mtron instructions are attached. Thus, one way to think about mtron is that it's resolving an identifier, where if a certain fragment requires a more in-depth computation, then that fragment defers to executable function -- an `inst`. 
 
 [source,mtron]
 ----
-from()                  where()                          count()
-┌───┐               ┌──────────────┐                   ┌────────┐ 
-│ * │g:V/1/OUT/knows│=?=[age?>29]>>│OUT/created/IN/name│.count()│ 
-└───┘               └──────────────┘                   └────────┘ 
-         out(knows)                  out(created)>>name            
+  from()                     where()                             count()
+  ┌───┐                   ┌────────────────┐                      ┌────────┐ 
+A │ * │g:V/1/OUT/knows/IN │=?=[age=>?>29]>>│ /OUT/created/IN/name │.count()│ B 
+  └───┘     │            │└────────────────┘│                    │└────────┘ 
+            └─out(knows)─┘                  └─out(created)>>name─┘            
 ----
 
 
-For example: `*g:V/1/OUT/knows` traverses via **uri resolution**. `*g:V/1.out(knows)` traverses via **instruction evaluation**. Both yield the same set of edges. The distinction lies in the fact that instructions are simply wrappers around a subset of the uri. The instructions `outE()`, `inV()`, `out()` — inherited from Gremlin — are https://en.wikipedia.org/wiki/Syntactic_sugar[syntactic sugar].
+With respects to the traversal instructions of `/m/grph`, the instructions `outE()`, `inV()`, `out()`, etc. — inherited from Gremlin — are https://en.wikipedia.org/wiki/Syntactic_sugar[syntactic sugar] that map to standard metatron URI fragments.
 --
 
 [discrete]

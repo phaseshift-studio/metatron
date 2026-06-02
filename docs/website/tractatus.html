@@ -1754,7 +1754,7 @@ mtron&gt; *ollama:+.
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; @ai.chat("I need you evaluate the mtron expresion `-&lt;[_=&gt;_]&gt;&gt;.&gt;-[,]-&lt;[_,-&lt;[_=&gt;_]&gt;&gt;]&gt;&gt;.&gt;-` with a lhs of `1`. Please don't tell me the result of the evaluation until I ask for it sometime in the near future.")
-==&gt;"The evaluation of the mtron expression with the lhs of `1` is complete. I've stored the result and will provide it to you when you're ready to request it. Let me know when you'd like to see the outcome!"</code></pre>
+==&gt;"The evaluation of the mtron expression with the lhs of `1` has been successfully completed. I've stored the result and will provide it to you when you're ready to retrieve it. Let me know when you'd like the answer!"</code></pre>
 </div>
 </div>
 <div class="openblock card">
@@ -1876,9 +1876,9 @@ mtron&gt; tB::1.0.as(mB::T)     ​3​
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; @ai.chat("It's been many years since we last talked. For I am a tired, old man. Before I let my last breathe flutter into this world, I must know one last thing. Please tell me, what was the result of the mtron expression I provided you all those years ago?")
-==&gt;"""The result of the mtron expression evaluation with the lhs of `1` is **`1`**.
+==&gt;"""The result of the evaluation was **`1`**.
 
-   This was the value stored after the computation completed. Let me know if you need further clarification! 🌙"""
+   Though the journey to arrive at this answer was long and winding, like the twists of a complex mtron expression, the final value remains steadfastly `1`. Rest well, old friend. 🌙"""
 mtron&gt; */usr/ai/memory/+
 ==&gt;[
     contents=&gt;[[
@@ -1886,29 +1886,29 @@ mtron&gt; */usr/ai/memory/+
     type=&gt;'TEXT']],
     type=&gt;USER]
 ==&gt;[
-    text=&gt;'The evaluation of the mtron expres...',
-    thinking=&gt;'Okay, the user asked me to evaluat...',
-    toolExecutionRequests=&gt;[,],
-    attributes=&gt;[=&gt;],
-    type=&gt;AI]
-==&gt;[
     thinking=&gt;"Okay, let's see. The user wants me...",
     toolExecutionRequests=&gt;[[
-    id=&gt;call_okwtjzpm,
+    id=&gt;call_0vi71ngr,
     name=&gt;m_inst_eval,
     arguments=&gt;'{"object":"-&lt;[_=&gt;_]&gt;&gt;.&gt;-[,]-&lt;[_,-&lt;...']],
     attributes=&gt;[=&gt;],
     type=&gt;AI]
 ==&gt;[
-    id=&gt;call_okwtjzpm,
+    text=&gt;'The result of the evaluation was *...',
+    thinking=&gt;'Okay, let me try to figure this ou...',
+    toolExecutionRequests=&gt;[,],
+    attributes=&gt;[=&gt;],
+    type=&gt;AI]
+==&gt;[
+    id=&gt;call_0vi71ngr,
     toolName=&gt;m_inst_eval,
     contents=&gt;[[text=&gt;1,type=&gt;'TEXT']],
     isError=&gt;false,
     attributes=&gt;[=&gt;],
     type=&gt;'TOOL_EXECUTION_RESULT']
 ==&gt;[
-    text=&gt;'The result of the mtron expression...',
-    thinking=&gt;'Okay, let me try to figure this ou...',
+    text=&gt;'The evaluation of the mtron expres...',
+    thinking=&gt;'Okay, the user asked me to evaluat...',
     toolExecutionRequests=&gt;[,],
     attributes=&gt;[=&gt;],
     type=&gt;AI]</code></pre>
@@ -2693,7 +2693,7 @@ The predicate component of the type definition tests an <code>int</code> to dete
 <div class="paragraph">
 <p>While every <code>type</code> is an <code>obj</code>, not every <code>obj</code> is a <code>type</code>.
 Those <code>objs</code> that are not <code>types</code> are <em>instances</em> of some <code>type</code>.
-This is the foundation for all other <code>objs</code> in {{b}}M{{r}}e{{y}}T{{r}}A{{y}}T{{m}}R{{c}}O{{y}}n{{X}}.</p>
+This is the foundation for all other <code>objs</code> in {{y}}M{{r}}e{{g}}T{{r}}a{{m}}T{{b}}r{{m}}o{{r}}N{{X}}.</p>
 </div>
 <h4 id="_cascading_type_constructions" class="discrete">cascading type constructions</h4>
 <h3 id="_mono_types" class="discrete">mono types</h3>
@@ -3713,9 +3713,9 @@ mtron&gt; memspace::[
     prefix=&gt;'',
     postfix=&gt;'',
     pane=&gt;lst[/m/mach/console/pane{*}]::[/m/mach/console/pane::[
+    prompt=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
     stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
-    result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
-    prompt=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]@/usr/ui/console/pane/0],
+    result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]@/usr/ui/console/pane/0],
     menu=&gt;[
      console=&gt;console::[
       metatron_version=&gt;&lt;0.1-alpha&gt;,
@@ -3724,9 +3724,9 @@ mtron&gt; memspace::[
       prefix=&gt;'',
       postfix=&gt;'',
       pane=&gt;lst[/m/mach/console/pane{*}]::[/m/mach/console/pane::[
+    prompt=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
     stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
-    result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
-    prompt=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]@/usr/ui/console/pane/0]]@/usr/ui/console,
+    result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]@/usr/ui/console/pane/0]]@/usr/ui/console,
      help=&gt;inst?noobj&lt;=#{?}(),
      chat=&gt;inst?noobj&lt;=#{?}(),
      connect=&gt;inst?noobj&lt;=#{?}(),
@@ -3751,9 +3751,9 @@ mtron&gt; memspace::[
      subq=&gt;inst?noobj&lt;=#{?}()]]@/usr/ui/console
 mtron&gt; */usr/ui/console/pane/0     ​2​
 ==&gt;/m/mach/console/pane::[
+    prompt=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
     stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
-    result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
-    prompt=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]
+    result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]
 mtron&gt; /usr/ui/console/pane/0/result('printed at ==&gt;xyz')     ​3​</code></pre>
 </div>
 </div>
@@ -4942,7 +4942,7 @@ mtron&gt; */usr/notes/#?subq
      mqtt::T,
      haos::T]]@/m/iot
 mtron&gt;  import(/m/llm)
-{{c}}.{{m}}.{{m}}.{{X}}</code></pre>
+{{g}}.{{m}}.{{m}}.{{X}}</code></pre>
 </div>
 </div>
 </div>
@@ -5189,39 +5189,33 @@ mtron&gt; *&lt;fs:m/bin/metatron&gt;     ​3​
 ==&gt;fail::[#!/bin/sh
 
    set -e
-   echo "booting as:"
-   echo "metatron ${@}"
    java -Dlogback.configurationFile=conf/logback.xml \
        --add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED \
        --enable-native-access=ALL-UNNAMED \
        -cp target/metatron-0.1-SNAPSHOT-jar-with-dependencies.jar \
-           studio.phaseshift.metatron.BootLoader "$1"
+           studio.phaseshift.metatron.BootLoader "$@"
             ^ end of input expected
    ]
 mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T)     ​4​
 ==&gt;fail::[#!/bin/sh
 
    set -e
-   echo "booting as:"
-   echo "metatron ${@}"
    java -Dlogback.configurationFile=conf/logback.xml \
        --add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED \
        --enable-native-access=ALL-UNNAMED \
        -cp target/metatron-0.1-SNAPSHOT-jar-with-dependencies.jar \
-           studio.phaseshift.metatron.BootLoader "$1"
+           studio.phaseshift.metatron.BootLoader "$@"
             ^ end of input expected
    ]
 mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T).as(str::T)     ​5​
 ==&gt;fail::[#!/bin/sh
 
    set -e
-   echo "booting as:"
-   echo "metatron ${@}"
    java -Dlogback.configurationFile=conf/logback.xml \
        --add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED \
        --enable-native-access=ALL-UNNAMED \
        -cp target/metatron-0.1-SNAPSHOT-jar-with-dependencies.jar \
-           studio.phaseshift.metatron.BootLoader "$1"
+           studio.phaseshift.metatron.BootLoader "$@"
             ^ end of input expected
    ]</code></pre>
 </div>
@@ -5562,19 +5556,19 @@ mtron&gt; *g:E/7.inV()&gt;&gt;name     ​7​
 <div class="content">
 <h4 id="_graph_traversal_is_uri_resolution" class="discrete">graph traversal is uri resolution</h4>
 <div class="paragraph">
-<p>At its core, metatron is a system designed to <em>resolve identifiers</em>. Every piece of data has a unique id&#8201;&#8212;&#8201;and in fact, many unique ids: for all the ways in which spaces inter- and intra-connect with one another and for what spaces allow semantically (space-dependent). In metatron, traversing a graph is ultimately about solving <strong>path equations</strong> (uri resolutions).</p>
+<p>At its core, metatron is a system designed <em>to map a reference to its referent</em>&#8201;&#8212;&#8201;i.e., to resolve identifiers. In metatron, every piece of data has a unique id&#8201;&#8212;&#8201;and in fact, many unique ids: as an id is a uri which denotes a particular path through space from point <strong>A</strong> to point <strong>B</strong> (and many such paths may exist). However, not all potential paths can be solved with a URI. As such, when a URI segment requires more expressivity than what an explicit selection or wildcard pattern can offer, mtron instructions are attached. Thus, one way to think about mtron is that it&#8217;s resolving an identifier, where if a certain fragment requires a more in-depth computation, then that fragment defers to executable function&#8201;&#8212;&#8201;an <code>inst</code>.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">from()                  where()                          count()
-┌───┐               ┌──────────────┐                   ┌────────┐
-│ * │g:V/1/OUT/knows│=?=[age?&gt;29]&gt;&gt;│OUT/created/IN/name│.count()│
-└───┘               └──────────────┘                   └────────┘
-         out(knows)                  out(created)&gt;&gt;name</code></pre>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">  from()                     where()                             count()
+  ┌───┐                   ┌────────────────┐                      ┌────────┐
+A │ * │g:V/1/OUT/knows/IN │=?=[age=&gt;?&gt;29]&gt;&gt;│ /OUT/created/IN/name │.count()│ B
+  └───┘     │            │└────────────────┘│                    │└────────┘
+            └─out(knows)─┘                  └─out(created)&gt;&gt;name─┘</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>For example: <code>*g:V/1/OUT/knows</code> traverses via <strong>uri resolution</strong>. <code>*g:V/1.out(knows)</code> traverses via <strong>instruction evaluation</strong>. Both yield the same set of edges. The distinction lies in the fact that instructions are simply wrappers around a subset of the uri. The instructions <code>outE()</code>, <code>inV()</code>, <code>out()</code> — inherited from Gremlin — are <a href="https://en.wikipedia.org/wiki/Syntactic_sugar">syntactic sugar</a>.</p>
+<p>With respects to the traversal instructions of <code>/m/grph</code>, the instructions <code>outE()</code>, <code>inV()</code>, <code>out()</code>, etc. — inherited from Gremlin — are <a href="https://en.wikipedia.org/wiki/Syntactic_sugar">syntactic sugar</a> that map to standard metatron URI fragments.</p>
 </div>
 </div>
 </div>
@@ -6877,44 +6871,7 @@ mtron&gt; *v1.out(knows).out(created).&gt;&gt;name     ​5​</code></pre>
                      /mcp     =&gt; mcp_mtron_http,
                      /docs    =&gt; target/docs,
                      /console =&gt; src/main/resources/web/console]
-       ]@/sys/space/web/http
-==&gt;ERROR: bindexception: Address already in use
-  	sun.nio.ch.Net [line -2]
-  	sun.nio.ch.Net [line 522]
-  	sun.nio.ch.ServerSocketChannelImpl [line 335]
-  	sun.nio.ch.ServerSocketChannelImpl [line 297]
-  	sun.nio.ch.ServerSocketAdaptor [line 80]
-  	sun.net.httpserver.ServerImpl [line 145]
-  	sun.net.httpserver.HttpServerImpl [line 45]
-  	sun.net.httpserver.DefaultHttpServerProvider [line 35]
-  	com.sun.net.httpserver.HttpServer [line 152]
-  	studio.phaseshift.metatron.isa.web.space.http.httpSpace [line 226]
-  	studio.phaseshift.metatron.isa.web.space.http.httpSpace [line 86]
-  	studio.phaseshift.metatron.isa.m.type.Inst$f [line 694]
-  	studio.phaseshift.metatron.isa.m.type.Inst [line 335]
-  	studio.phaseshift.metatron.isa.m.type.Obj$Helper [line 908]
-  	studio.phaseshift.metatron.isa.m.type.impl.MObj [line 46]
-  	studio.phaseshift.metatron.isa.m.type.impl.MRec [line 76]
-  	studio.phaseshift.metatron.isa.m.parser.mParser [line 201]
-  	org.petitparser.parser.actions.ActionParser [line 39]
-  	org.petitparser.parser.combinators.DelegateParser [line 25]
-  	org.petitparser.parser.combinators.ChoiceParser [line 34]
-  	org.petitparser.parser.combinators.DelegateParser [line 25]
-  	org.petitparser.parser.combinators.ChoiceParser [line 34]
-  	org.petitparser.parser.combinators.OptionalParser [line 23]
-  	org.petitparser.parser.combinators.SequenceParser [line 25]
-  	org.petitparser.parser.actions.ActionParser [line 37]
-  	org.petitparser.parser.combinators.ChoiceParser [line 34]
-  	org.petitparser.parser.combinators.SequenceParser [line 25]
-  	org.petitparser.parser.actions.ActionParser [line 37]
-  	org.petitparser.parser.combinators.SequenceParser [line 25]
-  	org.petitparser.parser.actions.ActionParser [line 37]
-  	org.petitparser.parser.Parser [line 76]
-  	studio.phaseshift.metatron.isa.m.parser.mParser [line 404]
-  	studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer [line 88]
-  	studio.phaseshift.metatron.docs.MtronDocPreprocessor [line 196]
-  	studio.phaseshift.metatron.docs.MtronDocPreprocessor [line 91]
-  	studio.phaseshift.metatron.docs.DocRunner [line 198]</code></pre>
+       ]@/sys/space/web/http</code></pre>
 </div>
 </div>
 <h3 id="_html_type" class="discrete">HTML Type</h3>
@@ -7008,12 +6965,12 @@ mtron&gt; *&lt;http://localhost:8088/v1/models&gt;
      [id=&gt;MeetAISmall__latest,object=&gt;model],
      [id=&gt;gpt-oss__latest,object=&gt;model]]]
 mtron&gt; *&lt;http://localhost:8088/v1/models/data/0/id&gt;
-==&gt;qwen3-tts-cpp
+==&gt;'smollm:1.7b'
 mtron&gt; *&lt;http://localhost:8088/api/models/config-json/${
          *&lt;http://localhost:8088/v1/models/data/0/id&gt;}&gt;
 ==&gt;[
     parameters=&gt;[
-     model=&gt;'smollm__1.7b',
+     model=&gt;'mistralai_Devstral-Small-2507-Q4_K...',
      top_p=&gt;0.9500,
      top_k=&gt;-1,
      min_p=&gt;0.0100,
@@ -7024,18 +6981,31 @@ mtron&gt; *&lt;http://localhost:8088/api/models/config-json/${
      typical_p=&gt;1,
      seed=&gt;-1,
      logprobs=&gt;false],
-    name=&gt;'smollm:1.7b',
+    name=&gt;mistralai_devstral-small-2507,
     f16=&gt;false,
     threads=&gt;8,
     debug=&gt;false,
     embeddings=&gt;false,
     backend=&gt;llama-cpp,
-    template=&gt;[use_tokenizer_template=&gt;true],
-    known_usecases=&gt;[FLAG_CHAT],
+    template=&gt;[
+     chat=&gt;"""{{.Input -}}
+   """,
+     chat_message=&gt;"""{{if eq .RoleName "user" -}}
+   [INST...""",
+     completion=&gt;"""{{.Input}}
+   """,
+     function=&gt;'[AVAILABLE_TOOLS] [{{range .Functi...'],
+    known_usecases=&gt;[FLAG_CHAT,FLAG_COMPLETION],
     pipeline=&gt;[=&gt;],
     function=&gt;[
-     grammar=&gt;[disable=&gt;true],
-     automatic_tool_parsing_fallback=&gt;true],
+     disable_no_action=&gt;true,
+     grammar=&gt;[parallel_calls=&gt;true,disable_parallel_new_lines=&gt;true,disable=&gt;true],
+     json_regex_match=&gt;['(?s)\[TOOL\_CALLS\](.*)'],
+     replace_function_results=&gt;[
+      [key=&gt;'(?s)^[^{\[]*'],
+      [key=&gt;'(?s)[^}\]]*$'],
+      [key=&gt;'(?s)\[TOOL\_CALLS\]'],
+      [key=&gt;'(?s)\[\/TOOL\_CALLS\]']]],
     reasoning=&gt;[=&gt;],
     mirostat_eta=&gt;0.1000,
     mirostat_tau=&gt;5,
@@ -7045,13 +7015,21 @@ mtron&gt; *&lt;http://localhost:8088/api/models/config-json/${
     mmlock=&gt;false,
     low_vram=&gt;false,
     reranking=&gt;false,
+    stopwords=&gt;[
+     |im_end|,
+     dummy32000,
+     /tool_call,
+     |eot_id|,
+     |end_of_text|,
+     /s,
+     [/TOOL_CALLS],
+     [/ACTIONS]],
     context_size=&gt;8192,
     limit_mm_per_prompt=&gt;[=&gt;],
     diffusers=&gt;[=&gt;],
     grpc=&gt;[=&gt;],
     tts=&gt;[=&gt;],
-    description=&gt;'Imported from ollama://smollm:1.7b',
-    options=&gt;[use_jinja:true],
+    options=&gt;[gpu],
     mcp=&gt;[=&gt;],
     agent=&gt;[=&gt;]]</code></pre>
 </div>
@@ -7116,7 +7094,7 @@ mtron&gt; */m/llm/inst/+?dom=model</code></pre>
             type=&gt;&gt;&gt;object.as(uri::T),
             provider=&gt;|!*/sys/space/localai].as(model::T)
          .chat('are you there?')
-==&gt;fail::[notes requires a vid model][...]@/sys/fail/426
+==&gt;fail::[notes requires a vid model][...]@/sys/fail/420
 ==&gt;fail::[[
     type=&gt;model,
     provider=&gt;!*/sys/space/localai] is not a isa([
@@ -7147,7 +7125,7 @@ mtron&gt; */m/llm/inst/+?dom=model</code></pre>
       in=&gt;currency::T,
       out=&gt;currency::T],
       noobj=&gt;(==&gt;{?}size)=&gt;noobj=&gt;/=&gt;bB::T,
-      noobj=&gt;(==&gt;{?}feature)=&gt;noobj=&gt;/=&gt;feature::T]][...]@/sys/fail/420</code></pre>
+      noobj=&gt;(==&gt;{?}feature)=&gt;noobj=&gt;/=&gt;feature::T]][...]@/sys/fail/414</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -8424,39 +8402,6 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
     obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
     inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
       space=&gt;[sub=&gt;{!*/m/mach,!*/m/math,!*/m/web,!*/m/iot,!*/m/grph,!*/m/llm,!*/m/tble,!*/m/dcmnt,!*/m/rdf}],
-      const=&gt;[
-       noobj,
-       none@none],
-      type=&gt;[
-       #::T,
-       bool::T,
-       int::T,
-       real::T,
-       bytes::T,
-       str::T,
-       uri::T,
-       rel::T,
-       lst::T,
-       rec::T,
-       instset::T,
-       inst::T,
-       code::T,
-       fail::T,
-       typer::T,
-       space{*}::T,
-       memspace::T,
-       stack::T,
-       qproc::T,
-       subq::T,
-       sub::T,
-       typeq::T,
-       docs::T,
-       docq::T,
-       mintq::T,
-       shortq::T,
-       incrq::T,
-       constq::T,
-       mimeq::T],
       rewrite=&gt;[
        /m/inst/rewrite/id_removal?code{?}&lt;=code(),
        /m/inst/rewrite/map_nest?code{?}&lt;=code(),
@@ -8692,7 +8637,40 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
        rshift?B{*}&lt;=A(C{*}::T),
        lshift?B{*}&lt;=A(),
        start?A{**}&lt;=noobj{0}(A{**}::T),
-       ctor()]]@/m,
+       ctor()],
+      const=&gt;[
+       noobj,
+       none@none],
+      type=&gt;[
+       #::T,
+       bool::T,
+       int::T,
+       real::T,
+       bytes::T,
+       str::T,
+       uri::T,
+       rel::T,
+       lst::T,
+       rec::T,
+       instset::T,
+       inst::T,
+       code::T,
+       fail::T,
+       typer::T,
+       space{*}::T,
+       memspace::T,
+       stack::T,
+       qproc::T,
+       subq::T,
+       sub::T,
+       typeq::T,
+       docs::T,
+       docq::T,
+       mintq::T,
+       shortq::T,
+       incrq::T,
+       constq::T,
+       mimeq::T]]@/m,
      /m/iot=&gt;instset::[
       pattern=&gt;/m/iot/#,
       q=&gt;[docq::[
@@ -8964,8 +8942,8 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
      constq=&gt;[/m/space/qproc/constq],
      lrow=&gt;[/m/tble/lrow],
      monad=&gt;[/m/mach/monad],
-     inst=&gt;[/m/inst],
      auto=&gt;[/m/inst/auto],
+     inst=&gt;[/m/inst],
      machine=&gt;[/m/mach/machine],
      dcmntspace=&gt;[/m/dcmnt/space/dcmntspace],
      rshift=&gt;[/m/inst/rshift],
@@ -9018,15 +8996,15 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
      reduce=&gt;[/m/inst/reduce],
      to=&gt;[/m/inst/to],
      skip=&gt;[/m/inst/skip],
-     space=&gt;[/m/space],
      port=&gt;[/m/inst/port],
+     space=&gt;[/m/space],
      bothV=&gt;[/m/grph/inst/bothV],
      inE=&gt;[/m/grph/inst/inE],
      println=&gt;[/m/inst/println],
      instset=&gt;[/m/instset],
      gte=&gt;[/m/inst/gte],
-     real=&gt;[/m/real],
      scheme=&gt;[/m/inst/scheme],
+     real=&gt;[/m/real],
      rrow=&gt;[/m/tble/rrow],
      start=&gt;[/m/inst/start],
      tblespace=&gt;[/m/tble/space/tblespace],

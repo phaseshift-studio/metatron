@@ -714,10 +714,8 @@ public class mParser {
                 final String source = removeBlockComments(lines.stream().reduce("", (a, b) -> a + b + "\n"));
                 return splitOnNonQuotedSequence(source, ';', false).stream()
                         .map(mParser::removeLineComments)
-                        .filter(s -> !s.trim().isEmpty())
-                        .map(s -> Arrays.stream(s.split("\n"))
-                                .map(String::trim)
-                                .reduce("", (a, b) -> a + b + "\n"))
+                        .filter(s -> !s.isBlank())
+                        .map(s -> Arrays.stream(s.split("\n")).reduce("", (a, b) -> a + b + "\n"))
                         .peek(s -> LOG.debug("evaluating line: %s", s))
                         .map(s -> {
                             try {
