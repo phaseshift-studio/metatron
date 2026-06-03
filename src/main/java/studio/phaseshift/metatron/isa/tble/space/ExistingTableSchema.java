@@ -46,7 +46,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.tble.tbleInstSet.TABLE_TID;
+
 
 /**
  * Schema for mapping existing SQL tables to metatron objects.
@@ -714,33 +714,21 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
                  * discovered table.  This makes the instset schema the single source
                  * of truth (no separate SQL-specific TABLE_TID encoding).
                  */
-                if (this.schemaGenerator != null) {
-                    return this.schemaGenerator.getTableTypes().stream()
-                            .map(t -> Space.IdObj.of(t.vid(), t))
-                            .iterator();
-                }
-                // Fallback when schema generator not yet wired
-                return this.tableSchemas.keySet().stream()
-                        .map(s -> {
-                            final fURI tableVID = Space.Helper.routeToSpace(pattern.retractPattern().extend(s), this.space.routes());
-                            return Space.IdObj.of(tableVID, uri(tableVID, TABLE_TID, null).selfVID(tableVID));
-                        }).iterator();
+                return this.schemaGenerator.getTableTypes().stream()
+                        .map(t -> Space.IdObj.of(t.vid(), t))
+                        .iterator();
             } else {
                 /*
                  * Exact table dereference — return the instset-encoded Type for this
                  * table.  The Type's isaPredicate carries the column=>type mappings,
                  * making the instset schema the single source of truth.
                  */
-                final String tableName = dp.collection().toLowerCase();
-                if (this.schemaGenerator != null) {
-                    final Type tableType = this.schemaGenerator.getTableType(tableName);
-                    if (tableType != null) {
-                        return IteratorUtil.of(Space.IdObj.of(tableType.vid(), tableType));
-                    }
+                final String tn = dp.collection().toLowerCase();
+                final Type tableType = this.schemaGenerator.getTableType(tn);
+                if (tableType != null) {
+                    return IteratorUtil.of(Space.IdObj.of(tableType.vid(), tableType));
                 }
-                // Fallback: construct a self-referencing table URI
-                final fURI tableVID = Space.Helper.routeToSpace(pattern, this.space.routes());
-                return IteratorUtil.of(Space.IdObj.of(tableVID, uri(tableVID, TABLE_TID, null).selfVID(tableVID)));
+                return Collections.emptyIterator();
             }
         } else {
             final TableMetadata metadata = tableSchemas.get(tableName.toLowerCase());

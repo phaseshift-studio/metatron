@@ -311,6 +311,8 @@ public class tbleSpace extends AbstractSpace<Connection> implements SchemaSpace 
      * Creates the {@link ExistingTableSchema} on first access when the space was
      * mounted without a {@code TABLE} config key and one is added at runtime via
      * {@code /sys/space/.../table -> [person,score]}.
+     * Also wires the schemaGenerator so instset-encoded Types are the single
+     * source of truth (no SQL-specific TABLE_TID encoding).
      */
     protected synchronized void lazyInitExistingTableSchema() {
         if (this.existingTableSchema == null) {
@@ -318,6 +320,20 @@ public class tbleSpace extends AbstractSpace<Connection> implements SchemaSpace 
                 this.existingTableSchema = new ExistingTableSchema(this, "objs");
                 this.existingTableSchema.initialize(this.sjvm());
                 LOG.info("lazy-initialized {{g}}existing table schema{{X}} - discovered %s tables",
+                        this.existingTableSchema.getTableNames().size());
+
+                // Wire schema generator so table dereferences return instset-encoded Types
+                final fURI schemaVid = this.vid().extend(SCHEMA).extend(INSTSET);
+                this.schemaGenerator = new SQLSchemaGenerator(
+                        this.existingTableSchema.getTableMetadata(), schemaVid);
+                this.existingTableSchema.setSchemaGenerator(this.schemaGenerator);
+
+                // Register schema instset as a Router space for type resolution
+                final SQLSchemaInstSet schemaInstset = this.schemaGenerator.generateSchemaInstset(schemaVid);
+                Router.global().addSpace(schemaInstset);
+                schemaInstset.setup();
+
+                LOG.info("lazy-initialized {{g}}SQL schema{{X}} with %s table types",
                         this.existingTableSchema.getTableNames().size());
             } catch (final SQLException ex) {
                 throw MTronException.of(ex);
