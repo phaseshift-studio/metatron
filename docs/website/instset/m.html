@@ -1646,13 +1646,13 @@ abc(a=&gt;?int::T,b=&gt;|(*a +10)){ _.*b }       [-- dependent arg inst    --]
         <small class="text-muted code">/m/web/json</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[uri::T=&gt;inside([
-  noobj{0}::T,
-  bool::T,
-  int::T,
-  str::T,
-  uri::T,
-  lst::T,
-  rec::T])]]@/m/web/json</code></pre></div>
+  isa(noobj{0}::T),
+  isa(bool::T),
+  isa(int::T),
+  isa(str::T),
+  isa(uri::T),
+  isa(lst::T),
+  isa(rec::T)])]]@/m/web/json</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a rec encoding of a json document</p>
 </div>
@@ -2185,13 +2185,13 @@ a/b/c/                           [-- relative/branch uri            --]
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=image&amp;dom=bytes(image::T,else(1.0000)){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=file&amp;dom=uri(file::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=bytes&amp;dom=file(bytes::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=json&amp;dom=str(json::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=xml&amp;dom=str(xml::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=html&amp;dom=str(html::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=markdown&amp;dom=str(markdown::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=str&amp;dom=html(str::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=str&amp;dom=markdown(str::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=html&amp;dom=markdown(html::T){&lt;j&gt;}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=json&amp;dom=str(json::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=str&amp;dom=#(json_str::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=tool&amp;dom=docs(tool::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=tool&amp;dom=inst(tool::T){&lt;j&gt;}</code></pre>
@@ -2202,13 +2202,13 @@ a/b/c/                           [-- relative/branch uri            --]
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=image&amp;dom=bytes(image::T,else(1.0000)){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=file&amp;dom=uri(file::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=bytes&amp;dom=file(bytes::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=json&amp;dom=str(json::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=xml&amp;dom=str(xml::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=html&amp;dom=str(html::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=markdown&amp;dom=str(markdown::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=str&amp;dom=html(str::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=str&amp;dom=markdown(str::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=html&amp;dom=markdown(html::T){&lt;j&gt;}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=json&amp;dom=str(json::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=str&amp;dom=#(json_str::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=tool&amp;dom=docs(tool::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=tool&amp;dom=inst(tool::T){&lt;j&gt;}</code></pre>
@@ -4015,6 +4015,32 @@ nat::6.type()-&lt;[tid(),vid()] [-- [/m/int, nat] non-base types tids are the ty
     window.addEventListener('load', function() {
         setTimeout(initTabs, 200);
     });
+
+    // ── Hash navigation into collapsed cards ─────────────────────
+    (function() {
+        function navigateToHash() {
+            var hash = window.location.hash;
+            if (!hash) return;
+            var target = document.querySelector(hash);
+            if (!target) return;
+            var card = target.closest('.collapse');
+            if (card && !card.classList.contains('show')) {
+                card.addEventListener('shown.bs.collapse', function scrollAfter() {
+                    card.removeEventListener('shown.bs.collapse', scrollAfter);
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                });
+                var inst = bootstrap.Collapse.getInstance(card)
+                        || new bootstrap.Collapse(card, { toggle: false });
+                inst.show();
+            } else {
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+        window.addEventListener('hashchange', navigateToHash);
+        window.addEventListener('load', function() {
+            setTimeout(navigateToHash, 80);
+        });
+    })();
 
     // ── Section heading anchor links + copy-to-clipboard ──────────
     (function() {

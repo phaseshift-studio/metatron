@@ -196,7 +196,7 @@ public final class MtronDocPreprocessor {
                 final Obj input = ObjmtronSerializer.parse(expr);
                 final Obj result = input.apply();
                 if (result.isFail() && !error) {
-                    LOG.error("no [ERROR] modifier in code block (docs are buggy): %s\nfor expression:\n%s\n", result, expr);
+                    LOG.error("no [ERROR] modifier in code block (docs are buggy): %s\n\t[{{r}}bad expression{{X}}]: %s\n", result, expr);
                     //System.exit(1);
                 }
                 if (!hidden && !noOutput && !result.isNoObj()) {

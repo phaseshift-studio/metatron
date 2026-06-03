@@ -511,7 +511,7 @@ bin/metatron</code></pre>
     <div class="py-3 text-center mt-5">
         <hr class="border-secondary">
         <small class="text-muted">
-            metatron instset doc generator on build 0-2026-06-01 18:40:30<br>
+            metatron instset doc generator on build 0-2026-06-02 21:41:39<br>
             (c) PhaseShift Studio, LLC
         </small>
     </div>
@@ -645,6 +645,32 @@ bin/metatron</code></pre>
     window.addEventListener('load', function() {
         setTimeout(initTabs, 200);
     });
+
+    // ── Hash navigation into collapsed cards ─────────────────────
+    (function() {
+        function navigateToHash() {
+            var hash = window.location.hash;
+            if (!hash) return;
+            var target = document.querySelector(hash);
+            if (!target) return;
+            var card = target.closest('.collapse');
+            if (card && !card.classList.contains('show')) {
+                card.addEventListener('shown.bs.collapse', function scrollAfter() {
+                    card.removeEventListener('shown.bs.collapse', scrollAfter);
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                });
+                var inst = bootstrap.Collapse.getInstance(card)
+                        || new bootstrap.Collapse(card, { toggle: false });
+                inst.show();
+            } else {
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+        window.addEventListener('hashchange', navigateToHash);
+        window.addEventListener('load', function() {
+            setTimeout(navigateToHash, 80);
+        });
+    })();
 
     // ── Section heading anchor links + copy-to-clipboard ──────────
     (function() {

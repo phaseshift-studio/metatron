@@ -1553,6 +1553,54 @@ strong {
     color: #797979;
 }
 
+/* ── Legend index (inset table-of-contents box) ───────────────────── */
+.legend-index {
+    float: left;
+    position: relative;
+    max-width: 220px;
+    width: 100%;
+    margin: 0.6em 1.8em 1.2em 0.2em;
+    padding: 0.35em 0 0.35em 0;
+    border: 1px solid var(--primarycolor);
+    background: var(--sidebarbackground);
+    font-size: 0.78rem;
+    line-height: 1.35;
+}
+.legend-index::before {
+    content: "toc";
+    position: absolute;
+    top: -0.55em;
+    left: 0.75em;
+    background: var(--sidebarbackground);
+    padding: 0 0.4em;
+    color: var(--primarycolor);
+    font-size: 0.7rem;
+    letter-spacing: 0.04em;
+}
+.legend-index ul {
+    list-style: none;
+    padding: 0.35em 0.65em 0.1em 0.65em;
+    margin: 0;
+}
+.legend-index li {
+    padding: 0 0;
+}
+.legend-index a {
+    color: var(--white);
+    text-decoration: none;
+}
+.legend-index a:hover {
+    color: var(--primarycolor);
+}
+/* ── Legend flush for narrow screens ── */
+@media (max-width: 768px) {
+    .legend-index {
+        float: none;
+        max-width: 100%;
+        margin: 0.6em 0 1em 0;
+    }
+}
+
 .MathJax_Display {
     color: var(--mred);
 }

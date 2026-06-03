@@ -194,12 +194,14 @@ public class DocRunner {
        // MtronDocPreprocessor.evalPrefixBlocks(prefixLines);
 
         // ── Copy adoc files and preprocess ──────────────────────
-        final MtronDocPreprocessor preprocessor = new MtronDocPreprocessor();
+        final LegendDocPreprocessor legendPreprocessor = new LegendDocPreprocessor();
+        final MtronDocPreprocessor mtronPreprocessor = new MtronDocPreprocessor();
         for (final Path file : adocFiles) {
             final Path outFile = outputPath.resolve(file.getFileName());
-            final String content = Files.readString(file);
-            final String processed = preprocessor.process(content);
-            Files.writeString(outFile, processed.stripTrailing());
+            String content = Files.readString(file);
+            content = legendPreprocessor.process(content);   // inject legend + anchors
+            content = mtronPreprocessor.process(content);    // evaluate [mtron] blocks
+            Files.writeString(outFile, content.stripTrailing());
             if (verbose) LOG.info("  processed " + file.getFileName());
         }
 

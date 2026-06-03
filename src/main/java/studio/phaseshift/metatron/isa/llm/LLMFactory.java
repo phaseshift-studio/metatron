@@ -108,7 +108,7 @@ public final class LLMFactory {
                             rec(mutableMap(uri(PROVIDER), auto_from_(spaceRec.vid()).tryToInst(),
                                             uri(NAME), uri(m.get0().getName()),
                                             //uri(LICENSE), Optional.ofNullable(m.get1().getLicense()).map(MStr::str).map(o -> (Obj) o).orElse(noobj()),
-                                            uri(THINK), m.get1().getCapabilities().contains(THINKING) ? rec0() : noobj(),
+                                            uri(THINK), m.get1().getCapabilities().contains(THINKING) ? rec() : noobj(),
                                             uri(SKILL), lst(m.get1().getCapabilities().stream().map(MUri::uri)),
                                             uri(SIZE), real(Long.valueOf(m.get0().getSize()).doubleValue(), MATH_BYTE_TID, null).as(GBYTE_TYPE)),
                                     MODEL_TID, vid);

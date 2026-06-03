@@ -25,6 +25,11 @@ Modern AI techniques are heavily leveraged across various aspects of metatron, w
  - **gguff vector files**: ...
 . **MCP Servers**: Developing and deploying MCP servers in mtron as well as interacting with remote MCP servers as a client is straightforward. Such simplicity provides a countless number of ways in which LLMs can interact with the underlying spaces.
 
+[discrete]
+=== llm catalogs
+
+Collections of LLMs are typically host by some provider and offered for use. These can be either cloud-based AI catalogs or local catalogs. An example of loading various popular catalogs into metatron are provided below.
+
 [mtron]
 ----
 catalog::[host         => <http://localhost:11434>,            /
@@ -46,16 +51,6 @@ catalog::[host         => <http://localhost:8088/v1>,           /
           pattern      => <localai:#>,                          /
           name         => <localai>,                            /
           route        => [<localai:>=><>]]@/sys/space/localai
-----
-
-
-[mtron]
-----
-wsspace::[host     => <ws://localhost:8555>,                        /
-          pattern  => ws://#,                                       /
-          q        => [docq::[=>],subq::[=>]],                      /
-          route    => [/mtron=> mtron_ws,                           /
-                       /mcp  => mcp_mtron_ws]]@/sys/space/web/ws
 ----
 
 [discrete]
@@ -107,7 +102,8 @@ fsspace::[pattern => fs:#,  /
        tool    => [!*eval],                               /
        think   => print(_),                               /
        response=> [to=>to(/usr/ai/response)]]].           /
- to(ai) 
+ to(ai)
+[HIDDEN] ai/feature/think -> noobj
 ----
 <1> create a `lst` to server as the an ordered sequence of chat interactions. 
 <2> stream all the models currently available on the local ollama server.
@@ -115,18 +111,18 @@ fsspace::[pattern => fs:#,  /
 <4> filter out models too small (for ollama, the cloud models) and models too big.
 <5> reverse sort the models by their size.
 <6> select the smallest model of those remaining.
-<7> now a serious of enrichements will be attached to the model.
+<7> attach features/enrichements to the model.
 <8> give the model a memory structure for extended context.
 <9> give the model access to mtron's eval instruction.
 <10> have the model print its thoughts to the console terminal
 <11> have the model store its responses to the `/usr/ai` space.
 <12> write the model to `ai`.
 
-The first part of the stream above was about widdling the set of available models down to those that meet the requirements for this documentation -- namely, a model that is not too big (as building the docs would take too long) and has some useful capabilities for demonstrating how model features work.
+The first part of the stream above was about widdling down the set of available models to those that meet the requirements for this documentation -- namely, a model that is not too big (as building the docs would take too long) and has some useful capabilities for demonstrating model features.
 
 Once a model was selected, then the second phase served to enrich the model with a memory structure (embedded in space), some tools to use if need be (embedded in space), a place for its thought (ephemeral to the console's stdout), and a location to place its response (embedded in space).
 
-With the model loaded and equipped, it's possible to communicate with it to the level of complexity as facilitated by its base training and the set of features attached to it.
+With the model loaded and equipped, it's possible to communicate with it.
 
 [mtron]
 ----
@@ -175,11 +171,30 @@ The content and metadata associated with the chat interaction are stored at the 
 */usr/ai/memory/+
 ----
 
+Or, using structured responses, the unstructured text result can be turned into a mtron obj.
+
+@ai.chat("what was the answer again?", [answer=>?int::T])
+
 [discrete]
 === llm tools, skills, and mcp servers
 
 LLM tools provide the model a way of calling predefined functions as deemed necessary during chat interactions. In metatron, any `inst` can be a tool. Simply place an `!*` reference to the `inst` into the model's "tool box" (`lst`) at `features/tool`. Next, should MCP tools be required, realize that MCP servers expose their tools as `insts` in metatron as well. Thus, adding an `inst` from an `instset` and adding an `inst` from a `http` or `ws` MCP server endpoint, ultimately boils down to pointing the model towards `insts` it can use to solve problems.
 
+
+metatron is capable of hosting MCP tools (server), using MCP tools (client), or both. The example below spawns an mtron websocket server and then spawns a client to it as well as other mcp servers not local to metatron.
+
+.metatron hosted mcp server
+[mtron]
+----
+wsspace::[host     => <ws://localhost:8555>,                        /
+          pattern  => ws://#,                                       /
+          q        => [docq::[=>],subq::[=>]],                      /
+          route    => [/mtron=> mtron_ws,                           /
+                       /mcp  => mcp_mtron_ws]]@/sys/space/web/ws
+----
+
+
+.metatron hosted mcp clients
 [mtron]
 ----
 mcp_client::[host =>                                /
@@ -225,13 +240,13 @@ mcp_client::[host =>                                /
 <2> without a response format, the agent replies in free, unstructured text.
 <3> the agent's memory records structured responses.
 
-Given that an `mcp_client::T` is an index of `insts`. Nothing prevents their `insts` being used by other processes.
+Given that an `mcp_client::T` is an index of `insts`. Nothing prevents their `insts` being used by other processes such
+as a human user. 
 
 [mtron]
 ----
-
+/usr/ai/mcp/intellij/tool/ide_type_hierarchy(className=>'studio.phaseshift.metatron.isa.m.type.Obj')
 ----
-
 
 [discrete]
 === agent notes
@@ -240,8 +255,7 @@ metatron introduces the concept of _notes_ to the agent toolkit. Notes are a mes
  . **real-time feedback**: if the agent has made a mistake in their _thinking_, there is no need to wait for the agent's response to complete nor halt the agent mid-thought. Instead, a note can be pushed on the agent's note stack and the agent will pop off the note, read it, and adjust itself accordingly.
  . **real-time system message**: the agent's system message is written at the start of chat and remains static for the duration of the interaction. Notes serve as dynamic system messages allowing programmatic alterations in the agent's behavior within a single interaction.
 
-Notes are enabled by adding `note\=>[,]` to the agent's configuration.
-The `eval` tool must also be present — the agent uses it to poll and pop notes from the note stack.
+Notes are enabled by adding `note\=>[,]` to the agent's configuration. The `eval` tool must also be present — the agent uses it to poll and pop notes from the note stack.
 
 [source,mtron]
 ----
@@ -256,15 +270,15 @@ While `robotron` is executing a task, a note can be pushed at any time from any 
 
 [source,mtron]
 ----
-*<robotron/note> + ['actually, can you provide the result in euros, not dollars']   <1>
+@robotron/note >>= +['actually, can you provide the result in euros, not dollars']   <1>
 ----
-<1> `+` concatenates to the note list at `{vid}/note`. Because the list carries its `@vid`, the mutation is automatically persisted to space — no explicit save needed.
+<1> `+` concatenates to the note `lst`. Because the list carries an anchored reference (`@vid`), the mutation is automatically persisted to space.
 
 [.card]
 --
 [discrete,.center]
 ==== @vid auto-persistence
-Any `obj` that carries a `@vid` annotation is _space-aware_: mutations to it (via `+`, `remove()`, or any other mutating instruction) are automatically reflected in the space at that address — no explicit re-assignment required.
+Any `obj` that carries an `@vid` is __anchored__ to its spatial location. Mutations to such objs are automatically reflected in the space at that address — no explicit re-assignment required.
 
 The difference between `.to()` and `.at()` is critical here:
 
@@ -280,7 +294,7 @@ The difference between `.to()` and `.at()` is critical here:
 <3> `.at()` binds `@vid` to the result, so every subsequent operation in the chain auto-persists.
 <4> `a` reflects the final value of the entire chain.
 
-The note list uses `at()` semantics: `[,]@/usr/ai/notes` initialises the list with its `@vid` already bound, so `*/usr/ai/notes + ['note']` persists automatically without re-assignment.
+The note list uses `at()` semantics: `[,]@/usr/ai/notes` initialises the list with its `@vid` already bound, so `@/usr/ai/notes + ['note']` persists automatically without re-assignment.
 --
 
 The agent receives the following standing instruction embedded in its system message at `chat()` time:

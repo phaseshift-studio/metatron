@@ -365,7 +365,7 @@ This is possible because a structure resolves up the fURI path hierarchy until i
 Once found, it then traverses within the match to resolve the remaining path segments.
 
 .Amortized Costs in Terms of Time
-[%header,width=70%,cols="l2,c1,c1,c1",role="small center"]
+[%header,width=50%,cols="l1,c1,c1,c1",role="small center"]
 |===
 | [.red]#embedding#              | [.red]#single-element#| [.red]#row-access#  | [.red]#column-access#
 | [.red]#entry#          | \[O(1)\]       | \[O(n)\]    | \[O(m)\]
@@ -377,7 +377,7 @@ The different embeddings also have different space costs, where space is defined
 
 .Amortized Costs in Terms of Space
 [.center]
-[%header,width=70%,cols="l2,c1,c1,c1",role="small center"]
+[%header,width=50%,cols="l1,c1,c1,c1",role="small center"]
 |===
 | [.red]#embedding#              | [.red]#single-element# | [.red]#row-access#    | [.red]#column-access#
 | [.red]#entry#          | \[O(1)\]       | \[O(n)\]      | \[O(m)\]
@@ -394,8 +394,8 @@ In mathematics, addition is denoted with a latexmath:[+] as in latexmath:[a + b]
 
 [mtron]
 ----
-x0 -> [a=>[b=>[c=>1,d=>2],
-           e=>[c=>3,d=>4,f=>5]],
+x0 -> [a=>[b=>[c=>1,d=>2],          /
+           e=>[c=>3,d=>4,f=>5]],    /
        g=>[b=>[c=>6]]]
 ----
 
@@ -413,27 +413,27 @@ Common left side variables amongst summed components can be factored to the left
 
 [mtron]
 ----
-x1 -> [a/b => [c=>1,d=>2],
-       a/e/c => 3,
-       a/e/d => 4,
-       a/e/f => 5,
+x1 -> [a/b => [c=>1,d=>2], /
+       a/e/c => 3,         /
+       a/e/d => 4,         /
+       a/e/f => 5,         /
        g/b => [c=>6]]
-x2 -> [a/b/c => 1, 
-       a/b/d => 2, 
-       a/e/c => 3, 
-       a/e/d => 4, 
-       a/e/f => 5, 
-       g/b/c => 6]
+x2 -> [a/b/c => 1,         /
+       a/b/d => 2,         /
+       a/e/c => 3,         /
+       a/e/d => 4,         /
+       a/e/f => 5,         /
+       g/b/c => 6]       
 ----
 
 [mtron]
 ----
-[x0,x1,x2]>-.-<[*(* /a/b/c)] 
-[x0,x1,x2]>-.-<[*(* /a/b/+)]
-[x0,x1,x2]>-.-<[*(* /a/+/+)]
-[x0,x1,x2]>-.-<[*(* /+/b/+)]
-[x0,x1,x2]>-.-<[*(* /+/b/c)]
-[x0,x1,x2]>-.-<[*(* /a/+/c)]
-[x0,x1,x2]>-.-<[*(* /+/+/c)]
-[x0,x1,x2]>-.-<[*(* /g/+/+)]
+[x0,x1,x2]>-.-<[*(* a/b/c)] 
+[x0,x1,x2]>-.-<[*(* a/b/+)]
+[x0,x1,x2]>-.-<[*(* a/+/+)]
+[x0,x1,x2]>-.-<[*(* +/b/+)]
+[x0,x1,x2]>-.-<[*(* +/b/c)]
+[x0,x1,x2]>-.-<[*(* a/+/c)]
+[x0,x1,x2]>-.-<[*(* +/+/c)]
+[x0,x1,x2]>-.-<[*(* g/+/+)]
 ----

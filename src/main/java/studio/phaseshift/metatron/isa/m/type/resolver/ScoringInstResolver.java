@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -32,6 +32,8 @@ import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.isa.m.mInstSet.AS_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_INST_TID;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.NOOBJ_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 
 /**
  * Instruction resolver that scores candidates by specificity and selects the best match.
@@ -89,7 +91,7 @@ public class ScoringInstResolver implements InstResolver {
                     final int score = scoreSpecificity(lhs, userInst, apiInst);
                     Inst transformed = userInst.hasDom() ? apiInst.dom(userInst.dom()) : apiInst;
                     transformed = userInst.hasRng() ? transformed.rng(userInst.rng()) : transformed;
-                    transformed = userInst.tid().basePath().equals(AS_INST_TID) ? transformed.rng(userInst.arg(0).asType()) : transformed;
+                    transformed = userInst.tid().basePath().equals(AS_INST_TID) ? transformed.rng(userInst.arg(0).isNoObj() ? NOOBJ_TYPE : userInst.arg(0).asType()) : transformed;
                     transformed = lhs.isInst() ? transformed : Inst.Helper.bindGenerics(lhs, transformed, userInst);
                     return new ScoredCandidate(apiInst, transformed, score);
                 })
@@ -119,7 +121,7 @@ public class ScoringInstResolver implements InstResolver {
     private Inst transformCandidate(final Obj lhs, final Inst userInst, final Inst apiInst) {
         Inst transformed = userInst.hasDom() ? apiInst.dom(userInst.dom()) : apiInst;
         transformed = userInst.hasRng() ? transformed.rng(userInst.rng()) : transformed;
-        transformed = userInst.tid().basePath().equals(AS_INST_TID) ? transformed.rng(userInst.arg(0).asType()) : transformed;
+        transformed = userInst.tid().basePath().equals(AS_INST_TID) ? transformed.rng(userInst.arg(0).isNoObj() ? NOOBJ_TYPE : userInst.arg(0).asType()) : transformed;
         transformed = lhs.isInst() ? transformed : Inst.Helper.bindGenerics(lhs, transformed, userInst);
         if (transformed == null)
             return null;
@@ -179,7 +181,7 @@ public class ScoringInstResolver implements InstResolver {
             // When user passes a Type argument to as(), heavily favor instructions whose range matches that type
             // e.g., as(skill::T) should strongly prefer as?skill<=dir over as?file<=uri
             // IMPORTANT: Only apply this to actual 'as' instructions, not constructors or other instructions
-            if (Obj.Helper.specificTypeId(apiInst).basePath().equals(AS_INST_TID) && userFirstArg != null && userFirstArg.isType() && !apiRngID.isGeneric()) {
+            if (Obj.Helper.specificTypeId(apiInst).basePath().equals(AS_INST_TID) && userFirstArg != null && (userFirstArg.isNoObj() || userFirstArg.isType()) && !apiRngID.isGeneric()) {
                 // Extract the actual type being requested (the Type's tid, not the Type object's own tid)
                 final fURI requestedTypeTid = Obj.Helper.specificTypeId(userFirstArg);
                 if (!requestedTypeTid.isGeneric() && apiRngID.basePath().equals(requestedTypeTid.basePath())) {

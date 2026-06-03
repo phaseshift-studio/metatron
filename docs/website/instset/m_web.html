@@ -304,13 +304,13 @@ bin/metatron</code></pre>
  inst=&gt;[
   ping?/m/math/time&lt;=#{?}(uri::T),
   format?str&lt;=markdown(),
+  as?json&lt;=str(json::T),
   as?xml&lt;=str(xml::T),
   as?html&lt;=str(html::T),
   as?markdown&lt;=str(markdown::T),
   as?str&lt;=html(str::T),
   as?str&lt;=markdown(str::T),
   as?html&lt;=markdown(html::T),
-  as?json&lt;=str(json::T),
   as(json_str::T)]]@/m/web</code></pre>
                     </div>
                 </div>
@@ -516,13 +516,13 @@ httpspace webserver is furi aware and will perform server-side extraction of nes
         <small class="text-muted code">/m/web/json</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[uri::T=&gt;inside([
-  noobj{0}::T,
-  bool::T,
-  int::T,
-  str::T,
-  uri::T,
-  lst::T,
-  rec::T])]]@/m/web/json</code></pre></div>
+  isa(noobj{0}::T),
+  isa(bool::T),
+  isa(int::T),
+  isa(str::T),
+  isa(uri::T),
+  isa(lst::T),
+  isa(rec::T)])]]@/m/web/json</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a rec encoding of a json document</p>
 </div>
@@ -549,16 +549,18 @@ httpspace webserver is furi aware and will perform server-side extraction of nes
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[
   host=&gt;uri::T,
   {?}transport=&gt;uri::T,
+  {?}command=&gt;lst::T,
   {?}tool=&gt;{?}[uri::T=&gt;tool::T],
   {?}status=&gt;isa(bool::T).else(false)]][ctor?mcp_client&lt;=#{?}(rec::T)]@/m/web/mcp_client</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a client implementing the model content protocol used by llms for the acquisition of tools and access to external software systems</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">a mcp client specification <span class="text-light">=&gt;</span> creates a connection to an existing mcp client</pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">an mcp client type specification <span class="text-light">=&gt;</span> a connection to an existing mcp server</pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  {?}status <span class="text-light">=&gt;</span> <span class="text-info">&#39;the current status of the mcp client/server connection&#39;</span>
-  {?}tool <span class="text-light">=&gt;</span> <span class="text-info">&#39;the tools/functions available for use on the mcp server&#39;</span>
   {?}transport <span class="text-light">=&gt;</span> <span class="text-info">&quot;specify the transport if host schema resolution isn&#39;t sufficient&quot;</span>
+  {?}tool <span class="text-light">=&gt;</span> <span class="text-info">&#39;the tools/functions available for use on the mcp server&#39;</span>
+  {?}command <span class="text-light">=&gt;</span> <span class="text-info">&#39;only necessary for stdio mcp servers, where the client is the server&#39;</span>
   host <span class="text-light">=&gt;</span> <span class="text-info">&#39;the mcp server endpoint&#39;</span>
 </pre>
 </div><div class="card-body border-top py-2">
@@ -935,6 +937,32 @@ mcp_client::[host =&gt; &lt;ws://localhost:8999&gt;]@/usr/ai/mcp/mtron          
     window.addEventListener('load', function() {
         setTimeout(initTabs, 200);
     });
+
+    // ── Hash navigation into collapsed cards ─────────────────────
+    (function() {
+        function navigateToHash() {
+            var hash = window.location.hash;
+            if (!hash) return;
+            var target = document.querySelector(hash);
+            if (!target) return;
+            var card = target.closest('.collapse');
+            if (card && !card.classList.contains('show')) {
+                card.addEventListener('shown.bs.collapse', function scrollAfter() {
+                    card.removeEventListener('shown.bs.collapse', scrollAfter);
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                });
+                var inst = bootstrap.Collapse.getInstance(card)
+                        || new bootstrap.Collapse(card, { toggle: false });
+                inst.show();
+            } else {
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+        window.addEventListener('hashchange', navigateToHash);
+        window.addEventListener('load', function() {
+            setTimeout(navigateToHash, 80);
+        });
+    })();
 
     // ── Section heading anchor links + copy-to-clipboard ──────────
     (function() {

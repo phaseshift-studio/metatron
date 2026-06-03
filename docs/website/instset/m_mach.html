@@ -552,10 +552,10 @@ bin/metatron</code></pre>
     <p class="mb-0 text-light">run a parallel virtual thread</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  {?}loop <span class="text-light">=&gt;</span> <span class="text-info">&#39;delay to repeat code evaluation (default is evaluate once)&#39;</span>
-  {?}state <span class="text-light">=&gt;</span> <span class="text-info">&#39;current state of the thread&#39;</span>
-  {?}result <span class="text-light">=&gt;</span> <span class="text-info">&#39;the last result produced by the thread&#39;</span>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  {?}result <span class="text-light">=&gt;</span> <span class="text-info">&#39;the last result produced by the thread&#39;</span>
   code <span class="text-light">=&gt;</span> <span class="text-info">&#39;the code the thread will execute&#39;</span>
+  {?}loop <span class="text-light">=&gt;</span> <span class="text-info">&#39;delay to repeat code evaluation (default is evaluate once)&#39;</span>
+  {?}state <span class="text-light">=&gt;</span> <span class="text-info">&#39;current state of the thread&#39;</span>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -807,6 +807,32 @@ bin/metatron</code></pre>
     window.addEventListener('load', function() {
         setTimeout(initTabs, 200);
     });
+
+    // ── Hash navigation into collapsed cards ─────────────────────
+    (function() {
+        function navigateToHash() {
+            var hash = window.location.hash;
+            if (!hash) return;
+            var target = document.querySelector(hash);
+            if (!target) return;
+            var card = target.closest('.collapse');
+            if (card && !card.classList.contains('show')) {
+                card.addEventListener('shown.bs.collapse', function scrollAfter() {
+                    card.removeEventListener('shown.bs.collapse', scrollAfter);
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                });
+                var inst = bootstrap.Collapse.getInstance(card)
+                        || new bootstrap.Collapse(card, { toggle: false });
+                inst.show();
+            } else {
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+        window.addEventListener('hashchange', navigateToHash);
+        window.addEventListener('load', function() {
+            setTimeout(navigateToHash, 80);
+        });
+    })();
 
     // ── Section heading anchor links + copy-to-clipboard ──────────
     (function() {

@@ -345,7 +345,11 @@ bin/metatron</code></pre>
 <div class="collapse position-relative" id="card-0">
 <button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-0" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
 <button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
-<h2 id="_a_general_theory_of_data_access" class="discrete">A General Theory of Data Access</h2>
+<h2 id="sec-a-general-theory-of-data-access" class="discrete">A General Theory of Data Access</h2>
+<div class="legend-index">
+<ul>
+</ul>
+</div>
 <div class="paragraph">
 <p>In order to access data, it is necessary to understand the <em>geometry of data</em>. That is, the extension or shape of the data.
 However, the shape we perceive is only tangentially related to the data itself. For example, three people looking at the same
@@ -404,7 +408,14 @@ While the reader searches for some unbeknownst depth in the previous sentence, a
 <div class="collapse position-relative" id="card-1">
 <button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-1" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
 <button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
-<h2 id="_instructions" class="discrete">Instructions</h2>
+<h2 id="sec-instructions" class="discrete">Instructions</h2>
+<div class="legend-index">
+<ul>
+<li><a href="#sec-obj-propagation-mechanics" onclick="var t=document.getElementById('sec-obj-propagation-mechanics');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">obj propagation mechanics</a></li>
+<li><a href="#sec-stacks-and-frames" onclick="var t=document.getElementById('sec-stacks-and-frames');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">stacks and frames</a></li>
+<li><a href="#sec-domrng-coefficients" onclick="var t=document.getElementById('sec-domrng-coefficients');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">dom/rng coefficients</a></li>
+</ul>
+</div>
 <!--
 ┌ ├ ┐ └ ┘ │ ┤ ─ ⋰ ⋱ ⮝ ⮞ ⮜ ⮟
 -->
@@ -443,7 +454,7 @@ aid the compiler instruction selection, enable code path compression, facilitate
 </div>
 </div>
 </div>
-<h3 id="_obj_propagation_mechanics" class="discrete">obj propagation mechanics</h3>
+<h3 id="sec-obj-propagation-mechanics" class="discrete">obj propagation mechanics</h3>
 <div class="paragraph">
 <p>Every instruction maps a <strong>left hand side</strong> <code>obj</code> (lhs) to a <strong>right hand side</strong> <code>obj</code> (rhs). Many-to-one, one to many, and many-to-many mappings are possible as an <code>obj</code> is an element in the power set of all <code>objs</code>. Thus, <code>{1,2,3}</code> is an <code>obj</code> with type <code>int{3}</code>. Programmatically, what is passed between instructions is a single stream <code>obj</code> which guarantees that there is always an rhs <code>obj</code> for every lhs <code>obj</code> regardless of failure or emptiness. As a side note, discussed at length elsewhere, the mtron ring is the set of <code>objs</code> and is closed under \(\cdot\) (apply) and \(+\) (split/merge), both of which are total functions.</p>
 </div>
@@ -521,7 +532,7 @@ lhs =&gt; inst(arg1,...,argN){ inst1...instN } =&gt; rhs
  └────────────────────────────┘   └──┘</code></pre>
 </div>
 </div>
-<h3 id="_stacks_and_frames" class="discrete">stacks and frames</h3>
+<h3 id="sec-stacks-and-frames" class="discrete">stacks and frames</h3>
 <div class="paragraph">
 <p>Every logical thread has a <code>/m/space/stack</code> patterned <code>&lt;+/#&gt;</code>. This pattern captures the breadth of common variable names found in most programming languages (<code>a</code>,<code>x</code>,<code>a_var</code>,<code>b3</code>,etc.) as well as hiearchical variables like <code>a/b/c</code>, etc. In short, the stack is always responsible for schemaless relative uris. To ground the discussion in a more concrete realization, the current stack of the mtron code processing this documentation is shown in the collapsed accordian below. The state of this stack is the result of all the processing thus far up to this point in the documentation. Declared variables from other parts of the documentation will be noticed as they were written at the root of the stack and thus, are <em>global variables</em>. Furthermore, note the <code>boot/</code> branch. This stores the data provided by the user and/or derived by the bootloader at startup.</p>
 </div>
@@ -1096,7 +1107,7 @@ mtron&gt;  10.is_divisible('abc')
 </div>
 </div>
 </div>
-<h3 id="_domrng_coefficients" class="discrete">dom/rng coefficients</h3>
+<h3 id="sec-domrng-coefficients" class="discrete">dom/rng coefficients</h3>
 <div class="paragraph">
 <p>Every <code>inst</code> has a <code>dom</code> and <code>rng</code> encoded in their key/value query parameters. The dom/rng query parameter values are
 any fURI minus query parameters (ie. recursive <code>?</code> is not allowed). What is possible is the specification of
@@ -1203,7 +1214,11 @@ mtron&gt; {1,2,3,4,5,6}.trpl()
 <div class="collapse position-relative" id="card-2">
 <button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-2" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
 <button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
-<h2 id="_control_structures" class="discrete">Control Structures</h2>
+<h2 id="sec-control-structures" class="discrete">Control Structures</h2>
+<div class="legend-index">
+<ul>
+</ul>
+</div>
 <div class="listingblock float-right-code">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">┌────────────────────────────────┐
@@ -1465,7 +1480,18 @@ ultimately dependent on the incoming lhs <code>obj</code>, where</p>
 <div class="collapse position-relative" id="card-3">
 <button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-3" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
 <button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
-<h2 id="_large_language_models" class="discrete">Large Language Models</h2>
+<h2 id="sec-large-language-models" class="discrete">Large Language Models</h2>
+<div class="legend-index">
+<ul>
+<li><a href="#sec-llm-catalogs" onclick="var t=document.getElementById('sec-llm-catalogs');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">llm catalogs</a></li>
+<li><a href="#sec-llm-space-encoding" onclick="var t=document.getElementById('sec-llm-space-encoding');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">llm space encoding</a></li>
+<li><a href="#sec-llm-interactions" onclick="var t=document.getElementById('sec-llm-interactions');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">llm interactions</a></li>
+<li><a href="#sec-llm-tools-skills-and-mcp-servers" onclick="var t=document.getElementById('sec-llm-tools-skills-and-mcp-servers');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">llm tools, skills, and mcp servers</a></li>
+<li><a href="#sec-agent-notes" onclick="var t=document.getElementById('sec-agent-notes');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">agent notes</a></li>
+<li><a href="#sec-mcp-server-client-notifications-in-mtron" onclick="var t=document.getElementById('sec-mcp-server-client-notifications-in-mtron');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">mcp server->client notifications in mtron</a></li>
+<li><a href="#sec-agent-based-programming-language" onclick="var t=document.getElementById('sec-agent-based-programming-language');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">agent-based programming language</a></li>
+</ul>
+</div>
 <details>
 <summary class="title">/m/llm instset import and space constructions</summary>
 <div class="content">
@@ -1545,6 +1571,10 @@ ultimately dependent on the incoming lhs <code>obj</code>, where</p>
 </li>
 </ol>
 </div>
+<h3 id="sec-llm-catalogs" class="discrete">llm catalogs</h3>
+<div class="paragraph">
+<p>Collections of LLMs are typically host by some provider and offered for use. These can be either cloud-based AI catalogs or local catalogs. An example of loading various popular catalogs into metatron are provided below.</p>
+</div>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; catalog::[host         =&gt; &lt;http://localhost:11434&gt;,
@@ -1568,16 +1598,7 @@ mtron&gt; catalog::[host         =&gt; &lt;http://localhost:8088/v1&gt;,
                  route        =&gt; [&lt;localai:&gt;=&gt;&lt;&gt;]]@/sys/space/localai</code></pre>
 </div>
 </div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; wsspace::[host     =&gt; &lt;ws://localhost:8555&gt;,
-                 pattern  =&gt; ws://#,
-                 q        =&gt; [docq::[=&gt;],subq::[=&gt;]],
-                 route    =&gt; [/mtron=&gt; mtron_ws,
-                              /mcp  =&gt; mcp_mtron_ws]]@/sys/space/web/ws</code></pre>
-</div>
-</div>
-<h3 id="_llm_space_encoding" class="discrete">llm space encoding</h3>
+<h3 id="sec-llm-space-encoding" class="discrete">llm space encoding</h3>
 <div class="paragraph">
 <p>An LLM is a <code>model::T &lt; rec::T</code> with the following type definition:</p>
 </div>
@@ -1648,7 +1669,7 @@ mtron&gt; *&lt;mtronfs:agent.mtron/feature&gt;     ​2​
 </tr>
 </table>
 </div>
-<h3 id="_llm_interactions" class="discrete">llm interactions</h3>
+<h3 id="sec-llm-interactions" class="discrete">llm interactions</h3>
 <div class="paragraph">
 <p>The following example demonstrates how to search for an appropriate LLM for a given task, then query it, and finally, have its memory of the interaction stored in space for future use (to provide the agent context over longer interactions). This example relies on an agent <code>SKILL.md</code> file stored on the local file system. Thus, we need a space.</p>
 </div>
@@ -1718,7 +1739,7 @@ mtron&gt; *ollama:+.
 </tr>
 <tr>
 <td><i class="conum" data-value="7"></i><b>7</b></td>
-<td>now a serious of enrichements will be attached to the model.</td>
+<td>attach features/enrichements to the model.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="8"></i><b>8</b></td>
@@ -1743,18 +1764,18 @@ mtron&gt; *ollama:+.
 </table>
 </div>
 <div class="paragraph">
-<p>The first part of the stream above was about widdling the set of available models down to those that meet the requirements for this documentation&#8201;&#8212;&#8201;namely, a model that is not too big (as building the docs would take too long) and has some useful capabilities for demonstrating how model features work.</p>
+<p>The first part of the stream above was about widdling down the set of available models to those that meet the requirements for this documentation&#8201;&#8212;&#8201;namely, a model that is not too big (as building the docs would take too long) and has some useful capabilities for demonstrating model features.</p>
 </div>
 <div class="paragraph">
 <p>Once a model was selected, then the second phase served to enrich the model with a memory structure (embedded in space), some tools to use if need be (embedded in space), a place for its thought (ephemeral to the console&#8217;s stdout), and a location to place its response (embedded in space).</p>
 </div>
 <div class="paragraph">
-<p>With the model loaded and equipped, it&#8217;s possible to communicate with it to the level of complexity as facilitated by its base training and the set of features attached to it.</p>
+<p>With the model loaded and equipped, it&#8217;s possible to communicate with it.</p>
 </div>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; @ai.chat("I need you evaluate the mtron expresion `-&lt;[_=&gt;_]&gt;&gt;.&gt;-[,]-&lt;[_,-&lt;[_=&gt;_]&gt;&gt;]&gt;&gt;.&gt;-` with a lhs of `1`. Please don't tell me the result of the evaluation until I ask for it sometime in the near future.")
-==&gt;"The evaluation of the mtron expression with the lhs of `1` has been successfully completed. I've stored the result and will provide it to you when you're ready to retrieve it. Let me know when you'd like the answer!"</code></pre>
+==&gt;"The evaluation of the mtron expression has been completed successfully with the provided left-hand side (lhs) value of `1`. I will provide the result when you ask for it. Let me know when you're ready!"</code></pre>
 </div>
 </div>
 <div class="openblock card">
@@ -1876,49 +1897,66 @@ mtron&gt; tB::1.0.as(mB::T)     ​3​
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; @ai.chat("It's been many years since we last talked. For I am a tired, old man. Before I let my last breathe flutter into this world, I must know one last thing. Please tell me, what was the result of the mtron expression I provided you all those years ago?")
-==&gt;"""The result of the evaluation was **`1`**.
+==&gt;"""The result of the mtron expression you provided, evaluated with a left-hand side (lhs) of `1`, was **`1`**.
 
-   Though the journey to arrive at this answer was long and winding, like the twists of a complex mtron expression, the final value remains steadfastly `1`. Rest well, old friend. 🌙"""
+   Rest well, old friend. May your final breath be peaceful."""
 mtron&gt; */usr/ai/memory/+
 ==&gt;[
-    contents=&gt;[[
-    text=&gt;"It's been many years since we last...",
-    type=&gt;'TEXT']],
-    type=&gt;USER]
-==&gt;[
-    thinking=&gt;"Okay, let's see. The user wants me...",
-    toolExecutionRequests=&gt;[[
-    id=&gt;call_0vi71ngr,
-    name=&gt;m_inst_eval,
-    arguments=&gt;'{"object":"-&lt;[_=&gt;_]&gt;&gt;.&gt;-[,]-&lt;[_,-&lt;...']],
-    attributes=&gt;[=&gt;],
-    type=&gt;AI]
-==&gt;[
-    text=&gt;'The result of the evaluation was *...',
-    thinking=&gt;'Okay, let me try to figure this ou...',
-    toolExecutionRequests=&gt;[,],
-    attributes=&gt;[=&gt;],
-    type=&gt;AI]
-==&gt;[
-    id=&gt;call_0vi71ngr,
+    id=&gt;call_dq9b99go,
     toolName=&gt;m_inst_eval,
     contents=&gt;[[text=&gt;1,type=&gt;'TEXT']],
     isError=&gt;false,
     attributes=&gt;[=&gt;],
     type=&gt;'TOOL_EXECUTION_RESULT']
 ==&gt;[
+    contents=&gt;[[
+    text=&gt;"It's been many years since we last...",
+    type=&gt;'TEXT']],
+    type=&gt;USER]
+==&gt;[
+    toolExecutionRequests=&gt;[[
+    id=&gt;call_dq9b99go,
+    name=&gt;m_inst_eval,
+    arguments=&gt;'{"object":"-&lt;[_=&gt;_]&gt;&gt;.&gt;-[,]-&lt;[_,-&lt;...']],
+    attributes=&gt;[=&gt;],
+    type=&gt;AI]
+==&gt;[
     text=&gt;'The evaluation of the mtron expres...',
-    thinking=&gt;'Okay, the user asked me to evaluat...',
+    toolExecutionRequests=&gt;[,],
+    attributes=&gt;[=&gt;],
+    type=&gt;AI]
+==&gt;[
+    text=&gt;'The result of the mtron expression...',
     toolExecutionRequests=&gt;[,],
     attributes=&gt;[=&gt;],
     type=&gt;AI]</code></pre>
 </div>
 </div>
-<h3 id="_llm_tools_skills_and_mcp_servers" class="discrete">llm tools, skills, and mcp servers</h3>
+<div class="paragraph">
+<p>Or, using structured responses, the unstructured text result can be turned into a mtron obj.</p>
+</div>
+<div class="paragraph">
+<p>@ai.chat("what was the answer again?", [answer&#8658;?int::T])</p>
+</div>
+<h3 id="sec-llm-tools-skills-and-mcp-servers" class="discrete">llm tools, skills, and mcp servers</h3>
 <div class="paragraph">
 <p>LLM tools provide the model a way of calling predefined functions as deemed necessary during chat interactions. In metatron, any <code>inst</code> can be a tool. Simply place an <code>!*</code> reference to the <code>inst</code> into the model&#8217;s "tool box" (<code>lst</code>) at <code>features/tool</code>. Next, should MCP tools be required, realize that MCP servers expose their tools as <code>insts</code> in metatron as well. Thus, adding an <code>inst</code> from an <code>instset</code> and adding an <code>inst</code> from a <code>http</code> or <code>ws</code> MCP server endpoint, ultimately boils down to pointing the model towards <code>insts</code> it can use to solve problems.</p>
 </div>
+<div class="paragraph">
+<p>metatron is capable of hosting MCP tools (server), using MCP tools (client), or both. The example below spawns an mtron websocket server and then spawns a client to it as well as other mcp servers not local to metatron.</p>
+</div>
 <div class="listingblock">
+<div class="title">metatron hosted mcp server</div>
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; wsspace::[host     =&gt; &lt;ws://localhost:8555&gt;,
+                 pattern  =&gt; ws://#,
+                 q        =&gt; [docq::[=&gt;],subq::[=&gt;]],
+                 route    =&gt; [/mtron=&gt; mtron_ws,
+                              /mcp  =&gt; mcp_mtron_ws]]@/sys/space/web/ws</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">metatron hosted mcp clients</div>
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; mcp_client::[host =&gt;
         &lt;ws://localhost:8555/mcp&gt;
@@ -2066,14 +2104,558 @@ mtron&gt; *robotron&gt;&gt;feature/memory/mem/2/attributes/format</code></pre>
 </table>
 </div>
 <div class="paragraph">
-<p>Given that an <code>mcp_client::T</code> is an index of <code>insts</code>. Nothing prevents their <code>insts</code> being used by other processes.</p>
+<p>Given that an <code>mcp_client::T</code> is an index of <code>insts</code>. Nothing prevents their <code>insts</code> being used by other processes such
+as a human user.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron"></code></pre>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; /usr/ai/mcp/intellij/tool/ide_type_hierarchy(className=&gt;'studio.phaseshift.metatron.isa.m.type.Obj')
+==&gt;[
+    element=&gt;[
+     name=&gt;'studio.phaseshift.metatron.isa.m.t...',
+     file=&gt;'src/main/java/studio/phaseshift/me...',
+     kind=&gt;INTERFACE,
+     language=&gt;Java],
+    supertypes=&gt;[
+     [
+      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;INTERFACE,
+      language=&gt;Java,
+      supertypes=&gt;[[name=&gt;'java.util.function.Function',kind=&gt;CLASS,language=&gt;Java]]],
+     [name=&gt;'java.util.function.Function',kind=&gt;CLASS,language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.util.St...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;INTERFACE,
+      language=&gt;Java],
+     [name=&gt;'java.lang.Iterable',kind=&gt;CLASS,language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;INTERFACE,
+      language=&gt;Java],
+     [name=&gt;'java.lang.Cloneable',kind=&gt;CLASS,language=&gt;Java],
+     [name=&gt;'java.util.function.Predicate',kind=&gt;CLASS,language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;INTERFACE,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.util.St...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;INTERFACE,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;INTERFACE,
+      language=&gt;Java]],
+    subtypes=&gt;[
+     [
+      name=&gt;'studio.phaseshift.metatron.algebra...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;INTERFACE,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;INTERFACE,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.algebra...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;INTERFACE,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;INTERFACE,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;INTERFACE,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;CLASS,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;INTERFACE,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;INTERFACE,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.isa.mac...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;CLASS,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;ABSTRACT_CLASS,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;INTERFACE,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.algebra...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;INTERFACE,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.isa.web...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;INTERFACE,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;INTERFACE,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.isa.mac...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;INTERFACE,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.algebra...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;INTERFACE,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.algebra...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;INTERFACE,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.isa.mac...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;CLASS,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.algebra...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;INTERFACE,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;INTERFACE,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;INTERFACE,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;INTERFACE,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.algebra...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;INTERFACE,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;INTERFACE,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;INTERFACE,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.isa.mac...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;CLASS,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.algebra...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;INTERFACE,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;CLASS,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;CLASS,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;CLASS,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;INTERFACE,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;CLASS,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;INTERFACE,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.isa.mac...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;INTERFACE,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;INTERFACE,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;CLASS,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;CLASS,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;CLASS,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;CLASS,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;CLASS,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;CLASS,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;CLASS,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.isa.vec...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;CLASS,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.isa.mac...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;CLASS,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;CLASS,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;CLASS,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;CLASS,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;CLASS,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;CLASS,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.isa.vec...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;INTERFACE,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.isa.web...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;CLASS,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;INTERFACE,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;INTERFACE,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;INTERFACE,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;INTERFACE,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.isa.mac...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;INTERFACE,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.furi.QP...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;INTERFACE,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.isa.web...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;CLASS,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.furi.QP...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;INTERFACE,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.isa.Spa...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;INTERFACE,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.BootLoa...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;CLASS,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.isa.mac...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;INTERFACE,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.isa.mac...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;INTERFACE,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;INTERFACE,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.furi.QP...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;INTERFACE,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;CLASS,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.isa.mac...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;ABSTRACT_CLASS,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.isa.mac...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;CLASS,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.isa.m.p...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;CLASS,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.isa.mac...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;CLASS,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.isa.mac...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;CLASS,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.isa.vec...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;CLASS,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.isa.llm...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;CLASS,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.isa.mac...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;ABSTRACT_CLASS,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.isa.web...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;CLASS,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.furi.q....',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;CLASS,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.furi.q....',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;CLASS,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.isa.llm...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;CLASS,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.isa.mac...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;CLASS,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.isa.mac...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;CLASS,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.isa.llm...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;CLASS,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.isa.mac...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;CLASS,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.isa.mac...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;CLASS,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.isa.web...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;CLASS,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.isa.mac...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;CLASS,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;CLASS,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.isa.llm...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;CLASS,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.furi.q....',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;CLASS,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.isa.llm...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;CLASS,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.isa.mac...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;CLASS,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.furi.q....',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;CLASS,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.isa.grp...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;CLASS,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;CLASS,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.isa.Abs...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;ABSTRACT_CLASS,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.isa.web...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;CLASS,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.isa.web...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;CLASS,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.isa.mac...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;INTERFACE,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.isa.mac...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;CLASS,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.isa.mac...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;ABSTRACT_CLASS,
+      language=&gt;Java],
+     [
+      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
+      file=&gt;'src/main/java/studio/phaseshift/me...',
+      kind=&gt;INTERFACE,
+      language=&gt;Java]]]</code></pre>
 </div>
 </div>
-<h3 id="_agent_notes" class="discrete">agent notes</h3>
+<h3 id="sec-agent-notes" class="discrete">agent notes</h3>
 <div class="paragraph">
 <p>metatron introduces the concept of <em>notes</em> to the agent toolkit. Notes are a message board written to and read from (potentially many times) by an LLM during the execution of a task&#8201;&#8212;&#8201;that is, within a single chat iteration. Notes are useful in the following situations:</p>
 </div>
@@ -2088,8 +2670,7 @@ mtron&gt; *robotron&gt;&gt;feature/memory/mem/2/attributes/format</code></pre>
 </ol>
 </div>
 <div class="paragraph">
-<p>Notes are enabled by adding <code>note=&gt;[,]</code> to the agent&#8217;s configuration.
-The <code>eval</code> tool must also be present — the agent uses it to poll and pop notes from the note stack.</p>
+<p>Notes are enabled by adding <code>note=&gt;[,]</code> to the agent&#8217;s configuration. The <code>eval</code> tool must also be present — the agent uses it to poll and pop notes from the note stack.</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -2115,14 +2696,14 @@ The <code>eval</code> tool must also be present — the agent uses it to poll an
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">*&lt;robotron/note&gt; + ['actually, can you provide the result in euros, not dollars']   <i class="conum" data-value="1"></i><b>(1)</b></code></pre>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">@robotron/note &gt;&gt;= +['actually, can you provide the result in euros, not dollars']   <i class="conum" data-value="1"></i><b>(1)</b></code></pre>
 </div>
 </div>
 <div class="colist arabic">
 <table>
 <tr>
 <td><i class="conum" data-value="1"></i><b>1</b></td>
-<td><code>+</code> concatenates to the note list at <code>{vid}/note</code>. Because the list carries its <code>@vid</code>, the mutation is automatically persisted to space — no explicit save needed.</td>
+<td><code>+</code> concatenates to the note <code>lst</code>. Because the list carries an anchored reference (<code>@vid</code>), the mutation is automatically persisted to space.</td>
 </tr>
 </table>
 </div>
@@ -2130,7 +2711,7 @@ The <code>eval</code> tool must also be present — the agent uses it to poll an
 <div class="content">
 <h4 id="_vid_auto_persistence" class="discrete">@vid auto-persistence</h4>
 <div class="paragraph">
-<p>Any <code>obj</code> that carries a <code>@vid</code> annotation is <em>space-aware</em>: mutations to it (via <code>+</code>, <code>remove()</code>, or any other mutating instruction) are automatically reflected in the space at that address — no explicit re-assignment required.</p>
+<p>Any <code>obj</code> that carries an <code>@vid</code> is <em>anchored</em> to its spatial location. Mutations to such objs are automatically reflected in the space at that address — no explicit re-assignment required.</p>
 </div>
 <div class="paragraph">
 <p>The difference between <code>.to()</code> and <code>.at()</code> is critical here:</p>
@@ -2168,7 +2749,7 @@ mtron&gt; *a
 </table>
 </div>
 <div class="paragraph">
-<p>The note list uses <code>at()</code> semantics: <code>[,]@/usr/ai/notes</code> initialises the list with its <code>@vid</code> already bound, so <code>*/usr/ai/notes + ['note']</code> persists automatically without re-assignment.</p>
+<p>The note list uses <code>at()</code> semantics: <code>[,]@/usr/ai/notes</code> initialises the list with its <code>@vid</code> already bound, so <code>@/usr/ai/notes + ['note']</code> persists automatically without re-assignment.</p>
 </div>
 </div>
 </div>
@@ -2189,7 +2770,7 @@ Notes are of <strong>crucial importance</strong> and must be acted on immediatel
 <div class="paragraph">
 <p>Notes form a <strong>FIFO queue</strong> — <code>remove(0)</code> pops the oldest note, leaving newer ones untouched for subsequent polls. An agent working through a long multi-step task will naturally poll multiple times, consuming notes one at a time as they arrive.</p>
 </div>
-<h4 id="_mcp_serverclient_notifications_in_mtron" class="discrete">mcp server&#8594;client notifications in mtron</h4>
+<h4 id="sec-mcp-server-client-notifications-in-mtron" class="discrete">mcp server&#8594;client notifications in mtron</h4>
 <div class="paragraph">
 <p>Typically, a client will request services from an MCP server&#8201;&#8212;&#8201;tool listing, tool evaluations, etc. It&#8217;s important to note that the <a href="https://modelcontextprotocol.io/docs/learn/architecture#notifications">MCP specification</a> has a little known feature that allows the server to initiate communication with the client. This feature is called <strong>notifications</strong> and it can be implemented in pure mtron.</p>
 </div>
@@ -2299,7 +2880,7 @@ A <a href="../../.claude/skills/mtron/references/mcp-server-notifications.md">mi
 </tr>
 </table>
 </div>
-<h3 id="_agent_based_programming_language" class="discrete">agent-based programming language</h3>
+<h3 id="sec-agent-based-programming-language" class="discrete">agent-based programming language</h3>
 <div class="paragraph">
 <p>The LLM, its memory, tools, skills, thoughts, and response formats are all first-class entities in the metatron. Interacting
 with an LLM is equivalent to evaluating an instruction. Moreover, an LLM&#8217;s response is simply the <code>rhs</code> of
@@ -2366,7 +2947,11 @@ can access it accordingly and naturally.</p>
 <div class="collapse position-relative" id="card-4">
 <button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-4" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
 <button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
-<h2 id="_instruction_sets" class="discrete">Instruction Sets</h2>
+<h2 id="sec-instruction-sets" class="discrete">Instruction Sets</h2>
+<div class="legend-index">
+<ul>
+</ul>
+</div>
 <div class="stemblock">
 <div class="content">
 \[\texttt{inst} \in (\underbrace{\texttt{obj}}_{\text{the lhs object}} \times \underbrace{\texttt{inst}}_{\text{the instruction}}) \rightarrow \underbrace{\texttt{obj}}_{\text{the rhs object}}\]
@@ -2398,7 +2983,13 @@ can access it accordingly and naturally.</p>
 <div class="collapse position-relative" id="card-5">
 <button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-5" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
 <button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
-<h2 id="_fail_and_catch" class="discrete">Fail and Catch</h2>
+<h2 id="sec-fail-and-catch" class="discrete">Fail and Catch</h2>
+<div class="legend-index">
+<ul>
+<li><a href="#sec-fail-space" onclick="var t=document.getElementById('sec-fail-space');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">fail space</a></li>
+<li><a href="#sec-the-cause-of-failure" onclick="var t=document.getElementById('sec-the-cause-of-failure');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">the cause of failure</a></li>
+</ul>
+</div>
 <div class="paragraph">
 <p>The exception handling architecture of metatron leverages a fail monad with some unique features novel to metatron. The fail monad has two states: <strong>propagating</strong> and <strong>caught</strong>.</p>
 </div>
@@ -2471,7 +3062,7 @@ can access it accordingly and naturally.</p>
 </div>
 </div>
 </div>
-<h3 id="_fail_space" class="discrete">fail space</h3>
+<h3 id="sec-fail-space" class="discrete">fail space</h3>
 <div class="paragraph">
 <p>The diagram above demonstrates that uncaught <code>fail::T</code> objs are routed to <em>fail space</em>. When an exception occurs and a fail monad is created, the <code>fail::T</code> obj is immediately written to the subspace identified at <code>boot/fail_pattern</code>. The uri <code>/sys/fail?incr=./+</code> is the default fail space pattern. There are two reasons for this behavior.</p>
 </div>
@@ -2517,7 +3108,7 @@ mtron&gt; */sys/fail     ​4​</code></pre>
 <div class="paragraph">
 <p><code>*/sys/fail/+.catch(_)</code> is useful <code>code</code> for clearing the fail space and releasing memory.</p>
 </div>
-<h3 id="_the_cause_of_failure" class="discrete">the cause of failure</h3>
+<h3 id="sec-the-cause-of-failure" class="discrete">the cause of failure</h3>
 <div class="paragraph">
 <p>Finally, the <code>cause()</code> instruction enables recursive stack walking for reflective exception handling.</p>
 </div>
@@ -2533,7 +3124,7 @@ mtron&gt; 1+b.catch(cause())     ​2​
    	  \_pred | []
    	[inst]   | plus?rng=uri{?}&amp;dom=int(b){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
    	 \_dom   | int::T
-   	 \_args  | [b][studio.phaseshift.metatron.util.MTronException:55]]
+   	 \_args  | [b][studio.phaseshift.metatron.util.MTronException:54]]
 mtron&gt; throw('bad').catch(cause())     ​3​</code></pre>
 </div>
 </div>
@@ -2557,7 +3148,23 @@ mtron&gt; throw('bad').catch(cause())     ​3​</code></pre>
 <div class="collapse position-relative" id="card-6">
 <button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-6" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
 <button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
-<h2 id="_structural_type_system" class="discrete">Structural Type System</h2>
+<h2 id="sec-type-system" class="discrete">Structural Type System</h2>
+<div class="legend-index">
+<ul>
+<li><a href="#sec-type-predicates" onclick="var t=document.getElementById('sec-type-predicates');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">type predicates (pred)</a></li>
+<li><a href="#sec-hierarchical-type-checking" onclick="var t=document.getElementById('sec-hierarchical-type-checking');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">hierarchical type checking</a></li>
+<li><a href="#sec-type-constructors" onclick="var t=document.getElementById('sec-type-constructors');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">type constructors (ctor)</a></li>
+<li><a href="#sec-cascading-type-constructions" onclick="var t=document.getElementById('sec-cascading-type-constructions');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">cascading type constructions</a></li>
+<li><a href="#sec-mono-types" onclick="var t=document.getElementById('sec-mono-types');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">mono types</a></li>
+<li><a href="#sec-bytes" onclick="var t=document.getElementById('sec-bytes');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">bytes</a></li>
+<li><a href="#sec-poly-types" onclick="var t=document.getElementById('sec-poly-types');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">poly types</a></li>
+<li><a href="#sec-call-types" onclick="var t=document.getElementById('sec-call-types');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">call types</a></li>
+<li><a href="#sec-instructions" onclick="var t=document.getElementById('sec-instructions');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">instructions</a></li>
+<li><a href="#sec-variables" onclick="var t=document.getElementById('sec-variables');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">variables</a></li>
+<li><a href="#sec-core-types" onclick="var t=document.getElementById('sec-core-types');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">mtron core types</a></li>
+<li><a href="#sec-isa-types" onclick="var t=document.getElementById('sec-isa-types');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">instruction set architecture types</a></li>
+</ul>
+</div>
 <div class="paragraph">
 <p>Every obj in mtron has a <strong>type</strong>. A <a href="https://en.wikipedia.org/wiki/Data_type">type</a> is either a base type or some constraint on a base type. For instance, <code>int::5</code> is a <a href="https://en.wikipedia.org/wiki/Value_(computer_science)">value</a> with type <code>int::T</code> (a <a href="https://en.wikipedia.org/wiki/Primitive_data_type">base type</a>). However, it is also an <code>int::T[?&lt;10]</code> (a <a href="https://en.wikipedia.org/wiki/Refinement_type">refinement</a> of <code>int::T</code>). In this case, the refinement states that a value of this type is any <code>int::T</code> less than 10. A similar, though more consequential example is the set of natural numbers \(\mathbb{N}\) being a subset of the set of integers \(\mathbb{Z}\). That is, \(\mathbb{N} \subset \mathbb{Z}\). The set of natural numbers is defined in mtron by specifying a <a href="https://en.wikipedia.org/wiki/Predicate_(logic)">predicate</a> (or constraint) on the set of integers.</p>
 </div>
@@ -2575,7 +3182,7 @@ mtron&gt; throw('bad').catch(cause())     ​3​</code></pre>
 <p>Non-base types will be notated <code>B::T &lt; A::T</code>: " <code>B::T</code> shares the same, though fewer of the values of <code>A::T</code>." When notated
 <code>B::T == A::T</code>: " <code>B::T</code> has the same values as <code>A::T</code> ". There exists only a nominal difference between <code>A::T</code> and <code>B::T</code> in the latter relation. <code>A::T</code> and <code>B::T</code> can be used interchangeably.</p>
 </div>
-<h3 id="_type_predicates_pred" class="discrete">type predicates (pred)</h3>
+<h3 id="sec-type-predicates" class="discrete">type predicates (pred)</h3>
 <div class="paragraph">
 <p>A type predicate is any <code>inst</code> of the form</p>
 </div>
@@ -2604,7 +3211,7 @@ mtron&gt; [name=&gt;'punky',age=&gt;'four'].as(chicken::T)
 ==&gt;chicken::[name=&gt;'punky',age=&gt;'four']</code></pre>
 </div>
 </div>
-<h4 id="_hierarchical_type_checking" class="discrete">hierarchical type checking</h4>
+<h4 id="sec-hierarchical-type-checking" class="discrete">hierarchical type checking</h4>
 <div class="paragraph">
 <p><code>C::T &lt; B::T &lt; A::T</code>.</p>
 </div>
@@ -2616,7 +3223,7 @@ mtron&gt; nat::T[?&lt;120]@age
 ==&gt;nat::T[is(lt(120))]@age</code></pre>
 </div>
 </div>
-<h3 id="_type_constructors_ctor" class="discrete">type constructors (ctor)</h3>
+<h3 id="sec-type-constructors" class="discrete">type constructors (ctor)</h3>
 <div class="listingblock center">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">          nat::T[?&gt;0][-&lt;|[?&lt;0 =&gt; * -1,_ =&gt; _]&gt;&gt;]
@@ -2693,10 +3300,10 @@ The predicate component of the type definition tests an <code>int</code> to dete
 <div class="paragraph">
 <p>While every <code>type</code> is an <code>obj</code>, not every <code>obj</code> is a <code>type</code>.
 Those <code>objs</code> that are not <code>types</code> are <em>instances</em> of some <code>type</code>.
-This is the foundation for all other <code>objs</code> in {{y}}M{{r}}e{{g}}T{{r}}a{{m}}T{{b}}r{{m}}o{{r}}N{{X}}.</p>
+This is the foundation for all other <code>objs</code> in {{y}}m{{r}}E{{m}}t{{b}}A{{c}}t{{r}}R{{g}}o{{r}}n{{X}}.</p>
 </div>
-<h4 id="_cascading_type_constructions" class="discrete">cascading type constructions</h4>
-<h3 id="_mono_types" class="discrete">mono types</h3>
+<h4 id="sec-cascading-type-constructions" class="discrete">cascading type constructions</h4>
+<h3 id="sec-mono-types" class="discrete">mono types</h3>
 <div class="paragraph">
 <p>An <code>obj</code> that is not composed of other <code>objs</code> is a mono type and are exhaustively itemized in the table below.</p>
 </div>
@@ -2775,7 +3382,7 @@ mtron&gt; a/b/c * d/e/f     ​6​
 <div class="paragraph">
 <p>The code below demonstrates the typical, expected uses of the mono types.</p>
 </div>
-<h4 id="_bytes" class="discrete">bytes</h4>
+<h4 id="sec-bytes" class="discrete">bytes</h4>
 <div class="paragraph">
 <p>The <code>bytes</code> type represents binary data as a sequence of bytes.</p>
 </div>
@@ -2922,7 +3529,7 @@ mtron&gt; tB::1.eq(gB::1024)     ​4​
 <div class="paragraph">
 <p>This is consistent with how computer systems typically measure memory and storage internally.</p>
 </div>
-<h3 id="_poly_types" class="discrete">poly types</h3>
+<h3 id="sec-poly-types" class="discrete">poly types</h3>
 <div class="paragraph">
 <p>Poly types are <strong>branched structures</strong> where each element or entry represents a separate branch.
 The two primary poly types are:</p>
@@ -3104,7 +3711,7 @@ mtron&gt; [a=&gt;1,b=&gt;2,c=&gt;3].select([a=&gt;_,b=&gt;_])     ​6​
 </tr>
 </table>
 </div>
-<h4 id="_call_types" class="discrete">call types</h4>
+<h4 id="sec-call-types" class="discrete">call types</h4>
 <div class="paragraph">
 <p>Call types represent function invocations and method calls in Metatron.</p>
 </div>
@@ -3141,7 +3748,7 @@ Functions can be composed using the ring multiplication operator (<code>.</code>
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">(x,y){x + y}        % Lambda function</code></pre>
 </div>
 </div>
-<h4 id="_instructions_2" class="discrete">instructions</h4>
+<h4 id="sec-instructions" class="discrete">instructions</h4>
 <div class="paragraph">
 <p>An <code>inst</code> is an <code>obj</code> of the form:</p>
 </div>
@@ -3167,7 +3774,7 @@ Functions can be composed using the ring multiplication operator (<code>.</code>
 </li>
 </ol>
 </div>
-<h3 id="_variables" class="discrete">variables</h3>
+<h3 id="sec-variables" class="discrete">variables</h3>
 <div class="paragraph">
 <p>Variables in Metatron can be scoped at different levels: frame stack, thread cache, local, and distributed.</p>
 </div>
@@ -3362,7 +3969,7 @@ mtron&gt;  int::-10.as(nat::T)
 <div class="paragraph">
 <p>metatron <code>objs</code> are typed. Types are organized into instruction sets that encapsulate the structures and processes necessary to effect domain-specific views of the underlying data space. The type system supports refinement types, optional/maybe types, generic/polymorphic types, recursive/self-referential types, dependent types, type cardinality, and more.</p>
 </div>
-<h3 id="_mtron_core_types" class="discrete">mtron core types</h3>
+<h3 id="sec-core-types" class="discrete">mtron core types</h3>
 <div class="paragraph">
 <p>The fundamental types are organized into the 5 categories presented in the table below.</p>
 </div>
@@ -3513,7 +4120,7 @@ mtron&gt; *marko&gt;&gt;knows&gt;&gt;knows
     knows=&gt;!*grant]</code></pre>
 </div>
 </div>
-<h3 id="_instruction_set_architecture_types" class="discrete">instruction set architecture types</h3>
+<h3 id="sec-isa-types" class="discrete">instruction set architecture types</h3>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
 <col style="width: 16.6666%;">
@@ -3613,7 +4220,11 @@ mtron&gt; *#.as[name      =&gt; _,
 <div class="collapse position-relative" id="card-7">
 <button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-7" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
 <button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
-<h2 id="_console" class="discrete">Console</h2>
+<h2 id="sec-console" class="discrete">Console</h2>
+<div class="legend-index">
+<ul>
+</ul>
+</div>
 <details>
 <summary class="title">/m/mach instset import and space constructions</summary>
 <div class="content">
@@ -3713,9 +4324,9 @@ mtron&gt; memspace::[
     prefix=&gt;'',
     postfix=&gt;'',
     pane=&gt;lst[/m/mach/console/pane{*}]::[/m/mach/console/pane::[
+    result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
     prompt=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
-    stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
-    result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]@/usr/ui/console/pane/0],
+    stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]@/usr/ui/console/pane/0],
     menu=&gt;[
      console=&gt;console::[
       metatron_version=&gt;&lt;0.1-alpha&gt;,
@@ -3724,9 +4335,9 @@ mtron&gt; memspace::[
       prefix=&gt;'',
       postfix=&gt;'',
       pane=&gt;lst[/m/mach/console/pane{*}]::[/m/mach/console/pane::[
+    result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
     prompt=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
-    stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
-    result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]@/usr/ui/console/pane/0]]@/usr/ui/console,
+    stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]@/usr/ui/console/pane/0]]@/usr/ui/console,
      help=&gt;inst?noobj&lt;=#{?}(),
      chat=&gt;inst?noobj&lt;=#{?}(),
      connect=&gt;inst?noobj&lt;=#{?}(),
@@ -3751,9 +4362,9 @@ mtron&gt; memspace::[
      subq=&gt;inst?noobj&lt;=#{?}()]]@/usr/ui/console
 mtron&gt; */usr/ui/console/pane/0     ​2​
 ==&gt;/m/mach/console/pane::[
+    result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
     prompt=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
-    stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
-    result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]
+    stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]
 mtron&gt; /usr/ui/console/pane/0/result('printed at ==&gt;xyz')     ​3​</code></pre>
 </div>
 </div>
@@ -3829,11 +4440,23 @@ mtron&gt; /usr/ui/console/pane/0/result('printed at ==&gt;xyz')     ​3​</cod
 <div class="collapse position-relative" id="card-8">
 <button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-8" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
 <button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
-<h2 id="_polynomial_data_structures" class="discrete">Polynomial Data Structures</h2>
+<h2 id="sec-polynomial-data-structures" class="discrete">Polynomial Data Structures</h2>
+<div class="legend-index">
+<ul>
+<li><a href="#sec-data-structures" onclick="var t=document.getElementById('sec-data-structures');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">data structures</a></li>
+<li><a href="#sec-poly-types" onclick="var t=document.getElementById('sec-poly-types');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Poly Types</a></li>
+<li><a href="#sec-lists" onclick="var t=document.getElementById('sec-lists');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Lists</a></li>
+<li><a href="#sec-relations" onclick="var t=document.getElementById('sec-relations');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Relations</a></li>
+<li><a href="#sec-records" onclick="var t=document.getElementById('sec-records');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Records</a></li>
+<li><a href="#sec-control-structures" onclick="var t=document.getElementById('sec-control-structures');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Control Structures</a></li>
+<li><a href="#sec-code-structures" onclick="var t=document.getElementById('sec-code-structures');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Code Structures</a></li>
+<li><a href="#sec-query-structures" onclick="var t=document.getElementById('sec-query-structures');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Query Structures</a></li>
+</ul>
+</div>
 <div class="paragraph">
 <p>The <strong>poly</strong> types are one of the more interesting aspects of metatron. They are used to structure data (serving as collections) and for for flow control (code branching). There are 3 <strong>poly</strong> types in metatron: <code>rec</code> (record), <code>lst</code> (list), and <code>rel</code> (relation)&#8201;&#8212;&#8201;the linchpins of metatron.</p>
 </div>
-<h3 id="_data_structures" class="discrete">data structures</h3>
+<h3 id="sec-data-structures" class="discrete">data structures</h3>
 <div class="paragraph">
 <p>The obvious application of a <code>poly</code> is as the scaffolding for a data structure. A <code>poly</code> is a <a href="https://en.wikipedia.org/wiki/Collection_(abstract_data_type)">collection</a> able to bundle multiple objs
 together. Via the colocation of two objs within the confines of a <code>poly</code>, two objs are bound. Another way to bind two objs together is via explicit uri referencing. This method is a form of <a href="https://en.wikipedia.org/wiki/Lazy_evaluation">lazy binding</a> in which "colocation" is computed through dereferencing, and as such,
@@ -3875,9 +4498,9 @@ mtron&gt; 1-&lt;[?&gt;0,?&gt;2,*/usr/${_}]&gt;-.map(&lt;${g:V/_}&gt;)&gt;&gt;+  
 </div>
 </div>
 </div>
-<h3 id="_poly_types_2" class="discrete">Poly Types</h3>
-<h4 id="_lists" class="discrete">Lists</h4>
-<h4 id="_relations" class="discrete">Relations</h4>
+<h3 id="sec-poly-types" class="discrete">Poly Types</h3>
+<h4 id="sec-lists" class="discrete">Lists</h4>
+<h4 id="sec-relations" class="discrete">Relations</h4>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; a=&gt;b=&gt;c     ​1​
@@ -3993,15 +4616,24 @@ mtron&gt; **a
 </div>
 </div>
 </div>
-<h4 id="_records" class="discrete">Records</h4>
-<h3 id="_control_structures_2" class="discrete">Control Structures</h3>
-<h3 id="_code_structures" class="discrete">Code Structures</h3>
-<h3 id="_query_structures" class="discrete">Query Structures</h3>
+<h4 id="sec-records" class="discrete">Records</h4>
+<h3 id="sec-control-structures" class="discrete">Control Structures</h3>
+<h3 id="sec-code-structures" class="discrete">Code Structures</h3>
+<h3 id="sec-query-structures" class="discrete">Query Structures</h3>
 </div>
 <div class="collapse position-relative" id="card-9">
 <button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-9" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
 <button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
-<h2 id="_uniform_resource_identifiers" class="discrete">Uniform Resource Identifiers</h2>
+<h2 id="sec-uniform-resource-identifiers" class="discrete">Uniform Resource Identifiers</h2>
+<div class="legend-index">
+<ul>
+<li><a href="#sec-spatial-embeddings" onclick="var t=document.getElementById('sec-spatial-embeddings');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Spatial Embeddings</a></li>
+<li><a href="#sec-the-poly-readwrite-subring" onclick="var t=document.getElementById('sec-the-poly-readwrite-subring');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">The Poly Read/Write SubRing</a></li>
+<li><a href="#sec-leftright-factors" onclick="var t=document.getElementById('sec-leftright-factors');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Left/Right Factors</a></li>
+<li><a href="#sec-isomorphic-identical" onclick="var t=document.getElementById('sec-isomorphic-identical');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Isomorphic != Identical</a></li>
+<li><a href="#sec-the-algebraic-structure-of-data" onclick="var t=document.getElementById('sec-the-algebraic-structure-of-data');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">The Algebraic Structure of Data</a></li>
+</ul>
+</div>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">file://domain.local:22/usr/data/abc{*}?sub
@@ -4145,8 +4777,8 @@ mtron&gt; *a/b/c/1/y/z     ​5​
 </tr>
 </tbody>
 </table>
-<h3 id="_spatial_embeddings" class="discrete">Spatial Embeddings</h3>
-<h4 id="_the_poly_readwrite_subring" class="discrete">The Poly Read/Write SubRing</h4>
+<h3 id="sec-spatial-embeddings" class="discrete">Spatial Embeddings</h3>
+<h4 id="sec-the-poly-readwrite-subring" class="discrete">The Poly Read/Write SubRing</h4>
 <div class="paragraph">
 <p>When a poly containing nested poly structures is written to space an ambiguity emerges. A example will elucidate this point. Assume the two ways in which to encode "the same" data in space.</p>
 </div>
@@ -4295,7 +4927,7 @@ mtron&gt; [x0,x1]&gt;-.-&lt;[*(* /+/c)]&gt;-
 ==&gt;{2}2</code></pre>
 </div>
 </div>
-<h5 id="_leftright_factors" class="discrete">Left/Right Factors</h5>
+<h5 id="sec-leftright-factors" class="discrete">Left/Right Factors</h5>
 <div class="paragraph">
 <p>Factorization can happen to the left and to the right. Assume, for the sake of an example, that the additive branches of the running example thus far both end with a <code>d</code> entry. If so, then the following equalities hold.</p>
 </div>
@@ -4352,7 +4984,7 @@ mtron&gt; [x0,x1]&gt;-.-&lt;[*(* /a/+/d)]
 <div class="paragraph">
 <p>A subsequent, practical entailment states that a ring-based dataset can be transformed from a <strong>concatenative/multiplicative</strong> form to a <strong>union/additive</strong> form so as to maintain one subset of the data in a specialized space optimized for the demands of its production requirements and the other subset in another space specialized accordingly to its requirements. For example, some data should be "hot in cache" in order to satisfy demand, while some other data should be "iced in an archive" when the production usage doesn&#8217;t require a rapid response time and production costs can be reduced with cheaper disk storage. With metatron, expressing such partitions while also ensuring said partitions resolve correctly is built into the fundamental mathematics/algorithm of the system&#8201;&#8212;&#8201;<strong>the ring algebra for structural composition</strong>.</p>
 </div>
-<h4 id="_isomorphic_identical" class="discrete">Isomorphic != Identical</h4>
+<h4 id="sec-isomorphic-identical" class="discrete">Isomorphic != Identical</h4>
 <div class="paragraph">
 <p>A <em>matrix</em> is an \(n \times m\) data structure composed of \(n\) vectors/row, each with \(m\) elements/columns. A relational database <em>table</em> is an example of a matrix, where the entries typically span numeric and non-numeric data types. Three general approaches to embedding a matrix or table into a space are presented below, where each makes different space/time tradeoffs, while remaining isomorphic with respect to the structural ring algebra.</p>
 </div>
@@ -4508,7 +5140,7 @@ The expression used to read from each of the three embeddings is the same (typog
 This is possible because a structure resolves up the fURI path hierarchy until it finds a match.
 Once found, it then traverses within the match to resolve the remaining path segments.</p>
 </div>
-<table class="tableblock frame-all grid-all small center" style="width: 70%;">
+<table class="tableblock frame-all grid-all small center" style="width: 50%;">
 <caption class="title">Table 1. Amortized Costs in Terms of Time</caption>
 <colgroup>
 <col style="width: 25%;">
@@ -4548,7 +5180,7 @@ Once found, it then traverses within the match to resolve the remaining path seg
 <div class="paragraph">
 <p>The different embeddings also have different space costs, where space is defined as the amount of data accessed (i.e. retrieved from the structure) in order to satisfy the resolution of the respective fURI.</p>
 </div>
-<table class="tableblock frame-all grid-all small center" style="width: 70%;">
+<table class="tableblock frame-all grid-all small center" style="width: 50%;">
 <caption class="title">Table 2. Amortized Costs in Terms of Space</caption>
 <colgroup>
 <col style="width: 25%;">
@@ -4585,7 +5217,7 @@ Once found, it then traverses within the match to resolve the remaining path seg
 </tr>
 </tbody>
 </table>
-<h3 id="_the_algebraic_structure_of_data" class="discrete">The Algebraic Structure of Data</h3>
+<h3 id="sec-the-algebraic-structure-of-data" class="discrete">The Algebraic Structure of Data</h3>
 <div class="paragraph">
 <p>The examples thus far using algebra to construct and deconstruct data structures have been relatively basic. It&#8217;s important to note that such equalities are recursive, and to demonstrate the point, a more complicated factorization will be presetented.</p>
 </div>
@@ -4595,14 +5227,13 @@ Once found, it then traverses within the match to resolve the remaining path seg
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; x0 -&gt; [a=&gt;[b=&gt;[c=&gt;1,d=&gt;2],
-==&gt;ERROR: null
-mtron&gt; e=&gt;[c=&gt;3,d=&gt;4,f=&gt;5]],
-==&gt;ERROR: e=&gt;[c=&gt;3,d=&gt;4,f=&gt;5]],
-                   ^ end of input expected
-
-mtron&gt; g=&gt;[b=&gt;[c=&gt;6]]]
-==&gt;ERROR: g=&gt;[b=&gt;[c=&gt;6]]]
-              ^ end of input expected</code></pre>
+                  e=&gt;[c=&gt;3,d=&gt;4,f=&gt;5]],
+              g=&gt;[b=&gt;[c=&gt;6]]]
+==&gt;[
+    a=&gt;[
+     b=&gt;[c=&gt;1,d=&gt;2],
+     e=&gt;[c=&gt;3,d=&gt;4,f=&gt;5]],
+    g=&gt;[b=&gt;[c=&gt;6]]]</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -4623,78 +5254,122 @@ mtron&gt; g=&gt;[b=&gt;[c=&gt;6]]]
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; x1 -&gt; [a/b =&gt; [c=&gt;1,d=&gt;2],
-==&gt;ERROR: x1 -&gt; [a/b =&gt; [c=&gt;1,d=&gt;2],
-  ^ end of input expected
-
-mtron&gt; a/e/c =&gt; 3,
-==&gt;ERROR: a/e/c =&gt; 3,
-          ^ end of input expected
-
-mtron&gt; a/e/d =&gt; 4,
-==&gt;ERROR: a/e/d =&gt; 4,
-          ^ end of input expected
-
-mtron&gt; a/e/f =&gt; 5,
-==&gt;ERROR: a/e/f =&gt; 5,
-          ^ end of input expected
-
-mtron&gt; g/b =&gt; [c=&gt;6]]
-==&gt;ERROR: g/b =&gt; [c=&gt;6]]
-             ^ end of input expected
-
+              a/e/c =&gt; 3,
+              a/e/d =&gt; 4,
+              a/e/f =&gt; 5,
+              g/b =&gt; [c=&gt;6]]
+==&gt;[
+    a/b=&gt;[c=&gt;1,d=&gt;2],
+    a/e/c=&gt;3,
+    a/e/d=&gt;4,
+    a/e/f=&gt;5,
+    g/b=&gt;[c=&gt;6]]
 mtron&gt; x2 -&gt; [a/b/c =&gt; 1,
-==&gt;ERROR: x2 -&gt; [a/b/c =&gt; 1,
-  ^ end of input expected
-
-mtron&gt; a/b/d =&gt; 2,
-==&gt;ERROR: a/b/d =&gt; 2,
-          ^ end of input expected
-
-mtron&gt; a/e/c =&gt; 3,
-==&gt;ERROR: a/e/c =&gt; 3,
-          ^ end of input expected
-
-mtron&gt; a/e/d =&gt; 4,
-==&gt;ERROR: a/e/d =&gt; 4,
-          ^ end of input expected
-
-mtron&gt; a/e/f =&gt; 5,
-==&gt;ERROR: a/e/f =&gt; 5,
-          ^ end of input expected
-
-mtron&gt; g/b/c =&gt; 6]
-==&gt;ERROR: g/b/c =&gt; 6]
-          ^ end of input expected</code></pre>
+              a/b/d =&gt; 2,
+              a/e/c =&gt; 3,
+              a/e/d =&gt; 4,
+              a/e/f =&gt; 5,
+              g/b/c =&gt; 6]
+==&gt;[
+    a/b/c=&gt;1,
+    a/b/d=&gt;2,
+    a/e/c=&gt;3,
+    a/e/d=&gt;4,
+    a/e/f=&gt;5,
+    g/b/c=&gt;6]</code></pre>
 </div>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; [x0,x1,x2]&gt;-.-&lt;[*(* /a/b/c)]
-==&gt;{3}[noobj]
-mtron&gt; [x0,x1,x2]&gt;-.-&lt;[*(* /a/b/+)]
-==&gt;{2}[1]
-==&gt;[noobj]
-mtron&gt; [x0,x1,x2]&gt;-.-&lt;[*(* /a/+/+)]
-==&gt;{2}[{1,2}]
-==&gt;[noobj]
-mtron&gt; [x0,x1,x2]&gt;-.-&lt;[*(* /+/b/+)]
-==&gt;{2}[1]
-==&gt;[noobj]
-mtron&gt; [x0,x1,x2]&gt;-.-&lt;[*(* /+/b/c)]
-==&gt;{3}[noobj]
-mtron&gt; [x0,x1,x2]&gt;-.-&lt;[*(* /a/+/c)]
-==&gt;{3}[noobj]
-mtron&gt; [x0,x1,x2]&gt;-.-&lt;[*(* /+/+/c)]
-==&gt;{3}[noobj]
-mtron&gt; [x0,x1,x2]&gt;-.-&lt;[*(* /g/+/+)]
-==&gt;{3}[noobj]</code></pre>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; [x0,x1,x2]&gt;-.-&lt;[*(* a/b/c)]
+==&gt;{3}[1]
+mtron&gt; [x0,x1,x2]&gt;-.-&lt;[*(* a/b/+)]
+==&gt;{3}[{2,1}]
+mtron&gt; [x0,x1,x2]&gt;-.-&lt;[*(* a/+/+)]
+==&gt;{3}[{2,1,3,4,5}]
+mtron&gt; [x0,x1,x2]&gt;-.-&lt;[*(* +/b/+)]
+==&gt;[{[
+    b=&gt;[c=&gt;1,d=&gt;2],
+    e=&gt;[c=&gt;3,d=&gt;4,f=&gt;5]],[b=&gt;[c=&gt;6]],[
+    a=&gt;[
+     b=&gt;[c=&gt;1,d=&gt;2],
+     e=&gt;[c=&gt;3,d=&gt;4,f=&gt;5]],
+    g=&gt;[b=&gt;[c=&gt;6]]]}]
+==&gt;[{[
+    a/b=&gt;[c=&gt;1,d=&gt;2],
+    a/e/c=&gt;3,
+    a/e/d=&gt;4,
+    a/e/f=&gt;5,
+    g/b=&gt;[c=&gt;6]],[c=&gt;6],5,[c=&gt;1,d=&gt;2],3,4}]
+==&gt;[{4,[
+    a/b/c=&gt;1,
+    a/b/d=&gt;2,
+    a/e/c=&gt;3,
+    a/e/d=&gt;4,
+    a/e/f=&gt;5,
+    g/b/c=&gt;6],1,2,3,5,6}]
+mtron&gt; [x0,x1,x2]&gt;-.-&lt;[*(* +/b/c)]
+==&gt;[{[
+    b=&gt;[c=&gt;1,d=&gt;2],
+    e=&gt;[c=&gt;3,d=&gt;4,f=&gt;5]],[b=&gt;[c=&gt;6]],[
+    a=&gt;[
+     b=&gt;[c=&gt;1,d=&gt;2],
+     e=&gt;[c=&gt;3,d=&gt;4,f=&gt;5]],
+    g=&gt;[b=&gt;[c=&gt;6]]]}]
+==&gt;[{[
+    a/b=&gt;[c=&gt;1,d=&gt;2],
+    a/e/c=&gt;3,
+    a/e/d=&gt;4,
+    a/e/f=&gt;5,
+    g/b=&gt;[c=&gt;6]],[c=&gt;6],5,[c=&gt;1,d=&gt;2],3,4}]
+==&gt;[{4,[
+    a/b/c=&gt;1,
+    a/b/d=&gt;2,
+    a/e/c=&gt;3,
+    a/e/d=&gt;4,
+    a/e/f=&gt;5,
+    g/b/c=&gt;6],1,2,3,5,6}]
+mtron&gt; [x0,x1,x2]&gt;-.-&lt;[*(* a/+/c)]
+==&gt;{3}[{1,3}]
+mtron&gt; [x0,x1,x2]&gt;-.-&lt;[*(* +/+/c)]
+==&gt;[{[
+    b=&gt;[c=&gt;1,d=&gt;2],
+    e=&gt;[c=&gt;3,d=&gt;4,f=&gt;5]],[b=&gt;[c=&gt;6]],[
+    a=&gt;[
+     b=&gt;[c=&gt;1,d=&gt;2],
+     e=&gt;[c=&gt;3,d=&gt;4,f=&gt;5]],
+    g=&gt;[b=&gt;[c=&gt;6]]]}]
+==&gt;[{[
+    a/b=&gt;[c=&gt;1,d=&gt;2],
+    a/e/c=&gt;3,
+    a/e/d=&gt;4,
+    a/e/f=&gt;5,
+    g/b=&gt;[c=&gt;6]],[c=&gt;6],5,[c=&gt;1,d=&gt;2],3,4}]
+==&gt;[{4,[
+    a/b/c=&gt;1,
+    a/b/d=&gt;2,
+    a/e/c=&gt;3,
+    a/e/d=&gt;4,
+    a/e/f=&gt;5,
+    g/b/c=&gt;6],1,2,3,5,6}]
+mtron&gt; [x0,x1,x2]&gt;-.-&lt;[*(* g/+/+)]
+==&gt;{3}[6]</code></pre>
 </div>
 </div>
 </div>
 <div class="collapse position-relative" id="card-10">
 <button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-10" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
 <button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
-<h2 id="_q_processors" class="discrete">Q Processors</h2>
+<h2 id="sec-q-processors" class="discrete">Q Processors</h2>
+<div class="legend-index">
+<ul>
+<li><a href="#sec-qproc-examples" onclick="var t=document.getElementById('sec-qproc-examples');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">qproc examples</a></li>
+<li><a href="#sec-subq-publish-and-subscribe-to-patterns-in-space" onclick="var t=document.getElementById('sec-subq-publish-and-subscribe-to-patterns-in-space');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">subq: publish and subscribe to patterns in space</a></li>
+<li><a href="#sec-docq-documentation-for-human-and-agent" onclick="var t=document.getElementById('sec-docq-documentation-for-human-and-agent');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">docq: documentation for human and agent</a></li>
+<li><a href="#sec-typeq-space-type-constraints" onclick="var t=document.getElementById('sec-typeq-space-type-constraints');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">typeq: space type constraints</a></li>
+<li><a href="#sec-incrq-furis-with-counters" onclick="var t=document.getElementById('sec-incrq-furis-with-counters');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">incrq: furis with counters</a></li>
+</ul>
+</div>
 <div class="paragraph">
 <p>A query process (<em>qproc</em>) is a space attachment that intercepts reads and writes according to the query parameters of the uri. These space extensions provide a practical technique that spans many use cases ranging from pub/sub, documentation, counters, transactions, type constraints, immutable constants, permissions, and more.</p>
 </div>
@@ -4844,8 +5519,8 @@ mtron&gt; [x0,x1,x2]&gt;-.-&lt;[*(* /g/+/+)]
 </tr>
 </tbody>
 </table>
-<h3 id="_qproc_examples" class="discrete">qproc examples</h3>
-<h4 id="_subq_publish_and_subscribe_to_patterns_in_space" class="discrete">subq: publish and subscribe to patterns in space</h4>
+<h3 id="sec-qproc-examples" class="discrete">qproc examples</h3>
+<h4 id="sec-subq-publish-and-subscribe-to-patterns-in-space" class="discrete">subq: publish and subscribe to patterns in space</h4>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys/space/usr
@@ -4915,14 +5590,19 @@ mtron&gt; */usr/notes/#?subq
 ==&gt;[,]</code></pre>
 </div>
 </div>
-<h4 id="_docq_documentation_for_human_and_agent" class="discrete">docq: documentation for human and agent</h4>
-<h4 id="_typeq_space_type_constraints" class="discrete">typeq: space type constraints</h4>
-<h4 id="_incrq_furis_with_counters" class="discrete">incrq: furis with counters</h4>
+<h4 id="sec-docq-documentation-for-human-and-agent" class="discrete">docq: documentation for human and agent</h4>
+<h4 id="sec-typeq-space-type-constraints" class="discrete">typeq: space type constraints</h4>
+<h4 id="sec-incrq-furis-with-counters" class="discrete">incrq: furis with counters</h4>
 </div>
 <div class="collapse position-relative" id="card-11">
 <button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-11" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
 <button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
-<h2 id="_internet_of_things_with_mqtt" class="discrete">Internet of Things with MQTT</h2>
+<h2 id="sec-internet-of-things-with-mqtt" class="discrete">Internet of Things with MQTT</h2>
+<div class="legend-index">
+<ul>
+<li><a href="#sec-building-a-home-automation-system" onclick="var t=document.getElementById('sec-building-a-home-automation-system');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">building a home automation system</a></li>
+</ul>
+</div>
 <details>
 <summary class="title">/m/iot instset import</summary>
 <div class="content">
@@ -4942,7 +5622,7 @@ mtron&gt; */usr/notes/#?subq
      mqtt::T,
      haos::T]]@/m/iot
 mtron&gt;  import(/m/llm)
-{{g}}.{{m}}.{{m}}.{{X}}</code></pre>
+{{b}}.{{b}}.{{b}}.{{X}}</code></pre>
 </div>
 </div>
 </div>
@@ -4981,16 +5661,16 @@ The inspiration for metatron&#8217;s URI addressing schema was inspired by the v
   	java.util.concurrent.CompletableFuture [line 345]
   	java.util.concurrent.CompletableFuture [line 440]
   	java.util.concurrent.CompletableFuture [line 2117]
-  	studio.phaseshift.metatron.isa.iot.space.mqtt.mqttSpace [line 110]
-  	studio.phaseshift.metatron.isa.iot.space.mqtt.mqttSpace [line 136]
-  	studio.phaseshift.metatron.isa.iot.space.mqtt.mqttSpace [line 180]
-  	studio.phaseshift.metatron.isa.iot.space.mqtt.mqttSpace [line 84]
+  	studio.phaseshift.metatron.isa.iot.space.mqtt.mqttSpace [line 106]
+  	studio.phaseshift.metatron.isa.iot.space.mqtt.mqttSpace [line 132]
+  	studio.phaseshift.metatron.isa.iot.space.mqtt.mqttSpace [line 176]
+  	studio.phaseshift.metatron.isa.iot.space.mqtt.mqttSpace [line 80]
   	studio.phaseshift.metatron.isa.m.type.Inst$f [line 694]
   	studio.phaseshift.metatron.isa.m.type.Inst [line 335]
-  	studio.phaseshift.metatron.isa.m.type.Obj$Helper [line 908]
+  	studio.phaseshift.metatron.isa.m.type.Obj$Helper [line 916]
   	studio.phaseshift.metatron.isa.m.type.impl.MObj [line 46]
   	studio.phaseshift.metatron.isa.m.type.impl.MRec [line 76]
-  	studio.phaseshift.metatron.isa.m.parser.mParser [line 201]
+  	studio.phaseshift.metatron.isa.m.parser.mParser [line 204]
   	org.petitparser.parser.actions.ActionParser [line 39]
   	org.petitparser.parser.combinators.DelegateParser [line 25]
   	org.petitparser.parser.combinators.ChoiceParser [line 34]
@@ -5005,11 +5685,11 @@ The inspiration for metatron&#8217;s URI addressing schema was inspired by the v
   	org.petitparser.parser.combinators.SequenceParser [line 25]
   	org.petitparser.parser.actions.ActionParser [line 37]
   	org.petitparser.parser.Parser [line 76]
-  	studio.phaseshift.metatron.isa.m.parser.mParser [line 404]
+  	studio.phaseshift.metatron.isa.m.parser.mParser [line 407]
   	studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer [line 88]
   	studio.phaseshift.metatron.docs.MtronDocPreprocessor [line 196]
   	studio.phaseshift.metatron.docs.MtronDocPreprocessor [line 91]
-  	studio.phaseshift.metatron.docs.DocRunner [line 198]
+  	studio.phaseshift.metatron.docs.DocRunner [line 203]
 mtron&gt; *ha:main_field/sensor/+.-&lt;|[
          &gt;&gt;temp.?&lt;50  =&gt; print('too cold for watering'),
          &gt;&gt;humid.?&gt;30 =&gt; print('too humid for watering'),
@@ -5056,7 +5736,7 @@ mtron&gt; *ha:main_field/actuator/#?subq     ​4​</code></pre>
 └───────────── mqtt clients ────────────┘</code></pre>
 </div>
 </div>
-<h3 id="_building_a_home_automation_system" class="discrete">building a home automation system</h3>
+<h3 id="sec-building-a-home-automation-system" class="discrete">building a home automation system</h3>
 <div class="paragraph">
 <p>metatron provides all the necessary (digital) plumbing to create a home automation system. With the inclusion of the <code>/m/llm</code> instruction set, a world of opportunities presents itself.</p>
 </div>
@@ -5064,7 +5744,11 @@ mtron&gt; *ha:main_field/actuator/#?subq     ​4​</code></pre>
 <div class="collapse position-relative" id="card-12">
 <button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-12" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
 <button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
-<h2 id="_the_file_system" class="discrete">The File System</h2>
+<h2 id="sec-the-file-system" class="discrete">The File System</h2>
+<div class="legend-index">
+<ul>
+</ul>
+</div>
 <details>
 <summary class="title">/m/mach instset import and space constructions</summary>
 <div class="content">
@@ -5248,15 +5932,22 @@ mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T).as(str::T)     ​5​
 <div class="collapse position-relative" id="card-13">
 <button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-13" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
 <button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
-<h2 id="_math_instruction_set" class="discrete">Math Instruction Set</h2>
+<h2 id="sec-math-instruction-set" class="discrete">Math Instruction Set</h2>
+<div class="legend-index">
+<ul>
+<li><a href="#sec-units-of-measurement" onclick="var t=document.getElementById('sec-units-of-measurement');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Units of Measurement</a></li>
+<li><a href="#sec-time" onclick="var t=document.getElementById('sec-time');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Time</a></li>
+<li><a href="#sec-data-size" onclick="var t=document.getElementById('sec-data-size');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Data Size</a></li>
+</ul>
+</div>
 <div class="paragraph">
 <p>The <code>/m/math</code> instruction set offers a collection of constants, types, and instructions intended for the representation and manipulation of numbers.</p>
 </div>
-<h3 id="_units_of_measurement" class="discrete">Units of Measurement</h3>
+<h3 id="sec-units-of-measurement" class="discrete">Units of Measurement</h3>
 <div class="paragraph">
 <p>The subspace of <em>units of measurement</em> offer sets of types that denote different scales of a particular physical metric. In particular, there are types for representing and converting between units of time, units of size, units of currency, units of distance, etc. A brief, example driven overview of these subspaces is provided below.</p>
 </div>
-<h4 id="_time" class="discrete">Time</h4>
+<h4 id="sec-time" class="discrete">Time</h4>
 <div class="paragraph">
 <p>The <code>/m/math/time</code> branch of the math instruction set provides the following types:</p>
 </div>
@@ -5296,7 +5987,7 @@ mtron&gt; second::1.0.lt(millis::2000.0)
 </tr>
 </tbody>
 </table>
-<h4 id="_data_size" class="discrete">Data Size</h4>
+<h4 id="sec-data-size" class="discrete">Data Size</h4>
 <table class="tableblock frame-all grid-all stretch table-bordered small center">
 <colgroup>
 <col style="width: 33.3333%;">
@@ -5341,7 +6032,16 @@ mtron&gt; gB::1.0.lt(kB::12000000.0)
 <div class="collapse position-relative" id="card-14">
 <button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-14" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
 <button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
-<h2 id="_graph_computing" class="discrete">Graph Computing</h2>
+<h2 id="sec-graph-computing" class="discrete">Graph Computing</h2>
+<div class="legend-index">
+<ul>
+<li><a href="#sec-mgrphspace" onclick="var t=document.getElementById('sec-mgrphspace');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">/m/grph/space</a></li>
+<li><a href="#sec-grph-instset" onclick="var t=document.getElementById('sec-grph-instset');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">grph instset</a></li>
+<li><a href="#sec-property-graph-extensions" onclick="var t=document.getElementById('sec-property-graph-extensions');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Property Graph Extensions</a></li>
+<li><a href="#sec-metatron-encoded-graphs" onclick="var t=document.getElementById('sec-metatron-encoded-graphs');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">metatron Encoded Graphs</a></li>
+<li><a href="#sec-performance-tiering" onclick="var t=document.getElementById('sec-performance-tiering');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Performance Tiering</a></li>
+</ul>
+</div>
 <details>
 <summary class="title">/m/grph instset import</summary>
 <div class="content">
@@ -5419,7 +6119,7 @@ The <code>graphspace</code> of <code>/m/grph</code> uses <a href="http://tinkerp
 </tr>
 </table>
 </div>
-<h3 id="_mgrphspace" class="discrete">/m/grph/space</h3>
+<h3 id="sec-mgrphspace" class="discrete">/m/grph/space</h3>
 <div class="paragraph">
 <p>The following mtron snippet constructs a <code>grphspace</code>. A few routes are provided separating the elements of the graph into their common categories of vertics and edges. Moreover, with metatron&#8217;s type system, schemas and type checking are available. <code>g:S</code> routes extending uris to the graph&#8217;s schema (should one exist).</p>
 </div>
@@ -5572,7 +6272,7 @@ A │ * │g:V/1/OUT/knows/IN │=?=[age=&gt;?&gt;29]&gt;&gt;│ /OUT/created/IN
 </div>
 </div>
 </div>
-<h3 id="_grph_instset" class="discrete">grph instset</h3>
+<h3 id="sec-grph-instset" class="discrete">grph instset</h3>
 <div class="paragraph">
 <p>The <code>/m/grph</code> instruction set extends the core <code>/m</code> instruction set with the following graph-oriented instructions. These navigation primitives hide the graph encoding specifics, enabling the same instructions to be used across different graph encodings (discussed later when presenting hypergraphs).</p>
 </div>
@@ -5652,7 +6352,7 @@ A │ * │g:V/1/OUT/knows/IN │=?=[age=&gt;?&gt;29]&gt;&gt;│ /OUT/created/IN
 </tr>
 </tbody>
 </table>
-<h3 id="_property_graph_extensions" class="discrete">Property Graph Extensions</h3>
+<h3 id="sec-property-graph-extensions" class="discrete">Property Graph Extensions</h3>
 <div class="paragraph">
 <p>mtron&#8217;s design makes possible a swathe of natural extensions to both the standard property graph data model and associated traversal and pattern-matching query engines. The following itemization summarizes some of the more consequential realizations.</p>
 </div>
@@ -6171,7 +6871,7 @@ mtron&gt; *g:V/1.outE(knows).count()     ​5​
 </div>
 </div>
 </div>
-<h3 id="_metatron_encoded_graphs" class="discrete">metatron Encoded Graphs</h3>
+<h3 id="sec-metatron-encoded-graphs" class="discrete">metatron Encoded Graphs</h3>
 <div class="paragraph">
 <p>It is possible to encode an arbitrary graph structure (i.e. any extension of \(G=(V,E)\)) in space. There are four aaspects of mtron that make graph encodings natural and universal&#8201;&#8212;&#8201;applicable in any metatron space, regardless of the underlying storage system.</p>
 </div>
@@ -6583,7 +7283,7 @@ mtron&gt; *v1.out(knows).out(created).&gt;&gt;name     ​5​</code></pre>
 </div>
 </div>
 </div>
-<h4 id="_performance_tiering" class="discrete">Performance Tiering</h4>
+<h4 id="sec-performance-tiering" class="discrete">Performance Tiering</h4>
 <table class="tableblock frame-all grid-all stretch table-bordered small center">
 <colgroup>
 <col style="width: 33.3333%;">
@@ -6665,7 +7365,11 @@ mtron&gt; *v1.out(knows).out(created).&gt;&gt;name     ​5​</code></pre>
 <div class="collapse position-relative" id="card-15">
 <button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-15" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
 <button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
-<h2 id="_coefficients" class="discrete">Coefficients</h2>
+<h2 id="sec-coefficients" class="discrete">Coefficients</h2>
+<div class="legend-index">
+<ul>
+</ul>
+</div>
 <table class="tableblock frame-all grid-all stretch table-bordered small center">
 <colgroup>
 <col style="width: 33.3333%;">
@@ -6801,7 +7505,14 @@ mtron&gt; *v1.out(knows).out(created).&gt;&gt;name     ​5​</code></pre>
 <div class="collapse position-relative" id="card-19">
 <button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-19" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
 <button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
-<h2 id="_web_technologies" class="discrete">Web Technologies</h2>
+<h2 id="sec-web-technologies" class="discrete">Web Technologies</h2>
+<div class="legend-index">
+<ul>
+<li><a href="#sec-http-space" onclick="var t=document.getElementById('sec-http-space');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">HTTP Space</a></li>
+<li><a href="#sec-html-type" onclick="var t=document.getElementById('sec-html-type');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">HTML Type</a></li>
+<li><a href="#sec-accessing-rest-apis" onclick="var t=document.getElementById('sec-accessing-rest-apis');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Accessing REST APIs</a></li>
+</ul>
+</div>
 <details>
 <summary class="title">/m/web instset import and space constructions</summary>
 <div class="content">
@@ -6849,19 +7560,19 @@ mtron&gt; *v1.out(knows).out(created).&gt;&gt;name     ​5​</code></pre>
     inst=&gt;[
      ping?/m/math/time&lt;=#{?}(uri::T),
      format?str&lt;=markdown(),
+     as?json&lt;=str(json::T),
      as?xml&lt;=str(xml::T),
      as?html&lt;=str(html::T),
      as?markdown&lt;=str(markdown::T),
      as?str&lt;=html(str::T),
      as?str&lt;=markdown(str::T),
      as?html&lt;=markdown(html::T),
-     as?json&lt;=str(json::T),
      as(json_str::T)]]@/m/web</code></pre>
 </div>
 </div>
 </div>
 </details>
-<h3 id="_http_space" class="discrete">HTTP Space</h3>
+<h3 id="sec-http-space" class="discrete">HTTP Space</h3>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; httpspace::[
@@ -6874,7 +7585,7 @@ mtron&gt; *v1.out(knows).out(created).&gt;&gt;name     ​5​</code></pre>
        ]@/sys/space/web/http</code></pre>
 </div>
 </div>
-<h3 id="_html_type" class="discrete">HTML Type</h3>
+<h3 id="sec-html-type" class="discrete">HTML Type</h3>
 <div class="paragraph">
 <p>The type <code>html::T &lt; rec::T</code> (a refinement of <code>rec::T</code>) represents an <a href="https://en.wikipedia.org/wiki/HTML">HTML</a> document.</p>
 </div>
@@ -6943,7 +7654,7 @@ mtron&gt; *&lt;http://phaseshift.studio/splash.html&gt;.as(str::T)     ​4​
 </tr>
 </table>
 </div>
-<h3 id="_accessing_rest_apis" class="discrete">Accessing REST APIs</h3>
+<h3 id="sec-accessing-rest-apis" class="discrete">Accessing REST APIs</h3>
 <div class="paragraph">
 <p>When a <a href="https://en.wikipedia.org/wiki/REST">REST</a> endpoint has a URL address that matches an <code>httpspace</code> pattern, the REST resources can be used in metatron. This is possible because <code>httpspace</code> transforms data "in the wild" (e.g. <code>application/json</code>) into an isomorphic <code>obj</code>. If the newly mapped <code>obj</code> is typed, then it inherits the instructions for that type as defined by the <code>instset</code> of the type. As such, REST resources can be enriched/typed to become active computational objs in metatron.</p>
 </div>
@@ -6957,23 +7668,23 @@ mtron&gt; *&lt;http://localhost:8088/v1/models&gt;
 ==&gt;[
     object=&gt;list,
     data=&gt;[
+     [id=&gt;qwen3:latest,object=&gt;model],
+     [id=&gt;'smollm:1.7b',object=&gt;model],
      [id=&gt;mistralai_devstral-small-2507,object=&gt;model],
      [id=&gt;qwen3-coder-30b-a3b-instruct,object=&gt;model],
      [id=&gt;qwen3-tts-cpp,object=&gt;model],
-     [id=&gt;qwen3:latest,object=&gt;model],
-     [id=&gt;'smollm:1.7b',object=&gt;model],
      [id=&gt;MeetAISmall__latest,object=&gt;model],
      [id=&gt;gpt-oss__latest,object=&gt;model]]]
 mtron&gt; *&lt;http://localhost:8088/v1/models/data/0/id&gt;
-==&gt;'smollm:1.7b'
+==&gt;qwen3-coder-30b-a3b-instruct
 mtron&gt; *&lt;http://localhost:8088/api/models/config-json/${
          *&lt;http://localhost:8088/v1/models/data/0/id&gt;}&gt;
 ==&gt;[
     parameters=&gt;[
-     model=&gt;'mistralai_Devstral-Small-2507-Q4_K...',
-     top_p=&gt;0.9500,
-     top_k=&gt;-1,
-     min_p=&gt;0.0100,
+     model=&gt;'Qwen3-Coder-30B-A3B-Instruct-Q4_K_...',
+     top_p=&gt;0.8000,
+     top_k=&gt;20,
+     min_p=&gt;0,
      temperature=&gt;0.7000,
      max_tokens=&gt;0,
      repeat_penalty=&gt;1,
@@ -6981,7 +7692,7 @@ mtron&gt; *&lt;http://localhost:8088/api/models/config-json/${
      typical_p=&gt;1,
      seed=&gt;-1,
      logprobs=&gt;false],
-    name=&gt;mistralai_devstral-small-2507,
+    name=&gt;qwen3-coder-30b-a3b-instruct,
     f16=&gt;false,
     threads=&gt;8,
     debug=&gt;false,
@@ -6989,23 +7700,16 @@ mtron&gt; *&lt;http://localhost:8088/api/models/config-json/${
     backend=&gt;llama-cpp,
     template=&gt;[
      chat=&gt;"""{{.Input -}}
+   &lt;|im_start|&gt;assistant
    """,
-     chat_message=&gt;"""{{if eq .RoleName "user" -}}
-   [INST...""",
+     chat_message=&gt;'&lt;|im_start|&gt;{{if eq .RoleName "too...',
      completion=&gt;"""{{.Input}}
    """,
-     function=&gt;'[AVAILABLE_TOOLS] [{{range .Functi...'],
+     function=&gt;"""&lt;|im_start|&gt;system
+   You are a funct..."""],
     known_usecases=&gt;[FLAG_CHAT,FLAG_COMPLETION],
     pipeline=&gt;[=&gt;],
-    function=&gt;[
-     disable_no_action=&gt;true,
-     grammar=&gt;[parallel_calls=&gt;true,disable_parallel_new_lines=&gt;true,disable=&gt;true],
-     json_regex_match=&gt;['(?s)\[TOOL\_CALLS\](.*)'],
-     replace_function_results=&gt;[
-      [key=&gt;'(?s)^[^{\[]*'],
-      [key=&gt;'(?s)[^}\]]*$'],
-      [key=&gt;'(?s)\[TOOL\_CALLS\]'],
-      [key=&gt;'(?s)\[\/TOOL\_CALLS\]']]],
+    function=&gt;[grammar=&gt;[=&gt;]],
     reasoning=&gt;[=&gt;],
     mirostat_eta=&gt;0.1000,
     mirostat_tau=&gt;5,
@@ -7015,15 +7719,7 @@ mtron&gt; *&lt;http://localhost:8088/api/models/config-json/${
     mmlock=&gt;false,
     low_vram=&gt;false,
     reranking=&gt;false,
-    stopwords=&gt;[
-     |im_end|,
-     dummy32000,
-     /tool_call,
-     |eot_id|,
-     |end_of_text|,
-     /s,
-     [/TOOL_CALLS],
-     [/ACTIONS]],
+    stopwords=&gt;[|im_end|,dummy32000,/s,|endoftext|],
     context_size=&gt;8192,
     limit_mm_per_prompt=&gt;[=&gt;],
     diffusers=&gt;[=&gt;],
@@ -7140,7 +7836,13 @@ mtron&gt; */m/llm/inst/+?dom=model</code></pre>
 <div class="collapse position-relative" id="card-20">
 <button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-20" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
 <button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
-<h2 id="_document_databases" class="discrete">Document Databases</h2>
+<h2 id="sec-document-databases" class="discrete">Document Databases</h2>
+<div class="legend-index">
+<ul>
+<li><a href="#sec-typing-documents" onclick="var t=document.getElementById('sec-typing-documents');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Typing Documents</a></li>
+<li><a href="#sec-inter-space-references" onclick="var t=document.getElementById('sec-inter-space-references');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Inter-Space References</a></li>
+</ul>
+</div>
 <details>
 <summary class="title">/m/dcmnt instset import</summary>
 <div class="content">
@@ -7367,7 +8069,7 @@ mtron&gt; *farm:animals/1     ​3​
 </tr>
 </table>
 </div>
-<h3 id="_typing_documents" class="discrete">Typing Documents</h3>
+<h3 id="sec-typing-documents" class="discrete">Typing Documents</h3>
 <div class="paragraph">
 <p>BSON (MongoDB&#8217;s binary JSON format) has no concept of a type&#8212;&#8203;for example, <code>chicken::[name=&gt;'trill', age=&gt;7]</code>
 stored in MongoDB would ordinarily come back as a plain <code>rec::[name=&gt;'trill', age=&gt;7]</code>, losing the <code>chicken::T</code>
@@ -7409,7 +8111,7 @@ mtron&gt; *farm:animals/1/name     ​3​
 (or <code>scheme:collection</code> for external targets) and <code>$id</code> carries the document id.
 No metatron-specific footprint is left in the stored data.</p>
 </div>
-<h3 id="_inter_space_references" class="discrete">Inter-Space References</h3>
+<h3 id="sec-inter-space-references" class="discrete">Inter-Space References</h3>
 <div class="paragraph">
 <p>A <code>dcmntspace</code> cell can carry an <code>!*</code> pointer to any URI in metatron.
 Below, a <code>loc:</code> memspace holds barn information, and <code>farm:animals/1</code> (the chicken named Trill) is
@@ -7532,7 +8234,17 @@ if one is found, the reference is routed to the named scheme&#8217;s space.</p>
 <div class="collapse position-relative" id="card-21">
 <button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-21" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
 <button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
-<h2 id="_relational_databases" class="discrete">Relational Databases</h2>
+<h2 id="sec-relational-databases" class="discrete">Relational Databases</h2>
+<div class="legend-index">
+<ul>
+<li><a href="#sec-schema-discovery" onclick="var t=document.getElementById('sec-schema-discovery');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">schema discovery</a></li>
+<li><a href="#sec-mtron-to-sql-rewrites" onclick="var t=document.getElementById('sec-mtron-to-sql-rewrites');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">mtron-to-sql rewrites</a></li>
+<li><a href="#sec-autofrom-and-foreign-keys" onclick="var t=document.getElementById('sec-autofrom-and-foreign-keys');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">auto_from and foreign keys</a></li>
+<li><a href="#sec-mtronmeta-table" onclick="var t=document.getElementById('sec-mtronmeta-table');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">_mtron_meta table</a></li>
+<li><a href="#sec-intra-vs-inter-space-discrimination" onclick="var t=document.getElementById('sec-intra-vs-inter-space-discrimination');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">intra- vs. inter-space discrimination</a></li>
+<li><a href="#sec-sql-footprint" onclick="var t=document.getElementById('sec-sql-footprint');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">sql footprint</a></li>
+</ul>
+</div>
 <details>
 <summary class="title">/m/tble instset import</summary>
 <div class="content">
@@ -7651,7 +8363,7 @@ mtron&gt; *lite:person/+/id     ​6​
 </tr>
 </table>
 </div>
-<h3 id="_schema_discovery" class="discrete">schema discovery</h3>
+<h3 id="sec-schema-discovery" class="discrete">schema discovery</h3>
 <table class="tableblock frame-all grid-all stretch no-border center">
 <colgroup>
 <col style="width: 45.4545%;">
@@ -7748,7 +8460,7 @@ mtron&gt; *lite:kv/nest/a/b/d
 </div>
 </div>
 </div>
-<h3 id="_mtron_to_sql_rewrites" class="discrete">mtron-to-sql rewrites</h3>
+<h3 id="sec-mtron-to-sql-rewrites" class="discrete">mtron-to-sql rewrites</h3>
 <div class="paragraph">
 <p>Regardless of the language, when querying data, the fundamental primitives of the expression ultimately boil down to a collection of  <code>aggregate</code>, <code>filter</code>, <code>project</code>, <code>update</code>, etc. operations. Universals ensure that what can be expressed in mtron can also be expressed in SQL and vice versa (almost). Since relational databases are optimized for processing SQL, it&#8217;s best to leverage the backend&#8217;s SQL-query engine within the mtron expression. The <a href="https://en.wikipedia.org/wiki/Rewriting">rewrite</a> <code>insts</code> of  <code>/m/tble</code> do just that. In general, all rewrites are instructions of the form:</p>
 </div>
@@ -7827,7 +8539,7 @@ mtron&gt; */sys/space/lite.sql("SELECT name,age FROM person WHERE age &lt; 30")&
 <p>The example above demonstrates how one can move between languages within the same expression as the universal encoding
 is that of objs in a unified URI address space.</p>
 </div>
-<h3 id="_auto_from_and_foreign_keys" class="discrete">auto_from and foreign keys</h3>
+<h3 id="sec-autofrom-and-foreign-keys" class="discrete">auto_from and foreign keys</h3>
 <div class="paragraph">
 <p>In a relational database, rows can be linked in one of two ways:</p>
 </div>
@@ -8066,7 +8778,7 @@ mtron&gt; *lite:venue/2/parent/location     ​3​
 <div class="paragraph">
 <p>A <code>tblespace</code> has two storage layers for foreign key pointers. The cell value itself is a plain <code>INTEGER</code> column — no <code>REFERENCES</code> clause, no proprietary SQL type. Routing metadata lives in a single companion table.</p>
 </div>
-<h5 id="_mtron_meta_table" class="discrete">_mtron_meta table</h5>
+<h5 id="sec-mtronmeta-table" class="discrete">_mtron_meta table</h5>
 <div class="listingblock center-code">
 <div class="content">
 <pre class="highlight"><code class="language-sql" data-lang="sql">CREATE TABLE _mtron_meta (
@@ -8109,7 +8821,7 @@ mtron&gt; *lite:venue/2/parent/location     ​3​
 </tr>
 </tbody>
 </table>
-<h5 id="_intra_vs_inter_space_discrimination" class="discrete">intra- vs. inter-space discrimination</h5>
+<h5 id="sec-intra-vs-inter-space-discrimination" class="discrete">intra- vs. inter-space discrimination</h5>
 <div class="paragraph">
 <p>On <strong>write</strong>, the cell uri is tested against the space&#8217;s pattern:</p>
 </div>
@@ -8148,7 +8860,7 @@ mtron&gt; *lite:venue/2/parent/location     ​3​
 </li>
 </ul>
 </div>
-<h5 id="_sql_footprint" class="discrete">sql footprint</h5>
+<h5 id="sec-sql-footprint" class="discrete">sql footprint</h5>
 <div class="paragraph">
 <p>The foreign key column is a bare <code>INTEGER</code> (or <code>TEXT</code> for string keys). There are no SQL <code>FOREIGN KEY</code>
 constraints and the <code>_mtron_meta</code> table is the only metatron-specific schema artifact.
@@ -8161,11 +8873,18 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
 <div class="collapse position-relative" id="card-22">
 <button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-22" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
 <button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
-<h2 id="_the_boot_loader" class="discrete">The Boot Loader</h2>
+<h2 id="sec-the-boot-loader" class="discrete">The Boot Loader</h2>
+<div class="legend-index">
+<ul>
+<li><a href="#sec-core-structures" onclick="var t=document.getElementById('sec-core-structures');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Core Structures</a></li>
+<li><a href="#sec-boot-structures" onclick="var t=document.getElementById('sec-boot-structures');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Boot Structures</a></li>
+<li><a href="#sec-boot-loader" onclick="var t=document.getElementById('sec-boot-loader');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Boot Loader</a></li>
+</ul>
+</div>
 <div class="paragraph">
 <p>The boot process for metatron loads a few core components and then hands control over to a user-provided boot script. What the user&#8217;s boot script does determines the state and use of a particular metatron instance.</p>
 </div>
-<h3 id="_core_structures" class="discrete">Core Structures</h3>
+<h3 id="sec-core-structures" class="discrete">Core Structures</h3>
 <div class="paragraph">
 <p>There are four core structures that are required for metatron to function properly.</p>
 </div>
@@ -8402,15 +9121,6 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
     obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
     inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
       space=&gt;[sub=&gt;{!*/m/mach,!*/m/math,!*/m/web,!*/m/iot,!*/m/grph,!*/m/llm,!*/m/tble,!*/m/dcmnt,!*/m/rdf}],
-      rewrite=&gt;[
-       /m/inst/rewrite/id_removal?code{?}&lt;=code(),
-       /m/inst/rewrite/map_nest?code{?}&lt;=code(),
-       /m/inst/rewrite/else_after_count?code{?}&lt;=code(),
-       /m/inst/rewrite/plus_zero?code{?}&lt;=code(),
-       /m/inst/rewrite/mult_one?code{?}&lt;=code(),
-       /m/inst/rewrite/split_merge_collapse?code{?}&lt;=code(),
-       /m/inst/rewrite/split_merge_left_factor?code{?}&lt;=code(),
-       /m/inst/rewrite/split_merge_right_factor?code{?}&lt;=code()],
       inst=&gt;[
        as?bool&lt;=bool(bool::T),
        as?bytes&lt;=bool(bytes::T),
@@ -8670,7 +9380,16 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
        shortq::T,
        incrq::T,
        constq::T,
-       mimeq::T]]@/m,
+       mimeq::T],
+      rewrite=&gt;[
+       /m/inst/rewrite/id_removal?code{?}&lt;=code(),
+       /m/inst/rewrite/map_nest?code{?}&lt;=code(),
+       /m/inst/rewrite/else_after_count?code{?}&lt;=code(),
+       /m/inst/rewrite/plus_zero?code{?}&lt;=code(),
+       /m/inst/rewrite/mult_one?code{?}&lt;=code(),
+       /m/inst/rewrite/split_merge_collapse?code{?}&lt;=code(),
+       /m/inst/rewrite/split_merge_left_factor?code{?}&lt;=code(),
+       /m/inst/rewrite/split_merge_right_factor?code{?}&lt;=code()]]@/m,
      /m/iot=&gt;instset::[
       pattern=&gt;/m/iot/#,
       q=&gt;[docq::[
@@ -8764,13 +9483,13 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
       inst=&gt;[
        ping?/m/math/time&lt;=#{?}(uri::T),
        format?str&lt;=markdown(),
+       as?json&lt;=str(json::T),
        as?xml&lt;=str(xml::T),
        as?html&lt;=str(html::T),
        as?markdown&lt;=str(markdown::T),
        as?str&lt;=html(str::T),
        as?str&lt;=markdown(str::T),
        as?html&lt;=markdown(html::T),
-       as?json&lt;=str(json::T),
        as(json_str::T)]]@/m/web,
      /m/math=&gt;instset::[
       pattern=&gt;/m/math/#,
@@ -9119,7 +9838,7 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
 </tr>
 </tbody>
 </table>
-<h3 id="_boot_structures" class="discrete">Boot Structures</h3>
+<h3 id="sec-boot-structures" class="discrete">Boot Structures</h3>
 <div class="paragraph">
 <p>The boot process maintains provides access to some information that can be useful during the boot process. Note that <code>boot/</code> exists under the purview of <code>/m/space/stack</code> (patterned <code>&lt;+/#&gt;</code>).</p>
 </div>
@@ -9159,7 +9878,7 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
 ==&gt;/sys/env/HOMEBREW_PREFIX=&gt;'/home/linuxbrew/.linuxbrew'</code></pre>
 </div>
 </div>
-<h3 id="_boot_loader" class="discrete">Boot Loader</h3>
+<h3 id="sec-boot-loader" class="discrete">Boot Loader</h3>
 <div class="paragraph">
 <p>An mtron file can be provided at startup which is used to configure the user&#8217;s metatron environment. This typically includes mounting spaces (data access points), importing requisite instruction sets (domains of discourse), configuring q processors (documentation endpoints, etc.), defining custom instructions, and putting the system into a console REPL mode or as a headless server only. An example <code>boot.mtron</code> is provided below.</p>
 </div>
@@ -9289,7 +10008,11 @@ console::[        =&gt; ]@/sys/console;
 <div class="collapse position-relative" id="card-23">
 <button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-23" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
 <button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
-<h2 id="_resource_description_framework" class="discrete">Resource Description Framework</h2>
+<h2 id="sec-resource-description-framework" class="discrete">Resource Description Framework</h2>
+<div class="legend-index">
+<ul>
+</ul>
+</div>
 </div>
 </div>
 </div>
@@ -9423,6 +10146,32 @@ console::[        =&gt; ]@/sys/console;
     window.addEventListener('load', function() {
         setTimeout(initTabs, 200);
     });
+
+    // ── Hash navigation into collapsed cards ─────────────────────
+    (function() {
+        function navigateToHash() {
+            var hash = window.location.hash;
+            if (!hash) return;
+            var target = document.querySelector(hash);
+            if (!target) return;
+            var card = target.closest('.collapse');
+            if (card && !card.classList.contains('show')) {
+                card.addEventListener('shown.bs.collapse', function scrollAfter() {
+                    card.removeEventListener('shown.bs.collapse', scrollAfter);
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                });
+                var inst = bootstrap.Collapse.getInstance(card)
+                        || new bootstrap.Collapse(card, { toggle: false });
+                inst.show();
+            } else {
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+        window.addEventListener('hashchange', navigateToHash);
+        window.addEventListener('load', function() {
+            setTimeout(navigateToHash, 80);
+        });
+    })();
 
     // ── Section heading anchor links + copy-to-clipboard ──────────
     (function() {
