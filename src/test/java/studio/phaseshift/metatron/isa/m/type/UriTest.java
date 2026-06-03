@@ -120,7 +120,14 @@ public class UriTest extends AbstractMetatronTest {
             "*test.>>q>>x                     % 1",
             "*test>>q>>y                      % 2",
             "*test.>>q>>z                     % *test",
-            "*test.>>path>>1.*(_)             % 42"
+            "*test.>>path>>1.*(_)             % 42",
+            "*test.>>0                        % a",
+            "*test.>>{1,2}                    % {b,c}",
+            "*test.>>(-1)                     % c",
+            "*test.>>{-1,0}                   % {c,a}",
+            "*test.>>{-2,0}                   % {b,a}",
+            "*test.>>{-2,1}                   % {2}b",
+            "*test.>>{-100,100}               % noobj"
     }, delimiter = '%')
     public void testGet(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
