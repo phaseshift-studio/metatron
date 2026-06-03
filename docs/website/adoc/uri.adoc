@@ -223,7 +223,7 @@ a──b──d──⮞1           ┌──b──d──⮞1          ┌─�
 a──c──d──⮞2           └──c──d──⮞2          └──c──┘
 ----
 
-The equalities below reiterate what is stated diagramatically above.
+The equalities below reiterate what is stated diagrammatically above.
 
 \[
 \begin{align}

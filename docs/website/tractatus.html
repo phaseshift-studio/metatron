@@ -411,6 +411,7 @@ While the reader searches for some unbeknownst depth in the previous sentence, a
 <h2 id="sec-instructions" class="discrete">Instructions</h2>
 <div class="legend-index">
 <ul>
+<li><a href="#sec-inst-uri-syntax" onclick="var t=document.getElementById('sec-inst-uri-syntax');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">inst uri syntax</a></li>
 <li><a href="#sec-obj-propagation-mechanics" onclick="var t=document.getElementById('sec-obj-propagation-mechanics');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">obj propagation mechanics</a></li>
 <li><a href="#sec-stacks-and-frames" onclick="var t=document.getElementById('sec-stacks-and-frames');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">stacks and frames</a></li>
 <li><a href="#sec-domrng-coefficients" onclick="var t=document.getElementById('sec-domrng-coefficients');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">dom/rng coefficients</a></li>
@@ -420,24 +421,40 @@ While the reader searches for some unbeknownst depth in the previous sentence, a
 ┌ ├ ┐ └ ┘ │ ┤ ─ ⋰ ⋱ ⮝ ⮞ ⮜ ⮟
 -->
 <div class="paragraph">
-<p>mtron programs are composed using computational primitives called <strong>instructions</strong> (<code>inst</code>). Instructions are organized into libraries called <strong>instruction sets</strong> (<code>instset</code>)&#8201;&#8212;&#8201;<a href="https://en.wikipedia.org/wiki/Domain_of_discourse">domains of discourse</a>. Mathematically, every instruction is a <strong>function</strong> written according to the form:</p>
+<p>mtron programs are composed using computational primitives called <strong>instructions</strong> (<code>inst</code>). Instructions are organized into libraries called <strong>instruction sets</strong> (<code>instset</code>)&#8201;&#8212;&#8201;<a href="https://en.wikipedia.org/wiki/Domain_of_discourse">domains of discourse</a>. Mathematically, every instruction is a <a href="https://en.wikipedia.org/wiki/Function_(mathematics)">function</a> that maps a <a href="https://en.wikipedia.org/wiki/Multiset">multiset</a> of objs to a multiset of objs&#8201;&#8212;&#8201;called streams.</p>
+</div>
+<div class="paragraph">
+<p>\[
+f\left(\cal{P}\left(\tt{X}\right)\right) \rightarrow \cal{P}\left(\tt{Y}\right)
+\]</p>
+</div>
+<div class="paragraph">
+<p>An instruction maps a <strong>left hand side</strong> <code>obj</code> (lhs) to a <strong>right hand side</strong> <code>obj</code> (rhs). One-to-one, many-to-one, one-to-many, many-to-many, etc. mappings are possible as domains and ranges are specified as elements of the power set of all <code>objs</code>. When coefficients are elements of \(\mathbb{Z}\), <code>{1,2,3}</code> \(\in \mathcal{P}(\texttt{obj})\) has type <code>int{3}</code>. Programmatically, what is passed between instructions is a single stream of <code>objs</code>. This formulation guarantees that there is always a rhs <code>obj</code> for every lhs <code>obj</code> regardless of failure (<code>fail::T</code>) or emptiness (<code>obj{0}</code>).</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="paragraph">
+<p>As a side note, discussed at length elsewhere, the <strong>mtron inst ring</strong> is the set of <code>objs</code>, closed under \(\cdot\) (apply) and \(+\) (split/merge), both of which are total functions.</p>
+</div>
+</div>
+</div>
+<h3 id="sec-inst-uri-syntax" class="discrete">inst uri syntax</h3>
+<div class="paragraph">
+<p>In mtron, instructions are written according to the form:</p>
 </div>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron"> tid{c}?rng&lt;=dom(args){ code }@vid
   │  │  │      │ │  │  │    │   │
   │  │  └───┬──┘ └─┬┘  └─┬──┘   │
-  │  │      │      │     │      └────⮞ value id: the opcode of the instruction (name)
+  │  │      │      │     │      └────⮞ value id: the position of the instruction in code
   │  │      │      │     └───────────⮞ code: instruction body is a tree of instructions (impl)
   │  │      │      └─────────────────⮞ arguments: dynamic parameterizations (args)
   │  │      └────────────────────────⮞ domain/range: the incoming (lhs) and outgoing (rhs) obj types
   │  └───────────────────────────────⮞ coefficient: the magnitude of the instruction upon the rhs
-  └──────────────────────────────────⮞ type id: the parent of the instruction (inst inheritance)</code></pre>
+  └──────────────────────────────────⮞ type id: the type of the instruction (opcode)</code></pre>
 </div>
 </div>
-<div class="openblock card">
-<div class="content">
-<h4 id="_uri_syntax_sugar" class="discrete">uri syntax sugar</h4>
 <div class="paragraph">
 <p>The instruction template above represents the typical instruction with <code>rng&lt;=dom</code> and <code>{c}</code> sugar syntax being used.
 However, note that the dom/rng and coefficient sugars ultimately compile to URI query parameters.
@@ -452,17 +469,7 @@ When fully parsed to a legal URI, the instruction signature is denoted:</p>
 <p>Instruction query parameters are similar in function to <a href="https://en.wikipedia.org/wiki/Java_annotation">method annotations</a>. Query parameters encode metadata which can
 aid the compiler instruction selection, enable code path compression, facilitate polymorphic dispatch, support lifted monadic processing, maintain runtime profiling statistics, and more.</p>
 </div>
-</div>
-</div>
 <h3 id="sec-obj-propagation-mechanics" class="discrete">obj propagation mechanics</h3>
-<div class="paragraph">
-<p>Every instruction maps a <strong>left hand side</strong> <code>obj</code> (lhs) to a <strong>right hand side</strong> <code>obj</code> (rhs). Many-to-one, one to many, and many-to-many mappings are possible as an <code>obj</code> is an element in the power set of all <code>objs</code>. Thus, <code>{1,2,3}</code> is an <code>obj</code> with type <code>int{3}</code>. Programmatically, what is passed between instructions is a single stream <code>obj</code> which guarantees that there is always an rhs <code>obj</code> for every lhs <code>obj</code> regardless of failure or emptiness. As a side note, discussed at length elsewhere, the mtron ring is the set of <code>objs</code> and is closed under \(\cdot\) (apply) and \(+\) (split/merge), both of which are total functions.</p>
-</div>
-<div class="paragraph">
-<p>\begin{align*}
-\text{obj} \in \mathcal{P}(\text{obj})
-\end{align*}</p>
-</div>
 <div class="paragraph">
 <p>It is important to understand the mechanics of instruction evaluation. Every instruction follows the same pattern. When a lhs <code>obj</code> is applied to an <code>inst</code> obj, the first thing that happens is the arguments of the <code>inst</code> are resolved. This is perhaps best described with an example.</p>
 </div>
@@ -516,8 +523,7 @@ mtron&gt; 1.isa(as(bool::T))     ​7​
 </table>
 </div>
 <div class="paragraph">
-<p>The key point is that <strong>call</strong> objs (<code>inst</code>, <code>code</code>, and <code>noobj</code>) have a domain and range that are context dependent as each incoming <code>obj</code> creates a chain reaction of internal calls to ultimately yield the arg <code>objs</code> that instruction will operate with. Said another way, <code>calls</code> are types that become instances at time of application. Constant <code>objs</code> (non-call objs) also have a domain and range. For instance, the verbose representation of <code>int::1</code> is <code>int?int&lt;=#{?}(){1}</code>.
-This states that every lhs <code>obj</code> or <code>noobj</code> (<code>#{?}</code>) that is applied to <code>1</code>, yields a single rhs <code>int</code>; namely <code>1</code>. In this way, constants are functions (calls) even though they return the same value regardless of input.</p>
+<p>The key point is that <strong>call</strong> objs (<code>inst</code>, <code>code</code>, and <code>noobj</code>) have a domain and range that are context dependent as each incoming <code>obj</code> creates a chain reaction of internal calls to ultimately yield the arg <code>objs</code> that instruction will operate with. Said another way, <code>calls</code> are types that become instances at time of application.</p>
 </div>
 <div class="paragraph">
 <p>The diagram below demonstrates how a lhs <code>obj</code> percolates through an <code>inst</code> to where ultimately, at the end of the last <code>inst</code> of code the resultant rhs <code>obj</code> is emitted.</p>
@@ -532,9 +538,52 @@ lhs =&gt; inst(arg1,...,argN){ inst1...instN } =&gt; rhs
  └────────────────────────────┘   └──┘</code></pre>
 </div>
 </div>
+<div class="openblock card">
+<div class="title">the unification of function and value</div>
+<div class="content">
+<div class="paragraph">
+<p>Constant <code>objs</code> (non-call objs) also have a domain and range. For instance, the verbose representation of <code>int::1</code> is <code>&lt;1&gt;?int&lt;=#{?}(){1}</code>.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; |&lt;1&gt;?int&lt;=#{?}(){1}@&lt;1&gt;   [-- 1 --]
+==&gt;1?rng=int&amp;dom=#{?}(){1}@<i class="conum" data-value="1"></i><b>(1)</b>
+mtron&gt; &lt;1&gt;()                     [-- 2 --]
+==&gt;1
+mtron&gt; 10.&lt;1&gt;()                  [-- 3 --]
+==&gt;1
+mtron&gt; 12 + &lt;1&gt;()                [-- 4 --]
+==&gt;13</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>1 as an <code>inst</code> from maybe an <code>obj</code> to an <code>int</code> (<code>|</code> to prevent evaluation).</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td><code>noobj</code> applied to the 1 <code>inst</code> (the <code>{0}</code> of the domain&#8217;s <code>{?}</code>).</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>10 applied to the 1 <code>inst</code> (the <code>{1}</code> of the domain&#8217;s <code>{?}</code>).</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>12 added to the 1 <code>inst</code>.</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>This states that every lhs <code>obj</code> or <code>noobj</code> (<code>#{?}</code>) that is applied to <code>1</code>, yields a single rhs <code>int</code>; namely <code>1</code>. In this way, constants are functions (calls) even though they return the same value regardless of input.</p>
+</div>
+</div>
+</div>
 <h3 id="sec-stacks-and-frames" class="discrete">stacks and frames</h3>
 <div class="paragraph">
-<p>Every logical thread has a <code>/m/space/stack</code> patterned <code>&lt;+/#&gt;</code>. This pattern captures the breadth of common variable names found in most programming languages (<code>a</code>,<code>x</code>,<code>a_var</code>,<code>b3</code>,etc.) as well as hiearchical variables like <code>a/b/c</code>, etc. In short, the stack is always responsible for schemaless relative uris. To ground the discussion in a more concrete realization, the current stack of the mtron code processing this documentation is shown in the collapsed accordian below. The state of this stack is the result of all the processing thus far up to this point in the documentation. Declared variables from other parts of the documentation will be noticed as they were written at the root of the stack and thus, are <em>global variables</em>. Furthermore, note the <code>boot/</code> branch. This stores the data provided by the user and/or derived by the bootloader at startup.</p>
+<p>Every logical thread of execution has a <code>/m/space/stack</code> patterned <code>&lt;+/#&gt;</code>. This pattern captures the breadth of common variable names found in most programming languages (<code>a</code>,<code>x</code>,<code>a_var</code>,<code>b3</code>,etc.) as well as hierarchical variables like <code>a/b/c</code>, etc. In short, the stack is always responsible for <em>schemaless relative</em> uris. To ground the discussion, the current stack of the mtron code processing this documentation is shown in the collapsed accordian below. The state of this stack is the result of all the processing thus far up to this point in the documentation. Declared variables from other parts of the documentation will be noticed as they were written at the root of the stack and thus, are <em>global variables</em>. Furthermore, note the <code>boot/</code> branch. This stores the data provided by the user and/or derived by the bootloader at startup (e.g. environmental variables).</p>
 </div>
 <details>
 <summary class="title">the objs of the doc processors stack</summary>
@@ -588,7 +637,7 @@ lhs =&gt; inst(arg1,...,argN){ inst1...instN } =&gt; rhs
 ==&gt;boot/args/local=&gt;booger
 ==&gt;testy/name=&gt;!*deep:deepseek-v4-pro/name
 ==&gt;v6/age=&gt;35
-==&gt;&lt;1&gt;=&gt;plus?rng=int&amp;dom=int(3){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
+==&gt;&lt;1&gt;=&gt;plus?rng=int&amp;dom=int(1){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
 ==&gt;orders=&gt;rrow::T[?[
      orderNumber=&gt;int::T,
      orderDate=&gt;str::T,
@@ -1775,7 +1824,7 @@ mtron&gt; *ollama:+.
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; @ai.chat("I need you evaluate the mtron expresion `-&lt;[_=&gt;_]&gt;&gt;.&gt;-[,]-&lt;[_,-&lt;[_=&gt;_]&gt;&gt;]&gt;&gt;.&gt;-` with a lhs of `1`. Please don't tell me the result of the evaluation until I ask for it sometime in the near future.")
-==&gt;"The evaluation of the mtron expression has been completed successfully with the provided left-hand side (lhs) value of `1`. I will provide the result when you ask for it. Let me know when you're ready!"</code></pre>
+==&gt;"The evaluation of the mtron expression with the provided lhs of `1` has been completed. I will provide the result when you ask for it."</code></pre>
 </div>
 </div>
 <div class="openblock card">
@@ -1897,27 +1946,16 @@ mtron&gt; tB::1.0.as(mB::T)     ​3​
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; @ai.chat("It's been many years since we last talked. For I am a tired, old man. Before I let my last breathe flutter into this world, I must know one last thing. Please tell me, what was the result of the mtron expression I provided you all those years ago?")
-==&gt;"""The result of the mtron expression you provided, evaluated with a left-hand side (lhs) of `1`, was **`1`**.
-
-   Rest well, old friend. May your final breath be peaceful."""
+==&gt;"The result of the evaluation of the mtron expression with the lhs of `1` was `1`."
 mtron&gt; */usr/ai/memory/+
-==&gt;[
-    id=&gt;call_dq9b99go,
-    toolName=&gt;m_inst_eval,
-    contents=&gt;[[text=&gt;1,type=&gt;'TEXT']],
-    isError=&gt;false,
-    attributes=&gt;[=&gt;],
-    type=&gt;'TOOL_EXECUTION_RESULT']
 ==&gt;[
     contents=&gt;[[
     text=&gt;"It's been many years since we last...",
     type=&gt;'TEXT']],
     type=&gt;USER]
 ==&gt;[
-    toolExecutionRequests=&gt;[[
-    id=&gt;call_dq9b99go,
-    name=&gt;m_inst_eval,
-    arguments=&gt;'{"object":"-&lt;[_=&gt;_]&gt;&gt;.&gt;-[,]-&lt;[_,-&lt;...']],
+    text=&gt;'The result of the evaluation of th...',
+    toolExecutionRequests=&gt;[,],
     attributes=&gt;[=&gt;],
     type=&gt;AI]
 ==&gt;[
@@ -1926,10 +1964,19 @@ mtron&gt; */usr/ai/memory/+
     attributes=&gt;[=&gt;],
     type=&gt;AI]
 ==&gt;[
-    text=&gt;'The result of the mtron expression...',
-    toolExecutionRequests=&gt;[,],
+    toolExecutionRequests=&gt;[[
+    id=&gt;call_awu9ybsr,
+    name=&gt;m_inst_eval,
+    arguments=&gt;'{"object":"-&lt;[_=&gt;_]&gt;&gt;.&gt;-[,]-&lt;[_,-&lt;...']],
     attributes=&gt;[=&gt;],
-    type=&gt;AI]</code></pre>
+    type=&gt;AI]
+==&gt;[
+    id=&gt;call_awu9ybsr,
+    toolName=&gt;m_inst_eval,
+    contents=&gt;[[text=&gt;1,type=&gt;'TEXT']],
+    isError=&gt;false,
+    attributes=&gt;[=&gt;],
+    type=&gt;'TOOL_EXECUTION_RESULT']</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -3300,7 +3347,7 @@ The predicate component of the type definition tests an <code>int</code> to dete
 <div class="paragraph">
 <p>While every <code>type</code> is an <code>obj</code>, not every <code>obj</code> is a <code>type</code>.
 Those <code>objs</code> that are not <code>types</code> are <em>instances</em> of some <code>type</code>.
-This is the foundation for all other <code>objs</code> in {{y}}m{{r}}E{{m}}t{{b}}A{{c}}t{{r}}R{{g}}o{{r}}n{{X}}.</p>
+This is the foundation for all other <code>objs</code> in {{y}}m{{c}}e{{g}}T{{r}}a{{b}}T{{g}}r{{r}}O{{g}}n{{X}}.</p>
 </div>
 <h4 id="sec-cascading-type-constructions" class="discrete">cascading type constructions</h4>
 <h3 id="sec-mono-types" class="discrete">mono types</h3>
@@ -4939,7 +4986,7 @@ a──c──d──⮞2           └──c──d──⮞2          └─�
 </div>
 </div>
 <div class="paragraph">
-<p>The equalities below reiterate what is stated diagramatically above.</p>
+<p>The equalities below reiterate what is stated diagrammatically above.</p>
 </div>
 <div class="paragraph">
 <p>\[
@@ -5622,7 +5669,7 @@ mtron&gt; */usr/notes/#?subq
      mqtt::T,
      haos::T]]@/m/iot
 mtron&gt;  import(/m/llm)
-{{b}}.{{b}}.{{b}}.{{X}}</code></pre>
+{{g}}.{{c}}.{{y}}.{{X}}</code></pre>
 </div>
 </div>
 </div>
@@ -7668,11 +7715,11 @@ mtron&gt; *&lt;http://localhost:8088/v1/models&gt;
 ==&gt;[
     object=&gt;list,
     data=&gt;[
+     [id=&gt;qwen3-tts-cpp,object=&gt;model],
      [id=&gt;qwen3:latest,object=&gt;model],
      [id=&gt;'smollm:1.7b',object=&gt;model],
      [id=&gt;mistralai_devstral-small-2507,object=&gt;model],
      [id=&gt;qwen3-coder-30b-a3b-instruct,object=&gt;model],
-     [id=&gt;qwen3-tts-cpp,object=&gt;model],
      [id=&gt;MeetAISmall__latest,object=&gt;model],
      [id=&gt;gpt-oss__latest,object=&gt;model]]]
 mtron&gt; *&lt;http://localhost:8088/v1/models/data/0/id&gt;
@@ -7681,10 +7728,10 @@ mtron&gt; *&lt;http://localhost:8088/api/models/config-json/${
          *&lt;http://localhost:8088/v1/models/data/0/id&gt;}&gt;
 ==&gt;[
     parameters=&gt;[
-     model=&gt;'Qwen3-Coder-30B-A3B-Instruct-Q4_K_...',
-     top_p=&gt;0.8000,
-     top_k=&gt;20,
-     min_p=&gt;0,
+     model=&gt;'smollm__1.7b',
+     top_p=&gt;0.9500,
+     top_k=&gt;-1,
+     min_p=&gt;0.0100,
      temperature=&gt;0.7000,
      max_tokens=&gt;0,
      repeat_penalty=&gt;1,
@@ -7692,24 +7739,18 @@ mtron&gt; *&lt;http://localhost:8088/api/models/config-json/${
      typical_p=&gt;1,
      seed=&gt;-1,
      logprobs=&gt;false],
-    name=&gt;qwen3-coder-30b-a3b-instruct,
+    name=&gt;'smollm:1.7b',
     f16=&gt;false,
     threads=&gt;8,
     debug=&gt;false,
     embeddings=&gt;false,
     backend=&gt;llama-cpp,
-    template=&gt;[
-     chat=&gt;"""{{.Input -}}
-   &lt;|im_start|&gt;assistant
-   """,
-     chat_message=&gt;'&lt;|im_start|&gt;{{if eq .RoleName "too...',
-     completion=&gt;"""{{.Input}}
-   """,
-     function=&gt;"""&lt;|im_start|&gt;system
-   You are a funct..."""],
-    known_usecases=&gt;[FLAG_CHAT,FLAG_COMPLETION],
+    template=&gt;[use_tokenizer_template=&gt;true],
+    known_usecases=&gt;[FLAG_CHAT],
     pipeline=&gt;[=&gt;],
-    function=&gt;[grammar=&gt;[=&gt;]],
+    function=&gt;[
+     grammar=&gt;[disable=&gt;true],
+     automatic_tool_parsing_fallback=&gt;true],
     reasoning=&gt;[=&gt;],
     mirostat_eta=&gt;0.1000,
     mirostat_tau=&gt;5,
@@ -7719,13 +7760,13 @@ mtron&gt; *&lt;http://localhost:8088/api/models/config-json/${
     mmlock=&gt;false,
     low_vram=&gt;false,
     reranking=&gt;false,
-    stopwords=&gt;[|im_end|,dummy32000,/s,|endoftext|],
     context_size=&gt;8192,
     limit_mm_per_prompt=&gt;[=&gt;],
     diffusers=&gt;[=&gt;],
     grpc=&gt;[=&gt;],
     tts=&gt;[=&gt;],
-    options=&gt;[gpu],
+    description=&gt;'Imported from ollama://smollm:1.7b',
+    options=&gt;[use_jinja:true],
     mcp=&gt;[=&gt;],
     agent=&gt;[=&gt;]]</code></pre>
 </div>
@@ -9121,6 +9162,39 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
     obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
     inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
       space=&gt;[sub=&gt;{!*/m/mach,!*/m/math,!*/m/web,!*/m/iot,!*/m/grph,!*/m/llm,!*/m/tble,!*/m/dcmnt,!*/m/rdf}],
+      type=&gt;[
+       #::T,
+       bool::T,
+       int::T,
+       real::T,
+       bytes::T,
+       str::T,
+       uri::T,
+       rel::T,
+       lst::T,
+       rec::T,
+       instset::T,
+       inst::T,
+       code::T,
+       fail::T,
+       typer::T,
+       space{*}::T,
+       memspace::T,
+       stack::T,
+       qproc::T,
+       subq::T,
+       sub::T,
+       typeq::T,
+       docs::T,
+       docq::T,
+       mintq::T,
+       shortq::T,
+       incrq::T,
+       constq::T,
+       mimeq::T],
+      const=&gt;[
+       noobj,
+       none@none],
       inst=&gt;[
        as?bool&lt;=bool(bool::T),
        as?bytes&lt;=bool(bytes::T),
@@ -9337,7 +9411,7 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
        count?int&lt;=A{*}(),
        skip?A{*}&lt;=A{*}(int::T),
        take?A{*}&lt;=A{*}(int::T),
-       update?B&lt;=A(B::T),
+       update?B{*}&lt;=A(B{*}::T),
        reify?rec&lt;=A(),
        reduce?A&lt;=A{*}(#{?}::T),
        where?A{?}&lt;=A(B::T),
@@ -9348,39 +9422,6 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
        lshift?B{*}&lt;=A(),
        start?A{**}&lt;=noobj{0}(A{**}::T),
        ctor()],
-      const=&gt;[
-       noobj,
-       none@none],
-      type=&gt;[
-       #::T,
-       bool::T,
-       int::T,
-       real::T,
-       bytes::T,
-       str::T,
-       uri::T,
-       rel::T,
-       lst::T,
-       rec::T,
-       instset::T,
-       inst::T,
-       code::T,
-       fail::T,
-       typer::T,
-       space{*}::T,
-       memspace::T,
-       stack::T,
-       qproc::T,
-       subq::T,
-       sub::T,
-       typeq::T,
-       docs::T,
-       docq::T,
-       mintq::T,
-       shortq::T,
-       incrq::T,
-       constq::T,
-       mimeq::T],
       rewrite=&gt;[
        /m/inst/rewrite/id_removal?code{?}&lt;=code(),
        /m/inst/rewrite/map_nest?code{?}&lt;=code(),
@@ -9661,8 +9702,8 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
      constq=&gt;[/m/space/qproc/constq],
      lrow=&gt;[/m/tble/lrow],
      monad=&gt;[/m/mach/monad],
-     auto=&gt;[/m/inst/auto],
      inst=&gt;[/m/inst],
+     auto=&gt;[/m/inst/auto],
      machine=&gt;[/m/mach/machine],
      dcmntspace=&gt;[/m/dcmnt/space/dcmntspace],
      rshift=&gt;[/m/inst/rshift],
@@ -9715,15 +9756,15 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
      reduce=&gt;[/m/inst/reduce],
      to=&gt;[/m/inst/to],
      skip=&gt;[/m/inst/skip],
-     port=&gt;[/m/inst/port],
      space=&gt;[/m/space],
+     port=&gt;[/m/inst/port],
      bothV=&gt;[/m/grph/inst/bothV],
      inE=&gt;[/m/grph/inst/inE],
      println=&gt;[/m/inst/println],
      instset=&gt;[/m/instset],
      gte=&gt;[/m/inst/gte],
-     scheme=&gt;[/m/inst/scheme],
      real=&gt;[/m/real],
+     scheme=&gt;[/m/inst/scheme],
      rrow=&gt;[/m/tble/rrow],
      start=&gt;[/m/inst/start],
      tblespace=&gt;[/m/tble/space/tblespace],
