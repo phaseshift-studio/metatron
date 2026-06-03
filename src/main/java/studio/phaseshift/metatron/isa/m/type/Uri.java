@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -310,9 +310,9 @@ public interface Uri extends Mono, Ring.O<Uri>, Comparable<Uri> {
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
                     //instC(SPLIT_INST_TID.dom(URI_TID).rng(LST_TID), lst(T(URI_TID)), (lhs, inst) -> lst(Arrays.stream(lhs.uriValue().toString().split(inst.arg(0).uriValue().toString())).map(MUri::uri))),
-                    instC(AS_INST_TID.dom(URI_TID).rng(INT_TID), lst(T(INT_TID)), (lhs, inst) -> jnt(Integer.parseInt(lhs.uriValue().toString()), inst.arg(0).vidOrTid().c(c->c.mult(lhs.c())), null)),
-                    instC(AS_INST_TID.dom(URI_TID).rng(URI_TID), lst(T(URI_TID)), (lhs, inst) -> uri(lhs.uriValue(), inst.arg(0).vidOrTid().c(c->c.mult(lhs.c())), lhs.vid())),
-                    instC(AS_INST_TID.dom(URI_TID).rng(STR_TID), lst(T(STR_TID)), (lhs, inst) -> str(lhs.uriValue().toString(), inst.arg(0).vidOrTid().c(c->c.mult(lhs.c())), lhs.vid())),
+                    instC(AS_INST_TID.dom(URI_TID).rng(INT_TID), lst(T(INT_TID)), (lhs, inst) -> jnt(Integer.parseInt(lhs.uriValue().toString()), inst.arg(0).vidOrTid().c(c -> c.mult(lhs.c())), null)),
+                    instC(AS_INST_TID.dom(URI_TID).rng(URI_TID), lst(T(URI_TID)), (lhs, inst) -> uri(lhs.uriValue(), inst.arg(0).vidOrTid().c(c -> c.mult(lhs.c())), lhs.vid())),
+                    instC(AS_INST_TID.dom(URI_TID).rng(STR_TID), lst(T(STR_TID)), (lhs, inst) -> str(lhs.uriValue().toString(), inst.arg(0).vidOrTid().c(c -> c.mult(lhs.c())), lhs.vid())),
                     instC(AS_INST_TID.dom(URI_TID).rng(REC_TID), lst(REC_TYPE), (lhs, inst) -> {
                         final fURI lhsUri = lhs.asUri().uriValue();
                         return rec(
@@ -321,7 +321,7 @@ public interface Uri extends Mono, Ring.O<Uri>, Comparable<Uri> {
                                 PORT, lhsUri.port() == -1 ? noobj() : jnt(lhsUri.port()),
                                 PATH, lhsUri.path().isEmpty() ? noobj() : lst(lhsUri.path().stream().map(MUri::uri)),
                                 COEFF, rec(MIN, null == lhsUri.c().min() ? noobj() : jnt(lhsUri.c().min()), MAX, null == lhsUri.c().max() ? noobj() : jnt(lhsUri.c().max())),
-                                QPROC, lhsUri.qMap().isEmpty() ? noobj() : rec(lhsUri.qMap().entrySet().stream().map(kv -> rel(uri(kv.getKey()), uri(kv.getValue()))))).c(c->c.mult(lhs.c()));
+                                QPROC, lhsUri.qMap().isEmpty() ? noobj() : rec(lhsUri.qMap().entrySet().stream().map(kv -> rel(uri(kv.getKey()), uri(kv.getValue()))))).c(c -> c.mult(lhs.c()));
                     }),
                     instC(REVERSE_INST_TID.dom(URI_TID).rng(URI_TID), lst(), (lhs, inst) -> lhs.jvm(lhs.uriValue().path(lhs.asUri().uriValue().path().reversed()))),
                     docWrap(instC(HAS_INST_TID.dom(URI_TID).rng(URI_TID.maybe()), lst(T(STR_TID)), (lhs, inst) -> REGEX_CACHE.compute(inst.arg(0).strValue(), (k, v) -> null == v ? Pattern.compile(k) : v).matcher(lhs.uriValue().toString()).find() ? lhs : noobj()),
@@ -405,7 +405,14 @@ public interface Uri extends Mono, Ring.O<Uri>, Comparable<Uri> {
         public static Obj rshiftUri(final Uri lhs, final Obj arg) {
             return objs(arg.stream().map(u -> {
                 if (u.isInt()) {
-                    return lhs.uriValue().segmentLength() > u.intValue().intValue() ? uri(lhs.uriValue().asRelativeNode().segments().get(u.intValue().intValue())) : noobj();
+                    final fURI uriFURI = lhs.uriValue();
+                    return u.intValue() < 0 ?
+                            (uriFURI.segmentLength() > (-1 * u.intValue().intValue()) ?
+                                    uri(uriFURI.asRelativeNode().segments().get(uriFURI.segmentLength() + u.intValue().intValue())) :
+                                    noobj()) :
+                            (uriFURI.segmentLength() > u.intValue().intValue() ?
+                                    uri(uriFURI.asRelativeNode().segments().get(u.intValue().intValue())) :
+                                    noobj());
                 } else {
                     final String component = u.uriValue().toString();
                     final Object result = switch (component) {
@@ -422,8 +429,8 @@ public interface Uri extends Mono, Ring.O<Uri>, Comparable<Uri> {
                     };
                     return result instanceof Obj ? (Obj) result :
                             (null == result || Integer.valueOf(-1) == result ? noobj() :
-                                    (result instanceof Integer ? jnt((Integer) result) :
-                                            uri(result.toString())));
+                             (result instanceof Integer ? jnt((Integer) result) :
+                                     uri(result.toString())));
                 }
             }));
         }
