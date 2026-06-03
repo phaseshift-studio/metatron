@@ -249,6 +249,11 @@ public class tbleSpace extends AbstractSpace<Connection> implements SchemaSpace 
         this.schemaGenerator = new SQLSchemaGenerator(
                 this.existingTableSchema.getTableMetadata(), schemaVid);
 
+        // Wire schema generator into existingTableSchema so that table
+        // dereferences return instset-encoded Types (single source of truth)
+        // instead of SQL-specific TABLE_TID URIs.
+        this.existingTableSchema.setSchemaGenerator(this.schemaGenerator);
+
         // Register schema instset as a Router space for type resolution (e.g.
         // /m/tble/space/schema/db/type/users → users::T).  Stored at the
         // SCHEMA config key as a human-readable rec for introspection.

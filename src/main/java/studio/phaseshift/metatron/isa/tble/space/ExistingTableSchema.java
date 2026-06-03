@@ -23,6 +23,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSQLSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
@@ -87,6 +88,16 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
 
     private final tbleSpace space;
     private final Map<String, TableMetadata> tableSchemas = new LinkedHashMap<>();
+    private SQLSchemaGenerator schemaGenerator;
+
+    /**
+     * Inject the schema generator so that table dereferences return instset-encoded
+     * Types instead of SQL-specific TABLE_TID URIs.
+     */
+    public void setSchemaGenerator(final SQLSchemaGenerator schemaGenerator) {
+        this.schemaGenerator = schemaGenerator;
+    }
+
     private final String excludeTableName;
 
     /**
@@ -698,12 +709,36 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
         final String tableName = dp.collection();
         if (!dp.hasEntry()) {
             if (dp.collectionIsWildcard()) {
+                /*
+                 * Wildcard table query — return the instset-encoded Type for each
+                 * discovered table.  This makes the instset schema the single source
+                 * of truth (no separate SQL-specific TABLE_TID encoding).
+                 */
+                if (this.schemaGenerator != null) {
+                    return this.schemaGenerator.getTableTypes().stream()
+                            .map(t -> Space.IdObj.of(t.vid(), t))
+                            .iterator();
+                }
+                // Fallback when schema generator not yet wired
                 return this.tableSchemas.keySet().stream()
                         .map(s -> {
                             final fURI tableVID = Space.Helper.routeToSpace(pattern.retractPattern().extend(s), this.space.routes());
                             return Space.IdObj.of(tableVID, uri(tableVID, TABLE_TID, null).selfVID(tableVID));
                         }).iterator();
             } else {
+                /*
+                 * Exact table dereference — return the instset-encoded Type for this
+                 * table.  The Type's isaPredicate carries the column=>type mappings,
+                 * making the instset schema the single source of truth.
+                 */
+                final String tableName = dp.collection().toLowerCase();
+                if (this.schemaGenerator != null) {
+                    final Type tableType = this.schemaGenerator.getTableType(tableName);
+                    if (tableType != null) {
+                        return IteratorUtil.of(Space.IdObj.of(tableType.vid(), tableType));
+                    }
+                }
+                // Fallback: construct a self-referencing table URI
                 final fURI tableVID = Space.Helper.routeToSpace(pattern, this.space.routes());
                 return IteratorUtil.of(Space.IdObj.of(tableVID, uri(tableVID, TABLE_TID, null).selfVID(tableVID)));
             }
