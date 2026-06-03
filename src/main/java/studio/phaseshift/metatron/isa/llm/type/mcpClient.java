@@ -132,9 +132,12 @@ public class mcpClient extends MRec {
                                 return fail(result.resultText());
                             else {
                                 try {
-                                    return ObjSimpleJSONSerializer.single().read(JsonParser.parseString(result.resultText()));
-                                } catch (final Exception e) {
-                                    return str(result.resultText());
+                                    return ObjSimpleJSONSerializer.parse(result.resultText());
+                                } catch (final Exception e1) {
+                                    final Obj parsed = ObjmtronSerializer.parse(result.resultText());
+                                    if (parsed.isFail())
+                                        return str(result.resultText());
+                                    return parsed;
                                 }
                             }
                         });
