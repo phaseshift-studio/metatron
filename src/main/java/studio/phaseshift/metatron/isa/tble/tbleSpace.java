@@ -255,12 +255,12 @@ public class tbleSpace extends AbstractSpace<Connection> implements SchemaSpace 
         this.existingTableSchema.setSchemaGenerator(this.schemaGenerator);
 
         // Register schema instset as a Router space for type resolution (e.g.
-        // /m/tble/space/schema/db/type/users → users::T).  Stored at the
-        // SCHEMA config key as a human-readable rec for introspection.
+        // /m/tble/space/schema/db/type/users → users::T).  The instset Types
+        // are the single source of truth — column types AND FK references are
+        // embedded in the isaPredicate; no separate native schema needed.
         final SQLSchemaInstSet schemaInstset = this.schemaGenerator.generateSchemaInstset(schemaVid);
         Router.global().addSpace(schemaInstset);
         schemaInstset.setup();
-        this.at(f(SCHEMA).extend(NATIVE), this.schemaGenerator.generateNativeSchema(), MUTABLE);
 
         LOG.info("initialized {{g}}SQL schema{{X}} with %s table types",
                 this.existingTableSchema.getTableNames().size());

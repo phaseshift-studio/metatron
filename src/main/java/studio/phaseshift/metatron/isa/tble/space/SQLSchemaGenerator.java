@@ -108,7 +108,11 @@ public class SQLSchemaGenerator {
 
 
     /**
-     * Generate a mtron type definition for a SQL table
+     * Generate a mtron type definition for a SQL table.
+     * <p>
+     * The isaPredicate rec contains both column=>type mappings AND a
+     * {@code references} field listing foreign-key relationships, making
+     * the instset Type the single source of truth (no separate native schema).
      */
     private Type generateTableType(final ExistingTableSchema.TableMetadata table) {
         final LinkedHashMap<Obj, Obj> fields = new LinkedHashMap<>();
@@ -119,7 +123,26 @@ public class SQLSchemaGenerator {
             fields.put(uri(column.name()), columnType);
         }
 
-        // Build the type: rec::T[isa([column1=>type1, column2=>type2, ...])]
+        // Embed FK references directly in the Type's isaPredicate so the
+        // instset schema is the single source of truth.
+        final List<Obj> refs = new ArrayList<>();
+        for (final ExistingTableSchema.ForeignKeyMetadata fk : table.foreignKeys()) {
+            final Map<Obj, Obj> refRec = new LinkedHashMap<>();
+            refRec.put(uri(FROM_TABLE), str(fk.fromTable()));
+            refRec.put(uri(FROM_COLUMN), str(fk.fromColumn()));
+            refRec.put(uri(TO_TABLE), str(fk.toTable()));
+            refRec.put(uri(TO_COLUMN), str(fk.toColumn()));
+            if (fk.fkName() != null) {
+                refRec.put(uri(NAME), str(fk.fkName()));
+            }
+            refRec.put(uri(TYPE), str("FOREIGN_KEY"));
+            refs.add(rec(refRec));
+        }
+        if (!refs.isEmpty()) {
+            fields.put(uri(REFERENCES), lst(refs));
+        }
+
+        // Build the type: rec::T[isa([column1=>type1, ..., references=>[...]])]
         final fURI tableTypePath = schemaBasePath.extend(table.tableName().toLowerCase());
 
         return Type.Builder.build()
@@ -197,106 +220,37 @@ public class SQLSchemaGenerator {
 
     /**
      * Generate a table Type with a specific VID (for use within a schema instset).
+     * <p>
+     * FK references are embedded in the isaPredicate alongside column types.
      */
     private Type generateTableTypeAt(final ExistingTableSchema.TableMetadata table, final fURI typeVid) {
         final LinkedHashMap<Obj, Obj> fields = new LinkedHashMap<>();
         for (final ExistingTableSchema.ColumnMetadata column : table.columns()) {
             fields.put(uri(column.name()), sqlTypeToMtronType(column));
         }
+
+        // Embed FK references directly in the Type's isaPredicate.
+        final List<Obj> refs = new ArrayList<>();
+        for (final ExistingTableSchema.ForeignKeyMetadata fk : table.foreignKeys()) {
+            final Map<Obj, Obj> refRec = new LinkedHashMap<>();
+            refRec.put(uri(FROM_TABLE), str(fk.fromTable()));
+            refRec.put(uri(FROM_COLUMN), str(fk.fromColumn()));
+            refRec.put(uri(TO_TABLE), str(fk.toTable()));
+            refRec.put(uri(TO_COLUMN), str(fk.toColumn()));
+            if (fk.fkName() != null) {
+                refRec.put(uri(NAME), str(fk.fkName()));
+            }
+            refRec.put(uri(TYPE), str("FOREIGN_KEY"));
+            refs.add(rec(refRec));
+        }
+        if (!refs.isEmpty()) {
+            fields.put(uri(REFERENCES), lst(refs));
+        }
+
         return Type.Builder.build()
                 .tid(REC_ROW_TID)
                 .vid(typeVid)
                 .isaPredicate(rec(fields))
                 .create();
-    }
-
-    /**
-     * Generate a complete schema object including tables and references.
-     * <p>
-     * Returns a rec with unified structure (aligned with dcmntSpace schema):
-     * <ul>
-     *   <li>pattern: base pattern for table types</li>
-     *   <li>name: database name</li>
-     *   <li>tables: list of table definitions with name, uri, schema, type</li>
-     *   <li>references: list of foreign key relationships</li>
-     * </ul>
-     */
-    public Obj generateNativeSchema() {
-        final Map<Obj, Obj> schemaMap = new LinkedHashMap<>();
-
-        // Add pattern (aligned with docdb)
-        schemaMap.put(uri(PATTERN), uri(this.schemaBasePath.extend("#")));
-
-        // Add database name (aligned with docdb)
-        schemaMap.put(uri(NAME), str(this.databaseName));
-
-        // Add table definitions with unified structure
-        schemaMap.put(uri(TABLES), lst(generateTableList()));
-
-        // Add references (unified name, was foreign_keys)
-        schemaMap.put(uri(REFERENCES), generateReferenceList());
-
-        return rec(schemaMap);
-    }
-
-    /**
-     * Generate a list of table definitions with unified structure.
-     * Each table entry contains: name, uri, schema, type
-     */
-    private List<Obj> generateTableList() {
-        final List<Obj> tableList = new ArrayList<>();
-
-        for (final ExistingTableSchema.TableMetadata table : tableMetadata) {
-            final Type tableType = generateTableType(table);
-            final fURI tableUri = schemaBasePath.extend(table.tableName().toLowerCase());
-
-            // Build schema rec (field => type mappings)
-            final Map<Obj, Obj> schemaRec = new LinkedHashMap<>();
-            for (final ExistingTableSchema.ColumnMetadata column : table.columns()) {
-                schemaRec.put(uri(column.name()), sqlTypeToMtronType(column));
-            }
-
-            // Build table entry with unified structure
-            final Map<Obj, Obj> tableEntry = new LinkedHashMap<>();
-            tableEntry.put(uri(NAME), str(table.tableName()));
-            tableEntry.put(uri(URI), uri(tableUri));
-            tableEntry.put(uri(f(SCHEMA).extend(SCHEMA)), rec(schemaRec));
-            tableEntry.put(uri(TYPE), tableType);
-
-            tableList.add(rec(tableEntry));
-
-            // Also cache the type
-            if (tableTypes == null) {
-                tableTypes = new LinkedHashMap<>();
-            }
-            tableTypes.put(table.tableName().toLowerCase(), tableType);
-        }
-
-        return tableList;
-    }
-
-    /**
-     * Generate a list of reference relationships as mtron objects.
-     * Uses unified field names aligned with docdb schema.
-     */
-    private Obj generateReferenceList() {
-        final List<Obj> refList = new ArrayList<>();
-
-        for (final ExistingTableSchema.TableMetadata table : tableMetadata) {
-            for (final ExistingTableSchema.ForeignKeyMetadata fk : table.foreignKeys()) {
-                final Map<Obj, Obj> refRec = new LinkedHashMap<>();
-                refRec.put(uri(FROM_TABLE), str(fk.fromTable()));
-                refRec.put(uri(FROM_COLUMN), str(fk.fromColumn()));
-                refRec.put(uri(TO_TABLE), str(fk.toTable()));
-                refRec.put(uri(TO_COLUMN), str(fk.toColumn()));
-                if (fk.fkName() != null) {
-                    refRec.put(uri(NAME), str(fk.fkName()));
-                }
-                refRec.put(uri(TYPE), str("FOREIGN_KEY"));
-                refList.add(rec(refRec));
-            }
-        }
-
-        return lst(refList);
     }
 }
