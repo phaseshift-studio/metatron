@@ -118,10 +118,11 @@ public class SQLSchemaGenerator {
     }
 
     /**
-     * Get a specific table type by name
+     * Get a specific table type by name (triggers lazy initialization)
      */
     public Type getTableType(final String tableName) {
-        return tableTypes != null ? tableTypes.get(tableName.toLowerCase()) : null;
+        getTableTypes(); // ensure lazy init
+        return tableTypes.get(tableName.toLowerCase());
     }
 
     /**
