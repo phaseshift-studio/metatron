@@ -211,6 +211,12 @@ public class dcmntSpace extends AbstractSpace<MongoClient> implements SchemaSpac
                 this.existingCollectionSchema.generateSchemaInstset(this.vid().extend(f(SCHEMA).extend(INSTSET)));
         Router.global().addSpace(schemaInstset);
         schemaInstset.setup();
+
+        // Wire schema instset into existingCollectionSchema so that collection
+        // dereferences return instset-encoded Types (single source of truth)
+        // instead of dcmnt-specific COLLECTION_TID URIs.
+        this.existingCollectionSchema.setSchemaInstset(schemaInstset);
+
         this.at(uri(f(SCHEMA).extend(INSTSET)), schemaInstset, MUTABLE);
 
         // Build a structured root type encoding the per-collection type map.
@@ -484,13 +490,39 @@ public class dcmntSpace extends AbstractSpace<MongoClient> implements SchemaSpac
                 return IteratorUtil.of();
 
             if (!dp.hasEntry()) {
-                return resolveCollectionStream(dp.collection()).map(collection -> {
-                            final fURI collectionVID = Space.Helper.routeToSpace(
-                                    f(collection.getNamespace().getCollectionName()), this.routes());
-                            LOG.debug("collection lookup: %s", collectionVID);
-                            return IdObj.of(collectionVID, uri(collectionVID, COLLECTION_TID, null)
-                                    .selfVID(collectionVID));
-                        }).iterator();
+                /*
+                 * Collection dereference — return the instset-encoded Type for each
+                 * discovered collection.  This makes the instset schema the single source
+                 * of truth (no separate dcmnt-specific COLLECTION_TID encoding).
+                 */
+                if (dp.collectionIsWildcard()) {
+                    if (this.existingCollectionSchema != null) {
+                        return this.existingCollectionSchema.getCollectionTypes().stream()
+                                .map(t -> IdObj.of(t.vid(), t))
+                                .iterator();
+                    }
+                    // Fallback when schema not wired: return COLLECTION_TID URIs
+                    return resolveCollectionStream(dp.collection()).map(collection -> {
+                                final fURI collectionVID = Space.Helper.routeToSpace(
+                                        f(collection.getNamespace().getCollectionName()), this.routes());
+                                LOG.debug("collection lookup: %s", collectionVID);
+                                return IdObj.of(collectionVID, uri(collectionVID, COLLECTION_TID, null)
+                                        .selfVID(collectionVID));
+                            }).iterator();
+                } else {
+                    final String collName = dp.collection();
+                    if (this.existingCollectionSchema != null) {
+                        final Type collectionType = this.existingCollectionSchema.getCollectionType(collName);
+                        if (collectionType != null) {
+                            return IteratorUtil.of(IdObj.of(collectionType.vid(), collectionType));
+                        }
+                    }
+                    // Fallback: construct a self-referencing collection URI
+                    final fURI collectionVID = Space.Helper.routeToSpace(
+                            f(collName), this.routes());
+                    return IteratorUtil.of(IdObj.of(collectionVID, uri(collectionVID, COLLECTION_TID, null)
+                            .selfVID(collectionVID)));
+                }
             }
 
             final List<IdObj> allResults = new ArrayList<>();

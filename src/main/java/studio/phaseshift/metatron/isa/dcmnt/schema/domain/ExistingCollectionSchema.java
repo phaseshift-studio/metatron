@@ -51,6 +51,40 @@ public class ExistingCollectionSchema {
     private final dcmntSpace space;
     private final Map<String, CollectionMetadata> collectionSchemas = new LinkedHashMap<>();
     private final int sampleSize;
+    private CollectionSchemaInstSet schemaInstset;
+
+    /**
+     * Inject the schema instset so that collection dereferences return instset-encoded
+     * Types instead of dcmnt-specific COLLECTION_TID URIs.
+     */
+    public void setSchemaInstset(final CollectionSchemaInstSet schemaInstset) {
+        this.schemaInstset = schemaInstset;
+    }
+
+    /**
+     * Look up the instset-encoded Type for a collection by name (case-insensitive).
+     * Returns {@code null} when the schema instset is not wired or the collection
+     * has no matching type.
+     */
+    public Type getCollectionType(final String collectionName) {
+        if (this.schemaInstset == null)
+            return null;
+        for (final Type t : this.schemaInstset.types()) {
+            if (t.vid().segments().getLast().equalsIgnoreCase(collectionName))
+                return t;
+        }
+        return null;
+    }
+
+    /**
+     * Return all collection Types from the schema instset.
+     * Returns an empty list when the schema instset is not wired.
+     */
+    public List<Type> getCollectionTypes() {
+        if (this.schemaInstset == null)
+            return Collections.emptyList();
+        return new ArrayList<>(this.schemaInstset.types());
+    }
 
     /**
      * Metadata about a MongoDB collection
