@@ -95,7 +95,7 @@ public record DataPath(String db, String collection, String entry, String field,
      */
     public static DataPath ofSpaceRelative(final fURI vid, final String db) {
         final fURI fprops;
-        if (vid.pathLength() > 3) {
+        if (vid.segmentLength() > 3) {
             final List<String> props = vid.segments().subList(3, vid.segmentLength());
             fprops = fURI.of(null, null, -1, props, vid.c(), null, vid.qMap(), vid.templates());
         } else {
