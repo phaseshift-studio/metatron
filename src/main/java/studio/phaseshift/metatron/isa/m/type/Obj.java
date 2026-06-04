@@ -282,6 +282,8 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
             return (rhs.tid().c().isZeroable() || rhs.tid().equals(NOOBJ_TID));
         else if (rhs.isNoObj())
             return this.c().isZeroable();
+        else if(null != this.vid() && Objects.equals(this.vid(),rhs.vid()))
+            return true;
         if (rhs.isObjCall() && !rhs.asCall().isPredicate(this))
             return true;
         if (rhs.isType() && !rhs.asType().isBaseType() && this.tid().test(rhs.vid()))
