@@ -27,13 +27,14 @@ import java.util.*;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.id_;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Real.REAL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
-import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.tble.tbleInstSet.REC_ROW_TID;
 
@@ -47,14 +48,32 @@ import static studio.phaseshift.metatron.isa.tble.tbleInstSet.REC_ROW_TID;
  * /netflix/schema/db/movie     → the movie table type
  * </pre>
  *
+ * <p>This class serves as the single source of truth for FK relationships.
+ * FK info is stored in {@link #fkLookup} and queryable via
+ * {@link #getFKTarget(String, String)}.
+ *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class SQLSchemaGenerator {
+
+    /**
+     * Holds the target path for a foreign key reference.
+     * {@code targetPath} is the full path to the referenced column,
+     * e.g., {@code "office/+/officeCode"} or {@code "db:office/+/officeCode"}.
+     */
+    public record FKTarget(String targetPath) {}
 
     private final List<ExistingTableSchema.TableMetadata> tableMetadata;
     private final fURI schemaBasePath;
     private final String databaseName;
     private Map<String, Type> tableTypes;
+
+    /**
+     * FK lookup map: "tableName.columnName" (lowercase) → FKTarget.
+     * Single source of truth for FK relationships — no duplicate SQL-specific
+     * FK encoding needed in {@link ExistingTableSchema}.
+     */
+    private final Map<String, FKTarget> fkLookup = new LinkedHashMap<>();
 
     /**
      * Create a schema generator for a SQL database
@@ -102,7 +121,49 @@ public class SQLSchemaGenerator {
      * Get a specific table type by name
      */
     public Type getTableType(final String tableName) {
-        return tableTypes.get(tableName.toLowerCase());
+        return tableTypes != null ? tableTypes.get(tableName.toLowerCase()) : null;
+    }
+
+    /**
+     * Returns the FK target path for the given table+column, or {@code null}
+     * if the column is not a foreign key.
+     *
+     * <p>The returned path is the full target path, e.g.
+     * {@code "office/+/officeCode"} or {@code "db:office/+/officeCode"}.
+     *
+     * @param tableName  the source table name
+     * @param columnName the source column name
+     * @return the FK target, or {@code null} if not an FK column
+     */
+    public FKTarget getFKTarget(final String tableName, final String columnName) {
+        final String key = tableName.toLowerCase() + "." + columnName.toLowerCase();
+        return fkLookup.get(key);
+    }
+
+    /**
+     * Register FK info discovered from SQL metadata.
+     * Called by {@link ExistingTableSchema} during initialization so that the
+     * generator — not the table schema — is the single source of truth.
+     *
+     * @param tableName  source table
+     * @param columnName source column
+     * @param toTable    referenced table
+     * @param toColumn   referenced column
+     */
+    public void registerFK(final String tableName, final String columnName,
+                           final String toTable, final String toColumn) {
+        final String key = tableName.toLowerCase() + "." + columnName.toLowerCase();
+        final String targetPath = toTable.contains(":")
+                ? toTable + "/+/" + toColumn
+                : toTable + "/+/" + toColumn;
+        fkLookup.put(key, new FKTarget(targetPath));
+    }
+
+    /**
+     * Returns the FK lookup map (read-only view).
+     */
+    public Map<String, FKTarget> getFKLookup() {
+        return Collections.unmodifiableMap(fkLookup);
     }
 
 
@@ -110,40 +171,33 @@ public class SQLSchemaGenerator {
     /**
      * Generate a mtron type definition for a SQL table.
      * <p>
-     * The isaPredicate rec contains both column=>type mappings AND a
-     * {@code references} field listing foreign-key relationships, making
-     * the instset Type the single source of truth (no separate native schema).
+     * Foreign key columns are encoded as isa predicates on the column type,
+     * pointing to the target table's primary key path via auto_from.
+     * This eliminates the need for a separate "references" block — the instset
+     * Type itself is the single source of truth.
      */
     private Type generateTableType(final ExistingTableSchema.TableMetadata table) {
         final LinkedHashMap<Obj, Obj> fields = new LinkedHashMap<>();
+        final String tbl = table.tableName().toLowerCase();
 
         // Add each column as a field in the record type
         for (final ExistingTableSchema.ColumnMetadata column : table.columns()) {
-            final Type columnType = sqlTypeToMtronType(column);
-            fields.put(uri(column.name()), columnType);
-        }
-
-        // Embed FK references directly in the Type's isaPredicate so the
-        // instset schema is the single source of truth.
-        final List<Obj> refs = new ArrayList<>();
-        for (final ExistingTableSchema.ForeignKeyMetadata fk : table.foreignKeys()) {
-            final Map<Obj, Obj> refRec = new LinkedHashMap<>();
-            refRec.put(uri(FROM_TABLE), str(fk.fromTable()));
-            refRec.put(uri(FROM_COLUMN), str(fk.fromColumn()));
-            refRec.put(uri(TO_TABLE), str(fk.toTable()));
-            refRec.put(uri(TO_COLUMN), str(fk.toColumn()));
-            if (fk.fkName() != null) {
-                refRec.put(uri(NAME), str(fk.fkName()));
+            final FKTarget fkTarget = getFKTarget(tbl, column.name());
+            if (fkTarget != null) {
+                // Encode FK as an isa predicate on the column type
+                // e.g., isa_(f("office/+/officeCode")).auto_from_(id_()).tryToInst()
+                final Obj fkPredicate = isa_(f(fkTarget.targetPath()))
+                        .auto_from_(id_())
+                        .tryToInst();
+                fields.put(uri(column.name()), fkPredicate);
+            } else {
+                final Type columnType = sqlTypeToMtronType(column);
+                fields.put(uri(column.name()), columnType);
             }
-            refRec.put(uri(TYPE), str("FOREIGN_KEY"));
-            refs.add(rec(refRec));
-        }
-        if (!refs.isEmpty()) {
-            fields.put(uri(REFERENCES), lst(refs));
         }
 
-        // Build the type: rec::T[isa([column1=>type1, ..., references=>[...]])]
-        final fURI tableTypePath = schemaBasePath.extend(table.tableName().toLowerCase());
+        // Build the type: rec::T[isa([column1=>type1, column2=>isa_predicate, ...])]
+        final fURI tableTypePath = schemaBasePath.extend(tbl);
 
         return Type.Builder.build()
                 .tid(REC_ROW_TID)
@@ -221,30 +275,22 @@ public class SQLSchemaGenerator {
     /**
      * Generate a table Type with a specific VID (for use within a schema instset).
      * <p>
-     * FK references are embedded in the isaPredicate alongside column types.
+     * FK columns are encoded as isa predicates pointing to the target table path.
      */
     private Type generateTableTypeAt(final ExistingTableSchema.TableMetadata table, final fURI typeVid) {
         final LinkedHashMap<Obj, Obj> fields = new LinkedHashMap<>();
-        for (final ExistingTableSchema.ColumnMetadata column : table.columns()) {
-            fields.put(uri(column.name()), sqlTypeToMtronType(column));
-        }
+        final String tbl = table.tableName().toLowerCase();
 
-        // Embed FK references directly in the Type's isaPredicate.
-        final List<Obj> refs = new ArrayList<>();
-        for (final ExistingTableSchema.ForeignKeyMetadata fk : table.foreignKeys()) {
-            final Map<Obj, Obj> refRec = new LinkedHashMap<>();
-            refRec.put(uri(FROM_TABLE), str(fk.fromTable()));
-            refRec.put(uri(FROM_COLUMN), str(fk.fromColumn()));
-            refRec.put(uri(TO_TABLE), str(fk.toTable()));
-            refRec.put(uri(TO_COLUMN), str(fk.toColumn()));
-            if (fk.fkName() != null) {
-                refRec.put(uri(NAME), str(fk.fkName()));
+        for (final ExistingTableSchema.ColumnMetadata column : table.columns()) {
+            final FKTarget fkTarget = getFKTarget(tbl, column.name());
+            if (fkTarget != null) {
+                final Obj fkPredicate = isa_(f(fkTarget.targetPath()))
+                        .auto_from_(id_())
+                        .tryToInst();
+                fields.put(uri(column.name()), fkPredicate);
+            } else {
+                fields.put(uri(column.name()), sqlTypeToMtronType(column));
             }
-            refRec.put(uri(TYPE), str("FOREIGN_KEY"));
-            refs.add(rec(refRec));
-        }
-        if (!refs.isEmpty()) {
-            fields.put(uri(REFERENCES), lst(refs));
         }
 
         return Type.Builder.build()

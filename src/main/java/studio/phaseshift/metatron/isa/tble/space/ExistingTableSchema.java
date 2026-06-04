@@ -96,6 +96,11 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
      */
     public void setSchemaGenerator(final SQLSchemaGenerator schemaGenerator) {
         this.schemaGenerator = schemaGenerator;
+        // Register any FKs discovered before the generator was set
+        for (final FKInfo fk : pendingFKs) {
+            schemaGenerator.registerFK(fk.fromTable(), fk.fromColumn(), fk.toTable(), fk.toColumn());
+        }
+        pendingFKs.clear();
     }
 
     private final String excludeTableName;
@@ -106,7 +111,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
     private final Map<String, Map<String, fURI>> logicalTypes = new LinkedHashMap<>();
 
     public record TableMetadata(String dbName, String tableName, List<ColumnMetadata> columns,
-                                List<String> primaryKeys, List<ForeignKeyMetadata> foreignKeys) {
+                                List<String> primaryKeys) {
     }
 
     public record ColumnMetadata(String name, int sqlType, String typeName, boolean nullable) {
@@ -156,9 +161,20 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
         }
     }
 
-    public record ForeignKeyMetadata(String fromTable, String fromColumn,
-                                     String toTable, String toColumn, String fkName) {
-    }
+    /**
+     * Reference to the schema generator — the single source of truth for FK info.
+     * Set after initialization via {@link #setSchemaGenerator(SQLSchemaGenerator)}.
+     */
+    private SQLSchemaGenerator schemaGenerator;
+
+    /**
+     * Temporary FK storage for FKs discovered before the schema generator is set.
+     * Cleared once all FKs are registered with the generator.
+     */
+    private final List<FKInfo> pendingFKs = new ArrayList<>();
+
+    /** Simple FK info holder used during discovery before the generator is available. */
+    private record FKInfo(String fromTable, String fromColumn, String toTable, String toColumn) {}
 
     public ExistingTableSchema(final tbleSpace space, final String excludeTableName) {
         this.excludeTableName = excludeTableName;
@@ -210,12 +226,13 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
                     }
                 }
 
-                final List<ForeignKeyMetadata> foreignKeys = discoverReferences(conn, catalog, tableName);
+                // Discover FKs and store temporarily — will register with schemaGenerator later
+                discoverReferencesAndRegister(conn, catalog, tableName);
 
                 this.tableSchemas.put(tableName.toLowerCase(),
-                        new TableMetadata(catalog, tableName, columns, primaryKeys, foreignKeys));
-                this.space.logger().debug("discovered table: %s with %s columns, %s primary keys, and %s foreign keys",
-                        tableName, columns.size(), primaryKeys.size(), foreignKeys.size());
+                        new TableMetadata(catalog, tableName, columns, primaryKeys));
+                this.space.logger().debug("discovered table: %s with %s columns and %s primary keys",
+                        tableName, columns.size(), primaryKeys.size());
             }
         }
         this.space.logger().info("discovered {{b}}%s{{X}} tables: %s", tableSchemas.size(), tableSchemas.keySet());
@@ -223,21 +240,32 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
         loadMetaForeignKeys(conn);
     }
 
-    private List<ForeignKeyMetadata> discoverReferences(final Connection conn, final String catalog,
-                                                         final String tableName) throws SQLException {
-        final List<ForeignKeyMetadata> foreignKeys = new ArrayList<>();
+    /**
+     * Discover FK references from JDBC metadata and register them with the schema
+     * generator (or store temporarily if the generator isn't set yet).
+     */
+    private void discoverReferencesAndRegister(final Connection conn, final String catalog,
+                                                final String tableName) throws SQLException {
         final DatabaseMetaData metaData = conn.getMetaData();
         try (final ResultSet fks = metaData.getImportedKeys(catalog, null, tableName)) {
             while (fks.next()) {
-                foreignKeys.add(new ForeignKeyMetadata(
-                        tableName, fks.getString("FKCOLUMN_NAME"),
-                        fks.getString("PKTABLE_NAME"), fks.getString("PKCOLUMN_NAME"),
-                        fks.getString("FK_NAME")));
+                final String fromCol = fks.getString("FKCOLUMN_NAME");
+                final String toTable = fks.getString("PKTABLE_NAME");
+                final String toCol = fks.getString("PKCOLUMN_NAME");
+                if (schemaGenerator != null) {
+                    schemaGenerator.registerFK(tableName, fromCol, toTable, toCol);
+                } else {
+                    // Store temporarily; will register when generator is set
+                    pendingFKs.add(new FKInfo(tableName, fromCol, toTable, toCol));
+                }
             }
         }
-        return foreignKeys;
     }
 
+    /**
+     * Load FK mappings from the _mtron_meta table and register them with the
+     * schema generator (or store temporarily if the generator isn't set yet).
+     */
     private void loadMetaForeignKeys(final Connection conn) {
         try (final Statement stmt = conn.createStatement();
              final ResultSet rs = stmt.executeQuery(
@@ -246,15 +274,28 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
                 final String tbl = rs.getString("table_name");
                 final String col = rs.getString("column_name");
                 final String ref = rs.getString("ref_table");
-                final TableMetadata meta = this.tableSchemas.get(tbl.toLowerCase());
-                if (meta == null) continue;
-                final boolean alreadyMapped = meta.foreignKeys().stream()
-                        .anyMatch(fk -> fk.fromColumn().equalsIgnoreCase(col));
-                if (!alreadyMapped)
-                    meta.foreignKeys().add(new ForeignKeyMetadata(tbl, col, ref, "id", null));
+                if (!this.tableSchemas.containsKey(tbl.toLowerCase())) continue;
+                // Check if already discovered from JDBC metadata
+                if (isFKAlreadyRegistered(tbl, col)) continue;
+                if (schemaGenerator != null) {
+                    schemaGenerator.registerFK(tbl, col, ref, "id");
+                } else {
+                    pendingFKs.add(new FKInfo(tbl, col, ref, "id"));
+                }
             }
         } catch (final SQLException ignored) {
         }
+    }
+
+    /**
+     * Check if an FK is already registered (either in generator or pending list).
+     */
+    private boolean isFKAlreadyRegistered(final String tbl, final String col) {
+        if (schemaGenerator != null && schemaGenerator.getFKTarget(tbl, col) != null) {
+            return true;
+        }
+        return pendingFKs.stream().anyMatch(fk ->
+                fk.fromTable.equalsIgnoreCase(tbl) && fk.fromColumn.equalsIgnoreCase(col));
     }
 
     /**
@@ -288,19 +329,11 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
 
     private Obj readColumnWithMetadata(final ResultSet rs, final ColumnMetadata col,
                                        final String tableName) throws SQLException {
-        final ForeignKeyMetadata fk = getForeignKeyForColumn(tableName, col.name);
+        final SQLSchemaGenerator.FKTarget fk = getFKTarget(tableName, col.name);
         if (fk != null) {
             final Object fkValue = rs.getObject(col.name);
             if (fkValue != null && !rs.wasNull()) {
-                final fURI referencedPath;
-                final String refTable = fk.toTable();
-                if (refTable.indexOf(':') >= 0) {
-                    referencedPath = f(refTable).extend(fkValue.toString());
-                } else {
-                    referencedPath = this.space.pattern().retractPattern()
-                            .extend(refTable)
-                            .extend(fkValue.toString());
-                }
+                final fURI referencedPath = buildFKReferencePath(fk.targetPath(), fkValue.toString());
                 return auto_from_(referencedPath).tryToInst();
             }
             return noobj();
@@ -326,6 +359,27 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
             return studio.phaseshift.metatron.isa.m.type.impl.MBool.bool(rs.getInt(col.name) != 0);
         }
         return readColumn(rs, col.name, col.sqlType);
+    }
+
+    /**
+     * Build the reference path for an FK column value.
+     * The targetPath is like "office/+/officeCode" or "db:office/+/officeCode".
+     * We extract the table part (before /+) and append the row ID.
+     */
+    private fURI buildFKReferencePath(final String targetPath, final String rowId) {
+        final int sepIdx = targetPath.indexOf("/+");
+        if (sepIdx > 0) {
+            final String refTable = targetPath.substring(0, sepIdx);
+            if (refTable.indexOf(':') >= 0) {
+                return f(refTable).extend(rowId);
+            } else {
+                return this.space.pattern().retractPattern()
+                        .extend(refTable)
+                        .extend(rowId);
+            }
+        }
+        // Fallback: use full path
+        return f(targetPath).extend(rowId);
     }
 
     private String buildRowId(final ResultSet rs, final TableMetadata metadata) throws SQLException {
@@ -890,16 +944,10 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
             }
         }
 
-        final List<ForeignKeyMetadata> foreignKeys = new ArrayList<>();
-        try (final ResultSet fks = metaData.getImportedKeys(catalog, null, tableName)) {
-            while (fks.next()) {
-                foreignKeys.add(new ForeignKeyMetadata(
-                        tableName, fks.getString("FKCOLUMN_NAME"),
-                        fks.getString("PKTABLE_NAME"), fks.getString("PKCOLUMN_NAME"),
-                        fks.getString("FK_NAME")));
-            }
-        }
+        // Discover FKs and register with generator
+        discoverReferencesAndRegister(conn, catalog, tableName);
 
+        // Also check _mtron_meta for additional FK mappings
         try (final PreparedStatement ps = conn.prepareStatement(
                 "SELECT column_name, ref_table FROM " + MTRON_META_TABLE + " WHERE table_name = ?")) {
             ps.setString(1, tableName);
@@ -907,17 +955,20 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
                 while (metaRs.next()) {
                     final String col = metaRs.getString("column_name");
                     final String ref = metaRs.getString("ref_table");
-                    final boolean alreadyMapped = foreignKeys.stream()
-                            .anyMatch(fk -> fk.fromColumn().equalsIgnoreCase(col));
-                    if (!alreadyMapped)
-                        foreignKeys.add(new ForeignKeyMetadata(tableName, col, ref, "id", null));
+                    if (!isFKAlreadyRegistered(tableName, col)) {
+                        if (schemaGenerator != null) {
+                            schemaGenerator.registerFK(tableName, col, ref, "id");
+                        } else {
+                            pendingFKs.add(new FKInfo(tableName, col, ref, "id"));
+                        }
+                    }
                 }
             }
         } catch (final SQLException ignored) {
         }
 
         this.tableSchemas.put(tableName.toLowerCase(),
-                new TableMetadata(catalog, tableName, columns, primaryKeys, foreignKeys));
+                new TableMetadata(catalog, tableName, columns, primaryKeys));
         this.space.logger().info("registered table {{b}}%s{{X}} with %s columns and primary keys %s",
                 tableName, columns.size(), primaryKeys);
     }
@@ -1009,23 +1060,12 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
         return new ArrayList<>(tableSchemas.values());
     }
 
-    public ForeignKeyMetadata getForeignKeyForColumn(final String tableName, final String columnName) {
-        final TableMetadata metadata = tableSchemas.get(tableName.toLowerCase());
-        if (metadata == null) return null;
-        return metadata.foreignKeys().stream()
-                .filter(fk -> fk.fromColumn().equalsIgnoreCase(columnName))
-                .findFirst().orElse(null);
+    /**
+     * Query the schema generator for FK info for the given table+column.
+     * Returns the FK target (e.g., "office/+/officeCode") or null if not an FK.
+     */
+    public SQLSchemaGenerator.FKTarget getFKTarget(final String tableName, final String columnName) {
+        if (schemaGenerator == null) return null;
+        return schemaGenerator.getFKTarget(tableName, columnName);
     }
-
-    /*public List<ForeignKeyMetadata> getForeignKeysForTable(final String tableName) {
-        final TableMetadata metadata = tableSchemas.get(tableName.toLowerCase());
-        if (metadata == null) return Collections.emptyList();
-        return metadata.foreignKeys();
-    }
-
-    public List<ForeignKeyMetadata> getAllForeignKeys() {
-        return tableSchemas.values().stream()
-                .flatMap(table -> table.foreignKeys().stream())
-                .toList();
-    }*/
 }
