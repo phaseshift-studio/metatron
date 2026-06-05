@@ -33,9 +33,14 @@ import org.junit.jupiter.params.provider.MethodSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.algebra.rewrite.CommonRewritesTestContract;
 import studio.phaseshift.metatron.furi.DataPath;
+import studio.phaseshift.metatron.furi.QProc;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.AbstractDataPathTest;
+import studio.phaseshift.metatron.furi.q.QCollection;
+import studio.phaseshift.metatron.furi.q.SubQTest;
 import studio.phaseshift.metatron.isa.AbstractSpaceTest;
 import studio.phaseshift.metatron.isa.dcmnt.space.dcmntSpace;
+import studio.phaseshift.metatron.isa.dcmnt.space.dcmntSpaceSubQ;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -55,6 +60,7 @@ import java.util.stream.Stream;
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.furi.q.QCollection.SUBQ_PATTERN;
 import static studio.phaseshift.metatron.isa.dcmnt.dcmntInstSet.DCMNT_ISA_TID;
 import static studio.phaseshift.metatron.isa.dcmnt.dcmntInstSet.DCMNT_SPACE_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
@@ -72,7 +78,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class dcmntSpaceTest extends AbstractSpaceTest implements CommonRewritesTestContract {//, SubQTest {
+public class dcmntSpaceTest extends AbstractDataPathTest implements CommonRewritesTestContract { //SubQTest {
 
     protected static MongoServer mongoServer;
     protected static String connectionString;
@@ -83,6 +89,7 @@ public class dcmntSpaceTest extends AbstractSpaceTest implements CommonRewritesT
         super(f("mongo:test_collection/rewrite_test"), () -> dcmntSpace.of(
                 rec(
                         uri(PATTERN), uri("mongo:#"),
+                        uri(QPROC), lst(QCollection.subq()),
                         uri(HOST), uri(connectionString + "/" + DB_NAME),
                         uri(ROUTE), rec(uri("mongo:"), uri("")),
                         uri(COLLECTION), lst()
@@ -92,6 +99,21 @@ public class dcmntSpaceTest extends AbstractSpaceTest implements CommonRewritesT
 
     }
 
+    // =========================================================================
+    //  AbstractDataPathTest — collection→Type contract for scheme-based URIs
+    // =========================================================================
+
+    @Override
+    @ParameterizedTest
+    @CsvSource(value = {
+            "*<mongo:+>               % collection",    // wildcard collection → every result is a Type
+            "*<mongo:users/+>.take(1) % entry",         // specific collection + wildcard entry → first is instance
+            "*<mongo:users/+>.take(2) % entry",         // second entry also an instance (not just first)
+    }, delimiter = '%')
+    public void testDataPathSegmentTypes(final String code, final String segmentType) {
+        super.testDataPathSegmentTypes(code, segmentType);
+    }
+    
     @Override
     public String make(final String expression, final Method testMethod) {
         // For testMonoUpdate, $$ → mongo: so seed data writes to mongo:<collection>/<docId>
@@ -105,6 +127,12 @@ public class dcmntSpaceTest extends AbstractSpaceTest implements CommonRewritesT
     @BeforeAll
     public static void setupInstSet() {
         InstSet.importInstSet(DCMNT_ISA_TID);
+    }
+
+    @Test
+    public void testDcmntSpaceSubQ() {
+        assertEquals(1,this.space.qs().valueElements().filter(q -> ((QProc)q).pattern().equals(SUBQ_PATTERN)).count(),"subq qproc not found");
+        assertEquals(1,this.space.qs().valueElements().filter(q -> ((QProc)q).pattern().equals(SUBQ_PATTERN)).filter(q -> q instanceof dcmntSpaceSubQ).count(), "native dcmntSpaceSubQ not found");
     }
 
     // Disable all abstract tests - dcmntSpace has its own comprehensive MongoDB-specific tests

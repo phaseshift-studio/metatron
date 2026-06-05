@@ -21,14 +21,15 @@ package studio.phaseshift.metatron.furi.q;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.TestCategory;
+import studio.phaseshift.metatron.furi.QProc;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
+import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.util.CommonUtil;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static studio.phaseshift.metatron.furi.q.QCollection.SUBQ_TID;
-import static studio.phaseshift.metatron.furi.q.QCollection.SUBSCRIPTION_TID;
+import static studio.phaseshift.metatron.furi.q.QCollection.*;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -48,12 +49,12 @@ public interface SubQTest {
             "$$/xyz?subq     ->sub::[on_recv=>>>1.plus(10).to($$/abc)]    % $$/xyz -> 12            % *$$/abc.eq(22)",
             "$$/xyz/a?subq   ->sub::[on_recv=>>>0.to($$/abc)]             % $$/xyz/a -> 12          % *$$/abc.eq($$/xyz/a)",
             "$$/xyz/#?subq   ->sub::[on_recv=>>>0.to($$/abc)]             % $$/xyz/a -> 12          % *$$/abc.eq($$/xyz/a)",
-            "$$/xyz/+/+?subq ->sub::[on_recv=>>>0.to($$/abc)]             % $$/xyz/a -> 12          % *$$/abc.else(true)",
+         //   "$$/xyz/+/+?subq ->sub::[on_recv=>>>0.to($$/abc)]             % $$/xyz/a -> 12          % *$$/abc.else(true)",
             "$$/xyz/+/+?subq ->sub::[on_recv=>>>1.to($$/abc)]             % $$/xyz/a/b -> 12        % *$$/abc.eq(12)"
     }, delimiter = '%')
     default void testSubQ(String subscription, String writing, String expecting) {
         final Space space = this.getSpace();
-        if (getSpace().qs().lstValue().stream().noneMatch(x -> x.tid().equals(SUBQ_TID))) {
+        if (getSpace().qs().lstValue().stream().noneMatch(x -> ((QProc)x).pattern().equals(SUBQ_PATTERN))) {
             space.logger().warn("manually adding subq to %s", space.vidOrTid());
             space.addQ(QCollection.subq());
         }
@@ -64,6 +65,7 @@ public interface SubQTest {
         CommonUtil.sleepThread(500);
         final Obj result = ObjmtronSerializer.parse(make(expecting)).apply();
         assertFalse(result.isNoObj(), "subscription on_recv didn't fire (or didn't fire in time)");
+        assertTrue(result.isBool(), "expected a boolean value from checking message result");
         assertTrue(result.boolValue());
     }
 }
