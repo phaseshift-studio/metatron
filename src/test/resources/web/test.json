@@ -1,0 +1,15 @@
+{
+  "hello": "world",
+  "number": 42,
+  "active": true,
+  "items": [1, "two", false, null, {"deep": "value"}],
+  "meta": {
+    "created": "2024-06-01T12:00:00Z",
+    "tags": ["alpha", "beta"],
+    "details": {
+      "score": 99.5,
+      "valid": false
+    }
+  },
+  "nothing": null
+}

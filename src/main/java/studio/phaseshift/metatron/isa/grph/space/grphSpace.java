@@ -151,7 +151,7 @@
                  case "modern" -> {
                      TinkerFactory.generateModern(tinkerGraph);
                      final modernSchema schema = new modernSchema();
-                     // InstSets created directly (not via importInstSetStream) need explicit registration
+                    // InstSets created directly (not via importInstSetStream) need explicit registration
                      Router.global().addSpace(schema);
                      schema.setup();
                      config.at(uri(SCHEMA), schema, MUTABLE);
@@ -296,7 +296,6 @@
      }
 
      private Iterator<IdObj> readCollection(final DataPath dp) {
-         LOG.warn("HERE %s %s",dp,this.pattern());
          final Obj schema = Router.readFromSpace(this.vid().extend("schema"));
          if (schema.isNoObj() || !schema.isInstSet())
              return IteratorUtil.of(IdObj.of(schema.vidOrTid(), schema));
