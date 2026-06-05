@@ -43,16 +43,16 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.PLUS_INST_TID;
  *     └─ segment 0 (database / graph name)
  * </pre>
  * <p>
- * <b>Two factory methods</b> — Which one you use encodes whether the
- * database name lives inside the fURI or is known out-of-band:
- * <ul>
- *   <li>{@link #of(fURI)} — all four prefix components are positionally
- *       extracted from the fURI segments.  Segment 0 is {@code db}.</li>
- *   <li>{@link #ofSpaceRelative(fURI, String)} — the fURI is
- *       space-relative (no database name segment).  {@code db} is supplied
- *       explicitly by the caller, and segment 0 is {@code collection}.</li>
- * </ul>
- * Mixing the two will silently place data in the wrong component.
+ * <b>Single factory method</b> — {@link #of(fURI)} extracts all four
+ * prefix components positionally from the fURI segments:
+ * Segment 0 → {@code db}, segment 1 → {@code collection},
+ * segment 2 → {@code entry}, segment 3 → {@code field},
+ * segments 4+ → {@code extension}.
+ * When the database name is not part of the URI path, the caller prepends
+ * the {@value #NONE} sentinel ({@code "-"}) via {@code f("-").extend(furi)}
+ * so that segment 0 marks the absent database position.  For paths that
+ * include a database name, prepend the name directly
+ * ({@code f("mydb").extend(furi)}).
  * <p>
  * <b>Wildcard cascade</b> — The recursive wildcard {@code #} cascades to
  * all descendant components.  If {@code collection} is {@code #} then
@@ -70,38 +70,38 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.PLUS_INST_TID;
  */
 public record DataPath(String db, String collection, String entry, String field, fURI extension) {
 
+    /** Sentinel segment value that means "no database" when placed at position 0. */
+    public static final String NONE = "-";
+
     /**
-     * Decompose a fully-qualified fURI into a DataPath.
+     * Decompose an fURI into a DataPath.
      * Segment 0 → {@code db}, segment 1 → {@code collection},
      * segment 2 → {@code entry}, segment 3 → {@code field},
      * segments 4+ → {@code extension}.
+     * <p>
+     * When segment 0 equals {@value #NONE} ({@code "-"}), the database is
+     * set to {@code null} and segments 1-3 become collection, entry, field.
+     * Callers whose URI path has no database segment prepend {@code f("-")}
+     * to mark the absent position (e.g. {@code f("-").extend(furi)}).
      */
     public static DataPath of(final fURI vid) {
+        final String seg0 = vid.segments(0, null);
+        final boolean noDb = NONE.equals(seg0);
         final fURI fprops;
+        // Extension threshold stays at 4 — the sentinel sits at position 0
+        // but collection/entry/field are always at positions 1/2/3.
         if (vid.pathLength() > 4) {
             final List<String> props = vid.segments().subList(4, vid.segmentLength());
             fprops = fURI.of(null, null, -1, props, vid.c(), null, vid.qMap(), vid.templates());
         } else {
             fprops = null;
         }
-        return new DataPath(vid.segments(0, null), vid.segments(1, null), vid.segments(2, null), vid.segments(3, null), fprops);
-    }
-
-    /**
-     * Decompose a space-relative fURI (no database-name segment) into a
-     * DataPath.  Segment 0 → {@code collection}, segment 1 → {@code entry},
-     * segment 2 → {@code field}, segments 3+ → {@code extension}.
-     * The {@code db} parameter is stored as-is.
-     */
-    public static DataPath ofSpaceRelative(final fURI vid, final String db) {
-        final fURI fprops;
-        if (vid.segmentLength() > 3) {
-            final List<String> props = vid.segments().subList(3, vid.segmentLength());
-            fprops = fURI.of(null, null, -1, props, vid.c(), null, vid.qMap(), vid.templates());
-        } else {
-            fprops = null;
-        }
-        return new DataPath(db, vid.segments(0, null), vid.segments(1, null), vid.segments(2, null), fprops);
+        return new DataPath(
+                noDb ? null : seg0,
+                vid.segments(1, null),
+                vid.segments(2, null),
+                vid.segments(3, null),
+                fprops);
     }
 
     /**

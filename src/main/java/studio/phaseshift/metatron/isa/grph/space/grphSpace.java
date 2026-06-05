@@ -344,7 +344,7 @@
                  if (routed.hasScheme() && !routed.test(this.pattern())) {
                      return new IdObj(routed, Router.global().read(routed)).iterator();
                  }
-                 final DataPath dp = routed.segments().get(0).equals(this.pattern().segments().get(0)) ? DataPath.of(routed) : DataPath.ofSpaceRelative(routed, null);
+                 final DataPath dp = routed.segments().get(0).equals(this.pattern().segments().get(0)) ? DataPath.of(routed) : DataPath.of(f("-").extend(routed));
                  if (!dp.hasCollection()) return IteratorUtil.of();
                  if (!dp.hasEntry()) return readCollection(dp);
                  if ("V".equals(dp.collection())) {
@@ -410,7 +410,7 @@
              }
              final fURI routed = Space.Helper.routeFromSpace(pattern, this.routes());
              LOG.debug("writing tp3 vid: %s => %s", pattern, routed);
-             final DataPath dp = DataPath.ofSpaceRelative(routed, null);
+             final DataPath dp = DataPath.of(f("-").extend(routed));
              if ("V".equals(dp.collection()) && dp.hasEntry() && CommonUtil.isInt(dp.entry())) {
                  final Integer id = Integer.parseInt(dp.entry());
                  try {
