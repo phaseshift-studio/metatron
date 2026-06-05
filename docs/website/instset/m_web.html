@@ -299,6 +299,7 @@ bin/metatron</code></pre>
   mtron_http::T,
   mcp_http::T,
   mcp_mtron_http::T,
+  web_http::T,
   mcp_server::T,
   mcp_client::T],
  inst=&gt;[
@@ -319,7 +320,7 @@ bin/metatron</code></pre>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <button class="btn btn-outline-secondary" disabled>Consts <span class="pill-label badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">22</span></a><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">2</span></a><button class="btn btn-outline-secondary" disabled>Spaces <span class="pill-label badge bg-dark">0</span></button><button class="btn btn-outline-secondary" disabled>Rewrites <span class="pill-label badge bg-dark">0</span></button>
+        <button class="btn btn-outline-secondary" disabled>Consts <span class="pill-label badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">23</span></a><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">2</span></a><button class="btn btn-outline-secondary" disabled>Spaces <span class="pill-label badge bg-dark">0</span></button><button class="btn btn-outline-secondary" disabled>Rewrites <span class="pill-label badge bg-dark">0</span></button>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="card">
@@ -374,6 +375,9 @@ bin/metatron</code></pre>
 </a><a href="#type-socket" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">socket</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#type-web_http" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">web_http</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
 </a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;" style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;line-height:1.25;" class="micro-label"><div style="font-size:0.6rem;opacity:0.45;font-family:monospace;white-space:nowrap;">space&thinsp;/</div><div><small class="mini-label fw-bold text-secondary" style="font-family:monospace;">wsspace</small></div></div><div class="d-flex flex-wrap"><a href="#type-mcp_mtron_ws" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">mcp_mtron_ws</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
@@ -405,7 +409,7 @@ bin/metatron</code></pre>
 </div></div>
     </div>
 </div><div class="container-xxl mb-4" id="types">
-    <h3 class="text-primary mb-3">Types <span class="pill-label badge bg-primary">22</span></h3>
+    <h3 class="text-primary mb-3">Types <span class="pill-label badge bg-primary">23</span></h3>
     <div class="card mb-3" id="type-content_type">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -557,11 +561,11 @@ httpspace webserver is furi aware and will perform server-side extraction of nes
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">an mcp client type specification <span class="text-light">=&gt;</span> a connection to an existing mcp server</pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  host <span class="text-light">=&gt;</span> <span class="text-info">&#39;the mcp server endpoint&#39;</span>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  {?}transport <span class="text-light">=&gt;</span> <span class="text-info">&quot;specify the transport if host schema resolution isn&#39;t sufficient&quot;</span>
+  {?}status <span class="text-light">=&gt;</span> <span class="text-info">&#39;the current status of the mcp client/server connection&#39;</span>
+  host <span class="text-light">=&gt;</span> <span class="text-info">&#39;the mcp server endpoint&#39;</span>
   {?}command <span class="text-light">=&gt;</span> <span class="text-info">&#39;only necessary for stdio mcp servers, where the client is the server&#39;</span>
   {?}tool <span class="text-light">=&gt;</span> <span class="text-info">&#39;the tools/functions available for use on the mcp server&#39;</span>
-  {?}transport <span class="text-light">=&gt;</span> <span class="text-info">&quot;specify the transport if host schema resolution isn&#39;t sufficient&quot;</span>
-  {?}status <span class="text-light">=&gt;</span> <span class="text-info">&#39;the current status of the mcp client/server connection&#39;</span>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -700,6 +704,23 @@ mcp_client::[host =&gt; &lt;ws://localhost:8999&gt;]@/usr/ai/mcp/mtron          
   {?}on_close=&gt;#::T]]@/m/web/space/httpspace/socket</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a generic http obj which can be refined with useful behaviors</p>
+</div>
+</div><div class="card mb-3" id="type-web_http">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">web_http::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m_web_space_httpspace.html#type-http_handler" class="instset-doc-small-code text-info code">/m/web/space/httpspace/http_handler::T</a></span>
+        </span>
+        <small class="text-muted code">/m/web/space/httpspace/web_http</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">http_handler::T[?[
+  {?}in=&gt;isa(content_type::T).else(application/mtron),
+  {?}out=&gt;isa(content_type::T).else(application/mtron),
+  {?}web_root=&gt;#::T,
+  {?}default_page=&gt;#::T,
+  {?}read_only=&gt;#::T]][ctor?web_http&lt;=#{?}(rec::T)]@/m/web/space/httpspace/web_http</code></pre></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">a http handler serving web content from a router-backed space</p>
 </div>
 </div><div class="card mb-3" id="type-websocket">
     <div class="card-header d-flex justify-content-between align-items-center py-2">

@@ -276,7 +276,7 @@ public interface Uri extends Mono, Ring.O<Uri>, Comparable<Uri> {
                 } else
                     yield objToString(result);
             }
-            case SCHEME, HOST, AUTHORITY -> {
+            case SCHEME, SUB, HOST, AUTHORITY -> {
                 // Simple toString for these components
                 if (result.isLst()) {
                     final String x = result.lstValue().stream().map(Uri::objToString).collect(Collectors.joining("/"));
@@ -417,6 +417,7 @@ public interface Uri extends Mono, Ring.O<Uri>, Comparable<Uri> {
                     final String component = u.uriValue().toString();
                     final Object result = switch (component) {
                         case SCHEME -> lhs.uriValue().scheme();
+                        case SUB -> lhs.uriValue().subdomain();
                         case HOST -> lhs.uriValue().host();
                         case PORT -> lhs.uriValue().port();
                         case AUTHORITY -> lhs.uriValue().authority();

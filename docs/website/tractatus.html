@@ -1824,7 +1824,7 @@ mtron&gt; *ollama:+.
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; @ai.chat("I need you evaluate the mtron expresion `-&lt;[_=&gt;_]&gt;&gt;.&gt;-[,]-&lt;[_,-&lt;[_=&gt;_]&gt;&gt;]&gt;&gt;.&gt;-` with a lhs of `1`. Please don't tell me the result of the evaluation until I ask for it sometime in the near future.")
-==&gt;"The evaluation of the mtron expression with the provided lhs of `1` has been completed. I will provide the result when you ask for it."</code></pre>
+==&gt;"The evaluation of the mtron expression with the given left-hand side (lhs) of `1` has been completed. I will provide the result when you ask for it."</code></pre>
 </div>
 </div>
 <div class="openblock card">
@@ -1946,8 +1946,15 @@ mtron&gt; tB::1.0.as(mB::T)     ​3​
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; @ai.chat("It's been many years since we last talked. For I am a tired, old man. Before I let my last breathe flutter into this world, I must know one last thing. Please tell me, what was the result of the mtron expression I provided you all those years ago?")
-==&gt;"The result of the evaluation of the mtron expression with the lhs of `1` was `1`."
+==&gt;"The result of the evaluation of the mtron expression `-&lt;[_=&gt;_]&gt;&gt;.&gt;-[,]-&lt;[_,-&lt;[_=&gt;_]&gt;&gt;]&gt;&gt;.&gt;-` with a left-hand side (lhs) of `1` was **`1`**."
 mtron&gt; */usr/ai/memory/+
+==&gt;[
+    id=&gt;call_mzlcivsi,
+    toolName=&gt;m_inst_eval,
+    contents=&gt;[[text=&gt;1,type=&gt;'TEXT']],
+    isError=&gt;false,
+    attributes=&gt;[=&gt;],
+    type=&gt;'TOOL_EXECUTION_RESULT']
 ==&gt;[
     contents=&gt;[[
     text=&gt;"It's been many years since we last...",
@@ -1959,24 +1966,17 @@ mtron&gt; */usr/ai/memory/+
     attributes=&gt;[=&gt;],
     type=&gt;AI]
 ==&gt;[
-    text=&gt;'The evaluation of the mtron expres...',
-    toolExecutionRequests=&gt;[,],
-    attributes=&gt;[=&gt;],
-    type=&gt;AI]
-==&gt;[
     toolExecutionRequests=&gt;[[
-    id=&gt;call_awu9ybsr,
+    id=&gt;call_mzlcivsi,
     name=&gt;m_inst_eval,
     arguments=&gt;'{"object":"-&lt;[_=&gt;_]&gt;&gt;.&gt;-[,]-&lt;[_,-&lt;...']],
     attributes=&gt;[=&gt;],
     type=&gt;AI]
 ==&gt;[
-    id=&gt;call_awu9ybsr,
-    toolName=&gt;m_inst_eval,
-    contents=&gt;[[text=&gt;1,type=&gt;'TEXT']],
-    isError=&gt;false,
+    text=&gt;'The evaluation of the mtron expres...',
+    toolExecutionRequests=&gt;[,],
     attributes=&gt;[=&gt;],
-    type=&gt;'TOOL_EXECUTION_RESULT']</code></pre>
+    type=&gt;AI]</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -2152,554 +2152,23 @@ mtron&gt; *robotron&gt;&gt;feature/memory/mem/2/attributes/format</code></pre>
 </div>
 <div class="paragraph">
 <p>Given that an <code>mcp_client::T</code> is an index of <code>insts</code>. Nothing prevents their <code>insts</code> being used by other processes such
-as a human user.</p>
+as a human user. And since, metatron is able to map common data formats to <code>obj</code>, its possible to take the result of the
+mcp tool and post process it to derive further more refined statistics not offered by the tool.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; /usr/ai/mcp/intellij/tool/ide_type_hierarchy(className=&gt;'studio.phaseshift.metatron.isa.m.type.Obj')
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; /usr/ai/mcp/intellij/tool/ide_type_hierarchy(className=&gt;'studio.phaseshift.metatron.isa.m.type.Obj').
+         -&lt;[supers =&gt; -&lt;[count =&gt; &gt;&gt;supertypes.count(),
+                         kinds =&gt; &gt;&gt;supertypes&gt;&gt;kind&gt;-[,]],
+            subs   =&gt; -&lt;[count =&gt; &gt;&gt;subtypes.count(),
+                         kinds =&gt; &gt;&gt;subtypes&gt;&gt;kind&gt;-[,]]]
 ==&gt;[
-    element=&gt;[
-     name=&gt;'studio.phaseshift.metatron.isa.m.t...',
-     file=&gt;'src/main/java/studio/phaseshift/me...',
-     kind=&gt;INTERFACE,
-     language=&gt;Java],
-    supertypes=&gt;[
-     [
-      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;INTERFACE,
-      language=&gt;Java,
-      supertypes=&gt;[[name=&gt;'java.util.function.Function',kind=&gt;CLASS,language=&gt;Java]]],
-     [name=&gt;'java.util.function.Function',kind=&gt;CLASS,language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.util.St...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;INTERFACE,
-      language=&gt;Java],
-     [name=&gt;'java.lang.Iterable',kind=&gt;CLASS,language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;INTERFACE,
-      language=&gt;Java],
-     [name=&gt;'java.lang.Cloneable',kind=&gt;CLASS,language=&gt;Java],
-     [name=&gt;'java.util.function.Predicate',kind=&gt;CLASS,language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;INTERFACE,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.util.St...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;INTERFACE,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;INTERFACE,
-      language=&gt;Java]],
-    subtypes=&gt;[
-     [
-      name=&gt;'studio.phaseshift.metatron.algebra...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;INTERFACE,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;INTERFACE,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.algebra...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;INTERFACE,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;INTERFACE,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;INTERFACE,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;CLASS,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;INTERFACE,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;INTERFACE,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.isa.mac...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;CLASS,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;ABSTRACT_CLASS,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;INTERFACE,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.algebra...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;INTERFACE,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.isa.web...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;INTERFACE,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;INTERFACE,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.isa.mac...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;INTERFACE,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.algebra...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;INTERFACE,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.algebra...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;INTERFACE,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.isa.mac...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;CLASS,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.algebra...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;INTERFACE,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;INTERFACE,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;INTERFACE,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;INTERFACE,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.algebra...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;INTERFACE,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;INTERFACE,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;INTERFACE,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.isa.mac...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;CLASS,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.algebra...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;INTERFACE,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;CLASS,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;CLASS,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;CLASS,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;INTERFACE,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;CLASS,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;INTERFACE,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.isa.mac...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;INTERFACE,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;INTERFACE,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;CLASS,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;CLASS,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;CLASS,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;CLASS,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;CLASS,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;CLASS,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;CLASS,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.isa.vec...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;CLASS,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.isa.mac...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;CLASS,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;CLASS,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;CLASS,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;CLASS,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;CLASS,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;CLASS,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.isa.vec...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;INTERFACE,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.isa.web...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;CLASS,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;INTERFACE,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;INTERFACE,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;INTERFACE,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;INTERFACE,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.isa.mac...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;INTERFACE,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.furi.QP...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;INTERFACE,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.isa.web...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;CLASS,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.furi.QP...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;INTERFACE,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.isa.Spa...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;INTERFACE,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.BootLoa...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;CLASS,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.isa.mac...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;INTERFACE,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.isa.mac...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;INTERFACE,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;INTERFACE,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.furi.QP...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;INTERFACE,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;CLASS,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.isa.mac...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;ABSTRACT_CLASS,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.isa.mac...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;CLASS,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.isa.m.p...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;CLASS,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.isa.mac...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;CLASS,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.isa.mac...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;CLASS,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.isa.vec...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;CLASS,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.isa.llm...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;CLASS,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.isa.mac...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;ABSTRACT_CLASS,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.isa.web...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;CLASS,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.furi.q....',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;CLASS,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.furi.q....',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;CLASS,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.isa.llm...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;CLASS,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.isa.mac...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;CLASS,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.isa.mac...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;CLASS,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.isa.llm...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;CLASS,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.isa.mac...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;CLASS,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.isa.mac...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;CLASS,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.isa.web...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;CLASS,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.isa.mac...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;CLASS,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;CLASS,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.isa.llm...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;CLASS,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.furi.q....',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;CLASS,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.isa.llm...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;CLASS,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.isa.mac...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;CLASS,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.furi.q....',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;CLASS,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.isa.grp...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;CLASS,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;CLASS,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.isa.Abs...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;ABSTRACT_CLASS,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.isa.web...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;CLASS,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.isa.web...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;CLASS,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.isa.mac...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;INTERFACE,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.isa.mac...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;CLASS,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.isa.mac...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;ABSTRACT_CLASS,
-      language=&gt;Java],
-     [
-      name=&gt;'studio.phaseshift.metatron.isa.m.t...',
-      file=&gt;'src/main/java/studio/phaseshift/me...',
-      kind=&gt;INTERFACE,
-      language=&gt;Java]]]</code></pre>
+    supers=&gt;[
+     count=&gt;1,
+     kinds=&gt;[,]],
+    subs=&gt;[
+     count=&gt;1,
+     kinds=&gt;[,]]]</code></pre>
 </div>
 </div>
 <h3 id="sec-agent-notes" class="discrete">agent notes</h3>
@@ -3248,7 +2717,7 @@ mtron&gt; 4.as(int::T[?&gt;0]@nat)
 ==&gt;nat::4
 mtron&gt;  -4.as(nat::T)
 ==&gt;fail::[-4 is not a is(gt(0))
-     -4=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/240
+     -4=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/234
 mtron&gt; [-- refining rec::T  --]
 mtron&gt; [name=&gt;'snowbutt',age=&gt;7].as(rec::T[?[name=&gt;str::T,age=&gt;int::T]@chicken)
 ==&gt;ERROR: [name=&gt;'snowbutt',age=&gt;7].as(rec::T[?[name=&gt;str::T,age=&gt;int::T]@chicken)
@@ -3316,11 +2785,11 @@ mtron&gt; 2.as(nat::T)     ​5​
 ==&gt;2
 mtron&gt;  -2.as(nat::T)     ​6​
 ==&gt;fail::[-2 is not a is(gt(0))
-     -2=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/246
+     -2=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/240
 mtron&gt;  nat::2 * -1     ​7​
 ==&gt;fail::[nat::-2 is not a int::T[is(gt(0))][choose([
      is(lt(0))=&gt;mult(-1),
-     id()=&gt;id()]).rshift()]][...]@/sys/fail/252</code></pre>
+     id()=&gt;id()]).rshift()]][...]@/sys/fail/246</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -3347,7 +2816,7 @@ The predicate component of the type definition tests an <code>int</code> to dete
 <div class="paragraph">
 <p>While every <code>type</code> is an <code>obj</code>, not every <code>obj</code> is a <code>type</code>.
 Those <code>objs</code> that are not <code>types</code> are <em>instances</em> of some <code>type</code>.
-This is the foundation for all other <code>objs</code> in {{y}}m{{c}}e{{g}}T{{r}}a{{b}}T{{g}}r{{r}}O{{g}}n{{X}}.</p>
+This is the foundation for all other <code>objs</code> in {{y}}m{{y}}e{{m}}T{{r}}a{{m}}T{{r}}R{{y}}o{{y}}n{{X}}.</p>
 </div>
 <h4 id="sec-cascading-type-constructions" class="discrete">cascading type constructions</h4>
 <h3 id="sec-mono-types" class="discrete">mono types</h3>
@@ -3465,13 +2934,13 @@ mtron&gt; bytes::'48656c6c6f'     ​2​
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; kB::1024.as(mB::T)     ​1​
-==&gt;ERROR: unable to convert int::T to real::T[studio.phaseshift.metatron.isa.m.type.Obj:579]
+==&gt;ERROR: unable to convert int::T to real::T[studio.phaseshift.metatron.isa.m.type.Obj:581]
 mtron&gt; mB::1.as(kB::T)     ​2​
-==&gt;ERROR: unable to convert int::T to real::T[studio.phaseshift.metatron.isa.m.type.Obj:579]
+==&gt;ERROR: unable to convert int::T to real::T[studio.phaseshift.metatron.isa.m.type.Obj:581]
 mtron&gt; gB::5.as(mB::T)     ​3​
-==&gt;ERROR: unable to convert int::T to real::T[studio.phaseshift.metatron.isa.m.type.Obj:579]
+==&gt;ERROR: unable to convert int::T to real::T[studio.phaseshift.metatron.isa.m.type.Obj:581]
 mtron&gt; pB::1.as(tB::T)     ​4​
-==&gt;ERROR: unable to convert int::T to real::T[studio.phaseshift.metatron.isa.m.type.Obj:579]</code></pre>
+==&gt;ERROR: unable to convert int::T to real::T[studio.phaseshift.metatron.isa.m.type.Obj:581]</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -3503,13 +2972,13 @@ mtron&gt; pB::1.as(tB::T)     ​4​
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; mB::1024.eq(gB::1)     ​1​
-==&gt;ERROR: unable to convert int::T to real::T[studio.phaseshift.metatron.isa.m.type.Obj:579]
+==&gt;ERROR: unable to convert int::T to real::T[studio.phaseshift.metatron.isa.m.type.Obj:581]
 mtron&gt; kB::1024.eq(mB::1)     ​2​
-==&gt;ERROR: unable to convert int::T to real::T[studio.phaseshift.metatron.isa.m.type.Obj:579]
+==&gt;ERROR: unable to convert int::T to real::T[studio.phaseshift.metatron.isa.m.type.Obj:581]
 mtron&gt; gB::2.eq(mB::2048)     ​3​
-==&gt;ERROR: unable to convert int::T to real::T[studio.phaseshift.metatron.isa.m.type.Obj:579]
+==&gt;ERROR: unable to convert int::T to real::T[studio.phaseshift.metatron.isa.m.type.Obj:581]
 mtron&gt; tB::1.eq(gB::1024)     ​4​
-==&gt;ERROR: unable to convert int::T to real::T[studio.phaseshift.metatron.isa.m.type.Obj:579]</code></pre>
+==&gt;ERROR: unable to convert int::T to real::T[studio.phaseshift.metatron.isa.m.type.Obj:581]</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -4004,7 +3473,7 @@ mtron&gt;  nat::-10
 ==&gt;ERROR: nat::-10 is not a int::T[is(gt(0))]
 mtron&gt;  int::-10.as(nat::T)
 ==&gt;fail::[-10 is not a is(gt(0))
-     -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/374</code></pre>
+     -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/368</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -4103,7 +3572,7 @@ mtron&gt;  nat::-10
 ==&gt;ERROR: nat::-10 is not a int::T[is(gt(0))]
 mtron&gt;  int::-10.as(nat::T)
 ==&gt;fail::[-10 is not a is(gt(0))
-     -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/380</code></pre>
+     -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/374</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -4129,10 +3598,10 @@ mtron&gt; age::125
 ==&gt;ERROR: age::125 is not a int::T[is(lt(120))]
 mtron&gt;  nat::125.as(age::T)
 ==&gt;fail::[nat::125 is not a is(lt(120))
-     nat::125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/386
+     nat::125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/380
 mtron&gt;  125.as(nat::T).as(age::T)
 ==&gt;fail::[125 is not a is(lt(120))
-     125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/392</code></pre>
+     125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/386</code></pre>
 </div>
 </div>
 <div class="listingblock">
@@ -5669,7 +5138,7 @@ mtron&gt; */usr/notes/#?subq
      mqtt::T,
      haos::T]]@/m/iot
 mtron&gt;  import(/m/llm)
-{{g}}.{{c}}.{{y}}.{{X}}</code></pre>
+{{c}}.{{b}}.{{g}}.{{X}}</code></pre>
 </div>
 </div>
 </div>
@@ -5704,39 +5173,6 @@ The inspiration for metatron&#8217;s URI addressing schema was inspired by the v
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; mqtt::[pattern =&gt; &lt;ha:#&gt;,
               host    =&gt; mqtt://localhost:1883,
               route   =&gt; [ha:=&gt;&lt;/home/chips&gt;]]@/sys/space/esp32     ​1​
-==&gt;ERROR: com.hivemq.client.mqtt.exceptions.ConnectionFailedException: io.netty.channel.AbstractChannel$AnnotatedConnectException: Connection refused: localhost/127.0.0.1:1883: com.hivemq.client.mqtt.exceptions.ConnectionFailedException: io.netty.channel.AbstractChannel$AnnotatedConnectException: Connection refused: localhost/127.0.0.1:1883
-  	java.util.concurrent.CompletableFuture [line 345]
-  	java.util.concurrent.CompletableFuture [line 440]
-  	java.util.concurrent.CompletableFuture [line 2117]
-  	studio.phaseshift.metatron.isa.iot.space.mqtt.mqttSpace [line 106]
-  	studio.phaseshift.metatron.isa.iot.space.mqtt.mqttSpace [line 132]
-  	studio.phaseshift.metatron.isa.iot.space.mqtt.mqttSpace [line 176]
-  	studio.phaseshift.metatron.isa.iot.space.mqtt.mqttSpace [line 80]
-  	studio.phaseshift.metatron.isa.m.type.Inst$f [line 694]
-  	studio.phaseshift.metatron.isa.m.type.Inst [line 335]
-  	studio.phaseshift.metatron.isa.m.type.Obj$Helper [line 916]
-  	studio.phaseshift.metatron.isa.m.type.impl.MObj [line 46]
-  	studio.phaseshift.metatron.isa.m.type.impl.MRec [line 76]
-  	studio.phaseshift.metatron.isa.m.parser.mParser [line 204]
-  	org.petitparser.parser.actions.ActionParser [line 39]
-  	org.petitparser.parser.combinators.DelegateParser [line 25]
-  	org.petitparser.parser.combinators.ChoiceParser [line 34]
-  	org.petitparser.parser.combinators.DelegateParser [line 25]
-  	org.petitparser.parser.combinators.ChoiceParser [line 34]
-  	org.petitparser.parser.combinators.OptionalParser [line 23]
-  	org.petitparser.parser.combinators.SequenceParser [line 25]
-  	org.petitparser.parser.actions.ActionParser [line 37]
-  	org.petitparser.parser.combinators.ChoiceParser [line 34]
-  	org.petitparser.parser.combinators.SequenceParser [line 25]
-  	org.petitparser.parser.actions.ActionParser [line 37]
-  	org.petitparser.parser.combinators.SequenceParser [line 25]
-  	org.petitparser.parser.actions.ActionParser [line 37]
-  	org.petitparser.parser.Parser [line 76]
-  	studio.phaseshift.metatron.isa.m.parser.mParser [line 407]
-  	studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer [line 88]
-  	studio.phaseshift.metatron.docs.MtronDocPreprocessor [line 196]
-  	studio.phaseshift.metatron.docs.MtronDocPreprocessor [line 91]
-  	studio.phaseshift.metatron.docs.DocRunner [line 203]
 mtron&gt; *ha:main_field/sensor/+.-&lt;|[
          &gt;&gt;temp.?&lt;50  =&gt; print('too cold for watering'),
          &gt;&gt;humid.?&gt;30 =&gt; print('too humid for watering'),
@@ -5918,8 +5354,17 @@ mtron&gt; *fs:m     ​3​
 mtron&gt; */sys/space/localfs/script     ​2​
 mtron&gt; *&lt;fs:m/bin/metatron&gt;     ​3​
 ==&gt;fail::[#!/bin/sh
+   # bin/metatron  distribution entry point for the metatron runtime.
+   # The uber-jar must already exist (built via `mvn package` or jDeploy).
+   # Run from the project root; all arguments are forwarded to BootLoader.main().
+   #
+   # Usage:
+   #   bin/metatron "[boot=&gt;&lt;boot/boot.mtron&gt;,log=&gt;info]"
+   #   bin/metatron --headless "[boot=&gt;&lt;boot/boot.mtron&gt;,log=&gt;info]"
 
    set -e
+
+   # JVM flags required for native access (Panama Vector API) and reflective operations
    java -Dlogback.configurationFile=conf/logback.xml \
        --add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED \
        --enable-native-access=ALL-UNNAMED \
@@ -5929,8 +5374,17 @@ mtron&gt; *&lt;fs:m/bin/metatron&gt;     ​3​
    ]
 mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T)     ​4​
 ==&gt;fail::[#!/bin/sh
+   # bin/metatron  distribution entry point for the metatron runtime.
+   # The uber-jar must already exist (built via `mvn package` or jDeploy).
+   # Run from the project root; all arguments are forwarded to BootLoader.main().
+   #
+   # Usage:
+   #   bin/metatron "[boot=&gt;&lt;boot/boot.mtron&gt;,log=&gt;info]"
+   #   bin/metatron --headless "[boot=&gt;&lt;boot/boot.mtron&gt;,log=&gt;info]"
 
    set -e
+
+   # JVM flags required for native access (Panama Vector API) and reflective operations
    java -Dlogback.configurationFile=conf/logback.xml \
        --add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED \
        --enable-native-access=ALL-UNNAMED \
@@ -5940,8 +5394,17 @@ mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T)     ​4​
    ]
 mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T).as(str::T)     ​5​
 ==&gt;fail::[#!/bin/sh
+   # bin/metatron  distribution entry point for the metatron runtime.
+   # The uber-jar must already exist (built via `mvn package` or jDeploy).
+   # Run from the project root; all arguments are forwarded to BootLoader.main().
+   #
+   # Usage:
+   #   bin/metatron "[boot=&gt;&lt;boot/boot.mtron&gt;,log=&gt;info]"
+   #   bin/metatron --headless "[boot=&gt;&lt;boot/boot.mtron&gt;,log=&gt;info]"
 
    set -e
+
+   # JVM flags required for native access (Panama Vector API) and reflective operations
    java -Dlogback.configurationFile=conf/logback.xml \
        --add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED \
        --enable-native-access=ALL-UNNAMED \
@@ -7602,6 +7065,7 @@ mtron&gt; *v1.out(knows).out(created).&gt;&gt;name     ​5​</code></pre>
      mtron_http::T,
      mcp_http::T,
      mcp_mtron_http::T,
+     web_http::T,
      mcp_server::T,
      mcp_client::T],
     inst=&gt;[
@@ -7619,7 +7083,13 @@ mtron&gt; *v1.out(knows).out(created).&gt;&gt;name     ​5​</code></pre>
 </div>
 </div>
 </details>
+<div class="paragraph">
+<p>The <code>/m/web</code> instruction set enables a wide range of capabilities centered around <code>http</code>-based systems and websocket-based systems. Correspondingly, there exists <code>httpspace</code> and <code>wsspace</code> that manage respective network i/o connections. Along with these spaces are various serializers that provide the mtron encoding of common web document standards such as html, xml, json, markdown, and the like.</p>
+</div>
 <h3 id="sec-http-space" class="discrete">HTTP Space</h3>
+<div class="paragraph">
+<p>The <code>httpspace::T</code> is a space capable of spawning and managing <code>http</code> connection handlers both as servers and as clients. The pattern of an <code>httpspace</code> dictates the breadth of resources accessible. When <code><a href="http://#" class="bare">http://#</a></code> is the pattern, the world wide web becomes a source of metatron objs.</p>
+</div>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; httpspace::[
@@ -7715,11 +7185,11 @@ mtron&gt; *&lt;http://localhost:8088/v1/models&gt;
 ==&gt;[
     object=&gt;list,
     data=&gt;[
+     [id=&gt;qwen3-coder-30b-a3b-instruct,object=&gt;model],
      [id=&gt;qwen3-tts-cpp,object=&gt;model],
      [id=&gt;qwen3:latest,object=&gt;model],
      [id=&gt;'smollm:1.7b',object=&gt;model],
      [id=&gt;mistralai_devstral-small-2507,object=&gt;model],
-     [id=&gt;qwen3-coder-30b-a3b-instruct,object=&gt;model],
      [id=&gt;MeetAISmall__latest,object=&gt;model],
      [id=&gt;gpt-oss__latest,object=&gt;model]]]
 mtron&gt; *&lt;http://localhost:8088/v1/models/data/0/id&gt;
@@ -7728,10 +7198,10 @@ mtron&gt; *&lt;http://localhost:8088/api/models/config-json/${
          *&lt;http://localhost:8088/v1/models/data/0/id&gt;}&gt;
 ==&gt;[
     parameters=&gt;[
-     model=&gt;'smollm__1.7b',
-     top_p=&gt;0.9500,
-     top_k=&gt;-1,
-     min_p=&gt;0.0100,
+     model=&gt;'Qwen3-Coder-30B-A3B-Instruct-Q4_K_...',
+     top_p=&gt;0.8000,
+     top_k=&gt;20,
+     min_p=&gt;0,
      temperature=&gt;0.7000,
      max_tokens=&gt;0,
      repeat_penalty=&gt;1,
@@ -7739,18 +7209,24 @@ mtron&gt; *&lt;http://localhost:8088/api/models/config-json/${
      typical_p=&gt;1,
      seed=&gt;-1,
      logprobs=&gt;false],
-    name=&gt;'smollm:1.7b',
+    name=&gt;qwen3-coder-30b-a3b-instruct,
     f16=&gt;false,
     threads=&gt;8,
     debug=&gt;false,
     embeddings=&gt;false,
     backend=&gt;llama-cpp,
-    template=&gt;[use_tokenizer_template=&gt;true],
-    known_usecases=&gt;[FLAG_CHAT],
+    template=&gt;[
+     chat=&gt;"""{{.Input -}}
+   &lt;|im_start|&gt;assistant
+   """,
+     chat_message=&gt;'&lt;|im_start|&gt;{{if eq .RoleName "too...',
+     completion=&gt;"""{{.Input}}
+   """,
+     function=&gt;"""&lt;|im_start|&gt;system
+   You are a funct..."""],
+    known_usecases=&gt;[FLAG_CHAT,FLAG_COMPLETION],
     pipeline=&gt;[=&gt;],
-    function=&gt;[
-     grammar=&gt;[disable=&gt;true],
-     automatic_tool_parsing_fallback=&gt;true],
+    function=&gt;[grammar=&gt;[=&gt;]],
     reasoning=&gt;[=&gt;],
     mirostat_eta=&gt;0.1000,
     mirostat_tau=&gt;5,
@@ -7760,13 +7236,13 @@ mtron&gt; *&lt;http://localhost:8088/api/models/config-json/${
     mmlock=&gt;false,
     low_vram=&gt;false,
     reranking=&gt;false,
+    stopwords=&gt;[|im_end|,dummy32000,/s,|endoftext|],
     context_size=&gt;8192,
     limit_mm_per_prompt=&gt;[=&gt;],
     diffusers=&gt;[=&gt;],
     grpc=&gt;[=&gt;],
     tts=&gt;[=&gt;],
-    description=&gt;'Imported from ollama://smollm:1.7b',
-    options=&gt;[use_jinja:true],
+    options=&gt;[gpu],
     mcp=&gt;[=&gt;],
     agent=&gt;[=&gt;]]</code></pre>
 </div>
@@ -7831,7 +7307,7 @@ mtron&gt; */m/llm/inst/+?dom=model</code></pre>
             type=&gt;&gt;&gt;object.as(uri::T),
             provider=&gt;|!*/sys/space/localai].as(model::T)
          .chat('are you there?')
-==&gt;fail::[notes requires a vid model][...]@/sys/fail/420
+==&gt;''
 ==&gt;fail::[[
     type=&gt;model,
     provider=&gt;!*/sys/space/localai] is not a isa([
@@ -7862,7 +7338,7 @@ mtron&gt; */m/llm/inst/+?dom=model</code></pre>
       in=&gt;currency::T,
       out=&gt;currency::T],
       noobj=&gt;(==&gt;{?}size)=&gt;noobj=&gt;/=&gt;bB::T,
-      noobj=&gt;(==&gt;{?}feature)=&gt;noobj=&gt;/=&gt;feature::T]][...]@/sys/fail/414</code></pre>
+      noobj=&gt;(==&gt;{?}feature)=&gt;noobj=&gt;/=&gt;feature::T]][...]@/sys/fail/408</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -9162,6 +8638,15 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
     obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
     inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
       space=&gt;[sub=&gt;{!*/m/mach,!*/m/math,!*/m/web,!*/m/iot,!*/m/grph,!*/m/llm,!*/m/tble,!*/m/dcmnt,!*/m/rdf}],
+      rewrite=&gt;[
+       /m/inst/rewrite/id_removal?code{?}&lt;=code(),
+       /m/inst/rewrite/map_nest?code{?}&lt;=code(),
+       /m/inst/rewrite/else_after_count?code{?}&lt;=code(),
+       /m/inst/rewrite/plus_zero?code{?}&lt;=code(),
+       /m/inst/rewrite/mult_one?code{?}&lt;=code(),
+       /m/inst/rewrite/split_merge_collapse?code{?}&lt;=code(),
+       /m/inst/rewrite/split_merge_left_factor?code{?}&lt;=code(),
+       /m/inst/rewrite/split_merge_right_factor?code{?}&lt;=code()],
       type=&gt;[
        #::T,
        bool::T,
@@ -9421,16 +8906,7 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
        rshift?B{*}&lt;=A(C{*}::T),
        lshift?B{*}&lt;=A(),
        start?A{**}&lt;=noobj{0}(A{**}::T),
-       ctor()],
-      rewrite=&gt;[
-       /m/inst/rewrite/id_removal?code{?}&lt;=code(),
-       /m/inst/rewrite/map_nest?code{?}&lt;=code(),
-       /m/inst/rewrite/else_after_count?code{?}&lt;=code(),
-       /m/inst/rewrite/plus_zero?code{?}&lt;=code(),
-       /m/inst/rewrite/mult_one?code{?}&lt;=code(),
-       /m/inst/rewrite/split_merge_collapse?code{?}&lt;=code(),
-       /m/inst/rewrite/split_merge_left_factor?code{?}&lt;=code(),
-       /m/inst/rewrite/split_merge_right_factor?code{?}&lt;=code()]]@/m,
+       ctor()]]@/m,
      /m/iot=&gt;instset::[
       pattern=&gt;/m/iot/#,
       q=&gt;[docq::[
@@ -9519,6 +8995,7 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
        mtron_http::T,
        mcp_http::T,
        mcp_mtron_http::T,
+       web_http::T,
        mcp_server::T,
        mcp_client::T],
       inst=&gt;[
@@ -9631,6 +9108,7 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
      print=&gt;[/m/inst/print],
      bothE=&gt;[/m/grph/inst/bothE],
      http_handler=&gt;[/m/web/space/httpspace/http_handler],
+     web_http=&gt;[/m/web/space/httpspace/web_http],
      inv=&gt;[/m/inst/inv],
      stdin=&gt;[/sys/io/stdin],
      ping=&gt;[/m/web/inst/ping],
@@ -9913,10 +9391,10 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
 ==&gt;/sys/env/QT_IM_MODULE=&gt;'ibus'
 ==&gt;/sys/env/SESSION_MANAGER=&gt;'local/booger:@/tmp/.ICE-unix/4114,unix/booger:/tmp/.ICE-unix/4114'
 ==&gt;/sys/env/GNOME_DESKTOP_SESSION_ID=&gt;'this-is-deprecated'
+==&gt;/sys/env/GNOME_TERMINAL_SCREEN=&gt;'/org/gnome/Terminal/screen/9fd15396_e248_4726_a1f5_1bc8b7bf236a'
 ==&gt;/sys/env/HOMEBREW_CELLAR=&gt;'/home/linuxbrew/.linuxbrew/Cellar'
 ==&gt;/sys/env/JBANG_HOME=&gt;'/home/killswitch/.sdkman/candidates/jbang/current'
-==&gt;/sys/env/USER=&gt;'killswitch'
-==&gt;/sys/env/HOMEBREW_PREFIX=&gt;'/home/linuxbrew/.linuxbrew'</code></pre>
+==&gt;/sys/env/USER=&gt;'killswitch'</code></pre>
 </div>
 </div>
 <h3 id="sec-boot-loader" class="discrete">Boot Loader</h3>

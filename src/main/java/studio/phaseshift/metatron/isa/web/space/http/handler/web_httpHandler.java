@@ -46,6 +46,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.mach.machInstSet.DIR_TID;
 import static studio.phaseshift.metatron.isa.web.space.http.httpSpace.HTTP_HANDLER_TID;
 import static studio.phaseshift.metatron.isa.web.space.http.httpSpace.HTTP_SPACE_TID;
 import static studio.phaseshift.metatron.isa.web.webInstSet.CONTENT_TYPE;
@@ -141,13 +142,14 @@ public class web_httpHandler extends HttpRec {
 
                 // 3 — DEFAULT_PAGE fallback (skip when a base document was found — the noobj
                 //     represents a null field value or missing key within that document)
-                if (requestObj.isNoObj() && !foundBase) {
+                //     Also applies when the path resolves to a directory (DIR_TID).
+                if (isNoobjOrDir(requestObj) && !foundBase) {
                     final String defaultPage = this.at(uri(DEFAULT_PAGE)).orElse(str("index.html")).strValue();
                     requestObj = Router.global().read(requestURI.extend(defaultPage));
                 }
 
                 // 4 — 404 if still nothing (skip when a base document was found — see above)
-                if (requestObj.isNoObj() && !foundBase) {
+                if (isNoobjOrDir(requestObj) && !foundBase) {
                     try {
                         sendError(404, "Not Found: " + requestURI);
                     } catch (final IOException e) {
@@ -249,5 +251,11 @@ public class web_httpHandler extends HttpRec {
                 return noobj();
             }
         }));
+    }
+
+    /** Checks whether an object is noobj or a directory URI — used by DEFAULT_PAGE fallback. */
+    private static boolean isNoobjOrDir(final Obj requestObj) {
+        return requestObj.isNoObj()
+                || (requestObj.isUri() && DIR_TID.equals(requestObj.tid().basePath()));
     }
 }

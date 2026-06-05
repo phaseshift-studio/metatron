@@ -18,21 +18,26 @@
 
 package studio.phaseshift.metatron.isa.web.space.http;
 
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.SkipInheritedTests;
 import studio.phaseshift.metatron.SkipInheritedTestsExtension;
 import studio.phaseshift.metatron.TestTag;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractSpaceTest;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
+import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.io.space.fs.fsSpace;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.util.CommonUtil;
 
+import java.io.File;
 import java.nio.file.FileSystems;
+import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
@@ -60,19 +65,41 @@ import static studio.phaseshift.metatron.isa.web.webInstSet.*;
 public class httpSpaceTest extends AbstractSpaceTest {
     private static final String BASE_URL = "http://localhost:" + generatePort();
 
-    public httpSpaceTest() {
-        super(f(BASE_URL), () -> {
-            InstSet.importInstSet(WEB_ISA_TID);
-            final fsSpace fs = fsSpace.of(FileSystems.getDefault(), rec(
-                    uri(PATTERN), uri("local:#"),
-                    uri(ROUTE), rec(uri("local:"), uri("src/test/resources/"))), f("/sys/space/fs"));
-            final httpSpace space = httpSpace.of(rec(
-                    uri(HOST), uri(BASE_URL),
-                    uri(PATTERN), uri("http://#"),
-                    uri(ROUTE), rec(uri("/"), uri("local:web"))), f("/sys/space/web"));
-            return space;
-        });
+    /** Isolated copy of test resources — writes land here, not in src/test/resources/. */
+    private static final Path WEB_DATA_DIR = Path.of("target", "test-web-data");
 
+    private static httpSpace staticHttpSpace;
+
+    @BeforeAll
+    public static void setupSpaces() {
+        InstSet.importInstSet(WEB_ISA_TID);
+        fsSpace.of(FileSystems.getDefault(), rec(
+                uri(PATTERN), uri("local:#"),
+                uri(ROUTE), rec(uri("local:"), uri(WEB_DATA_DIR.toString() + "/"))), f("/sys/space/fs"));
+        staticHttpSpace = httpSpace.of(rec(
+                uri(HOST), uri(BASE_URL),
+                uri(PATTERN), uri("http://#"),
+                uri(ROUTE), rec(uri("/"), uri("local:web"))), f("/sys/space/web"));
+    }
+
+    @BeforeEach
+    public void copyWebData() throws Exception {
+        final File src = new File("src/test/resources/web");
+        final File dest = new File(WEB_DATA_DIR.toFile(), "web");
+        if (dest.exists())
+            CommonUtil.deleteDirectory(dest.toPath());
+        dest.mkdirs();
+        CommonUtil.copyDirectory(src.toPath(), dest.toPath());
+    }
+
+    public httpSpaceTest() {
+        super(f(BASE_URL), () -> staticHttpSpace);
+    }
+
+    @Override
+    @AfterEach
+    protected void stop() {
+        // Don't close the static httpSpace between tests — it's shared
     }
 
     @Override
@@ -86,50 +113,54 @@ public class httpSpaceTest extends AbstractSpaceTest {
     }
 
 
-    @ParameterizedTest
-    @CsvSource(value = {
-            // "/|notnoobj",
-            // "/index.html|notnoobj",
-            "/index.html/html/body/out/0/out/0/out/0/text|\"a1.b1.c1.text\"",
-            "/index.html/html/body/out/1/out/0/out/0/text|\"a2.b2.c2.text\"",
-            "/html/body/out/0/out/0/out/0/text|\"a1.b1.c1.text\"",
-            "/html/body/out/1/out/0/out/0/text|\"a2.b2.c2.text\"",
-            "/test.json/hello|world",
-            "/test.txt|\"This is a plain text file for httpSpaceTest.\""
-    }, delimiter = '|', quoteCharacter = '\'')
-    public void testResourceAccess(final String path, final String expected) {
-        String url = BASE_URL + path;
-        var result = Router.readFromSpace(url);
-        assertEquals(ObjmtronSerializer.parse(expected), result, "unexpected resource content for: " + url);
+    @Test
+    public void testResourceAccess() {
+        // String[] for-loop pattern — single lifecycle, no @ParameterizedTest port conflicts
+        final String[] cases = {
+                "/index.html/html/body/out/0/out/0/out/0/text", "\"a1.b1.c1.text\"",
+                "/index.html/html/body/out/1/out/0/out/0/text", "\"a2.b2.c2.text\"",
+                "/html/body/out/0/out/0/out/0/text", "\"a1.b1.c1.text\"",
+                "/html/body/out/1/out/0/out/0/text", "\"a2.b2.c2.text\"",
+                "/test.json/hello", "world",
+                "/test.txt", "\"This is a plain text file for httpSpaceTest.\"",
+        };
+        for (int i = 0; i < cases.length; i += 2) {
+            final String path = cases[i];
+            final String expected = cases[i + 1];
+            final String url = BASE_URL + path;
+            final var result = Router.readFromSpace(url);
+            assertEquals(ObjmtronSerializer.parse(expected), result,
+                    "[" + i / 2 + "] unexpected resource content for: " + url);
+        }
     }
 
-    @ParameterizedTest
-    @CsvSource(value = {
-            // Top-level fields
-            // Top-level fields (JSON strings bias to URIs: "world" → uri("world"))
-            "/test.json/hello|world",
-            "/test.json/number|42",
-            "/test.json/active|true",
-            "/test.json/nothing|noobj",
-
-            // Nested object fields
-            "/test.json/meta/created|<2024-06-01T12:00:00Z>",
-            "/test.json/meta/details/score|99.5",
-            "/test.json/meta/details/valid|false",
-
-            // Arrays
-            "/test.json/items/0|1",
-            "/test.json/items/1|two",
-            "/test.json/items/2|false",
-            "/test.json/items/3|noobj",
-            "/test.json/items/4/deep|value",
-            "/test.json/meta/tags/0|alpha",
-            "/test.json/meta/tags/1|beta"
-    }, delimiter = '|')
-    public void testJsonResourceFields(String path, String expected) {
-        String url = BASE_URL + path;
-        var result = Router.readFromSpace(url);
-        assertEquals(ObjmtronSerializer.parse(expected), result, "unexpected value for: " + url);
+    @Test
+    public void testJsonResourceFields() {
+        // String[] for-loop pattern — single lifecycle, no @ParameterizedTest port conflicts
+        final String[] cases = {
+                "/test.json/hello", "world",
+                "/test.json/number", "42",
+                "/test.json/active", "true",
+                "/test.json/nothing", "noobj",
+                "/test.json/meta/created", "<2024-06-01T12:00:00Z>",
+                "/test.json/meta/details/score", "99.5",
+                "/test.json/meta/details/valid", "false",
+                "/test.json/items/0", "1",
+                "/test.json/items/1", "two",
+                "/test.json/items/2", "false",
+                "/test.json/items/3", "noobj",
+                "/test.json/items/4/deep", "value",
+                "/test.json/meta/tags/0", "alpha",
+                "/test.json/meta/tags/1", "beta",
+        };
+        for (int i = 0; i < cases.length; i += 2) {
+            final String path = cases[i];
+            final String expected = cases[i + 1];
+            final String url = BASE_URL + path;
+            final var result = Router.readFromSpace(url);
+            assertEquals(ObjmtronSerializer.parse(expected), result,
+                    "[" + i / 2 + "] unexpected value for: " + url);
+        }
     }
 
     @Test
@@ -159,4 +190,21 @@ public class httpSpaceTest extends AbstractSpaceTest {
         assertEquals(str("a2.b2.c2.text"), Router.readFromSpace(BASE_URL + "/html/body/out/1/out/+/out/+/text"));
     }
 
+    @Test
+    public void testFsSpaceDirectRead() {
+        final Obj direct = Router.readFromSpace("local:web/test.txt");
+        assertNotEquals(noobj(), direct, "direct fsSpace read should not be noobj");
+        assertTrue(direct.isStr(), "test.txt should be a string, got: " + direct.tid());
+    }
+
+    @Test
+    public void testHttpSpaceDirectRead() {
+        final Obj result = Router.readFromSpace(BASE_URL + "/test.txt");
+        assertNotEquals(noobj(), result, "httpSpace read should not be noobj");
+        assertTrue(result.isStr(), "should be a string, got: " + result.tid());
+        assertFalse(result.strValue().isEmpty(), "should have content");
+    }
+
 }
+
+

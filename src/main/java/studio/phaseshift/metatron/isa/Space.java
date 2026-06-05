@@ -364,8 +364,9 @@ public interface Space extends Rec, Closeable {
 
         public static void closeSpace(final Space space) {
             if (Router.loaded()) {
+               // Router.global().removeSpace(space.pattern());
                 Router.global().removeSpace(space.vid());
-                Router.global().removeSpace(space.pattern());
+               // 
             }
         }
 

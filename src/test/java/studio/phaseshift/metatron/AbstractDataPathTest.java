@@ -25,6 +25,7 @@ import studio.phaseshift.metatron.isa.AbstractSpaceTest;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
+import studio.phaseshift.metatron.isa.mach.type.Router;
 
 import java.util.function.Supplier;
 
@@ -39,23 +40,51 @@ public abstract class AbstractDataPathTest extends AbstractSpaceTest {
         super(baseURI, spaceSupplier);
     }
 
+    /**
+     * Verifies the collection-URI-is-schema-instset contract: collection-level
+     * DataPath segments resolve to instset-encoded {@link studio.phaseshift.metatron.isa.m.type.Type}
+     * objects, while entry-level segments resolve to data instances (Recs, etc.)
+     * that are valid refinements of their collection's Type.
+     *
+     * <p>{@code $$} is replaced by the subclass's base URI via {@link #make(String)}.
+     * {@code +} is the single-level wildcard.
+     */
     @ParameterizedTest
     @CsvSource(value = {
-            "*$$/+              % collection",
-            "*$$/+/+.take(1)    % entry"
+            "*<$$/+>            % collection",    // wildcard collection → every result is a Type
+            // "*<$$/+>.take(1) % collection",    // TODO: .take(1) on collection wildcard returns entry, not Type — investigate parser/space interaction
+            "*<$$/+/+>.take(1)  % entry",         // wildcard collection + wildcard entry → first is instance
+            "*<$$/+/+>.take(2)  % entry",         // second entry also an instance (not just first)
     }, delimiter = '%')
     public void testDataPathSegmentTypes(final String code, final String segmentType) {
         final Obj result = ObjmtronSerializer.parse(make(code)).apply();
-        assertFalse(result.isNoObj(), "test data for " + segmentType + " should not be noobj");
-        result.stream().forEach(o -> {
-            if (segmentType.equals("collection")) {
-                assertTrue(o.isType(), "collection objs should be the type schema of the collection elements:" + o);
-            } else if (segmentType.equals("entry")) {
-                assertFalse(o.isType(), "entry objs should not be types but instances of their collection schema: " + o);
-            } else {
-                fail("bad test definition as segment type is unknown: " + segmentType);
-            }
-        });
-
+        assertFalse(result.isNoObj(), "test data for " + segmentType + " should not be noobj: " + code);
+        if (segmentType.equals("collection")) {
+            result.stream().forEach(o ->
+                    assertTrue(o.isType(), "collection objs should be the type schema of the collection elements: " + o));
+        } else if (segmentType.equals("entry")) {
+            result.stream().forEach(entry -> {
+                assertFalse(entry.isType(), "entry objs should not be types but instances of their collection schema: " + entry);
+                // Read the collection Type(s) for this entry via its VID
+                // retract(1) strips the entry segment (e.g., /g/E/7 → /g/E)
+                final Obj collectionTypes = Router.readFromSpace(entry.vid().retract(1));
+                assertFalse(collectionTypes.isNoObj(),
+                        "collection type(s) should exist for entry: " + entry.vid() + " → " + entry.vid().retract(1));
+                // Stream in case the collection prefix resolves to multiple Types
+                // (e.g., /g/E returns both knows::T and created::T)
+                final boolean isValidInstance = collectionTypes.stream()
+                        .anyMatch(ct -> entry.test(ct));
+                assertTrue(isValidInstance,
+                        "entry should be a valid instance of at least one collection type: "
+                                + entry + " ∉ " + collectionTypes);
+                final boolean isMatchingType = collectionTypes.stream()
+                        .anyMatch(ct -> entry.type().test(ct));
+                assertTrue(isMatchingType,
+                        "entry type must be equal to or a refinement of at least one collection type: "
+                                + entry.type() + " ≮: " + collectionTypes);
+            });
+        } else {
+            fail("bad test definition as segment type is unknown: " + segmentType);
+        }
     }
 }
