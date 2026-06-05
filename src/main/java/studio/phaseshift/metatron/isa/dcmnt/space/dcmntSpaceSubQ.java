@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -31,12 +31,14 @@ import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
 import studio.phaseshift.metatron.BootLoader;
+import studio.phaseshift.metatron.furi.DataPath;
 import studio.phaseshift.metatron.furi.QProc;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.BaseQ;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 
+import java.io.Closeable;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
@@ -44,8 +46,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import static studio.phaseshift.metatron.Tokens.SUBQ;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.furi.q.QCollection.SUBQ_PATTERN;
 import static studio.phaseshift.metatron.isa.dcmnt.dcmntInstSet.DCMNT_SPACE_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /**
  * dcmntSpaceSubQ - Subscription query for MongoDB/DocumentDB change streams
@@ -75,7 +80,7 @@ import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class dcmntSpaceSubQ extends BaseQ {
+public class dcmntSpaceSubQ extends BaseQ implements Closeable {
 
     protected final dcmntSpace space;
     protected final QProc subq = QCollection.subq();
@@ -83,7 +88,8 @@ public class dcmntSpaceSubQ extends BaseQ {
     // Track active change stream watchers: fURI pattern -> (cursor, running flag, future)
     private final Map<fURI, WatcherHandle> activeWatchers = new ConcurrentHashMap<>();
 
-    private record WatcherHandle(MongoCursor<ChangeStreamDocument<Document>> cursor, AtomicBoolean running, Future<?> future) {
+    private record WatcherHandle(MongoCursor<ChangeStreamDocument<Document>> cursor, AtomicBoolean running,
+                                 Future<?> future) {
         void stop() {
             running.set(false);
             try {
@@ -98,10 +104,13 @@ public class dcmntSpaceSubQ extends BaseQ {
     }
 
     public dcmntSpaceSubQ(final dcmntSpace space) {
-        super(new HashMap<>(), DCMNT_SPACE_TID.extend("subq"), null);
+        super(mutableMap(), SUBQ_PATTERN, DCMNT_SPACE_TID.extend(SUBQ));
         this.space = space;
         this.onWrite = new OnWrite();
         this.onRead = this.subq.onRead().get();
+        this.jvm().put(uri(ON_WRITE), this.onWrite);
+        this.jvm().put(uri(ON_READ), this.onRead);
+        LOG.info("custom dcmntspace subq qproc initialized: %s", this);
     }
 
     public class OnWrite extends BaseOnWrite {
@@ -138,16 +147,16 @@ public class dcmntSpaceSubQ extends BaseQ {
                     subq.onWrite().ifPresent(w -> w.preWrite(vid, obj));
 
                     // Parse the path to determine collection and optional document ID
-                    final fURI relativePath = stripPatternPrefix(basePath);
-                    final List<String> segments = relativePath.segments();
+                    final DataPath dp = DataPath.of(basePath);
+                   // final List<String> segments = reladtivePath.segments();
 
-                    if (segments.isEmpty()) {
-                        LOG.warn("cannot subscribe to empty path: %s", basePath);
+                    if (!dp.hasCollection()) {
+                        LOG.warn("must subscribe to a collection: %s", basePath);
                         return Optional.empty();
                     }
 
-                    final String collectionName = segments.getFirst();
-                    final String documentId = segments.size() > 1 ? segments.get(1) : null;
+                    final String collectionName = dp.collection();
+                    final String documentId = dp.entry();
 
                     // Don't create duplicate watchers for the same pattern
                     if (activeWatchers.containsKey(basePath)) {
@@ -222,7 +231,7 @@ public class dcmntSpaceSubQ extends BaseQ {
      * Process a change stream event and dispatch to subscriptions.
      */
     private void processChangeEvent(final fURI subscriptionPath, final String collectionName,
-                                     final ChangeStreamDocument<Document> change) {
+                                    final ChangeStreamDocument<Document> change) {
         final OperationType opType = change.getOperationType();
         LOG.trace("change event: %s on %s", opType, collectionName);
 
@@ -304,7 +313,7 @@ public class dcmntSpaceSubQ extends BaseQ {
      * Close all active change stream watchers.
      * Called when the space is closed.
      */
-    public void closeAll() {
+    public void close() {
         LOG.info("closing all change stream watchers (%d active)", activeWatchers.size());
         activeWatchers.values().forEach(WatcherHandle::stop);
         activeWatchers.clear();

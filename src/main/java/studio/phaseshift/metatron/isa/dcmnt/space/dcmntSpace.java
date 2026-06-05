@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -28,6 +28,7 @@ import org.bson.*;
 import org.bson.types.ObjectId;
 import org.javatuples.Pair;
 import studio.phaseshift.metatron.furi.DataPath;
+import studio.phaseshift.metatron.furi.QProc;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractSpace;
 import studio.phaseshift.metatron.isa.SchemaSpace;
@@ -52,6 +53,7 @@ import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.furi.q.QCollection.SUBQ_PATTERN;
 import static studio.phaseshift.metatron.isa.dcmnt.dcmntInstSet.COLLECTION_TID;
 import static studio.phaseshift.metatron.isa.dcmnt.dcmntInstSet.DCMNT_SPACE_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
@@ -200,8 +202,11 @@ public class dcmntSpace extends AbstractSpace<MongoClient> implements SchemaSpac
         LOG.info("using document database {{b}}%s{{X}}", this.databaseName);
 
         // Initialize subscription query for change streams
-        this.dcmntSpaceSubQ = new dcmntSpaceSubQ(this);
-        this.at(uri(QPROC), this.at(uri(QPROC)).orElse(lst()).plus(lst(List.of(this.dcmntSpaceSubQ))), MUTABLE);
+        final int subQIndex = this.at(uri(QPROC)).orElse(lst()).indexedStream().filter(q -> ((QProc) q.second()).pattern().equals(SUBQ_PATTERN)).map(q -> q.first().intValue().intValue()).findFirst().orElse(-1);
+        if (-1 != subQIndex) {
+            this.at(uri(QPROC)).lstValue().remove(subQIndex);
+            this.at(uri(QPROC)).lstValue().add(subQIndex, this.dcmntSpaceSubQ = new dcmntSpaceSubQ(this));
+        }
         LOG.debug("initialized {{g}}change stream subscription{{X}} support");
 
         // Schema discovery always runs at startup — root and schema are always populated.
@@ -330,7 +335,9 @@ public class dcmntSpace extends AbstractSpace<MongoClient> implements SchemaSpac
         };
     }
 
-    /** Write (or delete) an entire document in the given collection. */
+    /**
+     * Write (or delete) an entire document in the given collection.
+     */
     private void writeDocument(final MongoCollection<Document> collection, final String documentId, final Obj obj) {
         if (obj.isNoObj()) {
             LOG.trace("deleting document %s", documentId);
@@ -400,7 +407,9 @@ public class dcmntSpace extends AbstractSpace<MongoClient> implements SchemaSpac
             collection.updateOne(Filters.eq(ID_FIELD, parsedId), new Document("$unset", unsetDoc));
     }
 
-    /** Write (or unset) a single field within a document. */
+    /**
+     * Write (or unset) a single field within a document.
+     */
     private void writeField(final MongoCollection<Document> collection, final String documentId,
                             final String fieldPathStr, final Obj obj) {
         if (obj.isNoObj()) {
@@ -503,12 +512,12 @@ public class dcmntSpace extends AbstractSpace<MongoClient> implements SchemaSpac
                     }
                     // Fallback when schema not wired: return COLLECTION_TID URIs
                     return resolveCollectionStream(dp.collection()).map(collection -> {
-                                final fURI collectionVID = Space.Helper.routeToSpace(
-                                        f(collection.getNamespace().getCollectionName()), this.routes());
-                                LOG.debug("collection lookup: %s", collectionVID);
-                                return IdObj.of(collectionVID, uri(collectionVID, COLLECTION_TID, null)
-                                        .selfVID(collectionVID));
-                            }).iterator();
+                        final fURI collectionVID = Space.Helper.routeToSpace(
+                                f(collection.getNamespace().getCollectionName()), this.routes());
+                        LOG.debug("collection lookup: %s", collectionVID);
+                        return IdObj.of(collectionVID, uri(collectionVID, COLLECTION_TID, null)
+                                .selfVID(collectionVID));
+                    }).iterator();
                 } else {
                     final String collName = dp.collection();
                     if (this.existingCollectionSchema != null) {
@@ -574,7 +583,7 @@ public class dcmntSpace extends AbstractSpace<MongoClient> implements SchemaSpac
             // Close all change stream watchers first
             if (this.dcmntSpaceSubQ != null) {
                 try {
-                    this.dcmntSpaceSubQ.closeAll();
+                    this.dcmntSpaceSubQ.close();
                 } catch (final Exception e) {
                     LOG.error("failed to close change stream watchers", e);
                 }
@@ -661,7 +670,7 @@ public class dcmntSpace extends AbstractSpace<MongoClient> implements SchemaSpac
      * avoiding full-document deserialization and Metatron-level Rec traversal.
      *
      * @return an {@link IdObj} with vid = {@code nodePattern} and obj = the leaf field value,
-     *         or {@code null} if the document or field does not exist
+     * or {@code null} if the document or field does not exist
      */
     private IdObj readProjectedField(final DataPath dp, final fURI nodePattern) {
         // Project only the top-level field; walk the full path locally (handles array indices)
@@ -695,7 +704,9 @@ public class dcmntSpace extends AbstractSpace<MongoClient> implements SchemaSpac
         return IdObj.of(nodePattern, fieldValue);
     }
 
-    /** Convert a Java value from a BSON {@link Document} to a {@link BsonValue} for the serializer. */
+    /**
+     * Convert a Java value from a BSON {@link Document} to a {@link BsonValue} for the serializer.
+     */
     private static BsonValue toBsonValue(final Object value) {
         if (value == null) return BsonNull.VALUE;
         if (value instanceof String s) return new BsonString(s);
