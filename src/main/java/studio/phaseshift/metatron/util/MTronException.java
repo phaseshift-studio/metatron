@@ -32,7 +32,7 @@ public class MTronException extends RuntimeException {
 
 
     private MTronException(final String message, final Throwable cause) {
-        super(null == cause ? Graphitty.string(message) : Graphitty.string(message + "[%s:%d]",
+        super(null == cause ? Graphitty.string(message) : Graphitty.string(message.replace("%", "%%") + "[%s:%d]",
                 cause.getStackTrace()[0].getClassName(),
                 cause.getStackTrace()[0].getLineNumber()), cause);
     }

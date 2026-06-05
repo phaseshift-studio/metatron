@@ -300,6 +300,24 @@ public final class CommonUtil {
         }
     }
 
+    /**
+     * Recursively delete a directory and all its contents.
+     */
+    public static void deleteDirectory(final Path dir) {
+        try (final Stream<Path> fileWalk = Files.walk(dir)) {
+            fileWalk.sorted(java.util.Comparator.reverseOrder())
+                    .forEach(path -> {
+                        try {
+                            Files.delete(path);
+                        } catch (final IOException e) {
+                            throw MTronException.of(e);
+                        }
+                    });
+        } catch (final IOException e) {
+            throw MTronException.of(e);
+        }
+    }
+
     public static final String HEADER_SEPARATOR = "####################";
     public static final String HEADER_FILE = "./conf/ansi_headers.txt";
 

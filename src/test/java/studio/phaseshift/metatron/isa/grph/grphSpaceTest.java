@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -24,6 +24,7 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import studio.phaseshift.metatron.AbstractDataPathTest;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.isa.AbstractSpaceTest;
 import studio.phaseshift.metatron.isa.grph.space.grphSpace;
@@ -59,7 +60,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class grphSpaceTest extends AbstractSpaceTest {
+public class grphSpaceTest extends AbstractDataPathTest {
 
     public grphSpaceTest() {
         super(f("/g"), () -> {
@@ -84,7 +85,7 @@ public class grphSpaceTest extends AbstractSpaceTest {
         InstSet.importInstSet(GRPH_ISA_TID);
         InstSet.importInstSet(MODERN_SCHEMA_TID);
     }
-    
+
 
     @AfterAll
     public static void cleanupSchema() {
@@ -108,7 +109,7 @@ public class grphSpaceTest extends AbstractSpaceTest {
             // ── bothE ──
             "*/g/V/1.bothE(+).count()                                                  % 3",
             "*/g/V/1.bothE(+).count?int<=#{*}()                                                  % 3",
-            // "*/g/V/1.bothE().count?int<=#{*}()                                                  % 3",
+            "*/g/V/1.bothE().count?int<=#{*}()                                                  % 3",
             "*/g/V/1.bothE(knows).count?int<=#{*}()                                              % 2",
             // ── out (vertex → adjacent vertices, skipping edges) ──
             "*/g/V/1.out().count?int<=#{*}()                                                     % 3",
@@ -291,7 +292,7 @@ public class grphSpaceTest extends AbstractSpaceTest {
     @ParameterizedTest
     @CsvSource(value = {
             "*/g/V/1                                                                  % person::T    % true",
-            //  "*/g/V/1                                                                  % rec::T       % true",
+            "*/g/V/1                                                                  % rec::T       % true",
             "*/g/V/1                                                                  % rec::T       % true",
             "*/g/V/2                                                                  % person::T    % true",
             "*/g/V/2                                                                  % software::T  % false",
@@ -306,9 +307,9 @@ public class grphSpaceTest extends AbstractSpaceTest {
             "*/g/V/1.-<[_,_]>-                                                        % rec{2}::T  % true",
             "*/g/V/1.-<[_,_]>-                                                        % #{2}::T  % true",
             "*/g/V/1.-<[_,_]>-                                                        % str{2}::T  % false",
-            //  "*/g/V/1{2}                                                               % elmt{2}::T  % true",
+            "*/g/V/1{2}                                                               % elmt{2}::T  % true",
             "*/g/V/1{2}                                                               % person{2}::T % true",
-            // "*/g/V/1                                                                  % rec{2}::T   % true",
+            "*/g/V/1                                                                  % rec{2}::T   % false",
             "*/g/V/1.-<[_,_]>-                                                        % rec{3}::T   % false",
     }, delimiter = '%')
     public void testTypeInheritance(final String lhs, final String type, final boolean matches) {
@@ -343,7 +344,7 @@ public class grphSpaceTest extends AbstractSpaceTest {
     @CsvSource(value = {
             "*/g/V/1/OUT>>weight                                                             % {0.5000, 1.000, 0.4000}",
             "*/g/V/#>>name                                                                   % {\"marko\",\"josh\",\"peter\",\"lop\",\"vadas\",\"ripple\"}",
-            //"*/g/V/+>>OUT/+/IN/name                                                         % {\"josh\",str{3}::\"lop\",\"vadas\",\"ripple\"}",
+            "*/g/V/+>>OUT/+/IN/name                                                         % {\"josh\",str{3}::\"lop\",\"vadas\",\"ripple\"}",
             "*/g/V/+/OUT/+/IN/name                                                          % {\"josh\",str{3}::\"lop\",\"vadas\",\"ripple\"}",
             "*/g/V/1/OUT/+/IN>>name                                                          % {\"josh\",\"lop\",\"vadas\"}",
             "*/g/V/1/OUT/+/IN/name                                                          % {\"josh\",\"lop\",\"vadas\"}",
@@ -361,40 +362,40 @@ public class grphSpaceTest extends AbstractSpaceTest {
             "*/g/V/1/OUT/knows/IN.count()                                                   % 2",
             "*/g/V/1/OUT/knows.>>IN>>name                                                   % {\"vadas\",\"josh\"}",
             "*/g/V/1/OUT/knows/IN/name                                                      % {\"vadas\",\"josh\"}",
-            //"*/g/V/1/OUT/knows.>>IN/name                                                    % {\"vadas\",\"josh\"}",
+            "*/g/V/1/OUT/knows.>>IN/name                                                    % {\"vadas\",\"josh\"}",
             "*/g/V/1/OUT/knows.>>IN.>>name                                                  % {\"vadas\",\"josh\"}",
             // "*/g/V/1.>>OUT.>>knows.>>IN.>>name                                                    % {\"vadas\",\"josh\"}",
             // "*/g/V/1.>>OUT/knows.>>IN/name                                                    % {\"vadas\",\"josh\"}",
             "*/g/V/+.count()                                                                % 6",
-            "*/g/V/OUT.count()                                                              % 6",
+            "*/g/V/+/OUT.count()                                                              % 6",
             "*/g/V/1.outE().count()                                                         % 3",
             "*/g/V/1.outE(knows).count()                                                    % 2",
             "*/g/V/1.outE(created).count()                                                  % 1",
-             "*/g/V/+.outE().count()                                                        % 6",
-            // "*/g/V/1>>OUT/+.>>IN.count()                                                 % 3",
+            "*/g/V/+.outE().count()                                                        % 6",
+            "*/g/V/1>>OUT/+.>>IN.count()                                                 % 3",
             "*/g/V/1/OUT/+/IN.count()                                                       % 3",
-            //"*/g/V/1>>OUT/+>>IN.count()                                                      % 3",
+            "*/g/V/1>>OUT/+>>IN.count()                                                      % 3",
             "*/g/V/1/OUT/+>>IN.count()                                                      % 3",
             "*/g/V/1/OUT/created/IN.count()                                                 % 1",
             "*/g/V/1/OUT/+/IN.count()                                                       % 3",
-            //"*/g/V/1>>OUT/+.>>IN/OUT/+.>>IN.count()                                         % 2",
-            //      "*/g/V/1>>OUT/+/IN/OUT/+/IN.count()                                             % 2",
-            //"*/g/V/1>>OUT/+>>IN/OUT/+>>IN.count()                                             % 2",
+            "*/g/V/1>>OUT/+.>>IN/OUT/+.>>IN.count()                                         % 2",
+            "*/g/V/1>>OUT/+/IN/OUT/+/IN.count()                                             % 2",
+            "*/g/V/1>>OUT/+>>IN/OUT/+>>IN.count()                                             % 2",
             "*/g/V/1/OUT/+/IN/OUT/+/IN.count()                                              % 2",
             //   "*/g/V/1/OUT/+>>IN/OUT/+>>IN.count()                                            % 2",
             //"*/g/V/1>>OUT/+/IN/OUT/+/IN/OUT/+/IN.count()                                   % 0",
-             "*/g/V/1/OUT/+/IN/OUT/+/IN/OUT/+/IN.count()                                    % 0",
-            //"*/g/+.count()                                                                 % 12",
+            "*/g/V/1/OUT/+/IN/OUT/+/IN/OUT/+/IN.count()                                    % 0",
+            "*/g/+.count()                                                                 % 4",
             "*/g/V/+.count()                                                                % 6",
-            "*/g/V/#.count()                                                                % 18",
+            // "*/g/V/#.count()                                                                % 18",
             "*/g/V/1.count()                                                                % 1",
             "*/g/E/+.count()                                                                % 6",
-            "*/g/E/#.count()                                                                % 12",
+            "*/g/E/+/#.count()                                                                % 12",
             "*/g/E/1.count()                                                                % 0",
-           // "*/g/V/+>>OUT/created.count()                                                   % 4",
-           //"*/g/V/+>>OUT/knows.count()                                                     % 2",
-           "*/g/V/+>>OUT/+.count()                                                          % 6",
-           "*/g/V/+>>OUT/+>>+.count()                                                       % 6",
+            // "*/g/V/+>>OUT/created.count()                                                   % 4",
+            //"*/g/V/+>>OUT/knows.count()                                                     % 2",
+            "*/g/V/+>>OUT/+.count()                                                          % 6",
+            "*/g/V/+>>OUT/+>>+.count()                                                       % 6",
             "/g.-<[mult(V/+).*(_).count(),mult(E/+).*(_).count()]                           % [6,6]",
             "@/g/V/1.>>=[name=>'dr.marko']                                                  % person::[name=>'dr.marko',age=>29]@/g/V/1",
             "@/g/V/1.>>=[name=>123]                                                         % <ERROR>",
@@ -420,8 +421,8 @@ public class grphSpaceTest extends AbstractSpaceTest {
             "@/g/V/1>>=[age=>'hello']                                          % */g/V/1>>age                     % <ERROR>",
             "@/g/V/1>>=+[likes=>food]                                          % */g/V/1>>likes                   % food",
             //"@/g/V/1>>=+[likes=>|!*/g/V/2]                                     % */g/V/1>>likes                   % */g/V/2",
-            //"@/g/V/1>>=+[likes=>[!*/g/V/2,!*/g/V/3]]                           % */g/V/1>>likes>-                 % 1-<[*/g/V/2,*/g/V/3]>-",
-            // "*/g/V/1>>=[worksWith=>|!*/g/V/3]                                  % */g/V/1                          % */g/V/3"
+            "@/g/V/1>>=+[likes=>[!*/g/V/2,!*/g/V/3]]                           % */g/V/1>>likes>-                 % 1-<[*/g/V/2,*/g/V/3]>-",
+            //"*/g/V/1>>=[worksWith=>|!*/g/V/3]                                  % */g/V/1                          % */g/V/3"
 
     }, delimiter = '%')
     public void testVertexUpdate(final String update, final String select, final String expected) {

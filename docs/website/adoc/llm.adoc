@@ -241,11 +241,16 @@ mcp_client::[host =>                                /
 <3> the agent's memory records structured responses.
 
 Given that an `mcp_client::T` is an index of `insts`. Nothing prevents their `insts` being used by other processes such
-as a human user. 
+as a human user. And since, metatron is able to map common data formats to `obj`, its possible to take the result of the
+mcp tool and post process it to derive further more refined statistics not offered by the tool.
 
 [mtron]
 ----
-/usr/ai/mcp/intellij/tool/ide_type_hierarchy(className=>'studio.phaseshift.metatron.isa.m.type.Obj')
+/usr/ai/mcp/intellij/tool/ide_type_hierarchy(className=>'studio.phaseshift.metatron.isa.m.type.Obj'). /
+  -<[supers => -<[count => >>supertypes.count(),                                                      /
+                  kinds => >>supertypes>>kind>-[,]],                                                  /
+     subs   => -<[count => >>subtypes.count(),                                                        /
+                  kinds => >>subtypes>>kind>-[,]]]
 ----
 
 [discrete]

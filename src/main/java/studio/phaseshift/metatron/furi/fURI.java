@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -67,13 +67,14 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
      */
     enum Component {
         SCHEME,      // URI scheme (e.g., http, https, file)
+        SUB,         // Host subdomain
         HOST,        // Host name or IP address
         PORT,        // Port number (must coerce to integer)
         AUTHORITY,   // Combined user-info, host, and port
         PATH,        // Path segments (can have multiple templates)
         QUERY,       // Query parameters (coerce to k=v pairs)
         COEFFICIENT, // fURI coefficient {min,max}
-        POLY         // Polynomial type annotation [type=>type]
+        POLY;         // Polynomial type annotation [type=>type]
     }
 
     default boolean classAgnosticEquals(final Object other) {
@@ -276,6 +277,22 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
     default boolean hasHost() {
         return this.host() != null;
     }
+
+    default boolean hasSubdomain() {
+        return this.subdomain() != null;
+    }
+
+    default String subdomain() {
+        final String hostString = this.host();
+        if (null == hostString)
+            return null;
+        Matcher m = fURI.Singleton.HOST_PATTERN.matcher(hostString);
+        if (m.matches() && m.group(1) != null) {
+            return m.group(1).replace(".", "");  // "a.b." → "a.b"
+        }
+        return null;
+    }
+
 
     int port();
 
@@ -751,6 +768,14 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
          * Captures the content inside the braces (without the ${ and } delimiters)
          */
         private static final Pattern TEMPLATE_PATTERN = Pattern.compile("\\$\\{([^}]+)}");
+
+        /**
+         * Pattern to match components of host
+         **/
+        private static final Pattern HOST_PATTERN = Pattern.compile(
+                "((?:[^.]+\\.)+)" +              // group 2: subdomain (one or more labels ending with dot)
+                        "([^.]+\\.[^.]+)" +      // group 3: registered domain (e.g. example.com)
+                        "(?::(\\d+))?");         // group 4: optional port
 
         /**
          * Extract all template expressions from URI components.

@@ -11,8 +11,12 @@ import(/m/web)
 ----
 ====
 
+The `/m/web` instruction set enables a wide range of capabilities centered around `http`-based systems and websocket-based systems. Correspondingly, there exists `httpspace` and `wsspace` that manage respective network i/o connections. Along with these spaces are various serializers that provide the mtron encoding of common web document standards such as html, xml, json, markdown, and the like. 
+
 [discrete]
 === HTTP Space
+
+The `httpspace::T` is a space capable of spawning and managing `http` connection handlers both as servers and as clients. The pattern of an `httpspace` dictates the breadth of resources accessible. When `http://#` is the pattern, the world wide web becomes a source of metatron objs.
 
 [mtron]
 ----

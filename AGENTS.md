@@ -173,3 +173,18 @@ Docker build is **disabled by default** (`skipDocker=true` in pom). Enable with 
 ## References
 - mtron language skills: `.metatron/skills/mtron/`
 - Agent memory: `.claude/memory/`
+
+---
+
+## Before Submitting
+
+**Read `CONTRIBUTING.md`** — it's the single source of truth for PR expectations, coding standards, and contribution guidelines. Key points:
+
+- New code **must** have test cases (`@ParameterizedTest` + `@CsvSource` preferred)
+- Reuse existing helpers (`XXX.Helper`, `fURI` methods, `CommonUtils`) — no algorithm duplication
+- Use `MTronException.of()` for all exceptions — never raw `RuntimeException`
+- Follow naming conventions (`tble`, `dcmnt`, `grph`, `vec` — not full words)
+- Conventional commit format: `type(scope): description`
+- Reference a GitHub issue (`Closes #N` or `Refs #N`)
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for full details.

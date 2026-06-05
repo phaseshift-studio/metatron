@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -113,6 +113,8 @@ public class UriTest extends AbstractMetatronTest {
             "*test.>>scheme                   % http",
             "*test.>>authority                % <www.marko.com:90>",
             "*test>>host                      % <www.marko.com>",
+            "*test>>sub                       % <www>",
+            "*test>>{sub,port}                % {<www>,90}",
             "*test.>>port                     % 90",
             "*test.>>path                     % </a/b/c>",
             "*test>>q                         % [w=><abc>,x=>1,y=>2,z=>!*test]",
@@ -120,7 +122,14 @@ public class UriTest extends AbstractMetatronTest {
             "*test.>>q>>x                     % 1",
             "*test>>q>>y                      % 2",
             "*test.>>q>>z                     % *test",
-            "*test.>>path>>1.*(_)             % 42"
+            "*test.>>path>>1.*(_)             % 42",
+            "*test.>>0                        % a",
+            "*test.>>{1,2}                    % {b,c}",
+            "*test.>>(-1)                     % c",
+            "*test.>>{-1,0}                   % {c,a}",
+            "*test.>>{-2,0}                   % {b,a}",
+            "*test.>>{-2,1}                   % {2}b",
+            "*test.>>{-100,100}               % noobj"
     }, delimiter = '%')
     public void testGet(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
@@ -255,7 +264,7 @@ public class UriTest extends AbstractMetatronTest {
     @CsvSource(value = {
             // PORT component - must coerce to integer
             "a.-<[<${_}://${_}:${10}/${_}/${_}>]                                         % [<a://a:10/a/a>]",
-          //  "a.-<[<${_}://${_}.${_}:${10}/${_}/${_}>]                                         % [<a://a.a:10/a/a>]",
+            //  "a.-<[<${_}://${_}.${_}:${10}/${_}/${_}>]                                         % [<a://a.a:10/a/a>]",
             "70-<[<http://blah.com:${plus(10)}>]                                         % [<http://blah.com:80>]",
             "70.map(<http://blah.com:${plus(10)}>)                                       % <http://blah.com:80>",
             "100.map(<http://api.com:${minus(20)}>)                                      % <http://api.com:80>",
