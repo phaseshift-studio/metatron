@@ -39,6 +39,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -224,7 +225,7 @@ public class RewriteBuilder<S extends Space> {
      * Create the optimized instruction that executes the native database operation.
      */
     protected Inst createOptimizedInst(final S typedSpace, final fURI expandedfURI, final C<?,?> coeff) {
-        final DataPath dp = DataPath.ofSpaceRelative(expandedfURI, null);
+        final DataPath dp = DataPath.of(f("-").extend(expandedfURI));
         return instC(
                 this.rewriteTid.dom(ALL.zero()).rng(this.resultTid),
                 lst(uri(expandedfURI)),

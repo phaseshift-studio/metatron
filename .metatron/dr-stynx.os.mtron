@@ -26,15 +26,15 @@ memspace::[pattern => /usr/#,
                        subq::[=>],
                        incrq::[=>]]]@/sys/space/usr;
 
-[==
-[-----------------------------------------------]
-[-- use-computer docker container file system --]
-[-----------------------------------------------]
+
+[-----------------------------------------------------]
+[-- local directory to serve as a file system root  --]
+[-----------------------------------------------------]
 fsspace::[pattern => home:#,
-          q       => [subq::[=>]], [-- enables subscribing to mutating files --]
-          route   => [home: => /home/assistant/]
+          q       => [subq::[=>]],
+          route   => [home: => <~/.metaron/space/fs/home>]
 ]@/sys/space/fs/home;
-==]
+
 
 [-------------------------------]
 [-- openai lm-studio endpoint --]
@@ -42,18 +42,26 @@ fsspace::[pattern => home:#,
 catalog::[host         => <http://192.168.1.61:1234/v1>,          
           pattern      => lm:#,                         
           name         => openai,                           
-          route        => [lm:rest => <http://192.168.1.61:1234/v1/>] [-- TODO: should internal route tables support external routing? why not? --]
+          route        => [lm:rest => <http://192.168.1.61:1234/v1/>]
 ]@/sys/space/ai/lm_studio;
 
+[== model          -> <lm:zai-org/glm-4.7-flash>; ==]
+
+[== home:agent/msg/inbox  -> [,];
+home:agent/msg/outbox -> [,]; ==]
+
+print('loading console...\n');
+console::[=>]@/usr/ui/console;
+[== glances        -> <http://glances.phaseshift.studio> ==]
 [--------------------------------------------------]
 [-- http server for static pages and mcp servers --]
+[--   * pulls files from fsspace                 --] 
 [--------------------------------------------------] 
-httpspace::[host     => <http://localhost:8777>,                                                         
-            q        => [mimeq::[=>]],                             [-- support for mapping objs to markdown, html, json, etc. --] 
-            pattern  => <http://#>,                                [-- access to any www web resources --]                                 
-            route    => [/          => home:dr-stynx-os/frontend/, [-- pulls files from fsspace --]                                                       
-                         /mtron     => mcp_mtron_http,             [-- mcp server with high-level metatron utilities --]  
-                         /docs      => home:dr-stynx-os/docs/]]@/sys/space/web/http; 
+[==httpspace::[host     => <http://localhost:8777>,                                                         
+            q        => [mimeq::[=>]],                       
+            pattern  => <http://#>,                     
+            route    => [/          => home:]
+]@/sys/space/web/http; ==]
 [==
 [--------------------------------------------------]
 [-- websocket server for streaming metatron objs --]
@@ -64,30 +72,17 @@ wsspace::[host     => <ws://dr-stynx.phaseshift.studio:8555>,
           route    => [/mtron => mtron_ws] [-- a console/repl via raw websocket text --]                           
 ]@/sys/space/web/ws;       
 
-[------------------------------------------------------]
-[-- mosquitto mqtt server for robust message passing --]
-[------------------------------------------------------] 
-mqttspace::[pattern =>  mqtt:#,
-            host    => <mqtt://dr-stynx.phaseshift.studio:1883>, [-- a mosquitto endpoint --]
-            q       => [subq::[=>],
-            route   => [mqtt:  => <>]
-]@/sys/space/mqtt;
-
-[-----------------------------------------------------]
-[-- graph database for robust interspace references --]
-[-----------------------------------------------------] 
-grphspace::[pattern=>g:#,
-            route=>[g:V=>V,g:E=>E,g:S=>home:grph/schema],
-            native=>[
-              config =>[<gremlin.graph>  => <org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerGraph>],
-              id     =>[vertex           => <java.lang.Integer>,
-                       edge              => <java.lang.Integer>]]
-]@/sys/space/grph
 
 [================================]
 [==      agent embedding       ==]
 [================================]
-glances -> <http://glances.phaseshift.studio>;
+[==
+model          -> <lm:zai-org/glm-4.7-flash>;
+glances        -> <http://glances.phaseshift.studio>;
+home:agent/msg/inbox  -> [,];
+home:agent/msg/outbox -> [,];
+
+[==
 [-- check if gpu is idle --]
 asleep -> |(asleep?bool{?}<=#{?}(uri::T){
 *<0>.mult(</api/4/gpu>).*(_).
@@ -109,7 +104,8 @@ virtual::[code=>asleep(*glances).
                   _ => throw('{{r}}thread not started{{X}}')].catch(print(_));
 
 print("\nrunning heartbeat ${*/usr/ai/heartbeat}\n");
-console::[=>]@/usr/ui/console;
+==]
+
 
 
 

@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -105,6 +105,9 @@ public class grphInstSet extends AbstractInstSet {
     public static final Uri LABEL = uri("LABEL");
     public static final Uri IN = uri(Direction.IN.name());
     public static final Uri OUT = uri(Direction.OUT.name());
+
+    public static Type VRTX_TYPE;
+    public static Type EDGE_TYPE;
 
     public grphInstSet() {
         super(mutableMap(uri(PATTERN), uri(GRPH_ISA_TID.extend(ALL))), INSTSET_TID, GRPH_ISA_TID);
@@ -216,13 +219,19 @@ public class grphInstSet extends AbstractInstSet {
                                 .tid(REC_TID)
                                 .vid(ELMT_TID)
                                 .create(), "a key/value attributed element that is refined by vrtx::T and edge::T"),
-                        docWrap(Type.Builder.build()
+                        VRTX_TYPE = docWrap(Type.Builder.build()
                                 .tid(ELMT_TID)
                                 .vid(VRTX_TID)
+                                /*.isaPredicate(rec(
+                                        OUT.maybe().asUri(), rec(URI_TYPE, T(EDGE_TID.maybeSome())),
+                                        IN.maybe(), rec(URI_TYPE, T(EDGE_TID.maybeSome()))))*/
                                 .create(), "a key/value attributed vertex"),
-                        docWrap(Type.Builder.build()
+                        EDGE_TYPE = docWrap(Type.Builder.build()
                                 .tid(ELMT_TID)
                                 .vid(EDGE_TID)
+                             /*   .isaPredicate(rec(
+                                        OUT, rec(URI_TYPE, T(VRTX_TID)),
+                                        IN, rec(URI_TYPE, T(VRTX_TID))))*/
                                 .create(), "a directed key/value attributed binary edge"),
                         docWrap(GRPH_SPACE_TYPE, "a space for graph traversal"),
                         docWrap(MODERN_SCHEMA_TYPE, "a schema for the modern graph dataset")

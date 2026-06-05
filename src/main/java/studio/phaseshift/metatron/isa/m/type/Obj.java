@@ -282,6 +282,8 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
             return (rhs.tid().c().isZeroable() || rhs.tid().equals(NOOBJ_TID));
         else if (rhs.isNoObj())
             return this.c().isZeroable();
+        else if(null != this.vid() && Objects.equals(this.vid(),rhs.vid()))
+            return true;
         if (rhs.isObjCall() && !rhs.asCall().isPredicate(this))
             return true;
         if (rhs.isType() && !rhs.asType().isBaseType() && this.tid().test(rhs.vid()))
@@ -1126,7 +1128,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             "any objs", "the objs after skipping", Map.of(jnt(0), "the number of objs to skip"), "skips the first n objs"),
                     docWrap(instC(TAKE_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(T(INT_TID)), (lhs, inst) -> lhs.take(cInt.of(inst.arg(0).intValue())).get0()), // remaining
                             "any objs", "the objs before skipping", Map.of(jnt(0), "the number of objs to take"), "takes the first n objs"),
-                    instC(UPDATE_INST_TID.dom(A).rng(B), lst(T(B)), (lhs, inst) -> Poly.Helper.updateRecursion(lhs.as(), inst.arg(0).as(), MUTABLE)),
+                    instC(UPDATE_INST_TID.dom(A).rng(B.maybeSome()), lst(T(B.maybeSome())), (lhs, inst) -> Poly.Helper.updateRecursion(lhs.as(), inst.arg(0).as(), MUTABLE)),
                     instC(REIFY_INST_TID.dom(A).rng(REC_TID), lst(), (lhs, inst) -> rec(
                             "type", rec(
                                     "tid", rec(

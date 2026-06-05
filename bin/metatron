@@ -1,6 +1,15 @@
 #!/bin/sh
+# bin/metatron — distribution entry point for the metatron runtime.
+# The uber-jar must already exist (built via `mvn package` or jDeploy).
+# Run from the project root; all arguments are forwarded to BootLoader.main().
+#
+# Usage:
+#   bin/metatron "[boot=><boot/boot.mtron>,log=>info]"
+#   bin/metatron --headless "[boot=><boot/boot.mtron>,log=>info]"
 
 set -e
+
+# JVM flags required for native access (Panama Vector API) and reflective operations
 java -Dlogback.configurationFile=conf/logback.xml \
     --add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED \
     --enable-native-access=ALL-UNNAMED \

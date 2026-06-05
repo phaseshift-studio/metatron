@@ -162,12 +162,6 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
     }
 
     /**
-     * Reference to the schema generator — the single source of truth for FK info.
-     * Set after initialization via {@link #setSchemaGenerator(SQLSchemaGenerator)}.
-     */
-    private SQLSchemaGenerator schemaGenerator;
-
-    /**
      * Temporary FK storage for FKs discovered before the schema generator is set.
      * Cleared once all FKs are registered with the generator.
      */
@@ -304,7 +298,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
      * table name is not a recognized table.
      */
     private DataPath resolveDataPath(final fURI furi) {
-        final DataPath dp = DataPath.ofSpaceRelative(furi, null);
+        final DataPath dp = DataPath.of(f("-").extend(furi));
         if (!dp.hasCollection())
             return null;
         if (!dp.collectionIsWildcard()
@@ -883,7 +877,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
 
     @Override
     public int delete(final Connection conn, final fURI furi) throws SQLException {
-        final DataPath dp = DataPath.ofSpaceRelative(furi, null);
+        final DataPath dp = DataPath.of(f("-").extend(furi));
         if (!dp.hasEntry()) return 0;
 
         final String tableName = dp.collection();
