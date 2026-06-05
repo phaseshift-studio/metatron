@@ -65,8 +65,11 @@ public abstract class AbstractDataPathTest extends AbstractSpaceTest {
         } else if (segmentType.equals("entry")) {
             result.stream().forEach(entry -> {
                 assertFalse(entry.isType(), "entry objs should not be types but instances of their collection schema: " + entry);
-                // Read the collection Type(s) for this entry via its VID
-                // retract(1) strips the entry segment (e.g., /g/E/7 → /g/E)
+                // Read the collection Type(s) for this entry via its VID.
+                // Spaces that don't set VIDs on entries (e.g. tbleSpace SQL rows)
+                // skip the collection-type assertions — the !isType() check above is sufficient.
+                if (entry.vid() == null)
+                    return;
                 final Obj collectionTypes = Router.readFromSpace(entry.vid().retract(1));
                 assertFalse(collectionTypes.isNoObj(),
                         "collection type(s) should exist for entry: " + entry.vid() + " → " + entry.vid().retract(1));

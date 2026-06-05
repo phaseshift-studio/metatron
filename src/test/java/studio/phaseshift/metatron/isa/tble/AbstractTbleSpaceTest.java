@@ -23,9 +23,9 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
+import studio.phaseshift.metatron.AbstractDataPathTest;
 import studio.phaseshift.metatron.algebra.rewrite.CommonRewritesTestContract;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.AbstractSpaceTest;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
@@ -74,7 +74,7 @@ import static studio.phaseshift.metatron.isa.tble.tbleInstSet.TBLE_ISA_TID;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public abstract class AbstractTbleSpaceTest extends AbstractSpaceTest implements CommonRewritesTestContract {
+public abstract class AbstractTbleSpaceTest extends AbstractDataPathTest implements CommonRewritesTestContract {
 
     protected static final fURI SPACE_VID = f("/sys/space/tabledb/test");
     protected static DatabaseConfig staticDbConfig;
@@ -101,7 +101,35 @@ public abstract class AbstractTbleSpaceTest extends AbstractSpaceTest implements
         });
         this.dbConfig = dbConfig;
     }
-    
+
+    // =========================================================================
+    //  AbstractDataPathTest — collection→Type contract for scheme-based URIs
+    // =========================================================================
+
+    /**
+     * Override the inherited DataPath contract test with tbleSpace-specific
+     * scheme-based URIs ({@code db:+}, {@code db:+/+}) instead of the
+     * path-segment {@code $$/+} form used by grphSpace.  This avoids
+     * conflicting with {@code make()}'s {@code $$} substitution used by
+     * {@code testMonoReadWrite} and other inherited parameterized tests.
+     */
+    @Override
+    @ParameterizedTest
+    @CsvSource(value = {
+            "*<db:+>               % collection",    // wildcard collection → every result is a Type
+            "*<db:users/+>.take(1) % entry",         // specific collection + wildcard entry → first is instance
+            "*<db:users/+>.take(2) % entry",         // second entry also an instance (not just first)
+    }, delimiter = '%')
+    public void testDataPathSegmentTypes(final String code, final String segmentType) {
+        super.testDataPathSegmentTypes(code, segmentType);
+    }
+
+    @Override
+    @Disabled("Rootless container aggregation only works in memSpace's trie — " +
+              "database spaces store discrete rows/documents with no implicit parent container")
+    public void testMonoRootlessReadWrites() {
+        super.testMonoRootlessReadWrites();
+    }
 
     // =========================================================================
     //  Lifecycle

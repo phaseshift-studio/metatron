@@ -365,7 +365,7 @@ public class tbleSpace extends AbstractSpace<Connection> implements SchemaSpace 
                         this.existingTableSchema.write(this.sjvm(), aligned, obj);
 
                     } else if (obj.isRec()) {
-                        final DataPath dp = DataPath.ofSpaceRelative(aligned, this.databaseName);
+                        final DataPath dp = DataPath.of(f(this.databaseName).extend(aligned));
                         if (dp.hasEntry() && isConfiguredTable(dp.collection())
                                 && !dp.entryIsWildcard()) {
                             lazyInitExistingTableSchema();

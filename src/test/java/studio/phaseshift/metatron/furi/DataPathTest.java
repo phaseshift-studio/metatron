@@ -56,22 +56,30 @@ public class DataPathTest extends AbstractMetatronTest {
     }
 
     // =======================================================================
-    // ofSpaceRelative() — space-relative fURI with explicit db name
+    // of() with prepended db — sends db as segment 0, or NONE sentinel
     // =======================================================================
 
     @ParameterizedTest
     @CsvSource(value = {
+            // ── with explicit db ──
             "users/abc/name/extra | mydb | mydb | users  | abc  | name | extra",
             "users/abc/name       | mydb | mydb | users  | abc  | name | null",
             "users/abc            | mydb | mydb | users  | abc  | null | null",
             "users                | mydb | mydb | users  | null | null | null",
             "                     | mydb | mydb | null  | null | null | null",
+            // ── with NONE sentinel (no db) ──
+            "users/abc/name/extra | -    | null | users  | abc  | name | extra",
+            "users/abc/name       | -    | null | users  | abc  | name | null",
+            "users/abc            | -    | null | users  | abc  | null | null",
+            "users                | -    | null | users  | null | null | null",
+            "                     | -    | null | null  | null | null | null",
     }, delimiter = '|', nullValues = "null")
-    public void testOfSpaceRelative(final String furiStr, final String db, final String expDb,
-                                     final String collection, final String entry,
-                                     final String field, final String extension) {
+    public void testOfWithPrependedDb(final String furiStr, final String db, final String expDb,
+                                       final String collection, final String entry,
+                                       final String field, final String extension) {
         final fURI vid = f(furiStr);
-        final DataPath dp = DataPath.ofSpaceRelative(vid, db);
+        final fURI qualified = f(db).extend(vid);
+        final DataPath dp = DataPath.of(qualified);
 
         assertEquals(expDb, dp.db(), "db mismatch for " + furiStr);
         assertEquals(collection, dp.collection(), "collection mismatch for " + furiStr);
@@ -176,7 +184,8 @@ public class DataPathTest extends AbstractMetatronTest {
             "users/abc      | /g/#      | g    | /g/users/abc",
     }, delimiter = '|', nullValues = "null")
     public void testVid(final String furiStr, final String spacePattern, final String db, final String expected) {
-        final DataPath dp = DataPath.ofSpaceRelative(f(furiStr), db);
+        final fURI qualified = f(db != null ? db : DataPath.NONE).extend(f(furiStr));
+        final DataPath dp = DataPath.of(qualified);
         assertEquals(f(expected), dp.vid(f(spacePattern)), "vid mismatch for " + furiStr);
     }
 
