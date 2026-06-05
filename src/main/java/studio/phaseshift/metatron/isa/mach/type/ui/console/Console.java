@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -249,7 +249,8 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
             this.status = new StatusLine(this);
             BootLoader.getExecutor().submit(this.status);
             this.history = auto_(instC(f("history").dom(ALL).rng(REC_TID.maybeSome()), lst(T(ALL)),
-                    (lhs, inst) -> objs(IteratorUtil.stream(this.reader.getHistory().reverseIterator())
+                    (lhs, inst) -> objs(IteratorUtil.list(this.reader.getHistory().reverseIterator())
+                            .stream()
                             .sorted(Comparator.comparing(History.Entry::time))
                             .map(s -> rec(uri(TIME), str(s.time().toString()), uri(ENTRY), str(s.line())))
                     ))).tryToInst().as();

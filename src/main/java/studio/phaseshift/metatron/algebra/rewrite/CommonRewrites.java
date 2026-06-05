@@ -33,6 +33,7 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -103,7 +104,7 @@ public final class CommonRewrites {
                 .matchPredicate(matches -> {
                     final Obj ref = matches.getFirst().arg(0);
                     // only skip when the collection/table name itself is a wildcard
-                    return !ref.isUri() || !DataPath.ofSpaceRelative(ref.uriValue(), null).collectionIsWildcard();
+                    return !ref.isUri() || !DataPath.of(f("-").extend(ref.uriValue())).collectionIsWildcard();
                 })
                 .optimize("from_count", (space, dp, coeff) -> {
                     final long count = countFunction.apply(space, dp);
@@ -258,7 +259,7 @@ public final class CommonRewrites {
                 if (this.spaceType.isInstance(space) && (this.matchPredicate == null || this.matchPredicate.test(matchedInsts))) {
                     final S typedSpace = this.spaceType.cast(space);
                     final fURI expandedfURI = space.redirect(oldfURI, true);
-                    final DataPath dp = DataPath.ofSpaceRelative(expandedfURI, null);
+                    final DataPath dp = DataPath.of(f("-").extend(expandedfURI));
 
                     // Extract limit value from take() instruction
                     final long limitValue = takeInst.arg(0).asInt().jvm();
@@ -440,7 +441,7 @@ public final class CommonRewrites {
 
                 final S typedSpace = this.spaceType.cast(space);
                 final fURI expandedfURI = space.redirect(oldfURI, true);
-                final DataPath dp = DataPath.ofSpaceRelative(expandedfURI, null);
+                final DataPath dp = DataPath.of(f("-").extend(expandedfURI));
 
                 LOG.debug("evaluating native select operation on %s with columns %s in space %s",
                         expandedfURI, columns, space);
@@ -612,7 +613,7 @@ public final class CommonRewrites {
 
                 final S typedSpace = this.spaceType.cast(space);
                 final fURI expandedfURI = space.redirect(oldfURI, true);
-                final DataPath dp = DataPath.ofSpaceRelative(expandedfURI, null);
+                final DataPath dp = DataPath.of(f("-").extend(expandedfURI));
 
                 LOG.debug("evaluating native where operation on %s with clause '%s' in space %s",
                         expandedfURI, sqlWhere, space);
@@ -839,7 +840,7 @@ public final class CommonRewrites {
                 }
 
                 final S typedSpace = this.spaceType.cast(space);
-                final DataPath dp = DataPath.ofSpaceRelative(furi, null);
+                final DataPath dp = DataPath.of(f("-").extend(furi));
 
                 LOG.debug("evaluating native where+count on %s with clause '%s' in space %s",
                         furi, sqlWhere, space);

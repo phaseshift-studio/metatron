@@ -261,7 +261,7 @@ public class dcmntSpace extends AbstractSpace<MongoClient> implements SchemaSpac
     /**
      * Resolve a space-relative fURI into a {@link DataPath}.
      * Delegates to {@link ExistingCollectionSchema} when the collection is known;
-     * otherwise falls back to structural decomposition via {@link DataPath#ofSpaceRelative}.
+     * otherwise falls back to structural decomposition via {@link DataPath#of(fURI)}.
      */
     private DataPath resolveDataPath(final fURI relativePath) {
         if (this.existingCollectionSchema != null) {
@@ -269,7 +269,7 @@ public class dcmntSpace extends AbstractSpace<MongoClient> implements SchemaSpac
             if (dp != null)
                 return dp;
         }
-        return DataPath.ofSpaceRelative(relativePath, this.database.getName());
+        return DataPath.of(f(this.database.getName()).extend(relativePath));
     }
 
     // =======================================================================

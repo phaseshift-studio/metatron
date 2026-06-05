@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -291,23 +291,24 @@ public class mModel extends MRec {
 
     private Capability notesCapability() {
         return (service, systemMessages) -> {
-            if(null == this.vid())
-                throw MTronException.of("notes requires a vid model");
-            if (this.notes().isPresent() && this.vid() != null) {
-                try {
-                    systemMessages.add("""
-                                          ### IMPORTANT ###
-                                          Always check for any notes the user has provided you.
-                                          Do this before, during, and after completing your task.
-                                          The contents of the notes should be deemed of crucial importance.
-                                          To check for notes, use your provided mtron `eval` tool with the following argument:
-                                            `@<%s/feature/note>.remove(0)`
-                                          A result of `noobj` means "no note" at this time, but do check again periodically.
-                                          """.formatted(this.vid()));
-                } catch (Exception e) {
-                    throw MTronException.of("unable to setup notes: %s", e);
+            if (this.notes().isPresent())
+                if (null == this.vid())
+                    throw MTronException.of("notes requires a vid model");
+                else {
+                    try {
+                        systemMessages.add("""
+                                           ### IMPORTANT ###
+                                           Always check for any notes the user has provided you.
+                                           Do this before, during, and after completing your task.
+                                           The contents of the notes should be deemed of crucial importance.
+                                           To check for notes, use your provided mtron `eval` tool with the following argument:
+                                             `@<%s/feature/note>.remove(0)`
+                                           A result of `noobj` means "no note" at this time, but do check again periodically.
+                                           """.formatted(this.vid()));
+                    } catch (Exception e) {
+                        throw MTronException.of("unable to setup notes: %s", e);
+                    }
                 }
-            }
         };
     }
 

@@ -267,7 +267,7 @@ public class ExistingCollectionSchema {
      * collection name is not a recognised collection.
      */
     public DataPath resolveDataPath(final fURI furi) {
-        final DataPath dp = DataPath.ofSpaceRelative(furi.asNode(), this.space.getDatabase().getName());
+        final DataPath dp = DataPath.of(f(this.space.getDatabase().getName()).extend(furi.asNode()));
         if (dp.collection() == null)
             return null;
         if (!dp.collectionIsWildcard()

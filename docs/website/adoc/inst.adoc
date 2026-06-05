@@ -7,25 +7,36 @@
 -->
 ++++
 
-mtron programs are composed using computational primitives called **instructions** (`inst`). Instructions are organized into libraries called **instruction sets** (`instset`) -- https://en.wikipedia.org/wiki/Domain_of_discourse[domains of discourse]. Mathematically, every instruction is a **function** written according to the form:
+mtron programs are composed using computational primitives called **instructions** (`inst`). Instructions are organized into libraries called **instruction sets** (`instset`) -- https://en.wikipedia.org/wiki/Domain_of_discourse[domains of discourse]. Mathematically, every instruction is a https://en.wikipedia.org/wiki/Function_(mathematics)[function] that maps a https://en.wikipedia.org/wiki/Multiset[multiset] of objs to a multiset of objs -- called streams. 
+
+\[
+f\left(\cal{P}\left(\tt{X}\right)\right) \rightarrow \cal{P}\left(\tt{Y}\right) 
+\]
+
+An instruction maps a **left hand side** `obj` (lhs) to a **right hand side** `obj` (rhs). One-to-one, many-to-one, one-to-many, many-to-many, etc. mappings are possible as domains and ranges are specified as elements of the power set of all `objs`. When coefficients are elements of latexmath:[\mathbb{Z}], `{1,2,3}` latexmath:[\in \mathcal{P}(\texttt{obj})] has type `int{3}`. Programmatically, what is passed between instructions is a single stream of `objs`. This formulation guarantees that there is always a rhs `obj` for every lhs `obj` regardless of failure (`fail::T`) or emptiness (`obj{0}`).
+
+====
+As a side note, discussed at length elsewhere, the **mtron inst ring** is the set of `objs`, closed under latexmath:[\cdot] (apply) and latexmath:[+] (split/merge), both of which are total functions.
+====
+
+[discrete]
+=== inst uri syntax
+
+In mtron, instructions are written according to the form:
 
 [source,mtron]
 ----
  tid{c}?rng<=dom(args){ code }@vid                                                  
   │  │  │      │ │  │  │    │   │                                                   
   │  │  └───┬──┘ └─┬┘  └─┬──┘   │                                                   
-  │  │      │      │     │      └────⮞ value id: the opcode of the instruction (name)                
+  │  │      │      │     │      └────⮞ value id: the position of the instruction in code                
   │  │      │      │     └───────────⮞ code: instruction body is a tree of instructions (impl)        
   │  │      │      └─────────────────⮞ arguments: dynamic parameterizations (args)    
   │  │      └────────────────────────⮞ domain/range: the incoming (lhs) and outgoing (rhs) obj types                
   │  └───────────────────────────────⮞ coefficient: the magnitude of the instruction upon the rhs              
-  └──────────────────────────────────⮞ type id: the parent of the instruction (inst inheritance)
+  └──────────────────────────────────⮞ type id: the type of the instruction (opcode)
 ----
 
-[.card]
---
-[discrete,.center]
-==== uri syntax sugar
 The instruction template above represents the typical instruction with `rng\<=dom` and `{c}` sugar syntax being used. 
 However, note that the dom/rng and coefficient sugars ultimately compile to URI query parameters. 
 When fully parsed to a legal URI, the instruction signature is denoted:
@@ -37,16 +48,9 @@ inst?dom=a&rng=b&c=x,y
 
 Instruction query parameters are similar in function to https://en.wikipedia.org/wiki/Java_annotation[method annotations]. Query parameters encode metadata which can
 aid the compiler instruction selection, enable code path compression, facilitate polymorphic dispatch, support lifted monadic processing, maintain runtime profiling statistics, and more.
---
 
 [discrete]
 === obj propagation mechanics
-
-Every instruction maps a **left hand side** `obj` (lhs) to a **right hand side** `obj` (rhs). Many-to-one, one to many, and many-to-many mappings are possible as an `obj` is an element in the power set of all `objs`. Thus, `{1,2,3}` is an `obj` with type `int{3}`. Programmatically, what is passed between instructions is a single stream `obj` which guarantees that there is always an rhs `obj` for every lhs `obj` regardless of failure or emptiness. As a side note, discussed at length elsewhere, the mtron ring is the set of `objs` and is closed under latexmath:[\cdot] (apply) and latexmath:[+] (split/merge), both of which are total functions.
-
-\begin{align*}
-\text{obj} \in \mathcal{P}(\text{obj})
-\end{align*}
 
 It is important to understand the mechanics of instruction evaluation. Every instruction follows the same pattern. When a lhs `obj` is applied to an `inst` obj, the first thing that happens is the arguments of the `inst` are resolved. This is perhaps best described with an example.
 
@@ -69,8 +73,7 @@ It is important to understand the mechanics of instruction evaluation. Every ins
 <6> `1` is applied to the instruction `as()` to emit `bool::true` (`0` would emit `bool::false`).
 <7> `1` is applied to the instruction `as(bool::T)` to yield `true` and then is applied to `isa` to allow `1` to pass unfiltered (i.e. not nothing).
 
-The key point is that *call* objs (`inst`, `code`, and `noobj`) have a domain and range that are context dependent as each incoming `obj` creates a chain reaction of internal calls to ultimately yield the arg `objs` that instruction will operate with. Said another way, `calls` are types that become instances at time of application. Constant `objs` (non-call objs) also have a domain and range. For instance, the verbose representation of `int::1` is `int?int\<=#{?}(){1}`. 
-This states that every lhs `obj` or `noobj` (`+#+{+?+}`) that is applied to `1`, yields a single rhs `int`; namely `1`. In this way, constants are functions (calls) even though they return the same value regardless of input.
+The key point is that *call* objs (`inst`, `code`, and `noobj`) have a domain and range that are context dependent as each incoming `obj` creates a chain reaction of internal calls to ultimately yield the arg `objs` that instruction will operate with. Said another way, `calls` are types that become instances at time of application. 
 
 The diagram below demonstrates how a lhs `obj` percolates through an `inst` to where ultimately, at the end of the last `inst` of code the resultant rhs `obj` is emitted.
 
@@ -84,10 +87,30 @@ lhs => inst(arg1,...,argN){ inst1...instN } => rhs
  └────────────────────────────┘   └──┘
 ----
 
+.the unification of function and value
+[.card]
+--
+Constant `objs` (non-call objs) also have a domain and range. For instance, the verbose representation of `int::1` is `<1>?int\<=#{?}(){1}`.
+
+[mtron]
+----
+|<1>?int<=#{?}(){1}@<1>   [-- 1 --]
+<1>()                     [-- 2 --]
+10.<1>()                  [-- 3 --]
+12 + <1>()                [-- 4 --]
+----
+<1> 1 as an `inst` from maybe an `obj` to an `int` (`|` to prevent evaluation).
+<2> `noobj` applied to the 1 `inst` (the `{0}` of the domain's `{?}`).
+<3> 10 applied to the 1 `inst` (the `{1}` of the domain's `{?}`).
+<4> 12 added to the 1 `inst`.
+
+This states that every lhs `obj` or `noobj` (`+#+{+?+}`) that is applied to `1`, yields a single rhs `int`; namely `1`. In this way, constants are functions (calls) even though they return the same value regardless of input.
+--
+
 [discrete]
 === stacks and frames
 
-Every logical thread has a `/m/space/stack` patterned `<+/#>`. This pattern captures the breadth of common variable names found in most programming languages (`a`,`x`,`a_var`,`b3`,etc.) as well as hiearchical variables like `a/b/c`, etc. In short, the stack is always responsible for schemaless relative uris. To ground the discussion in a more concrete realization, the current stack of the mtron code processing this documentation is shown in the collapsed accordian below. The state of this stack is the result of all the processing thus far up to this point in the documentation. Declared variables from other parts of the documentation will be noticed as they were written at the root of the stack and thus, are _global variables_. Furthermore, note the `boot/` branch. This stores the data provided by the user and/or derived by the bootloader at startup.
+Every logical thread of execution has a `/m/space/stack` patterned `<+/#>`. This pattern captures the breadth of common variable names found in most programming languages (`a`,`x`,`a_var`,`b3`,etc.) as well as hierarchical variables like `a/b/c`, etc. In short, the stack is always responsible for __schemaless relative__ uris. To ground the discussion, the current stack of the mtron code processing this documentation is shown in the collapsed accordian below. The state of this stack is the result of all the processing thus far up to this point in the documentation. Declared variables from other parts of the documentation will be noticed as they were written at the root of the stack and thus, are _global variables_. Furthermore, note the `boot/` branch. This stores the data provided by the user and/or derived by the bootloader at startup (e.g. environmental variables).
 
 .the objs of the doc processors stack
 [%collapsible]

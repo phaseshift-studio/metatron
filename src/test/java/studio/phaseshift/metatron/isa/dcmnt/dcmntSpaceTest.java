@@ -164,6 +164,12 @@ public class dcmntSpaceTest extends AbstractSpaceTest implements CommonRewritesT
     }
 
     @Override
+    @Disabled("Rootless container aggregation only works in memSpace's trie — " +
+              "database spaces store discrete documents with no implicit parent container")
+    public void testMonoRootlessReadWrites() {
+    }
+
+    @Override
     @Disabled
     public void testSpecialStringValues(String description, String value) {
     }

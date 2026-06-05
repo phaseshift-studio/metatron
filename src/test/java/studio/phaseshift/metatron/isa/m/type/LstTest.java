@@ -51,6 +51,13 @@ public class LstTest extends AbstractAlgebraTest<Lst> {
             "[a,b,c]>>+                                                                 % {a,b,c}",
             "[a,b,c]>><+>                                                               % {a,b,c}",
             "[a,b,c]>>{0,0}                                                             % {2}a",
+            "[a,b,c]>>(-1)                                                              % c",
+            "[a,b,c]>>{-1,-2}                                                           % {c,b}",
+            "[a,b,c]>>{-2,1}                                                            % {2}b",
+            "[a,[b=>1,c=>2],c]>><1/b>                                                   % 1",
+            "[a,[b=>1,c=>2],c]>><1/+>                                                   % {1,2}",
+            "[a,[b=>[d=>3,e=>4],c=>2],c]>><1/+/e>                                       % 4",
+            "[a,[b=>[d=>3,e=>4],c=>2],c]>><1/+/+>                                       % {3,4}",
             "[{5,8}a,b,{7}c]>>{{4,6}0,0}                                                % {25,56}a", // two zeros collapse on the key select
             "{2,3}[{5,8}a,b,{7}c]>>{{4,6}0,0}                                           % {50,168}a", // two zeros collapse on the key select
             "[{5,8}a,b,{7}c]>>{{4,6}0,0}                                                % {25,56}a", // two zeros collapse on the key select

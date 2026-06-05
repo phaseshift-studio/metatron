@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -32,6 +32,7 @@ import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.id_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Real.REAL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
@@ -61,7 +62,8 @@ public class SQLSchemaGenerator {
      * {@code targetPath} is the full path to the referenced column,
      * e.g., {@code "office/+/officeCode"} or {@code "db:office/+/officeCode"}.
      */
-    public record FKTarget(String targetPath) {}
+    public record FKTarget(String targetPath) {
+    }
 
     private final List<ExistingTableSchema.TableMetadata> tableMetadata;
     private final fURI schemaBasePath;
@@ -78,13 +80,13 @@ public class SQLSchemaGenerator {
     /**
      * Create a schema generator for a SQL database
      *
-     * @param tableMetadata metadata for all tables in the database
+     * @param tableMetadata  metadata for all tables in the database
      * @param schemaBasePath base path for schema types (e.g., /m/tble/inst/schema/db)
-     * @param databaseName the name of the database (for alignment with docdb schema)
+     * @param databaseName   the name of the database (for alignment with docdb schema)
      */
     public SQLSchemaGenerator(final List<ExistingTableSchema.TableMetadata> tableMetadata,
-                             final fURI schemaBasePath,
-                             final String databaseName) {
+                              final fURI schemaBasePath,
+                              final String databaseName) {
         this.tableMetadata = tableMetadata;
         this.schemaBasePath = schemaBasePath;
         this.databaseName = databaseName;
@@ -94,11 +96,11 @@ public class SQLSchemaGenerator {
     /**
      * Create a schema generator for a SQL database (without explicit database name)
      *
-     * @param tableMetadata metadata for all tables in the database
+     * @param tableMetadata  metadata for all tables in the database
      * @param schemaBasePath base path for schema types (e.g., /m/tble/inst/schema/db)
      */
     public SQLSchemaGenerator(final List<ExistingTableSchema.TableMetadata> tableMetadata,
-                             final fURI schemaBasePath) {
+                              final fURI schemaBasePath) {
         this(tableMetadata, schemaBasePath, schemaBasePath.name());
     }
 
@@ -118,10 +120,11 @@ public class SQLSchemaGenerator {
     }
 
     /**
-     * Get a specific table type by name
+     * Get a specific table type by name (triggers lazy initialization)
      */
     public Type getTableType(final String tableName) {
-        return tableTypes != null ? tableTypes.get(tableName.toLowerCase()) : null;
+        getTableTypes(); // ensure lazy init
+        return tableTypes.get(tableName.toLowerCase());
     }
 
     /**
@@ -167,7 +170,6 @@ public class SQLSchemaGenerator {
     }
 
 
-
     /**
      * Generate a mtron type definition for a SQL table.
      * <p>
@@ -186,8 +188,8 @@ public class SQLSchemaGenerator {
             if (fkTarget != null) {
                 // Encode FK as an isa predicate on the column type
                 // e.g., isa_(f("office/+/officeCode")).auto_from_(id_()).tryToInst()
-                final Obj fkPredicate = isa_(f(fkTarget.targetPath()))
-                        .auto_from_(id_())
+                final Obj fkPredicate = isa_(uri(fkTarget.targetPath()))
+                        .auto_from_(id_(), noobj())
                         .tryToInst();
                 fields.put(uri(column.name()), fkPredicate);
             } else {
@@ -284,8 +286,8 @@ public class SQLSchemaGenerator {
         for (final ExistingTableSchema.ColumnMetadata column : table.columns()) {
             final FKTarget fkTarget = getFKTarget(tbl, column.name());
             if (fkTarget != null) {
-                final Obj fkPredicate = isa_(f(fkTarget.targetPath()))
-                        .auto_from_(id_())
+                final Obj fkPredicate = isa_(uri(fkTarget.targetPath()))
+                        .auto_from_(id_(),noobj())
                         .tryToInst();
                 fields.put(uri(column.name()), fkPredicate);
             } else {

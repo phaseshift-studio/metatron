@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -166,6 +166,8 @@ public interface Type extends Obj {
             return this.test(rhs.dom());
         if (!rhs.isType())
             return false;
+        if (null != this.vid() && Objects.equals(this.vid(), rhs.vid()))
+            return true;
         if (rhs.isType() && rhs.asType().isRootType() && !rhs.asType().hasPredicate())
             return this.c().within(rhs.c());
         if (null != this.vid() &&
@@ -234,6 +236,8 @@ public interface Type extends Obj {
         }
 
         public static boolean typeCheck(final Obj lhs, final Obj rhs) {
+            if (null != lhs.vid() && Objects.equals(lhs.vid(), rhs.vid()))
+                return true;
             if (lhs.isType()) {
                 /// /////////////////////////
                 /// TYPE <=> OBJ or TYPE ///
