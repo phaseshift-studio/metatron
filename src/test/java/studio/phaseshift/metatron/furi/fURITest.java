@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -54,6 +54,20 @@ public class fURITest extends AbstractMetatronTest {
         assertEquals(f, f4);
         assertEquals(f3, f4);
         return f;
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "http://abc.xyz.com            | abc",
+            "http://xyz.com                | null",
+            "xyz://abc.xyz.com:90/x/y/z    | abc",
+            "abc/xyz/com                   | null",
+    }, delimiter = '|', nullValues = "null")
+    public void testSubdomain(final String furiA, final String subdomain) {
+        final fURI fa = f(furiA);
+        final fURI fb = f(subdomain);
+        LOG.debug("testing %s is subdomain of %si", fb, fa);
+        assertEquals(fb, f(fa.subdomain()));
     }
 
     @ParameterizedTest
@@ -446,7 +460,8 @@ public class fURITest extends AbstractMetatronTest {
             "http://x.com/a/b/c         |  x.com",
             "http://x.com:80/a/b/c      |  x.com",
             "mtron://lang/obj           |  lang",
-            "mtron:lang/obj             |  "
+            "mtron:lang/obj             |  ",
+            "x://abc.xyz.com            | abc.xyz.com"
     }, delimiter = '|')
     public void testHostOrSegment(final String a, final String b) {
         printComponents(idem(a));
@@ -1332,7 +1347,7 @@ public class fURITest extends AbstractMetatronTest {
     @ParameterizedTest
     @CsvSource(value = {
             "/g/V/1/OUT/te:hot/+        % +          % te:hot"
-    },delimiterString = "%")
+    }, delimiterString = "%")
     public void testEdgeCases(final String furi, final String name, final String penultimate) {
         final fURI parse = idem(furi);
         assertEquals(furi, parse.toString());

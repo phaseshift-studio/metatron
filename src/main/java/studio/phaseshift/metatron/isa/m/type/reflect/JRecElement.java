@@ -30,12 +30,19 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
  */
 @Retention(RetentionPolicy.RUNTIME)
 public @interface JRecElement {
+
+    /** Sentinel used when no explicit domain type constraint is specified. */
+    String DOM_WILDCARD = "#{?}";
+
+    /** Sentinel used when no explicit range type constraint is specified. */
+    String RNG_WILDCARD = "#{*}";
+
     String key();
 
-    String dom() default "#{?}";
+    String dom() default DOM_WILDCARD;
 
-    String rng() default "#{*}";
-    
+    String rng() default RNG_WILDCARD;
+
     Mimic mimic() default Mimic.FIELD;
 
     String typecast() default "";
@@ -43,14 +50,45 @@ public @interface JRecElement {
     public static enum Mimic {
         FIELD, METHOD
     }
-    
+
     class Helper {
-        public static fURI getDom(JRecElement annotation) {
-            return "#{?}".equals(annotation.dom()) ? null : f(annotation.dom());
+        private Helper() {
+            // do nothing
         }
 
-        public static fURI getRng(JRecElement annotation) {
-            return "#{*}".equals(annotation.rng()) ? null : f(annotation.rng());
+        /**
+         * Resolve an element's dom, with class-level fallback:
+         * <ol>
+         *   <li>Non-sentinel annotation value → {@code f(ann.dom())}</li>
+         *   <li>Sentinel + {@code @JRecType} on class → {@code f(typeAnn.tid())}</li>
+         *   <li>Sentinel with no class annotation → wildcard {@code f(DOM_WILDCARD)}</li>
+         * </ol>
+         */
+        public static fURI getDom(final JRecElement ann, final Class<?> declaringClass) {
+            if (!DOM_WILDCARD.equals(ann.dom()))
+                return f(ann.dom());
+            final JRecType typeAnn = declaringClass.getAnnotation(JRecType.class);
+            return null != typeAnn ? f(typeAnn.tid()) : f(ann.dom());
+        }
+
+        /**
+         * Same fallback chain for {@code rng}, using {@link #RNG_WILDCARD}.
+         */
+        public static fURI getRng(final JRecElement ann, final Class<?> declaringClass) {
+            if (!RNG_WILDCARD.equals(ann.rng()))
+                return f(ann.rng());
+            final JRecType typeAnn = declaringClass.getAnnotation(JRecType.class);
+            return null != typeAnn ? f(typeAnn.tid()) : f(ann.rng());
+        }
+
+        // -- legacy zero-arg overloads (for call sites without class context) --
+
+        public static fURI getDom(final JRecElement annotation) {
+            return DOM_WILDCARD.equals(annotation.dom()) ? null : f(annotation.dom());
+        }
+
+        public static fURI getRng(final JRecElement annotation) {
+            return RNG_WILDCARD.equals(annotation.rng()) ? null : f(annotation.rng());
         }
     }
 }

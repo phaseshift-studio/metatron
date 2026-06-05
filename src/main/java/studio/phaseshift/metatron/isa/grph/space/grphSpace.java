@@ -1,20 +1,20 @@
  /*
- * metatron: a distributed virtual machine and language
- *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *  
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
+  * metatron: a distributed virtual machine and language
+  *  Copyright (C) 2025- PhaseShift Studio, LLC
+  *
+  * This program is free software: you can redistribute it and/or modify
+  * it under the terms of the GNU Affero General Public License as published by
+  * the Free Software Foundation, either version 3 of the License, or
+  * (at your option) any later version.
+  *
+  * This program is distributed in the hope that it will be useful,
+  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  * GNU Affero General Public License for more details.
+  *
+  * You should have received a copy of the GNU Affero General Public License
+  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  */
 
  package studio.phaseshift.metatron.isa.grph.space;
 
@@ -32,10 +32,7 @@
  import studio.phaseshift.metatron.isa.Space;
  import studio.phaseshift.metatron.isa.grph.grphInstSet;
  import studio.phaseshift.metatron.isa.grph.space.schema.modernSchema;
- import studio.phaseshift.metatron.isa.m.type.Obj;
- import studio.phaseshift.metatron.isa.m.type.ObjFactory;
- import studio.phaseshift.metatron.isa.m.type.Rec;
- import studio.phaseshift.metatron.isa.m.type.Type;
+ import studio.phaseshift.metatron.isa.m.type.*;
  import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
  import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
  import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
@@ -56,6 +53,8 @@
  import static studio.phaseshift.metatron.Tokens.*;
  import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
  import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+ import static studio.phaseshift.metatron.isa.grph.grphInstSet.EDGE_TYPE;
+ import static studio.phaseshift.metatron.isa.grph.grphInstSet.VRTX_TYPE;
  import static studio.phaseshift.metatron.isa.m.mInstSet.INST_CTOR_TID;
  import static studio.phaseshift.metatron.isa.m.mInstSet.SPACE_TID;
  import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.failure_;
@@ -152,7 +151,7 @@
                  case "modern" -> {
                      TinkerFactory.generateModern(tinkerGraph);
                      final modernSchema schema = new modernSchema();
-                     // InstSets created directly (not via importInstSetStream) need explicit registration
+                    // InstSets created directly (not via importInstSetStream) need explicit registration
                      Router.global().addSpace(schema);
                      schema.setup();
                      config.at(uri(SCHEMA), schema, MUTABLE);
@@ -297,19 +296,24 @@
      }
 
      private Iterator<IdObj> readCollection(final DataPath dp) {
+         final Obj schema = Router.readFromSpace(this.vid().extend("schema"));
+         if (schema.isNoObj() || !schema.isInstSet())
+             return IteratorUtil.of(IdObj.of(schema.vidOrTid(), schema));
          if (!dp.hasCollection()) return IteratorUtil.of();
+         if (dp.collectionIsWildcard())
+             return Stream.concat(
+                     schema.<InstSet>as().types().stream().filter(t -> t.isRefinementOf(VRTX_TYPE)).map(t -> IdObj.of(t.vid(), t)),
+                     schema.<InstSet>as().types().stream().filter(t -> t.isRefinementOf(EDGE_TYPE)).map(t -> IdObj.of(t.vid(), t))).iterator();
          if ("V".equals(dp.collection()))
-             return IteratorUtil.stream(this.sjvm.vertices()).map(v -> IdObj.of(this.elementVID(v), new VertexRec(v, this))).iterator();
+             return schema.<InstSet>as().types().stream().filter(t -> t.isRefinementOf(VRTX_TYPE)).map(t -> IdObj.of(t.vid(), t)).iterator();
          if ("E".equals(dp.collection()))
-             return IteratorUtil.stream(this.sjvm.edges()).map(e -> IdObj.of(this.elementVID(e), new EdgeRec(e, this))).iterator();
+             return schema.<InstSet>as().types().stream().filter(t -> t.isRefinementOf(EDGE_TYPE)).map(t -> IdObj.of(t.vid(), t)).iterator();
          return IteratorUtil.of();
      }
 
      @Override
      public Stream<IdObj> readStream(final fURI pattern) {
-         final List<IdObj> results = new ArrayList<>();
-         directReader().apply(pattern).forEachRemaining(results::add);
-         return results.stream();
+         return IteratorUtil.stream(directReader().apply(pattern));
      }
 
      @Override
@@ -337,11 +341,12 @@
              } else {
                  final fURI routed = Space.Helper.routeFromSpace(pattern, this.routes());
                  LOG.debug("reading tp3 vid: %s => %s", pattern, routed);
-                 if (routed.hasScheme()) {
+                 if (routed.hasScheme() && !routed.test(this.pattern())) {
                      return new IdObj(routed, Router.global().read(routed)).iterator();
                  }
-                 final DataPath dp = DataPath.ofSpaceRelative(routed, null);
-                 if (!dp.hasCollection()) return readCollection(dp);
+                 final DataPath dp = routed.segments().get(0).equals(this.pattern().segments().get(0)) ? DataPath.of(routed) : DataPath.ofSpaceRelative(routed, null);
+                 if (!dp.hasCollection()) return IteratorUtil.of();
+                 if (!dp.hasEntry()) return readCollection(dp);
                  if ("V".equals(dp.collection())) {
                      // ── OUT/IN traversal — route through graph, not Rec ──
                      if (dp.hasField() && ("OUT".equalsIgnoreCase(dp.field()) || "IN".equalsIgnoreCase(dp.field()))) {

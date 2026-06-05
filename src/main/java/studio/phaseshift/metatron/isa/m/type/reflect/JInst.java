@@ -53,7 +53,6 @@ public @interface JInst {
     Attach attach();
 
     public static enum Attach {
-        TYPE,
         OBJ
     }
 
