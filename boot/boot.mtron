@@ -123,10 +123,10 @@ mqttspace::[pattern => <ha:#>,
            pattern      => <deep:#>,
            name         => <openai>,
            route        => [<deep:>=><>]]@/sys/space/deepseek;
- catalog::[host         => <http://localhost:8088/v1>,
-           pattern      => <localai:#>,
-           name         => <localai>,
-           route        => [<localai:>=><>]]@/sys/space/localai;
+ catalog::[host         => <http://localhost:1234/v1>,
+           pattern      => <lmstudio:#>,
+           name         => <openai>,
+           route        => [<lmstudio:>=><>]]@/sys/space/localai;
  tblespace::[pattern => cg:#,
                 q    => [docq::[
                           cg:nodes=>docs::[desc=>"code concepts", example=>["*cg:nodes/+.count()","*cg:nodes/+/kind"]]]],

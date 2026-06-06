@@ -24,6 +24,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.isa.web.parser.ObjPlainTextSerializer;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.io.StringReader;
@@ -179,7 +180,7 @@ public class ObjSimpleJSONSerializer extends AbstractObjSerializer<JsonElement> 
             throw new IllegalStateException("unknown type: " + json + "::" + json.getAsInt());
         } catch (final Exception e) {
             try {
-                return ObjmtronSerializer.parse(json.getAsString()).apply();
+                return ObjPlainTextSerializer.single().read(json.getAsString());
             } catch (final Exception e2) {
                 LOG.warn("ignoring json parse problem with %s: %s", json, e);
                 return noobj();

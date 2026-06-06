@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.llm.type;
 
+import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.mcp.client.DefaultMcpClient;
@@ -41,6 +42,7 @@ import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.isa.web.parser.ObjPlainTextSerializer;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -133,9 +135,10 @@ public class mcpClient extends MRec {
                                 return fail(result.resultText());
                             else {
                                 try {
-                                    return ObjSimpleJSONSerializer.parse(result.resultText());
+                                    final JsonElement element = JsonParser.parseString(result.resultText());
+                                    return ObjSimpleJSONSerializer.single().read(element);
                                 } catch (final Exception e1) {
-                                    return ObjmtronSerializer.parse(result.resultText());
+                                    return ObjPlainTextSerializer.single().read(result.resultText());
                                 }
                             }
                         });
