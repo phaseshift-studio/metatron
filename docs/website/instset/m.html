@@ -272,6 +272,9 @@ bin/metatron</code></pre>
  obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
  inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
  space=&gt;[sub=&gt;{!*/m/mach,!*/m/math,!*/m/web,!*/m/iot,!*/m/grph,!*/m/llm,!*/m/tble,!*/m/dcmnt,!*/m/rdf}],
+ const=&gt;[
+  noobj,
+  none@none],
  inst=&gt;[
   as?bool&lt;=bool(bool::T),
   as?bytes&lt;=bool(bytes::T),
@@ -537,10 +540,7 @@ bin/metatron</code></pre>
   shortq::T,
   incrq::T,
   constq::T,
-  mimeq::T],
- const=&gt;[
-  noobj,
-  none@none]]</code></pre>
+  mimeq::T]]</code></pre>
                     </div>
                 </div>
             </div>
@@ -548,7 +548,7 @@ bin/metatron</code></pre>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <a href="#consts" class="btn btn-outline-primary">Consts <span class="pill-label badge bg-secondary">12</span></a><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">47</span></a><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">275</span></a><button class="btn btn-outline-secondary" disabled>Spaces <span class="pill-label badge bg-dark">0</span></button><a href="#rewrites" class="btn btn-outline-primary">Rewrites <span class="pill-label badge bg-warning">8</span></a>
+        <a href="#consts" class="btn btn-outline-primary">Consts <span class="pill-label badge bg-secondary">12</span></a><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">47</span></a><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">278</span></a><button class="btn btn-outline-secondary" disabled>Spaces <span class="pill-label badge bg-dark">0</span></button><a href="#rewrites" class="btn btn-outline-primary">Rewrites <span class="pill-label badge bg-warning">8</span></a>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="card">
@@ -1323,7 +1323,8 @@ abc(a=&gt;?int::T,b=&gt;|(*a +10)){ _.*b }       [-- dependent arg inst    --]
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">an aggregate of consts, types, insts, rewrites, and sugars structuring a domain of discourse</p>
 </div><div class="card-body py-2">
-    <small class="text-muted fw-bold">args:</small>
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">an extension of space with structural requirements regarding obj construction <span class="text-light">=&gt;</span> creates the instset and registers it with the global router</pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  {?}const <span class="text-light">=&gt;</span> <span class="text-info">&#39;constants used across the instset&#39;</span>
   {?}type <span class="text-light">=&gt;</span> <span class="text-info">&#39;types used to structure objs of the instset&#39;</span>
   {?}inst <span class="text-light">=&gt;</span> <span class="text-info">&#39;instructions associated with the types of the instset&#39;</span>
@@ -1633,6 +1634,7 @@ a=&gt;b=&gt;c=&gt;d&gt;&gt;.&gt;&gt;  [-- c=&gt;d           --]
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[
   pattern=&gt;uri::T,
   {?}q=&gt;[qproc::T],
+  {?}route=&gt;[uri::T=&gt;uri::T],
   {?}root=&gt;type::T,
   {?}schema=&gt;instset::T]]@/m/space</code></pre></div>
     <div class="card-body border-top py-2">
@@ -1787,6 +1789,14 @@ however, more active stages reduces potential for data corruption.
 typically use many stages when designing code and once stable,
 remove stages accordingly for increased performance.
 </p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  inst_dom <span class="text-light">=&gt;</span> <span class="text-info">&#39;ensure lhs obj matches instruction domain&#39;</span>
+  inst_rng <span class="text-light">=&gt;</span> <span class="text-info">&#39;ensure rhs obj matches instruction range&#39;</span>
+  type_ctor <span class="text-light">=&gt;</span> <span class="text-info">&#39;ensure type constructor argument matches type predicate&#39;</span>
+  obj_write <span class="text-light">=&gt;</span> <span class="text-info">&#39;ensure obj matches type on space write&#39;</span>
+  code_resolve <span class="text-light">=&gt;</span> <span class="text-info">&#39;ensure only fully resolved code can be executed&#39;</span>
+</pre>
 </div>
 </div><div class="card mb-3" id="type-uri">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1809,7 +1819,7 @@ a/b/c/                           [-- relative/branch uri            --]
 </div>
 </div>
 </div><div class="container-xxl mb-4" id="instructions">
-    <h3 class="text-primary mb-3">Instructions <span class="pill-label badge bg-success">275</span></h3>
+    <h3 class="text-primary mb-3">Instructions <span class="pill-label badge bg-success">278</span></h3>
     <div class="card mb-3" id="inst-and">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
@@ -1903,6 +1913,7 @@ a/b/c/                           [-- relative/branch uri            --]
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=str&amp;dom=html(str::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=str&amp;dom=markdown(str::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=html&amp;dom=markdown(html::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=mcp_client&amp;dom=json(json::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=str&amp;dom=#(json_str::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=tool&amp;dom=docs(tool::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=tool&amp;dom=inst(tool::T){&lt;j&gt;}</code></pre>
@@ -1916,6 +1927,7 @@ a/b/c/                           [-- relative/branch uri            --]
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=str&amp;dom=html(str::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=str&amp;dom=markdown(str::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=html&amp;dom=markdown(html::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=mcp_client&amp;dom=json(json::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=str&amp;dom=#(json_str::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=tool&amp;dom=docs(tool::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=tool&amp;dom=inst(tool::T){&lt;j&gt;}</code></pre>
@@ -1933,6 +1945,7 @@ a/b/c/                           [-- relative/branch uri            --]
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=str&amp;dom=html(str::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=str&amp;dom=markdown(str::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=html&amp;dom=markdown(html::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=mcp_client&amp;dom=json(json::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=str&amp;dom=#(json_str::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=tool&amp;dom=docs(tool::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=tool&amp;dom=inst(tool::T){&lt;j&gt;}</code></pre>

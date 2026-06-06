@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -28,6 +28,7 @@ import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.Sugar;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MCode;
+import studio.phaseshift.metatron.isa.mach.type.Router;
 
 import java.util.*;
 import java.util.stream.Stream;
@@ -217,6 +218,7 @@ public class mInstSet extends AbstractInstSet {
             .isaPredicate(rec(
                     uri(PATTERN), URI_TYPE,
                     uri(QPROC).maybe(), lst(QPROC_TYPE),
+                    uri(ROUTE).maybe(), rec(URI_TYPE, URI_TYPE),
                     uri(ROOT).maybe(), T(TYPE_TID),     // nominal-only: avoids structural recursion in Type
                     uri(SCHEMA).maybe(), T(INSTSET_TID) // nominal-only: avoids structural recursion in InstSet
             )).create();
@@ -237,6 +239,7 @@ public class mInstSet extends AbstractInstSet {
                     uri(TypeCheck.code_resolve.name()), stages.asRec().at(uri(TypeCheck.code_resolve.name())).orElse(BOOL_FALSE),
                     uri(TypeCheck.obj_write.name()), stages.asRec().at(uri(TypeCheck.obj_write.name())).orElse(BOOL_FALSE)))
             .create();
+    
    /* public static final Type MONO_TYPE = Type.Builder.build()
             .tid(MONO_TID)
             .vid(MONO_TID)
@@ -324,7 +327,10 @@ public class mInstSet extends AbstractInstSet {
                                 "[a=>1,b=>2]           [-- 2 uri=>int rec --]",
                                 "[a=>[b=>1,c=>[d=>3]]] [-- nested rec     --]",
                                 "[a=>[b=>+1,c=>_]]     [-- inst values    --]"),
-                        docWrap(INSTSET_TYPE, "", "", mutableMap(
+                        docWrap(INSTSET_TYPE,
+                                "an extension of space with structural requirements regarding obj construction",
+                                "creates the instset and registers it with the global router",
+                                mutableMap(
                                         uri(CONST).maybe(), "constants used across the instset",
                                         uri(TYPE).maybe(), "types used to structure objs of the instset",
                                         uri(INST).maybe(), "instructions associated with the types of the instset",
@@ -347,13 +353,19 @@ public class mInstSet extends AbstractInstSet {
                                 "fail::[doh] + 2             [-- plus(2) skipped over    --]",
                                 "fail::[dah] + 2 + catch(9)  [-- fail flattened to 9       --]"),
                         /// ///////////////////////////////////
-                        docWrap(TYPER_TYPE, """
-                                            stages where the type checker should be applied.
-                                            the more stages that are active, the slower instructions evaluate.
-                                            however, more active stages reduces potential for data corruption.
-                                            typically use many stages when designing code and once stable,
-                                            remove stages accordingly for increased performance.
-                                            """),
+                        docWrap(TYPER_TYPE, null, null, mutableMap(
+                                        uri(TypeCheck.inst_dom.name()), "ensure lhs obj matches instruction domain",
+                                        uri(TypeCheck.inst_rng.name()), "ensure rhs obj matches instruction range",
+                                        uri(TypeCheck.type_ctor.name()), "ensure type constructor argument matches type predicate",
+                                        uri(TypeCheck.obj_write.name()), "ensure obj matches type on space write",
+                                        uri(TypeCheck.code_resolve.name()), "ensure only fully resolved code can be executed"),
+                                """
+                                stages where the type checker should be applied.
+                                the more stages that are active, the slower instructions evaluate.
+                                however, more active stages reduces potential for data corruption.
+                                typically use many stages when designing code and once stable,
+                                remove stages accordingly for increased performance.
+                                """),
                         docWrap(SPACE_TYPE, "storage systems structured as uri addressed objs"),
                         docWrap(MEM_SPACE_TYPE, "an in-memory space with objs indexed by a topic trie"),
                         docWrap(STACK_SPACE_TYPE, "a thread local stack used for global variables and machine inst frames",

@@ -55,8 +55,7 @@
  import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
  import static studio.phaseshift.metatron.isa.grph.grphInstSet.EDGE_TYPE;
  import static studio.phaseshift.metatron.isa.grph.grphInstSet.VRTX_TYPE;
- import static studio.phaseshift.metatron.isa.m.mInstSet.INST_CTOR_TID;
- import static studio.phaseshift.metatron.isa.m.mInstSet.SPACE_TID;
+ import static studio.phaseshift.metatron.isa.m.mInstSet.*;
  import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.failure_;
  import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
  import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -83,9 +82,7 @@
      public static final Type GRPH_SPACE_TYPE = Type.Builder.build()
              .tid(SPACE_TID)
              .vid(GRPH_SPACE_TID)
-             .isaPredicate(rec(
-                     (Obj) uri(ROOT).maybe(), Rec.REC_TYPE,
-                     uri(SCHEMA).maybe(), SCHEMA_CONFIG))
+             .isaPredicate(rec(uri(SCHEMA).maybe().asUri(), INSTSET_TYPE))
              .constructor(
                      instC(INST_CTOR_TID.dom(ALL.maybe()).rng(GRPH_SPACE_TID),
                              lst(isa_(GRAPH_CONFIG).else_(failure_(str("malformed tp3 config"))).tryToInst()),
@@ -151,7 +148,7 @@
                  case "modern" -> {
                      TinkerFactory.generateModern(tinkerGraph);
                      final modernSchema schema = new modernSchema();
-                    // InstSets created directly (not via importInstSetStream) need explicit registration
+                     // InstSets created directly (not via importInstSetStream) need explicit registration
                      Router.global().addSpace(schema);
                      schema.setup();
                      config.at(uri(SCHEMA), schema, MUTABLE);
