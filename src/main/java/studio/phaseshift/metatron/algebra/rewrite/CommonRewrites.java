@@ -103,8 +103,11 @@ public final class CommonRewrites {
                 .match(FROM_INST_TID, COUNT_INST_TID)
                 .matchPredicate(matches -> {
                     final Obj ref = matches.getFirst().arg(0);
-                    // only skip when the collection/table name itself is a wildcard
-                    return !ref.isUri() || !DataPath.of(f("-").extend(ref.uriValue())).collectionIsWildcard();
+                    // only apply when the path ends at collection level (no field/extensions)
+                    // URIs with extensions (e.g., /V/1/OUT/+) represent traversals, not simple counts
+                    if (!ref.isUri()) return true;
+                    final DataPath dp = DataPath.of(f("-").extend(ref.uriValue()));
+                    return !dp.collectionIsWildcard() && !dp.hasField() && !dp.hasExtension();
                 })
                 .optimize("from_count", (space, dp, coeff) -> {
                     final long count = countFunction.apply(space, dp);
@@ -268,7 +271,7 @@ public final class CommonRewrites {
                             expandedfURI, limitValue, space);
 
                     // Create the optimized instruction
-                    return List.of(instC(this.rewriteTid.dom(ALL.zero()).rng(this.resultTid), lst(uri(expandedfURI), jnt(limitValue)),
+                    return List.of(instC(this.rewriteTid.dom(ALL_STAR).rng(this.resultTid), lst(uri(expandedfURI), jnt(limitValue)),
                                     (lhs, inst) -> {
                                         try {
                                             return this.limitOperation.execute(typedSpace, dp, limitValue);
@@ -341,8 +344,10 @@ public final class CommonRewrites {
                 .match(FROM_INST_TID, HAS_INST_TID)
                 .matchPredicate(matches -> {
                     final Obj ref = matches.getFirst().arg(0);
-                    // patterns operate across collections/tables and require different rewriting
-                    return !ref.isUri() || !ref.uriValue().retract(1).hasPattern();
+                    // only apply when the path ends at collection level (no field/extensions)
+                    if (!ref.isUri()) return true;
+                    final DataPath dp = DataPath.of(f("-").extend(ref.uriValue()));
+                    return !dp.hasField() && !dp.hasExtension() && !dp.collectionIsWildcard();
                 })
                 .optimize("from_has", (space, dp, coeff) -> {
                     final boolean exists = hasFunction.apply(space, dp);
@@ -453,7 +458,7 @@ public final class CommonRewrites {
 
                 return java.util.List.of(
                         instC(
-                                this.rewriteTid.dom(ALL.zero()).rng(this.resultTid),
+                                this.rewriteTid.dom(ALL_STAR).rng(this.resultTid),
                                 lst(
                                         uri(expandedfURI),
                                         lst(colObjs)),
@@ -620,7 +625,7 @@ public final class CommonRewrites {
 
                 return java.util.List.of(
                         instC(
-                                this.rewriteTid.dom(ALL.zero()).rng(this.resultTid),
+                                this.rewriteTid.dom(ALL_STAR).rng(this.resultTid),
                                 lst(
                                         uri(expandedfURI),
                                         studio.phaseshift.metatron.isa.m.type.impl.MStr.str(sqlWhere)),
@@ -847,7 +852,7 @@ public final class CommonRewrites {
 
                 return java.util.List.of(
                         instC(
-                                this.rewriteTid.dom(ALL.zero()).rng(this.resultTid),
+                                this.rewriteTid.dom(ALL_STAR).rng(this.resultTid),
                                 lst(
                                         uri(furi),
                                         studio.phaseshift.metatron.isa.m.type.impl.MStr.str(sqlWhere)),
@@ -858,6 +863,130 @@ public final class CommonRewrites {
                                     } catch (final Exception e) {
                                         throw studio.phaseshift.metatron.util.MTronException.of(e,
                                                 "failed to execute native where+count operation");
+                                    }
+                                }
+                        )
+                );
+            };
+        }
+    }
+
+    /**
+     * Functional interface for where+limit operations.
+     *
+     * @param <S> The space type
+     */
+    @FunctionalInterface
+    public interface WhereLimitOperation<S extends Space> {
+        /**
+         * Execute the native filtered+limited query.
+         *
+         * @param space    The database space
+         * @param dp       The decomposed DataPath for the table/collection
+         * @param sqlWhere The SQL WHERE clause (or MongoDB filter)
+         * @param limit    The limit value from take(n)
+         * @return The filtered and limited results
+         * @throws Exception if the operation fails
+         */
+        Obj execute(S space, DataPath dp, String sqlWhere, long limit) throws Exception;
+    }
+
+    /**
+     * Create a where+limit optimization rewrite.
+     *
+     * <p>Optimizes {@code sql_where.take(n)} to use native database
+     * {@code SELECT * FROM table WHERE conditions LIMIT n} instead of
+     * fetching all filtered rows and taking the first n in memory.
+     *
+     * <p>This rewrite composes with whereRewrite:
+     * <pre>
+     * from.where.take
+     *   → sql_where.take        (whereRewrite)
+     *   → sql_where_limit       (this rewrite)
+     * </pre>
+     *
+     * @param spaceType           The database space type
+     * @param whereRewriteTID     The TID of the sql_where/mql_where instruction to match
+     * @param rewriteTID          The TID for this rewrite's output instruction
+     * @param whereLimitFunction  Function that executes the native where+limit operation
+     * @param <S>                 The space type
+     * @return The rewrite instruction
+     */
+    public static <S extends Space> Inst whereLimitRewrite(
+            final Class<S> spaceType,
+            final fURI whereRewriteTID,
+            final fURI rewriteTID,
+            final WhereLimitOperation<S> whereLimitFunction) {
+
+        return new WhereLimitRewriteBuilder<>(spaceType, whereRewriteTID, whereLimitFunction)
+                .tid(rewriteTID)
+                .rng(ALL_STAR)
+                .match(whereRewriteTID, TAKE_INST_TID)
+                .build();
+    }
+
+    /**
+     * Specialized RewriteBuilder for where+limit operations that extracts
+     * the fURI and WHERE clause from the preceding sql_where/mql_where instruction
+     * and the limit value from the take() instruction.
+     */
+    private static class WhereLimitRewriteBuilder<S extends Space> extends RewriteBuilder<S> {
+        private final fURI whereRewriteTID;
+        private final WhereLimitOperation<S> whereLimitOperation;
+
+        WhereLimitRewriteBuilder(final Class<S> spaceType, final fURI whereRewriteTID,
+                                 final WhereLimitOperation<S> whereLimitOperation) {
+            super(spaceType);
+            this.whereRewriteTID = whereRewriteTID;
+            this.whereLimitOperation = whereLimitOperation;
+            this.rewriteName = "from_where_limit";
+            this.optimization = (space, furi, coeff) -> null;
+        }
+
+        @Override
+        protected java.util.function.Function<java.util.Map<Inst, Inst>, java.util.List<Inst>> createRewriteFunction() {
+            return map -> {
+                final java.util.List<Inst> matchedInsts = new java.util.ArrayList<>(map.values());
+                final Inst whereInst = matchedInsts.get(0);   // sql_where / mql_where instruction
+                final Inst takeInst = matchedInsts.get(1);    // take(n) instruction
+
+                // Extract fURI and sqlWhere from the where instruction's args: [furi, sqlWhere]
+                final Obj args = whereInst.args();
+                if (!args.isLst() || args.asLst().count() < 2) {
+                    return matchedInsts.stream().map(Obj::asInst).toList();
+                }
+
+                final fURI furi = args.asLst().at(0).asUri().uriValue();
+                final String sqlWhere = args.asLst().at(1).asStr().jvm();
+
+                // Extract limit value from take() instruction
+                final long limitValue = takeInst.arg(0).asInt().jvm();
+
+                final Space space = studio.phaseshift.metatron.isa.mach.type.Router.global().getSpaceFor(furi);
+
+                if (!this.spaceType.isInstance(space)) {
+                    return matchedInsts.stream().map(Obj::asInst).toList();
+                }
+
+                final S typedSpace = this.spaceType.cast(space);
+                final DataPath dp = DataPath.of(f("-").extend(furi));
+
+                LOG.debug("evaluating native where+limit on %s with clause '%s' and limit %d in space %s",
+                        furi, sqlWhere, limitValue, space);
+
+                return java.util.List.of(
+                        instC(
+                                this.rewriteTid.dom(ALL_STAR).rng(this.resultTid),
+                                lst(
+                                        uri(furi),
+                                        studio.phaseshift.metatron.isa.m.type.impl.MStr.str(sqlWhere),
+                                        jnt(limitValue)),
+                                (lhs, inst) -> {
+                                    try {
+                                        return this.whereLimitOperation.execute(typedSpace, dp, sqlWhere, limitValue);
+                                    } catch (final Exception e) {
+                                        throw studio.phaseshift.metatron.util.MTronException.of(e,
+                                                "failed to execute native where+limit operation");
                                     }
                                 }
                         )

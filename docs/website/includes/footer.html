@@ -169,7 +169,7 @@
             toastTimer = setTimeout(function() { toast.classList.remove('show'); }, 1800);
         }
 
-        document.querySelectorAll('h2[id], h3[id], h4[id], h5[id], h6[id]').forEach(function(heading) {
+        document.querySelectorAll('h2[id]:not(.accordion-header), h3[id], h4[id], h5[id], h6[id]').forEach(function(heading) {
             var anchor = document.createElement('a');
             anchor.className = 'heading-anchor bi bi-link-45deg';
             anchor.href = '#' + heading.id;

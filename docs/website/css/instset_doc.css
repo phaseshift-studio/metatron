@@ -268,6 +268,16 @@ pre code.hljs {
 }
 
 /* ==========================================================================
+   Pill badge legibility — darker backgrounds for white text
+   ========================================================================== */
+.pill-label.badge.bg-primary {
+    background-color: var(--mred) !important;
+}
+.pill-label.badge.bg-success {
+    background-color: #0a5c32 !important;
+}
+
+/* ==========================================================================
    Anchor scroll offset — compensate for the sticky navbar (~80px)
    ========================================================================== */
 .card[id] {

@@ -294,7 +294,11 @@ bin/metatron</code></pre>
   bothE?edge{*}&lt;=vrtx(uri{*}::T),
   addE?edge&lt;=vrtx(uri::T,rec{+}::T,rec{?}::T)],
  rewrite=&gt;[
-  /m/grph/inst/rewrite/graph_limit?code{?}&lt;=code(),
+  /m/grph/inst/rewrite/gremlin_count?code{?}&lt;=code(),
+  /m/grph/inst/rewrite/gremlin_limit?code{?}&lt;=code(),
+  /m/grph/inst/rewrite/gremlin_where?code{?}&lt;=code(),
+  /m/grph/inst/rewrite/gremlin_where_count?code{?}&lt;=code(),
+  /m/grph/inst/rewrite/gremlin_where_limit?code{?}&lt;=code(),
   /m/grph/inst/rewrite/out_incident_adjacent?code{?}&lt;=code(),
   /m/grph/inst/rewrite/in_incident_adjacent?code{?}&lt;=code()]]@/m/grph</code></pre>
                     </div>
@@ -304,7 +308,7 @@ bin/metatron</code></pre>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <button class="btn btn-outline-secondary" disabled>Consts <span class="pill-label badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">5</span></a><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">13</span></a><button class="btn btn-outline-secondary" disabled>Spaces <span class="pill-label badge bg-dark">0</span></button><a href="#rewrites" class="btn btn-outline-primary">Rewrites <span class="pill-label badge bg-warning">3</span></a>
+        <a href="#consts" class="btn btn-outline-primary">Consts <span class="pill-label badge bg-secondary">1</span></a><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">5</span></a><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">13</span></a><button class="btn btn-outline-secondary" disabled>Spaces <span class="pill-label badge bg-dark">0</span></button><a href="#rewrites" class="btn btn-outline-primary">Rewrites <span class="pill-label badge bg-warning">7</span></a>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="card">
@@ -327,6 +331,12 @@ bin/metatron</code></pre>
     <span class="code" style="font-size:1.2rem;">grphspace</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a></div></div>
+</div><div class="mb-3">
+    <h6 class="text-primary mb-2">Constants</h6>
+    <div class="d-flex flex-wrap"><a href="#const-grph" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">grph</span>
+    <span class="pill-label badge bg-secondary ms-2">C</span>
+</a></div>
 </div><div class="mb-3">
     <h6 class="text-primary mb-2">Instructions</h6>
     <div class="d-flex flex-wrap"><a href="#inst-addE" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
@@ -371,8 +381,20 @@ bin/metatron</code></pre>
 </a></div>
 </div><div class="mb-3">
     <h6 class="text-primary mb-2">Rewrites</h6>
-    <div class="d-flex flex-wrap"><a href="#rewrite-graph_limit" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">graph_limit</span>
+    <div class="d-flex flex-wrap"><a href="#rewrite-gremlin_count" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">gremlin_count</span>
+    <span class="pill-label badge bg-warning text-dark ms-2">R</span>
+</a><a href="#rewrite-gremlin_limit" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">gremlin_limit</span>
+    <span class="pill-label badge bg-warning text-dark ms-2">R</span>
+</a><a href="#rewrite-gremlin_where" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">gremlin_where</span>
+    <span class="pill-label badge bg-warning text-dark ms-2">R</span>
+</a><a href="#rewrite-gremlin_where_count" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">gremlin_where_count</span>
+    <span class="pill-label badge bg-warning text-dark ms-2">R</span>
+</a><a href="#rewrite-gremlin_where_limit" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">gremlin_where_limit</span>
     <span class="pill-label badge bg-warning text-dark ms-2">R</span>
 </a><a href="#rewrite-in_incident_adjacent" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">in_incident_adjacent</span>
@@ -383,6 +405,55 @@ bin/metatron</code></pre>
 </a></div>
 </div></div>
     </div>
+</div><div class="container-xxl mb-4" id="consts">
+    <h3 class="text-primary mb-3">Constants <span class="pill-label badge bg-secondary">1</span></h3>
+    <div class="card mb-3" id="const-grph">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span class="code text-secondary fw-bold">grph</span>
+        <small class="text-muted code">/m/grph</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">instset::[
+ pattern=&gt;/m/grph/#,
+ q=&gt;[docq::[
+ pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
+ pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+ pattern=&gt;docq,
+ obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
+ inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
+ space=&gt;[super=&gt;/m/grph/#],
+ constq=&gt;[!*/m/mach/io/serializer/tp3],
+ type=&gt;[
+  elmt::T,
+  vrtx::T,
+  edge::T,
+  grphspace::T,
+  modern::T],
+ inst=&gt;[
+  gremlin?#{*}&lt;=grphspace(str::T),
+  label?uri&lt;=rec(),
+  values?#{*}&lt;=rec(uri{*}::T),
+  inV?vrtx&lt;=edge(),
+  outV?vrtx&lt;=edge(),
+  bothV?vrtx{2}&lt;=edge(),
+  out?edge{*}&lt;=vrtx(uri{*}::T),
+  in?edge{*}&lt;=vrtx(uri{*}::T),
+  both?edge{*}&lt;=vrtx(uri{*}::T),
+  outE?edge{*}&lt;=vrtx(uri{*}::T),
+  inE?edge{*}&lt;=vrtx(uri{*}::T),
+  bothE?edge{*}&lt;=vrtx(uri{*}::T),
+  addE?edge&lt;=vrtx(uri::T,rec{+}::T,rec{?}::T)],
+ rewrite=&gt;[
+  /m/grph/inst/rewrite/gremlin_count?code{?}&lt;=code(),
+  /m/grph/inst/rewrite/gremlin_limit?code{?}&lt;=code(),
+  /m/grph/inst/rewrite/gremlin_where?code{?}&lt;=code(),
+  /m/grph/inst/rewrite/gremlin_where_count?code{?}&lt;=code(),
+  /m/grph/inst/rewrite/gremlin_where_limit?code{?}&lt;=code(),
+  /m/grph/inst/rewrite/out_incident_adjacent?code{?}&lt;=code(),
+  /m/grph/inst/rewrite/in_incident_adjacent?code{?}&lt;=code()]]@/m/grph</code></pre></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">from vertex to vertex, the edge of the metatron is traversed</p>
+</div>
+</div>
 </div><div class="container-xxl mb-4" id="types">
     <h3 class="text-primary mb-3">Types <span class="pill-label badge bg-primary">5</span></h3>
     <div class="card mb-3" id="type-edge">
@@ -676,18 +747,82 @@ bin/metatron</code></pre>
 </div>
 </div>
 </div><div class="container-xxl mb-4" id="rewrites">
-    <h3 class="text-primary mb-3">Rewrites <span class="pill-label badge bg-warning text-dark">3</span></h3>
-    <div class="card mb-3" id="rewrite-graph_limit">
+    <h3 class="text-primary mb-3">Rewrites <span class="pill-label badge bg-warning text-dark">7</span></h3>
+    <div class="card mb-3" id="rewrite-gremlin_count">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
-            <span class="code text-warning fw-bold">graph_limit</span>
+            <span class="code text-warning fw-bold">gremlin_count</span>
             <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#type-code" data-bs-toggle="tooltip" title="domain" class="code text-info">code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#type-code" data-bs-toggle="tooltip" title="maybe range" class="code text-success">code{?}</a></span></span>
         </span>
-        <small class="text-muted code">/m/grph/inst/rewrite/graph_limit?rng=/m/code{?}&amp;dom=/m/code</small>
+        <small class="text-muted code">/m/grph/inst/rewrite/gremlin_count?rng=/m/code{?}&amp;dom=/m/code</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/grph/inst/rewrite/graph_limit?rng=code{?}&amp;dom=code(){&lt;j&gt;}</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/grph/inst/rewrite/gremlin_count?rng=code{?}&amp;dom=code(){&lt;j&gt;}</code></pre></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">leverages native Gremlin limit() for vertex/edge collections</p>
+    <p class="mb-0 text-light">leverages gremlin&#39;s count()-reducer for vrtx/edge collections</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">pre-rewrite code <span class="text-light">=&gt;</span> post-rewrite code</pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"></pre>
+</div>
+</div><div class="card mb-3" id="rewrite-gremlin_limit">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-warning fw-bold">gremlin_limit</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#type-code" data-bs-toggle="tooltip" title="domain" class="code text-info">code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#type-code" data-bs-toggle="tooltip" title="maybe range" class="code text-success">code{?}</a></span></span>
+        </span>
+        <small class="text-muted code">/m/grph/inst/rewrite/gremlin_limit?rng=/m/code{?}&amp;dom=/m/code</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/grph/inst/rewrite/gremlin_limit?rng=code{?}&amp;dom=code(){&lt;j&gt;}</code></pre></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">leverages gremlin&#39;s limit()-barrier for vrtx/edge collections</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">pre-rewrite code <span class="text-light">=&gt;</span> post-rewrite code</pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"></pre>
+</div>
+</div><div class="card mb-3" id="rewrite-gremlin_where">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-warning fw-bold">gremlin_where</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#type-code" data-bs-toggle="tooltip" title="domain" class="code text-info">code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#type-code" data-bs-toggle="tooltip" title="maybe range" class="code text-success">code{?}</a></span></span>
+        </span>
+        <small class="text-muted code">/m/grph/inst/rewrite/gremlin_where?rng=/m/code{?}&amp;dom=/m/code</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/grph/inst/rewrite/gremlin_where?rng=code{?}&amp;dom=code(){&lt;j&gt;}</code></pre></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">leverages gremlin&#39;s has()-filtering for vrtx collections</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">pre-rewrite code <span class="text-light">=&gt;</span> post-rewrite code</pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"></pre>
+</div>
+</div><div class="card mb-3" id="rewrite-gremlin_where_count">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-warning fw-bold">gremlin_where_count</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#type-code" data-bs-toggle="tooltip" title="domain" class="code text-info">code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#type-code" data-bs-toggle="tooltip" title="maybe range" class="code text-success">code{?}</a></span></span>
+        </span>
+        <small class="text-muted code">/m/grph/inst/rewrite/gremlin_where_count?rng=/m/code{?}&amp;dom=/m/code</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/grph/inst/rewrite/gremlin_where_count?rng=code{?}&amp;dom=code(){&lt;j&gt;}</code></pre></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">leverages gremlin&#39;s has().count() filtering-reduction for vrtx collections</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">pre-rewrite code <span class="text-light">=&gt;</span> post-rewrite code</pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"></pre>
+</div>
+</div><div class="card mb-3" id="rewrite-gremlin_where_limit">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-warning fw-bold">gremlin_where_limit</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#type-code" data-bs-toggle="tooltip" title="domain" class="code text-info">code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#type-code" data-bs-toggle="tooltip" title="maybe range" class="code text-success">code{?}</a></span></span>
+        </span>
+        <small class="text-muted code">/m/grph/inst/rewrite/gremlin_where_limit?rng=/m/code{?}&amp;dom=/m/code</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/grph/inst/rewrite/gremlin_where_limit?rng=code{?}&amp;dom=code(){&lt;j&gt;}</code></pre></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">leverages gremlin&#39;s has().limit() filtering-barrier for vrtx collections</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">pre-rewrite code <span class="text-light">=&gt;</span> post-rewrite code</pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
@@ -891,7 +1026,7 @@ bin/metatron</code></pre>
             toastTimer = setTimeout(function() { toast.classList.remove('show'); }, 1800);
         }
 
-        document.querySelectorAll('h2[id], h3[id], h4[id], h5[id], h6[id]').forEach(function(heading) {
+        document.querySelectorAll('h2[id]:not(.accordion-header), h3[id], h4[id], h5[id], h6[id]').forEach(function(heading) {
             var anchor = document.createElement('a');
             anchor.className = 'heading-anchor bi bi-link-45deg';
             anchor.href = '#' + heading.id;

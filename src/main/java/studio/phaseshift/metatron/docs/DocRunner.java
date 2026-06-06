@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.docs;
 import org.asciidoctor.Asciidoctor;
 import org.asciidoctor.Options;
 import org.asciidoctor.SafeMode;
+import org.slf4j.event.Level;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.TypeCheck;
 import studio.phaseshift.metatron.isa.dcmnt.dcmntInstSet;
@@ -81,6 +82,7 @@ public class DocRunner {
         boolean verbose = true;
         boolean copyOnly = false;
         int timeout = 8;
+        Level level = verbose ? Level.INFO : Level.ERROR;
 
         int i = 0;
         while (i < args.length) {
@@ -100,7 +102,6 @@ public class DocRunner {
             }
             i++;
         }
-
         LOG.info("\n[Docs Runner v" + VERSION + "]\n\targs: " + String.join(" ", args));
         // ── Load .env files ──────────────────────────────────────────────
         loadDotEnv(Path.of(System.getProperty("user.home"), ".metatron", "env"));
@@ -174,36 +175,44 @@ public class DocRunner {
                 LOG.info("done (copy only)");
             return;
         }
+            
+        ////////////////////////////////////////////////////////////////////////////////////
+        ////////////////////////////////////////////////////////////////////////////////////
+        ////////////////////////////////////////////////////////////////////////////////////
 
-        // ── Bootstrap metatron VM ────────────────────────────────────────
-        BootLoader.BOOTING = true;
-        BootLoader.TESTING = true;
-        BootLoader.load(MRec.rec(uri(LOGG), uri(INFO), uri(BOOT), uri(boot)));
-        for (final InstSet is : new InstSet[] {
-                new mathInstSet(), new webInstSet(), new iotInstSet(),
-                new grphInstSet(), new llmInstSet(), new tbleInstSet(),
-                new dcmntInstSet(), new rdfInstSet()
-        }) {
-            Router.global().addSpace(is);
-            Router.writeToSpace(is);
-            is.setup();
-        }
-        TypeCheck.enable(TypeCheck.values());
-        TypeCheck.disable(TypeCheck.code_resolve);
-        // ── Evaluate prefix expressions for side-effects ───────────
-       // MtronDocPreprocessor.evalPrefixBlocks(prefixLines);
-
-        // ── Copy adoc files and preprocess ──────────────────────
-        final LegendDocPreprocessor legendPreprocessor = new LegendDocPreprocessor();
-        final MtronDocPreprocessor mtronPreprocessor = new MtronDocPreprocessor();
         for (final Path file : adocFiles) {
+            // ── Bootstrap metatron VM ────────────────────────────────────────
+            BootLoader.BOOTING = true;
+            BootLoader.TESTING = true;
+            BootLoader.load(MRec.rec(uri(LOGG), uri(INFO), uri(BOOT), uri(boot)));
+            for (final InstSet is : new InstSet[]{
+                    new mathInstSet(), new webInstSet(), new iotInstSet(),
+                    new grphInstSet(), new llmInstSet(), new tbleInstSet(),
+                    new dcmntInstSet(), new rdfInstSet()
+            }) {
+                Router.global().addSpace(is);
+                Router.writeToSpace(is);
+                is.setup();
+            }
+            // hardcode type checker in support of runtime inst resolution
+            TypeCheck.enable(TypeCheck.values());
+            TypeCheck.disable(TypeCheck.code_resolve);
+            // ── Copy adoc files and preprocess ──────────────────────
+
+            if (verbose) LOG.info(Graphitty.sillyPrint("\n\nprocessing " + file.getFileName() + "...\n\n", true, true));
             final Path outFile = outputPath.resolve(file.getFileName());
             String content = Files.readString(file);
-            content = legendPreprocessor.process(content);   // inject legend + anchors
-            content = mtronPreprocessor.process(content);    // evaluate [mtron] blocks
+            content = new LegendDocPreprocessor().process(content);   // inject legend + anchors
+            content = new MtronDocPreprocessor().process(content);    // evaluate [mtron] blocks
             Files.writeString(outFile, content.stripTrailing());
             if (verbose) LOG.info("  processed " + file.getFileName());
+            BootLoader.close();
         }
+
+        ////////////////////////////////////////////////////////////////////////////////////
+        ////////////////////////////////////////////////////////////////////////////////////
+        ////////////////////////////////////////////////////////////////////////////////////
+
 
         // ── Copy supporting files (header.html, footer.html, images) ────
         final Path includesDir = inputPath.getParent().resolve("includes");

@@ -320,7 +320,7 @@ bin/metatron</code></pre>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <button class="btn btn-outline-secondary" disabled>Consts <span class="pill-label badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">23</span></a><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">2</span></a><button class="btn btn-outline-secondary" disabled>Spaces <span class="pill-label badge bg-dark">0</span></button><button class="btn btn-outline-secondary" disabled>Rewrites <span class="pill-label badge bg-dark">0</span></button>
+        <a href="#consts" class="btn btn-outline-primary">Consts <span class="pill-label badge bg-secondary">1</span></a><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">23</span></a><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">2</span></a><button class="btn btn-outline-secondary" disabled>Spaces <span class="pill-label badge bg-dark">0</span></button><button class="btn btn-outline-secondary" disabled>Rewrites <span class="pill-label badge bg-dark">0</span></button>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="card">
@@ -398,6 +398,12 @@ bin/metatron</code></pre>
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a></div></div>
 </div><div class="mb-3">
+    <h6 class="text-primary mb-2">Constants</h6>
+    <div class="d-flex flex-wrap"><a href="#const-web" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">web</span>
+    <span class="pill-label badge bg-secondary ms-2">C</span>
+</a></div>
+</div><div class="mb-3">
     <h6 class="text-primary mb-2">Instructions</h6>
     <div class="d-flex flex-wrap"><a href="#inst-format" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">format</span>
@@ -408,6 +414,70 @@ bin/metatron</code></pre>
 </a></div>
 </div></div>
     </div>
+</div><div class="container-xxl mb-4" id="consts">
+    <h3 class="text-primary mb-3">Constants <span class="pill-label badge bg-secondary">1</span></h3>
+    <div class="card mb-3" id="const-web">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span class="code text-secondary fw-bold">web</span>
+        <small class="text-muted code">/m/web</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">instset::[
+ pattern=&gt;/m/web/#,
+ q=&gt;[docq::[
+ pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
+ pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+ pattern=&gt;docq,
+ obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
+ inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
+ space=&gt;[super=&gt;/m/web/#],
+ const=&gt;[
+  !*/m/mach/io/serializer/xml,
+  !*/m/mach/io/serializer/html,
+  !*/m/mach/io/serializer/json,
+  !*/m/mach/io/serializer/markdown,
+  !*/m/mach/io/serializer/plain/text],
+ type=&gt;[
+  content_type::T,
+  xml::T,
+  html::T,
+  json::T,
+  css::T,
+  markdown::T,
+  httpspace::T,
+  wsspace::T,
+  websocket::T,
+  wshandler::T,
+  wsclient::T,
+  mtron_ws::T,
+  mcp_ws::T,
+  mcp_mtron_ws::T,
+  socket::T,
+  http_handler::T,
+  http_client::T,
+  mtron_http::T,
+  mcp_http::T,
+  mcp_mtron_http::T,
+  web_http::T,
+  mcp_server::T,
+  mcp_client::T],
+ inst=&gt;[
+  ping?/m/math/time&lt;=#{?}(uri::T),
+  format?str&lt;=markdown(),
+  as?json&lt;=str(json::T),
+  as?xml&lt;=str(xml::T),
+  as?html&lt;=str(html::T),
+  as?markdown&lt;=str(markdown::T),
+  as?str&lt;=html(str::T),
+  as?str&lt;=markdown(str::T),
+  as?html&lt;=markdown(html::T),
+  as(json_str::T)]]@/m/web</code></pre></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">the world of the web within the metatron</p>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">/usr/idea -&gt; *&lt;http://metatron.phaseshift.studio/html/head/title&gt;</code></pre>
+</div>
+</div>
 </div><div class="container-xxl mb-4" id="types">
     <h3 class="text-primary mb-3">Types <span class="pill-label badge bg-primary">23</span></h3>
     <div class="card mb-3" id="type-content_type">
@@ -561,11 +631,11 @@ httpspace webserver is furi aware and will perform server-side extraction of nes
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">an mcp client type specification <span class="text-light">=&gt;</span> a connection to an existing mcp server</pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  {?}transport <span class="text-light">=&gt;</span> <span class="text-info">&quot;specify the transport if host schema resolution isn&#39;t sufficient&quot;</span>
-  {?}status <span class="text-light">=&gt;</span> <span class="text-info">&#39;the current status of the mcp client/server connection&#39;</span>
-  host <span class="text-light">=&gt;</span> <span class="text-info">&#39;the mcp server endpoint&#39;</span>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  host <span class="text-light">=&gt;</span> <span class="text-info">&#39;the mcp server endpoint&#39;</span>
   {?}command <span class="text-light">=&gt;</span> <span class="text-info">&#39;only necessary for stdio mcp servers, where the client is the server&#39;</span>
   {?}tool <span class="text-light">=&gt;</span> <span class="text-info">&#39;the tools/functions available for use on the mcp server&#39;</span>
+  {?}transport <span class="text-light">=&gt;</span> <span class="text-info">&quot;specify the transport if host schema resolution isn&#39;t sufficient&quot;</span>
+  {?}status <span class="text-light">=&gt;</span> <span class="text-info">&#39;the current status of the mcp client/server connection&#39;</span>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -999,7 +1069,7 @@ mcp_client::[host =&gt; &lt;ws://localhost:8999&gt;]@/usr/ai/mcp/mtron          
             toastTimer = setTimeout(function() { toast.classList.remove('show'); }, 1800);
         }
 
-        document.querySelectorAll('h2[id], h3[id], h4[id], h5[id], h6[id]').forEach(function(heading) {
+        document.querySelectorAll('h2[id]:not(.accordion-header), h3[id], h4[id], h5[id], h6[id]').forEach(function(heading) {
             var anchor = document.createElement('a');
             anchor.className = 'heading-anchor bi bi-link-45deg';
             anchor.href = '#' + heading.id;

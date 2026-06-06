@@ -47,6 +47,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.mach.io.ioInstSet.OBJ_MTRON_STRING_SERIALIZER_VID;
 import static studio.phaseshift.metatron.isa.mach.io.ioInstSet.OBJ_SERIALIZER_TID;
 
 /*
@@ -152,8 +153,11 @@ public class ObjRDFSerializer extends AbstractObjSerializer<Stream<Value>> {
         throw MTronException.of("cannot write obj to rdf: %s".formatted(obj));
     }
 
-    @Override
     public fURI vid() {
+        return OBJ_RDF_SERIALIZER_VID;
+    }
+
+    public fURI jvm() {
         return OBJ_RDF_SERIALIZER_VID;
     }
 }

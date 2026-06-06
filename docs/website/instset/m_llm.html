@@ -295,7 +295,7 @@ bin/metatron</code></pre>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <button class="btn btn-outline-secondary" disabled>Consts <span class="pill-label badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">8</span></a><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">3</span></a><button class="btn btn-outline-secondary" disabled>Spaces <span class="pill-label badge bg-dark">0</span></button><button class="btn btn-outline-secondary" disabled>Rewrites <span class="pill-label badge bg-dark">0</span></button>
+        <a href="#consts" class="btn btn-outline-primary">Consts <span class="pill-label badge bg-secondary">1</span></a><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">8</span></a><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">3</span></a><button class="btn btn-outline-secondary" disabled>Spaces <span class="pill-label badge bg-dark">0</span></button><button class="btn btn-outline-secondary" disabled>Rewrites <span class="pill-label badge bg-dark">0</span></button>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="card">
@@ -328,6 +328,12 @@ bin/metatron</code></pre>
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a></div></div>
 </div><div class="mb-3">
+    <h6 class="text-primary mb-2">Constants</h6>
+    <div class="d-flex flex-wrap"><a href="#const-llm" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">llm</span>
+    <span class="pill-label badge bg-secondary ms-2">C</span>
+</a></div>
+</div><div class="mb-3">
     <h6 class="text-primary mb-2">Instructions</h6>
     <div class="d-flex flex-wrap"><a href="#inst-chat" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">chat</span>
@@ -338,6 +344,42 @@ bin/metatron</code></pre>
 </a></div>
 </div></div>
     </div>
+</div><div class="container-xxl mb-4" id="consts">
+    <h3 class="text-primary mb-3">Constants <span class="pill-label badge bg-secondary">1</span></h3>
+    <div class="card mb-3" id="const-llm">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span class="code text-secondary fw-bold">llm</span>
+        <small class="text-muted code">/m/llm</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">instset::[
+ pattern=&gt;/m/llm/#,
+ q=&gt;[docq::[
+ pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
+ pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+ pattern=&gt;docq,
+ obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
+ inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
+ space=&gt;[super=&gt;/m/llm/#],
+ type=&gt;[
+  catalog::T,
+  tool::T,
+  memory::T,
+  user::T,
+  AI::T,
+  skill::T,
+  feature::T,
+  model::T],
+ inst=&gt;[
+  as?tool&lt;=docs(tool::T),
+  as?tool&lt;=inst(tool::T),
+  as?skill&lt;=dir(skill::T),
+  chat?str&lt;=model(str::T),
+  embed?/m/vec/vec&lt;=model(#::T),
+  chat?rec&lt;=model(str::T,rec::T)]]@/m/llm</code></pre></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">large language model think and reason within the metatron</p>
+</div>
+</div>
 </div><div class="container-xxl mb-4" id="types">
     <h3 class="text-primary mb-3">Types <span class="pill-label badge bg-primary">8</span></h3>
     <div class="card mb-3" id="type-AI">
@@ -765,7 +807,7 @@ bin/metatron</code></pre>
             toastTimer = setTimeout(function() { toast.classList.remove('show'); }, 1800);
         }
 
-        document.querySelectorAll('h2[id], h3[id], h4[id], h5[id], h6[id]').forEach(function(heading) {
+        document.querySelectorAll('h2[id]:not(.accordion-header), h3[id], h4[id], h5[id], h6[id]').forEach(function(heading) {
             var anchor = document.createElement('a');
             anchor.className = 'heading-anchor bi bi-link-45deg';
             anchor.href = '#' + heading.id;

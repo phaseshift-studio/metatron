@@ -20,3 +20,8 @@ Threads encapsulate `code` that is evaluating independent of the thread that spa
 virtual::[code=>repeat(code=>+1,until=>?>=2026)]
 ----
 
+[source,mtron]
+----
+virtual::[code=>+1,until=>loops()?>2026]
+----
+
