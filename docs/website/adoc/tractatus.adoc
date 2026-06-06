@@ -36,10 +36,8 @@ include::header.html[]
 
 ++++
 <div class="container-xxl py-5">
-    <div class="container-fluid wow fadeIn" data-wow-delay="0.5s">
-        <h1 class="text-primary text-center p-5 glow-text">Tractatus Algebraicus Metatronicus</h1>
-        <hr/>
-        <div class="parchment-section">
+    <h1 class="text-primary text-center pt-2 pb-1 glow-text">Tractatus Algebraicus Metatronicus</h1>
+    <div class="parchment-section">
         <div class="row mt-3 mb-4 justify-content-center">
             <div class="col-md-6 position-relative">
                 <input type="text" id="lecture-search" class="form-control bg-dark text-light border-primary" placeholder="keyword search">
@@ -136,7 +134,7 @@ include::grid-button.adoc[]
 
 :card-id: 17
 :card-title: thread
-:card-disabled: disabled
+:card-disabled:
 include::grid-button.adoc[]
 
 :card-id: 18
@@ -172,7 +170,6 @@ include::grid-button.adoc[]
 ++++
                     </div>
     </div>
-        </div>
 <hr/>
 <div class="d-grid gap-2 d-md-flex justify-content-md-end" id="pdf-export-container" style="display: none;">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -300,6 +297,9 @@ include::card.adoc[]
 :card-file: c.adoc
 include::card.adoc[]
 
+:card-id: 17
+:card-file: thread.adoc
+include::card.adoc[]
 
 :card-id: 19
 :card-file: web.adoc

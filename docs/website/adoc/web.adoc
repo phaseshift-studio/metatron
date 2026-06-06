@@ -54,18 +54,18 @@ html::T                                                    [-- <1> --]
 
 When a https://en.wikipedia.org/wiki/REST[REST] endpoint has a URL address that matches an `httpspace` pattern, the REST resources can be used in metatron. This is possible because `httpspace` transforms data "in the wild" (e.g. `application/json`) into an isomorphic `obj`. If the newly mapped `obj` is typed, then it inherits the instructions for that type as defined by the `instset` of the type. As such, REST resources can be enriched/typed to become active computational objs in metatron.
 
-A https://localai.io/[LocalAI] service will serve to demonstrate how to leverage foreign resources in metatron. LocalAI exposes an https://www.openapis.org/[OpenAPI]-compliant endpoint at `http://localhost:8088/v1` (this is specific to the author's local deployment of LocalAI).
+A https://lmstudio.ai/[LMStudio] service will serve to demonstrate how to leverage foreign resources in metatron. LMStudio exposes an https://www.openapis.org/[OpenAPI]-compliant endpoint at `http://localhost:1234/v1` (this is specific to the author's local deployment of LMStudio).
 
 [mtron]
 ----
-*<http://localhost:8088/v1>                       
-*<http://localhost:8088/v1/models>               
-*<http://localhost:8088/v1/models/data/0/id>      
-*<http://localhost:8088/api/models/config-json/${  /
-  *<http://localhost:8088/v1/models/data/0/id>}>   
+*<http://localhost:1234/v1>                       
+*<http://localhost:1234/v1/models>               
+*<http://localhost:1234/v1/models/data/0/id>      
+*<http://localhost:1234/v1/models/config-json/${  /
+  *<http://localhost:1234/v1/models/data/0/id> }>   
 ----
 <1> No result, but also no connection `fail::T`. The endpoint is alive.
-<2> The `/models` resource contains a list of all LLM models available for use in LocalAI.
+<2> The `/models` resource contains a list of all LLM models available for use in LMStudio.
 <3> Traversing the data within the resource is a function of extending the URI accordingly.
 <4> Using URI template parameters to fetch more information about the model.
 
@@ -79,15 +79,15 @@ Once the desired REST resource has been accessed, it's possible to map the resou
 <1> The `model::T` type in `/m/llm`.
 <2> The `/m/llm` instructions with a domain of `model::T`  (an object oriented perspective -- `obj.f()`).
 
-When the REST resource is manipulated to fit the structural specification of `model::T`, then  `http://localhost:8088/v1/models/data/0` can be the source of `chat?#\<=model`.
+When the REST resource is manipulated to fit the structural specification of `model::T`, then  `http://localhost:1234/v1/models/data/0` can be the source of `chat?#\<=model`.
 
 
 [mtron]
 ----
-*<http://localhost:8088/v1/models/data/0>>-.           /
+*<http://localhost:1234/v1/models/data/0>>-.           /
   -<[name=>>>id.as(uri::T),                            /
      type=>>>object.as(uri::T),                        /
-     provider=>|!*/sys/space/localai].as(model::T)     /
+     provider=>|!*/sys/space/lmstudio].as(model::T)     /
   .chat('are you there?')                             
 ----
 <1> The OpenAPI `application/json` resource is morphed into a metatron `model::T` and then the model is `chat`ted with.

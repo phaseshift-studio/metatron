@@ -21,6 +21,7 @@
     --myellow: #edbf73;
     --maqua: #0082ae;
     --mbrown: #ffffff80;
+    --mheading: #796c6c;
 }
 
 .stemblock,
@@ -29,7 +30,7 @@ mjx-container {
 }
 
 h1, h2, h3, h4 {
-    color: var(--mred) !important;
+    color: var(--mheading);
 }
 
 h1 {
@@ -240,7 +241,7 @@ table {
 }
 
 .title {
-    color: var(--mred);
+    color: var(--mheading);
 }
 
 .tutorial-grid .btn {
@@ -696,7 +697,7 @@ em {
 }
 
 .navbar .navbar-nav .quickstart-link {
-    color: #796c6c;
+    color: var(--mheading);
 }
 
 .navbar .navbar-nav .quickstart-link:hover {
@@ -910,8 +911,8 @@ footer {
 }
 
 .discrete {
-    color: #796c6c !important;
-    border-bottom: 1px solid #7a2518;
+    color: var(--mheading);
+    border-bottom: 1px solid var(--mred);
     padding-bottom: 0.35rem;
     margin-bottom: 0.75rem;
 }
@@ -1350,7 +1351,7 @@ details {
     float: right;
     display: inline-block;
     max-width: max-content;
-    border: 1px solid #7a2518;
+    border: 1px solid var(--mred);
     margin: 0 0 0.75em 1em;
     padding: 0.5em 0.85em;
     background: rgba(122, 37, 24, 0.06);
@@ -1364,7 +1365,7 @@ details:hover {
 }
 
 details summary {
-    color: #796c6c;
+    color: var(--mheading);
     list-style: none;
     font-size: 0.85rem;
     font-weight: bold;
@@ -1376,7 +1377,7 @@ details summary::-webkit-details-marker {
 
 details summary::before {
     content: '\25B8';
-    color: #7a2518;
+    color: var(--mred);
     font-size: 0.75rem;
     margin-right: 8px;
     transition: transform 0.2s;
@@ -1402,14 +1403,14 @@ details[open] summary::before {
 }
 
 .switch--item.selected {
-    background-color: #7a2518 !important;
+    background-color: var(--mred) !important;
 }
 
 .switch--item {
     padding: 0.25em 1em;
     border-radius: 0.35em;
     position: relative;
-    border-color: #7a2518 !important;
+    border-color: var(--mred) !important;
     border-width: 1px;
     background-color: var(--secondarycolor) !important;
     border-style: solid;

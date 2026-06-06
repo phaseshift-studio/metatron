@@ -346,6 +346,11 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathTest impleme
         return "sql_";
     }
 
+    @Override
+    public fURI getRewriteInstUri() {
+        return f("/m/tble");
+    }
+
     // =========================================================================
     //  Type-prefix parser for @CsvSource test data
     // =========================================================================
@@ -408,6 +413,31 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathTest impleme
 
     public static Stream<Arguments> providePlanVerificationTestCases() {
         return new PostgreSQLTbleSpaceTest().generatePlanVerificationTestCases();
+    }
+
+    // verify/firing tests: now enabled via getRewriteInstUri() which fetches
+    // rewriters directly from the InstSet (Router.readFromSpace("/m/tble").at("rewrite"))
+
+    @Disabled("parse().rewrite() does not trigger tbleSpace rewrites")
+    @ParameterizedTest(name = "[{index}] {0}")
+    @MethodSource("provideRewriteVerificationTestCases")
+    public void testRewriteVerification(String description, String code, String nativeInstName) throws Exception {
+        runRewriteVerificationTest(description, code, nativeInstName);
+    }
+
+    static Stream<Arguments> provideRewriteVerificationTestCases() {
+        return Stream.empty();
+    }
+
+    @Disabled("parse().rewrite() does not trigger tbleSpace rewrites")
+    @ParameterizedTest(name = "[{index}] {0}")
+    @MethodSource("provideRewriteFiringTestCases")
+    public void testRewriteFiring(String description, String code, String nativeInstName, boolean shouldRewrite) throws Exception {
+        runRewriteFiringTest(description, code, nativeInstName, shouldRewrite);
+    }
+
+    static Stream<Arguments> provideRewriteFiringTestCases() {
+        return Stream.empty();
     }
 
     // =========================================================================

@@ -289,6 +289,7 @@ bin/metatron</code></pre>
   /m/dcmnt/inst/rewrite/mql_has?code{?}&lt;=code(),
   /m/dcmnt/inst/rewrite/mql_where?code{?}&lt;=code(),
   /m/dcmnt/inst/rewrite/mql_where_count?code{?}&lt;=code(),
+  /m/dcmnt/inst/rewrite/mql_where_limit?code{?}&lt;=code(),
   /m/dcmnt/inst/rewrite/mql_select?code{?}&lt;=code()]]@/m/dcmnt</code></pre>
                     </div>
                 </div>
@@ -297,7 +298,7 @@ bin/metatron</code></pre>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <a href="#consts" class="btn btn-outline-primary">Consts <span class="pill-label badge bg-secondary">1</span></a><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">2</span></a><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">2</span></a><button class="btn btn-outline-secondary" disabled>Spaces <span class="pill-label badge bg-dark">0</span></button><a href="#rewrites" class="btn btn-outline-primary">Rewrites <span class="pill-label badge bg-warning">8</span></a>
+        <a href="#consts" class="btn btn-outline-primary">Consts <span class="pill-label badge bg-secondary">2</span></a><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">2</span></a><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">2</span></a><button class="btn btn-outline-secondary" disabled>Spaces <span class="pill-label badge bg-dark">0</span></button><a href="#rewrites" class="btn btn-outline-primary">Rewrites <span class="pill-label badge bg-warning">9</span></a>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="card">
@@ -315,6 +316,9 @@ bin/metatron</code></pre>
     <h6 class="text-primary mb-2">Constants</h6>
     <div class="d-flex flex-wrap"><a href="#const-_id" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">_id</span>
+    <span class="pill-label badge bg-secondary ms-2">C</span>
+</a><a href="#const-dcmnt" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">dcmnt</span>
     <span class="pill-label badge bg-secondary ms-2">C</span>
 </a></div>
 </div><div class="mb-3">
@@ -349,11 +353,14 @@ bin/metatron</code></pre>
 </a><a href="#rewrite-mql_where_count" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">mql_where_count</span>
     <span class="pill-label badge bg-warning text-dark ms-2">R</span>
+</a><a href="#rewrite-mql_where_limit" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">mql_where_limit</span>
+    <span class="pill-label badge bg-warning text-dark ms-2">R</span>
 </a></div>
 </div></div>
     </div>
 </div><div class="container-xxl mb-4" id="consts">
-    <h3 class="text-primary mb-3">Constants <span class="pill-label badge bg-secondary">1</span></h3>
+    <h3 class="text-primary mb-3">Constants <span class="pill-label badge bg-secondary">2</span></h3>
     <div class="card mb-3" id="const-_id">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span class="code text-secondary fw-bold">_id</span>
@@ -361,6 +368,48 @@ bin/metatron</code></pre>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">_id@/m/dcmnt/_id</code></pre></div>
     
+</div><div class="card mb-3" id="const-dcmnt">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span class="code text-secondary fw-bold">dcmnt</span>
+        <small class="text-muted code">/m/dcmnt</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">instset::[
+ pattern=&gt;/m/dcmnt/#,
+ q=&gt;[docq::[
+ pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
+ pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+ pattern=&gt;docq,
+ obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
+ inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
+ space=&gt;[super=&gt;/m/dcmnt/#],
+ constq=&gt;[
+  !*/m/mach/io/serializer/json/simple,
+  _id@/m/dcmnt/_id],
+ type=&gt;[
+  collection::T,
+  dcmntspace::T],
+ inst=&gt;[
+  mql?rec{*}&lt;=dcmntspace(uri::T,rec::T),
+  mql?rec{*}&lt;=collection(rec::T)],
+ rewrite=&gt;[
+  /m/dcmnt/inst/rewrite/mql_count?code{?}&lt;=code(),
+  /m/dcmnt/inst/rewrite/mql_sum?code{?}&lt;=code(),
+  /m/dcmnt/inst/rewrite/mql_mean?code{?}&lt;=code(),
+  /m/dcmnt/inst/rewrite/mql_limit?code{?}&lt;=code(),
+  /m/dcmnt/inst/rewrite/mql_has?code{?}&lt;=code(),
+  /m/dcmnt/inst/rewrite/mql_where?code{?}&lt;=code(),
+  /m/dcmnt/inst/rewrite/mql_where_count?code{?}&lt;=code(),
+  /m/dcmnt/inst/rewrite/mql_where_limit?code{?}&lt;=code(),
+  /m/dcmnt/inst/rewrite/mql_select?code{?}&lt;=code()]]@/m/dcmnt</code></pre></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">nested documents, typed collections, and schema-enforced writes — all within metatron</p>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">@mongodb:people/6/address    &gt;&gt;=  [street=&gt;Elm Street,city=&gt;Gotham]
+@mongodb:people/6/address    &gt;&gt;= +[zipcode=&gt;90210]
+*mongodb:people/6/address         [-- [street=&gt;Elm Street,city=&gt;Gotham,zipcode=&gt;90210] --]
+*mongodb:people/6/address/zipcode [-- 90210 --]</code></pre>
+</div>
 </div>
 </div><div class="container-xxl mb-4" id="types">
     <h3 class="text-primary mb-3">Types <span class="pill-label badge bg-primary">2</span></h3>
@@ -396,12 +445,12 @@ bin/metatron</code></pre>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">a rec describing a document database connection <span class="text-light">=&gt;</span> a rec with fields for configuring a document database connection</pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  pattern <span class="text-light">=&gt;</span> <span class="text-info">&#39;the pattern for accessing documents&#39;</span>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  route <span class="text-light">=&gt;</span> <span class="text-info">&#39;the route for accessing documents&#39;</span>
+  {?}serializer <span class="text-light">=&gt;</span> <span class="text-info">&#39;the serializer for BSON documents&#39;</span>
+  pattern <span class="text-light">=&gt;</span> <span class="text-info">&#39;the pattern for accessing documents&#39;</span>
   host <span class="text-light">=&gt;</span> <span class="text-info">&#39;connection uri (mongodb://host:port/database?options)&#39;</span>
   {?}schema <span class="text-light">=&gt;</span> <span class="text-info">&#39;an instset of collection types auto-discovered from the live database&#39;</span>
   {?}root <span class="text-light">=&gt;</span> <span class="text-info">&#39;the root type constraint — writes at document root must satisfy this type; defaults to rec::T&#39;</span>
-  route <span class="text-light">=&gt;</span> <span class="text-info">&#39;the route for accessing documents&#39;</span>
-  {?}serializer <span class="text-light">=&gt;</span> <span class="text-info">&#39;the serializer for BSON documents&#39;</span>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -442,7 +491,7 @@ bin/metatron</code></pre>
 </div>
 </div>
 </div><div class="container-xxl mb-4" id="rewrites">
-    <h3 class="text-primary mb-3">Rewrites <span class="pill-label badge bg-warning text-dark">8</span></h3>
+    <h3 class="text-primary mb-3">Rewrites <span class="pill-label badge bg-warning text-dark">9</span></h3>
     <div class="card mb-3" id="rewrite-mql_count">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -522,6 +571,16 @@ bin/metatron</code></pre>
         <small class="text-muted code">/m/dcmnt/inst/rewrite/mql_where_count?rng=/m/code{?}&amp;dom=/m/code</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/dcmnt/inst/rewrite/mql_where_count?rng=code{?}&amp;dom=code(){&lt;j&gt;}</code></pre></div>
+    
+</div><div class="card mb-3" id="rewrite-mql_where_limit">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-warning fw-bold">mql_where_limit</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#type-code" data-bs-toggle="tooltip" title="domain" class="code text-info">code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#type-code" data-bs-toggle="tooltip" title="maybe range" class="code text-success">code{?}</a></span></span>
+        </span>
+        <small class="text-muted code">/m/dcmnt/inst/rewrite/mql_where_limit?rng=/m/code{?}&amp;dom=/m/code</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/dcmnt/inst/rewrite/mql_where_limit?rng=code{?}&amp;dom=code(){&lt;j&gt;}</code></pre></div>
     
 </div>
 </div><div class="container-xxl py-3 text-center">
@@ -701,7 +760,7 @@ bin/metatron</code></pre>
             toastTimer = setTimeout(function() { toast.classList.remove('show'); }, 1800);
         }
 
-        document.querySelectorAll('h2[id], h3[id], h4[id], h5[id], h6[id]').forEach(function(heading) {
+        document.querySelectorAll('h2[id]:not(.accordion-header), h3[id], h4[id], h5[id], h6[id]').forEach(function(heading) {
             var anchor = document.createElement('a');
             anchor.className = 'heading-anchor bi bi-link-45deg';
             anchor.href = '#' + heading.id;

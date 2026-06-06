@@ -533,55 +533,19 @@ In metatron, the uri is called a <em>fURI</em> (<strong>functional uniform resou
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys/space/+.count()
-==&gt;23
+==&gt;6
 mtron&gt; */sys/space/+.&gt;&gt;pattern
 ==&gt;&lt;+/#&gt;
-==&gt;{2}g:#
-==&gt;/te/cold/#
-==&gt;serial:#
+==&gt;g:#
 ==&gt;/usr/#
-==&gt;/te/hot/#
 ==&gt;http://#
-==&gt;localai:#
-==&gt;mqtt:#
-==&gt;acme:#
-==&gt;deep:#
-==&gt;ha:#
-==&gt;openai:#
-==&gt;ollama:#
-==&gt;/shared/#
-==&gt;mongo:#
-==&gt;wikidata:#
-==&gt;loc:#
-==&gt;fs:#
-==&gt;farm:#
-==&gt;local:#
 ==&gt;mtronfs:#
+==&gt;local:#
 mtron&gt; */sys/space/+.-&lt;[&gt;&gt;pattern=&gt;&gt;&gt;route]
-==&gt;{5}[=&gt;]
-==&gt;[g:#=&gt;[g:=&gt;&lt;&gt;,g:V=&gt;V,g:E=&gt;E,g:S=&gt;/m/grph/schema/modern]]
-==&gt;[/te/cold/#=&gt;[/te/cold/=&gt;&lt;&gt;]]
-==&gt;[serial:#=&gt;[serial:=&gt;&lt;&gt;]]
-==&gt;[/te/hot/#=&gt;[/te/hot/=&gt;&lt;&gt;]]
+==&gt;{3}[=&gt;]
 ==&gt;[http://#=&gt;[/=&gt;local:]]
-==&gt;[localai:#=&gt;[localai:=&gt;&lt;&gt;]]
-==&gt;[mqtt:#=&gt;[mqtt:=&gt;&lt;&gt;]]
-==&gt;[acme:#=&gt;[acme:=&gt;&lt;&gt;]]
-==&gt;[deep:#=&gt;[deep:=&gt;&lt;&gt;]]
-==&gt;[ha:#=&gt;[ha:=&gt;/home/chips]]
-==&gt;[openai:#=&gt;[openai:=&gt;&lt;&gt;]]
-==&gt;[ollama:#=&gt;[ollama:=&gt;&lt;&gt;]]
-==&gt;[mongo:#=&gt;[mongo:=&gt;&lt;&gt;]]
-==&gt;[wikidata:#=&gt;[
-    bd:=&gt;&lt;http://www.bigdata.com/rdf#&gt;,
-    wikibase:=&gt;&lt;http://wikiba.se/ontology#&gt;,
-    wd:=&gt;&lt;http://www.wikidata.org/entity/&gt;,
-    wdt:=&gt;&lt;http://www.wikidata.org/prop/direct/&gt;,
-    wikidata:=&gt;&lt;&gt;]]
-==&gt;[fs:#=&gt;[fs:m=&gt;/home/killswitch/software/metatron,fs:=&gt;/home/killswitch/]]
-==&gt;[farm:#=&gt;[farm:=&gt;&lt;&gt;]]
-==&gt;[local:#=&gt;[local:=&gt;/home/killswitch/]]
-==&gt;[mtronfs:#=&gt;[mtronfs:=&gt;&lt;.metatron&gt;]]</code></pre>
+==&gt;[mtronfs:#=&gt;[mtronfs:=&gt;&lt;.metatron&gt;]]
+==&gt;[local:#=&gt;[local:=&gt;/home/killswitch/]]</code></pre>
 </div>
 </div>
 <br><br>
@@ -756,7 +720,7 @@ mtron&gt; */sys/space/+.-&lt;[&gt;&gt;pattern=&gt;&gt;&gt;route]
             toastTimer = setTimeout(function() { toast.classList.remove('show'); }, 1800);
         }
 
-        document.querySelectorAll('h2[id], h3[id], h4[id], h5[id], h6[id]').forEach(function(heading) {
+        document.querySelectorAll('h2[id]:not(.accordion-header), h3[id], h4[id], h5[id], h6[id]').forEach(function(heading) {
             var anchor = document.createElement('a');
             anchor.className = 'heading-anchor bi bi-link-45deg';
             anchor.href = '#' + heading.id;

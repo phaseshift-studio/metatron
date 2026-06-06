@@ -11,7 +11,7 @@ import(/m/llm)
 ----
 ====
 
-Modern AI techniques are heavily leveraged across various aspects of metatron, with popular cloud service providers (e.g. link:https://www.anthropic.com/[Anthropic] and/or link:https://openai.com/[OpenAI]) and local providers (e.g. link:https://ollama.com/[Ollama] and/or http://localai.io[LocalAI]) serving as the compute-intensive inferencing backends.
+Modern AI techniques are heavily leveraged across various aspects of metatron, with popular cloud service providers (e.g. link:https://www.anthropic.com/[Anthropic] and/or link:https://openai.com/[OpenAI]) and local providers (e.g. link:https://ollama.com/[Ollama], link:http://lmstudio.ai/[LMStudio], and/or http://localai.io/[LocalAI]) serving as the compute-intensive inferencing backends.
 
 . **Pair Programmer**: LLMs can connect to a console session, be provided a terminal split screen, and evaluate mtron expressions alongside the user. This is especially useful when developing strategies for interlinking spaces via schema alignment and entity resolution as well as quickly creating domain-specific rewrite rules to optimize mtron compilation (using mtron).
 . **Agent Development**: A large portion of an LLM's functional elements are embedded in the URI address space and made accessible to mtron via respective spaces. Such components include:
@@ -47,10 +47,10 @@ catalog::[host         => <https://api.deepseek.com/>,          /
           pattern      => <deep:#>,                             /
           name         => <openai>,                             /
           route        => [<deep:>=><>]]@/sys/space/deepseek
-catalog::[host         => <http://localhost:8088/v1>,           /
-          pattern      => <localai:#>,                          /
-          name         => <localai>,                            /
-          route        => [<localai:>=><>]]@/sys/space/localai
+catalog::[host         => <http://localhost:1234/v1>,           /
+          pattern      => <lmstudio:#>,                          /
+          name         => <openai>,                              /
+          route        => [<lmstudio:>=><>]]@/sys/space/lmstudio
 ----
 
 [discrete]

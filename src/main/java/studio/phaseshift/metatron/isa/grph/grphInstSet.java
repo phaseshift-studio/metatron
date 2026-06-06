@@ -23,7 +23,9 @@ import org.apache.tinkerpop.gremlin.jsr223.GremlinLangScriptEngineFactory;
 import org.apache.tinkerpop.gremlin.jsr223.GremlinScriptEngine;
 import org.apache.tinkerpop.gremlin.structure.*;
 import studio.phaseshift.metatron.algebra.rewrite.CommonRewrites;
+import studio.phaseshift.metatron.algebra.rewrite.RewriteBuilder;
 import studio.phaseshift.metatron.algebra.rewrite.Rewriter;
+import studio.phaseshift.metatron.furi.DataPath;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
@@ -319,27 +321,133 @@ public class grphInstSet extends AbstractInstSet {
                             }));
                         })),
                 uri(REWRITE), lst(
-                        /*docWrap(CommonRewrites.countRewrite(
-                                grphSpace.class,
-                                GRPH_REWRITE_TID.extend("graph_count").dom(ALL.maybeSome()).rng(INT_TID),
-                                (space, dp) -> {
-                                    if ("V".equals(dp.collection()))
-                                        return space.sjvm().traversal().V().count().next();
-                                    if ("E".equals(dp.collection()))
-                                        return space.sjvm().traversal().E().count().next();
-                                    return 0L;
-                                }
-                        ), "pre-rewrite code", "post-rewrite code", Map.of(), "leverages native Gremlin count() for vertex/edge collections"),*/
+                        docWrap(
+                                InstSet.Helper.rewriter(
+                                        GRPH_REWRITE_TID.extend("gremlin_count"),
+                                        code -> code.selfJVM(
+                                                Rewriter.search(code.insts())
+                                                        .match(List.of(instB(FROM_INST_TID, lst()), instB(COUNT_INST_TID, lst())))
+                                                        .rewrite(map -> {
+                                                            final java.util.List<Inst> matchList = new java.util.ArrayList<>(map.values());
+                                                            final Inst fromInst = matchList.get(0);
+                                                            final Obj ref = fromInst.arg(0);
+                                                            // guard: only V/E collections, no traversals (no field/extensions)
+                                                            if (!ref.isUri()) return matchList.stream().map(Obj::asInst).toList();
+                                                            final DataPath dp = DataPath.of(f("-").extend(ref.uriValue()));
+                                                            if (!("V".equals(dp.collection()) || "E".equals(dp.collection()))
+                                                                    || !dp.entryIsWildcard()
+                                                                    || dp.hasField() || dp.hasExtension())
+                                                                return matchList.stream().map(Obj::asInst).toList();
+                                                            final fURI furi = ref.uriValue();
+                                                            final studio.phaseshift.metatron.isa.Space space = Router.global().getSpaceFor(furi);
+                                                            if (!(space instanceof grphSpace gs))
+                                                                return matchList.stream().map(Obj::asInst).toList();
+                                                            final long count = "V".equals(dp.collection())
+                                                                    ? gs.sjvm().traversal().V().count().next()
+                                                                    : gs.sjvm().traversal().E().count().next();
+                                                            return List.of(instC(
+                                                                    GRPH_REWRITE_TID.extend("graph_count").dom(ALL_STAR).rng(INT_TID),
+                                                                    lst(uri(furi)),
+                                                                    (lhs, inst) -> jnt(count)));
+                                                        })
+                                        ).asCode()),
+                                "pre-rewrite code", "post-rewrite code", Map.of(), "leverages gremlin's count()-reducer for vrtx/edge collections"),
                         docWrap(CommonRewrites.limitRewrite(
                                 grphSpace.class,
-                                GRPH_REWRITE_TID.extend("graph_limit"),
+                                GRPH_REWRITE_TID.extend("gremlin_limit"),
                                 (space, dp, limit) -> {
                                     final Iterator<? extends Element> elements = "V".equals(dp.collection())
                                             ? space.sjvm().traversal().V().limit(limit)
                                             : space.sjvm().traversal().E().limit(limit);
                                     return objs(IteratorUtil.stream(elements).map(e -> (e instanceof Vertex v) ? new VertexRec(v, space) : new EdgeRec((Edge) e, space)));
                                 }
-                        ), "pre-rewrite code", "post-rewrite code", Map.of(), "leverages native Gremlin limit() for vertex/edge collections"),
+                        ), "pre-rewrite code", "post-rewrite code", Map.of(), "leverages gremlin's limit()-barrier for vrtx/edge collections"),
+
+                        // Optimize: from(V/+).where([field=>value]) → g.V().has(field, predicate)
+                        docWrap(CommonRewrites.whereRewrite(
+                                grphSpace.class,
+                                GRPH_REWRITE_TID.extend("gremlin_where"),
+                                (space, dp, sqlWhere) -> {
+                                    if (!"V".equals(dp.collection()))
+                                        throw MTronException.of("where-rewrite only supports the vertex (V) collection: %s", dp.collection());
+                                    final org.apache.tinkerpop.gremlin.process.traversal.P<?> pred = parseGremlinPredicate(sqlWhere);
+                                    final String field = extractPredicateField(sqlWhere);
+                                    if (pred == null || field == null)
+                                        throw MTronException.of("unable to parse where-predicate: %s", sqlWhere);
+                                    return objs(IteratorUtil.stream(
+                                            space.sjvm().traversal().V().has(field, pred)).map(v -> new VertexRec((Vertex) v, space)));
+                                }
+                        ), "pre-rewrite code", "post-rewrite code", Map.of(), "leverages gremlin's has()-filtering for vrtx collections"),
+
+                        // Optimize: gremlin_where.count() → g.V().has(field, pred).count().next()
+                        // Uses direct rewriter to match by TID substring (bypasses ?dom/?rng query-param mismatch)
+                        docWrap(
+                                InstSet.Helper.rewriter(
+                                        GRPH_REWRITE_TID.extend("gremlin_where_count"),
+                                        code -> code.selfJVM(
+                                                Rewriter.search(code.insts())
+                                                        .match(List.of(instB(ALL, lst()), instB(COUNT_INST_TID, lst())))
+                                                        .rewrite(map -> {
+                                                            final java.util.List<Inst> matchList = new java.util.ArrayList<>(map.values());
+                                                            final Inst whereInst = matchList.get(0);
+                                                            // only compose if the first instruction is a gremlin_where
+                                                            if (!whereInst.tid().toString().contains("gremlin_where"))
+                                                                return matchList.stream().map(Obj::asInst).toList();
+                                                            final Obj args = whereInst.args();
+                                                            if (!args.isLst() || args.asLst().count() < 2)
+                                                                return matchList.stream().map(Obj::asInst).toList();
+                                                            final fURI furi = args.asLst().at(0).asUri().uriValue();
+                                                            final String sqlWhere = args.asLst().at(1).asStr().jvm();
+                                                            final studio.phaseshift.metatron.isa.Space space = Router.global().getSpaceFor(furi);
+                                                            if (!(space instanceof grphSpace gs))
+                                                                return matchList.stream().map(Obj::asInst).toList();
+                                                            //final DataPath dp = DataPath.of(f("-").extend(furi));
+                                                            final org.apache.tinkerpop.gremlin.process.traversal.P<?> pred = parseGremlinPredicate(sqlWhere);
+                                                            final String field = extractPredicateField(sqlWhere);
+                                                            if (pred == null || field == null) return matchList.stream().map(Obj::asInst).toList();
+                                                            final long count = gs.sjvm().traversal().V().has(field, pred).count().next();
+                                                            return List.of(instC(
+                                                                    GRPH_REWRITE_TID.extend("gremlin_where_count").dom(ALL_STAR).rng(INT_TID),
+                                                                    lst(uri(furi), studio.phaseshift.metatron.isa.m.type.impl.MStr.str(sqlWhere)),
+                                                                    (lhs, inst) -> jnt(count)));
+                                                        })
+                                        ).asCode()),
+                                "pre-rewrite code", "post-rewrite code", Map.of(), "leverages gremlin's has().count() filtering-reduction for vrtx collections"),
+
+                        // Optimize: gremlin_where.take(n) → g.V().has(field, pred).limit(n)
+                        docWrap(
+                                InstSet.Helper.rewriter(
+                                        GRPH_REWRITE_TID.extend("gremlin_where_limit"),
+                                        code -> code.selfJVM(
+                                                Rewriter.search(code.insts())
+                                                        .match(List.of(instB(ALL, lst()), instB(TAKE_INST_TID, lst())))
+                                                        .rewrite(map -> {
+                                                            final java.util.List<Inst> matchList = new java.util.ArrayList<>(map.values());
+                                                            final Inst whereInst = matchList.get(0);
+                                                            final Inst takeInst = matchList.get(1);
+                                                            if (!whereInst.tid().toString().contains("gremlin_where"))
+                                                                return matchList.stream().map(Obj::asInst).toList();
+                                                            final Obj args = whereInst.args();
+                                                            if (!args.isLst() || args.asLst().count() < 2)
+                                                                return matchList.stream().map(Obj::asInst).toList();
+                                                            final fURI furi = args.asLst().at(0).asUri().uriValue();
+                                                            final String sqlWhere = args.asLst().at(1).asStr().jvm();
+                                                            final long limit = takeInst.arg(0).asInt().jvm();
+                                                            final studio.phaseshift.metatron.isa.Space space = Router.global().getSpaceFor(furi);
+                                                            if (!(space instanceof grphSpace gs))
+                                                                return matchList.stream().map(Obj::asInst).toList();
+                                                            final DataPath dp = DataPath.of(f("-").extend(furi));
+                                                            final org.apache.tinkerpop.gremlin.process.traversal.P<?> pred = parseGremlinPredicate(sqlWhere);
+                                                            final String field = extractPredicateField(sqlWhere);
+                                                            if (pred == null || field == null) return matchList.stream().map(Obj::asInst).toList();
+                                                            return List.of(instC(
+                                                                    GRPH_REWRITE_TID.extend("gremlin_where_limit").dom(ALL_STAR).rng(ALL_STAR),
+                                                                    lst(uri(furi), studio.phaseshift.metatron.isa.m.type.impl.MStr.str(sqlWhere), jnt(limit)),
+                                                                    (lhs, inst) -> objs(IteratorUtil.stream(
+                                                                            gs.sjvm().traversal().V().has(field, pred).limit(limit)).map(v -> new VertexRec((Vertex) v, gs)))));
+                                                        })
+                                        ).asCode()),
+                                "pre-rewrite code", "post-rewrite code", Map.of(), "leverages gremlin's has().limit() filtering-barrier for vrtx collections"),
                         InstSet.Helper.rewriter(GRPH_REWRITE_TID.extend("out_incident_adjacent"), code -> code.selfJVM(
                                 Rewriter.search(code.insts())
                                         .match(List.of(instA(OUTE_INST_TID), instA(INV_INST_TID)))
@@ -350,5 +458,54 @@ public class grphInstSet extends AbstractInstSet {
                                         .rewrite(map -> List.of(instB(IN_INST_TID, map.entrySet().iterator().next().getValue().args())))).asCode()))));
         docWrap(this, "from vertex to vertex, the edge of the metatron is traversed");
         super.setup();
+    }
+
+    /**
+     * Parse a SQL-like WHERE clause into a Gremlin P predicate.
+     * Handles: "field > value", "field = value", "field < value",
+     *          "field >= value", "field <= value", "field <> value".
+     */
+    private static org.apache.tinkerpop.gremlin.process.traversal.P<?> parseGremlinPredicate(final String whereClause) {
+        if (whereClause == null || whereClause.isBlank()) return null;
+        final String[] ops = {">=", "<=", "<>", ">", "<", "="};
+        for (final String op : ops) {
+            final int idx = whereClause.indexOf(op);
+            if (idx > 0) {
+                final String valueStr = whereClause.substring(idx + op.length()).trim();
+                final Object value = parsePredicateValue(valueStr);
+                return switch (op) {
+                    case "=" -> org.apache.tinkerpop.gremlin.process.traversal.P.eq(value);
+                    case ">" -> org.apache.tinkerpop.gremlin.process.traversal.P.gt((Comparable) value);
+                    case "<" -> org.apache.tinkerpop.gremlin.process.traversal.P.lt((Comparable) value);
+                    case ">=" -> org.apache.tinkerpop.gremlin.process.traversal.P.gte((Comparable) value);
+                    case "<=" -> org.apache.tinkerpop.gremlin.process.traversal.P.lte((Comparable) value);
+                    case "<>" -> org.apache.tinkerpop.gremlin.process.traversal.P.neq(value);
+                    default -> null;
+                };
+            }
+        }
+        return null;
+    }
+
+    /** Extract the field name from a SQL WHERE condition like "value > 5" */
+    private static String extractPredicateField(final String whereClause) {
+        if (whereClause == null || whereClause.isBlank()) return null;
+        final String[] ops = {">=", "<=", "<>", ">", "<", "=", " IS NOT NULL"};
+        for (final String op : ops) {
+            final int idx = whereClause.indexOf(op);
+            if (idx > 0) return whereClause.substring(0, idx).trim();
+        }
+        return null;
+    }
+
+    /** Parse a value string: handle quoted strings, booleans, numbers */
+    private static Object parsePredicateValue(final String valueStr) {
+        if (valueStr.startsWith("'") && valueStr.endsWith("'"))
+            return valueStr.substring(1, valueStr.length() - 1).replace("''", "'");
+        if ("TRUE".equalsIgnoreCase(valueStr)) return true;
+        if ("FALSE".equalsIgnoreCase(valueStr)) return false;
+        try { return Integer.parseInt(valueStr); } catch (NumberFormatException ignored) {}
+        try { return Double.parseDouble(valueStr); } catch (NumberFormatException ignored) {}
+        return valueStr;
     }
 }

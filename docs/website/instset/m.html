@@ -272,39 +272,6 @@ bin/metatron</code></pre>
  obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
  inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
  space=&gt;[sub=&gt;{!*/m/mach,!*/m/math,!*/m/web,!*/m/iot,!*/m/grph,!*/m/llm,!*/m/tble,!*/m/dcmnt,!*/m/rdf}],
- type=&gt;[
-  #::T,
-  bool::T,
-  int::T,
-  real::T,
-  bytes::T,
-  str::T,
-  uri::T,
-  rel::T,
-  lst::T,
-  rec::T,
-  instset::T,
-  inst::T,
-  code::T,
-  fail::T,
-  typer::T,
-  space::T,
-  memspace::T,
-  stack::T,
-  qproc::T,
-  subq::T,
-  sub::T,
-  typeq::T,
-  docs::T,
-  docq::T,
-  mintq::T,
-  shortq::T,
-  incrq::T,
-  constq::T,
-  mimeq::T],
- const=&gt;[
-  noobj,
-  none@none],
  inst=&gt;[
   as?bool&lt;=bool(bool::T),
   as?bytes&lt;=bool(bytes::T),
@@ -540,7 +507,40 @@ bin/metatron</code></pre>
   /m/inst/rewrite/mult_one?code{?}&lt;=code(),
   /m/inst/rewrite/split_merge_collapse?code{?}&lt;=code(),
   /m/inst/rewrite/split_merge_left_factor?code{?}&lt;=code(),
-  /m/inst/rewrite/split_merge_right_factor?code{?}&lt;=code()]]@/m</code></pre>
+  /m/inst/rewrite/split_merge_right_factor?code{?}&lt;=code()],
+ type=&gt;[
+  #::T,
+  bool::T,
+  int::T,
+  real::T,
+  bytes::T,
+  str::T,
+  uri::T,
+  rel::T,
+  lst::T,
+  rec::T,
+  instset::T,
+  inst::T,
+  code::T,
+  fail::T,
+  typer::T,
+  space::T,
+  memspace::T,
+  stack::T,
+  qproc::T,
+  subq::T,
+  sub::T,
+  typeq::T,
+  docs::T,
+  docq::T,
+  mintq::T,
+  shortq::T,
+  incrq::T,
+  constq::T,
+  mimeq::T],
+ const=&gt;[
+  noobj,
+  none@none]]</code></pre>
                     </div>
                 </div>
             </div>
@@ -548,7 +548,7 @@ bin/metatron</code></pre>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <a href="#consts" class="btn btn-outline-primary">Consts <span class="pill-label badge bg-secondary">12</span></a><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">47</span></a><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">262</span></a><button class="btn btn-outline-secondary" disabled>Spaces <span class="pill-label badge bg-dark">0</span></button><a href="#rewrites" class="btn btn-outline-primary">Rewrites <span class="pill-label badge bg-warning">8</span></a>
+        <a href="#consts" class="btn btn-outline-primary">Consts <span class="pill-label badge bg-secondary">12</span></a><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">47</span></a><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">275</span></a><button class="btn btn-outline-secondary" disabled>Spaces <span class="pill-label badge bg-dark">0</span></button><a href="#rewrites" class="btn btn-outline-primary">Rewrites <span class="pill-label badge bg-warning">8</span></a>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="card">
@@ -696,10 +696,7 @@ bin/metatron</code></pre>
 </a></div></div>
 </div><div class="mb-3">
     <h6 class="text-primary mb-2">Constants</h6>
-    <div class="d-flex flex-wrap"><a href="#const-m" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">m</span>
-    <span class="pill-label badge bg-secondary ms-2">C</span>
-</a><a href="#const-none" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <div class="d-flex flex-wrap"><a href="#const-none" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">none</span>
     <span class="pill-label badge bg-secondary ms-2">C</span>
 </a><a href="#const-noobj" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
@@ -1043,293 +1040,7 @@ bin/metatron</code></pre>
     </div>
 </div><div class="container-xxl mb-4" id="consts">
     <h3 class="text-primary mb-3">Constants <span class="pill-label badge bg-secondary">12</span></h3>
-    <div class="card mb-3" id="const-m">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <span class="code text-secondary fw-bold">m</span>
-        <small class="text-muted code">/m</small>
-    </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">instset::[
- pattern=&gt;/m/#,
- q=&gt;[docq::[
- pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
- pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
- pattern=&gt;docq,
- obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
- inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
- space=&gt;[sub=&gt;{!*/m/mach,!*/m/math,!*/m/web,!*/m/iot,!*/m/grph,!*/m/llm,!*/m/tble,!*/m/dcmnt,!*/m/rdf}],
- type=&gt;[
-  #::T,
-  bool::T,
-  int::T,
-  real::T,
-  bytes::T,
-  str::T,
-  uri::T,
-  rel::T,
-  lst::T,
-  rec::T,
-  instset::T,
-  inst::T,
-  code::T,
-  fail::T,
-  typer::T,
-  space::T,
-  memspace::T,
-  stack::T,
-  qproc::T,
-  subq::T,
-  sub::T,
-  typeq::T,
-  docs::T,
-  docq::T,
-  mintq::T,
-  shortq::T,
-  incrq::T,
-  constq::T,
-  mimeq::T],
- const=&gt;[
-  noobj,
-  none@none],
- inst=&gt;[
-  as?bool&lt;=bool(bool::T),
-  as?bytes&lt;=bool(bytes::T),
-  as?int&lt;=bool(int::T),
-  as?real&lt;=bool(real::T),
-  as?str&lt;=bool(str::T),
-  plus?bool&lt;=bool(bool::T),
-  mult?bool&lt;=bool(bool::T),
-  not?bool&lt;=bool(),
-  as?bool&lt;=bytes(bool::T),
-  as?str&lt;=bytes(str::T),
-  zero?bytes&lt;=bytes(),
-  plus?bytes&lt;=bytes(bytes::T),
-  within?B&lt;=bytes(B::T),
-  as?bool&lt;=int(bool::T),
-  as?bytes&lt;=int(bytes::T),
-  as?real&lt;=int(real::T),
-  as?str&lt;=int(str::T),
-  as?uri&lt;=int(uri::T),
-  zero?int&lt;=int(),
-  one?int&lt;=int(),
-  neg?int&lt;=int(),
-  mult?int&lt;=int(int::T),
-  minus?int&lt;=int(int::T),
-  plus?int&lt;=int(int::T),
-  gt?bool&lt;=int(int::T),
-  gte?bool&lt;=int(int::T),
-  lt?bool&lt;=int(int::T),
-  lte?bool&lt;=int(int::T),
-  sum?int&lt;=int{*}(),
-  prod?int&lt;=int{*}(),
-  pow?int&lt;=int(int::T),
-  mod?int&lt;=int(int::T),
-  order?lst&lt;=int{*}(),
-  as?int&lt;=real(int::T),
-  as?str&lt;=real(str::T),
-  gt?bool&lt;=real(real::T),
-  gte?bool&lt;=real(real::T),
-  lt?bool&lt;=real(real::T),
-  lte?bool&lt;=real(real::T),
-  neg?real&lt;=real(),
-  plus?real&lt;=real(real::T),
-  mult?real&lt;=real(real::T),
-  div?real&lt;=real(real::T),
-  zero?real&lt;=real(),
-  one?real&lt;=real(),
-  inv?real&lt;=real(),
-  minus?real&lt;=real(real::T),
-  sum?real&lt;=real{*}(),
-  prod?real&lt;=real{*}(),
-  mean?real&lt;=real{*}(),
-  pow?real&lt;=real(real::T),
-  math?real&lt;=#{?}(str::T),
-  order?lst&lt;=real{*}(),
-  as?str&lt;=str(str::T),
-  as?bytes&lt;=str(bytes::T),
-  as?bool&lt;=str(bool::T),
-  as?int&lt;=str(int::T),
-  as?real&lt;=str(real::T),
-  as?uri&lt;=str(uri::T),
-  reverse?str&lt;=str(),
-  zero?str&lt;=str(),
-  has?str{?}&lt;=str(str::T),
-  split?lst&lt;=str(str::T),
-  merge?str&lt;=str{*}(str::T),
-  regex?lst&lt;=str(str::T),
-  gt?bool&lt;=str(str::T),
-  gte?bool&lt;=str(str::T),
-  lt?bool&lt;=str(str::T),
-  lte?bool&lt;=str(str::T),
-  plus?str&lt;=str(str::T),
-  sum?str&lt;=str{*}(str{?}::T),
-  ucase?str&lt;=str(),
-  lcase?str&lt;=str(),
-  within?B&lt;=str(B::T),
-  as?int&lt;=uri(int::T),
-  as?uri&lt;=uri(uri::T),
-  as?str&lt;=uri(str::T),
-  as?rec&lt;=uri(rec::T),
-  reverse?uri&lt;=uri(),
-  has?uri{?}&lt;=uri(str::T),
-  has?uri{?}&lt;=uri(uri::T),
-  split?lst&lt;=uri(uri::T),
-  merge?uri&lt;=uri{*}(uri::T),
-  minus?uri&lt;=uri(uri::T),
-  plus?uri{?}&lt;=uri(uri{?}::T),
-  mult?uri{?}&lt;=uri(uri{?}::T),
-  sum?uri&lt;=uri{*}(),
-  prod?uri&lt;=uri{*}(),
-  path?uri&lt;=uri(uri::T),
-  q?uri&lt;=uri(rec::T),
-  uri:c?lst&lt;=uri(uri::T),
-  pow?uri&lt;=uri(int::T),
-  scheme?uri{?}&lt;=uri(),
-  scheme?uri&lt;=uri(uri::T),
-  authority?uri{?}&lt;=uri(),
-  host?uri{?}&lt;=uri(),
-  host?uri&lt;=uri(uri::T),
-  port?int{?}&lt;=uri(),
-  port?uri&lt;=uri(int::T),
-  select?uri{?}&lt;=uri(uri::T),
-  where?uri{?}&lt;=uri(uri::T),
-  args?lst&lt;=inst(),
-  as?lst&lt;=rel(lst::T),
-  as?rec&lt;=rel(rec::T),
-  merge?rec&lt;=rel{*}(rec::T),
-  split?rel&lt;=A(rel::T),
-  dom?#{*}&lt;=rel(),
-  rng?#{*}&lt;=rel(),
-  get?A{?}&lt;=rel(#::T),
-  select?rel{?}&lt;=rel(rel::T),
-  plus?rel{*}&lt;=rel(rel{*}::T),
-  mult?rel{*}&lt;=rel(rel{*}::T),
-  neg?rel&lt;=rel(),
-  one?rel&lt;=rel(),
-  zero?rel&lt;=rel(),
-  as?lst&lt;=lst(lst::T),
-  as?rec&lt;=lst(rec::T),
-  as?code&lt;=lst(code::T),
-  reverse?lst&lt;=lst(),
-  plus?lst&lt;=lst(lst::T),
-  mult?lst&lt;=lst(lst::T),
-  zero?lst&lt;=lst(),
-  split?lst&lt;=A(lst::T),
-  merge?A{*}&lt;=lst(),
-  merge?A{*}&lt;=lst(uri::T),
-  merge?A{*}&lt;=lst(str::T),
-  has?lst{?}&lt;=lst(#::T,#{?}::T,#{?}::T),
-  within?lst&lt;=lst(#{*}::T),
-  sum?lst&lt;=lst{*}(),
-  select?lst{?}&lt;=lst(lst::T),
-  remove?A{*}&lt;=lst(int::T),
-  pow?lst&lt;=lst(int::T),
-  as?lst&lt;=rec(lst::T),
-  as?uri&lt;=rec(uri::T),
-  zero?rec&lt;=rec(),
-  reverse?rec&lt;=rec(),
-  has?rec{?}&lt;=rec(#::T,#::T),
-  has?rec{?}&lt;=rec(#::T),
-  get?A{*}&lt;=rec(uri::T),
-  split?rec&lt;=A(rec::T),
-  merge?rel{*}&lt;=rec(),
-  dom?A{*}&lt;=rec(),
-  rng?A{*}&lt;=rec(),
-  lshift?A{*}&lt;=rec(),
-  plus?rec&lt;=rec(rec{??}::T),
-  mplus?rec&lt;=rec(rec::T),
-  select?rec{?}&lt;=rec(rec::T),
-  select?#{?}&lt;=rec(uri::T),
-  select?rec{?}&lt;=rec(uri{2,}::T),
-  within?rec&lt;=rec(#{*}::T),
-  sum?rec&lt;=rec{*}(),
-  as?lst&lt;=code(lst::T),
-  cause?fail{?}&lt;=fail(),
-  reify?rec&lt;=fail(),
-  inside?A{?}&lt;=A(lst::T),
-  serialize?B&lt;=A(io::T),
-  fork?A{*}&lt;=A{*}(#::T),
-  range?A{*}&lt;=A{*}(int::T,isa(int::T).else(0)),
-  order?A{*}&lt;=A{*}(#::T),
-  as?noobj{0}&lt;=A(),
-  as?B&lt;=A(#::T),
-  import?space{*}&lt;=#{?}(uri::T,uri{?}::T),
-  dedup?A{*}&lt;=A{*}(),
-  barrier?lst&lt;=#{*}(lst::T),
-  barrier?rec&lt;=rel{*}(rec::T),
-  barrier?A{*}&lt;=A{*}(),
-  barrier?A{*}&lt;=A{*}(A{*}::T),
-  as?A&lt;=A(A::T),
-  repeat?A{*}&lt;=A(code=&gt;A{*}::T,until=&gt;bool::T),
-  !#{?}::T,
-  !*#{?}::T,
-  auto_at?#{*}&lt;=#{?}(#{?}::T,#{?}::T),
-  auto_to(#::T),
-  catch?C{*}&lt;=A(B{*}::T),
-  end?noobj{0}&lt;=#{*}(),
-  println?#{*}&lt;=#{?}(#{*}::T),
-  print?#{*}&lt;=#{?}(#{*}::T),
-  at?A{*}&lt;=#{?}(uri::T),
-  id?A&lt;=A(),
-  id?A{*}&lt;=A{*}(),
-  and?bool&lt;=A(bool::T,bool::T,bool{?}::T,bool{?}::T,bool{?}::T,bool{?}::T,bool{?}::T,bool{?}::T),
-  or?bool&lt;=A(bool::T,bool::T,bool{?}::T,bool{?}::T,bool{?}::T,bool{?}::T,bool{?}::T,bool{?}::T),
-  apply(#{*}::T),
-  map?B&lt;=A(B::T),
-  map?B{?}&lt;=A{?}(B{?}::T),
-  filter?A{?}&lt;=A(#{?}::T),
-  side?A&lt;=A(#::T),
-  tid(),
-  vid?uri{?}&lt;=A(),
-  vid?A&lt;=A(uri::T),
-  else(#{?}::T),
-  is?A{?}&lt;=A{?}(isa(bool::T).else(false)),
-  ?#::T,
-  matches?bool&lt;=#{?}(#{?}::T),
-  block?B{+}&lt;=A{?}(B{+}::T),
-  split(#{+}::T),
-  choose(rec::T),
-  merge?lst&lt;=A{*}(lst::T),
-  merge?#{*}&lt;=A{*}(#{*}::T),
-  merge?A{*}&lt;=A{*}(A{*}::T),
-  not(bool::T),
-  eq?bool&lt;=A(A::T),
-  neq?bool&lt;=A(A::T),
-  to?A{?}&lt;=A{?}(uri::T),
-  *uri::T,
-  ref(#{*}::T),
-  source?B{*}&lt;=A{?}(str::T),
-  type(),
-  cc?int&lt;=A{*}(),
-  cc?A{*}&lt;=A(int::T),
-  throw?fail&lt;=#{*}(#{?}::T),
-  parent(),
-  count?int&lt;=A{*}(),
-  skip?A{*}&lt;=A{*}(int::T),
-  take?A{*}&lt;=A{*}(int::T),
-  update?B{*}&lt;=A(B{*}::T),
-  reify?rec&lt;=A(),
-  reduce?A&lt;=A{*}(#{?}::T),
-  where?A{?}&lt;=A(B::T),
-  group?rec&lt;=#{*}(rec::T),
-  eval?#{*}&lt;=#{?}(#::T),
-  swap?A&lt;=A(B::T),
-  rshift?B{*}&lt;=A(C{*}::T),
-  lshift?B{*}&lt;=A(),
-  start?A{**}&lt;=noobj{0}(A{**}::T),
-  ctor()],
- rewrite=&gt;[
-  /m/inst/rewrite/id_removal?code{?}&lt;=code(),
-  /m/inst/rewrite/map_nest?code{?}&lt;=code(),
-  /m/inst/rewrite/else_after_count?code{?}&lt;=code(),
-  /m/inst/rewrite/plus_zero?code{?}&lt;=code(),
-  /m/inst/rewrite/mult_one?code{?}&lt;=code(),
-  /m/inst/rewrite/split_merge_collapse?code{?}&lt;=code(),
-  /m/inst/rewrite/split_merge_left_factor?code{?}&lt;=code(),
-  /m/inst/rewrite/split_merge_right_factor?code{?}&lt;=code()]]@/m</code></pre></div>
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">the core instruction set of metatron containing the base types and useful instructions to manipulate them</p>
-</div>
-</div><div class="card mb-3" id="const-none">
+    <div class="card mb-3" id="const-none">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span class="code text-secondary fw-bold">none</span>
         <small class="text-muted code">/m/none</small>
@@ -2098,7 +1809,7 @@ a/b/c/                           [-- relative/branch uri            --]
 </div>
 </div>
 </div><div class="container-xxl mb-4" id="instructions">
-    <h3 class="text-primary mb-3">Instructions <span class="pill-label badge bg-success">262</span></h3>
+    <h3 class="text-primary mb-3">Instructions <span class="pill-label badge bg-success">275</span></h3>
     <div class="card mb-3" id="inst-and">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
@@ -2185,6 +1896,19 @@ a/b/c/                           [-- relative/branch uri            --]
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=image&amp;dom=bytes(image::T,else(1.0000)){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=file&amp;dom=uri(file::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=bytes&amp;dom=file(bytes::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=json&amp;dom=str(json::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=xml&amp;dom=str(xml::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=html&amp;dom=str(html::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=markdown&amp;dom=str(markdown::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=str&amp;dom=html(str::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=str&amp;dom=markdown(str::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=html&amp;dom=markdown(html::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=str&amp;dom=#(json_str::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=tool&amp;dom=docs(tool::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=tool&amp;dom=inst(tool::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=skill&amp;dom=dir(skill::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=rrow&amp;dom=lrow(rrow::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=lrow&amp;dom=rrow(lrow::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=json&amp;dom=str(json::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=xml&amp;dom=str(xml::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=html&amp;dom=str(html::T){&lt;j&gt;}</code></pre>
@@ -4056,7 +3780,7 @@ nat::6.type()-&lt;[tid(),vid()] [-- [/m/int, nat] non-base types tids are the ty
             toastTimer = setTimeout(function() { toast.classList.remove('show'); }, 1800);
         }
 
-        document.querySelectorAll('h2[id], h3[id], h4[id], h5[id], h6[id]').forEach(function(heading) {
+        document.querySelectorAll('h2[id]:not(.accordion-header), h3[id], h4[id], h5[id], h6[id]').forEach(function(heading) {
             var anchor = document.createElement('a');
             anchor.className = 'heading-anchor bi bi-link-45deg';
             anchor.href = '#' + heading.id;

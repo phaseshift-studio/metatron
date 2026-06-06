@@ -20,16 +20,21 @@ package studio.phaseshift.metatron.isa.grph;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.MethodSource;
 import studio.phaseshift.metatron.AbstractDataPathTest;
 import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.algebra.rewrite.CommonRewritesTestContract;
 import studio.phaseshift.metatron.isa.AbstractSpaceTest;
 import studio.phaseshift.metatron.isa.grph.space.grphSpace;
 import studio.phaseshift.metatron.isa.grph.space.schema.modernSchema;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
+import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
@@ -39,6 +44,10 @@ import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.Tuple;
 
+import studio.phaseshift.metatron.furi.fURI;
+
+import java.util.stream.Stream;
+
 import static org.apache.tinkerpop.gremlin.LoadGraphWith.GraphData.MODERN;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static studio.phaseshift.metatron.Tokens.*;
@@ -46,6 +55,7 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.grph.grphInstSet.GRPH_ISA_TID;
 import static studio.phaseshift.metatron.isa.grph.space.schema.modernSchema.MODERN_SCHEMA_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
@@ -60,7 +70,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class grphSpaceTest extends AbstractDataPathTest {
+public class grphSpaceTest extends AbstractDataPathTest implements CommonRewritesTestContract {
 
     public grphSpaceTest() {
         super(f("/g"), () -> {
@@ -78,6 +88,65 @@ public class grphSpaceTest extends AbstractDataPathTest {
                                     uri(LOAD), uri(MODERN.name().toLowerCase()))),
                     f("/sys/space/test_" + System.nanoTime()));
         });
+    }
+
+    // ========================================================================
+    // CommonRewritesTestContract — isolated rewrite test space
+    // ========================================================================
+
+    // URI that routes to the grphSpace (matches /grt/# pattern) for space lookups
+    private static final fURI REWRITE_TEST_SPACE_URI = f("/grt");
+    private static final fURI REWRITE_TEST_SPACE_VID = f("/sys/space/grph/rewrite_test");
+
+    @BeforeAll
+    public static void setupRewriteTestSpace() {
+        // Isolated TinkerGraph for rewrite tests — no "modern" dataset contamination
+        final grphSpace rewriteSpace = grphSpace.of(rec(
+                        PATTERN, uri("/grt/#"),
+                        ROUTE, rec(
+                                uri("/grt/V"), uri("V"),
+                                uri("/grt/E"), uri("E")),
+                        GRAPH, rec(
+                                uri("gremlin.graph"),
+                                uri("org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerGraph"))),
+                REWRITE_TEST_SPACE_VID);
+        Router.global().addSpace(rewriteSpace);
+    }
+
+    @BeforeEach
+    public void seedRewriteTestData() {
+        // Use the grphSpace's pattern URI (not the VID) so getSpaceFor resolves correctly
+        final grphSpace space = (grphSpace) Router.global().getSpaceFor(REWRITE_TEST_SPACE_URI);
+        // Clear any existing vertices, then seed 10 rewrite-test vertices
+        space.sjvm().traversal().V().drop().iterate();
+        for (int i = 1; i <= 10; i++) {
+            Router.writeToSpace(
+                    f("/grt/V/" + i),
+                    rec(uri("id"), jnt(i),
+                            uri("value"), jnt(i),
+                            uri("name"), str("item" + i),
+                            uri("active"), bool(i % 2 == 1)));
+        }
+    }
+
+    @AfterAll
+    public static void cleanupRewriteTestSpace() { 
+        Router.global().removeSpace(REWRITE_TEST_SPACE_URI);
+    }
+
+    @Override
+    public fURI getTestDataUriPrefix() {
+        return f("/grt/V");
+    }
+
+    @Override
+    public String getNativeInstructionPrefix() {
+        return "gremlin_";
+    }
+
+    @Override
+    public fURI getRewriteInstUri() {
+        return f("/m/grph");
     }
 
     @BeforeAll
@@ -525,5 +594,78 @@ public class grphSpaceTest extends AbstractDataPathTest {
     @Override
     @Disabled
     public void testEmptyRecords(int testNumber) {
+    }
+
+    // ========================================================================
+    // CommonRewritesTestContract — parameterized rewrite tests
+    // ========================================================================
+
+    @ParameterizedTest(name = "[{index}] {0}")
+    @MethodSource("provideAllRewriteTestCases")
+    public void testRewriteOptimizations(String description, String code, Obj expected) throws Exception {
+        runRewriteTest(description, code, expected);
+    }
+
+    static Stream<Arguments> provideAllRewriteTestCases() {
+        return new grphSpaceTest().generateAllRewriteTestCases();
+    }
+
+    @ParameterizedTest(name = "[{index}] {0}")
+    @MethodSource("provideRewriteVerificationTestCases")
+    public void testRewriteVerification(String description, String code, String nativeInstName) throws Exception {
+        runRewriteVerificationTest(description, code, nativeInstName);
+    }
+
+    static Stream<Arguments> provideRewriteVerificationTestCases() {
+        return new grphSpaceTest().generateRewriteVerificationTestCases();
+    }
+
+    // ========================================================================
+    // Ad-hoc rewrite firing test — overridden with grph-specific cases
+    // ========================================================================
+
+    @Override
+    public Stream<Arguments> generateRewriteFiringTestCases() {
+        final String pre = getNativeInstructionPrefix();  // "gremlin_"
+        final Stream<Arguments> base = CommonRewritesTestContract.super.generateRewriteFiringTestCases();
+        return Stream.concat(base, Stream.of(
+                // --- SHOULD rewrite ---
+                Arguments.of("firing: *grph wildcard count should rewrite",
+                        "*/g/V.count()",
+                        pre + "count",
+                        true),
+                Arguments.of("firing: *grph update+count should rewrite (side-effect + not anchored)",
+                        "*/g/V.update([age=>+12]).count()",
+                        pre + "count",
+                        true),
+                Arguments.of("firing: *grph where should rewrite",
+                        "*/g/V.where([age=>?>20])",
+                        pre + "where",
+                        true),
+                // --- SHOULD NOT rewrite ---
+                Arguments.of("firing: @grph anchored update+count should NOT rewrite (side-effect must persist)",
+                        "@/g/V.update([age=>+12]).count()",
+                        pre + "count",
+                        false),
+                Arguments.of("firing: *grph where with impossible predicate should NOT rewrite (schema short-circuit)",
+                        "*/g/V/.where([age=>?<0]).count()",
+                        pre + "where",
+                        false)
+        ));
+    }
+
+    @ParameterizedTest(name = "[{index}] {0}")
+    @MethodSource("provideRewriteFiringTestCases")
+    public void testRewriteFiring(String description, String code, String nativeInstName, boolean shouldRewrite) throws Exception {
+        runRewriteFiringTest(description, code, nativeInstName, shouldRewrite);
+    }
+
+    static Stream<Arguments> provideRewriteFiringTestCases() {
+        return new grphSpaceTest().generateRewriteFiringTestCases();
+    }
+
+    @Test
+    public void testRewriteInstSanity() throws Exception {
+        runRewriteInstSanityTest();
     }
 }

@@ -249,6 +249,29 @@ public class dcmntInstSet extends AbstractInstSet {
                                 }
                         ),
 
+                        // Optimize: mql_where.take(n) → MongoDB find(filter).limit(n)
+                        CommonRewrites.whereLimitRewrite(
+                                dcmntSpace.class,
+                                DCMNT_ISA_REWRITE_TID.extend("mql_where"),
+                                DCMNT_ISA_REWRITE_TID.extend("mql_where_limit"),
+                                (space, dp, predicateStr, limit) -> {
+                                    final String collectionName = dp.collection();
+                                    final MongoCollection<Document> collection = space.getDatabase().getCollection(collectionName);
+                                    final fURI baseUri = dp.spaceURI();
+                                    final Bson filter = parseMongoFilter(predicateStr);
+                                    if (filter == null) {
+                                        throw new IllegalArgumentException("Could not parse filter: " + predicateStr);
+                                    }
+                                    return objs(IteratorUtil.stream(collection.find(filter).limit((int) limit).iterator()).map(doc -> {
+                                        final Object docId = doc.get(ID_FIELD_STRING);
+                                        final String idStr = docId instanceof org.bson.types.ObjectId oid
+                                                ? oid.toHexString() : docId.toString();
+                                        final fURI docUri = baseUri.extend(collection.getNamespace().getCollectionName()).extend(idStr);
+                                        return space.getSerializer().read(doc.toBsonDocument()).selfVID(docUri);
+                                    }));
+                                }
+                        ),
+
                         // Optimize: from(collection/+).>>{field1,field2} → MongoDB projection
                         CommonRewrites.selectRewrite(
                                 dcmntSpace.class,

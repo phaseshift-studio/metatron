@@ -254,7 +254,7 @@ bin/metatron</code></pre>
                 <h5 class="card-title code text-primary">/m</h5>
                 <div class="d-flex gap-2 flex-wrap">
                     <span class="pill-label badge bg-primary">47 types</span>
-                    <span class="pill-label badge bg-success">244 instructions</span>
+                    <span class="pill-label badge bg-success">257 instructions</span>
                     <span class="pill-label badge bg-info text-dark">0 spaces</span>
                 </div>
             </div>
@@ -384,7 +384,7 @@ bin/metatron</code></pre>
                 <h5 class="card-title code text-primary">/m</h5>
                 <div class="d-flex gap-2 flex-wrap">
                     <span class="pill-label badge bg-primary">47 types</span>
-                    <span class="pill-label badge bg-success">262 instructions</span>
+                    <span class="pill-label badge bg-success">275 instructions</span>
                     <span class="pill-label badge bg-info text-dark">0 spaces</span>
                 </div>
             </div>
@@ -511,7 +511,7 @@ bin/metatron</code></pre>
     <div class="py-3 text-center mt-5">
         <hr class="border-secondary">
         <small class="text-muted">
-            metatron instset doc generator on build 0-2026-06-04 18:24:24<br>
+            metatron instset doc generator on build 0-2026-06-05 18:46:54<br>
             (c) PhaseShift Studio, LLC
         </small>
     </div>
@@ -686,7 +686,7 @@ bin/metatron</code></pre>
             toastTimer = setTimeout(function() { toast.classList.remove('show'); }, 1800);
         }
 
-        document.querySelectorAll('h2[id], h3[id], h4[id], h5[id], h6[id]').forEach(function(heading) {
+        document.querySelectorAll('h2[id]:not(.accordion-header), h3[id], h4[id], h5[id], h6[id]').forEach(function(heading) {
             var anchor = document.createElement('a');
             anchor.className = 'heading-anchor bi bi-link-45deg';
             anchor.href = '#' + heading.id;

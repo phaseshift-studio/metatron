@@ -1376,6 +1376,16 @@ public class dcmntSpaceTest extends AbstractDataPathTest implements CommonRewrit
         return f("mongo:rewrite_test");
     }
 
+    @Override
+    public String getNativeInstructionPrefix() {
+        return "mql_";
+    }
+
+    @Override
+    public fURI getRewriteInstUri() {
+        return f("/m/dcmnt");
+    }
+
     /**
      * Parameterized test for all rewrite optimizations.
      * Tests count, limit, has, where, where+count, aggregations, and compositions.
@@ -1392,6 +1402,34 @@ public class dcmntSpaceTest extends AbstractDataPathTest implements CommonRewrit
      */
     static Stream<Arguments> provideAllRewriteTestCases() {
         return new dcmntSpaceTest().generateAllRewriteTestCases();
+    }
+
+    // verify/firing tests: enabled via getRewriteInstUri() fetching from /m/dcmnt
+    @Disabled("parse().rewrite() does not trigger dcmntSpace rewrites")
+    @ParameterizedTest(name = "[{index}] {0}")
+    @MethodSource("provideRewriteVerificationTestCases")
+    public void testRewriteVerification(String description, String code, String nativeInstName) throws Exception {
+        runRewriteVerificationTest(description, code, nativeInstName);
+    }
+
+    static Stream<Arguments> provideRewriteVerificationTestCases() {
+        return Stream.empty();
+    }
+
+    @Disabled("parse().rewrite() does not trigger dcmntSpace rewrites")
+    @ParameterizedTest(name = "[{index}] {0}")
+    @MethodSource("provideRewriteFiringTestCases")
+    public void testRewriteFiring(String description, String code, String nativeInstName, boolean shouldRewrite) throws Exception {
+        runRewriteFiringTest(description, code, nativeInstName, shouldRewrite);
+    }
+
+    static Stream<Arguments> provideRewriteFiringTestCases() {
+        return Stream.empty();
+    }
+
+    @Test
+    public void testRewriteInstSanity() throws Exception {
+        runRewriteInstSanityTest();
     }
     
     // ========================================

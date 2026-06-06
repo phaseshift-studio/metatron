@@ -347,6 +347,53 @@ public class tbleInstSet extends AbstractInstSet {
                                 }
                         ), "pre-rewrite code", "post-rewrite code", Map.of(), "leverages native SELECT COUNT(*) ... WHERE to count filtered rows"),
 
+                        // Optimize: sql_where.take(n) → SELECT * FROM table WHERE ... LIMIT n
+                        docWrap(CommonRewrites.whereLimitRewrite(
+                                tbleSpace.class,
+                                TBLE_ISA_REWRITE_TID.extend("sql_where"),
+                                TBLE_ISA_REWRITE_TID.extend("sql_where_limit"),
+                                (space, dp, sqlWhere, limit) -> {
+                                    final String tableName = dp.collection();
+                                    final String sql = "SELECT * FROM " + tableName + " WHERE " + sqlWhere + " LIMIT " + limit;
+                                    try (final Statement stmt = space.sjvm().createStatement();
+                                         final ResultSet rs = stmt.executeQuery(sql)) {
+
+                                        // Discover primary key columns for VID construction
+                                        final DatabaseMetaData dbMeta = space.sjvm().getMetaData();
+                                        final List<String> pkColumns = new ArrayList<>();
+                                        try (final ResultSet pkRs = dbMeta.getPrimaryKeys(null, null, tableName)) {
+                                            while (pkRs.next()) {
+                                                pkColumns.add(pkRs.getString("COLUMN_NAME"));
+                                            }
+                                        }
+
+                                        // Read rows and stamp routable VIDs for space routing
+                                        final Objs rows = objs0();
+                                        while (rs.next()) {
+                                            final Rec rawRow = ObjSQLSerializer.readCurrentAsRec(rs);
+                                            final Rec coerced = rawRow;
+                                            final fURI rowVID = Space.Helper.routeToSpace(
+                                                    pkColumns.isEmpty()
+                                                            ? space.vid().extend(tableName).extend(coerced.at(uri("id")).toString())
+                                                            : pkColumns.stream()
+                                                            .map(col -> coerced.at(uri(col)).toString())
+                                                            .reduce(space.vid().extend(tableName),
+                                                                    (vid, seg) -> vid.extend(seg),
+                                                                    (a, b) -> b),
+                                                    space.routes());
+                                            rows.append(coerced.selfVID(rowVID));
+                                        }
+                                        return rows.asObjs();
+                                    } catch (SQLException e) {
+                                        if (e.getErrorCode() == 1054)
+                                            return noobj();
+                                        throw MTronException.of(e, "%s", sql);
+                                    } catch (final Exception e) {
+                                        throw MTronException.of(e, "%s", sql);
+                                    }
+                                }
+                        ), "pre-rewrite code", "post-rewrite code", Map.of(), "leverages native SELECT ... WHERE ... LIMIT to filter and limit rows in a table"),
+
                         // Optimize: from(table/+).>>{col1,col2} → SELECT col1, col2 FROM table
                         docWrap(CommonRewrites.selectRewrite(
                                 tbleSpace.class,
