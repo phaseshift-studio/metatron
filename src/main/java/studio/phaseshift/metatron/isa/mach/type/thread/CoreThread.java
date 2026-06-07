@@ -30,6 +30,9 @@ import java.util.concurrent.TimeUnit;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_CORE_THREAD_TID;
+import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_VIRTUAL_THREAD_TID;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -75,5 +78,13 @@ public class CoreThread extends AbstractThread {
             this.at(RESULT).apply(result);
         });
         return this.future;
+    }
+
+    public static CoreThread core(final Obj code, final fURI vid) {
+        return new CoreThread(mutableMap(uri(CODE), code), MACH_CORE_THREAD_TID, vid);
+    }
+
+    public static CoreThread core(final Obj code) {
+        return new CoreThread(mutableMap(uri(CODE), code), MACH_CORE_THREAD_TID, null);
     }
 }

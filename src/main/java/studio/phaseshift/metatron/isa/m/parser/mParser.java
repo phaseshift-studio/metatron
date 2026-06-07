@@ -610,8 +610,10 @@ public class mParser {
     }
 
     public static Parser m_str() {
-        final Parser singleQuote = seq(of('\''), (of("\\'").or(any())).starLazy(of('\'')), of('\'')).flatten().map(t -> t.toString().substring(1, t.toString().length() - 1));
-        final Parser doubleQuote = seq(of('"'), (of("\\\"").or(any())).starLazy(of('"')), of('"')).flatten().map(t -> t.toString().substring(1, t.toString().length() - 1));
+        final Parser sqInner = noneOf("'\\").or(of("\\").seq(any()));
+        final Parser dqInner = noneOf("\"\\").or(of("\\").seq(any()));
+        final Parser singleQuote = seq(of('\''), sqInner.starLazy(of('\'')), of('\'')).flatten().map(t -> t.toString().substring(1, t.toString().length() - 1));
+        final Parser doubleQuote = seq(of('"'), dqInner.starLazy(of('"')), of('"')).flatten().map(t -> t.toString().substring(1, t.toString().length() - 1));
         final Parser tripleQuote = seq(
                 of('"').repeat(3, 3),
                 any().starLazy(of('"').repeat(3, 3)),

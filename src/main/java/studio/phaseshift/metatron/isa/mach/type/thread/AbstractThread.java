@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -22,6 +22,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Uri;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
+import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.io.Closeable;
@@ -31,6 +32,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /*
@@ -56,7 +58,7 @@ public abstract class AbstractThread extends MRec implements Closeable {
     protected Thread thread;
 
     public AbstractThread(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
-        super(jvm, tid, vid);
+        super(jvm, tid, null == vid ? CommonUtil.mintShortUUID(f("/sys/thread"), true) : vid);
         this.thread = null;
     }
 
@@ -73,9 +75,9 @@ public abstract class AbstractThread extends MRec implements Closeable {
         boolean running = this.state().equals(uri(RUN));
         this.stop();
         this.thread.interrupt();
-        if(!running)
+        if (!running)
             this.logger().info("closing at %s", LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
-        
+
     }
 
     public void stop() {
