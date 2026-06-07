@@ -70,6 +70,7 @@ public final class Tokens {
     public static final String RNG = "rng";
     public static final String SIZE = "size";
     public static final String SKILL = "skill";
+    public static final String URL = "url";
     public static final String MIME_TYPE = "mimeType";
     public static final String LLM = "llm";
     public static final String MCP = "mcp";
@@ -247,6 +248,9 @@ public final class Tokens {
     public static final String WARN = "warn";
     public static final String ERROR = "error";
     public static final String DEBUG = "debug";
+    public static final String ARGS = "args";
+    public static final String ENV = "env";
+    public static final String MCP_SERVERS = "mcpServers";
 
 
 }

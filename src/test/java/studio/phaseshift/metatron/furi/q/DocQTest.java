@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -40,7 +40,6 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.AND_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.STR_TID;
-import static studio.phaseshift.metatron.isa.m.type.Inst.OBJ;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -94,7 +93,7 @@ public class DocQTest extends AbstractMetatronTest {
         assertEquals("some obj", doc.at(DESC).strValue());
         /// //
         final fURI newURI2 = f("/m/some_obj_2");
-        docWrap(str("some obj 2",STR_TID,newURI2), "a test str", "aa", "bb");
+        docWrap(str("some obj 2", STR_TID, newURI2), "a test str", "aa", "bb");
         doc = new Docs(Router.readFromSpace(newURI2.addQ(DOCQ)).asRec());
         assertTrue(doc.test(DOCQ_TYPE));
         assertEquals("a test str", doc.description());

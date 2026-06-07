@@ -56,9 +56,9 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public final class mMCPUtility {
+public final class mcpMetatronBuilder {
 
-    private mMCPUtility() {
+    private mcpMetatronBuilder() {
         // do nothing
     }
 
@@ -77,7 +77,7 @@ public final class mMCPUtility {
      * @param vid  the type VID for tool TID namespacing
      * @return a new map with metatron-native tools merged in
      */
-    public static Map<Obj, Obj> buildMetatronTools(final Map<Obj, Obj> base, final fURI vid) {
+    public static Map<Obj, Obj> build(final Map<Obj, Obj> base, final fURI vid) {
         final Map<Obj, Obj> jvm = new LinkedHashMap<>(base);
 
         // ── tools ────────────────────────────────────────────────────────────

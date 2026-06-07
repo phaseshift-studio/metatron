@@ -400,9 +400,9 @@ public class grphSpaceTest extends AbstractDataPathTest implements CommonRewrite
     @CsvSource(value = {
             "*/g/S.count()                                                                   % 1",
             "*/g/S>>pattern                                                                  % /m/grph/schema/modern/#",
-            "*/g/S>>pattern.*(_).count()                                                     % 4",
-            "*/g/S>>pattern.*_.count()                                                       % 4",
-            //  "**/g/S/pattern.count()                                                      % 4",
+            "*/g/S>>pattern.*(_).count()                                                     % 5",
+            "*/g/S>>pattern.*_.count()                                                       % 5",
+            //  "*(*/g/S/pattern).count()                                                      % 5",
             "*/g/S>>pattern.*(_).vid()                                                        % {/m/grph/schema/modern/person,/m/grph/schema/modern/software,/m/grph/schema/modern/created,/m/grph/schema/modern/knows}",
     }, delimiter = '%')
     public void testSchemaTraversal(final String code, final String expected) {

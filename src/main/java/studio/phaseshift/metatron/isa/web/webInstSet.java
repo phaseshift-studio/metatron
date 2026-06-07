@@ -48,12 +48,10 @@ import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.inside_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_FALSE;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.Inst.ARGS;
 import static studio.phaseshift.metatron.isa.m.type.Inst.INST_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.NOOBJ_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
@@ -62,12 +60,14 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.web.space.http.handler.mcp_emulator_httpHandler.HTTP_MCP_EMULTATOR_TYPE;
 import static studio.phaseshift.metatron.isa.web.space.http.handler.mcp_httpHandler.HTTP_MCP_HANDLER_TYPE;
-import static studio.phaseshift.metatron.isa.web.space.http.handler.mcp_mtron_httpHandler.HTTP_MTRON_MCP_TYPE;
+import static studio.phaseshift.metatron.isa.web.space.http.handler.mcp_mtron_httpHandler.HTTP_MCP_MTRON_TYPE;
 import static studio.phaseshift.metatron.isa.web.space.http.handler.mtron_httpHandler.HTTP_MTRON_HANDLER_TYPE;
 import static studio.phaseshift.metatron.isa.web.space.http.handler.web_httpHandler.WEB_HTTP_HANDLER_TYPE;
 import static studio.phaseshift.metatron.isa.web.space.http.httpSpace.*;
-import static studio.phaseshift.metatron.isa.web.space.ws.handler.mcp_mtron_wsHandler.WS_MTRON_MCP_HANDLER_TYPE;
+import static studio.phaseshift.metatron.isa.web.space.ws.handler.mcp_emulator_wsHandler.WS_MCP_EMULTATOR_TYPE;
+import static studio.phaseshift.metatron.isa.web.space.ws.handler.mcp_mtron_wsHandler.WS_MCP_MTRON_HANDLER_TYPE;
 import static studio.phaseshift.metatron.isa.web.space.ws.handler.mcp_wsHandler.WS_MCP_HANDLER_TYPE;
 import static studio.phaseshift.metatron.isa.web.space.ws.handler.mtron_wsHandler.WS_MTRON_HANDLER_TYPE;
 import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.*;
@@ -178,16 +178,18 @@ public class webInstSet extends AbstractInstSet {
                         docWrap(WS_WEBSOCKET_TYPE, "a generic websocket obj which can be refined with useful behaviors"),
                         docWrap(WS_HANDLER_TYPE, "a websocket server which should be refined to implement protocol specs"),
                         docWrap(WS_CLIENT_TYPE, "an websocket client which should be refined to implement protocol specs"),
-                        docWrap(WS_MTRON_HANDLER_TYPE, "a simple websocket handler accepting mtron expressions and return mtron results", "mtron_ws::[=>]"),
                         docWrap(WS_MCP_HANDLER_TYPE, "an abstract mcp websocket handler providing necessary json-rpc infrastructure for mcp servers to leverage"),
-                        docWrap(WS_MTRON_MCP_HANDLER_TYPE, "an mcp handler server with built-in mtron eval, space listing, router info and instruction listing tools"),
+                        docWrap(WS_MCP_EMULTATOR_TYPE, "a webLsocket mcp emulator server that provides an agent a stateful environment of mcp server access"),
+                        docWrap(WS_MCP_MTRON_HANDLER_TYPE, "an mcp handler server with built-in mtron eval, space listing, router info and instruction listing tools"),
+                        docWrap(WS_MTRON_HANDLER_TYPE, "a simple websocket handler accepting mtron expressions and return mtron results", "mtron_ws::[=>]"),
                         /// //////////////////////////////
                         docWrap(HTTP_SOCKET_TYPE, "a generic http obj which can be refined with useful behaviors"),
                         docWrap(HTTP_HANDLER_TYPE, "a http server which should be refined to implement protocol specs"),
                         docWrap(HTTP_CLIENT_TYPE, "an http client which should be refined to implement protocol specs"),
+                        docWrap(HTTP_MCP_EMULTATOR_TYPE, "an http mcp emulator server that provides an agent a stateful environment of mcp server access"),
                         docWrap(HTTP_MTRON_HANDLER_TYPE, "a simple http handler accepting mtron expressions and return mtron results", "mtron_http::[=>]"),
                         docWrap(HTTP_MCP_HANDLER_TYPE, "an abstract mcp http handler providing necessary json-rpc infrastructure for mcp servers to leverage"),
-                        docWrap(HTTP_MTRON_MCP_TYPE, "mcp streamable http transport handler with built-in metatron tools"),
+                        docWrap(HTTP_MCP_MTRON_TYPE, "mcp streamable http transport handler with built-in metatron tools"),
                         docWrap(WEB_HTTP_HANDLER_TYPE, "a http handler serving web content from a router-backed space"),
                         /// //////////////////////////////
                         docWrap(MCP_SERVER_TYPE = Type.Builder.build()
@@ -204,18 +206,20 @@ public class webInstSet extends AbstractInstSet {
                                         .tid(REC_TID)
                                         .vid(MCP_CLIENT_TID)
                                         .isaPredicate(rec(
-                                                uri(HOST), URI_TYPE,
+                                                uri(HOST).maybe().asUri(), URI_TYPE,
                                                 uri(TRANSPORT).maybe(), URI_TYPE,
                                                 uri(COMMAND).maybe(), LST_TYPE,
+                                                uri(ENV).maybe(), rec(URI_TYPE, ALL_TYPE).maybe(),
                                                 uri(TOOL).maybe(), rec(URI_TYPE, T(LLM_TOOL_TID)).maybe(),
                                                 uri(STATUS).maybe(), isa_(BOOL_TYPE).else_(BOOL_FALSE)))
                                         .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(MCP_CLIENT_TID), lst(T(REC_TID)),
                                                 (x, inst) -> new mcpClient(inst.arg(0).asRec().jvm(), MCP_CLIENT_TID, inst.arg(0).vid())))
                                         .create(), "an mcp client type specification", "a connection to an existing mcp server",
                                 Map.of(
-                                        uri(HOST), "the mcp server endpoint",
+                                        uri(HOST).maybe(), "the mcp server endpoint (optional for stdio)",
                                         uri(TRANSPORT).maybe(), "specify the transport if host schema resolution isn't sufficient",
                                         uri(COMMAND).maybe(), "only necessary for stdio mcp servers, where the client is the server",
+                                        uri(ENV).maybe(), "environment variables for the stdio server process",
                                         uri(TOOL).maybe(), "the tools/functions available for use on the mcp server",
                                         uri(STATUS).maybe(), "the current status of the mcp client/server connection"),
                                 "a client implementing the model content protocol used by llms for the acquisition of tools and access to external software systems",
@@ -245,16 +249,31 @@ public class webInstSet extends AbstractInstSet {
                         instC(AS_INST_TID.dom(MARKDOWN_TID).rng(HTML_TID), lst(HTML_TYPE), (lhs, inst) -> ObjMarkdownSerializer.single().toHTML(ObjMarkdownSerializer.single().write(lhs))),
                         instC(AS_INST_TID.dom(JSON_TID).rng(MCP_CLIENT_TID), lst(JSON_TYPE), (lhs, inst) -> {
                             final Rec next = lhs.clone().asRec();
-                            if (next.has(COMMAND) && next.has(ARGS)) {
-                                final List<Obj> stdio = new ArrayList<>();
-                                next.at(COMMAND).elements().forEach(stdio::add);
-                                next.at(ARGS).elements().forEach(stdio::add);
-                                next.jvm().remove(uri(ARGS));
+                            // ── command (str or list) + args (list) → command list ──
+                            final List<Obj> merged = new ArrayList<>();
+                            if (next.has(COMMAND)) {
+                                final Obj cmd = next.at(COMMAND);
+                                if (cmd.isStr() || cmd.isUri()) merged.add(cmd);
+                                else if (cmd.isLst()) merged.addAll(cmd.lstValue());
                                 next.jvm().remove(uri(COMMAND));
-                                next.at(COMMAND, lst(stdio), MUTABLE);
                             }
-                            return rec(mutableMap(next.asRec().jvm()), MCP_CLIENT_TID, lhs.vid());
-
+                            if (next.has(ARGS)) {
+                               next.at(ARGS).elements().forEach(merged::add);
+                                next.jvm().remove(uri(ARGS));
+                            }
+                            if (!merged.isEmpty())
+                                next.at(COMMAND, lst(merged), MUTABLE);
+                            // ── env → headers merge (for stdio) ─────────────
+                            if (next.has(ENV) && !next.has(HEADERS)) {
+                                next.jvm().put(uri(HEADERS), next.jvm().remove(uri(ENV)));
+                            } else if (next.has(ENV) && next.has(HEADERS)) {
+                                next.at(HEADERS).asRec().jvm().putAll(next.jvm().remove(uri(ENV)).asRec().jvm());
+                            }
+                            if(next.has(URL)) {
+                                next.jvm().put(uri(HOST),next.at(URL));
+                            }
+                            final mcpClient client = new mcpClient(next.asRec().jvm(),MCP_CLIENT_TID,lhs.vid());
+                            return client;
                         }),
                         instC(AS_INST_TID.dom(ALL).rng(STR_TID), lst(JSON_STR_TYPE), (lhs, inst) -> str(ObjSimpleJSONSerializer.single().write(lhs).toString())))));
         docWrap(this,

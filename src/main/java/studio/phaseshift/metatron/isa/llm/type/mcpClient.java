@@ -169,7 +169,7 @@ public class mcpClient extends MRec {
         final Map<String, String> stringHeaders = headers.entrySet().stream()
                 .map(e -> new AbstractMap.SimpleEntry<>(Str.Helper.cleanString(e.getKey()), Str.Helper.cleanString(e.getValue())))
                 .collect(Collectors.toMap(AbstractMap.SimpleEntry::getKey, AbstractMap.SimpleEntry::getValue));
-
+        
         if (null != transport && !transport.isNoObj() && f(STREAMABLE_HTTP).equals(transport.uriValue())) {
             return StreamableHttpMcpTransport.builder()
                     .logRequests(true)
