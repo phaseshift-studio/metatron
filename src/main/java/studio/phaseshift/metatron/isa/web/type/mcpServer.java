@@ -86,113 +86,18 @@ public class mcpServer extends MRec {
 
             LOG.debug("mcp request: method=%s, id=%s, params=%s", method, id, params);
 
-            final Obj result = switch (method) {
-                // ========================================
-                // Tools
-                // ========================================
-                case "tools/list" -> mcpResponse(id, rec(
-                        uri("tools"), lst(this.at(TOOL).orElse(rec0()).elements()
-                                .map(kv -> (Obj) rec(
-                                        uri(NAME), str(kv.first().uriValue().toString()),
-                                        uri(DESCRIPTION), str(toolDescription(kv.second())),
-                                        uri("inputSchema"), buildInputSchema(kv.second())))
-                                .toList())));
-                case "tools/call" -> {
-                    final String toolName = params.at(uri(NAME)).isNoObj() ? "" : params.at(uri(NAME)).toCleanString();
-                    final Rec arguments = params.at(uri("arguments")).isNoObj() ? rec() : params.at(uri("arguments")).asRec();
-                    final Obj toolEntry = this.at(TOOL).orElse(rec0()).at(uri(toolName));
-                    if (toolEntry.isNoObj()) {
-                        yield mcpError(id, jnt(-32601), str("tool not found: " + toolName));
-                    } else {
-                        final Obj toolLhs = arguments.at(uri(LHS)).orElse(noobj());
-                        final Obj toolResult = toolEntry.asInst().args(arguments).apply(toolLhs);
-                        yield mcpResponse(id, rec(uri(CONTENT), lst(rec(
-                                uri(TYPE), str("text"),
-                                uri(TEXT), str(toolResult.toCleanString())))));
-                    }
-                }
-
-                // ========================================
-                // Resources
-                // ========================================
-                case "resources/list" -> mcpResponse(id, rec(
-                        uri("resources"), lst(this.at(RESOURCE).orElse(rec0()).elements()
-                                .map(kv -> (Obj) rec(
-                                        uri(URI), uri(kv.first().uriValue().toString()),
-                                        uri(NAME), str(kv.first().uriValue().toString()),
-                                        uri(DESCRIPTION), str(kv.second().toShortString())))
-                                .toList())));
-                case "resources/read" -> {
-                    final String resourceUri = params.at(uri(URI)).isNoObj() ? "" : params.at(uri(URI)).toCleanString();
-                    final Obj resourceEntry = this.at(RESOURCE).orElse(rec0()).at(uri(resourceUri));
-                    if (resourceEntry.isNoObj()) {
-                        yield mcpError(id, jnt(-32602), str("resource not found: " + resourceUri));
-                    } else {
-                        final Obj resolved = resourceEntry.resolve(noobj());
-                        yield mcpResponse(id, rec(uri("contents"), lst(rec(
-                                uri(URI), uri(resourceUri),
-                                uri(TEXT), str(resolved.toCleanString()),
-                                uri("mimeType"), str("text/plain")))));
-                    }
-                }
-
-                // ========================================
-                // Prompts
-                // ========================================
-                case "prompts/list" -> mcpResponse(id, rec(
-                        uri("prompts"), lst(this.at(PROMPT).orElse(rec0()).elements()
-                                .map(kv -> (Obj) rec(
-                                        uri(NAME), str(kv.first().uriValue().toString()),
-                                        uri(DESCRIPTION), str(kv.second().toShortString())))
-                                .toList())));
-                case "prompts/get" -> {
-                    final String promptName = params.at(uri(NAME)).isNoObj() ? "" : params.at(uri(NAME)).toCleanString();
-                    final Obj promptEntry = this.at(PROMPT).orElse(rec0()).at(uri(promptName));
-                    if (promptEntry.isNoObj()) {
-                        yield mcpError(id, jnt(-32602), str("prompt not found: " + promptName));
-                    } else {
-                        final Obj resolved = promptEntry.resolve(noobj());
-                        yield mcpResponse(id, rec(uri("messages"), lst(rec(
-                                uri("role"), str("user"),
-                                uri(CONTENT), rec(
-                                        uri(TYPE), str("text"),
-                                        uri(TEXT), str(resolved.toCleanString()))))));
-                    }
-                }
-
-                // ========================================
-                // Initialize / Ping / Notifications
-                // ========================================
-                case "initialize" -> {
-                    final boolean hasTools = !this.at(TOOL).isNoObj();
-                    final boolean hasResources = !this.at(RESOURCE).isNoObj();
-                    final boolean hasPrompts = !this.at(PROMPT).isNoObj();
-                    final Rec caps = rec();
-                    if (hasTools) caps.at(uri("tools"), rec(), Rec.MUTABLE);
-                    if (hasResources) caps.at(uri("resources"), rec(), Rec.MUTABLE);
-                    if (hasPrompts) caps.at(uri("prompts"), rec(), Rec.MUTABLE);
-                    yield mcpResponse(id, rec(
-                            uri("protocolVersion"), str("2025-03-26"),
-                            uri("capabilities"), caps,
-                            uri("serverInfo"), rec(
-                                    uri(NAME), str("metatron-mcp"),
-                                    uri("version"), str("0.1.0"))));
-                }
-                case "ping" -> mcpResponse(id, rec());
-                case "notifications/initialized", "notifications/cancelled" -> // no response for notifications
-                        noobj();
-
-                // ========================================
-                // Unknown method
-                // ========================================
-                default -> {
-                    if (method.isBlank())
-                        yield noobj();
-                    LOG.error("unknown mcp method: %s", method);
-                    yield mcpError(id, jnt(-32601), str("method not found: " + method));
-                }
+            return switch (method) {
+                case "tools/list" -> handleToolsList(id, params);
+                case "tools/call" -> handleToolsCall(id, params);
+                case "resources/list" -> handleResourcesList(id, params);
+                case "resources/read" -> handleResourcesRead(id, params);
+                case "prompts/list" -> handlePromptsList(id, params);
+                case "prompts/get" -> handlePromptsGet(id, params);
+                case "initialize" -> handleInitialize(id, params);
+                case "ping" -> handlePing(id, params);
+                case "notifications/initialized", "notifications/cancelled" -> handleNotifications(id, method);
+                default -> handleUnknownMethod(id, method);
             };
-            return result;
         } catch (final Exception e) {
             LOG.error("error processing mcp message: %s -- %s", message, e.getMessage() == null ? e.getClass().getName() : e.getMessage());
             for (var ste : e.getStackTrace()) {
@@ -200,6 +105,159 @@ public class mcpServer extends MRec {
             }
             return fail(e);
         }
+    }
+
+    // ========================================
+    // MCP Protocol Handlers (overridable by subclasses)
+    // ========================================
+
+    /**
+     * Handle a {@code tools/list} request.
+     * Returns the list of tools registered in this server's {@code tool} rec.
+     */
+    protected Obj handleToolsList(final Obj id, final Rec params) {
+        return mcpResponse(id, rec(
+                uri("tools"), lst(this.at(TOOL).orElse(rec0()).elements()
+                        .map(kv -> (Obj) rec(
+                                uri(NAME), str(kv.first().uriValue().toString()),
+                                uri(DESCRIPTION), str(toolDescription(kv.second())),
+                                uri("inputSchema"), buildInputSchema(kv.second())))
+                        .toList())));
+    }
+
+    /**
+     * Handle a {@code tools/call} request.
+     * Looks up the named tool and applies it with the supplied arguments.
+     */
+    protected Obj handleToolsCall(final Obj id, final Rec params) {
+        final String toolName = params.at(uri(NAME)).isNoObj() ? "" : params.at(uri(NAME)).toCleanString();
+        final Rec arguments = params.at(uri("arguments")).isNoObj() ? rec() : params.at(uri("arguments")).asRec();
+        // ── wire-key alias: "arguments" → "args" for metatron convention ──
+        if (!arguments.jvm().containsKey(uri(ARGS)) && arguments.jvm().containsKey(uri("arguments")))
+            arguments.jvm().put(uri(ARGS), arguments.jvm().get(uri("arguments")));
+        final Obj toolEntry = this.at(TOOL).orElse(rec0()).at(uri(toolName));
+        if (toolEntry.isNoObj()) {
+            return mcpError(id, jnt(-32601), str("tool not found: " + toolName));
+        } else {
+            final Obj toolLhs = arguments.at(uri(LHS)).orElse(noobj());
+            final Obj toolResult = toolEntry.asInst().args(arguments).apply(toolLhs);
+            if (toolResult.isFail())
+                return mcpError(id, jnt(-32603), str(toolResult.asFail().message().getMessage()));
+            return mcpResponse(id, rec(uri(CONTENT), lst(rec(
+                    uri(TYPE), str("text"),
+                    uri(TEXT), str(toolResult.toCleanString())))));
+        }
+    }
+
+    /**
+     * Handle a {@code resources/list} request.
+     * Returns the list of resources registered in this server's {@code resource} rec.
+     */
+    protected Obj handleResourcesList(final Obj id, final Rec params) {
+        return mcpResponse(id, rec(
+                uri("resources"), lst(this.at(RESOURCE).orElse(rec0()).elements()
+                        .map(kv -> (Obj) rec(
+                                uri(URI), uri(kv.first().uriValue().toString()),
+                                uri(NAME), str(kv.first().uriValue().toString()),
+                                uri(DESCRIPTION), str(kv.second().toShortString())))
+                        .toList())));
+    }
+
+    /**
+     * Handle a {@code resources/read} request.
+     * Resolves the named resource and returns its contents.
+     */
+    protected Obj handleResourcesRead(final Obj id, final Rec params) {
+        final String resourceUri = params.at(uri(URI)).isNoObj() ? "" : params.at(uri(URI)).toCleanString();
+        final Obj resourceEntry = this.at(RESOURCE).orElse(rec0()).at(uri(resourceUri));
+        if (resourceEntry.isNoObj()) {
+            return mcpError(id, jnt(-32602), str("resource not found: " + resourceUri));
+        } else {
+            final Obj resolved = resourceEntry.resolve(noobj());
+            return mcpResponse(id, rec(uri("contents"), lst(rec(
+                    uri(URI), uri(resourceUri),
+                    uri(TEXT), str(resolved.toCleanString()),
+                    uri("mimeType"), str("text/plain")))));
+        }
+    }
+
+    /**
+     * Handle a {@code prompts/list} request.
+     * Returns the list of prompts registered in this server's {@code prompt} rec.
+     */
+    protected Obj handlePromptsList(final Obj id, final Rec params) {
+        return mcpResponse(id, rec(
+                uri("prompts"), lst(this.at(PROMPT).orElse(rec0()).elements()
+                        .map(kv -> (Obj) rec(
+                                uri(NAME), str(kv.first().uriValue().toString()),
+                                uri(DESCRIPTION), str(kv.second().toShortString())))
+                        .toList())));
+    }
+
+    /**
+     * Handle a {@code prompts/get} request.
+     * Resolves the named prompt and returns its rendered messages.
+     */
+    protected Obj handlePromptsGet(final Obj id, final Rec params) {
+        final String promptName = params.at(uri(NAME)).isNoObj() ? "" : params.at(uri(NAME)).toCleanString();
+        final Obj promptEntry = this.at(PROMPT).orElse(rec0()).at(uri(promptName));
+        if (promptEntry.isNoObj()) {
+            return mcpError(id, jnt(-32602), str("prompt not found: " + promptName));
+        } else {
+            final Obj resolved = promptEntry.resolve(noobj());
+            return mcpResponse(id, rec(uri("messages"), lst(rec(
+                    uri("role"), str("user"),
+                    uri(CONTENT), rec(
+                            uri(TYPE), str("text"),
+                            uri(TEXT), str(resolved.toCleanString()))))));
+        }
+    }
+
+    /**
+     * Handle an {@code initialize} request.
+     * Returns server capabilities and info based on the presence of tools/resources/prompts.
+     */
+    protected Obj handleInitialize(final Obj id, final Rec params) {
+        final boolean hasTools = !this.at(TOOL).isNoObj();
+        final boolean hasResources = !this.at(RESOURCE).isNoObj();
+        final boolean hasPrompts = !this.at(PROMPT).isNoObj();
+        final Rec caps = rec();
+        if (hasTools) caps.at(uri("tools"), rec(), Rec.MUTABLE);
+        if (hasResources) caps.at(uri("resources"), rec(), Rec.MUTABLE);
+        if (hasPrompts) caps.at(uri("prompts"), rec(), Rec.MUTABLE);
+        return mcpResponse(id, rec(
+                uri("protocolVersion"), str("2025-03-26"),
+                uri("capabilities"), caps,
+                uri("serverInfo"), rec(
+                        uri(NAME), str("metatron-mcp"),
+                        uri("version"), str("0.1.0"))));
+    }
+
+    /**
+     * Handle a {@code ping} request.
+     * Returns an empty success response.
+     */
+    protected Obj handlePing(final Obj id, final Rec params) {
+        return mcpResponse(id, rec());
+    }
+
+    /**
+     * Handle notification messages ({@code notifications/initialized},
+     * {@code notifications/cancelled}). Notifications require no response.
+     */
+    protected Obj handleNotifications(final Obj id, final String method) {
+        return noobj();
+    }
+
+    /**
+     * Handle an unknown or unrecognized JSON-RPC method.
+     * Returns a method-not-found error (code -32601).
+     */
+    protected Obj handleUnknownMethod(final Obj id, final String method) {
+        if (method.isBlank())
+            return noobj();
+        LOG.error("unknown mcp method: %s", method);
+        return mcpError(id, jnt(-32601), str("method not found: " + method));
     }
 
     // ========================================
@@ -260,8 +318,8 @@ public class mcpServer extends MRec {
         final java.util.List<Obj> required = new java.util.ArrayList<>();
 
         if (!inst.dom().isNoObj() && !inst.dom().c().isZeroable()) {
-            final String argDesc = docArgs.at(uri(Inst.DOM)).isNoObj()
-                    ? "" : docArgs.at(uri(Inst.DOM)).toCleanString();
+            final String argDesc = docArgs.at(uri(DOM)).isNoObj()
+                    ? "" : docArgs.at(uri(DOM)).toCleanString();
             properties.at(uri(LHS),
                     rec(uri(TYPE), str(objTypeToJsonSchema(inst.dom())),
                             uri(DESCRIPTION), str(argDesc)),

@@ -22,7 +22,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
-import studio.phaseshift.metatron.isa.web.type.mMCPUtility;
+import studio.phaseshift.metatron.isa.web.type.mcpMetatronBuilder;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -50,16 +50,16 @@ import static studio.phaseshift.metatron.isa.web.space.http.httpSpace.HTTP_SPACE
  */
 public class mcp_mtron_httpHandler extends mcp_httpHandler {
 
-    public static final fURI HTTP_MTRON_MCP_TID = HTTP_SPACE_TID.extend("mcp_mtron_http");
+    public static final fURI HTTP_MCP_MTRON_TID = HTTP_SPACE_TID.extend("mcp_mtron_http");
 
-    public static final Type HTTP_MTRON_MCP_TYPE = Type.Builder.build()
+    public static final Type HTTP_MCP_MTRON_TYPE = Type.Builder.build()
             .tid(HTTP_MCP_HANDLER_TID)
-            .vid(HTTP_MTRON_MCP_TID)
+            .vid(HTTP_MCP_MTRON_TID)
             .isaPredicate(rec(
                     uri(TOOL).maybe().asUri(), rec(URI_TYPE, INST_TYPE),
                     uri(RESOURCE).maybe().asUri(), T(ALL),
                     uri(PROMPT).maybe().asUri(), T(ALL)))
-            .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(HTTP_MTRON_MCP_TID),
+            .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(HTTP_MCP_MTRON_TID),
                     lst(T(REC_TID)),
                     (lhs, inst) -> {
                         final Rec config = inst.arg(0).asRec();
@@ -70,6 +70,6 @@ public class mcp_mtron_httpHandler extends mcp_httpHandler {
             .create();
 
     public mcp_mtron_httpHandler(final Map<Obj, Obj> jvm, final fURI vid) {
-        super(mMCPUtility.buildMetatronTools(jvm, vid), HTTP_MTRON_MCP_TID, vid);
+        super(mcpMetatronBuilder.build(jvm, vid), HTTP_MCP_MTRON_TID, vid);
     }
 }

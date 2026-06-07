@@ -55,21 +55,23 @@ print("{{y}}supported scripting environments:\n{{X}}", *<boot/script>.else(boot/
             persist   => </tmp/shared.mtron>]@/sys/space/shared;
  fsspace::[pattern    => local:#,
             route     => [local:=><~/>]]@/sys/space/fs/home;
- fsspace::[pattern    => home:#,
-             route    => [home:=><~/.metatron/home>]]@/sys/space/fs/m_home;
+ memspace::[pattern    => home:#,
+             route    => [=>]]@/sys/space/fs/m_home;
   fsspace::[pattern   => mtronfs:#,
              route    => [mtronfs:=><.metatron>]]@/sys/space/fs/mtronfs;
  httpspace::[host     => !*boot/args/web/http/host,
              pattern  => <http://#>,
              route    => [/          => <>,
+                          /emulator  => mcp_emulator_http,
                           /mcp       => mcp_mtron_http, 
                           /docs      => <metatronfs:docs/website>,
                           /console   => <metatronfs:src/main/resources/web/console>]]@/sys/space/web/http;
    wsspace::[host     => !*boot/args/web/ws/host,
-             pattern  => ws://#,
+             pattern  => <ws://#>,
              q        => [docq::[=>],subq::[=>]],
-             route    => [/mtron=> mtron_ws,
-                          /mcp  => mcp_mtron_ws]]@/sys/space/web/ws;
+             route    => [/emulator => mcp_emulator_ws, 
+                          /mtron    => mtron_ws,
+                          /mcp      => mcp_mtron_ws]]@/sys/space/web/ws;
   [-- support for server->client notifications --]
    !*boot/args/web/ws/host * /mcp/+/notifications/#?subq -> sub::[                                           
       on_recv => inst?#<=lst(message=>?lst::T){                    

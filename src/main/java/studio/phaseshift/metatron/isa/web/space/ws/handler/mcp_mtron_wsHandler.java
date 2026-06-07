@@ -22,7 +22,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
-import studio.phaseshift.metatron.isa.web.type.mMCPUtility;
+import studio.phaseshift.metatron.isa.web.type.mcpMetatronBuilder;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -63,26 +63,26 @@ import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_SPACE_TID;
  */
 public class mcp_mtron_wsHandler extends mcp_wsHandler {
 
-    public static final fURI WS_MTRON_MCP_HANDLER_TID = WS_SPACE_TID.extend("mcp_mtron_ws");
+    public static final fURI WS_MCP_MTRON_HANDLER_TID = WS_SPACE_TID.extend("mcp_mtron_ws");
 
-    public static final Type WS_MTRON_MCP_HANDLER_TYPE = Type.Builder.build()
+    public static final Type WS_MCP_MTRON_HANDLER_TYPE = Type.Builder.build()
             .tid(WS_MCP_HANDLER_TID)
-            .vid(WS_MTRON_MCP_HANDLER_TID)
+            .vid(WS_MCP_MTRON_HANDLER_TID)
             .isaPredicate(rec(
                     uri(TOOL).maybe().asUri(), rec(URI_TYPE, INST_TYPE),
                     uri(RESOURCE).maybe().asUri(), T(ALL),
                     uri(PROMPT).maybe().asUri(), T(ALL)))
-            .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(WS_MTRON_MCP_HANDLER_TID), lst(T(REC_TID)), (lhs, inst) -> {
+            .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(WS_MCP_MTRON_HANDLER_TID), lst(T(REC_TID)), (lhs, inst) -> {
                 final Rec config = inst.arg(0).asRec();
                 return new mcp_mtron_wsHandler(new LinkedHashMap<>(config.jvm()), config.vid());
             })).create();
 
     public mcp_mtron_wsHandler(final Map<Obj, Obj> jvm, final fURI vid) {
         // buildMetatronTools() pre-populates tools before super() sets up ON_MESSAGE
-        super(buildJvm(jvm, vid), WS_MTRON_MCP_HANDLER_TID, vid);
+        super(buildJvm(jvm, vid), WS_MCP_MTRON_HANDLER_TID, vid);
     }
 
     private static Map<Obj, Obj> buildJvm(final Map<Obj, Obj> base, final fURI vid) {
-        return mMCPUtility.buildMetatronTools(base, vid);
+        return mcpMetatronBuilder.build(base, vid);
     }
 }

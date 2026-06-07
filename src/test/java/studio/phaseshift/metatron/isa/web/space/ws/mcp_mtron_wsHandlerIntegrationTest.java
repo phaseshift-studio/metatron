@@ -48,8 +48,8 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.web.space.ws.handler.mcp_mtron_wsHandler.WS_MTRON_MCP_HANDLER_TID;
-import static studio.phaseshift.metatron.isa.web.space.ws.handler.mcp_mtron_wsHandler.WS_MTRON_MCP_HANDLER_TYPE;
+import static studio.phaseshift.metatron.isa.web.space.ws.handler.mcp_mtron_wsHandler.WS_MCP_MTRON_HANDLER_TID;
+import static studio.phaseshift.metatron.isa.web.space.ws.handler.mcp_mtron_wsHandler.WS_MCP_MTRON_HANDLER_TYPE;
 import static studio.phaseshift.metatron.isa.web.space.ws.handler.mcp_wsHandler.WS_MCP_HANDLER_TID;
 import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_HANDLER_TID;
 
@@ -88,7 +88,7 @@ public class mcp_mtron_wsHandlerIntegrationTest extends AbstractWebSocketServerI
         return wsSpace.of(rec(
                 uri(HOST), uri(hostUri.toString()),
                 uri(PATTERN), uri("ws://#"),
-                uri(ROUTE), rec(uri("/mcp-mtron"), uri(WS_MTRON_MCP_HANDLER_TID.toString()))
+                uri(ROUTE), rec(uri("/mcp-mtron"), uri(WS_MCP_MTRON_HANDLER_TID.toString()))
         ).jvm(), f("/sys/space/ws/mcp-mtron/test"));
     }
 
@@ -125,14 +125,14 @@ public class mcp_mtron_wsHandlerIntegrationTest extends AbstractWebSocketServerI
 
     @Test
     public void testMcpMtronTIDNamespace() {
-        assertTrue(WS_MTRON_MCP_HANDLER_TID.toString().contains("wsspace"));
-        assertTrue(WS_MTRON_MCP_HANDLER_TID.toString().contains("mcp_mtron_ws"));
+        assertTrue(WS_MCP_MTRON_HANDLER_TID.toString().contains("wsspace"));
+        assertTrue(WS_MCP_MTRON_HANDLER_TID.toString().contains("mcp_mtron_ws"));
     }
 
     // todo: test type, not tid
     @Test
     public void testMcpMtronTypeIsSubtypeOfMcpWs() {
-        assertEquals(WS_MCP_HANDLER_TID, WS_MTRON_MCP_HANDLER_TYPE.tid(),
+        assertEquals(WS_MCP_HANDLER_TID, WS_MCP_MTRON_HANDLER_TYPE.tid(),
                 "mcp_mtron type should declare mcp_ws as its parent type");
     }
 

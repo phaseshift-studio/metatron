@@ -36,8 +36,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-import static studio.phaseshift.metatron.Tokens.LHS;
-import static studio.phaseshift.metatron.Tokens.MONAD;
+import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
@@ -52,11 +51,6 @@ public interface Inst extends Call {
 
     public record ArgsFunction(Poly<?, ?> args, f f) {
     }
-
-    String ARGS = "args";
-    String DOM = "dom";
-    String RNG = "rng";
-    String OBJ = "obj";
 
     fURI ARGS_FURI = fURI.Singleton.f(ARGS);
 
