@@ -247,7 +247,7 @@ public class webInstSet extends AbstractInstSet {
                         instC(AS_INST_TID.dom(HTML_TID).rng(STR_TID), lst(STR_TYPE), (lhs, inst) -> str(ObjHTMLSerializer.single().write(lhs).outerHtml())),
                         instC(AS_INST_TID.dom(MARKDOWN_TID).rng(STR_TID), lst(STR_TYPE), (lhs, inst) -> str(ObjMarkdownSerializer.single().write(lhs).getChars().toString())),
                         instC(AS_INST_TID.dom(MARKDOWN_TID).rng(HTML_TID), lst(HTML_TYPE), (lhs, inst) -> ObjMarkdownSerializer.single().toHTML(ObjMarkdownSerializer.single().write(lhs))),
-                        instC(AS_INST_TID.dom(JSON_TID).rng(MCP_CLIENT_TID), lst(JSON_TYPE), (lhs, inst) -> {
+                        instC(AS_INST_TID.dom(JSON_TID).rng(MCP_CLIENT_TID), lst(MCP_CLIENT_TYPE), (lhs, inst) -> {
                             final Rec next = lhs.clone().asRec();
                             // ── command (str or list) + args (list) → command list ──
                             final List<Obj> merged = new ArrayList<>();

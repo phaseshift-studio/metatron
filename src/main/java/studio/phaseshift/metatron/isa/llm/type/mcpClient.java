@@ -169,7 +169,7 @@ public class mcpClient extends MRec {
         final Map<String, String> stringHeaders = headers.entrySet().stream()
                 .map(e -> new AbstractMap.SimpleEntry<>(Str.Helper.cleanString(e.getKey()), Str.Helper.cleanString(e.getValue())))
                 .collect(Collectors.toMap(AbstractMap.SimpleEntry::getKey, AbstractMap.SimpleEntry::getValue));
-        
+
         if (null != transport && !transport.isNoObj() && f(STREAMABLE_HTTP).equals(transport.uriValue())) {
             return StreamableHttpMcpTransport.builder()
                     .logRequests(true)
@@ -187,32 +187,34 @@ public class mcpClient extends MRec {
                     .executorService(BootLoader.getExecutor())
                     .environment(stringHeaders)
                     .build();
-        } else if (host.uriValue().scheme().equals(WS) || host.uriValue().scheme().equals(WSS)) {
-            return WebSocketMcpTransport.builder() // WEBSOCKET
-                    .logRequests(true)
-                    .logResponses(true)
-                    .logger(LOG.logger(WARN))
-                    .url(host.uriValue().toString())
-                    .executor(BootLoader.getExecutor())
-                    .build();
-        } else if (host.uriValue().name().equals("sse")) {  // TODO: remove when sse is no longer supported
-            return HttpMcpTransport.builder() // SSE
-                    .sseUrl(host.uriValue().toString())
-                    .logger(LOG.logger(WARN))
-                    .logRequests(false)
-                    .logResponses(false)
-                    .customHeaders(stringHeaders)
-                    .build();
-        } else if (host.uriValue().scheme().equals(HTTP) || host.uriValue().scheme().equals(HTTPS)) {
-            return StreamableHttpMcpTransport.builder() // HTTP
-                    .logRequests(true)
-                    .logResponses(true)
-                    .logger(LOG.logger(WARN))
-                    .customHeaders(stringHeaders)
-                    .url(host.uriValue().toString())
-                    .executor(BootLoader.getExecutor())
-                    .build();
+        } else if (host.isUri() && host.uriValue().hasScheme()) {
+            if (host.uriValue().scheme().equals(WS) || host.uriValue().scheme().equals(WSS)) {
+                return WebSocketMcpTransport.builder() // WEBSOCKET
+                        .logRequests(true)
+                        .logResponses(true)
+                        .logger(LOG.logger(WARN))
+                        .url(host.uriValue().toString())
+                        .executor(BootLoader.getExecutor())
+                        .build();
+            } else if (host.uriValue().name().equals("sse")) {  // TODO: remove when sse is no longer supported
+                return HttpMcpTransport.builder() // SSE
+                        .sseUrl(host.uriValue().toString())
+                        .logger(LOG.logger(WARN))
+                        .logRequests(false)
+                        .logResponses(false)
+                        .customHeaders(stringHeaders)
+                        .build();
+            } else if (host.uriValue().scheme().equals(HTTP) || host.uriValue().scheme().equals(HTTPS)) {
+                return StreamableHttpMcpTransport.builder() // HTTP
+                        .logRequests(true)
+                        .logResponses(true)
+                        .logger(LOG.logger(WARN))
+                        .customHeaders(stringHeaders)
+                        .url(host.uriValue().toString())
+                        .executor(BootLoader.getExecutor())
+                        .build();
 
+            }
         }
         throw MTronException.of("unsupported transport for %s: %s %s", host, transport, headers);
     }

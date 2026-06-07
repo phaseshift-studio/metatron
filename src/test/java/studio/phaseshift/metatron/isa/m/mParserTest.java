@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -103,6 +103,80 @@ public class mParserTest extends AbstractMetatronTest {
     public void testStrParse() {
         assertEquals(str("abc").jvm(), ObjmtronSerializer.parse("'abc'").jvm());
         assertEquals(str("aBc35 4e6").jvm(), ObjmtronSerializer.parse("'aBc35 4e6'").jvm());
+    }
+
+    // ========================================
+    // String Escape Sequence Tests
+    // ========================================
+
+    @Test
+    public void testStrEscapeSequences() {
+        // Backslash escapes a regular character (dot) — both chars preserved
+        assertEquals("\\.", ObjmtronSerializer.parse("'\\.'").jvm());
+
+        // Backslash escapes backslash — both chars preserved (\\ → \\\\)
+        assertEquals("\\\\", ObjmtronSerializer.parse("'\\\\'").jvm());
+
+        // Backslash escapes single quote inside single-quoted string — both chars preserved
+        assertEquals("\\'", ObjmtronSerializer.parse("'\\''").jvm());
+
+        // Backslash escapes double quote inside single-quoted string — both preserved
+        assertEquals("\\\"", ObjmtronSerializer.parse("'\\\"'").jvm());
+
+        // Multiple escape sequences: escaped backslash + escaped dot
+        assertEquals("\\\\\\.", ObjmtronSerializer.parse("'\\\\\\.'").jvm());
+
+        // Escape sequence in the middle of normal text
+        assertEquals("hello\\.world", ObjmtronSerializer.parse("'hello\\.world'").jvm());
+
+        // Backslash-n (not a newline — literal backslash + n, both preserved)
+        assertEquals("\\n", ObjmtronSerializer.parse("'\\n'").jvm());
+
+        // Backslash-t (not a tab — literal backslash + t, both preserved)
+        assertEquals("\\t", ObjmtronSerializer.parse("'\\t'").jvm());
+    }
+
+    @Test
+    public void testStrEscapeRoundTrip() {
+        // Parse → serialize → re-parse should produce the same jvm value
+        final String[] inputs = {
+                "'\\.'",
+                "'\\\\'",
+                "'\\''",
+                "'\\\\\\.'",
+                "'hello\\.world'",
+                "'\\n'",
+                "'a\\bb\\cc\\dd'"
+        };
+        for (final String input : inputs) {
+            final Obj firstParse = ObjmtronSerializer.parse(input);
+            final String serialized = new ObjmtronSerializer().write(firstParse);
+            final Obj secondParse = ObjmtronSerializer.parse(serialized);
+            assertEquals((Object) firstParse.jvm(), secondParse.jvm(),
+                    "Round-trip failed for input: " + input + " → serialized: " + serialized);
+        }
+    }
+
+    @Test
+    public void testStrEscapeEdgeCases() {
+        assertEquals("\\.", ObjmtronSerializer.parse("'\\.'").jvm());
+        // Consecutive escape sequences
+        assertEquals("\\.\\!", ObjmtronSerializer.parse("'\\.\\!'").jvm());
+
+        // Only escape sequences, no normal characters
+        assertEquals("\\.\\@\\#", ObjmtronSerializer.parse("'\\.\\@\\#'").jvm());
+
+        // Leading and trailing escape sequences
+        assertEquals("\\.abc\\$", ObjmtronSerializer.parse("'\\.abc\\$'").jvm());
+
+        // Escaped backslash at start of string
+        assertEquals("\\\\abc", ObjmtronSerializer.parse("'\\\\abc'").jvm());
+
+        // Mixed backslash-escaping and plain text
+        assertEquals("path\\\\to\\\\file", ObjmtronSerializer.parse("'path\\\\to\\\\file'").jvm());
+
+        // Escaped single quotes coexisting with plain text
+        assertEquals("it\\'s working", ObjmtronSerializer.parse("'it\\'s working'").jvm());
     }
 
     @Test

@@ -193,6 +193,7 @@ public final class CommonUtil {
             if (escaped) {
                 current.append(c);
                 escaped = false;
+                continue;
             } else if (c == '\\') {
                 escaped = true;
             } else if (c == '\'' && !inDoubleQuote) {

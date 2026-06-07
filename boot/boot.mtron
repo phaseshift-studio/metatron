@@ -151,7 +151,7 @@ mqttspace::[pattern => <ha:#>,
              table      => [,],
              driver     => <org.mariadb.jdbc.Driver>]@/sys/space/netflix;
  tblespace::[pattern    => acme:#,
-             host       => <mariadb://localhost:3306/acme?user=mtron&password=mtron>,
+             host       => <mariadb://localhost:3306/classicmodels?user=mtron&password=mtron>,
              route      => [<acme:>=><>],
              serializer => !*</m/mach/io/serializer/string/clean>,
              table      => [,],
