@@ -2,12 +2,16 @@
 == Web Technologies
 
 [%collapsible]
-./m/web instset import and space constructions
+.web technologies setup
 ====
 [mtron]
 ----
-[HIDDEN] import(/m/llm)
-import(/m/web)
+[NO_OUTPUT] import(/m/web)
+[NO_OUTPUT] import(/m/llm)
+catalog::[host         => <http://localhost:1234/v1>, /
+          pattern      => <lmstudio:#>,               /
+          name         => <openai>,                   /
+          route        => [<lmstudio:>=><>]]@/sys/space/lmstudio
 ----
 ====
 
@@ -58,16 +62,11 @@ A https://lmstudio.ai/[LMStudio] service will serve to demonstrate how to levera
 
 [mtron]
 ----
-*<http://localhost:1234/v1>                       
-*<http://localhost:1234/v1/models>               
-*<http://localhost:1234/v1/models/data/0/id>      
-*<http://localhost:1234/v1/models/config-json/${  /
-  *<http://localhost:1234/v1/models/data/0/id> }>   
+*<http://localhost:1234/v1>            [-- <1> --]            
+*<http://localhost:1234/v1/models>     [-- <2> --]
 ----
-<1> No result, but also no connection `fail::T`. The endpoint is alive.
+<1> An error server side, but demonstrates that the endpoint is alive.
 <2> The `/models` resource contains a list of all LLM models available for use in LMStudio.
-<3> Traversing the data within the resource is a function of extending the URI accordingly.
-<4> Using URI template parameters to fetch more information about the model.
 
 Once the desired REST resource has been accessed, it's possible to map the resource into a form that meets the structural requirements of an mtron `type`. In doing so, the resource then acquires the behaviors defined in the type's respective `instset`. For this example, that `instset` is `/m/llm`.
 
@@ -79,17 +78,54 @@ Once the desired REST resource has been accessed, it's possible to map the resou
 <1> The `model::T` type in `/m/llm`.
 <2> The `/m/llm` instructions with a domain of `model::T`  (an object oriented perspective -- `obj.f()`).
 
-When the REST resource is manipulated to fit the structural specification of `model::T`, then  `http://localhost:1234/v1/models/data/0` can be the source of `chat?#\<=model`.
+When the REST resource is manipulated to fit the structural specification of `model::T`, then  `http://localhost:1234/v1/models` can be the source of `chat?#\<=model`.
 
 
 [mtron]
 ----
-*<http://localhost:1234/v1/models/data/0>>-.           /
-  -<[name=>>>id.as(uri::T),                            /
-     type=>>>object.as(uri::T),                        /
-     provider=>|!*/sys/space/lmstudio].as(model::T)     /
-  .chat('are you there?')                             
+*<http://localhost:1234/v1/models>.>>data/1.     /
+  -<[provider=> !*/sys/space/lmstudio,           /
+     name    => >>id.as(uri::T)].as(model::T)    /
+  .chat('are you there?') 
 ----
-<1> The OpenAPI `application/json` resource is morphed into a metatron `model::T` and then the model is `chat`ted with.
+<1> The OpenAPI `application/json` resource is morphed into a metatron `model::T` and then the model is chatted with.
 
+[discrete]
+=== WebSocket Space
 
+The `wsspace::T` is similar to `httpspace::T`, but enables long running connections and bidirectional communication. A particular useful aspect of `wsspace::T` is for communication between two metatron instances. 
+
+[discrete]
+==== Remote Console
+
+If another metatron instance is running on a remote machine, it's possible to route all console input to the remote metatron for evaluation. In order to make the experience seamless for the user, the `redirect/input` relation of `console::T` can be used.
+
+NOTE: In the following example, the "remote" metatron instance is `localhost`. This is because all code examples in this documentation are evaluated when the documentation is compiled. Note that `localhost` can be set to any hostname or IP address that is running a metatron instance with a `wsspace::T` exposing the `mtron_ws::T` handler.
+
+[mtron]
+----
+wsclient::[host=><ws://localhost:8555/mtron>]@/usr/ui/console/remote  [-- <1> --]
+----
+<1> creates a websocket connection to a remote metatron instance with a `wsspace::T` exposing an `mtron_ws::T` route.
+
+In the local console UI (the REPL), use the `:redirect/input` metacommand to have all user input processed by an arbitrary `inst`. When that `inst` is a `wsclient::T.send_recv()`, then a remote console is effected.
+
+[source,mtron]
+----
+mtron> :redirect/input inst?#{*}<=#{?}(to_send=>#{?}::T){*/usr/ui/console/remote.send_recv(*to_send)}
+[INFO ] [/usr/ui/console] redirecting console input to inst?#{*}<=#{?}(to_send=>#{?}::T){*/usr/ui/console/remote.send_recv(*to_send)}
+----
+
+At this point, all console input is sent to the remote metatron instance, evaluated at that instance via the `mtron_ws::T` endpoint, where the results are returned to the local instance and displayed in the local console UI.
+
+To have REPL input evaluated locally (the default behavior), set the `console::T.redirect/input` to `noobj`.
+
+[source,mtron]
+----
+mtron> :redirect/input noobj
+[INFO ] [/usr/ui/console] redirecting console input to noobj
+mtron> :redirect/input
+[INFO ] [/usr/ui/console] console input currently redirected to noobj
+----
+
+The `console::T.redirect/input` can be any `inst`. The flexibility of such redirection allows any number of use cases such as broadcasting, local processing w/ side effects, and more.

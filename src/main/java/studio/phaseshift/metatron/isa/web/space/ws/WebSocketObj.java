@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -23,6 +23,7 @@ import org.java_websocket.handshake.Handshakedata;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Real;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.web.type.MIME;
@@ -32,10 +33,10 @@ import java.io.Closeable;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 
-import static studio.phaseshift.metatron.Tokens.IN;
-import static studio.phaseshift.metatron.Tokens.OUT;
+import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.NOOBJ_TID;
+import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -48,8 +49,6 @@ public interface WebSocketObj extends Obj, Closeable {
             final MIME.MIMEType output = obj.has(OUT) ? MIME.MIMEType.of(obj.at(OUT).uriValue().toString()) : defaultType;
             return new IO(input, output);
         }
-
-
     }
 
     void onOpen(final WebSocket conn, final Handshakedata handshake);
@@ -65,13 +64,14 @@ public interface WebSocketObj extends Obj, Closeable {
     void setWebSocket(final WebSocket socket);
 
     default fURI getThisVID() {
-        return null == this.getWebSocket() ?
+        return null == this.getWebSocket() || this.getWebSocket().isClosed() ?
                 NOOBJ_TID :
                 this.getWebSocket().getAttachment();
     }
 
     default fURI getOtherVID() {
-        return null == this.getWebSocket() ?
+        
+        return null == this.getWebSocket() || this.getWebSocket().isClosed() ?
                 NOOBJ_TID :
                 f(this.getWebSocket().getRemoteSocketAddress().toString());
     }
@@ -111,5 +111,4 @@ public interface WebSocketObj extends Obj, Closeable {
             Graphitty.log(this).error("error sending %s: %s", message, e);
         }
     }
-
 }

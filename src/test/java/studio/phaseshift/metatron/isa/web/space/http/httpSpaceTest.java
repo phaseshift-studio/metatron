@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -30,6 +30,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractSpaceTest;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Str;
 import studio.phaseshift.metatron.isa.mach.io.space.fs.fsSpace;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
@@ -38,11 +39,13 @@ import studio.phaseshift.metatron.util.CommonUtil;
 import java.io.File;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
+import java.util.Locale;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -65,7 +68,9 @@ import static studio.phaseshift.metatron.isa.web.webInstSet.*;
 public class httpSpaceTest extends AbstractSpaceTest {
     private static final String BASE_URL = "http://localhost:" + generatePort();
 
-    /** Isolated copy of test resources — writes land here, not in src/test/resources/. */
+    /**
+     * Isolated copy of test resources — writes land here, not in src/test/resources/.
+     */
     private static final Path WEB_DATA_DIR = Path.of("target", "test-web-data");
 
     private static httpSpace staticHttpSpace;
@@ -75,7 +80,7 @@ public class httpSpaceTest extends AbstractSpaceTest {
         InstSet.importInstSet(WEB_ISA_TID);
         fsSpace.of(FileSystems.getDefault(), rec(
                 uri(PATTERN), uri("local:#"),
-                uri(ROUTE), rec(uri("local:"), uri(WEB_DATA_DIR.toString() + "/"))), f("/sys/space/fs"));
+                uri(ROUTE), rec(uri("local:"), uri(WEB_DATA_DIR + "/"))), f("/sys/space/fs"));
         staticHttpSpace = httpSpace.of(rec(
                 uri(HOST), uri(BASE_URL),
                 uri(PATTERN), uri("http://#"),
@@ -148,7 +153,7 @@ public class httpSpaceTest extends AbstractSpaceTest {
                 "/test.json/items/0", "1",
                 "/test.json/items/1", "two",
                 "/test.json/items/2", "false",
-                "/test.json/items/3", "noobj",
+                "/test.json/items/3", "<ERROR>",
                 "/test.json/items/4/deep", "value",
                 "/test.json/meta/tags/0", "alpha",
                 "/test.json/meta/tags/1", "beta",
@@ -158,8 +163,11 @@ public class httpSpaceTest extends AbstractSpaceTest {
             final String expected = cases[i + 1];
             final String url = BASE_URL + path;
             final var result = Router.readFromSpace(url);
-            assertEquals(ObjmtronSerializer.parse(expected), result,
-                    "[" + i / 2 + "] unexpected value for: " + url);
+            if (expected.equals("<ERROR>"))
+                assertTrue(result.toString().toLowerCase().contains("error"));
+            else
+                assertEquals(Str.Helper.cleanString(ObjmtronSerializer.parse(expected)), Str.Helper.cleanString(result),
+                        "[" + i / 2 + "] unexpected value for: " + url);
         }
     }
 

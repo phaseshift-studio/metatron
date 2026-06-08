@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -39,6 +39,8 @@ import studio.phaseshift.metatron.isa.mach.type.router.BasicRouter;
 import studio.phaseshift.metatron.isa.mach.type.thread.CoreThread;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.isa.sys.sysInstSet;
+import studio.phaseshift.metatron.isa.sys.type_.ThreadExecutor;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.IteratorUtil;
 
@@ -85,13 +87,13 @@ public class BootLoader implements Rec, Feature.SelfClone {
     private static final GraphittyLogger LOG;
     public static Router ROUTER;
     public static Rec ARGS;
-    private static volatile ExecutorService EXECUTOR;
+    private static volatile ThreadExecutor EXECUTOR;
     /**
      * Keeps the main thread alive in headless mode (no console REPL to block it).
      */
     private static final CountDownLatch SHUTDOWN_LATCH = new CountDownLatch(1);
-    private static final Supplier<ExecutorService> THREAD_POOL_SUPPLIER = () -> {
-        return Executors.newCachedThreadPool(r -> new Thread(r, "metatron-" + Thread.currentThread().getId()));
+    private static final Supplier<ThreadExecutor> THREAD_POOL_SUPPLIER = () -> {
+        return new ThreadExecutor(Executors.newCachedThreadPool(r -> new Thread(r, "metatron-" + Thread.currentThread().getId())), f("/sys/thread"));
     };
 
     static {
@@ -100,7 +102,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
         EXECUTOR = THREAD_POOL_SUPPLIER.get();
     }
 
-    public static ExecutorService getExecutor() {
+    public static ThreadExecutor getExecutor() {
         return EXECUTOR;
     }
 
@@ -352,7 +354,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
             LOG.debug("router location: %s", ROUTER.vid());
             sysSpace.write("/sys/typer/stage", typer);
             // LOAD STDIO INSTRUCTIONS
-            sysSpace.write("/sys/io/stdout", docWrap(instC(f("/sys/io/stdout").dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL.maybe())), (lhs, inst) -> {
+           /* sysSpace.write("/sys/io/stdout", docWrap(instC(f("/sys/io/stdout").dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL.maybe())), (lhs, inst) -> {
                 final Object arg = inst.arg(0).jvm();
                 if (arg != null)
                     System.out.println(arg);
@@ -362,19 +364,26 @@ public class BootLoader implements Rec, Feature.SelfClone {
                 final Scanner scanner = new Scanner(System.in);
                 final String input = scanner.nextLine();
                 return str(input);
-            }), "maybe an obj", "a single line of input", Map.of(), "read a line of input from the running terminal")).tryToInst());
+            }), "maybe an obj", "a single line of input", Map.of(), "read a line of input from the running terminal")).tryToInst());*/
             Router.global().registerRedirect(f("stdout"), f("/sys/io/stdout"));
             Router.global().registerRedirect(f("stdin"), f("/sys/io/stdin"));
-            ///  LOAD SYSTEM ENVIRONMENTAL VARIABLES
-            System.getenv().entrySet().stream()
-                    .map(kv -> new AbstractMap.SimpleEntry<>(SYS_VID.extend("env").extend(kv.getKey()), str(kv.getValue())))
-                    .sorted(Map.Entry.comparingByKey(Comparator.comparing(fURI::name)))
-                    .forEach(kv -> sysSpace.write(kv.getKey(), kv.getValue()));
             /// LOAD DEFAULT INSTRUCTION SET (/m and /m/mach)
             final InstSet m = new mInstSet();
             Router.global().addSpace(m);  // explicit registration after full construction
             Router.writeToSpace(m);
             m.setup();
+            //
+            final InstSet sys = new sysInstSet();
+            Router.global().addSpace(sys);
+            Router.writeToSpace(sys);
+            sys.setup();
+            ///  LOAD SYSTEM ENVIRONMENTAL VARIABLES
+            System.getenv().entrySet().stream()
+                    .map(kv -> new AbstractMap.SimpleEntry<>(SYS_VID.extend("env").extend(kv.getKey()), str(kv.getValue())))
+                    .sorted(Map.Entry.comparingByKey(Comparator.comparing(fURI::name)))
+                    .forEach(kv -> sysSpace.write(kv.getKey(), kv.getValue()));
+
+            //
             final InstSet mach = new machInstSet();
             Router.global().addSpace(mach);  // explicit registration after full construction
             Router.writeToSpace(mach);

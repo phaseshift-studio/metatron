@@ -149,6 +149,7 @@ public final class Tokens {
     public static final String LOGG = "log";
     public static final String DRIVER = "driver";
     public static final String SEND = "send";
+    public static final String SEND_RECV = "send_recv";
     public static final String CLOSE = "close";
     public static final String TABLE = "table";
     public static final String CTOR = "ctor";

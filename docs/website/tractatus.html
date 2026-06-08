@@ -408,10 +408,10 @@ While the reader searches for some unbeknownst depth in the previous sentence, a
 <h2 id="sec-instructions" class="discrete">Instructions</h2>
 <div class="legend-index">
 <ul>
-<li><a href="#sec-inst-uri-syntax" onclick="var t=document.getElementById('sec-inst-uri-syntax');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">inst uri syntax</a></li>
-<li><a href="#sec-obj-propagation-mechanics" onclick="var t=document.getElementById('sec-obj-propagation-mechanics');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">obj propagation mechanics</a></li>
-<li><a href="#sec-stacks-and-frames" onclick="var t=document.getElementById('sec-stacks-and-frames');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">stacks and frames</a></li>
-<li><a href="#sec-domrng-coefficients" onclick="var t=document.getElementById('sec-domrng-coefficients');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">dom/rng coefficients</a></li>
+<li class="legend-lvl-3"><a href="#sec-inst-uri-syntax" onclick="var t=document.getElementById('sec-inst-uri-syntax');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">inst uri syntax</a></li>
+<li class="legend-lvl-3"><a href="#sec-obj-propagation-mechanics" onclick="var t=document.getElementById('sec-obj-propagation-mechanics');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">obj propagation mechanics</a></li>
+<li class="legend-lvl-3"><a href="#sec-stacks-and-frames" onclick="var t=document.getElementById('sec-stacks-and-frames');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">stacks and frames</a></li>
+<li class="legend-lvl-3"><a href="#sec-domrng-coefficients" onclick="var t=document.getElementById('sec-domrng-coefficients');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">dom/rng coefficients</a></li>
 </ul>
 </div>
 <!--
@@ -595,10 +595,10 @@ mtron&gt; 12 + &lt;1&gt;()                [-- 4 --]
     boot=&gt;&lt;/home/killswitch/software/metatron/boot/docs.mtron&gt;,
     local=&gt;booger]
 ==&gt;boot/args/log=&gt;info
-==&gt;&lt;2&gt;=&gt;print?rng=#{*}&amp;dom=#{?}('{{r}}------------\nn{{g}}*{{y}}boo...',[
+==&gt;&lt;2&gt;=&gt;print?rng=#{*}&amp;dom=#{?}('{{r}}------------\n{{g}}*{{y}}boot...',[
      log=&gt;info,
      boot=&gt;&lt;/home/killswitch/software/metatron/boot/docs.mtron&gt;,
-     local=&gt;booger],'\nn{{r}}------------{{X}}\nn'){&lt;j&gt;}@<i class="conum" data-value="2"></i><b>(2)</b>
+     local=&gt;booger],'\n{{r}}------------{{X}}\n'){&lt;j&gt;}@<i class="conum" data-value="2"></i><b>(2)</b>
 ==&gt;boot/file=&gt;&lt;/home/killswitch/software/metatron/boot/docs.mtron&gt;@boot/file
 ==&gt;boot/args/local=&gt;booger</code></pre>
 </div>
@@ -981,9 +981,9 @@ mtron&gt; 2.band(min=&gt;1,max=&gt;1)     ​1​</code></pre>
                                       ^ end of input expected
 
 mtron&gt;  10.is_divisible(2)
-==&gt;fail::[unable to locate inst-f of is_divisible(2)@&lt;1&gt;][...]@/sys/fail/20
+==&gt;fail::[unable to locate inst-f of is_divisible(2)@&lt;1&gt;][...]@/sys/fail/18
 mtron&gt;  10.is_divisible('abc')
-==&gt;fail::[unable to locate inst-f of is_divisible('abc')@&lt;1&gt;][...]@/sys/fail/22</code></pre>
+==&gt;fail::[unable to locate inst-f of is_divisible('abc')@&lt;1&gt;][...]@/sys/fail/20</code></pre>
 </div>
 </div>
 </div>
@@ -1038,7 +1038,7 @@ This ensures the uri <code>trpl</code> is not applied to the <code>inst</code> p
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;  trpl -&gt; inst?lst[int,int,int]&lt;=int{3}(){&gt;-[,]}     ​1​
-==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(){merge([,])}]][...]@/sys/fail/24
+==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(){merge([,])}]][...]@/sys/fail/22
 mtron&gt; trpl -&gt; |inst?lst[int,int,int]&lt;=int{3}(){&gt;-[,]}     ​2​
 ==&gt;inst?rng=lst[int,int,int]&amp;dom=int{3}(){merge([,])}
 mtron&gt; *trpl     ​3​
@@ -1364,13 +1364,13 @@ ultimately dependent on the incoming lhs <code>obj</code>, where</p>
 <h2 id="sec-large-language-models" class="discrete">Large Language Models</h2>
 <div class="legend-index">
 <ul>
-<li><a href="#sec-llm-catalogs" onclick="var t=document.getElementById('sec-llm-catalogs');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">llm catalogs</a></li>
-<li><a href="#sec-llm-space-encoding" onclick="var t=document.getElementById('sec-llm-space-encoding');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">llm space encoding</a></li>
-<li><a href="#sec-llm-interactions" onclick="var t=document.getElementById('sec-llm-interactions');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">llm interactions</a></li>
-<li><a href="#sec-llm-tools-skills-and-mcp-servers" onclick="var t=document.getElementById('sec-llm-tools-skills-and-mcp-servers');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">llm tools, skills, and mcp servers</a></li>
-<li><a href="#sec-agent-notes" onclick="var t=document.getElementById('sec-agent-notes');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">agent notes</a></li>
-<li><a href="#sec-mcp-server-client-notifications-in-mtron" onclick="var t=document.getElementById('sec-mcp-server-client-notifications-in-mtron');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">mcp server->client notifications in mtron</a></li>
-<li><a href="#sec-agent-based-programming-language" onclick="var t=document.getElementById('sec-agent-based-programming-language');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">agent-based programming language</a></li>
+<li class="legend-lvl-3"><a href="#sec-llm-catalogs" onclick="var t=document.getElementById('sec-llm-catalogs');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">llm catalogs</a></li>
+<li class="legend-lvl-3"><a href="#sec-llm-space-encoding" onclick="var t=document.getElementById('sec-llm-space-encoding');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">llm space encoding</a></li>
+<li class="legend-lvl-3"><a href="#sec-llm-interactions" onclick="var t=document.getElementById('sec-llm-interactions');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">llm interactions</a></li>
+<li class="legend-lvl-3"><a href="#sec-llm-tools-skills-and-mcp-servers" onclick="var t=document.getElementById('sec-llm-tools-skills-and-mcp-servers');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">llm tools, skills, and mcp servers</a></li>
+<li class="legend-lvl-3"><a href="#sec-agent-notes" onclick="var t=document.getElementById('sec-agent-notes');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">agent notes</a></li>
+<li class="legend-lvl-4"><a href="#sec-mcp-server-client-notifications-in-mtron" onclick="var t=document.getElementById('sec-mcp-server-client-notifications-in-mtron');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">mcp server->client notifications in mtron</a></li>
+<li class="legend-lvl-3"><a href="#sec-agent-based-programming-language" onclick="var t=document.getElementById('sec-agent-based-programming-language');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">agent-based programming language</a></li>
 </ul>
 </div>
 <details>
@@ -2347,7 +2347,7 @@ mtron&gt; *ollama:+.
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; @ai.chat("I need you evaluate the mtron expresion `-&lt;[_=&gt;_]&gt;&gt;.&gt;-[,]-&lt;[_,-&lt;[_=&gt;_]&gt;&gt;]&gt;&gt;.&gt;-` with a lhs of `1`. Please don't tell me the result of the evaluation until I ask for it sometime in the near future.")
-==&gt;"The evaluation of the mtron expression has been completed successfully with the provided left-hand side (lhs) value of `1`. I will provide the result when you ask for it. Let me know when you're ready!"</code></pre>
+==&gt;fail::[error during START: java.util.concurrent.RejectedExecutionException: Task java.util.concurrent.CompletableFuture$AsyncSupply@5e0fdcf2 rejected from java.util.concurrent.ThreadPoolExecutor@6b927fb[Terminated, pool size = 0, active threads = 0, queued tasks = 0, completed tasks = 0]][...]@/sys/fail/6</code></pre>
 </div>
 </div>
 <div class="openblock card">
@@ -2469,9 +2469,7 @@ mtron&gt; tB::1.0.as(mB::T)     ​3​
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; @ai.chat("It's been many years since we last talked. For I am a tired, old man. Before I let my last breathe flutter into this world, I must know one last thing. Please tell me, what was the result of the mtron expression I provided you all those years ago?")
-==&gt;"""The result of the mtron expression you provided, evaluated with the left-hand side (lhs) value of `1`, was **`1`**.
-
-   If you have any more questions or need further assistance, feel free to ask. May your journey be peaceful."""
+==&gt;"The result of the mtron expression `-&lt;[_=&gt;_]&gt;&gt;.&gt;-[,]-&lt;[_,-&lt;[_=&gt;_]&gt;&gt;]&gt;&gt;.&gt;-` with a lhs of `1` was **`1`**."
 mtron&gt; */usr/ai/memory/+
 ==&gt;[
     contents=&gt;[[
@@ -2479,27 +2477,20 @@ mtron&gt; */usr/ai/memory/+
     type=&gt;'TEXT']],
     type=&gt;USER]
 ==&gt;[
-    id=&gt;call_d16u4xdk,
-    toolName=&gt;m_inst_eval,
-    contents=&gt;[[text=&gt;1,type=&gt;'TEXT']],
-    isError=&gt;false,
-    attributes=&gt;[=&gt;],
-    type=&gt;'TOOL_EXECUTION_RESULT']
-==&gt;[
     text=&gt;'The result of the mtron expression...',
     toolExecutionRequests=&gt;[,],
     attributes=&gt;[=&gt;],
     type=&gt;AI]
 ==&gt;[
-    toolExecutionRequests=&gt;[[
-    id=&gt;call_d16u4xdk,
-    name=&gt;m_inst_eval,
-    arguments=&gt;'{"object":"-&lt;[_=&gt;_]&gt;&gt;.&gt;-[,]-&lt;[_,-&lt;...']],
-    attributes=&gt;[=&gt;],
-    type=&gt;AI]
+    contents=&gt;[[
+    text=&gt;'I need you evaluate the mtron expr...',
+    type=&gt;'TEXT']],
+    type=&gt;USER]
 ==&gt;[
-    text=&gt;'The evaluation of the mtron expres...',
-    toolExecutionRequests=&gt;[,],
+    toolExecutionRequests=&gt;[[
+    id=&gt;call_sdhquzhr,
+    name=&gt;m_inst_eval,
+    arguments=&gt;'{"lhs":"1","object":"-&lt;[_=&gt;_]&gt;&gt;.&gt;-...']],
     attributes=&gt;[=&gt;],
     type=&gt;AI]</code></pre>
 </div>
@@ -2533,33 +2524,33 @@ mtron&gt; */usr/ai/memory/+
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; mcp_client::[host =&gt;
         &lt;ws://localhost:8555/mcp&gt;
        ]@/usr/ai/mcp/mtron     ​1​
-==&gt;mcp_client::[
-    host=&gt;ws://localhost:8555/mcp,
-    status=&gt;!inst?bool&lt;=#{?}(),
-    tool=&gt;[
-     write_memory=&gt;inst?#{?}&lt;=#{?}(current_memory=&gt;'',previous_memory=&gt;''),
-     read_memory=&gt;inst?#{?}&lt;=#{?}(memory_vid=&gt;''),
-     eval_mtron=&gt;inst?#{?}&lt;=#{?}(code=&gt;''),
-     list_space=&gt;inst?#{?}&lt;=#{?}(),
-     router_info=&gt;inst?#{?}&lt;=#{?}(),
-     find_inst=&gt;inst?#{?}&lt;=#{?}(pattern=&gt;'',dom=&gt;'',rng=&gt;''),
-     spawn_wsclient=&gt;inst?#{?}&lt;=#{?}(host=&gt;'',on_message=&gt;''),
-     spawn_wshandler=&gt;inst?#{?}&lt;=#{?}(host=&gt;'',on_message=&gt;'')]]@/usr/ai/mcp/mtron
-mtron&gt; mcp_client::[host =&gt;
-        &lt;http://127.0.0.1:29170/index-mcp/streamable-http&gt;
-       ]@/usr/ai/mcp/intellij     ​2​
-==&gt;ERROR: java.util.concurrent.ExecutionException: java.net.ConnectException: java.util.concurrent.ExecutionException: java.net.ConnectException
-  	dev.langchain4j.mcp.client.DefaultMcpClient [line 232]
-  	dev.langchain4j.mcp.client.DefaultMcpClient [line 205]
-  	dev.langchain4j.mcp.client.DefaultMcpClient$Builder [line 1102]
+==&gt;ERROR: rejectedexecutionexception: Task java.util.concurrent.CompletableFuture$AsyncSupply@7d284f15 rejected from java.util.concurrent.ThreadPoolExecutor@6b927fb[Terminated, pool size = 0, active threads = 0, queued tasks = 0, completed tasks = 0]
+  	java.util.concurrent.ThreadPoolExecutor$AbortPolicy [line 2032]
+  	java.util.concurrent.ThreadPoolExecutor [line 787]
+  	java.util.concurrent.ThreadPoolExecutor [line 1328]
+  	studio.phaseshift.metatron.isa.sys.type_.ThreadExecutor [line 117]
+  	java.util.concurrent.CompletableFuture [line 2761]
+  	jdk.internal.net.http.MultiExchange [line 311]
+  	jdk.internal.net.http.HttpClientImpl [line 1015]
+  	jdk.internal.net.http.HttpClientImpl [line 959]
+  	jdk.internal.net.http.HttpClientImpl [line 951]
+  	jdk.internal.net.http.HttpClientFacade [line 143]
+  	jdk.internal.net.http.websocket.OpeningHandshake [line 185]
+  	jdk.internal.net.http.websocket.WebSocketImpl [line 143]
+  	jdk.internal.net.http.websocket.BuilderImpl [line 120]
+  	dev.langchain4j.mcp.client.transport.websocket.WebSocketMcpTransport [line 117]
+  	dev.langchain4j.mcp.client.transport.websocket.WebSocketMcpTransport [line 102]
+  	dev.langchain4j.mcp.client.DefaultMcpClient [line 218]
+  	dev.langchain4j.mcp.client.DefaultMcpClient [line 206]
+  	dev.langchain4j.mcp.client.DefaultMcpClient$Builder [line 1103]
   	studio.phaseshift.metatron.isa.llm.type.mcpClient [line 96]
-  	studio.phaseshift.metatron.isa.web.webInstSet [line 213]
-  	studio.phaseshift.metatron.isa.m.type.Inst$f [line 694]
-  	studio.phaseshift.metatron.isa.m.type.Inst [line 335]
-  	studio.phaseshift.metatron.isa.m.type.Obj$Helper [line 918]
+  	studio.phaseshift.metatron.isa.web.webInstSet [line 216]
+  	studio.phaseshift.metatron.isa.m.type.Inst$f [line 688]
+  	studio.phaseshift.metatron.isa.m.type.Inst [line 329]
+  	studio.phaseshift.metatron.isa.m.type.Obj$Helper [line 919]
   	studio.phaseshift.metatron.isa.m.type.impl.MObj [line 46]
   	studio.phaseshift.metatron.isa.m.type.impl.MRec [line 76]
-  	studio.phaseshift.metatron.isa.m.parser.mParser [line 204]
+  	studio.phaseshift.metatron.isa.m.parser.mParser [line 207]
   	org.petitparser.parser.actions.ActionParser [line 39]
   	org.petitparser.parser.combinators.DelegateParser [line 25]
   	org.petitparser.parser.combinators.ChoiceParser [line 34]
@@ -2574,8 +2565,42 @@ mtron&gt; mcp_client::[host =&gt;
   	org.petitparser.parser.combinators.SequenceParser [line 25]
   	org.petitparser.parser.actions.ActionParser [line 37]
   	org.petitparser.parser.Parser [line 76]
-  	studio.phaseshift.metatron.isa.m.parser.mParser [line 407]
-  	studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer [line 88]
+  	studio.phaseshift.metatron.isa.m.parser.mParser [line 421]
+  	studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer [line 89]
+  	studio.phaseshift.metatron.docs.MtronDocPreprocessor [line 196]
+  	studio.phaseshift.metatron.docs.MtronDocPreprocessor [line 91]
+  	studio.phaseshift.metatron.docs.DocRunner [line 206]
+mtron&gt; mcp_client::[host =&gt;
+        &lt;http://127.0.0.1:29170/index-mcp/streamable-http&gt;
+       ]@/usr/ai/mcp/intellij     ​2​
+==&gt;ERROR: java.util.concurrent.RejectedExecutionException: Task java.util.concurrent.CompletableFuture$AsyncSupply@77c23d90 rejected from java.util.concurrent.ThreadPoolExecutor@6b927fb[Terminated, pool size = 0, active threads = 0, queued tasks = 0, completed tasks = 0]: java.util.concurrent.RejectedExecutionException: Task java.util.concurrent.CompletableFuture$AsyncSupply@77c23d90 rejected from java.util.concurrent.ThreadPoolExecutor@6b927fb[Terminated, pool size = 0, active threads = 0, queued tasks = 0, completed tasks = 0]
+  	dev.langchain4j.mcp.client.DefaultMcpClient [line 233]
+  	dev.langchain4j.mcp.client.DefaultMcpClient [line 206]
+  	dev.langchain4j.mcp.client.DefaultMcpClient$Builder [line 1103]
+  	studio.phaseshift.metatron.isa.llm.type.mcpClient [line 96]
+  	studio.phaseshift.metatron.isa.web.webInstSet [line 216]
+  	studio.phaseshift.metatron.isa.m.type.Inst$f [line 688]
+  	studio.phaseshift.metatron.isa.m.type.Inst [line 329]
+  	studio.phaseshift.metatron.isa.m.type.Obj$Helper [line 919]
+  	studio.phaseshift.metatron.isa.m.type.impl.MObj [line 46]
+  	studio.phaseshift.metatron.isa.m.type.impl.MRec [line 76]
+  	studio.phaseshift.metatron.isa.m.parser.mParser [line 207]
+  	org.petitparser.parser.actions.ActionParser [line 39]
+  	org.petitparser.parser.combinators.DelegateParser [line 25]
+  	org.petitparser.parser.combinators.ChoiceParser [line 34]
+  	org.petitparser.parser.combinators.DelegateParser [line 25]
+  	org.petitparser.parser.combinators.ChoiceParser [line 34]
+  	org.petitparser.parser.combinators.OptionalParser [line 23]
+  	org.petitparser.parser.combinators.SequenceParser [line 25]
+  	org.petitparser.parser.actions.ActionParser [line 37]
+  	org.petitparser.parser.combinators.ChoiceParser [line 34]
+  	org.petitparser.parser.combinators.SequenceParser [line 25]
+  	org.petitparser.parser.actions.ActionParser [line 37]
+  	org.petitparser.parser.combinators.SequenceParser [line 25]
+  	org.petitparser.parser.actions.ActionParser [line 37]
+  	org.petitparser.parser.Parser [line 76]
+  	studio.phaseshift.metatron.isa.m.parser.mParser [line 421]
+  	studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer [line 89]
   	studio.phaseshift.metatron.docs.MtronDocPreprocessor [line 196]
   	studio.phaseshift.metatron.docs.MtronDocPreprocessor [line 91]
   	studio.phaseshift.metatron.docs.DocRunner [line 206]
@@ -2668,7 +2693,7 @@ mcp tool and post process it to derive further more refined statistics not offer
                          kinds =&gt; &gt;&gt;supertypes&gt;&gt;kind&gt;-[,]],
             subs   =&gt; -&lt;[count =&gt; &gt;&gt;subtypes.count(),
                          kinds =&gt; &gt;&gt;subtypes&gt;&gt;kind&gt;-[,]]]
-==&gt;fail::[unable to locate inst-f of /usr/ai/mcp/intellij/tool/ide_type_hierarchy(className=&gt;'studio.phaseshift.metatron.isa.m.type.Obj')@&lt;0&gt;][...]@/sys/fail/82</code></pre>
+==&gt;fail::[unable to locate inst-f of /usr/ai/mcp/intellij/tool/ide_type_hierarchy(className=&gt;'studio.phaseshift.metatron.isa.m.type.Obj')@&lt;0&gt;][...]@/sys/fail/92</code></pre>
 </div>
 </div>
 <h3 id="sec-agent-notes" class="discrete">agent notes</h3>
@@ -2884,11 +2909,11 @@ Notes are of <strong>crucial importance</strong> and must be acted on immediatel
 <div class="paragraph">
 <p>If an MCP session is spawned at <code>ws://localhost:8555/mcp/0</code>, then writing an obj to <code>ws://localhost:8555/mcp/0/notification/x/y</code> will automatically be routed to the MCP client in a proper <a href="https://www.jsonrpc.org/">JSON-RPC 2.0</a> transport object.</p>
 </div>
-<div class="admonitionblock tip">
+<div class="admonitionblock note">
 <table>
 <tr>
 <td class="icon">
-<i class="fa icon-tip" title="Tip"></i>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
 A <a href="../../.claude/skills/mtron/references/mcp-server-notifications.md">mini-SKILL</a> is available for this pattern — it captures the development session learnings, pitfalls, and mechanics for agents and users working with MCP server→client notifications.
@@ -3002,8 +3027,8 @@ can access it accordingly and naturally.</p>
 <h2 id="sec-fail-and-catch" class="discrete">Fail and Catch</h2>
 <div class="legend-index">
 <ul>
-<li><a href="#sec-fail-space" onclick="var t=document.getElementById('sec-fail-space');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">fail space</a></li>
-<li><a href="#sec-the-cause-of-failure" onclick="var t=document.getElementById('sec-the-cause-of-failure');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">the cause of failure</a></li>
+<li class="legend-lvl-3"><a href="#sec-fail-space" onclick="var t=document.getElementById('sec-fail-space');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">fail space</a></li>
+<li class="legend-lvl-3"><a href="#sec-the-cause-of-failure" onclick="var t=document.getElementById('sec-the-cause-of-failure');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">the cause of failure</a></li>
 </ul>
 </div>
 <div class="paragraph">
@@ -3095,7 +3120,7 @@ can access it accordingly and naturally.</p>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;  1.plus(b)     ​1​
-==&gt;fail::[1 [int::T] unable to convert uri::T][...]@/sys/fail/46
+==&gt;fail::[1 [int::T] unable to convert uri::T][...]@/sys/fail/44
 mtron&gt; */sys/fail/+     ​2​
 mtron&gt; */sys/fail/+.catch(_)     ​3​
 mtron&gt; */sys/fail     ​4​</code></pre>
@@ -3167,18 +3192,18 @@ mtron&gt; throw('bad').catch(cause())     ​3​</code></pre>
 <h2 id="sec-type-system" class="discrete">Structural Type System</h2>
 <div class="legend-index">
 <ul>
-<li><a href="#sec-type-predicates" onclick="var t=document.getElementById('sec-type-predicates');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">type predicates (pred)</a></li>
-<li><a href="#sec-hierarchical-type-checking" onclick="var t=document.getElementById('sec-hierarchical-type-checking');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">hierarchical type checking</a></li>
-<li><a href="#sec-type-constructors" onclick="var t=document.getElementById('sec-type-constructors');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">type constructors (ctor)</a></li>
-<li><a href="#sec-cascading-type-constructions" onclick="var t=document.getElementById('sec-cascading-type-constructions');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">cascading type constructions</a></li>
-<li><a href="#sec-mono-types" onclick="var t=document.getElementById('sec-mono-types');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">mono types</a></li>
-<li><a href="#sec-bytes" onclick="var t=document.getElementById('sec-bytes');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">bytes</a></li>
-<li><a href="#sec-poly-types" onclick="var t=document.getElementById('sec-poly-types');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">poly types</a></li>
-<li><a href="#sec-call-types" onclick="var t=document.getElementById('sec-call-types');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">call types</a></li>
-<li><a href="#sec-instructions" onclick="var t=document.getElementById('sec-instructions');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">instructions</a></li>
-<li><a href="#sec-variables" onclick="var t=document.getElementById('sec-variables');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">variables</a></li>
-<li><a href="#sec-core-types" onclick="var t=document.getElementById('sec-core-types');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">mtron core types</a></li>
-<li><a href="#sec-isa-types" onclick="var t=document.getElementById('sec-isa-types');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">instruction set architecture types</a></li>
+<li class="legend-lvl-3"><a href="#sec-type-predicates" onclick="var t=document.getElementById('sec-type-predicates');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">type predicates (pred)</a></li>
+<li class="legend-lvl-4"><a href="#sec-hierarchical-type-checking" onclick="var t=document.getElementById('sec-hierarchical-type-checking');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">hierarchical type checking</a></li>
+<li class="legend-lvl-3"><a href="#sec-type-constructors" onclick="var t=document.getElementById('sec-type-constructors');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">type constructors (ctor)</a></li>
+<li class="legend-lvl-4"><a href="#sec-cascading-type-constructions" onclick="var t=document.getElementById('sec-cascading-type-constructions');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">cascading type constructions</a></li>
+<li class="legend-lvl-3"><a href="#sec-mono-types" onclick="var t=document.getElementById('sec-mono-types');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">mono types</a></li>
+<li class="legend-lvl-4"><a href="#sec-bytes" onclick="var t=document.getElementById('sec-bytes');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">bytes</a></li>
+<li class="legend-lvl-3"><a href="#sec-poly-types" onclick="var t=document.getElementById('sec-poly-types');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">poly types</a></li>
+<li class="legend-lvl-4"><a href="#sec-call-types" onclick="var t=document.getElementById('sec-call-types');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">call types</a></li>
+<li class="legend-lvl-4"><a href="#sec-instructions" onclick="var t=document.getElementById('sec-instructions');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">instructions</a></li>
+<li class="legend-lvl-3"><a href="#sec-variables" onclick="var t=document.getElementById('sec-variables');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">variables</a></li>
+<li class="legend-lvl-3"><a href="#sec-core-types" onclick="var t=document.getElementById('sec-core-types');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">mtron core types</a></li>
+<li class="legend-lvl-3"><a href="#sec-isa-types" onclick="var t=document.getElementById('sec-isa-types');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">instruction set architecture types</a></li>
 </ul>
 </div>
 <div class="paragraph">
@@ -3217,7 +3242,7 @@ mtron&gt; 4.as(int::T[?&gt;0]@nat)
 ==&gt;nat::4
 mtron&gt;  -4.as(nat::T)
 ==&gt;fail::[-4 is not a is(gt(0))
-     -4=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/8
+     -4=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/6
 mtron&gt; [-- refining rec::T  --]
 mtron&gt; [name=&gt;'snowbutt',age=&gt;7].as(rec::T[?[name=&gt;str::T,age=&gt;int::T]@chicken)
 ==&gt;ERROR: [name=&gt;'snowbutt',age=&gt;7].as(rec::T[?[name=&gt;str::T,age=&gt;int::T]@chicken)
@@ -3285,11 +3310,11 @@ mtron&gt; 2.as(nat::T)     ​5​
 ==&gt;2
 mtron&gt;  -2.as(nat::T)     ​6​
 ==&gt;fail::[-2 is not a is(gt(0))
-     -2=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/14
+     -2=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/12
 mtron&gt;  nat::2 * -1     ​7​
 ==&gt;fail::[nat::-2 is not a int::T[is(gt(0))][choose([
      is(lt(0))=&gt;mult(-1),
-     id()=&gt;id()]).rshift()]][...]@/sys/fail/20</code></pre>
+     id()=&gt;id()]).rshift()]][...]@/sys/fail/18</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -3316,7 +3341,7 @@ The predicate component of the type definition tests an <code>int</code> to dete
 <div class="paragraph">
 <p>While every <code>type</code> is an <code>obj</code>, not every <code>obj</code> is a <code>type</code>.
 Those <code>objs</code> that are not <code>types</code> are <em>instances</em> of some <code>type</code>.
-This is the foundation for all other <code>objs</code> in {{g}}m{{r}}E{{c}}T{{r}}A{{c}}t{{r}}r{{y}}o{{b}}N{{X}}.</p>
+This is the foundation for all other <code>objs</code> in {{m}}m{{y}}e{{c}}T{{y}}a{{m}}T{{c}}R{{y}}o{{b}}N{{X}}.</p>
 </div>
 <h4 id="sec-cascading-type-constructions" class="discrete">cascading type constructions</h4>
 <h3 id="sec-mono-types" class="discrete">mono types</h3>
@@ -3434,13 +3459,13 @@ mtron&gt; bytes::'48656c6c6f'     ​2​
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; kB::1024.as(mB::T)     ​1​
-==&gt;ERROR: unable to convert int::T to real::T[studio.phaseshift.metatron.isa.m.type.Obj:581]
+==&gt;ERROR: unable to convert int::T to real::T[studio.phaseshift.metatron.isa.m.type.Obj:582]
 mtron&gt; mB::1.as(kB::T)     ​2​
-==&gt;ERROR: unable to convert int::T to real::T[studio.phaseshift.metatron.isa.m.type.Obj:581]
+==&gt;ERROR: unable to convert int::T to real::T[studio.phaseshift.metatron.isa.m.type.Obj:582]
 mtron&gt; gB::5.as(mB::T)     ​3​
-==&gt;ERROR: unable to convert int::T to real::T[studio.phaseshift.metatron.isa.m.type.Obj:581]
+==&gt;ERROR: unable to convert int::T to real::T[studio.phaseshift.metatron.isa.m.type.Obj:582]
 mtron&gt; pB::1.as(tB::T)     ​4​
-==&gt;ERROR: unable to convert int::T to real::T[studio.phaseshift.metatron.isa.m.type.Obj:581]</code></pre>
+==&gt;ERROR: unable to convert int::T to real::T[studio.phaseshift.metatron.isa.m.type.Obj:582]</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -3472,13 +3497,13 @@ mtron&gt; pB::1.as(tB::T)     ​4​
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; mB::1024.eq(gB::1)     ​1​
-==&gt;ERROR: unable to convert int::T to real::T[studio.phaseshift.metatron.isa.m.type.Obj:581]
+==&gt;ERROR: unable to convert int::T to real::T[studio.phaseshift.metatron.isa.m.type.Obj:582]
 mtron&gt; kB::1024.eq(mB::1)     ​2​
-==&gt;ERROR: unable to convert int::T to real::T[studio.phaseshift.metatron.isa.m.type.Obj:581]
+==&gt;ERROR: unable to convert int::T to real::T[studio.phaseshift.metatron.isa.m.type.Obj:582]
 mtron&gt; gB::2.eq(mB::2048)     ​3​
-==&gt;ERROR: unable to convert int::T to real::T[studio.phaseshift.metatron.isa.m.type.Obj:581]
+==&gt;ERROR: unable to convert int::T to real::T[studio.phaseshift.metatron.isa.m.type.Obj:582]
 mtron&gt; tB::1.eq(gB::1024)     ​4​
-==&gt;ERROR: unable to convert int::T to real::T[studio.phaseshift.metatron.isa.m.type.Obj:581]</code></pre>
+==&gt;ERROR: unable to convert int::T to real::T[studio.phaseshift.metatron.isa.m.type.Obj:582]</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -3973,7 +3998,7 @@ mtron&gt;  nat::-10
 ==&gt;ERROR: nat::-10 is not a int::T[is(gt(0))]
 mtron&gt;  int::-10.as(nat::T)
 ==&gt;fail::[-10 is not a is(gt(0))
-     -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/142</code></pre>
+     -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/140</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -4072,7 +4097,7 @@ mtron&gt;  nat::-10
 ==&gt;ERROR: nat::-10 is not a int::T[is(gt(0))]
 mtron&gt;  int::-10.as(nat::T)
 ==&gt;fail::[-10 is not a is(gt(0))
-     -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/148</code></pre>
+     -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/146</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -4098,10 +4123,10 @@ mtron&gt; age::125
 ==&gt;ERROR: age::125 is not a int::T[is(lt(120))]
 mtron&gt;  nat::125.as(age::T)
 ==&gt;fail::[nat::125 is not a is(lt(120))
-     nat::125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/154
+     nat::125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/152
 mtron&gt;  125.as(nat::T).as(age::T)
 ==&gt;fail::[125 is not a is(lt(120))
-     125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/160</code></pre>
+     125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/158</code></pre>
 </div>
 </div>
 <div class="listingblock">
@@ -4333,54 +4358,44 @@ mtron&gt; memspace::[
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; console::[=&gt;]@/usr/ui/console     ​1​
-==&gt;console::[
-    metatron_version=&gt;&lt;0.1-alpha&gt;,
-    history=&gt;!history(#::T),
-    input=&gt;/usr/ui/console/in,
-    prefix=&gt;'',
-    postfix=&gt;'',
-    pane=&gt;lst[/m/mach/console/pane{*}]::[/m/mach/console/pane::[
-    stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
-    prompt=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
-    result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]@/usr/ui/console/pane/0],
-    menu=&gt;[
-     console=&gt;console::[
-      metatron_version=&gt;&lt;0.1-alpha&gt;,
-      history=&gt;!history(#::T),
-      input=&gt;/usr/ui/console/in,
-      prefix=&gt;'',
-      postfix=&gt;'',
-      pane=&gt;lst[/m/mach/console/pane{*}]::[/m/mach/console/pane::[
-    stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
-    prompt=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
-    result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]@/usr/ui/console/pane/0]]@/usr/ui/console,
-     help=&gt;inst?noobj&lt;=#{?}(),
-     chat=&gt;inst?noobj&lt;=#{?}(),
-     connect=&gt;inst?noobj&lt;=#{?}(),
-     header=&gt;inst?noobj&lt;=#{?}(),
-     quit=&gt;inst?noobj&lt;=#{?}(),
-     clear=&gt;inst?noobj&lt;=#{?}(),
-     log=&gt;inst?noobj&lt;=#{?}(),
-     check=&gt;inst?noobj&lt;=#{?}(),
-     top=&gt;inst?noobj&lt;=#{?}(),
-     less=&gt;inst?noobj&lt;=#{?}(),
-     subs=&gt;inst?noobj&lt;=#{?}(),
-     justify=&gt;inst?noobj&lt;=#{?}(),
-     state=&gt;inst?noobj&lt;=#{?}(),
-     lang=&gt;inst?noobj&lt;=#{?}(),
-     prefix=&gt;inst?noobj&lt;=#{?}(),
-     postfix=&gt;inst?noobj&lt;=#{?}(),
-     split=&gt;inst?noobj&lt;=#{?}(),
-     unsplit=&gt;inst?noobj&lt;=#{?}(),
-     close=&gt;inst?noobj&lt;=#{?}(),
-     focus=&gt;inst?noobj&lt;=#{?}(),
-     panes=&gt;inst?noobj&lt;=#{?}(),
-     subq=&gt;inst?noobj&lt;=#{?}()]]@/usr/ui/console
+==&gt;ERROR: rejectedexecutionexception: Task java.util.concurrent.FutureTask@3b1bb3ab[Not completed, task = java.util.concurrent.Executors$RunnableAdapter@7646731d[Wrapped task = studio.phaseshift.metatron.isa.mach.type.ui.console.StatusLine@70e29e14]] rejected from java.util.concurrent.ThreadPoolExecutor@6b927fb[Terminated, pool size = 0, active threads = 0, queued tasks = 0, completed tasks = 0]
+  	java.util.concurrent.ThreadPoolExecutor$AbortPolicy [line 2032]
+  	java.util.concurrent.ThreadPoolExecutor [line 787]
+  	java.util.concurrent.ThreadPoolExecutor [line 1328]
+  	studio.phaseshift.metatron.isa.sys.type_.ThreadExecutor [line 117]
+  	java.util.concurrent.AbstractExecutorService [line 125]
+  	studio.phaseshift.metatron.isa.mach.type.ui.console.Console [line 257]
+  	studio.phaseshift.metatron.isa.mach.type.ui.console.Console [line 178]
+  	studio.phaseshift.metatron.isa.m.type.Inst$f [line 688]
+  	studio.phaseshift.metatron.isa.m.type.Inst [line 329]
+  	studio.phaseshift.metatron.isa.m.type.Obj$Helper [line 919]
+  	studio.phaseshift.metatron.isa.m.type.impl.MObj [line 46]
+  	studio.phaseshift.metatron.isa.m.type.impl.MRec [line 76]
+  	studio.phaseshift.metatron.isa.m.parser.mParser [line 207]
+  	org.petitparser.parser.actions.ActionParser [line 39]
+  	org.petitparser.parser.combinators.DelegateParser [line 25]
+  	org.petitparser.parser.combinators.ChoiceParser [line 34]
+  	org.petitparser.parser.combinators.DelegateParser [line 25]
+  	org.petitparser.parser.combinators.ChoiceParser [line 34]
+  	org.petitparser.parser.combinators.OptionalParser [line 23]
+  	org.petitparser.parser.combinators.SequenceParser [line 25]
+  	org.petitparser.parser.actions.ActionParser [line 37]
+  	org.petitparser.parser.combinators.ChoiceParser [line 34]
+  	org.petitparser.parser.combinators.SequenceParser [line 25]
+  	org.petitparser.parser.actions.ActionParser [line 37]
+  	org.petitparser.parser.combinators.SequenceParser [line 25]
+  	org.petitparser.parser.actions.ActionParser [line 37]
+  	org.petitparser.parser.Parser [line 76]
+  	studio.phaseshift.metatron.isa.m.parser.mParser [line 421]
+  	studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer [line 89]
+  	studio.phaseshift.metatron.docs.MtronDocPreprocessor [line 196]
+  	studio.phaseshift.metatron.docs.MtronDocPreprocessor [line 91]
+  	studio.phaseshift.metatron.docs.DocRunner [line 206]
 mtron&gt; */usr/ui/console/pane/0     ​2​
 ==&gt;/m/mach/console/pane::[
-    stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
-    prompt=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
-    result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]
+    stream=&gt;inst?noobj{0}&lt;=#{?}(#{*}::T),
+    prompt=&gt;inst?noobj{0}&lt;=#{?}(#{*}::T),
+    result=&gt;inst?noobj{0}&lt;=#{?}(#{*}::T)]
 mtron&gt; /usr/ui/console/pane/0/result('printed at ==&gt;xyz')     ​3​</code></pre>
 </div>
 </div>
@@ -4459,14 +4474,14 @@ mtron&gt; /usr/ui/console/pane/0/result('printed at ==&gt;xyz')     ​3​</cod
 <h2 id="sec-polynomial-data-structures" class="discrete">Polynomial Data Structures</h2>
 <div class="legend-index">
 <ul>
-<li><a href="#sec-data-structures" onclick="var t=document.getElementById('sec-data-structures');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">data structures</a></li>
-<li><a href="#sec-poly-types" onclick="var t=document.getElementById('sec-poly-types');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Poly Types</a></li>
-<li><a href="#sec-lists" onclick="var t=document.getElementById('sec-lists');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Lists</a></li>
-<li><a href="#sec-relations" onclick="var t=document.getElementById('sec-relations');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Relations</a></li>
-<li><a href="#sec-records" onclick="var t=document.getElementById('sec-records');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Records</a></li>
-<li><a href="#sec-control-structures" onclick="var t=document.getElementById('sec-control-structures');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Control Structures</a></li>
-<li><a href="#sec-code-structures" onclick="var t=document.getElementById('sec-code-structures');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Code Structures</a></li>
-<li><a href="#sec-query-structures" onclick="var t=document.getElementById('sec-query-structures');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Query Structures</a></li>
+<li class="legend-lvl-3"><a href="#sec-data-structures" onclick="var t=document.getElementById('sec-data-structures');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">data structures</a></li>
+<li class="legend-lvl-3"><a href="#sec-poly-types" onclick="var t=document.getElementById('sec-poly-types');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Poly Types</a></li>
+<li class="legend-lvl-4"><a href="#sec-lists" onclick="var t=document.getElementById('sec-lists');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Lists</a></li>
+<li class="legend-lvl-4"><a href="#sec-relations" onclick="var t=document.getElementById('sec-relations');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Relations</a></li>
+<li class="legend-lvl-4"><a href="#sec-records" onclick="var t=document.getElementById('sec-records');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Records</a></li>
+<li class="legend-lvl-3"><a href="#sec-control-structures" onclick="var t=document.getElementById('sec-control-structures');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Control Structures</a></li>
+<li class="legend-lvl-3"><a href="#sec-code-structures" onclick="var t=document.getElementById('sec-code-structures');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Code Structures</a></li>
+<li class="legend-lvl-3"><a href="#sec-query-structures" onclick="var t=document.getElementById('sec-query-structures');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Query Structures</a></li>
 </ul>
 </div>
 <div class="paragraph">
@@ -4643,12 +4658,12 @@ mtron&gt; **a
 <h2 id="sec-uniform-resource-identifiers" class="discrete">Uniform Resource Identifiers</h2>
 <div class="legend-index">
 <ul>
-<li><a href="#sec-spatial-embeddings" onclick="var t=document.getElementById('sec-spatial-embeddings');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Spatial Embeddings</a></li>
-<li><a href="#sec-the-uri-reference-ring" onclick="var t=document.getElementById('sec-the-uri-reference-ring');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">The Uri Reference Ring</a></li>
-<li><a href="#sec-referential-distributivity" onclick="var t=document.getElementById('sec-referential-distributivity');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Referential Distributivity</a></li>
-<li><a href="#sec-referential-factoring" onclick="var t=document.getElementById('sec-referential-factoring');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Referential Factoring</a></li>
-<li><a href="#sec-isomorphic-identical" onclick="var t=document.getElementById('sec-isomorphic-identical');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Isomorphic != Identical</a></li>
-<li><a href="#sec-the-algebraic-structure-of-data" onclick="var t=document.getElementById('sec-the-algebraic-structure-of-data');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">The Algebraic Structure of Data</a></li>
+<li class="legend-lvl-3"><a href="#sec-spatial-embeddings" onclick="var t=document.getElementById('sec-spatial-embeddings');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Spatial Embeddings</a></li>
+<li class="legend-lvl-4"><a href="#sec-the-uri-reference-ring" onclick="var t=document.getElementById('sec-the-uri-reference-ring');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">The Uri Reference Ring</a></li>
+<li class="legend-lvl-5"><a href="#sec-referential-distributivity" onclick="var t=document.getElementById('sec-referential-distributivity');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Referential Distributivity</a></li>
+<li class="legend-lvl-5"><a href="#sec-referential-factoring" onclick="var t=document.getElementById('sec-referential-factoring');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Referential Factoring</a></li>
+<li class="legend-lvl-4"><a href="#sec-isomorphic-identical" onclick="var t=document.getElementById('sec-isomorphic-identical');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Isomorphic != Identical</a></li>
+<li class="legend-lvl-3"><a href="#sec-the-algebraic-structure-of-data" onclick="var t=document.getElementById('sec-the-algebraic-structure-of-data');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">The Algebraic Structure of Data</a></li>
 </ul>
 </div>
 <div class="listingblock">
@@ -5439,11 +5454,11 @@ mtron> [x0,x1,x2]>-.-<[*(* g/+/+)]
 <h2 id="sec-q-processors" class="discrete">Q Processors</h2>
 <div class="legend-index">
 <ul>
-<li><a href="#sec-qproc-examples" onclick="var t=document.getElementById('sec-qproc-examples');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">qproc examples</a></li>
-<li><a href="#sec-subq-publish-and-subscribe-to-patterns-in-space" onclick="var t=document.getElementById('sec-subq-publish-and-subscribe-to-patterns-in-space');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">subq: publish and subscribe to patterns in space</a></li>
-<li><a href="#sec-docq-documentation-for-human-and-agent" onclick="var t=document.getElementById('sec-docq-documentation-for-human-and-agent');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">docq: documentation for human and agent</a></li>
-<li><a href="#sec-typeq-space-type-constraints" onclick="var t=document.getElementById('sec-typeq-space-type-constraints');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">typeq: space type constraints</a></li>
-<li><a href="#sec-incrq-furis-with-counters" onclick="var t=document.getElementById('sec-incrq-furis-with-counters');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">incrq: furis with counters</a></li>
+<li class="legend-lvl-3"><a href="#sec-qproc-examples" onclick="var t=document.getElementById('sec-qproc-examples');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">qproc examples</a></li>
+<li class="legend-lvl-4"><a href="#sec-subq-publish-and-subscribe-to-patterns-in-space" onclick="var t=document.getElementById('sec-subq-publish-and-subscribe-to-patterns-in-space');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">subq: publish and subscribe to patterns in space</a></li>
+<li class="legend-lvl-4"><a href="#sec-docq-documentation-for-human-and-agent" onclick="var t=document.getElementById('sec-docq-documentation-for-human-and-agent');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">docq: documentation for human and agent</a></li>
+<li class="legend-lvl-4"><a href="#sec-typeq-space-type-constraints" onclick="var t=document.getElementById('sec-typeq-space-type-constraints');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">typeq: space type constraints</a></li>
+<li class="legend-lvl-4"><a href="#sec-incrq-furis-with-counters" onclick="var t=document.getElementById('sec-incrq-furis-with-counters');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">incrq: furis with counters</a></li>
 </ul>
 </div>
 <div class="paragraph">
@@ -5670,7 +5685,7 @@ mtron&gt; */usr/notes/#?subq
 <h2 id="sec-internet-of-things-with-mqtt" class="discrete">Internet of Things with MQTT</h2>
 <div class="legend-index">
 <ul>
-<li><a href="#sec-building-a-home-automation-system" onclick="var t=document.getElementById('sec-building-a-home-automation-system');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">building a home automation system</a></li>
+<li class="legend-lvl-3"><a href="#sec-building-a-home-automation-system" onclick="var t=document.getElementById('sec-building-a-home-automation-system');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">building a home automation system</a></li>
 </ul>
 </div>
 <details>
@@ -5692,7 +5707,7 @@ mtron&gt; */usr/notes/#?subq
      mqtt::T,
      haos::T]]@/m/iot
 mtron&gt;  import(/m/llm)
-{{m}}.{{y}}.{{y}}.{{X}}</code></pre>
+...</code></pre>
 </div>
 </div>
 </div>
@@ -5999,9 +6014,9 @@ mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T).as(str::T)     ​5​
 <h2 id="sec-math-instruction-set" class="discrete">Math Instruction Set</h2>
 <div class="legend-index">
 <ul>
-<li><a href="#sec-units-of-measurement" onclick="var t=document.getElementById('sec-units-of-measurement');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Units of Measurement</a></li>
-<li><a href="#sec-time" onclick="var t=document.getElementById('sec-time');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Time</a></li>
-<li><a href="#sec-data-size" onclick="var t=document.getElementById('sec-data-size');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Data Size</a></li>
+<li class="legend-lvl-3"><a href="#sec-units-of-measurement" onclick="var t=document.getElementById('sec-units-of-measurement');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Units of Measurement</a></li>
+<li class="legend-lvl-4"><a href="#sec-time" onclick="var t=document.getElementById('sec-time');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Time</a></li>
+<li class="legend-lvl-4"><a href="#sec-data-size" onclick="var t=document.getElementById('sec-data-size');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Data Size</a></li>
 </ul>
 </div>
 <div class="paragraph">
@@ -6099,11 +6114,11 @@ mtron&gt; gB::1.0.lt(kB::12000000.0)
 <h2 id="sec-graph-computing" class="discrete">Graph Computing</h2>
 <div class="legend-index">
 <ul>
-<li><a href="#sec-mgrphspace" onclick="var t=document.getElementById('sec-mgrphspace');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">/m/grph/space</a></li>
-<li><a href="#sec-grph-instset" onclick="var t=document.getElementById('sec-grph-instset');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">grph instset</a></li>
-<li><a href="#sec-property-graph-extensions" onclick="var t=document.getElementById('sec-property-graph-extensions');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Property Graph Extensions</a></li>
-<li><a href="#sec-metatron-encoded-graphs" onclick="var t=document.getElementById('sec-metatron-encoded-graphs');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">metatron Encoded Graphs</a></li>
-<li><a href="#sec-performance-tiering" onclick="var t=document.getElementById('sec-performance-tiering');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Performance Tiering</a></li>
+<li class="legend-lvl-3"><a href="#sec-mgrphspace" onclick="var t=document.getElementById('sec-mgrphspace');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">/m/grph/space</a></li>
+<li class="legend-lvl-3"><a href="#sec-grph-instset" onclick="var t=document.getElementById('sec-grph-instset');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">grph instset</a></li>
+<li class="legend-lvl-3"><a href="#sec-property-graph-extensions" onclick="var t=document.getElementById('sec-property-graph-extensions');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Property Graph Extensions</a></li>
+<li class="legend-lvl-3"><a href="#sec-metatron-encoded-graphs" onclick="var t=document.getElementById('sec-metatron-encoded-graphs');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">metatron Encoded Graphs</a></li>
+<li class="legend-lvl-4"><a href="#sec-performance-tiering" onclick="var t=document.getElementById('sec-performance-tiering');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Performance Tiering</a></li>
 </ul>
 </div>
 <details>
@@ -7595,68 +7610,26 @@ mtron&gt; *core
 <h2 id="sec-web-technologies" class="discrete">Web Technologies</h2>
 <div class="legend-index">
 <ul>
-<li><a href="#sec-http-space" onclick="var t=document.getElementById('sec-http-space');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">HTTP Space</a></li>
-<li><a href="#sec-html-type" onclick="var t=document.getElementById('sec-html-type');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">HTML Type</a></li>
-<li><a href="#sec-accessing-rest-apis" onclick="var t=document.getElementById('sec-accessing-rest-apis');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Accessing REST APIs</a></li>
+<li class="legend-lvl-3"><a href="#sec-http-space" onclick="var t=document.getElementById('sec-http-space');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">HTTP Space</a></li>
+<li class="legend-lvl-3"><a href="#sec-html-type" onclick="var t=document.getElementById('sec-html-type');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">HTML Type</a></li>
+<li class="legend-lvl-3"><a href="#sec-accessing-rest-apis" onclick="var t=document.getElementById('sec-accessing-rest-apis');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Accessing REST APIs</a></li>
+<li class="legend-lvl-3"><a href="#sec-websocket-space" onclick="var t=document.getElementById('sec-websocket-space');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">WebSocket Space</a></li>
+<li class="legend-lvl-4"><a href="#sec-remote-console" onclick="var t=document.getElementById('sec-remote-console');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Remote Console</a></li>
 </ul>
 </div>
 <details>
-<summary class="title">/m/web instset import and space constructions</summary>
+<summary class="title">web technologies setup</summary>
 <div class="content">
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; import(/m/web)
-==&gt;instset::[
-    pattern=&gt;/m/web/#,
-    q=&gt;[docq::[
-    pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
-    pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
-    pattern=&gt;docq,
-    obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
-    inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
-    space=&gt;[super=&gt;!*/m],
-    const=&gt;[
-     !*/m/mach/io/serializer/xml,
-     !*/m/mach/io/serializer/html,
-     !*/m/mach/io/serializer/json,
-     !*/m/mach/io/serializer/markdown,
-     !*/m/mach/io/serializer/plain/text],
-    type=&gt;[
-     content_type::T,
-     xml::T,
-     html::T,
-     json::T,
-     css::T,
-     markdown::T,
-     httpspace::T,
-     wsspace::T,
-     websocket::T,
-     wshandler::T,
-     wsclient::T,
-     mtron_ws::T,
-     mcp_ws::T,
-     mcp_mtron_ws::T,
-     socket::T,
-     http_handler::T,
-     http_client::T,
-     mtron_http::T,
-     mcp_http::T,
-     mcp_mtron_http::T,
-     web_http::T,
-     mcp_server::T,
-     mcp_client::T],
-    inst=&gt;[
-     ping?/m/math/time&lt;=#{?}(uri::T),
-     format?str&lt;=markdown(),
-     as?json&lt;=str(json::T),
-     as?xml&lt;=str(xml::T),
-     as?html&lt;=str(html::T),
-     as?markdown&lt;=str(markdown::T),
-     as?str&lt;=html(str::T),
-     as?str&lt;=markdown(str::T),
-     as?html&lt;=markdown(html::T),
-     as?mcp_client&lt;=json(json::T),
-     as(json_str::T)]]@/m/web</code></pre>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;  import(/m/web)
+...
+mtron&gt;  import(/m/llm)
+...
+mtron&gt; catalog::[host         =&gt; &lt;http://localhost:1234/v1&gt;,
+                 pattern      =&gt; &lt;lmstudio:#&gt;,
+                 name         =&gt; &lt;openai&gt;,
+                 route        =&gt; [&lt;lmstudio:&gt;=&gt;&lt;&gt;]]@/sys/space/lmstudio</code></pre>
 </div>
 </div>
 </div>
@@ -7758,14 +7731,14 @@ mtron&gt; *&lt;http://phaseshift.studio/splash.html&gt;.as(str::T)     ​4​
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *&lt;http://localhost:1234/v1&gt;
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *&lt;http://localhost:1234/v1&gt;     ​1​
 ==&gt;[error=&gt;'Unexpected endpoint or method. (GE...']
-mtron&gt; *&lt;http://localhost:1234/v1/models&gt;
+mtron&gt; *&lt;http://localhost:1234/v1/models&gt;     ​2​
 ==&gt;[
     data=&gt;[
      [id=&gt;'qwen/qwen3.6-27b',object=&gt;model,owned_by=&gt;organization_owner],
-     [id=&gt;'zai-org/glm-4.7-flash',object=&gt;model,owned_by=&gt;organization_owner],
      [id=&gt;'qwen2.5-coder-3b-instruct',object=&gt;model,owned_by=&gt;organization_owner],
+     [id=&gt;'zai-org/glm-4.7-flash',object=&gt;model,owned_by=&gt;organization_owner],
      [id=&gt;'qwen/qwen2.5-coder-14b',object=&gt;model,owned_by=&gt;organization_owner],
      [id=&gt;'qwen/qwen3.6-35b-a3b',object=&gt;model,owned_by=&gt;organization_owner],
      [id=&gt;qwen/qwen3-coder-30b,object=&gt;model,owned_by=&gt;organization_owner],
@@ -7786,31 +7759,18 @@ mtron&gt; *&lt;http://localhost:1234/v1/models&gt;
       object=&gt;model,
       owned_by=&gt;organization_owner],
      [id=&gt;nvidia/nemotron-3-nano,object=&gt;model,owned_by=&gt;organization_owner]],
-    object=&gt;list]
-mtron&gt; *&lt;http://localhost:1234/v1/models/data/0/id&gt;
-==&gt;[error=&gt;"Model with identifier 'data/0/id' ..."]
-mtron&gt; *&lt;http://localhost:1234/v1/models/config-json/${
-         *&lt;http://localhost:1234/v1/models/data/0/id&gt; }&gt;
-==&gt;[error=&gt;"Model with identifier 'config-json..."]</code></pre>
+    object=&gt;list]</code></pre>
 </div>
 </div>
 <div class="colist arabic">
 <table>
 <tr>
 <td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>No result, but also no connection <code>fail::T</code>. The endpoint is alive.</td>
+<td>An error server side, but demonstrates that the endpoint is alive.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="2"></i><b>2</b></td>
 <td>The <code>/models</code> resource contains a list of all LLM models available for use in LMStudio.</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="3"></i><b>3</b></td>
-<td>Traversing the data within the resource is a function of extending the URI accordingly.</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="4"></i><b>4</b></td>
-<td>Using URI template parameters to fetch more information about the model.</td>
 </tr>
 </table>
 </div>
@@ -7829,7 +7789,10 @@ mtron&gt; *&lt;http://localhost:1234/v1/models/config-json/${
       out=&gt;currency::T],
      {?}size=&gt;bB::T,
      {?}feature=&gt;feature::T]]@/m/llm/model
-mtron&gt; */m/llm/inst/+?dom=model</code></pre>
+mtron&gt; */m/llm/inst/+?dom=model
+==&gt;chat?rng=str&amp;dom=model(str::T){&lt;j&gt;}
+==&gt;chat?rng=rec&amp;dom=model(str::T,rec::T){&lt;j&gt;}
+==&gt;embed?rng=/m/vec/vec&amp;dom=model(#::T){&lt;j&gt;}</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -7845,16 +7808,17 @@ mtron&gt; */m/llm/inst/+?dom=model</code></pre>
 </table>
 </div>
 <div class="paragraph">
-<p>When the REST resource is manipulated to fit the structural specification of <code>model::T</code>, then  <code><a href="http://localhost:1234/v1/models/data/0" class="bare">http://localhost:1234/v1/models/data/0</a></code> can be the source of <code>chat?#&lt;=model</code>.</p>
+<p>When the REST resource is manipulated to fit the structural specification of <code>model::T</code>, then  <code><a href="http://localhost:1234/v1/models" class="bare">http://localhost:1234/v1/models</a></code> can be the source of <code>chat?#&lt;=model</code>.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *&lt;http://localhost:1234/v1/models/data/0&gt;&gt;-.
-         -&lt;[name=&gt;&gt;&gt;id.as(uri::T),
-            type=&gt;&gt;&gt;object.as(uri::T),
-            provider=&gt;|!*/sys/space/lmstudio].as(model::T)
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *&lt;http://localhost:1234/v1/models&gt;.&gt;&gt;data/1.
+         -&lt;[provider=&gt; !*/sys/space/lmstudio,
+            name    =&gt; &gt;&gt;id.as(uri::T)].as(model::T)
          .chat('are you there?')
-==&gt;fail::[[provider=&gt;!*/sys/space/lmstudio] is not a isa([
+==&gt;fail::[[
+    provider=&gt;[id=&gt;'qwen2.5-coder-3b-instruct',object=&gt;model,owned_by=&gt;organization_owner],
+    name=&gt;&lt;qwen2.5-coder-3b-instruct&gt;] is not a isa([
      provider=&gt;catalog::T,
      name=&gt;uri::T,
      {?}desc=&gt;str::T,
@@ -7864,23 +7828,88 @@ mtron&gt; */m/llm/inst/+?dom=model</code></pre>
      {?}size=&gt;bB::T,
      {?}feature=&gt;feature::T])
      [
-      provider=&gt;(/=&gt;provider)=&gt;noobj=&gt;X=&gt;catalog::T,
-      noobj=&gt;(X=&gt;name)=&gt;noobj=&gt;X=&gt;uri::T,
+      provider=&gt;(/=&gt;provider)=&gt;[id=&gt;'qwen2.5-coder-3b-instruct',object=&gt;model,owned_by=&gt;organization_owner]=&gt;X=&gt;catalog::T,
+      name=&gt;(==&gt;name)=&gt;&lt;qwen2.5-coder-3b-instruct&gt;=&gt;==&gt;uri::T,
       noobj=&gt;(==&gt;{?}desc)=&gt;noobj=&gt;/=&gt;str::T,
       noobj=&gt;(==&gt;{?}cost)=&gt;noobj=&gt;==&gt;{?}[
       in=&gt;currency::T,
       out=&gt;currency::T],
       noobj=&gt;(==&gt;{?}size)=&gt;noobj=&gt;/=&gt;bB::T,
-      noobj=&gt;(==&gt;{?}feature)=&gt;noobj=&gt;/=&gt;feature::T]][...]@/sys/fail/8</code></pre>
+      noobj=&gt;(==&gt;{?}feature)=&gt;noobj=&gt;/=&gt;feature::T]][...]@/sys/fail/6</code></pre>
 </div>
 </div>
 <div class="colist arabic">
 <table>
 <tr>
 <td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>The OpenAPI <code>application/json</code> resource is morphed into a metatron <code>model::T</code> and then the model is `chat`ted with.</td>
+<td>The OpenAPI <code>application/json</code> resource is morphed into a metatron <code>model::T</code> and then the model is chatted with.</td>
 </tr>
 </table>
+</div>
+<h3 id="sec-websocket-space" class="discrete">WebSocket Space</h3>
+<div class="paragraph">
+<p>The <code>wsspace::T</code> is similar to <code>httpspace::T</code>, but enables long running connections and bidirectional communication. A particular useful aspect of <code>wsspace::T</code> is for communication between two metatron instances.</p>
+</div>
+<h4 id="sec-remote-console" class="discrete">Remote Console</h4>
+<div class="paragraph">
+<p>If another metatron instance is running on a remote machine, it&#8217;s possible to route all console input to the remote metatron for evaluation. In order to make the experience seamless for the user, the <code>redirect/input</code> relation of <code>console::T</code> can be used.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+In the following example, the "remote" metatron instance is <code>localhost</code>. This is because all code examples in this documentation are evaluated when the documentation is compiled. Note that <code>localhost</code> can be set to any hostname or IP address that is running a metatron instance with a <code>wsspace::T</code> exposing the <code>mtron_ws::T</code> handler.
+</td>
+</tr>
+</table>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; wsclient::[host=&gt;&lt;ws://localhost:8555/mtron&gt;]@/usr/ui/console/remote     ​1​
+==&gt;wsclient::[
+    host=&gt;ws://localhost:8555/mtron,
+    send=&gt;inst?#{*}&lt;=#{?}(#{*}::T),
+    send_recv=&gt;inst?#{*}&lt;=#{?}(#{*}::T),
+    close=&gt;/m/inst/close?noobj&lt;=#{?}(),
+    on_message=&gt;print('recieved ${_}')]@/usr/ui/console/remote</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>creates a websocket connection to a remote metatron instance with a <code>wsspace::T</code> exposing an <code>mtron_ws::T</code> route.</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>In the local console UI (the REPL), use the <code>:redirect/input</code> metacommand to have all user input processed by an arbitrary <code>inst</code>. When that <code>inst</code> is a <code>wsclient::T.send_recv()</code>, then a remote console is effected.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; :redirect/input inst?#{*}&lt;=#{?}(to_send=&gt;#{?}::T){*/usr/ui/console/remote.send_recv(*to_send)}
+[INFO ] [/usr/ui/console] redirecting console input to inst?#{*}&lt;=#{?}(to_send=&gt;#{?}::T){*/usr/ui/console/remote.send_recv(*to_send)}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>At this point, all console input is sent to the remote metatron instance, evaluated at that instance via the <code>mtron_ws::T</code> endpoint, where the results are returned to the local instance and displayed in the local console UI.</p>
+</div>
+<div class="paragraph">
+<p>To have REPL input evaluated locally (the default behavior), set the <code>console::T.redirect/input</code> to <code>noobj</code>.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; :redirect/input noobj
+[INFO ] [/usr/ui/console] redirecting console input to noobj
+mtron&gt; :redirect/input
+[INFO ] [/usr/ui/console] console input currently redirected to noobj</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The <code>console::T.redirect/input</code> can be any <code>inst</code>. The flexibility of such redirection allows any number of use cases such as broadcasting, local processing w/ side effects, and more.</p>
 </div>
 </div>
 <div class="collapse position-relative" id="card-20">
@@ -7889,8 +7918,8 @@ mtron&gt; */m/llm/inst/+?dom=model</code></pre>
 <h2 id="sec-document-databases" class="discrete">Document Databases</h2>
 <div class="legend-index">
 <ul>
-<li><a href="#sec-typing-documents" onclick="var t=document.getElementById('sec-typing-documents');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Typing Documents</a></li>
-<li><a href="#sec-inter-space-references" onclick="var t=document.getElementById('sec-inter-space-references');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Inter-Space References</a></li>
+<li class="legend-lvl-3"><a href="#sec-typing-documents" onclick="var t=document.getElementById('sec-typing-documents');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Typing Documents</a></li>
+<li class="legend-lvl-3"><a href="#sec-inter-space-references" onclick="var t=document.getElementById('sec-inter-space-references');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Inter-Space References</a></li>
 </ul>
 </div>
 <details>
@@ -8095,7 +8124,7 @@ mtron&gt; farmset::[type=&gt;[animal::T,equipment::T,chicken::T]]@/m/dcmnt/schem
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;  farm:animals/1 -&gt; 'a chicken named trill'     ​1​
-==&gt;fail::[space /sys/space/farm requires rec::T[?[{?}animals=&gt;animals::T]] at root; got str::T][...]@/sys/fail/4
+==&gt;fail::[space /sys/space/farm requires rec::T[?[{?}animals=&gt;animals::T]] at root; got str::T][...]@/sys/fail/2
 mtron&gt; farm:animals/1 -&gt; chicken::[name=&gt;'trill',age=&gt;7]     ​2​
 ==&gt;chicken::[name=&gt;'trill',age=&gt;7]
 mtron&gt; *farm:animals/1     ​3​
@@ -8286,12 +8315,12 @@ if one is found, the reference is routed to the named scheme&#8217;s space.</p>
 <h2 id="sec-relational-databases" class="discrete">Relational Databases</h2>
 <div class="legend-index">
 <ul>
-<li><a href="#sec-schema-discovery" onclick="var t=document.getElementById('sec-schema-discovery');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">schema discovery</a></li>
-<li><a href="#sec-mtron-to-sql-rewrites" onclick="var t=document.getElementById('sec-mtron-to-sql-rewrites');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">mtron-to-sql rewrites</a></li>
-<li><a href="#sec-autofrom-and-foreign-keys" onclick="var t=document.getElementById('sec-autofrom-and-foreign-keys');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">auto_from and foreign keys</a></li>
-<li><a href="#sec-mtronmeta-table" onclick="var t=document.getElementById('sec-mtronmeta-table');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">_mtron_meta table</a></li>
-<li><a href="#sec-intra-vs-inter-space-discrimination" onclick="var t=document.getElementById('sec-intra-vs-inter-space-discrimination');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">intra- vs. inter-space discrimination</a></li>
-<li><a href="#sec-sql-footprint" onclick="var t=document.getElementById('sec-sql-footprint');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">sql footprint</a></li>
+<li class="legend-lvl-3"><a href="#sec-schema-discovery" onclick="var t=document.getElementById('sec-schema-discovery');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">schema discovery</a></li>
+<li class="legend-lvl-3"><a href="#sec-mtron-to-sql-rewrites" onclick="var t=document.getElementById('sec-mtron-to-sql-rewrites');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">mtron-to-sql rewrites</a></li>
+<li class="legend-lvl-3"><a href="#sec-autofrom-and-foreign-keys" onclick="var t=document.getElementById('sec-autofrom-and-foreign-keys');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">auto_from and foreign keys</a></li>
+<li class="legend-lvl-5"><a href="#sec-mtronmeta-table" onclick="var t=document.getElementById('sec-mtronmeta-table');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">_mtron_meta table</a></li>
+<li class="legend-lvl-5"><a href="#sec-intra-vs-inter-space-discrimination" onclick="var t=document.getElementById('sec-intra-vs-inter-space-discrimination');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">intra- vs. inter-space discrimination</a></li>
+<li class="legend-lvl-5"><a href="#sec-sql-footprint" onclick="var t=document.getElementById('sec-sql-footprint');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">sql footprint</a></li>
 </ul>
 </div>
 <details>
@@ -8905,9 +8934,9 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
 <h2 id="sec-the-boot-loader" class="discrete">The Boot Loader</h2>
 <div class="legend-index">
 <ul>
-<li><a href="#sec-core-structures" onclick="var t=document.getElementById('sec-core-structures');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Core Structures</a></li>
-<li><a href="#sec-boot-structures" onclick="var t=document.getElementById('sec-boot-structures');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Boot Structures</a></li>
-<li><a href="#sec-boot-loader" onclick="var t=document.getElementById('sec-boot-loader');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Boot Loader</a></li>
+<li class="legend-lvl-3"><a href="#sec-core-structures" onclick="var t=document.getElementById('sec-core-structures');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Core Structures</a></li>
+<li class="legend-lvl-3"><a href="#sec-boot-structures" onclick="var t=document.getElementById('sec-boot-structures');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Boot Structures</a></li>
+<li class="legend-lvl-3"><a href="#sec-boot-loader" onclick="var t=document.getElementById('sec-boot-loader');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Boot Loader</a></li>
 </ul>
 </div>
 <div class="paragraph">
@@ -9148,12 +9177,12 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
     obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
     inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
       space=&gt;[super=&gt;!*/m/mach],
+      type=&gt;[serializer::T],
       const=&gt;[
        !*/m/mach/io/serializer/string/clean,
        !*/m/mach/io/serializer/bytebuffer,
        !*/m/mach/io/serializer/json/simple,
-       !*/m/mach/io/serializer/bson],
-      type=&gt;[serializer::T]]@/m/mach/io,
+       !*/m/mach/io/serializer/bson]]@/m/mach/io,
      /m=&gt;instset::[
       pattern=&gt;/m/#,
       q=&gt;[docq::[
@@ -9162,7 +9191,7 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
     pattern=&gt;docq,
     obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
     inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
-      space=&gt;[sub=&gt;{!*/m/mach,!*/m/math,!*/m/web,!*/m/iot,!*/m/grph,!*/m/llm,!*/m/tble,!*/m/dcmnt,!*/m/rdf}],
+      space=&gt;[sub=&gt;{!*/m/sys,!*/m/mach,!*/m/math,!*/m/web,!*/m/iot,!*/m/grph,!*/m/llm,!*/m/tble,!*/m/dcmnt,!*/m/rdf}],
       const=&gt;[
        noobj,
        none@none],
@@ -9360,6 +9389,7 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
        as?lst&lt;=code(lst::T),
        cause?fail{?}&lt;=fail(),
        reify?rec&lt;=fail(),
+       native?B{*}&lt;=A{?}(str::T),
        inside?A{?}&lt;=A(lst::T),
        serialize?B&lt;=A(io::T),
        fork?A{*}&lt;=A{*}(#::T),
@@ -9513,12 +9543,14 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
        websocket::T,
        wshandler::T,
        wsclient::T,
-       mtron_ws::T,
        mcp_ws::T,
+       mcp_emulator_ws::T,
        mcp_mtron_ws::T,
+       mtron_ws::T,
        socket::T,
        http_handler::T,
        http_client::T,
+       mcp_emulator_http::T,
        mtron_http::T,
        mcp_http::T,
        mcp_mtron_http::T,
@@ -9535,7 +9567,7 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
        as?str&lt;=html(str::T),
        as?str&lt;=markdown(str::T),
        as?html&lt;=markdown(html::T),
-       as?mcp_client&lt;=json(json::T),
+       as?mcp_client&lt;=json(mcp_client::T),
        as(json_str::T)]]@/m/web,
      /m/math=&gt;instset::[
       pattern=&gt;/m/math/#,
@@ -9579,6 +9611,20 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
       const=&gt;[
        2.7183@/m/math/e?constq,
        3.1416@/m/math/pi?constq]]@/m/math,
+     /m/sys=&gt;instset::[
+      pattern=&gt;/m/sys/#,
+      q=&gt;[docq::[
+    pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
+    pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+    pattern=&gt;docq,
+    obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
+    inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
+      space=&gt;[super=&gt;!*/m],
+      inst=&gt;[
+       native?B{*}&lt;=A{?}(str::T),
+       stdout?#{?}&lt;=#{?}(#{?}::T),
+       stdin?str&lt;=#{?}()],
+      const=&gt;[[=&gt;]@/sys/thread]]@/m/sys,
      /sys/space/fs=&gt;fsspace::[
       pattern=&gt;local:#,
       route=&gt;[local:=&gt;/home/killswitch/],
@@ -9624,7 +9670,6 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
      count=&gt;[/m/inst/count],
      within=&gt;[/m/inst/within],
      plus=&gt;[/m/inst/plus],
-     stdout=&gt;[/sys/io/stdout],
      less=&gt;[/m/mach/inst/less],
      values=&gt;[/m/grph/inst/values],
      inV=&gt;[/m/grph/inst/inV],
@@ -9637,7 +9682,6 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
      http_handler=&gt;[/m/web/space/httpspace/http_handler],
      web_http=&gt;[/m/web/space/httpspace/web_http],
      inv=&gt;[/m/inst/inv],
-     stdin=&gt;[/sys/io/stdin],
      ping=&gt;[/m/web/inst/ping],
      out=&gt;[/m/grph/inst/out],
      in=&gt;[/m/grph/inst/in],
@@ -9687,6 +9731,7 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
      filter=&gt;[/m/inst/filter],
      lte=&gt;[/m/inst/lte],
      cos=&gt;[/m/math/inst/cos],
+     mcp_emulator_ws=&gt;[/m/web/space/wsspace/mcp_emulator_ws],
      nano=&gt;[/m/mach/inst/nano],
      sql_where=&gt;[/m/tble/inst/rewrite/sql_where],
      outE=&gt;[/m/grph/inst/outE],
@@ -9697,6 +9742,7 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
      int=&gt;[/m/int],
      wsclient=&gt;[/m/web/space/wsspace/wsclient],
      catalog=&gt;[/m/llm/space/catalog],
+     stdin=&gt;[/sys/io/stdin,/m/sys/inst/stdin],
      atan=&gt;[/m/math/inst/atan],
      gremlin_where=&gt;[/m/grph/inst/rewrite/gremlin_where],
      bson=&gt;[/m/mach/io/serializer/bson],
@@ -9730,6 +9776,7 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
      typeq=&gt;[/m/space/qproc/typeq],
      docq=&gt;[/m/space/qproc/docq],
      mimeq=&gt;[/m/space/qproc/mimeq],
+     stdout=&gt;[/sys/io/stdout,/m/sys/inst/stdout],
      xml=&gt;[/m/web/xml],
      zero=&gt;[/m/inst/zero,/m/mach/inst/ring/const/zero],
      json=&gt;[/m/web/json],
@@ -9737,6 +9784,7 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
      id_removal=&gt;[/m/inst/rewrite/id_removal],
      wshandler=&gt;[/m/web/space/wsspace/wshandler],
      markdown=&gt;[/m/web/markdown],
+     native=&gt;[/m/inst/native,/m/sys/inst/native],
      core=&gt;[/m/mach/thread/core],
      mtron_ws=&gt;[/m/web/space/wsspace/mtron_ws],
      modern=&gt;[/m/grph/schema/modern],
@@ -9794,6 +9842,7 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
      end=&gt;[/m/inst/end],
      close=&gt;[/m/mach/inst/close],
      socket=&gt;[/m/web/space/httpspace/socket],
+     mcp_emulator_http=&gt;[/m/web/space/httpspace/mcp_emulator_http],
      quad=&gt;[/m/rdf/space/quad],
      div=&gt;[/m/inst/div],
      update=&gt;[/m/inst/update],
@@ -9859,7 +9908,8 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
      matches=&gt;[/m/inst/matches],
      chat=&gt;[/m/llm/inst/chat],
      rel=&gt;[/m/rel]],
-    prefix=&gt;[=&gt;]]@/sys/router</code></pre>
+    prefix=&gt;[=&gt;]]@/sys/router
+==&gt;[=&gt;]@/sys/thread</code></pre>
 </div>
 </div></div></td>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
@@ -10092,15 +10142,25 @@ console::[        =&gt; ]@/sys/console;
     hljs.addPlugin(new CopyButtonPlugin({
         callback: function(text, el) {
             // Strip multi-line [== ... ==] comments
-            text = text.replace(/\[==[\s\S]*=?=\]/g, '');
-            // Process line by line
+            text = text.replace(/\[==[\s\S]*?==\]/g, '');
+            var inResult = false;
             return text.split('\n')
                 .map(function(line) {
-                    // Drop result lines (==> ...)
-                    if (/^\s*==>/.test(line)) return null;
-                    // Strip mtron> prompt
-                    line = line.replace(/^\s*mtron>\s*/, '');
-                    // Strip single-line [-- ... --] comments
+                    // mtron> prompt — exit result mode, include the input
+                    if (/^\s*mtron>/.test(line)) {
+                        inResult = false;
+                        line = line.replace(/^\s*mtron>\s*/, '');
+                        line = line.replace(/\[--[^\]\[]*--\]/g, '');
+                        return line.trim();
+                    }
+                    // ==> result prefix — enter result mode, skip this line
+                    if (/^\s*==>/.test(line)) {
+                        inResult = true;
+                        return null;
+                    }
+                    // Inside a multi-line result block — skip
+                    if (inResult) return null;
+                    // Regular line (continuation of input)
                     line = line.replace(/\[--[^\]\[]*--\]/g, '');
                     return line.trim();
                 })

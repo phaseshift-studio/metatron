@@ -49,6 +49,10 @@ h4 {
     font-size: 1.35rem;
 }
 
+h2[id], h3[id], h4[id], h5[id], h6[id] {
+    scroll-margin-top: 65px;
+}
+
 .float-left-code {
     float: left;
     background-color: transparent;
@@ -1057,6 +1061,26 @@ footer {
     border: 1px solid #000 !important;
 }
 
+.pdf-export-mode .admonitionblock {
+    border-left: 3px solid #000 !important;
+    background: #f5f5f5 !important;
+    padding: 0.75rem 1rem !important;
+    margin: 1rem 0 !important;
+    border-radius: 0 !important;
+}
+
+.pdf-export-mode .admonitionblock .icon i {
+    color: #000 !important;
+}
+
+.pdf-export-mode .admonitionblock .icon .title {
+    color: #000 !important;
+}
+
+.pdf-export-mode .admonitionblock .content {
+    color: #000 !important;
+}
+
 /* ── Callout badge in colist / annotation tables ──────────────────── */
 
 .conum + b {
@@ -1290,6 +1314,20 @@ pre.highlight > code[data-lang] {
         background: #000 !important;
         color: #fff !important;
     }
+
+    .admonitionblock {
+        border-left: 3px solid #000 !important;
+        background: #f8f9fa !important;
+        padding: 0.75rem 1rem !important;
+        margin: 1rem 0 !important;
+        border-radius: 0 !important;
+    }
+
+    .admonitionblock .icon i,
+    .admonitionblock .icon .title,
+    .admonitionblock .content {
+        color: #000 !important;
+    }
 }
 
 pre {
@@ -1387,6 +1425,51 @@ details[open] summary::before {
     content: '\25BE ';
 }
 
+/* ── Admonition blocks ──────────────────────────────────────────── */
+.admonitionblock {
+    margin: 1.5rem 0;
+    border-left: 4px solid var(--mred);
+    padding: 0.85rem 1.2rem;
+    border-radius: 0 4px 4px 0;
+}
+
+.admonitionblock table {
+    margin: 0 !important;
+    border: none;
+    background: transparent;
+}
+
+.admonitionblock td {
+    padding: 0;
+    vertical-align: top;
+}
+
+.admonitionblock .icon {
+    padding-right: 0.85rem;
+    font-size: 1.3rem;
+    line-height: 1.45;
+}
+
+.admonitionblock .icon .fa.icon-note::before {
+    content: "\f05a";
+    font-family: "Font Awesome 5 Free";
+    font-weight: 900;
+    color: var(--mred);
+}
+
+.admonitionblock .icon .title {
+    color: var(--mred);
+    font-weight: bold;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.admonitionblock .content {
+    line-height: 1.5;
+    font-size: 1.05rem;
+}
+
 .switch ~ div:nth-of-type(2),
 .switch ~ div:nth-of-type(3),
 .switch ~ div:nth-of-type(4),
@@ -1482,8 +1565,7 @@ th {
 .hljs-punctuation,
 .hljs-mtron-result-prefix,
 .hljs-mtron-type-prefix,
-.hljs-mtron-prompt-end,
-.hljs-mtron-log-info {
+.hljs-mtron-prompt-end {
     color: var(--white);
 }
 
@@ -1503,6 +1585,18 @@ th {
 .hljs-mtron-fail-bar,
 .hljs-mtron-thrown {
     color: var(--mred);
+}
+
+.hljs-mtron-log-info {
+    color: var(--mgreen);
+}
+
+.hljs-mtron-log-debug {
+    color: var(--tertiarycolor);
+}
+
+.hljs-mtron-log-trace {
+    color: var(--maqua);
 }
 
 .hljs-mtron-inst-f-jvm,
@@ -1586,6 +1680,9 @@ strong {
 .legend-index li {
     padding: 0 0;
 }
+.legend-index .legend-lvl-3 { padding-left: 0.75rem; }
+.legend-index .legend-lvl-4 { padding-left: 1.5rem; }
+.legend-index .legend-lvl-5 { padding-left: 2.25rem; }
 .legend-index a {
     color: var(--white);
     text-decoration: none;

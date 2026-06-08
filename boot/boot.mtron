@@ -128,7 +128,7 @@ mqttspace::[pattern => <ha:#>,
  catalog::[host         => <http://localhost:1234/v1>,
            pattern      => <lmstudio:#>,
            name         => <openai>,
-           route        => [<lmstudio:>=><>]]@/sys/space/localai;
+           route        => [<lmstudio:>=><>]]@/sys/space/lmstudio;
  tblespace::[pattern => cg:#,
                 q    => [docq::[
                           cg:nodes=>docs::[desc=>"code concepts", example=>["*cg:nodes/+.count()","*cg:nodes/+/kind"]]]],

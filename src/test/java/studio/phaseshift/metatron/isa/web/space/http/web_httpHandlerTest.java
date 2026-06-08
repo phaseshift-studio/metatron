@@ -129,14 +129,14 @@ public class web_httpHandlerTest extends AbstractHTTPServerTest {
         @BeforeEach
         public void setupContentSpace() {
             this.contentSpace = memSpace.of(rec(
-                    uri(PATTERN), uri("mem:web-test-pages/#"),
+                    uri(PATTERN), uri("mem:test-pages/#"),
                     uri(ROUTE), rec()
             ), f("/sys/space/test/web-int/" + getClass().getSimpleName()));
-            Router.writeToSpace(f("mem:web-test-pages/index.html"),
+            Router.writeToSpace(f("mem:test-pages/index.html"),
                     str("<html><body><h1>Hello World</h1></body></html>"));
-            Router.writeToSpace(f("mem:web-test-pages/about.html"),
+            Router.writeToSpace(f("mem:test-pages/about.html"),
                     str("<html><body><h1>About</h1></body></html>"));
-            Router.writeToSpace(f("mem:web-test-pages/data.json"),
+            Router.writeToSpace(f("mem:test-pages/data.json"),
                     str("{\"key\":\"value\"}"));
         }
 
@@ -157,7 +157,7 @@ public class web_httpHandlerTest extends AbstractHTTPServerTest {
                     uri(HOST), uri("http://localhost:" + generatePort()),
                     uri(PATTERN), uri("http://#"),
                     uri(ROUTE), rec(
-                            uri("/"), uri("mem:web-test-pages"))
+                            uri("/"), uri("web-test-pages"))
             ), f("/sys/space/http/web-test"));
         }
 

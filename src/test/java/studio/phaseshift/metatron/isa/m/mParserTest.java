@@ -19,11 +19,15 @@
 package studio.phaseshift.metatron.isa.m;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Bytes;
+import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.impl.MCode;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -32,6 +36,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static studio.phaseshift.metatron.AbstractMetatronTest.checkCodeParseApply;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.plus_;
@@ -52,17 +57,9 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 public class mParserTest extends AbstractMetatronTest {
 
-    @Test
-    public void testCommentParse() {
-        assertEquals(noobj(), ObjmtronSerializer.parse("[-- a comment --]"));
-        assertEquals(start_(jnt(1)).plus_(jnt(2)).end_().map_(jnt(4)), ObjmtronSerializer.parse("1+2;map(4)"));
-        assertEquals(start_(jnt(1)).plus_(jnt(2)), ObjmtronSerializer.parse("[-- a comment --]\n\r1+2"));
-        assertEquals(plus_(jnt(2)).tryToInst(), ObjmtronSerializer.parse("[-- a comment --]\n\rplus(2)"));
-        assertEquals(noobj(), ObjmtronSerializer.parse("[-- a comment --]"));
-        assertEquals(start_(jnt(1)).plus_(jnt(2)), ObjmtronSerializer.parse("[-- a comment\n\r\n\r --]1+2"));
-        assertThrows(Exception.class, () -> ObjmtronSerializer.parse("-- a comment\n\n --"));
-        assertEquals(noobj(), ObjmtronSerializer.parse("[-- a comment \n\n --]\n\n"));
-    }
+    // ========================================
+    // Type Parsing (simple, data-free tests)
+    // ========================================
 
     @Test
     public void testBoolParse() {
@@ -77,7 +74,6 @@ public class mParserTest extends AbstractMetatronTest {
         assertArrayEquals(HexFormat.of().parseHex("abc123"), m_bytes().parse("0xabc123").<Bytes>get().jvm().array());
     }
 
-
     @Test
     public void testIntParse() {
         assertEquals(jnt(1234), ObjmtronSerializer.parse("1234 "));
@@ -89,8 +85,6 @@ public class mParserTest extends AbstractMetatronTest {
                 t.append(jnt(3)).append(jnt(4)).append(jnt(5)));
         assertEquals(objs(List.of(jnt(1), jnt(3), jnt(4), jnt(5))),
                 t.append(jnt(3)).append(jnt(4)).append(jnt(5)));
-        //assertEquals(Int.of(10), ObjParser.parse("start(4).plus(plus(2))").apply(Int.of(4)));
-        //  assertEquals(Int.of("m:nat", 1234), ObjParser.parse("m:nat[1234] "));
     }
 
     @Test
@@ -98,47 +92,75 @@ public class mParserTest extends AbstractMetatronTest {
         assertEquals(real(1234.23), ObjmtronSerializer.parse("1234.23"));
     }
 
+    // ========================================
+    // String Parsing (Parameterized)
+    // ========================================
 
-    @Test
-    public void testStrParse() {
-        assertEquals(str("abc").jvm(), ObjmtronSerializer.parse("'abc'").jvm());
-        assertEquals(str("aBc35 4e6").jvm(), ObjmtronSerializer.parse("'aBc35 4e6'").jvm());
+    @ParameterizedTest
+    @CsvSource(value = {
+            "'abc'                                                          % 'abc'",
+            "'aBc35 4e6'                                                    % 'aBc35 4e6'",
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testStrParse(final String code, final String expected) {
+        checkCodeParseApply(LOG, code, expected);
     }
 
     // ========================================
-    // String Escape Sequence Tests
+    // String Escape Sequences (Parameterized)
     // ========================================
 
-    @Test
-    public void testStrEscapeSequences() {
-        // Backslash escapes a regular character (dot) — both chars preserved
-        assertEquals("\\.", ObjmtronSerializer.parse("'\\.'").jvm());
-
-        // Backslash escapes backslash — both chars preserved (\\ → \\\\)
-        assertEquals("\\\\", ObjmtronSerializer.parse("'\\\\'").jvm());
-
-        // Backslash escapes single quote inside single-quoted string — both chars preserved
-        assertEquals("\\'", ObjmtronSerializer.parse("'\\''").jvm());
-
-        // Backslash escapes double quote inside single-quoted string — both preserved
-        assertEquals("\\\"", ObjmtronSerializer.parse("'\\\"'").jvm());
-
-        // Multiple escape sequences: escaped backslash + escaped dot
-        assertEquals("\\\\\\.", ObjmtronSerializer.parse("'\\\\\\.'").jvm());
-
-        // Escape sequence in the middle of normal text
-        assertEquals("hello\\.world", ObjmtronSerializer.parse("'hello\\.world'").jvm());
-
-        // Backslash-n (not a newline — literal backslash + n, both preserved)
-        assertEquals("\\n", ObjmtronSerializer.parse("'\\n'").jvm());
-
-        // Backslash-t (not a tab — literal backslash + t, both preserved)
-        assertEquals("\\t", ObjmtronSerializer.parse("'\\t'").jvm());
+    @ParameterizedTest
+    @CsvSource(value = {
+            // Escaped dot — both chars preserved
+            "'\\.'                                                          % '\\.'",
+            // Escaped backslash — both chars preserved
+            "'\\\\'                                                         % '\\\\'",
+            // Escaped single quote inside single-quoted string
+            "'\\''                                                          % '\\''",
+            // Escaped double quote inside single-quoted string
+            "'\\\"'                                                         % '\\\"'",
+            // Multiple escapes: escaped backslash + escaped dot
+            "'\\\\\\.'                                                      % '\\\\\\.'",
+            // Escape in the middle of normal text
+            "'hello\\.world'                                                % 'hello\\.world'",
+            // Backslash-n — literal, not a newline
+            "'\\n'                                                          % '\\n'",
+            // Backslash-t — literal, not a tab
+            "'\\t'                                                          % '\\t'",
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testStrEscapeSequences(final String code, final String expected) {
+        checkCodeParseApply(LOG, code, expected);
     }
+
+    // ========================================
+    // String Escape Edge Cases (Parameterized)
+    // ========================================
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            // Consecutive escape sequences
+            "'\\.\\!'                                                       % '\\.\\!'",
+            // Only escape sequences, no normal characters
+            "'\\.\\@\\#'                                                    % '\\.\\@\\#'",
+            // Leading and trailing escape sequences
+            "'\\.abc\\$'                                                    % '\\.abc\\$'",
+            // Escaped backslash at start
+            "'\\\\abc'                                                      % '\\\\abc'",
+            // Mixed path-like escapes
+            "'path\\\\to\\\\file'                                           % 'path\\\\to\\\\file'",
+            // Escaped single quotes in text
+            "'it\\'s working'                                               % 'it\\'s working'",
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testStrEscapeEdgeCases(final String code, final String expected) {
+        checkCodeParseApply(LOG, code, expected);
+    }
+
+    // ========================================
+    // String Escape Round-Trip (loop-based)
+    // ========================================
 
     @Test
     public void testStrEscapeRoundTrip() {
-        // Parse → serialize → re-parse should produce the same jvm value
         final String[] inputs = {
                 "'\\.'",
                 "'\\\\'",
@@ -157,27 +179,202 @@ public class mParserTest extends AbstractMetatronTest {
         }
     }
 
-    @Test
-    public void testStrEscapeEdgeCases() {
-        assertEquals("\\.", ObjmtronSerializer.parse("'\\.'").jvm());
-        // Consecutive escape sequences
-        assertEquals("\\.\\!", ObjmtronSerializer.parse("'\\.\\!'").jvm());
+    // ========================================
+    // Comments (Parameterized)
+    // ========================================
 
-        // Only escape sequences, no normal characters
-        assertEquals("\\.\\@\\#", ObjmtronSerializer.parse("'\\.\\@\\#'").jvm());
-
-        // Leading and trailing escape sequences
-        assertEquals("\\.abc\\$", ObjmtronSerializer.parse("'\\.abc\\$'").jvm());
-
-        // Escaped backslash at start of string
-        assertEquals("\\\\abc", ObjmtronSerializer.parse("'\\\\abc'").jvm());
-
-        // Mixed backslash-escaping and plain text
-        assertEquals("path\\\\to\\\\file", ObjmtronSerializer.parse("'path\\\\to\\\\file'").jvm());
-
-        // Escaped single quotes coexisting with plain text
-        assertEquals("it\\'s working", ObjmtronSerializer.parse("'it\\'s working'").jvm());
+    @ParameterizedTest
+    @CsvSource(value = {
+            // ; sugar path through operator chain
+            "1+2;map(4)                                                     % start(1).plus(2).end().map(4)",
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testCommentParse(final String code, final String expected) {
+        checkCodeParseApply(LOG, code, expected);
     }
+
+    // Comment tests that don't fit in CSV (brackets, multi-line)
+    @Test
+    public void testCommentParseEdgeCases() {
+        // Comment-only
+        assertTrue(ObjmtronSerializer.parse("[-- a comment --]").isNoObj());
+        assertTrue(ObjmtronSerializer.parse("[== a block ==]").isNoObj());
+        assertTrue(ObjmtronSerializer.parse("[-- a comment \n\n --]\n\n").isNoObj());
+        // Leading line comment + expression
+        assertEquals(start_(jnt(1)).plus_(jnt(2)),
+                ObjmtronSerializer.parse("[-- a comment --]\n\r1+2"));
+        assertEquals(plus_(jnt(2)).tryToInst(),
+                ObjmtronSerializer.parse("[-- a comment --]\n\rplus(2)"));
+        assertEquals(start_(jnt(1)).plus_(jnt(2)),
+                ObjmtronSerializer.parse("[-- a comment\n\r\n\r --]1+2"));
+        // Invalid comment syntax
+        assertThrows(Exception.class, () -> ObjmtronSerializer.parse("-- a comment\n\n --"));
+    }
+
+    // ========================================
+    // Semicolon Behavior (Parameterized)
+    // ========================================
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            // parse() — ; inside operator chain produces end()
+            "1+2;map(4)                                                     % start(1).plus(2).end().map(4)",
+            // parse() — ; inside strings is NOT a separator
+            "'\\.'                                                          % '\\.'",
+            "'a;b'                                                          % 'a;b'",
+            // parseMulti() — leading ;
+            ";42                                                            % 42",
+            // parseMulti() — trailing ;
+            "42;                                                            % 42",
+            // parseMulti() — only semicolons → noobj
+            ";;;                                                            % noobj",
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testSemicolonBehavior(final String code, final String expected) {
+        if (expected.equals("noobj")) {
+            assertTrue(ObjmtronSerializer.parseMulti(code).isNoObj());
+        } else if (code.startsWith(";") || code.endsWith(";")) {
+            // Leading/trailing ; tests — use parseMulti
+            final Obj result = ObjmtronSerializer.parseMulti(code);
+            final Obj ex = ObjmtronSerializer.parse(expected);
+            assertEquals(ex, result);
+        } else {
+            checkCodeParseApply(LOG, code, expected);
+        }
+    }
+
+    // ========================================
+    // Comment Mid-Expression (Parameterized)
+    // ========================================
+
+    @Test
+    public void testCommentMidExpression() {
+        // Comment-only inputs
+        assertTrue(ObjmtronSerializer.parse("[-- just a comment --]").isNoObj());
+        assertTrue(ObjmtronSerializer.parse("[== just a block ==]").isNoObj());
+        assertTrue(ObjmtronSerializer.parseMulti("[-- just a comment --]").isNoObj());
+        assertTrue(ObjmtronSerializer.parseMulti("[== just a block ==]").isNoObj());
+
+        // Leading comments via parseMulti
+        assertEquals(42L, (Object) ObjmtronSerializer.parseMulti("[== header ==]42").jvm());
+
+        // Mid-expression comments: parser limitation — m_comment() in obj_parser
+        // greedily matches as a standalone expression, stopping before the value.
+        assertThrows(Exception.class, () -> ObjmtronSerializer.parse("1+[-- comment --]2"));
+        assertThrows(Exception.class, () -> ObjmtronSerializer.parse("1.[-- comment --]plus(2)"));
+        assertThrows(Exception.class, () -> ObjmtronSerializer.parse("[1,[-- c --]2,3]"));
+        assertThrows(Exception.class, () -> ObjmtronSerializer.parse("[a=>1,[-- c --]b=>2]"));
+        assertThrows(Exception.class, () -> ObjmtronSerializer.parse("1+[== block ==]2"));
+    }
+
+    // ========================================
+    // parseMulti() Structural Tests
+    // ========================================
+
+    @Test
+    public void testParseMulti() {
+        // Single expression — same shape as parse()
+        assertEquals(jnt(42).jvm(), ObjmtronSerializer.parseMulti("42").jvm());
+
+        // Two bare values
+        final Obj multi1 = ObjmtronSerializer.parseMulti("42; true");
+        assertTrue(multi1.isCode());
+        assertEquals(2, ObjmtronSerializer.splitCodeAtEnd(multi1.asCode()).size());
+
+        // Three expressions
+        assertEquals(3, ObjmtronSerializer.splitCodeAtEnd(
+                ObjmtronSerializer.parseMulti("1; 2; 3").asCode()).size());
+
+        // Single string — no splitting inside quotes
+        final Obj strResult = ObjmtronSerializer.parseMulti("'hello;world'");
+        assertTrue(strResult.isStr());
+        assertEquals("hello;world", strResult.jvm());
+
+        // ; with whitespace variations
+        assertEquals(2, ObjmtronSerializer.splitCodeAtEnd(
+                ObjmtronSerializer.parseMulti("1 ; 2").asCode()).size());
+        assertEquals(2, ObjmtronSerializer.splitCodeAtEnd(
+                ObjmtronSerializer.parseMulti("1;2").asCode()).size());
+
+        // Multiple consecutive ;
+        assertEquals(2, ObjmtronSerializer.splitCodeAtEnd(
+                ObjmtronSerializer.parseMulti("1;;;2").asCode()).size());
+
+        // Mixed expression types
+        assertEquals(3, ObjmtronSerializer.splitCodeAtEnd(
+                ObjmtronSerializer.parseMulti("42; true; 'hello'").asCode()).size());
+
+        // Instruction + bare value
+        assertEquals(2, ObjmtronSerializer.splitCodeAtEnd(
+                ObjmtronSerializer.parseMulti("map(1); 42").asCode()).size());
+
+        // Empty input
+        assertTrue(ObjmtronSerializer.parseMulti("").isNoObj());
+        assertTrue(ObjmtronSerializer.parseMulti("   ").isNoObj());
+    }
+
+    @Test
+    public void testParseMultiComments() {
+        // Block comment between expressions
+        assertEquals(2, ObjmtronSerializer.splitCodeAtEnd(
+                ObjmtronSerializer.parseMulti("1;[== block ==]2").asCode()).size());
+
+        // Block comment with ; inside — not treated as separator
+        assertEquals(2, ObjmtronSerializer.splitCodeAtEnd(
+                ObjmtronSerializer.parseMulti(
+                        "1;[== this ; is not ; a separator ==]2").asCode()).size());
+
+        // Line comment between ; and expression
+        assertEquals(2, ObjmtronSerializer.splitCodeAtEnd(
+                ObjmtronSerializer.parseMulti("1;[-- between --]2").asCode()).size());
+
+        // Comments around ; separator
+        assertEquals(2, ObjmtronSerializer.splitCodeAtEnd(
+                ObjmtronSerializer.parseMulti(
+                        "1;[-- before --];[-- after --]2").asCode()).size());
+
+        // Leading/trailing comments via parseMulti
+        assertEquals(42L, (Object) ObjmtronSerializer.parseMulti("[== header ==]42").jvm());
+        assertEquals(42L, (Object) ObjmtronSerializer.parseMulti("42[-- trailing --]").jvm());
+    }
+
+    // ========================================
+    // splitCodeAtEnd() Structural Tests
+    // ========================================
+
+    @Test
+    public void testSplitCodeAtEnd() {
+        // Single instruction, no end()
+        assertEquals(1, ObjmtronSerializer.splitCodeAtEnd(
+                MCode.of(List.of(instB(START_INST_TID, lst(jnt(1)))))).size());
+
+        // Two segments separated by end()
+        assertEquals(2, ObjmtronSerializer.splitCodeAtEnd(
+                MCode.of(List.of(
+                        instB(START_INST_TID, lst(jnt(1))),
+                        instB(END_INST_TID, lst()),
+                        instB(f("map"), lst(jnt(4)))))).size());
+
+        // Only end() — returns empty
+        assertEquals(0, ObjmtronSerializer.splitCodeAtEnd(
+                MCode.of(List.of(instB(END_INST_TID, lst())))).size());
+
+        // Trailing end() — discarded
+        assertEquals(1, ObjmtronSerializer.splitCodeAtEnd(
+                MCode.of(List.of(
+                        instB(START_INST_TID, lst(jnt(1))),
+                        instB(END_INST_TID, lst())))).size());
+
+        // Consecutive end() — empty segment skipped
+        assertEquals(2, ObjmtronSerializer.splitCodeAtEnd(
+                MCode.of(List.of(
+                        instB(START_INST_TID, lst(jnt(1))),
+                        instB(END_INST_TID, lst()),
+                        instB(END_INST_TID, lst()),
+                        instB(f("map"), lst(jnt(2)))))).size());
+    }
+
+    // ========================================
+    // URI / Rel / Inst / Sugar (unchanged)
+    // ========================================
 
     @Test
     public void testUriParse() {
@@ -202,11 +399,10 @@ public class mParserTest extends AbstractMetatronTest {
             assertEquals(List.of(), x.poly());
             assertEquals(Map.of("a", "2", "b", "3"), x.qMap());
         }
-        /// ///////////////////////////////////
         assertEquals(uri("http://metatron.com?a&b").uriValue(), ObjmtronSerializer.parse("<http://metatron.com?a&b>").uriValue());
         assertEquals(uri("http://metatron.com?a&b"), ObjmtronSerializer.parse("<http://metatron.com?a&b>"));
         assertEquals(uri("http://metatron.com?a=a/b/c&b=a"), ObjmtronSerializer.parse("<http://metatron.com?a=a/b/c&b=a>"));
-        assertThrows(MTronException.class, () -> ObjmtronSerializer.parse("/metatron.com?a&b")); // TODO: this will be needed moving forward with monad distribution and uri authorities
+        assertThrows(MTronException.class, () -> ObjmtronSerializer.parse("/metatron.com?a&b"));
         assertEquals(uri("metatron/com?a&b"), ObjmtronSerializer.parse("metatron/com?a&b"));
     }
 

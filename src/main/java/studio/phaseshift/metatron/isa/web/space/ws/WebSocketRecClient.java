@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -22,6 +22,7 @@ import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Real;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
@@ -44,6 +45,7 @@ import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_CLIENT_TID;
  */
 public class WebSocketRecClient extends WebSocketClient implements Rec, Closeable {
 
+
     private final WebSocketRec wsclient;
     protected final GraphittyLogger LOG = Graphitty.log(this);
 
@@ -54,7 +56,7 @@ public class WebSocketRecClient extends WebSocketClient implements Rec, Closeabl
         this.wsclient.selfTID(WS_CLIENT_TID);
         this.wsclient.socket.setAttachment(this.wsclient.vid());
         if (this.wsclient.at(ON_MESSAGE).isNoObj()) {
-            this.wsclient.at(ON_MESSAGE, print_(str("recieved ${_}")).tryToInst(), MUTABLE);
+            this.wsclient.at(ON_MESSAGE, print_(str("received ${_}")).tryToInst(), MUTABLE);
         }
         try {
             this.connectBlocking(5000, TimeUnit.MILLISECONDS);
@@ -112,7 +114,7 @@ public class WebSocketRecClient extends WebSocketClient implements Rec, Closeabl
     public void send(final Obj message) {
         this.wsclient.send(message);
     }
-
+    
     @Override
     public void onClose(int code, String reason, boolean remote) {
         this.wsclient.onClose(this, code, reason, remote);

@@ -38,9 +38,6 @@ include::header.html[]
 [discrete]
 == Quick Start
 
-WARNING: **metatron** is a large, involved software system composed of many interacting parts.
-Many of these components are packaged with the main metatron distribution while others are custom extensions written in mtron (the core language of metatron).
-
 ++++
 <img src="images/metatron-character-ansi.png" width="250px" style="float:left; margin:10px;"></a>
 ++++
@@ -51,17 +48,34 @@ From web technologies, to database technologies, to AI technologies, and so fort
 
 From this system emerges a natural way to express structural compositions not easily realized nor written using prior art.
 
-metatron touches on fundamental concepts in languages, compilers, operating systems, networks, databases, web technologies, and more –– all from the vantage point of a perspective codified in mtron which enables one to speak to this world at large, simply and effectively.
-
-[quote]
-----
-With that said, a whirlwind tour of the core concepts behind metatron will now be presented.
-----
+metatron touches on fundamental concepts in languages, compilers, operating systems, networks, databases, web technologies, and more –– all from the vantage point of that enables one to speak to this world at large, simply and effectively.
 
 [discrete]
 === Core Concepts
 
 metatron is a data-oriented programming environment with its own data-flow language called **mtron**.
+
+.metatron terminal program
+[.card]
+--
+The simplest way to use metatron is as a terminal program.
+
+[source,bash]
+----
+$ bin/metatron -e "1-<[+2,+3]"
+[3,4]
+----
+
+From here it's possible to interact with a running metatron instance.
+
+--
+
+.metatron console
+[.card]
+--
+$ bin/metatron -e "console::[=>]"
+
+--
 
 [discrete]
 ==== Core Data Types
@@ -92,7 +106,7 @@ Any obj with `c` of `{0}` is isomorphic to `noobj`.
 🧱
 [mtron]
 ----
-noobj-<[noobj]>-  [-- noobj * noobj --]
+{0}1 + 1  [-- noobj * noobj --]
 [noobj,noobj]>-   [-- noobj + noobj --]
 noobj-<[#]>-      [-- noobj * #     --]
 [noobj, #]>-      [-- noobj + #     --]

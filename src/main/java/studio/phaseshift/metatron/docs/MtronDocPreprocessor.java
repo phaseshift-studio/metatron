@@ -202,7 +202,7 @@ public final class MtronDocPreprocessor {
                 if (!hidden && !noOutput && !result.isNoObj()) {
                     result.stream().forEach(o -> lines.add("==>" + SER.write(o).replace("\n","\n   ")));
                 } else if (noOutput) {
-                    lines.add(Graphitty.sillyPrint("...", true, true));
+                    lines.add("...");
                 } else if (result.isNoObj() && input.isType()) {
                     lines.add("==>" + SER.write(input).replace("\n", "\n   ")); // replacement so second+ lines are indented past the result prompt
                 }
