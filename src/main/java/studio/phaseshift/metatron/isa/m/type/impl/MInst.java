@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -20,10 +20,7 @@ package studio.phaseshift.metatron.isa.m.type.impl;
 
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.type.Inst;
-import studio.phaseshift.metatron.isa.m.type.NoObj;
-import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.Poly;
+import studio.phaseshift.metatron.isa.m.type.*;
 
 import java.util.List;
 import java.util.Objects;
@@ -32,6 +29,7 @@ import java.util.function.BiFunction;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.util.Tuple.Triplet;
 
 public class MInst extends MObj implements Inst {
@@ -76,11 +74,15 @@ public class MInst extends MObj implements Inst {
     }
 
     public static Inst instLambda(final BiFunction<Obj, Inst, Obj> f) {
-        return instLambda(ALL, ALL_STAR, f);
+        return instLambda(lst(T(ALL.maybeSome())), f);
+    }
+
+    public static Inst instLambda(final Lst args, final BiFunction<Obj, Inst, Obj> f) {
+        return instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), args, f);
     }
 
     public static Inst instLambda(final fURI dom, final fURI rng, final BiFunction<Obj, Inst, Obj> f) {
-        return new MInst(Triplet.with(lst(List.of()), Inst.f.of(f), NoObj.noobj()), M_ISA_INST_TID.extend("lambda").dom(dom).rng(rng), null);
+        return instC(M_ISA_INST_TID.dom(dom).rng(rng), lst(T(ALL.maybeSome())), f);
     }
 
     @Override

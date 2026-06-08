@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -27,6 +27,7 @@ import studio.phaseshift.metatron.isa.llm.type.mModel;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.impl.MInst;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.LogObj;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.Border;
@@ -78,7 +79,7 @@ public final class ColonMenu extends MRec {
     public String[] getMenuItems() {
         return this.keys().map(x -> x.uriValue().toString()).toArray(String[]::new);
     }
-    
+
     public ColonMenu(final Console console) {
         super(mutableMap(uri("console"), auto_from_(console.vid()).tryToInst()), COLON_MENU_TID, console.vid().extend("colon_menu"));
         this.console = console;
@@ -140,6 +141,17 @@ public final class ColonMenu extends MRec {
             return noobj();
         }), MUTABLE);
 
+        // ===== redirect/input =====
+        this.at("redirect/input", instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(NOOBJ_TID), lst(), (lhs, inst) -> {
+            if (lhs.isStr() && !lhs.strValue().isBlank()) {
+                this.console.input = ObjmtronSerializer.parse(lhs.strValue());
+                this.console.logger().info("redirecting console input to %s", this.console.input);
+            } else {
+                this.console.logger().info("console input currently redirected to %s", this.console.input);
+            }
+            return noobj();
+        }), MUTABLE);
+
         // ===== header =====
         this.at("header", instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(NOOBJ_TID), lst(), (lhs, inst) -> {
             console.outputHeader(lhs.isStr() ? lhs.strValue() : "");
@@ -174,7 +186,7 @@ public final class ColonMenu extends MRec {
 
         // ===== check =====
         this.at("check", instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(NOOBJ_TID), lst(), (lhs, inst) -> {
-            if (lhs.isStr()) {
+            if (lhs.isStr() && !lhs.strValue().isBlank()) {
                 Arrays.stream(lhs.strValue().split(" ")).forEach(s -> {
                     if (!s.trim().isEmpty()) {
                         if (s.startsWith("-"))

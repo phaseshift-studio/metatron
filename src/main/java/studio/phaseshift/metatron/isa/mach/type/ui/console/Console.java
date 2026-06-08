@@ -35,8 +35,10 @@ import studio.phaseshift.metatron.TypeCheck;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.reflect.JInst;
+import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.reflect.JRec;
 import studio.phaseshift.metatron.isa.m.type.reflect.JRecElement;
+import studio.phaseshift.metatron.isa.m.type.impl.MCode;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.machine.SwarmMachine;
@@ -68,11 +70,13 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.INST_CTOR_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.START_INST_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.start_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instA;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
@@ -97,8 +101,10 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
     public static Path HISTORY_FILE = Paths.get(".metatron.history");
     @JRecElement(key = "history", rng = "/m/inst")
     public Inst history = instA(f("dummy"));
-    @JRecElement(key = "input", rng = "/m/uri")
-    public Uri input = uri("");
+    @JRecElement(key = "redirect/input", rng = "/m/inst")
+    public Inst input = noobj();
+    @JRecElement(key = "redirect/output", rng = "/m/inst")
+    public Inst output = noobj();
     @JRecElement(key = "prefix", rng = "/m/str")
     public String prefix = "";
     @JRecElement(key = "postfix", rng = "/m/str")
@@ -177,6 +183,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
 
     public Console(final Rec options, final fURI vid) {
         super(options.jvm(), CONSOLE_TID, vid);
+        BootLoader.ONE_SHOT = false;
         Console.LOCAL_INSTANCE = this;
         try {
             // Initialize pane system with a single pane
@@ -254,7 +261,6 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                             .sorted(Comparator.comparing(History.Entry::time))
                             .map(s -> rec(uri(TIME), str(s.time().toString()), uri(ENTRY), str(s.line())))
                     ))).tryToInst().as();
-            this.input = null == this.vid() ? uri("") : uri(this.vid().extend("in"));
         } catch (final Exception e) {
             throw MTronException.of(e);
         }
@@ -806,31 +812,51 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
     protected void executeMtron(final String line) {
         /// /////////////////////////////////////////////////////
         AtomicReference<Obj> running = new AtomicReference<>(noobj());
-        CommonUtil.splitOnNonQuotedSequence(this.prefix + line + this.postfix, ';', false).forEach(l -> {
+        final String fullInput = this.prefix + line + this.postfix;
+        if (fullInput.isBlank()) return;
+
+        // 1. Parse the full input — the parser natively handles ; via end() sugar
+        final Obj parsed = ObjmtronSerializer.parseMulti(fullInput);
+        if (null == parsed || parsed.isNoObj()) return;
+
+        // 2. Split into independently executable segments at end() boundaries
+        final List<Code> segments;
+        if (parsed.isCode()) {
+            segments = ObjmtronSerializer.splitCodeAtEnd(parsed.asCode());
+        } else {
+            // Single expression (bare value or single instruction) — wrap as a one-instruction code
+            segments = List.of(MCode.of(List.of(
+                    parsed.isInst() ? parsed.as() : instB(START_INST_TID, lst(parsed)))));
+        }
+        if (segments.isEmpty()) return;
+
+        // 3. Execute each segment with its own SwarmMachine, chaining running state
+        for (final Code segment : segments) {
             try {
-                final Obj parseResult = ObjmtronSerializer.parse(l);
                 final Level startLevel = this.status.getState();
-                if (null != parseResult && !parseResult.isNoObj()) {
-                    final Obj resolvedResult = parseResult.isCall() ? Call.Helper.resolveInspection(running.get(), parseResult.asCall(), unresolved -> {
-                        if (TypeCheck.code_resolve.enabled()) {
-                            throw MTronException.of("unable to fully resolve code. execution will require dynamic inst resolution for:\n\t%s", unresolved.stream().map(Obj::tid).toList());
-                        } else {
-                            this.status.setState(Level.WARN);
-                            parseResult.logger().warn("{{y}}dynamic resolution{{X}}: %s", unresolved.stream().map(i -> "{{b}}" + i.tid() + "{{y}}@" + i.vid() + "{{X}}").reduce("", (a, b) -> a + "," + b).substring(1));
-                        }
-                    }) : parseResult;
-                    final Machine mach = SwarmMachine.of(resolvedResult.isCall() ? resolvedResult.as() : start_(resolvedResult)).onHalt(this::printResult);
+                final Obj resolvedResult = Call.Helper.resolveInspection(running.get(), segment, unresolved -> {
+                    if (TypeCheck.code_resolve.enabled()) {
+                        throw MTronException.of("unable to fully resolve code. execution will require dynamic inst resolution for:\n\t%s", unresolved.stream().map(Obj::tid).toList());
+                    } else {
+                        this.status.setState(Level.WARN);
+                        segment.logger().warn("{{y}}dynamic resolution{{X}}: %s", unresolved.stream().map(i -> "{{b}}" + i.tid() + "{{y}}@" + i.vid() + "{{X}}").reduce("", (a, b) -> a + "," + b).substring(1));
+                    }
+                });
+                final Obj computeResult;
+                if (this.input.isNoObj()) {
+                    final Machine mach = SwarmMachine.of(resolvedResult.as()).onHalt(this::printResult);
                     // Track machine in both places for interruption
                     this.machine = mach;
                     if (this.activePane != null) {
                         this.activePane.machine(mach);
                     }
-
-                    final Obj computeResult = mach.apply();
-                    running.set(computeResult);
-                    computeResult.stream().forEach(this::printResult);
-                    this.status.setState(startLevel);
+                    computeResult = mach.apply();
+                } else {
+                    computeResult = this.input.apply(resolvedResult);
                 }
+                running.set(computeResult);
+                computeResult.stream().forEach(this::printResult);
+                this.status.setState(startLevel);
             } catch (final Exception e) {
                 this.printResult(fail(e));
             } finally {
@@ -838,7 +864,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                     this.activePane.clearMachine();
                 }
             }
-        });
+        }
     }
 
     protected void executeGremlin(final String line) {

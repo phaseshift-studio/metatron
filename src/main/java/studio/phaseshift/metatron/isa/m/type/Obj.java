@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.m.type;
 
+import org.zeroturnaround.exec.ProcessExecutor;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.TypeCheck;
 import studio.phaseshift.metatron.algebra.MultMonoid;
@@ -282,7 +283,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
             return (rhs.tid().c().isZeroable() || rhs.tid().equals(NOOBJ_TID));
         else if (rhs.isNoObj())
             return this.c().isZeroable();
-        else if(null != this.vid() && Objects.equals(this.vid(),rhs.vid()))
+        else if (null != this.vid() && Objects.equals(this.vid(), rhs.vid()))
             return true;
         if (rhs.isObjCall() && !rhs.asCall().isPredicate(this))
             return true;
@@ -960,6 +961,16 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
     final class ObjType {
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
+                    instC(NATIVE_INST_TID.dom(A.maybe()).rng(B.maybeSome()), lst(STR_TYPE), (lhs, inst) -> {
+                        final Str command = inst.arg(0).asStr();
+                        return MTronException.wrap(() ->
+                                ObjmtronSerializer.parseMulti(new String(
+                                        new ProcessExecutor().commandSplit(command.strValue())
+                                                .readOutput(true)
+                                                .execute()
+                                                .getOutput()
+                                                .getBytes())));
+                    }),
                     instC(INSIDE_INST_TID.dom(A).rng(A.maybe()), lst(LST_TYPE), (lhs, inst) -> inst.arg(0).lstValue().stream().anyMatch(o -> o.test(lhs)) ? lhs : noobj()),
                     instC(SERIALIZE_INST_TID.dom(A).rng(B), lst(T(OBJ_SERIAL_TID)), (lhs, inst) -> {
                         final Object serialization = inst.arg(0).<ObjSerializer<?>>as().write(lhs);

@@ -102,7 +102,8 @@ public final class LegendDocPreprocessor {
                 skippedTitle = true;
                 continue;
             }
-            legend.append("<li><a href=\"#").append(h.anchor)
+            legend.append("<li class=\"legend-lvl-").append(h.level.length())
+                    .append("\"><a href=\"#").append(h.anchor)
                     .append("\" onclick=\"var t=document.getElementById('")
                     .append(h.anchor)
                     .append("');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;\">")

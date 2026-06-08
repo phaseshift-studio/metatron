@@ -33,6 +33,7 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HexFormat;
+import java.util.List;
 
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBytes.bytes;
@@ -88,6 +89,13 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
         return mParser.parse(code);
     }
 
+    public static <OBJ extends Obj> OBJ parseMulti(final String code) {
+        return mParser.parseMulti(code);
+    }
+
+    public static List<Code> splitCodeAtEnd(final Code code) {
+        return mParser.splitCodeAtEnd(code);
+    }
 
     @Override
     public ByteBuffer outputBytes(final Obj obj) {

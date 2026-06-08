@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -101,7 +101,9 @@ public class JRec<OBJECT> extends MObj implements Rec {
     public Rec at(final Obj key, final Obj value) {
         try {
             this.jvm().put(key, value);
-            this.findField(key).forEach(f -> MTronException.wrap(() -> f.field().set(this.sjvm, value.jvm())));
+            this.findField(key).forEach(f -> MTronException.wrap(() -> {
+                f.field().set(this.sjvm, Obj.class.isAssignableFrom(f.field().getType()) ? value : value.jvm());
+            }));
             return this;
         } catch (final Exception e) {
             throw MTronException.of(e);

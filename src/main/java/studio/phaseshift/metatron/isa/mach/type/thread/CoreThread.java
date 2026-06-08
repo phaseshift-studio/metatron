@@ -23,6 +23,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.machine.SwarmMachine;
+import studio.phaseshift.metatron.isa.sys.type_.ThreadExecutor;
 
 import java.util.Map;
 import java.util.UUID;
@@ -45,7 +46,9 @@ public class CoreThread extends AbstractThread {
     public CoreThread(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
     }
-
+    
+    
+    
     /*@Override
     public Fail stop() {
         return this.machine.interrupt();

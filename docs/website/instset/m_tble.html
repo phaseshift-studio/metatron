@@ -658,15 +658,25 @@ bin/metatron</code></pre>
     hljs.addPlugin(new CopyButtonPlugin({
         callback: function(text, el) {
             // Strip multi-line [== ... ==] comments
-            text = text.replace(/\[==[\s\S]*=?=\]/g, '');
-            // Process line by line
+            text = text.replace(/\[==[\s\S]*?==\]/g, '');
+            var inResult = false;
             return text.split('\n')
                 .map(function(line) {
-                    // Drop result lines (==> ...)
-                    if (/^\s*==>/.test(line)) return null;
-                    // Strip mtron> prompt
-                    line = line.replace(/^\s*mtron>\s*/, '');
-                    // Strip single-line [-- ... --] comments
+                    // mtron> prompt — exit result mode, include the input
+                    if (/^\s*mtron>/.test(line)) {
+                        inResult = false;
+                        line = line.replace(/^\s*mtron>\s*/, '');
+                        line = line.replace(/\[--[^\]\[]*--\]/g, '');
+                        return line.trim();
+                    }
+                    // ==> result prefix — enter result mode, skip this line
+                    if (/^\s*==>/.test(line)) {
+                        inResult = true;
+                        return null;
+                    }
+                    // Inside a multi-line result block — skip
+                    if (inResult) return null;
+                    // Regular line (continuation of input)
                     line = line.replace(/\[--[^\]\[]*--\]/g, '');
                     return line.trim();
                 })

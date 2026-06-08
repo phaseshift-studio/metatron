@@ -30,6 +30,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Sugar;
 import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.type.Call;
+import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Fail;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -74,6 +75,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
+
 import static studio.phaseshift.metatron.util.CommonUtil.splitOnNonQuotedSequence;
 import static studio.phaseshift.metatron.util.Tuple.Triplet;
 
@@ -99,6 +101,7 @@ public class mParser {
     private static final LinkedHashSet<Parser> PARSERS = new LinkedHashSet<>();
     private static Parser cachedSugarParser = null;
     private static Parser cachedMainParser = null;
+    private static Parser cachedExpressionParser = null;
 
     private static final String REDUCED_FURI_CHARS = "~/%$!#_-@+:*";
     private static final String FULL_FURI_CHARS = REDUCED_FURI_CHARS + ". ";
@@ -210,13 +213,24 @@ public class mParser {
             return (op.equals("||") ? or_(lhs, rhs) : and_(lhs, rhs)).tryToInst();
         }));
 
+        // Core expression parser (without .end()) — reusable for multi-statement parsing
+        cachedExpressionParser = seq(
+                m_comment().star(),
+                choice(m_call_prefix(START_INST_TID), m_obj(false)),
+                opt(m_comment().trim(), null)
+        ).map(t -> {
+            final Obj x = pick(t, 1);
+            return null == x ? noobj() : x;
+        });
+
         // Cache the main parser to avoid rebuilding it on every parse() call
-        cachedMainParser = seq(m_comment().star(), choice(m_call_prefix(START_INST_TID), m_obj(false)), opt(m_comment().trim(), null))
-                .map(t -> {
-                    final Obj x = pick(t, 1);
-                    return null == x ? noobj() : x;
-                })
-                .end();
+        cachedMainParser = cachedExpressionParser.end();
+
+        // Multi-statement parser: using expressionParser in a Java-level loop,
+        // manually consuming ; between expressions.  We do this at the Java
+        // level instead of using PetitParser's possessive .star() because the
+        // separator (;) can consume whitespace without the following expression
+        // succeeding, and the possessive star won't backtrack.
     }
 
     public static LinkedHashSet<Parser> addSugar(final Sugar sugar) {
@@ -386,7 +400,7 @@ public class mParser {
 
     public static <O extends Obj> O eval(final String code) {
         final AtomicReference<Obj> running = new AtomicReference<>(noobj());
-        splitOnNonQuotedSequence(code.replaceAll("\\[==.*=?=]", ""), ';', false).stream()
+        splitOnNonQuotedSequence(code.replaceAll("\\[==.*?=]", ""), ';', false).stream()
                 .filter(s -> !s.trim().isEmpty())
                 .map(s -> Arrays.stream(s.split("\n"))
                         .map(String::trim)
@@ -422,6 +436,117 @@ public class mParser {
         }
 
         return obj;
+    }
+
+    /**
+     * Parses mtron code with support for {@code ;}-separated multi-statement input.
+     * Unlike {@link #parse(String)} which expects exactly one expression,
+     * this method allows {@code expr;expr;...} at the top level. The {@code ;}
+     * separator maps to {@code end()} instructions between statements.
+     * <p>
+     * Implementation: uses {@link #parse(String)} in a loop, consuming one
+     * expression at a time and manually trimming the {@code ;} separator.  This
+     * avoids PetitParser's possessive-star issue where a separator can partially
+     * match without the following expression succeeding.
+     */
+    public static <O extends Obj> O parseMulti(final String code) {
+        final String trimmed = code.trim();
+        if (trimmed.isEmpty())
+            return (O) noobj();
+
+        final List<Inst> allInsts = new ArrayList<>();
+        String remaining = trimmed;
+        boolean needsEnd = false;
+
+        while (!remaining.isBlank()) {
+            remaining = remaining.trim();
+
+            // Consume leading ; separators.  We defer the actual end()
+            // insertion until an expression follows, so that trailing ; does
+            // not produce a spurious end().
+            if (remaining.startsWith(";")) {
+                if (!allInsts.isEmpty()) needsEnd = true;
+                remaining = remaining.substring(1).trim();
+                continue;
+            }
+
+            final Result result = cachedExpressionParser.parse(remaining);
+            if (result.isFailure()) {
+                if (!allInsts.isEmpty()) break;   // partial parse, return what we have
+                throw MTronException.of((Object) (result.getBuffer() + "\n"
+                        + " ".repeat(result.getPosition()) + "^ " + result.getMessage() + "\n"));
+            }
+
+            final Obj parsed = result.get();
+            remaining = remaining.substring(result.getPosition());
+
+            // Skip comments — m_comment() returns noobj(), and a comment-only
+            // segment should not insert an end() separator or become a statement.
+            if (parsed.isNoObj()) continue;
+
+            if (needsEnd) {
+                allInsts.add(instB(END_INST_TID, lst()));
+                needsEnd = false;
+            }
+            appendToInstList(allInsts, parsed);
+        }
+
+        // Strip trailing end() instructions — they come from trailing ;
+        // that the parser consumed as sugar but have no subsequent expression.
+        while (!allInsts.isEmpty()
+                && END_INST_TID.equals(allInsts.get(allInsts.size() - 1).tid().basePath())) {
+            allInsts.remove(allInsts.size() - 1);
+        }
+
+        if (allInsts.isEmpty())
+            return (O) noobj();
+        if (allInsts.size() == 1) {
+            final Inst single = allInsts.get(0);
+            // Unwrap start(x) wrappers introduced by appendToInstList for bare
+            // values — a single expression should return the same shape as parse().
+            if (START_INST_TID.equals(single.tid().basePath())
+                    && single.args().count() == 1) {
+                return (O) single.args().lstValue().get(0);
+            }
+            return (O) single;
+        }
+        return (O) MCode.of(allInsts, CODE_TID, null).tryToInst();
+    }
+
+    /**
+     * Splits a parsed Code into independently executable segments at
+     * {@code end()} instruction boundaries. {@code end()} instructions are
+     * discarded — they serve only as separators between statements.
+     */
+    public static List<Code> splitCodeAtEnd(final Code code) {
+        final List<Code> segments = new ArrayList<>();
+        final List<Inst> current = new ArrayList<>();
+        for (final Inst inst : code.jvm()) {
+            if (END_INST_TID.equals(inst.tid().basePath())) {
+                if (!current.isEmpty()) {
+                    segments.add(MCode.of(new ArrayList<>(current)));
+                    current.clear();
+                }
+            } else {
+                current.add(inst);
+            }
+        }
+        if (!current.isEmpty()) {
+            segments.add(MCode.of(new ArrayList<>(current)));
+        }
+        return segments;
+    }
+
+    /** Appends the instructions from an Obj (Code, Inst, or plain value) to the given list. */
+    private static void appendToInstList(final List<Inst> insts, final Obj obj) {
+        if (null == obj || obj.isNoObj()) return;
+        if (obj.isCode()) {
+            insts.addAll(obj.asCode().codeValue());
+        } else if (obj.isInst()) {
+            insts.add(obj.as());
+        } else {
+            insts.add(instB(START_INST_TID, lst(obj)));
+        }
     }
 
     public static Parser m_comment() {

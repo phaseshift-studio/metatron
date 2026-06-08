@@ -116,7 +116,7 @@ public interface Str extends Mono, PlusMonoid.O<Str> {
         public static String cleanString(final Obj obj) {
             if (obj.isStr()) return obj.strValue();
             if (obj.isUri()) return obj.uriValue().toString();
-            return String.valueOf(obj.jvm());
+            return "" + obj.jvm();
         }
     }
 

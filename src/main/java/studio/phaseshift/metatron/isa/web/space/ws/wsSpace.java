@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -33,6 +33,7 @@ import studio.phaseshift.metatron.isa.web.type.MIME;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.util.Iterator;
@@ -77,6 +78,7 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
                     uri(IN).maybe().asUri(), isa_(CONTENT_TYPE).orElse(uri(MIME.MIMEType.APPLICATION_MTRON.value)),
                     uri(OUT).maybe().asUri(), isa_(CONTENT_TYPE).orElse(uri(MIME.MIMEType.APPLICATION_MTRON.value)),
                     uri(SEND).maybe().asUri(), INST_TYPE,
+                    uri(SEND_RECV).maybe().asUri(), INST_TYPE,
                     uri(ON_OPEN).maybe(), T(ALL),
                     uri(ON_ERROR).maybe(), T(ALL),
                     uri(ON_MESSAGE).maybe(), T(ALL),
@@ -95,8 +97,15 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
             .vid(WS_CLIENT_TID)
             .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(WS_WEBSOCKET_TID),
                     lst(T(REC_TID)), (lhs, inst) -> {
-                        final WebSocketRecClient client = new WebSocketRecClient(new WebSocketRec(inst.arg(0).asRec().jvm(), inst.arg(0).vid()));
-                        return client;
+                        try {
+                       
+                            
+
+                            final WebSocketRecClient client = new WebSocketRecClient(new WebSocketRec(inst.arg(0).asRec().jvm(), inst.arg(0).vid()));
+                            return client;
+                        } catch (final Exception e) {
+                            throw MTronException.of(e);
+                        }
                     })).create();
 
     public static final Type WS_SPACE_TYPE = Type.Builder.build()
@@ -123,7 +132,7 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
     public static wsSpace of(final Map<Obj, Obj> config, final fURI vid) {
         try {
             final mWebSocketServer server = new mWebSocketServer(
-                    config.get(uri(HOST)).autoResolve(noobj()).uriValue().host(), 
+                    config.get(uri(HOST)).autoResolve(noobj()).uriValue().host(),
                     config.get(uri(HOST)).autoResolve(noobj()).uriValue().port());
             final wsSpace ws = new wsSpace(server, config, vid);
             server.setSpace(ws);
