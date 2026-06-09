@@ -270,6 +270,11 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
         return null;
     }
 
+    default fURI authority(final String authority) {
+        final String[] parts = authority.split(":");
+        return parts.length == 2 ? this.host(parts[0]).port(Integer.parseInt(parts[1])) : this.host(parts[0]);
+    }
+
     String host();
 
     fURI host(final String host);

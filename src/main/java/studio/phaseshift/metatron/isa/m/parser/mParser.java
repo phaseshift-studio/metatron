@@ -227,7 +227,7 @@ public class mParser {
         cachedMainParser = cachedExpressionParser.end();
 
         // Multi-statement parser: using expressionParser in a Java-level loop,
-        // manually consuming ; between expressions.  We do this at the Java
+        // manually consuming ; between expressions.  Doing this at the Java
         // level instead of using PetitParser's possessive .star() because the
         // separator (;) can consume whitespace without the following expression
         // succeeding, and the possessive star won't backtrack.

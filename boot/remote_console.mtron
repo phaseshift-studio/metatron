@@ -1,0 +1,14 @@
+[== boot args ==]
+[host/ws => <ws://192.168.1.36:8555>,
+ log     => info]
+[===============]
+import(/m/mach/io);
+import(/m/web);
+
+memspace::[pattern=>/usr/#]@/sys/space/usr;
+/usr/web/ws ->(*<boot/args/host/ws>.-<[host=><${_}/mtron>].as(wsclient::T));
+console::[=>]@/usr/ui/console;
+*/m/web/helper.remote_console();
+[== remote -> |inst?#{*}<=#{?}(a=>#{*}::T){ */usr/web/ws.send_recv(*a) };
+/usr/ui/console/redirect/input -> *remote;
+print('console input directed to {{g}}${*boot/args/host/ws}{{X}}\n') ==]

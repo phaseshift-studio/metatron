@@ -28,6 +28,7 @@ import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.ui.console.Highlighter;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.web.type.MIME;
 import studio.phaseshift.metatron.util.CommonUtil;
@@ -98,9 +99,6 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
             .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(WS_WEBSOCKET_TID),
                     lst(T(REC_TID)), (lhs, inst) -> {
                         try {
-                       
-                            
-
                             final WebSocketRecClient client = new WebSocketRecClient(new WebSocketRec(inst.arg(0).asRec().jvm(), inst.arg(0).vid()));
                             return client;
                         } catch (final Exception e) {
@@ -256,11 +254,12 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
             try {
                 this.space.logger().info("creating new websocket server session w/ %s over %s", conn.getRemoteSocketAddress(), conn.getResourceDescriptor());
                 if (conn.getResourceDescriptor().equals("/")) {
-                    conn.send(String.format("metatron wsspace at %s\n", this.space.vid().toString()));
+                    
                     for (final String line : CommonUtil.getHeader(CommonUtil.HEADER_FILE, null, true).split("\n"))
                         conn.send(line);
-                    conn.send("available servers:\n");
-                    conn.send(this.space.at(ROUTE).toString());
+                    conn.send(String.format("metatron wsspace at {{b}}%s{{X}}\n", this.space.vid().toString()));
+                    conn.send("\t{{y}}available servers{{X}}:\n");
+                    conn.send(Highlighter.format(this.space.at(ROUTE)));
                     conn.closeConnection(1000, "end transmission");
                 } else {
                     final WebSocketRec server = this.createServer(conn);
