@@ -61,9 +61,9 @@
         <java-websocket.version>1.6.0</java-websocket.version>
         <mariadb.version>3.5.8</mariadb.version>
         <mongodb.version>5.8.0</mongodb.version>
-        <langchain4j.version>1.16.0</langchain4j.version>
+        <langchain4j.version>1.16.1</langchain4j.version>
         <jlama.version>0.8.4</jlama.version>
-        <langchain4j.beta.version>1.16.0-beta26</langchain4j.beta.version>
+        <langchain4j.beta.version>1.16.1-beta26</langchain4j.beta.version>
         <langgraph4j.version>1.8.11</langgraph4j.version>
         <junit.version>6.1.0</junit.version>
         <tinkerpop.version>3.8.1</tinkerpop.version>
