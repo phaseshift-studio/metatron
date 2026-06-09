@@ -1,6 +1,0 @@
-[== boot args ==]
-[host/ws=><ws://localhost:8555>]
-[===============]
-import(/m/mach/io);
-memspace::[pattern=>/usr/#]@/sys/space/usr;
-console::[redirect/input=>!*boot/args/host/ws]@/usr/ui/console

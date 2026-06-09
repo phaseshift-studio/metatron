@@ -18,16 +18,22 @@
 
 package studio.phaseshift.metatron.isa.web;
 
+import org.java_websocket.client.WebSocketClient;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.llm.type.mcpClient;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.m.type.Str;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
+import studio.phaseshift.metatron.isa.mach.type.ui.console.Console;
 import studio.phaseshift.metatron.isa.web.parser.*;
+import studio.phaseshift.metatron.isa.web.space.ws.WebSocketRec;
+import studio.phaseshift.metatron.isa.web.space.ws.WebSocketRecClient;
 import studio.phaseshift.metatron.isa.web.type.MIME;
 import studio.phaseshift.metatron.isa.web.type.mcpServer;
+import studio.phaseshift.metatron.util.CommonUtil;
 
 import java.net.InetSocketAddress;
 import java.nio.channels.SocketChannel;
@@ -54,12 +60,13 @@ import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.NOOBJ_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.sys.sysInstSet.SYS_INST_TID;
 import static studio.phaseshift.metatron.isa.web.space.http.handler.mcp_emulator_httpHandler.HTTP_MCP_EMULTATOR_TYPE;
 import static studio.phaseshift.metatron.isa.web.space.http.handler.mcp_httpHandler.HTTP_MCP_HANDLER_TYPE;
 import static studio.phaseshift.metatron.isa.web.space.http.handler.mcp_mtron_httpHandler.HTTP_MCP_MTRON_TYPE;
@@ -142,6 +149,10 @@ public class webInstSet extends AbstractInstSet {
     public void setup() {
         this.jvm().putAll(mutableMap(
                 uri(CONST), lst(
+                        docWrap(rec(mutableMap(
+                                                uri("remote_console"), webHelper.remoteConsole()),
+                                        REC_TID, WEB_ISA_TID.extend("helper")),
+                                "a collection of web related utilities"),
                         ObjXMLSerializer.single(),
                         ObjHTMLSerializer.single(),
                         ObjJSONSerializer.single(),
@@ -258,7 +269,7 @@ public class webInstSet extends AbstractInstSet {
                                 next.jvm().remove(uri(COMMAND));
                             }
                             if (next.has(ARGS)) {
-                               next.at(ARGS).elements().forEach(merged::add);
+                                next.at(ARGS).elements().forEach(merged::add);
                                 next.jvm().remove(uri(ARGS));
                             }
                             if (!merged.isEmpty())
@@ -269,10 +280,10 @@ public class webInstSet extends AbstractInstSet {
                             } else if (next.has(ENV) && next.has(HEADERS)) {
                                 next.at(HEADERS).asRec().jvm().putAll(next.jvm().remove(uri(ENV)).asRec().jvm());
                             }
-                            if(next.has(URL)) {
-                                next.jvm().put(uri(HOST),next.at(URL));
+                            if (next.has(URL)) {
+                                next.jvm().put(uri(HOST), next.at(URL));
                             }
-                            final mcpClient client = new mcpClient(next.asRec().jvm(),MCP_CLIENT_TID,lhs.vid());
+                            final mcpClient client = new mcpClient(next.asRec().jvm(), MCP_CLIENT_TID, lhs.vid());
                             return client;
                         }),
                         instC(AS_INST_TID.dom(ALL).rng(STR_TID), lst(JSON_STR_TYPE), (lhs, inst) -> str(ObjSimpleJSONSerializer.single().write(lhs).toString())))));

@@ -55,6 +55,7 @@ import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_fro
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.block_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.type.ui.console.Console.CONSOLE_TID;
@@ -99,10 +100,11 @@ public final class ColonMenu extends MRec {
                     .addRow(List.of("clear", ":clear", "clear the console"))
                     .addRow(List.of("header", ":header [ |<name>]", "print random or named metatron header"))
                     .addRow(List.of("log", ":log [ |trace|debug|info|warn|error] [ |int]", "show or set log level (and target a output to a pane)"))
+                    .addRow(List.of("input redirect", ":redirect/input <inst text>", "redirect console input elsewhere via inst (noobj for default)"))
                     .addRow(List.of("word jump", "<shift>+<left/right>", "jump to start/end of a word"))
                     .addRow(List.of("word delete", "<ctrl>+<backspace>", "delete previous word"))
-                    .addRow(List.of("prefix", ":prefix \"<text>\"", "prefix input with text"))
-                    .addRow(List.of("postfix", ":postfix \"<text>\"", "postfix input with text"))
+                    .addRow(List.of("prefix", ":prefix <text>", "prefix input with text"))
+                    .addRow(List.of("postfix", ":postfix <text>", "postfix input with text"))
                     .addRow(List.of("back erase", "<alt>+k <char>", "erase buffer back to first occurrence of char"))
                     .addRow(List.of("format buffer", "<ctrl>+f", "pretty-print current buffer (legal syntax only)"))
                     /// ///////////////////////////////////////////////////////////////////////////////////////
@@ -134,7 +136,7 @@ public final class ColonMenu extends MRec {
 
         // ===== connect =====
         this.at("connect", instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(NOOBJ_TID), lst(), (lhs, inst) -> {
-            Router.writeToSpace("abc", block_(MInst.instLambda((lhs2, inst2) -> {
+            Router.writeToSpace("abc", block_(instLambda((lhs2, inst2) -> {
                 console.getReader().getBuffer().write(lhs2.asLst().at(1).strValue());
                 return lhs2;
             })));
@@ -142,7 +144,7 @@ public final class ColonMenu extends MRec {
         }), MUTABLE);
 
         // ===== redirect/input =====
-        this.at("redirect/input", instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(NOOBJ_TID), lst(), (lhs, inst) -> {
+        this.at("redirect/input", instLambda((lhs, inst) -> {
             if (lhs.isStr() && !lhs.strValue().isBlank()) {
                 this.console.input = ObjmtronSerializer.parse(lhs.strValue());
                 this.console.logger().info("redirecting console input to %s", this.console.input);
