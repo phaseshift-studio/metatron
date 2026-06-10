@@ -339,9 +339,8 @@ public class mModel extends MRec {
     }
 
     public mModel chat(final String message, final Inst onResponse) {
-        BootLoader.getExecutor().submit(() -> {
-            onResponse.apply(this.chat(message));
-        });
+        studio.phaseshift.metatron.isa.mach.type.thread.VirtualThread.virtual(onResponse)
+                .apply(this.chat(message));
         return this;
     }
 

@@ -42,11 +42,7 @@ include::header.html[]
 <img src="images/metatron-character-ansi.png" width="250px" style="float:left; margin:10px;"></a>
 ++++
 
-Software is an endless maze of standards, specifications, packages, frameworks, utilities -- all providing a particular reconceptualization of computer in search of problems here, now, and the more general and elegant, into the future.
-This world is the epitome of rational human thought and in being so, acts as a "legoland" for the well-tuned mind that finds joy in discovering and manipulating abstract structures using cold, discrete mechanical processes all without breaking a sweat nor leaving the comfort of one's home.
-From web technologies, to database technologies, to AI technologies, and so forth, millions of developers are __clickity clacking__ away collectively writing a story of a wholly different sort. metatron is one such  contribution that provides a distillation of computing to a few fundamental patterns that, when used together, transform the complex morass into an easily comprehensible and usable set of constructs.
-
-From this system emerges a natural way to express structural compositions not easily realized nor written using prior art.
+Software is an endless maze of standards, specifications, packages, frameworks, utilities -- all touching fundamental concepts regarding the nature of the world we find ourselves in. This collective endeavour marks a high-point in rational human thought and in being so, serves as a "legoland" for the well-tuned mind that finds joy in discovering and manipulating abstract structures using cold, discrete mechanical processes all without breaking a sweat nor leaving the comfort of one's home. From web technologies, to database technologies, to AI technologies, and so forth, millions of developers are __clickity clacking__ away -- sewing a massive technological quilt. metatron is one such patch that provides a distillation of computing down to a few fundamental patterns that, when used together, transform the complex morass of seemingly orthogonal technologies into a comprehensible and usable set of constructs not easily realized nor written using prior art.
 
 metatron touches on fundamental concepts in languages, compilers, operating systems, networks, databases, web technologies, and more –– all from the vantage point of that enables one to speak to this world at large, simply and effectively.
 
@@ -66,7 +62,7 @@ $ bin/metatron -e "1-<[+2,+3]"
 [3,4]
 ----
 
-From here it's possible to interact with a running metatron instance.
+However, such stateless one-off interactions don't capture the full power of metatron. To use metatron as it was intended to be used is through instances of `console::T` or `desktop::T` -- the REPL terminal application and/or the desktop application, respectively. 
 
 --
 

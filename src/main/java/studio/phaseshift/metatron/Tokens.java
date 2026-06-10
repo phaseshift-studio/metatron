@@ -205,6 +205,7 @@ public final class Tokens {
     public static final String MQTT = "mqtt";
     public static final String EMPTY = "";
     public static final String ARG = "arg";
+    public static final String YIELD = "yield";
     public static final String DESC = "desc";
     public static final String DIR = "dir";
     public static final String CONTENT = "content";
@@ -239,6 +240,7 @@ public final class Tokens {
     public static final String VERTEX = "vertex";
     public static final String EDGE = "edge";
     public static final String CONFIG = "config";
+    public static final String SOURCE = "source";
     public static final String STATE = "state";
     public static final String ROOT = "root";
     public static final String SESSION = "session";
@@ -252,6 +254,20 @@ public final class Tokens {
     public static final String ARGS = "args";
     public static final String ENV = "env";
     public static final String MCP_SERVERS = "mcpServers";
+    public static final String INACTIVE = "inactive";
+    public static final String ACTIVE = "active";
+    public static final String DESKTOP = "desktop";
+    public static final String LAYOUT = "layout";
+    public static final String PANELS = "panels";
+    public static final String THEME = "theme";
+    public static final String VERSION = "version";
+    public static final String GRID = "grid";
+    public static final String SNAP = "snap";
+    public static final String COLUMNS = "columns";
+    public static final String PANEL = "panel";
+    public static final String PANEL_TYPE = "panel_type";
+    public static final String PANEL_STATE = "panel_state";
+    public static final String PANEL_ID = "panel_id";
 
 
 }

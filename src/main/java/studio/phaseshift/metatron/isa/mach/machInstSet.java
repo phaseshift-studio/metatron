@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.mach;
 
+import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.algebra.MultMonoid;
 import studio.phaseshift.metatron.algebra.PlusMonoid;
@@ -25,12 +26,14 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.Sugar;
 import studio.phaseshift.metatron.isa.m.space.noobjSpace;
+import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.io.space.fs.fsSpace;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.PCMonad;
 import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.thread.AbstractThread;
 import studio.phaseshift.metatron.isa.mach.type.thread.CoreThread;
 import studio.phaseshift.metatron.isa.mach.type.thread.VirtualThread;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Console;
@@ -58,6 +61,7 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.TIME_TYPE;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBytes.bytes;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
@@ -107,6 +111,8 @@ public class machInstSet extends AbstractInstSet {
     public static final fURI REWRITE_INST_TID = MACH_INST_TID.extend("rewrite");
     public static final Rec SPACE_CONFIG = rec(uri(Tokens.PATTERN), T(URI_TID));
 
+    public static final fURI THREAD_EXECUTOR_TID = MACH_ISA_TID.extend("thread_executor");
+
 
     /*public static final Type SPACE_TYPE = Type.Builder.build()
             .tid(REC_TID)
@@ -138,18 +144,22 @@ public class machInstSet extends AbstractInstSet {
             .vid(IMAGE_TID).create();
 
     /// //////////////////////////////////////////////////////////////////////
+    public static Type THREAD_EXECUTOR_TYPE;
     public static final Type MACH_MONAD_TYPE = Type.Builder.build().tid(LST_TID).vid(MACH_MONAD_TID).create();
     public static Type MACH_VIRTUAL_THREAD_TYPE;
-    public static final Type MACH_CORE_THREAD_TYPE = Type.Builder.build()
-            .tid(MACH_THREAD_TID)
-            .vid(MACH_CORE_THREAD_TID)
+    // Common thread predicate shared by core and virtual
+    public static final Type MACH_THREAD_TYPE = Type.Builder.build()
+            .tid(REC_TID)
+            .vid(MACH_THREAD_TID)
             .isaPredicate(
                     rec(uri(CODE), T(ALL),
+                            uri(SOURCE).maybe(), URI_TYPE,
+                            uri(YIELD).maybe(), T(MACH_THREAD_TID),
+                            uri(LOOP).maybe(), TIME_TYPE,
                             uri(STATE).maybe().asUri(), is_(or_(eq_(uri(STOP)), eq_(uri(RUN)), eq_(uri(PAUSE)))),
-                            uri(RESULT).maybe(), T(ALL).maybeSome()))
-            .constructor(instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(MACH_CORE_THREAD_TID), lst(T(REC_TID)),
-                    (lhs, inst) -> new CoreThread(inst.arg(0).jvm(), MACH_CORE_THREAD_TID, inst.arg(0).vid()))) // TODO: need to handle vid
+                            uri(RESULT).maybe(), T(ALL.maybeSome())))
             .create();
+    public static Type MACH_CORE_THREAD_TYPE;
 
 
     public machInstSet() {
@@ -173,28 +183,34 @@ public class machInstSet extends AbstractInstSet {
                         FACTORY_TYPE,
                         M_FACTORY_TYPE,
                         /// /////////////////////
-                        MACH_CORE_THREAD_TYPE,
-                        MACH_VIRTUAL_THREAD_TYPE = docWrap(Type.Builder.build()
+                        THREAD_EXECUTOR_TYPE = docWrap(Type.Builder.build()
+                                        .tid(REC_TID)
+                                        .vid(THREAD_EXECUTOR_TID)
+                                        .isaPredicate(rec(uri(RUN), lst(), uri(STOP), lst())).create(),
+                                "the gateway interface for all threads in metatron"),
+                        MACH_THREAD_TYPE,
+                        MACH_CORE_THREAD_TYPE = docWrap(Type.Builder.build()
                                         .tid(MACH_THREAD_TID)
-                                        .vid(MACH_VIRTUAL_THREAD_TID)
-                                        .isaPredicate(
-                                                rec(uri(CODE), T(ALL),
-                                                        uri(LOOP).maybe(), TIME_TYPE,
-                                                        uri(STATE).maybe().asUri(), is_(or_(eq_(uri(STOP)), eq_(uri(RUN)), eq_(uri(PAUSE)))),
-                                                        uri(RESULT).maybe(), T(ALL).maybeSome()))
-                                        .constructor(instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(MACH_VIRTUAL_THREAD_TID), lst(T(REC_TID)),
-                                                (lhs, inst) -> new VirtualThread(inst.arg(0).jvm(), MACH_VIRTUAL_THREAD_TID, inst.arg(0).vid()))) // TODO: need to handle vid
+                                        .vid(MACH_CORE_THREAD_TID)
+                                        .constructor(instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(MACH_CORE_THREAD_TID), lst(T(REC_TID)), (lhs, inst) -> new CoreThread(inst.arg(0).jvm(), MACH_CORE_THREAD_TID, inst.arg(0).vid()).apply(lhs)))
                                         .create(), null, null, Map.of(
                                         uri(CODE), "the code the thread will execute",
                                         uri(LOOP).maybe(), "delay to repeat code evaluation (default is evaluate once)",
                                         uri(STATE).maybe(), "current state of the thread",
                                         uri(RESULT).maybe(), "the last result produced by the thread"),
-                                "run a parallel virtual thread",
-                                "virtual::[code=>ping(<phaseshift.studio>),loop=>1000]@/sys/thread/ping"),
-                        /////////////////////
-                        MACH_MONAD_TYPE,
-                        MACH_MACHINE_TYPE,
-                        MACH_SWARM_MACHINE_TYPE),
+                                "run a concurrent core thread",
+                                "core::[code=>ping(<phaseshift.studio:80>),loop=>second::1.0]@/sys/thread/ping"),
+                        MACH_VIRTUAL_THREAD_TYPE = docWrap(Type.Builder.build()
+                                        .tid(MACH_THREAD_TID)
+                                        .vid(MACH_VIRTUAL_THREAD_TID)
+                                        .constructor(instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(MACH_VIRTUAL_THREAD_TID), lst(T(REC_TID)), (lhs, inst) -> new VirtualThread(inst.arg(0).jvm(), MACH_VIRTUAL_THREAD_TID, inst.arg(0).vid()).apply(lhs)))
+                                        .create(), null, null, Map.of(
+                                        uri(CODE), "the code the thread will execute",
+                                        uri(LOOP).maybe(), "delay to repeat code evaluation (default is evaluate once)",
+                                        uri(STATE).maybe(), "current state of the thread",
+                                        uri(RESULT).maybe(), "the last result produced by the thread"),
+                                "run a concurrent virtual thread",
+                                "virtual::[code=>ping(<phaseshift.studio:80>),loop=>second::1.5]@/sys/thread/ping")),
                 uri(INST), lst(Stream.concat(Router.RouterType.insts().stream(), Stream.of(instC(LIFT_INST_TID.dom(ALL).rng(MACH_MONAD_TID).q(MONAD, "^"), lst(T(ALL.maybe())), (lhs, inst) -> {
                             final PCMonad monad = lhs.asMonad();
                             if (!inst.arg(0).isNoObj())
@@ -292,23 +308,25 @@ public class machInstSet extends AbstractInstSet {
                         instC(THREAD_INST_TID.dom(ALL.maybe()).rng(MACH_THREAD_TID), lst(T(ALL)), (lhs, inst) -> {
                             final fURI baseVID = f("/sys/thread");
                             final VirtualThread thread = new VirtualThread(mutableMap(uri(CODE), inst.arg(0)), MACH_VIRTUAL_THREAD_TID, CommonUtil.mintShortUUID(baseVID, true));
+                            final AbstractThread parent = BootLoader.CURRENT_THREAD.get();
+                            if (null != parent && null != parent.vid())
+                                thread.jvm().put(uri(SOURCE), auto_from_(uri(parent.vid())).tryToInst());
                             thread.apply(lhs);
                             return thread;
-                        })
-                        /*instC(MACH_INST_TID.extend("stop").dom(MACH_THREAD_TID).rng(MACH_THREAD_TID), lst(), (lhs, inst) -> {
-                            final AbstractThread thread = AbstractThread.of(lhs.asRec());
-                            if (!thread.isRunning())
-                                throw MTronException.of("%s is not running: {{r}}%s{{X}}", thread.tid(), thread.state());
-                            thread.stop();
-                            return thread;
+                        }),
+                        instC(MACH_INST_TID.extend("stop").dom(MACH_THREAD_TID).rng(MACH_THREAD_TID), lst(), (lhs, inst) -> {
+                            ((AbstractThread) lhs).stop();
+                            return lhs;
                         }),
                         instC(MACH_INST_TID.extend("pause").dom(MACH_THREAD_TID).rng(MACH_THREAD_TID), lst(), (lhs, inst) -> {
-                            final AbstractThread thread = AbstractThread.of(lhs.asRec());
-                            if (!thread.isRunning())
-                                throw MTronException.of("%s is not running: {{r}}%s{{X}}", thread.tid(), thread.state());
-                            thread.pause();
-                            return thread;
-                        })*/)))));
+                            ((AbstractThread) lhs).pause();
+                            return lhs;
+                        }),
+                        instC(MACH_INST_TID.extend("resume").dom(MACH_THREAD_TID).rng(MACH_THREAD_TID), lst(), (lhs, inst) -> {
+                            ((AbstractThread) lhs).resume();
+                            return lhs;
+                        })
+                )))));
         docWrap(this, "the reflective instruction set of metatron featuring process, monad, and code introspection");
         super.setup();
 

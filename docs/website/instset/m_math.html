@@ -302,9 +302,7 @@ bin/metatron</code></pre>
   ceil?real&lt;=#{?}(real::T),
   floor?real&lt;=#{?}(real::T),
   round?int&lt;=#{?}(real::T)],
- const=&gt;[
-  2.7183@/m/math/e?constq,
-  3.1416@/m/math/pi?constq]]@/m/math</code></pre>
+ const=&gt;[2.7183@/m/math/e?constq,3.1416@/m/math/pi?constq]]@/m/math</code></pre>
                     </div>
                 </div>
             </div>
@@ -312,7 +310,7 @@ bin/metatron</code></pre>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <a href="#consts" class="btn btn-outline-primary">Consts <span class="pill-label badge bg-secondary">3</span></a><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">14</span></a><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">14</span></a><button class="btn btn-outline-secondary" disabled>Spaces <span class="pill-label badge bg-dark">0</span></button><button class="btn btn-outline-secondary" disabled>Rewrites <span class="pill-label badge bg-dark">0</span></button>
+        <a href="#consts" class="btn btn-outline-primary">Consts <span class="pill-label badge bg-secondary">2</span></a><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">14</span></a><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">14</span></a><button class="btn btn-outline-secondary" disabled>Spaces <span class="pill-label badge bg-dark">0</span></button><button class="btn btn-outline-secondary" disabled>Rewrites <span class="pill-label badge bg-dark">0</span></button>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="card">
@@ -367,9 +365,6 @@ bin/metatron</code></pre>
     <div class="d-flex flex-wrap"><a href="#const-e" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">e</span>
     <span class="pill-label badge bg-secondary ms-2">C</span>
-</a><a href="#const-math" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">math</span>
-    <span class="pill-label badge bg-secondary ms-2">C</span>
 </a><a href="#const-pi" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">pi</span>
     <span class="pill-label badge bg-secondary ms-2">C</span>
@@ -422,7 +417,7 @@ bin/metatron</code></pre>
 </div></div>
     </div>
 </div><div class="container-xxl mb-4" id="consts">
-    <h3 class="text-primary mb-3">Constants <span class="pill-label badge bg-secondary">3</span></h3>
+    <h3 class="text-primary mb-3">Constants <span class="pill-label badge bg-secondary">2</span></h3>
     <div class="card mb-3" id="const-e">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span class="code text-secondary fw-bold">e</span>
@@ -430,56 +425,6 @@ bin/metatron</code></pre>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">2.7183@/m/math/e?constq</code></pre></div>
     
-</div><div class="card mb-3" id="const-math">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <span class="code text-secondary fw-bold">math</span>
-        <small class="text-muted code">/m/math</small>
-    </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">instset::[
- pattern=&gt;/m/math/#,
- q=&gt;[docq::[
- pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
- pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
- pattern=&gt;docq,
- obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
- inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
- space=&gt;[super=&gt;/m/math/#],
- type=&gt;[
-  data_size::T,
-  bB::T,
-  kB::T,
-  mB::T,
-  gB::T,
-  tB::T,
-  pB::T,
-  currency::T,
-  usd::T,
-  euro::T,
-  millis::T,
-  second::T,
-  minute::T,
-  hour::T],
- inst=&gt;[
-  cos?real&lt;=#{?}(as(real::T)),
-  sin?real&lt;=#{?}(real::T),
-  tan?real&lt;=#{?}(real::T),
-  sqrt?real&lt;=#{?}(real::T),
-  pow?real&lt;=#{?}(real::T),
-  atan?real&lt;=#{?}(real::T),
-  atan2?real&lt;=#{?}(real{2}::T),
-  log?real&lt;=#{?}(real::T),
-  log10?real&lt;=#{?}(real::T),
-  exp?real&lt;=#{?}(real::T),
-  abs?real&lt;=#{?}(real::T),
-  ceil?real&lt;=#{?}(real::T),
-  floor?real&lt;=#{?}(real::T),
-  round?int&lt;=#{?}(real::T)],
- const=&gt;[
-  2.7183@/m/math/e?constq,
-  3.1416@/m/math/pi?constq]]@/m/math</code></pre></div>
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">the collection of mathematical instructions, algebraic and numeric data types, and associated constants</p>
-</div>
 </div><div class="card mb-3" id="const-pi">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span class="code text-secondary fw-bold">pi</span>

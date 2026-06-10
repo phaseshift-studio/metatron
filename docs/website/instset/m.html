@@ -1298,17 +1298,7 @@ html::[html=&gt;
         <small class="text-muted code">/m/inst</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">inst::T</code></pre></div>
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">a call with apply defined by an lhs obj, a poly of args, and an body of code</p>
-</div><div class="card-body border-top py-2">
-    <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">abc(?int::T,?int::T){ *&lt;0&gt; + *&lt;1&gt; }        [-- position args inst    --]
-abc(a=&gt;?int::T,b=&gt;?int::T){ *a + *b }      [-- named args inst       --]
-abc(a=&gt;else(1),b=&gt;else(2)){ *a + *b }      [-- default args inst     --]
-abc(a=&gt;?int::T,b=&gt;?&gt;3.else(4)){ *a + *b }  [-- contextual args inst  --]
-abc(a=&gt;?int::T,b=&gt;|(*a +10)){ _.*b }       [-- dependent arg inst    --]
-(_,_){*&lt;0&gt;+*&lt;1&gt;}                           [-- 2-arg lambda inst     --]</code></pre>
-</div>
+    
 </div><div class="card mb-3" id="type-instset">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>

@@ -415,7 +415,7 @@ public final class QCollection {
                     subscriptions.elements().filter(e -> vid.basePath().test(e.asRec().at(TARGET).uriValue()))
                             .forEach(s -> {
                                 subscriptions.logger().debug("spawning virtual thread for subscription recv: %s", s);
-                                virtual(s.asRec().at(ON_RECV)).apply(lst(List.of(vid.basePath().toUri(), obj)));
+                                virtual(s.asRec().jvm().getOrDefault(uri(ON_RECV), noobj())).apply(lst(List.of(vid.basePath().toUri(), obj)));
                             });
                     return noobj();
                 }).create();

@@ -235,22 +235,23 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
         /// //////////////////////////////////////////////////////////////////////////
 
         public static Obj updateRecursion(final Obj lhs, final Obj rhs, final BiFunction<Poly<?, ?>, Object, Poly<?, ?>> operation) {
-            if ((rhs.isNoObj() || rhs.isNone()) && null != lhs.vid())
-                Router.writeToSpace(lhs.vid(), noobj());
-            if (rhs.isNoObj())
+            final Obj result;
+            if ((rhs.isNoObj() || rhs.isNone())) {
+                if (null != lhs.vid())
+                    Router.writeToSpace(lhs.vid(), noobj());
                 return noobj();
-            if (rhs.isNone())
-                return null;
+            }
             // Objs (coefficient collection) with a structural RHS: apply per-element
             // BEFORE type-matched recursion — ALL_STAR.test(REC_TID) would otherwise
             // route to updatePolyRecursion which doesn't know how to decompose Objs
-            if (lhs.isObjs() && rhs.isPoly())
-                return objs(lhs.asObjs().elements()
-                        .map(e -> updateRecursion(e, rhs, operation).vid(e.vid()))
-                        .filter(e -> !e.isNoObj()));
-            if (lhs.isPoly() && rhs.isPoly() && lhs.type().test(rhs.type()))
-                return updatePolyRecursion(lhs.as(), rhs.as(), operation).vid(lhs.vid());
-            return rhs.apply(lhs).vid(lhs.vid());
+            else if (lhs.isObjs() && rhs.isPoly())
+                result = objs(lhs.asObjs().elements()
+                        .map(e -> updateRecursion(e, rhs, operation)));
+            else if (lhs.isPoly() && rhs.isPoly() && lhs.type().test(rhs.type()))
+                result = updatePolyRecursion(lhs.as(), rhs.as(), operation);
+            else
+                result = rhs.apply(lhs);
+            return lhs.vid() != null ? Router.writeToSpace(lhs.vid(), result).selfVID(lhs.vid()) : result.vid(null);
         }
 
 
@@ -272,7 +273,7 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
             lhsClone.jvm().forEach((lhsKey, lhsValue) -> result.compute(lhsKey.c(cInt::one), (rhsKey, rhsValue) -> {
                 if (null == rhsValue)
                     return lhsValue;
-                if (rhsValue.isNoObj())
+                if (rhsValue.isNoObj() || rhsValue.isNone())
                     return noobj();
                 return rhsValue;
 
@@ -298,7 +299,11 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
 
         private static Obj updateRelRecursion(final Rel lhs, final Rel rhs, BiFunction<Poly<?, ?>, Object, Poly<?, ?>> operation) {
             final Object result = Poly.Helper.selectRelRecursionRaw(lhs, rhs, (a, b) -> updatePolyRecursion(a.as(), b.as(), operation));
-            return result instanceof Obj ? (Obj) result : operation.apply(lhs, result);
+            if (result instanceof Obj) {
+                return ((Obj) result).isNone() ? noobj() : (Obj) result;
+            } else {
+                return operation.apply(lhs, result);
+            }
         }
 
         /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -389,7 +394,10 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
             else if (lhs.isLst() && rhs.isLst())
                 return applyLstRecursion(lhs.asLst(), rhs.asLst());
             else {
-                return rhs.apply(lhs);
+                final Obj result = rhs.apply(lhs);
+                if (result.isNone())
+                    return noobj();
+                return result;
             }
         }
 
@@ -418,10 +426,10 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
                             .map(y -> rel(applyObjRecursion(y.first(), x.second()), applyObjRecursion(y.second(), x.second())))
                             .findFirst();
                     if (kvMatch.isPresent())
-                        result.at(kvMatch.get().first(), kvMatch.get().second(), MUTABLE);
+                        result.at(kvMatch.get().first(), kvMatch.get().jvm().get1().isNone() ? noobj() : kvMatch.get().second(), MUTABLE);
                     else {
                         if (x.first().c().isZeroable())
-                            result.at(x.first(), x.second().apply(), MUTABLE);
+                            result.at(x.first(), x.jvm().get1().isNone() ? noobj() : x.second().apply(), MUTABLE);
                         else
                             result.at(x.first(), noobj(), MUTABLE);
                     }

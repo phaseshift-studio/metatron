@@ -18,49 +18,71 @@
 
 package studio.phaseshift.metatron.isa.sys.type_;
 
-import dev.langchain4j.service.V;
 import org.jspecify.annotations.NonNull;
+import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.type.Code;
-import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.Real;
-import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MCode;
 import studio.phaseshift.metatron.isa.mach.machInstSet;
 import studio.phaseshift.metatron.isa.mach.type.thread.AbstractThread;
 import studio.phaseshift.metatron.isa.mach.type.thread.CoreThread;
 import studio.phaseshift.metatron.isa.mach.type.thread.VirtualThread;
 
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.AbstractExecutorService;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.*;
+import java.util.concurrent.*;
 
-import static studio.phaseshift.metatron.Tokens.CODE;
-import static studio.phaseshift.metatron.Tokens.LOOP;
+import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst0;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.mach.type.thread.VirtualThread.virtual;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /*
+ * ThreadExecutor — single funnel for all metatron threading.
+ *
+ * Exposes threads as mtron-queryable Rec fields rather than hidden Java maps:
+ *
+ *   /sys/thread           ThreadExecutor rec
+ *   /sys/thread/active    Lst of currently running threads
+ *   /sys/thread/inactive  Lst of completed threads
+ *
+ * Standard mtron URI queries work naturally:
+ *   * /sys/thread/active/+               all active threads
+ *   * /sys/thread/inactive/+=?[source=x] completed threads spawned by x
+ *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class ThreadExecutor extends AbstractExecutorService implements Rec {
 
-    public final Map<Obj, Obj> map = new LinkedHashMap<>();
+    /**
+     * ThreadExecutor type TID — registered in sysInstSet.
+     */
+    public static final fURI THREAD_EXECUTOR_TID = REC_TID;
+
     private fURI vid;
     private final ExecutorService service;
     private boolean running = true;
 
+    /**
+     * The jvm map — every entry is mtron-accessible via the Rec interface.
+     * {@code run} and {@code stop} are thread-safe Lsts of currently-executing
+     * and completed threads, respectively.
+     */
+    public final Map<Obj, Obj> map;
+
     public ThreadExecutor(final ExecutorService service, final fURI vid) {
         this.service = service;
         this.vid = vid;
+        this.map = new ConcurrentHashMap<>();
+        this.map.put(uri(RUN), lst(new CopyOnWriteArrayList<>()));
+        this.map.put(uri(STOP), lst(new CopyOnWriteArrayList<>()));
     }
+
+    // ======================== Rec interface ========================
 
     @Override
     public fURI vid() {
@@ -69,7 +91,7 @@ public class ThreadExecutor extends AbstractExecutorService implements Rec {
 
     @Override
     public fURI tid() {
-        return REC_TID;
+        return THREAD_EXECUTOR_TID;
     }
 
     @Override
@@ -87,13 +109,18 @@ public class ThreadExecutor extends AbstractExecutorService implements Rec {
         return this;
     }
 
+    // ======================== ExecutorService delegation ========================
+
     @Override
     public void shutdown() {
+        //this.jvm().getOrDefault(uri(RUN),lst0()).elements().map(x->(AbstractThread)x).forEach(AbstractThread::stop);
+        this.running = false;
         this.service.shutdown();
     }
 
     @Override
     public @NonNull List<Runnable> shutdownNow() {
+        this.running = false;
         return this.service.shutdownNow();
     }
 
@@ -112,28 +139,77 @@ public class ThreadExecutor extends AbstractExecutorService implements Rec {
         return false;
     }
 
+    /**
+     * Standard {@code Runnable} execution — delegates directly to the underlying service.
+     */
     @Override
     public void execute(@NonNull Runnable command) {
         this.service.execute(command);
     }
 
-    public void execute(final AbstractThread thread) {
+    private final Set<fURI> executedVids = Collections.synchronizedSet(new HashSet<>());
 
+    // ======================== Metatron-aware thread execution ========================
+
+    /**
+     * Execute a metatron {@code AbstractThread} through this executor.
+     * Idempotent: if the thread has already been executed (tracked by vid),
+     * this call is a no-op.  On first execution the thread is added to the
+     * {@code active} list; on completion it moves to {@code inactive}.
+     * Both lists are exposed via the Rec jvm for mtron URI queries.
+     */
+    public void execute(final AbstractThread thread) {
+        final Lst run = this.at(uri(RUN)).asLst();
+        if (false && run.lstValue()
+                .stream()
+                .map(Obj.Helper::getAutoPointer)
+                .filter(Optional::isPresent)
+                .anyMatch(t -> Objects.equals(t.get(), thread.vid())))
+            return;
+        thread.jvm().put(uri(STATE), uri(RUN));
+        final Inst pointer = auto_from_(thread.vid()).tryToInst().as();
+        run.lstValue().add(pointer);
+        final Runnable task = thread.createTask();
+        final Runnable wrapped = () -> {
+            final AbstractThread previous = BootLoader.CURRENT_THREAD.get();
+            BootLoader.CURRENT_THREAD.set(thread);
+            try {
+                task.run();
+            } finally {
+                BootLoader.CURRENT_THREAD.set(previous);
+                run.lstValue().remove(pointer);
+                this.at(uri(STOP)).lstValue().add(pointer);
+            }
+        };
+
+        if (thread instanceof VirtualThread) {
+            final Thread javaThread = Thread.ofVirtual()
+                    .name(null != thread.vid() ? thread.vid().toString() : "metatron-virtual")
+                    .unstarted(wrapped);
+            thread.setJavaThread(javaThread);
+            javaThread.start();
+        } else {
+            this.service.execute(() -> {
+                thread.setJavaThread(Thread.currentThread());
+                wrapped.run();
+            });
+        }
     }
+
+    // ======================== Builder ========================
 
     @Override
     public Obj clone() {
         return this;
     }
 
-
     public static class Builder {
 
-        protected Code code = MCode.code(List.of()).zero().as();
+        protected Code code = null;
         protected Obj until = noobj();
         protected Real loop = real(0.0d).zero();
         protected fURI vid = null;
-
+        protected fURI source = null;
 
         public static Builder build() {
             return new Builder();
@@ -154,16 +230,30 @@ public class ThreadExecutor extends AbstractExecutorService implements Rec {
             return this;
         }
 
+        /**
+         * Set the source object (the Obj that spawned this thread).
+         */
+        public Builder source(final fURI sourceVid) {
+            this.source = sourceVid;
+            return this;
+        }
+
         public VirtualThread spawnVirtualThread() {
-            final VirtualThread thread = new VirtualThread(mutableMap(uri(CODE), this.code, uri(LOOP), this.loop), machInstSet.MACH_VIRTUAL_THREAD_TID, this.vid);
-            return thread;
+            final Map<Obj, Obj> jvm = mutableMap(uri(LOOP), this.loop);
+            if (null != this.code)
+                jvm.put(uri(CODE), this.code);
+            if (null != this.source)
+                jvm.put(uri(SOURCE), auto_from_(this.source).tryToInst());
+            return new VirtualThread(jvm, machInstSet.MACH_VIRTUAL_THREAD_TID, this.vid);
         }
 
         public CoreThread spawnCoreThread() {
-            final CoreThread thread = new CoreThread(mutableMap(uri(CODE), this.code, uri(LOOP), this.loop), machInstSet.MACH_CORE_THREAD_TID, this.vid);
-            return thread;
+            final Map<Obj, Obj> jvm = mutableMap(uri(LOOP), this.loop);
+            if (null != this.code)
+                jvm.put(uri(CODE), this.code);
+            if (null != this.source)
+                jvm.put(uri(SOURCE), auto_from_(this.source).tryToInst());
+            return new CoreThread(jvm, machInstSet.MACH_CORE_THREAD_TID, this.vid);
         }
     }
-
-
 }

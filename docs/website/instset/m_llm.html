@@ -295,14 +295,14 @@ bin/metatron</code></pre>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <a href="#consts" class="btn btn-outline-primary">Consts <span class="pill-label badge bg-secondary">1</span></a><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">8</span></a><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">3</span></a><button class="btn btn-outline-secondary" disabled>Spaces <span class="pill-label badge bg-dark">0</span></button><button class="btn btn-outline-secondary" disabled>Rewrites <span class="pill-label badge bg-dark">0</span></button>
+        <button class="btn btn-outline-secondary" disabled>Consts <span class="pill-label badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">7</span></a><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">3</span></a><a href="#spaces" class="btn btn-outline-primary">Spaces <span class="pill-label badge bg-info">1</span></a><button class="btn btn-outline-secondary" disabled>Rewrites <span class="pill-label badge bg-dark">0</span></button>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="card">
         <div class="card-header"><h5 class="mb-0 text-primary">Index</h5></div>
         <div class="card-body"><div class="mb-3">
     <h6 class="text-primary mb-2">Types</h6>
-    <div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">llm</small></div><div class="d-flex flex-wrap"><a href="#type-AI" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <div class="d-flex flex-wrap"><a href="#type-AI" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">AI</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a><a href="#type-feature" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
@@ -323,15 +323,6 @@ bin/metatron</code></pre>
 </a><a href="#type-user" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">user</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
-</a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">space</small></div><div class="d-flex flex-wrap"><a href="#type-catalog" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">catalog</span>
-    <span class="pill-label badge bg-primary ms-2">T</span>
-</a></div></div>
-</div><div class="mb-3">
-    <h6 class="text-primary mb-2">Constants</h6>
-    <div class="d-flex flex-wrap"><a href="#const-llm" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">llm</span>
-    <span class="pill-label badge bg-secondary ms-2">C</span>
 </a></div>
 </div><div class="mb-3">
     <h6 class="text-primary mb-2">Instructions</h6>
@@ -342,46 +333,16 @@ bin/metatron</code></pre>
     <span class="code" style="font-size:1.2rem;">embed</span>
     <span class="pill-label badge bg-success ms-2">I</span>
 </a></div>
+</div><div class="mb-3">
+    <h6 class="text-primary mb-2">Spaces</h6>
+    <div class="d-flex flex-wrap"><a href="#space-catalog" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">catalog</span>
+    <span class="pill-label badge bg-info text-dark ms-2">S</span>
+</a></div>
 </div></div>
     </div>
-</div><div class="container-xxl mb-4" id="consts">
-    <h3 class="text-primary mb-3">Constants <span class="pill-label badge bg-secondary">1</span></h3>
-    <div class="card mb-3" id="const-llm">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <span class="code text-secondary fw-bold">llm</span>
-        <small class="text-muted code">/m/llm</small>
-    </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">instset::[
- pattern=&gt;/m/llm/#,
- q=&gt;[docq::[
- pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
- pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
- pattern=&gt;docq,
- obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
- inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
- space=&gt;[super=&gt;/m/llm/#],
- type=&gt;[
-  catalog::T,
-  tool::T,
-  memory::T,
-  user::T,
-  AI::T,
-  skill::T,
-  feature::T,
-  model::T],
- inst=&gt;[
-  as?tool&lt;=docs(tool::T),
-  as?tool&lt;=inst(tool::T),
-  as?skill&lt;=dir(skill::T),
-  chat?str&lt;=model(str::T),
-  embed?/m/vec/vec&lt;=model(#::T),
-  chat?rec&lt;=model(str::T,rec::T)]]@/m/llm</code></pre></div>
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">large language model think and reason within the metatron</p>
-</div>
-</div>
 </div><div class="container-xxl mb-4" id="types">
-    <h3 class="text-primary mb-3">Types <span class="pill-label badge bg-primary">8</span></h3>
+    <h3 class="text-primary mb-3">Types <span class="pill-label badge bg-primary">7</span></h3>
     <div class="card mb-3" id="type-AI">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -390,23 +351,7 @@ bin/metatron</code></pre>
         </span>
         <small class="text-muted code">/m/llm/AI</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[
-  {?}text=&gt;str::T,
-  {?}thinking=&gt;int::T,
-  {?}attributes=&gt;rec::T,
-  type=&gt;AI]]@/m/llm/AI</code></pre></div>
-    
-</div><div class="card mb-3" id="type-catalog">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <span>
-            <span class="code text-primary fw-bold">catalog::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#type-space" class="instset-doc-small-code text-info code">/m/space::T</a></span>
-        </span>
-        <small class="text-muted code">/m/llm/space/catalog</small>
-    </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">space::T[?[
-  name=&gt;is(or(eq(anthropic),eq(openai),eq(ollama),eq(localai))),
-  {?}host=&gt;uri::T]][inst?catalog&lt;=#{?}(rec::T)]@/m/llm/space/catalog</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[{?}text=&gt;str::T,{?}thinking=&gt;int::T,{?}attributes=&gt;rec::T,type=&gt;AI]]@/m/llm/AI</code></pre></div>
     
 </div><div class="card mb-3" id="type-feature">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -420,13 +365,8 @@ bin/metatron</code></pre>
   {?}think=&gt;#::T,
   {?}memory=&gt;memory::T,
   {?}prompt=&gt;#::T,
-  {?}response=&gt;{?}[
-   {?}to=&gt;inst::T,
-   {?}format=&gt;#::T,
-   {?}cost=&gt;currency::T],
-  {?}tool=&gt;{?}[split([
- isa(tool::T),
- isa(mcp_server::T)])],
+  {?}response=&gt;{?}[{?}to=&gt;inst::T,{?}format=&gt;#::T,{?}cost=&gt;currency::T],
+  {?}tool=&gt;{?}[split([isa(tool::T),isa(mcp_server::T)])],
   {?}skill=&gt;lst{?}::T,
   {?}rag=&gt;{?}[uri::T=&gt;isa(int::T).else(10)],
   {?}note=&gt;lst{?}::T]]@/m/llm/feature</code></pre></div>
@@ -453,9 +393,7 @@ bin/metatron</code></pre>
         </span>
         <small class="text-muted code">/m/llm/memory</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[
-  mem=&gt;lst::T,
-  {?}max=&gt;isa(int::T).else(15)]]@/m/llm/memory</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[mem=&gt;lst::T,{?}max=&gt;isa(int::T).else(15)]]@/m/llm/memory</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">llm memory structure as a lst of past interactions</p>
 </div>
@@ -471,9 +409,7 @@ bin/metatron</code></pre>
   provider=&gt;catalog::T,
   name=&gt;uri::T,
   {?}desc=&gt;str::T,
-  {?}cost=&gt;{?}[
-   in=&gt;currency::T,
-   out=&gt;currency::T],
+  {?}cost=&gt;{?}[in=&gt;currency::T,out=&gt;currency::T],
   {?}size=&gt;bB::T,
   {?}feature=&gt;feature::T]]@/m/llm/model</code></pre></div>
     <div class="card-body border-top py-2">
@@ -495,13 +431,7 @@ bin/metatron</code></pre>
         </span>
         <small class="text-muted code">/m/llm/skill</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[
-  name=&gt;uri::T,
-  desc=&gt;str::T,
-  {?}content=&gt;str::T,
-  {?}entry=&gt;[[
- dir=&gt;uri::T,
- content=&gt;str::T]]]]@/m/llm/skill</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[name=&gt;uri::T,desc=&gt;str::T,{?}content=&gt;str::T,{?}entry=&gt;[[dir=&gt;uri::T,content=&gt;str::T]]]]@/m/llm/skill</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a skill.md specification to augment llm with specialized abilities</p>
 </div><div class="card-body py-2">
@@ -524,11 +454,7 @@ bin/metatron</code></pre>
         </span>
         <small class="text-muted code">/m/llm/tool</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[
-  inst=&gt;#::T,
-  name=&gt;uri::T,
-  desc=&gt;str::T,
-  {?}arg=&gt;#::T]]@/m/llm/tool</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[inst=&gt;#::T,name=&gt;uri::T,desc=&gt;str::T,{?}arg=&gt;#::T]]@/m/llm/tool</code></pre></div>
     
 </div><div class="card mb-3" id="type-user">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -538,9 +464,7 @@ bin/metatron</code></pre>
         </span>
         <small class="text-muted code">/m/llm/user</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[
-  contents=&gt;[text=&gt;str::T],
-  type=&gt;user]]@/m/llm/user</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[contents=&gt;[text=&gt;str::T],type=&gt;user]]@/m/llm/user</code></pre></div>
     
 </div>
 </div><div class="container-xxl mb-4" id="instructions">
@@ -627,6 +551,16 @@ bin/metatron</code></pre>
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*&lt;ollama:qwen3:latest&gt;.embed(&#39;what is a database?&#39;)</code></pre>
 </div>
+</div>
+</div><div class="container-xxl mb-4" id="spaces">
+    <h3 class="text-primary mb-3">Spaces <span class="pill-label badge bg-info">1</span></h3>
+    <div class="card mb-3" id="space-catalog">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <a href="m_llm_space_catalog.html" class="code text-primary fw-bold text-decoration-none">catalog</a>
+        <small class="text-muted code">/m/llm/space/catalog</small>
+    </div>
+    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[?[name=&gt;is(or(eq(anthropic),eq(openai),eq(ollama),eq(localai))),{?}host=&gt;uri::T]][inst?catalog&lt;=#{?}(rec::T)]@/m/llm/space/catalog</code></pre></div>
+    
 </div>
 </div><div class="container-xxl py-3 text-center">
     <hr class="border-secondary">

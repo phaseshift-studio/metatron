@@ -1,9 +1,7 @@
 [discrete]
-== thread
+== Threads and Coroutines
 
-mtron's threading model is a function of the underlying machine used to evaluate the program. However, there does exist types and instructions that express concurrent behavior, agnostic to mechanistic underpinnings.
-
-The types invovled in threading are `thread` (unrefined type) and it's two refinements: 'virtual` and `core`.
+mtron's threading model exposes two concurrent primitives — `virtual` and `core` — both subtypes of `thread`. Every thread is a first-class obj in the URI space, queryable, pausable, and traceable through its `source` lineage. The types involved in threading are `thread` (unrefined type) and its two refinements: `virtual` and `core`.
 
 [mtron]
 ----
@@ -11,17 +9,133 @@ The types invovled in threading are `thread` (unrefined type) and it's two refin
 *core
 ----
 
-A https://en.wikipedia.org/wiki/Virtual_thread[virtual thread] is a lightweight, serializable cooperative concurrency structure that shares a cpu's resources with other executing virtual threads. On the other hand, core threads (aka OS threads) are bound to a processor core of the underlying physical (or virtualized) machine.
+[discrete]
+=== Type Structure
 
-Threads encapsulate `code` that is evaluating independent of the thread that spawned it. When the `code` completes, the thread stores the resultant obj (the rhs obj of the code). Threads have similar semantics to https://en.wikipedia.org/wiki/Futures_and_promises[futures] in that they are objs that can be interacted with, but their value (the result of their code's computation) is accessed either through blocking, subscribing, polling, or otherwise ignoring (implicitly accessing value through side effects).
+[cols="1,^2a,7a", options="header"]
+|===
+| key      | type            |  description
+| `code`   | `#{*}::T`       | the obj (typically `code`) evaluated each iteration (`start` is lhs)
+| `source` | `thread::T`     | `!*` reference to the parent thread
+| `loop`   | `time{?}::T`    | `time::T` between repeated evaluations; omit for single execution
+| `state`  | `uri::T`        | `run` (executing), `pause` (suspended), or `stop` (completed)
+| `result` | `#{*}::T`       | the last obj produced by `code(start)` (can change after every loop)
+| `start`  | `#{?}::T`       | initial input obj, set by the spawning expression
+| `yield`  | `thread{?}::T`  | `!*` reference to a coroutine partner — resumed when this thread pauses
+|===
+
+[discrete]
+==== Thread Refinements
+
+A https://en.wikipedia.org/wiki/Virtual_thread[virtual thread] is a lightweight, cooperative concurrency primitive backed by a Java virtual thread. It shares CPU resources with other virtual threads and is suitable for IO-bound work and high-concurrency workloads.
+
+A `core` thread is bound to an OS platform thread from the executor's pool. It is appropriate for CPU-bound work where you want dedicated execution resources.
+
+Both types share identical semantics — the same keys, the same lifecycle, the same query surface. The difference is purely in the underlying execution substrate.
+
+Threads are addressable through the `/sys/thread` uri space. The thread executor exposes two `lst` objs — `run` and `stop` — for live and completed threads.
+
+[mtron]
+----
+*/sys/thread/executor/run/0                                                    [-- <1> --]
+[ --*/sys/thread/executor/stop/+=?[desc=>'console statusline']  --]            [-- <3> --]
+----
+<1> state of the first running thread
+<3> find a specific stopped thread by description
+
+[discreate]
+==== Thread State Machine
 
 [source,mtron]
 ----
-virtual::[code=>repeat(code=>+1,until=>?>=2026)]
+                ┌─────────┐
+       apply()  │         │
+NEW ──────────► │   RUN   │ ◄──────── resume()
+                │         │─────────┐
+                └─────────┘         │
+                     │   ▲          │ pause()
+                stop │   │ resume   │
+                     ▼   │          ▼
+                ┌─────────┐    ┌─────────┐
+                │  STOP   │    │  PAUSE  │
+                └─────────┘    └─────────┘
 ----
+
+A thread begins in `run` when constructed. Calling `pause()` sets `state=>pause` — the current cycle completes first, then the thread parks. `resume()` wakes it. `stop()` (or a `break` from the stop check) terminates it. A one-shot thread (no `loop`) executes once and transitions directly to `stop`.
+
+[discrete]
+=== Spawning Threads
+
+Threads are constructed inline with their type constructor and started immediately:
 
 [source,mtron]
 ----
-virtual::[code=>+1,until=>loops()?>2026]
+virtual::[code=>1+2]                           [-- <1> --]
+virtual::[code=>print('.'), loop=>second::5.0] [-- <2> --]
+core::[code=>expensive_computation]            [-- <3> --]
+----
+<1> executes `1+2` once, stores `3` in `result`
+<2> prints a dot every second, looping until stopped
+<3> runs CPU-heavy work on a platform thread
+
+[mtron]
+----
+*/sys/thread/run
+*/sys/thread/stop
+*/sys/thread/stop/+/source
+*/sys/thread/stop/+/source/source
 ----
 
+[discrete]
+==== Yielding Coroutines
+
+A thread with `yield=>!*/sys/thread/<vid>` forms a cooperative pair. When one pauses, it auto-resumes the other. Both threads must exist before their yield pointers can reference each other — construct the partner paused first, then link them:
+
+[mtron]
+----
+[,]@ab_queue                                               [-- <1> --]
+virtual::[code  => @ab_queue >>= +['B'], /
+          loop  => second::1.0,          /
+          state => pause]@/sys/thread/b                    [-- <3> --]
+virtual::[code  => @ab_queue >>= +['A'], /
+          loop  => second::1.0,          /
+          yield => !*/sys/thread/b]@/sys/thread/a          [-- <4> --]
+@/sys/thread/b >>= +[yield => !*/sys/thread/a]             [-- <5> --]
+sleep(second::5.0)
+*/sys/thread/b.stop()
+*/sys/thread/a.stop()
+*ab_queue
+----
+<1> partner **B** starts paused
+<2> initiator **A** points to **B**, begins running
+<3> direct **B** yield at **A** — the pair is now linked
+
+A updates a queue, pauses, yields to **B**. **B** updates the queue, pauses, yields to **A**. The two trade turns executing their `code`, where one full cycle completes approximately every 2 seconds.
+
+[discrete]
+==== Pausing and Resuming
+
+Any looping thread can be paused mid-execution. The current cycle always completes first.
+
+[mtron]
+----
+*/sys/thread/run/0.pause()               [-- <1> --]
+*/sys/thread/run/0.state()               [-- <2> --]
+*/sys/thread/run/0.resume()              [-- <3> --]
+----
+<1> Pause the first running thread
+<2> Verify state is `pause`
+<3> Resume it
+
+Non-looping threads (no `loop` key) cannot be paused — a warning is logged and the call is a no-op.
+
+[discrete]
+=== The Main Core Thread
+
+At boot, metatron establishes a root thread at `/sys/thread/main`. All user-spawned threads trace back to this root via `source`. The root thread blocks on the shutdown latch — when metatron shuts down, it transitions to `stop`.
+
+[mtron]
+----
+*/sys/thread/main
+*/sys/thread/main/desc
+----

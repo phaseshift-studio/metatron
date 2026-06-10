@@ -257,7 +257,7 @@ public class mInstSet extends AbstractInstSet {
              .vid(POLY_TID)
              .predicate((lhs, inst) -> bool(lhs.isLst() || lhs.isRec() || lhs.isRel() || lhs.isCode()))
              .create();*/
-    public static final Uri NONE = uri(f("none"), URI_TID, M_ISA_TID.extend("none"));
+    public static final Uri NONE = uri(f("none"), URI_TID, null);
 
 
     public mInstSet() {
@@ -405,8 +405,8 @@ public class mInstSet extends AbstractInstSet {
                         docWrap(CONSTQ_TYPE, "prevents the vid from being mutated once set"),
                         docWrap(MIMEQ_TYPE, "maps the obj to the specified mime type")),
                 uri(CONST), lst(
-                        docWrap(noobj(), "a no object. if an inst domain is no zeroable (e.g. {0}/{?}/{*}) then the inst will not evaluate."),
-                        docWrap(NONE, "a token uri denoting nothing. used for deleting obj in space.")),
+                        docWrap(noobj(), "a no object. if an inst domain is no zeroable (e.g. {0}/{?}/{*}) then the inst will not evaluate.")
+                        /*docWrap(NONE, "a token uri denoting nothing. used for deleting obj in space.")*/),
                 uri(INST), lst(Stream.of(
                         Bool.BoolType.insts().stream(),
                         Bytes.BytesType.insts().stream(),

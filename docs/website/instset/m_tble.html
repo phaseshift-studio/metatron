@@ -277,10 +277,7 @@ bin/metatron</code></pre>
   rrow::T,
   table::T,
   tblespace::T],
- inst=&gt;[
-  as?rrow&lt;=lrow(rrow::T),
-  as?lrow&lt;=rrow(lrow::T),
-  sql?rec{*}&lt;=tblespace(str::T)],
+ inst=&gt;[as?rrow&lt;=lrow(rrow::T),as?lrow&lt;=rrow(lrow::T),sql?rec{*}&lt;=tblespace(str::T)],
  rewrite=&gt;[
   /m/tble/inst/rewrite/sql_count?code{?}&lt;=code(),
   /m/tble/inst/rewrite/sql_sum?code{?}&lt;=code(),
@@ -298,14 +295,14 @@ bin/metatron</code></pre>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <a href="#consts" class="btn btn-outline-primary">Consts <span class="pill-label badge bg-secondary">1</span></a><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">4</span></a><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">1</span></a><button class="btn btn-outline-secondary" disabled>Spaces <span class="pill-label badge bg-dark">0</span></button><a href="#rewrites" class="btn btn-outline-primary">Rewrites <span class="pill-label badge bg-warning">9</span></a>
+        <button class="btn btn-outline-secondary" disabled>Consts <span class="pill-label badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">3</span></a><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">1</span></a><a href="#spaces" class="btn btn-outline-primary">Spaces <span class="pill-label badge bg-info">1</span></a><a href="#rewrites" class="btn btn-outline-primary">Rewrites <span class="pill-label badge bg-warning">9</span></a>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="card">
         <div class="card-header"><h5 class="mb-0 text-primary">Index</h5></div>
         <div class="card-body"><div class="mb-3">
     <h6 class="text-primary mb-2">Types</h6>
-    <div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">tble</small></div><div class="d-flex flex-wrap"><a href="#type-lrow" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <div class="d-flex flex-wrap"><a href="#type-lrow" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">lrow</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a><a href="#type-rrow" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
@@ -314,21 +311,18 @@ bin/metatron</code></pre>
 </a><a href="#type-table" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">table</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
-</a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">space</small></div><div class="d-flex flex-wrap"><a href="#type-tblespace" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">tblespace</span>
-    <span class="pill-label badge bg-primary ms-2">T</span>
-</a></div></div>
-</div><div class="mb-3">
-    <h6 class="text-primary mb-2">Constants</h6>
-    <div class="d-flex flex-wrap"><a href="#const-tble" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">tble</span>
-    <span class="pill-label badge bg-secondary ms-2">C</span>
 </a></div>
 </div><div class="mb-3">
     <h6 class="text-primary mb-2">Instructions</h6>
     <div class="d-flex flex-wrap"><a href="#inst-sql" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">sql</span>
     <span class="pill-label badge bg-success ms-2">I</span>
+</a></div>
+</div><div class="mb-3">
+    <h6 class="text-primary mb-2">Spaces</h6>
+    <div class="d-flex flex-wrap"><a href="#space-tblespace" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">tblespace</span>
+    <span class="pill-label badge bg-info text-dark ms-2">S</span>
 </a></div>
 </div><div class="mb-3">
     <h6 class="text-primary mb-2">Rewrites</h6>
@@ -362,50 +356,8 @@ bin/metatron</code></pre>
 </a></div>
 </div></div>
     </div>
-</div><div class="container-xxl mb-4" id="consts">
-    <h3 class="text-primary mb-3">Constants <span class="pill-label badge bg-secondary">1</span></h3>
-    <div class="card mb-3" id="const-tble">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <span class="code text-secondary fw-bold">tble</span>
-        <small class="text-muted code">/m/tble</small>
-    </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">instset::[
- pattern=&gt;/m/tble/#,
- q=&gt;[docq::[
- pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
- pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
- pattern=&gt;docq,
- obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
- inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
- space=&gt;[super=&gt;/m/tble/#],
- type=&gt;[
-  lrow::T,
-  rrow::T,
-  table::T,
-  tblespace::T],
- inst=&gt;[
-  as?rrow&lt;=lrow(rrow::T),
-  as?lrow&lt;=rrow(lrow::T),
-  sql?rec{*}&lt;=tblespace(str::T)],
- rewrite=&gt;[
-  /m/tble/inst/rewrite/sql_count?code{?}&lt;=code(),
-  /m/tble/inst/rewrite/sql_sum?code{?}&lt;=code(),
-  /m/tble/inst/rewrite/sql_mean?code{?}&lt;=code(),
-  /m/tble/inst/rewrite/sql_limit?code{?}&lt;=code(),
-  /m/tble/inst/rewrite/sql_has?code{?}&lt;=code(),
-  /m/tble/inst/rewrite/sql_where?code{?}&lt;=code(),
-  /m/tble/inst/rewrite/sql_where_count?code{?}&lt;=code(),
-  /m/tble/inst/rewrite/sql_where_limit?code{?}&lt;=code(),
-  /m/tble/inst/rewrite/sql_select?code{?}&lt;=code()]]@/m/tble</code></pre></div>
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">relational tables, typed rows, and SQL rewrites within the metatron</p>
-</div><div class="card-body border-top py-2">
-    <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*acme:customer.where[person=&gt;[name=&gt;_=&gt;age=&gt;?&gt;29]]</code></pre>
-</div>
-</div>
 </div><div class="container-xxl mb-4" id="types">
-    <h3 class="text-primary mb-3">Types <span class="pill-label badge bg-primary">4</span></h3>
+    <h3 class="text-primary mb-3">Types <span class="pill-label badge bg-primary">3</span></h3>
     <div class="card mb-3" id="type-lrow">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -442,25 +394,6 @@ bin/metatron</code></pre>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a stream of equally wide rows</p>
 </div>
-</div><div class="card mb-3" id="type-tblespace">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <span>
-            <span class="code text-primary fw-bold">tblespace::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#type-space" class="instset-doc-small-code text-info code">/m/space::T</a></span>
-        </span>
-        <small class="text-muted code">/m/tble/space/tblespace</small>
-    </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">space::T[?[
-  pattern=&gt;uri::T,
-  host=&gt;uri::T,
-  driver=&gt;uri::T,
-  route=&gt;[uri::T=&gt;uri::T],
-  {?}table=&gt;lst::T,
-  {?}root=&gt;rec::T,
-  {?}schema=&gt;instset::T]][ctor?tblespace&lt;=#{?}(rec::T)]@/m/tble/space/tblespace</code></pre></div>
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">a metatron realization of a relational database</p>
-</div>
 </div>
 </div><div class="container-xxl mb-4" id="instructions">
     <h3 class="text-primary mb-3">Instructions <span class="pill-label badge bg-success">1</span></h3>
@@ -484,6 +417,25 @@ bin/metatron</code></pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*/sys/space/netflix.sql(&#39;SELECT * FROM movie WHERE runtime &lt; ${*next_event - time(now)&#39;) [-- str templates are useful --]</code></pre>
+</div>
+</div>
+</div><div class="container-xxl mb-4" id="spaces">
+    <h3 class="text-primary mb-3">Spaces <span class="pill-label badge bg-info">1</span></h3>
+    <div class="card mb-3" id="space-tblespace">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <a href="m_tble_space_tblespace.html" class="code text-primary fw-bold text-decoration-none">tblespace</a>
+        <small class="text-muted code">/m/tble/space/tblespace</small>
+    </div>
+    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[?[
+  pattern=&gt;uri::T,
+  host=&gt;uri::T,
+  driver=&gt;uri::T,
+  route=&gt;[uri::T=&gt;uri::T],
+  {?}table=&gt;lst::T,
+  {?}root=&gt;rec::T,
+  {?}schema=&gt;instset::T]][ctor?tblespace&lt;=#{?}(rec::T)]@/m/tble/space/tblespace</code></pre></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">a metatron realization of a relational database</p>
 </div>
 </div>
 </div><div class="container-xxl mb-4" id="rewrites">

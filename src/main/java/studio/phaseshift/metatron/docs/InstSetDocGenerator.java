@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.docs;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.TypeCheck;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.dcmnt.dcmntInstSet;
 import studio.phaseshift.metatron.isa.grph.grphInstSet;
 import studio.phaseshift.metatron.isa.iot.iotInstSet;
@@ -50,6 +51,8 @@ import java.util.stream.Collectors;
 import static studio.phaseshift.metatron.Tokens.BOOT;
 import static studio.phaseshift.metatron.Tokens.LOGG;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.mInstSet.SPACE_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.SPACE_TYPE;
 
 /**
  * Generates HTML documentation for metatron instruction sets by querying the
@@ -79,7 +82,8 @@ public class InstSetDocGenerator {
     // ========================================================================
 
     private record Meta(String vid, String name, String desc, String parent,
-                        List<String> children, String full) {}
+                        List<String> children, String full) {
+    }
 
     // ========================================================================
     // MAIN
@@ -149,11 +153,15 @@ public class InstSetDocGenerator {
 
                     final Meta meta = extractMeta(is, vid);
 
-                    final Set<Type> types = is.types();
+                    final Set<Type> types = is.types().stream().filter(s -> !s.isRefinementOf(SPACE_TYPE)).collect(Collectors.toSet());
                     final Set<Inst> insts = is.insts();
                     final Set<Inst> rewrites = is.rewrites();
                     final Set<Obj> consts = is.consts();
-                    final List<SpaceEntry> spaces = fetchSpaces(is, vid);
+                    final List<SpaceEntry> spaces = is.types().stream()
+                            .filter(s -> s.isRefinementOf(SPACE_TYPE))
+                            .map(s -> new SpaceEntry(s.vid().toString(), s.vid().name(), s, s.toString()))
+                            .toList();
+                    consts.removeIf(c -> c.vid().equals(f(vid)));
 
                     LOG.info("  " + vid + ": " + types.size() + " types, " + insts.size() + " insts, "
                             + rewrites.size() + " rewrites, " + spaces.size() + " spaces, " + consts.size() + " consts");
@@ -194,7 +202,7 @@ public class InstSetDocGenerator {
         BootLoader.BOOTING = true;
         BootLoader.TESTING = true;
         BootLoader.load(MRec.rec(MUri.uri(LOGG), MUri.uri("info"), MUri.uri(BOOT), MUri.uri(bootFile)));
-        for (final InstSet is : new InstSet[] {
+        for (final InstSet is : new InstSet[]{
                 new mathInstSet(), new webInstSet(), new iotInstSet(),
                 new grphInstSet(), new llmInstSet(), new tbleInstSet(),
                 new dcmntInstSet(), new rdfInstSet()
@@ -244,8 +252,11 @@ public class InstSetDocGenerator {
         return new Meta(vid, name, desc, parent, children, full);
     }
 
-    /** A child space entry: URI, name, and its type object. */
-    private record SpaceEntry(String vid, String name, Obj obj, String typeSpec) {}
+    /**
+     * A child space entry: URI, name, and its type object.
+     */
+    private record SpaceEntry(String vid, String name, Obj obj, String typeSpec) {
+    }
 
     private static List<SpaceEntry> fetchSpaces(final InstSet is, final String instsetVid) {
         final List<SpaceEntry> spaces = new ArrayList<>();
@@ -267,7 +278,9 @@ public class InstSetDocGenerator {
 
     // ── Documentation ──────────────────────────────────────────────────
 
-    /** Fetch the doc Rec for an object via {@code uri.addQ("docq")}. */
+    /**
+     * Fetch the doc Rec for an object via {@code uri.addQ("docq")}.
+     */
     private static Rec fetchDoc(final fURI uri) {
         if (uri == null) return null;
         try {
@@ -282,12 +295,16 @@ public class InstSetDocGenerator {
         }
     }
 
-    /** Fetch doc via the object's vid (works for types and consts). */
+    /**
+     * Fetch doc via the object's vid (works for types and consts).
+     */
     private static Rec fetchDocByVid(final Obj obj) {
         return obj == null || obj.vid() == null ? null : fetchDoc(obj.vid());
     }
 
-    /** Fetch doc via the object's tid (works for insts and rewrites). */
+    /**
+     * Fetch doc via the object's tid (works for insts and rewrites).
+     */
     private static Rec fetchDocByTid(final Obj obj) {
         return obj == null || obj.tid() == null ? null : fetchDoc(obj.tid());
     }
@@ -590,7 +607,7 @@ public class InstSetDocGenerator {
             final String defn = SER.write(c);
             final String defnBlock = !defn.isEmpty()
                     ? "<div class=\"card-body p-2\"><pre class=\"mb-0\"><code class=\"language-mtron\">"
-                    + esc(defn) + "</code></pre></div>" : "";
+                      + esc(defn) + "</code></pre></div>" : "";
             final Rec doc = fetchDocByVid(c);
             cards.append("""
                          <div class="card mb-3" id="%s">
@@ -624,7 +641,7 @@ public class InstSetDocGenerator {
             final String defn = SER.write(t);
             final String defnBlock = !defn.isEmpty()
                     ? "<div class=\"card-body p-2\"><pre class=\"mb-0\"><code class=\"language-mtron\">"
-                    + esc(defn) + "</code></pre></div>" : "";
+                      + esc(defn) + "</code></pre></div>" : "";
             final String refines = superTypeRefines(t, instsetVid);
             final Rec doc = fetchDocByVid(t);
             cards.append("""
@@ -757,7 +774,7 @@ public class InstSetDocGenerator {
             final String sig = convertShorthand(SER.write(rw));
             final String sigBlock = !sig.isEmpty()
                     ? "<div class=\"card-body p-2\"><pre class=\"mb-0\"><code class=\"language-mtron\">"
-                    + esc(sig) + "</code></pre></div>" : "";
+                      + esc(sig) + "</code></pre></div>" : "";
             final String typeSig = typeSignatureHtml(instsetVid, rw);
             final Rec doc = fetchDocByTid(rw);
             cards.append("""
@@ -789,7 +806,7 @@ public class InstSetDocGenerator {
             final String gid = "space-" + esc(sp.name());
             final String spec = sp.typeSpec() != null && !sp.typeSpec().isEmpty()
                     ? "<div class=\"mt-2\"><pre class=\"mb-0\"><code class=\"language-mtron\">"
-                    + esc(sp.typeSpec()) + "</code></pre></div>" : "";
+                      + esc(sp.typeSpec()) + "</code></pre></div>" : "";
             final Rec doc = fetchDocByVid(sp.obj());
             cards.append("""
                          <div class="card mb-3" id="%s">
@@ -820,7 +837,7 @@ public class InstSetDocGenerator {
                        generated by metatron instset doc generator on build %d-%s<br>
                        (c) PhaseShift Studio, LLC
                    </small>
-               </div>""".formatted(0,"0.1-SNAPSHOT");//buildNumber, ts);
+               </div>""".formatted(0, "0.1-SNAPSHOT");//buildNumber, ts);
     }
 
     // ── Documentation rendering ────────────────────────────────────────
@@ -864,7 +881,9 @@ public class InstSetDocGenerator {
                </div>""".formatted(gid, pills.toString(), gid, contents.toString());
     }
 
-    /** Render a single doc Rec, or nothing. */
+    /**
+     * Render a single doc Rec, or nothing.
+     */
     private static String renderDoc(final Rec doc, final String gid) {
         if (doc == null) return "";
         return renderSingleDoc(doc);
@@ -1076,7 +1095,9 @@ public class InstSetDocGenerator {
     // SHARED UTILITIES
     // ========================================================================
 
-    /** Get the string value of a record field, or null if missing. */
+    /**
+     * Get the string value of a record field, or null if missing.
+     */
     private static String fieldStr(final Obj rec, final String field) {
         if (!(rec instanceof Rec r)) return null;
         final Obj val = r.at(field);

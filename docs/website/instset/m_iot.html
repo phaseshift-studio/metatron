@@ -263,18 +263,14 @@ bin/metatron</code></pre>
                 <div id="flush-collapseOne" class="accordion-collapse collapse"
                     aria-labelledby="flush-headingOne" data-bs-parent="#accordianInstSet">
                     <div class="accordion-body">
-                        <pre><code>instset::[
- pattern=&gt;/m/iot/#,
- q=&gt;[docq::[
+                        <pre><code>instset::[pattern=&gt;/m/iot/#,q=&gt;[docq::[
  pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
  pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
  pattern=&gt;docq,
  obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
- inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
- space=&gt;[super=&gt;/m/iot/#],
- type=&gt;[
-  mqtt::T,
-  haos::T]]@/m/iot</code></pre>
+ inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],space=&gt;[super=&gt;/m/iot/#],type=&gt;[
+ mqtt::T,
+ haos::T]]@/m/iot</code></pre>
                     </div>
                 </div>
             </div>
@@ -282,72 +278,37 @@ bin/metatron</code></pre>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <a href="#consts" class="btn btn-outline-primary">Consts <span class="pill-label badge bg-secondary">1</span></a><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">2</span></a><button class="btn btn-outline-secondary" disabled>Insts <span class="pill-label badge bg-dark">0</span></button><button class="btn btn-outline-secondary" disabled>Spaces <span class="pill-label badge bg-dark">0</span></button><button class="btn btn-outline-secondary" disabled>Rewrites <span class="pill-label badge bg-dark">0</span></button>
+        <button class="btn btn-outline-secondary" disabled>Consts <span class="pill-label badge bg-dark">0</span></button><button class="btn btn-outline-secondary" disabled>Types <span class="pill-label badge bg-dark">0</span></button><button class="btn btn-outline-secondary" disabled>Insts <span class="pill-label badge bg-dark">0</span></button><a href="#spaces" class="btn btn-outline-primary">Spaces <span class="pill-label badge bg-info">2</span></a><button class="btn btn-outline-secondary" disabled>Rewrites <span class="pill-label badge bg-dark">0</span></button>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="card">
         <div class="card-header"><h5 class="mb-0 text-primary">Index</h5></div>
         <div class="card-body"><div class="mb-3">
-    <h6 class="text-primary mb-2">Types</h6>
-    <div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">space</small></div><div class="d-flex flex-wrap"><a href="#type-mqtt" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">mqtt</span>
-    <span class="pill-label badge bg-primary ms-2">T</span>
-</a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;" style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;line-height:1.25;" class="micro-label"><div style="font-size:0.6rem;opacity:0.45;font-family:monospace;white-space:nowrap;">haos&thinsp;/</div><div><small class="mini-label fw-bold text-secondary" style="font-family:monospace;">space</small></div></div><div class="d-flex flex-wrap"><a href="#type-haos" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <h6 class="text-primary mb-2">Spaces</h6>
+    <div class="d-flex flex-wrap"><a href="#space-haos" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">haos</span>
-    <span class="pill-label badge bg-primary ms-2">T</span>
-</a></div></div>
-</div><div class="mb-3">
-    <h6 class="text-primary mb-2">Constants</h6>
-    <div class="d-flex flex-wrap"><a href="#const-iot" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">iot</span>
-    <span class="pill-label badge bg-secondary ms-2">C</span>
+    <span class="pill-label badge bg-info text-dark ms-2">S</span>
+</a><a href="#space-mqtt" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">mqtt</span>
+    <span class="pill-label badge bg-info text-dark ms-2">S</span>
 </a></div>
 </div></div>
     </div>
-</div><div class="container-xxl mb-4" id="consts">
-    <h3 class="text-primary mb-3">Constants <span class="pill-label badge bg-secondary">1</span></h3>
-    <div class="card mb-3" id="const-iot">
+</div><div class="container-xxl mb-4" id="spaces">
+    <h3 class="text-primary mb-3">Spaces <span class="pill-label badge bg-info">2</span></h3>
+    <div class="card mb-3" id="space-haos">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <span class="code text-secondary fw-bold">iot</span>
-        <small class="text-muted code">/m/iot</small>
-    </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">instset::[
- pattern=&gt;/m/iot/#,
- q=&gt;[docq::[
- pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
- pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
- pattern=&gt;docq,
- obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
- inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
- space=&gt;[super=&gt;/m/iot/#],
- type=&gt;[
-  mqtt::T,
-  haos::T]]@/m/iot</code></pre></div>
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">mqtt, esp32, home assistant, and more accessible within the metatron</p>
-</div>
-</div>
-</div><div class="container-xxl mb-4" id="types">
-    <h3 class="text-primary mb-3">Types <span class="pill-label badge bg-primary">2</span></h3>
-    <div class="card mb-3" id="type-haos">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <span>
-            <span class="code text-primary fw-bold">haos::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m_iot_space.html#type-mqtt" class="instset-doc-small-code text-info code">/m/iot/space/mqtt::T</a></span>
-        </span>
+        <a href="m_iot_haos_space_haos.html" class="code text-primary fw-bold text-decoration-none">haos</a>
         <small class="text-muted code">/m/iot/haos/space/haos</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">mqtt::T[][inst(?[pattern=&gt;uri::T])]@/m/iot/haos/space/haos</code></pre></div>
+    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">mqtt::T[][inst(?[pattern=&gt;uri::T])]@/m/iot/haos/space/haos</code></pre></div>
     
-</div><div class="card mb-3" id="type-mqtt">
+</div><div class="card mb-3" id="space-mqtt">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <span>
-            <span class="code text-primary fw-bold">mqtt::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#type-space" class="instset-doc-small-code text-info code">/m/space::T</a></span>
-        </span>
+        <a href="m_iot_space_mqtt.html" class="code text-primary fw-bold text-decoration-none">mqtt</a>
         <small class="text-muted code">/m/iot/space/mqtt</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">space::T[][inst?mqtt&lt;=#{?}(rec::T)]@/m/iot/space/mqtt</code></pre></div>
+    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[][inst?mqtt&lt;=#{?}(rec::T)]@/m/iot/space/mqtt</code></pre></div>
     
 </div>
 </div><div class="container-xxl py-3 text-center">

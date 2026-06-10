@@ -36,6 +36,7 @@ import studio.phaseshift.metatron.isa.mach.machInstSet;
 import studio.phaseshift.metatron.isa.mach.type.LogObj;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.router.BasicRouter;
+import studio.phaseshift.metatron.isa.mach.type.thread.AbstractThread;
 import studio.phaseshift.metatron.isa.mach.type.thread.CoreThread;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
@@ -68,6 +69,8 @@ import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_FALSE;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TRUE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
@@ -89,16 +92,19 @@ public class BootLoader implements Rec, Feature.SelfClone {
     public static Rec ARGS;
     private static volatile ThreadExecutor EXECUTOR;
     /**
+     * Tracks the currently executing metatron thread on this Java thread.
+     */
+    public static final ThreadLocal<AbstractThread> CURRENT_THREAD = new ThreadLocal<>();
+    /**
      * Keeps the main thread alive in headless mode (no console REPL to block it).
      */
     private static final CountDownLatch SHUTDOWN_LATCH = new CountDownLatch(1);
     private static final Supplier<ThreadExecutor> THREAD_POOL_SUPPLIER = () -> {
-        return new ThreadExecutor(Executors.newCachedThreadPool(r -> new Thread(r, "metatron-" + Thread.currentThread().getId())), f("/sys/thread"));
+        return new ThreadExecutor(Executors.newCachedThreadPool(r -> new Thread(r, "metatron-" + Thread.currentThread().getId())), f("/sys/thread/executor"));
     };
 
     static {
         LOG = Graphitty.log(new BootLoader());
-        //EXECUTOR = Executors.newCachedThreadPool(new mThreadFactory());
         EXECUTOR = THREAD_POOL_SUPPLIER.get();
     }
 
@@ -394,6 +400,23 @@ public class BootLoader implements Rec, Feature.SelfClone {
             ///  ADD INCRQ PROCESSOR TO SYS FOR AUTO INCREMENTING FAIL STACK
             MFail.FAIL_STACK_PATTERN = args.at("fail_stack_pattern").orElse(uri("/sys/fail?incrq=./+")).uriValue();
             ROUTER.start();
+            // Establish the system root thread so boot-spawned threads
+            // (console, agents) inherit it as source via CURRENT_THREAD.
+            // The task blocks on SHUTDOWN_LATCH — stays in 'run' until shutdown.
+            Thread.currentThread().setName("metatron-main");
+            final CoreThread systemThread = docWrap(CoreThread.core(
+                    instLambda((lhs, inst) -> {
+                        try {
+                            SHUTDOWN_LATCH.await();
+                        } catch (final InterruptedException e) {
+                            Thread.currentThread().interrupt();
+                        }
+                        return noobj();
+                    }),
+                    f("/sys/thread/main")), "main system latch");
+            EXECUTOR.execute(systemThread);
+            Router.writeToSpace("/sys/thread/main", systemThread);
+            BootLoader.CURRENT_THREAD.set(systemThread);
             ///////////////////////////////////////////////////////////////
             if (args.has(uri(Tokens.BOOT))) {
                 LOG.info("\t {{m}}BEGIN:{{g}} evaluating provided boot loader: {{b}}%s{{X}}\n", args.at(uri(Tokens.BOOT)).uriValue());
@@ -421,7 +444,6 @@ public class BootLoader implements Rec, Feature.SelfClone {
             // JVM stays alive until SIGTERM triggers close() → SHUTDOWN_LATCH.countDown().
             final String surefireClassPath = System.getProperty(SUREFIRE_REAL_CLASS_PATH);
             if (!TESTING && !ONE_SHOT && (surefireClassPath == null || surefireClassPath.isEmpty())) {
-                Thread.currentThread().setName("metatron-main");
                 try {
                     SHUTDOWN_LATCH.await();
                 } catch (final InterruptedException e) {

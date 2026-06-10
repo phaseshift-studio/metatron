@@ -308,7 +308,7 @@ bin/metatron</code></pre>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <a href="#consts" class="btn btn-outline-primary">Consts <span class="pill-label badge bg-secondary">1</span></a><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">5</span></a><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">13</span></a><button class="btn btn-outline-secondary" disabled>Spaces <span class="pill-label badge bg-dark">0</span></button><a href="#rewrites" class="btn btn-outline-primary">Rewrites <span class="pill-label badge bg-warning">7</span></a>
+        <button class="btn btn-outline-secondary" disabled>Consts <span class="pill-label badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">4</span></a><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">13</span></a><a href="#spaces" class="btn btn-outline-primary">Spaces <span class="pill-label badge bg-info">1</span></a><a href="#rewrites" class="btn btn-outline-primary">Rewrites <span class="pill-label badge bg-warning">7</span></a>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="card">
@@ -327,16 +327,7 @@ bin/metatron</code></pre>
 </a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">schema</small></div><div class="d-flex flex-wrap"><a href="#type-modern" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">modern</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
-</a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">space</small></div><div class="d-flex flex-wrap"><a href="#type-grphspace" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">grphspace</span>
-    <span class="pill-label badge bg-primary ms-2">T</span>
 </a></div></div>
-</div><div class="mb-3">
-    <h6 class="text-primary mb-2">Constants</h6>
-    <div class="d-flex flex-wrap"><a href="#const-grph" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">grph</span>
-    <span class="pill-label badge bg-secondary ms-2">C</span>
-</a></div>
 </div><div class="mb-3">
     <h6 class="text-primary mb-2">Instructions</h6>
     <div class="d-flex flex-wrap"><a href="#inst-addE" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
@@ -380,6 +371,12 @@ bin/metatron</code></pre>
     <span class="pill-label badge bg-success ms-2">I</span>
 </a></div>
 </div><div class="mb-3">
+    <h6 class="text-primary mb-2">Spaces</h6>
+    <div class="d-flex flex-wrap"><a href="#space-grphspace" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">grphspace</span>
+    <span class="pill-label badge bg-info text-dark ms-2">S</span>
+</a></div>
+</div><div class="mb-3">
     <h6 class="text-primary mb-2">Rewrites</h6>
     <div class="d-flex flex-wrap"><a href="#rewrite-gremlin_count" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">gremlin_count</span>
@@ -405,57 +402,8 @@ bin/metatron</code></pre>
 </a></div>
 </div></div>
     </div>
-</div><div class="container-xxl mb-4" id="consts">
-    <h3 class="text-primary mb-3">Constants <span class="pill-label badge bg-secondary">1</span></h3>
-    <div class="card mb-3" id="const-grph">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <span class="code text-secondary fw-bold">grph</span>
-        <small class="text-muted code">/m/grph</small>
-    </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">instset::[
- pattern=&gt;/m/grph/#,
- q=&gt;[docq::[
- pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
- pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
- pattern=&gt;docq,
- obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
- inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
- space=&gt;[super=&gt;/m/grph/#],
- constq=&gt;[!*/m/mach/io/serializer/tp3],
- type=&gt;[
-  elmt::T,
-  vrtx::T,
-  edge::T,
-  grphspace::T,
-  modern::T],
- inst=&gt;[
-  gremlin?#{*}&lt;=grphspace(str::T),
-  label?uri&lt;=rec(),
-  values?#{*}&lt;=rec(uri{*}::T),
-  inV?vrtx&lt;=edge(),
-  outV?vrtx&lt;=edge(),
-  bothV?vrtx{2}&lt;=edge(),
-  out?edge{*}&lt;=vrtx(uri{*}::T),
-  in?edge{*}&lt;=vrtx(uri{*}::T),
-  both?edge{*}&lt;=vrtx(uri{*}::T),
-  outE?edge{*}&lt;=vrtx(uri{*}::T),
-  inE?edge{*}&lt;=vrtx(uri{*}::T),
-  bothE?edge{*}&lt;=vrtx(uri{*}::T),
-  addE?edge&lt;=vrtx(uri::T,rec{+}::T,rec{?}::T)],
- rewrite=&gt;[
-  /m/grph/inst/rewrite/gremlin_count?code{?}&lt;=code(),
-  /m/grph/inst/rewrite/gremlin_limit?code{?}&lt;=code(),
-  /m/grph/inst/rewrite/gremlin_where?code{?}&lt;=code(),
-  /m/grph/inst/rewrite/gremlin_where_count?code{?}&lt;=code(),
-  /m/grph/inst/rewrite/gremlin_where_limit?code{?}&lt;=code(),
-  /m/grph/inst/rewrite/out_incident_adjacent?code{?}&lt;=code(),
-  /m/grph/inst/rewrite/in_incident_adjacent?code{?}&lt;=code()]]@/m/grph</code></pre></div>
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">from vertex to vertex, the edge of the metatron is traversed</p>
-</div>
-</div>
 </div><div class="container-xxl mb-4" id="types">
-    <h3 class="text-primary mb-3">Types <span class="pill-label badge bg-primary">5</span></h3>
+    <h3 class="text-primary mb-3">Types <span class="pill-label badge bg-primary">4</span></h3>
     <div class="card mb-3" id="type-edge">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -479,18 +427,6 @@ bin/metatron</code></pre>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T@/m/grph/elmt</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a key/value attributed element that is refined by vrtx::T and edge::T</p>
-</div>
-</div><div class="card mb-3" id="type-grphspace">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <span>
-            <span class="code text-primary fw-bold">grphspace::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#type-space" class="instset-doc-small-code text-info code">/m/space::T</a></span>
-        </span>
-        <small class="text-muted code">/m/grph/space/grphspace</small>
-    </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">space::T[?[{?}schema=&gt;instset::T]][ctor?grphspace&lt;=#{?}(isa([{?}graph=&gt;uri::T]).else(throw(&#39;malformed tp3 config&#39;)))]@/m/grph/space/grphspace</code></pre></div>
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">a space for graph traversal</p>
 </div>
 </div><div class="card mb-3" id="type-modern">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -740,6 +676,18 @@ bin/metatron</code></pre>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">an element <span class="text-light">=&gt;</span> the element values</pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  0 <span class="text-light">=&gt;</span> <span class="text-info">&#39;zero or more element property labels&#39;</span>
 </pre>
+</div>
+</div>
+</div><div class="container-xxl mb-4" id="spaces">
+    <h3 class="text-primary mb-3">Spaces <span class="pill-label badge bg-info">1</span></h3>
+    <div class="card mb-3" id="space-grphspace">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <a href="m_grph_space_grphspace.html" class="code text-primary fw-bold text-decoration-none">grphspace</a>
+        <small class="text-muted code">/m/grph/space/grphspace</small>
+    </div>
+    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[?[{?}schema=&gt;instset::T]][ctor?grphspace&lt;=#{?}(isa([{?}graph=&gt;uri::T]).else(throw(&#39;malformed tp3 config&#39;)))]@/m/grph/space/grphspace</code></pre></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">a space for graph traversal</p>
 </div>
 </div>
 </div><div class="container-xxl mb-4" id="rewrites">
