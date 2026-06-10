@@ -233,7 +233,7 @@ table {
 
 /* unified red-leather glow bridging title through grid */
 .container-fluid.wow.fadeIn {
-    background: radial-gradient(ellipse at 50% 38%, transparent 25%, rgba(160, 60, 30, 0.025) 45%, rgba(180, 75, 45, 0.05) 65%, transparent 85%);
+    background: radial-gradient(ellipse at 50% 38%, transparent 23%, rgba(160, 60, 30, 0.038) 43%, rgba(180, 75, 45, 0.075) 63%, transparent 88%);
 }
 
 /* bridge the title glow and parchment */
@@ -790,8 +790,8 @@ body::before {
     inset: 0;
     z-index: 0;
     pointer-events: none;
-    background: /* red glow bleeding down from top-center */ radial-gradient(ellipse 80% 42% at 50% 0%, rgba(151, 2, 7, 0.24) 0%, transparent 58%),
-        /* warm accent from right */ radial-gradient(ellipse 30% 35% at 85% 55%, rgba(151, 2, 7, 0.06) 0%, transparent 70%),
+    background: /* red glow bleeding down from top-center */ radial-gradient(ellipse 90% 48% at 50% 0%, rgba(151, 2, 7, 0.31) 0%, transparent 62%),
+        /* warm accent from right */ radial-gradient(ellipse 33% 38% at 85% 55%, rgba(151, 2, 7, 0.08) 0%, transparent 70%),
         /* teal whisper bottom-left */ radial-gradient(circle at 15% 85%, rgba(77, 182, 172, 0.04) 0%, transparent 50%);
 }
 

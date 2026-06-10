@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -150,7 +150,7 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
     @Override
     public String writeStr(final Str str) {
         final String string = str.jvm();
-        if(null == string)
+        if (null == string)
             return null;
         boolean doubleQuote = string.contains("\n") || (string.contains("\"") && string.contains("'"));
         final String quotes = doubleQuote ? "\"\"\"" : (string.contains("'") || string.contains("`") ? "\"" : "'");
@@ -310,9 +310,9 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
             return false;
         final long count = poly.count();
         return count != 1 && (count > 4 || poly.values().anyMatch(o ->
-                null != o.vid() ||
-                        o.isPoly() ||
-                        o.isObjCall() ||
+                (null != o.vid() && o.vid().toString().length() > NESTED_STRING_THRESHOLD) ||
+                        (o.isPoly() && o.<Poly<?,?>>as().count() > 2) ||
+                        (o.isObjCall() && o.asCall().insts().size() > 2) ||
                         (o.isStr() && o.strValue().length() > NESTED_STRING_THRESHOLD) ||
                         (o.isUri() && o.uriValue().toString().length() > NESTED_STRING_THRESHOLD) ||
                         (o.isBytes() && o.bytesValue().capacity() > NESTED_STRING_THRESHOLD) ||

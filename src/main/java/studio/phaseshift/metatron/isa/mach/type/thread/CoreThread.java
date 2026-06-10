@@ -21,18 +21,12 @@ package studio.phaseshift.metatron.isa.mach.type.thread;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.mach.type.Machine;
-import studio.phaseshift.metatron.isa.mach.type.machine.SwarmMachine;
-import studio.phaseshift.metatron.isa.sys.type_.ThreadExecutor;
 
 import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_CORE_THREAD_TID;
-import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_VIRTUAL_THREAD_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /*
@@ -40,46 +34,21 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  */
 public class CoreThread extends AbstractThread {
 
-    Machine machine;
-    final FutureObj<Obj> future = new FutureObj<>(UUID.randomUUID());
-
     public CoreThread(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
-    }
-    
-    
-    
-    /*@Override
-    public Fail stop() {
-        return this.machine.interrupt();
-    }
-
-    @Override
-    public NoObj pause() {
-        return this.machine.pause();
-    }*/
-
-    @Override
-    public Obj result() {
-        return this.at(RESULT);
-    }
-
-    @Override
-    public Obj result(long timeout, TimeUnit unit) {
-        throw new UnsupportedOperationException();
     }
 
     @Override
     public FutureObj<Obj> apply(final Obj other) {
-        this.jvm().put(uri(START),other);
-        this.machine = SwarmMachine.of(this.at(START), this.at(CODE).as());
-        BootLoader.getExecutor().submit(() -> {
-            this.at(STATE, uri("running"), MUTABLE);
-           final Obj result = this.machine.apply();
-            this.future.setObj(result);
-            this.at(STATE, uri("stopped"), MUTABLE);
-            this.at(RESULT).apply(result);
-        });
+        synchronized (this) {
+            if (null != this.thread && this.thread.getState() != Thread.State.NEW) {
+                this.logger().warn("thread currently running, ignoring %s", other);
+                return this.future;
+            }
+            if (this.at(START).isNoObj())
+                this.jvm().put(uri(START), other);
+            BootLoader.getExecutor().execute(this);
+        }
         return this.future;
     }
 

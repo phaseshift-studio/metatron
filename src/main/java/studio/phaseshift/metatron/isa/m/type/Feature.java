@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.isa.m.type;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.isa.sys.type_.ThreadExecutor;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -34,7 +35,19 @@ public interface Feature {
         }
     }
 
-    interface SelfClone extends HasLogger {
+    /**
+     * Provides a {@link ThreadExecutor.Builder} pre-seeded with the source
+     * set to this object's {@code vid()}.  The symmetry with {@link HasLogger#logger()}:
+     * every log message knows its source; every spawned thread knows its source.
+     */
+    interface HasThread {
+
+        default ThreadExecutor.Builder thread() {
+            return ThreadExecutor.Builder.build().source(((Obj) this).vid());
+        }
+    }
+
+    interface SelfClone extends HasLogger, HasThread {
 
         default <O extends Obj> O clone(final Object jvm, final fURI tid, final fURI vid) {
             this.logger().warn("this obj doesn't support pure cloning");

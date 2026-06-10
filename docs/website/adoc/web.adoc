@@ -129,3 +129,13 @@ mtron> :redirect/input
 ----
 
 The `console::T.redirect/input` can be any `inst`. The flexibility of such redirection allows any number of use cases such as broadcasting, local processing w/ side effects, and more.
+
+[discrete]
+=== Content-Type
+
+[source,bash]
+----
+$ websocat "ws://localhost:8555/mtron?in=application/mtron&out=application/json"
+[a=>[b=>[1,2,3],c=>2]]
+{"a":{"b":[1,2,3],"c":2}}
+----

@@ -42,6 +42,7 @@ import studio.phaseshift.metatron.isa.m.type.impl.MCode;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.machine.SwarmMachine;
+import studio.phaseshift.metatron.isa.mach.type.thread.VirtualThread;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.menu.ColonMenu;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
@@ -68,6 +69,7 @@ import static studio.phaseshift.metatron.BootLoader.BOOTING;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.INST_CTOR_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.START_INST_TID;
@@ -75,9 +77,8 @@ import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.start_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instA;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.*;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
@@ -85,6 +86,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_ISA_TID;
+import static studio.phaseshift.metatron.isa.mach.type.thread.VirtualThread.virtual;
 import static studio.phaseshift.metatron.util.CommonUtil.HEADER_FILE;
 
 public class Console extends JRec<Console> implements Closeable, Runnable {
@@ -177,7 +179,10 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
             .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(CONSOLE_TID), lst(T(REC_TID)), (lhs, inst) -> {
                 final Console console = new Console(inst.arg(0).as(), inst.arg(0).vid());
                 new ColonMenu(console).attach(rec());
-                BootLoader.getExecutor().submit(console);
+                docWrap(virtual(instLambda((_lhs, inst2) -> {
+                    console.run();
+                    return noobj();
+                })), "console repl").apply(noobj());
                 return console;
             })).create();
 
@@ -254,7 +259,10 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                     .build();
             new CustomWidgets(this.reader);
             this.status = new StatusLine(this);
-            BootLoader.getExecutor().submit(this.status);
+            docWrap(virtual(instLambda((lhs, inst2) -> {
+                Console.this.status.run();
+                return jnt(0);
+            })), "console statusline").apply();
             this.history = auto_(instC(f("history").dom(ALL).rng(REC_TID.maybeSome()), lst(T(ALL)),
                     (lhs, inst) -> objs(IteratorUtil.list(this.reader.getHistory().reverseIterator())
                             .stream()

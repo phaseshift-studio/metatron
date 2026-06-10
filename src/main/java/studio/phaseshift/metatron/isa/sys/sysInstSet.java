@@ -22,10 +22,12 @@ import org.zeroturnaround.exec.ProcessExecutor;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
+import studio.phaseshift.metatron.isa.m.math.mathInstSet;
 import studio.phaseshift.metatron.isa.m.type.Str;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.sys.type_.ThreadExecutor;
+import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.nio.file.Path;
@@ -38,10 +40,12 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
+import static studio.phaseshift.metatron.isa.m.math.mathInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.block_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
@@ -72,7 +76,7 @@ public class sysInstSet extends AbstractInstSet {
     public static final Type IMAGE_FILE_TYPE = Type.Builder.build()
             .tid(FILE_TID)
             .vid(IMAGE_TID).create();*/
-    
+
     public sysInstSet() {
         super(mutableMap(Map.of(uri(PATTERN), uri(SYS_ISA_TID.extend("#")))), INSTSET_TID, SYS_ISA_TID);
     }
@@ -85,6 +89,10 @@ public class sysInstSet extends AbstractInstSet {
                             final Str script = inst.arg(0).asStr();
                             return MTronException.wrap(() -> ObjmtronSerializer.parseMulti(new String(new ProcessExecutor(script.strValue().split(" ")).execute().getOutput().getBytes())));
                         }),
+                        docWrap(instC(SYS_INST_TID.extend("sleep").dom(A.maybe()).rng(A.maybe()), lst(TIME_TYPE), (lhs, inst) -> {
+                            CommonUtil.sleepThread(inst.arg(0).as(MILLIS_TYPE).realValue().intValue());
+                            return lhs;
+                        }), "an obj", "the lhs obj", Map.of(jnt(0), "the amount of time to pause the current thread"), "pauses the current thread for arg amount of time"),
                         docWrap(instC(SYS_INST_TID.extend("stdout").dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL.maybe())), (lhs, inst) -> {
                             final Object arg = inst.arg(0).jvm();
                             if (arg != null)

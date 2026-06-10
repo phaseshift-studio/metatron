@@ -31,6 +31,8 @@ import studio.phaseshift.metatron.isa.mach.type.ui.console.Console;
 import studio.phaseshift.metatron.isa.web.parser.*;
 import studio.phaseshift.metatron.isa.web.space.ws.WebSocketRec;
 import studio.phaseshift.metatron.isa.web.space.ws.WebSocketRecClient;
+import studio.phaseshift.metatron.isa.m.space.memSpace;
+import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.web.type.MIME;
 import studio.phaseshift.metatron.isa.web.type.mcpServer;
 import studio.phaseshift.metatron.util.CommonUtil;
@@ -95,6 +97,8 @@ public class webInstSet extends AbstractInstSet {
     public static final fURI CSS_TID = WEB_ISA_TID.extend("css");
     public static final fURI MARKDOWN_TID = WEB_ISA_TID.extend("markdown");
     public static final fURI CONTENT_TYPE_TID = WEB_ISA_TID.extend("content_type");
+
+    public static final fURI DESKTOP_SPACE_VID = f("/sys/desktop");
 
     public static final Type CONTENT_TYPE = Type.Builder.build()
             .tid(URI_TID)
@@ -290,6 +294,12 @@ public class webInstSet extends AbstractInstSet {
         docWrap(this,
                 "the world of the web within the metatron",
                 "/usr/idea -> *<http://metatron.phaseshift.studio/html/head/title>");
+
+        // Create the /sys/desktop in-memory space as a data entry within /sys.
+        // It is written into the system space so it is queryable via the router.
+        final memSpace desktopSpace = memSpace.of(DESKTOP_SPACE_VID.extend(ALL), DESKTOP_SPACE_VID);
+        Router.writeToSpace(DESKTOP_SPACE_VID, desktopSpace);
+
         super.setup();
     }
 }

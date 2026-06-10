@@ -202,27 +202,37 @@ public class dcmntSpaceSubQ extends BaseQ implements Closeable {
         final MongoCursor<ChangeStreamDocument<Document>> cursor = changeStream.iterator();
         final AtomicBoolean running = new AtomicBoolean(true);
 
-        final Future<?> future = BootLoader.getExecutor().submit(() -> {
-            LOG.debug("change stream watcher started for: %s", basePath);
-            try {
-                while (running.get() && cursor.hasNext()) {
-                    final ChangeStreamDocument<Document> change = cursor.next();
-                    processChangeEvent(basePath, collectionName, change);
-                }
-            } catch (final Exception e) {
-                if (running.get()) {
-                    LOG.error("change stream error for %s: %s", basePath, e.getMessage());
-                }
-            } finally {
-                running.set(false);
-                try {
-                    cursor.close();
-                } catch (final Exception ignored) {
-                }
-                activeWatchers.remove(basePath);
-                LOG.debug("change stream watcher stopped for: %s", basePath);
+        final studio.phaseshift.metatron.isa.mach.type.thread.VirtualThread watcher =
+                new studio.phaseshift.metatron.isa.mach.type.thread.VirtualThread(
+                studio.phaseshift.metatron.util.CommonUtil.mutableMap(
+                        uri("code"), studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt(0)),
+                studio.phaseshift.metatron.isa.mach.machInstSet.MACH_VIRTUAL_THREAD_TID,
+                studio.phaseshift.metatron.util.CommonUtil.mintShortUUID(
+                        studio.phaseshift.metatron.furi.fURI.Singleton.f("/sys/thread"), true)) {
+            @Override
+            public Runnable createTask() {
+                return () -> {
+                    LOG.debug("change stream watcher started for: %s", basePath);
+                    try {
+                        while (running.get() && cursor.hasNext()) {
+                            final ChangeStreamDocument<Document> change = cursor.next();
+                            processChangeEvent(basePath, collectionName, change);
+                        }
+                    } catch (final Exception e) {
+                        if (running.get()) {
+                            LOG.error("change stream error for %s: %s", basePath, e.getMessage());
+                        }
+                    } finally {
+                        running.set(false);
+                        try { cursor.close(); } catch (final Exception ignored) {}
+                        activeWatchers.remove(basePath);
+                        LOG.debug("change stream watcher stopped for: %s", basePath);
+                    }
+                };
             }
-        });
+        };
+        watcher.apply(noobj());
+        final var future = watcher.future();
 
         activeWatchers.put(basePath, new WatcherHandle(cursor, running, future));
     }

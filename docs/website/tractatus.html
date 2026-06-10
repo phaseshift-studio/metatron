@@ -1303,12 +1303,8 @@ mtron&gt; {1,2}-&lt;[?&lt;2=&gt;+9,?&gt;=2=&gt;+3]&gt;&gt;
 ==&gt;[false,false]
 ==&gt;[true,false]
 mtron&gt; {1,2}-&lt;[?&gt;=2,?&gt;3]     ​2​
-==&gt;[
-    noobj,
-    noobj]
-==&gt;[
-    2,
-    noobj]
+==&gt;[noobj,noobj]
+==&gt;[2,noobj]
 mtron&gt; {1,2}-&lt;[?&gt;=2,?&gt;3]&gt;-     ​3​
 ==&gt;2</code></pre>
 </div>
@@ -1490,9 +1486,7 @@ mtron&gt; catalog::[host         =&gt; &lt;http://localhost:1234/v1&gt;,
      provider=&gt;catalog::T,
      name=&gt;uri::T,
      {?}desc=&gt;str::T,
-     {?}cost=&gt;{?}[
-      in=&gt;currency::T,
-      out=&gt;currency::T],
+     {?}cost=&gt;{?}[in=&gt;currency::T,out=&gt;currency::T],
      {?}size=&gt;bB::T,
      {?}feature=&gt;feature::T]]@/m/llm/model</code></pre>
 </div>
@@ -1509,9 +1503,7 @@ mtron&gt; catalog::[host         =&gt; &lt;http://localhost:1234/v1&gt;,
     name=&gt;!*deep:deepseek-v4-pro/name,
     feature=&gt;[
      think=&gt;block(/usr/ui/console/pane/0/stream(id())),
-     memory=&gt;memory::[
-      max=&gt;20,
-      mem=&gt;!@/usr/agent/memory],
+     memory=&gt;memory::[max=&gt;20,mem=&gt;!@/usr/agent/memory],
      tool=&gt;[
       !*eval,
       !*sql,
@@ -1524,9 +1516,7 @@ mtron&gt; catalog::[host         =&gt; &lt;http://localhost:1234/v1&gt;,
 mtron&gt; *&lt;mtronfs:agent.mtron/feature&gt;     ​2​
 ==&gt;[
     think=&gt;block(/usr/ui/console/pane/0/stream(id())),
-    memory=&gt;memory::[
-     max=&gt;20,
-     mem=&gt;!@/usr/agent/memory],
+    memory=&gt;memory::[max=&gt;20,mem=&gt;!@/usr/agent/memory],
     tool=&gt;[
      !*eval,
      !*sql,
@@ -1568,17 +1558,10 @@ mtron&gt; *&lt;fs:skills/mtron/SKILL.md&gt;
       level=&gt;2,
       text=&gt;"""name: mtron
    description: connect h...""",
-      out=&gt;[
-       [type=&gt;text,content=&gt;'name: mtron'],
-       [type=&gt;soft_break],
-       [
-        type=&gt;text,
-        content=&gt;'description: connect heterogeneous...']]],
-     [
-      type=&gt;head,
-      level=&gt;1,
-      text=&gt;'mtron assistance',
-      out=&gt;[[type=&gt;text,content=&gt;'mtron assistance']]],
+      out=&gt;[[type=&gt;text,content=&gt;'name: mtron'],[type=&gt;soft_break],[
+    type=&gt;text,
+    content=&gt;'description: connect heterogeneous...']]],
+     [type=&gt;head,level=&gt;1,text=&gt;'mtron assistance',out=&gt;[[type=&gt;text,content=&gt;'mtron assistance']]],
      [
       type=&gt;p,
       text=&gt;'This skill makes you effective wit...',
@@ -1589,10 +1572,7 @@ mtron&gt; *&lt;fs:skills/mtron/SKILL.md&gt;
       type=&gt;p,
       text=&gt;'**Tip:** "metatron" (always lower ...',
       out=&gt;[
-       [
-        type=&gt;strong,
-        text=&gt;'**Tip:**',
-        out=&gt;[[type=&gt;text,content=&gt;'Tip:']]],
+       [type=&gt;strong,text=&gt;'**Tip:**',out=&gt;[[type=&gt;text,content=&gt;'Tip:']]],
        [
         type=&gt;text,
         content=&gt;' "metatron" (always lower cased) r...']]],
@@ -1608,10 +1588,7 @@ mtron&gt; *&lt;fs:skills/mtron/SKILL.md&gt;
       text=&gt;'Execute mtron expressions via the ...',
       out=&gt;[
        [type=&gt;text,content=&gt;'Execute mtron expressions via the '],
-       [
-        type=&gt;inline_code,
-        code=&gt;'eval-mcp-metatron',
-        out=&gt;[[type=&gt;text,content=&gt;'eval-mcp-metatron']]],
+       [type=&gt;inline_code,code=&gt;'eval-mcp-metatron',out=&gt;[[type=&gt;text,content=&gt;'eval-mcp-metatron']]],
        [type=&gt;text,content=&gt;' tool:']]],
      [
       type=&gt;code,
@@ -1621,11 +1598,8 @@ mtron&gt; *&lt;fs:skills/mtron/SKILL.md&gt;
     type=&gt;text,
     content=&gt;"""Tool: eval-mcp-metatron
    Parameter:..."""]]],
-     [
-      type=&gt;p,
-      text=&gt;"""Examples:
-   """,
-      out=&gt;[[type=&gt;text,content=&gt;'Examples:']]],
+     [type=&gt;p,text=&gt;"""Examples:
+   """,out=&gt;[[type=&gt;text,content=&gt;'Examples:']]],
      [
       type=&gt;code,
       lang=&gt;'mcp',
@@ -1640,16 +1614,10 @@ mtron&gt; *&lt;fs:skills/mtron/SKILL.md&gt;
        [
         type=&gt;text,
         content=&gt;'If the MCP server is not available...'],
-       [
-        type=&gt;inline_code,
-        code=&gt;'scripts/mtron_ws_client.py',
-        out=&gt;[[type=&gt;text,content=&gt;'scripts/mtron_ws_client.py']]],
+       [type=&gt;inline_code,code=&gt;'scripts/mtron_ws_client.py',out=&gt;[[type=&gt;text,content=&gt;'scripts/mtron_ws_client.py']]],
        [type=&gt;text,content=&gt;'.']]],
-     [
-      type=&gt;p,
-      text=&gt;"""Examples::
-   """,
-      out=&gt;[[type=&gt;text,content=&gt;'Examples::']]],
+     [type=&gt;p,text=&gt;"""Examples::
+   """,out=&gt;[[type=&gt;text,content=&gt;'Examples::']]],
      [
       type=&gt;code,
       lang=&gt;'python',
@@ -1662,23 +1630,13 @@ mtron&gt; *&lt;fs:skills/mtron/SKILL.md&gt;
       text=&gt;"Either of the two `eval()` options...",
       out=&gt;[
        [type=&gt;text,content=&gt;'Either of the two '],
-       [
-        type=&gt;inline_code,
-        code=&gt;'eval()',
-        out=&gt;[[type=&gt;text,content=&gt;'eval()']]],
+       [type=&gt;inline_code,code=&gt;'eval()',out=&gt;[[type=&gt;text,content=&gt;'eval()']]],
        [type=&gt;text,content=&gt;' options above can be used for '],
-       [
-        type=&gt;strong,
-        text=&gt;'**all**',
-        out=&gt;[[type=&gt;text,content=&gt;'all']]],
+       [type=&gt;strong,text=&gt;'**all**',out=&gt;[[type=&gt;text,content=&gt;'all']]],
        [
         type=&gt;text,
         content=&gt;' mtron expression execution — read...']]],
-     [
-      type=&gt;head,
-      level=&gt;2,
-      text=&gt;'Step 1: Gather Context',
-      out=&gt;[[type=&gt;text,content=&gt;'Step 1: Gather Context']]],
+     [type=&gt;head,level=&gt;2,text=&gt;'Step 1: Gather Context',out=&gt;[[type=&gt;text,content=&gt;'Step 1: Gather Context']]],
      [
       type=&gt;code,
       lang=&gt;'mtron',
@@ -1686,11 +1644,7 @@ mtron&gt; *&lt;fs:skills/mtron/SKILL.md&gt;
       out=&gt;[[
     type=&gt;text,
     content=&gt;'*/sys/space/+/                    ...']]],
-     [
-      type=&gt;head,
-      level=&gt;3,
-      text=&gt;'Relations &amp; Domain Extraction',
-      out=&gt;[[type=&gt;text,content=&gt;'Relations &amp; Domain Extraction']]],
+     [type=&gt;head,level=&gt;3,text=&gt;'Relations &amp; Domain Extraction',out=&gt;[[type=&gt;text,content=&gt;'Relations &amp; Domain Extraction']]],
      [
       type=&gt;p,
       text=&gt;'When dereferencing a URI with a tr...',
@@ -1698,34 +1652,19 @@ mtron&gt; *&lt;fs:skills/mtron/SKILL.md&gt;
        [
         type=&gt;text,
         content=&gt;'When dereferencing a URI with a tr...'],
-       [
-        type=&gt;inline_code,
-        code=&gt;'/',
-        out=&gt;[[type=&gt;text,content=&gt;'/']]],
+       [type=&gt;inline_code,code=&gt;'/',out=&gt;[[type=&gt;text,content=&gt;'/']]],
        [type=&gt;text,content=&gt;' (e.g., '],
-       [
-        type=&gt;inline_code,
-        code=&gt;'*/path/+/',
-        out=&gt;[[type=&gt;text,content=&gt;'*/path/+/']]],
+       [type=&gt;inline_code,code=&gt;'*/path/+/',out=&gt;[[type=&gt;text,content=&gt;'*/path/+/']]],
        [type=&gt;text,content=&gt;'), the result is a '],
-       [
-        type=&gt;strong,
-        text=&gt;'**relation**',
-        out=&gt;[[type=&gt;text,content=&gt;'relation']]],
+       [type=&gt;strong,text=&gt;'**relation**',out=&gt;[[type=&gt;text,content=&gt;'relation']]],
        [type=&gt;text,content=&gt;' ('],
-       [
-        type=&gt;inline_code,
-        code=&gt;'uri=&gt;obj',
-        out=&gt;[[type=&gt;text,content=&gt;'uri=&gt;obj']]],
+       [type=&gt;inline_code,code=&gt;'uri=&gt;obj',out=&gt;[[type=&gt;text,content=&gt;'uri=&gt;obj']]],
        [type=&gt;text,content=&gt;').'],
        [type=&gt;soft_break],
        [
         type=&gt;text,
         content=&gt;'To extract just the keys (URIs), u...'],
-       [
-        type=&gt;inline_code,
-        code=&gt;'.dom()',
-        out=&gt;[[type=&gt;text,content=&gt;'.dom()']]],
+       [type=&gt;inline_code,code=&gt;'.dom()',out=&gt;[[type=&gt;text,content=&gt;'.dom()']]],
        [type=&gt;text,content=&gt;' (domain) function:']]],
      [
       type=&gt;code,
@@ -1734,40 +1673,22 @@ mtron&gt; *&lt;fs:skills/mtron/SKILL.md&gt;
       out=&gt;[[
     type=&gt;text,
     content=&gt;'*/sys/space/+/.dom()  # Returns: {...']]],
-     [
-      type=&gt;head,
-      level=&gt;3,
-      text=&gt;'Important Concepts',
-      out=&gt;[[type=&gt;text,content=&gt;'Important Concepts']]],
-     [
-      type=&gt;head,
-      level=&gt;4,
-      text=&gt;'Space Patterns',
-      out=&gt;[[type=&gt;text,content=&gt;'Space Patterns']]],
+     [type=&gt;head,level=&gt;3,text=&gt;'Important Concepts',out=&gt;[[type=&gt;text,content=&gt;'Important Concepts']]],
+     [type=&gt;head,level=&gt;4,text=&gt;'Space Patterns',out=&gt;[[type=&gt;text,content=&gt;'Space Patterns']]],
      [
       type=&gt;p,
       text=&gt;"Each space has a `pattern` (what U...",
       out=&gt;[
        [type=&gt;text,content=&gt;'Each space has a '],
-       [
-        type=&gt;inline_code,
-        code=&gt;'pattern',
-        out=&gt;[[type=&gt;text,content=&gt;'pattern']]],
+       [type=&gt;inline_code,code=&gt;'pattern',out=&gt;[[type=&gt;text,content=&gt;'pattern']]],
        [type=&gt;text,content=&gt;' (what URIs it handles) and '],
-       [
-        type=&gt;inline_code,
-        code=&gt;'route',
-        out=&gt;[[type=&gt;text,content=&gt;'route']]],
+       [type=&gt;inline_code,code=&gt;'route',out=&gt;[[type=&gt;text,content=&gt;'route']]],
        [type=&gt;text,content=&gt;' (how URIs map internally).'],
        [type=&gt;soft_break],
        [
         type=&gt;text,
         content=&gt;"Don't assume prefixes — discover t..."]]],
-     [
-      type=&gt;head,
-      level=&gt;4,
-      text=&gt;'Dereferencing URIs',
-      out=&gt;[[type=&gt;text,content=&gt;'Dereferencing URIs']]],
+     [type=&gt;head,level=&gt;4,text=&gt;'Dereferencing URIs',out=&gt;[[type=&gt;text,content=&gt;'Dereferencing URIs']]],
      [
       type=&gt;p,
       text=&gt;'To retrieve the objs at a particul...',
@@ -1775,60 +1696,33 @@ mtron&gt; *&lt;fs:skills/mtron/SKILL.md&gt;
        [
         type=&gt;text,
         content=&gt;'To retrieve the objs at a particul...'],
-       [
-        type=&gt;inline_code,
-        code=&gt;'*',
-        out=&gt;[[type=&gt;text,content=&gt;'*']]],
+       [type=&gt;inline_code,code=&gt;'*',out=&gt;[[type=&gt;text,content=&gt;'*']]],
        [type=&gt;text,content=&gt;' ('],
-       [
-        type=&gt;inline_code,
-        code=&gt;'from()',
-        out=&gt;[[type=&gt;text,content=&gt;'from()']]],
+       [type=&gt;inline_code,code=&gt;'from()',out=&gt;[[type=&gt;text,content=&gt;'from()']]],
        [
         type=&gt;text,
         content=&gt;') instruction. Note that URIs supp...'],
-       [
-        type=&gt;inline_code,
-        code=&gt;'+',
-        out=&gt;[[type=&gt;text,content=&gt;'+']]],
+       [type=&gt;inline_code,code=&gt;'+',out=&gt;[[type=&gt;text,content=&gt;'+']]],
        [type=&gt;text,content=&gt;' (single-level) and '],
-       [
-        type=&gt;inline_code,
-        code=&gt;'#',
-        out=&gt;[[type=&gt;text,content=&gt;'#']]],
+       [type=&gt;inline_code,code=&gt;'#',out=&gt;[[type=&gt;text,content=&gt;'#']]],
        [
         type=&gt;text,
         content=&gt;' (multi-level) wildcards). Also, i...'],
-       [
-        type=&gt;inline_code,
-        code=&gt;'/',
-        out=&gt;[[type=&gt;text,content=&gt;'/']]],
+       [type=&gt;inline_code,code=&gt;'/',out=&gt;[[type=&gt;text,content=&gt;'/']]],
        [
         type=&gt;text,
         content=&gt;', the result is a stream of relati...'],
-       [
-        type=&gt;inline_code,
-        code=&gt;'uri=&gt;obj',
-        out=&gt;[[type=&gt;text,content=&gt;'uri=&gt;obj']]],
+       [type=&gt;inline_code,code=&gt;'uri=&gt;obj',out=&gt;[[type=&gt;text,content=&gt;'uri=&gt;obj']]],
        [type=&gt;text,content=&gt;'. If no trailing '],
-       [
-        type=&gt;inline_code,
-        code=&gt;'/',
-        out=&gt;[[type=&gt;text,content=&gt;'/']]],
+       [type=&gt;inline_code,code=&gt;'/',out=&gt;[[type=&gt;text,content=&gt;'/']]],
        [
         type=&gt;text,
         content=&gt;' exists, then the result is just a...'],
-       [
-        type=&gt;inline_code,
-        code=&gt;'obj',
-        out=&gt;[[type=&gt;text,content=&gt;'obj']]],
+       [type=&gt;inline_code,code=&gt;'obj',out=&gt;[[type=&gt;text,content=&gt;'obj']]],
        [
         type=&gt;text,
         content=&gt;' (same obj data in both situations...'],
-       [
-        type=&gt;inline_code,
-        code=&gt;'/',
-        out=&gt;[[type=&gt;text,content=&gt;'/']]],
+       [type=&gt;inline_code,code=&gt;'/',out=&gt;[[type=&gt;text,content=&gt;'/']]],
        [
         type=&gt;text,
         content=&gt;' usage provides the uri of the obj...']]],
@@ -1852,89 +1746,44 @@ mtron&gt; *&lt;fs:skills/mtron/SKILL.md&gt;
       out=&gt;[[
     type=&gt;text,
     content=&gt;'URIs in mtron form a tree structur...']]],
-     [
-      type=&gt;p,
-      text=&gt;"""**Key Concepts:**
-   """,
-      out=&gt;[[
-    type=&gt;strong,
-    text=&gt;'**Key Concepts:**',
-    out=&gt;[[type=&gt;text,content=&gt;'Key Concepts:']]]]],
+     [type=&gt;p,text=&gt;"""**Key Concepts:**
+   """,out=&gt;[[type=&gt;strong,text=&gt;'**Key Concepts:**',out=&gt;[[type=&gt;text,content=&gt;'Key Concepts:']]]]],
      [
       type=&gt;b_list,
-      out=&gt;[
-       [
-        type=&gt;entry,
-        out=&gt;[[
+      out=&gt;[[type=&gt;entry,out=&gt;[[
     type=&gt;p,
     text=&gt;"**Node URI** (no trailing `/`): Po...",
     out=&gt;[
-     [
-      type=&gt;strong,
-      text=&gt;'**Node URI**',
-      out=&gt;[[type=&gt;text,content=&gt;'Node URI']]],
+     [type=&gt;strong,text=&gt;'**Node URI**',out=&gt;[[type=&gt;text,content=&gt;'Node URI']]],
      [type=&gt;text,content=&gt;' (no trailing '],
-     [
-      type=&gt;inline_code,
-      code=&gt;'/',
-      out=&gt;[[type=&gt;text,content=&gt;'/']]],
+     [type=&gt;inline_code,code=&gt;'/',out=&gt;[[type=&gt;text,content=&gt;'/']]],
      [
       type=&gt;text,
-      content=&gt;'): Points to an obj attached at th...']]]]],
-       [
-        type=&gt;entry,
-        out=&gt;[[
+      content=&gt;'): Points to an obj attached at th...']]]]],[type=&gt;entry,out=&gt;[[
     type=&gt;p,
     text=&gt;"**Branch URI** (trailing `/`): Ret...",
     out=&gt;[
-     [
-      type=&gt;strong,
-      text=&gt;'**Branch URI**',
-      out=&gt;[[type=&gt;text,content=&gt;'Branch URI']]],
+     [type=&gt;strong,text=&gt;'**Branch URI**',out=&gt;[[type=&gt;text,content=&gt;'Branch URI']]],
      [type=&gt;text,content=&gt;' (trailing '],
-     [
-      type=&gt;inline_code,
-      code=&gt;'/',
-      out=&gt;[[type=&gt;text,content=&gt;'/']]],
+     [type=&gt;inline_code,code=&gt;'/',out=&gt;[[type=&gt;text,content=&gt;'/']]],
      [type=&gt;text,content=&gt;'): Returns a '],
-     [
-      type=&gt;inline_code,
-      code=&gt;'uri=&gt;obj',
-      out=&gt;[[type=&gt;text,content=&gt;'uri=&gt;obj']]],
-     [type=&gt;text,content=&gt;' relation for all matches']]]]],
-       [
-        type=&gt;entry,
-        out=&gt;[[
+     [type=&gt;inline_code,code=&gt;'uri=&gt;obj',out=&gt;[[type=&gt;text,content=&gt;'uri=&gt;obj']]],
+     [type=&gt;text,content=&gt;' relation for all matches']]]]],[type=&gt;entry,out=&gt;[[
     type=&gt;p,
     text=&gt;"**`&lt;&lt;` (left-shift)**: Applied to ...",
     out=&gt;[
-     [
-      type=&gt;strong,
-      text=&gt;"**`&lt;&lt;` (left-shift)**",
-      out=&gt;[
-       [
-        type=&gt;inline_code,
-        code=&gt;'&lt;&lt;',
-        out=&gt;[[type=&gt;text,content=&gt;'&lt;&lt;']]],
-       [type=&gt;text,content=&gt;' (left-shift)']]],
+     [type=&gt;strong,text=&gt;"**`&lt;&lt;` (left-shift)**",out=&gt;[
+    [type=&gt;inline_code,code=&gt;'&lt;&lt;',out=&gt;[[type=&gt;text,content=&gt;'&lt;&lt;']]],
+    [type=&gt;text,content=&gt;' (left-shift)']]],
      [
       type=&gt;text,
-      content=&gt;': Applied to a relation, returns j...']]]]],
-       [
-        type=&gt;entry,
-        out=&gt;[[
+      content=&gt;': Applied to a relation, returns j...']]]]],[type=&gt;entry,out=&gt;[[
     type=&gt;p,
     text=&gt;"**`+` wildcard**: Matches exactly ...",
     out=&gt;[
-     [
-      type=&gt;strong,
-      text=&gt;"**`+` wildcard**",
-      out=&gt;[
-       [
-        type=&gt;inline_code,
-        code=&gt;'+',
-        out=&gt;[[type=&gt;text,content=&gt;'+']]],
-       [type=&gt;text,content=&gt;' wildcard']]],
+     [type=&gt;strong,text=&gt;"**`+` wildcard**",out=&gt;[
+    [type=&gt;inline_code,code=&gt;'+',out=&gt;[[type=&gt;text,content=&gt;'+']]],
+    [type=&gt;text,content=&gt;' wildcard']]],
      [
       type=&gt;text,
       content=&gt;': Matches exactly one path segment...']]]]]]],
@@ -1970,57 +1819,30 @@ mtron&gt; *&lt;fs:skills/mtron/SKILL.md&gt;
       out=&gt;[[
     type=&gt;text,
     content=&gt;'*/m/+/.&lt;&lt;.as(json_str::T)  # Retur...']]],
-     [
-      type=&gt;p,
-      text=&gt;"""**Why this works:**
-   """,
-      out=&gt;[[
-    type=&gt;strong,
-    text=&gt;'**Why this works:**',
-    out=&gt;[[type=&gt;text,content=&gt;'Why this works:']]]]],
+     [type=&gt;p,text=&gt;"""**Why this works:**
+   """,out=&gt;[[type=&gt;strong,text=&gt;'**Why this works:**',out=&gt;[[type=&gt;text,content=&gt;'Why this works:']]]]],
      [
       type=&gt;o_list,
       start=&gt;1,
-      out=&gt;[
-       [
-        type=&gt;entry,
-        out=&gt;[[
+      out=&gt;[[type=&gt;entry,out=&gt;[[
     type=&gt;p,
     text=&gt;"`*/path/+/` - dereferences all URI...",
     out=&gt;[
-     [
-      type=&gt;inline_code,
-      code=&gt;'*/path/+/',
-      out=&gt;[[type=&gt;text,content=&gt;'*/path/+/']]],
+     [type=&gt;inline_code,code=&gt;'*/path/+/',out=&gt;[[type=&gt;text,content=&gt;'*/path/+/']]],
      [
       type=&gt;text,
       content=&gt;' - dereferences all URIs one level...'],
-     [
-      type=&gt;inline_code,
-      code=&gt;'path',
-      out=&gt;[[type=&gt;text,content=&gt;'path']]],
+     [type=&gt;inline_code,code=&gt;'path',out=&gt;[[type=&gt;text,content=&gt;'path']]],
      [type=&gt;text,content=&gt;', returning '],
-     [
-      type=&gt;inline_code,
-      code=&gt;'uri=&gt;obj',
-      out=&gt;[[type=&gt;text,content=&gt;'uri=&gt;obj']]],
-     [type=&gt;text,content=&gt;' relations']]]]],
-       [
-        type=&gt;entry,
-        out=&gt;[[
+     [type=&gt;inline_code,code=&gt;'uri=&gt;obj',out=&gt;[[type=&gt;text,content=&gt;'uri=&gt;obj']]],
+     [type=&gt;text,content=&gt;' relations']]]]],[type=&gt;entry,out=&gt;[[
     type=&gt;p,
     text=&gt;"`.&lt;&lt;` - extracts just the keys (UR...",
     out=&gt;[
-     [
-      type=&gt;inline_code,
-      code=&gt;'.&lt;&lt;',
-      out=&gt;[[type=&gt;text,content=&gt;'.&lt;&lt;']]],
+     [type=&gt;inline_code,code=&gt;'.&lt;&lt;',out=&gt;[[type=&gt;text,content=&gt;'.&lt;&lt;']]],
      [
       type=&gt;text,
-      content=&gt;' - extracts just the keys (URIs) f...']]]]],
-       [
-        type=&gt;entry,
-        out=&gt;[[
+      content=&gt;' - extracts just the keys (URIs) f...']]]]],[type=&gt;entry,out=&gt;[[
     type=&gt;p,
     text=&gt;'Result is a set of child URIs that...',
     out=&gt;[[
@@ -2042,14 +1864,8 @@ mtron&gt; *&lt;fs:skills/mtron/SKILL.md&gt;
       out=&gt;[[
     type=&gt;text,
     content=&gt;'*local:software/+/.&lt;&lt;      # Child...']]],
-     [
-      type=&gt;p,
-      text=&gt;"""**Depth-first (all descendants):**
-   """,
-      out=&gt;[[
-    type=&gt;strong,
-    text=&gt;'**Depth-first (all descendants):**',
-    out=&gt;[[type=&gt;text,content=&gt;'Depth-first (all descendants):']]]]],
+     [type=&gt;p,text=&gt;"""**Depth-first (all descendants):**
+   """,out=&gt;[[type=&gt;strong,text=&gt;'**Depth-first (all descendants):**',out=&gt;[[type=&gt;text,content=&gt;'Depth-first (all descendants):']]]]],
      [
       type=&gt;code,
       lang=&gt;'mtron',
@@ -2057,11 +1873,7 @@ mtron&gt; *&lt;fs:skills/mtron/SKILL.md&gt;
       out=&gt;[[
     type=&gt;text,
     content=&gt;'*/m/#/.&lt;&lt;                  # All U...']]],
-     [
-      type=&gt;head,
-      level=&gt;4,
-      text=&gt;'Obj Documentation',
-      out=&gt;[[type=&gt;text,content=&gt;'Obj Documentation']]],
+     [type=&gt;head,level=&gt;4,text=&gt;'Obj Documentation',out=&gt;[[type=&gt;text,content=&gt;'Obj Documentation']]],
      [
       type=&gt;p,
       text=&gt;'Any obj can have documentation. Us...',
@@ -2069,10 +1881,7 @@ mtron&gt; *&lt;fs:skills/mtron/SKILL.md&gt;
        [
         type=&gt;text,
         content=&gt;'Any obj can have documentation. Us...'],
-       [
-        type=&gt;inline_code,
-        code=&gt;'?docq',
-        out=&gt;[[type=&gt;text,content=&gt;'?docq']]],
+       [type=&gt;inline_code,code=&gt;'?docq',out=&gt;[[type=&gt;text,content=&gt;'?docq']]],
        [type=&gt;text,content=&gt;' suffix to retrieve it:']]],
      [
       type=&gt;code,
@@ -2087,18 +1896,10 @@ mtron&gt; *&lt;fs:skills/mtron/SKILL.md&gt;
       out=&gt;[[
     type=&gt;text,
     content=&gt;'This is useful for learning about ...']]],
-     [
-      type=&gt;code,
-      lang=&gt;'mtron',
-      code=&gt;"""*from
-   """,
-      out=&gt;[[type=&gt;text,content=&gt;"""*from
+     [type=&gt;code,lang=&gt;'mtron',code=&gt;"""*from
+   """,out=&gt;[[type=&gt;text,content=&gt;"""*from
    """]]],
-     [
-      type=&gt;head,
-      level=&gt;2,
-      text=&gt;'Step 2: Load Reference (one only)',
-      out=&gt;[[type=&gt;text,content=&gt;'Step 2: Load Reference (one only)']]],
+     [type=&gt;head,level=&gt;2,text=&gt;'Step 2: Load Reference (one only)',out=&gt;[[type=&gt;text,content=&gt;'Step 2: Load Reference (one only)']]],
      [
       type=&gt;p,
       text=&gt;"""| Goal | Reference |
@@ -2109,11 +1910,7 @@ mtron&gt; *&lt;fs:skills/mtron/SKILL.md&gt;
        [type=&gt;text,content=&gt;'|------|-----------|'],
        [type=&gt;soft_break],
        [type=&gt;text,content=&gt;'| Questions | '],
-       [
-        type=&gt;edge,
-        uri=&gt;&lt;references/answer-questions.md&gt;,
-        text=&gt;'answer-questions.md',
-        out=&gt;[[type=&gt;text,content=&gt;'answer-questions.md']]],
+       [type=&gt;edge,uri=&gt;&lt;references/answer-questions.md&gt;,text=&gt;'answer-questions.md',out=&gt;[[type=&gt;text,content=&gt;'answer-questions.md']]],
        [type=&gt;text,content=&gt;' |'],
        [type=&gt;soft_break],
        [type=&gt;text,content=&gt;'| Data sources | '],
@@ -2149,11 +1946,7 @@ mtron&gt; *&lt;fs:skills/mtron/SKILL.md&gt;
        [type=&gt;text,content=&gt;' |'],
        [type=&gt;soft_break],
        [type=&gt;text,content=&gt;'| HTTP page fetching | '],
-       [
-        type=&gt;edge,
-        uri=&gt;&lt;references/http-page-fetching.md&gt;,
-        text=&gt;'http-page-fetching.md',
-        out=&gt;[[type=&gt;text,content=&gt;'http-page-fetching.md']]],
+       [type=&gt;edge,uri=&gt;&lt;references/http-page-fetching.md&gt;,text=&gt;'http-page-fetching.md',out=&gt;[[type=&gt;text,content=&gt;'http-page-fetching.md']]],
        [type=&gt;text,content=&gt;' |'],
        [type=&gt;soft_break],
        [type=&gt;text,content=&gt;'| MCP server architecture | '],
@@ -2180,11 +1973,7 @@ mtron&gt; *&lt;fs:skills/mtron/SKILL.md&gt;
     out=&gt;[[
     type=&gt;text,
     content=&gt;'Load only the relevant reference f...']]]]],
-     [
-      type=&gt;head,
-      level=&gt;2,
-      text=&gt;'Step 3: Confirm Plan (if needed)',
-      out=&gt;[[type=&gt;text,content=&gt;'Step 3: Confirm Plan (if needed)']]],
+     [type=&gt;head,level=&gt;2,text=&gt;'Step 3: Confirm Plan (if needed)',out=&gt;[[type=&gt;text,content=&gt;'Step 3: Confirm Plan (if needed)']]],
      [
       type=&gt;p,
       text=&gt;'Required for: writes, expensive re...',
@@ -2199,49 +1988,20 @@ mtron&gt; *&lt;fs:skills/mtron/SKILL.md&gt;
     type=&gt;text,
     content=&gt;"""I'll help you &lt;goal&gt;. Steps:
    1. &lt;s..."""]]],
-     [
-      type=&gt;head,
-      level=&gt;2,
-      text=&gt;'Step 4: Execute',
-      out=&gt;[[type=&gt;text,content=&gt;'Step 4: Execute']]],
+     [type=&gt;head,level=&gt;2,text=&gt;'Step 4: Execute',out=&gt;[[type=&gt;text,content=&gt;'Step 4: Execute']]],
      [
       type=&gt;o_list,
       start=&gt;1,
-      out=&gt;[
-       [
-        type=&gt;entry,
-        out=&gt;[[
-    type=&gt;p,
-    text=&gt;"""Run expressions
-   """,
-    out=&gt;[[type=&gt;text,content=&gt;'Run expressions']]]]],
-       [
-        type=&gt;entry,
-        out=&gt;[[
-    type=&gt;p,
-    text=&gt;"""Validate results after each step
-   """,
-    out=&gt;[[type=&gt;text,content=&gt;'Validate results after each step']]]]],
-       [
-        type=&gt;entry,
-        out=&gt;[[
+      out=&gt;[[type=&gt;entry,out=&gt;[[type=&gt;p,text=&gt;"""Run expressions
+   """,out=&gt;[[type=&gt;text,content=&gt;'Run expressions']]]]],[type=&gt;entry,out=&gt;[[type=&gt;p,text=&gt;"""Validate results after each step
+   """,out=&gt;[[type=&gt;text,content=&gt;'Validate results after each step']]]]],[type=&gt;entry,out=&gt;[[
     type=&gt;p,
     text=&gt;'On errors: explain + propose alter...',
     out=&gt;[[
     type=&gt;text,
-    content=&gt;'On errors: explain + propose alter...']]]]],
-       [
-        type=&gt;entry,
-        out=&gt;[[
-    type=&gt;p,
-    text=&gt;"""Iterate as needed
-   """,
-    out=&gt;[[type=&gt;text,content=&gt;'Iterate as needed']]]]]]],
-     [
-      type=&gt;head,
-      level=&gt;2,
-      text=&gt;'Step 5: Summarize',
-      out=&gt;[[type=&gt;text,content=&gt;'Step 5: Summarize']]],
+    content=&gt;'On errors: explain + propose alter...']]]]],[type=&gt;entry,out=&gt;[[type=&gt;p,text=&gt;"""Iterate as needed
+   """,out=&gt;[[type=&gt;text,content=&gt;'Iterate as needed']]]]]]],
+     [type=&gt;head,level=&gt;2,text=&gt;'Step 5: Summarize',out=&gt;[[type=&gt;text,content=&gt;'Step 5: Summarize']]],
      [
       type=&gt;code,
       code=&gt;"""Done. Summary:
@@ -2274,13 +2034,7 @@ mtron&gt; *ollama:+.
     think=&gt;[=&gt;],
     skill=&gt;[completion,tools,thinking],
     size=&gt;gB::4.8665,
-    feature=&gt;[
-     memory=&gt;[
-      mem=&gt;!@/usr/ai/memory,
-      max=&gt;5],
-     tool=&gt;[!*eval],
-     think=&gt;print(id()),
-     response=&gt;[to=&gt;to(/usr/ai/response)]]]@ollama:qwen3:latest</code></pre>
+    feature=&gt;[memory=&gt;[mem=&gt;!@/usr/ai/memory,max=&gt;5],tool=&gt;[!*eval],think=&gt;print(id()),response=&gt;[to=&gt;to(/usr/ai/response)]]]@ollama:qwen3:latest</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -2347,7 +2101,7 @@ mtron&gt; *ollama:+.
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; @ai.chat("I need you evaluate the mtron expresion `-&lt;[_=&gt;_]&gt;&gt;.&gt;-[,]-&lt;[_,-&lt;[_=&gt;_]&gt;&gt;]&gt;&gt;.&gt;-` with a lhs of `1`. Please don't tell me the result of the evaluation until I ask for it sometime in the near future.")
-==&gt;fail::[error during START: java.util.concurrent.RejectedExecutionException: Task java.util.concurrent.CompletableFuture$AsyncSupply@5e0fdcf2 rejected from java.util.concurrent.ThreadPoolExecutor@6b927fb[Terminated, pool size = 0, active threads = 0, queued tasks = 0, completed tasks = 0]][...]@/sys/fail/6</code></pre>
+==&gt;'The evaluation of the mtron expression with the given lhs has been completed. I will provide the result when you ask for it.'</code></pre>
 </div>
 </div>
 <div class="openblock card">
@@ -2398,9 +2152,7 @@ mtron&gt; *ollama:+.
      ceil?real&lt;=#{?}(real::T),
      floor?real&lt;=#{?}(real::T),
      round?int&lt;=#{?}(real::T)],
-    const=&gt;[
-     2.7183@/m/math/e?constq,
-     3.1416@/m/math/pi?constq]]@/m/math</code></pre>
+    const=&gt;[2.7183@/m/math/e?constq,3.1416@/m/math/pi?constq]]@/m/math</code></pre>
 </div>
 </div>
 </div>
@@ -2469,30 +2221,32 @@ mtron&gt; tB::1.0.as(mB::T)     ​3​
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; @ai.chat("It's been many years since we last talked. For I am a tired, old man. Before I let my last breathe flutter into this world, I must know one last thing. Please tell me, what was the result of the mtron expression I provided you all those years ago?")
-==&gt;"The result of the mtron expression `-&lt;[_=&gt;_]&gt;&gt;.&gt;-[,]-&lt;[_,-&lt;[_=&gt;_]&gt;&gt;]&gt;&gt;.&gt;-` with a lhs of `1` was **`1`**."
+==&gt;"The result of the mtron expression you provided was `1`."
 mtron&gt; */usr/ai/memory/+
-==&gt;[
-    contents=&gt;[[
+==&gt;[contents=&gt;[[
     text=&gt;"It's been many years since we last...",
-    type=&gt;'TEXT']],
-    type=&gt;USER]
+    type=&gt;'TEXT']],type=&gt;USER]
+==&gt;[
+    text=&gt;'The evaluation of the mtron expres...',
+    toolExecutionRequests=&gt;[,],
+    attributes=&gt;[=&gt;],
+    type=&gt;AI]
+==&gt;[toolExecutionRequests=&gt;[[
+    id=&gt;call_a57bp70z,
+    name=&gt;m_inst_eval,
+    arguments=&gt;'{"object":"-&lt;[_=&gt;_]&gt;&gt;.&gt;-[,]-&lt;[_,-&lt;...']],attributes=&gt;[=&gt;],type=&gt;AI]
 ==&gt;[
     text=&gt;'The result of the mtron expression...',
     toolExecutionRequests=&gt;[,],
     attributes=&gt;[=&gt;],
     type=&gt;AI]
 ==&gt;[
-    contents=&gt;[[
-    text=&gt;'I need you evaluate the mtron expr...',
-    type=&gt;'TEXT']],
-    type=&gt;USER]
-==&gt;[
-    toolExecutionRequests=&gt;[[
-    id=&gt;call_sdhquzhr,
-    name=&gt;m_inst_eval,
-    arguments=&gt;'{"lhs":"1","object":"-&lt;[_=&gt;_]&gt;&gt;.&gt;-...']],
+    id=&gt;call_a57bp70z,
+    toolName=&gt;m_inst_eval,
+    contents=&gt;[[text=&gt;1,type=&gt;'TEXT']],
+    isError=&gt;false,
     attributes=&gt;[=&gt;],
-    type=&gt;AI]</code></pre>
+    type=&gt;'TOOL_EXECUTION_RESULT']</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -2524,87 +2278,72 @@ mtron&gt; */usr/ai/memory/+
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; mcp_client::[host =&gt;
         &lt;ws://localhost:8555/mcp&gt;
        ]@/usr/ai/mcp/mtron     ​1​
-==&gt;ERROR: rejectedexecutionexception: Task java.util.concurrent.CompletableFuture$AsyncSupply@7d284f15 rejected from java.util.concurrent.ThreadPoolExecutor@6b927fb[Terminated, pool size = 0, active threads = 0, queued tasks = 0, completed tasks = 0]
-  	java.util.concurrent.ThreadPoolExecutor$AbortPolicy [line 2032]
-  	java.util.concurrent.ThreadPoolExecutor [line 787]
-  	java.util.concurrent.ThreadPoolExecutor [line 1328]
-  	studio.phaseshift.metatron.isa.sys.type_.ThreadExecutor [line 117]
-  	java.util.concurrent.CompletableFuture [line 2761]
-  	jdk.internal.net.http.MultiExchange [line 311]
-  	jdk.internal.net.http.HttpClientImpl [line 1015]
-  	jdk.internal.net.http.HttpClientImpl [line 959]
-  	jdk.internal.net.http.HttpClientImpl [line 951]
-  	jdk.internal.net.http.HttpClientFacade [line 143]
-  	jdk.internal.net.http.websocket.OpeningHandshake [line 185]
-  	jdk.internal.net.http.websocket.WebSocketImpl [line 143]
-  	jdk.internal.net.http.websocket.BuilderImpl [line 120]
-  	dev.langchain4j.mcp.client.transport.websocket.WebSocketMcpTransport [line 117]
-  	dev.langchain4j.mcp.client.transport.websocket.WebSocketMcpTransport [line 102]
-  	dev.langchain4j.mcp.client.DefaultMcpClient [line 218]
-  	dev.langchain4j.mcp.client.DefaultMcpClient [line 206]
-  	dev.langchain4j.mcp.client.DefaultMcpClient$Builder [line 1103]
-  	studio.phaseshift.metatron.isa.llm.type.mcpClient [line 96]
-  	studio.phaseshift.metatron.isa.web.webInstSet [line 216]
-  	studio.phaseshift.metatron.isa.m.type.Inst$f [line 688]
-  	studio.phaseshift.metatron.isa.m.type.Inst [line 329]
-  	studio.phaseshift.metatron.isa.m.type.Obj$Helper [line 919]
-  	studio.phaseshift.metatron.isa.m.type.impl.MObj [line 46]
-  	studio.phaseshift.metatron.isa.m.type.impl.MRec [line 76]
-  	studio.phaseshift.metatron.isa.m.parser.mParser [line 207]
-  	org.petitparser.parser.actions.ActionParser [line 39]
-  	org.petitparser.parser.combinators.DelegateParser [line 25]
-  	org.petitparser.parser.combinators.ChoiceParser [line 34]
-  	org.petitparser.parser.combinators.DelegateParser [line 25]
-  	org.petitparser.parser.combinators.ChoiceParser [line 34]
-  	org.petitparser.parser.combinators.OptionalParser [line 23]
-  	org.petitparser.parser.combinators.SequenceParser [line 25]
-  	org.petitparser.parser.actions.ActionParser [line 37]
-  	org.petitparser.parser.combinators.ChoiceParser [line 34]
-  	org.petitparser.parser.combinators.SequenceParser [line 25]
-  	org.petitparser.parser.actions.ActionParser [line 37]
-  	org.petitparser.parser.combinators.SequenceParser [line 25]
-  	org.petitparser.parser.actions.ActionParser [line 37]
-  	org.petitparser.parser.Parser [line 76]
-  	studio.phaseshift.metatron.isa.m.parser.mParser [line 421]
-  	studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer [line 89]
-  	studio.phaseshift.metatron.docs.MtronDocPreprocessor [line 196]
-  	studio.phaseshift.metatron.docs.MtronDocPreprocessor [line 91]
-  	studio.phaseshift.metatron.docs.DocRunner [line 206]
+==&gt;mcp_client::[
+    host=&gt;ws://localhost:8555/mcp,
+    status=&gt;!inst?bool&lt;=#{?}(),
+    tool=&gt;[
+     write_memory=&gt;inst?#{?}&lt;=#{?}(current_memory=&gt;'',previous_memory=&gt;''),
+     read_memory=&gt;inst?#{?}&lt;=#{?}(memory_vid=&gt;''),
+     eval_mtron=&gt;inst?#{?}&lt;=#{?}(code=&gt;''),
+     list_space=&gt;inst?#{?}&lt;=#{?}(),
+     router_info=&gt;inst?#{?}&lt;=#{?}(),
+     find_inst=&gt;inst?#{?}&lt;=#{?}(pattern=&gt;'',dom=&gt;'',rng=&gt;''),
+     spawn_wsclient=&gt;inst?#{?}&lt;=#{?}(host=&gt;'',on_message=&gt;''),
+     spawn_wshandler=&gt;inst?#{?}&lt;=#{?}(host=&gt;'',on_message=&gt;'')]]@/usr/ai/mcp/mtron
 mtron&gt; mcp_client::[host =&gt;
         &lt;http://127.0.0.1:29170/index-mcp/streamable-http&gt;
        ]@/usr/ai/mcp/intellij     ​2​
-==&gt;ERROR: java.util.concurrent.RejectedExecutionException: Task java.util.concurrent.CompletableFuture$AsyncSupply@77c23d90 rejected from java.util.concurrent.ThreadPoolExecutor@6b927fb[Terminated, pool size = 0, active threads = 0, queued tasks = 0, completed tasks = 0]: java.util.concurrent.RejectedExecutionException: Task java.util.concurrent.CompletableFuture$AsyncSupply@77c23d90 rejected from java.util.concurrent.ThreadPoolExecutor@6b927fb[Terminated, pool size = 0, active threads = 0, queued tasks = 0, completed tasks = 0]
-  	dev.langchain4j.mcp.client.DefaultMcpClient [line 233]
-  	dev.langchain4j.mcp.client.DefaultMcpClient [line 206]
-  	dev.langchain4j.mcp.client.DefaultMcpClient$Builder [line 1103]
-  	studio.phaseshift.metatron.isa.llm.type.mcpClient [line 96]
-  	studio.phaseshift.metatron.isa.web.webInstSet [line 216]
-  	studio.phaseshift.metatron.isa.m.type.Inst$f [line 688]
-  	studio.phaseshift.metatron.isa.m.type.Inst [line 329]
-  	studio.phaseshift.metatron.isa.m.type.Obj$Helper [line 919]
-  	studio.phaseshift.metatron.isa.m.type.impl.MObj [line 46]
-  	studio.phaseshift.metatron.isa.m.type.impl.MRec [line 76]
-  	studio.phaseshift.metatron.isa.m.parser.mParser [line 207]
-  	org.petitparser.parser.actions.ActionParser [line 39]
-  	org.petitparser.parser.combinators.DelegateParser [line 25]
-  	org.petitparser.parser.combinators.ChoiceParser [line 34]
-  	org.petitparser.parser.combinators.DelegateParser [line 25]
-  	org.petitparser.parser.combinators.ChoiceParser [line 34]
-  	org.petitparser.parser.combinators.OptionalParser [line 23]
-  	org.petitparser.parser.combinators.SequenceParser [line 25]
-  	org.petitparser.parser.actions.ActionParser [line 37]
-  	org.petitparser.parser.combinators.ChoiceParser [line 34]
-  	org.petitparser.parser.combinators.SequenceParser [line 25]
-  	org.petitparser.parser.actions.ActionParser [line 37]
-  	org.petitparser.parser.combinators.SequenceParser [line 25]
-  	org.petitparser.parser.actions.ActionParser [line 37]
-  	org.petitparser.parser.Parser [line 76]
-  	studio.phaseshift.metatron.isa.m.parser.mParser [line 421]
-  	studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer [line 89]
-  	studio.phaseshift.metatron.docs.MtronDocPreprocessor [line 196]
-  	studio.phaseshift.metatron.docs.MtronDocPreprocessor [line 91]
-  	studio.phaseshift.metatron.docs.DocRunner [line 206]
-mtron&gt; */usr/ai/mcp/intellij&gt;&gt;tool.dom()     ​3​</code></pre>
+==&gt;mcp_client::[
+    host=&gt;&lt;http://127.0.0.1:29170/index-mcp/streamable-http&gt;,
+    status=&gt;!inst?bool&lt;=#{?}(),
+    tool=&gt;[
+     ide_find_implementations=&gt;inst?#{?}&lt;=#{?}(project_path=&gt;'Absolute path to the project root. Required when multiple projects are open. For workspace projects, use the sub-project path.',file=&gt;'Project-relative file path, or a dependency/library absolute path or jar:// URL previously returned by the plugin. Required for position-based lookup.',line=&gt;'1-based line number',column=&gt;'1-based column number',language=&gt;"Language of the symbol. Required when using 'symbol' parameter. Currently supported languages: Java.",symbol=&gt;"Fully qualified symbol reference. Format: 'com.example.ClassName' or 'com.example.ClassName#memberName'. Omit generics parameters.",scope=&gt;'Search scope. Default: project_files.',cursor=&gt;'Pagination cursor from a previous response. When provided, returns the next page of results. Search parameters are ignored; project_path and pageSize may still be provided.',pageSize=&gt;'Results per page. Default: 100, max: 500.'),
+     ide_refactor_safe_delete=&gt;inst?#{?}&lt;=#{?}(project_path=&gt;'Absolute path to the project root. Required when multiple projects are open. For workspace projects, use the sub-project path.',file=&gt;'Path to file relative to project root. REQUIRED.',line=&gt;"1-based line number where the symbol is located. REQUIRED when target_type='symbol' (default).",column=&gt;"1-based column number. REQUIRED when target_type='symbol' (default).",target_type=&gt;"What to delete: 'symbol' (default, requires line+column) or 'file' (deletes entire file if no external usages).",force=&gt;'Force deletion even if usages exist. Default: false. Use with caution!'),
+     ide_find_definition=&gt;inst?#{?}&lt;=#{?}(project_path=&gt;'Absolute path to the project root. Required when multiple projects are open. For workspace projects, use the sub-project path.',file=&gt;'Project-relative file path, or a dependency/library absolute path or jar:// URL previously returned by the plugin. Required for position-based lookup.',line=&gt;'1-based line number',column=&gt;'1-based column number',language=&gt;"Language of the symbol. Required when using 'symbol' parameter. Currently supported languages: Java.",symbol=&gt;"Fully qualified symbol reference. Format: 'com.example.ClassName' or 'com.example.ClassName#memberName'. Omit generics parameters.",fullElementPreview=&gt;'If true, returns the complete element code instead of a preview snippet. Optional, defaults to false.',maxPreviewLines=&gt;'Maximum lines for fullElementPreview. Truncates large classes/functions. Default: 50, Max: 500. Only used when fullElementPreview=true.'),
+     ide_find_class=&gt;inst?#{?}&lt;=#{?}(project_path=&gt;'Absolute path to the project root. Required when multiple projects are open. For workspace projects, use the sub-project path.',query=&gt;'Search pattern. Supports substring and camelCase matching. Required for fresh search, ignored when cursor is provided.',scope=&gt;'Search scope. Default: project_files.',language=&gt;'Filter results by language (e.g., "Kotlin", "Java", "Python"). Case-insensitive. Optional.',matchMode=&gt;'How to match the query. Default: "substring".',limit=&gt;'Maximum results per page (deprecated, use pageSize). Default: 25, max: 500.',cursor=&gt;'Pagination cursor from a previous response. When provided, returns the next page of results. Search parameters are ignored; project_path and pageSize may still be provided.',pageSize=&gt;'Results per page. Default: 25, max: 500.'),
+     ide_read_file=&gt;inst?#{?}&lt;=#{?}(project_path=&gt;'Absolute path to the project root. Required when multiple projects are open. For workspace projects, use the sub-project path.',file=&gt;'File path (relative, absolute, jar path with jar!/, or jar:// URL).',qualifiedName=&gt;'Fully qualified class name (e.g., java.util.ArrayList).',startLine=&gt;'Starting line number (1-based, inclusive).',endLine=&gt;'Ending line number (1-based, inclusive).'),
+     ide_diagnostics=&gt;inst?#{?}&lt;=#{?}(project_path=&gt;'Absolute path to the project root. Required when multiple projects are open. For workspace projects, use the sub-project path.',file=&gt;"Path to file relative to project root (e.g., 'src/main/java/com/example/MyClass.java'). Optional — enables per-file code analysis.",line=&gt;'1-based line number for intention lookup. Optional, defaults to 1. Requires file.',column=&gt;'1-based column number for intention lookup. Optional, defaults to 1. Requires file.',startLine=&gt;'Filter problems to start from this line. Optional. Requires file.',endLine=&gt;'Filter problems to end at this line. Optional. Requires file.',includeBuildErrors=&gt;'Include errors/warnings from the last build. Default: false.',includeTestResults=&gt;'Include test results from open test run tabs. Default: false.',severity=&gt;'Filter by severity across all sources. Default: all.',testResultFilter=&gt;"Filter test results: 'failed' (default) or 'all'.",maxBuildErrors=&gt;'Max build errors to return. Default: 100, max: 500.',maxTestResults=&gt;'Max test results to return. Default: 100, max: 500.'),
+     ide_optimize_imports=&gt;inst?#{?}&lt;=#{?}(project_path=&gt;'Absolute path to the project root. Required when multiple projects are open. For workspace projects, use the sub-project path.',file=&gt;'Path to the file relative to project root'),
+     ide_reformat_code=&gt;inst?#{?}&lt;=#{?}(project_path=&gt;'Absolute path to the project root. Required when multiple projects are open. For workspace projects, use the sub-project path.',file=&gt;'Path to the file relative to project root',startLine=&gt;'Start line for partial formatting (1-based). If provided, endLine is also required.',endLine=&gt;'End line for partial formatting (1-based). If provided, startLine is also required.',optimizeImports=&gt;'Optimize imports (remove unused, organize). Default: true.',rearrangeCode=&gt;'Rearrange code members according to arrangement rules. Default: true.'),
+     ide_move_file=&gt;inst?#{?}&lt;=#{?}(project_path=&gt;'Absolute path to the project root. Required when multiple projects are open. For workspace projects, use the sub-project path.',file=&gt;'Path to the source file to move, relative to project root. REQUIRED.',destination=&gt;"Target directory path relative to project root. The file will be moved into this directory. Created automatically if it doesn't exist. REQUIRED."),
+     ide_search_text=&gt;inst?#{?}&lt;=#{?}(project_path=&gt;'Absolute path to the project root. Required when multiple projects are open. For workspace projects, use the sub-project path.',query=&gt;'Text to search for. Treated as an exact word unless regex is true. Required for fresh search, ignored when cursor is provided.',regex=&gt;'Treat query as a regular expression. Default: false.',context=&gt;'Where to search: "code", "comments", "strings", "all". Default: "all".',caseSensitive=&gt;'Case sensitive search. Default: true.',filePattern=&gt;'IntelliJ file mask to filter files by name, e.g. "*.kt", "*.gradle.kts", "*.java,!*Test.java".',limit=&gt;'Maximum results per page (deprecated, use pageSize). Default: 100, max: 500.',cursor=&gt;'Pagination cursor from a previous response. When provided, returns the next page of results. Search parameters are ignored; project_path and pageSize may still be provided.',pageSize=&gt;'Results per page. Default: 100, max: 500.'),
+     ide_find_file=&gt;inst?#{?}&lt;=#{?}(project_path=&gt;'Absolute path to the project root. Required when multiple projects are open. For workspace projects, use the sub-project path.',query=&gt;'File name pattern. Supports substring and fuzzy matching. Required for fresh search, ignored when cursor is provided.',scope=&gt;'Search scope. Default: project_files.',limit=&gt;'Maximum results per page (deprecated, use pageSize). Default: 25, max: 500.',cursor=&gt;'Pagination cursor from a previous response. When provided, returns the next page of results. Search parameters are ignored; project_path and pageSize may still be provided.',pageSize=&gt;'Results per page. Default: 25, max: 500.'),
+     ide_call_hierarchy=&gt;inst?#{?}&lt;=#{?}(project_path=&gt;'Absolute path to the project root. Required when multiple projects are open. For workspace projects, use the sub-project path.',file=&gt;'Project-relative file path, or a dependency/library absolute path or jar:// URL previously returned by the plugin. Required for position-based lookup.',line=&gt;'1-based line number',column=&gt;'1-based column number',language=&gt;"Language of the symbol. Required when using 'symbol' parameter. Currently supported languages: Java.",symbol=&gt;"Fully qualified symbol reference. Format: 'com.example.ClassName' or 'com.example.ClassName#memberName'. Omit generics parameters.",direction=&gt;"Direction: 'callers' (methods that call this method) or 'callees' (methods this method calls)",depth=&gt;'How many levels deep to traverse the call hierarchy (default: 3, max: 5)',scope=&gt;'Search scope. Default: project_files.'),
+     ide_refactor_rename=&gt;inst?#{?}&lt;=#{?}(project_path=&gt;'Absolute path to the project root. Required when multiple projects are open. For workspace projects, use the sub-project path.',file=&gt;'Path to file relative to project root. REQUIRED.',line=&gt;'1-based line number. Required for symbol rename, omit for file rename.',column=&gt;'1-based column number. Required for symbol rename, omit for file rename.',newName=&gt;"The new name for the symbol or file. REQUIRED. For file renames, include the file extension (e.g., 'new_name.webp').",overrideStrategy=&gt;"Strategy when renaming a method that overrides a base method. 'rename_base' (default): rename the base method and all overrides automatically. 'rename_only_current': rename only the current method. 'ask': show the IDE dialog for interactive choice.",relatedRenamingStrategy=&gt;"Strategy for automatic renaming of related symbols (same-named properties, getters/setters, test classes, variables). 'all' (default): automatically rename all related symbols. 'none': rename only the targeted symbol, skip all automatic related renames. 'accessors_and_tests': only rename getters/setters and test classes/methods. 'ask': show the IDE dialog for each related rename for interactive choice."),
+     ide_find_super_methods=&gt;inst?#{?}&lt;=#{?}(project_path=&gt;'Absolute path to the project root. Required when multiple projects are open. For workspace projects, use the sub-project path.',file=&gt;'Project-relative file path, or a dependency/library absolute path or jar:// URL previously returned by the plugin. Required for position-based lookup.',line=&gt;'1-based line number',column=&gt;'1-based column number',language=&gt;"Language of the symbol. Required when using 'symbol' parameter. Currently supported languages: Java.",symbol=&gt;"Fully qualified symbol reference. Format: 'com.example.ClassName' or 'com.example.ClassName#memberName'. Omit generics parameters."),
+     ide_file_structure=&gt;inst?#{?}&lt;=#{?}(project_path=&gt;'Absolute path to the project root. Required when multiple projects are open. For workspace projects, use the sub-project path.',file=&gt;"Path to file relative to project root (e.g., 'src/main/java/com/example/MyClass.java'). REQUIRED."),
+     ide_find_symbol=&gt;inst?#{?}&lt;=#{?}(project_path=&gt;'Absolute path to the project root. Required when multiple projects are open. For workspace projects, use the sub-project path.',query=&gt;"Search pattern. Matching follows IntelliJ's Go to Symbol popup, including qualified queries. Required for fresh search, ignored when cursor is provided.",scope=&gt;'Search scope. Default: project_files.',language=&gt;'Filter results by language (e.g., "Kotlin", "Java", "Python"). Case-insensitive. Optional.',limit=&gt;'Maximum results per page (deprecated, use pageSize). Default: 25, max: 500.',cursor=&gt;'Pagination cursor from a previous response. When provided, returns the next page of results. Search parameters are ignored; project_path and pageSize may still be provided.',pageSize=&gt;'Results per page. Default: 25, max: 500.'),
+     ide_sync_files=&gt;inst?#{?}&lt;=#{?}(project_path=&gt;'Absolute path to the project root. Required when multiple projects are open. For workspace projects, use the sub-project path.',paths=&gt;'File or directory paths relative to project root to sync. If omitted, syncs the entire project.'),
+     ide_get_active_file=&gt;inst?#{?}&lt;=#{?}(project_path=&gt;'Absolute path to the project root. Required when multiple projects are open. For workspace projects, use the sub-project path.'),
+     ide_index_status=&gt;inst?#{?}&lt;=#{?}(project_path=&gt;'Absolute path to the project root. Required when multiple projects are open. For workspace projects, use the sub-project path.'),
+     ide_build_project=&gt;inst?#{?}&lt;=#{?}(project_path=&gt;'Absolute path to the project root. Required when multiple projects are open. For workspace projects, use the sub-project path.',rebuild=&gt;'Full rebuild instead of incremental build. Default: false.',includeRawOutput=&gt;'Include raw build output log in response. Default: false.',timeoutSeconds=&gt;'Timeout in seconds. Must be a positive integer. No timeout if omitted.'),
+     ide_type_hierarchy=&gt;inst?#{?}&lt;=#{?}(project_path=&gt;'Absolute path to the project root. Required when multiple projects are open. For workspace projects, use the sub-project path.',className=&gt;"Fully qualified class name (e.g., 'com.example.MyClass' for Java or 'App\\Models\\User' for PHP). RECOMMENDED - use this if you know the class name.",file=&gt;"Path to file relative to project root (e.g., 'src/main/java/com/example/MyClass.java'). Use with line and column.",line=&gt;'1-based line number where the class is defined. Required if using file parameter.',column=&gt;'1-based column number. Required if using file parameter.',scope=&gt;'Search scope. Default: project_files.'),
+     ide_find_references=&gt;inst?#{?}&lt;=#{?}(project_path=&gt;'Absolute path to the project root. Required when multiple projects are open. For workspace projects, use the sub-project path.',file=&gt;'Project-relative file path, or a dependency/library absolute path or jar:// URL previously returned by the plugin. Required for position-based lookup.',line=&gt;'1-based line number',column=&gt;'1-based column number',language=&gt;"Language of the symbol. Required when using 'symbol' parameter. Currently supported languages: Java.",symbol=&gt;"Fully qualified symbol reference. Format: 'com.example.ClassName' or 'com.example.ClassName#memberName'. Omit generics parameters.",scope=&gt;'Search scope. Default: project_files.',maxResults=&gt;'Maximum results per page (deprecated, use pageSize). Default: 100, max: 500.',cursor=&gt;'Pagination cursor from a previous response. When provided, returns the next page of results. Search parameters are ignored; project_path and pageSize may still be provided.',pageSize=&gt;'Results per page. Default: 100, max: 500.'),
+     ide_open_file=&gt;inst?#{?}&lt;=#{?}(project_path=&gt;'Absolute path to the project root. Required when multiple projects are open. For workspace projects, use the sub-project path.',file=&gt;'File path relative to project root, or absolute path.',line=&gt;'1-based line number to navigate to.',column=&gt;'1-based column number to navigate to. Requires line to be specified.')]]@/usr/ai/mcp/intellij
+mtron&gt; */usr/ai/mcp/intellij&gt;&gt;tool.dom()     ​3​
+==&gt;ide_find_implementations
+==&gt;ide_refactor_safe_delete
+==&gt;ide_find_definition
+==&gt;ide_find_class
+==&gt;ide_read_file
+==&gt;ide_diagnostics
+==&gt;ide_optimize_imports
+==&gt;ide_reformat_code
+==&gt;ide_move_file
+==&gt;ide_search_text
+==&gt;ide_find_file
+==&gt;ide_call_hierarchy
+==&gt;ide_refactor_rename
+==&gt;ide_find_super_methods
+==&gt;ide_file_structure
+==&gt;ide_find_symbol
+==&gt;ide_sync_files
+==&gt;ide_get_active_file
+==&gt;ide_index_status
+==&gt;ide_build_project
+==&gt;ide_type_hierarchy
+==&gt;ide_find_references
+==&gt;ide_open_file</code></pre>
 </div>
 </div>
 <div class="listingblock">
@@ -2693,7 +2432,7 @@ mcp tool and post process it to derive further more refined statistics not offer
                          kinds =&gt; &gt;&gt;supertypes&gt;&gt;kind&gt;-[,]],
             subs   =&gt; -&lt;[count =&gt; &gt;&gt;subtypes.count(),
                          kinds =&gt; &gt;&gt;subtypes&gt;&gt;kind&gt;-[,]]]
-==&gt;fail::[unable to locate inst-f of /usr/ai/mcp/intellij/tool/ide_type_hierarchy(className=&gt;'studio.phaseshift.metatron.isa.m.type.Obj')@&lt;0&gt;][...]@/sys/fail/92</code></pre>
+==&gt;[supers=&gt;[count=&gt;1,kinds=&gt;[,]],subs=&gt;[count=&gt;1,kinds=&gt;[,]]]</code></pre>
 </div>
 </div>
 <h3 id="sec-agent-notes" class="discrete">agent notes</h3>
@@ -2825,10 +2564,7 @@ Notes are of <strong>crucial importance</strong> and must be acted on immediatel
           params  =&gt; *message&gt;&gt;1](payload=&gt;_){
            *&lt;ws://localhost:8555/mcp/${*message&gt;&gt;0&gt;&gt;1}&gt;&gt;&gt;send.apply(*payload)}}]
 ==&gt;sub::[
-    on_recv=&gt;inst(message=&gt;?lst::T){split(json::[
-     jsonrpc=&gt;'2.0',
-     method=&gt;rshift(0).minus(&lt;ws://localhost:8555/mcp/${*message&gt;&gt;0&gt;&gt;1}${/}&gt;),
-     params=&gt;*message.rshift(1)]).inst(payload=&gt;id()){*&lt;ws://localhost:8555/mcp/${*message&gt;&gt;0&gt;&gt;1}&gt;.rshift(send).apply(*payload)}},
+    on_recv=&gt;inst(message=&gt;?lst::T){split(json::[jsonrpc=&gt;'2.0',method=&gt;rshift(0).minus(&lt;ws://localhost:8555/mcp/${*message&gt;&gt;0&gt;&gt;1}${/}&gt;),params=&gt;*message.rshift(1)]).inst(payload=&gt;id()){*&lt;ws://localhost:8555/mcp/${*message&gt;&gt;0&gt;&gt;1}&gt;.rshift(send).apply(*payload)}},
     target=&gt;ws://localhost:8555/mcp/+/notifications/#]</code></pre>
 </div>
 </div>
@@ -3295,13 +3031,9 @@ Yield the <em>range</em> (<code>&gt;&gt;</code>) of the relation constructed (th
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; nat -&gt; int::T[?&gt;0][-&lt;|[is(lt(0)) =&gt; * -1,_ =&gt; _]&gt;&gt;]     ​1​
-==&gt;int::T[is(gt(0))][choose([
-     is(lt(0))=&gt;mult(-1),
-     id()=&gt;id()]).rshift()]
+==&gt;int::T[is(gt(0))][choose([is(lt(0))=&gt;mult(-1),id()=&gt;id()]).rshift()]
 mtron&gt; *nat     ​2​
-==&gt;int::T[is(gt(0))][choose([
-     is(lt(0))=&gt;mult(-1),
-     id()=&gt;id()]).rshift()]
+==&gt;int::T[is(gt(0))][choose([is(lt(0))=&gt;mult(-1),id()=&gt;id()]).rshift()]
 mtron&gt; nat::2     ​3​
 ==&gt;nat::2
 mtron&gt; nat::-2     ​4​
@@ -3312,9 +3044,7 @@ mtron&gt;  -2.as(nat::T)     ​6​
 ==&gt;fail::[-2 is not a is(gt(0))
      -2=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/12
 mtron&gt;  nat::2 * -1     ​7​
-==&gt;fail::[nat::-2 is not a int::T[is(gt(0))][choose([
-     is(lt(0))=&gt;mult(-1),
-     id()=&gt;id()]).rshift()]][...]@/sys/fail/18</code></pre>
+==&gt;fail::[nat::-2 is not a int::T[is(gt(0))][choose([is(lt(0))=&gt;mult(-1),id()=&gt;id()]).rshift()]][...]@/sys/fail/18</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -3341,7 +3071,7 @@ The predicate component of the type definition tests an <code>int</code> to dete
 <div class="paragraph">
 <p>While every <code>type</code> is an <code>obj</code>, not every <code>obj</code> is a <code>type</code>.
 Those <code>objs</code> that are not <code>types</code> are <em>instances</em> of some <code>type</code>.
-This is the foundation for all other <code>objs</code> in {{m}}m{{y}}e{{c}}T{{y}}a{{m}}T{{c}}R{{y}}o{{b}}N{{X}}.</p>
+This is the foundation for all other <code>objs</code> in {{y}}m{{r}}E{{m}}t{{g}}A{{g}}T{{b}}r{{m}}o{{m}}N{{X}}.</p>
 </div>
 <h4 id="sec-cascading-type-constructions" class="discrete">cascading type constructions</h4>
 <h3 id="sec-mono-types" class="discrete">mono types</h3>
@@ -4141,10 +3871,7 @@ mtron&gt; personx -&gt; rec::T[?[name  =&gt; str::T,
      age=&gt;int::T,
      knows=&gt;personx{*}::T]]
 mtron&gt; marko -&gt; personx::[name=&gt;'marko',age=&gt;29,knows=&gt;!*grant]
-==&gt;personx::[
-    name=&gt;'marko',
-    age=&gt;29,
-    knows=&gt;!*grant]
+==&gt;personx::[name=&gt;'marko',age=&gt;29,knows=&gt;!*grant]
 mtron&gt; grant -&gt; personx::[name=&gt;'grant',age=&gt;23,knows=&gt;!*marko]
 ==&gt;personx::[
     name=&gt;'grant',
@@ -4292,11 +4019,10 @@ mtron&gt; *#.as[name      =&gt; _,
      image::T,
      factory::T,
      mfactory::T,
+     thread_executor::T,
+     thread::T,
      core::T,
-     virtual::T,
-     monad::T,
-     machine::T,
-     swarm::T],
+     virtual::T],
     inst=&gt;[
      lift(#{?}::T),
      rewrite?rec[short=&gt;uri,long=&gt;uri]&lt;=#{?}(uri::T),
@@ -4311,7 +4037,10 @@ mtron&gt; *#.as[name      =&gt; _,
      one?A&lt;=A(),
      which(uri::T),
      inject(int::T,#::T),
-     /m/inst/thread?/m/mach/thread&lt;=#{?}(#::T)]]@/m/mach
+     /m/inst/thread?thread&lt;=#{?}(#::T),
+     stop?thread&lt;=thread(),
+     pause?thread&lt;=thread(),
+     resume?thread&lt;=thread()]]@/m/mach
 mtron&gt; memspace::[
         pattern   =&gt; /usr/#,
         q         =&gt; [
@@ -4358,44 +4087,48 @@ mtron&gt; memspace::[
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; console::[=&gt;]@/usr/ui/console     ​1​
-==&gt;ERROR: rejectedexecutionexception: Task java.util.concurrent.FutureTask@3b1bb3ab[Not completed, task = java.util.concurrent.Executors$RunnableAdapter@7646731d[Wrapped task = studio.phaseshift.metatron.isa.mach.type.ui.console.StatusLine@70e29e14]] rejected from java.util.concurrent.ThreadPoolExecutor@6b927fb[Terminated, pool size = 0, active threads = 0, queued tasks = 0, completed tasks = 0]
-  	java.util.concurrent.ThreadPoolExecutor$AbortPolicy [line 2032]
-  	java.util.concurrent.ThreadPoolExecutor [line 787]
-  	java.util.concurrent.ThreadPoolExecutor [line 1328]
-  	studio.phaseshift.metatron.isa.sys.type_.ThreadExecutor [line 117]
-  	java.util.concurrent.AbstractExecutorService [line 125]
-  	studio.phaseshift.metatron.isa.mach.type.ui.console.Console [line 257]
-  	studio.phaseshift.metatron.isa.mach.type.ui.console.Console [line 178]
-  	studio.phaseshift.metatron.isa.m.type.Inst$f [line 688]
-  	studio.phaseshift.metatron.isa.m.type.Inst [line 329]
-  	studio.phaseshift.metatron.isa.m.type.Obj$Helper [line 919]
-  	studio.phaseshift.metatron.isa.m.type.impl.MObj [line 46]
-  	studio.phaseshift.metatron.isa.m.type.impl.MRec [line 76]
-  	studio.phaseshift.metatron.isa.m.parser.mParser [line 207]
-  	org.petitparser.parser.actions.ActionParser [line 39]
-  	org.petitparser.parser.combinators.DelegateParser [line 25]
-  	org.petitparser.parser.combinators.ChoiceParser [line 34]
-  	org.petitparser.parser.combinators.DelegateParser [line 25]
-  	org.petitparser.parser.combinators.ChoiceParser [line 34]
-  	org.petitparser.parser.combinators.OptionalParser [line 23]
-  	org.petitparser.parser.combinators.SequenceParser [line 25]
-  	org.petitparser.parser.actions.ActionParser [line 37]
-  	org.petitparser.parser.combinators.ChoiceParser [line 34]
-  	org.petitparser.parser.combinators.SequenceParser [line 25]
-  	org.petitparser.parser.actions.ActionParser [line 37]
-  	org.petitparser.parser.combinators.SequenceParser [line 25]
-  	org.petitparser.parser.actions.ActionParser [line 37]
-  	org.petitparser.parser.Parser [line 76]
-  	studio.phaseshift.metatron.isa.m.parser.mParser [line 421]
-  	studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer [line 89]
-  	studio.phaseshift.metatron.docs.MtronDocPreprocessor [line 196]
-  	studio.phaseshift.metatron.docs.MtronDocPreprocessor [line 91]
-  	studio.phaseshift.metatron.docs.DocRunner [line 206]
+==&gt;console::[
+    metatron_version=&gt;&lt;0.1-alpha&gt;,
+    history=&gt;!history(#::T),
+    redirect/input=&gt;noobj,
+    redirect/output=&gt;noobj,
+    prefix=&gt;'',
+    postfix=&gt;'',
+    pane=&gt;lst[/m/mach/console/pane{*}]::[/m/mach/console/pane::[result=&gt;inst?noobj{0}&lt;=#{?}(#{*}::T),prompt=&gt;inst?noobj{0}&lt;=#{?}(#{*}::T),stream=&gt;inst?noobj{0}&lt;=#{?}(#{*}::T)]@/usr/ui/console/pane/0],
+    menu=&gt;[
+     console=&gt;console::[
+      metatron_version=&gt;&lt;0.1-alpha&gt;,
+      history=&gt;!history(#::T),
+      redirect/input=&gt;noobj,
+      redirect/output=&gt;noobj,
+      prefix=&gt;'',
+      postfix=&gt;'',
+      pane=&gt;lst[/m/mach/console/pane{*}]::[/m/mach/console/pane::[result=&gt;inst?noobj{0}&lt;=#{?}(#{*}::T),prompt=&gt;inst?noobj{0}&lt;=#{?}(#{*}::T),stream=&gt;inst?noobj{0}&lt;=#{?}(#{*}::T)]@/usr/ui/console/pane/0]]@/usr/ui/console,
+     help=&gt;inst?noobj&lt;=#{?}(),
+     chat=&gt;inst?noobj&lt;=#{?}(),
+     connect=&gt;inst?noobj&lt;=#{?}(),
+     redirect=&gt;[input=&gt;inst?#{*}&lt;=#{?}(#{*}::T)],
+     header=&gt;inst?noobj&lt;=#{?}(),
+     quit=&gt;inst?noobj&lt;=#{?}(),
+     clear=&gt;inst?noobj&lt;=#{?}(),
+     log=&gt;inst?noobj&lt;=#{?}(),
+     check=&gt;inst?noobj&lt;=#{?}(),
+     top=&gt;inst?noobj&lt;=#{?}(),
+     less=&gt;inst?noobj&lt;=#{?}(),
+     subs=&gt;inst?noobj&lt;=#{?}(),
+     justify=&gt;inst?noobj&lt;=#{?}(),
+     state=&gt;inst?noobj&lt;=#{?}(),
+     lang=&gt;inst?noobj&lt;=#{?}(),
+     prefix=&gt;inst?noobj&lt;=#{?}(),
+     postfix=&gt;inst?noobj&lt;=#{?}(),
+     split=&gt;inst?noobj&lt;=#{?}(),
+     unsplit=&gt;inst?noobj&lt;=#{?}(),
+     close=&gt;inst?noobj&lt;=#{?}(),
+     focus=&gt;inst?noobj&lt;=#{?}(),
+     panes=&gt;inst?noobj&lt;=#{?}(),
+     subq=&gt;inst?noobj&lt;=#{?}()]]@/usr/ui/console
 mtron&gt; */usr/ui/console/pane/0     ​2​
-==&gt;/m/mach/console/pane::[
-    stream=&gt;inst?noobj{0}&lt;=#{?}(#{*}::T),
-    prompt=&gt;inst?noobj{0}&lt;=#{?}(#{*}::T),
-    result=&gt;inst?noobj{0}&lt;=#{?}(#{*}::T)]
+==&gt;/m/mach/console/pane::[result=&gt;inst?noobj{0}&lt;=#{?}(#{*}::T),prompt=&gt;inst?noobj{0}&lt;=#{?}(#{*}::T),stream=&gt;inst?noobj{0}&lt;=#{?}(#{*}::T)]
 mtron&gt; /usr/ui/console/pane/0/result('printed at ==&gt;xyz')     ​3​</code></pre>
 </div>
 </div>
@@ -4502,10 +4235,7 @@ together. Via the colocation of two objs within the confines of a <code>poly</co
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; 1-&lt;[?&gt;0,?&gt;2,*/usr/${_}]     ​1​
-==&gt;[
-    1,
-    noobj,
-    noobj]
+==&gt;[1,noobj,noobj]
 mtron&gt; 1-&lt;[?&gt;0,?&gt;2,*/usr/${_}]&gt;-     ​2​
 ==&gt;1
 mtron&gt; 1-&lt;[?&gt;0,?&gt;2,*/usr/${_}]&gt;-.map(&lt;${g:V/_}&gt;)&gt;&gt;+     ​3​</code></pre>
@@ -4747,13 +4477,9 @@ a/b/c -&gt; [x,[y=&gt;[z=&gt;2,zz=&gt;!*g]]]
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; g     -&gt; 'ping'     ​1​
 ==&gt;'ping'
 mtron&gt; a/b/c -&gt; [x,[y=&gt;[z=&gt;2,zz=&gt;!*g]]]     ​2​
-==&gt;[
-    x,
-    [y=&gt;[z=&gt;2,zz=&gt;!*g]]]
+==&gt;[x,[y=&gt;[z=&gt;2,zz=&gt;!*g]]]
 mtron&gt; *a/b/c     ​3​
-==&gt;[
-    x,
-    [y=&gt;[z=&gt;2,zz=&gt;!*g]]]
+==&gt;[x,[y=&gt;[z=&gt;2,zz=&gt;!*g]]]
 mtron&gt; *a/b/c/0     ​4​
 ==&gt;x
 mtron&gt; *a/b/c/1     ​5​
@@ -5042,9 +4768,7 @@ a \cdot \; &amp; ( b                 &amp; + \;\; &amp; c )                   \c
 ==&gt;[a=&gt;[b=&gt;[d=&gt;1]]]
 ==&gt;[a=&gt;[c=&gt;[d=&gt;2]]]
 mtron&gt; x1 -&gt; [a=&gt;[b=&gt;[d=&gt;1],c=&gt;[d=&gt;2]]]
-==&gt;[a=&gt;[
-    b=&gt;[d=&gt;1],
-    c=&gt;[d=&gt;2]]]
+==&gt;[a=&gt;[b=&gt;[d=&gt;1],c=&gt;[d=&gt;2]]]
 mtron&gt; x2 -&gt; [a=&gt;[b=&gt;!*d,[c=&gt;!*d]];d-&gt;{1,2};
 ==&gt;ERROR: x2 -&gt; [a=&gt;[b=&gt;!*d,[c=&gt;!*d]];d-&gt;{1,2};
   ^ end of input expected
@@ -5317,11 +5041,9 @@ mtron&gt; *m/+/0     ​3​
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; x0 -&gt; [a=&gt;[b=&gt;[c=&gt;1,d=&gt;2],
                   e=&gt;[c=&gt;3,d=&gt;4,f=&gt;5]],
               g=&gt;[b=&gt;[c=&gt;6]]]
-==&gt;[
-    a=&gt;[
-     b=&gt;[c=&gt;1,d=&gt;2],
-     e=&gt;[c=&gt;3,d=&gt;4,f=&gt;5]],
-    g=&gt;[b=&gt;[c=&gt;6]]]</code></pre>
+==&gt;[a=&gt;[
+    b=&gt;[c=&gt;1,d=&gt;2],
+    e=&gt;[c=&gt;3,d=&gt;4,f=&gt;5]],g=&gt;[b=&gt;[c=&gt;6]]]</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -5381,11 +5103,9 @@ mtron> [x0,x1,x2]>-.-<[*(* a/+/+)]
 mtron> [x0,x1,x2]>-.-<[*(* +/b/+)]
 ==>[{[
     b=>[c=>1,d=>2],
-    e=>[c=>3,d=>4,f=>5]],[b=>[c=>6]],[
-    a=>[
-     b=>[c=>1,d=>2],
-     e=>[c=>3,d=>4,f=>5]],
-    g=>[b=>[c=>6]]]}]
+    e=>[c=>3,d=>4,f=>5]],[b=>[c=>6]],[a=>[
+    b=>[c=>1,d=>2],
+    e=>[c=>3,d=>4,f=>5]],g=>[b=>[c=>6]]]}]
 ==>[{[
     a/b=>[c=>1,d=>2],
     a/e/c=>3,
@@ -5402,11 +5122,9 @@ mtron> [x0,x1,x2]>-.-<[*(* +/b/+)]
 mtron> [x0,x1,x2]>-.-<[*(* +/b/c)]
 ==>[{[
     b=>[c=>1,d=>2],
-    e=>[c=>3,d=>4,f=>5]],[b=>[c=>6]],[
-    a=>[
-     b=>[c=>1,d=>2],
-     e=>[c=>3,d=>4,f=>5]],
-    g=>[b=>[c=>6]]]}]
+    e=>[c=>3,d=>4,f=>5]],[b=>[c=>6]],[a=>[
+    b=>[c=>1,d=>2],
+    e=>[c=>3,d=>4,f=>5]],g=>[b=>[c=>6]]]}]
 ==>[{[
     a/b=>[c=>1,d=>2],
     a/e/c=>3,
@@ -5425,11 +5143,9 @@ mtron> [x0,x1,x2]>-.-<[*(* a/+/c)]
 mtron> [x0,x1,x2]>-.-<[*(* +/+/c)]
 ==>[{[
     b=>[c=>1,d=>2],
-    e=>[c=>3,d=>4,f=>5]],[b=>[c=>6]],[
-    a=>[
-     b=>[c=>1,d=>2],
-     e=>[c=>3,d=>4,f=>5]],
-    g=>[b=>[c=>6]]]}]
+    e=>[c=>3,d=>4,f=>5]],[b=>[c=>6]],[a=>[
+    b=>[c=>1,d=>2],
+    e=>[c=>3,d=>4,f=>5]],g=>[b=>[c=>6]]]}]
 ==>[{[
     a/b=>[c=>1,d=>2],
     a/e/c=>3,
@@ -5618,14 +5334,8 @@ mtron> [x0,x1,x2]>-.-<[*(* g/+/+)]
 ==&gt;memspace::[
     pattern=&gt;/usr/#,
     q=&gt;[
-     typeq::[
-      pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
-      pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
-      qless_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
-      pattern=&gt;&lt;T&gt;],
-     mintq::[
-      pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
-      pattern=&gt;mintq],
+     typeq::[pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),qless_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),pattern=&gt;&lt;T&gt;],
+     mintq::[pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),pattern=&gt;mintq],
      docq::[
       pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
       pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
@@ -5638,18 +5348,12 @@ mtron> [x0,x1,x2]>-.-<[*(* g/+/+)]
       qless_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
       pattern=&gt;subq,
       obj=&gt;[,]],
-     incrq::[
-      pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
-      pattern=&gt;incrq]],
+     incrq::[pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),pattern=&gt;incrq]],
     space=&gt;[=&gt;]]
 mtron&gt; /usr/notes/#?subq -&gt; sub::[on_recv=&gt;print('${&gt;&gt;1} written to ${&gt;&gt;0}')]
-==&gt;sub::[
-    on_recv=&gt;print('${&gt;&gt;1} written to ${&gt;&gt;0}'),
-    target=&gt;/usr/notes/#]
+==&gt;sub::[on_recv=&gt;print('${&gt;&gt;1} written to ${&gt;&gt;0}'),target=&gt;/usr/notes/#]
 mtron&gt; */usr/notes/#?subq
-==&gt;[sub::[
-    on_recv=&gt;print('${&gt;&gt;1} written to ${&gt;&gt;0}'),
-    target=&gt;/usr/notes/#]]
+==&gt;[sub::[on_recv=&gt;print('${&gt;&gt;1} written to ${&gt;&gt;0}'),target=&gt;/usr/notes/#]]
 mtron&gt; /usr/notes/#?subq -&gt; none
 ==&gt;none
 mtron&gt; */usr/notes/#?subq
@@ -5662,13 +5366,9 @@ mtron&gt; */usr/notes/#?subq
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; /usr/notes/#?subq -&gt; sub::[on_recv=&gt;print('${&gt;&gt;1} written to ${&gt;&gt;0}')]@abc
-==&gt;sub::[
-    on_recv=&gt;print('${&gt;&gt;1} written to ${&gt;&gt;0}'),
-    target=&gt;/usr/notes/#]@abc
+==&gt;sub::[on_recv=&gt;print('${&gt;&gt;1} written to ${&gt;&gt;0}'),target=&gt;/usr/notes/#]@abc
 mtron&gt; */usr/notes/#?subq
-==&gt;[sub::[
-    on_recv=&gt;print('${&gt;&gt;1} written to ${&gt;&gt;0}'),
-    target=&gt;/usr/notes/#]@abc]
+==&gt;[sub::[on_recv=&gt;print('${&gt;&gt;1} written to ${&gt;&gt;0}'),target=&gt;/usr/notes/#]@abc]
 mtron&gt; /usr/notes/#?subq=abc -&gt; none
 ==&gt;none
 mtron&gt; */usr/notes/#?subq
@@ -5694,18 +5394,14 @@ mtron&gt; */usr/notes/#?subq
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; import(/m/iot)
-==&gt;instset::[
-    pattern=&gt;/m/iot/#,
-    q=&gt;[docq::[
+==&gt;instset::[pattern=&gt;/m/iot/#,q=&gt;[docq::[
     pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
     pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
     pattern=&gt;docq,
     obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
-    inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
-    space=&gt;[super=&gt;!*/m],
-    type=&gt;[
-     mqtt::T,
-     haos::T]]@/m/iot
+    inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],space=&gt;[super=&gt;!*/m],type=&gt;[
+    mqtt::T,
+    haos::T]]@/m/iot
 mtron&gt;  import(/m/llm)
 ...</code></pre>
 </div>
@@ -5827,11 +5523,10 @@ mtron&gt; *ha:main_field/actuator/#?subq     ​4​</code></pre>
      image::T,
      factory::T,
      mfactory::T,
+     thread_executor::T,
+     thread::T,
      core::T,
-     virtual::T,
-     monad::T,
-     machine::T,
-     swarm::T],
+     virtual::T],
     inst=&gt;[
      lift(#{?}::T),
      rewrite?rec[short=&gt;uri,long=&gt;uri]&lt;=#{?}(uri::T),
@@ -5846,7 +5541,10 @@ mtron&gt; *ha:main_field/actuator/#?subq     ​4​</code></pre>
      one?A&lt;=A(),
      which(uri::T),
      inject(int::T,#::T),
-     /m/inst/thread?/m/mach/thread&lt;=#{?}(#::T)]]@/m/mach</code></pre>
+     /m/inst/thread?thread&lt;=#{?}(#::T),
+     stop?thread&lt;=thread(),
+     pause?thread&lt;=thread(),
+     resume?thread&lt;=thread()]]@/m/mach</code></pre>
 </div>
 </div>
 </div>
@@ -5885,11 +5583,7 @@ mtron&gt; *ha:main_field/actuator/#?subq     ​4​</code></pre>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys/space/localfs     ​1​
-==&gt;fsspace::[
-    pattern=&gt;fs:#,
-    route=&gt;[fs:m=&gt;/home/killswitch/software/metatron,fs:=&gt;/home/killswitch/],
-    script=&gt;!*boot/script,
-    space=&gt;[=&gt;]]
+==&gt;fsspace::[pattern=&gt;fs:#,route=&gt;[fs:m=&gt;/home/killswitch/software/metatron,fs:=&gt;/home/killswitch/],script=&gt;!*boot/script,space=&gt;[=&gt;]]
 mtron&gt; *fs:software/metatron     ​2​
 ==&gt;dir::fs:m
 mtron&gt; *fs:m     ​3​
@@ -5915,11 +5609,7 @@ mtron&gt; *fs:m     ​3​
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys/space/localfs     ​1​
-==&gt;fsspace::[
-    pattern=&gt;fs:#,
-    route=&gt;[fs:m=&gt;/home/killswitch/software/metatron,fs:=&gt;/home/killswitch/],
-    script=&gt;!*boot/script,
-    space=&gt;[=&gt;]]
+==&gt;fsspace::[pattern=&gt;fs:#,route=&gt;[fs:m=&gt;/home/killswitch/software/metatron,fs:=&gt;/home/killswitch/],script=&gt;!*boot/script,space=&gt;[=&gt;]]
 mtron&gt; */sys/space/localfs/script     ​2​
 mtron&gt; *&lt;fs:m/bin/metatron&gt;     ​3​
 ==&gt;fail::[#!/bin/sh
@@ -6216,18 +5906,12 @@ The <code>graphspace</code> of <code>/m/grph</code> uses <a href="http://tinkerp
          native  =&gt; [factory  =&gt; mfactory::[=&gt;],
                      load     =&gt; modern]]@/sys/space/grph/modern     ​1​
 mtron&gt; *g:S/+     ​2​
-==&gt;vrtx::T[?[
-     name=&gt;str::T,
-     age=&gt;int::T]]@/m/grph/schema/modern/person
-==&gt;vrtx::T[?[
-     name=&gt;str::T,
-     lang=&gt;str::T]]@/m/grph/schema/modern/software
+==&gt;vrtx::T[?[name=&gt;str::T,age=&gt;int::T]]@/m/grph/schema/modern/person
+==&gt;vrtx::T[?[name=&gt;str::T,lang=&gt;str::T]]@/m/grph/schema/modern/software
 ==&gt;edge::T[?[weight=&gt;real::T]]@/m/grph/schema/modern/knows
 ==&gt;edge::T[?[weight=&gt;real::T]]@/m/grph/schema/modern/created
 mtron&gt; *g:S/person     ​3​
-==&gt;vrtx::T[?[
-     name=&gt;str::T,
-     age=&gt;int::T]]@/m/grph/schema/modern/person</code></pre>
+==&gt;vrtx::T[?[name=&gt;str::T,age=&gt;int::T]]@/m/grph/schema/modern/person</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -6542,9 +6226,7 @@ mtron&gt; @g:V/1&gt;&gt;=+[address=&gt;[
 ==&gt;person::[
     address/work/city=&gt;'nomansland',
     age=&gt;29,
-    address=&gt;[
-     home=&gt;[city=&gt;'santa fe',state=&gt;NM],
-     work=&gt;!*&lt;../home&gt;],
+    address=&gt;[home=&gt;[city=&gt;'santa fe',state=&gt;NM],work=&gt;!*&lt;../home&gt;],
     name=&gt;'marko',
     address/home/city=&gt;'santa fe']@g:V/1
 mtron&gt; *g:V/1/address/home/city     ​3​
@@ -6553,9 +6235,7 @@ mtron&gt; *g:V/+.=?=[address=&gt;[_ =&gt; [state=&gt;NM]]]     ​4​
 ==&gt;person::[
     address/work/city=&gt;'nomansland',
     age=&gt;29,
-    address=&gt;[
-     home=&gt;[city=&gt;'santa fe',state=&gt;NM],
-     work=&gt;!*&lt;../home&gt;],
+    address=&gt;[home=&gt;[city=&gt;'santa fe',state=&gt;NM],work=&gt;!*&lt;../home&gt;],
     name=&gt;'marko',
     address/home/city=&gt;'santa fe']@g:V/1
 mtron&gt; *g:V/+.=?=[address=&gt;[_ =&gt; [state=&gt;NM]]].&gt;&gt;address/+/city     ​5​
@@ -6662,14 +6342,12 @@ mtron&gt; *g:V/+.=?=[address=&gt;[_ =&gt; [state=&gt;NM]]].&gt;&gt;address/+/cit
 ==&gt;person::[
     address/work/city=&gt;'nomansland',
     age=&gt;29,
-    address=&gt;[
-     home=&gt;[city=&gt;'santa fe',state=&gt;NM],
-     work=&gt;!*&lt;../home&gt;],
+    address=&gt;[home=&gt;[city=&gt;'santa fe',state=&gt;NM],work=&gt;!*&lt;../home&gt;],
     name=&gt;'marko',
     address/home/city=&gt;'santa fe']
 mtron&gt; *acme:customers/357     ​2​
 mtron&gt; @g:V/1.addE(consulted,|*acme:customers/357)     ​3​
-==&gt;consulted::[=&gt;]@g:E/22
+==&gt;consulted::[=&gt;]@g:E/31
 mtron&gt; *g:V/1.out(consulted)     ​4​
 mtron&gt; *g:V/1.out(consulted).matches(vrtx::T)     ​5​
 ==&gt;false</code></pre>
@@ -6838,18 +6516,12 @@ mtron&gt; tblespace::[pattern =&gt; &lt;/te/cold/#&gt;,
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; /te/hot/1/a  -&gt; [item   =&gt; 'laptop',
                        total=&gt;1200.0,
                        owner  =&gt; !*g:V/2]
-==&gt;[
-    item=&gt;'laptop',
-    total=&gt;1200.0000,
-    owner=&gt;!*g:V/2]
+==&gt;[item=&gt;'laptop',total=&gt;1200.0000,owner=&gt;!*g:V/2]
 mtron&gt; /te/hot/1/b  -&gt; [item   =&gt; 'mouse',total=&gt;25.0]
 ==&gt;[item=&gt;'mouse',total=&gt;25.0000]
 mtron&gt; /te/cold/1/x -&gt; [item   =&gt; 'book',total=&gt;15.0,
                        seller =&gt; !*g:V/4]
-==&gt;[
-    item=&gt;'book',
-    total=&gt;15.0000,
-    seller=&gt;!*g:V/4]</code></pre>
+==&gt;[item=&gt;'book',total=&gt;15.0000,seller=&gt;!*g:V/4]</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -6963,16 +6635,11 @@ mtron&gt; *g:V/1.outE(knows).count()     ​5​
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; v1 -&gt; [!*v2, !*v3, !*v4]
-==&gt;[
-    !*v2,
-    !*v3,
-    !*v4]
+==&gt;[!*v2,!*v3,!*v4]
 mtron&gt; v2 -&gt; [,]
 ==&gt;[,]
 mtron&gt; v3 -&gt; [!*v4, !*v5]
-==&gt;[
-    !*v4,
-    !*v5]
+==&gt;[!*v4,!*v5]
 mtron&gt; v4 -&gt; [,]
 ==&gt;[,]
 mtron&gt; v5 -&gt; [,]
@@ -6982,15 +6649,10 @@ mtron&gt; v6 -&gt; [!*v4]
 mtron&gt; v1     ​1​
 ==&gt;v1
 mtron&gt; *v1     ​2​
-==&gt;[
-    !*v2,
-    !*v3,
-    !*v4]
+==&gt;[!*v2,!*v3,!*v4]
 mtron&gt; *v1.&gt;&gt;
 ==&gt;{2}[,]
-==&gt;[
-    !*v4,
-    !*v5]
+==&gt;[!*v4,!*v5]
 mtron&gt; *v1.&gt;&gt;.&gt;&gt;
 ==&gt;{2}[,]</code></pre>
 </div>
@@ -7054,9 +6716,7 @@ mtron&gt; *v1.&gt;&gt;.&gt;&gt;
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; v1 -&gt; [knows=&gt;{!*v2, !*v3},created=&gt;!*v4]
-==&gt;[
-    knows=&gt;{!*v2,!*v3},
-    created=&gt;!*v4]
+==&gt;[knows=&gt;{!*v2,!*v3},created=&gt;!*v4]
 mtron&gt; v2 -&gt; [,]
 ==&gt;[,]
 mtron&gt; v3 -&gt; [created=&gt;{!*v4, !*v5}]
@@ -7070,9 +6730,7 @@ mtron&gt; v6 -&gt; [created=&gt;{!*v4}]
 mtron&gt; v1     ​1​
 ==&gt;v1
 mtron&gt; *v1     ​2​
-==&gt;[
-    knows=&gt;{!*v2,!*v3},
-    created=&gt;!*v4]
+==&gt;[knows=&gt;{!*v2,!*v3},created=&gt;!*v4]
 mtron&gt; *v1.&gt;&gt;knows     ​3​
 ==&gt;[,]
 ==&gt;[created=&gt;{!*v4,!*v5}]
@@ -7117,45 +6775,26 @@ knows              │
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; v1 -&gt; [name=&gt;'marko',age=&gt;29,
               out_=&gt;[knows=&gt;{!*v2, !*v3},created=&gt;!*v4]]
-==&gt;[
-    name=&gt;'marko',
-    age=&gt;29,
-    out_=&gt;[
-     knows=&gt;{!*v2,!*v3},
-     created=&gt;!*v4]]
+==&gt;[name=&gt;'marko',age=&gt;29,out_=&gt;[knows=&gt;{!*v2,!*v3},created=&gt;!*v4]]
 mtron&gt; v2 -&gt; [name=&gt;'vadas',age=&gt;27]
 ==&gt;[name=&gt;'vadas',age=&gt;27]
 mtron&gt; v3 -&gt; [name=&gt;'josh',age=&gt;32,
               out_=&gt;[created=&gt;{!*v4, !*v5}]]
-==&gt;[
-    name=&gt;'josh',
-    age=&gt;32,
-    out_=&gt;[created=&gt;{!*v4,!*v5}]]
+==&gt;[name=&gt;'josh',age=&gt;32,out_=&gt;[created=&gt;{!*v4,!*v5}]]
 mtron&gt; v4 -&gt; [name=&gt;'lop',lang=&gt;java]
 ==&gt;[name=&gt;'lop',lang=&gt;java]
 mtron&gt; v5 -&gt; [name=&gt;'ripple',lang=&gt;java]
 ==&gt;[name=&gt;'ripple',lang=&gt;java]
 mtron&gt; v6 -&gt; [name=&gt;'peter',age=&gt;35,
               out_=&gt;[created=&gt;{!*v4}]]
-==&gt;[
-    name=&gt;'peter',
-    age=&gt;35,
-    out_=&gt;[created=&gt;!*v4]]
+==&gt;[name=&gt;'peter',age=&gt;35,out_=&gt;[created=&gt;!*v4]]
 mtron&gt; v1     ​1​
 ==&gt;v1
 mtron&gt; *v1     ​2​
-==&gt;[
-    name=&gt;'marko',
-    age=&gt;29,
-    out_=&gt;[
-     knows=&gt;{!*v2,!*v3},
-     created=&gt;!*v4]]
+==&gt;[name=&gt;'marko',age=&gt;29,out_=&gt;[knows=&gt;{!*v2,!*v3},created=&gt;!*v4]]
 mtron&gt; *v1.&gt;&gt;out_.&gt;&gt;knows     ​3​
 ==&gt;[name=&gt;'vadas',age=&gt;27]
-==&gt;[
-    name=&gt;'josh',
-    age=&gt;32,
-    out_=&gt;[created=&gt;{!*v4,!*v5}]]
+==&gt;[name=&gt;'josh',age=&gt;32,out_=&gt;[created=&gt;{!*v4,!*v5}]]
 mtron&gt; *v1.&gt;&gt;out_.&gt;&gt;knows.&gt;&gt;out_.&gt;&gt;created     ​4​
 ==&gt;[name=&gt;'lop',lang=&gt;java]
 ==&gt;[name=&gt;'ripple',lang=&gt;java]
@@ -7164,10 +6803,7 @@ mtron&gt; *v1.&gt;&gt;out_.&gt;&gt;knows.&gt;&gt;out_.&gt;&gt;created.&gt;&gt;na
 ==&gt;'ripple'
 mtron&gt; *v1.&gt;&gt;out_/knows     ​3​
 ==&gt;[name=&gt;'vadas',age=&gt;27]
-==&gt;[
-    name=&gt;'josh',
-    age=&gt;32,
-    out_=&gt;[created=&gt;{!*v4,!*v5}]]
+==&gt;[name=&gt;'josh',age=&gt;32,out_=&gt;[created=&gt;{!*v4,!*v5}]]
 mtron&gt; *v1.&gt;&gt;out_/knows.&gt;&gt;out_/created     ​4​
 ==&gt;[name=&gt;'lop',lang=&gt;java]
 ==&gt;[name=&gt;'ripple',lang=&gt;java]
@@ -7208,12 +6844,7 @@ knows  vadas       │          ripple
 mtron&gt; v1     ​1​
 ==&gt;v1
 mtron&gt; *v1     ​2​
-==&gt;[
-    name=&gt;'marko',
-    age=&gt;29,
-    out_=&gt;[
-     knows=&gt;{!*v2,!*v3},
-     created=&gt;!*v4]]
+==&gt;[name=&gt;'marko',age=&gt;29,out_=&gt;[knows=&gt;{!*v2,!*v3},created=&gt;!*v4]]
 mtron&gt; *v1.outE(knows)     ​3​
 mtron&gt; *v1.outE(knows).outE(created)     ​4​
 mtron&gt; *v1.outE(knows).outE(created).&gt;&gt;name     ​5​</code></pre>
@@ -7561,46 +7192,394 @@ mtron&gt; *v1.out(knows).out(created).&gt;&gt;name     ​5​</code></pre>
 <div class="collapse position-relative" id="card-17">
 <button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-17" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
 <button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
-<h2 id="sec-thread" class="discrete">thread</h2>
+<h2 id="sec-threads-and-coroutines" class="discrete">Threads and Coroutines</h2>
 <div class="legend-index">
 <ul>
+<li class="legend-lvl-3"><a href="#sec-type-structure" onclick="var t=document.getElementById('sec-type-structure');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Type Structure</a></li>
+<li class="legend-lvl-4"><a href="#sec-thread-refinements" onclick="var t=document.getElementById('sec-thread-refinements');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Thread Refinements</a></li>
+<li class="legend-lvl-3"><a href="#sec-spawning-threads" onclick="var t=document.getElementById('sec-spawning-threads');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Spawning Threads</a></li>
+<li class="legend-lvl-4"><a href="#sec-yielding-coroutines" onclick="var t=document.getElementById('sec-yielding-coroutines');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Yielding Coroutines</a></li>
+<li class="legend-lvl-4"><a href="#sec-pausing-and-resuming" onclick="var t=document.getElementById('sec-pausing-and-resuming');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Pausing and Resuming</a></li>
+<li class="legend-lvl-3"><a href="#sec-the-main-core-thread" onclick="var t=document.getElementById('sec-the-main-core-thread');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">The Main Core Thread</a></li>
 </ul>
 </div>
 <div class="paragraph">
-<p>mtron&#8217;s threading model is a function of the underlying machine used to evaluate the program. However, there does exist types and instructions that express concurrent behavior, agnostic to mechanistic underpinnings.</p>
-</div>
-<div class="paragraph">
-<p>The types invovled in threading are <code>thread</code> (unrefined type) and it&#8217;s two refinements: 'virtual` and <code>core</code>.</p>
+<p>mtron&#8217;s threading model exposes two concurrent primitives — <code>virtual</code> and <code>core</code> — both subtypes of <code>thread</code>. Every thread is a first-class obj in the URI space, queryable, pausable, and traceable through its <code>source</code> lineage. The types involved in threading are <code>thread</code> (unrefined type) and its two refinements: <code>virtual</code> and <code>core</code>.</p>
 </div>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *virtual
-==&gt;/m/mach/thread::T[?[
-     code=&gt;#::T,
-     {?}loop=&gt;time::T,
-     {?}state=&gt;is(or(eq(stop),eq(run),eq(pause))),
-     {?}result=&gt;#{*}::T]][inst?virtual&lt;=#{?}(rec::T)]@/m/mach/thread/virtual
+==&gt;thread::T[][inst?virtual&lt;=#{?}(rec::T)]@/m/mach/thread/virtual
 mtron&gt; *core
-==&gt;/m/mach/thread::T[?[
-     code=&gt;#::T,
-     {?}state=&gt;is(or(eq(stop),eq(run),eq(pause))),
-     {?}result=&gt;#{*}::T]][inst?core&lt;=#{?}(rec::T)]@/m/mach/thread/core</code></pre>
+==&gt;thread::T[][inst?core&lt;=#{?}(rec::T)]@/m/mach/thread/core</code></pre>
 </div>
+</div>
+<h3 id="sec-type-structure" class="discrete">Type Structure</h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 10%;">
+<col style="width: 20%;">
+<col style="width: 70%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">key</th>
+<th class="tableblock halign-center valign-top">type</th>
+<th class="tableblock halign-left valign-top">description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>code</code></p></td>
+<td class="tableblock halign-center valign-top"><div class="content"><div class="paragraph">
+<p><code>#{*}::T</code></p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>the obj (typically <code>code</code>) evaluated each iteration (<code>start</code> is lhs)</p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>source</code></p></td>
+<td class="tableblock halign-center valign-top"><div class="content"><div class="paragraph">
+<p><code>thread::T</code></p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><code>!*</code> reference to the parent thread</p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>loop</code></p></td>
+<td class="tableblock halign-center valign-top"><div class="content"><div class="paragraph">
+<p><code>time{?}::T</code></p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><code>time::T</code> between repeated evaluations; omit for single execution</p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>state</code></p></td>
+<td class="tableblock halign-center valign-top"><div class="content"><div class="paragraph">
+<p><code>uri::T</code></p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><code>run</code> (executing), <code>pause</code> (suspended), or <code>stop</code> (completed)</p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>result</code></p></td>
+<td class="tableblock halign-center valign-top"><div class="content"><div class="paragraph">
+<p><code>#{*}::T</code></p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>the last obj produced by <code>code(start)</code> (can change after every loop)</p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>start</code></p></td>
+<td class="tableblock halign-center valign-top"><div class="content"><div class="paragraph">
+<p><code>#{?}::T</code></p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>initial input obj, set by the spawning expression</p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>yield</code></p></td>
+<td class="tableblock halign-center valign-top"><div class="content"><div class="paragraph">
+<p><code>thread{?}::T</code></p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><code>!*</code> reference to a coroutine partner — resumed when this thread pauses</p>
+</div></div></td>
+</tr>
+</tbody>
+</table>
+<h4 id="sec-thread-refinements" class="discrete">Thread Refinements</h4>
+<div class="paragraph">
+<p>A <a href="https://en.wikipedia.org/wiki/Virtual_thread">virtual thread</a> is a lightweight, cooperative concurrency primitive backed by a Java virtual thread. It shares CPU resources with other virtual threads and is suitable for IO-bound work and high-concurrency workloads.</p>
 </div>
 <div class="paragraph">
-<p>A <a href="https://en.wikipedia.org/wiki/Virtual_thread">virtual thread</a> is a lightweight, serializable cooperative concurrency structure that shares a cpu&#8217;s resources with other executing virtual threads. On the other hand, core threads (aka OS threads) are bound to a processor core of the underlying physical (or virtualized) machine.</p>
+<p>A <code>core</code> thread is bound to an OS platform thread from the executor&#8217;s pool. It is appropriate for CPU-bound work where you want dedicated execution resources.</p>
 </div>
 <div class="paragraph">
-<p>Threads encapsulate <code>code</code> that is evaluating independent of the thread that spawned it. When the <code>code</code> completes, the thread stores the resultant obj (the rhs obj of the code). Threads have similar semantics to <a href="https://en.wikipedia.org/wiki/Futures_and_promises">futures</a> in that they are objs that can be interacted with, but their value (the result of their code&#8217;s computation) is accessed either through blocking, subscribing, polling, or otherwise ignoring (implicitly accessing value through side effects).</p>
+<p>Both types share identical semantics — the same keys, the same lifecycle, the same query surface. The difference is purely in the underlying execution substrate.</p>
+</div>
+<div class="paragraph">
+<p>Threads are addressable through the <code>/sys/thread</code> uri space. The thread executor exposes two <code>lst</code> objs — <code>run</code> and <code>stop</code> — for live and completed threads.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">virtual::[code=&gt;repeat(code=&gt;+1,until=&gt;?&gt;=2026)]</code></pre>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys/thread/executor/run/0     ​1​
+mtron&gt; [ --*/sys/thread/executor/stop/+=?[desc=&gt;'console statusline']  --]     ​3​
+==&gt;ERROR: [ --*/sys/thread/executor/stop/+=?[desc=&gt;'console statusline']  --]
+^ end of input expected</code></pre>
 </div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>state of the first running thread</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>find a specific stopped thread by description</td>
+</tr>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_thread_state_machine">Thread State Machine</h4>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">                ┌─────────┐
+       apply()  │         │
+NEW ──────────► │   RUN   │ ◄──────── resume()
+                │         │─────────┐
+                └─────────┘         │
+                     │   ▲          │ pause()
+                stop │   │ resume   │
+                     ▼   │          ▼
+                ┌─────────┐    ┌─────────┐
+                │  STOP   │    │  PAUSE  │
+                └─────────┘    └─────────┘</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>A thread begins in <code>run</code> when constructed. Calling <code>pause()</code> sets <code>state&#8658;pause</code> — the current cycle completes first, then the thread parks. <code>resume()</code> wakes it. <code>stop()</code> (or a <code>break</code> from the stop check) terminates it. A one-shot thread (no <code>loop</code>) executes once and transitions directly to <code>stop</code>.</p>
+</div>
+<h3 id="sec-spawning-threads" class="discrete">Spawning Threads</h3>
+<div class="paragraph">
+<p>Threads are constructed inline with their type constructor and started immediately:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">virtual::[code=&gt;+1,until=&gt;loops()?&gt;2026]</code></pre>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">virtual::[code=&gt;1+2]                           [-- &lt;1&gt; --]
+virtual::[code=&gt;print('.'), loop=&gt;second::5.0] [-- &lt;2&gt; --]
+core::[code=&gt;expensive_computation]            [-- &lt;3&gt; --]</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>executes <code>1+2</code> once, stores <code>3</code> in <code>result</code></td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>prints a dot every second, looping until stopped</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>runs CPU-heavy work on a platform thread</td>
+</tr>
+</table>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys/thread/run
+mtron&gt; */sys/thread/stop
+mtron&gt; */sys/thread/stop/+/source
+mtron&gt; */sys/thread/stop/+/source/source</code></pre>
+</div>
+</div>
+<h4 id="sec-yielding-coroutines" class="discrete">Yielding Coroutines</h4>
+<div class="paragraph">
+<p>A thread with <code>yield&#8658;!*/sys/thread/&lt;vid&gt;</code> forms a cooperative pair. When one pauses, it auto-resumes the other. Both threads must exist before their yield pointers can reference each other — construct the partner paused first, then link them:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; [,]@ab_queue     ​1​
+==&gt;[,]@ab_queue
+mtron&gt; virtual::[code  =&gt; @ab_queue &gt;&gt;= +['B'],
+                 loop  =&gt; second::1.0,
+                 state =&gt; pause]@/sys/thread/b     ​3​
+==&gt;virtual::[
+    code=&gt;at(ab_queue).update(plus(['B'])),
+    loop=&gt;second::1.0000,
+    state=&gt;run,
+    start=&gt;[code=&gt;at(ab_queue).update(plus(['B'])),loop=&gt;second::1.0000,state=&gt;pause]@/sys/thread/b,
+    source=&gt;!*/sys/thread/main,
+    result=&gt;['B']@ab_queue]@/sys/thread/b
+mtron&gt; virtual::[code  =&gt; @ab_queue &gt;&gt;= +['A'],
+                 loop  =&gt; second::1.0,
+                 yield =&gt; !*/sys/thread/b]@/sys/thread/a     ​4​
+==&gt;virtual::[
+    code=&gt;at(ab_queue).update(plus(['A'])),
+    loop=&gt;second::1.0000,
+    yield=&gt;!*/sys/thread/b,
+    start=&gt;[
+     code=&gt;at(ab_queue).update(plus(['A'])),
+     loop=&gt;second::1.0000,
+     yield=&gt;!*/sys/thread/b]@/sys/thread/a,
+    state=&gt;run,
+    source=&gt;!*/sys/thread/main,
+    result=&gt;['B','B','A']@ab_queue]@/sys/thread/a
+mtron&gt; @/sys/thread/b &gt;&gt;= +[yield =&gt; !*/sys/thread/a]     ​5​
+==&gt;virtual::[
+    code=&gt;at(ab_queue).update(plus(['B'])),
+    loop=&gt;second::1.0000,
+    state=&gt;run,
+    start=&gt;[code=&gt;at(ab_queue).update(plus(['B'])),loop=&gt;second::1.0000,state=&gt;pause]@/sys/thread/b,
+    source=&gt;!*/sys/thread/main,
+    result=&gt;['B','B']@ab_queue,
+    yield=&gt;!*/sys/thread/a]@/sys/thread/b
+mtron&gt; sleep(second::5.0)
+mtron&gt; */sys/thread/b.stop()
+==&gt;[
+    code=&gt;at(ab_queue).update(plus(['B'])),
+    loop=&gt;second::1.0000,
+    state=&gt;stop,
+    start=&gt;[code=&gt;at(ab_queue).update(plus(['B'])),loop=&gt;second::1.0000,state=&gt;pause]@/sys/thread/b,
+    source=&gt;!*/sys/thread/main,
+    result=&gt;[
+     'B',
+     'B',
+     'A',
+     'A',
+     'B',
+     'B',
+     'A',
+     'A',
+     'B',
+     'B',
+     'A',
+     'A',
+     'B',
+     'B',
+     'A',
+     'A',
+     'B',
+     'B',
+     'A',
+     'A',
+     'B',
+     'B']@ab_queue,
+    yield=&gt;!*/sys/thread/a]@/sys/thread/b
+mtron&gt; */sys/thread/a.stop()
+==&gt;[
+    code=&gt;at(ab_queue).update(plus(['A'])),
+    loop=&gt;second::1.0000,
+    yield=&gt;!*/sys/thread/b,
+    start=&gt;[
+     code=&gt;at(ab_queue).update(plus(['A'])),
+     loop=&gt;second::1.0000,
+     yield=&gt;!*/sys/thread/b]@/sys/thread/a,
+    state=&gt;stop,
+    source=&gt;!*/sys/thread/main,
+    result=&gt;[
+     'B',
+     'B',
+     'A',
+     'A',
+     'B',
+     'B',
+     'A',
+     'A',
+     'B',
+     'B',
+     'A',
+     'A',
+     'B',
+     'B',
+     'A',
+     'A',
+     'B',
+     'B',
+     'A',
+     'A',
+     'B',
+     'B',
+     'A',
+     'A']@ab_queue]@/sys/thread/a
+mtron&gt; *ab_queue
+==&gt;[
+    'B',
+    'B',
+    'A',
+    'A',
+    'B',
+    'B',
+    'A',
+    'A',
+    'B',
+    'B',
+    'A',
+    'A',
+    'B',
+    'B',
+    'A',
+    'A',
+    'B',
+    'B',
+    'A',
+    'A',
+    'B',
+    'B',
+    'A',
+    'A']</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>partner <strong>B</strong> starts paused</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>initiator <strong>A</strong> points to <strong>B</strong>, begins running</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>direct <strong>B</strong> yield at <strong>A</strong> — the pair is now linked</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>A updates a queue, pauses, yields to <strong>B</strong>. <strong>B</strong> updates the queue, pauses, yields to <strong>A</strong>. The two trade turns executing their <code>code</code>, where one full cycle completes approximately every 2 seconds.</p>
+</div>
+<h4 id="sec-pausing-and-resuming" class="discrete">Pausing and Resuming</h4>
+<div class="paragraph">
+<p>Any looping thread can be paused mid-execution. The current cycle always completes first.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys/thread/run/0.pause()     ​1​
+mtron&gt; */sys/thread/run/0.state()     ​2​
+mtron&gt; */sys/thread/run/0.resume()     ​3​</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Pause the first running thread</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Verify state is <code>pause</code></td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>Resume it</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Non-looping threads (no <code>loop</code> key) cannot be paused — a warning is logged and the call is a no-op.</p>
+</div>
+<h3 id="sec-the-main-core-thread" class="discrete">The Main Core Thread</h3>
+<div class="paragraph">
+<p>At boot, metatron establishes a root thread at <code>/sys/thread/main</code>. All user-spawned threads trace back to this root via <code>source</code>. The root thread blocks on the shutdown latch — when metatron shuts down, it transitions to <code>stop</code>.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys/thread/main
+==&gt;core::[
+    code=&gt;inst?#{*}&lt;=#{?}(#{*}::T),
+    state=&gt;stop,
+    source=&gt;!*/sys/thread/main]
+mtron&gt; */sys/thread/main/desc</code></pre>
 </div>
 </div>
 </div>
@@ -7615,6 +7594,7 @@ mtron&gt; *core
 <li class="legend-lvl-3"><a href="#sec-accessing-rest-apis" onclick="var t=document.getElementById('sec-accessing-rest-apis');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Accessing REST APIs</a></li>
 <li class="legend-lvl-3"><a href="#sec-websocket-space" onclick="var t=document.getElementById('sec-websocket-space');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">WebSocket Space</a></li>
 <li class="legend-lvl-4"><a href="#sec-remote-console" onclick="var t=document.getElementById('sec-remote-console');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Remote Console</a></li>
+<li class="legend-lvl-3"><a href="#sec-content-type" onclick="var t=document.getElementById('sec-content-type');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Content-Type</a></li>
 </ul>
 </div>
 <details>
@@ -7650,7 +7630,44 @@ mtron&gt; catalog::[host         =&gt; &lt;http://localhost:1234/v1&gt;,
                      /mcp     =&gt; mcp_mtron_http,
                      /docs    =&gt; target/docs,
                      /console =&gt; src/main/resources/web/console]
-       ]@/sys/space/web/http</code></pre>
+       ]@/sys/space/web/http
+==&gt;ERROR: bindexception: Address already in use
+  	sun.nio.ch.Net [line -2]
+  	sun.nio.ch.Net [line 522]
+  	sun.nio.ch.ServerSocketChannelImpl [line 335]
+  	sun.nio.ch.ServerSocketChannelImpl [line 297]
+  	sun.nio.ch.ServerSocketAdaptor [line 80]
+  	sun.net.httpserver.ServerImpl [line 145]
+  	sun.net.httpserver.HttpServerImpl [line 45]
+  	sun.net.httpserver.DefaultHttpServerProvider [line 35]
+  	com.sun.net.httpserver.HttpServer [line 152]
+  	studio.phaseshift.metatron.isa.web.space.http.httpSpace [line 225]
+  	studio.phaseshift.metatron.isa.web.space.http.httpSpace [line 85]
+  	studio.phaseshift.metatron.isa.m.type.Inst$f [line 688]
+  	studio.phaseshift.metatron.isa.m.type.Inst [line 329]
+  	studio.phaseshift.metatron.isa.m.type.Obj$Helper [line 919]
+  	studio.phaseshift.metatron.isa.m.type.impl.MObj [line 46]
+  	studio.phaseshift.metatron.isa.m.type.impl.MRec [line 76]
+  	studio.phaseshift.metatron.isa.m.parser.mParser [line 207]
+  	org.petitparser.parser.actions.ActionParser [line 39]
+  	org.petitparser.parser.combinators.DelegateParser [line 25]
+  	org.petitparser.parser.combinators.ChoiceParser [line 34]
+  	org.petitparser.parser.combinators.DelegateParser [line 25]
+  	org.petitparser.parser.combinators.ChoiceParser [line 34]
+  	org.petitparser.parser.combinators.OptionalParser [line 23]
+  	org.petitparser.parser.combinators.SequenceParser [line 25]
+  	org.petitparser.parser.actions.ActionParser [line 37]
+  	org.petitparser.parser.combinators.ChoiceParser [line 34]
+  	org.petitparser.parser.combinators.SequenceParser [line 25]
+  	org.petitparser.parser.actions.ActionParser [line 37]
+  	org.petitparser.parser.combinators.SequenceParser [line 25]
+  	org.petitparser.parser.actions.ActionParser [line 37]
+  	org.petitparser.parser.Parser [line 76]
+  	studio.phaseshift.metatron.isa.m.parser.mParser [line 421]
+  	studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer [line 89]
+  	studio.phaseshift.metatron.docs.MtronDocPreprocessor [line 196]
+  	studio.phaseshift.metatron.docs.MtronDocPreprocessor [line 91]
+  	studio.phaseshift.metatron.docs.DocRunner [line 206]</code></pre>
 </div>
 </div>
 <h3 id="sec-html-type" class="discrete">HTML Type</h3>
@@ -7660,46 +7677,13 @@ mtron&gt; catalog::[host         =&gt; &lt;http://localhost:1234/v1&gt;,
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; html::T     ​1​
-==&gt;xml::T[?[html=&gt;[
-    head=&gt;[{?}title=&gt;str::T],
-    body=&gt;rec::T]]]@/m/web/html
+==&gt;xml::T[?[html=&gt;[head=&gt;[{?}title=&gt;str::T],body=&gt;rec::T]]]@/m/web/html
 mtron&gt; *&lt;http://phaseshift.studio/splash.html&gt;     ​2​
-==&gt;html::[html=&gt;[
-    head=&gt;[
-     title=&gt;'PhaseShift Studio',
-     out=&gt;[
-      [
-       tag=&gt;link,
-       href=&gt;&lt;https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css&gt;,
-       rel=&gt;'stylesheet'],
-      [tag=&gt;link,href=&gt;&lt;css/metatron.css&gt;,rel=&gt;'stylesheet']]],
-    body=&gt;[
-     out=&gt;[
-      [tag=&gt;p],
-      [
-       tag=&gt;h1,
-       style=&gt;'padding-left:125px;color:var(--pri...',
-       text=&gt;'PhaseShift Studio'],
-      [
-       tag=&gt;img,
-       style=&gt;'padding-left:100px',
-       src=&gt;&lt;http://metatron.phaseshift.studio/images/metatron-character.png&gt;,
-       width=&gt;'500px']],
-     style=&gt;'background-color: black;']]]
+==&gt;fail::[no active space supports pattern &lt;http://phaseshift.studio/splash.html&gt;][...]@/sys/fail/18
 mtron&gt; *&lt;http://phaseshift.studio/splash.html/html/head/title&gt;     ​3​
-==&gt;'PhaseShift Studio'
+==&gt;fail::[no active space supports pattern &lt;http://phaseshift.studio/splash.html/html/head/title&gt;][...]@/sys/fail/24
 mtron&gt; *&lt;http://phaseshift.studio/splash.html&gt;.as(str::T)     ​4​
-==&gt;"""&lt;html&gt;
-    &lt;head&gt;
-     &lt;link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet"&gt;
-     &lt;link href="css/metatron.css" rel="stylesheet"&gt;
-    &lt;/head&gt;
-    &lt;body style="background-color: black;"&gt;
-     &lt;p&gt;&lt;/p&gt;
-     &lt;h1 style="padding-left:125px;color:var(--primary)"&gt;PhaseShift Studio&lt;/h1&gt;
-     &lt;img style="padding-left:100px" src="http://metatron.phaseshift.studio/images/metatron-character.png" width="500px"&gt;
-    &lt;/body&gt;
-   &lt;/html&gt;"""</code></pre>
+==&gt;fail::[no active space supports pattern &lt;http://phaseshift.studio/splash.html&gt;][...]@/sys/fail/30</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -7732,34 +7716,9 @@ mtron&gt; *&lt;http://phaseshift.studio/splash.html&gt;.as(str::T)     ​4​
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *&lt;http://localhost:1234/v1&gt;     ​1​
-==&gt;[error=&gt;'Unexpected endpoint or method. (GE...']
+==&gt;fail::[no active space supports pattern http://localhost:1234/v1][...]@/sys/fail/36
 mtron&gt; *&lt;http://localhost:1234/v1/models&gt;     ​2​
-==&gt;[
-    data=&gt;[
-     [id=&gt;'qwen/qwen3.6-27b',object=&gt;model,owned_by=&gt;organization_owner],
-     [id=&gt;'qwen2.5-coder-3b-instruct',object=&gt;model,owned_by=&gt;organization_owner],
-     [id=&gt;'zai-org/glm-4.7-flash',object=&gt;model,owned_by=&gt;organization_owner],
-     [id=&gt;'qwen/qwen2.5-coder-14b',object=&gt;model,owned_by=&gt;organization_owner],
-     [id=&gt;'qwen/qwen3.6-35b-a3b',object=&gt;model,owned_by=&gt;organization_owner],
-     [id=&gt;qwen/qwen3-coder-30b,object=&gt;model,owned_by=&gt;organization_owner],
-     [id=&gt;openai/gpt-oss-20b,object=&gt;model,owned_by=&gt;organization_owner],
-     [id=&gt;'opus-mcp-research-v0.5',object=&gt;model,owned_by=&gt;organization_owner],
-     [id=&gt;'qwen/qwen3.5-9b',object=&gt;model,owned_by=&gt;organization_owner],
-     [id=&gt;nvidia/nemotron-3-nano-4b,object=&gt;model,owned_by=&gt;organization_owner],
-     [id=&gt;'sweep-next-edit-1.5b',object=&gt;model,owned_by=&gt;organization_owner],
-     [id=&gt;google/gemma-3-4b,object=&gt;model,owned_by=&gt;organization_owner],
-     [id=&gt;'llama-3.2-1b-instruct',object=&gt;model,owned_by=&gt;organization_owner],
-     [id=&gt;ibm/granite-4-h-tiny,object=&gt;model,owned_by=&gt;organization_owner],
-     [
-      id=&gt;'text-embedding-nomic-embed-text-v1...',
-      object=&gt;model,
-      owned_by=&gt;organization_owner],
-     [
-      id=&gt;'text-embedding-qwen2.5-0.5b-instru...',
-      object=&gt;model,
-      owned_by=&gt;organization_owner],
-     [id=&gt;nvidia/nemotron-3-nano,object=&gt;model,owned_by=&gt;organization_owner]],
-    object=&gt;list]</code></pre>
+==&gt;fail::[no active space supports pattern http://localhost:1234/v1/models][...]@/sys/fail/42</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -7784,9 +7743,7 @@ mtron&gt; *&lt;http://localhost:1234/v1/models&gt;     ​2​
      provider=&gt;catalog::T,
      name=&gt;uri::T,
      {?}desc=&gt;str::T,
-     {?}cost=&gt;{?}[
-      in=&gt;currency::T,
-      out=&gt;currency::T],
+     {?}cost=&gt;{?}[in=&gt;currency::T,out=&gt;currency::T],
      {?}size=&gt;bB::T,
      {?}feature=&gt;feature::T]]@/m/llm/model
 mtron&gt; */m/llm/inst/+?dom=model
@@ -7816,26 +7773,7 @@ mtron&gt; */m/llm/inst/+?dom=model
          -&lt;[provider=&gt; !*/sys/space/lmstudio,
             name    =&gt; &gt;&gt;id.as(uri::T)].as(model::T)
          .chat('are you there?')
-==&gt;fail::[[
-    provider=&gt;[id=&gt;'qwen2.5-coder-3b-instruct',object=&gt;model,owned_by=&gt;organization_owner],
-    name=&gt;&lt;qwen2.5-coder-3b-instruct&gt;] is not a isa([
-     provider=&gt;catalog::T,
-     name=&gt;uri::T,
-     {?}desc=&gt;str::T,
-     {?}cost=&gt;{?}[
-      in=&gt;currency::T,
-      out=&gt;currency::T],
-     {?}size=&gt;bB::T,
-     {?}feature=&gt;feature::T])
-     [
-      provider=&gt;(/=&gt;provider)=&gt;[id=&gt;'qwen2.5-coder-3b-instruct',object=&gt;model,owned_by=&gt;organization_owner]=&gt;X=&gt;catalog::T,
-      name=&gt;(==&gt;name)=&gt;&lt;qwen2.5-coder-3b-instruct&gt;=&gt;==&gt;uri::T,
-      noobj=&gt;(==&gt;{?}desc)=&gt;noobj=&gt;/=&gt;str::T,
-      noobj=&gt;(==&gt;{?}cost)=&gt;noobj=&gt;==&gt;{?}[
-      in=&gt;currency::T,
-      out=&gt;currency::T],
-      noobj=&gt;(==&gt;{?}size)=&gt;noobj=&gt;/=&gt;bB::T,
-      noobj=&gt;(==&gt;{?}feature)=&gt;noobj=&gt;/=&gt;feature::T]][...]@/sys/fail/6</code></pre>
+==&gt;ERROR: null</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -7873,8 +7811,8 @@ In the following example, the "remote" metatron instance is <code>localhost</cod
     host=&gt;ws://localhost:8555/mtron,
     send=&gt;inst?#{*}&lt;=#{?}(#{*}::T),
     send_recv=&gt;inst?#{*}&lt;=#{?}(#{*}::T),
-    close=&gt;/m/inst/close?noobj&lt;=#{?}(),
-    on_message=&gt;print('recieved ${_}')]@/usr/ui/console/remote</code></pre>
+    close=&gt;inst?#{*}&lt;=#{?}(#{*}::T),
+    on_message=&gt;print('received ${_}')]@/usr/ui/console/remote</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -7911,6 +7849,14 @@ mtron&gt; :redirect/input
 <div class="paragraph">
 <p>The <code>console::T.redirect/input</code> can be any <code>inst</code>. The flexibility of such redirection allows any number of use cases such as broadcasting, local processing w/ side effects, and more.</p>
 </div>
+<h3 id="sec-content-type" class="discrete">Content-Type</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-bash" data-lang="bash">$ websocat "ws://localhost:8555/mtron?in=application/mtron&amp;out=application/json"
+[a=&gt;[b=&gt;[1,2,3],c=&gt;2]]
+{"a":{"b":[1,2,3],"c":2}}</code></pre>
+</div>
+</div>
 </div>
 <div class="collapse position-relative" id="card-20">
 <button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-20" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
@@ -7937,15 +7883,11 @@ mtron&gt; :redirect/input
     obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
     inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
     space=&gt;[super=&gt;!*/m],
-    constq=&gt;[
-     !*/m/mach/io/serializer/json/simple,
-     _id@/m/dcmnt/_id],
+    constq=&gt;[!*/m/mach/io/serializer/json/simple,_id@/m/dcmnt/_id],
     type=&gt;[
      collection::T,
      dcmntspace::T],
-    inst=&gt;[
-     mql?rec{*}&lt;=dcmntspace(uri::T,rec::T),
-     mql?rec{*}&lt;=collection(rec::T)],
+    inst=&gt;[mql?rec{*}&lt;=dcmntspace(uri::T,rec::T),mql?rec{*}&lt;=collection(rec::T)],
     rewrite=&gt;[
      /m/dcmnt/inst/rewrite/mql_count?code{?}&lt;=code(),
      /m/dcmnt/inst/rewrite/mql_sum?code{?}&lt;=code(),
@@ -8067,15 +8009,11 @@ the root is <code>rec::T[?[collection_name=&gt;collection_type{*}::T]]</code>.</
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; animal    -&gt; rec::T[?[name=&gt;str::T,  age=&gt;int::T]]@animal     ​1​
-==&gt;rec::T[?[
-     name=&gt;str::T,
-     age=&gt;int::T]]@animal
+==&gt;rec::T[?[name=&gt;str::T,age=&gt;int::T]]@animal
 mtron&gt; chicken   -&gt; animal::T@chicken     ​2​
 ==&gt;animal::T@chicken
 mtron&gt; equipment -&gt; rec::T[?[model=&gt;uri::T, year=&gt;int::T]]@equipment     ​3​
-==&gt;rec::T[?[
-     model=&gt;uri::T,
-     year=&gt;int::T]]@equipment
+==&gt;rec::T[?[model=&gt;uri::T,year=&gt;int::T]]@equipment
 mtron&gt; farmset::[type=&gt;[animal::T,equipment::T,chicken::T]]@/m/dcmnt/schema/farmset     ​4​
 ==&gt;farmset::[type=&gt;[
     animal::T,
@@ -8208,15 +8146,9 @@ mtron&gt; *farm:animals/1     ​4​
 ==&gt;chicken::[name=&gt;'trill',age=&gt;7]
 mtron&gt; *farm:animals/1/shelter     ​5​
 mtron&gt; farm:animals/2 -&gt; chicken::[name=&gt;'cluck',age=&gt;3,shelter=&gt;!*loc:barns/1]     ​6​
-==&gt;chicken::[
-    name=&gt;'cluck',
-    age=&gt;3,
-    shelter=&gt;!*loc:barns/1]
+==&gt;chicken::[name=&gt;'cluck',age=&gt;3,shelter=&gt;!*loc:barns/1]
 mtron&gt; *farm:animals/2     ​7​
-==&gt;chicken::[
-    name=&gt;'cluck',
-    age=&gt;3,
-    shelter=&gt;!*loc:barns/1]
+==&gt;chicken::[name=&gt;'cluck',age=&gt;3,shelter=&gt;!*loc:barns/1]
 mtron&gt; *farm:animals/2/shelter     ​8​</code></pre>
 </div>
 </div>
@@ -8343,10 +8275,7 @@ if one is found, the reference is routed to the named scheme&#8217;s space.</p>
      rrow::T,
      table::T,
      tblespace::T],
-    inst=&gt;[
-     as?rrow&lt;=lrow(rrow::T),
-     as?lrow&lt;=rrow(lrow::T),
-     sql?rec{*}&lt;=tblespace(str::T)],
+    inst=&gt;[as?rrow&lt;=lrow(rrow::T),as?lrow&lt;=rrow(lrow::T),sql?rec{*}&lt;=tblespace(str::T)],
     rewrite=&gt;[
      /m/tble/inst/rewrite/sql_count?code{?}&lt;=code(),
      /m/tble/inst/rewrite/sql_sum?code{?}&lt;=code(),
@@ -8454,16 +8383,12 @@ mtron&gt; *lite:person/+/id     ​6​
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys/space/lite/schema
-==&gt;[instset=&gt;instset::[
-    pattern=&gt;/sys/space/lite/schema/instset/#,
-    type=&gt;[,],
-    q=&gt;[docq::[
+==&gt;[instset=&gt;instset::[pattern=&gt;/sys/space/lite/schema/instset/#,type=&gt;[,],q=&gt;[docq::[
     pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
     pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
     pattern=&gt;docq,
     obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
-    inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
-    space=&gt;[super=&gt;!*/sys]]@/sys/space/lite/schema/instset]
+    inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],space=&gt;[super=&gt;!*/sys]]@/sys/space/lite/schema/instset]
 mtron&gt; */sys/space/lite/schema/type/+</code></pre>
 </div>
 </div></div></td>
@@ -8511,22 +8436,14 @@ mtron&gt; *lite:kv/single
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; lite:kv/nest -&gt; [a=&gt;[b=&gt;[c=&gt;2,d=&gt;!*lite:kv/nest]]]
-==&gt;[a=&gt;[b=&gt;[
-    c=&gt;2,
-    d=&gt;!*lite:kv/nest]]]
+==&gt;[a=&gt;[b=&gt;[c=&gt;2,d=&gt;!*lite:kv/nest]]]
 mtron&gt; *lite:kv/nest
-==&gt;[a=&gt;[b=&gt;[
-    c=&gt;2,
-    d=&gt;!*lite:kv/nest]]]
+==&gt;[a=&gt;[b=&gt;[c=&gt;2,d=&gt;!*lite:kv/nest]]]
 mtron&gt; *lite:kv/nest/a/b/+
-==&gt;[a=&gt;[b=&gt;[
-    c=&gt;2,
-    d=&gt;!*lite:kv/nest]]]
+==&gt;[a=&gt;[b=&gt;[c=&gt;2,d=&gt;!*lite:kv/nest]]]
 ==&gt;2
 mtron&gt; *lite:kv/nest/a/b/d
-==&gt;[a=&gt;[b=&gt;[
-    c=&gt;2,
-    d=&gt;!*lite:kv/nest]]]</code></pre>
+==&gt;[a=&gt;[b=&gt;[c=&gt;2,d=&gt;!*lite:kv/nest]]]</code></pre>
 </div>
 </div>
 </div>
@@ -8646,16 +8563,12 @@ whose values happen to match <code>person.name</code> — the link is purely alg
     driver=&gt;&lt;org.sqlite.JDBC&gt;,
     route=&gt;[lite:=&gt;&lt;&gt;],
     space=&gt;[=&gt;],
-    schema=&gt;[instset=&gt;instset::[
-    pattern=&gt;/sys/space/lite/schema/instset/#,
-    type=&gt;[,],
-    q=&gt;[docq::[
+    schema=&gt;[instset=&gt;instset::[pattern=&gt;/sys/space/lite/schema/instset/#,type=&gt;[,],q=&gt;[docq::[
     pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
     pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
     pattern=&gt;docq,
     obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
-    inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
-    space=&gt;[super=&gt;!*/sys]]@/sys/space/lite/schema/instset]]@/sys/space/lite
+    inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],space=&gt;[super=&gt;!*/sys]]@/sys/space/lite/schema/instset]]@/sys/space/lite
 mtron&gt; lite:score/1 -&gt; [player=&gt;'marko', points=&gt;42]     ​2​
 ==&gt;[player=&gt;'marko',points=&gt;42]
 mtron&gt; lite:score/2 -&gt; [player=&gt;'grant', points=&gt;99]     ​3​
@@ -8700,20 +8613,12 @@ Unlike a matching column value, the pointer encodes the full address of the link
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; @/sys/space/lite &gt;&gt;= [table=&gt;[person,score,award]];     ​1​
 mtron&gt; lite:award/1 -&gt; [trophy=&gt;'gold',   recipient=&gt;!*lite:person/1]     ​2​
-==&gt;[
-    trophy=&gt;'gold',
-    recipient=&gt;!*lite:person/1]
+==&gt;[trophy=&gt;'gold',recipient=&gt;!*lite:person/1]
 mtron&gt; lite:award/2 -&gt; [trophy=&gt;'silver', recipient=&gt;!*lite:person/2]     ​3​
-==&gt;[
-    trophy=&gt;'silver',
-    recipient=&gt;!*lite:person/2]
+==&gt;[trophy=&gt;'silver',recipient=&gt;!*lite:person/2]
 mtron&gt; *lite:award/+     ​4​
-==&gt;[
-    trophy=&gt;'gold',
-    recipient=&gt;!*lite:person/1]
-==&gt;[
-    trophy=&gt;'silver',
-    recipient=&gt;!*lite:person/2]
+==&gt;[trophy=&gt;'gold',recipient=&gt;!*lite:person/1]
+==&gt;[trophy=&gt;'silver',recipient=&gt;!*lite:person/2]
 mtron&gt; *lite:award/1/recipient     ​5​
 ==&gt;[name=&gt;'marko',age=&gt;29]</code></pre>
 </div>
@@ -8754,14 +8659,9 @@ mtron&gt; area:V/1 -&gt; [label=&gt;'downtown',capacity=&gt;5000]     ​2​
 ==&gt;[label=&gt;'downtown',capacity=&gt;5000]
 mtron&gt; @/sys/space/lite &gt;&gt;= [table=&gt;[person,score,award,venue]];     ​3​
 mtron&gt; lite:venue/1 -&gt; [name=&gt;'main_stage',location=&gt;!*area:V/1,parent=&gt;none]     ​4​
-==&gt;[
-    name=&gt;'main_stage',
-    location=&gt;!*area:V/1,
-    parent=&gt;none]
+==&gt;[name=&gt;'main_stage',location=&gt;!*area:V/1,parent=&gt;none]
 mtron&gt; *lite:venue/1     ​5​
-==&gt;[
-    name=&gt;'main_stage',
-    location=&gt;!*area:V/1]
+==&gt;[name=&gt;'main_stage',location=&gt;!*area:V/1]
 mtron&gt; *lite:venue/1/location     ​6​
 ==&gt;[label=&gt;'downtown',capacity=&gt;5000]</code></pre>
 </div>
@@ -8801,15 +8701,9 @@ pointing back at the row&#8217;s own table.</p>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; lite:venue/2 -&gt; [name=&gt;'side_hall',location=&gt;!*g:V/1,parent=&gt;!*lite:venue/1]     ​1​
-==&gt;[
-    name=&gt;'side_hall',
-    location=&gt;!*g:V/1,
-    parent=&gt;!*lite:venue/1]
+==&gt;[name=&gt;'side_hall',location=&gt;!*g:V/1,parent=&gt;!*lite:venue/1]
 mtron&gt; *lite:venue/2     ​2​
-==&gt;[
-    name=&gt;'side_hall',
-    location=&gt;!*area:V/1,
-    parent=&gt;'1']
+==&gt;[name=&gt;'side_hall',location=&gt;!*area:V/1,parent=&gt;'1']
 mtron&gt; *lite:venue/2/parent/location     ​3​
 ==&gt;'1'</code></pre>
 </div>
@@ -8972,6 +8866,7 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys/+
+==&gt;memspace::[pattern=&gt;/sys/desktop/#,space=&gt;[super=&gt;!*/sys]]@/sys/desktop
 ==&gt;/m/mach/log::[level=&gt;[info=&gt;[&lt;#&gt;]]]@/sys/log
 ==&gt;router::[
     primary=&gt;/m,
@@ -8985,15 +8880,11 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
     obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
     inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
       space=&gt;[super=&gt;!*/m],
-      constq=&gt;[
-       !*/m/mach/io/serializer/json/simple,
-       _id@/m/dcmnt/_id],
+      constq=&gt;[!*/m/mach/io/serializer/json/simple,_id@/m/dcmnt/_id],
       type=&gt;[
        collection::T,
        dcmntspace::T],
-      inst=&gt;[
-       mql?rec{*}&lt;=dcmntspace(uri::T,rec::T),
-       mql?rec{*}&lt;=collection(rec::T)],
+      inst=&gt;[mql?rec{*}&lt;=dcmntspace(uri::T,rec::T),mql?rec{*}&lt;=collection(rec::T)],
       rewrite=&gt;[
        /m/dcmnt/inst/rewrite/mql_count?code{?}&lt;=code(),
        /m/dcmnt/inst/rewrite/mql_sum?code{?}&lt;=code(),
@@ -9007,14 +8898,8 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
      /sys/space/usr=&gt;memspace::[
       pattern=&gt;/usr/#,
       q=&gt;[
-       typeq::[
-        pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
-        pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
-        qless_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
-        pattern=&gt;&lt;T&gt;],
-       mintq::[
-        pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
-        pattern=&gt;mintq],
+       typeq::[pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),qless_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),pattern=&gt;&lt;T&gt;],
+       mintq::[pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),pattern=&gt;mintq],
        docq::[
         pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
         pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
@@ -9027,10 +8912,9 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
         qless_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
         pattern=&gt;subq,
         obj=&gt;[,]],
-       incrq::[
-        pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
-        pattern=&gt;incrq]],
+       incrq::[pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),pattern=&gt;incrq]],
       space=&gt;[=&gt;]]@/sys/space/usr,
+     /sys/desktop=&gt;memspace::[pattern=&gt;/sys/desktop/#,space=&gt;[super=&gt;!*/sys]]@/sys/desktop,
      /m/grph=&gt;instset::[
       pattern=&gt;/m/grph/#,
       q=&gt;[docq::[
@@ -9109,13 +8993,9 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
         qless_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
         pattern=&gt;subq,
         obj=&gt;[,]],
-       incrq::[
-        pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
-        pattern=&gt;incrq],
-       mimeq::[
-        post_read=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
-        pattern=&gt;mimeq]],
-      space=&gt;[=&gt;]]@/sys,
+       incrq::[pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),pattern=&gt;incrq],
+       mimeq::[post_read=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),pattern=&gt;mimeq]],
+      space=&gt;[sub=&gt;!*/sys/desktop]]@/sys,
      /m/tble=&gt;instset::[
       pattern=&gt;/m/tble/#,
       q=&gt;[docq::[
@@ -9130,10 +9010,7 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
        rrow::T,
        table::T,
        tblespace::T],
-      inst=&gt;[
-       as?rrow&lt;=lrow(rrow::T),
-       as?lrow&lt;=rrow(lrow::T),
-       sql?rec{*}&lt;=tblespace(str::T)],
+      inst=&gt;[as?rrow&lt;=lrow(rrow::T),as?lrow&lt;=rrow(lrow::T),sql?rec{*}&lt;=tblespace(str::T)],
       rewrite=&gt;[
        /m/tble/inst/rewrite/sql_count?code{?}&lt;=code(),
        /m/tble/inst/rewrite/sql_sum?code{?}&lt;=code(),
@@ -9144,11 +9021,7 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
        /m/tble/inst/rewrite/sql_where_count?code{?}&lt;=code(),
        /m/tble/inst/rewrite/sql_where_limit?code{?}&lt;=code(),
        /m/tble/inst/rewrite/sql_select?code{?}&lt;=code()]]@/m/tble,
-     &lt;+/#&gt;=&gt;stack::[
-      pattern=&gt;&lt;+/#&gt;,
-      q=&gt;[mintq::[
-    pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
-    pattern=&gt;mintq]]],
+     &lt;+/#&gt;=&gt;stack::[pattern=&gt;&lt;+/#&gt;,q=&gt;[mintq::[pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),pattern=&gt;mintq]]],
      /m/rdf=&gt;instset::[
       pattern=&gt;/m/rdf/#,
       q=&gt;[docq::[
@@ -9164,10 +9037,7 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
        quad::T,
        rdfspace::T],
       inst=&gt;[sparql?rec{*}&lt;=rdfspace(str::T)]]@/m/rdf,
-     /sys/space/mtronfs=&gt;fsspace::[
-      pattern=&gt;mtronfs:#,
-      route=&gt;[mtronfs:=&gt;&lt;.metatron&gt;],
-      space=&gt;[=&gt;]]@/sys/space/mtronfs,
+     /sys/space/mtronfs=&gt;fsspace::[pattern=&gt;mtronfs:#,route=&gt;[mtronfs:=&gt;&lt;.metatron&gt;],space=&gt;[=&gt;]]@/sys/space/mtronfs,
      /m/mach/io=&gt;[
       pattern=&gt;/m/mach/io/#,
       q=&gt;[docq::[
@@ -9178,11 +9048,7 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
     inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
       space=&gt;[super=&gt;!*/m/mach],
       type=&gt;[serializer::T],
-      const=&gt;[
-       !*/m/mach/io/serializer/string/clean,
-       !*/m/mach/io/serializer/bytebuffer,
-       !*/m/mach/io/serializer/json/simple,
-       !*/m/mach/io/serializer/bson]]@/m/mach/io,
+      const=&gt;[!*/m/mach/io/serializer/string/clean,!*/m/mach/io/serializer/bytebuffer,!*/m/mach/io/serializer/json/simple,!*/m/mach/io/serializer/bson]]@/m/mach/io,
      /m=&gt;instset::[
       pattern=&gt;/m/#,
       q=&gt;[docq::[
@@ -9192,9 +9058,6 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
     obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
     inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
       space=&gt;[sub=&gt;{!*/m/sys,!*/m/mach,!*/m/math,!*/m/web,!*/m/iot,!*/m/grph,!*/m/llm,!*/m/tble,!*/m/dcmnt,!*/m/rdf}],
-      const=&gt;[
-       noobj,
-       none@none],
       type=&gt;[
        #::T,
        bool::T,
@@ -9225,15 +9088,7 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
        incrq::T,
        constq::T,
        mimeq::T],
-      rewrite=&gt;[
-       /m/inst/rewrite/id_removal?code{?}&lt;=code(),
-       /m/inst/rewrite/map_nest?code{?}&lt;=code(),
-       /m/inst/rewrite/else_after_count?code{?}&lt;=code(),
-       /m/inst/rewrite/plus_zero?code{?}&lt;=code(),
-       /m/inst/rewrite/mult_one?code{?}&lt;=code(),
-       /m/inst/rewrite/split_merge_collapse?code{?}&lt;=code(),
-       /m/inst/rewrite/split_merge_left_factor?code{?}&lt;=code(),
-       /m/inst/rewrite/split_merge_right_factor?code{?}&lt;=code()],
+      const=&gt;[noobj],
       inst=&gt;[
        as?bool&lt;=bool(bool::T),
        as?bytes&lt;=bool(bytes::T),
@@ -9461,19 +9316,24 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
        rshift?B{*}&lt;=A(C{*}::T),
        lshift?B{*}&lt;=A(),
        start?A{**}&lt;=noobj{0}(A{**}::T),
-       ctor()]]@/m,
-     /m/iot=&gt;instset::[
-      pattern=&gt;/m/iot/#,
-      q=&gt;[docq::[
+       ctor()],
+      rewrite=&gt;[
+       /m/inst/rewrite/id_removal?code{?}&lt;=code(),
+       /m/inst/rewrite/map_nest?code{?}&lt;=code(),
+       /m/inst/rewrite/else_after_count?code{?}&lt;=code(),
+       /m/inst/rewrite/plus_zero?code{?}&lt;=code(),
+       /m/inst/rewrite/mult_one?code{?}&lt;=code(),
+       /m/inst/rewrite/split_merge_collapse?code{?}&lt;=code(),
+       /m/inst/rewrite/split_merge_left_factor?code{?}&lt;=code(),
+       /m/inst/rewrite/split_merge_right_factor?code{?}&lt;=code()]]@/m,
+     /m/iot=&gt;instset::[pattern=&gt;/m/iot/#,q=&gt;[docq::[
     pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
     pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
     pattern=&gt;docq,
     obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
-    inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
-      space=&gt;[super=&gt;!*/m],
-      type=&gt;[
-       mqtt::T,
-       haos::T]]@/m/iot,
+    inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],space=&gt;[super=&gt;!*/m],type=&gt;[
+    mqtt::T,
+    haos::T]]@/m/iot,
      /m/mach=&gt;instset::[
       pattern=&gt;/m/mach/#,
       q=&gt;[docq::[
@@ -9496,11 +9356,10 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
        image::T,
        factory::T,
        mfactory::T,
+       thread_executor::T,
+       thread::T,
        core::T,
-       virtual::T,
-       monad::T,
-       machine::T,
-       swarm::T],
+       virtual::T],
       inst=&gt;[
        lift(#{?}::T),
        rewrite?rec[short=&gt;uri,long=&gt;uri]&lt;=#{?}(uri::T),
@@ -9515,7 +9374,10 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
        one?A&lt;=A(),
        which(uri::T),
        inject(int::T,#::T),
-       /m/inst/thread?/m/mach/thread&lt;=#{?}(#::T)]]@/m/mach,
+       /m/inst/thread?thread&lt;=#{?}(#::T),
+       stop?thread&lt;=thread(),
+       pause?thread&lt;=thread(),
+       resume?thread&lt;=thread()]]@/m/mach,
      /m/web=&gt;instset::[
       pattern=&gt;/m/web/#,
       q=&gt;[docq::[
@@ -9526,6 +9388,7 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
     inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
       space=&gt;[super=&gt;!*/m],
       const=&gt;[
+       [remote_console=&gt;inst()]@helper,
        !*/m/mach/io/serializer/xml,
        !*/m/mach/io/serializer/html,
        !*/m/mach/io/serializer/json,
@@ -9608,9 +9471,7 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
        ceil?real&lt;=#{?}(real::T),
        floor?real&lt;=#{?}(real::T),
        round?int&lt;=#{?}(real::T)],
-      const=&gt;[
-       2.7183@/m/math/e?constq,
-       3.1416@/m/math/pi?constq]]@/m/math,
+      const=&gt;[2.7183@/m/math/e?constq,3.1416@/m/math/pi?constq]]@/m/math,
      /m/sys=&gt;instset::[
       pattern=&gt;/m/sys/#,
       q=&gt;[docq::[
@@ -9620,16 +9481,9 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
     obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
     inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
       space=&gt;[super=&gt;!*/m],
-      inst=&gt;[
-       native?B{*}&lt;=A{?}(str::T),
-       stdout?#{?}&lt;=#{?}(#{?}::T),
-       stdin?str&lt;=#{?}()],
-      const=&gt;[[=&gt;]@/sys/thread]]@/m/sys,
-     /sys/space/fs=&gt;fsspace::[
-      pattern=&gt;local:#,
-      route=&gt;[local:=&gt;/home/killswitch/],
-      script=&gt;!*boot/script,
-      space=&gt;[=&gt;]]@/sys/space/fs],
+      inst=&gt;[native?B{*}&lt;=A{?}(str::T),sleep?A{?}&lt;=A{?}(time::T),stdout?#{?}&lt;=#{?}(#{?}::T),stdin?str&lt;=#{?}()],
+      const=&gt;[[stop=&gt;[,],run=&gt;[!*/sys/thread/main,!*/sys/thread/main]]@/sys/thread/executor]]@/m/sys,
+     /sys/space/fs=&gt;fsspace::[pattern=&gt;local:#,route=&gt;[local:=&gt;/home/killswitch/],script=&gt;!*boot/script,space=&gt;[=&gt;]]@/sys/space/fs],
     pattern=&gt;&lt;#&gt;,
     route=&gt;[
      pB=&gt;[/m/math/pB],
@@ -9659,6 +9513,7 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
      log10=&gt;[/m/math/inst/log10],
      elmt=&gt;[/m/grph/elmt],
      group=&gt;[/m/inst/group],
+     resume=&gt;[/m/mach/inst/resume],
      exp=&gt;[/m/math/inst/exp],
      auto_from=&gt;[/m/inst/auto_from],
      skill=&gt;[/m/llm/skill],
@@ -9667,9 +9522,11 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
      pow=&gt;[/m/inst/pow,/m/math/inst/pow],
      gB=&gt;[/m/math/gB],
      memory=&gt;[/m/llm/memory],
+     helper=&gt;[/m/web/helper],
      count=&gt;[/m/inst/count],
      within=&gt;[/m/inst/within],
      plus=&gt;[/m/inst/plus],
+     thread_executor=&gt;[/m/mach/thread_executor],
      less=&gt;[/m/mach/inst/less],
      values=&gt;[/m/grph/inst/values],
      inV=&gt;[/m/grph/inst/inV],
@@ -9682,6 +9539,7 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
      http_handler=&gt;[/m/web/space/httpspace/http_handler],
      web_http=&gt;[/m/web/space/httpspace/web_http],
      inv=&gt;[/m/inst/inv],
+     sleep=&gt;[/m/sys/inst/sleep],
      ping=&gt;[/m/web/inst/ping],
      out=&gt;[/m/grph/inst/out],
      in=&gt;[/m/grph/inst/in],
@@ -9754,15 +9612,13 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
      sql=&gt;[/m/tble/inst/sql],
      constq=&gt;[/m/space/qproc/constq],
      lrow=&gt;[/m/tble/lrow],
-     monad=&gt;[/m/mach/monad],
      inst=&gt;[/m/inst],
      auto=&gt;[/m/inst/auto],
-     machine=&gt;[/m/mach/machine],
      dcmntspace=&gt;[/m/dcmnt/space/dcmntspace],
+     thread=&gt;[/m/mach/thread],
      rshift=&gt;[/m/inst/rshift],
      gt=&gt;[/m/inst/gt],
      map_nest=&gt;[/m/inst/rewrite/map_nest],
-     none=&gt;[/m/none],
      eq=&gt;[/m/inst/eq],
      mfactory=&gt;[/m/mach/mfactory],
      label=&gt;[/m/grph/inst/label],
@@ -9836,10 +9692,10 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
      apply=&gt;[/m/inst/apply],
      rng=&gt;[/m/inst/rng],
      mcp_client=&gt;[/m/web/mcp_client],
-     thread=&gt;[/m/inst/thread],
      minus=&gt;[/m/inst/minus],
      tid=&gt;[/m/inst/tid],
      end=&gt;[/m/inst/end],
+     pause=&gt;[/m/mach/inst/pause],
      close=&gt;[/m/mach/inst/close],
      socket=&gt;[/m/web/space/httpspace/socket],
      mcp_emulator_http=&gt;[/m/web/space/httpspace/mcp_emulator_http],
@@ -9860,7 +9716,6 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
      regex=&gt;[/m/inst/regex],
      get=&gt;[/m/inst/get],
      lshift=&gt;[/m/inst/lshift],
-     swarm=&gt;[/m/mach/machine/swarm],
      websocket=&gt;[/m/web/space/wsspace/websocket],
      mqtt=&gt;[/m/iot/space/mqtt],
      from=&gt;[/m/inst/from],
@@ -9875,6 +9730,7 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
      feature=&gt;[/m/llm/feature],
      memspace=&gt;[/m/space/memspace],
      rewrite=&gt;[/m/mach/inst/rewrite],
+     stop=&gt;[/m/mach/inst/stop],
      format=&gt;[/m/web/inst/format],
      both=&gt;[/m/grph/inst/both],
      grphspace=&gt;[/m/grph/space/grphspace],
@@ -9908,8 +9764,7 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
      matches=&gt;[/m/inst/matches],
      chat=&gt;[/m/llm/inst/chat],
      rel=&gt;[/m/rel]],
-    prefix=&gt;[=&gt;]]@/sys/router
-==&gt;[=&gt;]@/sys/thread</code></pre>
+    prefix=&gt;[=&gt;]]@/sys/router</code></pre>
 </div>
 </div></div></td>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
@@ -10341,3 +10196,4 @@ console::[        =&gt; ]@/sys/console;
 
 </body>
 </html>
+</div>

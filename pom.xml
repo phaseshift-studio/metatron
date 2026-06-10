@@ -558,6 +558,7 @@
                                 <argument>${project.basedir}/docs/website/instset</argument>
                                 <!-- generate instset docs -->
                                 <argument>/m</argument>
+                                <argument>/m/sys</argument>
                                 <argument>/m/mach</argument>
                                 <argument>/m/math</argument>
                                 <argument>/m/web</argument>
