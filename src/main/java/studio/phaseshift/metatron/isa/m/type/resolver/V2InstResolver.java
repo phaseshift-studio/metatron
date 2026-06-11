@@ -370,7 +370,7 @@ public class V2InstResolver implements InstResolver {
                             // Check for conflicting prior binding
                             final fURI lastBinding = generics.get(argGeneric);
                             if (lastBinding != null && !userArgTypeId.test(lastBinding)) {
-                                LOG.debug("generic conflict: %s bound to %s, now %s", argGeneric, lastBinding, userArgTypeId);
+                                LOG.warn("generic conflict: %s bound to %s, now %s — first binding wins", argGeneric, lastBinding, userArgTypeId);
                             }
                             generics.putIfAbsent(argGeneric, userArgTypeId);
                         }
