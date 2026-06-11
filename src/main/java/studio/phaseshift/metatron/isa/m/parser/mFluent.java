@@ -280,10 +280,6 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
         return this.addInst(instB(mInstSet.FILL_TID, lst(obj)));
     }
 
-    public F chain_(final Obj obj) {
-        return this.addInst(instB(mInstSet.CHAIN_TID, lst(obj)));
-    }
-
     // ========================================
     // Aggregation Functions
     // ========================================
@@ -668,10 +664,6 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
 
         public static <F extends mFluent<F>> F fill_(final Obj obj) {
             return new mFluent<F>().fill_(obj);
-        }
-
-        public static <F extends mFluent<F>> F chain_(final Obj obj) {
-            return new mFluent<F>().chain_(obj);
         }
 
         // ========================================

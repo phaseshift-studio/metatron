@@ -242,7 +242,8 @@ public abstract class AbstractMetatronTest {
             }
         } else {
             final Obj cd = ObjmtronSerializer.parse(code);
-            final Obj ex = ObjmtronSerializer.parse(expected).apply();
+            final Obj exParsed = ObjmtronSerializer.parse(expected);
+            final Obj ex = exParsed.isCall() ? exParsed.apply() : exParsed;
             final Obj actual = cd.apply(noobj());
             LOG.debug("testing %s => %s => %s [expected:%s]", code, code, actual, ex);
             if (!actual.equals(ex) && actual.stream().anyMatch(Obj::isFail))

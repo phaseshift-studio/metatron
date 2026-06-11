@@ -18,11 +18,19 @@
 
 package studio.phaseshift.metatron.isa.m.type.resolver;
 
+import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.mach.type.Router;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
+
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 
 /**
  * Strategy interface for instruction resolution.
@@ -75,5 +83,63 @@ public interface InstResolver {
      * @param candidates stream of candidate instructions fetched from router
      * @return the resolved instruction with bound generics and resolved args, or null if no match
      */
-    Inst resolve(Obj lhs, Inst userInst, Stream<Obj> candidates);
+    /**
+     * Resolve an instruction with resolver-owned candidate fetching.
+     * This is the primary resolution method. Implementations own the full pipeline:
+     * candidate fetching, selection, generics binding, and argument resolution.
+     */
+    Inst resolveInst(Obj lhs, Inst userInst);
+
+    /**
+     * Legacy resolution method: receives pre-fetched candidates.
+     * Default fetches candidates and delegates to {@link #resolveInst}.
+     */
+    default Inst resolve(final Obj lhs, final Inst userInst, final Stream<Obj> candidates) {
+        return resolveInst(lhs, userInst);
+    }
+
+    /**
+     * Resolve a full instruction chain. Default threads output-type of each
+     * instruction as input-type of the next via {@link Inst#resolve(Obj)}.
+     */
+    default Code resolveCode(final Obj lhs, final Code code) {
+        final var LOG = studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty.log(this);
+        Obj token = lhs.isType() ? lhs : lhs.type();
+        final List<Inst> resolvedCode = new ArrayList<>();
+        boolean fullResolution = true;
+        int i = 0;
+        for (final Inst inst : code.insts()) {
+            try {
+                final Inst instToResolve = inst.tid().basePath()
+                        .equals(studio.phaseshift.metatron.isa.m.mInstSet.AS_INST_TID)
+                        ? inst.rng(inst.arg(0).asType()).asInst()
+                        : inst;
+                final Inst resolvedInst = instToResolve.resolve(token);
+                if (!resolvedInst.hasDom()) {
+                    resolvedCode.add(inst.clone().selfVID(f("" + i)).as());
+                    token = inst.hasRng() ? inst.rng() : token;
+                } else {
+                    resolvedCode.add(resolvedInst.clone().selfVID(f("" + i)).as());
+                    token = resolvedInst.rng();
+                    if (resolvedInst.isGather()) {
+                        LOG.trace("  {{m}}==|{{/m}} marking {{y}}barrier{{/y}} at %s", resolvedInst);
+                    } else if (resolvedInst.isInitial()) {
+                        LOG.trace("  {{g}}==>{{/g}} marking {{y}}initial{{/y}} at %s", resolvedInst);
+                        token = resolvedInst.arg(0).isType() ? resolvedInst.arg(0) : resolvedInst.arg(0).type();
+                    }
+                }
+                token = token.c(c -> c.mult(resolvedInst.c()));
+            } catch (final Exception e) {
+                resolvedCode.add(inst.clone().selfVID(f("" + i)).as());
+                LOG.debug("runtime resolution of %s required", null == inst ? "[0]" : inst);
+                fullResolution = false;
+            }
+            i++;
+        }
+        final Code resolved = code.jvm(resolvedCode);
+        LOG.debug("%s code:\n        [{{g}}COMPILED{{/g}}]\n%s",
+                fullResolution ? "{{g}}resolved{{/g}}" : "{{y}}semi-resolved{{/y}}",
+                studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer.prettyPrintCode(resolved));
+        return resolved;
+    }
 }

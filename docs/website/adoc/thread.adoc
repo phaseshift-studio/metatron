@@ -93,24 +93,24 @@ A thread with `yield=>!*/sys/thread/<vid>` forms a cooperative pair. When one pa
 
 [mtron]
 ----
-[,]@ab_queue                                               [-- <1> --]
-virtual::[code  => @ab_queue >>= +['B'], /
+""@ab                                                      [-- <1> --]
+virtual::[code  => @ab >>= +'B',         /
           loop  => second::1.0,          /
           state => pause]@/sys/thread/b                    [-- <3> --]
-virtual::[code  => @ab_queue >>= +['A'], /
+virtual::[code  => @ab >>= +'A',         /
           loop  => second::1.0,          /
           yield => !*/sys/thread/b]@/sys/thread/a          [-- <4> --]
 @/sys/thread/b >>= +[yield => !*/sys/thread/a]             [-- <5> --]
 sleep(second::5.0)
 */sys/thread/b.stop()
 */sys/thread/a.stop()
-*ab_queue
+*ab
 ----
 <1> partner **B** starts paused
 <2> initiator **A** points to **B**, begins running
 <3> direct **B** yield at **A** — the pair is now linked
 
-A updates a queue, pauses, yields to **B**. **B** updates the queue, pauses, yields to **A**. The two trade turns executing their `code`, where one full cycle completes approximately every 2 seconds.
+**A** appends `A` to the `str@ab`, pauses, yields to **B**. **B** appends `B` to the same `str::T`, pauses, then yields to **A**. The two trade turns executing their `code`, where one full cycle completes approximately every 2 seconds.
 
 [discrete]
 ==== Pausing and Resuming

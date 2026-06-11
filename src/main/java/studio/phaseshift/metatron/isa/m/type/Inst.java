@@ -233,23 +233,7 @@ public interface Inst extends Call {
         */
 
         try {
-            Obj fetched = noobj();
-            if (fetched.isNoObj() && lhs.isRec()) // search obj stack structure
-                fetched = lhs.asRec().at(this.tid().basePath());
-            //if (null != lhs.vid()) // search obj space structure
-            //    fetched = Router.readFromSpace(lhs.vid().extend(this.tid().basePath()));
-            if (fetched.isNoObj()) // search inst space structure
-                fetched = Router.readFromSpace(this.tid().basePath());
-            /// //////////////////////////////////////////////////
-            /*if (fetched.stream().noneMatch(Obj::isInstObj)) {
-                fetched = space.read(this.tid().extend("apply"));
-                if (fetched.stream().noneMatch(Obj::isInstObj))
-                    fetched = Router.global().read(this.type().tid().extend("apply"));
-                LOG.debug("apply() insts at: %s => %s", this.tid().extend("apply"), fetched);
-            }*/
-            /// //////////////////////////////////////////////////
-            LOG.debug("fetched insts: %s => %s", this.tid().basePath(), fetched);
-            final Inst resolved = InstResolver.get().resolve(lhs, this, fetched.stream());
+            final Inst resolved = InstResolver.get().resolveInst(lhs, this);
             if (null != resolved) {
                 LOG.trace("%s => %s is %s resolved", lhs, resolved, CommonUtil.lambda(() -> resolved.isResolved(false) ? "" : "not"));
                 // Cache disabled - see comment above
@@ -468,13 +452,14 @@ public interface Inst extends Call {
                 for (int i = 0; i < apiInst.args().count(); i++) {
                     final Obj usrArg = Optional.ofNullable(userInst.arg(i)).orElse(noobj());
                     final Obj apiArg = Optional.ofNullable(apiInst.arg(i)).orElse(noobj());
-                    if (!usrArg.c().within(apiArg.c()))
-                        return null;
+                    // Coefficient quick-reject REMOVED for nested calls: executor
+                    // handles uniqueC() compression (e.g., {2}2.plus(x) runs once
+                    // and multiplies). Type compatibility checked per-branch below.
                     if (userInst.isBlocking()) {
                         resolvedArgs.add(usrArg);
                     } else if (apiArg.isObjCall() && usrArg.isNoObj()) { // used for default args (when user arg is noobj)
                         final Obj r = apiArg.apply(usrArg).resolve(lhs);
-                        if (r.rng().test(apiArg))
+                        if (typeCompatibleIgnoreCoefficient(r.rng(), apiArg))
                             resolvedArgs.add(r);
                         else return null;
                     } else if (usrArg.isObjCall()) {
@@ -483,7 +468,7 @@ public interface Inst extends Call {
                             resolvedArgs.add(usrArg.resolve(lhs));
                         } else {
                             final Obj r = usrArg.resolve(lhs);
-                            if (r.rng().test(apiArg))
+                            if (typeCompatibleIgnoreCoefficient(r.rng(), apiArg))
                                 resolvedArgs.add(r);
                             else return null;
                         }
@@ -504,6 +489,22 @@ public interface Inst extends Call {
                         }));
             } else
                 throw MTronException.of("inst args must be a lst or rec: %s", apiInst);
+        }
+
+        /**
+         * Check type compatibility, ignoring coefficient. Unbound generics match
+         * any type. Executor handles uniqueC() compression.
+         */
+        private static boolean typeCompatibleIgnoreCoefficient(final Obj a, final Obj b) {
+            if (a.isNoObj() || b.isNoObj()) return true;
+            final Type aType = a.isType() ? a.asType() : a.type();
+            final Type bType = b.isType() ? b.asType() : b.type();
+            if (aType.isGeneric() || bType.isGeneric()) return true;
+            if (a.testByID(b) || b.testByID(a)) return true;
+            if (a.c().within(b.c()) || b.c().within(a.c())) return a.test(b);
+            final Obj aNorm = a.c(cInt.ONE());
+            final Obj bNorm = b.isType() ? b.asType().c(cInt.ONE()) : b.c(cInt.ONE());
+            return aNorm.test(bNorm);
         }
 
         public static Inst applyArgs(final Obj lhs, final Inst inst) {

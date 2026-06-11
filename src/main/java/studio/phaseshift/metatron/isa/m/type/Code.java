@@ -24,6 +24,7 @@ import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.machine.SwarmMachine;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.isa.m.type.resolver.InstResolver;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.*;
@@ -90,50 +91,11 @@ public interface Code extends Call {
 
     @Override
     default Code resolve(final Obj lhs) {
-        //if(this.insts().stream().noneMatch(x -> x.resolution().equals(Inst.Resolution.A)))
-        //  return this;
         GraphittyLogger LOG = Graphitty.log(this);
         LOG.debug("reading code:\n        [{{y}}PREPILED{{/y}}] %s {{g}}=>{{/g}}\n%s", lhs, ObjmtronSerializer.prettyPrintCode(this));
-        /// ////////////////////////////////////////////////////////////////////////////////////////////////////////////
         final Code rewrittenCode = this.rewrite();
         LOG.debug("rewriting code:\n        [{{y}}REWRITTEN{{/y}}] %s {{g}}=>{{/g}}\n%s", lhs, ObjmtronSerializer.prettyPrintCode(rewrittenCode));
-        Obj token = lhs.isType() ? lhs : lhs.type();
-        final List<Inst> resolvedCode = new ArrayList<>();
-        boolean fullResolution = true;
-        int i = 0;
-        for (final Inst inst : rewrittenCode.insts()) {
-            try {
-                LOG.trace("   {{g}}=>{{/g}} resolving %s => %s", token, inst);
-                final Inst resolvedInst = (inst.tid().basePath().equals(AS_INST_TID) ? inst.rng(inst.arg(0).asType()).asInst() : inst).resolve(token);
-
-                if (!resolvedInst.hasDom()) {
-                    resolvedCode.add(inst.clone().selfVID(f("" + i)).as());
-                    token = inst.hasRng() ? inst.rng() : token;
-                } else {
-                    resolvedCode.add(resolvedInst.clone().selfVID(f("" + i)).as());
-                    token = resolvedInst.rng();
-                    if (resolvedInst.isInitial()) {
-                        LOG.trace("  {{g}}==>{{/g}} marking {{y}}initial{{/y}} at %s", resolvedInst);
-                        token = resolvedInst.arg(0).isType() ? resolvedInst.arg(0) : resolvedInst.arg(0).type();
-                        //this.running().append(MMonad.of(NoObj.single(), instB));
-                    } else if (resolvedInst.isGather()) {
-                        // many-to-?
-                        LOG.trace("  {{m}}==|{{/m}} marking {{y}}barrier{{/y}} at %s", resolvedInst);
-                    }
-                }
-                token = token.c(c -> c.mult(resolvedInst.c()));
-            } catch (final Exception e) {
-                resolvedCode.add(inst.clone().selfVID(f("" + i)).as());
-                LOG.debug("runtime resolution of %s required: not enough context to determine inst", null == inst ? "[0]" : inst);
-                //e.printStackTrace();
-                fullResolution = false;
-            }
-            i++;
-        }
-        final Code resolved = this.jvm(resolvedCode);
-        LOG.debug("%s code:\n        [{{g}}COMPILED{{/g}}]\n%s", fullResolution ? "{{g}}resolved{{/g}}" : "{{y}}semi-resolved{{/y}}", ObjmtronSerializer.prettyPrintCode(resolved));
-        return resolved;
-
+        return InstResolver.get().resolveCode(lhs, rewrittenCode);
     }
 
     default Inst nextInst(final Inst inst) {
