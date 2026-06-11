@@ -497,9 +497,12 @@ public interface Inst extends Call {
          */
         private static boolean typeCompatibleIgnoreCoefficient(final Obj a, final Obj b) {
             if (a.isNoObj() || b.isNoObj()) return true;
-            final Type aType = a.isType() ? a.asType() : a.type();
-            final Type bType = b.isType() ? b.asType() : b.type();
-            if (aType.isGeneric() || bType.isGeneric()) return true;
+            // Use specificTypeId for isGeneric check — avoids a.type() which
+            // triggers MType.T() construction and can cause StackOverflow with
+            // typed values like nat::2.
+            final fURI aId = Obj.Helper.specificTypeId(a);
+            final fURI bId = Obj.Helper.specificTypeId(b);
+            if (aId.isGeneric() || bId.isGeneric()) return true;
             if (a.testByID(b) || b.testByID(a)) return true;
             if (a.c().within(b.c()) || b.c().within(a.c())) return a.test(b);
             final Obj aNorm = a.c(cInt.ONE());
