@@ -1064,8 +1064,8 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                     instC(APPLY_INST_TID.dom(ALL).rng(ALL_STAR), lst(T(ALL_STAR)), (lhs, inst) -> lhs.isInst() ?
                             lhs.asInst().apply(inst.args()) :
                             Router.global().read(lhs.uriValue().basePath().extend("apply")).apply(inst.args())),
-                    instC(MAP_INST_TID.dom(A).rng(B), lst(T(B)), (lhs, inst) -> inst.arg(0)),
-                    docWrap(instC(MAP_INST_TID.dom(A.maybe()).rng(B.maybe()), lst(T(B.maybe())), (lhs, inst) -> inst.arg(0)), "maybe some obj", "the lhs obj applied to the arg obj", Map.of(jnt(0), "any obj"), "applies the lhs obj to the arg obj to yield the rhs obj"),
+                    instC(MAP_INST_TID.dom(A).rng(ALL.maybe()), lst(T(B)), (lhs, inst) -> inst.arg(0)),
+                    docWrap(instC(MAP_INST_TID.dom(A.maybe()).rng(ALL.maybe()), lst(T(B.maybe())), (lhs, inst) -> inst.arg(0)), "maybe some obj", "the lhs obj applied to the arg obj", Map.of(jnt(0), "any obj"), "applies the lhs obj to the arg obj to yield the rhs obj"),
                     instC(FILTER_INST_TID.dom(A).rng(A.maybe()), lst(T(ALL.maybe())), (lhs, inst) -> inst.arg(0).isNoObj() ? noobj() : lhs),
                     instC(SIDE_INST_TID.dom(A).rng(A), lst(ALL_TYPE), (lhs, inst) -> Optional.of(inst.arg(0).apply(lhs)).map(x -> (Obj) null).orElse(lhs)),
                     docWrap(instC(TID_INST_TID.dom(ALL).rng(URI_TID), lst(), (lhs, inst) -> lhs.tid().toUri()),
@@ -1186,6 +1186,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                     docWrap(instC(EVAL_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(ALL_TYPE), (lhs, inst) -> inst.arg(0)),
                             "can be any obj", "the result of applying the lhs to the arg", Map.of(jnt(0), "the mtron obj to evaluate"), "evaluates an mtron obj"),
                     instC(SWAP_TID.dom(A).rng(A), lst(T(B)), (lhs, inst) -> lhs.apply(inst.arg(0))),
+                    instC(RSHIFT_INST_TID.dom(ALL).rng(URI_TID.maybe()), lst(uri("vid")), (lhs, inst) -> null == lhs.vid() ? noobj() : lhs.vid().toUri()),
                     instC(RSHIFT_INST_TID.dom(A).rng(B.maybeSome()), lst(T(C.maybeSome())), (lhs, inst) -> {
                         if (lhs.isRec())
                             return Rec.Helper.rshiftRec(lhs.asRec(), inst.arg(0));

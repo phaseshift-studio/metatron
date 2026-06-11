@@ -22,6 +22,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Poly;
+import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 
@@ -61,6 +62,23 @@ public class ScoringInstResolver implements InstResolver {
      * for scoring purposes.
      */
     private record ScoredCandidate(Inst original, Inst transformed, int score) {
+    }
+
+    @Override
+    public Inst resolveInst(final Obj lhs, final Inst userInst) {
+        if (userInst.hasf())
+            return userInst;
+        if (userInst.isNoObj())
+            return null;
+
+        final fURI basePath = userInst.tid().basePath();
+        Obj fetched = noobj();
+        if (lhs.isRec())
+            fetched = lhs.asRec().at(basePath);
+        if (fetched.isNoObj())
+            fetched = Router.readFromSpace(basePath);
+
+        return resolve(lhs, userInst, fetched.stream());
     }
 
     @Override

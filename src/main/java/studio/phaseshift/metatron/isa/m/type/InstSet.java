@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -53,7 +53,7 @@ public interface InstSet extends Space {
     Type INSTSET_TYPE = Type.Builder.build().tid(REC_TID).vid(INSTSET_TID)
             .isaPredicate(rec(
                     uri(PATTERN).maybe().asUri(), URI_TYPE,
-                    uri(CONSTQ).maybe().asUri(), lst(T(ALL.maybe())),
+                    uri(CONST).maybe().asUri(), lst(T(ALL.maybe())),
                     uri(TYPE).maybe(), lst(T(ALL_STAR)).maybe(),
                     uri(INST).maybe(), lst(INST_TYPE).maybe(),
                     uri(REWRITE).maybe(), lst(INST_TYPE).maybe(),

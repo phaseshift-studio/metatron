@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -18,14 +18,17 @@
 
 package studio.phaseshift.metatron.isa.m.type.resolver;
 
+import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Poly;
+import studio.phaseshift.metatron.isa.mach.type.Router;
 
 import java.util.Objects;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_INST_TID;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 
 /**
  * Original instruction resolver that uses {@code findFirst()} selection.
@@ -39,7 +42,14 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_INST_TID;
 public class FirstFindInstResolver implements InstResolver {
 
     @Override
-    public Inst resolve(final Obj lhs, final Inst userInst, final Stream<Obj> candidates) {
+    public Inst resolveInst(final Obj lhs, final Inst userInst) {
+        if (userInst.hasf())
+            return userInst;
+        if (userInst.isNoObj())
+            return null;
+
+        final Stream<Obj> candidates = fetchCandidates(lhs, userInst);
+
         return candidates
                 .filter(Obj::isInst)
                 .map(Obj::asInst)
@@ -61,5 +71,20 @@ public class FirstFindInstResolver implements InstResolver {
                 .map(i -> i.c(userInst.c()))
                 .findFirst()
                 .orElse(null);
+    }
+
+    private Stream<Obj> fetchCandidates(final Obj lhs, final Inst userInst) {
+        final fURI basePath = userInst.tid().basePath();
+
+        Stream<Obj> fromLhs = Stream.empty();
+        if (lhs.isRec()) {
+            final Obj at = lhs.asRec().at(basePath);
+            if (!at.isNoObj())
+                fromLhs = at.stream();
+        }
+
+        final Stream<Obj> fromSpace = Router.readFromSpace(basePath).stream();
+
+        return Stream.concat(fromLhs, fromSpace);
     }
 }
