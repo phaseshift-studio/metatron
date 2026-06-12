@@ -59,11 +59,11 @@
         <flexmark.version>0.64.8</flexmark.version>
         <testcontainers.version>2.0.5</testcontainers.version>
         <java-websocket.version>1.6.0</java-websocket.version>
-        <mariadb.version>3.5.8</mariadb.version>
+        <mariadb.version>3.5.9</mariadb.version>
         <mongodb.version>5.8.0</mongodb.version>
-        <langchain4j.version>1.16.0</langchain4j.version>
+        <langchain4j.version>1.16.2</langchain4j.version>
         <jlama.version>0.8.4</jlama.version>
-        <langchain4j.beta.version>1.16.0-beta26</langchain4j.beta.version>
+        <langchain4j.beta.version>1.16.2-beta26</langchain4j.beta.version>
         <langgraph4j.version>1.8.11</langgraph4j.version>
         <junit.version>6.1.0</junit.version>
         <tinkerpop.version>3.8.1</tinkerpop.version>
@@ -74,7 +74,7 @@
         <rdf4j.version>5.3.1</rdf4j.version>
         <logback.version>1.5.34</logback.version>
         <slf4j.version>2.0.18</slf4j.version>
-        <hive.version>1.3.14</hive.version>
+        <hive.version>1.3.15</hive.version>
         <jakarta.version>2.2.0</jakarta.version>
         <jsoup.version>1.22.2</jsoup.version>
         <asciidoctor.version>3.2.0</asciidoctor.version>
@@ -91,7 +91,7 @@
         <rhino.j2r223.version>1.7.14</rhino.j2r223.version>
         <sqlite.version>3.53.2.0</sqlite.version>
         <mcp-annotated-java-sdk.version>0.13.0</mcp-annotated-java-sdk.version>
-        <mcp.version>1.1.3</mcp.version>
+        <mcp.version>2.0.0</mcp.version>
         <zt.version>1.12</zt.version>
         <!-- LOGBACK PROPERTIES -->
     </properties>
