@@ -28,5 +28,5 @@ export MAVEN_OPTS="--add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED
 # Compile and run via Maven classpath (fast — no uber-jar assembly)
 # The [✓] prints after metatron exits, confirming clean shutdown
 printf "  ${GREEN}compiling metatron${NC} ... "
-mvn compile exec:java -o -q -Dexec.args="$*"
+mvn compile exec:java -q -Dexec.args="$*"
 printf "${LB}${BOLDGREEN}✓${RB}\n"
