@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -18,11 +18,10 @@
 
 package studio.phaseshift.metatron.isa.mach.type;
 
-import studio.phaseshift.metatron.algebra.Ring;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.mach.type.thread.mThread;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 
@@ -37,9 +36,17 @@ import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_MACHINE_TID;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_MONAD_TID;
 
 /*
+ * Machine — a thread of execution that processes code through a monadic
+ * step-loop with barriers, halted collection, and lifecycle control.
+ *
+ * A Machine IS-A {@code mThread}: it can be started, paused, resumed, and
+ * stopped.  The machine's state (code, running queue, barriers, halted
+ * objects) lives in its jvm map, making it fully queryable through the
+ * mtron URI graph.
+ *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public interface Machine extends Call, Ring<Call> {
+public interface Machine extends mThread {
 
     Type MACH_MACHINE_TYPE = Type.Builder.build()
             .tid(REC_TID)
@@ -50,82 +57,59 @@ public interface Machine extends Call, Ring<Call> {
                     uri(BARRIER), LST_TYPE))
             .create();
 
-    @Override
-    Machine clone(final Object jvm, final fURI tid, final fURI vid);
+    // ======================== Machine state ========================
 
-    // code, running, barriers, halted
-    @Override
+    /**
+     * @return the machine state as a jvm map (code, running, barriers, halted)
+     */
     Map<Obj, Obj> jvm();
 
-    Fail interrupt();
+    /**
+     * @return the code this machine is executing
+     */
+    Code code();
 
-    NoObj pause();
+    /**
+     * Return a copy of this machine with the given code substituted.
+     */
+    Machine code(final Code code);
 
-    Obj run();
+    /**
+     * @return the running monad queue
+     */
+    Obj running();
 
-    @Override
-    default boolean isResolved(final boolean nested) {
-        return this.code().isResolved(nested);
-    }
+    /**
+     * @return the barrier monad queue
+     */
+    Lst barriers();
 
-    default Obj halted() {
-        return this.jvm().get(uri(HALTED));
-    }
+    /**
+     * @return the collection of halted objects produced during execution
+     */
+    Obj halted();
 
-    default Lst barriers() {
-        return this.jvm().get(uri(BARRIER)).as();
-    }
+    // ======================== Halt callback ========================
 
-    default Obj running() {
-        return this.jvm().get(uri(RUN));
-    }
-
-    default Code code() {
-        return this.jvm().get(uri(CODE)).as();
-    }
-
-    default Machine code(final Code code) {
-        final Map<Obj, Obj> map = new HashMap<>(this.jvm());
-        map.put(uri(CODE), code);
-        return this.clone(map, this.tid(), this.vid());
-    }
-
+    /**
+     * Register a callback invoked for each halted object.
+     */
     Machine onHalt(final Consumer<Obj> halted);
 
+    /**
+     * @return the current onHalt callback
+     */
     Consumer<Obj> onHalt();
 
-    @Override
-    default Machine plus(final Call other) {
-        // two machines executing in parallel
-        final boolean otherMachine = other instanceof Machine;
-        /*return this.clone(Tuple.Quartet.with(this.jvm().get(uri(CODE)).plus(otherMachine ? other.<Machine>as().jvm().get(uri(CODE)) : other.jvm().get(uri(CODE))),
-                        otherMachine ? this.jvm().get(uri(RUNNING)).append(other.<Machine>as().jvm().get(uri(RUNNING))) : this.jvm().get(uri(RUNNING)),
-                        otherMachine ? this.jvm().get(uri(BARRIER)).append(other.<Machine>as().jvm().get(uri(BARRIER))) : this.jvm().get(uri(BARRIER)),
-                        otherMachine ? this.jvm().get(uri(HALTED)).append(other.<Machine>as().jvm().get(uri(HALTED))) : this.jvm().get(uri(HALTED))),
-                this.tid().plus(other.tid()), this.vid());*/
-        return null;
-    }
+    // ======================== Resolution ========================
 
-    @Override
-    default Machine mult(final Call other) {
-       /* return this.clone(Tuple.Quartet.with(this.value().get0().mult(other.value().get0()),
-                this.value().get1().append(other.value().get1()),
-                this.value().get2().append(other.value().get2()),
-                this.value().get3().append(other.value().get3())), this.tid().plus(other.tid()), this.vid());*/
-        return this;
-    }
-
-    @Override
+    /**
+     * Resolve the machine's code against the given input, creating initial
+     * and barrier monads in the running/barriers queues.
+     */
     Machine resolve(final Obj lhs);
 
-    @Override
-    default Type dom() {
-        return this.code().dom();
-    }
+    // ======================== Cloning ========================
 
-    @Override
-    default Type rng() {
-        return this.code().rng();
-    }
-
+    Machine clone(final Object jvm, final fURI tid, final fURI vid);
 }

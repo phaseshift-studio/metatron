@@ -340,7 +340,7 @@ public class mModel extends MRec {
 
     public mModel chat(final String message, final Inst onResponse) {
         studio.phaseshift.metatron.isa.mach.type.thread.VirtualThread.virtual(onResponse)
-                .apply(this.chat(message));
+                .applyAsync(this.chat(message));
         return this;
     }
 

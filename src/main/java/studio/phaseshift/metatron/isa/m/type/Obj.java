@@ -982,7 +982,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                         }
                     }),
                     instC(FORK_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(ALL_TYPE), (lhs, inst) -> {
-                        studio.phaseshift.metatron.isa.mach.type.thread.VirtualThread.virtual(inst.arg(0)).apply(lhs);
+                        studio.phaseshift.metatron.isa.mach.type.thread.VirtualThread.virtual(inst.arg(0)).applyAsync(lhs);
                         return lhs;
                     }),
                     instC(RANGE_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(INT_TYPE, isa_(INT_TYPE).else_(jnt(0)).tryToInst()), (lhs, inst) -> lhs.take(cInt.of(inst.arg(0).intValue())).get1().take(cInt.of(inst.arg(1).intValue())).get0()),

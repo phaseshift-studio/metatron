@@ -92,9 +92,9 @@ public interface Code extends Call {
     @Override
     default Code resolve(final Obj lhs) {
         GraphittyLogger LOG = Graphitty.log(this);
-        LOG.debug("reading code:\n        [{{y}}PREPILED{{/y}}] %s {{g}}=>{{/g}}\n%s", lhs, ObjmtronSerializer.prettyPrintCode(this));
+        // LOG.debug("reading code:\n        [{{y}}PREPILED{{/y}}] %s {{g}}=>{{/g}}\n%s", lhs, ObjmtronSerializer.prettyPrintCode(this));
         final Code rewrittenCode = this.rewrite();
-        LOG.debug("rewriting code:\n        [{{y}}REWRITTEN{{/y}}] %s {{g}}=>{{/g}}\n%s", lhs, ObjmtronSerializer.prettyPrintCode(rewrittenCode));
+        // LOG.debug("rewriting code:\n        [{{y}}REWRITTEN{{/y}}] %s {{g}}=>{{/g}}\n%s", lhs, ObjmtronSerializer.prettyPrintCode(rewrittenCode));
         return InstResolver.get().resolveCode(lhs, rewrittenCode);
     }
 
@@ -140,13 +140,10 @@ public interface Code extends Call {
     @Override
     default Obj apply(final Obj lhs) {
         final Call resolve = this.tryToInst().resolve(lhs);
-        // TODO: add this as a TypeCheker check point?
-        //if (!lhs.matches(resolve.dom()))
-        //    throw MTronException.of("%s ({{m}}lhs{{/m}}) (%s) does not match {{m}}code domain{{/m}} (%s): %s", lhs, lhs.rng(), resolve.dom(), resolve);
-        final Obj rhs = objs(resolve.isCode() ? SwarmMachine.of(lhs, resolve.as()).apply(noobj()) : resolve.apply(lhs));
-        //if (!rhs.matches(call.rng()))
-        //    throw MTronException.of("%s ({{m}}rhs{{/m}}) (%s) does not match {{m}}code range{{/m}} (%s): %s", rhs, rhs.rng(), call.rng(), this);
-        return rhs;
+        if (resolve.isCode()) {
+            return objs(SwarmMachine.of(lhs, resolve.as()).apply(noobj()));
+        }
+        return objs(resolve.apply(lhs));
     }
 
     public static class CodeType {

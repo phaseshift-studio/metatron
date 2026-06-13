@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -18,7 +18,6 @@
 
 package studio.phaseshift.metatron.isa.mach.type.thread;
 
-import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 
@@ -30,26 +29,19 @@ import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_CORE_THREAD_T
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /*
+ * CoreThread — a metatron thread backed by a platform (OS) thread from
+ * the main executor pool.
+ *
+ * Execution ({@code apply} / {@code applyAsync}) and lifecycle
+ * ({@code stop} / {@code pause} / {@code resume}) are inherited from
+ * {@code AbstractThread}.
+ *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class CoreThread extends AbstractThread {
 
     public CoreThread(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
-    }
-
-    @Override
-    public FutureObj<Obj> apply(final Obj other) {
-        synchronized (this) {
-            if (null != this.thread && this.thread.getState() != Thread.State.NEW) {
-                this.logger().warn("thread currently running, ignoring %s", other);
-                return this.future;
-            }
-            if (this.at(START).isNoObj())
-                this.jvm().put(uri(START), other);
-            BootLoader.getExecutor().execute(this);
-        }
-        return this.future;
     }
 
     public static CoreThread core(final Obj code, final fURI vid) {
@@ -59,4 +51,5 @@ public class CoreThread extends AbstractThread {
     public static CoreThread core(final Obj code) {
         return new CoreThread(mutableMap(uri(CODE), code), MACH_CORE_THREAD_TID, null);
     }
+
 }

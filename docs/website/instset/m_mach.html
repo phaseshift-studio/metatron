@@ -283,6 +283,8 @@ bin/metatron</code></pre>
   image::T,
   factory::T,
   mfactory::T,
+  machine::T,
+  swarm::T,
   thread_executor::T,
   thread::T,
   core::T,
@@ -312,7 +314,7 @@ bin/metatron</code></pre>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <button class="btn btn-outline-secondary" disabled>Consts <span class="pill-label badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">11</span></a><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">12</span></a><a href="#spaces" class="btn btn-outline-primary">Spaces <span class="pill-label badge bg-info">2</span></a><button class="btn btn-outline-secondary" disabled>Rewrites <span class="pill-label badge bg-dark">0</span></button>
+        <button class="btn btn-outline-secondary" disabled>Consts <span class="pill-label badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">13</span></a><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">12</span></a><a href="#spaces" class="btn btn-outline-primary">Spaces <span class="pill-label badge bg-info">2</span></a><button class="btn btn-outline-secondary" disabled>Rewrites <span class="pill-label badge bg-dark">0</span></button>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="card">
@@ -331,6 +333,9 @@ bin/metatron</code></pre>
 </a><a href="#type-file" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">file</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#type-machine" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">machine</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
 </a><a href="#type-mfactory" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">mfactory</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
@@ -345,6 +350,9 @@ bin/metatron</code></pre>
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">file</small></div><div class="d-flex flex-wrap"><a href="#type-image" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">image</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">machine</small></div><div class="d-flex flex-wrap"><a href="#type-swarm" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">swarm</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">thread</small></div><div class="d-flex flex-wrap"><a href="#type-core" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">core</span>
@@ -404,7 +412,7 @@ bin/metatron</code></pre>
 </div></div>
     </div>
 </div><div class="container-xxl mb-4" id="types">
-    <h3 class="text-primary mb-3">Types <span class="pill-label badge bg-primary">11</span></h3>
+    <h3 class="text-primary mb-3">Types <span class="pill-label badge bg-primary">13</span></h3>
     <div class="card mb-3" id="type-console">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -428,10 +436,10 @@ bin/metatron</code></pre>
     <p class="mb-0 text-light">run a concurrent core thread</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  {?}loop <span class="text-light">=&gt;</span> <span class="text-info">&#39;delay to repeat code evaluation (default is evaluate once)&#39;</span>
-  {?}state <span class="text-light">=&gt;</span> <span class="text-info">&#39;current state of the thread&#39;</span>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  code <span class="text-light">=&gt;</span> <span class="text-info">&#39;the code the thread will execute&#39;</span>
   {?}result <span class="text-light">=&gt;</span> <span class="text-info">&#39;the last result produced by the thread&#39;</span>
-  code <span class="text-light">=&gt;</span> <span class="text-info">&#39;the code the thread will execute&#39;</span>
+  {?}state <span class="text-light">=&gt;</span> <span class="text-info">&#39;current state of the thread&#39;</span>
+  {?}loop <span class="text-light">=&gt;</span> <span class="text-info">&#39;delay to repeat code evaluation (default is evaluate once)&#39;</span>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -477,6 +485,16 @@ bin/metatron</code></pre>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">file::T@/m/mach/file/image</code></pre></div>
     
+</div><div class="card mb-3" id="type-machine">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">machine::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m_mach_thread.html#type-virtual" class="instset-doc-small-code text-info code">/m/mach/thread/virtual::T</a></span>
+        </span>
+        <small class="text-muted code">/m/mach/machine</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">virtual::T@/m/mach/machine</code></pre></div>
+    
 </div><div class="card mb-3" id="type-mfactory">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -497,6 +515,25 @@ bin/metatron</code></pre>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T@/m/mach/router</code></pre></div>
     
+</div><div class="card mb-3" id="type-swarm">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">swarm::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">/m/mach/machine::T</span></span>
+        </span>
+        <small class="text-muted code">/m/mach/machine/swarm</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">machine::T[?[code=&gt;#::T]][ctor?swarm&lt;=#{?}(machine::T)]@/m/mach/machine/swarm</code></pre></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">a swarm machine makes use of a set of independently executing monads that move across the code inst chain.
+barriers serve as synchronization points where all running monads must aggregate before being released on the post-barrier segment of code.
+the objs referenced by the monads that halt are the result of the machine execution.
+</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  code <span class="text-light">=&gt;</span> <span class="text-info">&#39;the code the machine will evaluate&#39;</span>
+</pre>
+</div>
 </div><div class="card mb-3" id="type-thread">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -538,10 +575,10 @@ bin/metatron</code></pre>
     <p class="mb-0 text-light">run a concurrent virtual thread</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  {?}loop <span class="text-light">=&gt;</span> <span class="text-info">&#39;delay to repeat code evaluation (default is evaluate once)&#39;</span>
-  {?}state <span class="text-light">=&gt;</span> <span class="text-info">&#39;current state of the thread&#39;</span>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  code <span class="text-light">=&gt;</span> <span class="text-info">&#39;the code the thread will execute&#39;</span>
   {?}result <span class="text-light">=&gt;</span> <span class="text-info">&#39;the last result produced by the thread&#39;</span>
-  code <span class="text-light">=&gt;</span> <span class="text-info">&#39;the code the thread will execute&#39;</span>
+  {?}state <span class="text-light">=&gt;</span> <span class="text-info">&#39;current state of the thread&#39;</span>
+  {?}loop <span class="text-light">=&gt;</span> <span class="text-info">&#39;delay to repeat code evaluation (default is evaluate once)&#39;</span>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>

@@ -22,7 +22,6 @@ package studio.phaseshift.metatron.isa.mach.io.type;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.*;
-import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.PCMonad;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.util.CommonUtil;
@@ -266,10 +265,6 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
         return handleIds(monad, "M[" + this.write(monad.obj()) + "<=M=>" + this.write(monad.inst()));
     }
 
-    @Override
-    public String writeMachine(final Machine machine) {
-        return handleIds(machine, "M[" + this.write(machine.code()) + "]");
-    }
 
     @Override
     public Obj read(final String data) throws MTronException {

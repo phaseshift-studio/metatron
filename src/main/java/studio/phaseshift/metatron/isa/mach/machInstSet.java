@@ -33,6 +33,7 @@ import studio.phaseshift.metatron.isa.mach.io.space.fs.fsSpace;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.PCMonad;
 import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.machine.SwarmMachine;
 import studio.phaseshift.metatron.isa.mach.type.thread.AbstractThread;
 import studio.phaseshift.metatron.isa.mach.type.thread.CoreThread;
 import studio.phaseshift.metatron.isa.mach.type.thread.VirtualThread;
@@ -75,8 +76,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.io.space.fs.fsSpace.FS_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.mach.io.space.fs.fsSpace.makeFile;
 import static studio.phaseshift.metatron.isa.mach.io.space.serial.serialSpace.SERIAL_SPACE_TYPE;
-import static studio.phaseshift.metatron.isa.mach.type.Machine.MACH_MACHINE_TYPE;
-import static studio.phaseshift.metatron.isa.mach.type.machine.SwarmMachine.MACH_SWARM_MACHINE_TYPE;
 import static studio.phaseshift.metatron.isa.mach.type.ui.console.Console.CONSOLE_TYPE;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
@@ -160,6 +159,9 @@ public class machInstSet extends AbstractInstSet {
                             uri(RESULT).maybe(), T(ALL.maybeSome())))
             .create();
     public static Type MACH_CORE_THREAD_TYPE;
+    public static Type MACH_MACHINE_TYPE;
+    public static final fURI MACH_SWARM_MACHINE_TID = MACH_MACHINE_TID.extend("swarm");
+    public static Type MACH_SWARM_MACHINE_TYPE;
 
 
     public machInstSet() {
@@ -182,6 +184,22 @@ public class machInstSet extends AbstractInstSet {
                         IMAGE_FILE_TYPE,
                         FACTORY_TYPE,
                         M_FACTORY_TYPE,
+                        /////////////////////////
+                        MACH_MACHINE_TYPE = Type.Builder.build()
+                                .tid(MACH_VIRTUAL_THREAD_TID)
+                                .vid(MACH_MACHINE_TID)
+                                .create(),
+                        MACH_SWARM_MACHINE_TYPE = docWrap(Type.Builder.build()
+                                        .tid(MACH_MACHINE_TID)
+                                        .vid(MACH_SWARM_MACHINE_TID)
+                                        .isaPredicate(rec(uri(CODE), T(ALL)))
+                                        .constructor(machine -> SwarmMachine.machine(machine.jvm(), machine.tid(), machine.vid()))
+                                        .create(), null, null, Map.of(uri(CODE), "the code the machine will evaluate"),
+                                """
+                                a swarm machine makes use of a set of independently executing monads that move across the code inst chain.
+                                barriers serve as synchronization points where all running monads must aggregate before being released on the post-barrier segment of code.
+                                the objs referenced by the monads that halt are the result of the machine execution.
+                                """),
                         /// /////////////////////
                         THREAD_EXECUTOR_TYPE = docWrap(Type.Builder.build()
                                         .tid(REC_TID)
@@ -203,7 +221,11 @@ public class machInstSet extends AbstractInstSet {
                         MACH_VIRTUAL_THREAD_TYPE = docWrap(Type.Builder.build()
                                         .tid(MACH_THREAD_TID)
                                         .vid(MACH_VIRTUAL_THREAD_TID)
-                                        .constructor(instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(MACH_VIRTUAL_THREAD_TID), lst(T(REC_TID)), (lhs, inst) -> new VirtualThread(inst.arg(0).jvm(), MACH_VIRTUAL_THREAD_TID, inst.arg(0).vid()).apply(lhs)))
+                                        .constructor(instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(MACH_VIRTUAL_THREAD_TID), lst(T(REC_TID)), (lhs, inst) -> {
+                                            final VirtualThread vt = new VirtualThread(inst.arg(0).jvm(), MACH_VIRTUAL_THREAD_TID, inst.arg(0).vid());
+                                            vt.applyAsync(lhs);
+                                            return vt;
+                                        }))
                                         .create(), null, null, Map.of(
                                         uri(CODE), "the code the thread will execute",
                                         uri(LOOP).maybe(), "delay to repeat code evaluation (default is evaluate once)",
@@ -311,7 +333,7 @@ public class machInstSet extends AbstractInstSet {
                             final AbstractThread parent = BootLoader.CURRENT_THREAD.get();
                             if (null != parent && null != parent.vid())
                                 thread.jvm().put(uri(SOURCE), auto_from_(uri(parent.vid())).tryToInst());
-                            thread.apply(lhs);
+                            thread.applyAsync(lhs);
                             return thread;
                         }),
                         instC(MACH_INST_TID.extend("stop").dom(MACH_THREAD_TID).rng(MACH_THREAD_TID), lst(), (lhs, inst) -> {
