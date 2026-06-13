@@ -30,7 +30,6 @@ import studio.phaseshift.metatron.isa.dcmnt.space.dcmntSpace;
 import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.io.type.AbstractObjSerializer;
-import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.PCMonad;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
@@ -434,13 +433,6 @@ public class ObjBSONSerializer extends AbstractObjSerializer<BsonValue> {
         return new BsonDocument(List.of(
                 new BsonElement("obj", this.write(monad.obj())),
                 new BsonElement("inst", this.write(monad.inst()))
-        ));
-    }
-
-    @Override
-    public BsonDocument writeMachine(final Machine machine) {
-        return new BsonDocument(List.of(
-                new BsonElement("code", this.writeCode(machine.code()))
         ));
     }
 }

@@ -18,7 +18,6 @@
 
 package studio.phaseshift.metatron.isa.mach.type.thread;
 
-import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.NotDetachable;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -33,6 +32,12 @@ import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_VIRTUAL_THREA
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /*
+ * VirtualThread — a metatron thread backed by a Java virtual thread.
+ *
+ * Execution ({@code apply} / {@code applyAsync}) and lifecycle
+ * ({@code stop} / {@code pause} / {@code resume}) are inherited from
+ * {@code AbstractThread}.
+ *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class VirtualThread extends AbstractThread implements NotDetachable {
@@ -41,17 +46,8 @@ public class VirtualThread extends AbstractThread implements NotDetachable {
         super(mutableMap(jvm), tid, null == vid ? CommonUtil.mintShortUUID(f("/sys/thread"), true) : vid);
     }
 
-    @Override
-    public Obj apply(final Obj other) {
-        synchronized (this) {
-            if (null != this.thread && this.thread.getState() != Thread.State.NEW) {
-                this.logger().warn("thread currently running, ignoring %s", other);
-                return this;
-            }
-            this.jvm().put(uri(START), other);
-            BootLoader.getExecutor().execute(this);
-        }
-        return this;
+    protected VirtualThread() {
+        // no-arg for clone (bypasses objCheckAndSave)
     }
 
     public static VirtualThread virtual(final Obj code, final fURI vid) {
@@ -63,17 +59,7 @@ public class VirtualThread extends AbstractThread implements NotDetachable {
     }
 
     @Override
-    public VirtualThread clone(final Object jvm, final fURI tid, final fURI vid) {
-        return (VirtualThread) super.clone(jvm, tid, null == this.vid() ? vid : this.vid());
-    }
-
-    @Override
     public VirtualThread self(final Object jvm, final fURI tid, final fURI vid) {
         return (VirtualThread) super.self(jvm, tid, null == this.vid() ? vid : this.vid());
-    }
-
-    @Override
-    public VirtualThread clone() {
-        return this;
     }
 }

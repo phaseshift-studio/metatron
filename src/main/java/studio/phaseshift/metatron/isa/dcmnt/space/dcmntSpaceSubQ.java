@@ -231,7 +231,7 @@ public class dcmntSpaceSubQ extends BaseQ implements Closeable {
                 };
             }
         };
-        watcher.apply(noobj());
+        watcher.applyAsync();
         final var future = watcher.future();
 
         activeWatchers.put(basePath, new WatcherHandle(cursor, running, future));

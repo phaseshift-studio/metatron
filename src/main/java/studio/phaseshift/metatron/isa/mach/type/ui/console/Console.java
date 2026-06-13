@@ -182,7 +182,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                 docWrap(virtual(instLambda((_lhs, inst2) -> {
                     console.run();
                     return noobj();
-                })), "console repl").apply(noobj());
+                })), "console repl").applyAsync();
                 return console;
             })).create();
 
@@ -225,9 +225,9 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                 if (signal == Terminal.Signal.INT) {
                     // Interrupt active pane's machine
                     if (this.activePane != null && this.activePane.machine() != null) {
-                        this.activePane.machine().interrupt();
+                        this.activePane.machine().stop();
                     } else if (null != this.machine) {
-                        this.machine.interrupt();
+                        this.machine.stop();
                     }
                 }
             }).encoding(StandardCharsets.UTF_8).system(true).build();
@@ -858,7 +858,8 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                     if (this.activePane != null) {
                         this.activePane.machine(mach);
                     }
-                    computeResult = mach.apply();
+                    mach.applyAsync();
+                    computeResult = mach.result();
                 } else {
                     computeResult = this.input.apply(resolvedResult);
                 }
@@ -953,7 +954,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                 }
             } catch (final UserInterruptException e) {
                 if (null != this.machine)
-                    this.machine.interrupt();
+                    this.machine.stop();
                 LOG.warn(Graphitty.sillyPrint("machine interrupted", true, true));
             } catch (final EndOfFileException e) {
                 System.exit(0);

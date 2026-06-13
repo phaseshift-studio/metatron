@@ -371,8 +371,8 @@ public class BootLoader implements Rec, Feature.SelfClone {
                 final String input = scanner.nextLine();
                 return str(input);
             }), "maybe an obj", "a single line of input", Map.of(), "read a line of input from the running terminal")).tryToInst());*/
-            Router.global().registerRedirect(f("stdout"), f("/sys/io/stdout"));
-            Router.global().registerRedirect(f("stdin"), f("/sys/io/stdin"));
+           // Router.global().registerRedirect(f("stdout"), f("/sys/io/stdout"));
+           // Router.global().registerRedirect(f("stdin"), f("/sys/io/stdin"));
             /// LOAD DEFAULT INSTRUCTION SET (/m and /m/mach)
             final InstSet m = new mInstSet();
             Router.global().addSpace(m);  // explicit registration after full construction
@@ -404,7 +404,8 @@ public class BootLoader implements Rec, Feature.SelfClone {
             // (console, agents) inherit it as source via CURRENT_THREAD.
             // The task blocks on SHUTDOWN_LATCH — stays in 'run' until shutdown.
             Thread.currentThread().setName("metatron-main");
-            final CoreThread systemThread = docWrap(CoreThread.core(
+            LOG.info("starting system thread");
+            final CoreThread systemThread = CoreThread.core(
                     instLambda((lhs, inst) -> {
                         try {
                             SHUTDOWN_LATCH.await();
@@ -413,8 +414,8 @@ public class BootLoader implements Rec, Feature.SelfClone {
                         }
                         return noobj();
                     }),
-                    f("/sys/thread/main")), "main system latch");
-            EXECUTOR.execute(systemThread);
+                    f("/sys/thread/main"));
+            systemThread.applyAsync();
             Router.writeToSpace("/sys/thread/main", systemThread);
             BootLoader.CURRENT_THREAD.set(systemThread);
             ///////////////////////////////////////////////////////////////

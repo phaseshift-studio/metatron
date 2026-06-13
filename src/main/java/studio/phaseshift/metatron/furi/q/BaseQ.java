@@ -118,14 +118,16 @@ public class BaseQ extends MRec implements QProc {
         public Optional<Obj> preRead(final fURI vid) {
             final Inst i = this.at(PRE_READ).as();
             if (i.isNoObj()) return Optional.empty();
-            final Obj result = i.args(lst(uri(vid))).apply();
+            final Inst withArgs = i.args(lst(uri(vid)));
+            final Obj result = withArgs.f().apply(noobj(), withArgs);
             return result.isNoObj() ? Optional.empty() : Optional.of(result);
         }
 
         public Optional<Obj> postRead(final fURI vid, final Obj obj) {
             final Inst i = this.at(POST_READ).as();
             if (i.isNoObj()) return Optional.empty();
-            final Obj result = i.args(lst(uri(vid), obj)).apply();
+            final Inst withArgs = i.args(lst(uri(vid), obj));
+            final Obj result = withArgs.f().apply(noobj(), withArgs);
             return result.isNoObj() ? Optional.empty() : Optional.of(result);
         }
     }
@@ -138,22 +140,24 @@ public class BaseQ extends MRec implements QProc {
         public Optional<Obj> preWrite(final fURI vid, final Obj obj) {
             final Inst i = this.at(PRE_WRITE).as();
             if (i.isNoObj()) return Optional.empty();
-            final Obj result = i.args(lst(uri(vid), obj)).apply();
+            final Inst withArgs = i.args(lst(uri(vid), obj));
+            final Obj result = withArgs.f().apply(noobj(), withArgs);
             return result.isNoObj() ? Optional.empty() : Optional.of(result);
-
         }
 
         public Optional<Obj> postWrite(final fURI vid, final Obj oldObj, final Obj newObj) {
             final Inst i = this.at(POST_WRITE).as();
             if (i.isNoObj()) return Optional.empty();
-            final Obj result = i.args(lst(uri(vid), oldObj, newObj)).apply();
+            final Inst withArgs = i.args(lst(uri(vid), oldObj, newObj));
+            final Obj result = withArgs.f().apply(noobj(), withArgs);
             return result.isNoObj() ? Optional.empty() : Optional.of(result);
         }
 
         public Optional<Obj> qlessWrite(final fURI vid, final Obj obj) {
             final Inst i = this.at(QLESS_WRITE).as();
             if (i.isNoObj()) return Optional.empty();
-            final Obj result = i.args(lst(uri(vid), obj)).apply();
+            final Inst withArgs = i.args(lst(uri(vid), obj));
+            final Obj result = withArgs.f().apply(noobj(), withArgs);
             return result.isNoObj() ? Optional.empty() : Optional.of(result);
         }
 
