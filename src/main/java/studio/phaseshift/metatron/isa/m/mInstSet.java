@@ -77,6 +77,7 @@ public class mInstSet extends AbstractInstSet {
     public static final fURI REL_TID = M_ISA_TID.extend("rel");
     public static final fURI LST_TID = M_ISA_TID.extend("lst");
     public static final fURI REC_TID = M_ISA_TID.extend("rec");
+    public static final fURI AUTHORITY_TID = URI_TID.extend("authority");
     public static final fURI M_ISA_INST_TID = M_ISA_TID.extend("inst");
     public static final fURI M_ISA_REWRITE_TID = M_ISA_INST_TID.extend("rewrite");
     public static final fURI INSTSET_TID = M_ISA_TID.extend("instset");
@@ -210,6 +211,7 @@ public class mInstSet extends AbstractInstSet {
             STR_TID, URI_TID, REL_TID,
             LST_TID, REC_TID, M_ISA_INST_TID,
             CODE_TID, OBJS_TID, NOOBJ_TID);
+    public static Type AUTHORITY_TYPE;
     public static final Type ALL_TYPE = Type.Builder.build().tid(ALL).vid(ALL).create();
     public static final Type SPACE_TYPE = Type.Builder.build()
             .tid(REC_TID)
@@ -402,7 +404,16 @@ public class mInstSet extends AbstractInstSet {
                                 "*abc?shortq=10 [-- optional value is max length of obj components (default " + DEFAULT_SHORTQ_MAX_LENGTH + ") --]"),
                         docWrap(INCRQ_TYPE, "internal counter increments and appends value to vid"),
                         docWrap(CONSTQ_TYPE, "prevents the vid from being mutated once set"),
-                        docWrap(MIMEQ_TYPE, "maps the obj to the specified mime type")),
+                        docWrap(MIMEQ_TYPE, "maps the obj to the specified mime type"),
+                        ////////////////////////////////////////////////////////////////////////////
+                        docWrap(AUTHORITY_TYPE = Type.Builder.build()
+                                .tid(URI_TID)
+                                .vid(AUTHORITY_TID)
+                                .predicate((lhs, inst) -> {
+                                    final fURI uri = inst.arg(0).uriValue();
+                                    return (uri.hasAuthority() && !uri.hasScheme() && uri.pathLength() == 0 && uri.qMap().isEmpty()) ?
+                                            inst.arg(0) : uri().c(cInt.ZERO());
+                                }).create(), "a uri containing only a host:port component with port being optional")),
                 uri(CONST), lst(
                         docWrap(noobj(), "a no object. if an inst domain is no zeroable (e.g. {0}/{?}/{*}) then the inst will not evaluate.")
                         /*docWrap(NONE, "a token uri denoting nothing. used for deleting obj in space.")*/),

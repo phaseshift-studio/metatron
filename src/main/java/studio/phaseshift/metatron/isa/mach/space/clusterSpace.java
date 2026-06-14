@@ -35,9 +35,13 @@ import java.util.concurrent.TimeUnit;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.*;
+import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
+import static studio.phaseshift.metatron.isa.m.mInstSet.AUTHORITY_TYPE;
 import static studio.phaseshift.metatron.isa.m.mInstSet.SPACE_TID;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_SECOND_TID;
+import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
@@ -46,6 +50,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_ISA_TID;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_VIRTUAL_THREAD_TID;
 import static studio.phaseshift.metatron.isa.mach.type.thread.VirtualThread.virtual;
+import static studio.phaseshift.metatron.isa.web.webInstSet.CLIENT_TYPE;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /**
@@ -53,27 +58,20 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  * <p>
  * This space manages the cluster topology, host connections, and cross-host routing.
  * It integrates seamlessly with the Router system through pattern-based routing.
+ * <p>
+ * [peers=>[xyz:1234=>[host=>ws://xyz:1234/mtron, handler=>mtron_ws,state=>OK,stat=>[in=>bytes::0.0,out=>bytes:0.0]]]
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class clusterSpace extends AbstractSpace<Map<Obj, Obj>> implements Space {
 
-    public static final fURI CLUSTER_SPACE_TID = MACH_ISA_TID.extend("cluster");
-    public static final Type CLUSTER_SPACE_TYPE = Type.Builder.build()
-            .tid(SPACE_TID)
-            .vid(CLUSTER_SPACE_TID)
-            .isaPredicate(rec(uri(PEERS), rec()))
-            .constructor(obj -> {
-                return new clusterSpace(new ConcurrentHashMap<>(), obj.asRec().jvm(), CLUSTER_SPACE_TID, obj.vid());
-            }).create();
+   
 
     // Pattern for cluster-related operations
     private static final fURI CLUSTER_PATTERN = f("ws://+/cluster/#");
 
     // Host information storage
     private final fURI localHost;
-    private final Map<String, HostInfo> hosts = new ConcurrentHashMap<>();
-    private final Map<String, Space> hostSpaces = new ConcurrentHashMap<>();
 
     public clusterSpace(final Map<Obj, Obj> sjvm, final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(sjvm, jvm, tid, vid);
@@ -91,8 +89,6 @@ public class clusterSpace extends AbstractSpace<Map<Obj, Obj>> implements Space 
                         hostInfo.handlerType = extractHandlerType(hostRec);
                         hostInfo.protocol = key.uriValue().scheme();
                         hostInfo.url = buildHostUrl(hostInfo);
-
-                        hosts.put(hostName, hostInfo);
                         LOG.info("Added host to cluster: {{b}}%s{{X}} => %s", hostName, hostInfo.url);
 
                     } catch (Exception e) {
@@ -104,7 +100,7 @@ public class clusterSpace extends AbstractSpace<Map<Obj, Obj>> implements Space 
             // Start cluster discovery and maintenance
             startDiscovery();
 
-            LOG.info("ClusterSpace initialized with {{b}}%d{{X}} hosts", hosts.size());
+            LOG.info("ClusterSpace initialized with {{b}}%d{{X}} hosts", this.at(PEERS).asRec().count());
 
         } catch (Exception e) {
             LOG.error("Failed to initialize ClusterSpace: %s", e.getMessage(), e);
@@ -153,53 +149,11 @@ public class clusterSpace extends AbstractSpace<Map<Obj, Obj>> implements Space 
         LOG.info("cluster health management thread started");
     }
 
-    /**
-     * Add a host to the cluster
-     */
-    public void addHost(String hostName, HostInfo hostInfo) {
-        hosts.put(hostName, hostInfo);
-        LOG.info("added host to cluster: {{b}}%s{{X}}", hostName);
-    }
-
-    /**
-     * Remove a host from the cluster
-     */
-    public void removeHost(String hostName) {
-        hosts.remove(hostName);
-        LOG.info("removed host from cluster: {{b}}%s{{X}}", hostName);
-    }
-
-    /**
-     * Get all hosts in the cluster
-     */
-    public Collection<HostInfo> getHosts() {
-        return new ArrayList<>(hosts.values());
-    }
-
-    /**
-     * Check if a host is part of this cluster
-     */
-    public boolean hasHost(String hostName) {
-        return hosts.containsKey(hostName);
-    }
-
-    /**
-     * Get host information by name
-     */
-    public HostInfo getHost(String hostName) {
-        return hosts.get(hostName);
-    }
-
     // ======================== Router Integration ========================
 
     @Override
     public Obj read(final fURI vid) {
         LOG.debug("clusterSpace read: {{b}}%s{{X}}", vid);
-
-        // If this is a cluster-related operation, process it directly
-        if (vid.isBranch() && vid.basePath().toString().contains("/cluster/")) {
-            return processClusterOperation(vid);
-        }
 
         // Delegate to the router for normal operations
         return Router.readFromSpace(vid);
@@ -208,62 +162,24 @@ public class clusterSpace extends AbstractSpace<Map<Obj, Obj>> implements Space 
     @Override
     public Obj write(final fURI vid, final Obj obj) {
         LOG.debug("clusterSpace write: {{b}}%s{{X}} => %s", vid, obj);
-        if (vid.host().equals(this.localHost.host())) {
-            return Router.writeToSpace( Space.Helper.routeFromSpace(vid,this.routes()), obj);
+        final fURI authority = f(vid.authority());
+        if (authority.test(f(this.localHost.host()))) {
+            return Router.writeToSpace(Space.Helper.routeFromSpace(vid, this.routes()), obj.vid(Space.Helper.routeFromSpace(obj.vid(), this.routes())));
         } else {
-            // If this is a cluster-related operation, process it directly
-            if (vid.isBranch() && vid.basePath().toString().contains("/cluster/")) {
-                return processClusterWriteOperation(vid, obj);
-            }
+            this.at(PEERS)
+                    .orElse(rec0())
+                    .asRec()
+                    .elements()
+                    .filter(e -> e.first().uriValue().test(authority))
+                    .forEach(e -> {
+                        LOG.info("sending obj to remote metatron: (%s,%s) => %s", vid, obj, e.second().orElse(rec0()).asRec().at(PROTOCOL));
+                        e.second().asRec().orElse(rec0()).at(CLIENT).orElse(rec0()).at(SEND).orElse(noobj()).apply(obj);
+                    });
+
         }
         return obj;
     }
 
-    /**
-     * Process cluster-specific operations
-     */
-    private Obj processClusterOperation(fURI vid) {
-        // Handle special cluster operations like:
-        // /sys/router/cluster/hosts - list all hosts
-        // /sys/router/cluster/status - cluster status
-        // etc.
-
-        if (vid.basePath().toString().endsWith("/hosts")) {
-            return buildHostsList();
-        }
-
-        return noobj();
-    }
-
-    /**
-     * Process cluster write operations
-     */
-    private Obj processClusterWriteOperation(fURI vid, Obj obj) {
-        // Handle cluster configuration updates
-        if (vid.basePath().toString().endsWith("/hosts")) {
-            // Update hosts based on the written object
-            LOG.info("Updating cluster hosts: %s", obj);
-            return obj;
-        }
-
-        return obj;
-    }
-
-    /**
-     * Build a list of all hosts in the cluster
-     */
-    private Obj buildHostsList() {
-        final Map<Obj, Obj> hostMap = new LinkedHashMap<>();
-        for (Map.Entry<String, HostInfo> entry : hosts.entrySet()) {
-            final HostInfo info = entry.getValue();
-            hostMap.put(uri(info.hostName), rec(Map.of(
-                    uri("url"), uri(info.url),
-                    uri("protocol"), uri(info.protocol),
-                    uri("port"), jnt(info.port)
-            )));
-        }
-        return rec(hostMap);
-    }
 
     // ======================== Space Interface ========================
 

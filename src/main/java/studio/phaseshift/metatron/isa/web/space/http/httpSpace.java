@@ -90,7 +90,7 @@ public class httpSpace extends AbstractSpace<HttpServer> {
     public static final Type HTTP_HANDLER_TYPE = Type.Builder.build()
             .tid(HTTP_SOCKET_TID)
             .vid(HTTP_HANDLER_TID)
-            .constructor(instC(HTTP_HANDLER_TID.extend(CTOR).dom(ALL.maybe()).rng(HTTP_SOCKET_TID),
+            .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(HTTP_SOCKET_TID),
                     lst(T(REC_TID)), (lhs, inst) ->
                             new HttpRec(inst.arg(0).asRec().jvm(), inst.arg(0).tid(), inst.arg(0).vid()))).create();
 

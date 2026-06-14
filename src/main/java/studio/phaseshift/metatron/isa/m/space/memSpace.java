@@ -49,6 +49,7 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.SPACE_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -66,6 +67,7 @@ public class memSpace extends AbstractSpace<TopicTrie> {
     public static final Type MEM_SPACE_TYPE = Type.Builder.build()
             .tid(SPACE_TID)
             .vid(MEM_SPACE_TID)
+            // .isaPredicate(rec(uri(PERSIST).maybe().asUri(),URI_TYPE).maybe())
             .constructor(
                     instC(mInstSet.M_ISA_INST_TID.dom(ALL.maybe()).rng(MEM_SPACE_TID),
                             lst(isa_(MEM_SPACE_CONFIG).tryToInst()),

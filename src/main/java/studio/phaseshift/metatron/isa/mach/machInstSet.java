@@ -30,6 +30,7 @@ import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.io.space.fs.fsSpace;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
+import studio.phaseshift.metatron.isa.mach.space.clusterSpace;
 import studio.phaseshift.metatron.isa.mach.type.PCMonad;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.machine.SwarmMachine;
@@ -50,6 +51,7 @@ import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
@@ -74,8 +76,8 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.io.space.fs.fsSpace.FS_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.mach.io.space.fs.fsSpace.makeFile;
 import static studio.phaseshift.metatron.isa.mach.io.space.serial.serialSpace.SERIAL_SPACE_TYPE;
-import static studio.phaseshift.metatron.isa.mach.space.clusterSpace.CLUSTER_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.mach.type.ui.console.Console.CONSOLE_TYPE;
+import static studio.phaseshift.metatron.isa.web.webInstSet.CLIENT_TYPE;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /*
@@ -98,6 +100,9 @@ public class machInstSet extends AbstractInstSet {
     public static final fURI RING_BINARY = MACH_INST_TID.extend("ring").extend("op").extend("+");
     public static final fURI WHICH_INST_TID = MACH_INST_TID.extend("which");
 
+    public static final fURI CLUSTER_SPACE_TID = MACH_ISA_TID.extend("cluster");
+    public static  Type CLUSTER_SPACE_TYPE;
+    
     public static final fURI ROUTER_TID = MACH_ISA_TID.extend("router");
     public static final fURI MACH_SPACE_TID = MACH_ISA_TID.extend("space");
     public static final fURI FILE_TID = MACH_ISA_TID.extend("file");
@@ -209,7 +214,7 @@ public class machInstSet extends AbstractInstSet {
                         MACH_CORE_THREAD_TYPE = docWrap(Type.Builder.build()
                                         .tid(MACH_THREAD_TID)
                                         .vid(MACH_CORE_THREAD_TID)
-                                        .constructor(instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(MACH_CORE_THREAD_TID), lst(T(REC_TID)), (lhs, inst) -> new CoreThread(inst.arg(0).jvm(), MACH_CORE_THREAD_TID, inst.arg(0).vid()).apply(lhs)))
+                                        .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(MACH_CORE_THREAD_TID), lst(T(REC_TID)), (lhs, inst) -> new CoreThread(inst.arg(0).jvm(), MACH_CORE_THREAD_TID, inst.arg(0).vid()).apply(lhs)))
                                         .create(), null, null, Map.of(
                                         uri(CODE), "the code the thread will execute",
                                         uri(LOOP).maybe(), "delay to repeat code evaluation (default is evaluate once)",
@@ -220,7 +225,7 @@ public class machInstSet extends AbstractInstSet {
                         MACH_VIRTUAL_THREAD_TYPE = docWrap(Type.Builder.build()
                                         .tid(MACH_THREAD_TID)
                                         .vid(MACH_VIRTUAL_THREAD_TID)
-                                        .constructor(instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(MACH_VIRTUAL_THREAD_TID), lst(T(REC_TID)), (lhs, inst) -> {
+                                        .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(MACH_VIRTUAL_THREAD_TID), lst(T(REC_TID)), (lhs, inst) -> {
                                             final VirtualThread vt = new VirtualThread(inst.arg(0).jvm(), MACH_VIRTUAL_THREAD_TID, inst.arg(0).vid());
                                             vt.applyAsync(lhs);
                                             return vt;
@@ -232,8 +237,25 @@ public class machInstSet extends AbstractInstSet {
                                         uri(RESULT).maybe(), "the last result produced by the thread"),
                                 "run a concurrent virtual thread",
                                 "virtual::[code=>ping(<phaseshift.studio:80>),loop=>second::1.5]@/sys/thread/ping"),
-                        docWrap(CLUSTER_SPACE_TYPE,"a space containing peers within a metatron cluster where reading and writing to this space will automatically route" +
-                                "the obj (based on the uri) to its respective peer in the cluster.")),
+                        docWrap(CLUSTER_SPACE_TYPE = Type.Builder.build()
+                                        .tid(SPACE_TID)
+                                        .vid(CLUSTER_SPACE_TID)
+                                        .isaPredicate(rec(uri(PEERS),
+                                                rec(AUTHORITY_TYPE,
+                                                        rec(uri(HOST), URI_TYPE,
+                                                                uri(PROTOCOL), URI_TYPE,
+                                                                uri(CLIENT).maybe(), CLIENT_TYPE))))
+                                        .constructor(obj -> new clusterSpace(new ConcurrentHashMap<>(), obj.asRec().jvm(), CLUSTER_SPACE_TID, obj.vid())).create(),
+                                null, null,
+                                Map.of(uri(PEERS), "known metatron instance elsewhere in ws or http space",
+                                        f(PEERS).extend(AUTHORITY).toUri(), "the host:port of known peer",
+                                        f(PEERS).extend(AUTHORITY).extend(HOST).toUri(), "the full uri of the peer host communication point",
+                                        f(PEERS).extend(AUTHORITY).extend(PROTOCOL).toUri(), "the protocol of the host endpoint",
+                                        f(PEERS).extend(AUTHORITY).extend(CLIENT).toUri(), "the client connection to the remote metatron instance"),
+                                """
+                                a space encoding references to other metatron instances and their associated router topology.
+                                this space provides infrastructure to route read/write uri-obj pairs to and from the current metatron instance
+                                """)),
                 uri(INST), lst(Stream.concat(Router.RouterType.insts().stream(), Stream.of(instC(LIFT_INST_TID.dom(ALL).rng(MACH_MONAD_TID).q(MONAD, "^"), lst(T(ALL.maybe())), (lhs, inst) -> {
                             final PCMonad monad = lhs.asMonad();
                             if (!inst.arg(0).isNoObj())

@@ -271,7 +271,7 @@ bin/metatron</code></pre>
  pattern=&gt;docq,
  obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
  inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
- space=&gt;[super=&gt;/m/mach/#],
+ space=&gt;[super=&gt;!*/m],
  type=&gt;[
   router::T,
   space::T,
@@ -288,7 +288,8 @@ bin/metatron</code></pre>
   thread_executor::T,
   thread::T,
   core::T,
-  virtual::T],
+  virtual::T,
+  cluster::T],
  inst=&gt;[
   lift(#{?}::T),
   rewrite?rec[short=&gt;uri,long=&gt;uri]&lt;=#{?}(uri::T),
@@ -314,7 +315,7 @@ bin/metatron</code></pre>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <button class="btn btn-outline-secondary" disabled>Consts <span class="pill-label badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">13</span></a><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">12</span></a><a href="#spaces" class="btn btn-outline-primary">Spaces <span class="pill-label badge bg-info">2</span></a><button class="btn btn-outline-secondary" disabled>Rewrites <span class="pill-label badge bg-dark">0</span></button>
+        <button class="btn btn-outline-secondary" disabled>Consts <span class="pill-label badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">13</span></a><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">12</span></a><a href="#spaces" class="btn btn-outline-primary">Spaces <span class="pill-label badge bg-info">3</span></a><button class="btn btn-outline-secondary" disabled>Rewrites <span class="pill-label badge bg-dark">0</span></button>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="card">
@@ -402,7 +403,10 @@ bin/metatron</code></pre>
 </a></div>
 </div><div class="mb-3">
     <h6 class="text-primary mb-2">Spaces</h6>
-    <div class="d-flex flex-wrap"><a href="#space-fsspace" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <div class="d-flex flex-wrap"><a href="#space-cluster" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">cluster</span>
+    <span class="pill-label badge bg-info text-dark ms-2">S</span>
+</a><a href="#space-fsspace" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">fsspace</span>
     <span class="pill-label badge bg-info text-dark ms-2">S</span>
 </a><a href="#space-serial" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
@@ -431,15 +435,15 @@ bin/metatron</code></pre>
         </span>
         <small class="text-muted code">/m/mach/thread/core</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">thread::T[][inst?core&lt;=#{?}(rec::T)]@/m/mach/thread/core</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">thread::T[][ctor?core&lt;=#{?}(rec::T)]@/m/mach/thread/core</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">run a concurrent core thread</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  code <span class="text-light">=&gt;</span> <span class="text-info">&#39;the code the thread will execute&#39;</span>
-  {?}result <span class="text-light">=&gt;</span> <span class="text-info">&#39;the last result produced by the thread&#39;</span>
-  {?}state <span class="text-light">=&gt;</span> <span class="text-info">&#39;current state of the thread&#39;</span>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  {?}result <span class="text-light">=&gt;</span> <span class="text-info">&#39;the last result produced by the thread&#39;</span>
+  code <span class="text-light">=&gt;</span> <span class="text-info">&#39;the code the thread will execute&#39;</span>
   {?}loop <span class="text-light">=&gt;</span> <span class="text-info">&#39;delay to repeat code evaluation (default is evaluate once)&#39;</span>
+  {?}state <span class="text-light">=&gt;</span> <span class="text-info">&#39;current state of the thread&#39;</span>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -570,15 +574,15 @@ the objs referenced by the monads that halt are the result of the machine execut
         </span>
         <small class="text-muted code">/m/mach/thread/virtual</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">thread::T[][inst?virtual&lt;=#{?}(rec::T)]@/m/mach/thread/virtual</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">thread::T[][ctor?virtual&lt;=#{?}(rec::T)]@/m/mach/thread/virtual</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">run a concurrent virtual thread</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  code <span class="text-light">=&gt;</span> <span class="text-info">&#39;the code the thread will execute&#39;</span>
-  {?}result <span class="text-light">=&gt;</span> <span class="text-info">&#39;the last result produced by the thread&#39;</span>
-  {?}state <span class="text-light">=&gt;</span> <span class="text-info">&#39;current state of the thread&#39;</span>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  {?}result <span class="text-light">=&gt;</span> <span class="text-info">&#39;the last result produced by the thread&#39;</span>
+  code <span class="text-light">=&gt;</span> <span class="text-info">&#39;the code the thread will execute&#39;</span>
   {?}loop <span class="text-light">=&gt;</span> <span class="text-info">&#39;delay to repeat code evaluation (default is evaluate once)&#39;</span>
+  {?}state <span class="text-light">=&gt;</span> <span class="text-info">&#39;current state of the thread&#39;</span>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -728,8 +732,27 @@ the objs referenced by the monads that halt are the result of the machine execut
     
 </div>
 </div><div class="container-xxl mb-4" id="spaces">
-    <h3 class="text-primary mb-3">Spaces <span class="pill-label badge bg-info">2</span></h3>
-    <div class="card mb-3" id="space-fsspace">
+    <h3 class="text-primary mb-3">Spaces <span class="pill-label badge bg-info">3</span></h3>
+    <div class="card mb-3" id="space-cluster">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <a href="m_mach_cluster.html" class="code text-primary fw-bold text-decoration-none">cluster</a>
+        <small class="text-muted code">/m/mach/cluster</small>
+    </div>
+    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[?[peers=&gt;[uri::T[/m/inst/pred?rng=authority&amp;dom=#{?}(uri::T){&lt;j&gt;}]@/m/uri/authority=&gt;[host=&gt;uri::T,protocol=&gt;uri::T,{?}client=&gt;client::T]]]][ctor?cluster&lt;=#{?}(space::T)]@/m/mach/cluster</code></pre></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">a space encoding references to other metatron instances and their associated router topology.
+this space provides infrastructure to route read/write uri-obj pairs to and from the current metatron instance
+</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  peers/authority/protocol <span class="text-light">=&gt;</span> <span class="text-info">&#39;the protocol of the host endpoint&#39;</span>
+  peers <span class="text-light">=&gt;</span> <span class="text-info">&#39;known metatron instance elsewhere in ws or http space&#39;</span>
+  peers/authority/client <span class="text-light">=&gt;</span> <span class="text-info">&#39;the client connection to the remote metatron instance&#39;</span>
+  peers/authority/host <span class="text-light">=&gt;</span> <span class="text-info">&#39;the full uri of the peer host communication point&#39;</span>
+  peers/authority <span class="text-light">=&gt;</span> <span class="text-info">&#39;the host:port of known peer&#39;</span>
+</pre>
+</div>
+</div><div class="card mb-3" id="space-fsspace">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <a href="m_mach_space_fsspace.html" class="code text-primary fw-bold text-decoration-none">fsspace</a>
         <small class="text-muted code">/m/mach/space/fsspace</small>

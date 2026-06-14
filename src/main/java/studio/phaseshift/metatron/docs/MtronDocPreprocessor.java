@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -68,6 +68,7 @@ public final class MtronDocPreprocessor {
     private static final Pattern ERROR = Pattern.compile("\\[ERROR]");
     private static final Pattern NOOUT = Pattern.compile("\\[NO_OUTPUT]");
     private static final Pattern NOPROMPT = Pattern.compile("\\[NO_PROMPT]");
+    private static final Pattern MAXOUTPUT = Pattern.compile("\\[MAXOUTPUT \\d+]");
 
     private static final ObjmtronSerializer SER = new ObjmtronSerializer(35);
     private static final GraphittyLogger LOG = Graphitty.log(MtronDocPreprocessor.class);
@@ -160,10 +161,12 @@ public final class MtronDocPreprocessor {
             }
             boolean error = false;
             boolean noOutput = false;
+            int maxOutput = 20;
             if (NOHDR.matcher(raw).find()) noHeader = true;
             if (ERROR.matcher(raw).find()) error = true;
             if (NOOUT.matcher(raw).find()) noOutput = true;
             if (NOPROMPT.matcher(raw).find()) noPrompt = true;
+            if (MAXOUTPUT.matcher(raw).find()) maxOutput = 20;
             final boolean hidden = HIDDEN.matcher(raw).find();
 
             // ── Line continuation ──
@@ -179,6 +182,7 @@ public final class MtronDocPreprocessor {
             expr = NOOUT.matcher(expr).replaceAll("");
             expr = CALLOUT.matcher(expr).replaceAll("");
             expr = NOPROMPT.matcher(expr).replaceAll("");
+            expr = MAXOUTPUT.matcher(expr).replaceAll("");
             acc.setLength(0);
             if (expr.isEmpty()) continue;
 
@@ -192,7 +196,7 @@ public final class MtronDocPreprocessor {
 
             // ── Evaluate ──
             try {
-                TypeCheck.disable(TypeCheck.code_resolve,TypeCheck.inst_rng);
+                TypeCheck.disable(TypeCheck.code_resolve, TypeCheck.inst_rng);
                 final Obj input = ObjmtronSerializer.parse(expr);
                 final Obj result = input.apply();
                 if (result.isFail() && !error) {
@@ -200,7 +204,7 @@ public final class MtronDocPreprocessor {
                     //System.exit(1);
                 }
                 if (!hidden && !noOutput && !result.isNoObj()) {
-                    result.stream().forEach(o -> lines.add("==>" + SER.write(o).replace("\n","\n   ")));
+                    result.stream().forEach(o -> lines.add("==>" + SER.write(o).replace("\n", "\n   ")));
                 } else if (noOutput) {
                     lines.add("...");
                 } else if (result.isNoObj() && input.isType()) {
@@ -210,6 +214,13 @@ public final class MtronDocPreprocessor {
                 if (!hidden) ObjmtronSerializer.parse("/sys/fail/+ -> noobj").apply();
             } catch (final Exception e) {
                 if (!hidden) lines.add("==>ERROR: " + e.getMessage());
+            }
+            if (lines.size() > maxOutput) {
+                int linesToRemove = lines.size() - maxOutput;
+                for (int i = 0; i < linesToRemove; i++) {
+                    lines.removeLast();
+                }
+                lines.add("...");
             }
             noPrompt = false;
         }

@@ -141,6 +141,10 @@ public class webInstSet extends AbstractInstSet {
     public static final Type MARKDOWN_TYPE = Type.Builder.build().tid(REC_TID).vid(MARKDOWN_TID).create();
     public static final fURI MCP_SERVER_TID = WEB_ISA_TID.extend("mcp_server");
     public static final fURI MCP_CLIENT_TID = WEB_ISA_TID.extend("mcp_client");
+    public static final fURI CLIENT_TID = WEB_ISA_TID.extend("client");
+    public static Type CLIENT_TYPE;
+    public static final fURI SERVER_TID = WEB_ISA_TID.extend("server");
+    public static Type SERVER_TYPE;
     public static Type MCP_CLIENT_TYPE;
     public static Type MCP_SERVER_TYPE;
 
@@ -190,6 +194,11 @@ public class webInstSet extends AbstractInstSet {
                         docWrap(WS_SPACE_TYPE, "a space for exposing and managing web socket servers.",
                                 "*<ws://localhost:8999/mtron>               [-- creates a wsmtron server session    --]",
                                 "<ws://localhost:8999/mtron/0/send>('ping') [-- sends str to wsmtron server session --]"),
+                        /////////////////////////////////////////////////////////////////////////////////////////////////////
+                        docWrap(CLIENT_TYPE = Type.Builder.build().tid(REC_TID).vid(CLIENT_TID).create(), 
+                                "a generic web client which can be refined with useful behaviors"),
+                        docWrap(SERVER_TYPE = Type.Builder.build().tid(REC_TID).vid(SERVER_TID).create(),
+                                "a generic web server which can be refined with useful behaviors"),
                         docWrap(WS_WEBSOCKET_TYPE, "a generic websocket obj which can be refined with useful behaviors"),
                         docWrap(WS_HANDLER_TYPE, "a websocket server which should be refined to implement protocol specs"),
                         docWrap(WS_CLIENT_TYPE, "an websocket client which should be refined to implement protocol specs"),
@@ -208,7 +217,7 @@ public class webInstSet extends AbstractInstSet {
                         docWrap(WEB_HTTP_HANDLER_TYPE, "a http handler serving web content from a router-backed space"),
                         /// //////////////////////////////
                         docWrap(MCP_SERVER_TYPE = Type.Builder.build()
-                                        .tid(REC_TID)
+                                        .tid(SERVER_TID)
                                         .vid(MCP_SERVER_TID)
                                         .isaPredicate(rec(
                                                 uri(TOOL).maybe().asUri(), rec(URI_TYPE, INST_TYPE).maybe(),
@@ -218,7 +227,7 @@ public class webInstSet extends AbstractInstSet {
                                                 new mcpServer(new LinkedHashMap<>(inst.arg(0).asRec().jvm()), MCP_SERVER_TID, inst.arg(0).vid()))).create(),
                                 "transport-agnostic mcp json-rpc protocol handler"),
                         docWrap(MCP_CLIENT_TYPE = Type.Builder.build()
-                                        .tid(REC_TID)
+                                        .tid(CLIENT_TID)
                                         .vid(MCP_CLIENT_TID)
                                         .isaPredicate(rec(
                                                 uri(HOST).maybe().asUri(), URI_TYPE,
