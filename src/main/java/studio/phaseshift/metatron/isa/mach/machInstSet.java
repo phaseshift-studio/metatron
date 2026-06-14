@@ -30,7 +30,7 @@ import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.io.space.fs.fsSpace;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.mach.space.clusterSpace;
+import studio.phaseshift.metatron.isa.mach.space.clstrSpace;
 import studio.phaseshift.metatron.isa.mach.type.PCMonad;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.machine.SwarmMachine;
@@ -245,7 +245,7 @@ public class machInstSet extends AbstractInstSet {
                                                         rec(uri(HOST), URI_TYPE,
                                                                 uri(PROTOCOL), URI_TYPE,
                                                                 uri(CLIENT).maybe(), CLIENT_TYPE))))
-                                        .constructor(obj -> new clusterSpace(new ConcurrentHashMap<>(), obj.asRec().jvm(), CLUSTER_SPACE_TID, obj.vid())).create(),
+                                        .constructor(obj -> new clstrSpace(new ConcurrentHashMap<>(), obj.asRec().jvm(), CLUSTER_SPACE_TID, obj.vid())).create(),
                                 null, null,
                                 Map.of(uri(PEERS), "known metatron instance elsewhere in ws or http space",
                                         f(PEERS).extend(AUTHORITY).toUri(), "the host:port of known peer",

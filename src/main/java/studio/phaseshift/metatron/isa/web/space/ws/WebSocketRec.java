@@ -32,24 +32,14 @@ import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.web.type.MIME;
 
 import java.util.Map;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
 
 import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
-import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_INST_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.NOOBJ_TID;
-import static studio.phaseshift.metatron.isa.m.type.InstSet.A;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
-import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
-import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 public class WebSocketRec extends MRec implements WebSocketObj {
@@ -75,30 +65,16 @@ public class WebSocketRec extends MRec implements WebSocketObj {
             }));
         if (!map.containsKey(uri(SEND_RECV))) {
             this.jvm().put(uri(SEND_RECV), instLambda((lhs1, inst1) -> {
-                final AtomicReference<Obj> incoming = new AtomicReference<>(noobj());
-                final CountDownLatch latch = new CountDownLatch(1);
-                final Obj previousOnMessage = this.at(ON_MESSAGE);
-                this.at(ON_MESSAGE, instLambda((lhs, inst) -> {
-                    incoming.set(lhs);
-                    latch.countDown();
-                    return lhs;
-                }), MUTABLE);
                 try {
                     final Obj toSend = inst1.arg(0);
                     final Real timeoutMs = inst1.arg(1).orElse(real(-1.0));
-                    if (timeoutMs.realValue() == -1.0) {
-                        this.send(toSend);
-                        latch.await();
-                    } else {
-                        this.send(toSend);
-                        latch.await(timeoutMs.realValue().longValue(), TimeUnit.MILLISECONDS);
-                    }
-                } catch (final InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                } finally {
-                    this.at(ON_MESSAGE, previousOnMessage, MUTABLE);
+                    return timeoutMs.realValue() == -1.0
+                            ? this.sendRecv(toSend)
+                            : this.sendRecv(toSend, timeoutMs.realValue().longValue());
+                } catch (final Exception e) {
+                    LOG.error("error in sendRecv: %s", e);
+                    return fail(e);
                 }
-                return incoming.get();
             }));
         }
         if (!map.containsKey(uri(CLOSE)))

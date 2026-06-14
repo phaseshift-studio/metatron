@@ -32,16 +32,23 @@ import studio.phaseshift.metatron.util.MTronException;
 import java.io.Closeable;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.NOOBJ_TID;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.Poly.MUTABLE;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public interface WebSocketObj extends Obj, Closeable {
+public interface WebSocketObj extends Rec, Closeable {
 
     record IO(MIME.MIMEType input, MIME.MIMEType output) {
         public static IO of(final Rec obj, final MIME.MIMEType defaultType) {
@@ -110,5 +117,62 @@ public interface WebSocketObj extends Obj, Closeable {
         } catch (final Exception e) {
             Graphitty.log(this).error("error sending %s: %s", message, e);
         }
+    }
+
+    /**
+     * Send a message and block until a response is received, then return it.
+     * <p>
+     * Temporarily installs a one-shot {@code ON_MESSAGE} handler that captures
+     * the next inbound frame, sends {@code message}, waits indefinitely for the
+     * response, restores the previous {@code ON_MESSAGE} handler, and returns
+     * the captured response.
+     *
+     * @param message the Obj to send
+     * @return the response Obj (or {@code noobj} if interrupted)
+     */
+    default Obj sendRecv(final Obj message) {
+        return this.sendRecv(message, 0L);
+    }
+
+    /**
+     * Send a message and block for up to {@code timeoutMs} waiting for a
+     * response.
+     * <p>
+     * Temporarily installs a one-shot {@code ON_MESSAGE} handler that captures
+     * the next inbound frame, sends {@code message}, waits up to
+     * {@code timeoutMs}, restores the previous {@code ON_MESSAGE} handler, and
+     * returns the captured response (or {@code noobj} if the timeout expired
+     * or the thread was interrupted).
+     *
+     * @param message   the Obj to send
+     * @param timeoutMs max wait in milliseconds (<= 0 means wait indefinitely)
+     * @return the response Obj (or {@code noobj} on timeout / interrupt)
+     */
+    default Obj sendRecv(final Obj message, final long timeoutMs) {
+        final AtomicReference<Obj> incoming = new AtomicReference<>(noobj());
+        final CountDownLatch latch = new CountDownLatch(1);
+        final Obj previousOnMessage = this.at(uri(ON_MESSAGE));
+
+        // Install a one-shot handler that captures the next message
+        this.at(uri(ON_MESSAGE), instLambda((lhs, inst) -> {
+            incoming.set(lhs);
+            latch.countDown();
+            return lhs;
+        }), MUTABLE);
+
+        try {
+            this.send(message);
+            if (timeoutMs <= 0L) {
+                latch.await();
+            } else {
+                latch.await(timeoutMs, TimeUnit.MILLISECONDS);
+            }
+        } catch (final InterruptedException e) {
+            Thread.currentThread().interrupt();
+        } finally {
+            this.at(uri(ON_MESSAGE), previousOnMessage, MUTABLE);
+        }
+
+        return incoming.get();
     }
 }

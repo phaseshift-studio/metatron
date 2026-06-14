@@ -333,7 +333,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathTest impleme
 
     @Override
     public String make(final String expression, final Method testMethod) {
-        // For testMonoUpdate, $$ → mongo: so seed data writes to mongo:<collection>/<docId>
+        // For testMonoUpdate, $$ → db: so seed data writes to db:<collection>/<docId>
         // and update/read expressions resolve to the same two-segment document paths.
         if (testMethod != null && ("testMonoUpdate".equals(testMethod.getName()) || "testMonoDepth".equals(testMethod.getName()))) {
             return expression.contains("$$") ? expression.replace("$$/", "db:") : expression;

@@ -1173,7 +1173,9 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                     instC(GROUP_INST_TID.dom(ALL.maybeSome()).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> {
                         final Map<Obj, Obj> result = new LinkedHashMap<>();
                         lhs.stream().forEach(e -> inst.arg(0).asRec().elements().forEach(kv -> {
-                            final Obj kk = kv.first().isObjCall() ? kv.first().apply(e) : (e.isRec() ? e.asRec().at(kv.first()) : e);
+                            final Obj kk = kv.first().isObjCall() || kv.first().isInst()
+                                    ? kv.first().apply(e)
+                                    : (e.isRec() ? e.asRec().at(kv.first()) : e);
                             if (!kk.isNoObj()) // TODO: if the group value is not a barrier, then process immediately.
                                 result.compute(kk, (k, v) -> (v == null) ? lst(kv.second(), e) : v.asLst().at(jnt(1), v.asLst().at(jnt(1)).append(e), MUTABLE));
                         }));

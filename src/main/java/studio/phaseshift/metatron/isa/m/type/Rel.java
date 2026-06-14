@@ -27,6 +27,7 @@ import studio.phaseshift.metatron.util.Tuple;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
@@ -331,7 +332,15 @@ public interface Rel extends Poly<Rel, Tuple.Pair<Obj, Obj>>, MultMonoid.O<Rel>,
         }
 
         public static Obj rshiftRel(final Rel lhs, final Obj arg) {
-            return arg.isNoObj() ? lhs.asRel().second() : lhs.asRel().at(arg);
+            if (arg.isNoObj())
+                return lhs.asRel().second();
+            final Obj firstMatch = lhs.asRel().at(arg);
+            if (!firstMatch.isNoObj())
+                return firstMatch;
+            if (lhs.asRel().second().isRec()) {
+                return lhs.asRel().second().asRec().at(arg);
+            }
+            return noobj();
         }
     }
 

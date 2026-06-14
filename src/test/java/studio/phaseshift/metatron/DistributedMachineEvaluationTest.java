@@ -18,144 +18,105 @@
 
 package studio.phaseshift.metatron;
 
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.mach.space.LocalCluster;
+import studio.phaseshift.metatron.isa.mach.space.LocalNode;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 
 /**
- * Test class demonstrating distributed machine evaluation functionality.
- * This test shows how the AbstractDistributedMetatronTest harness works
- * for testing cross-host machine execution.
+ * Demonstration of the Tier 1 (in-JVM) distributed test infrastructure.
+ * <p>
+ * Validates cluster-space topology, read delegation, and store-level
+ * write isolation across multiple in-process metatron nodes.
+ *
+ * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class DistributedMachineEvaluationTest extends AbstractDistributedMetatronTest {
 
     private static final GraphittyLogger LOG = Graphitty.log(DistributedMachineEvaluationTest.class);
+    private LocalCluster cluster;
 
-    @BeforeAll
-    public static void setup() {
-        // Call the parent setup
-        AbstractDistributedMetatronTest.begin();
-
-        // Setup distributed test environment with 3 hosts
-        setupDistributedEnvironment("distributed_machine_evaluation", 3);
-
-        LOG.info("=== Distributed Machine Evaluation Test Setup ===");
+    @BeforeEach
+    public void setup() {
+        this.cluster = createCluster(3);
+        LOG.info("=== Distributed Machine Evaluation Test Setup === 3 nodes");
     }
 
-    @AfterAll
-    public static void tearDown() {
-        LOG.info("=== Distributed Machine Evaluation Test Complete ===");
-        AbstractDistributedMetatronTest.end();
-    }
-
-    @Test
-    @DisplayName("Test basic distributed machine setup")
-    public void testDistributedMachineSetup() {
-        LOG.info("Testing basic distributed machine setup");
-
-        // Verify that our test infrastructure is properly initialized
-        Obj stats = getTestStatistics();
-        assertNotNull(stats, "Test statistics should be available");
-
-        Obj debugUtils = getDebugUtilities();
-        assertNotNull(debugUtils, "Debug utilities should be available");
-
-        LOG.debug("Basic setup verification passed");
+    @AfterEach
+    public void tearDown() {
+        if (this.cluster != null) {
+            this.cluster.close();
+            this.cluster = null;
+        }
     }
 
     @Test
-    @DisplayName("Test cross-host URI routing")
-    public void testCrossHostRouting() {
-        LOG.info("Testing cross-host URI routing");
-
-        // Test local URI
-        fURI localUri = f("/demo/data/local_object");
-        verifyCrossHostRouting(LOG, localUri, false);
-
-        // Test remote URI
-        fURI remoteUri = f("http://host2:8080/demo/data/remote_object");
-        verifyCrossHostRouting(LOG, remoteUri, true);
-
-        LOG.debug("Cross-host routing test passed");
+    @DisplayName("Full 3-node topology — each node sees both peers")
+    public void testFullTopology() {
+        assertFullTopology(cluster);
+        for (int i = 0; i < cluster.size(); i++) {
+            assertPeerCount(cluster.node(i), 2);
+        }
     }
 
     @Test
-    @DisplayName("Test distributed machine evaluation")
-    public void testDistributedMachineEvaluation() {
-        LOG.info("Testing distributed machine evaluation");
+    @DisplayName("Read delegates to Router — each node reads its own namespace via clusterSpace")
+    public void testReadOwnNamespace() {
+        // Write to each node's namespace via Router
+        for (int i = 0; i < cluster.size(); i++) {
+            final int port = cluster.node(i).port();
+            Router.writeToSpace(
+                    f("ws://localhost:" + port + "/t/x"),
+                    str("node-" + i));
+        }
 
-        // Test simple machine code that should work across hosts
-        String machineCode = "print?str<=str('hello world')";
+        // Each node reads its own namespace through its clusterSpace
+        for (int i = 0; i < cluster.size(); i++) {
+            assertEquals(str("node-" + i),
+                    cluster.cluster(i).read(
+                            f("ws://localhost:" + cluster.node(i).port() + "/t/x")));
+        }
 
-        testDistributedMachineEvaluation(LOG, machineCode, null, 3);
-
-        LOG.debug("Distributed machine evaluation test passed");
+        // Router directly sees all namespaces (no authority routing)
+        for (int i = 0; i < cluster.size(); i++) {
+            assertEquals(str("node-" + i),
+                    Router.readFromSpace(
+                            f("ws://localhost:" + cluster.node(i).port() + "/t/x")));
+        }
     }
 
     @Test
-    @DisplayName("Test distributed statistics tracking")
-    public void testDistributedStatistics() {
-        LOG.info("Testing distributed statistics tracking");
+    @DisplayName("Write isolation — each namespace stores independently")
+    public void testWriteIsolation() {
+        final LocalNode n0 = cluster.node(0);
+        final LocalNode n1 = cluster.node(1);
 
-        // Verify we can access host-specific statistics
-        Obj host0Stats = getHostStatistics("host_0");
-        assertNotNull(host0Stats, "Host 0 statistics should be available");
+        Router.writeToSpace(
+                f("ws://localhost:" + n0.port() + "/t/val"), str("n0-only"));
 
-        Obj host1Stats = getHostStatistics("host_1");
-        assertNotNull(host1Stats, "Host 1 statistics should be available");
+        // n0's namespace has the value
+        assertEquals(str("n0-only"),
+                Router.readFromSpace(f("ws://localhost:" + n0.port() + "/t/val")));
 
-        LOG.debug("Distributed statistics tracking test passed");
+        // n1's namespace is empty at the same path
+        assertTrue(
+                Router.readFromSpace(f("ws://localhost:" + n1.port() + "/t/val")).isNoObj());
     }
 
     @Test
-    @DisplayName("Test distributed operation validation")
-    public void testDistributedOperationValidation() {
-        LOG.info("Testing distributed operation validation");
-
-        // Test a successful distributed operation
-        checkDistributedOperation(LOG, "data_processing", true);
-
-        // Test a failed distributed operation (simulated)
-        checkDistributedOperation(LOG, "network_failure_simulation", false);
-
-        LOG.debug("Distributed operation validation test passed");
-    }
-
-    @Test
-    @DisplayName("Test distributed environment configuration")
-    public void testEnvironmentConfiguration() {
-        LOG.info("Testing distributed environment configuration");
-
-        // Create a scenario with specific host configurations
-        var hostConfig = new java.util.HashMap<String, Object>();
-        hostConfig.put("host_0", "primary");
-        hostConfig.put("host_1", "replica");
-        hostConfig.put("host_2", "backup");
-
-        createDistributedScenario(LOG, "three_host_cluster", hostConfig);
-
-        LOG.debug("Environment configuration test passed");
-    }
-
-    @Test
-    @DisplayName("Test distributed result consistency")
-    public void testResultConsistency() {
-        LOG.info("Testing distributed result consistency");
-
-        // Create mock results for local and remote execution
-        Obj localResult = uri("local_result");
-        Obj remoteResult = uri("remote_result");
-
-        // Results should match when computation is identical
-        validateDistributedResults(LOG, localResult, remoteResult, false);
-
-        LOG.debug("Result consistency test passed");
+    @DisplayName("Unwritten VID returns noobj through clusterSpace")
+    public void testUnwrittenVid() {
+        final fURI unknown = f("ws://localhost:" + cluster.node(0).port() + "/t/nowhere");
+        assertTrue(cluster.cluster(0).read(unknown).isNoObj());
     }
 }

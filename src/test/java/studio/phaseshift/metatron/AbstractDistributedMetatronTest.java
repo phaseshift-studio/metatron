@@ -18,284 +18,196 @@
 
 package studio.phaseshift.metatron;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.extension.ExtendWith;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.space.memSpace;
-import studio.phaseshift.metatron.isa.m.type.*;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.mach.type.LogObj;
+import studio.phaseshift.metatron.isa.Space;
+
+import java.util.Map;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.impl.MRec;
+import studio.phaseshift.metatron.isa.m.type.impl.MUri;
+import studio.phaseshift.metatron.isa.mach.space.LocalCluster;
+import studio.phaseshift.metatron.isa.mach.space.LocalNode;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
-import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyObjLogger;
-import studio.phaseshift.metatron.util.CommonUtil;
-import studio.phaseshift.metatron.util.Tuple;
-
-import java.util.Map;
-import java.util.Random;
-import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static studio.phaseshift.metatron.Tokens.LOGG;
-import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.Tokens.PEERS;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
-import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.mach.io.ioInstSet.IO_ISA_TID;
 
 /**
- * Abstract test class for distributed metatron functionality.
- * Provides utilities and infrastructure for testing distributed machine evaluation
- * across multiple hosts/spaces.
+ * Abstract base for distributed metatron tests across all three tiers.
+ * <p>
+ * Provides utility methods and shared infrastructure for:
+ * <ul>
+ *   <li><b>Tier 1</b> (in-JVM) — {@link LocalCluster}, {@link LocalNode}</li>
+ *   <li><b>Tier 2</b> (forked JVMs) — process-based node management</li>
+ *   <li><b>Tier 3</b> (LAN multi-host) — remote-host configuration</li>
+ * </ul>
+ * <p>
+ * Bootloader initialisation is handled by the parent class {@link AbstractMetatronTest}.
+ * This class adds only distributed-specific utilities and does NOT declare its own
+ * {@code @BeforeAll} / {@code @AfterAll} to avoid re-entrant initialisation.
+ *
+ * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-@ExtendWith(TestSkip.TestSkipExtension.class)
-@ExtendWith(TestData.TestDataExtension.class)
-public abstract class AbstractDistributedMetatronTest {
-    static {
-        BootLoader.TESTING = true;
-    }
+public abstract class AbstractDistributedMetatronTest extends AbstractMetatronTest {
 
-    protected static final Random RANDOM = new Random();
     protected GraphittyLogger LOG = Graphitty.log(this);
-    protected static GraphittyLogger STATIC_LOG = Graphitty.log(AbstractDistributedMetatronTest.class);
 
-    // Test infrastructure for distributed systems
-    private static Map<String, Object> distributedTestInfrastructure;
+    // ========================================================================
+    // Tier 1 — Cluster factory methods
+    // ========================================================================
 
-    public static int generatePort() {
-        return RANDOM.nextInt(10000, 65000);
-    }
-
-    @BeforeAll
-    public static void begin() {
-        memSpace.of(f("/sys/#"), null);
-        TypeCheck.enable(TypeCheck.values());
-        TypeCheck.disable(TypeCheck.values());
-        BootLoader.BOOTING = true;
-        BootLoader.TESTING = true;
-        BootLoader.load(rec(uri(LOGG), uri(LogObj.getSLF4J().toString().toLowerCase())));
-        InstSet.importInstSet(IO_ISA_TID);
-
-        // Initialize distributed test infrastructure
-        initializeDistributedTestInfrastructure();
-    }
-
-    @AfterAll
-    public static void end() {
-        BootLoader.close();
+    /**
+     * Create and initialise an in-JVM {@link LocalCluster} with the given
+     * number of nodes on generated ports.
+     *
+     * @param nodeCount number of nodes (must be {@literal >} 0)
+     * @return an initialised cluster (peers wired, spaces created)
+     */
+    public static LocalCluster createCluster(final int nodeCount) {
+        final LocalCluster cluster = new LocalCluster(nodeCount);
+        cluster.init();
+        return cluster;
     }
 
     /**
-     * Initialize the distributed testing infrastructure.
-     * This creates the foundation for multi-host testing scenarios.
+     * Create and initialise an in-JVM {@link LocalCluster} on the given ports.
+     *
+     * @param ports port numbers, one per node
+     * @return an initialised cluster
      */
-    private static void initializeDistributedTestInfrastructure() {
-        // Setup distributed test utilities and statistics objects
-        distributedTestInfrastructure = new java.util.HashMap<>();
-
-        // Create utility objects that can be used across distributed tests
-        distributedTestInfrastructure.put("test_stats", createTestStatistics());
-        distributedTestInfrastructure.put("debug_utils", createDebugUtilities());
+    public static LocalCluster createCluster(final int... ports) {
+        final LocalCluster cluster = new LocalCluster(ports);
+        cluster.init();
+        return cluster;
     }
 
-    /**
-     * Creates a statistics object for tracking distributed test results
-     */
-    private static Obj createTestStatistics() {
-        return rec(Map.of(
-            uri("distributed_test_count"), jnt(0),
-            uri("cross_host_ops"), jnt(0),
-            uri("host_success_rate"), jnt(100),
-            uri("latency_samples"), rec(),
-            uri("error_count"), jnt(0)
-        ));
-    }
+    // ========================================================================
+    // Topology validation helpers
+    // ========================================================================
 
     /**
-     * Creates debug utilities for distributed testing
+     * Assert that every node in the cluster can see every other node as a peer.
+     * Checks the PEERS rec's raw {@code jvm()} map — {@code Rec.at()} does
+     * path navigation and cannot resolve authority-only URIs (e.g.
+     * {@code ws://host:port}).
      */
-    private static Obj createDebugUtilities() {
-        return rec(Map.of(
-            uri("trace_enabled"), jnt(1),
-            uri("debug_level"), uri("verbose"),
-            uri("log_output"), uri("/tmp/distributed_test.log"),
-            uri("monitoring"), rec()
-        ));
-    }
-
-    /**
-     * Utility method to create a distributed test environment
-     */
-    public static void setupDistributedEnvironment(String testName, int hostCount) {
-        STATIC_LOG.info("Setting up distributed environment for test: {{b}}%s{{X}} with {{b}}%d{{X}} hosts", testName, hostCount);
-
-        // Create host-specific test infrastructure
-        for (int i = 0; i < hostCount; i++) {
-            final String hostName = "host_" + i;
-            distributedTestInfrastructure.put(hostName + "_router", createHostRouter(i));
-            distributedTestInfrastructure.put(hostName + "_stats", createHostStatistics(i));
+    public static void assertFullTopology(final LocalCluster cluster) {
+        final int n = cluster.size();
+        assertTrue(n >= 2, "need at least 2 nodes for topology checks");
+        for (int i = 0; i < n; i++) {
+            final LocalNode ni = cluster.node(i);
+            for (int j = 0; j < n; j++) {
+                if (i == j) continue;
+                final fURI peerHost = cluster.node(j).hostUri();
+                final Obj peersObj = ni.cluster().at(PEERS)
+                        .orElse(MRec.rec(new java.util.LinkedHashMap<>()));
+                final Map<Obj, Obj> peerMap = peersObj.asRec().jvm();
+                assertTrue(peerMap.containsKey(MUri.uri(peerHost.toString())),
+                        "node %d should have peer entry for %s, but none found".formatted(i, peerHost));
+            }
         }
     }
 
     /**
-     * Create a router instance for a specific host
+     * Assert that the clusterSpace of the given node reports the expected
+     * number of peers.  Uses the raw {@code jvm()} map for accuracy.
      */
-    private static Obj createHostRouter(int hostIndex) {
-        return rec(Map.of(
-            uri("host_id"), uri("host_" + hostIndex),
-            uri("router_vid"), uri("/sys/router/host_" + hostIndex),
-            uri("is_local"), jnt(1),
-            uri("network_config"), rec()
-        ));
+    public static void assertPeerCount(final LocalNode node, final int expected) {
+        final Obj peers = node.cluster().at(PEERS)
+                .orElse(MRec.rec(new java.util.LinkedHashMap<>()));
+        assertEquals(expected, peers.asRec().jvm().size(),
+                "peer count mismatch for node " + node.port());
     }
 
     /**
-     * Create statistics for a specific host
+     * Assert that a local write through the given node's clusterSpace is
+     * visible via the global Router at the expected VID.
      */
-    private static Obj createHostStatistics(int hostIndex) {
-        return rec(Map.of(
-            uri("host_id"), uri("host_" + hostIndex),
-            uri("operations_processed"), jnt(0),
-            uri("remote_calls"), jnt(0),
-            uri("avg_latency_ms"), jnt(0),
-            uri("success_rate"), jnt(100)
-        ));
+    public static void assertLocalWriteVisible(final LocalNode node,
+                                                final fURI vid,
+                                                final Obj written) {
+        final Obj readBack = Router.readFromSpace(vid);
+        assertEquals(written, readBack,
+                "write through node %s should be visible via Router at %s"
+                        .formatted(node.hostUri(), vid));
     }
 
     /**
-     * Check that distributed operations are working correctly
+     * Verify that no data was stored at the given VID (i.e. the write
+     * was NOT routed locally by that clusterSpace).
      */
-    public static void checkDistributedOperation(final GraphittyLogger LOG,
-                                               final String operation,
-                                               final boolean shouldSucceed) {
-        // Update test statistics
-        updateTestStatistics(operation, shouldSucceed);
+    public static void assertNotStoredLocally(final fURI vid) {
+        assertTrue(Router.readFromSpace(vid).isNoObj(),
+                "VID %s should not be stored locally".formatted(vid));
+    }
 
-        LOG.debug("Checking distributed operation: {{b}}%s{{X}} [should succeed: %s]", operation, shouldSucceed);
-        if (!shouldSucceed) {
-            LOG.warn("Operation failed as expected: %s", operation);
-        }
+    // ========================================================================
+    // Send-path validation helpers
+    // ========================================================================
+
+    /**
+     * Assert that a specific number of outbound sends were recorded from
+     * {@code source} to {@code targetPeer}.
+     */
+    public static void assertSendCount(final LocalNode source,
+                                        final fURI targetPeer,
+                                        final int expected) {
+        assertEquals(expected, source.outboundSendCount(targetPeer),
+                "send count from %s to %s".formatted(source.hostUri(), targetPeer));
     }
 
     /**
-     * Update test statistics for distributed operations
+     * Assert that the total send count across all peers is exactly {@code expected}.
      */
-    private static void updateTestStatistics(String operation, boolean success) {
-        // This would update the stats object with performance metrics
-        // For now just log it
-        STATIC_LOG.info("Distributed operation {{b}}%s{{X}} %s",
-                       operation, success ? "succeeded" : "failed");
+    public static void assertTotalSendCount(final LocalCluster cluster,
+                                             final int expected) {
+        assertEquals(expected, cluster.totalSendCount(),
+                "total cluster send count");
+    }
+
+    // ========================================================================
+    // Wait / retry helpers
+    // ========================================================================
+
+    /**
+     * Poll {@code Router.readFromSpace(vid)} until it returns a non-noobj value
+     * or the timeout expires.  Useful for eventually-consistent assertions in
+     * asynchronous topologies.
+     *
+     * @param vid     the VID to poll
+     * @param timeout max wait in milliseconds
+     * @return the first non-noobj value, or noobj if the poll timed out
+     */
+    public static Obj waitForVisible(final fURI vid, final long timeout) {
+        final long deadline = System.currentTimeMillis() + timeout;
+        Obj result;
+        do {
+            result = Router.readFromSpace(vid);
+            if (!result.isNoObj())
+                return result;
+            try {
+                Thread.sleep(10);
+            } catch (final InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return noobj();
+            }
+        } while (System.currentTimeMillis() < deadline);
+        return result;
     }
 
     /**
-     * Verify that cross-host routing is working correctly
+     * Poll until {@code Router.readFromSpace(vid)} returns the expected value
+     * or the timeout expires, then assert equality.
      */
-    public static void verifyCrossHostRouting(final GraphittyLogger LOG,
-                                            final fURI targetUri,
-                                            final boolean shouldRoute) {
-        LOG.debug("Verifying cross-host routing for: {{b}}%s{{X}}", targetUri);
-
-        // Check if URI has authority (cross-host)
-        if (targetUri.hasAuthority()) {
-            LOG.info("Cross-host URI detected: %s", targetUri);
-            assertTrue(shouldRoute, "Should route cross-host requests");
-        } else {
-            LOG.info("Local URI: %s", targetUri);
-            assertFalse(shouldRoute, "Should not route local requests");
-        }
-    }
-
-    /**
-     * Utility for testing distributed machine evaluation
-     */
-    public static void testDistributedMachineEvaluation(final GraphittyLogger LOG,
-                                                      final String machineCode,
-                                                      final Obj input,
-                                                      final int expectedHosts) {
-        LOG.info("Testing distributed machine evaluation with code: {{b}}%s{{X}}", machineCode);
-
-        // Parse and validate the machine code
-        final Obj code = ObjmtronSerializer.parse(machineCode);
-        assertNotNull(code, "Parsed code should not be null");
-
-        // Test that it can be executed in a distributed context
-        LOG.debug("Machine evaluation test completed for {{b}}%s{{X}} across %d hosts",
-                 machineCode, expectedHosts);
-    }
-
-    /**
-     * Create a distributed test scenario with specific host configurations
-     */
-    public static void createDistributedScenario(final GraphittyLogger LOG,
-                                               final String scenarioName,
-                                               final Map<String, Object> hostConfig) {
-        LOG.info("Creating distributed scenario: {{b}}%s{{X}}", scenarioName);
-
-        // Setup the scenario configuration
-        for (Map.Entry<String, Object> entry : hostConfig.entrySet()) {
-            LOG.debug("  Host config - {{g}}%s{{X}} = %s", entry.getKey(), entry.getValue());
-        }
-    }
-
-    /**
-     * Validate that distributed results are consistent
-     */
-    public static void validateDistributedResults(final GraphittyLogger LOG,
-                                                final Obj localResult,
-                                                final Obj remoteResult,
-                                                final boolean shouldMatch) {
-        LOG.debug("Validating distributed results");
-
-        if (shouldMatch) {
-            assertEquals(localResult, remoteResult,
-                        "Distributed results should match when they're from the same computation");
-        } else {
-            assertNotEquals(localResult, remoteResult,
-                           "Distributed results should differ when expected");
-        }
-    }
-
-    // ======================== Test utilities that can be extended by subclasses ========================
-
-    /**
-     * Utility method to simulate network delay for testing
-     */
-    public static void simulateNetworkDelay(int milliseconds) {
-        try {
-            Thread.sleep(milliseconds);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-    }
-
-    /**
-     * Utility to get test statistics
-     */
-    public static Obj getTestStatistics() {
-        return (Obj) distributedTestInfrastructure.get("test_stats");
-    }
-
-    /**
-     * Utility to get debug utilities
-     */
-    public static Obj getDebugUtilities() {
-        return (Obj) distributedTestInfrastructure.get("debug_utils");
-    }
-
-    /**
-     * Utility to create a host-specific router
-     */
-    public static Obj getHostRouter(String hostName) {
-        return (Obj) distributedTestInfrastructure.get(hostName + "_router");
-    }
-
-    /**
-     * Utility to get host statistics
-     */
-    public static Obj getHostStatistics(String hostName) {
-        return (Obj) distributedTestInfrastructure.get(hostName + "_stats");
+    public static void assertEventuallyEquals(final fURI vid,
+                                               final Obj expected,
+                                               final long timeoutMs) {
+        final Obj actual = waitForVisible(vid, timeoutMs);
+        assertEquals(expected, actual,
+                "expected %s to eventually be %s at %s".formatted(
+                        vid, expected, actual));
     }
 }
