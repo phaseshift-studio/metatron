@@ -18,39 +18,29 @@
 
 package studio.phaseshift.metatron.isa.mach.space;
 
-import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractSpace;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.thread.VirtualThread;
+import studio.phaseshift.metatron.isa.web.space.ws.WebSocketRec;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.*;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
-import static studio.phaseshift.metatron.isa.m.mInstSet.AUTHORITY_TYPE;
-import static studio.phaseshift.metatron.isa.m.mInstSet.SPACE_TID;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_SECOND_TID;
-import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_ISA_TID;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_VIRTUAL_THREAD_TID;
 import static studio.phaseshift.metatron.isa.mach.type.thread.VirtualThread.virtual;
-import static studio.phaseshift.metatron.isa.web.webInstSet.CLIENT_TYPE;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /**
@@ -63,9 +53,8 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class clusterSpace extends AbstractSpace<Map<Obj, Obj>> implements Space {
+public class clstrSpace extends AbstractSpace<Map<Obj, Obj>> implements Space {
 
-   
 
     // Pattern for cluster-related operations
     private static final fURI CLUSTER_PATTERN = f("ws://+/cluster/#");
@@ -73,7 +62,7 @@ public class clusterSpace extends AbstractSpace<Map<Obj, Obj>> implements Space 
     // Host information storage
     private final fURI localHost;
 
-    public clusterSpace(final Map<Obj, Obj> sjvm, final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
+    public clstrSpace(final Map<Obj, Obj> sjvm, final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(sjvm, jvm, tid, vid);
         try {
             this.localHost = this.at(HOST).orThrow(MTronException.of("no host provided")).uriValue();
@@ -113,7 +102,10 @@ public class clusterSpace extends AbstractSpace<Map<Obj, Obj>> implements Space 
      * Extract handler type from host configuration
      */
     private String extractHandlerType(Rec hostRec) {
-        final Obj handler = hostRec.at(uri(SERVER)).asRec().at(uri("handler"));
+        final Obj serverObj = hostRec.at(uri(SERVER));
+        if (serverObj.isNoObj() || !serverObj.isRec())
+            return "mtron"; // Default
+        final Obj handler = serverObj.asRec().at(uri("handler"));
         if (!handler.isNoObj()) {
             return handler.toString();
         }
@@ -153,7 +145,7 @@ public class clusterSpace extends AbstractSpace<Map<Obj, Obj>> implements Space 
 
     @Override
     public Obj read(final fURI vid) {
-        LOG.debug("clusterSpace read: {{b}}%s{{X}}", vid);
+        LOG.debug("clstrspace read: {{b}}%s{{X}}", vid);
 
         // Delegate to the router for normal operations
         return Router.readFromSpace(vid);
@@ -161,7 +153,7 @@ public class clusterSpace extends AbstractSpace<Map<Obj, Obj>> implements Space 
 
     @Override
     public Obj write(final fURI vid, final Obj obj) {
-        LOG.debug("clusterSpace write: {{b}}%s{{X}} => %s", vid, obj);
+        LOG.debug("clstrspace write: {{b}}%s{{X}} => %s", vid, obj);
         final fURI authority = f(vid.authority());
         if (authority.test(f(this.localHost.host()))) {
             return Router.writeToSpace(Space.Helper.routeFromSpace(vid, this.routes()), obj.vid(Space.Helper.routeFromSpace(obj.vid(), this.routes())));

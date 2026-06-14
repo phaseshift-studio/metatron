@@ -232,6 +232,95 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
         this.space.logger().info("discovered {{b}}%s{{X}} tables: %s", tableSchemas.size(), tableSchemas.keySet());
         ensureMetaTable(conn);
         loadMetaForeignKeys(conn);
+        // Discover FKs by naming convention: a column named after another table
+        // (e.g. company in people → companies) is inferred as an FK.
+        discoverFKByConvention(conn);
+    }
+
+    /**
+     * Infer FK relationships by naming convention.
+     * A column whose name matches another table name (case-insensitive,
+     * with or without trailing "s" or "_id") is registered as a foreign key
+     * pointing to that table.  This catches patterns like
+     * {@code people.company → companies} without requiring SQL-level
+     * REFERENCES constraints or {@link #MTRON_META_TABLE} entries.
+     */
+    private void discoverFKByConvention(final Connection conn) {
+        final Set<String> tableNames = new HashSet<>();
+        for (final String key : this.tableSchemas.keySet()) {
+            final String tn = this.tableSchemas.get(key).tableName().toLowerCase();
+            tableNames.add(tn);
+        }
+        for (final TableMetadata meta : this.tableSchemas.values()) {
+            final String srcTbl = meta.tableName().toLowerCase();
+            for (final ColumnMetadata col : meta.columns()) {
+                final String colName = col.name().toLowerCase();
+                if (meta.primaryKeys().stream().anyMatch(pk -> pk.equalsIgnoreCase(colName)))
+                    continue;
+                // Already registered (from JDBC metadata or _mtron_meta)
+                if (isFKAlreadyRegistered(srcTbl, colName))
+                    continue;
+                // Try matching column name to table name (with convention variants)
+                final String refTable = findReferencedTable(colName, tableNames);
+                if (refTable != null) {
+                    if (schemaGenerator != null) {
+                        schemaGenerator.registerFK(meta.tableName(), col.name(), refTable, "id");
+                    } else {
+                        pendingFKs.add(new FKInfo(meta.tableName(), col.name(), refTable, "id"));
+                    }
+                    this.space.logger().info("inferred FK by convention: {{b}}%s.%s{{X}} → {{b}}%s{{X}}",
+                            meta.tableName(), col.name(), refTable);
+                }
+            }
+        }
+    }
+
+    /**
+     * Match a column name against known table names using naming conventions:
+     * exact match, column+ "s", column with trailing "_id" stripped, or column
+     * without trailing "id".
+     */
+    private static String findReferencedTable(final String columnName, final Set<String> tableNames) {
+        // Exact match
+        if (tableNames.contains(columnName))
+            return columnName;
+        // column + "s": company + s → companies?  No, "companys" != "companies".
+        // But try it for regular plurals (e.g. user + s → users).
+        if (tableNames.contains(columnName + "s"))
+            return columnName + "s";
+        // y → ies: company → companies, category → categories
+        if (columnName.endsWith("y") && columnName.length() > 1) {
+            final String iesForm = columnName.substring(0, columnName.length() - 1) + "ies";
+            if (tableNames.contains(iesForm))
+                return iesForm;
+        }
+        // column without trailing "id": categoryid → category/categories
+        if (columnName.endsWith("id") && columnName.length() > 2) {
+            final String stem = columnName.substring(0, columnName.length() - 2);
+            if (!stem.isEmpty() && tableNames.contains(stem))
+                return stem;
+            if (!stem.isEmpty() && tableNames.contains(stem + "s"))
+                return stem + "s";
+            if (stem.endsWith("y") && stem.length() > 1) {
+                final String iesStem = stem.substring(0, stem.length() - 1) + "ies";
+                if (tableNames.contains(iesStem))
+                    return iesStem;
+            }
+        }
+        // column without trailing "_id": company_id → company/companies
+        if (columnName.endsWith("_id") && columnName.length() > 3) {
+            final String stem = columnName.substring(0, columnName.length() - 3);
+            if (tableNames.contains(stem))
+                return stem;
+            if (tableNames.contains(stem + "s"))
+                return stem + "s";
+            if (stem.endsWith("y") && stem.length() > 1) {
+                final String iesStem = stem.substring(0, stem.length() - 1) + "ies";
+                if (tableNames.contains(iesStem))
+                    return iesStem;
+            }
+        }
+        return null;
     }
 
     /**
@@ -282,6 +371,27 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
     }
 
     /**
+     * Lazy FK inference by naming convention, triggered at read time.
+     * If a column name matches another table (e.g. "company" in "people"
+     * matches table "companies"), registers the FK on the fly and returns
+     * the FKTarget.  This catches tables created after init.
+     */
+    private SQLSchemaGenerator.FKTarget inferFKByConvention(final String tableName, final String columnName) {
+        if (schemaGenerator == null)
+            return null;
+        final Set<String> knownTables = this.tableSchemas.keySet();
+        final String colName = columnName.toLowerCase();
+        final String refTable = findReferencedTable(colName, knownTables);
+        if (refTable != null) {
+            schemaGenerator.registerFK(tableName, columnName, refTable, "id");
+            this.space.logger().info("lazy FK by convention: {{b}}%s.%s{{X}} → {{b}}%s{{X}}",
+                    tableName, columnName, refTable);
+            return schemaGenerator.getFKTarget(tableName, columnName);
+        }
+        return null;
+    }
+
+    /**
      * Check if an FK is already registered (either in generator or pending list).
      */
     private boolean isFKAlreadyRegistered(final String tbl, final String col) {
@@ -323,7 +433,12 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
 
     private Obj readColumnWithMetadata(final ResultSet rs, final ColumnMetadata col,
                                        final String tableName) throws SQLException {
-        final SQLSchemaGenerator.FKTarget fk = getFKTarget(tableName, col.name);
+        // Check registered FKs (from JDBC metadata, _mtron_meta, or naming convention)
+        SQLSchemaGenerator.FKTarget fk = getFKTarget(tableName, col.name);
+        // Lazy naming-convention check: tables may have been added after init
+        if (fk == null) {
+            fk = inferFKByConvention(tableName, col.name);
+        }
         if (fk != null) {
             final Object fkValue = rs.getObject(col.name);
             if (fkValue != null && !rs.wasNull()) {
@@ -522,11 +637,11 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
         }
     }
 
+
     private int writeRow(final Connection conn, final TableMetadata metadata, final String rowId, final Rec rec) throws SQLException {
         final String pkColumn = metadata.primaryKeys.getFirst();
 
-        // Read the current row to diff against — replaces the old SELECT COUNT(*)
-        // and enables writing only columns that actually changed.
+        // Read the current row to diff against
         final Rec current = readCurrentRow(conn, metadata, pkColumn, rowId);
         if (current == null)
             return insertRow(conn, metadata, rowId, rec);
@@ -547,6 +662,33 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
             final Obj currentValue = currentMap.get(entry.getKey());
             if (!newValue.equals(currentValue))
                 changed.put(column.name, newValue);
+        }
+
+        // Also detect columns that exist in the current row but are absent from
+        // the incoming rec — these were explicitly unset via [field=>none] (which
+        // Rec.at() converts to a map-remove, dropping the key entirely).
+        // Such fields should be set to SQL NULL in the database.
+        for (final Map.Entry<Obj, Obj> entry : currentMap.entrySet()) {
+            if (!entry.getKey().isUri()) continue;
+            final String fieldName = entry.getKey().asUri().uriValue().name();
+            if (fieldName == null || fieldName.isEmpty()) continue;
+            if (metadata.primaryKeys.stream().anyMatch(pk -> pk.equalsIgnoreCase(fieldName)))
+                continue;
+
+            final boolean presentInNewRec = rec.recValue().keySet().stream()
+                    .anyMatch(k -> k.isUri() && k.asUri().uriValue().name().equalsIgnoreCase(fieldName));
+            if (!presentInNewRec) {
+                // Column was present in the current row but was removed from the incoming
+                // rec — write SQL NULL to clear it.
+                final ColumnMetadata column = metadata.columns.stream()
+                        .filter(c -> c.name.equalsIgnoreCase(fieldName)).findFirst().orElse(null);
+                if (column != null && !column.nullable()) {
+                    this.space.logger().warn("cannot set %s.%s to NULL: column has NOT NULL constraint",
+                            metadata.tableName, fieldName);
+                    continue;
+                }
+                changed.put(fieldName, noobj());
+            }
         }
 
         if (changed.isEmpty()) {

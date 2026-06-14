@@ -132,6 +132,7 @@ This is useful for learning about instructions.
 
 | Goal | Reference |
 |------|-----------|
+| **Full language reference** | [mtron-language-reference.md](references/mtron-language-reference.md) |
 | Questions | [answer-questions.md](references/answer-questions.md) |
 | Data sources | [connecting-datasources.md](references/connecting-datasources.md) |
 | Expressions | [writing-mtron-expressions.md](references/writing-mtron-expressions.md) |

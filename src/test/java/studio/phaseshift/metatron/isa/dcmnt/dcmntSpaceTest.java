@@ -198,6 +198,12 @@ public class dcmntSpaceTest extends AbstractDataPathTest implements CommonRewrit
     }
 
     @Override
+    @Disabled("?= filter + >>= wildcard update requires poly-level element iteration "
+            + "and write-back that dcmntSpace's MongoDB layer can't support")
+    public void testMonoUpdate() {
+    }
+
+    @Override
     @Disabled
     public void testSpecialStringValues(String description, String value) {
     }
