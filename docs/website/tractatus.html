@@ -845,10 +845,7 @@ mtron&gt; 15.band(10,20)     ​6​
 mtron&gt; -15.band(-20,-10)     ​7​
 mtron&gt; band -&gt; |inst?int{?}&lt;=int(min=&gt;?nat::T.else(-100),max=&gt;?nat::T.else(100)){ is(and(gte(*min),lte(*max))) }
 ==&gt;inst?rng=int{?}&amp;dom=int(min=&gt;isa(nat::T).else(-100),max=&gt;isa(nat::T).else(100)){is(and(gte(*min),lte(*max)))}
-mtron&gt; 15.band(10,20)     ​8​
-==&gt;15
-mtron&gt; -15.band(-20,-10)     ​9​
-==&gt;-15</code></pre>
+...</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -1468,44 +1465,7 @@ mtron&gt; catalog::[host         =&gt; &lt;https://api.deepseek.com/&gt;,
                  api_key      =&gt; !*&lt;/sys/env/DEEPSEEK_API_KEY&gt;,
                  pattern      =&gt; &lt;deep:#&gt;,
                  name         =&gt; &lt;openai&gt;,
-                 route        =&gt; [&lt;deep:&gt;=&gt;&lt;&gt;]]@/sys/space/deepseek
-mtron&gt; catalog::[host         =&gt; &lt;http://localhost:1234/v1&gt;,
-                 pattern      =&gt; &lt;lmstudio:#&gt;,
-                 name         =&gt; &lt;openai&gt;,
-                 route        =&gt; [&lt;lmstudio:&gt;=&gt;&lt;&gt;]]@/sys/space/lmstudio
-==&gt;ERROR: java.net.ConnectException: java.net.ConnectException
-  	dev.langchain4j.http.client.jdk.JdkHttpClient [line 64]
-  	dev.langchain4j.model.openai.internal.SyncRequestExecutor [line 20]
-  	dev.langchain4j.model.openai.internal.RequestExecutor [line 44]
-  	dev.langchain4j.model.openai.internal.RequestExecutor [line 38]
-  	dev.langchain4j.model.openai.OpenAiModelCatalog [line 61]
-  	studio.phaseshift.metatron.isa.llm.LLMFactory [line 133]
-  	studio.phaseshift.metatron.isa.llm.space.modelCatalogSpace [line 62]
-  	studio.phaseshift.metatron.isa.m.type.Inst$f [line 692]
-  	studio.phaseshift.metatron.isa.m.type.Inst [line 313]
-  	studio.phaseshift.metatron.isa.m.type.Obj$Helper [line 919]
-  	studio.phaseshift.metatron.isa.m.type.impl.MObj [line 46]
-  	studio.phaseshift.metatron.isa.m.type.impl.MRec [line 76]
-  	studio.phaseshift.metatron.isa.m.parser.mParser [line 207]
-  	org.petitparser.parser.actions.ActionParser [line 39]
-  	org.petitparser.parser.combinators.DelegateParser [line 25]
-  	org.petitparser.parser.combinators.ChoiceParser [line 34]
-  	org.petitparser.parser.combinators.DelegateParser [line 25]
-  	org.petitparser.parser.combinators.ChoiceParser [line 34]
-  	org.petitparser.parser.combinators.OptionalParser [line 23]
-  	org.petitparser.parser.combinators.SequenceParser [line 25]
-  	org.petitparser.parser.actions.ActionParser [line 37]
-  	org.petitparser.parser.combinators.ChoiceParser [line 34]
-  	org.petitparser.parser.combinators.SequenceParser [line 25]
-  	org.petitparser.parser.actions.ActionParser [line 37]
-  	org.petitparser.parser.combinators.SequenceParser [line 25]
-  	org.petitparser.parser.actions.ActionParser [line 37]
-  	org.petitparser.parser.Parser [line 76]
-  	studio.phaseshift.metatron.isa.m.parser.mParser [line 421]
-  	studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer [line 88]
-  	studio.phaseshift.metatron.docs.MtronDocPreprocessor [line 196]
-  	studio.phaseshift.metatron.docs.MtronDocPreprocessor [line 91]
-  	studio.phaseshift.metatron.docs.DocRunner [line 206]</code></pre>
+                 route        =&gt; [&lt;deep:&gt;=&gt;&lt;&gt;]]@/sys/space/deepseek</code></pre>
 </div>
 </div>
 <h3 id="sec-llm-space-encoding" class="discrete">llm space encoding</h3>
@@ -2134,7 +2094,7 @@ mtron&gt; *ollama:+.
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; @ai.chat("I need you evaluate the mtron expresion `-&lt;[_=&gt;_]&gt;&gt;.&gt;-[,]-&lt;[_,-&lt;[_=&gt;_]&gt;&gt;]&gt;&gt;.&gt;-` with a lhs of `1`. Please don't tell me the result of the evaluation until I ask for it sometime in the near future.")
-==&gt;"The evaluation of the mtron expression has been completed successfully with the given lhs of `1`. I will provide the result when you ask for it."</code></pre>
+==&gt;"The evaluation of the mtron expression with the given left-hand side (lhs) of `1` has been completed. I will provide the result when you ask for it."</code></pre>
 </div>
 </div>
 <div class="openblock card">
@@ -2254,13 +2214,20 @@ mtron&gt; tB::1.0.as(mB::T)     ​3​
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; @ai.chat("It's been many years since we last talked. For I am a tired, old man. Before I let my last breathe flutter into this world, I must know one last thing. Please tell me, what was the result of the mtron expression I provided you all those years ago?")
-==&gt;"The result of the mtron expression you provided, evaluated with a lhs of `1`, was `1`."
+==&gt;"The result of the evaluation of the mtron expression `-&lt;[_=&gt;_]&gt;&gt;.&gt;-[,]-&lt;[_,-&lt;[_=&gt;_]&gt;&gt;]&gt;&gt;.&gt;-` with a left-hand side (lhs) of `1` was **`1`**."
 mtron&gt; */usr/ai/memory/+
+==&gt;[
+    id=&gt;call_j4eo1hh5,
+    toolName=&gt;m_inst_eval,
+    contents=&gt;[[text=&gt;1,type=&gt;'TEXT']],
+    isError=&gt;false,
+    attributes=&gt;[=&gt;],
+    type=&gt;'TOOL_EXECUTION_RESULT']
 ==&gt;[contents=&gt;[[
     text=&gt;"It's been many years since we last...",
     type=&gt;'TEXT']],type=&gt;USER]
 ==&gt;[
-    text=&gt;'The result of the mtron expression...',
+    text=&gt;'The result of the evaluation of th...',
     toolExecutionRequests=&gt;[,],
     attributes=&gt;[=&gt;],
     type=&gt;AI]
@@ -2270,16 +2237,9 @@ mtron&gt; */usr/ai/memory/+
     attributes=&gt;[=&gt;],
     type=&gt;AI]
 ==&gt;[toolExecutionRequests=&gt;[[
-    id=&gt;call_8vkpduw3,
+    id=&gt;call_j4eo1hh5,
     name=&gt;m_inst_eval,
-    arguments=&gt;'{"object":"-&lt;[_=&gt;_]&gt;&gt;.&gt;-[,]-&lt;[_,-&lt;...']],attributes=&gt;[=&gt;],type=&gt;AI]
-==&gt;[
-    id=&gt;call_8vkpduw3,
-    toolName=&gt;m_inst_eval,
-    contents=&gt;[[text=&gt;1,type=&gt;'TEXT']],
-    isError=&gt;false,
-    attributes=&gt;[=&gt;],
-    type=&gt;'TOOL_EXECUTION_RESULT']</code></pre>
+    arguments=&gt;'{"object":"-&lt;[_=&gt;_]&gt;&gt;.&gt;-[,]-&lt;[_,-&lt;...']],attributes=&gt;[=&gt;],type=&gt;AI]</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -2334,15 +2294,20 @@ mtron&gt; mcp_client::[host =&gt;
      ide_refactor_safe_delete=&gt;inst?#{?}&lt;=#{?}(project_path=&gt;'Absolute path to the project root. Required when multiple projects are open. For workspace projects, use the sub-project path.',file=&gt;'Path to file relative to project root. REQUIRED.',line=&gt;"1-based line number where the symbol is located. REQUIRED when target_type='symbol' (default).",column=&gt;"1-based column number. REQUIRED when target_type='symbol' (default).",target_type=&gt;"What to delete: 'symbol' (default, requires line+column) or 'file' (deletes entire file if no external usages).",force=&gt;'Force deletion even if usages exist. Default: false. Use with caution!'),
      ide_find_definition=&gt;inst?#{?}&lt;=#{?}(project_path=&gt;'Absolute path to the project root. Required when multiple projects are open. For workspace projects, use the sub-project path.',file=&gt;'Project-relative file path, or a dependency/library absolute path or jar:// URL previously returned by the plugin. Required for position-based lookup.',line=&gt;'1-based line number',column=&gt;'1-based column number',language=&gt;"Language of the symbol. Required when using 'symbol' parameter. Currently supported languages: Java.",symbol=&gt;"Fully qualified symbol reference. Format: 'com.example.ClassName' or 'com.example.ClassName#memberName'. Omit generics parameters.",fullElementPreview=&gt;'If true, returns the complete element code instead of a preview snippet. Optional, defaults to false.',maxPreviewLines=&gt;'Maximum lines for fullElementPreview. Truncates large classes/functions. Default: 50, Max: 500. Only used when fullElementPreview=true.'),
      ide_find_class=&gt;inst?#{?}&lt;=#{?}(project_path=&gt;'Absolute path to the project root. Required when multiple projects are open. For workspace projects, use the sub-project path.',query=&gt;'Search pattern. Supports substring and camelCase matching. Required for fresh search, ignored when cursor is provided.',scope=&gt;'Search scope. Default: project_files.',language=&gt;'Filter results by language (e.g., "Kotlin", "Java", "Python"). Case-insensitive. Optional.',includeGenerated=&gt;'Include classes defined in generated sources (KSP/Dagger/annotation-processor output). Default: false.',matchMode=&gt;'How to match the query. Default: "substring".',limit=&gt;'Maximum results per page (deprecated, use pageSize). Default: 25, max: 500.',cursor=&gt;'Pagination cursor from a previous response. When provided, returns the next page of results. Search parameters are ignored; project_path and pageSize may still be provided.',pageSize=&gt;'Results per page. Default: 25, max: 500.'),
+     ide_install_plugin=&gt;inst?#{?}&lt;=#{?}(path=&gt;'Absolute path to the plugin zip to install.',project_path=&gt;'Absolute path to the project root. Required when multiple projects are open. For workspace projects, use the sub-project path.'),
      ide_read_file=&gt;inst?#{?}&lt;=#{?}(project_path=&gt;'Absolute path to the project root. Required when multiple projects are open. For workspace projects, use the sub-project path.',file=&gt;'File path (relative, absolute, jar path with jar!/, or jar:// URL).',qualifiedName=&gt;'Fully qualified class name (e.g., java.util.ArrayList).',startLine=&gt;'Starting line number (1-based, inclusive).',endLine=&gt;'Ending line number (1-based, inclusive).'),
      ide_diagnostics=&gt;inst?#{?}&lt;=#{?}(project_path=&gt;'Absolute path to the project root. Required when multiple projects are open. For workspace projects, use the sub-project path.',file=&gt;"Path to file relative to project root (e.g., 'src/main/java/com/example/MyClass.java'). Optional — enables per-file code analysis.",line=&gt;'1-based line number for intention lookup. Optional, defaults to 1. Requires file.',column=&gt;'1-based column number for intention lookup. Optional, defaults to 1. Requires file.',startLine=&gt;'Filter problems to start from this line. Optional. Requires file.',endLine=&gt;'Filter problems to end at this line. Optional. Requires file.',includeBuildErrors=&gt;'Include errors/warnings from the last build. Default: false.',includeTestResults=&gt;'Include test results from open test run tabs. Default: false.',severity=&gt;'Filter by severity across all sources. Default: all.',testResultFilter=&gt;"Filter test results: 'failed' (default) or 'all'.",maxBuildErrors=&gt;'Max build errors to return. Default: 100, max: 500.',maxTestResults=&gt;'Max test results to return. Default: 100, max: 500.'),
+     ide_restart=&gt;inst?#{?}&lt;=#{?}(project_path=&gt;'Absolute path to the project root. Required when multiple projects are open. For workspace projects, use the sub-project path.'),
      ide_optimize_imports=&gt;inst?#{?}&lt;=#{?}(project_path=&gt;'Absolute path to the project root. Required when multiple projects are open. For workspace projects, use the sub-project path.',file=&gt;'Path to the file relative to project root'),
      ide_reformat_code=&gt;inst?#{?}&lt;=#{?}(project_path=&gt;'Absolute path to the project root. Required when multiple projects are open. For workspace projects, use the sub-project path.',file=&gt;'Path to the file relative to project root',startLine=&gt;'Start line for partial formatting (1-based). If provided, endLine is also required.',endLine=&gt;'End line for partial formatting (1-based). If provided, startLine is also required.',optimizeImports=&gt;'Optimize imports (remove unused, organize). Default: true.',rearrangeCode=&gt;'Rearrange code members according to arrangement rules. Default: true.'),
      ide_move_file=&gt;inst?#{?}&lt;=#{?}(project_path=&gt;'Absolute path to the project root. Required when multiple projects are open. For workspace projects, use the sub-project path.',file=&gt;'Path to the source file to move, relative to project root. REQUIRED.',destination=&gt;"Target directory path relative to project root. The file will be moved into this directory. Created automatically if it doesn't exist. REQUIRED."),
+     ide_close_project=&gt;inst?#{?}&lt;=#{?}(project_path=&gt;'Absolute path to the project root. Required when multiple projects are open. For workspace projects, use the sub-project path.'),
      ide_search_text=&gt;inst?#{?}&lt;=#{?}(project_path=&gt;'Absolute path to the project root. Required when multiple projects are open. For workspace projects, use the sub-project path.',query=&gt;'Text to search for. Treated as an exact word unless regex is true. Required for fresh search, ignored when cursor is provided.',regex=&gt;'Treat query as a regular expression. Default: false.',context=&gt;'Where to search: "code", "comments", "strings", "all". Default: "all".',caseSensitive=&gt;'Case sensitive search. Default: true.',filePattern=&gt;'IntelliJ file mask to filter files by name, e.g. "*.kt", "*.gradle.kts", "*.java,!*Test.java".',limit=&gt;'Maximum results per page (deprecated, use pageSize). Default: 100, max: 500.',cursor=&gt;'Pagination cursor from a previous response. When provided, returns the next page of results. Search parameters are ignored; project_path and pageSize may still be provided.',pageSize=&gt;'Results per page. Default: 100, max: 500.'),
      ide_find_file=&gt;inst?#{?}&lt;=#{?}(project_path=&gt;'Absolute path to the project root. Required when multiple projects are open. For workspace projects, use the sub-project path.',query=&gt;'File name pattern. Supports substring and fuzzy matching. Required for fresh search, ignored when cursor is provided.',scope=&gt;'Search scope. Default: project_files.',includeGenerated=&gt;'Include files under generated sources (KSP/Dagger/annotation-processor output). Default: false.',limit=&gt;'Maximum results per page (deprecated, use pageSize). Default: 25, max: 500.',cursor=&gt;'Pagination cursor from a previous response. When provided, returns the next page of results. Search parameters are ignored; project_path and pageSize may still be provided.',pageSize=&gt;'Results per page. Default: 25, max: 500.'),
+     ide_set_power_save_mode=&gt;inst?#{?}&lt;=#{?}(enabled=&gt;'true to enable Power Save Mode, false to disable it.',project_path=&gt;'Absolute path to the project root. Required when multiple projects are open. For workspace projects, use the sub-project path.'),
      ide_call_hierarchy=&gt;inst?#{?}&lt;=#{?}(project_path=&gt;'Absolute path to the project root. Required when multiple projects are open. For workspace projects, use the sub-project path.',file=&gt;'Project-relative file path, or a dependency/library absolute path or jar:// URL previously returned by the plugin. Required for position-based lookup.',line=&gt;'1-based line number',column=&gt;'1-based column number',language=&gt;"Language of the symbol. Required when using 'symbol' parameter. Currently supported languages: Java.",symbol=&gt;"Fully qualified symbol reference. Format: 'com.example.ClassName' or 'com.example.ClassName#memberName'. Omit generics parameters.",direction=&gt;"Direction: 'callers' (methods that call this method) or 'callees' (methods this method calls)",depth=&gt;'How many levels deep to traverse the call hierarchy (default: 3, max: 5)',scope=&gt;'Search scope. Default: project_files.',includeGenerated=&gt;'Include callers/callees in generated sources (KSP/Dagger/annotation-processor output). Default: true.'),
      ide_refactor_rename=&gt;inst?#{?}&lt;=#{?}(project_path=&gt;'Absolute path to the project root. Required when multiple projects are open. For workspace projects, use the sub-project path.',file=&gt;'Path to file relative to project root. REQUIRED.',line=&gt;'1-based line number. Required for symbol rename, omit for file rename.',column=&gt;'1-based column number. Required for symbol rename, omit for file rename.',newName=&gt;"The new name for the symbol or file. REQUIRED. For file renames, include the file extension (e.g., 'new_name.webp').",overrideStrategy=&gt;"Strategy when renaming a method that overrides a base method. 'rename_base' (default): rename the base method and all overrides automatically. 'rename_only_current': rename only the current method. 'ask': show the IDE dialog for interactive choice.",relatedRenamingStrategy=&gt;"Strategy for automatic renaming of related symbols (same-named properties, getters/setters, test classes, variables). 'all' (default): automatically rename all related symbols. 'none': rename only the targeted symbol, skip all automatic related renames. 'accessors_and_tests': only rename getters/setters and test classes/methods. 'ask': show the IDE dialog for each related rename for interactive choice."),
+     ide_open_project=&gt;inst?#{?}&lt;=#{?}(path=&gt;'Absolute filesystem path of the project directory to open.',timeoutSeconds=&gt;'Maximum seconds to wait for the project to open and finish indexing. Must be a positive integer. Default: 600.',project_path=&gt;'Absolute path to the project root. Required when multiple projects are open. For workspace projects, use the sub-project path.'),
      ide_find_super_methods=&gt;inst?#{?}&lt;=#{?}(project_path=&gt;'Absolute path to the project root. Required when multiple projects are open. For workspace projects, use the sub-project path.',file=&gt;'Project-relative file path, or a dependency/library absolute path or jar:// URL previously returned by the plugin. Required for position-based lookup.',line=&gt;'1-based line number',column=&gt;'1-based column number',language=&gt;"Language of the symbol. Required when using 'symbol' parameter. Currently supported languages: Java.",symbol=&gt;"Fully qualified symbol reference. Format: 'com.example.ClassName' or 'com.example.ClassName#memberName'. Omit generics parameters."),
      ide_file_structure=&gt;inst?#{?}&lt;=#{?}(project_path=&gt;'Absolute path to the project root. Required when multiple projects are open. For workspace projects, use the sub-project path.',file=&gt;"Path to file relative to project root (e.g., 'src/main/java/com/example/MyClass.java'). REQUIRED."),
      ide_find_symbol=&gt;inst?#{?}&lt;=#{?}(project_path=&gt;'Absolute path to the project root. Required when multiple projects are open. For workspace projects, use the sub-project path.',query=&gt;"Search pattern. Matching follows IntelliJ's Go to Symbol popup, including qualified queries. Required for fresh search, ignored when cursor is provided.",scope=&gt;'Search scope. Default: project_files.',language=&gt;'Filter results by language (e.g., "Kotlin", "Java", "Python"). Case-insensitive. Optional.',includeGenerated=&gt;'Include symbols defined in generated sources (KSP/Dagger/annotation-processor output). Default: false.',limit=&gt;'Maximum results per page (deprecated, use pageSize). Default: 25, max: 500.',cursor=&gt;'Pagination cursor from a previous response. When provided, returns the next page of results. Search parameters are ignored; project_path and pageSize may still be provided.',pageSize=&gt;'Results per page. Default: 25, max: 500.'),
@@ -2358,25 +2323,18 @@ mtron&gt; */usr/ai/mcp/intellij&gt;&gt;tool.dom()     ​3​
 ==&gt;ide_refactor_safe_delete
 ==&gt;ide_find_definition
 ==&gt;ide_find_class
+==&gt;ide_install_plugin
 ==&gt;ide_read_file
 ==&gt;ide_diagnostics
+==&gt;ide_restart
 ==&gt;ide_optimize_imports
 ==&gt;ide_reformat_code
 ==&gt;ide_move_file
+==&gt;ide_close_project
 ==&gt;ide_search_text
 ==&gt;ide_find_file
-==&gt;ide_call_hierarchy
-==&gt;ide_refactor_rename
-==&gt;ide_find_super_methods
-==&gt;ide_file_structure
-==&gt;ide_find_symbol
-==&gt;ide_sync_files
-==&gt;ide_get_active_file
-==&gt;ide_index_status
-==&gt;ide_build_project
-==&gt;ide_type_hierarchy
-==&gt;ide_find_references
-==&gt;ide_open_file</code></pre>
+==&gt;ide_set_power_save_mode
+...</code></pre>
 </div>
 </div>
 <div class="listingblock">
@@ -3104,7 +3062,7 @@ The predicate component of the type definition tests an <code>int</code> to dete
 <div class="paragraph">
 <p>While every <code>type</code> is an <code>obj</code>, not every <code>obj</code> is a <code>type</code>.
 Those <code>objs</code> that are not <code>types</code> are <em>instances</em> of some <code>type</code>.
-This is the foundation for all other <code>objs</code> in {{r}}M{{r}}e{{y}}t{{y}}a{{g}}t{{b}}r{{m}}O{{b}}n{{X}}.</p>
+This is the foundation for all other <code>objs</code> in {{m}}m{{y}}e{{r}}t{{b}}a{{r}}t{{c}}R{{y}}o{{g}}n{{X}}.</p>
 </div>
 <h4 id="sec-cascading-type-constructions" class="discrete">cascading type constructions</h4>
 <h3 id="sec-mono-types" class="discrete">mono types</h3>
@@ -4057,7 +4015,8 @@ mtron&gt; *#.as[name      =&gt; _,
      thread_executor::T,
      thread::T,
      core::T,
-     virtual::T],
+     virtual::T,
+     cluster::T],
     inst=&gt;[
      lift(#{?}::T),
      rewrite?rec[short=&gt;uri,long=&gt;uri]&lt;=#{?}(uri::T),
@@ -4905,21 +4864,7 @@ mtron&gt; m/2/0 -&gt; 8
 ==&gt;8
 mtron&gt; m/2/1 -&gt; 9
 ==&gt;9
-mtron&gt; m/2/2 -&gt; 10
-==&gt;10
-mtron&gt; m/2/3 -&gt; 11
-==&gt;11
-mtron&gt; *m/0/0     ​1​
-==&gt;0
-mtron&gt; *m/0/+     ​2​
-==&gt;2
-==&gt;3
-==&gt;0
-==&gt;1
-mtron&gt; *m/+/0     ​3​
-==&gt;0
-==&gt;4
-==&gt;8</code></pre>
+...</code></pre>
 </div>
 </div></div></td>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
@@ -5194,8 +5139,7 @@ mtron> [x0,x1,x2]>-.-<[*(* +/+/c)]
     a/e/d=>4,
     a/e/f=>5,
     g/b/c=>6],1,2,3,5,6}]
-mtron> [x0,x1,x2]>-.-<[*(* g/+/+)]
-==>{3}[6]
+...
 ----
 -->
 </div>
@@ -5384,7 +5328,7 @@ mtron> [x0,x1,x2]>-.-<[*(* g/+/+)]
       pattern=&gt;subq,
       obj=&gt;[,]],
      incrq::[pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),pattern=&gt;incrq]],
-    space=&gt;[=&gt;]]
+    space=&gt;[=&gt;]]@/sys/space/usr
 mtron&gt; /usr/notes/#?subq -&gt; sub::[on_recv=&gt;print('${&gt;&gt;1} written to ${&gt;&gt;0}')]
 ==&gt;sub::[on_recv=&gt;print('${&gt;&gt;1} written to ${&gt;&gt;0}'),target=&gt;/usr/notes/#]
 mtron&gt; */usr/notes/#?subq
@@ -5503,8 +5447,8 @@ The inspiration for metatron&#8217;s URI addressing schema was inspired by the v
   	org.petitparser.parser.Parser [line 76]
   	studio.phaseshift.metatron.isa.m.parser.mParser [line 421]
   	studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer [line 88]
-  	studio.phaseshift.metatron.docs.MtronDocPreprocessor [line 196]
-  	studio.phaseshift.metatron.docs.MtronDocPreprocessor [line 91]
+  	studio.phaseshift.metatron.docs.MtronDocPreprocessor [line 200]
+  	studio.phaseshift.metatron.docs.MtronDocPreprocessor [line 92]
   	studio.phaseshift.metatron.docs.DocRunner [line 206]
 mtron&gt; *ha:main_field/sensor/+.-&lt;|[
          &gt;&gt;temp.?&lt;50  =&gt; print('too cold for watering'),
@@ -5596,7 +5540,8 @@ mtron&gt; *ha:main_field/actuator/#?subq     ​4​</code></pre>
      thread_executor::T,
      thread::T,
      core::T,
-     virtual::T],
+     virtual::T,
+     cluster::T],
     inst=&gt;[
      lift(#{?}::T),
      rewrite?rec[short=&gt;uri,long=&gt;uri]&lt;=#{?}(uri::T),
@@ -5653,7 +5598,7 @@ mtron&gt; *ha:main_field/actuator/#?subq     ​4​</code></pre>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys/space/localfs     ​1​
-==&gt;fsspace::[pattern=&gt;fs:#,route=&gt;[fs:m=&gt;/home/killswitch/software/metatron,fs:=&gt;/home/killswitch/],script=&gt;!*boot/script,space=&gt;[=&gt;]]
+==&gt;fsspace::[pattern=&gt;fs:#,route=&gt;[fs:m=&gt;/home/killswitch/software/metatron,fs:=&gt;/home/killswitch/],script=&gt;!*boot/script,space=&gt;[=&gt;]]@/sys/space/localfs
 mtron&gt; *fs:software/metatron     ​2​
 ==&gt;dir::fs:m
 mtron&gt; *fs:m     ​3​
@@ -5679,7 +5624,7 @@ mtron&gt; *fs:m     ​3​
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys/space/localfs     ​1​
-==&gt;fsspace::[pattern=&gt;fs:#,route=&gt;[fs:m=&gt;/home/killswitch/software/metatron,fs:=&gt;/home/killswitch/],script=&gt;!*boot/script,space=&gt;[=&gt;]]
+==&gt;fsspace::[pattern=&gt;fs:#,route=&gt;[fs:m=&gt;/home/killswitch/software/metatron,fs:=&gt;/home/killswitch/],script=&gt;!*boot/script,space=&gt;[=&gt;]]@/sys/space/localfs
 mtron&gt; */sys/space/localfs/script     ​2​
 mtron&gt; *&lt;fs:m/bin/metatron&gt;     ​3​
 ==&gt;fail::[#!/bin/sh
@@ -6724,7 +6669,7 @@ mtron&gt; *v1.&gt;&gt;
 ==&gt;{2}[,]
 ==&gt;[!*v4,!*v5]
 mtron&gt; *v1.&gt;&gt;.&gt;&gt;
-==&gt;{2}[,]</code></pre>
+...</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -6805,7 +6750,7 @@ mtron&gt; *v1.&gt;&gt;knows     ​3​
 ==&gt;[,]
 ==&gt;[created=&gt;{!*v4,!*v5}]
 mtron&gt; *v1.&gt;&gt;knows.&gt;&gt;created     ​4​
-==&gt;{2}[,]</code></pre>
+...</code></pre>
 </div>
 </div></div></td>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
@@ -6866,20 +6811,7 @@ mtron&gt; *v1.&gt;&gt;out_.&gt;&gt;knows     ​3​
 ==&gt;[name=&gt;'vadas',age=&gt;27]
 ==&gt;[name=&gt;'josh',age=&gt;32,out_=&gt;[created=&gt;{!*v4,!*v5}]]
 mtron&gt; *v1.&gt;&gt;out_.&gt;&gt;knows.&gt;&gt;out_.&gt;&gt;created     ​4​
-==&gt;[name=&gt;'lop',lang=&gt;java]
-==&gt;[name=&gt;'ripple',lang=&gt;java]
-mtron&gt; *v1.&gt;&gt;out_.&gt;&gt;knows.&gt;&gt;out_.&gt;&gt;created.&gt;&gt;name     ​5​
-==&gt;'lop'
-==&gt;'ripple'
-mtron&gt; *v1.&gt;&gt;out_/knows     ​3​
-==&gt;[name=&gt;'vadas',age=&gt;27]
-==&gt;[name=&gt;'josh',age=&gt;32,out_=&gt;[created=&gt;{!*v4,!*v5}]]
-mtron&gt; *v1.&gt;&gt;out_/knows.&gt;&gt;out_/created     ​4​
-==&gt;[name=&gt;'lop',lang=&gt;java]
-==&gt;[name=&gt;'ripple',lang=&gt;java]
-mtron&gt; *v1.&gt;&gt;out_/knows.&gt;&gt;out_/created.&gt;&gt;name     ​5​
-==&gt;'lop'
-==&gt;'ripple'</code></pre>
+...</code></pre>
 </div>
 </div></div></td>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
@@ -7274,7 +7206,7 @@ mtron&gt; *v1.out(knows).out(created).&gt;&gt;name     ​5​</code></pre>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *virtual
-==&gt;thread::T[][inst?virtual&lt;=#{?}(rec::T)]@/m/mach/thread/virtual
+==&gt;thread::T[][ctor?virtual&lt;=#{?}(rec::T)]@/m/mach/thread/virtual
 mtron&gt; *machine
 ==&gt;virtual::T@/m/mach/machine</code></pre>
 </div>
@@ -7300,7 +7232,7 @@ mtron&gt; *machine
 </div>
 <h3 id="sec-swarm-machine" class="discrete">Swarm Machine</h3>
 <div class="paragraph">
-<p>A <code>swarm::T</code> realizes the computation a "swarm" of independent, autonomous monads moving over the <code>insts</code> of the machine&#8217;s <code>code</code> and, as dictated by the code, over the objs in space. The only coordination that exists in <code>swarm::T</code> is at <em>_barrier</em> instructions. A barrier aggregates all monads up to that point, and when no monads are left outside the barrier, the barrier then drains the monads&#8201;&#8212;&#8201;allowing them to once again independently execute.</p>
+<p>A <code>swarm::T</code> realizes the computation as a "swarm" of independent, autonomous monads moving over the <code>insts</code> of the machine&#8217;s <code>code</code> and, as dictated by the code, over the objs in space. The only coordination that exists in <code>swarm::T</code> is at <em>_barrier</em> instructions. A barrier aggregates all monads up to that point, and when no monads are left outside the barrier, the barrier then drains the monads&#8201;&#8212;&#8201;allowing them to once again independently execute.</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -7329,9 +7261,9 @@ mtron&gt; *machine
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *virtual
-==&gt;thread::T[][inst?virtual&lt;=#{?}(rec::T)]@/m/mach/thread/virtual
+==&gt;thread::T[][ctor?virtual&lt;=#{?}(rec::T)]@/m/mach/thread/virtual
 mtron&gt; *core
-==&gt;thread::T[][inst?core&lt;=#{?}(rec::T)]@/m/mach/thread/core</code></pre>
+==&gt;thread::T[][ctor?core&lt;=#{?}(rec::T)]@/m/mach/thread/core</code></pre>
 </div>
 </div>
 <h3 id="sec-type-structure" class="discrete">Type Structure</h3>
@@ -7686,8 +7618,8 @@ mtron&gt; catalog::[host         =&gt; &lt;http://localhost:1234/v1&gt;,
   	org.petitparser.parser.Parser [line 76]
   	studio.phaseshift.metatron.isa.m.parser.mParser [line 421]
   	studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer [line 88]
-  	studio.phaseshift.metatron.docs.MtronDocPreprocessor [line 196]
-  	studio.phaseshift.metatron.docs.MtronDocPreprocessor [line 91]
+  	studio.phaseshift.metatron.docs.MtronDocPreprocessor [line 200]
+  	studio.phaseshift.metatron.docs.MtronDocPreprocessor [line 92]
   	studio.phaseshift.metatron.docs.DocRunner [line 206]</code></pre>
 </div>
 </div>
@@ -7709,7 +7641,44 @@ mtron&gt; catalog::[host         =&gt; &lt;http://localhost:1234/v1&gt;,
                      /mcp     =&gt; mcp_mtron_http,
                      /docs    =&gt; target/docs,
                      /console =&gt; src/main/resources/web/console]
-       ]@/sys/space/web/http</code></pre>
+       ]@/sys/space/web/http
+==&gt;ERROR: bindexception: Address already in use
+  	sun.nio.ch.Net [line -2]
+  	sun.nio.ch.Net [line 522]
+  	sun.nio.ch.ServerSocketChannelImpl [line 335]
+  	sun.nio.ch.ServerSocketChannelImpl [line 297]
+  	sun.nio.ch.ServerSocketAdaptor [line 80]
+  	sun.net.httpserver.ServerImpl [line 145]
+  	sun.net.httpserver.HttpServerImpl [line 45]
+  	sun.net.httpserver.DefaultHttpServerProvider [line 35]
+  	com.sun.net.httpserver.HttpServer [line 152]
+  	studio.phaseshift.metatron.isa.web.space.http.httpSpace [line 225]
+  	studio.phaseshift.metatron.isa.web.space.http.httpSpace [line 85]
+  	studio.phaseshift.metatron.isa.m.type.Inst$f [line 692]
+  	studio.phaseshift.metatron.isa.m.type.Inst [line 313]
+  	studio.phaseshift.metatron.isa.m.type.Obj$Helper [line 919]
+  	studio.phaseshift.metatron.isa.m.type.impl.MObj [line 46]
+  	studio.phaseshift.metatron.isa.m.type.impl.MRec [line 76]
+  	studio.phaseshift.metatron.isa.m.parser.mParser [line 207]
+  	org.petitparser.parser.actions.ActionParser [line 39]
+  	org.petitparser.parser.combinators.DelegateParser [line 25]
+  	org.petitparser.parser.combinators.ChoiceParser [line 34]
+  	org.petitparser.parser.combinators.DelegateParser [line 25]
+  	org.petitparser.parser.combinators.ChoiceParser [line 34]
+  	org.petitparser.parser.combinators.OptionalParser [line 23]
+  	org.petitparser.parser.combinators.SequenceParser [line 25]
+  	org.petitparser.parser.actions.ActionParser [line 37]
+  	org.petitparser.parser.combinators.ChoiceParser [line 34]
+  	org.petitparser.parser.combinators.SequenceParser [line 25]
+  	org.petitparser.parser.actions.ActionParser [line 37]
+  	org.petitparser.parser.combinators.SequenceParser [line 25]
+  	org.petitparser.parser.actions.ActionParser [line 37]
+  	org.petitparser.parser.Parser [line 76]
+  	studio.phaseshift.metatron.isa.m.parser.mParser [line 421]
+  	studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer [line 88]
+  	studio.phaseshift.metatron.docs.MtronDocPreprocessor [line 200]
+  	studio.phaseshift.metatron.docs.MtronDocPreprocessor [line 92]
+  	studio.phaseshift.metatron.docs.DocRunner [line 206]</code></pre>
 </div>
 </div>
 <h3 id="sec-html-type" class="discrete">HTML Type</h3>
@@ -7721,38 +7690,11 @@ mtron&gt; catalog::[host         =&gt; &lt;http://localhost:1234/v1&gt;,
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; html::T     ​1​
 ==&gt;xml::T[?[html=&gt;[head=&gt;[{?}title=&gt;str::T],body=&gt;rec::T]]]@/m/web/html
 mtron&gt; *&lt;http://phaseshift.studio/splash.html&gt;     ​2​
-==&gt;html::[html=&gt;[head=&gt;[title=&gt;'PhaseShift Studio',out=&gt;[
-    [
-     tag=&gt;link,
-     href=&gt;&lt;https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css&gt;,
-     rel=&gt;'stylesheet'],
-    [tag=&gt;link,href=&gt;&lt;css/metatron.css&gt;,rel=&gt;'stylesheet']]],body=&gt;[
-    out=&gt;[
-     [tag=&gt;p],
-     [
-      tag=&gt;h1,
-      style=&gt;'padding-left:125px;color:var(--pri...',
-      text=&gt;'PhaseShift Studio'],
-     [
-      tag=&gt;img,
-      style=&gt;'padding-left:100px',
-      src=&gt;&lt;http://metatron.phaseshift.studio/images/metatron-character.png&gt;,
-      width=&gt;'500px']],
-    style=&gt;'background-color: black;']]]
+==&gt;fail::[no active space supports pattern &lt;http://phaseshift.studio/splash.html&gt;][...]@/sys/fail/18
 mtron&gt; *&lt;http://phaseshift.studio/splash.html/html/head/title&gt;     ​3​
-==&gt;'PhaseShift Studio'
+==&gt;fail::[no active space supports pattern &lt;http://phaseshift.studio/splash.html/html/head/title&gt;][...]@/sys/fail/24
 mtron&gt; *&lt;http://phaseshift.studio/splash.html&gt;.as(str::T)     ​4​
-==&gt;"""&lt;html&gt;
-    &lt;head&gt;
-     &lt;link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet"&gt;
-     &lt;link href="css/metatron.css" rel="stylesheet"&gt;
-    &lt;/head&gt;
-    &lt;body style="background-color: black;"&gt;
-     &lt;p&gt;&lt;/p&gt;
-     &lt;h1 style="padding-left:125px;color:var(--primary)"&gt;PhaseShift Studio&lt;/h1&gt;
-     &lt;img style="padding-left:100px" src="http://metatron.phaseshift.studio/images/metatron-character.png" width="500px"&gt;
-    &lt;/body&gt;
-   &lt;/html&gt;"""</code></pre>
+==&gt;fail::[no active space supports pattern &lt;http://phaseshift.studio/splash.html&gt;][...]@/sys/fail/30</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -7785,49 +7727,9 @@ mtron&gt; *&lt;http://phaseshift.studio/splash.html&gt;.as(str::T)     ​4​
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *&lt;http://localhost:1234/v1&gt;     ​1​
-==&gt;fail::[java.net.ConnectException: null
-     	jdk.internal.net.http.HttpClientImpl [line 923]
-     	jdk.internal.net.http.HttpClientFacade [line 133]
-     	org.jsoup.helper.HttpClientExecutor [line 90]
-     	org.jsoup.helper.HttpConnection$Response [line 892]
-     	org.jsoup.helper.HttpConnection$Response [line 866]
-     	org.jsoup.helper.HttpConnection [line 365]
-     	studio.phaseshift.metatron.isa.web.space.http.httpSpace [line 276]
-     	studio.phaseshift.metatron.isa.Space$Helper [line 263]
-     	studio.phaseshift.metatron.isa.AbstractSpace [line 71]
-     	java.util.Optional [line 364]
-     	studio.phaseshift.metatron.isa.AbstractSpace [line 70]
-     	studio.phaseshift.metatron.isa.mach.type.router.BasicRouter [line 286]
-     	studio.phaseshift.metatron.isa.mach.type.Router [line 80]
-     	studio.phaseshift.metatron.isa.m.type.Obj$ObjType [line 1101]
-     	studio.phaseshift.metatron.isa.m.type.Inst$f [line 692]
-     	studio.phaseshift.metatron.isa.m.type.Inst [line 313]
-     	studio.phaseshift.metatron.isa.m.type.Obj [line 246]
-     	studio.phaseshift.metatron.docs.MtronDocPreprocessor [line 197]
-     	studio.phaseshift.metatron.docs.MtronDocPreprocessor [line 91]
-     	studio.phaseshift.metatron.docs.DocRunner [line 206]][...]@/sys/fail/12
+==&gt;fail::[no active space supports pattern http://localhost:1234/v1][...]@/sys/fail/36
 mtron&gt; *&lt;http://localhost:1234/v1/models&gt;     ​2​
-==&gt;fail::[java.net.ConnectException: null
-     	jdk.internal.net.http.HttpClientImpl [line 923]
-     	jdk.internal.net.http.HttpClientFacade [line 133]
-     	org.jsoup.helper.HttpClientExecutor [line 90]
-     	org.jsoup.helper.HttpConnection$Response [line 892]
-     	org.jsoup.helper.HttpConnection$Response [line 866]
-     	org.jsoup.helper.HttpConnection [line 365]
-     	studio.phaseshift.metatron.isa.web.space.http.httpSpace [line 276]
-     	studio.phaseshift.metatron.isa.Space$Helper [line 263]
-     	studio.phaseshift.metatron.isa.AbstractSpace [line 71]
-     	java.util.Optional [line 364]
-     	studio.phaseshift.metatron.isa.AbstractSpace [line 70]
-     	studio.phaseshift.metatron.isa.mach.type.router.BasicRouter [line 286]
-     	studio.phaseshift.metatron.isa.mach.type.Router [line 80]
-     	studio.phaseshift.metatron.isa.m.type.Obj$ObjType [line 1101]
-     	studio.phaseshift.metatron.isa.m.type.Inst$f [line 692]
-     	studio.phaseshift.metatron.isa.m.type.Inst [line 313]
-     	studio.phaseshift.metatron.isa.m.type.Obj [line 246]
-     	studio.phaseshift.metatron.docs.MtronDocPreprocessor [line 197]
-     	studio.phaseshift.metatron.docs.MtronDocPreprocessor [line 91]
-     	studio.phaseshift.metatron.docs.DocRunner [line 206]][...]@/sys/fail/18</code></pre>
+==&gt;fail::[no active space supports pattern http://localhost:1234/v1/models][...]@/sys/fail/42</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -7882,31 +7784,7 @@ mtron&gt; */m/llm/inst/+?dom=model
          -&lt;[provider=&gt; !*/sys/space/lmstudio,
             name    =&gt; &gt;&gt;id.as(uri::T)].as(model::T)
          .chat('are you there?')
-==&gt;fail::[java.net.ConnectException: null
-     	jdk.internal.net.http.HttpClientImpl [line 923]
-     	jdk.internal.net.http.HttpClientFacade [line 133]
-     	org.jsoup.helper.HttpClientExecutor [line 90]
-     	org.jsoup.helper.HttpConnection$Response [line 892]
-     	org.jsoup.helper.HttpConnection$Response [line 866]
-     	org.jsoup.helper.HttpConnection [line 365]
-     	studio.phaseshift.metatron.isa.web.space.http.httpSpace [line 276]
-     	studio.phaseshift.metatron.isa.Space$Helper [line 263]
-     	studio.phaseshift.metatron.isa.AbstractSpace [line 71]
-     	java.util.Optional [line 364]
-     	studio.phaseshift.metatron.isa.AbstractSpace [line 70]
-     	studio.phaseshift.metatron.isa.mach.type.router.BasicRouter [line 286]
-     	studio.phaseshift.metatron.isa.mach.type.Router [line 80]
-     	studio.phaseshift.metatron.isa.m.type.Obj$ObjType [line 1101]
-     	studio.phaseshift.metatron.isa.m.type.Inst$f [line 692]
-     	studio.phaseshift.metatron.isa.m.type.Inst [line 313]
-     	studio.phaseshift.metatron.isa.mach.type.PCMonad [line 172]
-     	studio.phaseshift.metatron.isa.mach.type.machine.SwarmMachine [line 297]
-     	studio.phaseshift.metatron.isa.mach.type.machine.SwarmMachine [line 258]
-     	studio.phaseshift.metatron.isa.m.type.Code [line 144]
-     	studio.phaseshift.metatron.isa.m.type.Code [line 137]
-     	studio.phaseshift.metatron.docs.MtronDocPreprocessor [line 197]
-     	studio.phaseshift.metatron.docs.MtronDocPreprocessor [line 91]
-     	studio.phaseshift.metatron.docs.DocRunner [line 206]][...]@/sys/fail/24</code></pre>
+==&gt;ERROR: null</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -8516,12 +8394,6 @@ mtron&gt; *lite:person/+/id     ​6​
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys/space/lite/schema
-==&gt;[instset=&gt;instset::[pattern=&gt;/sys/space/lite/schema/instset/#,type=&gt;[,],q=&gt;[docq::[
-    pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
-    pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
-    pattern=&gt;docq,
-    obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
-    inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],space=&gt;[super=&gt;!*/sys]]@/sys/space/lite/schema/instset]
 mtron&gt; */sys/space/lite/schema/type/+</code></pre>
 </div>
 </div></div></td>
@@ -8695,19 +8567,13 @@ whose values happen to match <code>person.name</code> — the link is purely alg
     host=&gt;sqlite:target/test,
     driver=&gt;&lt;org.sqlite.JDBC&gt;,
     route=&gt;[lite:=&gt;&lt;&gt;],
-    space=&gt;[=&gt;],
-    schema=&gt;[instset=&gt;instset::[pattern=&gt;/sys/space/lite/schema/instset/#,type=&gt;[,],q=&gt;[docq::[
-    pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
-    pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
-    pattern=&gt;docq,
-    obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
-    inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],space=&gt;[super=&gt;!*/sys]]@/sys/space/lite/schema/instset]]@/sys/space/lite
+    space=&gt;[=&gt;]]@/m/tble/space/tblespace/default
 mtron&gt; lite:score/1 -&gt; [player=&gt;'marko', points=&gt;42]     ​2​
 ==&gt;[player=&gt;'marko',points=&gt;42]
 mtron&gt; lite:score/2 -&gt; [player=&gt;'grant', points=&gt;99]     ​3​
 ==&gt;[player=&gt;'grant',points=&gt;99]
 mtron&gt; *lite:score/+.=?=[player=&gt;'marko']     ​4​
-==&gt;rrow{2}::[id=&gt;1,player=&gt;'marko',points=&gt;42]@lite:/sys/space/lite/score/1
+==&gt;rrow{2}::[id=&gt;1,player=&gt;'marko',points=&gt;42]@lite:/m/tble/space/tblespace/default/score/1
 mtron&gt; */sys/space/lite.sql("SELECT p.name,p.age,s.points FROM person p JOIN score s ON p.name=s.player")     ​5​
 ==&gt;[name=&gt;'marko',age=&gt;29,points=&gt;42]
 ==&gt;[name=&gt;'grant',age=&gt;25,points=&gt;99]</code></pre>
@@ -9171,7 +9037,7 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
        rdfspace::T],
       inst=&gt;[sparql?rec{*}&lt;=rdfspace(str::T)]]@/m/rdf,
      /sys/space/mtronfs=&gt;fsspace::[pattern=&gt;mtronfs:#,route=&gt;[mtronfs:=&gt;&lt;.metatron&gt;],space=&gt;[=&gt;]]@/sys/space/mtronfs,
-     /m/mach/io=&gt;[
+     /m/mach/io=&gt;instset::[
       pattern=&gt;/m/mach/io/#,
       q=&gt;[docq::[
     pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
@@ -9191,6 +9057,15 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
     obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
     inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
       space=&gt;[sub=&gt;{!*/m/sys,!*/m/mach,!*/m/math,!*/m/web,!*/m/iot,!*/m/grph,!*/m/llm,!*/m/tble,!*/m/dcmnt,!*/m/rdf}],
+      rewrite=&gt;[
+       /m/inst/rewrite/id_removal?code{?}&lt;=code(),
+       /m/inst/rewrite/map_nest?code{?}&lt;=code(),
+       /m/inst/rewrite/else_after_count?code{?}&lt;=code(),
+       /m/inst/rewrite/plus_zero?code{?}&lt;=code(),
+       /m/inst/rewrite/mult_one?code{?}&lt;=code(),
+       /m/inst/rewrite/split_merge_collapse?code{?}&lt;=code(),
+       /m/inst/rewrite/split_merge_left_factor?code{?}&lt;=code(),
+       /m/inst/rewrite/split_merge_right_factor?code{?}&lt;=code()],
       inst=&gt;[
        as?bool&lt;=bool(bool::T),
        as?bytes&lt;=bool(bytes::T),
@@ -9286,7 +9161,6 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
        pow?uri&lt;=uri(int::T),
        scheme?uri{?}&lt;=uri(),
        scheme?uri&lt;=uri(uri::T),
-       authority?uri{?}&lt;=uri(),
        host?uri{?}&lt;=uri(),
        host?uri&lt;=uri(uri::T),
        port?int{?}&lt;=uri(),
@@ -9420,15 +9294,7 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
        lshift?B{*}&lt;=A(),
        start?A{**}&lt;=noobj{0}(A{**}::T),
        ctor()],
-      rewrite=&gt;[
-       /m/inst/rewrite/id_removal?code{?}&lt;=code(),
-       /m/inst/rewrite/map_nest?code{?}&lt;=code(),
-       /m/inst/rewrite/else_after_count?code{?}&lt;=code(),
-       /m/inst/rewrite/plus_zero?code{?}&lt;=code(),
-       /m/inst/rewrite/mult_one?code{?}&lt;=code(),
-       /m/inst/rewrite/split_merge_collapse?code{?}&lt;=code(),
-       /m/inst/rewrite/split_merge_left_factor?code{?}&lt;=code(),
-       /m/inst/rewrite/split_merge_right_factor?code{?}&lt;=code()],
+      const=&gt;[noobj],
       type=&gt;[
        #::T,
        bool::T,
@@ -9458,8 +9324,8 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
        shortq::T,
        incrq::T,
        constq::T,
-       mimeq::T],
-      const=&gt;[noobj]]@/m,
+       mimeq::T,
+       authority::T]]@/m,
      /m/iot=&gt;instset::[pattern=&gt;/m/iot/#,q=&gt;[docq::[
     pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
     pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
@@ -9495,7 +9361,8 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
        thread_executor::T,
        thread::T,
        core::T,
-       virtual::T],
+       virtual::T,
+       cluster::T],
       inst=&gt;[
        lift(#{?}::T),
        rewrite?rec[short=&gt;uri,long=&gt;uri]&lt;=#{?}(uri::T),
@@ -9539,6 +9406,8 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
        markdown::T,
        httpspace::T,
        wsspace::T,
+       client::T,
+       server::T,
        websocket::T,
        wshandler::T,
        wsclient::T,
@@ -9636,6 +9505,7 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
      tB=&gt;[/m/math/tB],
      millis=&gt;[/m/math/millis],
      lift=&gt;[/m/mach/inst/lift],
+     client=&gt;[/m/web/client],
      sqrt=&gt;[/m/math/inst/sqrt],
      table=&gt;[/m/tble/table],
      virtual=&gt;[/m/mach/thread/virtual],
@@ -9672,6 +9542,7 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
      is=&gt;[/m/inst/is],
      neg=&gt;[/m/inst/neg],
      print=&gt;[/m/inst/print],
+     server=&gt;[/m/web/server],
      bothE=&gt;[/m/grph/inst/bothE],
      http_handler=&gt;[/m/web/space/httpspace/http_handler],
      web_http=&gt;[/m/web/space/httpspace/web_http],
@@ -9698,7 +9569,6 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
      rdfspace=&gt;[/m/rdf/space/rdfspace],
      collection=&gt;[/m/dcmnt/collection],
      docs=&gt;[/m/space/qproc/docq/docs],
-     authority=&gt;[/m/inst/authority],
      repeat=&gt;[/m/inst/repeat],
      source=&gt;[/m/inst/source],
      mplus=&gt;[/m/inst/mplus],
@@ -9723,6 +9593,7 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
      not=&gt;[/m/inst/not],
      reverse=&gt;[/m/inst/reverse],
      throw=&gt;[/m/inst/throw],
+     cluster=&gt;[/m/mach/cluster],
      filter=&gt;[/m/inst/filter],
      lte=&gt;[/m/inst/lte],
      cos=&gt;[/m/math/inst/cos],
@@ -9775,6 +9646,7 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
      uri=&gt;[/m/uri],
      id_removal=&gt;[/m/inst/rewrite/id_removal],
      wshandler=&gt;[/m/web/space/wsspace/wshandler],
+     authority=&gt;[/m/uri/authority],
      markdown=&gt;[/m/web/markdown],
      native=&gt;[/m/inst/native,/m/sys/inst/native],
      core=&gt;[/m/mach/thread/core],

@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -191,6 +191,8 @@ public interface Space extends Rec, Closeable {
         }
 
         public static fURI routeToSpace(final fURI vid, Map<Uri, Uri> routes) {
+            if (null == vid)
+                return null;
             final Uri vidURI = uri(vid);
             return routes.entrySet().stream()
                     //.sorted(Map.Entry.comparingByKey(Comparator.reverseOrder()))
@@ -201,6 +203,8 @@ public interface Space extends Rec, Closeable {
         }
 
         public static fURI routeFromSpace(final fURI vid, Map<Uri, Uri> routes) {
+            if (null == vid)
+                return null;
             final Uri vidURI = uri(vid);
             return routes.entrySet().stream()
                     //.sorted(Map.Entry.comparingByKey(Comparator.reverseOrder()))
@@ -364,9 +368,9 @@ public interface Space extends Rec, Closeable {
 
         public static void closeSpace(final Space space) {
             if (Router.loaded()) {
-               // Router.global().removeSpace(space.pattern());
+                // Router.global().removeSpace(space.pattern());
                 Router.global().removeSpace(space.vid());
-               // 
+                // 
             }
         }
 

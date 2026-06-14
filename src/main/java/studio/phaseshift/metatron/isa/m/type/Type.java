@@ -38,6 +38,7 @@ import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
@@ -359,7 +360,7 @@ public interface Type extends Obj {
         public Builder predicate(final BiFunction<Obj, Inst, Obj> predicate) {
             if (null == this.vid)
                 throw MTronException.of("vid must be set prior to specifying predicate");
-            return this.predicate(instC(INST_PRED_TID.dom(ALL.maybe()).rng(this.vid), lst(), predicate));
+            return this.predicate(instC(INST_PRED_TID.dom(ALL.maybe()).rng(this.vid), lst(URI_TYPE), predicate));
         }
 
         public Builder isaPredicate(final Obj predicate) {

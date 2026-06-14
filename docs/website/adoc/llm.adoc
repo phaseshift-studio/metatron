@@ -47,10 +47,6 @@ catalog::[host         => <https://api.deepseek.com/>,          /
           pattern      => <deep:#>,                             /
           name         => <openai>,                             /
           route        => [<deep:>=><>]]@/sys/space/deepseek
-catalog::[host         => <http://localhost:1234/v1>,           /
-          pattern      => <lmstudio:#>,                          /
-          name         => <openai>,                              /
-          route        => [<lmstudio:>=><>]]@/sys/space/lmstudio
 ----
 
 [discrete]
