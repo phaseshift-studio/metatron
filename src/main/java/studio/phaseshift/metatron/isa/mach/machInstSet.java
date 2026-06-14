@@ -26,7 +26,6 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.Sugar;
 import studio.phaseshift.metatron.isa.m.space.noobjSpace;
-import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.io.space.fs.fsSpace;
@@ -62,7 +61,6 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.TIME_TYPE;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBytes.bytes;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
@@ -76,6 +74,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.io.space.fs.fsSpace.FS_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.mach.io.space.fs.fsSpace.makeFile;
 import static studio.phaseshift.metatron.isa.mach.io.space.serial.serialSpace.SERIAL_SPACE_TYPE;
+import static studio.phaseshift.metatron.isa.mach.space.clusterSpace.CLUSTER_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.mach.type.ui.console.Console.CONSOLE_TYPE;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
@@ -232,7 +231,9 @@ public class machInstSet extends AbstractInstSet {
                                         uri(STATE).maybe(), "current state of the thread",
                                         uri(RESULT).maybe(), "the last result produced by the thread"),
                                 "run a concurrent virtual thread",
-                                "virtual::[code=>ping(<phaseshift.studio:80>),loop=>second::1.5]@/sys/thread/ping")),
+                                "virtual::[code=>ping(<phaseshift.studio:80>),loop=>second::1.5]@/sys/thread/ping"),
+                        docWrap(CLUSTER_SPACE_TYPE,"a space containing peers within a metatron cluster where reading and writing to this space will automatically route" +
+                                "the obj (based on the uri) to its respective peer in the cluster.")),
                 uri(INST), lst(Stream.concat(Router.RouterType.insts().stream(), Stream.of(instC(LIFT_INST_TID.dom(ALL).rng(MACH_MONAD_TID).q(MONAD, "^"), lst(T(ALL.maybe())), (lhs, inst) -> {
                             final PCMonad monad = lhs.asMonad();
                             if (!inst.arg(0).isNoObj())

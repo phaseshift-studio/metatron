@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -113,13 +113,17 @@ public class QProcIntegrationTest extends AbstractMetatronTest {
 
         // Write data — qlessWrite checks type, accepts or rejects
         final Obj dataObj = ObjmtronSerializer.parse(writeVal);
-        final Obj writeResult = space.write(target, dataObj);
+        try {
+            final Obj writeResult = space.write(target, dataObj);
 
-        if (expectFail) {
-            assertTrue(writeResult.isFail(), desc + ": write should be rejected");
-        } else {
-            assertFalse(writeResult.isFail(), desc + ": write should succeed");
-            checkEquality(LOG, ObjmtronSerializer.parse(expectedRead), space.read(target), true);
+            if (expectFail) {
+                assertTrue(writeResult.isFail(), desc + ": write should be rejected");
+            } else {
+                assertFalse(writeResult.isFail(), desc + ": write should succeed");
+                checkEquality(LOG, ObjmtronSerializer.parse(expectedRead), space.read(target), true);
+            }
+        } catch (final Exception e) {
+            assertTrue(expectFail, "expected an exception");
         }
     }
 

@@ -260,5 +260,38 @@ public abstract class AbstractMetatronTest {
             assertEquals(aex, aactual); */
         }
     }
+    /**
+     * Utility method for distributed testing - check if URI requires cross-host routing
+     */
+    public static boolean isCrossHostUri(final GraphittyLogger LOG, final fURI uri) {
+        boolean isCrossHost = uri.hasAuthority();
+        LOG.debug("URI {{b}}%s{{X}} is cross-host: %s", uri, isCrossHost);
+        return isCrossHost;
+    }
+
+    /**
+     * Utility method for distributed testing - simulate network delay
+     */
+    public static void simulateNetworkDelay(final GraphittyLogger LOG, int milliseconds) {
+        try {
+            LOG.debug("Simulating network delay of {{b}}%d{{X}} ms", milliseconds);
+            Thread.sleep(milliseconds);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            LOG.warn("Network delay simulation interrupted");
+        }
+    }
+
+    /**
+     * Utility method to get router statistics
+     */
+    public static Obj getRouterStatistics(final GraphittyLogger LOG) {
+        if (Router.loaded()) {
+            return Router.global().at(uri("stats"));
+        }
+        LOG.warn("Router not loaded, cannot get stats");
+        return noobj();
+    }
 
 }
+
