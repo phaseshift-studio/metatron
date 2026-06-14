@@ -177,7 +177,11 @@ mqttspace::[pattern => <ha:#>,
               wikibase: =><http://wikiba.se/ontology#>,
               wd:       =><http://www.wikidata.org/entity/>,
               wdt:      =><http://www.wikidata.org/prop/direct/>,
-              wikidata: =><>]]@/sys/space/wikidata;       ==]           
+              wikidata: =><>]]@/sys/space/wikidata;       ==]     
+  cluster::[pattern => <ws://+/cluster/#>,
+            host    => <ws://localhost:8555/cluster>,
+            route   => [<ws://localhost:8555/cluster> => <>],
+            peers=>[=>]]@/sys/space/cluster;    
 *<mtronfs:instset/ai.mtron>;
 *<mtronfs:agent.mtron>;
 console::[=>]@/usr/ui/console;

@@ -271,6 +271,8 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
     }
 
     default fURI authority(final String authority) {
+        if(null == authority && null != this.authority())
+            return  fURI.of(this.scheme(),null,-1,this.path(),this.c(),this.poly(),this.qMap(), this.templates());
         final String[] parts = authority.split(":");
         return parts.length == 2 ? this.host(parts[0]).port(Integer.parseInt(parts[1])) : this.host(parts[0]);
     }

@@ -94,7 +94,7 @@ public class mcp_httpHandler extends HttpRec {
     @Override
     protected void doPost(final HttpExchange exchange) throws IOException {
         final String body = readBody(exchange);
-        LOG.info("mcp http POST %s: %s", exchange.getRequestURI(), body.length() > 200 ? body.substring(0, 200) + "..." : body);
+        LOG.debug("mcp http POST %s: %s", exchange.getRequestURI(), body.length() > 200 ? body.substring(0, 200) + "..." : body);
 
         // Parse incoming JSON-RPC
         final Obj request;

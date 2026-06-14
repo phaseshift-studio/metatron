@@ -271,7 +271,6 @@ public interface Uri extends Mono, Ring.O<Uri>, Comparable<Uri> {
             }
             case PATH -> {
                 if (result.isLst()) {
-                    result.logger().warn("coercing Lst to PATH: {}", result);
                     yield result.lstValue().stream().map(Uri::objToString).collect(Collectors.joining("/"));
                 } else
                     yield objToString(result);

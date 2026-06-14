@@ -174,6 +174,17 @@ public abstract class AbstractSpace<SJVM> extends MRec implements Space {
         return this;
     }
 
+
+    @Override
+    public Space clone(final Object jvm, final fURI tid, final fURI vid) {
+        return this;
+    }
+
+    @Override
+    public Space self(final Object jvm, final fURI tid, final fURI vid) {
+        return (Space) super.self(jvm, null == this.tid() ? tid : this.tid(), null == this.vid() ? vid : this.vid());
+    }
+
     @Override
     public String toString() {
         return Space.Helper.spaceToString(this);

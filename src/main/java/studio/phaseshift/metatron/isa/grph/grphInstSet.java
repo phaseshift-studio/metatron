@@ -22,8 +22,8 @@ import org.apache.tinkerpop.gremlin.jsr223.DefaultGremlinScriptEngineManager;
 import org.apache.tinkerpop.gremlin.jsr223.GremlinLangScriptEngineFactory;
 import org.apache.tinkerpop.gremlin.jsr223.GremlinScriptEngine;
 import org.apache.tinkerpop.gremlin.structure.*;
+import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.algebra.rewrite.CommonRewrites;
-import studio.phaseshift.metatron.algebra.rewrite.RewriteBuilder;
 import studio.phaseshift.metatron.algebra.rewrite.Rewriter;
 import studio.phaseshift.metatron.furi.DataPath;
 import studio.phaseshift.metatron.furi.c.cInt;
@@ -136,34 +136,34 @@ public class grphInstSet extends AbstractInstSet {
         return base;
     }
 
-    private static Obj routeTraversal(final Obj lhs, final Inst inst, final String dir) {
+    private static Obj routeEdgeTraversal(final Obj lhs, final Inst inst, final Direction direction) {
         final fURI base = resolveVid(lhs);
         if (base == null) return noobj();
-        fURI path = base.extend(dir);
+        fURI path = base.extend(direction.name());
         if (!inst.arg(0).isNoObj())
             path = path.extend(inst.arg(0).uriValue().toString());
         return Router.readFromSpace(path);
     }
 
-    private static Obj routeVertexTraversal(final Obj lhs, final Inst inst, final String dir, final String reverseDir) {
+    private static Obj routeVertexTraversal(final Obj lhs, final Inst inst, final Direction direction) {
         final fURI base = resolveVid(lhs);
         if (base == null) return noobj();
-        fURI path = base.extend(dir);
+        fURI path = base.extend(direction.name());
         if (!inst.arg(0).isNoObj())
             path = path.extend(inst.arg(0).uriValue().toString());
-        path = path.extend(reverseDir);
+        path = path.extend(direction.opposite().name());
         return Router.readFromSpace(path);
     }
 
-    private static Obj routeBothTraversal(final Obj lhs, final Inst inst, final String reverseDir) {
+    private static Obj routeBothTraversal(final Obj lhs, final Inst inst) {
         final fURI base = resolveVid(lhs);
         if (base == null) return noobj();
         final fURI outPath = inst.arg(0).isNoObj()
-                ? base.extend("OUT").extend(reverseDir)
-                : base.extend("OUT").extend(inst.arg(0).uriValue().toString()).extend(reverseDir);
+                ? base.extend("OUT").extend("+")
+                : base.extend("OUT").extend(inst.arg(0).uriValue().toString()).extend(Tokens.IN);
         final fURI inPath = inst.arg(0).isNoObj()
-                ? base.extend("IN").extend(reverseDir)
-                : base.extend("IN").extend(inst.arg(0).uriValue().toString()).extend(reverseDir);
+                ? base.extend("IN").extend("+")
+                : base.extend("IN").extend(inst.arg(0).uriValue().toString()).extend(Tokens.OUT);
         return objs(Stream.concat(
                 Router.readFromSpace(outPath).stream(),
                 Router.readFromSpace(inPath).stream()));
@@ -186,18 +186,16 @@ public class grphInstSet extends AbstractInstSet {
     }
 
     protected static BiFunction<Obj, Inst, Obj> V_E_FUNCTION(final Direction direction) {
-        final String dir = direction.name();
         return direction == Direction.BOTH
                 ? (lhs, inst) -> routeBothETraversal(lhs, inst)
-                : (lhs, inst) -> routeTraversal(lhs, inst, dir);
+                : (lhs, inst) -> routeEdgeTraversal(lhs, inst, direction);
     }
 
     public static BiFunction<Obj, Inst, Obj> V_V_FUNCTION(final Direction direction) {
         final String dir = direction.name();
-        final String revDir = direction == Direction.OUT ? "IN" : direction == Direction.IN ? "OUT" : null;
         return direction == Direction.BOTH
-                ? (lhs, inst) -> routeBothTraversal(lhs, inst, "OUT")
-                : (lhs, inst) -> routeVertexTraversal(lhs, inst, dir, revDir);
+                ? grphInstSet::routeBothTraversal
+                : (lhs, inst) -> routeVertexTraversal(lhs, inst, direction);
     }
 
 
@@ -231,9 +229,9 @@ public class grphInstSet extends AbstractInstSet {
                         EDGE_TYPE = docWrap(Type.Builder.build()
                                 .tid(ELMT_TID)
                                 .vid(EDGE_TID)
-                             /*   .isaPredicate(rec(
-                                        OUT, rec(URI_TYPE, T(VRTX_TID)),
-                                        IN, rec(URI_TYPE, T(VRTX_TID))))*/
+                                /*   .isaPredicate(rec(
+                                           OUT, rec(URI_TYPE, T(VRTX_TID)),
+                                           IN, rec(URI_TYPE, T(VRTX_TID))))*/
                                 .create(), "a directed key/value attributed binary edge"),
                         docWrap(GRPH_SPACE_TYPE, "a space for graph traversal"),
                         docWrap(MODERN_SCHEMA_TYPE, "a schema for the modern graph dataset")
@@ -332,7 +330,8 @@ public class grphInstSet extends AbstractInstSet {
                                                             final Inst fromInst = matchList.get(0);
                                                             final Obj ref = fromInst.arg(0);
                                                             // guard: only V/E collections, no traversals (no field/extensions)
-                                                            if (!ref.isUri()) return matchList.stream().map(Obj::asInst).toList();
+                                                            if (!ref.isUri())
+                                                                return matchList.stream().map(Obj::asInst).toList();
                                                             final DataPath dp = DataPath.of(f("-").extend(ref.uriValue()));
                                                             if (!("V".equals(dp.collection()) || "E".equals(dp.collection()))
                                                                     || !dp.entryIsWildcard()
@@ -404,7 +403,8 @@ public class grphInstSet extends AbstractInstSet {
                                                             //final DataPath dp = DataPath.of(f("-").extend(furi));
                                                             final org.apache.tinkerpop.gremlin.process.traversal.P<?> pred = parseGremlinPredicate(sqlWhere);
                                                             final String field = extractPredicateField(sqlWhere);
-                                                            if (pred == null || field == null) return matchList.stream().map(Obj::asInst).toList();
+                                                            if (pred == null || field == null)
+                                                                return matchList.stream().map(Obj::asInst).toList();
                                                             final long count = gs.sjvm().traversal().V().has(field, pred).count().next();
                                                             return List.of(instC(
                                                                     GRPH_REWRITE_TID.extend("gremlin_where_count").dom(ALL_STAR).rng(INT_TID),
@@ -439,7 +439,8 @@ public class grphInstSet extends AbstractInstSet {
                                                             final DataPath dp = DataPath.of(f("-").extend(furi));
                                                             final org.apache.tinkerpop.gremlin.process.traversal.P<?> pred = parseGremlinPredicate(sqlWhere);
                                                             final String field = extractPredicateField(sqlWhere);
-                                                            if (pred == null || field == null) return matchList.stream().map(Obj::asInst).toList();
+                                                            if (pred == null || field == null)
+                                                                return matchList.stream().map(Obj::asInst).toList();
                                                             return List.of(instC(
                                                                     GRPH_REWRITE_TID.extend("gremlin_where_limit").dom(ALL_STAR).rng(ALL_STAR),
                                                                     lst(uri(furi), studio.phaseshift.metatron.isa.m.type.impl.MStr.str(sqlWhere), jnt(limit)),
@@ -463,7 +464,7 @@ public class grphInstSet extends AbstractInstSet {
     /**
      * Parse a SQL-like WHERE clause into a Gremlin P predicate.
      * Handles: "field > value", "field = value", "field < value",
-     *          "field >= value", "field <= value", "field <> value".
+     * "field >= value", "field <= value", "field <> value".
      */
     private static org.apache.tinkerpop.gremlin.process.traversal.P<?> parseGremlinPredicate(final String whereClause) {
         if (whereClause == null || whereClause.isBlank()) return null;
@@ -487,7 +488,9 @@ public class grphInstSet extends AbstractInstSet {
         return null;
     }
 
-    /** Extract the field name from a SQL WHERE condition like "value > 5" */
+    /**
+     * Extract the field name from a SQL WHERE condition like "value > 5"
+     */
     private static String extractPredicateField(final String whereClause) {
         if (whereClause == null || whereClause.isBlank()) return null;
         final String[] ops = {">=", "<=", "<>", ">", "<", "=", " IS NOT NULL"};
@@ -498,14 +501,22 @@ public class grphInstSet extends AbstractInstSet {
         return null;
     }
 
-    /** Parse a value string: handle quoted strings, booleans, numbers */
+    /**
+     * Parse a value string: handle quoted strings, booleans, numbers
+     */
     private static Object parsePredicateValue(final String valueStr) {
         if (valueStr.startsWith("'") && valueStr.endsWith("'"))
             return valueStr.substring(1, valueStr.length() - 1).replace("''", "'");
         if ("TRUE".equalsIgnoreCase(valueStr)) return true;
         if ("FALSE".equalsIgnoreCase(valueStr)) return false;
-        try { return Integer.parseInt(valueStr); } catch (NumberFormatException ignored) {}
-        try { return Double.parseDouble(valueStr); } catch (NumberFormatException ignored) {}
+        try {
+            return Integer.parseInt(valueStr);
+        } catch (NumberFormatException ignored) {
+        }
+        try {
+            return Double.parseDouble(valueStr);
+        } catch (NumberFormatException ignored) {
+        }
         return valueStr;
     }
 }

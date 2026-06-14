@@ -403,7 +403,7 @@ public class grphSpaceTest extends AbstractDataPathTest implements CommonRewrite
             "*/g/S>>pattern.*(_).count()                                                     % 5",
             "*/g/S>>pattern.*_.count()                                                       % 5",
             //  "*(*/g/S/pattern).count()                                                      % 5",
-            "*/g/S>>pattern.*(_).vid()                                                        % {/m/grph/schema/modern/person,/m/grph/schema/modern/software,/m/grph/schema/modern/created,/m/grph/schema/modern/knows}",
+            "*/g/S>>pattern.*(_).vid()                                                        % {/m/grph/schema/modern/person,/m/grph/schema/modern/software,/m/grph/schema/modern/created,/m/grph/schema/modern/knows,/m/grph/schema/modern}",
     }, delimiter = '%')
     public void testSchemaTraversal(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
