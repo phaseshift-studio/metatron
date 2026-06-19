@@ -399,7 +399,6 @@ public class BootLoader implements Rec, Feature.SelfClone {
             Router.writeToSpace(f("boot/args"), args);
             ///  ADD INCRQ PROCESSOR TO SYS FOR AUTO INCREMENTING FAIL STACK
             MFail.FAIL_STACK_PATTERN = args.at("fail_stack_pattern").orElse(uri("/sys/fail?incrq=./+")).uriValue();
-            ROUTER.start();
             // Establish the system root thread so boot-spawned threads
             // (console, agents) inherit it as source via CURRENT_THREAD.
             // The task blocks on SHUTDOWN_LATCH — stays in 'run' until shutdown.

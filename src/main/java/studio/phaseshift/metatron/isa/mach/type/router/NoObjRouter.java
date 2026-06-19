@@ -50,11 +50,6 @@ public final class NoObjRouter extends MRec implements Router {
     }
     
     @Override
-    public void start() {
-
-    }
-
-    @Override
     public Object sjvm() {
         return Map.of();
     }

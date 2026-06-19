@@ -121,7 +121,7 @@ public final class Tokens {
     public static final String REASON = "reason";
     public static final String SUPER = "super";
     public static final String ROUTE = "route";
-    public static final String PEERS = "peers";
+    public static final String PEER = "peer";
     public static final String CACHE = "cache";
     public static final String CONST = "const";
     public static final String CONSTQ = "constq";

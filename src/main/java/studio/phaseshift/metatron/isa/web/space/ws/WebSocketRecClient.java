@@ -44,8 +44,7 @@ import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_CLIENT_TID;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class WebSocketRecClient extends WebSocketClient implements Rec, Closeable {
-
-
+    
     private final WebSocketRec wsclient;
     protected final GraphittyLogger LOG = Graphitty.log(this);
 
@@ -90,8 +89,7 @@ public class WebSocketRecClient extends WebSocketClient implements Rec, Closeabl
     public int hashCode() {
         return this.wsclient.hashCode();
     }
-
-
+    
     public WebSocketObj.IO getIO() {
         return WebSocketObj.IO.of(this.wsclient, MIME.MIMEType.APPLICATION_MTRON);
     }
@@ -110,7 +108,11 @@ public class WebSocketRecClient extends WebSocketClient implements Rec, Closeabl
     public void onMessage(final ByteBuffer message) {
         this.wsclient.onMessage(this, this.getIO().input().serializer().inputBytes(message));
     }
-
+    
+    public boolean state() {
+        return this.wsclient.state(this);    
+    }
+    
     public void send(final Obj message) {
         this.wsclient.send(message);
     }

@@ -19,9 +19,17 @@
 package studio.phaseshift.metatron.isa.mach.space;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.web.space.ws.handler.mtron_wsHandler;
+import studio.phaseshift.metatron.isa.web.space.ws.wsSpace;
 
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /**
  * Manages a collection of in-JVM {@link LocalNode} instances for distributed
@@ -74,6 +82,12 @@ public class LocalCluster implements AutoCloseable {
                 .collect(Collectors.toList());
         this.nodesByPort = this.nodes.stream()
                 .collect(Collectors.toMap(LocalNode::port, n -> n));
+        this.nodesByPort.forEach((port, node) -> {
+            wsSpace.of(mutableMap(
+                    uri(HOST), uri("ws://localhost:" + port),
+                    uri(PATTERN), uri("ws://localhost:" + port + "/#"),
+                    uri(ROUTE), rec(mutableMap(uri("mtron"), new mtron_wsHandler(mutableMap(), null)))), f("/sys/space/cluster" + port));
+        });
     }
 
     /**
@@ -120,17 +134,23 @@ public class LocalCluster implements AutoCloseable {
     // Accessors
     // ====================================================================
 
-    /** Number of nodes in the cluster. */
+    /**
+     * Number of nodes in the cluster.
+     */
     public int size() {
         return this.nodes.size();
     }
 
-    /** Node by index (0-based). */
+    /**
+     * Node by index (0-based).
+     */
     public LocalNode node(final int index) {
         return this.nodes.get(index);
     }
 
-    /** Node by port number. */
+    /**
+     * Node by port number.
+     */
     public LocalNode nodeByPort(final int port) {
         final LocalNode n = this.nodesByPort.get(port);
         if (n == null)
@@ -138,29 +158,39 @@ public class LocalCluster implements AutoCloseable {
         return n;
     }
 
-    /** The clusterSpace for the node at the given index. */
+    /**
+     * The clusterSpace for the node at the given index.
+     */
     public clstrSpace cluster(final int index) {
         return this.nodes.get(index).cluster();
     }
 
-    /** The clusterSpace for the node at the given port. */
+    /**
+     * The clusterSpace for the node at the given port.
+     */
     public clstrSpace clusterByPort(final int port) {
         return nodeByPort(port).cluster();
     }
 
-    /** All nodes in the cluster. */
+    /**
+     * All nodes in the cluster.
+     */
     public List<LocalNode> nodes() {
         return Collections.unmodifiableList(this.nodes);
     }
 
-    /** All host URIs in the cluster. */
+    /**
+     * All host URIs in the cluster.
+     */
     public List<fURI> hostUris() {
         return this.nodes.stream()
                 .map(LocalNode::hostUri)
                 .collect(Collectors.toList());
     }
 
-    /** All ports in the cluster. */
+    /**
+     * All ports in the cluster.
+     */
     public int[] ports() {
         return this.nodes.stream()
                 .mapToInt(LocalNode::port)
@@ -207,7 +237,9 @@ public class LocalCluster implements AutoCloseable {
     // Helpers
     // ====================================================================
 
-    /** Generate {@code count} unique ports in the ephemeral range. */
+    /**
+     * Generate {@code count} unique ports in the ephemeral range.
+     */
     private static int[] generatePorts(final int count) {
         if (count < 1)
             throw new IllegalArgumentException("nodeCount must be >= 1, got " + count);

@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -135,24 +135,18 @@ public class fsSpace extends AbstractSpace<FileSystem> {
     }
 
     private Obj readFileAsObj(final File file, final Map<String, String> qMap) throws IOException {
-        MIME.MIMEType mimeType = qMap.containsKey(MIMEQ_PATTERN.toString()) ?
+        final MIME.MIMEType mimeType = qMap.containsKey(MIMEQ_PATTERN.toString()) ?
                 MIME.MIMEType.of(qMap.get(MIMEQ_PATTERN.toString())) :
-                MIME.MIMEType.fromProbe(file, null);
-        mimeType = null == mimeType ?
-                MIME.MIMEType.fromExtension(file.getName(), MIME.MIMEType.APPLICATION_MTRON) : mimeType;
+                MIME.MIMEType.fromProbe(file, MIME.MIMEType.fromExtension(file.getName(), MIME.MIMEType.TEXT_PLAIN));
         final FileInputStream fs = new FileInputStream(file);
         byte[] fileBytes = fs.readAllBytes();
         fs.close();
         final String source = new String(fileBytes, StandardCharsets.UTF_8);
         final fURI vid = source.startsWith("[-- @<") ? f(source.substring(6, source.indexOf("> --]\n")).trim()) : null;
-        if (vid != null) mimeType = MIME.MIMEType.APPLICATION_MTRON;
         LOG.debug("fileToObj: %s => %s", file.getPath(), vid);
         // Use parse (not eval) to avoid executing potential write-side-effect expressions
         // in the file content (e.g. !* or -> sugar that Router.writeToSpace).
-        return mimeType == MIME.MIMEType.APPLICATION_MTRON
-                ? ObjmtronSerializer.parse(source)
-                : (mimeType.hasSerializer() ? mimeType.fromBytes(fileBytes)
-                : uri(this.redirect(f(file.getPath()), false), FILE_TID, null).selfVID(vid));
+        return mimeType.serializer().inputBytes(source.getBytes());
     }
 
     @Override
@@ -198,7 +192,9 @@ public class fsSpace extends AbstractSpace<FileSystem> {
      * @param qMap query parameters from the read expression
      * @return an IdObj if a parent file was found and navigated, or null
      */
-    /** Simple recursion guard — resets each thread after top-level write completes. */
+    /**
+     * Simple recursion guard — resets each thread after top-level write completes.
+     */
     private static final ThreadLocal<Integer> NEST_GUARD = ThreadLocal.withInitial(() -> 0);
 
     private IdObj navigateFromParentFile(final File file, final fURI vid, final Map<String, String> qMap) {
@@ -267,7 +263,7 @@ public class fsSpace extends AbstractSpace<FileSystem> {
                                 .filter(p -> {
                                     try {
                                         return !p.equals(walkRoot)
-                                    && this.redirect(f(p.toString()), false).test(f("#"));
+                                                && this.redirect(f(p.toString()), false).test(f("#"));
                                     } catch (final Exception e) {
                                         LOG.error(e);
                                         return false;
@@ -423,7 +419,7 @@ public class fsSpace extends AbstractSpace<FileSystem> {
                         .filter(p -> {
                             try {
                                 return !p.equals(walkRoot)
-                                    && this.redirect(f(p.toString()), false).test(f("#"));
+                                        && this.redirect(f(p.toString()), false).test(f("#"));
                             } catch (final Exception e) {
                                 LOG.error(e);
                                 return false;
@@ -544,7 +540,7 @@ public class fsSpace extends AbstractSpace<FileSystem> {
             return null;
         final File parentFile = parent.toFile();
         // Parse parent file content
-        final Obj parentObj = fileToObj(parentFile, Map.of());
+        final Obj parentObj = fileToObj(parentFile, vid.qMap());
         if (parentObj.isNoObj() || !parentObj.isPoly())
             return null;
         // Compute the parent VID and the remaining relative path
@@ -599,12 +595,12 @@ public class fsSpace extends AbstractSpace<FileSystem> {
                             this.objToFile(f(new File(file, ".mtron").getPath()), obj);
                     } else {
                         this.objToFile(f(path.toString()), obj);
-                        if (pattern.hasQ("p")) {
+                        /*if (pattern.hasQ("p")) {
                             final Set<PosixFilePermission> currentP = PosixFilePermissions.fromString(Files.getPosixFilePermissions(path).toString());
                             final Set<PosixFilePermission> newP = PosixFilePermissions.fromString(pattern.qValue("p", String.class));
                             if (!currentP.equals(newP))
                                 Files.setPosixFilePermissions(file.toPath(), newP);
-                        }
+                        }*/
                     }
                 } catch (final Exception e) {
                     throw MTronException.of(e);

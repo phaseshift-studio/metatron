@@ -104,8 +104,6 @@ public interface Router extends Space {
         return this.at(uri(SPACE)).as();
     }
 
-    void start();
-
     Obj read(final fURI vid);
 
     default Obj read(final String vid) {

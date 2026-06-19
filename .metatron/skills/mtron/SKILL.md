@@ -20,9 +20,9 @@ Parameter: code = "<your mtron expression>"
 
 Examples:
 ```mcp
-mtron_eval("*/sys/space/+/")                     [-- list spaces --]
-mtron_eval("*/sys/console/history")              [-- get history --]
-mtron_eval("*acme:customers.*(_).take(5)")       [-- query data  --]
+mtron_eval("*/sys/space/+/")                        [-- list spaces --]
+mtron_eval("*/usr/ui/console/history")              [-- get history --]
+mtron_eval("*acme:customers/+.take(5)")             [-- query data  --]
 ```
 
 If the MCP server is not available, you can use the script `scripts/mtron_ws_client.py`.
@@ -135,8 +135,6 @@ This is useful for learning about instructions.
 | **Full language reference** | [mtron-language-reference.md](references/mtron-language-reference.md) |
 | Questions | [answer-questions.md](references/answer-questions.md) |
 | Data sources | [connecting-datasources.md](references/connecting-datasources.md) |
-| Expressions | [writing-mtron-expressions.md](references/writing-mtron-expressions.md) |
-| Statistics | [providing-data-statistics.md](references/providing-data-statistics.md) |
 | MCP server push / subq | [mcp-server-notifications.md](references/mcp-server-notifications.md) |
 | HTTP page fetching | [http-page-fetching.md](references/http-page-fetching.md) |
 | MCP server architecture | [mcp-server-architecture.md](references/mcp-server-architecture.md) |

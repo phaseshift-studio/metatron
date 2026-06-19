@@ -90,6 +90,10 @@ public class WebSocketRec extends MRec implements WebSocketObj {
         return IO.of(this, MIME.MIMEType.APPLICATION_MTRON);
     }
 
+    public boolean state() {
+        return this.state(this.getWebSocket());
+    }
+    
     @Override
     public void onOpen(final WebSocket conn, final Handshakedata handshake) {
         try {
@@ -108,7 +112,7 @@ public class WebSocketRec extends MRec implements WebSocketObj {
         try {
             this.logger().info("{{y}}%s {{g}}<=> {{y}}%s{{X}} closed: code={{y}}%s{{X}}, reason={{y}}%s{{X}}", this.vid(), this.getOtherVID(), code, reason);
             this.at(uri(ON_CLOSE)).apply(rec(uri(CODE), jnt(code), uri(REASON), str(reason)));
-            Router.global().write(this.vid(), noobj());
+            this.close();
         } catch (final Exception e) {
             LOG.error("error processing close: %s", this.vid(), e);
         }

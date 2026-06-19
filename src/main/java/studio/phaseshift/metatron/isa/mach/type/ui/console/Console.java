@@ -858,8 +858,8 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                     if (this.activePane != null) {
                         this.activePane.machine(mach);
                     }
-                    mach.applyAsync();
-                    computeResult = mach.result();
+                   computeResult = mach.applyAsync().timeout(5000);
+                    //computeResult = mach.result();
                 } else {
                     computeResult = this.input.apply(resolvedResult);
                 }

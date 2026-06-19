@@ -122,7 +122,7 @@ public interface InstSet extends Space {
                 .stream()
                 .peek(p -> {
                     if (!p.type().isAnnotationPresent(JREService.class))
-                        Graphitty.log(InstSet.class).warn("an inst set without a service metadata located: %s", p.type().getCanonicalName());
+                        throw MTronException.of("an inst set without a service metadata located: %s", p.type().getCanonicalName());
                 })
                 .filter(p -> p.type().isAnnotationPresent(JREService.class))
                 .filter(p -> f(p.type().getAnnotation(JREService.class).vid()).test(pattern));
