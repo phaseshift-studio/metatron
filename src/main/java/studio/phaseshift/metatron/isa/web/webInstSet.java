@@ -18,24 +18,19 @@
 
 package studio.phaseshift.metatron.isa.web;
 
-import org.java_websocket.client.WebSocketClient;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.llm.type.mcpClient;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
-import studio.phaseshift.metatron.isa.m.type.Str;
 import studio.phaseshift.metatron.isa.m.type.Type;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjJavaSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
-import studio.phaseshift.metatron.isa.mach.type.ui.console.Console;
 import studio.phaseshift.metatron.isa.web.parser.*;
-import studio.phaseshift.metatron.isa.web.space.ws.WebSocketRec;
-import studio.phaseshift.metatron.isa.web.space.ws.WebSocketRecClient;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.web.type.MIME;
 import studio.phaseshift.metatron.isa.web.type.mcpServer;
-import studio.phaseshift.metatron.util.CommonUtil;
 
 import java.net.InetSocketAddress;
 import java.nio.channels.SocketChannel;
@@ -68,7 +63,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.sys.sysInstSet.SYS_INST_TID;
 import static studio.phaseshift.metatron.isa.web.space.http.handler.mcp_emulator_httpHandler.HTTP_MCP_EMULTATOR_TYPE;
 import static studio.phaseshift.metatron.isa.web.space.http.handler.mcp_httpHandler.HTTP_MCP_HANDLER_TYPE;
 import static studio.phaseshift.metatron.isa.web.space.http.handler.mcp_mtron_httpHandler.HTTP_MCP_MTRON_TYPE;
@@ -98,6 +92,9 @@ public class webInstSet extends AbstractInstSet {
     public static final fURI MARKDOWN_TID = WEB_ISA_TID.extend("markdown");
     public static final fURI CONTENT_TYPE_TID = WEB_ISA_TID.extend("content_type");
 
+    public static final fURI JAVA_TID = WEB_ISA_TID.extend("java");
+
+
     public static final fURI DESKTOP_SPACE_VID = f("/sys/desktop");
 
     public static final Type CONTENT_TYPE = Type.Builder.build()
@@ -124,6 +121,10 @@ public class webInstSet extends AbstractInstSet {
     public static final Type JSON_STR_TYPE = Type.Builder.build()
             .tid(STR_TID)
             .vid(JSON_STR_TID).create();
+    public static final Type JAVA_TYPE = Type.Builder.build()
+            .tid(REC_TID)
+            .vid(JAVA_TID)
+            .create();
     public static final Type JSON_TYPE = Type.Builder.build()
             .tid(REC_TID)
             .vid(JSON_TID)
@@ -165,6 +166,7 @@ public class webInstSet extends AbstractInstSet {
                         ObjHTMLSerializer.single(),
                         ObjJSONSerializer.single(),
                         ObjMarkdownSerializer.single(),
+                        //ObjJavaSerializer.single(),
                         ObjPlainTextSerializer.single()),
                 uri(TYPE), lst(
                         docWrap(CONTENT_TYPE, "indicates the media type of the data as specified by RFC-9110"),
@@ -182,6 +184,7 @@ public class webInstSet extends AbstractInstSet {
                         docWrap(JSON_TYPE, "a rec encoding of a json document"),
                         docWrap(CSS_TYPE, "a rec encoding of a css document"),
                         docWrap(MARKDOWN_TYPE, "a rec encoding of a markdown document"),
+                        docWrap(JAVA_TYPE, "a rec encoding of a java source file"),
                         docWrap(HTTP_SPACE_TYPE, """
                                                  a space for reading and writing web-related resources. 
                                                  for http://# patterns and remote routes, uri resolution will fetch remote web resources and httpspace will handle nested addresses client-side. 
@@ -195,7 +198,7 @@ public class webInstSet extends AbstractInstSet {
                                 "*<ws://localhost:8999/mtron>               [-- creates a wsmtron server session    --]",
                                 "<ws://localhost:8999/mtron/0/send>('ping') [-- sends str to wsmtron server session --]"),
                         /////////////////////////////////////////////////////////////////////////////////////////////////////
-                        docWrap(CLIENT_TYPE = Type.Builder.build().tid(REC_TID).vid(CLIENT_TID).create(), 
+                        docWrap(CLIENT_TYPE = Type.Builder.build().tid(REC_TID).vid(CLIENT_TID).create(),
                                 "a generic web client which can be refined with useful behaviors"),
                         docWrap(SERVER_TYPE = Type.Builder.build().tid(REC_TID).vid(SERVER_TID).create(),
                                 "a generic web server which can be refined with useful behaviors"),
@@ -268,6 +271,8 @@ public class webInstSet extends AbstractInstSet {
                         instC(AS_INST_TID.dom(STR_TID).rng(XML_TID), lst(T(XML_TID)), (lhs, inst) -> ObjXMLSerializer.parse(lhs.asStr().strValue())),
                         instC(AS_INST_TID.dom(STR_TID).rng(HTML_TID), lst(HTML_TYPE), (lhs, inst) -> ObjHTMLSerializer.parse(lhs.asStr().strValue())),
                         instC(AS_INST_TID.dom(STR_TID).rng(MARKDOWN_TID), lst(MARKDOWN_TYPE), (lhs, inst) -> ObjMarkdownSerializer.parse(lhs.asStr().strValue())),
+                        instC(AS_INST_TID.dom(STR_TID).rng(JAVA_TID), lst(JAVA_TYPE), (obj, inst) -> ObjJavaSerializer.single().inputBytes(obj.strValue().getBytes())),
+                        instC(AS_INST_TID.dom(JAVA_TID).rng(STR_TID), lst(STR_TYPE), (obj, inst) -> str(new String(ObjJavaSerializer.single().outputBytes(obj).array()))),
                         instC(AS_INST_TID.dom(HTML_TID).rng(STR_TID), lst(STR_TYPE), (lhs, inst) -> str(ObjHTMLSerializer.single().write(lhs).outerHtml())),
                         instC(AS_INST_TID.dom(MARKDOWN_TID).rng(STR_TID), lst(STR_TYPE), (lhs, inst) -> str(ObjMarkdownSerializer.single().write(lhs).getChars().toString())),
                         instC(AS_INST_TID.dom(MARKDOWN_TID).rng(HTML_TID), lst(HTML_TYPE), (lhs, inst) -> ObjMarkdownSerializer.single().toHTML(ObjMarkdownSerializer.single().write(lhs))),

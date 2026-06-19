@@ -18,10 +18,7 @@
 
 package studio.phaseshift.metatron.isa.tble;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.MethodOrderer;
-import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.*;
 
 /**
  * Test suite for tbleSpace with MySQL database using TestContainers.
@@ -29,6 +26,7 @@ import org.junit.jupiter.api.TestMethodOrder;
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
+@Disabled("testcontainers not working for mysql")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class MySQLTbleSpaceTest extends AbstractTbleSpaceTest {
 
