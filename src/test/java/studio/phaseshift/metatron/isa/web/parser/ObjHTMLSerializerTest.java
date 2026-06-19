@@ -327,6 +327,169 @@ public class ObjHTMLSerializerTest extends AbstractSerializerTest<Document> {
     }
 
     @Test
+    public void testTitleSurvivesRoundTrip() {
+        // Bug: title was stored as str but writeHeadElement checked isRec(), so title was lost
+        final String html = "<html><head><title>abc</title></head><body></body></html>";
+        final Obj rec = ObjHTMLSerializer.parse(html);
+
+        // Verify title is parsed correctly
+        assertEquals(str("abc"), rec.asRec().at(uri("html/head/title")));
+
+        // Write back and verify title survives
+        final Document doc = serializer.write(rec);
+        final String regeneratedHtml = doc.outerHtml();
+
+        // Parse regenerated and verify title is still present
+        final Obj rec2 = ObjHTMLSerializer.parse(regeneratedHtml);
+        assertEquals(str("abc"), rec2.asRec().at(uri("html/head/title")));
+    }
+
+    /**
+     * Full round-trip: HTML → mtron → HTML → mtron.
+     * Verifies both HTML idempotency (two serializations produce identical output)
+     * and mtron structural fidelity (key paths survive both trips).
+     */
+    @Test
+    public void testFullRoundTripComplexHTML() {
+        final String originalHtml = """
+                <html>
+                  <head>
+                    <title>My Test Page</title>
+                    <script type="text/javascript">console.log('hello');</script>
+                    <meta charset="utf-8">
+                  </head>
+                  <body>
+                    <h1>Welcome</h1>
+                    <p>This is a <strong>bold</strong> statement.</p>
+                    <a href="https://example.com">Visit Example</a>
+                    <ul>
+                      <li>Item A</li>
+                      <li>Item B</li>
+                    </ul>
+                    <div id="footer">
+                      <img src="/logo.png" alt="Logo">
+                      <span>Footer text</span>
+                    </div>
+                  </body>
+                </html>
+                """;
+
+        // Phase 1: HTML₁ → mtron₁
+        final Obj mtron1 = ObjHTMLSerializer.parse(originalHtml);
+        assertTrue(mtron1.isRec());
+        final Obj htmlObj1 = mtron1.asRec().at(uri(HTML));
+        assertFalse(htmlObj1.isNoObj());
+
+        // Verify key paths in mtron₁ (using rec-key paths only, no list indices)
+        assertEquals(str("My Test Page"), mtron1.asRec().at(uri("html/head/title")));
+
+        // Phase 2: mtron₁ → HTML₂
+        final Document doc2 = serializer.write(mtron1);
+        final String html2 = doc2.outerHtml();
+
+        // Phase 3: HTML₂ → mtron₂
+        final Obj mtron2 = ObjHTMLSerializer.parse(html2);
+        assertTrue(mtron2.isRec());
+
+        // Phase 4: mtron₂ → HTML₃
+        final Document doc3 = serializer.write(mtron2);
+        final String html3 = doc3.outerHtml();
+
+        // === Assert HTML idempotency: HTML₂ == HTML₃ ===
+        assertEquals(html2, html3, "serializer must be idempotent: second write produces identical HTML");
+
+        // === Assert mtron structural fidelity across round-trip ===
+
+        // Title survived
+        assertEquals(str("My Test Page"), mtron2.asRec().at(uri("html/head/title")));
+
+        // Head: title + OUT children (script, meta)
+        final Obj head1 = findChildByTag(htmlObj1, HEAD);
+        assertFalse(head1.isNoObj());
+        final Obj headOut1 = head1.asRec().at(uri(OUT));
+        assertFalse(headOut1.isNoObj(), "head must have OUT children (script, meta)");
+        final int headChildCount1 = headOut1.asLst().elements().toList().size();
+
+        final Obj htmlObj2 = mtron2.asRec().at(uri(HTML));
+        final Obj head2 = findChildByTag(htmlObj2, HEAD);
+        assertFalse(head2.isNoObj());
+        final Obj headOut2 = head2.asRec().at(uri(OUT));
+        assertFalse(headOut2.isNoObj(), "head OUT children must survive round-trip");
+        assertEquals(headChildCount1, headOut2.asLst().elements().toList().size(),
+                "head must have same number of children after round-trip");
+
+        // Body: OUT children survived
+        final Obj body1 = findChildByTag(htmlObj1, BODY);
+        assertFalse(body1.isNoObj());
+        final Obj bodyOut1 = body1.asRec().at(uri(OUT));
+        final int bodyChildCount1 = bodyOut1.asLst().elements().toList().size();
+
+        final Obj body2 = findChildByTag(htmlObj2, BODY);
+        assertFalse(body2.isNoObj());
+        final Obj bodyOut2 = body2.asRec().at(uri(OUT));
+        assertFalse(bodyOut2.isNoObj(), "body must have OUT children");
+        assertEquals(bodyChildCount1, bodyOut2.asLst().elements().toList().size(),
+                "body must have same number of children after round-trip");
+
+        // h1 survived with text
+        final Obj h1_1 = findChildByTag(body1, "h1");
+        final Obj h1_2 = findChildByTag(body2, "h1");
+        assertFalse(h1_1.isNoObj());
+        assertFalse(h1_2.isNoObj());
+        assertEquals((Object) h1_1.asRec().at(uri(TEXT)), (Object) h1_2.asRec().at(uri(TEXT)));
+
+        // a href survived
+        final Obj a1 = findChildByTag(body1, "a");
+        final Obj a2 = findChildByTag(body2, "a");
+        assertFalse(a1.isNoObj());
+        assertFalse(a2.isNoObj());
+        final Obj a1Href = a1.asRec().at(uri(HREF));
+        final Obj a2Href = a2.asRec().at(uri(HREF));
+        assertFalse(a1Href.isNoObj());
+        assertFalse(a2Href.isNoObj());
+        // href stored as URI by the serializer (see readElement src/href handling)
+        assertTrue(a1Href.isUri());
+        assertTrue(a2Href.isUri());
+        assertEquals(a1Href.uriValue().toString(), a2Href.uriValue().toString());
+        assertEquals((Object) a1.asRec().at(uri(TEXT)), (Object) a2.asRec().at(uri(TEXT)));
+
+        // ul with li children survived
+        final Obj ul1 = findChildByTag(body1, "ul");
+        final Obj ul2 = findChildByTag(body2, "ul");
+        assertFalse(ul1.isNoObj());
+        assertFalse(ul2.isNoObj());
+        assertEquals(ul1.asRec().at(uri(OUT)).asLst().elements().toList().size(),
+                ul2.asRec().at(uri(OUT)).asLst().elements().toList().size());
+
+        // div#footer survived with id attribute and children
+        final Obj footer1 = findChildByTag(body1, "div");
+        final Obj footer2 = findChildByTag(body2, "div");
+        assertFalse(footer1.isNoObj());
+        assertFalse(footer2.isNoObj());
+        assertEquals(str("footer"), footer1.asRec().at(uri("id")));
+        assertEquals(str("footer"), footer2.asRec().at(uri("id")));
+        assertEquals(footer1.asRec().at(uri(OUT)).asLst().elements().toList().size(),
+                footer2.asRec().at(uri(OUT)).asLst().elements().toList().size());
+
+        // img survived with src and alt
+        final Obj img1 = findChildByTag(footer1, "img");
+        final Obj img2 = findChildByTag(footer2, "img");
+        assertFalse(img1.isNoObj());
+        assertFalse(img2.isNoObj());
+        assertFalse(img1.asRec().at(uri(SRC)).isNoObj());
+        assertFalse(img2.asRec().at(uri(SRC)).isNoObj());
+        assertEquals(str("Logo"), img1.asRec().at(uri("alt")));
+        assertEquals(str("Logo"), img2.asRec().at(uri("alt")));
+
+        // span survived
+        final Obj span1 = findChildByTag(footer1, "span");
+        final Obj span2 = findChildByTag(footer2, "span");
+        assertFalse(span1.isNoObj());
+        assertFalse(span2.isNoObj());
+        assertEquals((Object) span1.asRec().at(uri(TEXT)), (Object) span2.asRec().at(uri(TEXT)));
+    }
+
+    @Test
     public void testRoundTripHTMLString() {
         final String originalHtml = "<html><head><title>Test</title></head><body><h1>Hello</h1><p>This is <strong>bold</strong> text.</p></body></html>";
         // Parse HTML string to Rec

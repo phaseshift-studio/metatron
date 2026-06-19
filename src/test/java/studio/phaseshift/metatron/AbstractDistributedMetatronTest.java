@@ -22,6 +22,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
 
 import java.util.Map;
+
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.m.type.impl.MUri;
@@ -32,7 +33,7 @@ import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static studio.phaseshift.metatron.Tokens.PEERS;
+import static studio.phaseshift.metatron.Tokens.PEER;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 
 /**
@@ -102,7 +103,7 @@ public abstract class AbstractDistributedMetatronTest extends AbstractMetatronTe
             for (int j = 0; j < n; j++) {
                 if (i == j) continue;
                 final fURI peerHost = cluster.node(j).hostUri();
-                final Obj peersObj = ni.cluster().at(PEERS)
+                final Obj peersObj = ni.cluster().at(PEER)
                         .orElse(MRec.rec(new java.util.LinkedHashMap<>()));
                 final Map<Obj, Obj> peerMap = peersObj.asRec().jvm();
                 assertTrue(peerMap.containsKey(MUri.uri(peerHost.toString())),
@@ -116,7 +117,7 @@ public abstract class AbstractDistributedMetatronTest extends AbstractMetatronTe
      * number of peers.  Uses the raw {@code jvm()} map for accuracy.
      */
     public static void assertPeerCount(final LocalNode node, final int expected) {
-        final Obj peers = node.cluster().at(PEERS)
+        final Obj peers = node.cluster().at(PEER)
                 .orElse(MRec.rec(new java.util.LinkedHashMap<>()));
         assertEquals(expected, peers.asRec().jvm().size(),
                 "peer count mismatch for node " + node.port());
@@ -127,8 +128,8 @@ public abstract class AbstractDistributedMetatronTest extends AbstractMetatronTe
      * visible via the global Router at the expected VID.
      */
     public static void assertLocalWriteVisible(final LocalNode node,
-                                                final fURI vid,
-                                                final Obj written) {
+                                               final fURI vid,
+                                               final Obj written) {
         final Obj readBack = Router.readFromSpace(vid);
         assertEquals(written, readBack,
                 "write through node %s should be visible via Router at %s"
@@ -153,8 +154,8 @@ public abstract class AbstractDistributedMetatronTest extends AbstractMetatronTe
      * {@code source} to {@code targetPeer}.
      */
     public static void assertSendCount(final LocalNode source,
-                                        final fURI targetPeer,
-                                        final int expected) {
+                                       final fURI targetPeer,
+                                       final int expected) {
         assertEquals(expected, source.outboundSendCount(targetPeer),
                 "send count from %s to %s".formatted(source.hostUri(), targetPeer));
     }
@@ -163,7 +164,7 @@ public abstract class AbstractDistributedMetatronTest extends AbstractMetatronTe
      * Assert that the total send count across all peers is exactly {@code expected}.
      */
     public static void assertTotalSendCount(final LocalCluster cluster,
-                                             final int expected) {
+                                            final int expected) {
         assertEquals(expected, cluster.totalSendCount(),
                 "total cluster send count");
     }
@@ -203,8 +204,8 @@ public abstract class AbstractDistributedMetatronTest extends AbstractMetatronTe
      * or the timeout expires, then assert equality.
      */
     public static void assertEventuallyEquals(final fURI vid,
-                                               final Obj expected,
-                                               final long timeoutMs) {
+                                              final Obj expected,
+                                              final long timeoutMs) {
         final Obj actual = waitForVisible(vid, timeoutMs);
         assertEquals(expected, actual,
                 "expected %s to eventually be %s at %s".formatted(

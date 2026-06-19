@@ -36,11 +36,12 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TRUE;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.mach.machInstSet.CLUSTER_SPACE_TID;
+import static studio.phaseshift.metatron.isa.mach.machInstSet.CLSTR_SPACE_TID;
 
 /**
  * A single logical metatron node running in-process for distributed testing (Tier 1).
@@ -125,14 +126,14 @@ public class LocalNode implements AutoCloseable {
         final Map<Obj, Obj> config = new HashMap<>();
         config.put(uri(PATTERN), uri("ws://localhost:" + port + "/cluster/#"));
         config.put(uri(HOST), uri(this.hostUri.toString()));
-        // Always include PEERS — even empty — to satisfy the type predicate
-        config.put(uri(PEERS), peerRec);
+        if (!peerRec.jvm().isEmpty())
+            config.put(uri(PEER), peerRec);
 
         // ── 4. Create the clusterSpace ────────────────────────────────────
         this.cluster = new clstrSpace(
                 new HashMap<>(),
                 config,
-                CLUSTER_SPACE_TID,
+                CLSTR_SPACE_TID,
                 f("/sys/space/cluster/" + port)
         );
 
@@ -142,41 +143,27 @@ public class LocalNode implements AutoCloseable {
     }
 
     /**
-     * Build the peers rec for this node — only fields the clusterSpace type
-     * predicate expects ({@code host}, {@code protocol}).  The
-     * {@code client.send} lambda is added later via
-     * {@link #wirePeerDispatchers(Map)} (a mutable update after type
-     * validation during construction).
-     * <p>
-     * When there are no peers (single-node cluster), includes a self-referencing
-     * entry to satisfy the clusterSpace type predicate, which requires at
-     * least one entry with a URI key and a value containing {@code host}
-     * and {@code protocol}.
+     * Build the peers rec for this node.  Each peer entry is an empty
+     * {@link Rec} keyed by the peer&#39;s host URI.  In production a peer
+     * entry is a {@code wsclient::T} (live {@code WebSocketRecClient});
+     * for Tier 1 we use a plain Rec with {@code send} and {@code state}
+     * instructions injected later by {@link #wirePeerDispatchers(Map)}.
      */
     private Rec buildPeerRec(final Map<Integer, LocalNode> allNodes) {
         final Map<Obj, Obj> entries = new java.util.LinkedHashMap<>();
         for (final LocalNode peer : allNodes.values()) {
             if (peer.port == this.port)
                 continue;
-            entries.put(uri(peer.hostUri.toString()), rec(
-                    uri(HOST), uri(peer.hostUri.toString()),
-                    uri(PROTOCOL), uri("ws")
-            ));
-        }
-        // Single-node cluster: include self as peer to satisfy type predicate
-        if (entries.isEmpty()) {
-            entries.put(uri(this.hostUri.toString()), rec(
-                    uri(HOST), uri(this.hostUri.toString()),
-                    uri(PROTOCOL), uri("ws")
-            ));
+            entries.put(uri(peer.hostUri), rec(uri(STATE), MInst.instLambda((lhs, inst) -> BOOL_TRUE)));
         }
         return MRec.rec(entries);
     }
 
     /**
      * After the clusterSpace is constructed and type-validation has passed,
-     * inject {@code client.send} into each peer entry so that the remote-write
-     * path in {@link clstrSpace#write(fURI, Obj)} can dispatch through it.
+     * inject {@code send} into each peer entry so that the remote-write
+     * path in {@link clstrSpace#write(fURI, Obj)} can dispatch through it
+     * (Tier 1 simulation — evaluates via Router rather than live WebSocket).
      * <p>
      * Uses {@link Rec#jvm()} for raw key lookup because {@code Rec.at()}
      * treats URI keys as path navigation and cannot resolve authority-only
@@ -186,7 +173,7 @@ public class LocalNode implements AutoCloseable {
         if (this.cluster == null)
             throw new IllegalStateException("clusterSpace not initialized; call init() first");
 
-        final Map<Obj, Obj> peerJvm = this.cluster.at(PEERS)
+        final Map<Obj, Obj> peerJvm = this.cluster.at(PEER)
                 .orElse(MRec.rec(new java.util.LinkedHashMap<>()))
                 .asRec().jvm();
 
@@ -199,20 +186,27 @@ public class LocalNode implements AutoCloseable {
             if (peerEntry == null || peerEntry.isNoObj())
                 continue;
 
-            // Create the send lambda that records the dispatch
+            // Create the send lambda that records the dispatch and evaluates
+            // via Router (simulating remote peer evaluation in Tier 1)
             final Inst sendLambda = MInst.instLambda((lhs, inst) -> {
                 outboundSendCounts
                         .computeIfAbsent(peer.hostUri, k -> new AtomicInteger(0))
                         .incrementAndGet();
                 LOG.debug("in-JVM send: {} -> {} (count={})",
                         hostUri, peer.hostUri, outboundSendCounts.get(peer.hostUri).get());
-                return lhs;
+                // Extract URI from instruction and evaluate via Router
+                final Inst lhsInst = (Inst) lhs;
+                final fURI targetVid = lhsInst.arg(0).uriValue();
+                final Obj maybeObj = lhsInst.arg(1);
+                if (maybeObj.isNoObj())
+                    return Router.readFromSpace(targetVid);
+                else
+                    return Router.writeToSpace(targetVid, maybeObj);
             });
 
-            // Inject client.send via mutable update — type predicate already passed
-            peerEntry.asRec().at(uri(CLIENT), rec(
-                    uri(SEND), sendLambda
-            ), Poly.MUTABLE);
+            // Inject send and state via mutable update — type predicate already passed
+            peerEntry.asRec().at(uri(SEND), sendLambda, Poly.MUTABLE);
+            peerEntry.asRec().at(uri(STATE), MInst.instLambda((lhs, inst) -> BOOL_TRUE), Poly.MUTABLE);
         }
     }
 
@@ -220,22 +214,30 @@ public class LocalNode implements AutoCloseable {
     // Accessors
     // ====================================================================
 
-    /** The unique port assigned to this node. */
+    /**
+     * The unique port assigned to this node.
+     */
     public int port() {
         return this.port;
     }
 
-    /** The host URI (e.g. {@code ws://localhost:21001}). */
+    /**
+     * The host URI (e.g. {@code ws://localhost:21001}).
+     */
     public fURI hostUri() {
         return this.hostUri;
     }
 
-    /** The clusterSpace for this node. */
+    /**
+     * The clusterSpace for this node.
+     */
     public clstrSpace cluster() {
         return this.cluster;
     }
 
-    /** The local data store (memSpace) for this node. */
+    /**
+     * The local data store (memSpace) for this node.
+     */
     public Space localStore() {
         return this.localStore;
     }

@@ -120,6 +120,17 @@ public class web_httpHandler extends HttpRec {
                 // 1 — Direct read from Router (space-agnostic: fsSpace, memSpace, etc.)
                 Obj requestObj = Router.global().read(requestURI);
 
+                // 1.5 — When the request URI looks like a directory (no file extension),
+                // try the DEFAULT_PAGE.  This handles / → local:web where fsSpace returns
+                // a directory listing (rec or lst) rather than a DIR_TID URI.
+                if (!requestObj.isNoObj() && !requestURI.name().contains(".")) {
+                    final String defaultPage = this.at(uri(DEFAULT_PAGE)).orElse(str("index.html")).strValue();
+                    final Obj defaultObj = Router.global().read(requestURI.extend(defaultPage));
+                    if (!defaultObj.isNoObj()) {
+                        requestObj = defaultObj;
+                    }
+                }
+
                 // 2 — locateBaseObj: walk up the URI path to find a containing object, then navigate into it
                 boolean foundBase = false;
                 if (requestObj.isNoObj()) {
@@ -136,6 +147,10 @@ public class web_httpHandler extends HttpRec {
                                 requestObj = baseObj.obj().asRec().at(subPath);
                             else
                                 requestObj = baseObj.obj().asLst().at(subPath);
+                            // Sub-path navigation failed (e.g. base was a directory listing,
+                            // not a content document) — allow DEFAULT_PAGE / 404 fallthrough
+                            if (requestObj.isNoObj())
+                                foundBase = false;
                         }
                     }
                 }

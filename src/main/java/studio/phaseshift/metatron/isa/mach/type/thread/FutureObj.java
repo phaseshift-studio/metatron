@@ -48,7 +48,8 @@ public class FutureObj<T extends Obj> extends MObj implements Future<T> {
 
     private final UUID tag;
     private boolean isCanceled;
-
+    private int timeout = DEFAULT_TIMEOUT_MS;
+    
     public FutureObj(final UUID tag) {
         super();
         this.jvm = new AtomicReference<T>();
@@ -60,6 +61,11 @@ public class FutureObj<T extends Obj> extends MObj implements Future<T> {
 
     public UUID tag() {
         return this.tag;
+    }
+    
+    public FutureObj<T> timeout(final int millis) {
+        this.timeout = millis;
+        return this;
     }
 
     @Override
@@ -91,41 +97,41 @@ public class FutureObj<T extends Obj> extends MObj implements Future<T> {
 
     @Override
     public Iterator<Obj> iterator() {
-        return this.get(DEFAULT_TIMEOUT_MS).iterator();
+        return this.get(this.timeout).iterator();
     }
 
     @Override
     public <O extends Obj> O clone(final Object jvm, final fURI tid, final fURI vid) {
-        return this.get(DEFAULT_TIMEOUT_MS).clone(jvm, tid, vid);
+        return this.get(this.timeout).clone(jvm, tid, vid);
     }
 
     @Override
     public <O extends Obj> O self(final Object jvm, final fURI tid, final fURI vid) {
         if (this.isDone())
-            return this.get(DEFAULT_TIMEOUT_MS).self(jvm, tid, vid).self(jvm, tid, vid);
+            return this.get(this.timeout).self(jvm, tid, vid).self(jvm, tid, vid);
         else
             return MObjFactory.of().toObj(jvm, this.tid(), this.vid());
     }
 
     @Override
     public Stream<Obj> stream() {
-        return this.get(DEFAULT_TIMEOUT_MS).stream();
+        return this.get(this.timeout).stream();
     }
 
     @Override
     public boolean isNoObj() {
-        return this.get(DEFAULT_TIMEOUT_MS).isNoObj();
+        return this.get(this.timeout).isNoObj();
     }
 
     @Override
     public boolean isObjs() {
-        return this.get(DEFAULT_TIMEOUT_MS).isObjs();
+        return this.get(this.timeout).isObjs();
     }
 
 
     @Override
     public <O extends Obj> Stream<O> elements() {
-        return this.get(DEFAULT_TIMEOUT_MS).elements();
+        return this.get(this.timeout).elements();
     }
 
     @Override

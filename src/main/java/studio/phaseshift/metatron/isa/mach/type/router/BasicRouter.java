@@ -204,7 +204,8 @@ public class BasicRouter extends AbstractSpace<Map<Obj, Obj>> implements Router 
             superSpaces.at(uri(SUB), superSpaces.jvm().getOrDefault(uri(SUB), MObjs.objs0()).append(auto_from_(null == space.vid() ? space.tid() : space.vid()).tryToInst()), MUTABLE);
             superSpace.at(uri(SPACE), superSpaces, MUTABLE);
         }
-        space.at(uri(SPACE), subSpaces, MUTABLE);
+        if (!subSpaces.isEmpty())
+            space.at(uri(SPACE), subSpaces, MUTABLE);
         this.spaces().jvm().put(null == space.vid() ? space.pattern().toUri() : space.vid().toUri(), space);
         Space.Helper.spaceOpenLog(this, space);
         // save routes registered by spaceS
@@ -257,11 +258,6 @@ public class BasicRouter extends AbstractSpace<Map<Obj, Obj>> implements Router 
             }
         }
         return readableVID;
-    }
-
-    @Override
-    public void start() {
-
     }
 
     @Override

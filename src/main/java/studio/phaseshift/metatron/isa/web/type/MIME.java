@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -125,7 +125,7 @@ public class MIME {
         public static MIMEType fromExtension(final String filename, final MIMEType defaultType) {
             if (filename == null) return defaultType;
             final String lower = filename.toLowerCase();
-            if (lower.endsWith(".mtron")) return APPLICATION_MTRON;
+            if (!lower.contains(".") || lower.endsWith(".mtron")) return APPLICATION_MTRON;
             if (lower.endsWith(".css")) return TEXT_CSS;
             if (lower.endsWith(".js")) return APPLICATION_JAVASCRIPT;
             if (lower.endsWith(".md")) return TEXT_MARKDOWN;

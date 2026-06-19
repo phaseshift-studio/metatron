@@ -257,9 +257,14 @@ public class httpSpace extends AbstractSpace<HttpServer> {
     @Override
     public Function<fURI, Iterator<IdObj>> directReader() {
         return (pattern) -> {
+            // Normalize bare host URLs (http://host → http://host/) so route
+            // matching and Jsoup fetch behave identically with or without trailing slash.
+            final fURI pat = (pattern.segmentLength() == 0) && pattern.hasHost()
+                    ? pattern.asBranch() : pattern;
+
             // 1 — Try local route table first
             try {
-                final fURI route = Space.Helper.routeFromSpace(pattern.scheme(null).host(null), this.routes());
+                final fURI route = Space.Helper.routeFromSpace(pat.scheme(null).host(null), this.routes());
                 if (route != null && !route.toString().isEmpty()) {
                     final Iterator<IdObj> local = this.cache.directReader().apply(route);
                     if (local.hasNext())
@@ -269,7 +274,7 @@ public class httpSpace extends AbstractSpace<HttpServer> {
 
             // 2 — Remote web fetch via Jsoup
             try {
-                fURI runningPattern = pattern;
+                fURI runningPattern = pat;
                 int steps = 0;
                 while (true) {
                     final Connection.Response response = Jsoup.connect(runningPattern.toString())
@@ -287,12 +292,12 @@ public class httpSpace extends AbstractSpace<HttpServer> {
                             contentType = MIME.MIMEType.fromExtension(runningPattern.name(), contentType);
                         }
                         final Obj docObj = null != contentType ? contentType.fromBytes(response.body()) : str(response.body());
-                        final Uri key = uri(pattern.scheme(null).host(null).tail(steps).asRelative());
+                        final Uri key = uri(pat.scheme(null).host(null).tail(steps).asRelative());
                         if (key.uriValue().toString().trim().isEmpty())
-                            return docObj.isNoObj() ? IteratorUtil.of() : IteratorUtil.of(IdObj.of(pattern, docObj));
+                            return docObj.isNoObj() ? IteratorUtil.of() : IteratorUtil.of(IdObj.of(pat, docObj));
                         if (docObj.isRec()) {
                             final Obj subDocObj = docObj.asRec().at(key);
-                            return subDocObj.isNoObj() ? IteratorUtil.of() : IteratorUtil.of(IdObj.of(pattern, subDocObj));
+                            return subDocObj.isNoObj() ? IteratorUtil.of() : IteratorUtil.of(IdObj.of(pat, subDocObj));
                         }
                         return IteratorUtil.of();
                     }

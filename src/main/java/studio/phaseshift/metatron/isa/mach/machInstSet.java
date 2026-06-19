@@ -77,7 +77,6 @@ import static studio.phaseshift.metatron.isa.mach.io.space.fs.fsSpace.FS_SPACE_T
 import static studio.phaseshift.metatron.isa.mach.io.space.fs.fsSpace.makeFile;
 import static studio.phaseshift.metatron.isa.mach.io.space.serial.serialSpace.SERIAL_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.mach.type.ui.console.Console.CONSOLE_TYPE;
-import static studio.phaseshift.metatron.isa.web.webInstSet.CLIENT_TYPE;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /*
@@ -100,9 +99,9 @@ public class machInstSet extends AbstractInstSet {
     public static final fURI RING_BINARY = MACH_INST_TID.extend("ring").extend("op").extend("+");
     public static final fURI WHICH_INST_TID = MACH_INST_TID.extend("which");
 
-    public static final fURI CLUSTER_SPACE_TID = MACH_ISA_TID.extend("cluster");
-    public static  Type CLUSTER_SPACE_TYPE;
-    
+    public static final fURI CLSTR_SPACE_TID = MACH_ISA_TID.extend("clstrspace");
+    public static Type CLSTR_SPACE_TYPE;
+
     public static final fURI ROUTER_TID = MACH_ISA_TID.extend("router");
     public static final fURI MACH_SPACE_TID = MACH_ISA_TID.extend("space");
     public static final fURI FILE_TID = MACH_ISA_TID.extend("file");
@@ -237,24 +236,16 @@ public class machInstSet extends AbstractInstSet {
                                         uri(RESULT).maybe(), "the last result produced by the thread"),
                                 "run a concurrent virtual thread",
                                 "virtual::[code=>ping(<phaseshift.studio:80>),loop=>second::1.5]@/sys/thread/ping"),
-                        docWrap(CLUSTER_SPACE_TYPE = Type.Builder.build()
+                        docWrap(CLSTR_SPACE_TYPE = Type.Builder.build()
                                         .tid(SPACE_TID)
-                                        .vid(CLUSTER_SPACE_TID)
-                                        .isaPredicate(rec(uri(PEERS),
-                                                rec(AUTHORITY_TYPE,
-                                                        rec(uri(HOST), URI_TYPE,
-                                                                uri(PROTOCOL), URI_TYPE,
-                                                                uri(CLIENT).maybe(), CLIENT_TYPE))))
-                                        .constructor(obj -> new clstrSpace(new ConcurrentHashMap<>(), obj.asRec().jvm(), CLUSTER_SPACE_TID, obj.vid())).create(),
+                                        .vid(CLSTR_SPACE_TID)
+                                        .isaPredicate(rec(uri(PEER).maybe().asUri(), rec(AUTHORITY_TYPE, ALL_TYPE).maybe()))
+                                        .constructor(obj -> new clstrSpace(new ConcurrentHashMap<>(), obj.asRec().jvm(), CLSTR_SPACE_TID, obj.vid())).create(),
                                 null, null,
-                                Map.of(uri(PEERS), "known metatron instance elsewhere in ws or http space",
-                                        f(PEERS).extend(AUTHORITY).toUri(), "the host:port of known peer",
-                                        f(PEERS).extend(AUTHORITY).extend(HOST).toUri(), "the full uri of the peer host communication point",
-                                        f(PEERS).extend(AUTHORITY).extend(PROTOCOL).toUri(), "the protocol of the host endpoint",
-                                        f(PEERS).extend(AUTHORITY).extend(CLIENT).toUri(), "the client connection to the remote metatron instance"),
+                                Map.of(uri(PEER), "known metatron instance elsewhere in ws or http space"),
                                 """
-                                a space encoding references to other metatron instances and their associated router topology.
-                                this space provides infrastructure to route read/write uri-obj pairs to and from the current metatron instance
+                                a peer is a wsclient to a mtron_ws handler. 
+                                *x and x->y are the respective read/write insts sent to the peer for evaluation.
                                 """)),
                 uri(INST), lst(Stream.concat(Router.RouterType.insts().stream(), Stream.of(instC(LIFT_INST_TID.dom(ALL).rng(MACH_MONAD_TID).q(MONAD, "^"), lst(T(ALL.maybe())), (lhs, inst) -> {
                             final PCMonad monad = lhs.asMonad();

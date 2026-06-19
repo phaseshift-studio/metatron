@@ -247,7 +247,7 @@ public class ObjHTMLSerializer extends AbstractObjSerializer<Document> {
     private Element writeHeadElement(final Rec headRec, final Element headElement) {
         // Write title if present
         final Obj titleObj = headRec.at(uri(TITLE));
-        if (!titleObj.isNoObj() && titleObj.isRec()) {
+        if (!titleObj.isNoObj()) {
             final Element titleElement = headElement.appendElement(TITLE);
             titleElement.text(titleObj.strValue());
         }

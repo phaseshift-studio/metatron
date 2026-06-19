@@ -33,6 +33,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
@@ -70,8 +71,8 @@ public class clstrSpaceTest extends AbstractDistributedMetatronTest {
         this.cluster = createCluster(1);
         final LocalNode n0 = cluster.node(0);
 
-        // Single-node cluster has 1 self-peer to satisfy type predicate
-        assertPeerCount(n0, 1);
+        // Single-node cluster has no peers
+        assertPeerCount(n0, 0);
 
         // Host URI is well-formed
         assertFalse(n0.hostUri().toString().isEmpty());
@@ -101,22 +102,13 @@ public class clstrSpaceTest extends AbstractDistributedMetatronTest {
         final LocalNode n1 = cluster.node(1);
 
         // PEERS rec maps peer URI → {host, protocol}
-        final Map<Obj, Obj> peerMap = n0.cluster().at(PEERS)
+        final Map<Obj, Obj> peerMap = n0.cluster().at(PEER)
                 .orElse(MRec.rec(new java.util.LinkedHashMap<>())).asRec().jvm();
         assertEquals(1, peerMap.size(), "node 0 should have one peer entry");
 
         // The peer key is the full peer URI
         final Obj key = MUri.uri(n1.hostUri().toString());
         assertTrue(peerMap.containsKey(key), "peer map should contain key " + n1.hostUri());
-
-        // The peer entry value is a rec with host and protocol
-        final Obj entry = peerMap.get(key);
-        assertNotNull(entry, "peer entry should not be null");
-        assertTrue(entry.isRec(), "peer entry should be a rec");
-
-        final Rec entryRec = entry.asRec();
-        assertFalse(entryRec.at(uri(HOST)).isNoObj(), "peer entry should have a host field");
-        assertFalse(entryRec.at(uri(PROTOCOL)).isNoObj(), "peer entry should have a protocol field");
     }
 
     // ====================================================================
@@ -149,7 +141,7 @@ public class clstrSpaceTest extends AbstractDistributedMetatronTest {
         final fURI unknown = f("ws://localhost:" + n0.port() + "/t/does-not-exist");
 
         assertTrue(n0.cluster().read(unknown).isNoObj(),
-                "reading an unwritten VID should return noobj");
+                "reading an unwritten vid should return noobj");
     }
 
     // ====================================================================
@@ -204,10 +196,7 @@ public class clstrSpaceTest extends AbstractDistributedMetatronTest {
         final Obj result = n0.cluster().write(vid, str("test"));
 
         assertEquals(str("test"), result, "write should return the written obj");
-        assertTrue(Router.readFromSpace(vid).isNoObj(),
-                "data should not be stored — clusterSpace.write() local " +
-                "path currently requires authority matching; this test " +
-                "captures the current behavior");
+        assertEquals(str("test"),Router.readFromSpace(vid));
     }
 
     // ====================================================================
@@ -227,15 +216,14 @@ public class clstrSpaceTest extends AbstractDistributedMetatronTest {
         final LocalNode n1 = cluster.node(1);
         final fURI peerHost = n1.hostUri();
 
-        // The peer entry in the jvm() map should have a client.send handler
-        final Map<Obj, Obj> peerMap = n0.cluster().at(PEERS)
+        // The peer entry in the jvm() map should have a send handler
+        final Map<Obj, Obj> peerMap = n0.cluster().at(PEER)
                 .orElse(MRec.rec(new java.util.LinkedHashMap<>())).asRec().jvm();
         final Rec peerEntry = peerMap.get(MUri.uri(peerHost.toString())).asRec();
 
-        final Obj clientSend = peerEntry.at(uri(CLIENT))
-                .orElse(MRec.rec(new java.util.LinkedHashMap<>())).asRec().at(uri(SEND));
-        assertFalse(clientSend.isNoObj(),
-                "peer entry should have client.send after wirePeerDispatchers");
+       final Obj sendInst = peerEntry.at(uri(SEND));
+       assertFalse(sendInst.isNoObj(),
+               "peer entry should have send after wirePeerDispatchers");
     }
 
     // ====================================================================

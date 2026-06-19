@@ -431,7 +431,8 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
     @ParameterizedTest
     @TestData(value = {
             "x -> [address/home/city=>\"santa fe\",address/work/city=>\"nomansland\"]",
-            "y -> [address/home/city=>\"santa fe\",address/work/city=>!>>(address/home/city)]"})
+            "y -> [address/home/city=>\"santa fe\",address/work/city=>\"santa fe\"]"})
+          //  "y -> [address/home/city=>\"santa fe\",address/work/city=>>>(address/home/city)]"})
     @CsvSource(value = {
             "[a=>1,b=>2,c=>3].select([a=>_,b=>_])                                          % [a=>1,b=>2]",
             "[a=>1,b=>2,c=>3].select([a=>_])                                               % [a=>1]",

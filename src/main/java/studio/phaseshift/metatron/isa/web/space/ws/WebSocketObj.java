@@ -58,6 +58,10 @@ public interface WebSocketObj extends Rec, Closeable {
         }
     }
 
+    default boolean state(final WebSocket conn) {
+        return conn.isOpen();
+    }
+
     void onOpen(final WebSocket conn, final Handshakedata handshake);
 
     void onClose(final WebSocket conn, final int code, final String reason, final boolean remote);
@@ -72,15 +76,12 @@ public interface WebSocketObj extends Rec, Closeable {
 
     default fURI getThisVID() {
         return null == this.getWebSocket() || this.getWebSocket().isClosed() ?
-                NOOBJ_TID :
-                this.getWebSocket().getAttachment();
+                null : this.getWebSocket().getAttachment();
     }
 
     default fURI getOtherVID() {
-        
-        return null == this.getWebSocket() || this.getWebSocket().isClosed() ?
-                NOOBJ_TID :
-                f(this.getWebSocket().getRemoteSocketAddress().toString());
+        return (null == this.getWebSocket() || this.getWebSocket().isClosed() || !this.getWebSocket().isOpen()) ?
+                null : f(this.getWebSocket().getRemoteSocketAddress().toString());
     }
 
     IO getIO();
@@ -89,12 +90,12 @@ public interface WebSocketObj extends Rec, Closeable {
     default void close() {
         try {
             if (null != this.getWebSocket() && !this.getWebSocket().isClosed()) {
-                Graphitty.log(this).info("closing %s", this.getThisVID());
+                this.logger().info("closing %s", this.getThisVID());
                 this.getWebSocket().close();
             } else
                 throw MTronException.of("websocket already closed for %s", this.getThisVID());
         } catch (final Exception e) {
-            Graphitty.log(this).error("error closing websocket: %s", this.getThisVID(), e);
+            this.logger().error("error closing websocket: %s", this.getThisVID(), e);
         }
     }
 

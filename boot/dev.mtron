@@ -1,0 +1,72 @@
+[== boot args ==]
+[port   => 8555,
+ port2  => 8556,
+ host   => localhost:${!*boot/args/port},
+ space  => /sys/space,
+ web    => [
+   http/host  => <http://0.0.0.0:8777>,
+   ws/host    => <ws://0.0.0.0:8555>],
+ mqtt/broker  => <mqtt://ginger.local:1883>,
+ typer/stages => [inst_dom     => true, 
+                  inst_rng     => true,
+                  type_ctor    => true,
+                  obj_write    => true,
+                  code_resolve => false]]
+[===============]
+print("""
+{{y}} ______   _______  __   __        __   __  _______  ______    _______  __    _ 
+|      | |       ||  | |  |      |  |_|  ||       ||    _ |  |       ||  |  | |
+|  _    ||    ___||  |_|  |      |       ||_     _||   | ||  |   _   ||   |_| |
+| | |   ||   {{b}}|___ |       |      |       |  |   |  |   |_||_ |  | |  ||       |
+| |_|   ||    ___||       | ___  |       |  |   |  |    __  ||  |_|  ||  _    |
+|       ||   |___  |     | |   | | ||_|| {{g}}|  |   |  |   |  | ||       || | |   |
+|______| |_______|  |___|  |___| |_|   |_|  |___|  |___|  |_||_______||_|  |__|{{X}}                                                              
+""")
+print("{{r}}------------\n{{g}}*{{y}}boot/args{{X}}: ",
+      *boot/args, 
+     "\n{{r}}------------{{X}}\n");
+[== mount instruction sets ==]
+print("{{y}}mounting instruction sets\n{{X}}");
+import(/m/mach/io);
+import(/m/math);
+import(/m/web);
+
+[===================================================================================================]
+[===================================================================================================]
+memspace::[
+  pattern => /usr/#,                                 
+        q => [mintq::[=>],
+              docq::[=>],
+              subq::[=>],
+              incrq::[=>]]]@/sys/space/usr;       
+fsspace::[
+  pattern => local:#,
+        q => [subq::[=>],
+              mimeq::[=>]],
+    route => [local: => <~>]]@/sys/space/local;      
+httpspace::[host     => !*boot/args/web/http/host,
+            pattern  => <http://#>,
+            route    => [/          => <>,
+                         /emulator  => mcp_emulator_http,
+                         /mcp       => mcp_mtron_http, 
+                         /docs      => <metatronfs:docs/website>,
+                         /console   => <metatronfs:src/main/resources/web/console>]]@/sys/space/web/http;
+wsspace::[host      => !*boot/args/web/ws/host,
+          pattern   => <ws://#>,
+          q         => [docq::[=>],subq::[=>]],
+          route     => [/emulator => mcp_emulator_ws, 
+                        /mtron    => mtron_ws,
+                        /mcp      => mcp_mtron_ws]]@/sys/space/web/ws;
+mqttspace::[pattern  => <z2m:#>,
+            host     => <mqtt://localhost:1883>,
+            q        => [subq::[=>]],
+            route    => [z2m:=><>]]@/sys/space/mqtt;   
+clstrspace::[pattern => <ws://+/cluster/#>,
+             host    => <ws://localhost:8555/cluster>,
+             route   => [<ws://localhost:8555/cluster> => <>],
+             peer    => [<localhost:${*boot/args/port2}> => wsclient::[host=><ws://localhost:${*boot/args/port2}/mtron>]]]@/sys/space/cluster;    
+[===================================================================================================]
+[===================================================================================================]
+console::[=>]@/usr/ui/console;
+print(*boot/args,'\n');
+ 

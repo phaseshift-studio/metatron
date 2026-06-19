@@ -23,6 +23,8 @@ import studio.phaseshift.metatron.isa.m.type.Uri;
 
 import java.util.concurrent.TimeUnit;
 
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+
 /*
  * mThread — the unified thread lifecycle contract.
  *
@@ -91,7 +93,7 @@ public interface mThread {
      * @return a future that will hold the result
      */
     default FutureObj<Obj> applyAsync() {
-        return this.applyAsync(studio.phaseshift.metatron.isa.m.type.NoObj.noobj());
+        return this.applyAsync(noobj());
     }
 
     // ======================== Result ========================

@@ -5,9 +5,10 @@
 # its own location to find the project root.
 #
 # Usage:
-#   metatron                                    # boots from boot/boot.mtron
-#   metatron "[boot=><boot/boot.mtron>,log=>info]"
-#   metatron --headless "[boot=><boot/boot.mtron>,log=>info]"
+#   metatron-dev                                    # boots from boot/boot.mtron
+#   metatron-dev -b boot/dev.mtron "[port=>8556]"
+#   metatron-dev "[boot=><boot/boot.mtron>,log=>info]"
+#   metatron-dev --headless "[boot=><boot/boot.mtron>,log=>info]"
 
 set -e
 
@@ -27,6 +28,7 @@ export MAVEN_OPTS="--add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED
 
 # Compile and run via Maven classpath (fast — no uber-jar assembly)
 # The [✓] prints after metatron exits, confirming clean shutdown
-printf "  ${GREEN}compiling metatron${NC} ... "
+printf "${PHASESHIFT} presents\n${BLUE}  metatron-dev${NC}\n\n"
+printf "  ${GREEN}co${YELLOW}mpi${BLUE}ling me${CYAN}tatr${MAGENTA}on${NC} ...\n"
 mvn compile exec:java -q -Dexec.args="$*"
-printf "${LB}${BOLDGREEN}✓${RB}\n"
+printf "\n${LB}${BOLDGREEN}done.${RB}\n"

@@ -271,8 +271,8 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
     }
 
     default fURI authority(final String authority) {
-        if(null == authority && null != this.authority())
-            return  fURI.of(this.scheme(),null,-1,this.path(),this.c(),this.poly(),this.qMap(), this.templates());
+        if (null == authority && null != this.authority())
+            return fURI.of(this.scheme(), null, -1, this.path(), this.c(), this.poly(), this.qMap(), this.templates());
         final String[] parts = authority.split(":");
         return parts.length == 2 ? this.host(parts[0]).port(Integer.parseInt(parts[1])) : this.host(parts[0]);
     }
@@ -451,6 +451,10 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
     }
 
     fURI poly(final List<String> poly);
+
+    default fURI poly(final fURI polynomial, final fURI... polynomials) {
+        return fURI.of(this.scheme(), this.host(), this.port(), this.path(), this.c(), Stream.concat(Stream.of(polynomial), Stream.of(polynomials)).map(fURI::toString).toList(), this.qMap(), this.templates());
+    }
 
     fURI neg();
 
