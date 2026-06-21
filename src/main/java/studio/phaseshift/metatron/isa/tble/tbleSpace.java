@@ -102,7 +102,7 @@ public class tbleSpace extends AbstractSpace<Connection> implements SchemaSpace 
     public static final String MARIADB = "mariadb";
     public static final String MYSQL = "mysql";
     public static final String POSTGRESQL = "postgresql";
-    //public static final String SQLITE = "sqlite";
+    public static final String SQLITE = "sqlite";
 
     // ---- Type system -----------------------------------------------------------
 
@@ -132,6 +132,7 @@ public class tbleSpace extends AbstractSpace<Connection> implements SchemaSpace 
     protected ExistingTableSchema existingTableSchema;
     protected SQLSchemaGenerator schemaGenerator;
     protected String databaseName;
+    protected String backend;
 
     // =========================================================================
     //  Factory
@@ -180,6 +181,16 @@ public class tbleSpace extends AbstractSpace<Connection> implements SchemaSpace 
         return this.databaseName;
     }
 
+    /** The detected database product name (e.g. {@code sqlite}, {@code postgresql}, {@code mariadb}). */
+    public String backend() {
+        return this.backend;
+    }
+
+    /** Convenience: true when the backend is SQLite. */
+    public boolean isSqlite() {
+        return this.backend != null && this.backend.contains(SQLITE);
+    }
+
     @Override
     public void close() {
         try {
@@ -201,6 +212,7 @@ public class tbleSpace extends AbstractSpace<Connection> implements SchemaSpace 
      */
     private void initializeSchema(final Connection conn) throws SQLException {
         final String dbProductName = conn.getMetaData().getDatabaseProductName().toLowerCase();
+        this.backend = dbProductName;
         if (dbProductName.contains(MARIADB) || dbProductName.contains(MYSQL)) {
             this.schema = new fURIAwareIndexedSchema();
             this.serializer = this.at(SERIALIZER).orElse(new ObjmtronSerializer());

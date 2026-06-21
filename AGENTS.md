@@ -130,7 +130,7 @@ src/main/java/studio/phaseshift/metatron/
 
 ### Key Concepts
 
-**Spaces** — fundamental data containers, registered via `Router.global().addSpace()`. URI queries use `*<uri>` dereference (e.g., `*/sys/space/+/`).
+**Spaces** — fundamental data containers, registered in `Router` upon construction. Registration is automatic when extending `AbstractSpace`. Spaces are indirectly read/written from/to via the JVM global `Router`. `*<uri>` dereference and `<uri> -> <obj>` reference).
 
 **InstSet** (Instruction Sets) — discovered via `META-INF/services/` SPI. New sets go under `isa/<domain>/<domain>InstSet.java`.
 

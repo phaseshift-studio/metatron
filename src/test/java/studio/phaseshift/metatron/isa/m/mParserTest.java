@@ -21,9 +21,12 @@ package studio.phaseshift.metatron.isa.m;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.petitparser.context.Context;
+import org.petitparser.parser.Parser;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.Bytes;
 import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -31,6 +34,7 @@ import studio.phaseshift.metatron.isa.m.type.impl.MCode;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.util.MTronException;
 
+import java.lang.reflect.Field;
 import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
@@ -424,5 +428,78 @@ public class mParserTest extends AbstractMetatronTest {
     @Test
     public void testSugar() {
         assertEquals(lst(jnt(1), lst(jnt(1), lst(jnt(1)))), ObjmtronSerializer.parse("1-<[_,-<[_,-<[_]]]").apply());
+    }
+
+    // ========================================
+    // Infinite Loop Guards — parseMulti() iteration cap + zero-progress check
+    // ========================================
+
+    @Test
+    public void testParseMultiIterationCapAndRestore() {
+        final int originalLimit = mParser.maxParseIterations;
+
+        try {
+            // Lower the cap so a multi-statement input triggers it quickly.
+            // 4 expressions → 4 parse iterations → exceeds lowered cap of 3.
+            mParser.maxParseIterations = 3;
+
+            final MTronException ex = assertThrows(MTronException.class,
+                    () -> ObjmtronSerializer.parseMulti("1;2;3;4"));
+            assertTrue(ex.getMessage().contains("infinite recursion detected in parser"),
+                    "Exception should mention 'infinite recursion detected in parser', got: "
+                            + ex.getMessage());
+            assertTrue(ex.getMessage().contains("iterations"),
+                    "Exception should mention 'iterations', got: "
+                            + ex.getMessage());
+        } finally {
+            mParser.maxParseIterations = originalLimit;
+        }
+
+        // After restoring the limit, multi-statement parsing should work again
+        final Obj result = ObjmtronSerializer.parseMulti("1;2;3;4;5");
+        assertNotNull(result);
+        assertFalse(result.isNoObj());
+    }
+
+    @Test
+    public void testParseMultiZeroProgressGuard() throws Exception {
+        // Swap in a dummy parser that always returns success at position 0.
+        // This simulates a grammar bug where the parser matches but consumes
+        // nothing — without the guard, parseMulti() would loop forever.
+        final Field field = mParser.class.getDeclaredField("cachedExpressionParser");
+        field.setAccessible(true);
+        final Parser original = (Parser) field.get(null);
+
+        try {
+            field.set(null, new Parser() {
+                @Override
+                public org.petitparser.context.Result parseOn(final Context context) {
+                    return context.success(noobj());
+                }
+
+                @Override
+                public Parser copy() {
+                    return this;
+                }
+
+                @Override
+                public List<Parser> getChildren() {
+                    return List.of();
+                }
+
+                @Override
+                public void replace(final Parser source, final Parser target) {
+                    // no-op
+                }
+            });
+
+            final MTronException ex = assertThrows(MTronException.class,
+                    () -> mParser.parseMulti("anything"));
+            assertTrue(ex.getMessage().contains("consumed 0 characters"),
+                    "Exception should mention 'consumed 0 characters', got: "
+                            + ex.getMessage());
+        } finally {
+            field.set(null, original);
+        }
     }
 }

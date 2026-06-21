@@ -1,4 +1,4 @@
-[,]@</usr/agent/memory>;
+memory::[max=>20,mem=>[,],agent_id=>'testy']@</usr/agent/memory>;
 [,]@</usr/agent/notes>;
 mcp_mtron_ws::[host => <ws://localhost:8555/mcp>]@/usr/ai/mcp/mtron;
 mcp_ws::[host => <http://127.0.0.1:29170/index-mcp/streamable-http>]@/usr/ai/mcp/index-mcp;
@@ -7,7 +7,7 @@ model::[ desc     => "testy the agent",
          provider => !*deep:deepseek-v4-pro/provider,
          name     => !*deep:deepseek-v4-pro/name,
          feature  => [think    => |/usr/ui/console/pane/0/stream(_), 
-                      memory   => memory::[max=>20,mem=>!@</usr/agent/memory>],
+                      memory   => !@</usr/agent/memory>,
                       tool     => [!*eval,
                                     !*sql,
                                    !*</usr/ai/mcp/index-mcp>,

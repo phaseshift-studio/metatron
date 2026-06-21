@@ -35,6 +35,7 @@ import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.llm.Capability;
 import studio.phaseshift.metatron.isa.llm.CostCalculator;
 import studio.phaseshift.metatron.isa.llm.LLMFactory;
+import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.llm.space.SpaceChatMemoryStore;
 import studio.phaseshift.metatron.isa.llm.space.SpaceContentRetriever;
 import studio.phaseshift.metatron.isa.m.type.*;
@@ -104,10 +105,14 @@ public class mModel extends MRec {
         final Obj result = responseFormatted ?
                 ObjSimpleJSONSerializer.single().inputBytes(ByteBuffer.wrap(response.strValue().getBytes(StandardCharsets.UTF_8))) :
                 response;
+        // Update the last message's attributes (messages are inline typed Recs in the mem Lst)
         final Obj memObj = this.memory().at("mem");
-        if (responseFormatted && memObj.isLst() && !memObj.asLst().isEmpty() && memObj.asLst().lstValue().getLast().isRec()) {
-            memObj.asLst().lstValue().getLast().asRec().recValue().put(uri("attributes"), rec(uri(FORMAT), result));
-            memObj.save();
+        if (responseFormatted && memObj.isLst() && !memObj.asLst().isEmpty()) {
+            final Obj last = memObj.asLst().lstValue().getLast();
+            if (last.isRec()) {
+                last.asRec().recValue().put(uri(ATTRIBUTES), rec(uri(FORMAT), result));
+                memObj.save();
+            }
         }
         this.asRec().at(feat(RESPONSE, TO)).apply(result);
         return result;
@@ -212,14 +217,15 @@ public class mModel extends MRec {
         return (service, systemMessages) -> {
             if (!this.memory().isNoObj()) {
                 try {
-                    final fURI memoryVID = this.memory().at("mem").vid();
-                    if (memoryVID == null)
+                    final fURI memoryVID = this.memory().vid();
+                    if (memoryVID == null) {
                         this.logger().warn("llm memory has no vid (ignoring): %s", this.memory());
-                    else {
+                    } else {
+                        final Space space = Router.global().getSpaceFor(memoryVID);
                         service.chatMemory(MessageWindowChatMemory.builder()
                                         .maxMessages(this.memory().at(MAX).intValue().intValue())
                                         .id(memoryVID)
-                                        .chatMemoryStore(SpaceChatMemoryStore.single())
+                                        .chatMemoryStore(new SpaceChatMemoryStore(space))
                                         .build())
                                 .storeRetrievedContentInChatMemory(true);
                     }

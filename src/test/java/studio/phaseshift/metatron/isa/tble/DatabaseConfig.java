@@ -64,6 +64,13 @@ public interface DatabaseConfig {
     String getDatabaseName();
 
     /**
+     * Convenience: true when the backend is SQLite.
+     */
+    default boolean isSqlite() {
+        return getJdbcHost() != null && getJdbcHost().contains("sqlite");
+    }
+
+    /**
      * Get SQL for creating the users table.
      * Different databases may have different syntax for data types.
      */

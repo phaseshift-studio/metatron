@@ -90,6 +90,9 @@ public final class Tokens {
     public static final String OBJECT = "object";
     public static final String TYPE = "type";
     public static final String THINKING = "thinking";
+    public static final String TOOL_REQUESTS = "tool_requests";
+    public static final String CONTENTS = "contents";
+    public static final String ATTRIBUTES = "attributes";
     public static final String TEXT = "text";
     public static final String UNTIL = "until";
     public static final String MONAD = "monad";
@@ -182,6 +185,7 @@ public final class Tokens {
     public static final String LOCAL = "local";
     public static final String PORT = "port";
     public static final String USER = "user";
+    public static final String SYSTEM = "system";
     public static final String PASS = "pass";
     public static final String NAME = "name";
     public static final String CREATOR = "creator";
