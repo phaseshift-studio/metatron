@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -40,6 +40,7 @@ import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
@@ -126,7 +127,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathTest impleme
 
     @Override
     @Disabled("Rootless container aggregation only works in memSpace's trie — " +
-              "database spaces store discrete rows/documents with no implicit parent container")
+            "database spaces store discrete rows/documents with no implicit parent container")
     public void testMonoRootlessReadWrites() {
         super.testMonoRootlessReadWrites();
     }
@@ -1171,6 +1172,116 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathTest impleme
                     "exception should name the column, got: " + ex.getMessage());
             assertTrue(ex.getMessage().contains(tableName),
                     "exception should name the table, got: " + ex.getMessage());
+        } finally {
+            try (final Connection conn = staticDbConfig.getConnection();
+                 final Statement stmt = conn.createStatement()) {
+                stmt.executeUpdate("DROP TABLE IF EXISTS " + tableName);
+            }
+            Router.global().removeSpace(testSpace.vid());
+            testSpace.close();
+        }
+    }
+
+    /**
+     * LLM memory: writes a {@code {mem: Lst<message::T>, max: Int}} record and
+     * verifies the {@code mem} field is read back as a {@link studio.phaseshift.metatron.isa.m.type.Lst} of typed
+     * {@link studio.phaseshift.metatron.isa.m.type.Rec} elements (not {@link studio.phaseshift.metatron.isa.m.type.Str}).
+     */
+    @Test
+    public void testLLMMemoryWriteReadBack() throws Exception {
+        final String tableName = "llm_memory";
+        final fURI spaceVid = f("/sys/space/tble/llmmem_test");
+
+        final boolean isSqlite = staticDbConfig.getJdbcHost().contains("sqlite");
+        final String memCol = isSqlite
+                ? "TEXT DEFAULT '[]'"
+                : "JSON DEFAULT ('[]')";
+
+        try (final Connection conn = staticDbConfig.getConnection();
+             final Statement stmt = conn.createStatement()) {
+            stmt.executeUpdate("DROP TABLE IF EXISTS " + tableName);
+            stmt.executeUpdate("CREATE TABLE " + tableName
+                    + " (id INTEGER PRIMARY KEY, agent_id VARCHAR(255) NOT NULL,"
+                    + " name VARCHAR(255) DEFAULT NULL,"
+                    + " mem " + memCol + ","
+                    + " max INTEGER DEFAULT 15)");
+        }
+
+        final tbleSpace testSpace = tbleSpace.of(
+                rec(
+                        uri(PATTERN), uri("llm:#"),
+                        uri(HOST), uri(staticDbConfig.getJdbcHost()),
+                        uri(DRIVER), uri(staticDbConfig.getDriverClass()),
+                        uri(TABLE), lst(uri(tableName)),
+                        uri(ROUTE), rec(uri("llm:"), uri(""))
+                ).jvm(),
+                spaceVid
+        );
+
+        try {
+            // Build typed message Recs (TID = message type discriminator)
+            final Obj systemMsg = rec(uri(TEXT), str("You are helpful."))
+                    .tid(f("/m/llm/system"));
+            final Obj userMsg = rec(uri(NAME), str("marko"),
+                    uri(CONTENTS), rec(uri(TEXT), str("are you there?")))
+                    .tid(f("/m/llm/user"));
+            final Obj aiMsg = rec(uri(TEXT), str("Yes, I am here."))
+                    .tid(f("/m/llm/ai"));
+            final Obj toolResultMsg = rec(uri(NAME), str("eval"),
+                    uri(TEXT), str("42"))
+                    .tid(f("/m/llm/tool_result"));
+
+            final Obj memoryRec = rec(
+                    uri("agent_id"), str("testy"),
+                    uri("name"), str("test-conversation"),
+                    uri("mem"), lst(List.of(systemMsg, userMsg, aiMsg, toolResultMsg), f("/m/m/lst"), null),
+                    uri("max"), jnt(20)
+            );
+
+            // Write
+            Router.writeToSpace(f("llm:" + tableName + "/1"), memoryRec);
+            LOG.info("wrote llm_memory record with %d messages", 4);
+
+            // Read back
+            final Obj readBack = Router.readFromSpace(f("llm:" + tableName + "/1"));
+            assertFalse(readBack.isNoObj(), "read back should not be noobj");
+            assertTrue(readBack.isRec(), "read back should be a Rec");
+
+            // Verify mem field is a Lst, not a Str
+            final Obj mem = readBack.asRec().at(uri("mem"));
+            assertFalse(mem.isNoObj(), "mem field should exist");
+            assertTrue(mem.isLst(), "mem should be a Lst, got: " + mem.getClass().getSimpleName());
+            final studio.phaseshift.metatron.isa.m.type.Lst memLst = mem.asLst();
+            assertEquals(4L, memLst.count());
+
+            // Verify each element is a typed Rec with correct TID
+            final java.util.List<Obj> elements = memLst.elements().toList();
+
+            final Obj el0 = elements.get(0);
+            assertTrue(el0.isRec(), "element 0 should be Rec");
+            assertEquals(f("/m/llm/system"), el0.asRec().tid());
+            assertEquals(str("You are helpful."), el0.asRec().at(uri(TEXT)));
+
+            final Obj el1 = elements.get(1);
+            assertTrue(el1.isRec(), "element 1 should be Rec");
+            assertEquals(f("/m/llm/user"), el1.asRec().tid());
+            assertEquals(str("marko"), el1.asRec().at(uri(NAME)));
+
+            final Obj el2 = elements.get(2);
+            assertTrue(el2.isRec(), "element 2 should be Rec");
+            assertEquals(f("/m/llm/ai"), el2.asRec().tid());
+            assertEquals(str("Yes, I am here."), el2.asRec().at(uri(TEXT)));
+
+            final Obj el3 = elements.get(3);
+            assertTrue(el3.isRec(), "element 3 should be Rec");
+            assertEquals(f("/m/llm/tool_result"), el3.asRec().tid());
+            assertEquals(str("eval"), el3.asRec().at(uri(NAME)));
+            assertEquals(str("42"), el3.asRec().at(uri(TEXT)));
+
+            // Verify max field
+            assertEquals(20L, readBack.asRec().at(uri("max")).intValue());
+
+            LOG.info("llm_memory test passed on {}", staticDbConfig.getDatabaseName());
         } finally {
             try (final Connection conn = staticDbConfig.getConnection();
                  final Statement stmt = conn.createStatement()) {

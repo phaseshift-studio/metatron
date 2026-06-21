@@ -125,10 +125,6 @@ mqttspace::[pattern => <ha:#>,
            pattern      => <deep:#>,
            name         => <openai>,
            route        => [<deep:>=><>]]@/sys/space/deepseek;
- catalog::[host         => <http://localhost:1234/v1>,
-           pattern      => <lmstudio:#>,
-           name         => <openai>,
-           route        => [<lmstudio:>=><>]]@/sys/space/lmstudio;
  tblespace::[pattern => cg:#,
                 q    => [docq::[
                           cg:nodes=>docs::[desc=>"code concepts", example=>["*cg:nodes/+.count()","*cg:nodes/+/kind"]]]],
@@ -156,13 +152,11 @@ mqttspace::[pattern => <ha:#>,
              serializer => !*</m/mach/io/serializer/string/clean>,
              table      => [,],
              driver     => <org.mariadb.jdbc.Driver>]@/sys/space/acme;
- tblespace::[pattern => db:#,
-        host         => <mariadb://localhost:3306/tble_space?user=mtron&password=mtron>,
-        route        => [db:=><>],
-        root         => rec::T,
-        table        => [play],
-        schema       => instset::[type=>[rec::T]],
-        driver       => <org.mariadb.jdbc.Driver>]@/sys/space/db;
+ tblespace::[pattern => chat:#,
+        host         => <mariadb://localhost:3306/chat?createDatabaseIfNotExist=true&user=mtron&password=mtron>,
+        route        => [<chat:>=><>],
+        table        => [,],
+        driver       => <org.mariadb.jdbc.Driver>]@/sys/space/chat;
  dcmntspace::[pattern    => mongo:#,
               host       => <mongodb://localhost:27017/mflix>,
               serializer => !*</m/mach/io/serializer/bson>,

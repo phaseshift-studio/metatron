@@ -356,7 +356,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
             /// CREATE A ROUTER AND ATTACH IT TO SYS
             ROUTER = new BasicRouter(SYS_VID.extend("router"));
             sysSpace.write(ROUTER.vid(), ROUTER);
-            Router.global().addSpace(sysSpace.self(sysSpace.jvm(), sysSpace.tid(), SYS_VID).as());
+            Router.global().addSpace(sysSpace.self(sysSpace.jvm(), sysSpace.tid(), SYS_VID.extend("space/sys")).as());
             LOG.debug("router location: %s", ROUTER.vid());
             sysSpace.write("/sys/typer/stage", typer);
             // LOAD STDIO INSTRUCTIONS

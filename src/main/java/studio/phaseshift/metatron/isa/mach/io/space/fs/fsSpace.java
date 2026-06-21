@@ -220,7 +220,7 @@ public class fsSpace extends AbstractSpace<FileSystem> {
                 return null;
             // Compute the parent VID in the space's URI namespace
             final fURI parentVid = Space.Helper.routeToSpace(f(parent.toString()), this.routes());
-            final String relative = vid.toString().substring(parentVid.toString().length());
+            final String relative = vid.toString().length() >= parentVid.toString().length() ? vid.toString().substring(parentVid.toString().length()) : "";
             if (relative.isEmpty())
                 return null;
             final fURI relativeFuri = f(relative.startsWith("/") ? relative.substring(1) : relative);
@@ -307,6 +307,8 @@ public class fsSpace extends AbstractSpace<FileSystem> {
                         // Exact-path read on a directory without .mtron: enumerate children at depth 1
                         if (value.isUri() && file.isDirectory()) {
                             try {
+                                if(true)
+                                    return IdObj.of(key,fileToObj(file,key.qMap())).iterator();
                                 final java.util.List<Path> children = Files.list(file.toPath()).toList();
                                 if (!children.isEmpty()) {
                                     final Map<fURI, Obj> collected = new LinkedHashMap<>();

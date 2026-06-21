@@ -18,23 +18,38 @@
 
 package studio.phaseshift.metatron.isa.llm.type;
 
+import dev.langchain4j.data.message.*;
 import dev.langchain4j.model.chat.request.json.*;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.llm.JsonSchemaGenerator;
-import studio.phaseshift.metatron.isa.m.type.Lst;
-import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.Rec;
-import studio.phaseshift.metatron.isa.m.type.Type;
+import studio.phaseshift.metatron.isa.llm.space.SpaceChatMemoryStore;
+import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
+import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.tble.tbleSpace;
+import studio.phaseshift.metatron.util.MTronException;
 
+import java.io.File;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.Statement;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.MODEL_TID;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_at_;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.tble.tbleInstSet.TBLE_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
@@ -321,5 +336,148 @@ public class mModelTest extends AbstractMetatronTest {
         Rec r = rec(uri("name"), STR_TYPE, uri("age"), INT_TYPE);
         JsonObjectSchema schema = JsonSchemaGenerator.recToSchema(r, "person");
         assertNotNull(schema);
+    }
+
+    // ========================================================================
+    //  SQLite-backed memory tests
+    // ========================================================================
+
+    private static final String TEST_DB_PATH = "target/test-llm-memory.db";
+    private static final String MEM_TABLE = "llm_memory";
+    private static final fURI MEM_VID = f("sqlite:" + MEM_TABLE + "/1");
+    private tbleSpace memSpace;
+
+    private void initSQLiteMemory() throws Exception {
+        final File dbFile = new File(TEST_DB_PATH);
+        if (dbFile.exists()) dbFile.delete();
+        dbFile.getParentFile().mkdirs();
+
+        try (final Connection conn = DriverManager.getConnection("jdbc:sqlite:" + TEST_DB_PATH);
+             final Statement stmt = conn.createStatement()) {
+            stmt.executeUpdate("CREATE TABLE " + MEM_TABLE
+                    + " (id INTEGER PRIMARY KEY, agent_id VARCHAR(255) NOT NULL,"
+                    + " name VARCHAR(255) DEFAULT NULL,"
+                    + " mem TEXT DEFAULT '[]', max INTEGER DEFAULT 15)");
+            stmt.executeUpdate("INSERT INTO " + MEM_TABLE
+                    + " (id, agent_id, mem, max) VALUES (1, 'test-agent', '[]', 20)");
+        }
+
+        InstSet.importInstSet(TBLE_ISA_TID);
+
+        this.memSpace = tbleSpace.of(
+                Map.of(
+                        uri(PATTERN), uri("sqlite:#"),
+                        uri(HOST), uri("sqlite:" + TEST_DB_PATH),
+                        uri(DRIVER), uri("org.sqlite.JDBC"),
+                        uri(TABLE), lst(uri(MEM_TABLE)),
+                        uri(ROUTE), rec(uri("sqlite:"), uri(""))
+                ),
+                f("/sys/space/test_llm_mem")
+        );
+    }
+
+    @AfterEach
+    public void teardownSQLite() {
+        if (this.memSpace != null) {
+            try { Router.global().removeSpace(this.memSpace.vid()); } catch (Exception ignored) {}
+            this.memSpace.close();
+            this.memSpace = null;
+        }
+        final File dbFile = new File(TEST_DB_PATH);
+        if (dbFile.exists()) dbFile.delete();
+    }
+
+    @Test
+    public void testSQLiteMemoryTypeDetection() throws Exception {
+        initSQLiteMemory();
+
+        // Read the mem column of row 1 — should be a Lst from JSON array default
+        final Obj row = Router.readFromSpace(MEM_VID);
+        assertFalse(row.isNoObj(), "row should exist");
+        assertTrue(row.isRec(), "row should be Rec");
+
+        final Obj memField = row.asRec().at(uri("mem"));
+        assertFalse(memField.isNoObj(), "mem field should exist");
+        assertTrue(memField.isLst(),
+                "mem should be Lst (JSON array detected), got: " + memField.getClass().getSimpleName());
+    }
+
+    @Test
+    public void testSQLiteMemoryStoreAndRetrieve() throws Exception {
+        initSQLiteMemory();
+
+        // Build messages as typed Recs and serialize the Lst to JSON so
+        // tbleSpace stores proper JSON (not mtron format from toString)
+        final Obj systemMsg = rec(uri(TEXT), str("You are helpful."))
+                .tid(f("/m/llm/system"));
+        final Obj userMsg = rec(uri(NAME), str("marko"),
+                uri(CONTENTS), rec(uri(TEXT), str("are you there?")))
+                .tid(f("/m/llm/user"));
+        final Obj aiMsg = rec(uri(TEXT), str("Yes, I am here."))
+                .tid(f("/m/llm/ai"));
+
+        final Obj msgList = lst(List.of(systemMsg, userMsg, aiMsg), f("/m/m/lst"), null);
+        final String memJson = new String(ObjSimpleJSONSerializer.single()
+                .outputBytes(msgList).array(), java.nio.charset.StandardCharsets.UTF_8);
+
+        final Rec memoryRec = (Rec) rec(
+                uri("agent_id"), str("test-agent"),
+                uri("mem"), str(memJson),
+                uri("max"), jnt(20)
+        ).vid(MEM_VID);
+
+        Router.writeToSpace(MEM_VID, memoryRec);
+
+        // Read back — verify mem is a Lst (JSON detection working)
+        final Obj readBack = Router.readFromSpace(MEM_VID);
+        assertFalse(readBack.isNoObj());
+        assertTrue(readBack.isRec());
+
+        final Obj memField = readBack.asRec().at(uri("mem"));
+        assertTrue(memField.isLst(),
+                "mem should be Lst (JSON detected), got: " + memField.getClass().getSimpleName());
+        assertEquals(3L, memField.asLst().count());
+
+        // Delete via noobj
+        Router.writeToSpace(MEM_VID, noobj());
+        assertTrue(Router.readFromSpace(MEM_VID).isNoObj());
+    }
+
+    @Test
+    public void testChatPersistsMemoryToSQLite() throws Exception {
+        initSQLiteMemory();
+
+        // Build model with SQLite-backed memory
+        final Rec modelRec = (Rec) rec(Map.of(
+                uri(NAME), uri("qwen3:latest"),
+                uri(PROVIDER), rec(Map.of(
+                        uri(NAME), uri("ollama"),
+                        uri(HOST), uri(PROVIDER_HOST)
+                )),
+                uri(FEATURE), rec(Map.of(
+                        uri(MEMORY), rec(Map.of(
+                                uri("mem"), auto_at_(MEM_VID).tryToInst(),
+                                uri(MAX), jnt(20)
+                        ))
+                ))
+        ), MODEL_TID, null);
+
+        final mModel chatModel = mModel.model(modelRec);
+
+        try {
+            final Obj response = chatModel.chat("hello");
+            assertFalse(response.isNoObj(), "chat should return a response");
+        } catch (final MTronException e) {
+            if (e.getMessage() != null && e.getMessage().contains("Connection refused"))
+                return; // Ollama not running — skip
+            throw e;
+        }
+
+        // Verify memory was persisted
+        final Obj row = Router.readFromSpace(MEM_VID);
+        final Obj memField = row.asRec().at(uri("mem"));
+        assertTrue(memField.isLst(), "mem should be Lst after chat");
+        assertTrue(memField.asLst().count() >= 2L,
+                "expected >=2 messages (user + ai), got " + memField.asLst().count());
     }
 }

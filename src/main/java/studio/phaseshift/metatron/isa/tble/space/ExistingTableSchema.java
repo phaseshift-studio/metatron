@@ -114,9 +114,23 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
                                 List<String> primaryKeys) {
     }
 
-    public record ColumnMetadata(String name, int sqlType, String typeName, boolean nullable) {
+    public record ColumnMetadata(String name, int sqlType, String typeName, boolean nullable, String columnDefault) {
         public ColumnMetadata(String name, int sqlType, String typeName) {
-            this(name, sqlType, typeName, true);
+            this(name, sqlType, typeName, true, null);
+        }
+
+        /** true when the column default looks like a JSON array ({@code [...]}, {@code '[...]'}, or {@code json_array()}). */
+        public boolean isDefaultJSONArray() {
+            if (columnDefault == null) return false;
+            final String s = columnDefault.strip().toLowerCase();
+            return s.startsWith("[") || s.startsWith("'[") || s.startsWith("json_array");
+        }
+
+        /** true when the column default looks like a JSON object ({@code \{...\}}, {@code '\{...\}'}, or {@code json_object()}). */
+        public boolean isDefaultJSONObject() {
+            if (columnDefault == null) return false;
+            final String s = columnDefault.strip().toLowerCase();
+            return s.startsWith("{") || s.startsWith("'{") || s.startsWith("json_object");
         }
 
         public boolean isNumeric() {
@@ -206,11 +220,13 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
                 final List<ColumnMetadata> columns = new ArrayList<>();
                 try (final ResultSet cols = metaData.getColumns(catalog, null, tableName, "%")) {
                     while (cols.next()) {
+                        final boolean nullable = !"NO".equalsIgnoreCase(cols.getString("IS_NULLABLE"));
+                        final String columnDefault = cols.getString("COLUMN_DEF");
                         columns.add(new ColumnMetadata(
                                 cols.getString("COLUMN_NAME"),
                                 cols.getInt("DATA_TYPE"),
                                 cols.getString("TYPE_NAME"),
-                                !"NO".equalsIgnoreCase(cols.getString("IS_NULLABLE"))));
+                                nullable, columnDefault));
                     }
                 }
                 final List<String> primaryKeys = new ArrayList<>();
@@ -1065,11 +1081,13 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
         final List<ColumnMetadata> columns = new ArrayList<>();
         try (final ResultSet cols = metaData.getColumns(catalog, null, tableName, "%")) {
             while (cols.next()) {
+                final boolean nullable_ = !"NO".equalsIgnoreCase(cols.getString("IS_NULLABLE"));
+                final String columnDefault_ = cols.getString("COLUMN_DEF");
                 columns.add(new ColumnMetadata(
                         cols.getString("COLUMN_NAME"),
                         cols.getInt("DATA_TYPE"),
                         cols.getString("TYPE_NAME"),
-                        !"NO".equalsIgnoreCase(cols.getString("IS_NULLABLE"))));
+                        nullable_, columnDefault_));
             }
         }
 

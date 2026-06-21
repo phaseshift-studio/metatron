@@ -33,6 +33,8 @@ import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.Rec.REC_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Real.REAL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
@@ -215,6 +217,16 @@ public class SQLSchemaGenerator {
         // Handle BOOLEAN specially - SQLite reports it as INTEGER but with BOOLEAN type name
         if ("BOOLEAN".equalsIgnoreCase(column.typeName())) {
             return BOOL_TYPE;
+        }
+
+        // JSON columns: use typeName and/or COLUMN_DEFAULT to detect JSON structure.
+        // Some JDBC drivers report JSON as VARCHAR, so also probe the column default.
+        final boolean isJsonType = "JSON".equalsIgnoreCase(column.typeName());
+        final boolean defaultLooksJson = column.isDefaultJSONArray() || column.isDefaultJSONObject();
+        if (isJsonType || defaultLooksJson) {
+            if (column.isDefaultJSONArray()) return LST_TYPE;
+            if (column.isDefaultJSONObject()) return REC_TYPE;
+            return LST_TYPE; // JSON column without a default: assume array
         }
 
         return switch (column.sqlType()) {

@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.isa.mach.io.type;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.nio.ByteBuffer;
@@ -144,10 +145,10 @@ public class ObjSQLSerializer extends AbstractObjSerializer<ResultSet> {
             case Types.TINYINT, Types.SMALLINT, Types.INTEGER, Types.BIGINT -> jnt(rs.getLong(columnName));
             case Types.REAL, Types.FLOAT, Types.DOUBLE, Types.DECIMAL, Types.NUMERIC -> real(rs.getDouble(columnName));
             case Types.CHAR, Types.VARCHAR, Types.LONGVARCHAR, Types.NCHAR, Types.NVARCHAR, Types.LONGNVARCHAR ->
-                    str(rs.getString(columnName));
+                    readMaybeJSON(rs.getString(columnName));
             case Types.DATE, Types.TIME, Types.TIMESTAMP -> str(rs.getString(columnName));
             case Types.BINARY, Types.VARBINARY, Types.LONGVARBINARY -> str(rs.getString(columnName));
-            default -> str(value.toString());
+            default -> readMaybeJSON(value.toString());
         };
     }
 
@@ -171,11 +172,35 @@ public class ObjSQLSerializer extends AbstractObjSerializer<ResultSet> {
             case Types.TINYINT, Types.SMALLINT, Types.INTEGER, Types.BIGINT -> jnt(rs.getLong(columnIndex));
             case Types.REAL, Types.FLOAT, Types.DOUBLE, Types.DECIMAL, Types.NUMERIC -> real(rs.getDouble(columnIndex));
             case Types.CHAR, Types.VARCHAR, Types.LONGVARCHAR, Types.NCHAR, Types.NVARCHAR, Types.LONGNVARCHAR ->
-                    str(rs.getString(columnIndex));
+                    readMaybeJSON(rs.getString(columnIndex));
             case Types.DATE, Types.TIME, Types.TIMESTAMP -> str(rs.getString(columnIndex));
             case Types.BINARY, Types.VARBINARY, Types.LONGVARBINARY -> str(rs.getString(columnIndex));
-            default -> str(value.toString());
+            default -> readMaybeJSON(value.toString());
         };
+    }
+
+    /**
+     * Probe a string value for structured data.  If it starts with {@code [} or {@code \{},
+     * try JSON parsing first, then fall back to mtron parsing.  Otherwise return it as
+     * a plain {@link Str}.
+     */
+    static Obj readMaybeJSON(final String value) {
+        if (value == null || value.isBlank()) return str(value);
+        final String trimmed = value.stripLeading();
+        if (trimmed.isEmpty()) return str(value);
+        final char first = trimmed.charAt(0);
+        if (first == '[' || first == '{') {
+            try {
+                return ObjSimpleJSONSerializer.parse(value);
+            } catch (final Exception jsonEx) {
+                try {
+                    return ObjmtronSerializer.parse(value);
+                } catch (final Exception mtronEx) {
+                    return str(value);
+                }
+            }
+        }
+        return str(value);
     }
 
     // ==================== Bulk ResultSet Conversion Helpers ====================
@@ -387,10 +412,10 @@ public class ObjSQLSerializer extends AbstractObjSerializer<ResultSet> {
             case Types.TINYINT, Types.SMALLINT, Types.INTEGER, Types.BIGINT -> jnt(rs.getLong(columnIndex));
             case Types.REAL, Types.FLOAT, Types.DOUBLE, Types.DECIMAL, Types.NUMERIC -> real(rs.getDouble(columnIndex));
             case Types.CHAR, Types.VARCHAR, Types.LONGVARCHAR, Types.NCHAR, Types.NVARCHAR, Types.LONGNVARCHAR ->
-                    str(rs.getString(columnIndex));
+                    readMaybeJSON(rs.getString(columnIndex));
             case Types.DATE, Types.TIME, Types.TIMESTAMP -> str(rs.getString(columnIndex));
             case Types.BINARY, Types.VARBINARY, Types.LONGVARBINARY -> str(rs.getString(columnIndex));
-            default -> str(value.toString());
+            default -> readMaybeJSON(value.toString());
         };
     }
 

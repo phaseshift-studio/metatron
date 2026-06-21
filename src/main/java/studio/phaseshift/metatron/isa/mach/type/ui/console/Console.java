@@ -42,6 +42,7 @@ import studio.phaseshift.metatron.isa.m.type.impl.MCode;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.machine.SwarmMachine;
+import studio.phaseshift.metatron.isa.mach.type.thread.FutureObj;
 import studio.phaseshift.metatron.isa.mach.type.thread.VirtualThread;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.menu.ColonMenu;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
@@ -850,7 +851,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                         segment.logger().warn("{{y}}dynamic resolution{{X}}: %s", unresolved.stream().map(i -> "{{b}}" + i.tid() + "{{y}}@" + i.vid() + "{{X}}").reduce("", (a, b) -> a + "," + b).substring(1));
                     }
                 });
-                final Obj computeResult;
+                final AtomicReference<Obj> computeResult = new AtomicReference<>(noobj());
                 if (this.input.isNoObj()) {
                     final Machine mach = SwarmMachine.of(resolvedResult.as()).onHalt(this::printResult);
                     // Track machine in both places for interruption
@@ -858,13 +859,27 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                     if (this.activePane != null) {
                         this.activePane.machine(mach);
                     }
-                   computeResult = mach.applyAsync().timeout(5000);
-                    //computeResult = mach.result();
+                    final FutureObj<Obj> future = mach.applyAsync();
+                    while (!future.isDone()) {
+                        try {
+                            future.get(5000);
+                        } catch (final Exception e) {
+                            // do nothing
+                        }
+                        if (!future.isDone()) {
+                            final String waitOrInterrupt = this.reader.readLine(Highlighter.format("{{y}}\ncontinue waiting {{g}}[y/N]{{y}}?{{X}}\n"));
+                            if (waitOrInterrupt.trim().equalsIgnoreCase("n")) {
+                                future.cancel(true);
+                                break;
+                            }
+                        }
+                    }
+                    computeResult.set(future.get());
                 } else {
-                    computeResult = this.input.apply(resolvedResult);
+                    computeResult.set(this.input.apply(resolvedResult));
                 }
-                running.set(computeResult);
-                computeResult.stream().forEach(this::printResult);
+                running.set(computeResult.get());
+                computeResult.get().stream().forEach(this::printResult);
                 this.status.setState(startLevel);
             } catch (final Exception e) {
                 this.printResult(fail(e));

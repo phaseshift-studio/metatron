@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -24,13 +24,18 @@ import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSQLSerializer;
+import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.web.webHelper;
 import studio.phaseshift.metatron.util.MTronException;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.*;
@@ -50,6 +55,8 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.mach.machInstSet.FILE_TID;
+import static studio.phaseshift.metatron.isa.mach.machInstSet.FILE_TYPE;
 import static studio.phaseshift.metatron.isa.tble.tbleSpace.*;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
@@ -92,6 +99,12 @@ public class tbleInstSet extends AbstractInstSet {
     @Override
     public void setup() {
         this.jvm().putAll(mutableMap(
+                uri(CONST), lst(
+                        docWrap(rec(mutableMap(
+                                                uri("llm_chat_schema"),
+                                                instC(M_ISA_INST_TID.dom(ALL_STAR).rng(ALL_STAR), lst(), (lhs, inst) -> MTronException.wrap(() -> str(new String(new BufferedInputStream(Objects.requireNonNull(tbleInstSet.class.getResourceAsStream("llm_messages_schema.sql"))).readAllBytes()))))),
+                                        REC_TID, TBLE_ISA_TID.extend("helper")),
+                                "a collection of tble related utilities")),
                 uri(TYPE), lst(
                         docWrap(LST_ROW_TYPE, "a table row indexed by column number"),
                         docWrap(REC_ROW_TYPE, "a table row indexed by column name"),
@@ -108,6 +121,31 @@ public class tbleInstSet extends AbstractInstSet {
                                 "a table row indexed by column number",
                                 Map.of(),
                                 "maps a rec row to a lst row"),
+                        docWrap(instC(SQL_INST_TID.dom(TBLE_SPACE_TID).rng(REC_TID.maybeSome()), lst(FILE_TYPE), (lhs, inst) -> {
+                            try {
+                                final String fileContent = Router.readFromSpace(inst.arg(0).uriValue().basePath()).orThrow(MTronException.of("no such file type")).strValue()
+                                        .replace("\"\"\"", "")
+                                        .lines()
+                                        .map(String::trim)
+                                        .filter(l -> !l.isEmpty())
+                                        .filter(l -> !l.startsWith("--"))
+                                        .reduce("", (a, b) -> a + b)
+                                        .trim();
+                                final String[] updates = fileContent.split(";");
+                          
+                                for (final String update : updates) {
+                                    if (!update.trim().isBlank()) {
+                                        LOG.info("update statement: %s", update);
+                                        try (final Statement stmt = lhs.<tbleSpace>as().sjvm().createStatement()) {
+                                            stmt.executeUpdate(update);
+                                        }
+                                    }
+                                }
+                                return noobj();
+                            } catch (final Exception e) {
+                                throw MTronException.of(e);
+                            }
+                        }), "load an sql file into the lhs tblespace"),
                         docWrap(instC(SQL_INST_TID.dom(TBLE_SPACE_TID).rng(REC_TID.maybeSome()), lst(STR_TYPE), (lhs, inst) -> {
                                     try {
                                         final Statement statement = lhs.<tbleSpace>as().sjvm().createStatement();

@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -69,16 +69,23 @@ public class llmInstSet extends AbstractInstSet {
     public static final fURI LLM_MEMORY_TID = LLM_ISA_TID.extend(MEMORY);
     public static final fURI LLM_SKILL_TID = LLM_ISA_TID.extend(SKILL);
     public static final fURI LLM_FEATURE_TID = LLM_ISA_TID.extend(FEATURE);
-    public static final fURI AI_MEMORY_TID = LLM_ISA_TID.extend(AI);
-    public static final fURI USER_MEMORY_TID = LLM_ISA_TID.extend(USER);
+    public static final fURI MESSAGE_TID = LLM_ISA_TID.extend(MESSAGE);
+    public static final fURI AI_MESSAGE_TID = LLM_ISA_TID.extend(AI);
+    public static final fURI USER_MESSAGE_TID = LLM_ISA_TID.extend(USER);
+    public static final fURI SYSTEM_MESSAGE_TID = LLM_ISA_TID.extend(SYSTEM);
+    public static final fURI TOOL_REQUEST_MESSAGE_TID = LLM_ISA_TID.extend("tool_request");
+    public static final fURI TOOL_RESULT_MESSAGE_TID = LLM_ISA_TID.extend("tool_result");
     //public static final fURI MCP_TOOL_TID = LLM_ISA_TID.extend("mcp");
     // public static Obj MTRON_EVAL_TOOL = mModel.Helper.mtronInstToolSpecification(ObjType.insts().stream().filter(i -> i.tid().equals(EVAL_INST_TID)).findFirst().orElse(null));    
 
 
-    public static Type LLM_AI_MEMORY_TYPE;
-    public static Type LLM_USER_MEMORY_TYPE;
+    public static Type LLM_AI_MESSAGE_TYPE;
+    public static Type LLM_USER_MESSAGE_TYPE;
+    public static Type LLM_SYSTEM_MESSAGE_TYPE;
     public static Type LLM_SKILL_TYPE;
     public static Type LLM_MEMORY_TYPE;
+    public static Type LLM_MESSAGE_TYPE;
+    public static Type LLM_TOOL_RESULT_MESSAGE_TYPE;
     public static Type LLM_NOTES_TYPE;
     public static ObjFactory LLM_OBJ_FACTORY = MObjFactory.of().addExtension(MVec.class, x -> lst(x.jvm().stream().toList()));
     public static Type LLM_FEATURE_TYPE;
@@ -95,27 +102,61 @@ public class llmInstSet extends AbstractInstSet {
                 uri(TYPE), lst(
                         LLM_CATALOG_SPACE_TYPE,
                         LLM_TOOL_TYPE,
+                        //////////////////////////////////////////////////
                         docWrap(LLM_MEMORY_TYPE = Type.Builder.build()
                                 .tid(REC_TID)
                                 .vid(LLM_MEMORY_TID)
                                 .isaPredicate(rec(uri("mem"), LST_TYPE, uri(MAX).maybe(), isa_(INT_TYPE).else_(jnt(15))))
-                                .create(), "llm memory structure as a lst of past interactions"),
-                        LLM_USER_MEMORY_TYPE = Type.Builder.build()
+                                .create(), "llm memory: a pointer lst of message URIs with an optional max window size"),
+                        docWrap(LLM_MESSAGE_TYPE = Type.Builder.build()
                                 .tid(REC_TID)
-                                .vid(USER_MEMORY_TID)
-                                .isaPredicate(rec(
-                                        uri("contents"), rec(uri(TEXT), STR_TYPE),
-                                        uri(TYPE), uri(USER)))
-                                .create(),
-                        LLM_AI_MEMORY_TYPE = Type.Builder.build()
-                                .tid(REC_TID)
-                                .vid(AI_MEMORY_TID)
-                                .isaPredicate(rec(
-                                        uri(TEXT).maybe().asUri(), STR_TYPE,
-                                        uri(THINKING).maybe(), INT_TYPE,
-                                        uri("attributes").maybe(), REC_TYPE,
-                                        uri(TYPE), uri(AI)))
-                                .create(),
+                                .vid(MESSAGE_TID)
+                                .create(), "a message that with ai, user, and system message refinements"),
+                        docWrap(LLM_SYSTEM_MESSAGE_TYPE = Type.Builder.build()
+                                .tid(MESSAGE_TID)
+                                .vid(SYSTEM_MESSAGE_TID)
+                                .isaPredicate(rec(uri(TEXT), STR_TYPE))
+                                .create(), "a system message typically provides behavioral and response-style instructions to the model"),
+                        docWrap(LLM_USER_MESSAGE_TYPE = Type.Builder.build()
+                                        .tid(MESSAGE_TID)
+                                        .vid(USER_MESSAGE_TID)
+                                        .isaPredicate(rec(
+                                                uri(NAME).maybe().asUri(), STR_TYPE,
+                                                uri(CONTENTS), rec(uri(TEXT), STR_TYPE)))
+                                        .create(),
+                                null, null, mutableMap(
+                                        uri(NAME).maybe(), "sender identity for multi-user conversations",
+                                        uri(CONTENTS), "the message contents"), "a user message"),
+                        docWrap(LLM_AI_MESSAGE_TYPE = Type.Builder.build()
+                                        .tid(MESSAGE_TID)
+                                        .vid(AI_MESSAGE_TID)
+                                        .isaPredicate(rec(
+                                                uri(NAME).maybe().asUri(), STR_TYPE,
+                                                uri(TEXT).maybe().asUri(), STR_TYPE,
+                                                uri(THINKING).maybe(), INT_TYPE,
+                                                uri(TOOL_REQUESTS).maybe(), LST_TYPE,
+                                                uri(ATTRIBUTES).maybe(), REC_TYPE))
+                                        .create(),
+                                null, null, mutableMap(
+                                        uri(NAME), "the assistant identity",
+                                        uri(TEXT), "the response text",
+                                        uri(THINKING), "the internal reasoning and token count of the model",
+                                        uri(TOOL_REQUESTS), "the tool execution requests made by the model",
+                                        uri(ATTRIBUTES), "extra metadata from the provider"), "an ai/assistant message"),
+                        docWrap(LLM_TOOL_RESULT_MESSAGE_TYPE = Type.Builder.build()
+                                        .tid(MESSAGE_TID)
+                                        .vid(TOOL_RESULT_MESSAGE_TID)
+                                        .isaPredicate(rec(
+                                                uri(NAME), STR_TYPE,
+                                                uri(TEXT), STR_TYPE,
+                                                uri(ID).maybe(), STR_TYPE))
+                                        .create(),
+                                null, null, mutableMap(
+                                        uri(NAME), "the tool that was executed",
+                                        uri(TEXT), "the text result of the tool execution",
+                                        uri(ID).maybe(), "correlation id matching the tool execution request"),
+                                "a tool execution result message"),
+                        //////////////////////////////////////////////////
                         docWrap(LLM_SKILL_TYPE = Type.Builder.build()
                                         .tid(REC_TID)
                                         .vid(LLM_SKILL_TID)

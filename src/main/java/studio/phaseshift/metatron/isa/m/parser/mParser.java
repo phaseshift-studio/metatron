@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -102,6 +102,41 @@ public class mParser {
     private static Parser cachedSugarParser = null;
     private static Parser cachedMainParser = null;
     private static Parser cachedExpressionParser = null;
+
+    /**
+     * Maximum loop iterations in parseMulti() before throwing. Tests lower this.
+     */
+    public static int maxParseIterations = 10_000;
+
+    //
+    // Future: watchdog timer for exponential-backtracking detection
+    //
+    // The three existing guards catch structural loops (zero-progress spins,
+    // iteration-cap violations, and stack overflow from left recursion).  They
+    // do NOT catch the case where a single parse() call makes incremental progress
+    // but traverses a combinatorially large search space — chewing CPU for
+    // minutes without truly looping.
+    //
+    // Implementation sketch:
+    //
+    //   - A daemon ScheduledExecutorService with one thread.
+    //   - parse() (and parseMulti()'s inner call) records its start time in a
+    //     ThreadLocal<Long> before entering the parser.
+    //   - The watchdog fires every ~500 ms, walks all live parse threads via
+    //     Thread.getAllStackTraces(), checks elapsed time, and calls
+    //     Thread.interrupt() on any thread that exceeds a configurable
+    //     PARSE_TIMEOUT_MS threshold (default 0 = disabled).
+    //   - The parse() guard block already catches StackOverflowError; it would
+    //     additionally check Thread.interrupted() after PetitParser returns and
+    //     throw a "PARSER TIMEOUT" MTronException if set.
+    //
+    //   Caveat: PetitParser does not check Thread.interrupted() internally, so
+    //   the timeout only takes effect after the current parser combinator
+    //   returns.  For true preemption we'd need to run the parse in a separate
+    //   thread and Thread.stop() it (deprecated/unsafe) or fork a subprocess.
+    //   The watchdog approach is "best effort" — it bounds the post-mortem
+    //   delay rather than preempting a runaway parse mid-flight.
+    //
 
     private static final String REDUCED_FURI_CHARS = "~/%$!#_-@+:*";
     private static final String FULL_FURI_CHARS = REDUCED_FURI_CHARS + ". ";
@@ -418,7 +453,12 @@ public class mParser {
             return (O) noobj();
         // Use cached parser instead of rebuilding on every call
         long start = System.nanoTime();
-        final Result result = cachedMainParser.parse(trimmed);
+        final Result result;
+        try {
+            result = cachedMainParser.parse(trimmed);
+        } catch (final StackOverflowError e) {
+            throw MTronException.of("infinite recursion detected in parser: possible left recursion in '%s'", trimmed);
+        }
         long parseTime = System.nanoTime() - start;
 
         if (result.isFailure()) {
@@ -457,8 +497,14 @@ public class mParser {
         final List<Inst> allInsts = new ArrayList<>();
         String remaining = trimmed;
         boolean needsEnd = false;
+        int iterations = 0;
 
         while (!remaining.isBlank()) {
+            if (++iterations > maxParseIterations) {
+                throw MTronException.of(
+                        "infinite recursion detected in parser: parseMulti() exceeded %d iterations on '%s'",
+                        maxParseIterations, remaining);
+            }
             remaining = remaining.trim();
 
             // Consume leading ; separators.  We defer the actual end()
@@ -470,7 +516,14 @@ public class mParser {
                 continue;
             }
 
-            final Result result = cachedExpressionParser.parse(remaining);
+            final Result result;
+            try {
+                result = cachedExpressionParser.parse(remaining);
+            } catch (final StackOverflowError e) {
+                throw MTronException.of(
+                        "infinite recursion detected in parser: possible left recursion in '%s'",
+                        remaining);
+            }
             if (result.isFailure()) {
                 if (!allInsts.isEmpty()) break;   // partial parse, return what we have
                 throw MTronException.of((Object) (result.getBuffer() + "\n"
@@ -478,7 +531,16 @@ public class mParser {
             }
 
             final Obj parsed = result.get();
-            remaining = remaining.substring(result.getPosition());
+            final int consumed = result.getPosition();
+
+            // Guard: if the parser succeeded but consumed zero characters we
+            // would loop forever on the same remaining string.
+            if (consumed == 0) {
+                throw MTronException.of(
+                        "infinite recursion detected in parser: parser consumed 0 characters at '%s'",
+                        remaining);
+            }
+            remaining = remaining.substring(consumed);
 
             // Skip comments — m_comment() returns noobj(), and a comment-only
             // segment should not insert an end() separator or become a statement.
@@ -537,7 +599,9 @@ public class mParser {
         return segments;
     }
 
-    /** Appends the instructions from an Obj (Code, Inst, or plain value) to the given list. */
+    /**
+     * Appends the instructions from an Obj (Code, Inst, or plain value) to the given list.
+     */
     private static void appendToInstList(final List<Inst> insts, final Obj obj) {
         if (null == obj || obj.isNoObj()) return;
         if (obj.isCode()) {
