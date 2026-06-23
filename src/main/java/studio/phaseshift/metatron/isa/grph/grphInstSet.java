@@ -243,7 +243,7 @@ public class grphInstSet extends AbstractInstSet {
                                 //factory.setCustomizerManager(new CachedGremlinScriptEngineManager());
                                 factory.setCustomizerManager(new DefaultGremlinScriptEngineManager());
                                 final GremlinScriptEngine engine = factory.getScriptEngine();
-                                engine.put("g", ((grphSpace) lhs).sjvm().traversal());
+                                engine.put("g", ((grphSpace) lhs).sjvm());
                                 final Object object = engine.eval(inst.arg(0).strValue());
                                 return MObjFactory.of().toObj(object);
                             } catch (Exception e) {
@@ -342,8 +342,8 @@ public class grphInstSet extends AbstractInstSet {
                                                             if (!(space instanceof grphSpace gs))
                                                                 return matchList.stream().map(Obj::asInst).toList();
                                                             final long count = "V".equals(dp.collection())
-                                                                    ? gs.sjvm().traversal().V().count().next()
-                                                                    : gs.sjvm().traversal().E().count().next();
+                                                                    ? gs.sjvm().V().count().next()
+                                                                    : gs.sjvm().E().count().next();
                                                             return List.of(instC(
                                                                     GRPH_REWRITE_TID.extend("graph_count").dom(ALL_STAR).rng(INT_TID),
                                                                     lst(uri(furi)),
@@ -356,8 +356,8 @@ public class grphInstSet extends AbstractInstSet {
                                 GRPH_REWRITE_TID.extend("gremlin_limit"),
                                 (space, dp, limit) -> {
                                     final Iterator<? extends Element> elements = "V".equals(dp.collection())
-                                            ? space.sjvm().traversal().V().limit(limit)
-                                            : space.sjvm().traversal().E().limit(limit);
+                                            ? space.sjvm().V().limit(limit)
+                                            : space.sjvm().E().limit(limit);
                                     return objs(IteratorUtil.stream(elements).map(e -> (e instanceof Vertex v) ? new VertexRec(v, space) : new EdgeRec((Edge) e, space)));
                                 }
                         ), "pre-rewrite code", "post-rewrite code", Map.of(), "leverages gremlin's limit()-barrier for vrtx/edge collections"),
@@ -374,7 +374,7 @@ public class grphInstSet extends AbstractInstSet {
                                     if (pred == null || field == null)
                                         throw MTronException.of("unable to parse where-predicate: %s", sqlWhere);
                                     return objs(IteratorUtil.stream(
-                                            space.sjvm().traversal().V().has(field, pred)).map(v -> new VertexRec((Vertex) v, space)));
+                                            space.sjvm().V().has(field, pred)).map(v -> new VertexRec((Vertex) v, space)));
                                 }
                         ), "pre-rewrite code", "post-rewrite code", Map.of(), "leverages gremlin's has()-filtering for vrtx collections"),
 
@@ -405,7 +405,7 @@ public class grphInstSet extends AbstractInstSet {
                                                             final String field = extractPredicateField(sqlWhere);
                                                             if (pred == null || field == null)
                                                                 return matchList.stream().map(Obj::asInst).toList();
-                                                            final long count = gs.sjvm().traversal().V().has(field, pred).count().next();
+                                                            final long count = gs.sjvm().V().has(field, pred).count().next();
                                                             return List.of(instC(
                                                                     GRPH_REWRITE_TID.extend("gremlin_where_count").dom(ALL_STAR).rng(INT_TID),
                                                                     lst(uri(furi), studio.phaseshift.metatron.isa.m.type.impl.MStr.str(sqlWhere)),
@@ -445,7 +445,7 @@ public class grphInstSet extends AbstractInstSet {
                                                                     GRPH_REWRITE_TID.extend("gremlin_where_limit").dom(ALL_STAR).rng(ALL_STAR),
                                                                     lst(uri(furi), studio.phaseshift.metatron.isa.m.type.impl.MStr.str(sqlWhere), jnt(limit)),
                                                                     (lhs, inst) -> objs(IteratorUtil.stream(
-                                                                            gs.sjvm().traversal().V().has(field, pred).limit(limit)).map(v -> new VertexRec((Vertex) v, gs)))));
+                                                                            gs.sjvm().V().has(field, pred).limit(limit)).map(v -> new VertexRec((Vertex) v, gs)))));
                                                         })
                                         ).asCode()),
                                 "pre-rewrite code", "post-rewrite code", Map.of(), "leverages gremlin's has().limit() filtering-barrier for vrtx collections"),

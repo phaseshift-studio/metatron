@@ -21,6 +21,10 @@
  import org.apache.commons.configuration2.BaseConfiguration;
  import org.apache.commons.configuration2.Configuration;
  import org.apache.commons.configuration2.ConfigurationMap;
+ import org.apache.tinkerpop.gremlin.driver.remote.DriverRemoteConnection;
+ import org.apache.tinkerpop.gremlin.process.remote.traversal.RemoteTraversal;
+ import org.apache.tinkerpop.gremlin.process.traversal.AnonymousTraversalSource;
+ import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
  import org.apache.tinkerpop.gremlin.structure.*;
  import org.apache.tinkerpop.gremlin.structure.util.GraphFactory;
  import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerFactory;
@@ -58,6 +62,7 @@
  import static studio.phaseshift.metatron.isa.m.mInstSet.*;
  import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.failure_;
  import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
+ import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TYPE;
  import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
  import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
  import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
@@ -69,7 +74,7 @@
  /*
   * @author Marko A. Rodriguez (http://markorodriguez.com)
   */
- public class grphSpace extends AbstractSpace<Graph> implements SchemaSpace {
+ public class grphSpace extends AbstractSpace<GraphTraversalSource> implements SchemaSpace {
 
      public static final String GRAPH_CONFIGURATION_KEY = "mtron.grph.vid";
      public static final ObjSerializer<String> SERIALIZER = new ObjmtronSerializer();
@@ -78,25 +83,34 @@
 
      protected static ObjFactory FACTORY = null;
      private static final fURI V_SOME = f("V/+");
+
+     protected static final String AUTO_TX = "auto_tx";
+
      public static final fURI GRPH_SPACE_TID = grphInstSet.GRPH_ISA_TID.extend(SPACE).extend("grphspace");
      public static final Type GRPH_SPACE_TYPE = Type.Builder.build()
              .tid(SPACE_TID)
              .vid(GRPH_SPACE_TID)
-             .isaPredicate(rec(uri(SCHEMA).maybe().asUri(), INSTSET_TYPE))
+             .isaPredicate(rec(
+                     uri(SCHEMA).maybe().asUri(), INSTSET_TYPE,
+                     uri(CONFIG).maybe(), rec(
+                             uri(MTRON).maybe().asUri(), rec(uri(AUTO_TX).maybe().asUri(), BOOL_TYPE))))
              .constructor(
                      instC(INST_CTOR_TID.dom(ALL.maybe()).rng(GRPH_SPACE_TID),
-                             lst(isa_(GRAPH_CONFIG).else_(failure_(str("malformed tp3 config"))).tryToInst()),
+                             lst(REC_TYPE),
                              (lhs, inst) -> {
                                  if (inst.arg(0).isFail())
                                      throw inst.arg(0).asFail().asException();
                                  return grphSpace.of(inst.arg(0).asRec(), inst.arg(0).vid());
                              })).create();
 
-     public static grphSpace of(final Rec config, final fURI vid) {
-         final Configuration graphConfig = toApacheConfiguration(config);
-         final Graph graph = GraphFactory.open(graphConfig);
-         loadDatasetIfSpecified(graph, config); // only loads if supported and specified
-         return new grphSpace(graph, config.jvm(), vid);
+     public static grphSpace of(final Rec grph, final fURI vid) {
+         grph.logger().info("using config: %s", grph.at(CONFIG));
+         final Configuration graphConfig = toApacheConfiguration(grph.at(CONFIG));
+         final GraphTraversalSource g = AnonymousTraversalSource.traversal().withRemote(DriverRemoteConnection.using(graphConfig));
+         final Graph graph = g.getGraph();
+         grph.logger().info("HERE: %s", g.V().count().toList());
+         loadDatasetIfSpecified(graph, grph); // only loads if supported and specified
+         return new grphSpace(g, grph.jvm(), vid);
      }
 
      /**
@@ -110,16 +124,17 @@
          final BaseConfiguration apacheConfig = new BaseConfiguration();
 
          // Check for new-style GRAPH config (supports any TinkerPop3-compliant graph)
-         if (config.has(uri(GRAPH))) {
-             final Rec graphRec = config.at(uri(GRAPH)).asRec();
-             graphRec.jvm().forEach((key, value) -> {
-                 final String configKey = key.uriValue().toString();
-                 final Object configValue = value.jvm();
-                 apacheConfig.setProperty(configKey, configValue);
+         config.logger().info("config: %s", config.at("#/"));
+         if (!config.isEmpty()) {
+             config.elements().forEach(rel -> {
+                 apacheConfig.setProperty(rel.first().uriValue().toString(), rel.second().toString());
              });
+             apacheConfig.setProperty("clusterConfigurationFile", "/home/killswitch/software/metatron/conf/remote-objects.yaml");
+             config.logger().info("using apache configuration: %s", apacheConfig);
          } else {
              // Legacy format - default to TinkerGraph for backward compatibility
              apacheConfig.setProperty(Graph.GRAPH, TinkerGraph.class.getCanonicalName());
+             config.logger().info("defaulting to in-memory tinkergraph configuration: %s", apacheConfig);
          }
          return apacheConfig;
      }
@@ -181,33 +196,33 @@
 
      protected ExistingGraphSchema existingGraphSchema;
 
-     protected grphSpace(final Graph graph, final Map<Obj, Obj> config, final fURI vid) {
+     protected grphSpace(final GraphTraversalSource graph, final Map<Obj, Obj> config, final fURI vid) {
          super(graph, config, GRPH_SPACE_TID, vid);
          LOG.debug("tp3 space: %s", this);
-         graph.configuration().setProperty(GRAPH_CONFIGURATION_KEY, vid.toString());
+        // graph.configuration().setProperty(GRAPH_CONFIGURATION_KEY, vid.toString());
          // ── schema discovery ──
          this.existingGraphSchema = new ExistingGraphSchema(this);
-         this.existingGraphSchema.initialize(graph);
+        // this.existingGraphSchema.initialize(graph);
          if (null == FACTORY) {
              LOG.warn("no obj factory specified. defaulting to an extended mobjfactory that assumes 64-bit long element ids");
              FACTORY = MObjFactory.of()
                      .addExtension(Vertex.class, v -> new VertexRec(v, this))
                      .addExtension(Edge.class, e -> new EdgeRec(e, this));
          }
-         final Rec tp3Config = rec();
-         new ConfigurationMap(sjvm.configuration()).forEach((key, value) -> {
+        // final Rec tp3Config = rec();
+        /* new ConfigurationMap(sjvm.getGraph().configuration()).forEach((key, value) -> {
              try {
                  tp3Config.at(uri(key.toString()), MObjFactory.of().toObj(value), MUTABLE);
              } catch (final Exception e) {
                  LOG.warn("unable to encode %s:%s: %s", key, value, e);
              }
-         });
-         this.at(uri(NATIVE), rec(
+         });*/
+         /*this.at(uri(NATIVE), rec(
                  uri("factory"), FACTORY,
                  uri(CONFIG), tp3Config,
                  uri("id"), rec(
-                         uri(VERTEX), uri(IteratorUtil.findFirst(this.sjvm.vertices()).map(i -> i.id().getClass().getSimpleName()).orElse("unknown")),
-                         uri(EDGE), uri(IteratorUtil.findFirst(this.sjvm.edges()).map(i -> i.id().getClass().getSimpleName()).orElse("unknown")))), MUTABLE);
+                         uri(VERTEX), uri(IteratorUtil.findFirst(this.sjvm.V()).map(i -> i.id().getClass().getSimpleName()).orElse("unknown")),
+                         uri(EDGE), uri(IteratorUtil.findFirst(this.sjvm.E()).map(i -> i.id().getClass().getSimpleName()).orElse("unknown")))), MUTABLE);*/
      }
 
      // =========================================================================
@@ -216,7 +231,7 @@
 
      private Iterator<IdObj> readVertexTraversal(final DataPath dp) {
          final Iterator<Vertex> vertices = dp.entryIsWildcard()
-                 ? this.sjvm.vertices() : this.sjvm.vertices(Integer.parseInt(dp.entry()));
+                 ? this.sjvm.V() : this.sjvm.V(Integer.parseInt(dp.entry()));
          return IteratorUtil.stream(vertices).flatMap(v -> traverseVertex(v, dp)).iterator();
      }
 
@@ -279,7 +294,7 @@
 
      private Iterator<IdObj> readEdgeTraversal(final DataPath dp) {
          final int id = Integer.parseInt(dp.entry());
-         final Edge e = IteratorUtil.stream(this.sjvm.edges(id)).findFirst().orElse(null);
+         final Edge e = IteratorUtil.stream(this.sjvm.E(id)).findFirst().orElse(null);
          if (e == null) return IteratorUtil.of();
          final Vertex target = "OUT".equalsIgnoreCase(dp.field()) ? e.outVertex() : e.inVertex();
          Stream<Obj> stream = Stream.of(new VertexRec(target, this));
@@ -330,8 +345,8 @@
              LOG.debug("looking for tp3 vid: %s", pattern);
              if (pattern.equals(ALL)) {
                  return Stream.concat(
-                                 IteratorUtil.stream(this.sjvm().vertices()),
-                                 IteratorUtil.stream(this.sjvm().edges()))
+                                 IteratorUtil.stream(this.sjvm().V()),
+                                 IteratorUtil.stream(this.sjvm().E()))
                          .map(e -> IdObj.of(this.elementVID(e), e instanceof Vertex v ?
                                  new VertexRec(v, this) :
                                  new EdgeRec((Edge) e, this))).iterator();
@@ -351,9 +366,9 @@
                      }
                      Iterator<Vertex> iterator;
                      if (!dp.entryIsWildcard() && CommonUtil.isInt(dp.entry()))
-                         iterator = this.sjvm.vertices(Integer.parseInt(dp.entry()));
+                         iterator = this.sjvm.V(Integer.parseInt(dp.entry()));
                      else if (dp.entryIsWildcard())
-                         iterator = this.sjvm.vertices();
+                         iterator = this.sjvm.V();
                      else return readCollection(dp);
                      return IteratorUtil.stream(iterator)
                              .map(v -> IdObj.of(this.elementVID(v), new VertexRec(v, this)))
@@ -371,9 +386,9 @@
                      }
                      Iterator<Edge> iterator;
                      if (!dp.entryIsWildcard() && CommonUtil.isInt(dp.entry()))
-                         iterator = this.sjvm.edges(Integer.parseInt(dp.entry()));
+                         iterator = this.sjvm.E(Integer.parseInt(dp.entry()));
                      else if (dp.entryIsWildcard())
-                         iterator = this.sjvm.edges();
+                         iterator = this.sjvm.E();
                      else return readCollection(dp);
                      return (Iterator) IteratorUtil.stream(iterator)
                              .map(e -> IdObj.of(this.elementVID(e), new EdgeRec(e, this)))
@@ -411,13 +426,13 @@
              if ("V".equals(dp.collection()) && dp.hasEntry() && CommonUtil.isInt(dp.entry())) {
                  final Integer id = Integer.parseInt(dp.entry());
                  try {
-                     final Vertex vertex = IteratorUtil.stream(this.sjvm.vertices(id)).findFirst().orElseGet(() ->
-                             this.sjvm.addVertex(
+                     final Vertex vertex = IteratorUtil.stream(this.sjvm.V(id)).findFirst().orElseGet(() ->
+                             this.sjvm.addV().property(
                                      org.apache.tinkerpop.gremlin.structure.T.label,
                                      obj.isRec() && obj.asRec().jvm().containsKey(grphInstSet.LABEL)
                                              ? obj.asRec().jvm().get(grphInstSet.LABEL).uriValue().toString()
-                                             : obj.tid().basePath().toString(),
-                                     org.apache.tinkerpop.gremlin.structure.T.id, id));
+                                             : obj.tid().basePath().toString()).property(
+                                     org.apache.tinkerpop.gremlin.structure.T.id, id).next());
                      LOG.debug("writing vertex %s => %s", vid, vertex);
                      // write properties from the Rec to the TinkerPop vertex
                      obj.asRec().jvm().entrySet().stream()
@@ -432,6 +447,11 @@
                                              jvm instanceof String || jvm instanceof Number || jvm instanceof Boolean ? jvm : value);
                                  }
                              });
+                     this.at(AUTO_TX).ifPresent(x -> {
+                         if (x.boolValue()) {
+                             this.sjvm.tx().commit();
+                         }
+                     });
                      return new VertexRec(vertex, this);
                  } catch (final Exception e) {
                      return fail(e);
