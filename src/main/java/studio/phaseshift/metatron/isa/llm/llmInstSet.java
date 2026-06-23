@@ -27,8 +27,20 @@ import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.ObjFactory;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
+import studio.phaseshift.metatron.isa.tble.tbleInstSet;
+import studio.phaseshift.metatron.isa.tble.tbleSpace;
 import studio.phaseshift.metatron.isa.vec.type.MVec;
 import studio.phaseshift.metatron.isa.web.webInstSet;
+import studio.phaseshift.metatron.util.MTronException;
+
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.sql.Connection;
+import java.sql.Statement;
+import java.util.stream.Collectors;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
@@ -45,15 +57,18 @@ import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.split_;
 import static studio.phaseshift.metatron.isa.m.type.Inst.INST_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.io.space.fs.fsSpace.staticObjToFile;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.DIR_TID;
 import static studio.phaseshift.metatron.isa.vec.vecInstSet.VEC_TID;
+import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /*
@@ -98,7 +113,34 @@ public class llmInstSet extends AbstractInstSet {
     public void setup() {
         this.jvm().putAll(mutableMap(
                 //uri(PATTERN), uri(LLM_ISA_TID.extend(ALL)),
-                //  uri(CONST), lst(MTRON_EVAL_TOOL)),
+                uri(CONST), lst(
+                        rec(mutableMap(uri("chat_schema"), instC(M_ISA_INST_TID.dom(ALL.maybeSome()).rng(ALL.maybeSome()), lst(), (lhs, inst) -> {
+                            try (InputStream is = tbleInstSet.class.getResourceAsStream("llm_messages_schema.sql");
+                                 BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
+                                Connection conn = lhs.<tbleSpace>as().sjvm();
+                                conn.setAutoCommit(false); // Enable transaction
+                                Statement stmt = conn.createStatement();
+                                StringBuilder currentStatement = new StringBuilder();
+                                String line;
+                                while ((line = reader.readLine()) != null) {
+                                    line = line.trim();
+                                    if (line.isEmpty() || line.startsWith("--"))
+                                        continue; // Skip empty lines and comments
+                                    currentStatement.append(line).append(" ");
+                                    if (line.endsWith(";")) {
+                                        String sql = currentStatement.toString().trim();
+                                        if (!sql.isEmpty()) {
+                                            stmt.executeUpdate(sql);
+                                        }
+                                        currentStatement.setLength(0); // Reset buffer
+                                    }
+                                }
+                                conn.commit(); // Commit all statements
+                            } catch (Exception e) {
+                                throw MTronException.of(e);
+                            }
+                            return noobj();
+                        })), REC_TID, LLM_ISA_TID.extend("helper"))),
                 uri(TYPE), lst(
                         LLM_CATALOG_SPACE_TYPE,
                         LLM_TOOL_TYPE,
@@ -106,8 +148,8 @@ public class llmInstSet extends AbstractInstSet {
                         docWrap(LLM_MEMORY_TYPE = Type.Builder.build()
                                 .tid(REC_TID)
                                 .vid(LLM_MEMORY_TID)
-                                .isaPredicate(rec(uri("mem"), LST_TYPE, uri(MAX).maybe(), isa_(INT_TYPE).else_(jnt(15))))
-                                .create(), "llm memory: a pointer lst of message URIs with an optional max window size"),
+                                .isaPredicate(rec(uri("mem"), LST_TYPE, uri(ALGORITHM), REC_TYPE))
+                                .create(), "llm memory: memory policy with algorithm config and a resolved lst of messages from sub-path */msg/*"),
                         docWrap(LLM_MESSAGE_TYPE = Type.Builder.build()
                                 .tid(REC_TID)
                                 .vid(MESSAGE_TID)
@@ -259,7 +301,8 @@ public class llmInstSet extends AbstractInstSet {
                                 "the models chat response", // rng
                                 mutableMap(jnt(0), "the message to send the model", jnt(1), "the desired response format"), // args
                                 "communicate with am llm enriched by tools, skills, etc. and receive response in particular format", // desc
-                                "*<ollama:qwen3:latest>+[response=>[to=>print(_)],think=>to(/ai/thoughts?incrq)].chat('what is 4+2?',[answer=>int::T])"))));
+                                "*<ollama:qwen3:latest>+[response=>[to=>print(_)],think=>to(/ai/thoughts?incrq)].chat('what is 4+2?',[answer=>int::T])"))))
+        ;
         docWrap(this, "large language model think and reason within the metatron");
         super.setup();
     }

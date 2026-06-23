@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.llm.type;
 
+import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.data.message.*;
 import dev.langchain4j.model.chat.request.json.*;
 import org.junit.jupiter.api.AfterEach;
@@ -45,6 +46,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_MEMORY_TID;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.MODEL_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_at_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
@@ -64,6 +66,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MRec.noobjRec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -87,32 +90,34 @@ public class mModelTest extends AbstractMetatronTest {
     private static Rec buildFixture() {
         Map<Obj, Obj> map = new LinkedHashMap<>();
         map.put(uri(NAME), uri(MODEL_NAME));
-        map.put(uri(PROVIDER), rec(Map.of(
+        map.put(uri(PROVIDER), rec(mutableMap(
                 uri(NAME), str(PROVIDER_NAME),
                 uri(HOST), uri(PROVIDER_HOST),
                 uri(API_KEY), str(PROVIDER_KEY)
         )));
         map.put(uri(API_KEY), str(PROVIDER_KEY));
-        map.put(uri(FEATURE), rec(Map.of(
-                uri(THINK), (Obj) rec(),
-                uri(TOOL), (Obj) lst(uri("/test/tool")),
-                uri(SKILL), (Obj) lst(str("a-skill")),
-                uri(NOTE), (Obj) lst(str("a-note")),
-                uri(PROMPT), (Obj) str("you are helpful"),
-                uri(RAG), (Obj) rec(Map.of(
+        map.put(uri(FEATURE), rec(mutableMap(
+                uri(THINK), rec(),
+                uri(TOOL), lst(uri("/test/tool")),
+                uri(SKILL), lst(str("a-skill")),
+                uri(NOTE), lst(str("a-note")),
+                uri(PROMPT), str("you are helpful"),
+                uri(RAG), rec(mutableMap(
                         uri(PATTERN), uri("/sys/docs/#"),
                         uri(MAX), jnt(5)
                 )),
-                uri(COST), (Obj) rec(Map.of(
+                uri(COST), rec(mutableMap(
                         uri("input"), real(0.01),
                         uri("output"), real(0.02)
                 )),
-                uri(MEMORY), (Obj) rec(Map.of(
+                uri(MEMORY), rec(mutableMap(
                         uri("mem"), lst(),
-                        uri(MAX), jnt(15)
+                        uri(ALGORITHM), rec(mutableMap(
+                                uri(MAX), jnt(15)
+                        ))
                 )),
-                uri(RESPONSE), (Obj) rec(Map.of(
-                        uri(FORMAT), rec(Map.of(
+                uri(RESPONSE), rec(mutableMap(
+                        uri(FORMAT), rec(mutableMap(
                                 uri("answer"), str("string")
                         ))
                 ))
@@ -203,13 +208,6 @@ public class mModelTest extends AbstractMetatronTest {
         assertTrue(model.rag().isPresent());
         assertEquals(f("/sys/docs/#"), model.rag().get().at(PATTERN).uriValue());
         assertEquals(5, model.rag().get().at(MAX).intValue().intValue());
-    }
-
-    @Test
-    public void testMemory() {
-        Rec memory = model.memory();
-        assertFalse(memory.isNoObj());
-        assertEquals(15, memory.at(MAX).intValue().intValue());
     }
 
     @Test
@@ -357,9 +355,9 @@ public class mModelTest extends AbstractMetatronTest {
             stmt.executeUpdate("CREATE TABLE " + MEM_TABLE
                     + " (id INTEGER PRIMARY KEY, agent_id VARCHAR(255) NOT NULL,"
                     + " name VARCHAR(255) DEFAULT NULL,"
-                    + " mem TEXT DEFAULT '[]', max INTEGER DEFAULT 15)");
+                    + " algorithm TEXT DEFAULT '{}')");
             stmt.executeUpdate("INSERT INTO " + MEM_TABLE
-                    + " (id, agent_id, mem, max) VALUES (1, 'test-agent', '[]', 20)");
+                    + " (id, agent_id, algorithm) VALUES (1, 'test-agent', '{}')");
         }
 
         InstSet.importInstSet(TBLE_ISA_TID);
@@ -379,7 +377,10 @@ public class mModelTest extends AbstractMetatronTest {
     @AfterEach
     public void teardownSQLite() {
         if (this.memSpace != null) {
-            try { Router.global().removeSpace(this.memSpace.vid()); } catch (Exception ignored) {}
+            try {
+                Router.global().removeSpace(this.memSpace.vid());
+            } catch (Exception ignored) {
+            }
             this.memSpace.close();
             this.memSpace = null;
         }
@@ -391,52 +392,43 @@ public class mModelTest extends AbstractMetatronTest {
     public void testSQLiteMemoryTypeDetection() throws Exception {
         initSQLiteMemory();
 
-        // Read the mem column of row 1 — should be a Lst from JSON array default
+        // Read the algorithm column — should be a Rec from JSON object default
         final Obj row = Router.readFromSpace(MEM_VID);
         assertFalse(row.isNoObj(), "row should exist");
         assertTrue(row.isRec(), "row should be Rec");
 
-        final Obj memField = row.asRec().at(uri("mem"));
-        assertFalse(memField.isNoObj(), "mem field should exist");
-        assertTrue(memField.isLst(),
-                "mem should be Lst (JSON array detected), got: " + memField.getClass().getSimpleName());
+        final Obj algoField = row.asRec().at(uri(ALGORITHM));
+        assertFalse(algoField.isNoObj(), "algorithm field should exist");
+        assertTrue(algoField.isRec(),
+                "algorithm should be Rec (JSON object detected), got: " + algoField.getClass().getSimpleName());
     }
 
     @Test
     public void testSQLiteMemoryStoreAndRetrieve() throws Exception {
         initSQLiteMemory();
 
-        // Build messages as typed Recs and serialize the Lst to JSON so
-        // tbleSpace stores proper JSON (not mtron format from toString)
-        final Obj systemMsg = rec(uri(TEXT), str("You are helpful."))
-                .tid(f("/m/llm/system"));
-        final Obj userMsg = rec(uri(NAME), str("marko"),
-                uri(CONTENTS), rec(uri(TEXT), str("are you there?")))
-                .tid(f("/m/llm/user"));
-        final Obj aiMsg = rec(uri(TEXT), str("Yes, I am here."))
-                .tid(f("/m/llm/ai"));
-
-        final Obj msgList = lst(List.of(systemMsg, userMsg, aiMsg), f("/m/m/lst"), null);
-        final String memJson = new String(ObjSimpleJSONSerializer.single()
-                .outputBytes(msgList).array(), java.nio.charset.StandardCharsets.UTF_8);
-
+        // Write a memory policy row with algorithm config
         final Rec memoryRec = (Rec) rec(
                 uri("agent_id"), str("test-agent"),
-                uri("mem"), str(memJson),
-                uri("max"), jnt(20)
+                uri("name"), str("test-chat"),
+                uri(ALGORITHM), rec(
+                        uri(MAX), jnt(20),
+                        uri("message_count"), jnt(3)
+                )
         ).vid(MEM_VID);
 
         Router.writeToSpace(MEM_VID, memoryRec);
 
-        // Read back — verify mem is a Lst (JSON detection working)
+        // Read back — verify algorithm is a Rec (JSON detection working)
         final Obj readBack = Router.readFromSpace(MEM_VID);
         assertFalse(readBack.isNoObj());
         assertTrue(readBack.isRec());
 
-        final Obj memField = readBack.asRec().at(uri("mem"));
-        assertTrue(memField.isLst(),
-                "mem should be Lst (JSON detected), got: " + memField.getClass().getSimpleName());
-        assertEquals(3L, memField.asLst().count());
+        final Obj algoField = readBack.asRec().at(uri(ALGORITHM));
+        assertTrue(algoField.isRec(),
+                "algorithm should be Rec (JSON detected), got: " + algoField.getClass().getSimpleName());
+        assertEquals(20L, algoField.asRec().at(uri(MAX)).intValue());
+        assertEquals(3L, algoField.asRec().at(uri("message_count")).intValue());
 
         // Delete via noobj
         Router.writeToSpace(MEM_VID, noobj());
@@ -448,17 +440,19 @@ public class mModelTest extends AbstractMetatronTest {
         initSQLiteMemory();
 
         // Build model with SQLite-backed memory
-        final Rec modelRec = (Rec) rec(Map.of(
+        final Rec modelRec = (Rec) rec(mutableMap(
                 uri(NAME), uri("qwen3:latest"),
-                uri(PROVIDER), rec(Map.of(
+                uri(PROVIDER), rec(mutableMap(
                         uri(NAME), uri("ollama"),
                         uri(HOST), uri(PROVIDER_HOST)
                 )),
-                uri(FEATURE), rec(Map.of(
-                        uri(MEMORY), rec(Map.of(
+                uri(FEATURE), rec(mutableMap(
+                        uri(MEMORY), rec(mutableMap(
                                 uri("mem"), auto_at_(MEM_VID).tryToInst(),
-                                uri(MAX), jnt(20)
-                        ))
+                                uri(ALGORITHM), rec(mutableMap(
+                                        uri(MAX), jnt(20)
+                                ))
+                        ), LLM_MEMORY_TID, MEM_VID)
                 ))
         ), MODEL_TID, null);
 
@@ -473,11 +467,10 @@ public class mModelTest extends AbstractMetatronTest {
             throw e;
         }
 
-        // Verify memory was persisted
-        final Obj row = Router.readFromSpace(MEM_VID);
-        final Obj memField = row.asRec().at(uri("mem"));
-        assertTrue(memField.isLst(), "mem should be Lst after chat");
-        assertTrue(memField.asLst().count() >= 2L,
-                "expected >=2 messages (user + ai), got " + memField.asLst().count());
+        // Verify memory was persisted via the KV message store
+        final SpaceChatMemoryStore store = new SpaceChatMemoryStore(this.memSpace);
+        final List<ChatMessage> messages = store.getMessages(MEM_VID);
+        assertTrue(messages.size() >= 2,
+                "expected >=2 messages (user + ai) in KV store, got " + messages.size());
     }
 }

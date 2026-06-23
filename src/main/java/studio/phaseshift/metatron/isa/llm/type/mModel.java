@@ -61,6 +61,7 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.DOCQ;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.MODEL_TID;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.SYSTEM_MESSAGE_TID;
 import static studio.phaseshift.metatron.isa.llm.type.mTool.LLM_TOOL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Str.str0;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -78,8 +79,29 @@ public class mModel extends MRec {
     public record Provider(String name, fURI host, String apiKey) {
     }
 
+    // Held so mergeSystemMessages() can mirror composed system messages.
+    private SpaceChatMemoryStore chatMemoryStore;
+    private fURI memoryVID;
+
+    // User-added system messages (via addSystemMessage).  Merged with
+    // capability-generated messages during agent construction.
+    private final List<String> customSystemMessages = new ArrayList<>();
+
     public mModel(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
+    }
+
+    /**
+     * Add a system message that will be included in every chat turn.
+     * Mirrored to the typed table when the agent is built.
+     */
+    public void addSystemMessage(final String text) {
+        this.customSystemMessages.add(text);
+    }
+
+    /** All user-added system messages (mutable list). */
+    public List<String> systemMessages() {
+        return this.customSystemMessages;
     }
 
     public static mModel model(final Rec model) {
@@ -222,12 +244,17 @@ public class mModel extends MRec {
                         this.logger().warn("llm memory has no vid (ignoring): %s", this.memory());
                     } else {
                         final Space space = Router.global().getSpaceFor(memoryVID);
-                        service.chatMemory(MessageWindowChatMemory.builder()
-                                        .maxMessages(this.memory().at(MAX).intValue().intValue())
-                                        .id(memoryVID)
-                                        .chatMemoryStore(new SpaceChatMemoryStore(space))
-                                        .build())
+                        final SpaceChatMemoryStore store = new SpaceChatMemoryStore(space);
+                        final MessageWindowChatMemory chatMemory = MessageWindowChatMemory.builder()
+                                .maxMessages(this.memory().at(ALGORITHM).asRec().at(MAX).intValue().intValue())
+                                .id(memoryVID)
+                                .chatMemoryStore(store)
+                                .build();
+                        service.chatMemory(chatMemory)
                                 .storeRetrievedContentInChatMemory(true);
+                        // Save so mergeSystemMessages() can mirror system messages
+                        this.chatMemoryStore = store;
+                        this.memoryVID = memoryVID;
                     }
                 } catch (Exception e) {
                     throw MTronException.of("unable to setup memory: %s", e);
@@ -336,9 +363,25 @@ public class mModel extends MRec {
 
     private void mergeSystemMessages(final AiServices<mAgent> service, final List<String> systemMessages) {
         try {
+            // Prepend user-added system messages before capability-generated ones
+            if (!this.customSystemMessages.isEmpty()) {
+                final List<String> all = new ArrayList<>(this.customSystemMessages);
+                all.addAll(systemMessages);
+                systemMessages.clear();
+                systemMessages.addAll(all);
+            }
             final String finalSystemMessage = String.join("\n", systemMessages);
-            if (!finalSystemMessage.isBlank())
+            if (!finalSystemMessage.isBlank()) {
                 service.systemMessage(finalSystemMessage);
+                // Mirror to typed table (system messages bypass ChatMemory)
+                if (this.chatMemoryStore != null && this.memoryVID != null) {
+                    final Map<Obj, Obj> systemMap = new LinkedHashMap<>();
+                    systemMap.put(uri(TEXT), str(finalSystemMessage));
+                    systemMap.put(uri(TYPE), uri("SYSTEM"));
+                    final Rec systemRec = rec(systemMap, SYSTEM_MESSAGE_TID, null);
+                    SpaceChatMemoryStore.mirrorSystemMessage(this.memoryVID, systemRec);
+                }
+            }
         } catch (Exception e) {
             throw MTronException.of("unable to setup system message: %s", e);
         }

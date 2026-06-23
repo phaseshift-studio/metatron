@@ -862,15 +862,15 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                     final FutureObj<Obj> future = mach.applyAsync();
                     while (!future.isDone()) {
                         try {
-                            future.get(5000);
+                            future.get(10000);
                         } catch (final Exception e) {
                             // do nothing
                         }
                         if (!future.isDone()) {
-                            final String waitOrInterrupt = this.reader.readLine(Highlighter.format("{{y}}\ncontinue waiting {{g}}[y/N]{{y}}?{{X}}\n"));
-                            if (waitOrInterrupt.trim().equalsIgnoreCase("n")) {
+                            terminal.writer().write(Highlighter.format("{{k}}\ncancel stream with [q] {{X}}"));
+                            if (terminal.reader().read() == 'q') {
+                                this.write(Graphitty.string("{{-X-&|0}}"));
                                 future.cancel(true);
-                                break;
                             }
                         }
                     }

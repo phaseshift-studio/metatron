@@ -48,6 +48,7 @@ import studio.phaseshift.metatron.util.IteratorUtil;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.InetAddress;
+import java.nio.file.FileSystem;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
@@ -222,8 +223,8 @@ public class BootLoader implements Rec, Feature.SelfClone {
 
         // --- Parse boot-file header for embedded args -----------------------
         if (ARGS.has(BOOT)) {
-            final Path bootPath = Paths.get(f(Paths.get("").toAbsolutePath().normalize().toString()).extend(ARGS.at(BOOT).uriValue()).toString());
-            fsSpace.makeFile(bootPath).vid(f("boot/file"));
+            final Path bootPath = Path.of(ARGS.at(BOOT).uriValue().toString());
+            //fsSpace.makeFile(bootPath).vid(f("boot/file"));
             try (final FileInputStream bootReader = new FileInputStream(bootPath.toFile())) {
                 final List<String> bootLines = Arrays.asList(new String(bootReader.readAllBytes()).split("\n"));
                 final int argsStart = IteratorUtil.indexedStream(bootLines.iterator()).filter(x -> x.get1().startsWith("[== boot args ==]")).map(x -> x.get0()).findFirst().orElse(-1);
@@ -320,8 +321,17 @@ public class BootLoader implements Rec, Feature.SelfClone {
                 EXECUTOR = THREAD_POOL_SUPPLIER.get();
             /// /// PARSING OF BOOT ARGUMENT REC /// ///
             LOG.info("final boot args:\n%s", args);
-            if (args.has(BOOT))
-                args.at(uri(BOOT), f(Paths.get("").toAbsolutePath().normalize().toString()).extend(args.at(BOOT).uriValue()).toUri(), MUTABLE);
+            if (args.has(BOOT)) {
+                final fURI bootUri = args.at(BOOT).uriValue();
+                final String bootPath = bootUri.toString();
+                if (bootPath.startsWith("/")) {
+                    // absolute path: normalize but don't prepend CWD
+                    args.at(uri(BOOT), f(Path.of(bootPath).normalize().toString()).toUri(), MUTABLE);
+                } else {
+                    // relative path: resolve against CWD
+                    args.at(uri(BOOT), f(Paths.get("").toAbsolutePath().normalize().toString()).extend(bootUri).toUri(), MUTABLE);
+                }
+            }
             LogObj.setSLF4J(args.at(uri("log")).orElse(uri("warn")).uriValue().toString());
             LOG.info("%s", Graphitty.sillyPrint("booting metatron", true, true));
             /// /// INITIAL PHASE OF BOOT PROCESS /// ///
