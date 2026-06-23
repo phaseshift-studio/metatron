@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -29,15 +29,16 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.isa.m.mInstSet.LST_TID;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableList;
 
 public class MLst extends MObj implements Lst {
 
     public static Lst lst(final Obj... objs) {
-        return lst(Arrays.stream(objs).collect(Collectors.toCollection(ArrayList::new)), LST_TID,null);
+        return lst(Arrays.stream(objs).collect(Collectors.toCollection(ArrayList::new)), LST_TID, null);
     }
 
     public static Lst lst(final List<Obj> objs) {
-        return lst(objs, LST_TID,null);
+        return lst(objs, LST_TID, null);
     }
 
     public static Lst lst(final List<Obj> objs, final fURI tid, final fURI vid) {
@@ -58,7 +59,7 @@ public class MLst extends MObj implements Lst {
 
     @Override
     public Lst clone(final Object jvm, final fURI tid, final fURI vid) {
-        return super.clone(((List<Obj>)jvm).stream()/*.map(Obj::clone)*/.collect(Collectors.toCollection(ArrayList::new)), tid, vid);
+        return super.clone(((List<Obj>) jvm).stream()/*.map(Obj::clone)*/.collect(Collectors.toCollection(ArrayList::new)), tid, vid);
     }
 
     @Override
@@ -71,6 +72,6 @@ public class MLst extends MObj implements Lst {
         return this.clone(jvm, this.tid(), this.vid());
     }
 
-    private static final Lst EMPTY_LST = new MLst(List.of(), LST_TID,null);
+    private static final Lst EMPTY_LST = new MLst(mutableList(), LST_TID, null);
 
 }

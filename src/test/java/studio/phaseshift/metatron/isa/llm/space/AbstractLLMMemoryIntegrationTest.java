@@ -120,6 +120,9 @@ public abstract class AbstractLLMMemoryIntegrationTest extends AbstractMetatronT
         this.memoryStore = null;
         cleanupMemory();
         this.space = null;
+        // Clear the static mirror dedup cache so a fresh space with the same
+        // memory VID pattern gets fresh mirror writes (tests reuse VIDs).
+        SpaceChatMemoryStore.clearMirrorCache();
     }
 
     /* ------------------------------------------------------------
@@ -263,15 +266,15 @@ public abstract class AbstractLLMMemoryIntegrationTest extends AbstractMetatronT
 
         // ── Verify llm_message_system ────────────────────────────
         assertTypedTable(scheme, "llm_message_system",
-                "system", 1, this::verifyMirrorRow);
+                "system", 1, 1, this::verifyMirrorRow);
 
         // ── Verify llm_message_user ──────────────────────────────
         assertTypedTable(scheme, "llm_message_user",
-                "user", 3, this::verifyMirrorRow);
+                "user", 3, 3, this::verifyMirrorRow);
 
         // ── Verify llm_message_ai ────────────────────────────────
         assertTypedTable(scheme, "llm_message_ai",
-                "ai", 3, this::verifyMirrorRow);
+                "ai", 3, 3, this::verifyMirrorRow);
 
         // ── KV store remains authoritative ───────────────────────
         assertTrue(memoryStore.getMessages(memoryVID()).size() >= 6,
@@ -295,7 +298,7 @@ public abstract class AbstractLLMMemoryIntegrationTest extends AbstractMetatronT
 
     /** Validate a typed table: sequential IDs, unique hashes, per-row assertions. */
     private void assertTypedTable(final String scheme, final String tableName,
-                                  final String label, final int minRows,
+                                  final String label, final int minRows, final int maxRows,
                                   final java.util.function.BiConsumer<Rec, Integer> perRow) {
         final Map<String, Integer> hashCounts = new LinkedHashMap<>();
         int rows = 0;
@@ -323,6 +326,8 @@ public abstract class AbstractLLMMemoryIntegrationTest extends AbstractMetatronT
 
         assertTrue(rows >= minRows,
                 label + " table: expected >= " + minRows + " rows, got " + rows);
+        assertTrue(rows <= maxRows,
+                label + " table: expected <= " + maxRows + " rows (no duplicates), got " + rows);
 
         // All hashes unique (= row count)
         final long duplicates = hashCounts.values().stream().filter(c -> c > 1).count();

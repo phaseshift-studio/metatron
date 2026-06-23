@@ -443,6 +443,15 @@ public final class CommonUtil {
         }
     }
 
+    public static <V> List<V> mutableList(final List<V> list) {
+        return new ArrayList<>(list);
+    }
+
+    public static <V> List<V> mutableList(final V... args) {
+        return mutableList(List.of(args));
+    }
+
+
     public static <K, V> Map<K, V> mutableMap(final Map<K, V> map) {
         return new LinkedHashMap<>(map);
     }

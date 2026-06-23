@@ -29,7 +29,9 @@ import org.junit.jupiter.params.provider.MethodSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.TestCategory;
 import studio.phaseshift.metatron.TestData;
+import studio.phaseshift.metatron.furi.QProc;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
@@ -1318,4 +1320,33 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
         // Clean up _ops_ subtree so wildcard reads in other tests don't pick this up.
         Router.global().write(this.testUri("_ops_/#"), noobj());
     }
+
+    // =========================================================================
+    //  QProc registration
+    // =========================================================================
+
+    @Test
+    public void testAddQProcStoredAndRetrievable() {
+        final QProc q = QCollection.incrQ();
+        this.space.addQ(q);
+        final List<QProc> qprocs = this.space.qs().lstValue().stream()
+                .map(o -> (QProc) o).toList();
+        assertFalse(qprocs.isEmpty(), "qs() should not be empty after addQ");
+        assertTrue(qprocs.stream().anyMatch(qp -> qp.pattern().equals(QCollection.INCRQ_PATTERN)),
+                "qs() should contain the added incrQ");
+    }
+
+    @Test
+    public void testMultipleQProcs() {
+        this.space.addQ(QCollection.incrQ());
+        this.space.addQ(QCollection.subq());
+        final List<QProc> qprocs = this.space.qs().lstValue().stream()
+                .map(o -> (QProc) o).toList();
+        assertTrue(qprocs.size() >= 2, "should have >= 2 qprocs, got " + qprocs.size());
+        assertTrue(qprocs.stream().anyMatch(qp -> qp.pattern().equals(QCollection.INCRQ_PATTERN)),
+                "should contain incrQ");
+        assertTrue(qprocs.stream().anyMatch(qp -> qp.pattern().equals(QCollection.SUBQ_PATTERN)),
+                "should contain subq");
+    }
+
 }

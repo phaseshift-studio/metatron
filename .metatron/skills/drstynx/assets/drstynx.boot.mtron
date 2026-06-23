@@ -9,7 +9,7 @@
                      obj_write    => true,
                      code_resolve => false]],
  external      =>
-   [ memorydb  => <mariadb://localhost:3306/drstynx2?createDatabaseIfNotExist=true&user=mtron&password=mtron>,
+   [ memorydb  => <mariadb://localhost:3306/dr_memory?createDatabaseIfNotExist=true&user=mtron&password=mtron>,
      localfs   => </home/killswitch/.hermes_clone>]
 ]
 [===============]
@@ -53,29 +53,29 @@ fsspace::[
     route => [localfs: => <~/.hermes_clone>]]@</sys/space/fs/dr>;
     
 catalog::[host    => <http://localhost:11434>,
-          pattern => <ollama:#>,
-          name    => <ollama>,
+          pattern => ollama:#,
+          name    => ollama,
           route   => [ollama:=><>]]@</sys/space/ollama>;
           
 tblespace::[pattern    => drdb:#,
-            host       => <mariadb://localhost:3306/drstynx2?createDatabaseIfNotExist=true&user=mtron&password=mtron>,
+            host       => !*<boot/args/external/memorydb>,
+            driver     => <org.mariadb.jdbc.Driver>,
             table      => [llm_memory, llm_message_system, llm_message_user, llm_message_ai, llm_message_tool_result, llm_model, llm_skill, llm_tool],
-            route      => [<drdb:>=><>],
-            driver     => <org.mariadb.jdbc.Driver>]@/sys/space/tble/dr;
+            q          => [incrq::[=>]],
+            route      => [<drdb:>=><>]]@/sys/space/tble/dr;
              
         [======================]  
         [======== AGENT =======]
         [======================]   
-<drdb:llm_memory/1>       -> [agent_id=>'drstynx',name=>'general chat', algorithm=>[max=>15]];
-
-model::[ desc     => "core agent",
-         provider => !*<ollama:qwen3:latest/provider>,
-         name     => !*<ollama:qwen3:latest/name>,
-         feature  => [think    => |/usr/ui/console/pane/0/stream(_), 
-                      memory   => !@<drdb:llm_memory/1>,
-                      tool     => [!*eval,!*sql.skip(1).take(1)],
-                      note     => !@</usr/dr/notes>,
-                      [==skill    => [!*<mtronfs:skills/mtron>.as(skill::T)],==]
-                      response => [to=>print(_)]]]@<dr>;
+*<drdb:llm_memory/1>.else([agent_id=>'drstynx',name=>'general chat', algorithm=>[max=>15]].to(drdb:llm_memory/1));
+model::[desc     => "core agent",
+        provider => !*<ollama:qwen3:latest/provider>,
+        name     => !*<ollama:qwen3:latest/name>,
+        feature  => [think    => |/usr/ui/console/pane/0/stream(_), 
+                     memory   => !@<drdb:llm_memory/1>,
+                     tool     => [!*eval,!*sql.skip(1).take(1)],
+                     note     => !@</usr/dr/notes>,
+                     [==skill    => [!*<mtronfs:skills/mtron>.as(skill::T)],==]
+                     response => [to=>print(_)]]]@<dr>;
 
 console::[=>]@/usr/dr/console;

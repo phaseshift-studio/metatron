@@ -49,8 +49,7 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.type.Bool.*;
 import static studio.phaseshift.metatron.isa.m.type.Bytes.BYTES_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Code.CODE_TYPE;
@@ -1064,8 +1063,8 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                     instC(APPLY_INST_TID.dom(ALL).rng(ALL_STAR), lst(T(ALL_STAR)), (lhs, inst) -> lhs.isInst() ?
                             lhs.asInst().apply(inst.args()) :
                             Router.global().read(lhs.uriValue().basePath().extend("apply")).apply(inst.args())),
-                    instC(MAP_INST_TID.dom(A).rng(ALL.maybe()), lst(T(B)), (lhs, inst) -> inst.arg(0)),
-                    docWrap(instC(MAP_INST_TID.dom(A.maybe()).rng(ALL.maybe()), lst(T(B.maybe())), (lhs, inst) -> inst.arg(0)), "maybe some obj", "the lhs obj applied to the arg obj", Map.of(jnt(0), "any obj"), "applies the lhs obj to the arg obj to yield the rhs obj"),
+                    //instC(MAP_INST_TID.dom(A).rng(ALL.maybe()), lst(T(B)), (lhs, inst) -> inst.arg(0)),
+                    docWrap(instC(MAP_INST_TID.dom(A.maybe()).rng(B.maybe()), lst(T(B.maybe())), (lhs, inst) -> inst.arg(0)), "maybe some obj", "the lhs obj applied to the arg obj", Map.of(jnt(0), "any obj"), "applies the lhs obj to the arg obj to yield the rhs obj"),
                     instC(FILTER_INST_TID.dom(A).rng(A.maybe()), lst(T(ALL.maybe())), (lhs, inst) -> inst.arg(0).isNoObj() ? noobj() : lhs),
                     instC(SIDE_INST_TID.dom(A).rng(A), lst(ALL_TYPE), (lhs, inst) -> Optional.of(inst.arg(0).apply(lhs)).map(x -> (Obj) null).orElse(lhs)),
                     docWrap(instC(TID_INST_TID.dom(ALL).rng(URI_TID), lst(), (lhs, inst) -> lhs.tid().toUri()),
@@ -1074,7 +1073,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             "any obj", "a spatial location for the lhs obj", Map.of(jnt(0), "the value id for the lhs obj"), "specifies the spatial location of the lhs obj", "1@abc.vid() [-- abc --]"),
                     docWrap(instC(VID_INST_TID.dom(A).rng(A), lst(T(URI_TID)), (lhs, inst) -> lhs.vid(inst.arg(0).uriValue())),
                             "any obj", "a spatial location for the lhs obj", Map.of(jnt(0), "the value id for the lhs obj"), "specifies the spatial location of the lhs obj", "1@abc.vid() [-- abc --]"),
-                    docWrap(instC(ELSE_INST_TID.dom(ALL.maybe()).rng(ALL), lst(T(ALL.maybe())), (lhs, inst) -> lhs.isNoObj() ? inst.arg(0) : lhs),
+                    docWrap(instC(ELSE_INST_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL.maybe())), (lhs, inst) -> lhs.isNoObj() ? inst.arg(0).apply(lhs) : lhs),
                             "maybe an obj", "the lhs obj else the arg obj", Map.of(jnt(0), "the rhs obj is the lhs is noobj"), "\\[ f(\\tt{lhs}) = \\left\\{ \\begin{aligned} \\tt{lhs} & \\quad \\text{if } \\tt{lhs} \\neq \\emptyset \\\\ \\tt{arg}_0 & \\quad \\text{otherwise.} \\end{aligned} \\right. \\]"),// TODO: rec args needs resolution on generics connected
                     docWrap(instC(IS_INST_TID.dom(A.maybe()).rng(A.maybe()), lst(isa_(T(BOOL_TID)).else_(BOOL_FALSE).tryToInst()), (lhs, inst) -> inst.arg(0).orElse(BOOL_FALSE).boolValue() ? lhs : noobj()),
                             "any obj", "the lhs obj if arg is true", Map.of(jnt(0), "filter lhs if false"), "filters the lhs obj"), // TODO: generics are not working for some reason

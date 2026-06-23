@@ -379,7 +379,7 @@ public class mModel extends MRec {
                     systemMap.put(uri(TEXT), str(finalSystemMessage));
                     systemMap.put(uri(TYPE), uri("SYSTEM"));
                     final Rec systemRec = rec(systemMap, SYSTEM_MESSAGE_TID, null);
-                    SpaceChatMemoryStore.mirrorSystemMessage(this.memoryVID, systemRec);
+                    SpaceChatMemoryStore.mirrorSystemMessage(this.chatMemoryStore.space(), this.memoryVID, systemRec);
                 }
             }
         } catch (Exception e) {
@@ -408,7 +408,7 @@ public class mModel extends MRec {
 
         try {
             final mAgent agent = (this.has(DESC) && !this.at(DESC).strValue().isBlank() ?
-                    this.agentBuilder().systemMessageTransformer((current, content) -> this.at(DESC).orElse(str0()).strValue() + "\n\n" + current) :
+                    this.agentBuilder().systemMessageTransformer((current, content) -> (this.at(DESC).orElse(str0()).strValue() + "\n\n" + (current != null ? current : "")).trim()) :
                     this.agentBuilder())
                     .streamingChatModel(LLMFactory.createChatInteraction(this, this.model(), responseFormat)).build();
             final AtomicReference<String> STAGE = new AtomicReference<>("START");

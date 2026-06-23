@@ -32,6 +32,7 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.furi.q.QCollection.incrQ;
 import static studio.phaseshift.metatron.isa.tble.tbleInstSet.TBLE_ISA_TID;
 
 /*
@@ -75,7 +76,8 @@ public class SqliteLLMMemoryIntegrationTest extends AbstractLLMMemoryIntegration
                                 uri("llm_message_user"),
                                 uri("llm_message_ai"),
                                 uri("llm_message_tool_result")),
-                        uri(ROUTE), rec(uri("sqlite:"), uri(""))
+                        uri(ROUTE), rec(uri("sqlite:"), uri("")),
+                        uri(QPROC), lst(incrQ())
                 ),
                 SPACE_VID
         );

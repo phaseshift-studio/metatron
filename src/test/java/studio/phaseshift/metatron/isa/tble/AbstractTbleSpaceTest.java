@@ -26,6 +26,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import studio.phaseshift.metatron.AbstractDataPathTest;
 import studio.phaseshift.metatron.algebra.rewrite.CommonRewritesTestContract;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.furi.q.IncrQTest;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
@@ -76,7 +77,12 @@ import static studio.phaseshift.metatron.isa.tble.tbleInstSet.TBLE_ISA_TID;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public abstract class AbstractTbleSpaceTest extends AbstractDataPathTest implements CommonRewritesTestContract {
+public abstract class AbstractTbleSpaceTest extends AbstractDataPathTest implements CommonRewritesTestContract, IncrQTest {
+
+    @Override
+    public fURI incrQBaseURI() {
+        return f(getSpace().pattern().scheme() + ":incrq");
+    }
 
     protected static final fURI SPACE_VID = f("/sys/space/tabledb/test");
     protected static DatabaseConfig staticDbConfig;

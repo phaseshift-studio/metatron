@@ -42,15 +42,15 @@ import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 
-public class MqttPubSubQ extends BaseQ {
+public class mqttSpaceSubQ extends BaseQ {
 
     protected final mqttSpace space;
     protected final QProc subq = QCollection.subq();
 
-    public MqttPubSubQ(final mqttSpace space) {
+    public mqttSpaceSubQ(final mqttSpace space) {
         super(new HashMap<>(), f(SUBQ), SUBQ_TID);
         this.space = space;
-        this.onWrite = new MqttPubSubQ.OnWrite();
+        this.onWrite = new mqttSpaceSubQ.OnWrite();
         this.onRead = this.subq.onRead().get();
     }
 

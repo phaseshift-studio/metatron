@@ -173,7 +173,7 @@ public class mModelTest extends AbstractMetatronTest {
 
     @Test
     public void testToolsAbsent() {
-        Rec empty = rec(Map.of(uri(NAME), uri("empty")), MODEL_TID, null);
+        Rec empty = rec(mutableMap(uri(NAME), uri("empty")), MODEL_TID, null);
         mModel emptyModel = mModel.model(empty);
         assertTrue(emptyModel.tools().isEmpty());
     }
@@ -212,7 +212,7 @@ public class mModelTest extends AbstractMetatronTest {
 
     @Test
     public void testMemoryAbsent() {
-        Rec empty = rec(Map.of(uri(NAME), uri("empty")), MODEL_TID, null);
+        Rec empty = rec(mutableMap(uri(NAME), uri("empty")), MODEL_TID, null);
         assertTrue(mModel.model(empty).memory().isNoObj());
     }
 
@@ -227,7 +227,7 @@ public class mModelTest extends AbstractMetatronTest {
 
     @Test
     public void testFeaturesAbsent() {
-        Rec empty = rec(Map.of(uri(NAME), uri("empty")), MODEL_TID, null);
+        Rec empty = rec(mutableMap(uri(NAME), uri("empty")), MODEL_TID, null);
         assertTrue(mModel.model(empty).features().isNoObj());
     }
 
@@ -246,13 +246,13 @@ public class mModelTest extends AbstractMetatronTest {
 
     @Test
     public void testResponseFormatAbsent() {
-        Rec empty = rec(Map.of(uri(NAME), uri("empty")), MODEL_TID, null);
+        Rec empty = rec(mutableMap(uri(NAME), uri("empty")), MODEL_TID, null);
         assertTrue(mModel.model(empty).responseFormat().isEmpty());
     }
 
     @Test
     public void testLastResponseAbsent() {
-        Rec empty = rec(Map.of(uri(NAME), uri("empty")), MODEL_TID, null);
+        Rec empty = rec(mutableMap(uri(NAME), uri("empty")), MODEL_TID, null);
         assertTrue(mModel.model(empty).lastResponse().isEmpty());
     }
 
@@ -363,7 +363,7 @@ public class mModelTest extends AbstractMetatronTest {
         InstSet.importInstSet(TBLE_ISA_TID);
 
         this.memSpace = tbleSpace.of(
-                Map.of(
+                mutableMap(
                         uri(PATTERN), uri("sqlite:#"),
                         uri(HOST), uri("sqlite:" + TEST_DB_PATH),
                         uri(DRIVER), uri("org.sqlite.JDBC"),
