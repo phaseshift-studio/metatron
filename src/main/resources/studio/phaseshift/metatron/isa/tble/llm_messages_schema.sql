@@ -1,71 +1,72 @@
--- llm_memory: one row per conversation / agent memory session.
--- Uses pointer-Lst model: { mem: Lst<Uri>, max?: Int }
--- The mem field is a JSON array of message URIs (pointers to individually-addressable message rows).
--- Messages are stored independently in their own tables — ordering is by Lst index, not per-message position.
-
+-- =========================================================================
+-- llm_memory: memory policy / algorithm configuration object
+-- One row per agent conversation session.
+-- Messages are NOT inlined here — they are stored at llm:llm_memory/{id}/msg/{position}
+-- =========================================================================
 CREATE TABLE IF NOT EXISTS llm_memory (
-    id            INT PRIMARY KEY,
-    agent_id      VARCHAR(255)  NOT NULL,
-    name          VARCHAR(255)  DEFAULT NULL,
-    mem           JSON          DEFAULT JSON_ARRAY(),
-    max           INT           DEFAULT 15,
-    created_at    TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
-    updated_at    TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
+    id              INT PRIMARY KEY AUTO_INCREMENT,
+    agent_id        VARCHAR(255)  NOT NULL,
+    name            VARCHAR(255)  DEFAULT NULL,
+    algorithm       JSON          NOT NULL,           -- {"max": 15, ...future algorithms}
+    created_at      TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
+    updated_at      TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
 
     UNIQUE (agent_id, name)
 );
 
--- Messages are typed at the metatron level via TID (system::T, user::T, ai::T, tool_result::T).
--- Each message type maps to its own table.  Messages are independent records — they do not carry
--- a memory_id FK; the pointer Lst in llm_memory is the exclusive owner of message ordering.
--- Orphaned messages (evicted from the window but not deleted) are harmless and lazily GC'd.
-
--- llm_message_system: SYSTEM messages — behavioral / instruction context for the LLM.
+-- =========================================================================
+-- llm_message_system: SYSTEM messages — behavioral / instruction context for the LLM
+-- Typed columns for metatron-native scalars (Str, Int).
+-- Nested Rec/Lst fields live in the per-type message tables below.
 -- TID: /m/llm/system     (metatron: system::T)
-
+-- =========================================================================
 CREATE TABLE IF NOT EXISTS llm_message_system (
-    id          INT  PRIMARY KEY,
-    text        TEXT NOT NULL
+    id      INT PRIMARY KEY AUTO_INCREMENT,
+    text    TEXT NOT NULL
 );
 
--- llm_message_user: USER messages — supports both single-text and multi-modal content.
+-- =========================================================================
+-- llm_message_user: USER messages — single-text or multi-modal content
 -- TID: /m/llm/user       (metatron: user::T)
--- Single-text:   contents => [text => "hello"]
--- Multi-modal:   contents => [[text => "..."], [image => [mime_type => "image/png", url => "..."]]]
-
+-- Single-text path stored in `text`; multi-modal path stored in `parts` (Lst of content-part Recs as JSON)
+-- =========================================================================
 CREATE TABLE IF NOT EXISTS llm_message_user (
-    id              INT PRIMARY KEY,
-    name            VARCHAR(255)  DEFAULT NULL,
-    content_json    JSON          NOT NULL   
+    id      INT PRIMARY KEY AUTO_INCREMENT,
+    name    VARCHAR(255)  DEFAULT NULL,
+    text    TEXT,
+    parts   JSON          DEFAULT NULL
 );
 
--- llm_message_ai: AI / ASSISTANT messages — model responses with optional tool requests.
+-- =========================================================================
+-- llm_message_ai: AI / ASSISTANT messages — model responses with optional tool requests
 -- TID: /m/llm/ai          (metatron: ai::T)
-
+-- =========================================================================
 CREATE TABLE IF NOT EXISTS llm_message_ai (
-    id              INT PRIMARY KEY,
+    id              INT PRIMARY KEY AUTO_INCREMENT,
     name            VARCHAR(255)  DEFAULT NULL,
     text            TEXT          DEFAULT NULL,
     thinking        INT           DEFAULT NULL,
-    tool_requests   JSON          DEFAULT JSON_ARRAY(),
-    attrs           JSON          DEFAULT JSON_OBJECT()
+    tool_requests   JSON          DEFAULT NULL,       -- Lst of tool-request Recs
+    attrs           JSON          DEFAULT NULL        -- Rec of provider key-value metadata
 );
 
--- llm_message_tool_result: TOOL_EXECUTION_RESULT messages — results of tool invocations.
+-- =========================================================================
+-- llm_message_tool_result: TOOL_EXECUTION_RESULT messages
 -- TID: /m/llm/tool_result  (metatron: tool_result::T)
 -- boundary note: metatron NAME token maps to LC4j ToolExecutionResultMessage.toolName()
-
+-- =========================================================================
 CREATE TABLE IF NOT EXISTS llm_message_tool_result (
-    id      INT PRIMARY KEY,
-    name    VARCHAR(255)  NOT NULL,  
-    text    TEXT          NOT NULL   
+    id          INT PRIMARY KEY AUTO_INCREMENT,
+    tool_name   VARCHAR(255) NOT NULL,
+    text        TEXT         NOT NULL,
+    result_id   VARCHAR(255) DEFAULT NULL
 );
 
-
--- llm_model: LLM model catalog (name -> metadata).
-
+-- =========================================================================
+-- llm_model: LLM model catalog (unchanged)
+-- =========================================================================
 CREATE TABLE IF NOT EXISTS llm_model (
-    id             INT PRIMARY KEY,
+    id             INT PRIMARY KEY AUTO_INCREMENT,
     name           VARCHAR(255)    NOT NULL UNIQUE,
     label          VARCHAR(255)    DEFAULT 'null',
     info           JSON            DEFAULT JSON_OBJECT(),
@@ -73,22 +74,22 @@ CREATE TABLE IF NOT EXISTS llm_model (
     metadata_json  JSON            DEFAULT JSON_OBJECT()
 );
 
-
--- llm_skill: registered skills / tools available to models.
-
+-- =========================================================================
+-- llm_skill: registered skills (unchanged)
+-- =========================================================================
 CREATE TABLE IF NOT EXISTS llm_skill (
-    id             INT PRIMARY KEY,
+    id             INT PRIMARY KEY AUTO_INCREMENT,
     name           VARCHAR(255)    NOT NULL UNIQUE,
     description    TEXT            DEFAULT 'null',
     instructions   JSON            DEFAULT JSON_OBJECT(),
     metadata       JSON            DEFAULT JSON_OBJECT()
 );
 
-
--- llm_tool: tool registration — mtron instruction mapped to a LangChain4j ToolSpecification.
-
+-- =========================================================================
+-- llm_tool: tool registration (unchanged)
+-- =========================================================================
 CREATE TABLE IF NOT EXISTS llm_tool (
-    id             INT PRIMARY KEY,
+    id             INT PRIMARY KEY AUTO_INCREMENT,
     memory_id      INT REFERENCES llm_memory(id) ON DELETE SET NULL,
     mtron_inst     VARCHAR(1024)  NOT NULL UNIQUE,
     name           VARCHAR(255)    NOT NULL,

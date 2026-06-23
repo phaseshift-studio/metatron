@@ -61,6 +61,7 @@ public final class Tokens {
     public static final String ENTRY = "entry";
     public static final String RAG = "rag";
     public static final String FEATURE = "feature";
+    public static final String ALGORITHM = "algorithm";
     public static final String ID = "id";
     public static final String IN = "in";
     public static final String OUT = "out";
@@ -213,6 +214,7 @@ public final class Tokens {
     public static final String YIELD = "yield";
     public static final String DESC = "desc";
     public static final String DIR = "dir";
+    public static final String FILE = "file";
     public static final String CONTENT = "content";
     public static final String EXAMPLE = "example";
     public static final String MODEL = "model";

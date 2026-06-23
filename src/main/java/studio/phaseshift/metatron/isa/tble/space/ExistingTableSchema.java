@@ -103,6 +103,9 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
         pendingFKs.clear();
     }
 
+    /** Entry token that signals "let the DB assign the next auto-increment value." */
+    static final String AUTO_ENTRY = "~auto";
+
     private final String excludeTableName;
 
     /**
@@ -540,6 +543,17 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
         if (metadata == null) {
             throw new SQLException("table not found: " + tableName);
         }
+        // ~auto — DB-assigned primary key (AUTO_INCREMENT, SERIAL, etc.)
+        if (AUTO_ENTRY.equals(rowId)) {
+            if (dp.hasField())
+                throw new SQLException("field write not supported with " + AUTO_ENTRY);
+            if (obj.isNoObj() || obj.isNone())
+                throw new SQLException("delete not supported with " + AUTO_ENTRY);
+            if (obj.isRec())
+                return insertRowAuto(conn, metadata, obj.asRec());
+            throw new SQLException("expected rec for " + AUTO_ENTRY + " write: " + obj.tid());
+        }
+
         if (rowId == null || dp.entryIsWildcard()) {
             throw new SQLException("cannot write without specific row ID: " + furi);
         }
@@ -907,6 +921,66 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
         }
     }
 
+    /**
+     * INSERT a new row letting the database assign the primary key value
+     * (AUTO_INCREMENT, SERIAL, etc.).  The PK column is omitted from the
+     * INSERT statement entirely — the DB fills it in.
+     */
+    private int insertRowAuto(final Connection conn, final TableMetadata metadata,
+                              final Rec rec) throws SQLException {
+        final List<String> columnNames = new ArrayList<>();
+        final List<Tuple.Pair<Obj, ColumnMetadata>> values = new ArrayList<>();
+
+        for (final Map.Entry<Obj, Obj> entry : rec.recValue().entrySet()) {
+            if (!entry.getKey().isUri()) {
+                this.space.logger().warn("ignoring non-uri key in rec: %s", entry.getKey());
+                continue;
+            }
+            final String fieldName = entry.getKey().asUri().uriValue().name();
+            if (fieldName == null || fieldName.isEmpty()) {
+                this.space.logger().warn("ignoring empty field name for key: %s", entry.getKey());
+                continue;
+            }
+            // Skip PK columns and user-provided 'id' — DB auto-assigns
+            if (metadata.primaryKeys.contains(fieldName) || "id".equalsIgnoreCase(fieldName))
+                continue;
+
+            final ColumnMetadata column = metadata.columns.stream()
+                    .filter(c -> c.name.equalsIgnoreCase(fieldName)).findFirst().orElse(null);
+            if (column != null) {
+                trackLogicalType(metadata, column.name, entry.getValue(), column.sqlType);
+                columnNames.add(column.name);
+                values.add(Tuple.Pair.with(entry.getValue(), column));
+            } else {
+                this.space.logger().warn("ignoring insert as column %s not found in table %s",
+                        fieldName, metadata.tableName);
+            }
+        }
+
+        if (columnNames.isEmpty()) {
+            this.space.logger().warn("no valid columns for auto-insert into table %s", metadata.tableName);
+            return 0;
+        }
+
+        final String placeholders = String.join(", ", Collections.nCopies(columnNames.size(), "?"));
+        final String sql = String.format("INSERT INTO %s (%s) VALUES (%s)",
+                metadata.tableName, String.join(", ", columnNames), placeholders);
+
+        try (final PreparedStatement stmt = conn.prepareStatement(sql)) {
+            for (int i = 0; i < values.size(); i++) {
+                final Tuple.Pair<Obj, ColumnMetadata> pair = values.get(i);
+                final Obj value = pair.get0();
+                final ColumnMetadata column = pair.get1();
+                validateColumnWrite(value, column, metadata.tableName);
+                writeParameter(stmt, i + 1, value, column.sqlType);
+            }
+            final int inserted = stmt.executeUpdate();
+            this.space.logger().debug("auto-inserted row into %s: %s rows affected",
+                    metadata.tableName, inserted);
+            return inserted;
+        }
+    }
+
     @Override
     public Iterator<Space.IdObj> read(final Connection conn, final fURI pattern) throws SQLException {
         final DataPath dp = resolveDataPath(pattern);
@@ -1132,14 +1206,23 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
         final StringBuilder ddl = new StringBuilder("CREATE TABLE IF NOT EXISTS ")
                 .append(tableName).append(" (");
 
-        final boolean hasIdField = rec.recValue().keySet().stream()
-                .anyMatch(k -> k.isUri() && "id".equalsIgnoreCase(k.asUri().uriValue().name()));
-
-        boolean first = true;
-        if (!hasIdField) {
+        // Always use auto-increment integer PK — never let the user's
+        // Rec dictate the PK type (avoids TEXT-in-key errors on MariaDB).
+        // Dialect: SERIAL for PostgreSQL, AUTO_INCREMENT for MariaDB/MySQL,
+        // plain INTEGER PRIMARY KEY for SQLite (which auto-increments it).
+        if (this.space instanceof studio.phaseshift.metatron.isa.tble.tbleSpace tble) {
+            final String b = tble.backend();
+            if (b != null && b.contains("postgresql"))
+                ddl.append("id SERIAL PRIMARY KEY");
+            else if (b != null && (b.contains("mariadb") || b.contains("mysql")))
+                ddl.append("id INTEGER PRIMARY KEY AUTO_INCREMENT");
+            else
+                ddl.append("id INTEGER PRIMARY KEY");
+        } else {
             ddl.append("id INTEGER PRIMARY KEY");
-            first = false;
         }
+
+        boolean first = false; // id column already added
 
         final Map<String, String> autoFromColumns = new LinkedHashMap<>();
 
@@ -1147,6 +1230,8 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
             if (!entry.getKey().isUri()) continue;
             final String colName = entry.getKey().asUri().uriValue().name();
             if (colName == null || colName.isEmpty()) continue;
+            // Skip user-provided 'id' — we already have the auto-increment PK
+            if ("id".equalsIgnoreCase(colName)) continue;
             if (!first) ddl.append(", ");
             first = false;
 

@@ -55,6 +55,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.tble.tbleInstSet.TBLE_ISA_TID;
 
 /**
@@ -1189,22 +1190,39 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathTest impleme
      */
     @Test
     public void testLLMMemoryWriteReadBack() throws Exception {
-        final String tableName = "llm_memory";
+        final String memTable = "llm_memory";
         final fURI spaceVid = f("/sys/space/tble/llmmem_test");
-
-        final boolean isSqlite = staticDbConfig.getJdbcHost().contains("sqlite");
-        final String memCol = isSqlite
-                ? "TEXT DEFAULT '[]'"
-                : "JSON DEFAULT ('[]')";
 
         try (final Connection conn = staticDbConfig.getConnection();
              final Statement stmt = conn.createStatement()) {
-            stmt.executeUpdate("DROP TABLE IF EXISTS " + tableName);
-            stmt.executeUpdate("CREATE TABLE " + tableName
+            // Drop old tables
+            stmt.executeUpdate("DROP TABLE IF EXISTS " + memTable);
+            stmt.executeUpdate("DROP TABLE IF EXISTS llm_message_system");
+            stmt.executeUpdate("DROP TABLE IF EXISTS llm_message_user");
+            stmt.executeUpdate("DROP TABLE IF EXISTS llm_message_ai");
+            stmt.executeUpdate("DROP TABLE IF EXISTS llm_message_tool_result");
+
+            // Create memory policy table (no mem column — messages live at sub-path)
+            stmt.executeUpdate("CREATE TABLE " + memTable
                     + " (id INTEGER PRIMARY KEY, agent_id VARCHAR(255) NOT NULL,"
                     + " name VARCHAR(255) DEFAULT NULL,"
-                    + " mem " + memCol + ","
-                    + " max INTEGER DEFAULT 15)");
+                    + " algorithm TEXT DEFAULT '{}',"
+                    + " created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,"
+                    + " updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)");
+
+            // Create per-type message tables
+            stmt.executeUpdate("CREATE TABLE llm_message_system"
+                    + " (id INTEGER PRIMARY KEY, text TEXT NOT NULL)");
+            stmt.executeUpdate("CREATE TABLE llm_message_user"
+                    + " (id INTEGER PRIMARY KEY, name VARCHAR(255) DEFAULT NULL,"
+                    + " text TEXT, parts JSON DEFAULT NULL)");
+            stmt.executeUpdate("CREATE TABLE llm_message_ai"
+                    + " (id INTEGER PRIMARY KEY, name VARCHAR(255) DEFAULT NULL,"
+                    + " text TEXT DEFAULT NULL, thinking INTEGER DEFAULT NULL,"
+                    + " tool_requests JSON DEFAULT NULL, attrs JSON DEFAULT NULL)");
+            stmt.executeUpdate("CREATE TABLE llm_message_tool_result"
+                    + " (id INTEGER PRIMARY KEY, tool_name VARCHAR(255) NOT NULL,"
+                    + " text TEXT NOT NULL, result_id VARCHAR(255) DEFAULT NULL)");
         }
 
         final tbleSpace testSpace = tbleSpace.of(
@@ -1212,14 +1230,25 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathTest impleme
                         uri(PATTERN), uri("llm:#"),
                         uri(HOST), uri(staticDbConfig.getJdbcHost()),
                         uri(DRIVER), uri(staticDbConfig.getDriverClass()),
-                        uri(TABLE), lst(uri(tableName)),
+                        uri(TABLE), lst(uri(memTable), uri("llm_message_system"),
+                                uri("llm_message_user"), uri("llm_message_ai"),
+                                uri("llm_message_tool_result")),
                         uri(ROUTE), rec(uri("llm:"), uri(""))
                 ).jvm(),
                 spaceVid
         );
 
         try {
-            // Build typed message Recs (TID = message type discriminator)
+            // -- Write memory policy object ---------------------------------
+            final Obj memoryRec = rec(
+                    uri("agent_id"), str("testy"),
+                    uri("name"), str("test-conversation"),
+                    uri(ALGORITHM), rec(uri(MAX), jnt(20), uri("message_count"), jnt(4))
+            );
+            Router.writeToSpace(f("llm:" + memTable + "/1"), memoryRec);
+            LOG.info("wrote llm_memory policy record");
+
+            // -- Build typed message Recs (TID = message type discriminator) -
             final Obj systemMsg = rec(uri(TEXT), str("You are helpful."))
                     .tid(f("/m/llm/system"));
             final Obj userMsg = rec(uri(NAME), str("marko"),
@@ -1231,61 +1260,81 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathTest impleme
                     uri(TEXT), str("42"))
                     .tid(f("/m/llm/tool_result"));
 
-            final Obj memoryRec = rec(
-                    uri("agent_id"), str("testy"),
-                    uri("name"), str("test-conversation"),
-                    uri("mem"), lst(List.of(systemMsg, userMsg, aiMsg, toolResultMsg), f("/m/m/lst"), null),
-                    uri("max"), jnt(20)
-            );
+            final Obj[] messages = {systemMsg, userMsg, aiMsg, toolResultMsg};
+            // Use llm:msg/ prefix (NOT under llm_memory/) to avoid colliding with
+            // tbleSpace's table-mapped field-write path.  llm:msg is not in the
+            // TABLE config, so writes fall through to KV storage.
+            final fURI msgBase = f("llm:msg");
+            final int memoryId = 1;
 
-            // Write
-            Router.writeToSpace(f("llm:" + tableName + "/1"), memoryRec);
-            LOG.info("wrote llm_memory record with %d messages", 4);
+            // -- Write each message to its sub-path position -----------------
+            for (int i = 0; i < messages.length; i++) {
+                Router.writeToSpace(msgBase.extend(String.valueOf(memoryId)).extend(String.valueOf(i)), messages[i]);
+            }
+            LOG.info("wrote %d messages to msg sub-path", messages.length);
 
-            // Read back
-            final Obj readBack = Router.readFromSpace(f("llm:" + tableName + "/1"));
+            // -- Read back memory policy ------------------------------------
+            final Obj readBack = Router.readFromSpace(f("llm:" + memTable + "/1"));
             assertFalse(readBack.isNoObj(), "read back should not be noobj");
             assertTrue(readBack.isRec(), "read back should be a Rec");
 
-            // Verify mem field is a Lst, not a Str
-            final Obj mem = readBack.asRec().at(uri("mem"));
-            assertFalse(mem.isNoObj(), "mem field should exist");
-            assertTrue(mem.isLst(), "mem should be a Lst, got: " + mem.getClass().getSimpleName());
-            final studio.phaseshift.metatron.isa.m.type.Lst memLst = mem.asLst();
-            assertEquals(4L, memLst.count());
+            // Verify algorithm field
+            final Obj algorithm = readBack.asRec().at(uri(ALGORITHM));
+            assertTrue(algorithm.isRec(), "algorithm should be a Rec");
+            assertEquals(20L, algorithm.asRec().at(uri(MAX)).intValue());
+            assertEquals(4L, algorithm.asRec().at(uri("message_count")).intValue());
 
-            // Verify each element is a typed Rec with correct TID
-            final java.util.List<Obj> elements = memLst.elements().toList();
+            // Verify max via algorithm rec (no convenience field on the table row)
+            assertEquals(20L, algorithm.asRec().at(uri(MAX)).intValue());
 
-            final Obj el0 = elements.get(0);
-            assertTrue(el0.isRec(), "element 0 should be Rec");
-            assertEquals(f("/m/llm/system"), el0.asRec().tid());
-            assertEquals(str("You are helpful."), el0.asRec().at(uri(TEXT)));
+            // -- Read back individual messages by position -------------------
+            for (int i = 0; i < messages.length; i++) {
+                final Obj msg = Router.readFromSpace(msgBase.extend(String.valueOf(memoryId)).extend(String.valueOf(i)));
+                assertFalse(msg.isNoObj(), "message at position " + i + " should exist");
+                assertTrue(msg.isRec(), "message at position " + i + " should be a Rec");
+                assertEquals(messages[i].tid(), msg.asRec().tid(),
+                        "message " + i + " should have correct TID");
+            }
 
-            final Obj el1 = elements.get(1);
-            assertTrue(el1.isRec(), "element 1 should be Rec");
-            assertEquals(f("/m/llm/user"), el1.asRec().tid());
-            assertEquals(str("marko"), el1.asRec().at(uri(NAME)));
+            // Verify message 0 = system
+            final Obj m0 = Router.readFromSpace(msgBase.extend(String.valueOf(memoryId)).extend("0"));
+            assertEquals(f("/m/llm/system"), m0.asRec().tid());
+            assertEquals(str("You are helpful."), m0.asRec().at(uri(TEXT)));
 
-            final Obj el2 = elements.get(2);
-            assertTrue(el2.isRec(), "element 2 should be Rec");
-            assertEquals(f("/m/llm/ai"), el2.asRec().tid());
-            assertEquals(str("Yes, I am here."), el2.asRec().at(uri(TEXT)));
+            // Verify message 1 = user
+            final Obj m1 = Router.readFromSpace(msgBase.extend(String.valueOf(memoryId)).extend("1"));
+            assertEquals(f("/m/llm/user"), m1.asRec().tid());
+            assertEquals(str("marko"), m1.asRec().at(uri(NAME)));
 
-            final Obj el3 = elements.get(3);
-            assertTrue(el3.isRec(), "element 3 should be Rec");
-            assertEquals(f("/m/llm/tool_result"), el3.asRec().tid());
-            assertEquals(str("eval"), el3.asRec().at(uri(NAME)));
-            assertEquals(str("42"), el3.asRec().at(uri(TEXT)));
+            // Verify message 2 = ai
+            final Obj m2 = Router.readFromSpace(msgBase.extend(String.valueOf(memoryId)).extend("2"));
+            assertEquals(f("/m/llm/ai"), m2.asRec().tid());
+            assertEquals(str("Yes, I am here."), m2.asRec().at(uri(TEXT)));
 
-            // Verify max field
-            assertEquals(20L, readBack.asRec().at(uri("max")).intValue());
+            // Verify message 3 = tool_result
+            final Obj m3 = Router.readFromSpace(msgBase.extend(String.valueOf(memoryId)).extend("3"));
+            assertEquals(f("/m/llm/tool_result"), m3.asRec().tid());
+            assertEquals(str("eval"), m3.asRec().at(uri(NAME)));
+            assertEquals(str("42"), m3.asRec().at(uri(TEXT)));
+
+            // -- Delete a message (simulating window eviction) ---------------
+            Router.writeToSpace(msgBase.extend(String.valueOf(memoryId)).extend("0"), noobj());
+            final Obj deleted = Router.readFromSpace(msgBase.extend(String.valueOf(memoryId)).extend("0"));
+            assertTrue(deleted.isNoObj(), "deleted message should be noobj");
+
+            // Message at position 1 should still exist
+            final Obj stillThere = Router.readFromSpace(msgBase.extend(String.valueOf(memoryId)).extend("1"));
+            assertFalse(stillThere.isNoObj(), "undeleted message should still exist");
 
             LOG.info("llm_memory test passed on {}", staticDbConfig.getDatabaseName());
         } finally {
             try (final Connection conn = staticDbConfig.getConnection();
                  final Statement stmt = conn.createStatement()) {
-                stmt.executeUpdate("DROP TABLE IF EXISTS " + tableName);
+                stmt.executeUpdate("DROP TABLE IF EXISTS " + memTable);
+                stmt.executeUpdate("DROP TABLE IF EXISTS llm_message_system");
+                stmt.executeUpdate("DROP TABLE IF EXISTS llm_message_user");
+                stmt.executeUpdate("DROP TABLE IF EXISTS llm_message_ai");
+                stmt.executeUpdate("DROP TABLE IF EXISTS llm_message_tool_result");
             }
             Router.global().removeSpace(testSpace.vid());
             testSpace.close();

@@ -189,6 +189,9 @@ public class ObjSQLSerializer extends AbstractObjSerializer<ResultSet> {
         final String trimmed = value.stripLeading();
         if (trimmed.isEmpty()) return str(value);
         final char first = trimmed.charAt(0);
+        if (first == '<' && trimmed.endsWith(">")) {
+            return uri(trimmed.substring(1, trimmed.length() - 1));
+        }
         if (first == '[' || first == '{') {
             try {
                 return ObjSimpleJSONSerializer.parse(value);
