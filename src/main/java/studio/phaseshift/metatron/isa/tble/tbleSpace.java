@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -19,7 +19,11 @@
 package studio.phaseshift.metatron.isa.tble;
 
 import studio.phaseshift.metatron.furi.DataPath;
+import studio.phaseshift.metatron.furi.QProc;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.furi.q.QCollection;
+import studio.phaseshift.metatron.isa.m.type.Lst;
+import studio.phaseshift.metatron.isa.tble.space.tbleIncrQ;
 import studio.phaseshift.metatron.isa.AbstractSpace;
 import studio.phaseshift.metatron.isa.SchemaSpace;
 import studio.phaseshift.metatron.isa.Space;
@@ -50,6 +54,7 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.INST_CTOR_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.SPACE_TID;
 import static studio.phaseshift.metatron.isa.m.type.InstSet.INSTSET_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -145,16 +150,16 @@ public class tbleSpace extends AbstractSpace<Connection> implements SchemaSpace 
      */
     public static tbleSpace of(final Map<Obj, Obj> config, final fURI vid) {
         // Ensure vid is never null — generate a default from tid if missing
-        final fURI effectiveVid = null != vid ? vid : TBLE_SPACE_TID.extend("default");
+        //final fURI effectiveVid = null != vid ? vid : TBLE_SPACE_TID.extend("default");
         MTronException.wrap(() -> Class.forName(config.get(uri(DRIVER)).uriValue().toString()));
         try {
             final Connection conn = DriverManager.getConnection(
-                    JDBC + config.get(uri(HOST)).uriValue().toString());
+                    JDBC + config.get(uri(HOST)).autoResolve(noobj()).uriValue().toString());
             // Defensive copy: the constructor mutates the config map (adds TABLE/SCHEMA
             // entries).  The original map is the shared jvm() of the caller's Rec —
             // modifying it concurrently while another thread iterates it causes
             // ConcurrentModificationException.
-            return new tbleSpace(conn, new LinkedHashMap<>(config), TBLE_SPACE_TID, effectiveVid);
+            return new tbleSpace(conn, new LinkedHashMap<>(config), TBLE_SPACE_TID, vid);
         } catch (final SQLException ex) {
             throw MTronException.of(ex);
         }
@@ -167,6 +172,15 @@ public class tbleSpace extends AbstractSpace<Connection> implements SchemaSpace 
     protected tbleSpace(final Connection sjvm, final Map<Obj, Obj> config,
                         final fURI tid, final fURI vid) {
         super(sjvm, config, tid, vid);
+        // Re-route QPROC entries through addQ() so the override can substitute
+        // tbleIncrQ for the default AtomicLong-based incrQ.
+        final Lst qprocs = this.at(uri(QPROC)).orElse(lst()).asLst();
+        if (!qprocs.isEmpty()) {
+            final List<QProc> snapshot = new ArrayList<>(qprocs.<QProc>elements().toList());
+            this.at(uri(QPROC), lst(), MUTABLE);
+            for (final QProc q : snapshot)
+                this.addQ(q);
+        }
         LOG.info("connected {{b}}%s{{X}}", config.get(uri(HOST)));
         try {
             this.databaseName = sjvm.getCatalog() != null ? sjvm.getCatalog() : "db";
@@ -181,12 +195,16 @@ public class tbleSpace extends AbstractSpace<Connection> implements SchemaSpace 
         return this.databaseName;
     }
 
-    /** The detected database product name (e.g. {@code sqlite}, {@code postgresql}, {@code mariadb}). */
+    /**
+     * The detected database product name (e.g. {@code sqlite}, {@code postgresql}, {@code mariadb}).
+     */
     public String backend() {
         return this.backend;
     }
 
-    /** Convenience: true when the backend is SQLite. */
+    /**
+     * Convenience: true when the backend is SQLite.
+     */
     public boolean isSqlite() {
         return this.backend != null && this.backend.contains(SQLITE);
     }
@@ -277,6 +295,26 @@ public class tbleSpace extends AbstractSpace<Connection> implements SchemaSpace 
 
         LOG.info("initialized {{g}}SQL schema{{X}} with %s table types",
                 this.existingTableSchema.getTableNames().size());
+    }
+
+    @Override
+    public Space addQ(final QProc qProc) {
+        // Intercept incrQ: replace the default in-memory counter with our
+        // DB-backed version that has a reference to this space.
+        final QProc toAdd = qProc.pattern().equals(QCollection.INCRQ_PATTERN)
+                ? new tbleIncrQ(this) : qProc;
+        final Obj key = uri(QPROC);
+        if (this.at(key).isNoObj())
+            this.at(key, lst(), MUTABLE);
+        this.at(key).asLst().add(toAdd, MUTABLE);
+        return this;
+    }
+
+    /**
+     * Exposed for {@link tbleIncrQ} — access to table schema.
+     */
+    public ExistingTableSchema existingTableSchema() {
+        return this.existingTableSchema;
     }
 
     // =========================================================================

@@ -103,9 +103,6 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
         pendingFKs.clear();
     }
 
-    /** Entry token that signals "let the DB assign the next auto-increment value." */
-    static final String AUTO_ENTRY = "~auto";
-
     private final String excludeTableName;
 
     /**
@@ -543,17 +540,6 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
         if (metadata == null) {
             throw new SQLException("table not found: " + tableName);
         }
-        // ~auto — DB-assigned primary key (AUTO_INCREMENT, SERIAL, etc.)
-        if (AUTO_ENTRY.equals(rowId)) {
-            if (dp.hasField())
-                throw new SQLException("field write not supported with " + AUTO_ENTRY);
-            if (obj.isNoObj() || obj.isNone())
-                throw new SQLException("delete not supported with " + AUTO_ENTRY);
-            if (obj.isRec())
-                return insertRowAuto(conn, metadata, obj.asRec());
-            throw new SQLException("expected rec for " + AUTO_ENTRY + " write: " + obj.tid());
-        }
-
         if (rowId == null || dp.entryIsWildcard()) {
             throw new SQLException("cannot write without specific row ID: " + furi);
         }
@@ -979,6 +965,22 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
                     metadata.tableName, inserted);
             return inserted;
         }
+    }
+
+    /**
+     * Ensure the table exists (creating it if needed via
+     * {@code createTableFromRecord}), then do an auto-increment INSERT.
+     * Called from {@link tbleIncrQ#onPreWrite} — the QProc handles the
+     * write so the normal {@code directWriter} path is never reached.
+     */
+    public void ensureTableAndInsert(final Connection conn, final String tableName,
+                              final Rec rec) throws java.sql.SQLException {
+        if (!tableSchemas.containsKey(tableName.toLowerCase()))
+            createTableFromRecord(conn, tableName, rec);
+        final TableMetadata metadata = tableSchemas.get(tableName.toLowerCase());
+        if (metadata == null)
+            throw new java.sql.SQLException("failed to create table: " + tableName);
+        insertRowAuto(conn, metadata, rec);
     }
 
     @Override

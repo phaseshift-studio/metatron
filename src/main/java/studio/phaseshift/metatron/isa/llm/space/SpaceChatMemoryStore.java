@@ -70,6 +70,14 @@ public class SpaceChatMemoryStore implements ChatMemoryStore {
      *  chat call) without leaking state between different memory sessions. */
     private static final Map<fURI, Set<String>> MIRRORED_HASHES = new LinkedHashMap<>();
 
+    /** Clear the static mirror dedup cache.  Called between tests that
+     *  reuse the same memory VID pattern on fresh space instances. */
+    static void clearMirrorCache() {
+        synchronized (MIRRORED_HASHES) {
+            MIRRORED_HASHES.clear();
+        }
+    }
+
     /** Sub-path under the memory VID where individual messages are stored. */
     private static final String MSG = "msg";
 
@@ -82,7 +90,7 @@ public class SpaceChatMemoryStore implements ChatMemoryStore {
      * injected via {@code AiServices.systemMessage()}.  This method provides
      * the same fire-and-forget mirror that user/AI messages get.
      */
-    public static void mirrorSystemMessage(final fURI memoryVID, final Rec systemRec) {
+    public static void mirrorSystemMessage(final Space space, final fURI memoryVID, final Rec systemRec) {
         final String hash = contentHash(systemRec);
         systemRec.recValue().put(uri(CONTENT_HASH), str(hash));
         // System messages bypass ChatMemory — use a synthetic URI for the back-link
@@ -92,8 +100,7 @@ public class SpaceChatMemoryStore implements ChatMemoryStore {
             if (!seen.add(hash)) return;
         }
         try {
-            final fURI uri = f(memoryVID.scheme() + ":llm_message_system/~auto");
-            Router.writeToSpace(uri, systemRec);
+            space.write(f(memoryVID.scheme() + ":llm_message_system/+?incrq"), systemRec);
         } catch (final Exception e) {
             LOG.debug("mirror system message failed (non-blocking): %s", e.getMessage());
         }
@@ -115,16 +122,16 @@ public class SpaceChatMemoryStore implements ChatMemoryStore {
 
     /**
      * Fire-and-forget mirror of a message Rec to its per-type table.
-     * Uses the {@code ~auto} entry token so the database's AUTO_INCREMENT
-     * assigns a new primary key on every write — no overwrites.
+     * Uses {@code +?incrq} so tbleSpace's DB-backed incrQ delegates
+     * ID generation to AUTO_INCREMENT / SERIAL — no overwrites.
      * Purely additive; the per-type tables grow with every message.
      * <p>
      * TID → table mapping:
      * <pre>
-     *   /m/llm/system      → llm_message_system/~auto
-     *   /m/llm/user        → llm_message_user/~auto
-     *   /m/llm/AI          → llm_message_ai/~auto
-     *   /m/llm/tool_result → llm_message_tool_result/~auto
+     *   /m/llm/system      → llm_message_system/+?incrq
+     *   /m/llm/user        → llm_message_user/+?incrq
+     *   /m/llm/AI          → llm_message_ai/+?incrq
+     *   /m/llm/tool_result → llm_message_tool_result/+?incrq
      * </pre>
      */
     private void mirrorToTypedTable(final fURI memoryVID, final Rec msgRec, final fURI kvURI) {
@@ -148,9 +155,12 @@ public class SpaceChatMemoryStore implements ChatMemoryStore {
                 if (contents.isRec() && contents.asRec().has(uri(TEXT))) {
                     final Map<Obj, Obj> flat = new LinkedHashMap<>(msgRec.recValue());
                     flat.put(uri(TEXT), contents.asRec().at(uri(TEXT)));
+                    flat.putIfAbsent(uri(NAME), str(""));
                     toMirror = rec(flat, msgRec.tid(), null);
                 } else {
-                    toMirror = msgRec;
+                    final Map<Obj, Obj> flat = new LinkedHashMap<>(msgRec.recValue());
+                    flat.putIfAbsent(uri(NAME), str(""));
+                    toMirror = rec(flat, msgRec.tid(), null);
                 }
             } else {
                 toMirror = msgRec;
@@ -159,8 +169,7 @@ public class SpaceChatMemoryStore implements ChatMemoryStore {
             // message in the key-value store (reconstruction, navigation).
             toMirror.recValue().put(uri(URI), str("<" + kvURI + ">"));
 
-            final fURI tableURI = f(memoryVID.scheme() + ":" + table + "/~auto");
-            Router.writeToSpace(tableURI, toMirror);
+            this.space.write(f(memoryVID.scheme() + ":" + table + "/+?incrq"), toMirror);
         } catch (final Exception e) {
             LOG.debug("mirror to typed table failed (non-blocking): %s", e.getMessage());
         }
@@ -345,7 +354,10 @@ public class SpaceChatMemoryStore implements ChatMemoryStore {
         // Messages are stored at incoming-list-index positions (0..N-1).
         // Messages with matching hashes at different positions are moved.
         // Messages with matching hashes at the same position are skipped.
+        // Mirrors are batched: if two messages land on the same KV URI
+        // (streaming partial → complete), only the last one is mirrored.
         final Set<Integer> writtenPositions = new HashSet<>();
+        final java.util.Map<fURI, Rec> batchedMirrors = new LinkedHashMap<>();
         for (int pos = 0; pos < incomingRecs.size(); pos++) {
             final Rec incomingRec = incomingRecs.get(pos);
             final String incomingHash = incomingRec.recValue().get(uri(CONTENT_HASH)).strValue();
@@ -353,21 +365,21 @@ public class SpaceChatMemoryStore implements ChatMemoryStore {
             if (storedHashMap.containsKey(incomingHash)) {
                 final int storedPos = storedHashMap.get(incomingHash);
                 if (storedPos == pos) {
-                    // Same content at same position — idempotent, skip
                     writtenPositions.add(pos);
-                    continue;
+                    continue; // idempotent
                 }
-                // Same content at different position — delete old, write new
                 Router.writeToSpace(msgPath.extend(String.valueOf(storedPos)), noobj());
                 Router.writeToSpace(msgPath.extend(String.valueOf(pos)), incomingRec);
             } else {
-                // Truly new message — write to KV and mirror to typed table
                 final fURI kvURI = msgPath.extend(String.valueOf(pos));
                 Router.writeToSpace(kvURI, incomingRec);
-                mirrorToTypedTable(memVID, incomingRec, kvURI);
+                batchedMirrors.put(kvURI, incomingRec);
             }
             writtenPositions.add(pos);
         }
+        // Write mirrors — last message per URI wins (streaming dedup)
+        for (final Map.Entry<fURI, Rec> e : batchedMirrors.entrySet())
+            mirrorToTypedTable(memVID, e.getValue(), e.getKey());
 
         // -- 5. Delete messages no longer in the window ----------------------
         // Guard: never delete positions we just wrote (hash may have changed

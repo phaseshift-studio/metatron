@@ -113,8 +113,8 @@ public class mqttSpace extends AbstractSpace<Mqtt5Client> {
 
     @Override
     public Space addQ(final QProc q) {
-        if (q.tid().basePath().equals(QCollection.SUBQ_TID) && !(q instanceof MqttPubSubQ)) {
-            this.at(uri(QPROC)).asLst().add(new MqttPubSubQ(this), MUTABLE);
+        if (q.tid().basePath().equals(QCollection.SUBQ_TID) && !(q instanceof mqttSpaceSubQ)) {
+            this.at(uri(QPROC)).asLst().add(new mqttSpaceSubQ(this), MUTABLE);
             return this;
         }
         return super.addQ(q);
