@@ -34,6 +34,7 @@ import studio.phaseshift.metatron.isa.m.type.Uri;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
 import studio.phaseshift.metatron.isa.web.type.MIME;
+import studio.phaseshift.metatron.isa.web.webInstSet;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -62,7 +63,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.web.space.http.handler.web_httpHandler.WEB_HTTP_TID;
-import static studio.phaseshift.metatron.isa.web.webInstSet.CONTENT_TYPE;
 import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
@@ -98,8 +98,8 @@ public class httpSpace extends AbstractSpace<HttpServer> {
             .tid(REC_TID)
             .vid(HTTP_SOCKET_TID)
             .isaPredicate(rec(
-                    uri(IN).maybe().asUri(), isa_(CONTENT_TYPE).orElse(uri(MIME.MIMEType.APPLICATION_MTRON.value)),
-                    uri(OUT).maybe().asUri(), isa_(CONTENT_TYPE).orElse(uri(MIME.MIMEType.APPLICATION_MTRON.value)),
+                    uri(IN).maybe().asUri(), isa_(webInstSet.MIME_TYPE).orElse(uri(MIME.MIMEType.APPLICATION_MTRON.value)),
+                    uri(OUT).maybe().asUri(), isa_(webInstSet.MIME_TYPE).orElse(uri(MIME.MIMEType.APPLICATION_MTRON.value)),
                     uri(SEND).maybe().asUri(), INST_TYPE,
                     uri(ON_GET).maybe(), T(ALL),
                     uri(ON_POST).maybe(), T(ALL),

@@ -149,7 +149,7 @@ public interface Lst extends Poly<Lst, List<Obj>>, PlusMonoid.O<Lst> {
         final cInt cKey = key.c();
         if (key.isInt())
             return (OBJ) (key.intValue() < 0 ?
-                    ((this.jvm().size() > (-1 * key.intValue())) ? this.jvm().get((int) (this.jvm().size() + key.asInt().intValue())) : noobj()) :
+                    ((this.jvm().size()+1 > (-1 * key.intValue())) ? this.jvm().get((int) (this.jvm().size() + key.asInt().intValue())) : noobj()) :
                     ((this.jvm().size() > key.intValue()) ? this.jvm().get(key.asInt().intValue().intValue()) : noobj())
                             .autoResolve(this)
                             .parent(this)

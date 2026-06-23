@@ -337,8 +337,20 @@ public interface Rel extends Poly<Rel, Tuple.Pair<Obj, Obj>>, MultMonoid.O<Rel>,
             final Obj firstMatch = lhs.asRel().at(arg);
             if (!firstMatch.isNoObj())
                 return firstMatch;
-            if (lhs.asRel().second().isRec()) {
-                return lhs.asRel().second().asRec().at(arg);
+            if (lhs.asRel().second().isPoly()) {
+                return lhs.asRel().second().asPoly().at(arg);
+            }
+            return noobj();
+        }
+
+        public static Obj lshiftRel(final Rel lhs, final Obj arg) {
+            if (arg.isNoObj())
+                return lhs.asRel().first();
+            final Obj firstMatch = lhs.asRel().at(arg);
+            if (!firstMatch.isNoObj())
+                return firstMatch;
+            if (lhs.asRel().first().isPoly()) {
+                return lhs.asRel().first().asPoly().at(arg);
             }
             return noobj();
         }

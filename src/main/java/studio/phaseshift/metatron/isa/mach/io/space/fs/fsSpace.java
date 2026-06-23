@@ -135,18 +135,19 @@ public class fsSpace extends AbstractSpace<FileSystem> {
     }
 
     private Obj readFileAsObj(final File file, final Map<String, String> qMap) throws IOException {
+        //LOG.info("MIME %s",qMap);
         final MIME.MIMEType mimeType = qMap.containsKey(MIMEQ_PATTERN.toString()) ?
                 MIME.MIMEType.of(qMap.get(MIMEQ_PATTERN.toString())) :
                 MIME.MIMEType.fromProbe(file, MIME.MIMEType.fromExtension(file.getName(), MIME.MIMEType.TEXT_PLAIN));
         final FileInputStream fs = new FileInputStream(file);
         byte[] fileBytes = fs.readAllBytes();
         fs.close();
-        final String source = new String(fileBytes, StandardCharsets.UTF_8);
-        final fURI vid = source.startsWith("[-- @<") ? f(source.substring(6, source.indexOf("> --]\n")).trim()) : null;
-        LOG.debug("fileToObj: %s => %s", file.getPath(), vid);
+        //final String source = new String(fileBytes, StandardCharsets.UTF_8);
+        //final fURI vid = source.startsWith("[-- @<") ? f(source.substring(6, source.indexOf("> --]\n")).trim()) : null;
+        LOG.info("reading %s [mime:%s]", file.getPath(), mimeType.value);
         // Use parse (not eval) to avoid executing potential write-side-effect expressions
         // in the file content (e.g. !* or -> sugar that Router.writeToSpace).
-        return mimeType.serializer().inputBytes(source.getBytes());
+        return mimeType.serializer().inputBytes(fileBytes);
     }
 
     @Override
@@ -156,20 +157,22 @@ public class fsSpace extends AbstractSpace<FileSystem> {
 
     public Obj objToFile(final fURI vid, final Obj obj) {
         try {
-            final MIME.MIMEType contentType = MIME.MIMEType.fromType(obj, MIME.MIMEType.APPLICATION_MTRON);
-            final File file = new File(this.redirect(vid, true).toString());
-            LOG.info("writing %s to %s", obj, file.getPath());
+            final MIME.MIMEType mimeType = vid.hasQ(MIMEQ_PATTERN) ?
+                    MIME.MIMEType.of(vid.q(MIMEQ_PATTERN.toString())) :
+                    MIME.MIMEType.fromType(obj, MIME.MIMEType.APPLICATION_MTRON);
+            final File file = new File(this.redirect(vid.qLess(), true).toString());
+            LOG.info("writing %s to %s [mime:%s]", obj, file.getPath(), mimeType.value);
             if (!file.exists()) {
                 new File(f(file.getAbsolutePath()).retract(1).toString()).mkdirs();
                 file.createNewFile();
             }
             final fURI selfVID = obj.vid();
             try (final FileOutputStream writer = new FileOutputStream(file, vid.hasQ("append"))) {
-                if (contentType.isMtron() && !vid.hasQ("append")) {
+                if (mimeType.isMtron() && !vid.hasQ("append")) {
                     //  final String at_vid = selfVID == null ? null : "[-- @<" + selfVID + "> --]\n";
                     // if (null != at_vid) writer.write(at_vid.getBytes(StandardCharsets.UTF_8));
                 }
-                writer.write(contentType.toBytes(obj.selfVID(null)));
+                writer.write(mimeType.toBytes(obj.selfVID(null)));
                 writer.flush();
             }
             return obj.selfVID(selfVID);
@@ -307,8 +310,8 @@ public class fsSpace extends AbstractSpace<FileSystem> {
                         // Exact-path read on a directory without .mtron: enumerate children at depth 1
                         if (value.isUri() && file.isDirectory()) {
                             try {
-                                if(true)
-                                    return IdObj.of(key,fileToObj(file,key.qMap())).iterator();
+                                if (true)
+                                    return IdObj.of(key, fileToObj(file, key.qMap())).iterator();
                                 final java.util.List<Path> children = Files.list(file.toPath()).toList();
                                 if (!children.isEmpty()) {
                                     final Map<fURI, Obj> collected = new LinkedHashMap<>();
@@ -561,7 +564,7 @@ public class fsSpace extends AbstractSpace<FileSystem> {
             // Replace the old parent file with the merged content.
             // Strip vids on child objs to prevent Router writes on re-read.
             final Rec merged = MRec.rec(jvm, REC_TID, null);
-            this.objToFile(f(parentFile.getPath()), merged);
+            this.objToFile(vid.hasQ(MIMEQ_PATTERN) ? f(parentFile.getPath()).addQ(MIMEQ_PATTERN.toString(), vid.q(MIMEQ_PATTERN.toString())) : f(parentFile.getPath()), merged);
             return obj;
         }
         return null;
@@ -589,14 +592,14 @@ public class fsSpace extends AbstractSpace<FileSystem> {
                         if (written != null)
                             return written;
                         // No parent found — create as a new file
-                        this.objToFile(f(path.toString()), obj);
+                        this.objToFile(pattern.hasQ(MIMEQ_PATTERN) ? f(path.toString()).addQ(MIMEQ_PATTERN.toString(), pattern.q(MIMEQ_PATTERN.toString())) : f(path.toString()), obj);
                     } else if (file.isDirectory()) {
                         if (!file.exists())
                             file.mkdirs();
                         if (obj.isPoly())
-                            this.objToFile(f(new File(file, ".mtron").getPath()), obj);
+                            this.objToFile(pattern.hasQ(MIMEQ_PATTERN) ? f(new File(file, ".mtron").getPath()).addQ(MIMEQ_PATTERN.toString(), pattern.q(MIMEQ_PATTERN.toString())) : f(new File(file, ".mtron").getPath()), obj);
                     } else {
-                        this.objToFile(f(path.toString()), obj);
+                        this.objToFile(pattern.hasQ(MIMEQ_PATTERN) ? f(path.toString()).addQ(MIMEQ_PATTERN.toString(), pattern.q(MIMEQ_PATTERN.toString())) : f(path.toString()), obj);
                         /*if (pattern.hasQ("p")) {
                             final Set<PosixFilePermission> currentP = PosixFilePermissions.fromString(Files.getPosixFilePermissions(path).toString());
                             final Set<PosixFilePermission> newP = PosixFilePermissions.fromString(pattern.qValue("p", String.class));

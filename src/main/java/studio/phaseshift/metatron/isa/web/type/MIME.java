@@ -18,9 +18,11 @@
 
 package studio.phaseshift.metatron.isa.web.type;
 
+import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.dcmnt.schema.storage.ObjBSONSerializer;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Str;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjJavaSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
@@ -37,6 +39,7 @@ import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static studio.phaseshift.metatron.isa.m.type.ObjFactory.LOG;
 import static studio.phaseshift.metatron.isa.web.webInstSet.*;
@@ -62,6 +65,8 @@ public class MIME {
         TEXT_MARKDOWN("text/markdown"),
         TEXT_JAVASCRIPT("text/javascript"),
         TEXT_X_SHELLSCRIPT("text/x-shellscript"),
+        TEXT_JAVA("text/x-java"),
+        TEXT_PYTHON("text/x-python"),
         IMAGE_PNG("image/png"),
         IMAGE_JPEG("image/jpeg"),
         IMAGE_GIF("image/gif"),
@@ -78,15 +83,12 @@ public class MIME {
          * Returns true if this content type should be transmitted as a WebSocket text frame
          * rather than a binary frame (i.e. it is human-readable UTF-8 text).
          */
+        private static final Set<MIMEType> TEXT_MIMES =
+                Set.of(APPLICATION_JSON, APPLICATION_LD_JSON, APPLICATION_MTRON,
+                        APPLICATION_JAVASCRIPT, APPLICATION_XML, APPLICATION_XHTML_XML, APPLICATION_ATOM_XML);
+
         public boolean isText() {
-            return this.value.startsWith("text/")
-                    || this == APPLICATION_JSON
-                    || this == APPLICATION_LD_JSON
-                    || this == APPLICATION_MTRON
-                    || this == APPLICATION_JAVASCRIPT
-                    || this == APPLICATION_XML
-                    || this == APPLICATION_XHTML_XML
-                    || this == APPLICATION_ATOM_XML;
+            return this.value.startsWith("text/") || TEXT_MIMES.contains(this);
         }
 
         public static MIMEType of(final String contentType) {
@@ -101,7 +103,7 @@ public class MIME {
                 LOG.debug("probed content type: %s", contentType);
                 return contentType == null ? defaultType : contentType;
             } catch (final IOException e) {
-                LOG.error(e);
+                LOG.error("using default type %s as file probe failed: %s", defaultType, e);
                 return defaultType;
             }
         }
@@ -111,11 +113,13 @@ public class MIME {
          * defaults to application/mtron.
          */
         public static MIMEType fromType(final Obj obj, final MIMEType defaultType) {
-            if (obj.type().vid().basePath().equals(HTML_TID)) return TEXT_HTML;
-            if (obj.type().vid().basePath().equals(MARKDOWN_TID)) return TEXT_MARKDOWN;
-            if (obj.type().vid().basePath().equals(JSON_TID)) return APPLICATION_JSON;
-            if (obj.type().vid().basePath().equals(XML_TID)) return APPLICATION_XML;
-            if (obj.type().vid().basePath().equals(CSS_TID)) return TEXT_CSS;
+            final fURI basePath = obj.type().vid().basePath();
+            if (basePath.equals(HTML_TID)) return TEXT_HTML;
+            if (basePath.equals(MARKDOWN_TID)) return TEXT_MARKDOWN;
+            if (basePath.equals(JSON_TID)) return APPLICATION_JSON;
+            if (basePath.equals(XML_TID)) return APPLICATION_XML;
+            if (basePath.equals(CSS_TID)) return TEXT_CSS;
+            if (basePath.equals(JAVA_TID)) return TEXT_JAVA;
             return defaultType;
         }
 
@@ -125,21 +129,24 @@ public class MIME {
         public static MIMEType fromExtension(final String filename, final MIMEType defaultType) {
             if (filename == null) return defaultType;
             final String lower = filename.toLowerCase();
-            if (!lower.contains(".") || lower.endsWith(".mtron")) return APPLICATION_MTRON;
-            if (lower.endsWith(".css")) return TEXT_CSS;
-            if (lower.endsWith(".js")) return APPLICATION_JAVASCRIPT;
-            if (lower.endsWith(".md")) return TEXT_MARKDOWN;
-            if (lower.endsWith(".html") || lower.endsWith(".htm")) return TEXT_HTML;
-            if (lower.endsWith(".json")) return APPLICATION_JSON;
-            if (lower.endsWith(".xml")) return APPLICATION_XML;
-            if (lower.endsWith(".png")) return IMAGE_PNG;
-            if (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) return IMAGE_JPEG;
-            if (lower.endsWith(".gif")) return IMAGE_GIF;
-            if (lower.endsWith(".svg")) return IMAGE_SVG;
-            if (lower.endsWith(".ico")) return IMAGE_ICO;
-            if (lower.endsWith(".sh")) return TEXT_X_SHELLSCRIPT;
-            if (lower.endsWith(".bash")) return TEXT_X_SHELLSCRIPT;
-            if (lower.endsWith(".py")) return TEXT_X_SHELLSCRIPT;
+            final String extension = (lower.contains(".") ? lower.substring(lower.lastIndexOf('.') + 1) : "").trim();
+            if (extension.isEmpty() || extension.equals("mtron")) return APPLICATION_MTRON;
+            if (extension.equals("txt")) return TEXT_PLAIN;
+            if (extension.equals("css")) return TEXT_CSS;
+            if (extension.equals("js")) return APPLICATION_JAVASCRIPT;
+            if (extension.equals("md")) return TEXT_MARKDOWN;
+            if (extension.equals("html") || lower.endsWith("htm")) return TEXT_HTML;
+            if (extension.equals("json")) return APPLICATION_JSON;
+            if (extension.equals("xml")) return APPLICATION_XML;
+            if (extension.equals("png")) return IMAGE_PNG;
+            if (extension.equals("jpg") || extension.equals("jpeg")) return IMAGE_JPEG;
+            if (extension.equals("gif")) return IMAGE_GIF;
+            if (extension.equals("svg")) return IMAGE_SVG;
+            if (extension.equals("ico")) return IMAGE_ICO;
+            if (extension.equals("sh")) return TEXT_X_SHELLSCRIPT;
+            if (extension.equals("bash")) return TEXT_X_SHELLSCRIPT;
+            if (extension.equals("py")) return TEXT_PYTHON;
+            if (extension.equals("java")) return TEXT_JAVA;
             return defaultType;
         }
 
@@ -183,6 +190,10 @@ public class MIME {
             return this.equals(TEXT_X_SHELLSCRIPT);
         }
 
+        public boolean isJava() {
+            return this.equals(TEXT_JAVA);
+        }
+
         public static final String VALUE = "Content-Type";
 
         public ObjSerializer<?> serializer() {
@@ -191,6 +202,7 @@ public class MIME {
             if (this.isHtml()) return ObjHTMLSerializer.single();
             if (this.isXml()) return ObjXMLSerializer.single();
             if (this.isMarkdown()) return ObjMarkdownSerializer.single();
+            if (this.isJava()) return ObjJavaSerializer.single();
             if (this.isBSON()) return ObjBSONSerializer.single();
             if (this.isShell()) return ObjPlainTextSerializer.single();
             if (this.isPlain()) return ObjPlainTextSerializer.single();

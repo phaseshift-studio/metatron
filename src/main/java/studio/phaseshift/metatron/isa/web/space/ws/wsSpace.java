@@ -31,10 +31,10 @@ import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Highlighter;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.web.type.MIME;
+import studio.phaseshift.metatron.isa.web.webInstSet;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.util.Iterator;
@@ -57,7 +57,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.web.space.http.httpSpace.CONFIG;
-import static studio.phaseshift.metatron.isa.web.webInstSet.CONTENT_TYPE;
 import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
@@ -76,8 +75,8 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
             .tid(REC_TID)
             .vid(WS_WEBSOCKET_TID)
             .isaPredicate(rec(
-                    uri(IN).maybe().asUri(), isa_(CONTENT_TYPE).orElse(uri(MIME.MIMEType.APPLICATION_MTRON.value)),
-                    uri(OUT).maybe().asUri(), isa_(CONTENT_TYPE).orElse(uri(MIME.MIMEType.APPLICATION_MTRON.value)),
+                    uri(IN).maybe().asUri(), isa_(webInstSet.MIME_TYPE).orElse(uri(MIME.MIMEType.APPLICATION_MTRON.value)),
+                    uri(OUT).maybe().asUri(), isa_(webInstSet.MIME_TYPE).orElse(uri(MIME.MIMEType.APPLICATION_MTRON.value)),
                     uri(SEND).maybe().asUri(), INST_TYPE,
                     uri(SEND_RECV).maybe().asUri(), INST_TYPE,
                     uri(ON_OPEN).maybe(), T(ALL),

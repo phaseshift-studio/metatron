@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.isa.web.type;
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.isa.dcmnt.schema.storage.ObjBSONSerializer;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjJavaSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.web.parser.ObjHTMLSerializer;
@@ -44,6 +45,7 @@ class MIMETest extends AbstractMetatronTest {
         assertEquals(MIME.MIMEType.APPLICATION_JSON, MIME.MIMEType.fromExtension("data.json", null));
         assertEquals(MIME.MIMEType.IMAGE_PNG, MIME.MIMEType.fromExtension("image.png", null));
         assertEquals(MIME.MIMEType.IMAGE_JPEG, MIME.MIMEType.fromExtension("photo.jpeg", null));
+        assertEquals(MIME.MIMEType.TEXT_JAVA, MIME.MIMEType.fromExtension("/src/studio/phaseshift/metatron/isa/m/mInstSet.java", null));
         assertEquals(MIME.MIMEType.APPLICATION_MTRON, MIME.MIMEType.fromExtension("file.mtron", null));
         assertEquals(MIME.MIMEType.TEXT_PLAIN, MIME.MIMEType.fromExtension("file.unknown", MIME.MIMEType.TEXT_PLAIN));
         assertNull(MIME.MIMEType.fromExtension("file.unknown", null));
@@ -98,10 +100,11 @@ class MIMETest extends AbstractMetatronTest {
 
     @Test
     void testSerializer() {
-        assertTrue(MIME.MIMEType.APPLICATION_MTRON.serializer() instanceof ObjmtronSerializer);
-        assertTrue(MIME.MIMEType.APPLICATION_JSON.serializer() instanceof ObjSimpleJSONSerializer);
-        assertTrue(MIME.MIMEType.TEXT_HTML.serializer() instanceof ObjHTMLSerializer);
-        assertTrue(MIME.MIMEType.APPLICATION_BSON.serializer() instanceof ObjBSONSerializer);
+        assertInstanceOf(ObjmtronSerializer.class, MIME.MIMEType.APPLICATION_MTRON.serializer());
+        assertInstanceOf(ObjSimpleJSONSerializer.class, MIME.MIMEType.APPLICATION_JSON.serializer());
+        assertInstanceOf(ObjHTMLSerializer.class, MIME.MIMEType.TEXT_HTML.serializer());
+        assertInstanceOf(ObjBSONSerializer.class, MIME.MIMEType.APPLICATION_BSON.serializer());
+        assertInstanceOf(ObjJavaSerializer.class, MIME.MIMEType.TEXT_JAVA.serializer());
         // assertTrue(Content.ContentType.TEXT_PLAIN.serializer() instanceof ObjSimpleJSONSerializer);
     }
 }
