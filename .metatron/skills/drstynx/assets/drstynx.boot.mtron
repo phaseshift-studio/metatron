@@ -2,32 +2,30 @@
 [
  internal        =>
   [ sys          => /sys,
-    agent_home   => /usr/dr,
-    user_home    => /usr/marko,
-    session_id   => 1,
+    home         => /usr/dr,
     typer/stages => [inst_dom     => true, 
                      inst_rng     => true,
                      type_ctor    => true,
                      obj_write    => true,
                      code_resolve => false]],
- external     =>
-  [ web       => [ http => <http://localhost:8777>,
-                   ws   => <ws://0.0.0.0:8555> ],
-    ollama    => <http://ginger.local:11434>,
-    session   => <mariadb://localhost:3306/dr_sessions?createDatabaseIfNotExist=true&user=mtron&password=mtron>,
-    localfs   => </home/killswitch/.hermes_clone>],
- header       => """
-   ______          _______ __   {{r}}PhaseShift Studio                    
-  |   _  \ .----. |   _   |  |_.--.--.-----.--.--.
-  |.  |  {{y}} \|   ___|   1___|   _|  |  |     |_   _|
-  |.  |    |__||__|____   |____|___  |{{b}}__|__|__.__|
-  |:  1    /      |:  1   |    |_____| presents ..      
-  |::.. . /       |::.. . |{{g}}       a metatron bomb                       
-  `------'        `-------'          
- """
+ external      =>
+   [ ollama    => <http://ginger.local:11434>,
+     memorydb  => <mariadb://ginger.local:3306/dr_memory?createDatabaseIfNotExist=true&user=mtron&password=mtron>,
+     knowgraph => <ws://ginger.local:8182/gremlin>,
+     localfs   => </home/killswitch/.hermes_clone>]
 ]
 [===============]
-print(*boot/args/header)
+print("""
+{{r}}PhaseShift Studio Presents{{X}}
+{{y}} ___    ____      _____ ______  __ __  ____   __ __ 
+|   \  |    \    / ___/|      ||  |  ||    \ |  |  |
+|    \ |  D  )  (   \_ |  {{c}}    ||  |  ||  _  ||  |  |
+|  D  ||    /    \__  ||_|  |_||  ~  ||  |  ||_   _|
+|     ||    \  __/  \ |  |  |  |___, ||  |  ||     |
+|     ||  .  \|  \    |  |  |  |   {{m}}  ||  |  ||  |  |
+|_____||__|\_||__|\___|  |__|  |____/ |__|__||__|__|
+                                    {{y}} a metatron bomb{{X}}                                      
+""")
 print("{{r}}----{{y}}----{{r}}----\n{{g}}*{{y}}boot/args{{X}}: ",
       *boot/args, 
      "\n{{y}}----{{r}}----{{y}}----{{X}}\n");
@@ -38,6 +36,7 @@ import(/m/web);
 import(/m/tble);
 import(/m/math);
 import(/m/llm);
+import(/m/grph);
 space_root -> <${*boot/args/internal/sys}/space/dr>;
 [===================================================================]
 [===================================================================]
@@ -45,29 +44,11 @@ space_root -> <${*boot/args/internal/sys}/space/dr>;
         [======== HOME =======]
         [=====================]   
 memspace::[
-  pattern => </usr/dr/#>,                                 
+  pattern => /usr/dr/#,                                 
         q => [mintq::[=>],
                docq::[=>],
                subq::[=>],
-              incrq::[=>]]]@</sys/space/usr/dr>;   
-
-memspace::[
-  pattern => </usr/marko/#>,                                 
-        q => [mintq::[=>],
-               docq::[=>],
-               subq::[=>],
-              incrq::[=>]]]@</sys/space/usr/marko>;                 
-    
-        [=====================]  
-        [====== FILE SYS =====]
-        [=====================]   
-    
-fsspace::[
-  pattern => root:#,
-        q => [mimeq::[=>]],
-    route => [root: => /usr/bin]]@</sys/space/fs/root>;
-
-
+              incrq::[=>]]]@</sys/space/usr>;       
 fsspace::[
   pattern => localfs:#,
         q => [subq::[=>],
@@ -78,54 +59,38 @@ fsspace::[
   pattern => metatronfs:#,
     route => [metatronfs: => <~/software/metatron/.metatron/>]]@</sys/space/fs/metatron>;
     
-        [=====================]  
-        [======== WEB ========]
-        [=====================]   
-            
-httpspace::[host     => !*<boot/args/external/web/http>,
-            pattern  => <http://#>,
-            route    => [/ => <>]]@/sys/space/web/http;   
-            
-wsspace::[host     => !*<boot/args/external/web/ws>,
-         pattern  => <ws://#>,
-         route    => [/mcp   => mcp_mtron_ws,
-                      /mtron => mtron_ws]]@/sys/space/web/ws;    
-    
-        [=====================]  
-        [======== LLM ========]
-        [=====================]       
-    
 catalog::[host    => !*<boot/args/external/ollama>,
           pattern => ollama:#,
           name    => ollama,
           route   => [ollama:=><>]]@</sys/space/llm/ollama>;
           
 tblespace::[pattern    => drdb:#,
-            host       => !*<boot/args/external/session>,
+            host       => !*<boot/args/external/memorydb>,
             driver     => <org.mariadb.jdbc.Driver>,
+            table      => [llm_memory, llm_message_system, llm_message_user, llm_message_ai, llm_message_tool_result, llm_model, llm_skill, llm_tool],
             q          => [incrq::[=>],subq::[=>]],
             route      => [drdb:=><>]]@/sys/space/tble/dr;
-    
-[== if the llm session already exists, continue, else create it ==]    
-*<drdb:llm_session/1>.
-  else(session::[agent     => !*boot/args/internal/agent_home,
-                 user      => !*boot/args/internal/user_home,
-                 name      => 'general chat',
-                 message   => <drdb:msg/1/+>,
-                 algorithm => [max=>15]]==[_=>_].
-  to(drdb:llm_session/1));
+            
+ grphspace::[pattern  => g:#,
+             host     => !*<boot/args/external/knowgraph>,
+             config   => [
+                 <clusterConfigurationFile>                 => '/home/killswitch/software/metatron/conf/remote-objects.yaml',
+                 <gremlin.remote.remoteConnectionClass>     => <org.apache.tinkerpop.gremlin.driver.remote.DriverRemoteConnection>,
+                 <gremlin.remote.remoteTraversalSourceName> => 'g'],
+             route    => [g:V => V, g:E => E]]@</sys/space/grph/kg>;
 
-  
-model::[desc     => "the agent dr.stynx is here to be of use in the metatron",
+        [======================]  
+        [======== AGENT =======]
+        [======================]   
+*<drdb:llm_memory/1>.else([agent_id=>'drstynx',name=>'general chat', algorithm=>[max=>15]].to(drdb:llm_memory/1));
+model::[desc     => "core agent",
         provider => !*<ollama:gemma4:26b/provider>,
         name     => !*<ollama:gemma4:26b/name>,
-        feature  => [think    => /usr/marko/console/pane/0/stream(_), 
-                     session  => !@<drdb:llm_session/1>,
-                     session/on_user  => _,
-                     tool     => [!*eval,!*sql],
-                     note     => [,],
+        feature  => [think    => |/usr/ui/console/pane/0/stream(_), 
+                     memory   => !@<drdb:llm_memory/1>,
+                     tool     => [!*eval,!*sql.skip(1).take(1)],
+                     note     => !@</usr/dr/notes>,
                      skill    => [!*<metatronfs:skills/mtron>.as(skill::T)],
                      response => [to=>print(_)]]]@<dr>;
 
-[== user console ==]
-console::[header=>!*boot/args/header]@/usr/marko/console;
+console::[=>]@/usr/dr/console;
