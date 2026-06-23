@@ -9,7 +9,8 @@
                      obj_write    => true,
                      code_resolve => false]],
  external      =>
-   [ memorydb  => <mariadb://localhost:3306/dr_memory?createDatabaseIfNotExist=true&user=mtron&password=mtron>,
+   [ ollama    => <http://ginger.local:11434>,
+     memorydb  => <mariadb://localhost:3306/dr_memory?createDatabaseIfNotExist=true&user=mtron&password=mtron>,
      localfs   => </home/killswitch/.hermes_clone>]
 ]
 [===============]
@@ -52,30 +53,34 @@ fsspace::[
               mimeq::[=>]],
     route => [localfs: => <~/.hermes_clone>]]@</sys/space/fs/dr>;
     
-catalog::[host    => <http://localhost:11434>,
+fsspace::[
+  pattern => metatronfs:#,
+    route => [metatronfs: => <~/software/metatron/.metatron/>]]@</sys/space/fs/metatron>;
+    
+catalog::[host    => !*<boot/args/external/ollama>,
           pattern => ollama:#,
           name    => ollama,
-          route   => [ollama:=><>]]@</sys/space/ollama>;
+          route   => [ollama:=><>]]@</sys/space/llm/ollama>;
           
 tblespace::[pattern    => drdb:#,
             host       => !*<boot/args/external/memorydb>,
             driver     => <org.mariadb.jdbc.Driver>,
             table      => [llm_memory, llm_message_system, llm_message_user, llm_message_ai, llm_message_tool_result, llm_model, llm_skill, llm_tool],
-            q          => [incrq::[=>]],
-            route      => [<drdb:>=><>]]@/sys/space/tble/dr;
+            q          => [incrq::[=>],subq::[=>]],
+            route      => [drdb:=><>]]@/sys/space/tble/dr;
              
         [======================]  
         [======== AGENT =======]
         [======================]   
 *<drdb:llm_memory/1>.else([agent_id=>'drstynx',name=>'general chat', algorithm=>[max=>15]].to(drdb:llm_memory/1));
 model::[desc     => "core agent",
-        provider => !*<ollama:qwen3:latest/provider>,
-        name     => !*<ollama:qwen3:latest/name>,
+        provider => !*<ollama:gemma4:26b/provider>,
+        name     => !*<ollama:gemma4:26b/name>,
         feature  => [think    => |/usr/ui/console/pane/0/stream(_), 
                      memory   => !@<drdb:llm_memory/1>,
                      tool     => [!*eval,!*sql.skip(1).take(1)],
                      note     => !@</usr/dr/notes>,
-                     [==skill    => [!*<mtronfs:skills/mtron>.as(skill::T)],==]
+                     skill    => [!*<metatronfs:skills/mtron>.as(skill::T)],
                      response => [to=>print(_)]]]@<dr>;
 
 console::[=>]@/usr/dr/console;

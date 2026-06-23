@@ -601,6 +601,10 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
         return (Rel) this;
     }
 
+    default Poly<?, ?> asPoly() {
+        return (Poly<?, ?>) this;
+    }
+
     default Inst asInst() {
         return (Inst) this;
     }
@@ -1201,7 +1205,13 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             return objs(lhs.asObjs().stream().flatMap(o -> inst.apply(o).stream()));
                         else return noobj();
                     }),
-                    instC(LSHIFT_INST_TID.dom(A).rng(B.maybeSome()), lst(), (lhs, inst) -> lhs.parent())));
+                    instC(LSHIFT_INST_TID.dom(A).rng(B.maybeSome()), lst(), (lhs, inst) -> {
+                        if (lhs.isRel()) {
+                            return Rel.Helper.lshiftRel(lhs.asRel(), inst.arg(0));
+                        } else {
+                            return lhs.parent();
+                        }
+                    })));
         }
     }
 

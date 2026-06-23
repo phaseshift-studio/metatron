@@ -24,6 +24,7 @@ import studio.phaseshift.metatron.isa.llm.type.mcpClient;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
+import studio.phaseshift.metatron.isa.m.type.Uri;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjJavaSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
 import studio.phaseshift.metatron.isa.web.parser.*;
@@ -31,6 +32,7 @@ import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.web.type.MIME;
 import studio.phaseshift.metatron.isa.web.type.mcpServer;
+import studio.phaseshift.metatron.util.CommonUtil;
 
 import java.net.InetSocketAddress;
 import java.nio.channels.SocketChannel;
@@ -38,6 +40,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
@@ -90,25 +93,17 @@ public class webInstSet extends AbstractInstSet {
     public static final fURI JSON_STR_TID = WEB_ISA_TID.extend("json_str");
     public static final fURI CSS_TID = WEB_ISA_TID.extend("css");
     public static final fURI MARKDOWN_TID = WEB_ISA_TID.extend("markdown");
-    public static final fURI CONTENT_TYPE_TID = WEB_ISA_TID.extend("content_type");
+    public static final fURI MIME_TYPE_TID = WEB_ISA_TID.extend("mime");
 
     public static final fURI JAVA_TID = WEB_ISA_TID.extend("java");
 
 
     public static final fURI DESKTOP_SPACE_VID = f("/sys/desktop");
 
-    public static final Type CONTENT_TYPE = Type.Builder.build()
+    public static Type MIME_TYPE = Type.Builder.build()
             .tid(URI_TID)
-            .vid(CONTENT_TYPE_TID)
-            .isaPredicate(inside_(lst(
-                    uri(MIME.MIMEType.TEXT_PLAIN.value),
-                    uri(MIME.MIMEType.TEXT_HTML.value),
-                    uri(MIME.MIMEType.TEXT_CSS.value),
-                    uri(MIME.MIMEType.TEXT_MARKDOWN.value),
-                    uri(MIME.MIMEType.TEXT_JAVASCRIPT.value),
-                    uri(MIME.MIMEType.APPLICATION_MTRON.value),
-                    uri(MIME.MIMEType.TEXT_X_SHELLSCRIPT.value),
-                    uri(MIME.MIMEType.APPLICATION_JSON.value))))
+            .vid(MIME_TYPE_TID)
+            .isaPredicate(inside_(Stream.of(MIME.MIMEType.values()).map(m -> uri(m.value)).collect(new CommonUtil.LstCollector())))
             .create();
 
     public static final Type XML_TYPE = Type.Builder.build()
@@ -169,7 +164,7 @@ public class webInstSet extends AbstractInstSet {
                         //ObjJavaSerializer.single(),
                         ObjPlainTextSerializer.single()),
                 uri(TYPE), lst(
-                        docWrap(CONTENT_TYPE, "indicates the media type of the data as specified by RFC-9110"),
+                        docWrap(MIME_TYPE, "indicates the media type of the data as specified by RFC-9110"),
                         docWrap(XML_TYPE, "a rec encoding of an xml document"),
                         docWrap(HTML_TYPE, "a rec encoding of an html document",
                                 "*<http://metatron.phaseshift.studio> [-- yields an html::T --]",

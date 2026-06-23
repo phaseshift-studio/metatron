@@ -26,6 +26,7 @@ import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.web.space.http.HttpRec;
 import studio.phaseshift.metatron.isa.web.type.MIME;
+import studio.phaseshift.metatron.isa.web.webInstSet;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -49,7 +50,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.DIR_TID;
 import static studio.phaseshift.metatron.isa.web.space.http.httpSpace.HTTP_HANDLER_TID;
 import static studio.phaseshift.metatron.isa.web.space.http.httpSpace.HTTP_SPACE_TID;
-import static studio.phaseshift.metatron.isa.web.webInstSet.CONTENT_TYPE;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -62,8 +62,8 @@ public class web_httpHandler extends HttpRec {
             .tid(HTTP_HANDLER_TID)
             .vid(WEB_HTTP_TID)
             .isaPredicate(rec(
-                    uri(IN).maybe().asUri(), isa_(CONTENT_TYPE).else_(uri(MIME.MIMEType.APPLICATION_MTRON.value)),
-                    uri(OUT).maybe().asUri(), isa_(CONTENT_TYPE).else_(uri(MIME.MIMEType.APPLICATION_MTRON.value)),
+                    uri(IN).maybe().asUri(), isa_(webInstSet.MIME_TYPE).else_(uri(MIME.MIMEType.APPLICATION_MTRON.value)),
+                    uri(OUT).maybe().asUri(), isa_(webInstSet.MIME_TYPE).else_(uri(MIME.MIMEType.APPLICATION_MTRON.value)),
                     uri(WEB_ROOT).maybe(), T(ALL),
                     uri(DEFAULT_PAGE).maybe(), T(ALL),
                     uri(READ_ONLY).maybe(), T(ALL)))
