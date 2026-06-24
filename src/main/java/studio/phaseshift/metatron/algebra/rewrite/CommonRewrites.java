@@ -106,7 +106,7 @@ public final class CommonRewrites {
                     // only apply when the path ends at collection level (no field/extensions)
                     // URIs with extensions (e.g., /V/1/OUT/+) represent traversals, not simple counts
                     if (!ref.isUri()) return true;
-                    final DataPath dp = DataPath.of(f("-").extend(ref.uriValue()));
+                    final DataPath dp = DataPath.of(ref.uriValue());
                     return !dp.collectionIsWildcard() && !dp.hasField() && !dp.hasExtension();
                 })
                 .optimize("from_count", (space, dp, coeff) -> {

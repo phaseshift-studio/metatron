@@ -35,7 +35,7 @@ import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_MEMORY_TID;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SESSION_TID;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.MODEL_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_at_;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -48,47 +48,47 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  */
 
 /**
- * Abstract integration test for LLM memory persistence across chat turns.
+ * Abstract integration test for LLM session persistence across chat turns.
  * <p>
  * Concrete subclasses provide a space backend (tbleSpace with SQLite,
  * MariaDB, PostgreSQL; memSpace; dcmntSpace; etc.) and this class verifies
- * that the full chat→memory→recall lifecycle works correctly:
+ * that the full chat→session→recall lifecycle works correctly:
  * <ol>
- *   <li>Chat "remember the word DOG" → verify memory message structure</li>
+ *   <li>Chat "remember the word DOG" → verify session message structure</li>
  *   <li>Chat "what word were you asked to remember?" → verify response contains DOG</li>
- *   <li>Verify memory messages after the full conversation</li>
+ *   <li>Verify session messages after the full conversation</li>
  * </ol>
  *
  * <h3>Subclass contract</h3>
  * Subclasses must implement:
  * <ul>
- *   <li>{@link #createMemorySpace()} — create and return a Space with the
- *       {@code llm_memory} table and per-type message tables pre-created</li>
- *   <li>{@link #memoryVID()} — return the fURI of the memory policy row</li>
- *   <li>{@link #cleanupMemory()} — tear down the space and any resources</li>
+ *   <li>{@link #createSessionSpace()} — create and return a Space with the
+ *       {@code llm_session} table and per-type message tables pre-created</li>
+ *   <li>{@link #sessionVID()} — return the fURI of the session policy row</li>
+ *   <li>{@link #cleanupSession()} — tear down the space and any resources</li>
  * </ul>
  */
-public abstract class AbstractLLMMemoryIntegrationTest extends AbstractMetatronTest {
+public abstract class AbstractLLMSessionIntegrationTest extends AbstractMetatronTest {
 
     /* ------------------------------------------------------------
      * Subclass contract
      * ---------------------------------------------------------- */
 
-    /** Create and return a space that stores memory rows and message entries. */
-    protected abstract Space createMemorySpace() throws Exception;
+    /** Create and return a space that stores session rows and message entries. */
+    protected abstract Space createSessionSpace() throws Exception;
 
-    /** The fURI of the pre-created memory policy row in the space. */
-    protected abstract fURI memoryVID();
+    /** The fURI of the pre-created session policy row in the space. */
+    protected abstract fURI sessionVID();
 
     /** Clean up the space and any associated resources (files, connections). */
-    protected abstract void cleanupMemory() throws Exception;
+    protected abstract void cleanupSession() throws Exception;
 
     /* ------------------------------------------------------------
      * State
      * ---------------------------------------------------------- */
 
     private Space space;
-    private SpaceChatMemoryStore memoryStore;
+    private SpaceChatSessionStore sessionStore;
     private mModel chatModel;
 
     private static final String MODEL_NAME = "qwen3:latest";
@@ -100,29 +100,29 @@ public abstract class AbstractLLMMemoryIntegrationTest extends AbstractMetatronT
      * ---------------------------------------------------------- */
 
     @BeforeEach
-    void initMemory() throws Exception {
-        this.space = createMemorySpace();
+    void initSession() throws Exception {
+        this.space = createSessionSpace();
 
-        // Pre-create the memory policy row — SpaceChatMemoryStore.updateMessages()
+        // Pre-create the session policy row — updateMessages()
         // reads this row to extract the algorithm config (max, message_count) and
-        // preserves non-algorithm fields (agent_id, name) on write-back.
-        preCreateMemoryRow();
+        // preserves non-algorithm fields (agent, name) on write-back.
+        preCreateSessionRow();
 
-        this.memoryStore = new SpaceChatMemoryStore(this.space);
+        this.sessionStore = new SpaceChatSessionStore(this.space);
         this.chatModel = buildModel();
         // Add a system message — gets mirrored to llm_message_system
         this.chatModel.addSystemMessage("You are a helpful test assistant.");
     }
 
     @AfterEach
-    void teardownMemory() throws Exception {
+    void teardownSession() throws Exception {
         this.chatModel = null;
-        this.memoryStore = null;
-        cleanupMemory();
+        this.sessionStore = null;
+        cleanupSession();
         this.space = null;
         // Clear the static mirror dedup cache so a fresh space with the same
-        // memory VID pattern gets fresh mirror writes (tests reuse VIDs).
-        SpaceChatMemoryStore.clearMirrorCache();
+        // session VID pattern gets fresh mirror writes (tests reuse VIDs).
+        SpaceChatSessionStore.clearMirrorCache();
     }
 
     /* ------------------------------------------------------------
@@ -130,7 +130,7 @@ public abstract class AbstractLLMMemoryIntegrationTest extends AbstractMetatronT
      * ---------------------------------------------------------- */
 
     @Test
-    public void testMemoryAcrossChatTurns() {
+    public void testSessionAcrossTurns() {
         // ── Turn 1: "remember the word DOG" ──────────────────────────
         try {
             chatModel.chat("Remember the word DOG. Just say 'ok' and nothing else.");
@@ -140,8 +140,8 @@ public abstract class AbstractLLMMemoryIntegrationTest extends AbstractMetatronT
             throw e;
         }
 
-        // Verify memory after turn 1: should have user + ai messages
-        final List<ChatMessage> messages1 = memoryStore.getMessages(memoryVID());
+        // Verify session after turn 1: should have user + ai messages
+        final List<ChatMessage> messages1 = sessionStore.getMessages(sessionVID());
         assertTrue(messages1.size() >= 2,
                 "turn 1: expected >= 2 messages (user + ai), got " + messages1.size());
 
@@ -172,10 +172,10 @@ public abstract class AbstractLLMMemoryIntegrationTest extends AbstractMetatronT
         assertTrue(turn2Response.toLowerCase().contains("dog"),
                 "turn 2: response should contain 'DOG', got: " + turn2Response);
 
-        // Verify memory grew after turn 2
-        final List<ChatMessage> messages2 = memoryStore.getMessages(memoryVID());
+        // Verify session grew after turn 2
+        final List<ChatMessage> messages2 = sessionStore.getMessages(sessionVID());
         assertTrue(messages2.size() > messages1.size(),
-                "memory should have grown after turn 2: "
+                "session should have grown after turn 2: "
                         + messages1.size() + " → " + messages2.size());
 
         // ── Turn 3: "what letter does it start with?" ──────────────
@@ -191,37 +191,37 @@ public abstract class AbstractLLMMemoryIntegrationTest extends AbstractMetatronT
         assertTrue(turn3Response.toLowerCase().contains("d"),
                 "turn 3: response should contain 'D', got: " + turn3Response);
 
-        // Verify memory after all 3 turns
-        final List<ChatMessage> messages3 = memoryStore.getMessages(memoryVID());
+        // Verify session after all 3 turns
+        final List<ChatMessage> messages3 = sessionStore.getMessages(sessionVID());
         assertTrue(messages3.size() > messages2.size(),
-                "memory should have grown after turn 3: "
+                "session should have grown after turn 3: "
                         + messages2.size() + " → " + messages3.size());
         assertTrue(messages3.stream().filter(m -> m instanceof UserMessage).count() >= 3,
                 "should have >= 3 user messages");
         assertTrue(messages3.stream().filter(m -> m instanceof AiMessage).count() >= 3,
                 "should have >= 3 ai messages");
 
-        // ── Verify memory policy row ──────────────────────────────
-        verifyMemoryPolicyRow();
+        // ── Verify session policy row ──────────────────────────────
+        verifySessionPolicyRow();
     }
 
     @Test
     public void testWindowEnforcement() {
         // Tighten the window to 3 — update both the space row and the model
         final int smallMax = 3;
-        final Obj memRow = Router.readFromSpace(memoryVID());
-        assertTrue(memRow.isRec(), "memory row should exist");
+        final Obj memRow = Router.readFromSpace(sessionVID());
+        assertTrue(memRow.isRec(), "session row should exist");
         final Rec updated = rec(new LinkedHashMap<>(memRow.asRec().recValue()));
         updated.recValue().put(uri(ALGORITHM), rec(
                 uri(MAX), jnt(smallMax),
                 uri("message_count"), jnt(0)
         ));
-        Router.writeToSpace(memoryVID(), updated);
+        Router.writeToSpace(sessionVID(), updated);
 
-        // Build a model whose memory feature also uses the tight max
+        // Build a model whose session feature also uses the tight max
         this.chatModel = buildModelWithMax(smallMax);
         this.chatModel.addSystemMessage("You are a test assistant.");
-        this.memoryStore = new SpaceChatMemoryStore(this.space);
+        this.sessionStore = new SpaceChatSessionStore(this.space);
 
         // Chat 5 times — MessageWindowChatMemory evicts beyond 3 internally,
         // and getMessages() also applies the max filter
@@ -234,7 +234,7 @@ public abstract class AbstractLLMMemoryIntegrationTest extends AbstractMetatronT
             }
         }
 
-        final List<ChatMessage> windowed = memoryStore.getMessages(memoryVID());
+        final List<ChatMessage> windowed = sessionStore.getMessages(sessionVID());
         assertTrue(windowed.size() <= smallMax,
                 "window max=" + smallMax + ": expected <= " + smallMax
                         + " messages, got " + windowed.size());
@@ -243,7 +243,7 @@ public abstract class AbstractLLMMemoryIntegrationTest extends AbstractMetatronT
         assertTrue(lastText.toLowerCase().contains("5") || lastText.toLowerCase().contains("turn"),
                 "last message should be from turn 5, got: " + lastText);
 
-        verifyMemoryPolicyRow();
+        verifySessionPolicyRow();
     }
 
     /* ------------------------------------------------------------
@@ -262,7 +262,7 @@ public abstract class AbstractLLMMemoryIntegrationTest extends AbstractMetatronT
             throw e;
         }
 
-        final String scheme = memoryVID().scheme();
+        final String scheme = sessionVID().scheme();
 
         // ── Verify llm_message_system ────────────────────────────
         assertTypedTable(scheme, "llm_message_system",
@@ -277,7 +277,7 @@ public abstract class AbstractLLMMemoryIntegrationTest extends AbstractMetatronT
                 "ai", 3, 3, this::verifyMirrorRow);
 
         // ── KV store remains authoritative ───────────────────────
-        assertTrue(memoryStore.getMessages(memoryVID()).size() >= 6,
+        assertTrue(sessionStore.getMessages(sessionVID()).size() >= 6,
                 "KV store: expected >= 6 messages");
     }
 
@@ -345,16 +345,16 @@ public abstract class AbstractLLMMemoryIntegrationTest extends AbstractMetatronT
      * Helpers
      * ---------------------------------------------------------- */
 
-    /** Verify the llm_memory policy row has the expected fields. */
-    private void verifyMemoryPolicyRow() {
-        final Obj row = Router.readFromSpace(memoryVID());
-        assertTrue(row.isRec(), "memory policy row must be Rec, got: " + row);
+    /** Verify the llm_session policy row has the expected fields. */
+    private void verifySessionPolicyRow() {
+        final Obj row = Router.readFromSpace(sessionVID());
+        assertTrue(row.isRec(), "session policy row must be Rec, got: " + row);
         final Rec rec = row.asRec();
 
-        assertFalse(rec.at(uri("agent_id")).isNoObj(),
-                "agent_id should exist in: " + row);
-        assertFalse(rec.at(uri("agent_id")).strValue().isBlank(),
-                "agent_id should not be blank");
+        assertFalse(rec.at(uri("agent")).isNoObj(),
+                "agent should exist in: " + row);
+        assertFalse(rec.at(uri("agent")).strValue().isBlank(),
+                "agent should not be blank");
 
         final Obj algorithm = rec.at(uri(ALGORITHM));
         assertTrue(algorithm.isRec(), "algorithm must be Rec, got: " + algorithm);
@@ -365,27 +365,27 @@ public abstract class AbstractLLMMemoryIntegrationTest extends AbstractMetatronT
                 "message_count should be > 0, got " + algo.at(uri("message_count")));
     }
 
-    /** Write the memory policy row so the space has a target for message storage. */
-    private void preCreateMemoryRow() {
+    /** Write the session policy row so the space has a target for message storage. */
+    private void preCreateSessionRow() {
         final Obj row = rec(
-                uri("agent_id"), str("test-agent"),
+                uri("agent"), str("test-agent"),
                 uri("name"), str("test-chat"),
                 uri(ALGORITHM), rec(
                         uri(MAX), jnt(WINDOW_MAX),
                         uri("message_count"), jnt(0)
                 )
         );
-        Router.writeToSpace(memoryVID(), row);
+        Router.writeToSpace(sessionVID(), row);
     }
 
-    /** Build an mModel wired to our space-backed memory with the default max. */
+    /** Build an mModel wired to our space-backed session with the default max. */
     private mModel buildModel() {
         return buildModelWithMax(WINDOW_MAX);
     }
 
     /** Build an mModel with a specific window max. */
     private mModel buildModelWithMax(final int max) {
-        final fURI memVID = memoryVID();
+        final fURI memVID = sessionVID();
         final Rec modelRec = (Rec) rec(new LinkedHashMap<>(Map.of(
                 uri(NAME), uri(MODEL_NAME),
                 uri(PROVIDER), rec(new LinkedHashMap<>(Map.of(
@@ -393,20 +393,20 @@ public abstract class AbstractLLMMemoryIntegrationTest extends AbstractMetatronT
                         uri(HOST), uri(PROVIDER_HOST)
                 ))),
                 uri(FEATURE), rec(new LinkedHashMap<>(Map.of(
-                        uri(MEMORY), rec(new LinkedHashMap<>(Map.of(
+                        uri(SESSION), rec(new LinkedHashMap<>(Map.of(
                                 uri("mem"), auto_at_(memVID).tryToInst(),
                                 uri(ALGORITHM), rec(new LinkedHashMap<>(Map.of(
                                         uri(MAX), jnt(max)
                                 )))
-                        )), LLM_MEMORY_TID, memVID)  // VID = memory row URI; TID = memory type
+                        )), LLM_SESSION_TID, memVID)  // VID = session row URI; TID = session type
                 )))
         )), MODEL_TID, null);
         return mModel.model(modelRec);
     }
 
-    /** Read the text of the last AI message from memory. */
+    /** Read the text of the last AI message from session. */
     private String readLastAiText() {
-        final List<ChatMessage> messages = memoryStore.getMessages(memoryVID());
+        final List<ChatMessage> messages = sessionStore.getMessages(sessionVID());
         for (int i = messages.size() - 1; i >= 0; i--) {
             if (messages.get(i) instanceof AiMessage ai)
                 return ai.text() != null ? ai.text() : "";

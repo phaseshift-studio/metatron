@@ -138,7 +138,7 @@ This is useful for learning about instructions.
 | MCP server push / subq | [mcp-server-notifications.md](references/mcp-server-notifications.md) |
 | HTTP page fetching | [http-page-fetching.md](references/http-page-fetching.md) |
 | MCP server architecture | [mcp-server-architecture.md](references/mcp-server-architecture.md) |
-| Agent memory / chat | [mtron-agent-architecture.md](../../../.claude/projects/-home-killswitch-software-metatron/memory/team/mtron-agent-architecture.md) |
+| Agent session / chat | [mtron-agent-architecture.md](../../../.claude/projects/-home-killswitch-software-metatron/memory/team/mtron-agent-architecture.md) |
 
 **Load only the relevant reference file, not all.**
 

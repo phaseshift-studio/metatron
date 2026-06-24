@@ -17,7 +17,7 @@ Modern AI techniques are heavily leveraged across various aspects of metatron, w
 . **Agent Development**: A large portion of an LLM's functional elements are embedded in the URI address space and made accessible to mtron via respective spaces. Such components include:
  - **tools**: every mtron `inst` has an `as()`-mapping to `tool`, where the `docq` q processor of the `inst` provides the name, description, and argument notes necessary for LLM tool selection. While most mtron instructions are low-level and not necessarily "tool-oriented," user-defined custom instructions can be defined and offered as tools/services to llms as needed.
  - **thoughts**: when enabling internal reasoning with a supporting LLM, the stream of thought is published streamed and can be directed to system output, to a memory structure, to another LLM for review, etc.  
- - **memory**: an LLMs interaction/thought history can be stored and retrieved at a later time to enable long-term memory and context awareness.
+ - **sessions**: an LLMs interaction/thought history can be stored and retrieved at a later time to enable long-term memory and context awareness.
  - **skills**: an LLM can be trained on a wide range of skills and domains, allowing them to perform complex tasks and solve domain-specific problems. Skills can be pulled from the Anthropic-specified `.agent` directory that has a corresponding `SKILL.md` file and associated resources. Or, can be created programmatically in metaron.
  - **notes**: pass information to an LLM during a chat iteration without interrupting them. LLMs will periodically check their note stack for any advice/information from the user about their task at hand.
  - **prompts**: specific prompts or instructions can be stored and retrieved to help guide an LLM's response.
@@ -59,7 +59,7 @@ An LLM is a `model::T < rec::T` with the following type definition:
 */m/llm/model
 ----
 
-The design makes a distinction between the **LLM** (general-purpose reasoning engine) and its **features** (accessories that can be attached to the LLM). Example features include tools, skills, memory, thinking, response formats, and other similar enrichme. Features are agnostic to the underlying LLM and can be shared between LLMs making it easy to assemble new LLMs from a library of stored features. In `.metatron`, there exists an `agent.mtron` file that provides a sample library.
+The design makes a distinction between the **LLM** (general-purpose reasoning engine) and its **features** (accessories that can be attached to the LLM). Example features include tools, skills, sessions, thinking, response formats, and other similar enrichme. Features are agnostic to the underlying LLM and can be shared between LLMs making it easy to assemble new LLMs from a library of stored features. In `.metatron`, there exists an `agent.mtron` file that provides a sample library.
 
 [mtron]
 ----
@@ -72,7 +72,7 @@ The design makes a distinction between the **LLM** (general-purpose reasoning en
 [discrete]
 === llm interactions
 
-The following example demonstrates how to search for an appropriate LLM for a given task, then query it, and finally, have its memory of the interaction stored in space for future use (to provide the agent context over longer interactions). This example relies on an agent `SKILL.md` file stored on the local file system. Thus, we need a space.
+The following example demonstrates how to search for an appropriate LLM for a given task, then query it, and finally, have its session of the interaction stored in space for future use (to provide the agent context over longer interactions). This example relies on an agent `SKILL.md` file stored on the local file system. Thus, we need a space.
 
 [mtron]
 ----
@@ -87,17 +87,20 @@ fsspace::[pattern => fs:#,  /
 
 [mtron]
 ----
-[,]@/usr/ai/memory                                        [-- <1> --]
+[,]@/usr/ai/session                                        [-- <1> --]
 *ollama:+.                                                /
  where(>>skill.has(thinking).has(tools)).                 /
  where(>>size.?>gB::1.0.?<gB::5.0).                       /
  order(>>size * -1.0).                                    /
  take(1).                                                 /
  >>=+[feature=>[                                          /
-       memory  => [mem=>!@/usr/ai/memory,max=>5],         /   
-       tool    => [!*eval],                               /
-       think   => print(_),                               /
-       response=> [to=>to(/usr/ai/response)]]].           /
+       session  => [agent     => /usr/ai,                 /
+                    user      => /usr/marko,              /
+                    name      => 'general chat',          /
+                    algorithm => [max=>15]],              /
+       tool     => [!*eval],                              /
+       think    => print(_),                              /
+       response => [to=>to(/usr/ai/response)]]].          /
  to(ai)
 [HIDDEN] ai/feature/think -> noobj
 ----
@@ -108,7 +111,7 @@ fsspace::[pattern => fs:#,  /
 <5> reverse sort the models by their size.
 <6> select the smallest model of those remaining.
 <7> attach features/enrichements to the model.
-<8> give the model a memory structure for extended context.
+<8> give the model a session structure for extended context.
 <9> give the model access to mtron's eval instruction.
 <10> have the model print its thoughts to the console terminal
 <11> have the model store its responses to the `/usr/ai` space.
@@ -116,7 +119,7 @@ fsspace::[pattern => fs:#,  /
 
 The first part of the stream above was about widdling down the set of available models to those that meet the requirements for this documentation -- namely, a model that is not too big (as building the docs would take too long) and has some useful capabilities for demonstrating model features.
 
-Once a model was selected, then the second phase served to enrich the model with a memory structure (embedded in space), some tools to use if need be (embedded in space), a place for its thought (ephemeral to the console's stdout), and a location to place its response (embedded in space).
+Once a model was selected, then the second phase served to enrich the model with a session structure (embedded in space), some tools to use if need be (embedded in space), a place for its thought (ephemeral to the console's stdout), and a location to place its response (embedded in space).
 
 With the model loaded and equipped, it's possible to communicate with it.
 
@@ -164,7 +167,7 @@ The content and metadata associated with the chat interaction are stored at the 
 [mtron]
 ----
 @ai.chat("It's been many years since we last talked. For I am a tired, old man. Before I let my last breathe flutter into this world, I must know one last thing. Please tell me, what was the result of the mtron expression I provided you all those years ago?")
-*/usr/ai/memory/+
+*/usr/ai/session/+
 ----
 
 Or, using structured responses, the unstructured text result can be turned into a mtron obj.
@@ -229,12 +232,12 @@ mcp_client::[host =>                                /
 @robotron.chat('what tools do you have access to?',          /
             [number_of_tools=>int::T,tool_names=>str::T])        
 @robotron.chat('what skills do you have?')                        
-*robotron>>feature/memory                                                 
-*robotron>>feature/memory/mem/2/attributes/format                        
+*robotron>>feature/session                                                 
+*robotron>>feature/session/mem/2/attributes/format                        
 ----
 <1> providing a response format `rec` yields a structured response.
 <2> without a response format, the agent replies in free, unstructured text.
-<3> the agent's memory records structured responses.
+<3> the chat session records structured responses.
 
 Given that an `mcp_client::T` is an index of `insts`. Nothing prevents their `insts` being used by other processes such
 as a human user. And since, metatron is able to map common data formats to `obj`, its possible to take the result of the
@@ -363,7 +366,7 @@ NOTE: A link:../../.claude/skills/mtron/references/mcp-server-notifications.md[m
 [discrete]
 === agent-based programming language
 
-The LLM, its memory, tools, skills, thoughts, and response formats are all first-class entities in the metatron. Interacting
+The LLM, its sessions, tools, skills, thoughts, and response formats are all first-class entities in the metatron. Interacting
 with an LLM is equivalent to evaluating an instruction. Moreover, an LLM's response is simply the `rhs` of
 the instruction. As such, in mtron, function composition applies to LLM interactions. 
 Agent-oriented computations can be defined and executed in a "workflow" type manner.
@@ -374,7 +377,7 @@ can access it accordingly and naturally.
 ----
     enriched llm                                                  
    ┌──────────────────────────────────────────────────┐           
-   │       memory                       thoughts      │           
+   │       session                      thoughts      │           
    │       tools                        skills        │           
    │       response format              notes         │           
    └──────────────────────────────────────────────────┘           
@@ -404,9 +407,9 @@ The mtron example below contains two structured response calls to the agent used
        .>>answer                                                                   /
        .-<|[?>23 => print('a big answer'),                                         /
                _ => print('a small answer')].>>.mult(1000)                         
-*<local:.agent/robotron/memory>                                                   
+*<local:.agent/robotron/session>                                                   
 ----
 
 <1> The agent used in the previous examples.
 <2> Treat `chat()` like any other instruction within a larger mtron composition.
-<3> The llm's memory structure with requests and responses accessible.
+<3> The llm's chat sessions with requests and responses accessible.

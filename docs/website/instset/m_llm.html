@@ -272,12 +272,16 @@ bin/metatron</code></pre>
  obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
  inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
  space=&gt;[super=&gt;!*/m],
+ const=&gt;[[chat_schema=&gt;inst?#{*}&lt;=#{*}()]@helper],
  type=&gt;[
   catalog::T,
   tool::T,
-  memory::T,
+  session::T,
+  message::T,
+  system::T,
   user::T,
   AI::T,
+  tool_result::T,
   skill::T,
   feature::T,
   model::T],
@@ -295,7 +299,7 @@ bin/metatron</code></pre>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <button class="btn btn-outline-secondary" disabled>Consts <span class="pill-label badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">7</span></a><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">3</span></a><a href="#spaces" class="btn btn-outline-primary">Spaces <span class="pill-label badge bg-info">1</span></a><button class="btn btn-outline-secondary" disabled>Rewrites <span class="pill-label badge bg-dark">0</span></button>
+        <a href="#consts" class="btn btn-outline-primary">Consts <span class="pill-label badge bg-secondary">1</span></a><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">10</span></a><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">3</span></a><a href="#spaces" class="btn btn-outline-primary">Spaces <span class="pill-label badge bg-info">1</span></a><button class="btn btn-outline-secondary" disabled>Rewrites <span class="pill-label badge bg-dark">0</span></button>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="card">
@@ -308,21 +312,36 @@ bin/metatron</code></pre>
 </a><a href="#type-feature" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">feature</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
-</a><a href="#type-memory" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">memory</span>
+</a><a href="#type-message" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">message</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a><a href="#type-model" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">model</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#type-session" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">session</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
 </a><a href="#type-skill" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">skill</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#type-system" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">system</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a><a href="#type-tool" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">tool</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#type-tool_result" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">tool_result</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
 </a><a href="#type-user" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">user</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
+</a></div>
+</div><div class="mb-3">
+    <h6 class="text-primary mb-2">Constants</h6>
+    <div class="d-flex flex-wrap"><a href="#const-helper" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">helper</span>
+    <span class="pill-label badge bg-secondary ms-2">C</span>
 </a></div>
 </div><div class="mb-3">
     <h6 class="text-primary mb-2">Instructions</h6>
@@ -341,18 +360,43 @@ bin/metatron</code></pre>
 </a></div>
 </div></div>
     </div>
+</div><div class="container-xxl mb-4" id="consts">
+    <h3 class="text-primary mb-3">Constants <span class="pill-label badge bg-secondary">1</span></h3>
+    <div class="card mb-3" id="const-helper">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span class="code text-secondary fw-bold">helper</span>
+        <small class="text-muted code">/m/llm/helper</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">[chat_schema=&gt;inst?#{*}&lt;=#{*}()]@helper</code></pre></div>
+    
+</div>
 </div><div class="container-xxl mb-4" id="types">
-    <h3 class="text-primary mb-3">Types <span class="pill-label badge bg-primary">7</span></h3>
+    <h3 class="text-primary mb-3">Types <span class="pill-label badge bg-primary">10</span></h3>
     <div class="card mb-3" id="type-AI">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">AI::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#type-rec" class="instset-doc-small-code text-info code">/m/rec::T</a></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">/m/llm/message::T</span></span>
         </span>
         <small class="text-muted code">/m/llm/AI</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[{?}text=&gt;str::T,{?}thinking=&gt;int::T,{?}attributes=&gt;rec::T,type=&gt;AI]]@/m/llm/AI</code></pre></div>
-    
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">message::T[?[
+  {?}name=&gt;str::T,
+  {?}text=&gt;str::T,
+  {?}thinking=&gt;int::T,
+  {?}tool_requests=&gt;lst::T,
+  {?}attributes=&gt;rec::T]]@/m/llm/AI</code></pre></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">an ai/assistant message</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  name <span class="text-light">=&gt;</span> <span class="text-info">&#39;the assistant identity&#39;</span>
+  text <span class="text-light">=&gt;</span> <span class="text-info">&#39;the response text&#39;</span>
+  thinking <span class="text-light">=&gt;</span> <span class="text-info">&#39;the internal reasoning and token count of the model&#39;</span>
+  tool_requests <span class="text-light">=&gt;</span> <span class="text-info">&#39;the tool execution requests made by the model&#39;</span>
+  attributes <span class="text-light">=&gt;</span> <span class="text-info">&#39;extra metadata from the provider&#39;</span>
+</pre>
+</div>
 </div><div class="card mb-3" id="type-feature">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -363,7 +407,7 @@ bin/metatron</code></pre>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?{?}[
   {?}think=&gt;#::T,
-  {?}memory=&gt;memory::T,
+  {?}session=&gt;session::T,
   {?}prompt=&gt;#::T,
   {?}response=&gt;{?}[{?}to=&gt;inst::T,{?}format=&gt;#::T,{?}cost=&gt;currency::T],
   {?}tool=&gt;{?}[split([isa(tool::T),isa(mcp_server::T)])],
@@ -379,23 +423,23 @@ bin/metatron</code></pre>
   {?}think <span class="text-light">=&gt;</span> <span class="text-info">&#39;an obj to process llm thoughts&#39;</span>
   {?}note <span class="text-light">=&gt;</span> <span class="text-info">&#39;a lst of notes llm will read and react to mid-chat&#39;</span>
   {?}prompt <span class="text-light">=&gt;</span> <span class="text-info">&#39;a user prompt to prefix chat messages with&#39;</span>
-  {?}memory <span class="text-light">=&gt;</span> <span class="text-info">&quot;llm&#39;s memory of previous interactions&quot;</span>
+  {?}session <span class="text-light">=&gt;</span> <span class="text-info">&#39;current llm session containing chat interactions&#39;</span>
   {?}rag <span class="text-light">=&gt;</span> <span class="text-info">&#39;retrieval augmented generation configuration&#39;</span>
   {?}skill <span class="text-light">=&gt;</span> <span class="text-info">&quot;skills to extend the llm&#39;s abilities&quot;</span>
   {?}tool <span class="text-light">=&gt;</span> <span class="text-info">&#39;tool functions the llm can use to solve problems&#39;</span>
 </pre>
 </div>
-</div><div class="card mb-3" id="type-memory">
+</div><div class="card mb-3" id="type-message">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
-            <span class="code text-primary fw-bold">memory::T</span>
+            <span class="code text-primary fw-bold">message::T</span>
             <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#type-rec" class="instset-doc-small-code text-info code">/m/rec::T</a></span>
         </span>
-        <small class="text-muted code">/m/llm/memory</small>
+        <small class="text-muted code">/m/llm/message</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[mem=&gt;lst::T,{?}max=&gt;isa(int::T).else(15)]]@/m/llm/memory</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T@/m/llm/message</code></pre></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">llm memory structure as a lst of past interactions</p>
+    <p class="mb-0 text-light">a message that with ai, user, and system message refinements</p>
 </div>
 </div><div class="card mb-3" id="type-model">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -423,6 +467,25 @@ bin/metatron</code></pre>
   {?}feature <span class="text-light">=&gt;</span> <span class="text-info">&#39;llm features can be moved or shared between multiple models&#39;</span>
 </pre>
 </div>
+</div><div class="card mb-3" id="type-session">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">session::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#type-rec" class="instset-doc-small-code text-info code">/m/rec::T</a></span>
+        </span>
+        <small class="text-muted code">/m/llm/session</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[agent=&gt;uri{+}::T,user=&gt;uri{+}::T,message=&gt;uri::T,algorithm=&gt;rec::T]]@/m/llm/session</code></pre></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">llm session session policy with algorithm config and a resolved lst of messages from sub-path */msg/*</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  agent <span class="text-light">=&gt;</span> <span class="text-info">&#39;the agent(s) involved in the chat session&#39;</span>
+  user <span class="text-light">=&gt;</span> <span class="text-info">&#39;the user(s) involved in the chat session&#39;</span>
+  message <span class="text-light">=&gt;</span> <span class="text-info">&#39;a reference to all messages in the chat session&#39;</span>
+  algorithm <span class="text-light">=&gt;</span> <span class="text-info">&#39;the algorithm used to manage the chat session (compaction, windowing, summarizing, etc.)&#39;</span>
+</pre>
+</div>
 </div><div class="card mb-3" id="type-skill">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -446,6 +509,18 @@ bin/metatron</code></pre>
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*&lt;local:.agent/skills&gt;.as(skill::T)   [-- see as?skill&lt;=dir() --]</code></pre>
 </div>
+</div><div class="card mb-3" id="type-system">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">system::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">/m/llm/message::T</span></span>
+        </span>
+        <small class="text-muted code">/m/llm/system</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">message::T[?[text=&gt;str::T]]@/m/llm/system</code></pre></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">a system message typically provides behavioral and response-style instructions to the model</p>
+</div>
 </div><div class="card mb-3" id="type-tool">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -456,16 +531,41 @@ bin/metatron</code></pre>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[inst=&gt;#::T,name=&gt;uri::T,desc=&gt;str::T,{?}arg=&gt;#::T]]@/m/llm/tool</code></pre></div>
     
+</div><div class="card mb-3" id="type-tool_result">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">tool_result::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">/m/llm/message::T</span></span>
+        </span>
+        <small class="text-muted code">/m/llm/tool_result</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">message::T[?[name=&gt;str::T,text=&gt;str::T,{?}id=&gt;str::T]]@/m/llm/tool_result</code></pre></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">a tool execution result message</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  name <span class="text-light">=&gt;</span> <span class="text-info">&#39;the tool that was executed&#39;</span>
+  text <span class="text-light">=&gt;</span> <span class="text-info">&#39;the text result of the tool execution&#39;</span>
+  {?}id <span class="text-light">=&gt;</span> <span class="text-info">&#39;correlation id matching the tool execution request&#39;</span>
+</pre>
+</div>
 </div><div class="card mb-3" id="type-user">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">user::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#type-rec" class="instset-doc-small-code text-info code">/m/rec::T</a></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">/m/llm/message::T</span></span>
         </span>
         <small class="text-muted code">/m/llm/user</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[contents=&gt;[text=&gt;str::T],type=&gt;user]]@/m/llm/user</code></pre></div>
-    
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">message::T[?[{?}name=&gt;str::T,contents=&gt;[text=&gt;str::T]]]@/m/llm/user</code></pre></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">a user message</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  {?}name <span class="text-light">=&gt;</span> <span class="text-info">&#39;sender identity for multi-user conversations&#39;</span>
+  contents <span class="text-light">=&gt;</span> <span class="text-info">&#39;the message contents&#39;</span>
+</pre>
+</div>
 </div>
 </div><div class="container-xxl mb-4" id="instructions">
     <h3 class="text-primary mb-3">Instructions <span class="pill-label badge bg-success">3</span></h3>

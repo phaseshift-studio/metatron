@@ -19,18 +19,15 @@
 package studio.phaseshift.metatron.isa.llm.type;
 
 import dev.langchain4j.data.message.ChatMessage;
-import dev.langchain4j.data.message.*;
 import dev.langchain4j.model.chat.request.json.*;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.llm.JsonSchemaGenerator;
-import studio.phaseshift.metatron.isa.llm.space.SpaceChatMemoryStore;
+import studio.phaseshift.metatron.isa.llm.space.SpaceChatSessionStore;
 import studio.phaseshift.metatron.isa.m.type.*;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.tble.tbleSpace;
 import studio.phaseshift.metatron.util.MTronException;
@@ -46,7 +43,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_MEMORY_TID;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SESSION_TID;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.MODEL_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_at_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
@@ -211,9 +208,9 @@ public class mModelTest extends AbstractMetatronTest {
     }
 
     @Test
-    public void testMemoryAbsent() {
+    public void testSessionAbsent() {
         Rec empty = rec(mutableMap(uri(NAME), uri("empty")), MODEL_TID, null);
-        assertTrue(mModel.model(empty).memory().isNoObj());
+        assertTrue(mModel.model(empty).session().isNoObj());
     }
 
     @Test
@@ -345,7 +342,7 @@ public class mModelTest extends AbstractMetatronTest {
     private static final fURI MEM_VID = f("sqlite:" + MEM_TABLE + "/1");
     private tbleSpace memSpace;
 
-    private void initSQLiteMemory() throws Exception {
+    private void initSQLiteSession() throws Exception {
         final File dbFile = new File(TEST_DB_PATH);
         if (dbFile.exists()) dbFile.delete();
         dbFile.getParentFile().mkdirs();
@@ -389,8 +386,8 @@ public class mModelTest extends AbstractMetatronTest {
     }
 
     @Test
-    public void testSQLiteMemoryTypeDetection() throws Exception {
-        initSQLiteMemory();
+    public void testSQLiteSessionTypeDetection() throws Exception {
+        initSQLiteSession();
 
         // Read the algorithm column — should be a Rec from JSON object default
         final Obj row = Router.readFromSpace(MEM_VID);
@@ -404,8 +401,8 @@ public class mModelTest extends AbstractMetatronTest {
     }
 
     @Test
-    public void testSQLiteMemoryStoreAndRetrieve() throws Exception {
-        initSQLiteMemory();
+    public void testSQLiteSessionStoreAndRetrieve() throws Exception {
+        initSQLiteSession();
 
         // Write a memory policy row with algorithm config
         final Rec memoryRec = (Rec) rec(
@@ -436,8 +433,8 @@ public class mModelTest extends AbstractMetatronTest {
     }
 
     @Test
-    public void testChatPersistsMemoryToSQLite() throws Exception {
-        initSQLiteMemory();
+    public void testChatPersistsSessionToSQLite() throws Exception {
+        initSQLiteSession();
 
         // Build model with SQLite-backed memory
         final Rec modelRec = (Rec) rec(mutableMap(
@@ -452,7 +449,7 @@ public class mModelTest extends AbstractMetatronTest {
                                 uri(ALGORITHM), rec(mutableMap(
                                         uri(MAX), jnt(20)
                                 ))
-                        ), LLM_MEMORY_TID, MEM_VID)
+                        ), LLM_SESSION_TID, MEM_VID)
                 ))
         ), MODEL_TID, null);
 
@@ -468,7 +465,7 @@ public class mModelTest extends AbstractMetatronTest {
         }
 
         // Verify memory was persisted via the KV message store
-        final SpaceChatMemoryStore store = new SpaceChatMemoryStore(this.memSpace);
+        final SpaceChatSessionStore store = new SpaceChatSessionStore(this.memSpace);
         final List<ChatMessage> messages = store.getMessages(MEM_VID);
         assertTrue(messages.size() >= 2,
                 "expected >=2 messages (user + ai) in KV store, got " + messages.size());

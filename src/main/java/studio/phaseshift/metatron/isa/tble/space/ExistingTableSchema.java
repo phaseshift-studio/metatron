@@ -847,6 +847,57 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
         }
     }*/
 
+    /**
+     * ALTER TABLE on the fly — adds a missing column so writes never lose data
+     * just because the first-written record didn't include this field.
+     *
+     * The column is always nullable (existing rows get NULL) and the SQL type
+     * is inferred from the metatron value being written, using the same rules
+     * as {@link #createTableFromRecord}.
+     */
+    private ColumnMetadata addColumnOnTheFly(final Connection conn, final TableMetadata metadata,
+                                              final String columnName, final Obj value) throws SQLException {
+        final String sqlType;
+        final int jdbcType;
+        if (value.isBool()) {
+            sqlType = "BOOLEAN"; jdbcType = Types.BOOLEAN;
+        } else if (value.isInt()) {
+            sqlType = "INTEGER"; jdbcType = Types.INTEGER;
+        } else if (value.isReal()) {
+            sqlType = "REAL"; jdbcType = Types.REAL;
+        } else {
+            sqlType = "TEXT"; jdbcType = Types.VARCHAR;
+        }
+
+        final String ddl = String.format("ALTER TABLE %s ADD COLUMN %s %s",
+                metadata.tableName, columnName, sqlType);
+        this.space.logger().info("adding column on the fly: %s", ddl);
+        try (final Statement stmt = conn.createStatement()) {
+            stmt.executeUpdate(ddl);
+        } catch (final SQLException e) {
+            // Race: another writer added the same column between our metadata
+            // check and this DDL.  The column now exists — re-read its info
+            // from the DB so we can proceed with the insert.
+            try (final java.sql.ResultSet cols = conn.getMetaData().getColumns(
+                    metadata.dbName, null, metadata.tableName, columnName)) {
+                if (cols.next()) {
+                    final int sqlType2 = cols.getInt("DATA_TYPE");
+                    final String typeName2 = cols.getString("TYPE_NAME");
+                    final ColumnMetadata raced = new ColumnMetadata(columnName, sqlType2, typeName2);
+                    metadata.columns.add(raced);
+                    this.space.logger().info("column {{b}}%s{{X}}.%s already exists (race); using DB-reported type %s",
+                            metadata.tableName, columnName, typeName2);
+                    return raced;
+                }
+            }
+            throw e;
+        }
+
+        final ColumnMetadata newCol = new ColumnMetadata(columnName, jdbcType, sqlType);
+        metadata.columns.add(newCol);
+        return newCol;
+    }
+
     private int insertRow(final Connection conn, final TableMetadata metadata, final String rowId, final Rec rec) throws SQLException {
         final List<String> columnNames = new ArrayList<>();
         final List<Tuple.Pair<Obj, ColumnMetadata>> values = new ArrayList<>();
@@ -884,7 +935,9 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
                 columnNames.add(column.name);
                 values.add(Tuple.Pair.with(entry.getValue(), column));
             } else {
-                this.space.logger().warn("ignoring insert as column %s not found in table %s", fieldName, metadata.tableName);
+                final ColumnMetadata newCol = addColumnOnTheFly(conn, metadata, fieldName, entry.getValue());
+                columnNames.add(newCol.name);
+                values.add(Tuple.Pair.with(entry.getValue(), newCol));
             }
         }
 
@@ -938,8 +991,9 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
                 columnNames.add(column.name);
                 values.add(Tuple.Pair.with(entry.getValue(), column));
             } else {
-                this.space.logger().warn("ignoring insert as column %s not found in table %s",
-                        fieldName, metadata.tableName);
+                final ColumnMetadata newCol = addColumnOnTheFly(conn, metadata, fieldName, entry.getValue());
+                columnNames.add(newCol.name);
+                values.add(Tuple.Pair.with(entry.getValue(), newCol));
             }
         }
 

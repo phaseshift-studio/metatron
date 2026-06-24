@@ -2,16 +2,19 @@
 [
  internal        =>
   [ sys          => /sys,
-    home         => /usr/dr,
+    agent_home   => /usr/dr,
+    user_home    => /usr/marko,
+    session_id   => 1,
     typer/stages => [inst_dom     => true, 
                      inst_rng     => true,
                      type_ctor    => true,
                      obj_write    => true,
                      code_resolve => false]],
- external      =>
-   [ ollama    => <http://ginger.local:11434>,
-     memorydb  => <mariadb://localhost:3306/dr_memory?createDatabaseIfNotExist=true&user=mtron&password=mtron>,
-     localfs   => </home/killswitch/.hermes_clone>]
+ external     =>
+  [ web       => [ http => <http://localhost:8777> ],
+    ollama    => <http://ginger.local:11434>,
+    session   => <mariadb://localhost:3306/dr_sessions?createDatabaseIfNotExist=true&user=mtron&password=mtron>,
+    localfs   => </home/killswitch/.hermes_clone>]
 ]
 [===============]
 print("""
@@ -42,11 +45,23 @@ space_root -> <${*boot/args/internal/sys}/space/dr>;
         [======== HOME =======]
         [=====================]   
 memspace::[
-  pattern => /usr/dr/#,                                 
+  pattern => </usr/dr/#>,                                 
         q => [mintq::[=>],
                docq::[=>],
                subq::[=>],
-              incrq::[=>]]]@</sys/space/usr>;       
+              incrq::[=>]]]@</sys/space/usr/dr>;   
+
+memspace::[
+  pattern => </usr/marko/#>,                                 
+        q => [mintq::[=>],
+               docq::[=>],
+               subq::[=>],
+              incrq::[=>]]]@</sys/space/usr/marko>;                 
+    
+        [=====================]  
+        [====== FILE SYS =====]
+        [=====================]   
+    
 fsspace::[
   pattern => localfs:#,
         q => [subq::[=>],
@@ -57,30 +72,51 @@ fsspace::[
   pattern => metatronfs:#,
     route => [metatronfs: => <~/software/metatron/.metatron/>]]@</sys/space/fs/metatron>;
     
+        [=====================]  
+        [======== WEB ========]
+        [=====================]   
+            
+httpspace::[host     => !*<boot/args/external/web/http>,
+            pattern  => <http://#>,
+            route    => [/ => <>]]@/sys/space/web/http;    
+    
+        [=====================]  
+        [======== LLM ========]
+        [=====================]       
+    
 catalog::[host    => !*<boot/args/external/ollama>,
           pattern => ollama:#,
           name    => ollama,
           route   => [ollama:=><>]]@</sys/space/llm/ollama>;
           
 tblespace::[pattern    => drdb:#,
-            host       => !*<boot/args/external/memorydb>,
+            host       => !*<boot/args/external/session>,
             driver     => <org.mariadb.jdbc.Driver>,
-            table      => [llm_memory, llm_message_system, llm_message_user, llm_message_ai, llm_message_tool_result, llm_model, llm_skill, llm_tool],
+            table      => [llm_session, llm_message_system, 
+                           llm_message_user, llm_message_ai, 
+                           llm_message_tool_result, llm_model, 
+                           llm_skill, llm_tool],
             q          => [incrq::[=>],subq::[=>]],
             route      => [drdb:=><>]]@/sys/space/tble/dr;
-             
-        [======================]  
-        [======== AGENT =======]
-        [======================]   
-*<drdb:llm_memory/1>.else([agent_id=>'drstynx',name=>'general chat', algorithm=>[max=>15]].to(drdb:llm_memory/1));
-model::[desc     => "core agent",
+    
+[== if the llm session already exists, continue, else create it ==]    
+*<drdb:llm_session/1>.
+  else(session::[agent     => !*boot/args/internal/agent_home,
+                 user      => !*boot/args/internal/user_home,
+                 name      => 'general chat',
+                 message   => <drdb:msg/1/+>,
+                 algorithm => [max=>15]]==[_=>_].
+  to(drdb:llm_session/1));
+  
+model::[desc     => "the agent dr.stynx is here to be of use in the metatron",
         provider => !*<ollama:gemma4:26b/provider>,
         name     => !*<ollama:gemma4:26b/name>,
-        feature  => [think    => |/usr/ui/console/pane/0/stream(_), 
-                     memory   => !@<drdb:llm_memory/1>,
+        feature  => [think    => |/usr/marko/console/pane/0/stream(_), 
+                     session  => !@<drdb:llm_session/1>,
                      tool     => [!*eval,!*sql.skip(1).take(1)],
-                     note     => !@</usr/dr/notes>,
+                     note     => [,],
                      skill    => [!*<metatronfs:skills/mtron>.as(skill::T)],
                      response => [to=>print(_)]]]@<dr>;
 
-console::[=>]@/usr/dr/console;
+[== user console ==]
+console::[=>]@/usr/marko/console;

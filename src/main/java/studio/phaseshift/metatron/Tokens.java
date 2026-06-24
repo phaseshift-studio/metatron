@@ -81,6 +81,7 @@ public final class Tokens {
     public static final String COST = "cost";
     public static final String THOUGHT = "thought";
     public static final String MEMORY = "memory";
+    public static final String SESSION = "session";
     public static final String NOTE = "note";
     public static final String HISTORY = "history";
     public static final String HREF = "href";
@@ -250,7 +251,6 @@ public final class Tokens {
     public static final String SOURCE = "source";
     public static final String STATE = "state";
     public static final String ROOT = "root";
-    public static final String SESSION = "session";
     public static final String WEB_ROOT = "web_root";
     public static final String DEFAULT_PAGE = "default_page";
     public static final String READ_ONLY = "read_only";

@@ -22,7 +22,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.mach.type.Router;
-import studio.phaseshift.metatron.isa.tble.PostgreSQLDatabaseConfig;
+import studio.phaseshift.metatron.isa.tble.MariaDBDatabaseConfig;
 import studio.phaseshift.metatron.isa.tble.tbleSpace;
 
 import java.util.Map;
@@ -40,30 +40,33 @@ import static studio.phaseshift.metatron.isa.tble.tbleInstSet.TBLE_ISA_TID;
  */
 
 /**
- * PostgreSQL-backed implementation of {@link AbstractLLMMemoryIntegrationTest}.
+ * MariaDB-backed implementation of {@link AbstractLLMSessionIntegrationTest}.
  * <p>
- * Uses TestContainers PostgreSQL.  The {@code llm_memory} table is auto-created
- * by tbleSpace's {@code createTableFromRecord} on the first write.
+ * Uses TestContainers MariaDB 11.x.  The {@code llm_memory} table is
+ * auto-created by tbleSpace's {@code createTableFromRecord} on the first
+ * write — no manual DDL needed.
  */
-public class PostgreSQLLLMMemoryIntegrationTest extends AbstractLLMMemoryIntegrationTest {
+public class MariaDBLLMSessionIntegrationTest extends AbstractLLMSessionIntegrationTest {
 
-    private static final String MEM_TABLE = "llm_memory";
-    private static final fURI SPACE_VID = f("/sys/space/test_llm_mem_int_pg");
-    private static final fURI MEM_VID = f("pg:" + MEM_TABLE + "/1");
+    private static final String MEM_TABLE = "llm_session";
+    private static final fURI SPACE_VID = f("/sys/space/test_llm_mem_int_maria");
+    private static final fURI MEM_VID = f("maria:" + MEM_TABLE + "/1");
 
-    private PostgreSQLDatabaseConfig dbConfig;
+    private MariaDBDatabaseConfig dbConfig;
     private tbleSpace space;
 
     @Override
-    protected Space createMemorySpace() throws Exception {
-        this.dbConfig = new PostgreSQLDatabaseConfig();
+    protected Space createSessionSpace() throws Exception {
+        this.dbConfig = new MariaDBDatabaseConfig();
         dbConfig.setup();
 
         InstSet.importInstSet(TBLE_ISA_TID);
 
+        // createTableFromRecord builds llm_memory from the first write in
+        // preCreateMemoryRow() — no manual SQL needed.
         this.space = tbleSpace.of(
                 Map.of(
-                        uri(PATTERN), uri("pg:#"),
+                        uri(PATTERN), uri("maria:#"),
                         uri(HOST), uri(dbConfig.getJdbcHost()),
                         uri(DRIVER), uri(dbConfig.getDriverClass()),
                         uri(TABLE), lst(uri(MEM_TABLE),
@@ -71,7 +74,7 @@ public class PostgreSQLLLMMemoryIntegrationTest extends AbstractLLMMemoryIntegra
                                 uri("llm_message_user"),
                                 uri("llm_message_ai"),
                                 uri("llm_message_tool_result")),
-                        uri(ROUTE), rec(uri("pg:"), uri("")),
+                        uri(ROUTE), rec(uri("maria:"), uri("")),
                         uri(QPROC), lst(incrQ())
                 ),
                 SPACE_VID
@@ -80,12 +83,12 @@ public class PostgreSQLLLMMemoryIntegrationTest extends AbstractLLMMemoryIntegra
     }
 
     @Override
-    protected fURI memoryVID() {
+    protected fURI sessionVID() {
         return MEM_VID;
     }
 
     @Override
-    protected void cleanupMemory() throws Exception {
+    protected void cleanupSession() throws Exception {
         if (this.space != null) {
             try { Router.global().removeSpace(this.space.vid()); } catch (final Exception ignored) {}
             this.space.close();
