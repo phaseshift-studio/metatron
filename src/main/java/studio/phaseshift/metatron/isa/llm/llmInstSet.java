@@ -34,13 +34,11 @@ import studio.phaseshift.metatron.isa.web.webInstSet;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.Statement;
-import java.util.stream.Collectors;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
@@ -64,11 +62,11 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
+import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.io.space.fs.fsSpace.staticObjToFile;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.DIR_TID;
 import static studio.phaseshift.metatron.isa.vec.vecInstSet.VEC_TID;
-import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /*
@@ -81,7 +79,7 @@ public class llmInstSet extends AbstractInstSet {
     public static final fURI LLM_INST_TID = LLM_ISA_TID.extend(INST);
     public static final fURI LLM_SPACE_TID = LLM_ISA_TID.extend(SPACE);
     public static final fURI LLM_TOOL_TID = LLM_ISA_TID.extend(TOOL);
-    public static final fURI LLM_MEMORY_TID = LLM_ISA_TID.extend(MEMORY);
+    public static final fURI LLM_SESSION_TID = LLM_ISA_TID.extend(SESSION);
     public static final fURI LLM_SKILL_TID = LLM_ISA_TID.extend(SKILL);
     public static final fURI LLM_FEATURE_TID = LLM_ISA_TID.extend(FEATURE);
     public static final fURI MESSAGE_TID = LLM_ISA_TID.extend(MESSAGE);
@@ -98,7 +96,7 @@ public class llmInstSet extends AbstractInstSet {
     public static Type LLM_USER_MESSAGE_TYPE;
     public static Type LLM_SYSTEM_MESSAGE_TYPE;
     public static Type LLM_SKILL_TYPE;
-    public static Type LLM_MEMORY_TYPE;
+    public static Type LLM_SESSION_TYPE;
     public static Type LLM_MESSAGE_TYPE;
     public static Type LLM_TOOL_RESULT_MESSAGE_TYPE;
     public static Type LLM_NOTES_TYPE;
@@ -145,11 +143,17 @@ public class llmInstSet extends AbstractInstSet {
                         LLM_CATALOG_SPACE_TYPE,
                         LLM_TOOL_TYPE,
                         //////////////////////////////////////////////////
-                        docWrap(LLM_MEMORY_TYPE = Type.Builder.build()
-                                .tid(REC_TID)
-                                .vid(LLM_MEMORY_TID)
-                                .isaPredicate(rec(uri("mem"), LST_TYPE, uri(ALGORITHM), REC_TYPE))
-                                .create(), "llm memory: memory policy with algorithm config and a resolved lst of messages from sub-path */msg/*"),
+                        docWrap(LLM_SESSION_TYPE = Type.Builder.build()
+                                        .tid(REC_TID)
+                                        .vid(LLM_SESSION_TID)
+                                        .isaPredicate(rec(uri(AGENT), T(URI_TID.some()), uri(USER), T(URI_TID.some()), uri(MESSAGE), URI_TYPE, uri(ALGORITHM), REC_TYPE))
+                                        .create(),
+                                null, null, mutableMap(
+                                        uri(AGENT), "the agent(s) involved in the chat session",
+                                        uri(USER), "the user(s) involved in the chat session",
+                                        uri(MESSAGE), "a reference to all messages in the chat session",
+                                        uri(ALGORITHM), "the algorithm used to manage the chat session (compaction, windowing, summarizing, etc.)"),
+                                "llm session session policy with algorithm config and a resolved lst of messages from sub-path */msg/*"),
                         docWrap(LLM_MESSAGE_TYPE = Type.Builder.build()
                                 .tid(REC_TID)
                                 .vid(MESSAGE_TID)
@@ -220,7 +224,7 @@ public class llmInstSet extends AbstractInstSet {
                                         .vid(LLM_FEATURE_TID)
                                         .isaPredicate(rec(
                                                 uri(THINK).maybe().asUri(), ALL_TYPE,
-                                                uri(MEMORY).maybe(), LLM_MEMORY_TYPE.maybe(),
+                                                uri(SESSION).maybe(), LLM_SESSION_TYPE.maybe(),
                                                 uri(PROMPT).maybe(), ALL_TYPE,
                                                 uri(RESPONSE).maybe(), rec(
                                                         uri(TO).maybe().asUri(), INST_TYPE,
@@ -238,7 +242,7 @@ public class llmInstSet extends AbstractInstSet {
                                         uri(THINK).maybe(), "an obj to process llm thoughts",
                                         uri(NOTE).maybe(), "a lst of notes llm will read and react to mid-chat",
                                         uri(PROMPT).maybe(), "a user prompt to prefix chat messages with",
-                                        uri(MEMORY).maybe(), "llm's memory of previous interactions",
+                                        uri(SESSION).maybe(), "current llm session containing chat interactions",
                                         uri(RAG).maybe(), "retrieval augmented generation configuration",
                                         uri(SKILL).maybe(), "skills to extend the llm's abilities",
                                         uri(TOOL).maybe(), "tool functions the llm can use to solve problems"),

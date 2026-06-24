@@ -22,9 +22,9 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.tble.PostgreSQLDatabaseConfig;
 import studio.phaseshift.metatron.isa.tble.tbleSpace;
 
-import java.io.File;
 import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.*;
@@ -40,43 +40,38 @@ import static studio.phaseshift.metatron.isa.tble.tbleInstSet.TBLE_ISA_TID;
  */
 
 /**
- * SQLite-backed implementation of {@link AbstractLLMMemoryIntegrationTest}.
+ * PostgreSQL-backed implementation of {@link AbstractLLMSessionIntegrationTest}.
  * <p>
- * The {@code llm_memory} table is auto-created by tbleSpace's
- * {@code createTableFromRecord} on the first write — no manual DDL needed.
- * Messages are stored via KV at {@code sqlite:msg/{memId}/{pos}}.
+ * Uses TestContainers PostgreSQL.  The {@code llm_session} table is auto-created
+ * by tbleSpace's {@code createTableFromRecord} on the first write.
  */
-public class SqliteLLMMemoryIntegrationTest extends AbstractLLMMemoryIntegrationTest {
+public class PostgreSQLLLMSessionIntegrationTest extends AbstractLLMSessionIntegrationTest {
 
-    private static final String DB_PATH = "target/test-llm-memory-int.db";
-    private static final String MEM_TABLE = "llm_memory";
-    private static final fURI SPACE_VID = f("/sys/space/test_llm_mem_int");
-    private static final fURI MEM_VID = f("sqlite:" + MEM_TABLE + "/1");
+    private static final String MEM_TABLE = "llm_session";
+    private static final fURI SPACE_VID = f("/sys/space/test_llm_mem_int_pg");
+    private static final fURI MEM_VID = f("pg:" + MEM_TABLE + "/1");
 
+    private PostgreSQLDatabaseConfig dbConfig;
     private tbleSpace space;
 
     @Override
-    protected Space createMemorySpace() throws Exception {
-        final File dbFile = new File(DB_PATH);
-        if (dbFile.exists()) dbFile.delete();
-        dbFile.getParentFile().mkdirs();
+    protected Space createSessionSpace() throws Exception {
+        this.dbConfig = new PostgreSQLDatabaseConfig();
+        dbConfig.setup();
 
         InstSet.importInstSet(TBLE_ISA_TID);
 
-        // tbleSpace opens the DB.  The llm_memory table does not exist yet —
-        // createTableFromRecord will build it from the first write in
-        // preCreateMemoryRow().
         this.space = tbleSpace.of(
                 Map.of(
-                        uri(PATTERN), uri("sqlite:#"),
-                        uri(HOST), uri("sqlite:" + DB_PATH),
-                        uri(DRIVER), uri("org.sqlite.JDBC"),
+                        uri(PATTERN), uri("pg:#"),
+                        uri(HOST), uri(dbConfig.getJdbcHost()),
+                        uri(DRIVER), uri(dbConfig.getDriverClass()),
                         uri(TABLE), lst(uri(MEM_TABLE),
                                 uri("llm_message_system"),
                                 uri("llm_message_user"),
                                 uri("llm_message_ai"),
                                 uri("llm_message_tool_result")),
-                        uri(ROUTE), rec(uri("sqlite:"), uri("")),
+                        uri(ROUTE), rec(uri("pg:"), uri("")),
                         uri(QPROC), lst(incrQ())
                 ),
                 SPACE_VID
@@ -85,18 +80,20 @@ public class SqliteLLMMemoryIntegrationTest extends AbstractLLMMemoryIntegration
     }
 
     @Override
-    protected fURI memoryVID() {
+    protected fURI sessionVID() {
         return MEM_VID;
     }
 
     @Override
-    protected void cleanupMemory() throws Exception {
+    protected void cleanupSession() throws Exception {
         if (this.space != null) {
             try { Router.global().removeSpace(this.space.vid()); } catch (final Exception ignored) {}
             this.space.close();
             this.space = null;
         }
-        final File dbFile = new File(DB_PATH);
-        if (dbFile.exists()) dbFile.delete();
+        if (this.dbConfig != null) {
+            try { dbConfig.teardown(); } catch (final Exception ignored) {}
+            this.dbConfig = null;
+        }
     }
 }

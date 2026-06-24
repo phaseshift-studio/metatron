@@ -271,7 +271,38 @@ bin/metatron</code></pre>
  pattern=&gt;docq,
  obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
  inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
- space=&gt;[sub=&gt;{!*/m/sys,!*/m/mach,!*/m/math,!*/m/web,!*/m/iot,!*/m/grph,!*/m/llm,!*/m/tble,!*/m/dcmnt,!*/m/rdf}],
+ type=&gt;[
+  #::T,
+  bool::T,
+  int::T,
+  real::T,
+  bytes::T,
+  str::T,
+  uri::T,
+  rel::T,
+  lst::T,
+  rec::T,
+  instset::T,
+  inst::T,
+  code::T,
+  fail::T,
+  typer::T,
+  space::T,
+  memspace::T,
+  stack::T,
+  qproc::T,
+  subq::T,
+  sub::T,
+  typeq::T,
+  docs::T,
+  docq::T,
+  mintq::T,
+  shortq::T,
+  incrq::T,
+  constq::T,
+  mimeq::T,
+  authority::T],
+ const=&gt;[noobj],
  inst=&gt;[
   as?bool&lt;=bool(bool::T),
   as?bytes&lt;=bool(bytes::T),
@@ -456,14 +487,13 @@ bin/metatron</code></pre>
   and?bool&lt;=A(bool::T,bool::T,bool{?}::T,bool{?}::T,bool{?}::T,bool{?}::T,bool{?}::T,bool{?}::T),
   or?bool&lt;=A(bool::T,bool::T,bool{?}::T,bool{?}::T,bool{?}::T,bool{?}::T,bool{?}::T,bool{?}::T),
   apply(#{*}::T),
-  map?#{?}&lt;=A(B::T),
-  map?#{?}&lt;=A{?}(B{?}::T),
+  map?B{?}&lt;=A{?}(B{?}::T),
   filter?A{?}&lt;=A(#{?}::T),
   side?A&lt;=A(#::T),
   tid(),
   vid?uri{?}&lt;=A(),
   vid?A&lt;=A(uri::T),
-  else(#{?}::T),
+  else?#{?}&lt;=#{?}(#{?}::T),
   is?A{?}&lt;=A{?}(isa(bool::T).else(false)),
   ?#::T,
   matches?bool&lt;=#{?}(#{?}::T),
@@ -500,38 +530,6 @@ bin/metatron</code></pre>
   lshift?B{*}&lt;=A(),
   start?A{**}&lt;=noobj{0}(A{**}::T),
   ctor()],
- const=&gt;[noobj],
- type=&gt;[
-  #::T,
-  bool::T,
-  int::T,
-  real::T,
-  bytes::T,
-  str::T,
-  uri::T,
-  rel::T,
-  lst::T,
-  rec::T,
-  instset::T,
-  inst::T,
-  code::T,
-  fail::T,
-  typer::T,
-  space::T,
-  memspace::T,
-  stack::T,
-  qproc::T,
-  subq::T,
-  sub::T,
-  typeq::T,
-  docs::T,
-  docq::T,
-  mintq::T,
-  shortq::T,
-  incrq::T,
-  constq::T,
-  mimeq::T,
-  authority::T],
  rewrite=&gt;[
   /m/inst/rewrite/id_removal?code{?}&lt;=code(),
   /m/inst/rewrite/map_nest?code{?}&lt;=code(),
@@ -540,7 +538,8 @@ bin/metatron</code></pre>
   /m/inst/rewrite/mult_one?code{?}&lt;=code(),
   /m/inst/rewrite/split_merge_collapse?code{?}&lt;=code(),
   /m/inst/rewrite/split_merge_left_factor?code{?}&lt;=code(),
-  /m/inst/rewrite/split_merge_right_factor?code{?}&lt;=code()]]@/m</code></pre>
+  /m/inst/rewrite/split_merge_right_factor?code{?}&lt;=code()],
+ space=&gt;[sub=&gt;{!*/m/sys,!*/m/mach,!*/m/math,!*/m/web,!*/m/iot,!*/m/grph,!*/m/llm,!*/m/tble,!*/m/dcmnt,!*/m/rdf}]]@/m</code></pre>
                     </div>
                 </div>
             </div>
@@ -548,7 +547,7 @@ bin/metatron</code></pre>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <a href="#consts" class="btn btn-outline-primary">Consts <span class="pill-label badge bg-secondary">11</span></a><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">35</span></a><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">279</span></a><a href="#spaces" class="btn btn-outline-primary">Spaces <span class="pill-label badge bg-info">3</span></a><a href="#rewrites" class="btn btn-outline-primary">Rewrites <span class="pill-label badge bg-warning">8</span></a>
+        <a href="#consts" class="btn btn-outline-primary">Consts <span class="pill-label badge bg-secondary">11</span></a><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">35</span></a><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">284</span></a><a href="#spaces" class="btn btn-outline-primary">Spaces <span class="pill-label badge bg-info">3</span></a><a href="#rewrites" class="btn btn-outline-primary">Rewrites <span class="pill-label badge bg-warning">8</span></a>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="card">
@@ -612,14 +611,14 @@ bin/metatron</code></pre>
 </a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">vec</small></div><div class="d-flex flex-wrap"><a href="#type-cmplx" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">cmplx</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
-</a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">web</small></div><div class="d-flex flex-wrap"><a href="#type-content_type" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">content_type</span>
-    <span class="pill-label badge bg-primary ms-2">T</span>
-</a><a href="#type-html" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">web</small></div><div class="d-flex flex-wrap"><a href="#type-html" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">html</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a><a href="#type-json" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">json</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#type-mime" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">mime</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;" style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;line-height:1.25;" class="micro-label"><div style="font-size:0.6rem;opacity:0.45;font-family:monospace;white-space:nowrap;">rdf&thinsp;/</div><div><small class="mini-label fw-bold text-secondary" style="font-family:monospace;">space</small></div></div><div class="d-flex flex-wrap"><a href="#type-quad" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">quad</span>
@@ -1157,12 +1156,16 @@ bin/metatron</code></pre>
  obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
  inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
  space=&gt;[super=&gt;!*/m],
+ const=&gt;[[chat_schema=&gt;inst?#{*}&lt;=#{*}()]@helper],
  type=&gt;[
   catalog::T,
   tool::T,
-  memory::T,
+  session::T,
+  message::T,
+  system::T,
   user::T,
   AI::T,
+  tool_result::T,
   skill::T,
   feature::T,
   model::T],
@@ -1207,7 +1210,7 @@ bin/metatron</code></pre>
   thread::T,
   core::T,
   virtual::T,
-  cluster::T],
+  clstrspace::T],
  inst=&gt;[
   lift(#{?}::T),
   rewrite?rec[short=&gt;uri,long=&gt;uri]&lt;=#{?}(uri::T),
@@ -1324,8 +1327,8 @@ bin/metatron</code></pre>
  obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
  inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
  space=&gt;[super=&gt;!*/m],
- const=&gt;[[stop=&gt;[,],run=&gt;[!*/sys/thread/main]]@/sys/thread/executor],
- inst=&gt;[native?B{*}&lt;=A{?}(str::T),sleep?A{?}&lt;=A{?}(time::T),stdout?#{?}&lt;=#{?}(#{?}::T),stdin?str&lt;=#{?}()]]@/m/sys</code></pre></div>
+ inst=&gt;[native?B{*}&lt;=A{?}(str::T),sleep?A{?}&lt;=A{?}(time::T),stdout?#{?}&lt;=#{?}(#{?}::T),stdin?str&lt;=#{?}()],
+ const=&gt;[[stop=&gt;[,],run=&gt;[!*/sys/thread/main]]@/sys/thread/executor]]@/m/sys</code></pre></div>
     
 </div><div class="card mb-3" id="const-tble">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1341,12 +1344,13 @@ bin/metatron</code></pre>
  obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
  inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
  space=&gt;[super=&gt;!*/m],
+ const=&gt;[[llm_chat_schema=&gt;inst?#{*}&lt;=#{*}()]@helper],
  type=&gt;[
   lrow::T,
   rrow::T,
   table::T,
   tblespace::T],
- inst=&gt;[as?rrow&lt;=lrow(rrow::T),as?lrow&lt;=rrow(lrow::T),sql?rec{*}&lt;=tblespace(str::T)],
+ inst=&gt;[as?rrow&lt;=lrow(rrow::T),as?lrow&lt;=rrow(lrow::T),sql?rec{*}&lt;=tblespace(file::T),sql?rec{*}&lt;=tblespace(str::T)],
  rewrite=&gt;[
   /m/tble/inst/rewrite/sql_count?code{?}&lt;=code(),
   /m/tble/inst/rewrite/sql_sum?code{?}&lt;=code(),
@@ -1385,12 +1389,13 @@ bin/metatron</code></pre>
   !*/m/mach/io/serializer/markdown,
   !*/m/mach/io/serializer/plain/text],
  type=&gt;[
-  content_type::T,
+  mime::T,
   xml::T,
   html::T,
   json::T,
   css::T,
   markdown::T,
+  java::T,
   httpspace::T,
   wsspace::T,
   client::T,
@@ -1419,6 +1424,8 @@ bin/metatron</code></pre>
   as?xml&lt;=str(xml::T),
   as?html&lt;=str(html::T),
   as?markdown&lt;=str(markdown::T),
+  as?java&lt;=str(java::T),
+  as?str&lt;=java(str::T),
   as?str&lt;=html(str::T),
   as?str&lt;=markdown(str::T),
   as?html&lt;=markdown(html::T),
@@ -1527,26 +1534,6 @@ true.or(_,not(_))  [-- true -- ]</code></pre>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">qproc::T[][ctor?constq&lt;=#{?}()]@/m/space/qproc/constq</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">prevents the vid from being mutated once set</p>
-</div>
-</div><div class="card mb-3" id="type-content_type">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <span>
-            <span class="code text-primary fw-bold">content_type::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">/m/uri::T</span></span>
-        </span>
-        <small class="text-muted code">/m/web/content_type</small>
-    </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">uri::T[?inside([
- text/plain,
- text/html,
- text/css,
- text/markdown,
- text/javascript,
- application/mtron,
- text/x-shellscript,
- application/json])]@/m/web/content_type</code></pre></div>
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">indicates the media type of the data as specified by RFC-9110</p>
 </div>
 </div><div class="card mb-3" id="type-docq">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1721,6 +1708,42 @@ html::[html=&gt;
 [a,b,c]          [-- 3 uri lst  --]
 [&#39;a&#39;,&#39;b&#39;,&#39;c&#39;]    [-- 3 str lst  --]
 [a,[b,[c,d],e]]  [-- nested lst --]</code></pre>
+</div>
+</div><div class="card mb-3" id="type-mime">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">mime::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">/m/uri::T</span></span>
+        </span>
+        <small class="text-muted code">/m/web/mime</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">uri::T[?inside([
+ application/bson,
+ application/json,
+ application/ld+json,
+ media/,
+ media/mpeg,
+ application/octet-stream,
+ application/atom+xml,
+ application/xml,
+ application/mtron,
+ application/javascript,
+ text/html,
+ text/plain,
+ text/css,
+ text/markdown,
+ text/javascript,
+ text/x-shellscript,
+ text/x-java,
+ text/x-python,
+ image/png,
+ image/jpeg,
+ image/gif,
+ image/svg+xml,
+ image/x-icon,
+ application/xhtml+xml])]@/m/web/mime</code></pre></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">indicates the media type of the data as specified by RFC-9110</p>
 </div>
 </div><div class="card mb-3" id="type-mimeq">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -2000,7 +2023,7 @@ a/b/c/                           [-- relative/branch uri            --]
 </div>
 </div>
 </div><div class="container-xxl mb-4" id="instructions">
-    <h3 class="text-primary mb-3">Instructions <span class="pill-label badge bg-success">279</span></h3>
+    <h3 class="text-primary mb-3">Instructions <span class="pill-label badge bg-success">284</span></h3>
     <div class="card mb-3" id="inst-and">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
@@ -2091,6 +2114,8 @@ a/b/c/                           [-- relative/branch uri            --]
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=xml&amp;dom=str(xml::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=html&amp;dom=str(html::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=markdown&amp;dom=str(markdown::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=java&amp;dom=str(java::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=str&amp;dom=java(str::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=str&amp;dom=html(str::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=str&amp;dom=markdown(str::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=html&amp;dom=markdown(html::T){&lt;j&gt;}</code></pre>
@@ -2105,6 +2130,8 @@ a/b/c/                           [-- relative/branch uri            --]
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=xml&amp;dom=str(xml::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=html&amp;dom=str(html::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=markdown&amp;dom=str(markdown::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=java&amp;dom=str(java::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=str&amp;dom=java(str::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=str&amp;dom=html(str::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=str&amp;dom=markdown(str::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=html&amp;dom=markdown(html::T){&lt;j&gt;}</code></pre>
@@ -2123,6 +2150,8 @@ a/b/c/                           [-- relative/branch uri            --]
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=xml&amp;dom=str(xml::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=html&amp;dom=str(html::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=markdown&amp;dom=str(markdown::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=java&amp;dom=str(java::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=str&amp;dom=java(str::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=str&amp;dom=html(str::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=str&amp;dom=markdown(str::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=html&amp;dom=markdown(html::T){&lt;j&gt;}</code></pre>
@@ -2408,11 +2437,11 @@ a/b/c/                           [-- relative/branch uri            --]
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">else</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="#" data-bs-toggle="tooltip" title="maybe generic domain" class="code text-info">#{?}</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#" data-bs-toggle="tooltip" title="generic range" class="code text-success">#</a></span></span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="#" data-bs-toggle="tooltip" title="maybe generic domain" class="code text-info">#{?}</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#" data-bs-toggle="tooltip" title="maybe generic range" class="code text-success">#{?}</a></span></span>
         </span>
-        <small class="text-muted code">/m/inst/else?rng=#&amp;dom=#{?}</small>
+        <small class="text-muted code">/m/inst/else?rng=#{?}&amp;dom=#{?}</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-else-doc-0-tab').click();document.getElementById('inst-else-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">else?rng=#&amp;dom=#{?}(#{?}::T){&lt;j&gt;}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-else-doc-0-tab').click();document.getElementById('inst-else-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">else?rng=#{?}&amp;dom=#{?}(#{?}::T){&lt;j&gt;}</code></pre>
 </div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">\[ f(\tt{lhs}) = \left\{ \begin{aligned} \tt{lhs} &amp; \quad \text{if } \tt{lhs} \neq \emptyset \\ \tt{arg}_0 &amp; \quad \text{otherwise.} \end{aligned} \right. \]</p>
@@ -2773,12 +2802,11 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">map</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="#" data-bs-toggle="tooltip" title="generic domain" class="code text-info">A</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#" data-bs-toggle="tooltip" title="maybe generic range" class="code text-success">#{?}</a></span></span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="#" data-bs-toggle="tooltip" title="maybe generic domain" class="code text-info">A{?}</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#" data-bs-toggle="tooltip" title="maybe generic range" class="code text-success">B{?}</a></span></span>
         </span>
-        <small class="text-muted code">/m/inst/map?rng=#{?}&amp;dom=A</small>
+        <small class="text-muted code">/m/inst/map?rng=B{?}&amp;dom=A{?}</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-map-doc-0-tab').click();document.getElementById('inst-map-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">map?rng=#{?}&amp;dom=A(B::T){&lt;j&gt;}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-map-doc-0-tab').click();document.getElementById('inst-map-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">map?rng=#{?}&amp;dom=A{?}(B{?}::T){&lt;j&gt;}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-map-doc-0-tab').click();document.getElementById('inst-map-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">map?rng=B{?}&amp;dom=A{?}(B{?}::T){&lt;j&gt;}</code></pre>
 </div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">applies the lhs obj to the arg obj to yield the rhs obj</p>

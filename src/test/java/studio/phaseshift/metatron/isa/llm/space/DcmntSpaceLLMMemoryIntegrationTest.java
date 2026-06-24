@@ -23,7 +23,7 @@ package studio.phaseshift.metatron.isa.llm.space;
  */
 
 /**
- * dcmntSpace-backed implementation of {@link AbstractLLMMemoryIntegrationTest}.
+ * dcmntSpace-backed implementation of {@link AbstractLLMSessionIntegrationTest}.
  *
  * <h3>BLOCKED — URI scheme incompatibility</h3>
  * {@code SpaceChatMemoryStore} stores messages at {@code {scheme}:msg/{memId}/{pos}}

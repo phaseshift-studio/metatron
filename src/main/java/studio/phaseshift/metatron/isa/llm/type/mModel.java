@@ -36,7 +36,7 @@ import studio.phaseshift.metatron.isa.llm.Capability;
 import studio.phaseshift.metatron.isa.llm.CostCalculator;
 import studio.phaseshift.metatron.isa.llm.LLMFactory;
 import studio.phaseshift.metatron.isa.Space;
-import studio.phaseshift.metatron.isa.llm.space.SpaceChatMemoryStore;
+import studio.phaseshift.metatron.isa.llm.space.SpaceChatSessionStore;
 import studio.phaseshift.metatron.isa.llm.space.SpaceContentRetriever;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MReal;
@@ -80,8 +80,8 @@ public class mModel extends MRec {
     }
 
     // Held so mergeSystemMessages() can mirror composed system messages.
-    private SpaceChatMemoryStore chatMemoryStore;
-    private fURI memoryVID;
+    private SpaceChatSessionStore sessionStore;
+    private fURI sessionVID;
 
     // User-added system messages (via addSystemMessage).  Merged with
     // capability-generated messages during agent construction.
@@ -128,7 +128,7 @@ public class mModel extends MRec {
                 ObjSimpleJSONSerializer.single().inputBytes(ByteBuffer.wrap(response.strValue().getBytes(StandardCharsets.UTF_8))) :
                 response;
         // Update the last message's attributes (messages are inline typed Recs in the mem Lst)
-        final Obj memObj = this.memory().at("mem");
+        final Obj memObj = this.session().at("mem");
         if (responseFormatted && memObj.isLst() && !memObj.asLst().isEmpty()) {
             final Obj last = memObj.asLst().lstValue().getLast();
             if (last.isRec()) {
@@ -176,8 +176,8 @@ public class mModel extends MRec {
         return this.feature(f(RESPONSE).extend(FORMAT).toString());
     }
 
-    public Rec memory() {
-        return this.at(feat(MEMORY)).orElse(noobjRec());
+    public Rec session() {
+        return this.at(feat(SESSION)).orElse(noobjRec());
     }
 
     public Optional<Rec> lastResponse() {
@@ -213,7 +213,7 @@ public class mModel extends MRec {
         final AiServices<mAgent> service = AiServices.builder(mAgent.class);
 
         promptCapability().apply(service, systemMessages);
-        memoryCapability().apply(service, systemMessages);
+        sessionCapability().apply(service, systemMessages);
         skillsCapability().apply(service, systemMessages);
         toolsCapability().apply(service, systemMessages);
         notesCapability().apply(service, systemMessages);
@@ -235,29 +235,29 @@ public class mModel extends MRec {
         });
     }
 
-    private Capability memoryCapability() {
+    private Capability sessionCapability() {
         return (service, systemMessages) -> {
-            if (!this.memory().isNoObj()) {
+            if (!this.session().isNoObj()) {
                 try {
-                    final fURI memoryVID = this.memory().vid();
-                    if (memoryVID == null) {
-                        this.logger().warn("llm memory has no vid (ignoring): %s", this.memory());
+                    final fURI sessionVID = this.session().vid();
+                    if (sessionVID == null) {
+                        this.logger().warn("llm session has no vid (ignoring): %s", this.session());
                     } else {
-                        final Space space = Router.global().getSpaceFor(memoryVID);
-                        final SpaceChatMemoryStore store = new SpaceChatMemoryStore(space);
+                        final Space space = Router.global().getSpaceFor(sessionVID);
+                        final SpaceChatSessionStore store = new SpaceChatSessionStore(space);
                         final MessageWindowChatMemory chatMemory = MessageWindowChatMemory.builder()
-                                .maxMessages(this.memory().at(ALGORITHM).asRec().at(MAX).intValue().intValue())
-                                .id(memoryVID)
+                                .maxMessages(this.session().at(ALGORITHM).asRec().at(MAX).intValue().intValue())
+                                .id(sessionVID)
                                 .chatMemoryStore(store)
                                 .build();
                         service.chatMemory(chatMemory)
                                 .storeRetrievedContentInChatMemory(true);
                         // Save so mergeSystemMessages() can mirror system messages
-                        this.chatMemoryStore = store;
-                        this.memoryVID = memoryVID;
+                        this.sessionStore = store;
+                        this.sessionVID = sessionVID;
                     }
                 } catch (Exception e) {
-                    throw MTronException.of("unable to setup memory: %s", e);
+                    throw MTronException.of("unable to setup session: %s", e);
                 }
             }
         };
@@ -299,7 +299,7 @@ public class mModel extends MRec {
                                     if (t.isRec() && t.test(MCP_CLIENT_TYPE)) {
                                         service.toolProvider(McpToolProvider.builder().mcpClients(Rec.wrap(t.as(), mcpClient.class).client()).build()).executeToolsConcurrently(BootLoader.getExecutor());
                                     } else if (t.isObjInst()) {
-                                        if (QCollection.isNoDocs(Router.global().read(t.tid().addQ(DOCQ))))
+                                        if (QCollection.isNoDocs(Router.readFromSpace(t.tid().addQ(DOCQ))))
                                             t.logger().warn("ignoring inst as it has no associated ?docq: %s", t);
                                         else {
                                             final Tuple.Pair<ToolSpecification, ToolExecutor> pair = mTool.mtronInstToolSpecification(mTool.mtronInstToTool(t.asInst()));
@@ -374,12 +374,12 @@ public class mModel extends MRec {
             if (!finalSystemMessage.isBlank()) {
                 service.systemMessage(finalSystemMessage);
                 // Mirror to typed table (system messages bypass ChatMemory)
-                if (this.chatMemoryStore != null && this.memoryVID != null) {
+                if (this.sessionStore != null && this.sessionVID != null) {
                     final Map<Obj, Obj> systemMap = new LinkedHashMap<>();
                     systemMap.put(uri(TEXT), str(finalSystemMessage));
                     systemMap.put(uri(TYPE), uri("SYSTEM"));
                     final Rec systemRec = rec(systemMap, SYSTEM_MESSAGE_TID, null);
-                    SpaceChatMemoryStore.mirrorSystemMessage(this.chatMemoryStore.space(), this.memoryVID, systemRec);
+                    SpaceChatSessionStore.mirrorSystemMessage(this.sessionStore.space(), this.sessionVID, systemRec);
                 }
             }
         } catch (Exception e) {

@@ -97,12 +97,12 @@ Persists chat messages to mtron space:
 - `updateMessages(memoryId, messages)` — serializes ChatMessage → JSON, writes as Lst to space URI
 - `deleteMessages(memoryId)` — writes `noobj()` to clear
 
-Used by `mModel.agent()` to give agents persistent memory across `.chat()` calls via `MessageWindowChatMemory`.
+Used by `mModel.agent()` to give agents persistent session across `.chat()` calls via `MessageWindowChatMemory`.
 
 ## Agent Memory Flow
 
 ```
-agent config: memory => memory::[max=>20, mem=>!*</usr/ai/memory>]
+agent config: session => memory::[max=>20, mem=>!*</usr/ai/memory>]
                                     │
                                     ▼
 mModel.agent(): memoryVID = this.memory().at("mem").vid()

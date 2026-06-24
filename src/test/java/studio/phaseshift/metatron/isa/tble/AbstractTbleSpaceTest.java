@@ -49,6 +49,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
+import static studio.phaseshift.metatron.isa.m.type.Poly.MUTABLE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -1186,6 +1187,81 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathTest impleme
             }
             Router.global().removeSpace(testSpace.vid());
             testSpace.close();
+        }
+    }
+
+    /**
+     * Verifies that when a rec with new fields is written to a table that was
+     * created by a prior first-write (with fewer columns), the missing columns
+     * are added on the fly via ALTER TABLE rather than silently dropping the data.
+     */
+    @Test
+    public void testAlterTableOnTheFly() throws Exception {
+        final String tableName = "onthefly_test";
+
+        // Ensure incrQ is registered so writes go through ensureTableAndInsert
+        final tbleSpace space = (tbleSpace) getSpace();
+        space.at("table", lst(uri("onthefly_test")), MUTABLE);
+        try (final Connection conn = staticDbConfig.getConnection();
+             final Statement stmt = conn.createStatement()) {
+            stmt.executeUpdate("DROP TABLE IF EXISTS " + tableName);
+            // -- Write 1: creates the table with only name + age columns ------
+            final Obj rec1 = rec(uri("name"), str("Alice"), uri("age"), jnt(30));
+            space.write(f("db:" + tableName + "/1"), rec1);
+            // -- Verify: name, age columns exist in the DB --------------------
+            final List<String> columnNames = new java.util.ArrayList<>();
+            try (final java.sql.ResultSet cols = conn.getMetaData().getColumns(
+                    null, null, tableName, null)) {
+                while (cols.next())
+                    columnNames.add(cols.getString("COLUMN_NAME").toLowerCase());
+            }
+            assertTrue(columnNames.contains("name"));
+            assertTrue(columnNames.contains("age"));
+            assertFalse(columnNames.contains("email"));
+            // -- Write 2: same table, but now with an email field -------------
+            final Obj rec2 = rec(uri("name"), str("Bob"), uri("age"), jnt(25),
+                    uri("email"), str("bob@example.com"));
+            space.write(f("db:" + tableName + "/2"), rec2);
+
+            // -- Verify: email column now exists in the DB --------------------
+            columnNames.clear();
+            try (final java.sql.ResultSet cols = conn.getMetaData().getColumns(
+                    null, null, tableName, null)) {
+                while (cols.next())
+                    columnNames.add(cols.getString("COLUMN_NAME").toLowerCase());
+            }
+            assertTrue(columnNames.contains("email"),
+                    "email column should have been added on the fly, but found: " + columnNames);
+            assertTrue(columnNames.contains("name"));
+            assertTrue(columnNames.contains("age"));
+
+            // -- Verify: both rows are readable with correct data -------------
+            // Read by auto-generated row IDs (1 and 2) to avoid IdObj wrapping
+            // that wildcard reads (+/) produce.
+
+            // Row 1: Alice, 30, no email (NULL since column was added later)
+            final Obj row1 = space.read(f("db:" + tableName + "/1"));
+            assertTrue(row1.isRec(), "row 1 should be a Rec, got: " + row1.getClass());
+            assertEquals(str("Alice"), row1.asRec().at(uri("name")));
+            assertEquals(jnt(30), row1.asRec().at(uri("age")));
+            // email should be absent or NULL — not the "none" sentinel
+            final Obj email1 = row1.asRec().at(uri("email"));
+            assertTrue(email1.isNoObj() || email1.isNone(),
+                    "Alice's email should be absent/NULL, got: " + email1);
+
+            // Row 2: Bob, 25, bob@example.com
+            final Obj row2 = space.read(f("db:" + tableName + "/2"));
+            assertTrue(row2.isRec(), "row 2 should be a Rec, got: " + row2.getClass());
+            assertEquals(str("Bob"), row2.asRec().at(uri("name")));
+            assertEquals(jnt(25), row2.asRec().at(uri("age")));
+            assertEquals(str("bob@example.com"), row2.asRec().at(uri("email")));
+
+            LOG.info("on-the-fly ALTER TABLE test passed on {}", staticDbConfig.getDatabaseName());
+        } finally {
+            try (final Connection conn = staticDbConfig.getConnection();
+                 final Statement stmt = conn.createStatement()) {
+                stmt.executeUpdate("DROP TABLE IF EXISTS " + tableName);
+            }
         }
     }
 

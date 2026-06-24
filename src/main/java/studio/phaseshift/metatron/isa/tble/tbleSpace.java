@@ -233,11 +233,11 @@ public class tbleSpace extends AbstractSpace<Connection> implements SchemaSpace 
         this.backend = dbProductName;
         if (dbProductName.contains(MARIADB) || dbProductName.contains(MYSQL)) {
             this.schema = new fURIAwareIndexedSchema();
-            this.serializer = this.at(SERIALIZER).orElse(new ObjmtronSerializer());
+            this.serializer = this.at(SERIALIZER).orElse(ObjmtronSerializer.singleNoClip());
             LOG.info("detected {{b}}mariadb/mysql{{X}} - using {{g}}mqtt schema with clean string serializer");
         } else {
             this.schema = new TypedKeyValueSchema();
-            this.serializer = this.at(SERIALIZER).orElse(new ObjmtronSerializer());
+            this.serializer = this.at(SERIALIZER).orElse(ObjmtronSerializer.singleNoClip());
             LOG.info("detected {{b}}%s{{X}} - using {{g}}typed schema", dbProductName);
         }
         this.schema.initialize(conn);

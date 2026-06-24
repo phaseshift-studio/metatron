@@ -197,7 +197,7 @@ public class ObjSQLSerializer extends AbstractObjSerializer<ResultSet> {
                 return ObjSimpleJSONSerializer.parse(value);
             } catch (final Exception jsonEx) {
                 try {
-                    return ObjmtronSerializer.parse(value);
+                    return ObjmtronSerializer.singleNoClip().inputBytes(value.getBytes());
                 } catch (final Exception mtronEx) {
                     return str(value);
                 }
