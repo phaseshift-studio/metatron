@@ -29,9 +29,12 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.iot.haos.space.haosSpace.HAOS_SPACE_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 import static studio.phaseshift.metatron.isa.iot.iotInstSet.IOT_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.NOOBJ_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
@@ -164,7 +167,7 @@ public class haosInstSet extends AbstractInstSet {
     }
 
     public haosInstSet(final fURI vid) {
-        super(HAOS_ISA_TID, vid);
+        super(mutableMap(uri(PATTERN), uri(vid.extend(ALL))), HAOS_ISA_TID, vid);
     }
 
     @Override

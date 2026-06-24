@@ -101,9 +101,9 @@ public class SqliteTbleSpaceTest extends AbstractTbleSpaceTest {
         try {
             // Check if table was discovered
             if (testSpace.existingTableSchema != null) {
-                LOG.info("Discovered tables: {}", testSpace.existingTableSchema.getTableNames());
+                LOG.info("discovered tables: {}", testSpace.existingTableSchema.getTableNames());
             } else {
-                LOG.warn("ExistingTableSchema is null!");
+                LOG.warn("existingTableSchema is null");
             }
 
             // Use Router.readFromSpace() to test table mapping

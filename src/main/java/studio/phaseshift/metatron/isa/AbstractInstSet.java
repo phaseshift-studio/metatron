@@ -88,41 +88,6 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
         old = false;
     }
 
-    public AbstractInstSet(final fURI tid, final fURI vid) {
-        super(new LinkedHashMap<>(), mutableMap(
-                uri(Tokens.PATTERN), uri(vid.extend(ALL))), tid, vid);
-        this.at(uri(Tokens.QPROC), lst(QCollection.docQ()), MUTABLE);
-        if (Router.loaded()) {
-            this.sugars().forEach(mParser::addSugar);
-            this.consts().forEach(c -> Router.global().registerRedirect(f(c.vid().name()), c.vid()));
-            this.types().stream().filter(t -> null != t.vid()).forEach(t -> Router.global().registerRedirect(f(t.vid().name()), t.vid()));
-            this.insts().forEach(t -> Router.global().registerRedirect(f(t.tid().name()), t.tid().basePath()));
-            /// //////////////////////////////////////////////////////////////////////////////////////////////
-            this.types().forEach(t -> {
-                if (null != t.vid()) {
-                    if (t.vid().test(this.pattern)) this.write(t.vid(), t);
-                    else Router.writeToSpace(t.vid(), t);
-                } else if (null != t.tid()) {
-                    if (t.tid().test(this.pattern)) this.write(t.tid(), t);
-                    else Router.writeToSpace(t.tid(), t);
-                }
-            });
-            Router.writeToSpace(NOOBJ_TID, NOOBJ_TYPE); // every inst set must have a noobj so it can operate independently of /m/inst
-            this.consts().forEach(c -> {
-                if (c.vid().test(this.pattern)) this.write(c.vid(), c.vid(null));
-                else Router.writeToSpace(c.vid(), c.vid(null));
-            });
-            this.insts().forEach(i -> {
-                if (i.tid().test(this.pattern)) this.write(i.tid(), i);
-                else Router.writeToSpace(i.tid(), i);
-            });
-            this.rewrites().forEach(r -> {
-                if (r.tid().test(this.pattern)) this.write(r.tid(), r);
-                else Router.writeToSpace(r.tid(), r);
-            });
-        }
-    }
-
     public AbstractInstSet(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(new LinkedHashMap<>(), jvm, tid, vid);
         this.at(uri(Tokens.QPROC), lst(QCollection.docQ()), MUTABLE);
@@ -135,7 +100,6 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
         this.jvm().forEach((k, v) -> {
             if (k.equals(uri(CONST))) {
                 v.lstValue().stream()
-                        //.filter(this::checkPattern)
                         .filter(c -> checkDepth(c, this.tid.extend(CONST)))
                         .forEach(c -> {
                             if (!checkPattern(c))
@@ -147,7 +111,6 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
                         });
             } else if (k.equals(uri(TYPE))) {
                 v.lstValue().stream()
-                        //.filter(this::checkPattern)
                         .filter(t -> checkDepth(t, this.tid))
                         .forEach(t -> {
                             if (!checkPattern(t))
@@ -159,8 +122,7 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
                         });
             } else if (k.equals(uri(INST))) {
                 v.lstValue().stream()
-                        //.filter(this::checkPattern)
-                        .filter(r -> checkDepth(r, this.tid.extend(INST)))
+                        .filter(i -> checkDepth(i, this.tid.extend(INST)))
                         .forEach(i -> {
                             if (!checkPattern(i))
                                 Router.writeToSpace(i.tid(), i);
@@ -171,7 +133,6 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
                         });
             } else if (k.equals(uri(REWRITE))) {
                 v.lstValue().stream()
-                        //.filter(this::checkPattern)
                         .filter(r -> checkDepth(r, this.tid.extend(INST).extend(REWRITE)))
                         .forEach(r -> {
                             if (!checkPattern(r))
@@ -181,7 +142,6 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
                         });
             } else if (k.equals(uri(SUGAR))) {
                 LOG.warn("unable to load sugar: %s", v);
-                //v.lstValue().forEach(s -> Router.global().addSugar(s.as()));
             }
         });
         Router.global().write(this.vid(), this);

@@ -125,11 +125,6 @@ public class SimpleKeyValueSchema implements TableSchema {
     }
 
     @Override
-    public boolean supportsfURIPatterns() {
-        return false;
-    }
-
-    @Override
     public String version() {
         return "1.0-simple";
     }

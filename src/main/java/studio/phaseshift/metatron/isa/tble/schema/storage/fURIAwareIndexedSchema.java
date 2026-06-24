@@ -256,11 +256,6 @@ public class fURIAwareIndexedSchema implements TableSchema {
     }
 
     @Override
-    public boolean supportsfURIPatterns() {
-        return true;
-    }
-
-    @Override
     public String version() {
         return "1.0-mqtt";
     }

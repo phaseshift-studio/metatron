@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -110,6 +110,17 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
      */
     private final Map<String, Map<String, fURI>> logicalTypes = new LinkedHashMap<>();
 
+    /** Exposed for {@link SQLSchemaGenerator} so it can produce correct instset types. */
+    public Map<String, Map<String, fURI>> getLogicalTypes() {
+        return logicalTypes;
+    }
+
+    /** Single-column lookup for the schema generator. */
+    public fURI getLogicalType(final String tableName, final String columnName) {
+        final Map<String, fURI> tableTypes = logicalTypes.get(tableName.toLowerCase());
+        return tableTypes != null ? tableTypes.get(columnName.toLowerCase()) : null;
+    }
+
     public record TableMetadata(String dbName, String tableName, List<ColumnMetadata> columns,
                                 List<String> primaryKeys) {
     }
@@ -119,14 +130,18 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
             this(name, sqlType, typeName, true, null);
         }
 
-        /** true when the column default looks like a JSON array ({@code [...]}, {@code '[...]'}, or {@code json_array()}). */
+        /**
+         * true when the column default looks like a JSON array ({@code [...]}, {@code '[...]'}, or {@code json_array()}).
+         */
         public boolean isDefaultJSONArray() {
             if (columnDefault == null) return false;
             final String s = columnDefault.strip().toLowerCase();
             return s.startsWith("[") || s.startsWith("'[") || s.startsWith("json_array");
         }
 
-        /** true when the column default looks like a JSON object ({@code \{...\}}, {@code '\{...\}'}, or {@code json_object()}). */
+        /**
+         * true when the column default looks like a JSON object ({@code \{...\}}, {@code '\{...\}'}, or {@code json_object()}).
+         */
         public boolean isDefaultJSONObject() {
             if (columnDefault == null) return false;
             final String s = columnDefault.strip().toLowerCase();
@@ -135,10 +150,10 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
 
         public boolean isNumeric() {
             return sqlType == Types.INTEGER || sqlType == Types.BIGINT ||
-                   sqlType == Types.SMALLINT || sqlType == Types.TINYINT ||
-                   sqlType == Types.REAL || sqlType == Types.FLOAT ||
-                   sqlType == Types.DOUBLE || sqlType == Types.DECIMAL ||
-                   sqlType == Types.NUMERIC;
+                    sqlType == Types.SMALLINT || sqlType == Types.TINYINT ||
+                    sqlType == Types.REAL || sqlType == Types.FLOAT ||
+                    sqlType == Types.DOUBLE || sqlType == Types.DECIMAL ||
+                    sqlType == Types.NUMERIC;
         }
     }
 
@@ -160,7 +175,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
         if (value.isPoly() && column.isNumeric()) {
             throw MTronException.of(
                     "Cannot write %s to column '%s.%s': column type is %s (numeric). "
-                    + "Numbers, strings, and booleans are supported.",
+                            + "Numbers, strings, and booleans are supported.",
                     value.tid().name(), tableName, column.name(), column.typeName());
         }
         // Non-numeric string into a numeric column
@@ -181,8 +196,11 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
      */
     private final List<FKInfo> pendingFKs = new ArrayList<>();
 
-    /** Simple FK info holder used during discovery before the generator is available. */
-    private record FKInfo(String fromTable, String fromColumn, String toTable, String toColumn) {}
+    /**
+     * Simple FK info holder used during discovery before the generator is available.
+     */
+    private record FKInfo(String fromTable, String fromColumn, String toTable, String toColumn) {
+    }
 
     public ExistingTableSchema(final tbleSpace space, final String excludeTableName) {
         this.excludeTableName = excludeTableName;
@@ -344,7 +362,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
      * generator (or store temporarily if the generator isn't set yet).
      */
     private void discoverReferencesAndRegister(final Connection conn, final String catalog,
-                                                final String tableName) throws SQLException {
+                                               final String tableName) throws SQLException {
         final DatabaseMetaData metaData = conn.getMetaData();
         try (final ResultSet fks = metaData.getImportedKeys(catalog, null, tableName)) {
             while (fks.next()) {
@@ -612,13 +630,16 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
         return updateRowDiffed(conn, metadata, pkColumn, pkValue, changed);
     }
 
+    /**
+     * Record the exact metatron TID of every value written so the instset
+     * schema can preserve user-defined type refinements (e.g. {@code nat::T}
+     * instead of plain {@code int::T}, {@code uri::T} instead of {@code str::T}).
+     */
     private void trackLogicalType(final TableMetadata metadata, final String columnName,
                                   final Obj value, final int sqlType) {
-        if (sqlType == Types.INTEGER && value.isBool()) {
-            this.logicalTypes
-                    .computeIfAbsent(metadata.tableName.toLowerCase(), k -> new LinkedHashMap<>())
-                    .put(columnName.toLowerCase(), value.tid());
-        }
+        this.logicalTypes
+                .computeIfAbsent(metadata.tableName.toLowerCase(), k -> new LinkedHashMap<>())
+                .put(columnName.toLowerCase(), value.tid());
     }
 
     private int writeField(final Connection conn, final TableMetadata metadata, final String rowId,
@@ -850,23 +871,27 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
     /**
      * ALTER TABLE on the fly — adds a missing column so writes never lose data
      * just because the first-written record didn't include this field.
-     *
+     * <p>
      * The column is always nullable (existing rows get NULL) and the SQL type
      * is inferred from the metatron value being written, using the same rules
      * as {@link #createTableFromRecord}.
      */
     private ColumnMetadata addColumnOnTheFly(final Connection conn, final TableMetadata metadata,
-                                              final String columnName, final Obj value) throws SQLException {
+                                             final String columnName, final Obj value) throws SQLException {
         final String sqlType;
         final int jdbcType;
         if (value.isBool()) {
-            sqlType = "BOOLEAN"; jdbcType = Types.BOOLEAN;
+            sqlType = "BOOLEAN";
+            jdbcType = Types.BOOLEAN;
         } else if (value.isInt()) {
-            sqlType = "INTEGER"; jdbcType = Types.INTEGER;
+            sqlType = "INTEGER";
+            jdbcType = Types.INTEGER;
         } else if (value.isReal()) {
-            sqlType = "REAL"; jdbcType = Types.REAL;
+            sqlType = "REAL";
+            jdbcType = Types.REAL;
         } else {
-            sqlType = "TEXT"; jdbcType = Types.VARCHAR;
+            sqlType = "TEXT";
+            jdbcType = Types.VARCHAR;
         }
 
         final String ddl = String.format("ALTER TABLE %s ADD COLUMN %s %s",
@@ -895,6 +920,8 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
 
         final ColumnMetadata newCol = new ColumnMetadata(columnName, jdbcType, sqlType);
         metadata.columns.add(newCol);
+        trackLogicalType(metadata, columnName, value, jdbcType);
+        this.space.onTableChanged(metadata.tableName);
         return newCol;
     }
 
@@ -1028,13 +1055,18 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
      * write so the normal {@code directWriter} path is never reached.
      */
     public void ensureTableAndInsert(final Connection conn, final String tableName,
-                              final Rec rec) throws java.sql.SQLException {
-        if (!tableSchemas.containsKey(tableName.toLowerCase()))
+                                     final Rec rec) throws java.sql.SQLException {
+        final boolean isNew = !tableSchemas.containsKey(tableName.toLowerCase());
+        if (isNew)
             createTableFromRecord(conn, tableName, rec);
         final TableMetadata metadata = tableSchemas.get(tableName.toLowerCase());
         if (metadata == null)
             throw new java.sql.SQLException("failed to create table: " + tableName);
         insertRowAuto(conn, metadata, rec);
+        // Update the instset type AFTER the first insert so logical type
+        // tracking (e.g. URI stored in TEXT) has already fired.
+        if (isNew)
+            this.space.onTableChanged(tableName);
     }
 
     @Override
@@ -1253,7 +1285,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
 
         this.tableSchemas.put(tableName.toLowerCase(),
                 new TableMetadata(catalog, tableName, columns, primaryKeys));
-        this.space.logger().info("registered table {{b}}%s{{X}} with %s columns and primary keys %s",
+        this.space.logger().info("created table {{b}}%s{{X}} with %s columns and primary keys %s",
                 tableName, columns.size(), primaryKeys);
     }
 
@@ -1316,7 +1348,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
         }
         ddl.append(")");
 
-        this.space.logger().info("creating table {{b}}%s{{X}}: %s", tableName, ddl);
+        this.space.logger().debug("creating table {{b}}%s{{X}}: %s", tableName, ddl);
         try (final Statement stmt = conn.createStatement()) {
             stmt.executeUpdate(ddl.toString());
         }
