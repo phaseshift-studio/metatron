@@ -45,18 +45,42 @@ lite:person/2 -> [name=>'grant', age=>25]             [-- <3> --]
 <5> querying the `person` table — all rows with any `name` value.
 <6> primary keys are encoded in the vid and omitted from the row body — but still addressable as an explicit path segment.
 
+[.card]
+--
+When the first row is added to a table the schema is defined. Said in terms of metatron, when the first `rec` is written to a collection data path, the data path's instruction set is updated.
+
+[source,mtron]
+----
+[INFO ] [/sys/space/lite] created table person with 3 columns and primary keys [id]
+----
+
+[mtron]
+----
+*lite:+
+----
+
+Note that when a new row is inserted that has more fields than the first row, the `tblespace` will perform an `ALTER TABLE` to accommodate the new data. This, in turn, updates the `instset` of the `tblespace`.
+
+[mtron]
+----
+lite:person/3 -> [name=>'alex', age=>25, skill=>graph]
+*lite:+
+----
+
+--
+
+
 [discrete]
-=== schema discovery
+=== Schema Discovery
 
 [cols="5a,6a",separator=🧱,role="no-border center"]
 |===
 🧱
-On connection, `tblespace` introspects the live database and generates an `instset` schema. Each discovered table is some refinement on `rec{*}::T` (zero or more rows) with `rel` keys matching a table column name and values matching a table column type.
+On connection, `tblespace` introspects the live database and generates an `instset` schema. Each discovered table is some refinement on `rec{\*}::T`. In the rubric of relational databses, this means zero or more rows in a table, where the `rec::T` `rel::T` elements refer to the table column name and respective cell value.
 
 [mtron]
 ----
-*/sys/space/lite/schema
-*/sys/space/lite/schema/type/+
+*lite:*
 ----
 🧱
 
@@ -86,10 +110,9 @@ l└─ └───┘└───┘└───┘└───┘└───
 [.card]
 --
 [discrete,.center]
-==== a relational key/value store
+==== A Relational Key/Value Store
 
-`tblespace` is a **hybrid** space. URIs that match a discovered table (`db:person/1`) route to the SQL table via a respective read/write path. URIs that don't match a table (`db:kv/mykey`) fall through to a general-purpose https://en.wikipedia.org/wiki/Key%E2%80%93value_database[key/value store] backed by the same database. The key/value store has no `root` type constraint — any `obj` can be stored there.
-
+`tblespace` is a **hybrid** space. URIs that match a discovered table (`db:person/1`) route to the SQL table via a respective read/write path. URIs that don't match a table (`db:kv/mykey`) fall through to a general-purpose https://en.wikipedia.org/wiki/Key%E2%80%93value_database[key/value store] backed by the same database.
 [mtron]
 ----
 lite:kv/single -> 651.02

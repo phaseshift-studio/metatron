@@ -32,9 +32,13 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.isa.iot.iotInstSet.IOT_ISA_TID;
 import static studio.phaseshift.metatron.isa.iot.miot.space.miotSpace.MIOT_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.iot.space.mqtt.mqttSpace.MQTT_SPACE_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -68,7 +72,7 @@ public class miotInstSet extends AbstractInstSet {
     }
 
     public miotInstSet() {
-        super(MIOT_ISA_TID, MIOT_ISA_TID);
+        super(mutableMap(uri(PATTERN), uri(MIOT_ISA_TID.extend(ALL))), MIOT_ISA_TID, MIOT_ISA_TID);
     }
 
     public static fURI deduceVID(final Obj obj, final fURI childVID) {

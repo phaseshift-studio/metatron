@@ -38,6 +38,7 @@ import static studio.phaseshift.metatron.isa.m.type.Rec.REC_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Real.REAL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.tble.tbleInstSet.REC_ROW_TID;
 
@@ -70,6 +71,7 @@ public class SQLSchemaGenerator {
     private final List<ExistingTableSchema.TableMetadata> tableMetadata;
     private final fURI schemaBasePath;
     private final String databaseName;
+    private final Map<String, Map<String, fURI>> logicalTypes;
     private Map<String, Type> tableTypes;
 
     /**
@@ -88,10 +90,12 @@ public class SQLSchemaGenerator {
      */
     public SQLSchemaGenerator(final List<ExistingTableSchema.TableMetadata> tableMetadata,
                               final fURI schemaBasePath,
-                              final String databaseName) {
+                              final String databaseName,
+                              final Map<String, Map<String, fURI>> logicalTypes) {
         this.tableMetadata = tableMetadata;
         this.schemaBasePath = schemaBasePath;
         this.databaseName = databaseName;
+        this.logicalTypes = logicalTypes;
         this.tableTypes = null; // Lazy initialization
     }
 
@@ -103,7 +107,7 @@ public class SQLSchemaGenerator {
      */
     public SQLSchemaGenerator(final List<ExistingTableSchema.TableMetadata> tableMetadata,
                               final fURI schemaBasePath) {
-        this(tableMetadata, schemaBasePath, schemaBasePath.name());
+        this(tableMetadata, schemaBasePath, schemaBasePath.name(), null);
     }
 
     /**
@@ -119,6 +123,26 @@ public class SQLSchemaGenerator {
             }
         }
         return tableTypes.values();
+    }
+
+    /**
+     * Generate (or refresh) a single table Type and update the cache.
+     * Called when a table is created or altered on the fly — avoids
+     * regenerating types for all tables.
+     */
+    public Type refreshTableType(final ExistingTableSchema.TableMetadata table) {
+        final String key = table.tableName().toLowerCase();
+        // Ensure the metadata list includes this table (may have been added
+        // to ExistingTableSchema.tableSchemas after the initial snapshot).
+        final boolean known = tableMetadata.stream()
+                .anyMatch(t -> t.tableName().equalsIgnoreCase(table.tableName()));
+        if (!known)
+            tableMetadata.add(table);
+        final Type tableType = generateTableType(table);
+        if (tableTypes == null)
+            tableTypes = new LinkedHashMap<>();
+        tableTypes.put(key, tableType);
+        return tableType;
     }
 
     /**
@@ -195,7 +219,13 @@ public class SQLSchemaGenerator {
                         .tryToInst();
                 fields.put(uri(column.name()), fkPredicate);
             } else {
-                final Type columnType = sqlTypeToMtronType(column);
+                Type columnType = sqlTypeToMtronType(column, tbl);
+                // Columns that are absent at insert time: nullable, auto-increment
+                // PK, or have a SQL DEFAULT.  JDBC metadata is the authority.
+                if (column.nullable()
+                        || table.primaryKeys().contains(column.name())
+                        || column.columnDefault() != null)
+                    columnType = columnType.maybe();
                 fields.put(uri(column.name()), columnType);
             }
         }
@@ -213,7 +243,21 @@ public class SQLSchemaGenerator {
     /**
      * Map SQL types to mtron types
      */
-    private Type sqlTypeToMtronType(final ExistingTableSchema.ColumnMetadata column) {
+    private Type sqlTypeToMtronType(final ExistingTableSchema.ColumnMetadata column,
+                                    final String tableName) {
+        // Logical type override — the exact metatron TID tracked on write.
+        // Use it whenever it differs from the SQL-default type for the column.
+        // Covers user-defined types (nat::T, uri::T, bool-in-int, etc.)
+        if (logicalTypes != null) {
+            final Map<String, fURI> tableTypes = logicalTypes.get(tableName.toLowerCase());
+            if (tableTypes != null) {
+                final fURI logicalType = tableTypes.get(column.name().toLowerCase());
+                if (logicalType != null && !isDefaultSQLType(logicalType, column.sqlType())) {
+                    return T(logicalType);
+                }
+            }
+        }
+
         // Handle BOOLEAN specially - SQLite reports it as INTEGER but with BOOLEAN type name
         if ("BOOLEAN".equalsIgnoreCase(column.typeName())) {
             return BOOL_TYPE;
@@ -252,6 +296,25 @@ public class SQLSchemaGenerator {
 
             // Other types - default to string
             default -> STR_TYPE;
+        };
+    }
+
+    /**
+     * Returns true when {@code tid} is the default metatron type for the
+     * given SQL column type — meaning no user-defined refinement is present.
+     */
+    private static boolean isDefaultSQLType(final fURI tid, final int sqlType) {
+        final String name = tid.name();
+        return switch (sqlType) {
+            case Types.TINYINT, Types.SMALLINT, Types.INTEGER, Types.BIGINT -> "int".equals(name);
+            case Types.FLOAT, Types.REAL, Types.DOUBLE, Types.DECIMAL, Types.NUMERIC -> "real".equals(name);
+            case Types.BOOLEAN, Types.BIT -> "bool".equals(name);
+            case Types.CHAR, Types.VARCHAR, Types.LONGVARCHAR, Types.NCHAR,
+                 Types.NVARCHAR, Types.LONGNVARCHAR, Types.CLOB, Types.NCLOB,
+                 Types.DATE, Types.TIME, Types.TIMESTAMP,
+                 Types.TIME_WITH_TIMEZONE, Types.TIMESTAMP_WITH_TIMEZONE,
+                 Types.BINARY, Types.VARBINARY, Types.LONGVARBINARY, Types.BLOB -> "str".equals(name);
+            default -> false;
         };
     }
 
@@ -303,7 +366,12 @@ public class SQLSchemaGenerator {
                         .tryToInst();
                 fields.put(uri(column.name()), fkPredicate);
             } else {
-                fields.put(uri(column.name()), sqlTypeToMtronType(column));
+                Type columnType = sqlTypeToMtronType(column, tbl);
+                if (column.nullable()
+                        || table.primaryKeys().contains(column.name())
+                        || column.columnDefault() != null)
+                    columnType = columnType.maybe();
+                fields.put(uri(column.name()), columnType);
             }
         }
 

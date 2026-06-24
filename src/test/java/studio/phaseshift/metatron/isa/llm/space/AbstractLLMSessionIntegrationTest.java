@@ -38,6 +38,7 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SESSION_TID;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.MODEL_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_at_;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
@@ -279,6 +280,72 @@ public abstract class AbstractLLMSessionIntegrationTest extends AbstractMetatron
         // ── KV store remains authoritative ───────────────────────
         assertTrue(sessionStore.getMessages(sessionVID()).size() >= 6,
                 "KV store: expected >= 6 messages");
+    }
+
+    @Test
+    public void testSessionMessageWriteReadBack() {
+        final fURI sessionVID = sessionVID();
+        final String scheme = sessionVID.scheme();
+        final int memoryId = 1;
+        final fURI msgBase = f(scheme + ":msg");
+
+        // -- Build typed message Recs (TID = message type discriminator) --
+        final Obj systemMsg = rec(uri(TEXT), str("You are helpful."))
+                .tid(f("/m/llm/system"));
+        final Obj userMsg = rec(uri(NAME), str("marko"),
+                uri(CONTENTS), rec(uri(TEXT), str("are you there?")))
+                .tid(f("/m/llm/user"));
+        final Obj aiMsg = rec(uri(TEXT), str("Yes, I am here."))
+                .tid(f("/m/llm/ai"));
+        final Obj toolResultMsg = rec(uri(NAME), str("eval"),
+                uri(TEXT), str("42"))
+                .tid(f("/m/llm/tool_result"));
+
+        final Obj[] messages = {systemMsg, userMsg, aiMsg, toolResultMsg};
+
+        // -- Write each message to its sub-path position -----------------
+        for (int i = 0; i < messages.length; i++) {
+            Router.writeToSpace(msgBase.extend(String.valueOf(memoryId)).extend(String.valueOf(i)), messages[i]);
+        }
+
+        // -- Read back individual messages by position -------------------
+        for (int i = 0; i < messages.length; i++) {
+            final Obj msg = Router.readFromSpace(msgBase.extend(String.valueOf(memoryId)).extend(String.valueOf(i)));
+            assertFalse(msg.isNoObj(), "message at position " + i + " should exist");
+            assertTrue(msg.isRec(), "message at position " + i + " should be a Rec");
+            assertEquals(messages[i].tid(), msg.asRec().tid(),
+                    "message " + i + " should have correct TID");
+        }
+
+        // Verify message 0 = system
+        final Obj m0 = Router.readFromSpace(msgBase.extend(String.valueOf(memoryId)).extend("0"));
+        assertEquals(f("/m/llm/system"), m0.asRec().tid());
+        assertEquals(str("You are helpful."), m0.asRec().at(uri(TEXT)));
+
+        // Verify message 1 = user
+        final Obj m1 = Router.readFromSpace(msgBase.extend(String.valueOf(memoryId)).extend("1"));
+        assertEquals(f("/m/llm/user"), m1.asRec().tid());
+        assertEquals(str("marko"), m1.asRec().at(uri(NAME)));
+
+        // Verify message 2 = ai
+        final Obj m2 = Router.readFromSpace(msgBase.extend(String.valueOf(memoryId)).extend("2"));
+        assertEquals(f("/m/llm/ai"), m2.asRec().tid());
+        assertEquals(str("Yes, I am here."), m2.asRec().at(uri(TEXT)));
+
+        // Verify message 3 = tool_result
+        final Obj m3 = Router.readFromSpace(msgBase.extend(String.valueOf(memoryId)).extend("3"));
+        assertEquals(f("/m/llm/tool_result"), m3.asRec().tid());
+        assertEquals(str("eval"), m3.asRec().at(uri(NAME)));
+        assertEquals(str("42"), m3.asRec().at(uri(TEXT)));
+
+        // -- Delete a message (simulating window eviction) ---------------
+        Router.writeToSpace(msgBase.extend(String.valueOf(memoryId)).extend("0"), noobj());
+        final Obj deleted = Router.readFromSpace(msgBase.extend(String.valueOf(memoryId)).extend("0"));
+        assertTrue(deleted.isNoObj(), "deleted message should be noobj");
+
+        // Message at position 1 should still exist
+        final Obj stillThere = Router.readFromSpace(msgBase.extend(String.valueOf(memoryId)).extend("1"));
+        assertFalse(stillThere.isNoObj(), "undeleted message should still exist");
     }
 
     /** Per-row validation for typed-table mirror: text + kv URI back-link. */

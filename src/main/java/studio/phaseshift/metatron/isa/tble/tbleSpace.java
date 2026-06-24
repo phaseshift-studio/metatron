@@ -136,6 +136,7 @@ public class tbleSpace extends AbstractSpace<Connection> implements SchemaSpace 
     protected TableSchema schema;
     protected ExistingTableSchema existingTableSchema;
     protected SQLSchemaGenerator schemaGenerator;
+    protected SQLSchemaInstSet schemaInstset;
     protected String databaseName;
     protected String backend;
 
@@ -278,7 +279,9 @@ public class tbleSpace extends AbstractSpace<Connection> implements SchemaSpace 
         // to route schema reads/writes back into this space → recursion.
         final fURI schemaVid = this.vid().extend(SCHEMA).extend(INSTSET);
         this.schemaGenerator = new SQLSchemaGenerator(
-                this.existingTableSchema.getTableMetadata(), schemaVid);
+                this.existingTableSchema.getTableMetadata(), schemaVid,
+                this.databaseName,
+                this.existingTableSchema.getLogicalTypes());
 
         // Wire schema generator into existingTableSchema so that table
         // dereferences return instset-encoded Types (single source of truth)
@@ -289,9 +292,9 @@ public class tbleSpace extends AbstractSpace<Connection> implements SchemaSpace 
         // /m/tble/space/schema/db/type/users → users::T).  The instset Types
         // are the single source of truth — column types AND FK references are
         // embedded in the isaPredicate; no separate native schema needed.
-        final SQLSchemaInstSet schemaInstset = this.schemaGenerator.generateSchemaInstset(schemaVid);
-        Router.global().addSpace(schemaInstset);
-        schemaInstset.setup();
+        this.schemaInstset = this.schemaGenerator.generateSchemaInstset(schemaVid);
+        Router.global().addSpace(this.schemaInstset);
+        this.schemaInstset.setup();
 
         LOG.info("initialized {{g}}SQL schema{{X}} with %s table types",
                 this.existingTableSchema.getTableNames().size());
@@ -352,6 +355,26 @@ public class tbleSpace extends AbstractSpace<Connection> implements SchemaSpace 
         return tableConfig.asLst().lstValue().stream()
                 .anyMatch(o -> o.isUri()
                         && tableName.equalsIgnoreCase(o.asUri().uriValue().name()));
+    }
+
+    /**
+     * Surgically add or refresh the Type for a single table after on-the-fly
+     * creation or alteration.  Writes through {@link Router} so the type lands
+     * in the schema instset that owns it — no full rebuild, no direct coupling
+     * to the instset instance.
+     */
+    public void onTableChanged(final String tableName) {
+        if (this.schemaGenerator == null
+                || this.existingTableSchema == null
+                || this.schemaInstset == null)
+            return;
+        final ExistingTableSchema.TableMetadata metadata =
+                this.existingTableSchema.getTableMetadata().stream()
+                        .filter(t -> t.tableName().equalsIgnoreCase(tableName))
+                        .findFirst().orElse(null);
+        if (metadata == null) return;
+        final Type type = this.schemaGenerator.refreshTableType(metadata);
+        Router.writeToSpace(type.vid(), type);
     }
 
     // =========================================================================
@@ -420,13 +443,16 @@ public class tbleSpace extends AbstractSpace<Connection> implements SchemaSpace 
                         if (dp.hasEntry() && isConfiguredTable(dp.collection())
                                 && !dp.entryIsWildcard()) {
                             lazyInitExistingTableSchema();
-                            if (!this.existingTableSchema.getTableNames()
-                                    .contains(dp.collection().toLowerCase())) {
+                            final boolean isNew = !this.existingTableSchema.getTableNames()
+                                    .contains(dp.collection().toLowerCase());
+                            if (isNew) {
                                 this.existingTableSchema.createTableFromRecord(
                                         this.sjvm(), dp.collection(), obj.asRec());
                                 syncTableConfig(List.of(dp.collection()));
                             }
                             this.existingTableSchema.write(this.sjvm(), aligned, obj);
+                            if (isNew)
+                                onTableChanged(dp.collection());
                         } else {
                             writeKV(aligned, obj);
                         }

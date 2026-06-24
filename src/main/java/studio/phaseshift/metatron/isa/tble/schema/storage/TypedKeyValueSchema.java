@@ -241,11 +241,6 @@ public class TypedKeyValueSchema implements TableSchema {
     }
 
     @Override
-    public boolean supportsfURIPatterns() {
-        return false;
-    }
-
-    @Override
     public String version() {
         return "2.0-typed";
     }

@@ -75,15 +75,6 @@ public interface TableSchema {
     int delete(final Connection conn, final fURI furi) throws SQLException;
 
     /**
-     * Check if the schema supports MQTT-style pattern matching.
-     *
-     * @return true if MQTT patterns (+/#) are supported
-     */
-    default boolean supportsfURIPatterns() {
-        return false;
-    }
-
-    /**
      * Get the schema version for migration tracking.
      *
      * @return schema version string
