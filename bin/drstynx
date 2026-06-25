@@ -1,0 +1,13 @@
+#!/bin/sh
+
+cat <<'EOF'
+  ______          _______ __  PhaseShift Studio                    
+ |   _  \ .----. |   _   |  |_.--.--.-----.--.--.
+ |.  |   \|   ___|   1___|   _|  |  |     |_   _|
+ |.  |    |__||__|____   |____|___  |__|__|__.__|
+ |:  1    /      |:  1   |    |_____|            
+ |::.. . /       |::.. . |presents a metatron bomb                       
+ `------'        `-------'                                          
+EOF
+
+metatron -b .metatron/skills/drstynx/assets/drstynx.boot.mtron "[log=>info]"

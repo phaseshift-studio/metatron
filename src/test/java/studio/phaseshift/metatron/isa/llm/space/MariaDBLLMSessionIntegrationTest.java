@@ -69,11 +69,6 @@ public class MariaDBLLMSessionIntegrationTest extends AbstractLLMSessionIntegrat
                         uri(PATTERN), uri("maria:#"),
                         uri(HOST), uri(dbConfig.getJdbcHost()),
                         uri(DRIVER), uri(dbConfig.getDriverClass()),
-                        uri(TABLE), lst(uri(MEM_TABLE),
-                                uri("llm_message_system"),
-                                uri("llm_message_user"),
-                                uri("llm_message_ai"),
-                                uri("llm_message_tool_result")),
                         uri(ROUTE), rec(uri("maria:"), uri("")),
                         uri(QPROC), lst(incrQ())
                 ),

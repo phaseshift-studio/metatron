@@ -28,6 +28,7 @@ import studio.phaseshift.metatron.isa.AbstractSpace;
 import studio.phaseshift.metatron.isa.SchemaSpace;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
@@ -69,16 +70,18 @@ import static studio.phaseshift.metatron.isa.tble.tbleInstSet.TBLE_ISA_TID;
  * <h3>Modes</h3>
  * <dl>
  *   <dt>Key-Value</dt>
- *   <dd>Paths that don't match a known SQL table are stored as typed key-value
- *       pairs.  On MariaDB/MySQL this uses an indexed MQTT-pattern schema; on
- *       PostgreSQL, SQLite, and others a {@link TypedKeyValueSchema} preserves
- *       full type fidelity.</dd>
+ *   <dd>Paths matching the reserved collection names {@code "kv_store"} (KV schema
+ *       internal table), {@code "_mtron_meta"} (FK metadata), and {@code "kv"}
+ *       (conventional KV namespace) are stored as typed key-value pairs.  On
+ *       MariaDB/MySQL this uses an indexed MQTT-pattern schema; on PostgreSQL,
+ *       SQLite, and others a {@link TypedKeyValueSchema} preserves full type
+ *       fidelity.</dd>
  *   <dt>Table Mapping</dt>
- *   <dd>When the {@code TABLE} config key is present, the space auto-discovers
- *       existing SQL tables via JDBC metadata and routes reads/writes for those
- *       table paths to {@link ExistingTableSchema}.  Tables listed in
- *       {@code TABLE} but not yet in the database are created on first write
- *       ("create-on-first-write").</dd>
+ *   <dd>All other collection paths are automatically treated as SQL tables.
+ *       The space auto-discovers existing SQL tables via JDBC metadata and
+ *       creates new tables on first Rec write ("create-on-first-write").
+ *       Table schemas are published as Types in the schema instset so wildcard
+ *       queries ({@code *db:+}) resolve immediately.</dd>
  * </dl>
  *
  * <h3>Foreign keys and {@code auto_from}</h3>
@@ -93,10 +96,12 @@ import static studio.phaseshift.metatron.isa.tble.tbleInstSet.TBLE_ISA_TID;
  *     uri(PATTERN), uri("db:#"),
  *     uri(HOST),    uri("postgresql://localhost:5432/mydb"),
  *     uri(DRIVER),  uri("org.postgresql.Driver"),
- *     uri(TABLE),   lst(uri("users"), uri("orders")),  // optional whitelist
  *     uri(ROUTE),   rec(uri("db:"), uri(""))
  * ).jvm(), f("/sys/space/tble"));
  * }</pre>
+ * The {@code TABLE} config key is deprecated and ignored — table mapping is
+ * always on.  All collection paths except {@code "kv_store"}, {@code "_mtron_meta"},
+ * and {@code "kv"} are candidates for auto table creation.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
@@ -256,23 +261,10 @@ public class tbleSpace extends AbstractSpace<Connection> implements SchemaSpace 
      * the Router in the {@code /m/} namespace for type resolution.
      */
     private void initializeTableMapping(final Connection conn) throws SQLException {
-        final boolean enableTableMapping = this.at(uri(TABLE)) != null;
-        if (!enableTableMapping) {
-            this.existingTableSchema = null;
-            this.schemaGenerator = null;
-            LOG.info("table mapping {{y}}disabled{{X}}");
-            return;
-        }
-
-        this.existingTableSchema = new ExistingTableSchema(this, "objs");
+        this.existingTableSchema = new ExistingTableSchema(this, "kv_store");
         this.existingTableSchema.initialize(conn);
         LOG.info("initialized {{g}}existing table schema{{X}} - discovered %s tables for database %s",
                 this.existingTableSchema.getTableNames().size(), conn.getCatalog());
-
-        // Merge user-configured tables (whitelist for create-on-first-write)
-        // with JDBC-discovered tables (actual schema).  Order: user first,
-        // then discovered — user intent preserved, discovery appended.
-        syncTableConfig(new ArrayList<>());
 
         // Schema VID is in /m/ namespace — backed by system memSpace, not this
         // tbleSpace.  A VID under the tbleSpace pattern would cause the Router
@@ -320,41 +312,37 @@ public class tbleSpace extends AbstractSpace<Connection> implements SchemaSpace 
         return this.existingTableSchema;
     }
 
+    /** The schema instset — single source of truth for table types. */
+    public SQLSchemaInstSet schemaInstset() {
+        return this.schemaInstset;
+    }
+
     // =========================================================================
     //  Table-config helpers
     // =========================================================================
 
     /**
-     * Merges the given table names into the live {@code TABLE} config list,
-     * preserving any names already present.  Used both during initialisation
-     * (JDBC-discovered tables) and create-on-first-write (new tables).
+     * Returns {@code true} when {@code collectionName} is eligible for
+     * create-on-first-write table creation.  Excludes the KV schema table
+     * ({@code "kv_store"}) and the FK meta table ({@code "_mtron_meta"}).
      */
-    private void syncTableConfig(final Collection<String> additional) {
-        final Obj current = this.at(uri(TABLE));
-        final List<Obj> tableList = new ArrayList<>();
-        if (current != null && !current.isNoObj() && current.isLst())
-            tableList.addAll(current.asLst().jvm());
-        for (final String name : additional) {
-            if (tableList.stream().noneMatch(
-                    o -> o.isUri() && name.equalsIgnoreCase(o.asUri().uriValue().name())))
-                tableList.add(uri(name));
-        }
-        this.at(uri(TABLE), lst(tableList), MUTABLE);
+    protected boolean isTableCandidate(final String collectionName) {
+        final String n = collectionName.toLowerCase();
+        return !n.equals("kv_store")
+                && !n.equals("_mtron_meta")
+                && !n.equals("kv")
+                && !n.equals("msg");
     }
 
     /**
-     * Returns {@code true} when {@code tableName} appears in the {@code TABLE}
-     * config list.  Only whitelisted names are eligible for create-on-first-write
-     * — this prevents KV paths (e.g. {@code db:kv/test}) from accidentally
-     * becoming SQL tables.
+     * Returns {@code true} when a type exists in the schema instset for the
+     * given collection — the instset is the single source of truth for which
+     * collections are typed tables.
      */
-    protected boolean isConfiguredTable(final String tableName) {
-        final Obj tableConfig = this.at(uri(TABLE));
-        if (tableConfig == null || tableConfig.isNoObj() || !tableConfig.isLst())
-            return false;
-        return tableConfig.asLst().lstValue().stream()
-                .anyMatch(o -> o.isUri()
-                        && tableName.equalsIgnoreCase(o.asUri().uriValue().name()));
+    boolean isTableDeclared(final String collectionName) {
+        if (this.schemaInstset == null) return false;
+        return this.schemaInstset.types().stream()
+                .anyMatch(t -> t.vid().name().equalsIgnoreCase(collectionName));
     }
 
     /**
@@ -364,9 +352,7 @@ public class tbleSpace extends AbstractSpace<Connection> implements SchemaSpace 
      * to the instset instance.
      */
     public void onTableChanged(final String tableName) {
-        if (this.schemaGenerator == null
-                || this.existingTableSchema == null
-                || this.schemaInstset == null)
+        if (this.schemaInstset == null)
             return;
         final ExistingTableSchema.TableMetadata metadata =
                 this.existingTableSchema.getTableMetadata().stream()
@@ -380,40 +366,6 @@ public class tbleSpace extends AbstractSpace<Connection> implements SchemaSpace 
     // =========================================================================
     //  Lazy table-schema initialisation
     // =========================================================================
-
-    /**
-     * Creates the {@link ExistingTableSchema} on first access when the space was
-     * mounted without a {@code TABLE} config key and one is added at runtime via
-     * {@code /sys/space/.../table -> [person,score]}.
-     * Also wires the schemaGenerator so instset-encoded Types are the single
-     * source of truth (no SQL-specific TABLE_TID encoding).
-     */
-    protected synchronized void lazyInitExistingTableSchema() {
-        if (this.existingTableSchema == null) {
-            try {
-                this.existingTableSchema = new ExistingTableSchema(this, "objs");
-                this.existingTableSchema.initialize(this.sjvm());
-                LOG.info("lazy-initialized {{g}}existing table schema{{X}} - discovered %s tables",
-                        this.existingTableSchema.getTableNames().size());
-
-                // Wire schema generator so table dereferences return instset-encoded Types
-                final fURI schemaVid = this.vid().extend(SCHEMA).extend(INSTSET);
-                this.schemaGenerator = new SQLSchemaGenerator(
-                        this.existingTableSchema.getTableMetadata(), schemaVid);
-                this.existingTableSchema.setSchemaGenerator(this.schemaGenerator);
-
-                // Register schema instset as a Router space for type resolution
-                final SQLSchemaInstSet schemaInstset = this.schemaGenerator.generateSchemaInstset(schemaVid);
-                Router.global().addSpace(schemaInstset);
-                schemaInstset.setup();
-
-                LOG.info("lazy-initialized {{g}}SQL schema{{X}} with %s table types",
-                        this.existingTableSchema.getTableNames().size());
-            } catch (final SQLException ex) {
-                throw MTronException.of(ex);
-            }
-        }
-    }
 
     // =========================================================================
     //  Path resolution
@@ -433,6 +385,24 @@ public class tbleSpace extends AbstractSpace<Connection> implements SchemaSpace 
                 } else {
                     final fURI aligned = Space.Helper.routeFromSpace(pattern, this.routes());
 
+                    // -- Collection-path type declaration ----------------
+                    // Writing a Type to a collection path (no entry) is a
+                    // schema declaration: place it under the schema instset
+                    // namespace and write it directly.  (auto-save skips
+                    // Types, so we can't rely on selfVID+objCheckAndSave.)
+                    if (obj.isType() && this.schemaInstset != null) {
+                        final DataPath dp = DataPath.of(f(this.databaseName).extend(aligned));
+                        if (dp.hasCollection() && !dp.hasEntry()) {
+                            final fURI typeVID = this.schemaInstset.pattern()
+                                    .retractPattern().extend(dp.collection());
+                            final Type typed = (Type) obj.asType().vid(typeVID);
+                            Router.writeToSpace(typeVID, typed);
+                            LOG.info("registered type {{b}}%s{{X}} at collection path %s",
+                                    typeVID, dp.collection());
+                            return typed;
+                        }
+                    }
+
                     if (this.existingTableSchema != null
                             && this.existingTableSchema.isTablePath(aligned)) {
                         // ── table-mapped path (existing table) ──
@@ -440,19 +410,16 @@ public class tbleSpace extends AbstractSpace<Connection> implements SchemaSpace 
 
                     } else if (obj.isRec()) {
                         final DataPath dp = DataPath.of(f(this.databaseName).extend(aligned));
-                        if (dp.hasEntry() && isConfiguredTable(dp.collection())
-                                && !dp.entryIsWildcard()) {
-                            lazyInitExistingTableSchema();
-                            final boolean isNew = !this.existingTableSchema.getTableNames()
-                                    .contains(dp.collection().toLowerCase());
-                            if (isNew) {
-                                this.existingTableSchema.createTableFromRecord(
-                                        this.sjvm(), dp.collection(), obj.asRec());
-                                syncTableConfig(List.of(dp.collection()));
-                            }
-                            this.existingTableSchema.write(this.sjvm(), aligned, obj);
+                        final String coll = dp.collection().toLowerCase();
+                        if (dp.hasEntry() && !dp.entryIsWildcard()
+                                && isTableCandidate(coll)) {
+                            final boolean isNew = !this.existingTableSchema.getTableNames().contains(coll);
                             if (isNew)
-                                onTableChanged(dp.collection());
+                                this.existingTableSchema.createTableFromRecord(
+                                        this.sjvm(), coll, obj.asRec());
+                            this.existingTableSchema.write(this.sjvm(), aligned, obj.asRec());
+                            if (isNew)
+                                onTableChanged(coll);
                         } else {
                             writeKV(aligned, obj);
                         }

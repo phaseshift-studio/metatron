@@ -136,14 +136,16 @@ public class SqliteTbleSpaceTest extends AbstractTbleSpaceTest {
     @ParameterizedTest(name = "[{index}] Type preservation: {0}")
     @MethodSource("provideTypedStorageTestCases")
     public void testTypedStoragePreservation(String description, String uri, Obj writeValue, Obj expectedValue) throws Exception {
+        // Clean up stale DB from previous test runs
+        new java.io.File("target/test-typed-storage.db").delete();
         // SQLite-specific: hardcoded path
         final tbleSpace testSpace = tbleSpace.of(
                 rec(
-                        uri(PATTERN), uri("/tble/#"),
+                        uri(PATTERN), uri("tblekv:#"),
                         uri(HOST), uri("sqlite:target/test-typed-storage.db"),
                         uri(DRIVER), uri("org.sqlite.JDBC"),
-                        uri(TABLE), lst(),
-                        uri(ROUTE), rec(uri("/tble/"), uri(""))
+                        uri(ROUTE), rec(uri("tblekv:"), uri("")),
+                        uri(TABLE), lst()
                 ).jvm(),
                 f("/sys/space/tble/typed")
         );
@@ -168,21 +170,21 @@ public class SqliteTbleSpaceTest extends AbstractTbleSpaceTest {
     private static Stream<Arguments> provideTypedStorageTestCases() {
         return Stream.of(
                 // Primitive types should be stored natively, not as JSON
-                Arguments.of("Boolean true", "/tble/test/bool1", bool(true), bool(true)),
-                Arguments.of("Boolean false", "/tble/test/bool2", bool(false), bool(false)),
-                Arguments.of("Integer zero", "/tble/test/int1", jnt(0), jnt(0)),
-                Arguments.of("Integer positive", "/tble/test/int2", jnt(42), jnt(42)),
-                Arguments.of("Integer negative", "/tble/test/int3", jnt(-999), jnt(-999)),
-                Arguments.of("Real zero", "/tble/test/real1", real(0.0), real(0.0)),
-                Arguments.of("Real positive", "/tble/test/real2", real(3.14159), real(3.14159)),
-                Arguments.of("String empty", "/tble/test/str1", str(""), str("")),
-                Arguments.of("String simple", "/tble/test/str2", str("hello"), str("hello")),
+                Arguments.of("Boolean true", "tblekv:kv/bool1", bool(true), bool(true)),
+                Arguments.of("Boolean false", "tblekv:kv/bool2", bool(false), bool(false)),
+                Arguments.of("Integer zero", "tblekv:kv/int1", jnt(0), jnt(0)),
+                Arguments.of("Integer positive", "tblekv:kv/int2", jnt(42), jnt(42)),
+                Arguments.of("Integer negative", "tblekv:kv/int3", jnt(-999), jnt(-999)),
+                Arguments.of("Real zero", "tblekv:kv/real1", real(0.0), real(0.0)),
+                Arguments.of("Real positive", "tblekv:kv/real2", real(3.14159), real(3.14159)),
+                Arguments.of("String empty", "tblekv:kv/str1", str(""), str("")),
+                Arguments.of("String simple", "tblekv:kv/str2", str("hello"), str("hello")),
 
                 // Complex types should use ObjmtronSerializer
-                Arguments.of("Record", "/tble/test/rec1",
+                Arguments.of("Record", "tblekv:kv/rec1",
                         rec(uri(NAME), str("Alice"), uri("age"), jnt(30)),
                         rec(uri(NAME), str("Alice"), uri("age"), jnt(30))),
-                Arguments.of("List", "/tble/test/lst1",
+                Arguments.of("List", "tblekv:kv/lst1",
                         lst(jnt(1), jnt(2), jnt(3)),
                         lst(jnt(1), jnt(2), jnt(3)))
         );

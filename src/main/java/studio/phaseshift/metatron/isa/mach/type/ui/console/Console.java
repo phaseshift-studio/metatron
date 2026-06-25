@@ -97,10 +97,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
     public static final String METATRON_VERSION = "0.1-alpha";
     //@JRecElement(key = "mtron", rng = "/m/uri")
     public static final String MTRON = "mtron";
-    // @JRecElement(tid = FILE_TID_STRING)
     public static final String MTRON_NANORC = "mtron.nanorc";
-    //@JRecElement(tid = FILE_TID_STRING)
-    //@JRecElement(tid = FILE_TID_STRING)
     public static Path HISTORY_FILE = Paths.get(".metatron.history");
     @JRecElement(key = "history", rng = "/m/inst")
     public Inst history = instA(f("dummy"));
@@ -999,8 +996,13 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
 
     public void outputHeader(final String name) {
         try {
-            terminal.writer().print(CommonUtil.getHeader(HEADER_FILE, name, true));
-            terminal.writer().flush();
+            if (this.at(HEADER).isNoObj()) {
+                terminal.writer().print(CommonUtil.getHeader(HEADER_FILE, name, true));
+                terminal.writer().flush();
+            } else {
+                terminal.writer().print(Graphitty.string(Str.Helper.cleanString(this.at(HEADER))));
+                terminal.writer().flush();
+            }
         } catch (final Exception e) {
             terminal.writer().println("...a fundamental boot exception has occurred.");
             terminal.writer().println("      ...this does not bode well for your time in the meTaRon: " + e);

@@ -27,6 +27,7 @@ import java.util.*;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.id_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
@@ -37,7 +38,9 @@ import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Rec.REC_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Real.REAL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.mInstSet.ALL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.tble.tbleInstSet.REC_ROW_TID;
@@ -220,19 +223,19 @@ public class SQLSchemaGenerator {
                 fields.put(uri(column.name()), fkPredicate);
             } else {
                 Type columnType = sqlTypeToMtronType(column, tbl);
-                // Columns that are absent at insert time: nullable, auto-increment
-                // PK, or have a SQL DEFAULT.  JDBC metadata is the authority.
-                if (column.nullable()
-                        || table.primaryKeys().contains(column.name())
-                        || column.columnDefault() != null)
+                // Auto-increment PK never present in the rec at insert time
+                if (table.primaryKeys().contains(column.name()))
                     columnType = columnType.maybe();
                 fields.put(uri(column.name()), columnType);
             }
         }
 
-        // Build the type: rec::T[isa([column1=>type1, column2=>isa_predicate, ...])]
-        final fURI tableTypePath = schemaBasePath.extend(tbl);
+        // Auto-generated types are open by default — the wildcard entry
+        // allows new columns to be added on the fly.  Remove it to lock.
+        fields.put(T(URI_TID.maybe()), ALL_TYPE);
 
+        // Build the type with full VID under schema instset namespace
+        final fURI tableTypePath = schemaBasePath.extend(tbl);
         return Type.Builder.build()
                 .tid(REC_ROW_TID)
                 .vid(tableTypePath)
@@ -367,13 +370,14 @@ public class SQLSchemaGenerator {
                 fields.put(uri(column.name()), fkPredicate);
             } else {
                 Type columnType = sqlTypeToMtronType(column, tbl);
-                if (column.nullable()
-                        || table.primaryKeys().contains(column.name())
-                        || column.columnDefault() != null)
+                // Auto-increment PK never present in the rec at insert time
+                if (table.primaryKeys().contains(column.name()))
                     columnType = columnType.maybe();
                 fields.put(uri(column.name()), columnType);
             }
         }
+
+        fields.put(URI_TYPE.maybe(), ALL_TYPE);
 
         return Type.Builder.build()
                 .tid(REC_ROW_TID)

@@ -24,6 +24,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.BaseQ;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.tble.tbleSpace;
+import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -68,7 +69,7 @@ public class tbleIncrQ extends BaseQ {
                                 T(fURI.Singleton.ALL)),
                         (lhs, inst) -> {
                             final fURI vid = inst.arg(0).uriValue();
-                            final Obj  obj = inst.arg(1);
+                            final Obj obj = inst.arg(1);
                             final fURI cleaned = vid.removeQ(INCRQ_PATTERN);
                             try {
                                 final fURI aligned = studio.phaseshift.metatron.isa.Space.Helper
@@ -78,18 +79,17 @@ public class tbleIncrQ extends BaseQ {
                                 final studio.phaseshift.metatron.isa.m.type.Rec rec =
                                         obj.isRec() ? obj.asRec()
                                                 : studio.phaseshift.metatron.isa.m.type.impl.MRec.rec(
-                                                        studio.phaseshift.metatron.util.CommonUtil.mutableMap(
-                                                                studio.phaseshift.metatron.isa.m.type.impl.MUri.uri("val"), obj));
+                                                studio.phaseshift.metatron.util.CommonUtil.mutableMap(
+                                                        studio.phaseshift.metatron.isa.m.type.impl.MUri.uri("val"), obj));
                                 space.existingTableSchema().ensureTableAndInsert(
                                         space.sjvm(), dp.collection(), rec);
                             } catch (final Exception e) {
-                                space.logger().warn(
-                                        "tbleIncrQ auto-insert failed: %s", e.getMessage());
+                                throw MTronException.of(e);
                             }
                             return obj;
                         }),
                 uri(POST_WRITE), noobj(),
-                uri(PRE_READ),  noobj(),
+                uri(PRE_READ), noobj(),
                 uri(POST_READ), noobj(),
                 uri(QLESS_WRITE), noobj()
         );

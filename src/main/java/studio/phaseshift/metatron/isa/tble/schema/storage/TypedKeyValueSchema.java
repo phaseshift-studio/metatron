@@ -56,14 +56,14 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
  */
 public class TypedKeyValueSchema implements TableSchema {
 
-    private static final String TABLE_NAME = "objs";
+    private static final String TABLE_NAME = "kv_store";
     private static final ObjmtronSerializer SERIALIZER = new ObjmtronSerializer();
 
     @Override
     public void initialize(final Connection conn) throws SQLException {
         // Create table with typed columns for isomorphic mapping
         final String createTable = """
-                CREATE TABLE IF NOT EXISTS objs (
+                CREATE TABLE IF NOT EXISTS kv_store (
                     furi VARCHAR(512) NOT NULL PRIMARY KEY,
                     type VARCHAR(32) NOT NULL,
                     bool_val BOOLEAN,
@@ -76,7 +76,7 @@ public class TypedKeyValueSchema implements TableSchema {
 
         // Create index on furi for fast lookups
         final String createIndex = """
-                CREATE INDEX IF NOT EXISTS idx_furi ON objs(furi);
+                CREATE INDEX IF NOT EXISTS idx_furi ON kv_store(furi);
                 """;
 
         try (final Statement stmt = conn.createStatement()) {

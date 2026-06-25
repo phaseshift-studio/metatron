@@ -39,6 +39,7 @@ import java.util.*;
 
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -110,12 +111,16 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
      */
     private final Map<String, Map<String, fURI>> logicalTypes = new LinkedHashMap<>();
 
-    /** Exposed for {@link SQLSchemaGenerator} so it can produce correct instset types. */
+    /**
+     * Exposed for {@link SQLSchemaGenerator} so it can produce correct instset types.
+     */
     public Map<String, Map<String, fURI>> getLogicalTypes() {
         return logicalTypes;
     }
 
-    /** Single-column lookup for the schema generator. */
+    /**
+     * Single-column lookup for the schema generator.
+     */
     public fURI getLogicalType(final String tableName, final String columnName) {
         final Map<String, fURI> tableTypes = logicalTypes.get(tableName.toLowerCase());
         return tableTypes != null ? tableTypes.get(columnName.toLowerCase()) : null;
@@ -559,7 +564,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
             throw new SQLException("table not found: " + tableName);
         }
         if (rowId == null || dp.entryIsWildcard()) {
-            throw new SQLException("cannot write without specific row ID: " + furi);
+            return 0; // collection-level write with no entry — no-op
         }
         if (metadata.primaryKeys.isEmpty()) {
             throw new SQLException("table " + tableName + " has no primary key, cannot write");
@@ -618,9 +623,12 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
         final Map<Obj, Obj> currentMap = current.recValue();
         for (final Map.Entry<Obj, Obj> entry : rec.recValue().entrySet()) {
             final String fieldName = entry.getKey().asUri().uriValue().name();
-            final ColumnMetadata col = metadata.columns.stream()
+            ColumnMetadata col = metadata.columns.stream()
                     .filter(c -> c.name.equalsIgnoreCase(fieldName)).findFirst().orElse(null);
-            if (col == null) continue;
+            if (col == null) {
+                // On-the-fly column addition via UPDATE (same as INSERT path)
+                col = addColumnOnTheFly(conn, metadata, fieldName, entry.getValue());
+            }
             final Obj currentVal = currentMap.get(entry.getKey());
             if (!entry.getValue().equals(currentVal))
                 changed.put(col.name, entry.getValue());
@@ -1082,19 +1090,30 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
                  * discovered table.  This makes the instset schema the single source
                  * of truth (no separate SQL-specific TABLE_TID encoding).
                  */
-                return this.schemaGenerator.getTableTypes().stream()
+                // Merge auto-generated types with user-declared instset types
+                final Set<Type> all = new LinkedHashSet<>(
+                        this.schemaGenerator.getTableTypes());
+                if (space.schemaInstset() != null)
+                    all.addAll(space.schemaInstset().types());
+                return all.stream()
                         .map(t -> Space.IdObj.of(t.vid(), t))
                         .iterator();
             } else {
                 /*
-                 * Exact table dereference — return the instset-encoded Type for this
-                 * table.  The Type's isaPredicate carries the column=>type mappings,
-                 * making the instset schema the single source of truth.
+                 * Exact table dereference — check the generator first, then
+                 * fall back to the schema instset for user-declared types.
                  */
                 final String tn = dp.collection().toLowerCase();
                 final Type tableType = this.schemaGenerator.getTableType(tn);
                 if (tableType != null) {
                     return IteratorUtil.of(Space.IdObj.of(tableType.vid(), tableType));
+                }
+                if (space.schemaInstset() != null) {
+                    final Type declared = space.schemaInstset().types().stream()
+                            .filter(t -> t.vid().name().equalsIgnoreCase(tn))
+                            .findFirst().orElse(null);
+                    if (declared != null)
+                        return IteratorUtil.of(Space.IdObj.of(declared.vid(), declared));
                 }
                 return Collections.emptyIterator();
             }
@@ -1318,7 +1337,6 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
             if (!entry.getKey().isUri()) continue;
             final String colName = entry.getKey().asUri().uriValue().name();
             if (colName == null || colName.isEmpty()) continue;
-            // Skip user-provided 'id' — we already have the auto-increment PK
             if ("id".equalsIgnoreCase(colName)) continue;
             if (!first) ddl.append(", ");
             first = false;
