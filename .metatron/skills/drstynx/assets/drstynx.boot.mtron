@@ -14,20 +14,19 @@
   [ web       => [ http => <http://localhost:8777> ],
     ollama    => <http://ginger.local:11434>,
     session   => <mariadb://localhost:3306/dr_sessions?createDatabaseIfNotExist=true&user=mtron&password=mtron>,
-    localfs   => </home/killswitch/.hermes_clone>]
+    localfs   => </home/killswitch/.hermes_clone>],
+ header       => """
+   ______          _______ __   {{r}}PhaseShift Studio                    
+  |   _  \ .----. |   _   |  |_.--.--.-----.--.--.
+  |.  |  {{y}} \|   ___|   1___|   _|  |  |     |_   _|
+  |.  |    |__||__|____   |____|___  |{{b}}__|__|__.__|
+  |:  1    /      |:  1   |    |_____| presents ..      
+  |::.. . /       |::.. . |{{g}}       a metatron bomb                       
+  `------'        `-------'          
+ """
 ]
 [===============]
-print("""
-{{r}}PhaseShift Studio Presents{{X}}
-{{y}} ___    ____      _____ ______  __ __  ____   __ __ 
-|   \  |    \    / ___/|      ||  |  ||    \ |  |  |
-|    \ |  D  )  (   \_ |  {{c}}    ||  |  ||  _  ||  |  |
-|  D  ||    /    \__  ||_|  |_||  ~  ||  |  ||_   _|
-|     ||    \  __/  \ |  |  |  |___, ||  |  ||     |
-|     ||  .  \|  \    |  |  |  |   {{m}}  ||  |  ||  |  |
-|_____||__|\_||__|\___|  |__|  |____/ |__|__||__|__|
-                                    {{y}} a metatron bomb{{X}}                                      
-""")
+print(*boot/args/header)
 print("{{r}}----{{y}}----{{r}}----\n{{g}}*{{y}}boot/args{{X}}: ",
       *boot/args, 
      "\n{{y}}----{{r}}----{{y}}----{{X}}\n");
@@ -119,4 +118,4 @@ model::[desc     => "the agent dr.stynx is here to be of use in the metatron",
                      response => [to=>print(_)]]]@<dr>;
 
 [== user console ==]
-console::[=>]@/usr/marko/console;
+console::[header=>!*boot/args/header]@/usr/marko/console;

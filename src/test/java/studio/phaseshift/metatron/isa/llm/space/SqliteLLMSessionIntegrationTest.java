@@ -71,11 +71,6 @@ public class SqliteLLMSessionIntegrationTest extends AbstractLLMSessionIntegrati
                         uri(PATTERN), uri("sqlite:#"),
                         uri(HOST), uri("sqlite:" + DB_PATH),
                         uri(DRIVER), uri("org.sqlite.JDBC"),
-                        uri(TABLE), lst(uri(MEM_TABLE),
-                                uri("llm_message_system"),
-                                uri("llm_message_user"),
-                                uri("llm_message_ai"),
-                                uri("llm_message_tool_result")),
                         uri(ROUTE), rec(uri("sqlite:"), uri("")),
                         uri(QPROC), lst(incrQ())
                 ),

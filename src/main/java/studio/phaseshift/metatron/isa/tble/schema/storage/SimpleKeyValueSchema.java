@@ -37,13 +37,13 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
  */
 public class SimpleKeyValueSchema implements TableSchema {
 
-    private static final String TABLE_NAME = "objs";
+    private static final String TABLE_NAME = "kv_store";
 
     @Override
     public void initialize(final Connection conn) throws SQLException {
         // Create table (compatible with SQLite, MariaDB, MySQL, PostgreSQL)
         final String createTable = """
-                CREATE TABLE IF NOT EXISTS objs (
+                CREATE TABLE IF NOT EXISTS kv_store (
                     furi VARCHAR(512) NOT NULL PRIMARY KEY,
                     obj TEXT NOT NULL
                 );
@@ -51,7 +51,7 @@ public class SimpleKeyValueSchema implements TableSchema {
 
         // Create index separately (SQLite doesn't support inline INDEX in CREATE TABLE)
         final String createIndex = """
-                CREATE INDEX IF NOT EXISTS idx_furi ON objs(furi);
+                CREATE INDEX IF NOT EXISTS idx_furi ON kv_store(furi);
                 """;
 
         try (final Statement stmt = conn.createStatement()) {

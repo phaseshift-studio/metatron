@@ -50,8 +50,12 @@ import java.util.stream.Stream;
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.mInstSet.ALL_TYPE;
 import static studio.phaseshift.metatron.isa.m.mInstSet.INT_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
+import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.gt_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.is_;
 import static studio.phaseshift.metatron.isa.m.type.Poly.MUTABLE;
@@ -345,12 +349,22 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathTest impleme
         return f("db:rewrite_test");
     }
 
+    /** Route inherited KV tests through the {@code kv/} collection so they
+     *  bypass table mapping entirely.  Rewrite tests use the parent prefix. */
+    @Override
+    protected fURI testUri(String suffix) {
+        return f("db:kv/test/" + suffix);
+    }
+
     @Override
     public String make(final String expression, final Method testMethod) {
         // For testMonoUpdate, $$ → db: so seed data writes to db:<collection>/<docId>
         // and update/read expressions resolve to the same two-segment document paths.
-        if (testMethod != null && ("testMonoUpdate".equals(testMethod.getName()) || "testMonoDepth".equals(testMethod.getName()))) {
+        if (testMethod != null && "testMonoUpdate".equals(testMethod.getName())) {
             return expression.contains("$$") ? expression.replace("$$/", "db:") : expression;
+        }
+        if (testMethod != null && "testMonoDepth".equals(testMethod.getName())) {
+            return expression.contains("$$") ? expression.replace("$$/", "db:kv/") : expression;
         }
         return super.make(expression, testMethod);
     }
@@ -1204,9 +1218,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathTest impleme
     public void testAlterTableOnTheFly() throws Exception {
         final String tableName = "onthefly_test";
 
-        // Ensure incrQ is registered so writes go through ensureTableAndInsert
         final tbleSpace space = (tbleSpace) getSpace();
-        space.at("table", lst(uri("onthefly_test")), MUTABLE);
         try (final Connection conn = staticDbConfig.getConnection();
              final Statement stmt = conn.createStatement()) {
             stmt.executeUpdate("DROP TABLE IF EXISTS " + tableName);
@@ -1466,5 +1478,215 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathTest impleme
                 stmt.executeUpdate("DROP TABLE IF EXISTS " + tableName);
             }
         }
+    }
+
+    /**
+     * Verifies that writing a Type to a collection path registers it in the
+     * schema instset, making it discoverable via {@code *schema:+} and
+     * enabling typed-table writes.
+     */
+    @Test
+    public void testCollectionPathTypeDeclaration() throws Exception {
+        final String tableName = "decl_test";
+        final tbleSpace space = (tbleSpace) getSpace();
+
+        try (final Connection conn = staticDbConfig.getConnection();
+             final Statement stmt = conn.createStatement()) {
+            stmt.executeUpdate("DROP TABLE IF EXISTS " + tableName);
+
+            // -- Write a locked type (no wildcard) to the collection path --
+            final Type lockedType = Type.Builder.build()
+                    .tid(INT_TID)  // rrow type
+                    .vid(f(tableName))
+                    .isaPredicate(rec(
+                            uri("name"), str("str::T"),  // placeholder — real type would use T()
+                            uri("age"), str("int::T")
+                    ))
+                    .create();
+            space.write(f("db:" + tableName), lockedType);
+
+            // Verify it appears in the schema instset
+            final Type registered = space.schemaInstset.types().stream()
+                    .filter(t -> t.vid().name().equalsIgnoreCase(tableName))
+                    .findFirst().orElse(null);
+            assertNotNull(registered, "locked type should be in schema instset");
+            assertNotNull(registered.isPredicateObj(), "should have isa predicate");
+
+            // -- Write an open type (with wildcard) to another collection --
+            final String openName = "open_test";
+            stmt.executeUpdate("DROP TABLE IF EXISTS " + openName);
+            final Type openType = Type.Builder.build()
+                    .tid(INT_TID)
+                    .vid(f(openName))
+                    .isaPredicate(rec(
+                            uri("title"), str("str::T"),
+                            uri("uri{?}::T"), str("#")  // wildcard entry
+                    ))
+                    .create();
+            space.write(f("db:" + openName), openType);
+
+            final Type registeredOpen = space.schemaInstset.types().stream()
+                    .filter(t -> t.vid().name().equalsIgnoreCase(openName))
+                    .findFirst().orElse(null);
+            assertNotNull(registeredOpen, "open type should be in schema instset");
+
+            // -- Verify isTableDeclared plumbing works ---------------
+            assertTrue(space.isTableDeclared(tableName),
+                    "isTableDeclared should see the locked type");
+            assertTrue(space.isTableDeclared(openName),
+                    "isTableDeclared should see the open type");
+            assertFalse(space.isTableDeclared("nonexistent"),
+                    "isTableDeclared should return false for unknown collections");
+
+            // Clean up
+            stmt.executeUpdate("DROP TABLE IF EXISTS " + openName);
+            stmt.executeUpdate("DROP TABLE IF EXISTS " + tableName);
+
+            LOG.info("collection-path type declaration test passed on {}",
+                    staticDbConfig.getDatabaseName());
+        }
+    }
+
+    /**
+     * Comprehensive schema behavior matrix — covers all permutations of
+     * auto-inferred, locked, and open schemas.
+     *
+     * <table>
+     * <tr><th>#</th><th>Mode</th><th>Action</th><th>Expected</th></tr>
+     * <tr><td>A1</td><td>Auto</td><td>Write {name, age}</td><td>Table created, wildcard added</td></tr>
+     * <tr><td>A2</td><td>Auto</td><td>Write {name, age, skill}</td><td>skill column added via ALTER</td></tr>
+     * <tr><td>A3</td><td>Auto</td><td>Write {name, age=>string}</td><td>Fails — type mismatch</td></tr>
+     * <tr><td>A4</td><td>Auto</td><td>Write {name}</td><td>Succeeds — columns nullable</td></tr>
+     * <tr><td>L1</td><td>Locked</td><td>Write {name, age=>29}</td><td>Table created from declared columns</td></tr>
+     * <tr><td>L2</td><td>Locked</td><td>Write {name, age, skill}</td><td>Fails — locked, no wildcard</td></tr>
+     * <tr><td>L3</td><td>Locked</td><td>Write {name, age=>string}</td><td>Fails — type mismatch</td></tr>
+     * <tr><td>O1</td><td>Open</td><td>Write {name, age}</td><td>Table created from declared columns</td></tr>
+     * <tr><td>O2</td><td>Open</td><td>Write {name, age, skill}</td><td>skill added via ALTER</td></tr>
+     * <tr><td>O3</td><td>Open</td><td>Write {name, age=>string}</td><td>Fails — type mismatch</td></tr>
+     * </table>
+     */
+    @Test
+    public void testSchemaBehaviorMatrix() throws Exception {
+        final tbleSpace space = (tbleSpace) getSpace();
+
+        // ===== A: Auto-inferred (no declared type) ============================
+        final String autoTable = "person_auto";
+        try (final Connection conn = staticDbConfig.getConnection();
+             final Statement stmt = conn.createStatement()) {
+            stmt.executeUpdate("DROP TABLE IF EXISTS " + autoTable);
+
+            // A1: first write defines the schema; wildcard auto-added
+            space.write(f("db:" + autoTable + "/1"),
+                    rec(uri("name"), str("alice"), uri("age"), jnt(30)));
+            // Verify schema exists with wildcard
+            final Type autoType = space.schemaInstset().types().stream()
+                    .filter(t -> t.vid().name().equalsIgnoreCase(autoTable))
+                    .findFirst().orElse(null);
+            assertNotNull(autoType, "A1: auto type should exist");
+            assertNotNull(autoType.isPredicateObj(), "A1: should have predicate");
+            final Obj autoPred = autoType.isPredicateObj();
+            assertTrue(autoPred.isRec());
+            // Has declared columns
+            assertFalse(autoPred.asRec().at(uri("name")).isNoObj(), "A1: name should be declared");
+            assertFalse(autoPred.asRec().at(uri("age")).isNoObj(), "A1: age should be declared");
+            // Has wildcard
+            final boolean autoHasWC = autoPred.asRec().recValue().keySet().stream()
+                    .anyMatch(k -> k.isType() && k.asType().vid() != null
+                            && k.asType().vid().name().equals("uri")
+                            && k.toString().contains("{?}"));
+            assertTrue(autoHasWC, "A1: auto type should have uri{?} wildcard");
+
+            // A2: write with extra column — ALTER TABLE adds it
+            space.write(f("db:" + autoTable + "/2"),
+                    rec(uri("name"), str("bob"), uri("age"), jnt(25),
+                            uri("skill"), str("coding")));
+            final Type autoType2 = space.schemaInstset().types().stream()
+                    .filter(t -> t.vid().name().equalsIgnoreCase(autoTable))
+                    .findFirst().orElseThrow();
+            final Obj pred2 = autoType2.isPredicateObj();
+            assertFalse(pred2.asRec().at(uri("skill")).isNoObj(),
+                    "A2: skill should be added to schema");
+
+            // A2b: data read-back
+            final Obj row2 = space.read(f("db:" + autoTable + "/2"));
+            assertEquals("bob", row2.asRec().at(uri("name")).strValue());
+            assertEquals(25L, row2.asRec().at(uri("age")).asInt().jvm().longValue());
+
+            // A3: write wrong type — validateColumnWrite rejects
+            // non-numeric string in an INTEGER column at the DB level
+            assertThrows(Exception.class, () ->
+                    space.write(f("db:" + autoTable + "/3"),
+                            rec(uri("name"), str("charlie"), uri("age"), str("old")))
+            );
+
+            // A4: write without optional column — succeeds, age is NULL
+            space.write(f("db:" + autoTable + "/4"),
+                    rec(uri("name"), str("diana")));
+            final Obj row4 = space.read(f("db:" + autoTable + "/4"));
+            assertEquals("diana", row4.asRec().at(uri("name")).strValue());
+
+            LOG.info("A: auto-inferred matrix passed");
+        } finally {
+            try (final Connection conn = staticDbConfig.getConnection();
+                 final Statement stmt = conn.createStatement()) {
+                stmt.executeUpdate("DROP TABLE IF EXISTS " + autoTable);
+            }
+        }
+
+        // ===== D: Declared (user-declared type at collection path) =============
+        final String declTable = "person_declared";
+        try (final Connection conn = staticDbConfig.getConnection();
+             final Statement stmt = conn.createStatement()) {
+            stmt.executeUpdate("DROP TABLE IF EXISTS " + declTable);
+
+            // Declare type
+            final Type declType = Type.Builder.build()
+                    .tid(INT_TID).vid(f(declTable))
+                    .isaPredicate(rec(uri("name"), STR_TYPE, uri("age"), INT_TYPE))
+                    .create();
+            space.write(f("db:" + declTable), declType);
+
+            // D1: first write matches declared type — succeeds
+            space.write(f("db:" + declTable + "/1"),
+                    rec(uri("name"), str("alice"), uri("age"), jnt(30)));
+            final Obj rowD1 = space.read(f("db:" + declTable + "/1"));
+            assertEquals("alice", rowD1.asRec().at(uri("name")).strValue());
+
+            // D2: extra column — metatron structural typing accepts it.
+            // addColumnOnTheFly adds it, schema refreshed.
+            space.write(f("db:" + declTable + "/2"),
+                    rec(uri("name"), str("bob"), uri("age"), jnt(25),
+                            uri("skill"), str("coding")));
+            final Obj rowD2 = space.read(f("db:" + declTable + "/2"));
+            assertEquals("bob", rowD2.asRec().at(uri("name")).strValue());
+            // Schema should include the new column
+            final Type d2type = space.schemaInstset().types().stream()
+                    .filter(t -> t.vid().name().equalsIgnoreCase(declTable))
+                    .findFirst().orElseThrow();
+            assertFalse(d2type.isPredicateObj().asRec().at(uri("skill")).isNoObj(),
+                    "D2: schema should be refreshed with skill column");
+
+            // D3: wrong type for declared column — typeAndValidate rejects
+            assertThrows(Exception.class, () ->
+                    space.write(f("db:" + declTable + "/3"),
+                            rec(uri("name"), str("charlie"), uri("age"), str("old")))
+            );
+
+            // D4: write without optional column — succeeds, age is NULL
+            space.write(f("db:" + declTable + "/4"),
+                    rec(uri("name"), str("diana")));
+            final Obj rowD4 = space.read(f("db:" + declTable + "/4"));
+            assertEquals("diana", rowD4.asRec().at(uri("name")).strValue());
+
+            LOG.info("D: declared matrix passed");
+        } finally {
+            try (final Connection conn = staticDbConfig.getConnection();
+                 final Statement stmt = conn.createStatement()) {
+                stmt.executeUpdate("DROP TABLE IF EXISTS " + declTable);
+            }
+        }
+
+        LOG.info("schema behavior matrix test passed on {}",
+                staticDbConfig.getDatabaseName());
     }
 }

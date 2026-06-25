@@ -42,13 +42,13 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 public class fURIAwareIndexedSchema implements TableSchema {
 
     private static final int MAX_SEGMENTS = 7;
-    private static final String TABLE_NAME = "objs";
+    private static final String TABLE_NAME = "kv_store";
     private static final ObjmtronSerializer SERIALIZER = new ObjmtronSerializer();
 
     @Override
     public void initialize(final Connection conn) throws SQLException {
         final String createTable = """
-                                   CREATE TABLE IF NOT EXISTS objs (
+                                   CREATE TABLE IF NOT EXISTS kv_store (
                                        furi VARCHAR(512) NOT NULL PRIMARY KEY,
                                        obj TEXT NOT NULL,
                                        -- Virtual generated columns for path segments

@@ -549,8 +549,8 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
             "$$/people/3 -> [name=>'Charlie', age=>35, title=>'Manager', salary=>85000.0, company=>!*$$/companies/101, active=>false]",
             "$$/people/4 -> [name=>'Diana', age=>28, title=>'Engineer', salary=>70000.0, company=>!*$$/companies/102, active=>true]",
             // --- companies (2 rows) — referenced via !*$$/people/X/company ---
-            "$$/companies/101 -> [name=>'Acme Corp', city=>'NYC', employees=>50, public=>false];",
-            "$$/companies/102 -> [name=>'Globex Inc', city=>'LA', employees=>200, public=>true];",
+            "$$/companies/101 -> [name=>'Acme Corp', city=>'NYC', employees=>50, public=>false]",
+            "$$/companies/102 -> [name=>'Globex Inc', city=>'LA', employees=>200, public=>true]",
     })
     public void testMonoUpdate() {
         final String[] value = {
