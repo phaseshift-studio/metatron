@@ -236,13 +236,8 @@ public final class Tokens {
     public static final String HOSTNAME = "HOSTNAME";
     public static final String SCHEMA = "schema";
     public static final String INSTSET = "instset";
-    public static final String TABLES = "tables";
     public static final String ALT = "alt";
     public static final String REFERENCES = "references";
-    public static final String FROM_TABLE = "from_table";
-    public static final String FROM_COLUMN = "from_column";
-    public static final String TO_TABLE = "to_table";
-    public static final String TO_COLUMN = "to_column";
     public static final String URI = "uri";
     public static final String LABEL = "label";
     public static final String VERTEX = "vertex";

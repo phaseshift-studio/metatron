@@ -72,16 +72,7 @@ import static studio.phaseshift.metatron.isa.tble.tbleInstSet.TBLE_ISA_TID;
 /**
  * Abstract base test suite for tbleSpace with database-agnostic tests.
  * Subclasses provide database-specific configuration via {@link DatabaseConfig}.
- *
- * <h3>Adding test cases</h3>
- * Most parameterized tests use {@code @CsvSource} with a simple type-prefix
- * convention for expected values:
- * <pre>
- *   str:Alice    →   str("Alice")
- *   jnt:42       →   jnt(42)
- *   real:99.99   →   real(99.99)
- *   bool:true    →   bool(true)
- * </pre>
+ * 
  * See {@link #parseObj(String)}.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -89,6 +80,10 @@ import static studio.phaseshift.metatron.isa.tble.tbleInstSet.TBLE_ISA_TID;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public abstract class AbstractTbleSpaceTest extends AbstractDataPathTest implements CommonRewritesTestContract, IncrQTest {
 
+    /**
+     * tbleIncQ is the native incrQ qproc implemented as AUTO INCREMENT
+     * @return
+     */
     @Override
     public fURI incrQBaseURI() {
         return f(getSpace().pattern().scheme() + ":incrq");
@@ -382,30 +377,9 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathTest impleme
     // =========================================================================
     //  Type-prefix parser for @CsvSource test data
     // =========================================================================
-
-    /**
-     * Parses a type-prefixed string into its corresponding {@link Obj}.
-     * <pre>
-     *   str:Alice    → str("Alice")
-     *   jnt:42       → jnt(42)
-     *   real:99.99   → real(99.99)
-     *   bool:true    → bool(true)
-     *   bool:false   → bool(false)
-     * </pre>
-     */
+    
     protected static Obj parseObj(final String encoded) {
-        if (encoded == null) return str("");
-        final int colon = encoded.indexOf(':');
-        if (colon < 0) return str(encoded);
-        final String type = encoded.substring(0, colon);
-        final String value = encoded.substring(colon + 1);
-        return switch (type) {
-            case "str" -> str(value);
-            case "jnt" -> jnt(Long.parseLong(value));
-            case "real" -> real(Double.parseDouble(value));
-            case "bool" -> bool(Boolean.parseBoolean(value));
-            default -> str(encoded);
-        };
+       return ObjmtronSerializer.single().read(encoded);
     }
 
     // =========================================================================
@@ -484,21 +458,21 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathTest impleme
      */
     @ParameterizedTest(name = "[{index}] Read {0}")
     @CsvSource(delimiter = '|', textBlock = """
-                                            String field from users             | db:users/1    | name         | str:Alice
-                                            String field from products          | db:products/101 | product_name | str:Laptop
-                                            Email field                         | db:users/2    | email        | str:bob@example.com
-                                            Category field                      | db:products/105 | category     | str:Furniture
-                                            Category stationery                  | db:products/107 | category     | str:Stationery
-                                            Integer age field                   | db:users/1    | age          | jnt:30
-                                            Integer quantity field              | db:products/102 | quantity     | jnt:50
-                                            Integer quantity zero               | db:products/101 | quantity     | jnt:15
-                                            Integer age field user 2            | db:users/2    | age          | jnt:25
-                                            Integer age field user 3            | db:users/3    | age          | jnt:35
-                                            Real salary field                   | db:users/1    | salary       | real:75000.50
-                                            Real price field                    | db:products/101 | price        | real:1299.99
-                                            Small price value                   | db:products/102 | price        | real:29.99
-                                            Real salary Diana                   | db:users/4    | salary       | real:70000.25
-                                            Real price furniture                 | db:products/105 | price        | real:249.99
+                                            String field from users             | db:users/1       | name         | str::"Alice"
+                                            String field from products          | db:products/101  | product_name | str::"Laptop"
+                                            Email field                         | db:users/2       | email        | "bob@example.com"
+                                            Category field                      | db:products/105  | category     | str::"Furniture"
+                                            Category stationery                 | db:products/107  | category     | str::"Stationery"
+                                            Integer age field                   | db:users/1       | age          | int::30
+                                            Integer quantity field              | db:products/102  | quantity     | int::50
+                                            Integer quantity zero               | db:products/101  | quantity     | int::15
+                                            Integer age field user 2            | db:users/2       | age          | int::25
+                                            Integer age field user 3            | db:users/3       | age          | int::35
+                                            Real salary field                   | db:users/1       | salary       | real::75000.50
+                                            Real price field                    | db:products/101  | price        | real::1299.99
+                                            Small price value                   | db:products/102  | price        | real::29.99
+                                            Real salary Diana                   | db:users/4       | salary       | real::70000.25
+                                            Real price furniture                | db:products/105  | price        | real::249.99
                                             """)
     public void testReadIndividualFields(String description, String rowUri,
                                          String fieldName, String expectedEncoded) throws Exception {
@@ -527,18 +501,16 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathTest impleme
      * CSV columns: {@code table, rowId, field, newValue, expectedValue}
      */
     @ParameterizedTest(name = "[{index}] Write {2} to {0}/{1}")
-    @CsvSource(delimiter = '|', textBlock = """     
-                                            users | 1   | name         | str:Alice Updated     | str:Alice Updated
-                                            users | 2   | email        | str:bob.new@example.com | str:bob.new@example.com
-                                            products | 101 | product_name | str:Gaming Laptop   | str:Gaming Laptop
-                                            products | 105 | category   | str:Office            | str:Office
-                                            users | 1   | age          | jnt:31                | jnt:31
-                                            users | 2   | age          | jnt:26                | jnt:26
-                                            products | 102 | quantity     | jnt:100              | jnt:100
-                                            products | 103 | quantity     | jnt:0                | jnt:0
-                                            users | 1   | salary       | real:80000.00         | real:80000.00
-                                            products | 101 | price        | real:999.00          | real:999.00
-                                            users | 3   | salary       | real:100000.50        | real:100000.50
+    @CsvSource(delimiter = '|', quoteCharacter = '\'', textBlock = """     
+                                            users    | 1   | name         | "Alice Updated"        | "Alice Updated"
+                                            products | 101 | product_name | str::"Gaming Laptop"   | str::"Gaming Laptop"
+                                            users    | 1   | age          | 31                     | int::31
+                                            users    | 2   | age          | 26                     | int::26
+                                            products | 102 | quantity     | 100                    | int::100
+                                            products | 103 | quantity     | 0                      | int::0
+                                            users    | 1   | salary       | 80000.00               | real::80000.00
+                                            products | 101 | price        | real::999.00           | real::999.00
+                                            users    | 3   | salary       | real::100000.50        | real::100000.50
                                             """)
     public void testWriteIndividualFields(String table, String rowId, String field,
                                           String newValueEncoded, String expectedEncoded) throws Exception {
@@ -604,12 +576,12 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathTest impleme
      * The trailing pairs define the record body.  All values use type-prefix encoding.
      */
     @ParameterizedTest(name = "[{index}] Insert new row into {0}")
-    @CsvSource(delimiter = '|', textBlock = """
-                                            users    | 100 | name | str:Test User | name | str:Test User | age | jnt:25 | salary | real:50000.00 | active | bool:true | email | str:test@example.com
-                                            products | 200 | product_name | str:New Product | product_name | str:New Product | price | real:199.99 | in_stock | bool:true | quantity | jnt:10 | category | str:Test Category
-                                            users    | 101 | age  | jnt:0  | name | str:Zero Age | age | jnt:0 | salary | real:0.0 | active | bool:false | email | str:zero@example.com
-                                            users    | 102 | name | str:Max Val | name | str:Max Val | age | jnt:999 | salary | real:999999.99 | active | bool:true | email | str:max@example.com
-                                            products | 201 | price | real:0.0 | product_name | str:Free Item | price | real:0.0 | in_stock | bool:true | quantity | jnt:0 | category | str:Free
+    @CsvSource(delimiter = '|', quoteCharacter = '\'', textBlock = """
+                                            users    | 100 | name | str::"Test User" | name | "Test User" | age | int::25 | salary | real::50000.00 | active | bool::true | email | "test@example.com"
+                                            products | 200 | product_name | str::"New Product" | product_name | "New Product" | price | real::199.99 | in_stock | bool::true | quantity | int::10 | category | str::"Test Category"
+                                            users    | 101 | age  | int::0  | name | str::"Zero Age" | age | int::0 | salary | real::0.0 | active | bool::false | email | str::"zero@example.com"
+                                            users    | 102 | name | str::"Max Val" | name | str::"Max Val" | age | int::999 | salary | real::999999.99 | active | true | email | str::"max@example.com"
+                                            products | 201 | price | real::0.0 | product_name | str::"Free Item" | price | real::0.0 | in_stock | bool::true | quantity | 0 | category | str::"Free"
                                             """)
     public void testInsertNewRows(String table, String rowId, String verifyField,
                                   String expectedEncoded,
@@ -648,27 +620,26 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathTest impleme
 
     /**
      * Writes a value and reads it back, verifying type-preserving round-trip
-     * behaviour.  (PostgreSQL uses INTEGER columns for booleans, so bool writes
-     * come back as jnt.)
+     * behavior.
      * <br>
      * CSV columns: {@code description, table, rowId, field, writeValue, expectedReadValue}
      */
     @ParameterizedTest(name = "[{index}] {0}")
     @CsvSource(delimiter = '|', textBlock = """
-                                            boolean true converts and back   | users | 1 | active | bool:true  | bool:true
-                                            boolean false converts and back  | users | 1 | active | bool:false | bool:false
-                                            real number with decimals        | users | 1 | salary | real:12345.00 | real:12345.00
-                                            real number zero                 | users | 1 | salary | real:0.0     | real:0.0
-                                            real negative                    | users | 1 | salary | real:-500.25  | real:-500.25
-                                            real large                       | users | 1 | salary | real:9999999.99 | real:9999999.99
-                                            integer zero                     | users | 1 | age    | jnt:0       | jnt:0
-                                            integer large value              | users | 1 | age    | jnt:999     | jnt:999
-                                            integer negative                 | users | 1 | age    | jnt:-1      | jnt:-1
-                                            integer max long                 | users | 1 | age    | jnt:2147483647 | jnt:2147483647
-                                            empty string                     | users | 1 | name   | str:        | str:
-                                            string with spaces               | users | 1 | name   | str:  Test  | str:  Test
-                                            string with special chars        | users | 1 | email  | str:test+tag@example.com | str:test+tag@example.com
-                                            string unicode                   | users | 1 | name   | str:José María | str:José María
+                                            boolean true converts and back   | users | 1 | active | bool::true     | bool::true
+                                            boolean false converts and back  | users | 1 | active | bool::false    | bool::false
+                                            real number with decimals        | users | 1 | salary | real::12345.00 | real::12345.00
+                                            real number zero                 | users | 1 | salary | real::0.0      | real::0.0
+                                            real negative                    | users | 1 | salary | real::-500.25  | real::-500.25
+                                            real large                       | users | 1 | salary | real::9999999.99 | real::9999999.99
+                                            integer zero                     | users | 1 | age    | 0                | int::0
+                                            integer large value              | users | 1 | age    | int::999         | int::999
+                                            integer negative                 | users | 1 | age    | int::-1          | -1
+                                            integer max long                 | users | 1 | age    | 2147483647       | 2147483647
+                                            empty string                     | users | 1 | name   | str::""          | ""
+                                            string with spaces               | users | 1 | name   | "   Test"        | str::"   Test"
+                                            string with special chars        | users | 1 | email  | str::"test+tag@example.com" | str::"test+tag@example.com"
+                                            string unicode                   | users | 1 | name   | str::"José María"           | "José María"
                                             """)
     public void testTypeConversions(String description, String table, String rowId,
                                     String field, String writeEncoded,
@@ -758,16 +729,12 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathTest impleme
             assertEquals(jnt(26), updatedUser2.asRec().at(uri("age")));
             assertEquals(real(62000.00), updatedUser2.asRec().at(uri("salary")));
 
-            // Verify directly in DB
-            try (final Connection conn = staticDbConfig.getConnection();
-                 final Statement stmt = conn.createStatement();
-                 final ResultSet rs = stmt.executeQuery(
-                         "SELECT name, age FROM users WHERE id = 1")) {
-                if (rs.next()) {
-                    assertEquals("Alice Smith", rs.getString("name"));
-                    assertEquals(31, rs.getInt("age"));
-                }
-            }
+            // Verify directly in DB via space.sql()
+            final Obj verifyRows = testSpace.sql(
+                    "SELECT name, age FROM users WHERE id = 1");
+            final Rec verifyRow = verifyRows.stream().toList().get(0).asRec();
+            assertEquals(str("Alice Smith"), verifyRow.at(uri("name")));
+            assertEquals(jnt(31), verifyRow.at(uri("age")));
 
             LOG.info("All comprehensive tests passed for {}!",
                     staticDbConfig.getDatabaseName());
@@ -832,10 +799,10 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathTest impleme
             LOG.info("auto_from round-trip test passed on {}",
                     staticDbConfig.getDatabaseName());
         } finally {
-            try (final Connection conn = staticDbConfig.getConnection();
-                 final Statement stmt = conn.createStatement()) {
-                stmt.executeUpdate("DROP TABLE IF EXISTS award");
-                stmt.executeUpdate("DROP TABLE IF EXISTS person");
+            try {
+                testSpace.sql("DROP TABLE IF EXISTS award; DROP TABLE IF EXISTS person");
+            } catch (final Exception ex) {
+                LOG.warn("[ignored] %s", ex);
             }
             Router.global().removeSpace(testSpace.vid());
             testSpace.close();
@@ -867,16 +834,13 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathTest impleme
                     uri("category"), auto_from_(f("pmk:category/10")).tryToInst()));
 
             // _mtron_meta should have one row for item.category → category
-            try (final Connection conn = staticDbConfig.getConnection();
-                 final Statement stmt = conn.createStatement();
-                 final ResultSet rs = stmt.executeQuery(
-                         "SELECT column_name, ref_table FROM _mtron_meta " +
-                                 "WHERE table_name = 'item'")) {
-                assertTrue(rs.next(), "_mtron_meta should have a row for item.category");
-                assertEquals("category", rs.getString("column_name"));
-                assertEquals("category", rs.getString("ref_table"));
-                assertFalse(rs.next(), "_mtron_meta should have exactly one row for item");
-            }
+            final Obj metaRows = testSpace.sql(
+                    "SELECT column_name, ref_table FROM _mtron_meta WHERE table_name = 'item'");
+            final List<Obj> metaList = metaRows.stream().toList();
+            assertEquals(1, metaList.size(),
+                    "_mtron_meta should have exactly one row for item");
+            assertEquals(str("category"), metaList.get(0).asRec().at(uri("column_name")));
+            assertEquals(str("category"), metaList.get(0).asRec().at(uri("ref_table")));
 
             // Restart: close space, re-open → FK must survive
             testSpace.close();
@@ -905,15 +869,16 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathTest impleme
                 testSpace2.close();
             }
         } finally {
-            try (final Connection conn = staticDbConfig.getConnection();
-                 final Statement stmt = conn.createStatement()) {
-                stmt.executeUpdate("DROP TABLE IF EXISTS item");
-                stmt.executeUpdate("DROP TABLE IF EXISTS category");
+            try {
+                testSpace.sql("DROP TABLE IF EXISTS item; DROP TABLE IF EXISTS category");
+            } catch (final Exception ex) {
+                LOG.warn("[ignored] %s", ex);
             }
             try {
                 Router.global().removeSpace(testSpace.vid());
                 testSpace.close();
-            } catch (final Exception ignored) {
+            } catch (final Exception ex) {
+                LOG.warn("[ignored] %s", ex);
             }
         }
     }
@@ -944,17 +909,14 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathTest impleme
                     uri("addr"), auto_from_(f("g:V/1")).tryToInst()));
 
             // Verify _mtron_meta stores scheme:segment for cross-space ref
-            try (final Connection conn = staticDbConfig.getConnection();
-                 final Statement stmt = conn.createStatement();
-                 final ResultSet rs = stmt.executeQuery(
-                         "SELECT column_name, ref_table FROM _mtron_meta " +
-                                 "WHERE table_name = 'place'")) {
-                assertTrue(rs.next(), "_mtron_meta should have a row for place.addr");
-                assertEquals("addr", rs.getString("column_name"));
-                assertEquals("g:V", rs.getString("ref_table"),
-                        "cross-space ref should store scheme:segment, not bare table name");
-                assertFalse(rs.next(), "should have exactly one row for place");
-            }
+            final Obj placeMetaRows = testSpace.sql(
+                    "SELECT column_name, ref_table FROM _mtron_meta WHERE table_name = 'place'");
+            final List<Obj> placeMetaList = placeMetaRows.stream().toList();
+            assertEquals(1, placeMetaList.size(),
+                    "_mtron_meta should have exactly one row for place");
+            assertEquals(str("addr"), placeMetaList.get(0).asRec().at(uri("column_name")));
+            assertEquals(str("g:V"), placeMetaList.get(0).asRec().at(uri("ref_table")),
+                    "cross-space ref should store scheme:segment, not bare table name");
 
             // Read back: auto_from inst points to g:V/1 (not play:V/1)
             final Obj row = Router.readFromSpace(f("play:place/1"));
@@ -969,16 +931,14 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathTest impleme
                     uri("name"), str("indoor_zone"),
                     uri("parent"), auto_from_(f("play:place/1")).tryToInst()));
 
-            try (final Connection conn = staticDbConfig.getConnection();
-                 final Statement stmt = conn.createStatement();
-                 final ResultSet rs = stmt.executeQuery(
-                         "SELECT column_name, ref_table FROM _mtron_meta " +
-                                 "WHERE table_name = 'venue'")) {
-                assertTrue(rs.next(), "_mtron_meta should have a row for venue.parent");
-                assertEquals("parent", rs.getString("column_name"));
-                assertEquals("place", rs.getString("ref_table"),
-                        "internal FK should store bare table name");
-            }
+            final Obj venueMetaRows = testSpace.sql(
+                    "SELECT column_name, ref_table FROM _mtron_meta WHERE table_name = 'venue'");
+            final List<Obj> venueMetaList = venueMetaRows.stream().toList();
+            assertEquals(1, venueMetaList.size(),
+                    "_mtron_meta should have exactly one row for venue");
+            assertEquals(str("parent"), venueMetaList.get(0).asRec().at(uri("column_name")));
+            assertEquals(str("place"), venueMetaList.get(0).asRec().at(uri("ref_table")),
+                    "internal FK should store bare table name");
 
             // Read back: internal FK uses space pattern
             final Obj row2 = Router.readFromSpace(f("play:venue/1"));
@@ -991,10 +951,10 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathTest impleme
             LOG.info("cross-space auto_from test passed on {}",
                     staticDbConfig.getDatabaseName());
         } finally {
-            try (final Connection conn = staticDbConfig.getConnection();
-                 final Statement stmt = conn.createStatement()) {
-                stmt.executeUpdate("DROP TABLE IF EXISTS venue");
-                stmt.executeUpdate("DROP TABLE IF EXISTS place");
+            try {
+                testSpace.sql("DROP TABLE IF EXISTS venue; DROP TABLE IF EXISTS place");
+            } catch (final Exception ex) {
+                LOG.warn("[ignored] %s", ex);
             }
             Router.global().removeSpace(testSpace.vid());
             testSpace.close();
@@ -1037,15 +997,13 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathTest impleme
                     uri("location"), auto_from_(f("grph:vertices/42")).tryToInst()));
 
             // Verify storage: _mtron_meta records scheme:segment
-            try (final Connection conn = staticDbConfig.getConnection();
-                 final Statement stmt = conn.createStatement();
-                 final ResultSet rs = stmt.executeQuery(
-                         "SELECT ref_table FROM _mtron_meta " +
-                                 "WHERE table_name = 'arena' AND column_name = 'location'")) {
-                assertTrue(rs.next());
-                assertEquals("grph:vertices", rs.getString("ref_table"),
-                        "multi-segment cross-space ref stores scheme:firstSegment");
-            }
+            final Obj arenaMetaRows = sourceSpace.sql(
+                    "SELECT ref_table FROM _mtron_meta WHERE table_name = 'arena' AND column_name = 'location'");
+            final List<Obj> arenaMetaList = arenaMetaRows.stream().toList();
+            assertEquals(1, arenaMetaList.size(),
+                    "_mtron_meta should have exactly one row for arena.location");
+            assertEquals(str("grph:vertices"), arenaMetaList.get(0).asRec().at(uri("ref_table")),
+                    "multi-segment cross-space ref stores scheme:firstSegment");
 
             // Verify the instruction is properly reconstructed
             final Obj row = Router.readFromSpace(f("play:arena/1"));
@@ -1065,9 +1023,10 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathTest impleme
             LOG.info("cross-space auto_from resolution test passed on {}",
                     staticDbConfig.getDatabaseName());
         } finally {
-            try (final Connection conn = staticDbConfig.getConnection();
-                 final Statement stmt = conn.createStatement()) {
-                stmt.executeUpdate("DROP TABLE IF EXISTS arena");
+            try {
+                sourceSpace.sql("DROP TABLE IF EXISTS arena");
+            } catch (final Exception ex) {
+                LOG.warn("[ignored] %s", ex);
             }
             Router.global().removeSpace(sourceSpace.vid());
             sourceSpace.close();
@@ -1108,21 +1067,18 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathTest impleme
                     uri("manager_id"), auto_from_(f("net:employee/1")).tryToInst()));
 
             // _mtron_meta has rows for both FK columns
-            try (final Connection conn = staticDbConfig.getConnection();
-                 final Statement stmt = conn.createStatement();
-                 final ResultSet rs = stmt.executeQuery(
-                         "SELECT column_name, ref_table FROM _mtron_meta " +
-                                 "WHERE table_name = 'employee' ORDER BY column_name")) {
-                assertTrue(rs.next());
-                assertEquals("manager_id", rs.getString("column_name"));
-                assertEquals("employee", rs.getString("ref_table"),
-                        "self-referencing FK stores own table name");
-                assertTrue(rs.next());
-                assertEquals("org_id", rs.getString("column_name"));
-                assertEquals("org", rs.getString("ref_table"),
-                        "cross-table internal FK stores bare target table name");
-                assertFalse(rs.next());
-            }
+            final Obj empMetaRows = testSpace.sql(
+                    "SELECT column_name, ref_table FROM _mtron_meta WHERE table_name = 'employee' ORDER BY column_name");
+            final List<Obj> empMetaList = empMetaRows.stream().toList();
+            assertEquals(2, empMetaList.size(),
+                    "_mtron_meta should have two rows for employee");
+            // ORDER BY column_name → manager_id comes first
+            assertEquals(str("manager_id"), empMetaList.get(0).asRec().at(uri("column_name")));
+            assertEquals(str("employee"), empMetaList.get(0).asRec().at(uri("ref_table")),
+                    "self-referencing FK stores own table name");
+            assertEquals(str("org_id"), empMetaList.get(1).asRec().at(uri("column_name")));
+            assertEquals(str("org"), empMetaList.get(1).asRec().at(uri("ref_table")),
+                    "cross-table internal FK stores bare target table name");
 
             // Read back: org_id instruction points within same space
             final Obj emp = Router.readFromSpace(f("net:employee/1"));
@@ -1148,10 +1104,10 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathTest impleme
             LOG.info("intra-space auto_from resolution test passed on {}",
                     staticDbConfig.getDatabaseName());
         } finally {
-            try (final Connection conn = staticDbConfig.getConnection();
-                 final Statement stmt = conn.createStatement()) {
-                stmt.executeUpdate("DROP TABLE IF EXISTS employee");
-                stmt.executeUpdate("DROP TABLE IF EXISTS org");
+            try {
+                testSpace.sql("DROP TABLE IF EXISTS employee; DROP TABLE IF EXISTS org");
+            } catch (final Exception ex) {
+                LOG.warn("[ignored] %s", ex);
             }
             Router.global().removeSpace(testSpace.vid());
             testSpace.close();
@@ -1200,9 +1156,10 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathTest impleme
             assertTrue(ex.getMessage().contains(tableName),
                     "exception should name the table, got: " + ex.getMessage());
         } finally {
-            try (final Connection conn = staticDbConfig.getConnection();
-                 final Statement stmt = conn.createStatement()) {
-                stmt.executeUpdate("DROP TABLE IF EXISTS " + tableName);
+            try {
+                testSpace.sql("DROP TABLE IF EXISTS " + tableName);
+            } catch (final Exception ex) {
+                LOG.warn("[ignored] %s", ex);
             }
             Router.global().removeSpace(testSpace.vid());
             testSpace.close();
@@ -1219,9 +1176,8 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathTest impleme
         final String tableName = "onthefly_test";
 
         final tbleSpace space = (tbleSpace) getSpace();
-        try (final Connection conn = staticDbConfig.getConnection();
-             final Statement stmt = conn.createStatement()) {
-            stmt.executeUpdate("DROP TABLE IF EXISTS " + tableName);
+        space.sql("DROP TABLE IF EXISTS " + tableName);
+        try (final Connection conn = staticDbConfig.getConnection()) {
             // -- Write 1: creates the table with only name + age columns ------
             final Obj rec1 = rec(uri("name"), str("Alice"), uri("age"), jnt(30));
             space.write(f("db:" + tableName + "/1"), rec1);
@@ -1275,9 +1231,10 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathTest impleme
 
             LOG.info("on-the-fly ALTER TABLE test passed on {}", staticDbConfig.getDatabaseName());
         } finally {
-            try (final Connection conn = staticDbConfig.getConnection();
-                 final Statement stmt = conn.createStatement()) {
-                stmt.executeUpdate("DROP TABLE IF EXISTS " + tableName);
+            try {
+                space.sql("DROP TABLE IF EXISTS " + tableName);
+            } catch (final Exception ex) {
+                LOG.warn("[ignored] %s", ex);
             }
         }
     }
@@ -1309,9 +1266,9 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathTest impleme
                 .isaPredicate(is_(gt_(jnt(0))).tryToInst())
                 .create();
 
+        space.sql("DROP TABLE IF EXISTS " + tableName);
         try (final Connection conn = staticDbConfig.getConnection();
              final Statement stmt = conn.createStatement()) {
-            stmt.executeUpdate("DROP TABLE IF EXISTS " + tableName);
 
             // === Step 1: write nat::29, verify schema + read-back ==============
             final Obj nat29 = jnt(29, natVID, null);
@@ -1361,12 +1318,11 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathTest impleme
             // because type checking only happens on write via typeRow.
             stmt.executeUpdate("INSERT INTO " + tableName + " (id, name, age) VALUES (3, 'alex', -25)");
 
-            // Raw JDBC read confirms -25 is in the DB as a plain integer
-            try (final ResultSet rs = stmt.executeQuery(
-                    "SELECT age FROM " + tableName + " WHERE id = 3")) {
-                assertTrue(rs.next());
-                assertEquals(-25, rs.getInt("age"));
-            }
+            // Verify via space.sql(): -25 is in the DB as a plain integer
+            final Obj verifyRows = space.sql(
+                    "SELECT age FROM " + tableName + " WHERE id = 3");
+            final Rec verifyRow = verifyRows.stream().toList().get(0).asRec();
+            assertEquals(jnt(-25), verifyRow.at(uri("age")));
 
             // mtron read-back succeeds (plain int, no type check on read)
             final Obj row3 = space.read(f("db:" + tableName + "/3"));
@@ -1377,9 +1333,10 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathTest impleme
 
             LOG.info("step 3 passed: raw SQL bypass succeeds at both write and read");
         } finally {
-            try (final Connection conn = staticDbConfig.getConnection();
-                 final Statement stmt = conn.createStatement()) {
-                stmt.executeUpdate("DROP TABLE IF EXISTS " + tableName);
+            try {
+                space.sql("DROP TABLE IF EXISTS " + tableName);
+            } catch (final Exception ex) {
+                LOG.warn("[ignored] %s", ex);
             }
         }
     }
@@ -1407,9 +1364,8 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathTest impleme
                 .isaPredicate(is_(gt_(jnt(0)).tryToInst()))
                 .create();
 
-        try (final Connection conn = staticDbConfig.getConnection();
-             final Statement stmt = conn.createStatement()) {
-            stmt.executeUpdate("DROP TABLE IF EXISTS " + tableName);
+        space.sql("DROP TABLE IF EXISTS " + tableName);
+        try (final Connection conn = staticDbConfig.getConnection()) {
 
             // === Edge case 1: URI value → uri::T in schema ==================
             space.write(f("db:" + tableName + "/1"),
@@ -1473,9 +1429,10 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathTest impleme
 
             LOG.info("edge 3 passed: ALTER TABLE adds uri column, schema updated");
         } finally {
-            try (final Connection conn = staticDbConfig.getConnection();
-                 final Statement stmt = conn.createStatement()) {
-                stmt.executeUpdate("DROP TABLE IF EXISTS " + tableName);
+            try {
+                space.sql("DROP TABLE IF EXISTS " + tableName);
+            } catch (final Exception ex) {
+                LOG.warn("[ignored] %s", ex);
             }
         }
     }
@@ -1490,61 +1447,56 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathTest impleme
         final String tableName = "decl_test";
         final tbleSpace space = (tbleSpace) getSpace();
 
-        try (final Connection conn = staticDbConfig.getConnection();
-             final Statement stmt = conn.createStatement()) {
-            stmt.executeUpdate("DROP TABLE IF EXISTS " + tableName);
+        space.sql("DROP TABLE IF EXISTS " + tableName);
 
-            // -- Write a locked type (no wildcard) to the collection path --
-            final Type lockedType = Type.Builder.build()
-                    .tid(INT_TID)  // rrow type
-                    .vid(f(tableName))
-                    .isaPredicate(rec(
-                            uri("name"), str("str::T"),  // placeholder — real type would use T()
-                            uri("age"), str("int::T")
-                    ))
-                    .create();
-            space.write(f("db:" + tableName), lockedType);
+        // -- Write a locked type (no wildcard) to the collection path --
+        final Type lockedType = Type.Builder.build()
+                .tid(INT_TID)  // rrow type
+                .vid(f(tableName))
+                .isaPredicate(rec(
+                        uri("name"), str("str::T"),  // placeholder — real type would use T()
+                        uri("age"), str("int::T")
+                ))
+                .create();
+        space.write(f("db:" + tableName), lockedType);
 
-            // Verify it appears in the schema instset
-            final Type registered = space.schemaInstset.types().stream()
-                    .filter(t -> t.vid().name().equalsIgnoreCase(tableName))
-                    .findFirst().orElse(null);
-            assertNotNull(registered, "locked type should be in schema instset");
-            assertNotNull(registered.isPredicateObj(), "should have isa predicate");
+        // Verify it appears in the schema instset
+        final Type registered = space.schemaInstset.types().stream()
+                .filter(t -> t.vid().name().equalsIgnoreCase(tableName))
+                .findFirst().orElse(null);
+        assertNotNull(registered, "locked type should be in schema instset");
+        assertNotNull(registered.isPredicateObj(), "should have isa predicate");
 
-            // -- Write an open type (with wildcard) to another collection --
-            final String openName = "open_test";
-            stmt.executeUpdate("DROP TABLE IF EXISTS " + openName);
-            final Type openType = Type.Builder.build()
-                    .tid(INT_TID)
-                    .vid(f(openName))
-                    .isaPredicate(rec(
-                            uri("title"), str("str::T"),
-                            uri("uri{?}::T"), str("#")  // wildcard entry
-                    ))
-                    .create();
-            space.write(f("db:" + openName), openType);
+        // -- Write an open type (with wildcard) to another collection --
+        final String openName = "open_test";
+        final Type openType = Type.Builder.build()
+                .tid(INT_TID)
+                .vid(f(openName))
+                .isaPredicate(rec(
+                        uri("title"), str("str::T"),
+                        uri("uri{?}::T"), str("#")  // wildcard entry
+                ))
+                .create();
+        space.write(f("db:" + openName), openType);
 
-            final Type registeredOpen = space.schemaInstset.types().stream()
-                    .filter(t -> t.vid().name().equalsIgnoreCase(openName))
-                    .findFirst().orElse(null);
-            assertNotNull(registeredOpen, "open type should be in schema instset");
+        final Type registeredOpen = space.schemaInstset.types().stream()
+                .filter(t -> t.vid().name().equalsIgnoreCase(openName))
+                .findFirst().orElse(null);
+        assertNotNull(registeredOpen, "open type should be in schema instset");
 
-            // -- Verify isTableDeclared plumbing works ---------------
-            assertTrue(space.isTableDeclared(tableName),
-                    "isTableDeclared should see the locked type");
-            assertTrue(space.isTableDeclared(openName),
-                    "isTableDeclared should see the open type");
-            assertFalse(space.isTableDeclared("nonexistent"),
-                    "isTableDeclared should return false for unknown collections");
+        // -- Verify isTableDeclared plumbing works ---------------
+        assertTrue(space.isTableDeclared(tableName),
+                "isTableDeclared should see the locked type");
+        assertTrue(space.isTableDeclared(openName),
+                "isTableDeclared should see the open type");
+        assertFalse(space.isTableDeclared("nonexistent"),
+                "isTableDeclared should return false for unknown collections");
 
-            // Clean up
-            stmt.executeUpdate("DROP TABLE IF EXISTS " + openName);
-            stmt.executeUpdate("DROP TABLE IF EXISTS " + tableName);
+        // Clean up
+        space.sql("DROP TABLE IF EXISTS " + openName + "; DROP TABLE IF EXISTS " + tableName);
 
-            LOG.info("collection-path type declaration test passed on {}",
-                    staticDbConfig.getDatabaseName());
-        }
+        LOG.info("collection-path type declaration test passed on {}",
+                staticDbConfig.getDatabaseName());
     }
 
     /**
@@ -1571,122 +1523,178 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathTest impleme
 
         // ===== A: Auto-inferred (no declared type) ============================
         final String autoTable = "person_auto";
-        try (final Connection conn = staticDbConfig.getConnection();
-             final Statement stmt = conn.createStatement()) {
-            stmt.executeUpdate("DROP TABLE IF EXISTS " + autoTable);
+        space.sql("DROP TABLE IF EXISTS " + autoTable);
 
-            // A1: first write defines the schema; wildcard auto-added
-            space.write(f("db:" + autoTable + "/1"),
-                    rec(uri("name"), str("alice"), uri("age"), jnt(30)));
-            // Verify schema exists with wildcard
-            final Type autoType = space.schemaInstset().types().stream()
-                    .filter(t -> t.vid().name().equalsIgnoreCase(autoTable))
-                    .findFirst().orElse(null);
-            assertNotNull(autoType, "A1: auto type should exist");
-            assertNotNull(autoType.isPredicateObj(), "A1: should have predicate");
-            final Obj autoPred = autoType.isPredicateObj();
-            assertTrue(autoPred.isRec());
-            // Has declared columns
-            assertFalse(autoPred.asRec().at(uri("name")).isNoObj(), "A1: name should be declared");
-            assertFalse(autoPred.asRec().at(uri("age")).isNoObj(), "A1: age should be declared");
-            // Has wildcard
-            final boolean autoHasWC = autoPred.asRec().recValue().keySet().stream()
-                    .anyMatch(k -> k.isType() && k.asType().vid() != null
-                            && k.asType().vid().name().equals("uri")
-                            && k.toString().contains("{?}"));
-            assertTrue(autoHasWC, "A1: auto type should have uri{?} wildcard");
+        // A1: first write defines the schema; wildcard auto-added
+        space.write(f("db:" + autoTable + "/1"),
+                rec(uri("name"), str("alice"), uri("age"), jnt(30)));
+        // Verify schema exists with wildcard
+        final Type autoType = space.schemaInstset().types().stream()
+                .filter(t -> t.vid().name().equalsIgnoreCase(autoTable))
+                .findFirst().orElse(null);
+        assertNotNull(autoType, "A1: auto type should exist");
+        assertNotNull(autoType.isPredicateObj(), "A1: should have predicate");
+        final Obj autoPred = autoType.isPredicateObj();
+        assertTrue(autoPred.isRec());
+        // Has declared columns
+        assertFalse(autoPred.asRec().at(uri("name")).isNoObj(), "A1: name should be declared");
+        assertFalse(autoPred.asRec().at(uri("age")).isNoObj(), "A1: age should be declared");
+        // Has wildcard
+        final boolean autoHasWC = autoPred.asRec().recValue().keySet().stream()
+                .anyMatch(k -> k.isType() && k.asType().vid() != null
+                        && k.asType().vid().name().equals("uri")
+                        && k.toString().contains("{?}"));
+        assertTrue(autoHasWC, "A1: auto type should have uri{?} wildcard");
 
-            // A2: write with extra column — ALTER TABLE adds it
-            space.write(f("db:" + autoTable + "/2"),
-                    rec(uri("name"), str("bob"), uri("age"), jnt(25),
-                            uri("skill"), str("coding")));
-            final Type autoType2 = space.schemaInstset().types().stream()
-                    .filter(t -> t.vid().name().equalsIgnoreCase(autoTable))
-                    .findFirst().orElseThrow();
-            final Obj pred2 = autoType2.isPredicateObj();
-            assertFalse(pred2.asRec().at(uri("skill")).isNoObj(),
-                    "A2: skill should be added to schema");
+        // A2: write with extra column — ALTER TABLE adds it
+        space.write(f("db:" + autoTable + "/2"),
+                rec(uri("name"), str("bob"), uri("age"), jnt(25),
+                        uri("skill"), str("coding")));
+        final Type autoType2 = space.schemaInstset().types().stream()
+                .filter(t -> t.vid().name().equalsIgnoreCase(autoTable))
+                .findFirst().orElseThrow();
+        final Obj pred2 = autoType2.isPredicateObj();
+        assertFalse(pred2.asRec().at(uri("skill")).isNoObj(),
+                "A2: skill should be added to schema");
 
-            // A2b: data read-back
-            final Obj row2 = space.read(f("db:" + autoTable + "/2"));
-            assertEquals("bob", row2.asRec().at(uri("name")).strValue());
-            assertEquals(25L, row2.asRec().at(uri("age")).asInt().jvm().longValue());
+        // A2b: data read-back
+        final Obj row2 = space.read(f("db:" + autoTable + "/2"));
+        assertEquals("bob", row2.asRec().at(uri("name")).strValue());
+        assertEquals(25L, row2.asRec().at(uri("age")).asInt().jvm().longValue());
 
-            // A3: write wrong type — validateColumnWrite rejects
-            // non-numeric string in an INTEGER column at the DB level
-            assertThrows(Exception.class, () ->
-                    space.write(f("db:" + autoTable + "/3"),
-                            rec(uri("name"), str("charlie"), uri("age"), str("old")))
-            );
+        // A3: write wrong type — validateColumnWrite rejects
+        // non-numeric string in an INTEGER column at the DB level
+        assertThrows(Exception.class, () ->
+                space.write(f("db:" + autoTable + "/3"),
+                        rec(uri("name"), str("charlie"), uri("age"), str("old")))
+        );
 
-            // A4: write without optional column — succeeds, age is NULL
-            space.write(f("db:" + autoTable + "/4"),
-                    rec(uri("name"), str("diana")));
-            final Obj row4 = space.read(f("db:" + autoTable + "/4"));
-            assertEquals("diana", row4.asRec().at(uri("name")).strValue());
+        // A4: write without optional column — succeeds, age is NULL
+        space.write(f("db:" + autoTable + "/4"),
+                rec(uri("name"), str("diana")));
+        final Obj row4 = space.read(f("db:" + autoTable + "/4"));
+        assertEquals("diana", row4.asRec().at(uri("name")).strValue());
 
-            LOG.info("A: auto-inferred matrix passed");
-        } finally {
-            try (final Connection conn = staticDbConfig.getConnection();
-                 final Statement stmt = conn.createStatement()) {
-                stmt.executeUpdate("DROP TABLE IF EXISTS " + autoTable);
-            }
+        LOG.info("A: auto-inferred matrix passed");
+        try {
+            space.sql("DROP TABLE IF EXISTS " + autoTable);
+        } catch (final Exception ignored) {
+            LOG.warn("[ignored] %s", ignored);
         }
 
         // ===== D: Declared (user-declared type at collection path) =============
         final String declTable = "person_declared";
-        try (final Connection conn = staticDbConfig.getConnection();
-             final Statement stmt = conn.createStatement()) {
-            stmt.executeUpdate("DROP TABLE IF EXISTS " + declTable);
+        space.sql("DROP TABLE IF EXISTS " + declTable);
 
-            // Declare type
-            final Type declType = Type.Builder.build()
-                    .tid(INT_TID).vid(f(declTable))
-                    .isaPredicate(rec(uri("name"), STR_TYPE, uri("age"), INT_TYPE))
-                    .create();
-            space.write(f("db:" + declTable), declType);
+        // Declare type
+        final Type declType = Type.Builder.build()
+                .tid(INT_TID).vid(f(declTable))
+                .isaPredicate(rec(uri("name"), STR_TYPE, uri("age"), INT_TYPE))
+                .create();
+        space.write(f("db:" + declTable), declType);
 
-            // D1: first write matches declared type — succeeds
-            space.write(f("db:" + declTable + "/1"),
-                    rec(uri("name"), str("alice"), uri("age"), jnt(30)));
-            final Obj rowD1 = space.read(f("db:" + declTable + "/1"));
-            assertEquals("alice", rowD1.asRec().at(uri("name")).strValue());
+        // D1: first write matches declared type — succeeds
+        space.write(f("db:" + declTable + "/1"),
+                rec(uri("name"), str("alice"), uri("age"), jnt(30)));
+        final Obj rowD1 = space.read(f("db:" + declTable + "/1"));
+        assertEquals("alice", rowD1.asRec().at(uri("name")).strValue());
 
-            // D2: extra column — metatron structural typing accepts it.
-            // addColumnOnTheFly adds it, schema refreshed.
-            space.write(f("db:" + declTable + "/2"),
-                    rec(uri("name"), str("bob"), uri("age"), jnt(25),
-                            uri("skill"), str("coding")));
-            final Obj rowD2 = space.read(f("db:" + declTable + "/2"));
-            assertEquals("bob", rowD2.asRec().at(uri("name")).strValue());
-            // Schema should include the new column
-            final Type d2type = space.schemaInstset().types().stream()
-                    .filter(t -> t.vid().name().equalsIgnoreCase(declTable))
-                    .findFirst().orElseThrow();
-            assertFalse(d2type.isPredicateObj().asRec().at(uri("skill")).isNoObj(),
-                    "D2: schema should be refreshed with skill column");
+        // D2: extra column — metatron structural typing accepts it.
+        // addColumnOnTheFly adds it, schema refreshed.
+        space.write(f("db:" + declTable + "/2"),
+                rec(uri("name"), str("bob"), uri("age"), jnt(25),
+                        uri("skill"), str("coding")));
+        final Obj rowD2 = space.read(f("db:" + declTable + "/2"));
+        assertEquals("bob", rowD2.asRec().at(uri("name")).strValue());
+        // Schema should include the new column
+        final Type d2type = space.schemaInstset().types().stream()
+                .filter(t -> t.vid().name().equalsIgnoreCase(declTable))
+                .findFirst().orElseThrow();
+        assertFalse(d2type.isPredicateObj().asRec().at(uri("skill")).isNoObj(),
+                "D2: schema should be refreshed with skill column");
 
-            // D3: wrong type for declared column — typeAndValidate rejects
-            assertThrows(Exception.class, () ->
-                    space.write(f("db:" + declTable + "/3"),
-                            rec(uri("name"), str("charlie"), uri("age"), str("old")))
-            );
+        // D3: wrong type for declared column — typeAndValidate rejects
+        assertThrows(Exception.class, () ->
+                space.write(f("db:" + declTable + "/3"),
+                        rec(uri("name"), str("charlie"), uri("age"), str("old")))
+        );
 
-            // D4: write without optional column — succeeds, age is NULL
-            space.write(f("db:" + declTable + "/4"),
-                    rec(uri("name"), str("diana")));
-            final Obj rowD4 = space.read(f("db:" + declTable + "/4"));
-            assertEquals("diana", rowD4.asRec().at(uri("name")).strValue());
+        // D4: write without optional column — succeeds, age is NULL
+        space.write(f("db:" + declTable + "/4"),
+                rec(uri("name"), str("diana")));
+        final Obj rowD4 = space.read(f("db:" + declTable + "/4"));
+        assertEquals("diana", rowD4.asRec().at(uri("name")).strValue());
 
-            LOG.info("D: declared matrix passed");
-        } finally {
-            try (final Connection conn = staticDbConfig.getConnection();
-                 final Statement stmt = conn.createStatement()) {
-                stmt.executeUpdate("DROP TABLE IF EXISTS " + declTable);
-            }
+        LOG.info("D: declared matrix passed");
+        try {
+            space.sql("DROP TABLE IF EXISTS " + declTable);
+        } catch (final Exception ignored) {
+            LOG.warn("[ignored] %s", ignored);
         }
 
         LOG.info("schema behavior matrix test passed on {}",
                 staticDbConfig.getDatabaseName());
+    }
+
+    // =========================================================================
+    //  testMultiLineSqlWithComments
+    // =========================================================================
+
+    /**
+     * Verifies that {@link tbleSpace#sql(String)} handles multi-line SQL with
+     * comments ({@code --}) and blank lines, executing DDL/DML statements and
+     * returning the result of the final SELECT.
+     */
+    @Test
+    public void testMultiLineSqlWithComments() throws Exception {
+        // Use an isolated space (like testWriteIndividualFields) so no shared
+        // Router state leaks to other tests.
+        final tbleSpace space = createTestSpace();
+        try {
+            // == Multi-line SQL with comments and blank lines ==
+            // CREATE + INSERTs run as update; SELECT runs as query — only its
+            // rows are returned.
+            final String tableName = "multi_test";
+            final Obj result = space.sql("""
+                    -- Create a temp table for this test
+                    CREATE TABLE %s (id INTEGER PRIMARY KEY, label TEXT);
+
+                    -- Insert some rows
+                    INSERT INTO %s VALUES (1, 'alpha');
+                    INSERT INTO %s VALUES (2, 'beta');
+
+                    -- Blank line above this comment should be ignored
+
+                    -- Final query: should be the result returned
+                    SELECT * FROM %s ORDER BY id;
+                    """.formatted(tableName, tableName, tableName, tableName));
+            final List<Obj> rows = result.stream().toList();
+            assertEquals(2, rows.size(), "should have 2 rows");
+            assertEquals(str("alpha"), rows.get(0).asRec().at(uri("label")),
+                    "first row label should be alpha");
+            assertEquals(str("beta"), rows.get(1).asRec().at(uri("label")),
+                    "second row label should be beta");
+
+            // == Single-statement degenerate case ==
+            final List<Obj> singleRows = space.sql(
+                    "SELECT COUNT(*) AS cnt FROM " + tableName).stream().toList();
+            assertEquals(1, singleRows.size(), "COUNT should return one row");
+            final Obj cntRow = singleRows.get(0);
+            assertEquals(jnt(2), cntRow.asRec().at(uri("cnt")),
+                    "count should be 2");
+
+            // == All-comment / empty input → noobj ==
+            assertEquals(noobj(), space.sql("-- just a comment\n\n  -- another comment"),
+                    "all-comment input should return noobj");
+
+            // Cleanup
+            space.sql("DROP TABLE IF EXISTS " + tableName);
+
+            LOG.info("multi-line SQL with comments test passed on {}",
+                    staticDbConfig.getDatabaseName());
+        } finally {
+            Router.global().removeSpace(space.vid());
+            space.close();
+        }
     }
 }

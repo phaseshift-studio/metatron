@@ -121,76 +121,13 @@ public class tbleInstSet extends AbstractInstSet {
                                 "a table row indexed by column number",
                                 Map.of(),
                                 "maps a rec row to a lst row"),
-                        docWrap(instC(SQL_INST_TID.dom(TBLE_SPACE_TID).rng(REC_TID.maybeSome()), lst(FILE_TYPE), (lhs, inst) -> {
-                            try {
-                                final String fileContent = Router.readFromSpace(inst.arg(0).uriValue().basePath()).orThrow(MTronException.of("no such file type")).strValue()
-                                        .replace("\"\"\"", "")
-                                        .lines()
-                                        .map(String::trim)
-                                        .filter(l -> !l.isEmpty())
-                                        .filter(l -> !l.startsWith("--"))
-                                        .reduce("", (a, b) -> a + b)
-                                        .trim();
-                                final String[] updates = fileContent.split(";");
-                          
-                                for (final String update : updates) {
-                                    if (!update.trim().isBlank()) {
-                                        LOG.info("update statement: %s", update);
-                                        try (final Statement stmt = lhs.<tbleSpace>as().sjvm().createStatement()) {
-                                            stmt.executeUpdate(update);
-                                        }
-                                    }
-                                }
-                                return noobj();
-                            } catch (final Exception e) {
-                                throw MTronException.of(e);
-                            }
-                        }), "load an sql file into the lhs tblespace"),
-                        docWrap(instC(SQL_INST_TID.dom(TBLE_SPACE_TID).rng(REC_TID.maybeSome()), lst(STR_TYPE), (lhs, inst) -> {
-                                    try {
-                                        final Statement statement = lhs.<tbleSpace>as().sjvm().createStatement();
-                                        final ResultSet result = statement.executeQuery(inst.arg(0).strValue());
-                                        final ResultSetMetaData metadata = result.getMetaData();
-                                        Obj objs = objs0();
-                                        while (result.next()) {
-                                            final Rec row = rec();
-                                            for (int i = 1; i <= metadata.getColumnCount(); i++) {
-                                                final int sqlType = metadata.getColumnType(i);
-                                                final String columnName = metadata.getColumnName(i);
-                                                // Use typed getters based on SQL type to avoid database-specific objects
-                                                final Obj value = switch (sqlType) {
-                                                    case Types.TINYINT, Types.SMALLINT, Types.INTEGER, Types.BIGINT -> {
-                                                        final long val = result.getLong(i);
-                                                        yield result.wasNull() ? noobj() : jnt(val);
-                                                    }
-                                                    case Types.FLOAT, Types.REAL, Types.DOUBLE, Types.DECIMAL, Types.NUMERIC -> {
-                                                        final double val = result.getDouble(i);
-                                                        yield result.wasNull() ? noobj() : real(val);
-                                                    }
-                                                    case Types.BOOLEAN, Types.BIT -> {
-                                                        final boolean val = result.getBoolean(i);
-                                                        yield result.wasNull() ? noobj() : bool(val);
-                                                    }
-                                                    default -> {
-                                                        // String types, dates, binary, etc.
-                                                        final String val = result.getString(i);
-                                                        yield val == null ? noobj() : str(val);
-                                                    }
-                                                };
-                                                row.at(uri(columnName), value, MUTABLE);
-                                            }
-                                            objs = objs.append(row);
-                                        }
-                                        return objs;
-
-                                    } catch (final Exception e) {
-                                        throw MTronException.of(e);
-                                    }
-                                }), "a table space typically backed by an sql-compliant relational database",
+                        docWrap(instC(SQL_INST_TID.dom(TBLE_SPACE_TID).rng(REC_TID.maybeSome()), lst(STR_TYPE), (lhs, inst) ->
+                                    MTronException.wrap(() -> lhs.<tbleSpace>as().sql(inst.arg(0).strValue()))
+                                ), "a table space typically backed by an sql-compliant relational database",
                                 "a result set as a stream of rows in mtron",
                                 mutableMap(jnt(0), "an sql query"),
                                 "query a relational database in native sql and yield an mtron mapped result set",
-                                "*/sys/space/netflix.sql('SELECT * FROM movie WHERE runtime < ${*next_event - time(now)') [-- str templates are useful --]"))),
+                                "*/sys/space/netflix.sql('SELECT * FROM movie WHERE runtime < ${*next_event} - time(now)') [-- str templates are useful --]"))),
                 uri(REWRITE), lst(
                         // Optimize: *table.count() → SELECT COUNT(*)
                         docWrap(CommonRewrites.countRewrite(
