@@ -23,6 +23,7 @@ import studio.phaseshift.metatron.furi.QProc;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.m.type.Lst;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjSQLSerializer;
 import studio.phaseshift.metatron.isa.tble.space.tbleIncrQ;
 import studio.phaseshift.metatron.isa.AbstractSpace;
 import studio.phaseshift.metatron.isa.SchemaSpace;
@@ -43,7 +44,9 @@ import studio.phaseshift.metatron.util.MTronException;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -59,6 +62,7 @@ import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs0;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.tble.tbleInstSet.TBLE_ISA_INST_TID;
 import static studio.phaseshift.metatron.isa.tble.tbleInstSet.TBLE_ISA_TID;
@@ -364,8 +368,73 @@ public class tbleSpace extends AbstractSpace<Connection> implements SchemaSpace 
     }
 
     // =========================================================================
-    //  Lazy table-schema initialisation
+    //  SQL execution
     // =========================================================================
+
+    /**
+     * Executes a multi-line SQL expression against this space's JDBC connection.
+     * <p>
+     * SQL comments ({@code --}) and blank lines are ignored.  The expression is
+     * split on {@code ;} into individual statements.  All statements except the
+     * last are executed as updates (DDL/DML).  The final statement is executed
+     * and its result set — if any — is converted to mtron {@link Rec} rows via
+     * {@link ObjSQLSerializer#readCurrentAsRec(ResultSet)} and returned as an
+     * {@code Objs} stream.  When the final statement produces no result set
+     * (e.g. a terminal INSERT or CREATE), {@link NoObj#noobj()} is returned.
+     *
+     * @param sqlExpression one or more SQL statements separated by semicolons
+     * @return the result of the last statement as a stream of rows, or noobj
+     * @throws SQLException if a database error occurs
+     */
+    public Obj sql(final String sqlExpression) throws SQLException {
+        // 1. Normalize: strip comments, blank lines, split into statements
+        final List<String> lines = sqlExpression
+                .lines()
+                .map(String::trim)
+                .filter(l -> !l.isEmpty() && !l.startsWith("--"))
+                .toList();
+
+        if (lines.isEmpty())
+            return noobj();
+
+        final String[] statements = String.join(" ", lines).split(";");
+
+        // Filter out blank fragments after the split
+        final List<String> valid = new ArrayList<>();
+        for (final String s : statements) {
+            final String trimmed = s.trim();
+            if (!trimmed.isBlank())
+                valid.add(trimmed);
+        }
+
+        if (valid.isEmpty())
+            return noobj();
+
+        // 2. Execute all but the last as updates
+        for (int i = 0; i < valid.size() - 1; i++) {
+            LOG.info("sql update: %s", valid.get(i));
+            try (final Statement stmt = this.sjvm().createStatement()) {
+                stmt.executeUpdate(valid.get(i));
+            }
+        }
+
+        // 3. Execute the final statement and return its result
+        final String lastStmt = valid.get(valid.size() - 1);
+        LOG.info("sql query: %s", lastStmt);
+        try (final Statement stmt = this.sjvm().createStatement()) {
+            final boolean hasResultSet = stmt.execute(lastStmt);
+            if (hasResultSet) {
+                try (final ResultSet rs = stmt.getResultSet()) {
+                    Obj objs = objs0();
+                    while (rs.next()) {
+                        objs = objs.append(ObjSQLSerializer.readCurrentAsRec(rs));
+                    }
+                    return objs;
+                }
+            }
+            return noobj();
+        }
+    }
 
     // =========================================================================
     //  Path resolution

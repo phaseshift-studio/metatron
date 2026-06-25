@@ -83,11 +83,11 @@ public class llmInstSet extends AbstractInstSet {
     public static final fURI LLM_SKILL_TID = LLM_ISA_TID.extend(SKILL);
     public static final fURI LLM_FEATURE_TID = LLM_ISA_TID.extend(FEATURE);
     public static final fURI MESSAGE_TID = LLM_ISA_TID.extend(MESSAGE);
-    public static final fURI AI_MESSAGE_TID = LLM_ISA_TID.extend(AI);
-    public static final fURI USER_MESSAGE_TID = LLM_ISA_TID.extend(USER);
-    public static final fURI SYSTEM_MESSAGE_TID = LLM_ISA_TID.extend(SYSTEM);
-    public static final fURI TOOL_REQUEST_MESSAGE_TID = LLM_ISA_TID.extend("tool_request");
-    public static final fURI TOOL_RESULT_MESSAGE_TID = LLM_ISA_TID.extend("tool_result");
+    public static final fURI AI_MESSAGE_TID = MESSAGE_TID.extend(AI);
+    public static final fURI USER_MESSAGE_TID = MESSAGE_TID.extend(USER);
+    public static final fURI SYSTEM_MESSAGE_TID = MESSAGE_TID.extend(SYSTEM);
+    public static final fURI TOOL_REQUEST_MESSAGE_TID = MESSAGE_TID.extend("tool_request");
+    public static final fURI TOOL_RESULT_MESSAGE_TID = MESSAGE_TID.extend("tool_result");
     //public static final fURI MCP_TOOL_TID = LLM_ISA_TID.extend("mcp");
     // public static Obj MTRON_EVAL_TOOL = mModel.Helper.mtronInstToolSpecification(ObjType.insts().stream().filter(i -> i.tid().equals(EVAL_INST_TID)).findFirst().orElse(null));    
 
@@ -111,34 +111,6 @@ public class llmInstSet extends AbstractInstSet {
     public void setup() {
         this.jvm().putAll(mutableMap(
                 //uri(PATTERN), uri(LLM_ISA_TID.extend(ALL)),
-                uri(CONST), lst(
-                        rec(mutableMap(uri("chat_schema"), instC(M_ISA_INST_TID.dom(ALL.maybeSome()).rng(ALL.maybeSome()), lst(), (lhs, inst) -> {
-                            try (InputStream is = tbleInstSet.class.getResourceAsStream("llm_messages_schema.sql");
-                                 BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
-                                Connection conn = lhs.<tbleSpace>as().sjvm();
-                                conn.setAutoCommit(false); // Enable transaction
-                                Statement stmt = conn.createStatement();
-                                StringBuilder currentStatement = new StringBuilder();
-                                String line;
-                                while ((line = reader.readLine()) != null) {
-                                    line = line.trim();
-                                    if (line.isEmpty() || line.startsWith("--"))
-                                        continue; // Skip empty lines and comments
-                                    currentStatement.append(line).append(" ");
-                                    if (line.endsWith(";")) {
-                                        String sql = currentStatement.toString().trim();
-                                        if (!sql.isEmpty()) {
-                                            stmt.executeUpdate(sql);
-                                        }
-                                        currentStatement.setLength(0); // Reset buffer
-                                    }
-                                }
-                                conn.commit(); // Commit all statements
-                            } catch (Exception e) {
-                                throw MTronException.of(e);
-                            }
-                            return noobj();
-                        })), REC_TID, LLM_ISA_TID.extend("helper"))),
                 uri(TYPE), lst(
                         LLM_CATALOG_SPACE_TYPE,
                         LLM_TOOL_TYPE,
