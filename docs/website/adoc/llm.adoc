@@ -1,13 +1,21 @@
 [discrete]
 == Large Language Models
 
+[.accordion-small]
 [%collapsible]
 ./m/llm instset import and space constructions
 ====
 [mtron]
 ----
-[HIDDEN] import(/m/web)
+[NO_OUTPUT] import(/m/web)
 import(/m/llm)
+wsspace::[host     => <ws://localhost:8555>,                          /
+          pattern  => <ws://#>,                                       /
+          q        => [docq::[=>],subq::[=>]],                        /
+          route    => [/mtron  => mtron_ws,                           /
+                       /mcp    => mcp_mtron_ws]]@/sys/space/web/ws
+fsspace::[pattern  => fs:#,                                      /
+          route    => [fs:=><.metatron>]]@/sys/space/fs
 ----
 ====
 
@@ -17,16 +25,16 @@ Modern AI techniques are heavily leveraged across various aspects of metatron, w
 . **Agent Development**: A large portion of an LLM's functional elements are embedded in the URI address space and made accessible to mtron via respective spaces. Such components include:
  - **tools**: every mtron `inst` has an `as()`-mapping to `tool`, where the `docq` q processor of the `inst` provides the name, description, and argument notes necessary for LLM tool selection. While most mtron instructions are low-level and not necessarily "tool-oriented," user-defined custom instructions can be defined and offered as tools/services to llms as needed.
  - **thoughts**: when enabling internal reasoning with a supporting LLM, the stream of thought is published streamed and can be directed to system output, to a memory structure, to another LLM for review, etc.  
- - **sessions**: an LLMs interaction/thought history can be stored and retrieved at a later time to enable long-term memory and context awareness.
+ - **sessions**: an LLMs interactions and thoughts can be stored and retrieved at a later time to enable long-term memory and context awareness.
  - **skills**: an LLM can be trained on a wide range of skills and domains, allowing them to perform complex tasks and solve domain-specific problems. Skills can be pulled from the Anthropic-specified `.agent` directory that has a corresponding `SKILL.md` file and associated resources. Or, can be created programmatically in metaron.
  - **notes**: pass information to an LLM during a chat iteration without interrupting them. LLMs will periodically check their note stack for any advice/information from the user about their task at hand.
  - **prompts**: specific prompts or instructions can be stored and retrieved to help guide an LLM's response.
  - **response formats**: a mtron `rec` can serve as a schema object instructing the LLM to populate the `rec` with their answer to avoid arbitrary string responses in favor of structured responses.
  - **gguff vector files**: ...
-. **MCP Servers**: Developing and deploying MCP servers in mtron as well as interacting with remote MCP servers as a client is straightforward. Such simplicity provides a countless number of ways in which LLMs can interact with the underlying spaces.
+. **MCP Servers**: Developing and deploying MCP servers in mtron as well as interacting with remote MCP servers as a client is straightforward. MCP servers and their tools offer numerous ways by which LLMs can interact with their environment.
 
 [discrete]
-=== llm catalogs
+=== Catalogs
 
 Collections of LLMs are typically host by some provider and offered for use. These can be either cloud-based AI catalogs or local catalogs. An example of loading various popular catalogs into metatron are provided below.
 
@@ -50,7 +58,7 @@ catalog::[host         => <https://api.deepseek.com/>,          /
 ----
 
 [discrete]
-=== llm space encoding
+=== LLM Space Encoding
 
 An LLM is a `model::T < rec::T` with the following type definition:
 
@@ -63,22 +71,23 @@ The design makes a distinction between the **LLM** (general-purpose reasoning en
 
 [mtron]
 ----
-*<mtronfs:agent.mtron>           [-- <1> --]
-*<mtronfs:agent.mtron/feature>   [-- <2> --]
+*<fs:agent.mtron>           [-- <1> --]
+*<fs:agent.mtron/feature>   [-- <2> --]
 ----
 <1> if a file contains mtron source, the mtron source is the obj referred to by the file uri.
 <2> the previous callout entails that a file path can be extended beyond the file boundary.
 
 [discrete]
-=== llm interactions
+=== Features
 
-The following example demonstrates how to search for an appropriate LLM for a given task, then query it, and finally, have its session of the interaction stored in space for future use (to provide the agent context over longer interactions). This example relies on an agent `SKILL.md` file stored on the local file system. Thus, we need a space.
+[discrete]
+==== Sessions
+
+The following example demonstrates how to search for an appropriate LLM for a given task, then query it, and finally, have its session of the interaction stored in space for future use (to provide the agent context over longer interactions). This example relies on an agent `SKILL.md` file stored on the local file system (`fs:`).
 
 [mtron]
 ----
-fsspace::[pattern => fs:#,  /
-          route   => [fs: => <~/software/metatron/.metatron/>]]@/sys/space/fs
-*<fs:skills/mtron/SKILL.md>
+[MAXOUTPUT 20] *<fs:skills/mtron/SKILL.md>
 ----
 
 ++++
@@ -134,6 +143,7 @@ With the model loaded and equipped, it's possible to communicate with it.
 [discrete,.center]
 ==== a note on unit conversions
 
+[.accordion-small]
 [%collapsible]
 ./m/math instset import
 ====
@@ -175,7 +185,7 @@ Or, using structured responses, the unstructured text result can be turned into 
 @ai.chat("what was the answer again?", [answer=>?int::T])
 
 [discrete]
-=== llm tools, skills, and mcp servers
+==== Tools
 
 LLM tools provide the model a way of calling predefined functions as deemed necessary during chat interactions. In metatron, any `inst` can be a tool. Simply place an `!*` reference to the `inst` into the model's "tool box" (`lst`) at `features/tool`. Next, should MCP tools be required, realize that MCP servers expose their tools as `insts` in metatron as well. Thus, adding an `inst` from an `instset` and adding an `inst` from a `http` or `ws` MCP server endpoint, ultimately boils down to pointing the model towards `insts` it can use to solve problems.
 
@@ -183,7 +193,7 @@ LLM tools provide the model a way of calling predefined functions as deemed nece
 metatron is capable of hosting MCP tools (server), using MCP tools (client), or both. The example below spawns an mtron websocket server and then spawns a client to it as well as other mcp servers not local to metatron.
 
 .metatron hosted mcp server
-[mtron]
+[source,mtron]
 ----
 wsspace::[host     => <ws://localhost:8555>,                        /
           pattern  => ws://#,                                       /
@@ -194,7 +204,7 @@ wsspace::[host     => <ws://localhost:8555>,                        /
 
 
 .metatron hosted mcp clients
-[mtron]
+[source,mtron]
 ----
 mcp_client::[host =>                                /
  <ws://localhost:8555/mcp>                          /
@@ -206,7 +216,7 @@ mcp_client::[host =>                                /
 ----
 
 
-[mtron]
+[source,mtron]
 ----
 *<openai:gpt-4o>.at(robotron).                                   /  
  side([,].at(<local:.agent/robotron/memory>)).                   /  
@@ -227,7 +237,7 @@ mcp_client::[host =>                                /
 <7> pass robotron a reference to the memory structure and cap its growth to 15 entries.
 <8> re-reference any resolved `!\*` (`auto_from`) references using `^*` (`auto_to`).
 
-[mtron]
+[source,mtron]
 ----
 @robotron.chat('what tools do you have access to?',          /
             [number_of_tools=>int::T,tool_names=>str::T])        
@@ -243,7 +253,7 @@ Given that an `mcp_client::T` is an index of `insts`. Nothing prevents their `in
 as a human user. And since, metatron is able to map common data formats to `obj`, its possible to take the result of the
 mcp tool and post process it to derive further more refined statistics not offered by the tool.
 
-[mtron]
+[source,mtron]
 ----
 /usr/ai/mcp/intellij/tool/ide_type_hierarchy(className=>'studio.phaseshift.metatron.isa.m.type.Obj'). /
   -<[supers => -<[count => >>supertypes.count(),                                                      /
@@ -253,7 +263,7 @@ mcp tool and post process it to derive further more refined statistics not offer
 ----
 
 [discrete]
-=== agent notes
+=== Notes
 metatron introduces the concept of _notes_ to the agent toolkit. Notes are a message board written to and read from (potentially many times) by an LLM during the execution of a task -- that is, within a single chat iteration. Notes are useful in the following situations:
 
  . **real-time feedback**: if the agent has made a mistake in their _thinking_, there is no need to wait for the agent's response to complete nor halt the agent mid-thought. Instead, a note can be pushed on the agent's note stack and the agent will pop off the note, read it, and adjust itself accordingly.
@@ -320,7 +330,7 @@ Notes form a **FIFO queue** — `remove(0)` pops the oldest note, leaving newer 
 
 Typically, a client will request services from an MCP server -- tool listing, tool evaluations, etc. It's important to note that the https://modelcontextprotocol.io/docs/learn/architecture#notifications[MCP specification] has a little known feature that allows the server to initiate communication with the client. This feature is called **notifications** and it can be implemented in pure mtron.
 
-[mtron]
+[source,mtron]
 ----
 <ws://localhost:8555/mcp/+/notifications/#?subq> -> sub::[                /           
  on_recv => inst?#<=lst(message=>?lst::T){                                /

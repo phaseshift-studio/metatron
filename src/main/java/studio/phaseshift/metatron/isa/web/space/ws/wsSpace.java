@@ -98,8 +98,7 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
             .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(WS_WEBSOCKET_TID),
                     lst(T(REC_TID)), (lhs, inst) -> {
                         try {
-                            final WebSocketRecClient client = new WebSocketRecClient(new WebSocketRec(inst.arg(0).asRec().jvm(), inst.arg(0).vid()));
-                            return client;
+                            return new WebSocketRecClient(new WebSocketRec(inst.arg(0).asRec().jvm(), inst.arg(0).vid()));
                         } catch (final Exception e) {
                             throw MTronException.of(e);
                         }
@@ -120,10 +119,6 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
     protected wsSpace(final WebSocketServer server, final Map<Obj, Obj> config, final fURI vid) {
         super(server, config, WS_SPACE_TID, vid);
         this.cache = memSpace.of(rec(uri(PATTERN), config.getOrDefault(uri(PATTERN), noobj())), null);
-        /*if (null != vid)
-            this.at(ROUTE, this.at(ROUTE).orElse(rec0())
-                    .plus(rec(this.pattern.host(null).scheme(null).retractPattern().extend("wsmtron").toUri(), WS_MTRON_SERVER_TYPE))
-                    .plus(rec(this.pattern.host(null).scheme(null).retractPattern().extend("wsmcp").toUri(), WS_MCP_HANDLER_TYPE)), MUTABLE);*/
     }
 
     public static wsSpace of(final Map<Obj, Obj> config, final fURI vid) {
@@ -144,12 +139,12 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
     public void close() {
         LOG.debug("closing %s node {{b}}%s{{/b}}", Graphitty.sillyPrint("mtron", true, true), this);
         try {
-            //this.cluster.values().stream().toList().forEach(MConnection::close);
-            this.sjvm().stop(1000, "server shutdown");
+            this.cache.close();
+            this.sjvm().stop(2000, "server shutdown");
         } catch (final InterruptedException e) {
             LOG.info("%s interrupted successfully", this);
         } finally {
-            //  this.running.set(false);
+            // this.running.set(false);
         }
     }
 

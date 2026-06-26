@@ -468,6 +468,19 @@
                 <artifactId>maven-install-plugin</artifactId>
             </plugin>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>compile-for-site</id>
+                        <phase>pre-site</phase>
+                        <goals>
+                            <goal>compile</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>3.6.3</version>
@@ -671,6 +684,25 @@
                                     <directory>${project.basedir}/src/main/resources/web/console</directory>
                                     <includes>
                                         <include>**.*</include>
+                                    </includes>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <!-- copy curl install script to website root for Cloudflare distribution -->
+                        <id>copy-install-script-to-website</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.basedir}/docs/website</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${project.basedir}/dist/curl</directory>
+                                    <includes>
+                                        <include>install.sh</include>
                                     </includes>
                                 </resource>
                             </resources>

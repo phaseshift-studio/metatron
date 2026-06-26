@@ -268,7 +268,7 @@ public class tbleSpace extends AbstractSpace<Connection> implements SchemaSpace 
         this.existingTableSchema = new ExistingTableSchema(this, "kv_store");
         this.existingTableSchema.initialize(conn);
         LOG.info("initialized {{g}}existing table schema{{X}} - discovered %s tables for database %s",
-                this.existingTableSchema.getTableNames().size(), conn.getCatalog());
+                this.existingTableSchema.getTableNames().size(), null == conn.getCatalog() ? "" : conn.getCatalog());
 
         // Schema VID is in /m/ namespace — backed by system memSpace, not this
         // tbleSpace.  A VID under the tbleSpace pattern would cause the Router
@@ -316,7 +316,9 @@ public class tbleSpace extends AbstractSpace<Connection> implements SchemaSpace 
         return this.existingTableSchema;
     }
 
-    /** The schema instset — single source of truth for table types. */
+    /**
+     * The schema instset — single source of truth for table types.
+     */
     public SQLSchemaInstSet schemaInstset() {
         return this.schemaInstset;
     }
@@ -466,8 +468,7 @@ public class tbleSpace extends AbstractSpace<Connection> implements SchemaSpace 
                                     .retractPattern().extend(dp.collection());
                             final Type typed = (Type) obj.asType().vid(typeVID);
                             Router.writeToSpace(typeVID, typed);
-                            LOG.info("registered type {{b}}%s{{X}} at collection path %s",
-                                    typeVID, dp.collection());
+                            LOG.info("registered type {{b}}%s{{X}} at collection path %s", typeVID, dp.collection());
                             return typed;
                         }
                     }

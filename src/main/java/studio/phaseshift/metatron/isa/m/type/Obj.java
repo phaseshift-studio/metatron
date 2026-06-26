@@ -170,6 +170,10 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
         return this.vid() == null ? this.tid() : this.vid();
     }
 
+    default fURI typeId() {
+        return this.isType() ? this.vid() : this.tid();
+    }
+
     default Type type() {
         return this.isType() ? T(this.vid()) : T(this.tid()); // null == Router.global() || this.isInst() ? MType.of(this.tid()) : Router.global().read(this.tid()).orElse(MType.of(this.tid()));
     }

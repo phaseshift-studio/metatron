@@ -59,7 +59,7 @@ import static studio.phaseshift.metatron.isa.web.type.MIME.MIMEType.APPLICATION_
  */
 public class mcp_httpHandler extends HttpRec {
 
-    public static final fURI HTTP_MCP_HANDLER_TID = HTTP_SPACE_TID.extend("mcp_http");
+    public static final fURI HTTP_MCP_HANDLER_TID = HTTP_SPACE_TID.extend("mcp").extend("mcp_http");
 
     public static final Type HTTP_MCP_HANDLER_TYPE = Type.Builder.build()
             .tid(HTTP_REC_TID)

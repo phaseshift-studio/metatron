@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -35,6 +35,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
+import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
@@ -60,29 +61,30 @@ public class mathInstSet extends AbstractInstSet {
     public static final fURI MATH_FLOOR_INST_TID = MATH_INST_TID.extend("floor");
     public static final fURI MATH_ROUND_INST_TID = MATH_INST_TID.extend("round");
     public static final fURI MATH_POW_INST_TID = MATH_INST_TID.extend("pow");
-    public static final fURI MATH_BYTE_TID = MATH_ISA_TID.extend("bB");
-    public static final fURI MATH_KBYTE_TID = MATH_ISA_TID.extend("kB");
-    public static final fURI MATH_MBYTE_TID = MATH_ISA_TID.extend("mB");
-    public static final fURI MATH_GBYTE_TID = MATH_ISA_TID.extend("gB");
-    public static final fURI MATH_TBYTE_TID = MATH_ISA_TID.extend("tB");
-    public static final fURI MATH_PBYTE_TID = MATH_ISA_TID.extend("pB");
-    public static final fURI MATH_DATA_SIZE_TID = MATH_ISA_TID.extend("data_size");
-    public static final String MATH_BYTE_STRING = "/m/math/bB";
-    public static final String MATH_KBYTE_STRING = "/m/math/kB";
-    public static final String MATH_MBYTE_STRING = "/m/math/mB";
-    public static final String MATH_GBYTE_STRING = "/m/math/gB";
-    public static final String MATH_TBYTE_STRING = "/m/math/tB";
-    public static final String MATH_PBYTE_STRING = "/m/math/pB";
+    public static final fURI MATH_DATA_TID = MATH_ISA_TID.extend("data");
+    public static final fURI MATH_BYTE_TID = MATH_DATA_TID.extend("bB");
+    public static final fURI MATH_KBYTE_TID = MATH_DATA_TID.extend("kB");
+    public static final fURI MATH_MBYTE_TID = MATH_DATA_TID.extend("mB");
+    public static final fURI MATH_GBYTE_TID = MATH_DATA_TID.extend("gB");
+    public static final fURI MATH_TBYTE_TID = MATH_DATA_TID.extend("tB");
+    public static final fURI MATH_PBYTE_TID = MATH_DATA_TID.extend("pB");
+    public static final String MATH_BYTE_STRING = "/m/math/data/bB";
+    public static final String MATH_KBYTE_STRING = "/m/math/data/kB";
+    public static final String MATH_MBYTE_STRING = "/m/math/data/mB";
+    public static final String MATH_GBYTE_STRING = "/m/math/data/gB";
+    public static final String MATH_TBYTE_STRING = "/m/math/data/tB";
+    public static final String MATH_PBYTE_STRING = "/m/math/data/pB";
     /// ///////////////////////
     public static final fURI MATH_TIME_TID = MATH_ISA_TID.extend("time");
-    public static final fURI MATH_MILLIS_TID = MATH_ISA_TID.extend("millis");
-    public static final fURI MATH_SECOND_TID = MATH_ISA_TID.extend("second");
-    public static final fURI MATH_MINUTE_TID = MATH_ISA_TID.extend("minute");
-    public static final fURI MATH_HOUR_TID = MATH_ISA_TID.extend("hour");
-    public static final String MATH_MILLIS_STRING = "/m/math/millis";
-    public static final String MATH_SECOND_STRING = "/m/math/second";
-    public static final String MATH_MINUTE_STRING = "/m/math/minute";
-    public static final String MATH_HOUR_STRING = "/m/math/hour";
+    public static final fURI MATH_NOW_INST_TID = MATH_INST_TID.extend("now");
+    public static final fURI MATH_MILLIS_TID = MATH_TIME_TID.extend("millis");
+    public static final fURI MATH_SECOND_TID = MATH_TIME_TID.extend("second");
+    public static final fURI MATH_MINUTE_TID = MATH_TIME_TID.extend("minute");
+    public static final fURI MATH_HOUR_TID = MATH_TIME_TID.extend("hour");
+    public static final String MATH_MILLIS_STRING = "/m/math/time/millis";
+    public static final String MATH_SECOND_STRING = "/m/math/time/second";
+    public static final String MATH_MINUTE_STRING = "/m/math/time/minute";
+    public static final String MATH_HOUR_STRING = "/m/math/time/hour";
     /// ///////////////////////
     public static final fURI MATH_CURRENCY_TID = f("/m/math/currency");
     public static final fURI MATH_USD_TID = MATH_CURRENCY_TID.extend("usd");
@@ -171,11 +173,11 @@ public class mathInstSet extends AbstractInstSet {
 
     public static final Type DATA_SIZE_TYPE = Type.Builder.build()
             .tid(REAL_TID)
-            .vid(MATH_DATA_SIZE_TID)
+            .vid(MATH_DATA_TID)
             .create();
 
     public static final Type BYTE_TYPE = Type.Builder.build()
-            .tid(MATH_DATA_SIZE_TID)
+            .tid(MATH_DATA_TID)
             .vid(MATH_BYTE_TID)
             .constructor(lhs -> {
                 final Real arg = lhs.asReal();
@@ -192,7 +194,7 @@ public class mathInstSet extends AbstractInstSet {
             }).create();
 
     public static final Type KBYTE_TYPE = Type.Builder.build()
-            .tid(MATH_DATA_SIZE_TID)
+            .tid(MATH_DATA_TID)
             .vid(MATH_KBYTE_TID)
             .constructor(lhs -> {
                 final Real arg = lhs.asReal();
@@ -208,7 +210,7 @@ public class mathInstSet extends AbstractInstSet {
             }).create();
 
     public static final Type MBYTE_TYPE = Type.Builder.build()
-            .tid(MATH_DATA_SIZE_TID)
+            .tid(MATH_DATA_TID)
             .vid(MATH_MBYTE_TID)
             .constructor(lhs -> {
                 final Real arg = lhs.asReal();
@@ -224,7 +226,7 @@ public class mathInstSet extends AbstractInstSet {
             }).create();
 
     public static final Type GBYTE_TYPE = Type.Builder.build()
-            .tid(MATH_DATA_SIZE_TID)
+            .tid(MATH_DATA_TID)
             .vid(MATH_GBYTE_TID)
             .constructor(lhs -> {
                 final Real arg = lhs.asReal();
@@ -240,7 +242,7 @@ public class mathInstSet extends AbstractInstSet {
             }).create();
 
     public static final Type TBYTE_TYPE = Type.Builder.build()
-            .tid(MATH_DATA_SIZE_TID)
+            .tid(MATH_DATA_TID)
             .vid(MATH_TBYTE_TID)
             .constructor(lhs -> {
                 final Real arg = lhs.asReal();
@@ -256,7 +258,7 @@ public class mathInstSet extends AbstractInstSet {
             }).create();
 
     public static final Type PBYTE_TYPE = Type.Builder.build()
-            .tid(MATH_DATA_SIZE_TID)
+            .tid(MATH_DATA_TID)
             .vid(MATH_PBYTE_TID)
             .constructor(lhs -> {
                 final Real arg = lhs.asReal();
@@ -290,6 +292,13 @@ public class mathInstSet extends AbstractInstSet {
                         docWrap(MINUTE_TYPE, "a minute of time (60 seconds)"),
                         docWrap(HOUR_TYPE, "an hour of time (60 minutes)")),
                 uri(INST), lst(
+                        /*instC(MATH_NOW_INST_TID.dom(ALL.maybe()).rng(MATH_TIME_TID), lst(), (lhs, inst) -> real((double) System.currentTimeMillis(), MATH_TIME_TID, null)),
+                        instC(AS_INST_TID.dom(MATH_TIME_TID).rng(STR_TID), lst(TIME_TYPE), (lhs, inst) -> {
+                            Date date = new Date(lhs.realValue().intValue());
+                            DateFormat formatter = new SimpleDateFormat("yyyy.MM.dd 'at' HH:mm:ss z");
+                            formatter.setTimeZone(TimeZone.getTimeZone(ZoneId.systemDefault()));
+                            return str(formatter.format(date));
+                        }),*/
                         instC(MATH_COS_INST_TID.dom(ALL.maybe()).rng(REAL_TID), lst(as_(REAL_TYPE).tryToInst()), (lhs, inst) -> real(Math.cos(inst.arg(0).realValue()))),
                         instC(MATH_SIN_INST_TID.dom(ALL.maybe()).rng(REAL_TID), lst(REAL_TYPE), (lhs, inst) -> real(Math.sin(inst.arg(0).realValue()))),
                         instC(MATH_TAN_INST_TID.dom(ALL.maybe()).rng(REAL_TID), lst(REAL_TYPE), (lhs, inst) -> real(Math.tan(inst.arg(0).realValue()))),

@@ -87,15 +87,14 @@ public class webInstSet extends AbstractInstSet {
 
     public static final fURI WEB_ISA_TID = M_ISA_TID.extend("web");
     public static final fURI INST_TID = WEB_ISA_TID.extend("inst");
-    public static final fURI XML_TID = WEB_ISA_TID.extend("xml");
-    public static final fURI HTML_TID = WEB_ISA_TID.extend("html");
-    public static final fURI JSON_TID = WEB_ISA_TID.extend("json");
-    public static final fURI JSON_STR_TID = WEB_ISA_TID.extend("json_str");
-    public static final fURI CSS_TID = WEB_ISA_TID.extend("css");
-    public static final fURI MARKDOWN_TID = WEB_ISA_TID.extend("markdown");
     public static final fURI MIME_TYPE_TID = WEB_ISA_TID.extend("mime");
-
-    public static final fURI JAVA_TID = WEB_ISA_TID.extend("java");
+    public static final fURI XML_TID = MIME_TYPE_TID.extend("xml");
+    public static final fURI HTML_TID = MIME_TYPE_TID.extend("html");
+    public static final fURI JSON_TID = MIME_TYPE_TID.extend("json");
+    public static final fURI JSON_STR_TID = MIME_TYPE_TID.extend("json_str");
+    public static final fURI CSS_TID = MIME_TYPE_TID.extend("css");
+    public static final fURI MARKDOWN_TID = MIME_TYPE_TID.extend("markdown");
+    public static final fURI JAVA_TID = MIME_TYPE_TID.extend("java");
 
 
     public static final fURI DESKTOP_SPACE_VID = f("/sys/desktop");
@@ -135,8 +134,8 @@ public class webInstSet extends AbstractInstSet {
             .tid(REC_TID)
             .vid(CSS_TID).create();
     public static final Type MARKDOWN_TYPE = Type.Builder.build().tid(REC_TID).vid(MARKDOWN_TID).create();
-    public static final fURI MCP_SERVER_TID = WEB_ISA_TID.extend("mcp_server");
-    public static final fURI MCP_CLIENT_TID = WEB_ISA_TID.extend("mcp_client");
+    public static final fURI MCP_SERVER_TID = WEB_ISA_TID.extend("mcp").extend("mcp_server");
+    public static final fURI MCP_CLIENT_TID = WEB_ISA_TID.extend("mcp").extend("mcp_client");
     public static final fURI CLIENT_TID = WEB_ISA_TID.extend("client");
     public static Type CLIENT_TYPE;
     public static final fURI SERVER_TID = WEB_ISA_TID.extend("server");

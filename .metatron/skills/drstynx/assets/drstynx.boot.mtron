@@ -62,6 +62,12 @@ memspace::[
         [=====================]   
     
 fsspace::[
+  pattern => root:#,
+        q => [mimeq::[=>]],
+    route => [root: => /usr/bin]]@</sys/space/fs/root>;
+
+
+fsspace::[
   pattern => localfs:#,
         q => [subq::[=>],
               mimeq::[=>]],
@@ -108,7 +114,7 @@ model::[desc     => "the agent dr.stynx is here to be of use in the metatron",
         name     => !*<ollama:gemma4:26b/name>,
         feature  => [think    => |/usr/marko/console/pane/0/stream(_), 
                      session  => !@<drdb:llm_session/1>,
-                     session/ => [user_message => inst(u=>user::T){ 'stuff' }],
+                     session/on_user  => "[time: ${now().as(str::T)}] ${_}",
                      tool     => [!*eval,!*sql.skip(1).take(1)],
                      note     => [,],
                      skill    => [!*<metatronfs:skills/mtron>.as(skill::T)],

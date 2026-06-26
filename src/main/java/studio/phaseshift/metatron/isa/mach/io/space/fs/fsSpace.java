@@ -18,6 +18,9 @@
 
 package studio.phaseshift.metatron.isa.mach.io.space.fs;
 
+import org.zeroturnaround.exec.ProcessExecutor;
+import org.zeroturnaround.exec.ProcessResult;
+import org.zeroturnaround.exec.stream.LogOutputStream;
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractSpace;
@@ -39,6 +42,7 @@ import java.nio.file.FileSystem;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.*;
+import java.util.concurrent.Future;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -53,6 +57,7 @@ import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -66,9 +71,9 @@ public class fsSpace extends AbstractSpace<FileSystem> {
             .tid(SPACE_TID)
             .vid(FS_SPACE_TID)
             .isaPredicate(rec(
-                    uri(Tokens.PATTERN), URI_TYPE,
+                    uri(PATTERN), URI_TYPE,
                     uri(ROUTE), rec(URI_TYPE, URI_TYPE),
-                    uri(Tokens.SCRIPT).maybe(), rec(URI_TYPE, URI_TYPE)))
+                    uri(SCRIPT).maybe(), rec(URI_TYPE, URI_TYPE)))
             .constructor(
                     instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(FS_SPACE_TID), lst(REC_TYPE),
                             (lhs, inst) -> fsSpace.of(FileSystems.getDefault(), inst.arg(0).asRec(), inst.arg(0).vid()))).create();
@@ -290,7 +295,7 @@ public class fsSpace extends AbstractSpace<FileSystem> {
 
                 } else {
                     try {
-                        final Path vidPath = Path.of(Space.Helper.routeFromSpace(keyQless.name().equals("apply") ? keyQless.retract(1) : keyQless, this.routes()).toString());
+                        final Path vidPath = Path.of(Space.Helper.routeFromSpace(keyQless, this.routes()).toString());
                         final File file = vidPath.toFile();
                         if (!file.exists()) {
                             final IdObj parentResult = navigateFromParentFile(file, keyQless, key.qMap());
@@ -298,15 +303,21 @@ public class fsSpace extends AbstractSpace<FileSystem> {
                                 return IteratorUtil.of(parentResult);
                             return IteratorUtil.of();
                         }
-                        final Obj value = keyQless.name().equals("apply") ?
-                                instC(keyQless.retract(1).dom(ALL.maybe()).rng(ALL_STAR), lst(T(ALL_STAR)), (lhs, inst) -> {
-                                    LOG.debug("applying: %s => %s", lhs, inst);
-                                    final Uri toExec = makeFile(vidPath);
-                                    if (!file.canExecute())
-                                        throw MTronException.of("file permissions prevent execution of %s", toExec);
-                                    return this.internalApply(toExec, inst.args());
-                                }) :
-                                this.fileToObj(file, key.qMap());
+                        final Obj value;
+                        if (file.isFile() && file.canExecute() && !(this.hasQ(MIMEQ_PATTERN) && key.hasQ(MIMEQ_PATTERN.toString()))) {
+                            final String engine = checkScriptEvaluation(file);
+                            if (engine != null) {
+                                final fURI execTID = this.vid().extend("exec").extend(file.getName()).dom(ALL.maybe()).rng(ALL_STAR);
+                                value = instC(execTID, lst(T(ALL.maybeSome())), (lhs, inst) -> {
+                                    LOG.debug("executing: %s => %s", lhs, inst);
+                                    return this.executeFile(file, engine, inst.args());
+                                });
+                            } else {
+                                value = this.fileToObj(file, key.qMap());
+                            }
+                        } else {
+                            value = this.fileToObj(file, key.qMap());
+                        }
                         // Exact-path read on a directory without .mtron: enumerate children at depth 1
                         if (value.isUri() && file.isDirectory()) {
                             try {
@@ -339,72 +350,87 @@ public class fsSpace extends AbstractSpace<FileSystem> {
         };
     }
 
-    private Obj evalScript(final File scriptPath, final String scriptEngine, final Poly<?, ?> args) {
-        final List<Obj> result = new ArrayList<>();
+    /**
+     * Execute a file with the given engine and arguments.
+     * <p>
+     * Two modes:
+     * <ul>
+     *   <li><b>Direct execution</b> — when {@code engine} equals the file's own path.
+     *       The file is invoked directly: {@code file arg1 arg2 ...}</li>
+     *   <li><b>Script execution</b> — when {@code engine} differs from the file path
+     *       (typically resolved from a shebang via {@link #checkScriptEvaluation(File)}).
+     *       The engine interprets the script: {@code engine file arg1 arg2 ...}</li>
+     * </ul>
+     * Each line of stdout is parsed as mtron; parse failures become strings.
+     *
+     * @param file   the executable or script file
+     * @param engine the interpreter path (or the file's own path for direct exec)
+     * @param args   the instruction arguments forwarded to the process
+     * @return the lines of stdout as objs
+     */
+    private Obj executeFile(final File file, final String engine, final Poly<?, ?> args) {
         try {
-            final String[] command = new String[2 + (int) args.count()];
-            command[0] = scriptEngine;
-            command[1] = scriptPath.getAbsolutePath();
-            int j = 2;
-            for (final Obj arg : args) {
-                command[j++] = arg.toString();
-            }
-            final ProcessBuilder processBuilder = new ProcessBuilder(command);
-            LOG.debug("evaluating script %s", processBuilder.command());
-            final Map<String, String> env = processBuilder.environment();
-            env.put("ENV_KEY", "ENV_VALUE");
-            final Process process = processBuilder.start();
-            final BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            String line;
-            while ((line = reader.readLine()) != null) {
-                Obj x;
-                try {
-                    x = ObjmtronSerializer.parse(line);
-                } catch (final Exception e) {
-                    x = str(line);
-                }
-                LOG.debug("%s", x);
-                result.add(x);
-            }
-            process.waitFor();
-            LOG.debug("script executed successfully");
+            final boolean isDirectExec = engine.equals(file.getAbsolutePath());
+            final List<String> argList = new ArrayList<>();
+            argList.add(isDirectExec ? file.getAbsolutePath() : engine);
+            if (!isDirectExec)
+                argList.add(file.getAbsolutePath());
+            argList.addAll(args.elements().map(Str.Helper::cleanString).toList());
+            return objs(new ProcessExecutor()
+                    .readOutput(true)
+                    .command(argList)
+                    .redirectOutput(new LogOutputStream() {
+                        @Override
+                        protected void processLine(final String line) {
+                            // This runs in real-time as the process outputs data
+                            //System.out.println(line);
+                        }
+                    })
+                    .start()
+                    .getFuture().get().getOutput().getLines().stream().map(line -> {
+                        try {
+                            return ObjmtronSerializer.parse(line);
+                        } catch (final Exception e) {
+                            return str(line);
+                        }
+                    }));
         } catch (final Exception e) {
             throw MTronException.of(e);
         }
-        return MObjs.objs(result);
     }
 
+    /**
+     * Determine the execution engine for a file.
+     * <p>
+     * For files with a shebang ({@code #!}), the shebang line is matched against the
+     * space's {@link Tokens#SCRIPT} configuration to resolve the engine path.
+     * For executable files without a recognized shebang engine, the file's own
+     * absolute path is returned (direct execution mode).
+     *
+     * @param file the file to inspect
+     * @return the engine path, or null if the file is not executable
+     */
     private String checkScriptEvaluation(final File file) {
+        if (!file.canExecute())
+            return null;
         try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
             String firstLine = reader.readLine();
-            if (firstLine != null) {
-                // if (true)
-                //     return "/bin/sh";
-                if (firstLine.startsWith("#!"))
-                    return this.at(SCRIPT).orElse(rec0())
-                            .elements()
-                            .filter(pair -> firstLine.contains(pair.first().uriValue().toString()))
-                            .map(Rel::second)
-                            .map(engine -> engine.uriValue().toString())
-                            .findFirst()
-                            .orElse(null);
+            if (firstLine != null && firstLine.startsWith("#!")) {
+                final String engine = this.at(SCRIPT).orElse(rec0())
+                        .elements()
+                        .filter(pair -> firstLine.contains(pair.first().uriValue().toString()))
+                        .map(Rel::second)
+                        .map(e -> e.uriValue().toString())
+                        .findFirst()
+                        .orElse(null);
+                if (engine != null)
+                    return engine;
             }
         } catch (final IOException e) {
             LOG.warn("error reading script file: %s", file, e);
         }
-        return null;
-    }
-
-    public Obj internalApply(final Obj fileObj, final Poly<?, ?> args) {
-        if (fileObj.tid().basePath().equals(FILE_TID)) {
-            LOG.debug("internal apply: %s => %s", args, fileObj);
-            final Path path = Paths.get(fileObj.uriValue().basePath().toString());
-            final File file = path.toFile();
-            final String scriptEngine = checkScriptEvaluation(file);
-            if (scriptEngine != null)
-                return this.evalScript(file, scriptEngine, args);
-        }
-        return fileObj;
+        // Executable without a recognized shebang engine — execute directly
+        return file.getAbsolutePath();
     }
 
     @Override
@@ -448,21 +474,28 @@ public class fsSpace extends AbstractSpace<FileSystem> {
             }
         }
         try {
-            final Path vidPath = Path.of(Space.Helper.routeFromSpace(
-                    keyQless.name().equals("apply") ? keyQless.retract(1) : keyQless,
-                    this.routes()).toString());
+            final Path vidPath = Path.of(Space.Helper.routeFromSpace(keyQless, this.routes()).toString());
             final File file = vidPath.toFile();
-            if (keyQless.name().equals("apply")) {
-                return file.exists() && file.canExecute()
-                        ? Stream.of(IdObj.of(pattern,
-                        instC(keyQless.retract(1).dom(ALL.maybe()).rng(ALL_STAR),
-                                lst(T(ALL_STAR)), (lhs, inst) -> {
-                                    final Uri toExec = makeFile(vidPath);
-                                    return this.internalApply(toExec, inst.args());
-                                })))
-                        : Stream.empty();
+            final Obj value;
+            if (file.exists() && file.isFile() && file.canExecute() && !(this.hasQ(MIMEQ_PATTERN) && pattern.hasQ(MIMEQ_PATTERN.toString()))) {
+                final String engine = checkScriptEvaluation(file);
+                if (engine != null) {
+                    final fURI execTID = this.vid().extend("exec").extend(file.getName()).dom(ALL.maybe()).rng(ALL_STAR);
+                    value = instC(execTID,
+                            lst(),
+                            (lhs, inst) -> {
+                                LOG.debug("executing: %s => %s", lhs, inst);
+                                return this.executeFile(file, engine, inst.args());
+                            });
+                    return Stream.of(IdObj.of(execTID, value));
+                } else {
+                    value = this.fileToObj(file, pattern.qMap());
+                }
+            } else if (file.exists()) {
+                value = this.fileToObj(file, pattern.qMap());
+            } else {
+                value = noobj();
             }
-            final Obj value = file.exists() ? this.fileToObj(file, pattern.qMap()) : noobj();
             if (value.isNoObj()) {
                 // Try walking up to the nearest parent file and navigating into it
                 final IdObj parentResult = navigateFromParentFile(file, keyQless, pattern.qMap());

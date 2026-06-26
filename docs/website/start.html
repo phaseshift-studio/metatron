@@ -92,7 +92,7 @@
                     download
                 </a>
                 <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="download_dropdown">
-                    <li>
+                    <!--<li>
                         <div class="terminal-box">
                             <pre><code>npm i -g metatron-vm</code></pre>
                         </div>
@@ -109,7 +109,7 @@
 mvn clean install -DskipTests=true
 bin/metatron</code></pre>
                         </div>
-                    </li>
+                    </li>-->
                     <li>
                         <div class="terminal-box">
                             <span class="badge bg-danger">only linux tested</span>
@@ -352,9 +352,13 @@ There are 3 categories of objs:</p>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; {0}1 + 1  [-- noobj * noobj --]
+
 mtron&gt; [noobj,noobj]&gt;-   [-- noobj + noobj --]
+
 mtron&gt; noobj-&lt;[#]&gt;-      [-- noobj * #     --]
+
 mtron&gt; [noobj, #]&gt;-      [-- noobj + #     --]
+
 ==&gt;&lt;#&gt;</code></pre>
 </div>
 </div></div></td>
@@ -366,11 +370,17 @@ mtron&gt; [noobj, #]&gt;-      [-- noobj + #     --]
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; #.-&lt;[#]&gt;-          [-- # * #     --]
+
 ==&gt;&lt;#&gt;
+
 mtron&gt; [#,#]&gt;-            [-- # + #     --]
+
 ==&gt;{2}&lt;#&gt;
+
 mtron&gt; #.-&lt;[noobj]&gt;-      [-- # * noobj --]
+
 mtron&gt; [#,noobj]&gt;-        [-- # + noobj --]
+
 ==&gt;&lt;#&gt;</code></pre>
 </div>
 </div></div></td>
@@ -442,12 +452,17 @@ For now, create the following bootloader as plain text&#8201;&#8212;&#8201;it wi
 <div class="title">start.mtron bootloader</div>
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron"> import(/m/web);
+
  memspace::[pattern  =&gt;/usr/#, q     =&gt;[docq::[=&gt;],subq::[=&gt;]]]@/sys/space/usr;
+
  memspace::[pattern  =&gt;g:#,    q     =&gt;[subq::[=&gt;]]]           @/sys/space/graph;
+
  fsspace::[pattern   =&gt;local:#,route =&gt;[local: =&gt; &lt;~/&gt;]]       @/sys/space/fs;
+
  httpspace::[pattern =&gt;http://#,
              host    =&gt;http://localhost:8765,
              route   =&gt;[/            =&gt;local:]]@/sys/space/http;
+
  console::[=&gt;]@/usr/ui/console;</code></pre>
 </div>
 </div>
@@ -469,24 +484,43 @@ A machine can be thought of as an executing process.</p>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; 1 + 2
+
 ==&gt;3
+
 mtron&gt; ab * xyz * mn?i=1&amp;j=2
+
 ==&gt;ab/xyz/mn?i=1&amp;j=2
+
 mtron&gt; 1-&lt;[_,+ 2,* 5]&gt;-.sum()
+
 ==&gt;9
+
 mtron&gt; {1,2,3}-&lt;|[?&gt;1 =&gt; +20, _ =&gt; * -1]&gt;&gt;
+
 ==&gt;-1
+
 ==&gt;22
+
 ==&gt;23
+
 mtron&gt; 1873-&lt;[http://localhost:${+10}/mcp]
+
 ==&gt;[http://localhost:1883/mcp]
+
 mtron&gt; 10.inst(a=&gt;+2,b=&gt;?int::T){ *a + *b }
+
 ==&gt;22
+
 mtron&gt; a=&gt;b=&gt;c=&gt;d=&gt;e=&gt;f
+
 ==&gt;a=&gt;(b=&gt;(c=&gt;(d=&gt;(e=&gt;f))))
+
 mtron&gt; a=&gt;b=&gt;c=&gt;d=&gt;e=&gt;f.&gt;&gt;.&gt;&gt;.&gt;&gt;.&gt;&gt;.&gt;&gt;
+
 ==&gt;f
+
 mtron&gt; [a=&gt;1,b=&gt;[c=&gt;[5,6,7]]]&gt;&gt;b/c/1
+
 ==&gt;6</code></pre>
 </div>
 </div>
@@ -535,19 +569,33 @@ In metatron, the uri is called a <em>fURI</em> (<strong>functional uniform resou
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys/space/+.count()
+
 ==&gt;7
+
 mtron&gt; */sys/space/+.&gt;&gt;pattern
+
 ==&gt;&lt;+/#&gt;
+
 ==&gt;g:#
+
 ==&gt;/usr/#
+
 ==&gt;http://#
+
 ==&gt;/sys/#
+
 ==&gt;mtronfs:#
+
 ==&gt;local:#
+
 mtron&gt; */sys/space/+.-&lt;[&gt;&gt;pattern=&gt;&gt;&gt;route]
+
 ==&gt;{4}[=&gt;]
+
 ==&gt;[http://#=&gt;[/=&gt;local:]]
+
 ==&gt;[mtronfs:#=&gt;[mtronfs:=&gt;&lt;.metatron&gt;]]
+
 ==&gt;[local:#=&gt;[local:=&gt;/home/killswitch/]]</code></pre>
 </div>
 </div>
