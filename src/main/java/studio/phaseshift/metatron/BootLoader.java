@@ -381,8 +381,8 @@ public class BootLoader implements Rec, Feature.SelfClone {
                 final String input = scanner.nextLine();
                 return str(input);
             }), "maybe an obj", "a single line of input", Map.of(), "read a line of input from the running terminal")).tryToInst());*/
-           // Router.global().registerRedirect(f("stdout"), f("/sys/io/stdout"));
-           // Router.global().registerRedirect(f("stdin"), f("/sys/io/stdin"));
+            // Router.global().registerRedirect(f("stdout"), f("/sys/io/stdout"));
+            // Router.global().registerRedirect(f("stdin"), f("/sys/io/stdin"));
             /// LOAD DEFAULT INSTRUCTION SET (/m and /m/mach)
             final InstSet m = new mInstSet();
             Router.global().addSpace(m);  // explicit registration after full construction
@@ -475,8 +475,8 @@ public class BootLoader implements Rec, Feature.SelfClone {
                 Router.global().close();
             ROUTER = null;
             ARGS = null;
-            EXECUTOR.shutdown();
-            System.gc();
+            EXECUTOR.shutdownNow();
+            EXECUTOR = null;
             LOG.info("%s {{g}}successfully{{/g}} shutdown", Graphitty.sillyPrint("metatron", true, true));
         } catch (final Exception e) {
             LOG.error("%s {{r}}unsuccessfully{{/r}} shutdown:\n\t", Graphitty.sillyPrint("metatron", true, true), e);

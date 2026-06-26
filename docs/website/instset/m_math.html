@@ -93,7 +93,7 @@
                     download
                 </a>
                 <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="download_dropdown">
-                    <li>
+                    <!--<li>
                         <div class="terminal-box">
                             <pre><code>npm i -g metatron-vm</code></pre>
                         </div>
@@ -110,7 +110,7 @@
 mvn clean install -DskipTests=true
 bin/metatron</code></pre>
                         </div>
-                    </li>
+                    </li>-->
                     <li>
                         <div class="terminal-box">
                             <span class="badge bg-danger">only linux tested</span>
@@ -273,7 +273,7 @@ bin/metatron</code></pre>
  inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
  space=&gt;[super=&gt;!*/m],
  type=&gt;[
-  data_size::T,
+  data::T,
   bB::T,
   kB::T,
   mB::T,
@@ -317,20 +317,23 @@ bin/metatron</code></pre>
         <div class="card-header"><h5 class="mb-0 text-primary">Index</h5></div>
         <div class="card-body"><div class="mb-3">
     <h6 class="text-primary mb-2">Types</h6>
-    <div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">math</small></div><div class="d-flex flex-wrap"><a href="#type-bB" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">bB</span>
-    <span class="pill-label badge bg-primary ms-2">T</span>
-</a><a href="#type-currency" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">math</small></div><div class="d-flex flex-wrap"><a href="#type-currency" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">currency</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
-</a><a href="#type-data_size" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">data_size</span>
+</a><a href="#type-data" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">data</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">currency</small></div><div class="d-flex flex-wrap"><a href="#type-euro" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">euro</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#type-usd" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">usd</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">data</small></div><div class="d-flex flex-wrap"><a href="#type-bB" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">bB</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a><a href="#type-gB" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">gB</span>
-    <span class="pill-label badge bg-primary ms-2">T</span>
-</a><a href="#type-hour" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">hour</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a><a href="#type-kB" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">kB</span>
@@ -338,26 +341,23 @@ bin/metatron</code></pre>
 </a><a href="#type-mB" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">mB</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#type-pB" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">pB</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#type-tB" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">tB</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">time</small></div><div class="d-flex flex-wrap"><a href="#type-hour" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">hour</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
 </a><a href="#type-millis" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">millis</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a><a href="#type-minute" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">minute</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
-</a><a href="#type-pB" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">pB</span>
-    <span class="pill-label badge bg-primary ms-2">T</span>
 </a><a href="#type-second" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">second</span>
-    <span class="pill-label badge bg-primary ms-2">T</span>
-</a><a href="#type-tB" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">tB</span>
-    <span class="pill-label badge bg-primary ms-2">T</span>
-</a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">currency</small></div><div class="d-flex flex-wrap"><a href="#type-euro" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">euro</span>
-    <span class="pill-label badge bg-primary ms-2">T</span>
-</a><a href="#type-usd" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">usd</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a></div></div>
 </div><div class="mb-3">
@@ -439,11 +439,11 @@ bin/metatron</code></pre>
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">bB::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">/m/math/data_size::T</span></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">/m/math/data::T</span></span>
         </span>
-        <small class="text-muted code">/m/math/bB</small>
+        <small class="text-muted code">/m/math/data/bB</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">data_size::T[][ctor?bB&lt;=#{?}(data_size::T)]@/m/math/bB</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">data::T[][ctor?bB&lt;=#{?}(data::T)]@/m/math/data/bB</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a byte of data</p>
 </div>
@@ -459,15 +459,15 @@ bin/metatron</code></pre>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a currency amount</p>
 </div>
-</div><div class="card mb-3" id="type-data_size">
+</div><div class="card mb-3" id="type-data">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
-            <span class="code text-primary fw-bold">data_size::T</span>
+            <span class="code text-primary fw-bold">data::T</span>
             <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#type-real" class="instset-doc-small-code text-info code">/m/real::T</a></span>
         </span>
-        <small class="text-muted code">/m/math/data_size</small>
+        <small class="text-muted code">/m/math/data</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">real::T@/m/math/data_size</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">real::T@/m/math/data</code></pre></div>
     
 </div><div class="card mb-3" id="type-euro">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -485,11 +485,11 @@ bin/metatron</code></pre>
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">gB::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">/m/math/data_size::T</span></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">/m/math/data::T</span></span>
         </span>
-        <small class="text-muted code">/m/math/gB</small>
+        <small class="text-muted code">/m/math/data/gB</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">data_size::T[][ctor?gB&lt;=#{?}(data_size::T)]@/m/math/gB</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">data::T[][ctor?gB&lt;=#{?}(data::T)]@/m/math/data/gB</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a gigabyte (1024 megabytes) of data</p>
 </div>
@@ -499,9 +499,9 @@ bin/metatron</code></pre>
             <span class="code text-primary fw-bold">hour::T</span>
             <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">/m/math/time::T</span></span>
         </span>
-        <small class="text-muted code">/m/math/hour</small>
+        <small class="text-muted code">/m/math/time/hour</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/math/time::T[][ctor?hour&lt;=#{?}(time::T)]@/m/math/hour</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/math/time::T[][ctor?hour&lt;=#{?}(time::T)]@/m/math/time/hour</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">an hour of time (60 minutes)</p>
 </div>
@@ -509,11 +509,11 @@ bin/metatron</code></pre>
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">kB::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">/m/math/data_size::T</span></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">/m/math/data::T</span></span>
         </span>
-        <small class="text-muted code">/m/math/kB</small>
+        <small class="text-muted code">/m/math/data/kB</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">data_size::T[][ctor?kB&lt;=#{?}(data_size::T)]@/m/math/kB</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">data::T[][ctor?kB&lt;=#{?}(data::T)]@/m/math/data/kB</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a kilobyte (1024 bytes) of data</p>
 </div>
@@ -521,11 +521,11 @@ bin/metatron</code></pre>
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">mB::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">/m/math/data_size::T</span></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">/m/math/data::T</span></span>
         </span>
-        <small class="text-muted code">/m/math/mB</small>
+        <small class="text-muted code">/m/math/data/mB</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">data_size::T[][ctor?mB&lt;=#{?}(data_size::T)]@/m/math/mB</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">data::T[][ctor?mB&lt;=#{?}(data::T)]@/m/math/data/mB</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a megabyte (1024 kilobytes) of data</p>
 </div>
@@ -535,9 +535,9 @@ bin/metatron</code></pre>
             <span class="code text-primary fw-bold">millis::T</span>
             <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">/m/math/time::T</span></span>
         </span>
-        <small class="text-muted code">/m/math/millis</small>
+        <small class="text-muted code">/m/math/time/millis</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/math/time::T[][ctor?millis&lt;=#{?}(time::T)]@/m/math/millis</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/math/time::T[][ctor?millis&lt;=#{?}(time::T)]@/m/math/time/millis</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a millisecond of time</p>
 </div>
@@ -547,9 +547,9 @@ bin/metatron</code></pre>
             <span class="code text-primary fw-bold">minute::T</span>
             <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">/m/math/time::T</span></span>
         </span>
-        <small class="text-muted code">/m/math/minute</small>
+        <small class="text-muted code">/m/math/time/minute</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/math/time::T[][ctor?minute&lt;=#{?}(time::T)]@/m/math/minute</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/math/time::T[][ctor?minute&lt;=#{?}(time::T)]@/m/math/time/minute</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a minute of time (60 seconds)</p>
 </div>
@@ -557,11 +557,11 @@ bin/metatron</code></pre>
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">pB::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">/m/math/data_size::T</span></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">/m/math/data::T</span></span>
         </span>
-        <small class="text-muted code">/m/math/pB</small>
+        <small class="text-muted code">/m/math/data/pB</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">data_size::T[][ctor?pB&lt;=#{?}(data_size::T)]@/m/math/pB</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">data::T[][ctor?pB&lt;=#{?}(data::T)]@/m/math/data/pB</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a petabyte (1024 terabytes) of data</p>
 </div>
@@ -571,9 +571,9 @@ bin/metatron</code></pre>
             <span class="code text-primary fw-bold">second::T</span>
             <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">/m/math/time::T</span></span>
         </span>
-        <small class="text-muted code">/m/math/second</small>
+        <small class="text-muted code">/m/math/time/second</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/math/time::T[][ctor?second&lt;=#{?}(time::T)]@/m/math/second</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/math/time::T[][ctor?second&lt;=#{?}(time::T)]@/m/math/time/second</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a second of time (1000 millis)</p>
 </div>
@@ -581,11 +581,11 @@ bin/metatron</code></pre>
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">tB::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">/m/math/data_size::T</span></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">/m/math/data::T</span></span>
         </span>
-        <small class="text-muted code">/m/math/tB</small>
+        <small class="text-muted code">/m/math/data/tB</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">data_size::T[][ctor?tB&lt;=#{?}(data_size::T)]@/m/math/tB</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">data::T[][ctor?tB&lt;=#{?}(data::T)]@/m/math/data/tB</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a terabyte (1024 gigabytes) of data</p>
 </div>

@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -90,9 +90,17 @@ public class BasicRouter extends AbstractSpace<Map<Obj, Obj>> implements Router 
         return super.at(key, value);
     }
 
+    @Override
     public synchronized void close() {
         try {
-            this.spaces().jvm().keySet().forEach(vid -> this.removeSpace(vid.uriValue()));
+            this.spaces().jvm().entrySet().forEach(space -> {
+                try {
+                    // space.getValue().<Space>as().close();
+                    this.removeSpace(space.getKey().uriValue());
+                } catch (final Exception e) {
+                    LOG.warn(e);
+                }
+            });
         } catch (final Exception e) {
             throw MTronException.of(e);
         } finally {

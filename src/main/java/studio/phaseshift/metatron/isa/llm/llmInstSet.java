@@ -77,11 +77,11 @@ public class llmInstSet extends AbstractInstSet {
     public static final fURI LLM_ISA_TID = M_ISA_TID.extend(LLM);
     public static final fURI MODEL_TID = LLM_ISA_TID.extend(MODEL);
     public static final fURI LLM_INST_TID = LLM_ISA_TID.extend(INST);
-    public static final fURI LLM_SPACE_TID = LLM_ISA_TID.extend(SPACE);
-    public static final fURI LLM_TOOL_TID = LLM_ISA_TID.extend(TOOL);
-    public static final fURI LLM_SESSION_TID = LLM_ISA_TID.extend(SESSION);
-    public static final fURI LLM_SKILL_TID = LLM_ISA_TID.extend(SKILL);
     public static final fURI LLM_FEATURE_TID = LLM_ISA_TID.extend(FEATURE);
+    public static final fURI LLM_SPACE_TID = LLM_ISA_TID.extend(SPACE);
+    public static final fURI LLM_TOOL_TID = LLM_FEATURE_TID.extend(TOOL);
+    public static final fURI LLM_SESSION_TID = LLM_FEATURE_TID.extend(SESSION);
+    public static final fURI LLM_SKILL_TID = LLM_FEATURE_TID.extend(SKILL);
     public static final fURI MESSAGE_TID = LLM_ISA_TID.extend(MESSAGE);
     public static final fURI AI_MESSAGE_TID = MESSAGE_TID.extend(AI);
     public static final fURI USER_MESSAGE_TID = MESSAGE_TID.extend(USER);
@@ -118,7 +118,7 @@ public class llmInstSet extends AbstractInstSet {
                         docWrap(LLM_SESSION_TYPE = Type.Builder.build()
                                         .tid(REC_TID)
                                         .vid(LLM_SESSION_TID)
-                                        .isaPredicate(rec(uri(AGENT), T(URI_TID.some()), uri(USER), T(URI_TID.some()), uri(MESSAGE), URI_TYPE, uri(ALGORITHM), REC_TYPE))
+                                        .isaPredicate(rec(uri(AGENT), T(URI_TID.some()), uri(USER), T(URI_TID.some()), uri(MESSAGE), T(URI_TID.maybe()), uri(ALGORITHM), REC_TYPE))
                                         .create(),
                                 null, null, mutableMap(
                                         uri(AGENT), "the agent(s) involved in the chat session",

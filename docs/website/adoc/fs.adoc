@@ -54,3 +54,44 @@ The type `space::T < rec::T`. Thus, each space is an obj that can be referenced.
 <3> files and directories are accessible through dereferencing.
 <4> the binary content of a file is accessed by transforming `file::T` to `bytes::T`.
 <5> accessing the text content of a file requires a `file \=> bytes \=> str` chain of transformations.
+
+[discrete]
+=== Bash Commands
+
+It's possible to evaluate `bash` commands within the current working directory by referencing the bash binary as an mtron `inst`. Before doing so, `bash` must be accessible via some `fspsace` pattern.
+
+[mtron]
+----
+fsspace::[                                            /
+  pattern => bin:#,                                   /
+    route => [bin: => /usr/bin]]@</sys/space/fs/bin> 
+----
+
+From there,the `bash` binary has `obj` args applied to it. These `obj` args are turned into strings. Thus, uris can be used to reduce quoting.
+
+[mtron]
+----
+bin:bash('-c',df)
+bin:bash('-c',ls)
+bin:bash('-c','ls -all').regex('\b*\w+')._/count()\_>-.sum()
+----
+
+[discrete]
+=== Shell Scripts
+
+Shell scripts can also be transformed into instructions on the fly. The `#!` (shebang) of a text file is analyzed. A `script` relation in `fsspace` serves as a lookup table regarding
+the location of the respective script engine. If found, then what were originally file references, have now become inst references.
+
+[mtron]
+----
+fsspace::[                                          /
+  pattern => local:#,                               /
+        q => [mimeq::[=>]],                         /
+   script => [sh     => /bin/sh,                    /
+              bash   => /bin/bash,                  /
+              zsh    => /bin/zsh,                   /
+              python => /usr/bin/python3,           /
+              perl   => /usr/bin/perl,              /
+              mtron  => /bin/metatron]              /                 
+    route => [local: => <~>]]@</sys/space/fs/local>
+----

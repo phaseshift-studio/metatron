@@ -16,11 +16,42 @@ ERRORMARK="${RED}\u274C"
 
 # Configuration
 REPO_URL="https://github.com/phaseshift-studio/metatron.git"
-BUILD_DIR="./metatron"
+BUILD_DIR="${PWD}/metatron"
 
-echo -e "${BLUE}metatron ${YELLOW}installer"
-echo -e "  ${BLUE}repo:${YELLOW}    ${REPO_URL}"
-echo -e "  ${BLUE}install:${YELLOW} ${BUILD_DIR}${NC}"
+HEADER="${RED}                _        _                   
+ _ __ ___   ___| |_ __ _| |_ _ __ ___  _ __  
+| '_  ${YELLOW} _ \ / _ \ __/ _  | __| '__/ _ \| '_ \ 
+| | | | | |  __/ || (_| | |_| | | (_) | | | |
+|_| |_| |_|\___|\__${GREEN}\__,_|\__|_|  \___/|_| |_|
+                            ${BLUE}PhaseShift Studio${NC}"
+
+echo -e "$HEADER"
+echo -e ""
+echo -e "repository:  ${REPO_URL}"
+echo -e "install dir: ${BUILD_DIR}"
+echo -e ""
+
+# loading icon
+spinner() {
+    local pid=$1
+    local message="${2:-Processing...}"
+    local spin='⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏'
+    local i=0
+
+    # Hide cursor
+    tput civis 2>/dev/null || true
+
+    while kill -0 "$pid" 2>/dev/null; do
+        i=$(( (i + 1) % 10 ))
+        printf "\r${spin:$i:1} $message"
+        sleep 0.1
+    done
+
+    # Show cursor and clear line
+    tput cnorm 2>/dev/null || true
+    printf "\r\033[K✓ $message\n"
+}
+
 
 # Function to check if a command exists
 command_exists() {
@@ -37,7 +68,7 @@ install_dependencies() {
       echo -e "installing ${package}..."
       sudo apt-get update
       sudo apt-get install -y ${package}
-      echo -e "${package]} installed"
+      echo -e "${package} installed"
     else
       echo "installation cancelled by user"
       exit 1
@@ -51,10 +82,10 @@ else
     # Extract major version (handles both 1.x and x formats)
     JAVA_MAJOR_VERSION=$(java -version 2>&1 | awk -F '"' '/version/ {split($2, a, "."); gsub(/[^0-9]/, "", a[1]); print a[1]}')
     # Check if version is 21 or higher
-    if [ "$JAVA_MAJOR_VERSION" -ge 21 ]; then
-        echo -e "${CHECKMARK} java $JAVA_MAJOR_VERSION ${GREEN}already installed${NC}."
+    if [ "${JAVA_MAJOR_VERSION}" -ge 21 ]; then
+        echo -e "${CHECKMARK} java ${JAVA_MAJOR_VERSION} ${GREEN}already installed${NC}"
     else
-        echo -e "java version $JAVA_MAJOR_VERSION ${RED}is too low${NC}. java 21 or higher is required."
+        echo -e "java version ${JAVA_MAJOR_VERSION} ${RED}is too low${NC}. java 21 or higher is required."
         install_dependencies "openjdk-21-jdk"
     fi
 fi
@@ -63,44 +94,33 @@ fi
 if ! command_exists mvn; then
     install_dependencies "maven"
 else
-    echo -e "${CHECKMARK} maven ${GREEN}already installed${NC}."
+    echo -e "${CHECKMARK} maven ${GREEN}already installed${NC}"
 fi
 
 # Clone the repository
-echo -e "cloning repository from $REPO_URL..."
-if [ -d "$BUILD_DIR" ]; then
-    echo -e "directory $BUILD_DIR ${YELLOW}already exists${NC}. updating..."
-    cd "$BUILD_DIR"
+echo -e "cloning ${REPO_URL}..."
+if [ -d "${BUILD_DIR}" ]; then
+    echo -e "directory ${BUILD_DIR} ${YELLOW}already exists${NC}"
+    echo -e "updating..."
+    cd "${BUILD_DIR}"
     git pull
 else
-    git clone "$REPO_URL"
-    cd "$BUILD_DIR"
+    git clone "${REPO_URL}"
+    cd "{$BUILD_DIR}"
 fi
 
 # Build the project with Maven
-echo -e "building project with maven..."
-export MAVEN_OPTS=--add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED
-# defaults
-HOST="ws://0.0.0.0:8555"
-BOOT="boot/boot.mtron"
-LOG="info"
-EXTRAS=""
-while [ $# -gt 0 ]; do
-  case "$1" in
-    --headless) export MTRON_HEADLESS=1       ; shift ;;
-    --log)      LOG="$2"                     ; shift 2 ;;
-    --host)     HOST="$2"                    ; shift 2 ;;
-    --boot)     BOOT="$2"                    ; shift 2 ;;
-    *)          break ;;
-  esac
-done
-
-mvn compile exec:java -o -Dexec.args="[host=><${HOST}>,boot=><${BOOT}>,log=>${LOG}${EXTRAS}]"
+export MAVEN_OPTS="--add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED --sun-misc-unsafe-memory-access=allow"
+mvn clean install -q -DskipTests=true &
+spinner $! "installing metatron"
 
 # Check build status
 if [ $? -eq 0 ]; then
-    echo "build successful!"
+    echo -e "${CHECKMARK} build successful${NC}"
+    echo -e "${GREEN}up next${NC}"
+    echo "cd ${BUILD_DIR}"
+    echo "bin/metatron --help" 
 else
-    echo "build failed!"
+    echo -e "${RED} build failed${NC}"
     exit 1
 fi

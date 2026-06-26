@@ -37,6 +37,7 @@ import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.rdf.rdfInstSet;
 import studio.phaseshift.metatron.isa.tble.tbleInstSet;
 import studio.phaseshift.metatron.isa.web.webInstSet;
+import studio.phaseshift.metatron.util.CommonUtil;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
@@ -175,7 +176,7 @@ public class DocRunner {
                 LOG.info("done (copy only)");
             return;
         }
-            
+
         ////////////////////////////////////////////////////////////////////////////////////
         ////////////////////////////////////////////////////////////////////////////////////
         ////////////////////////////////////////////////////////////////////////////////////
@@ -184,7 +185,7 @@ public class DocRunner {
             // ── Bootstrap metatron VM ────────────────────────────────────────
             BootLoader.BOOTING = true;
             BootLoader.TESTING = true;
-            BootLoader.load(MRec.rec(uri(LOGG), uri(INFO), uri(BOOT), uri(boot)));
+            BootLoader.load(MRec.rec(uri(LOGG), uri(INFO), uri(BOOT), uri("boot/docs.mtron")));
             for (final InstSet is : new InstSet[]{
                     new mathInstSet(), new webInstSet(), new iotInstSet(),
                     new grphInstSet(), new llmInstSet(), new tbleInstSet(),
@@ -199,14 +200,15 @@ public class DocRunner {
             TypeCheck.disable(TypeCheck.code_resolve);
             // ── Copy adoc files and preprocess ──────────────────────
 
-            if (verbose) LOG.info(Graphitty.sillyPrint("\n\nprocessing " + file.getFileName() + "...\n\n", true, true));
+            LOG.info(Graphitty.sillyPrint("\n\nprocessing " + file.getFileName() + "...\n\n", true, true));
             final Path outFile = outputPath.resolve(file.getFileName());
             String content = Files.readString(file);
             content = new LegendDocPreprocessor().process(content);   // inject legend + anchors
             content = new MtronDocPreprocessor().process(content);    // evaluate [mtron] blocks
             Files.writeString(outFile, content.stripTrailing());
-            if (verbose) LOG.info("  processed " + file.getFileName());
-            BootLoader.close();
+            LOG.info("  processed " + file.getFileName());
+            BootLoader.getExecutor().shutdownNow();
+            //BootLoader.close();
         }
 
         ////////////////////////////////////////////////////////////////////////////////////
@@ -252,8 +254,7 @@ public class DocRunner {
             }
         }
 
-        if (verbose)
-            LOG.info("done");
+        LOG.info("done");
         BootLoader.close();
         System.exit(0);
     }

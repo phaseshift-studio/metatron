@@ -91,7 +91,7 @@ public class mcpClient extends MRec {
                         this.at(uri(HEADERS)).orElse(rec()).jvm(),
                         this.at(uri(HOST)),
                         this.at(COMMAND).orElse(lst()).jvm()))
-                //.autoHealthCheck(true)
+                .autoHealthCheck(false)
                 .cacheToolList(true)
                 .build();
         this.jvm().put(uri(STATUS), auto_(instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(BOOL_TID), lst(), (lhs, inst) -> {

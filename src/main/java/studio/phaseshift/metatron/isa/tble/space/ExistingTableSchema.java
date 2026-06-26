@@ -42,6 +42,7 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
@@ -179,8 +180,8 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
         // produces garbage like "[field=>'val',...]" that can't parse as a number
         if (value.isPoly() && column.isNumeric()) {
             throw MTronException.of(
-                    "Cannot write %s to column '%s.%s': column type is %s (numeric). "
-                            + "Numbers, strings, and booleans are supported.",
+                    "cannot write %s to column '%s.%s': column type is %s (numeric). "
+                            + "numbers, strings, and booleans are supported.",
                     value.tid().name(), tableName, column.name(), column.typeName());
         }
         // Non-numeric string into a numeric column
@@ -189,7 +190,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
                 Double.parseDouble(value.asStr().jvm());
             } catch (final NumberFormatException e) {
                 throw MTronException.of(
-                        "Cannot write string '%s' to column '%s.%s': column type is %s (numeric).",
+                        "cannot write string '%s' to column '%s.%s': column type is %s (numeric).",
                         value.asStr().jvm(), tableName, column.name(), column.typeName());
             }
         }
@@ -423,7 +424,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
         final String refTable = findReferencedTable(colName, knownTables);
         if (refTable != null) {
             schemaGenerator.registerFK(tableName, columnName, refTable, "id");
-            this.space.logger().info("lazy FK by convention: {{b}}%s.%s{{X}} → {{b}}%s{{X}}",
+            this.space.logger().info("lazy foreign key by convention: {{b}}%s.%s{{X}} → {{b}}%s{{X}}",
                     tableName, columnName, refTable);
             return schemaGenerator.getFKTarget(tableName, columnName);
         }
@@ -494,7 +495,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
                 final Object value = rs.getObject(col.name);
                 if (value == null || rs.wasNull()) return noobj();
                 if (logicalType.name().equals("bool")) {
-                    return studio.phaseshift.metatron.isa.m.type.impl.MBool.bool(rs.getInt(col.name) != 0);
+                    return bool(rs.getInt(col.name) != 0);
                 }
             }
         }
@@ -504,7 +505,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
                         col.sqlType == Types.SMALLINT || col.sqlType == Types.BIT)) {
             final Object value = rs.getObject(col.name);
             if (value == null || rs.wasNull()) return noobj();
-            return studio.phaseshift.metatron.isa.m.type.impl.MBool.bool(rs.getInt(col.name) != 0);
+            return bool(rs.getInt(col.name) != 0);
         }
         return readColumn(rs, col.name, col.sqlType);
     }
@@ -611,7 +612,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
             this.space.logger().debug("using primary key from list: %s = %s", pkColumn, pkValue);
         } else {
             pkValue = rowId;
-            this.space.logger().debug("using primary key from URI: %s = %s", pkColumn, pkValue);
+            this.space.logger().debug("using primary key from uri: %s = %s", pkColumn, pkValue);
         }
 
         final Rec current = readCurrentRow(conn, metadata, pkColumn, pkValue);
@@ -655,7 +656,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
         final ColumnMetadata column = metadata.columns.stream()
                 .filter(c -> c.name.equalsIgnoreCase(fieldName))
                 .findFirst()
-                .orElseThrow(() -> new SQLException("Column not found: " + fieldName));
+                .orElseThrow(() -> new SQLException("column not found: " + fieldName));
 
         final String pkColumn = metadata.primaryKeys.getFirst();
         final String sql = String.format("UPDATE %s SET %s = ? WHERE %s = ?",

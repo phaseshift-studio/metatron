@@ -70,6 +70,13 @@ public class ScoringInstResolver implements InstResolver {
             return userInst;
         if (userInst.isNoObj())
             return null;
+        if (userInst.tid().big().test(AS_INST_TID)) {
+            final List<Obj> result = Router.readFromSpace(String.format("as?%s<=%s", userInst.arg(0).typeId(), lhs.typeId())).stream().toList();
+            if (result.size() == 1) {
+                userInst.logger().debug("fast as retrieval: %s", result);
+                return result.getFirst().as();
+            }
+        }
 
         final fURI basePath = userInst.tid().basePath();
         Obj fetched = noobj();

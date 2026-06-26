@@ -44,6 +44,7 @@ import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.vec.type.MVec;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
@@ -63,11 +64,13 @@ import static studio.phaseshift.metatron.furi.q.QCollection.DOCQ;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.MODEL_TID;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.SYSTEM_MESSAGE_TID;
 import static studio.phaseshift.metatron.isa.llm.type.mTool.LLM_TOOL_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Str.str0;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.mach.type.thread.VirtualThread.virtual;
 import static studio.phaseshift.metatron.isa.vec.vecInstSet.VEC_TID;
 import static studio.phaseshift.metatron.isa.web.webInstSet.MCP_CLIENT_TYPE;
 
@@ -86,6 +89,7 @@ public class mModel extends MRec {
     // User-added system messages (via addSystemMessage).  Merged with
     // capability-generated messages during agent construction.
     private final List<String> customSystemMessages = new ArrayList<>();
+    protected final GraphittyLogger LOG = Graphitty.log(this);
 
     public mModel(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
@@ -99,7 +103,9 @@ public class mModel extends MRec {
         this.customSystemMessages.add(text);
     }
 
-    /** All user-added system messages (mutable list). */
+    /**
+     * All user-added system messages (mutable list).
+     */
     public List<String> systemMessages() {
         return this.customSystemMessages;
     }
@@ -387,9 +393,13 @@ public class mModel extends MRec {
         }
     }
 
+    protected String onMessageUpdate(final String message, final String messageType) {
+        final Obj onMessage = this.at(f(FEATURE).extend(SESSION).extend(messageType));
+        return onMessage.isNoObj() ? message : Str.Helper.cleanString(onMessage.apply(str(message)));
+    }
+
     public mModel chat(final String message, final Inst onResponse) {
-        studio.phaseshift.metatron.isa.mach.type.thread.VirtualThread.virtual(onResponse)
-                .applyAsync(this.chat(message));
+        virtual(onResponse).applyAsync(this.chat(message));
         return this;
     }
 
@@ -399,7 +409,8 @@ public class mModel extends MRec {
 
     public Obj chat(final String message, final Rec responseFormat) {
         final StringBuilder response = new StringBuilder();
-        Router.global().stats().ioStats().incrBytesSent(message.getBytes().length);
+        final String processedMessage = this.onMessageUpdate(message, "on_user");
+        Router.global().stats().ioStats().incrBytesSent(processedMessage.getBytes().length);
         final CountDownLatch latch = new CountDownLatch(1);
         final AtomicBoolean isThinking = new AtomicBoolean(false);
         final AtomicBoolean isResponding = new AtomicBoolean(false);
@@ -412,9 +423,10 @@ public class mModel extends MRec {
                     this.agentBuilder())
                     .streamingChatModel(LLMFactory.createChatInteraction(this, this.model(), responseFormat)).build();
             final AtomicReference<String> STAGE = new AtomicReference<>("START");
-            if (message.isBlank())
+            if (processedMessage.isBlank())
                 throw MTronException.of("no message provided: %s", this.vid());
-            agent.chat(message)
+            LOG.info("processed message: %s", processedMessage);
+            agent.chat(processedMessage)
                     .onToolExecuted(tool -> {
                         STAGE.set("TOOLING");
                         this.logger().info("tool executed: %s(%s) => %s", tool.request().name(), tool.request().arguments(), tool.result());

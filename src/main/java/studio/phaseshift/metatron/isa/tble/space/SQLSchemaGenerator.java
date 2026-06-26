@@ -377,7 +377,7 @@ public class SQLSchemaGenerator {
             }
         }
 
-        fields.put(URI_TYPE.maybe(), ALL_TYPE);
+        //fields.put(URI_TYPE.maybe(), ALL_TYPE);
 
         return Type.Builder.build()
                 .tid(REC_ROW_TID)

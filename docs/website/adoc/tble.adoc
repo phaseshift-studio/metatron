@@ -17,7 +17,7 @@ https://mariadb.org/[MariaDB], and https://www.mysql.com/[MySQL].
 [cols="5a,6a",separator=🧱,role="table-bordered center"]
 |===
 🧱 
-creating a `tblespace` requires a JDBC `host` URI, a `driver`, and a `route`. the `instset` schema is auto-discovered from the live database; the `pattern` determines which subset of the URI address space that this space is responsible for.
+creating a `tblespace` requires a JDBC `host` URI, a `driver`, and a `route`. Finally, the `pattern` determines which subset of the URI address space that this space is responsible for.
 🧱
 [mtron]
 ----
@@ -30,11 +30,10 @@ creating a `tblespace` requires a JDBC `host` URI, a `driver`, and a `route`. th
 tblespace::[pattern => lite:#,                             /
             host    => <sqlite:target/test>,               /
             driver  => <org.sqlite.JDBC>,                  /
-            table   => [person,score,award,venue],         /
             route   => [lite:=><>]]@/sys/space/lite   [-- <1> --]
 lite:person/1 -> [name=>'marko', age=>29]             [-- <2> --]
 lite:person/2 -> [name=>'grant', age=>25]             [-- <3> --]
-*lite:person/                                         [-- <4> --]
+*lite:person                                          [-- <4> --]
 *lite:person/+/name                                   [-- <5> --]
 *lite:person/+/id                                     [-- <6> --]              
 ----
@@ -45,9 +44,10 @@ lite:person/2 -> [name=>'grant', age=>25]             [-- <3> --]
 <5> querying the `person` table — all rows with any `name` value.
 <6> primary keys are encoded in the vid and omitted from the row body — but still addressable as an explicit path segment.
 
+.auto-generated dynamic schemas
 [.card]
 --
-When the first row is added to a table the schema is defined. Said in terms of metatron, when the first `rec` is written to a collection data path, the data path's instruction set is updated.
+When the first row is added to a table a **schema** is inferred from the row's relations. Said in terms of metatron, when the first `rec` is written to a `tblespace` collection, the collection's type is inferred.
 
 [source,mtron]
 ----
@@ -59,9 +59,9 @@ When the first row is added to a table the schema is defined. Said in terms of m
 *lite:+
 ----
 
-Note that when a new row is inserted that has more fields than the first row, the `tblespace` will perform an `ALTER TABLE` to accommodate the new data. This, in turn, updates the `instset` of the `tblespace`.
+When a new row is inserted that has more fields than the first row, the `tblespace` will perform an `ALTER TABLE` to accommodate the extending data. This, in turn, updates the collection's type.
 
-[mtron]
+[source,mtron]
 ----
 lite:person/3 -> [name=>'alex', age=>25, skill=>graph]
 *lite:+
@@ -131,9 +131,9 @@ lite:kv/nest -> [a=>[b=>[c=>2,d=>!*lite:kv/nest]]]
 --
 
 [discrete]
-=== mtron-to-sql rewrites
+=== Relational Database Rewrites
 
-Regardless of the language, when querying data, the fundamental primitives of the expression ultimately boil down to a collection of  `aggregate`, `filter`, `project`, `update`, etc. operations. Universals ensure that what can be expressed in mtron can also be expressed in SQL and vice versa (almost). Since relational databases are optimized for processing SQL, it's best to leverage the backend's SQL-query engine within the mtron expression. The https://en.wikipedia.org/wiki/Rewriting[rewrite] `insts` of  `/m/tble` do just that. In general, all rewrites are instructions of the form:
+Regardless of the language, when querying data, the fundamental primitives of the expression ultimately boil down to a collection of  `aggregate`, `filter`, `project`, `update`, etc. type operations. The universality of these operations across programming and query languages ensure that what can be expressed in mtron can also be expressed in SQL and vice versa (almost). Since relational databases are optimized for processing SQL, it's best to leverage the backend's SQL-query engine whenever possible. The https://en.wikipedia.org/wiki/Rewriting[rewrite] `insts` of  `/m/tble` do just that. In general, all rewrites are instructions of the form:
 
 \[
 \tt rewrite?code\{?\}<=code(arg_0,arg_1,\ldots,arg_n).

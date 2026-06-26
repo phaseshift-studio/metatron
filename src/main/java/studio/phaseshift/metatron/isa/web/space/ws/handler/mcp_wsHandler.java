@@ -74,7 +74,7 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  */
 public class mcp_wsHandler extends WebSocketRec {
 
-    public static final fURI WS_MCP_HANDLER_TID = WS_SPACE_TID.extend("mcp_ws");
+    public static final fURI WS_MCP_HANDLER_TID = WS_SPACE_TID.extend("mcp").extend("mcp_ws");
     protected final GraphittyLogger LOG = Graphitty.log(this);
 
     public static final Type WS_MCP_HANDLER_TYPE = Type.Builder.build()

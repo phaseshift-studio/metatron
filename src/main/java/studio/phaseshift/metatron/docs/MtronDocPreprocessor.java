@@ -216,12 +216,23 @@ public final class MtronDocPreprocessor {
                 if (!hidden) lines.add("==>ERROR: " + e.getMessage());
             }
             if (lines.size() > maxOutput) {
-                int linesToRemove = lines.size() - maxOutput;
-                for (int i = 0; i < linesToRemove; i++) {
-                    lines.removeLast();
-                }
-                lines.add("...");
+                final List<String> shortList = new ArrayList<>(lines.subList(0, maxOutput));
+                lines.clear();
+                lines.addAll(shortList);
+                lines.add("   ...");
             }
+            final int maxOutputFinal = maxOutput;
+            final List<String> newShort = new ArrayList<>(lines.stream().map(l -> new ArrayList<>(List.of(l.split("\n")))).map(l -> {
+                if (l.size() > maxOutputFinal) {
+                    final List<String> shortList = new ArrayList<>(l.subList(0, maxOutputFinal));
+                    l.clear();
+                    l.addAll(shortList);
+                    l.add("   ...");
+                }
+                return l.stream().reduce("", (a, b) -> a + b + "\n");
+            }).toList());
+            lines.clear();
+            lines.addAll(newShort);
             noPrompt = false;
         }
 
