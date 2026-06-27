@@ -90,27 +90,23 @@ The following example demonstrates how to search for an appropriate LLM for a gi
 [MAXOUTPUT 20] *<fs:skills/mtron/SKILL.md>
 ----
 
-++++
-<!--   skill   => [!*<fs:skills/mtron>.as(skill::T)],     -->
-++++
-
 [mtron]
 ----
-[,]@/usr/ai/session                                        [-- <1> --]
-*ollama:+.                                                /
- where(>>skill.has(thinking).has(tools)).                 /
- where(>>size.?>gB::1.0.?<gB::5.0).                       /
- order(>>size * -1.0).                                    /
- take(1).                                                 /
- >>=+[feature=>[                                          /
-       session  => [agent     => /usr/ai,                 /
-                    user      => /usr/marko,              /
-                    name      => 'general chat',          /
-                    algorithm => [max=>15]],              /
-       tool     => [!*eval],                              /
-       think    => print(_),                              /
-       response => [to=>to(/usr/ai/response)]]].          /
- to(ai)
+[,]@/usr/ai/session                                            [-- <1> --]
+*ollama:+.                                                     /
+ where(>>skill.has(thinking).has(tools)).                      /
+ where(>>size.?>gB::1.0.?<gB::5.0).                            /
+ order(>>size * -1.0).                                         /
+ take(1).                                                      /
+ >>=+[feature=>[                                               /
+       session  => [agent     => /usr/ai,                      /
+                    user      => /usr/marko,                   /
+                    name      => 'general chat',               /
+                    algorithm => [max=>15]]@/usr/ai/session/1, /
+       tool     => [!*eval],                                   /
+       think    => print(_),                                   /
+       response => [to=>to(/usr/ai/response)]]].               /
+ to(aix)
 [HIDDEN] ai/feature/think -> noobj
 ----
 <1> create a `lst` to server as the an ordered sequence of chat interactions. 
@@ -124,7 +120,7 @@ The following example demonstrates how to search for an appropriate LLM for a gi
 <9> give the model access to mtron's eval instruction.
 <10> have the model print its thoughts to the console terminal
 <11> have the model store its responses to the `/usr/ai` space.
-<12> write the model to `ai`.
+<12> write the model to `aix`.
 
 The first part of the stream above was about widdling down the set of available models to those that meet the requirements for this documentation -- namely, a model that is not too big (as building the docs would take too long) and has some useful capabilities for demonstrating model features.
 
@@ -134,7 +130,7 @@ With the model loaded and equipped, it's possible to communicate with it.
 
 [mtron]
 ----
-@ai.chat("I need you evaluate the mtron expresion `-<[_=>_]>>.>-[,]-<[_,-<[_=>_]>>]>>.>-` with a lhs of `1`. Please don't tell me the result of the evaluation until I ask for it sometime in the near future.")
+@aix.chat("I need you evaluate the mtron expresion `-<[_=>_]>>.>-[,]-<[_,-<[_=>_]>>]>>.>-` with a lhs of `1`. Please don't tell me the result of the evaluation until I ask for it sometime in the near future.")
 ----
 
 

@@ -41,6 +41,12 @@ public class MTronException extends RuntimeException {
         this(Graphitty.string(message), null);
     }
 
+    protected MTronException(final String message, final Throwable cause, final boolean dummy) {
+        super(null == cause ? Graphitty.string(message) : Graphitty.string(message.replace("%", "%%") + "[%s:%d]",
+                cause.getStackTrace()[0].getClassName(),
+                cause.getStackTrace()[0].getLineNumber()), cause);
+    }
+
     public static MTronException of(final Throwable cause) {
         final MTronException m = cause instanceof MTronException ? (MTronException) cause : convert(cause);
         return cause.getCause() != null ? m.cause(convert(cause.getCause())) : m;

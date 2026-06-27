@@ -229,7 +229,7 @@ public final class MtronDocPreprocessor {
                     l.addAll(shortList);
                     l.add("   ...");
                 }
-                return l.stream().reduce("", (a, b) -> a + b + "\n");
+                return l.stream().reduce("", (a, b) -> a + "\n" + b).trim();
             }).toList());
             lines.clear();
             lines.addAll(newShort);
