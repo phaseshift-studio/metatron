@@ -115,13 +115,14 @@ public interface Lst extends Poly<Lst, List<Obj>>, PlusMonoid.O<Lst> {
     default Lst at(final Obj key, final Obj value, final BiFunction<Poly<?, ?>, Object, Poly<?, ?>> operation) {
         if (key.isInt()) {
             final int keyIndex = key.intValue().intValue();
-            if (Math.abs(keyIndex) >= this.jvm().size())
+            final int effectiveIdx = keyIndex < 0 ? this.jvm().size() + keyIndex : keyIndex;
+            if (effectiveIdx < 0 || effectiveIdx >= this.jvm().size())
                 throw MTronException.of("lst index out of bounds: %d > %d", Math.abs(keyIndex), this.jvm().size());
             final ArrayList<Obj> newList = new ArrayList<>(this.lstValue());
             if (value.isNoObj())
-                newList.remove(keyIndex < 0 ? (this.jvm().size() + keyIndex) : keyIndex);
+                newList.remove(effectiveIdx);
             else
-                newList.set(keyIndex < 0 ? (this.jvm().size() + keyIndex) : keyIndex, value);
+                newList.set(effectiveIdx, value);
             return this.clone(newList, this.tid(), this.vid());
         } else if (key.isUri()) {
             final Int k = jnt(Long.parseLong(key.uriValue().path().get(0)));

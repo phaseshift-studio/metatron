@@ -47,6 +47,17 @@ public class LstTest extends AbstractAlgebraTest<Lst> {
 
     @ParameterizedTest
     @CsvSource(value = {
+            "[1,2,3]>> -1                                                                 % 3",
+            "[1]>> -1                                                                    % 1",
+            "[1,2,3]>> -2                                                                % 2",
+            "[1,2,3]>> -3                                                                % 1",
+            "[1]>> -2                                                                    % noobj",
+            "[1,2,3]>> -4                                                                % noobj",
+            "[1,2,3,4]>> 345                                                             % noobj",
+            "[1,2,3]>>{1,-2}                                                             % {2,2}",
+            "[1,2,3]>>{-1,-2,-3}                                                         % {3,2,1}",
+            "[1,2,3]>>{0,-1,2}                                                           % {1,3,3}",
+            // existing negative-index cases
             "[a,b,c]>>a                                                                 % noobj",
             "[a,b,c]>>+                                                                 % {a,b,c}",
             "[a,b,c]>><+>                                                               % {a,b,c}",

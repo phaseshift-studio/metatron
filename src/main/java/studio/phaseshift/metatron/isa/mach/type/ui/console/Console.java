@@ -43,7 +43,6 @@ import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.machine.SwarmMachine;
 import studio.phaseshift.metatron.isa.mach.type.thread.FutureObj;
-import studio.phaseshift.metatron.isa.mach.type.thread.VirtualThread;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.menu.ColonMenu;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
@@ -75,7 +74,6 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.INST_CTOR_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.START_INST_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.start_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.*;
@@ -148,6 +146,22 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
      */
     private volatile int lastBufferLength = 0;
     private volatile boolean pendingPaneFlush = false;
+    /**
+     * When non-null, the next {@code readLine()} call will pre-fill the JLine
+     * editing buffer with this text.  Set by the chat-overlay detection path
+     * to restore the mtron&gt; prefix after a chat submission, and cleared
+     * immediately after the next {@code readLine()} consumes it.
+     */
+    private volatile String seedBuffer = null;
+    /**
+     * Metatron-addressable stack of {@code \_ } expression lines, ordered
+     * outermost→innermost.  The deepest (last) element is evaluated on
+     * ENTER and popped.  Accessible from mtron via {@code *exp>>0} etc.
+     * when the console is stored at {@code /usr/console}.
+     */
+    @JRecElement(key = "exp", rng = "/m/lst")
+    public Lst expressionStack = lst();
+
     /**
      * Milliseconds of keyboard inactivity after which non-active panes may render.
      */
@@ -357,8 +371,13 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
 
             // Restore full terminal width / secondary prompt.
             this.reader.setVariable("COLUMNS", terminal.getWidth());
+            // Use a clean secondary prompt when the seed buffer contains \_ lines
+            // so the JLine "|" decoration doesn't appear before the \_ marker.
+            final boolean hasChatLines = null != this.seedBuffer && this.seedBuffer.contains("\\_ ");
             this.reader.setVariable(LineReader.SECONDARY_PROMPT_PATTERN,
-                    Graphitty.string("{{-X&v1&^1&m}}     {{g}}| {{X}}"));
+                    hasChatLines
+                            ? Graphitty.string("{{-X-}}{{v1&^1&m}}")
+                            : Graphitty.string("{{-X&v1&^1&m}}     {{g}}| {{X}}"));
         }
     }
 
@@ -818,7 +837,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
     protected void executeMtron(final String line) {
         /// /////////////////////////////////////////////////////
         AtomicReference<Obj> running = new AtomicReference<>(noobj());
-        final String fullInput = this.prefix + line + this.postfix;
+        final String fullInput = this.prefix + Str.Helper.cleanString(str(line).apply()) + this.postfix;
         if (fullInput.isBlank()) return;
 
         // 1. Parse the full input — the parser natively handles ; via end() sugar
@@ -932,13 +951,81 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                 this.inReadLine = true;
                 this.lastKeyActivityMs = System.currentTimeMillis();
                 this.lastBufferLength = 0; // fresh buffer for new readLine
-                final String line = this.reader.readLine(this.prompt()).trim();
+                final String line = (null != this.seedBuffer
+                        ? this.reader.readLine(this.prompt(), null, (MaskingCallback) null, this.seedBuffer)
+                        : this.reader.readLine(this.prompt())).trim();
+                this.seedBuffer = null;
                 this.inReadLine = false;
                 // Drain any agent output that was deferred while the user was typing.
                 if (this.pendingPaneFlush) {
                     this.pendingPaneFlush = false;
                     if (this.splitMode) this.renderPanes();
                 }
+                // --- Expression overlay (\_) detection ---
+                // Each \_ line is an expression stored in the metatron-addressable
+                // expressionStack Lst (outermost→innermost).  ENTER evaluates the
+                // deepest (last), pops it, and rebuilds the seed buffer from the
+                // remaining lines.
+                final int firstUscore = line.indexOf("\\_ ");
+                if (firstUscore >= 0 && line.lastIndexOf('\n', firstUscore) >= 0) {
+                    final String[] rawLines = line.split("\n");
+                    final String mtronPart = rawLines[0].trim();
+                    // Reset and refill expressionStack: >>0 = mtron> line,
+                    // >>1 = outermost \_, ..., >> -1 = deepest (top of stack).
+                    this.expressionStack = lst();
+                    this.expressionStack.add(str(mtronPart), Poly.MUTABLE);
+                    for (int i = 1; i < rawLines.length; i++) {
+                        final int uScore = rawLines[i].indexOf("\\_ ");
+                        if (uScore >= 0) {
+                            this.expressionStack.add(
+                                    str(rawLines[i].substring(uScore + 3).trim()),
+                                    Poly.MUTABLE);
+                        }
+                    }
+                    // Evaluate the deepest expression (>> -1, top of stack)
+                    if (this.expressionStack.count() > 1) {
+                        final String chatPart = this.expressionStack
+                                .<Obj>at(jnt(-1)).strValue();
+                        if (!chatPart.isEmpty()) {
+                            this.status.startTimer();
+                            if (this.splitMode && this.activePane != null) {
+                                this.activePane.appendOutput(
+                                        Graphitty.string("{{c}}  \\_{{X}} ") + Highlighter.format(chatPart));
+                            }
+                            this.executeInCurrentLanguage(chatPart);
+                            this.machine = null;
+                            if (this.splitMode) {
+                                this.renderPanes();
+                            }
+                        }
+                        // Pop the evaluated expression (>> -1)
+                        // at() always clones regardless of operation; reassign required.
+                        this.expressionStack = this.expressionStack
+                                .at(jnt(-1), noobj(), Poly.MUTABLE);
+                    }
+                    // Rebuild seed buffer: >>0 (mtron>), then remaining \_ lines
+                    // in display order (mtron> part first, then \_ lines).
+                    final Obj[] remaining = this.expressionStack
+                            .elements().toArray(Obj[]::new);
+                    if (remaining.length > 1) {
+                        final int promptWidth = Highlighter.visualLength(
+                                this.getCurrentLanguage().prompt);
+                        final StringBuilder sb = new StringBuilder(remaining[0].strValue());
+                        for (int i = 1; i < remaining.length; i++) {
+                            sb.append('\n');
+                            sb.append(" ".repeat(promptWidth - 2 + (i - 1)));
+                            sb.append("\\_ ").append(remaining[i].strValue());
+                        }
+                        this.seedBuffer = sb.toString();
+                    } else {
+                        this.seedBuffer = remaining.length == 1
+                                ? remaining[0].strValue()
+                                : "";
+                        if (this.seedBuffer.isBlank()) this.seedBuffer = "";
+                    }
+                    continue;
+                }
+                // --- End expression overlay detection ---
                 // An empty line can result from pane-switch (Ctrl+W clears the buffer and
                 // calls accept-line to break out of readLine so the next iteration can
                 // start fresh in the new pane).  Skip evaluation entirely.
@@ -1174,6 +1261,57 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                         System.exit(0);
                         return true;
                     }, ctrl('q'));
+            /// CHAT OVERLAY — Alt+C adds a new \_ level below the current one
+            /// (or below the mtron> prompt if no \_ lines exist yet).
+            /// The first \_ aligns under the mtron> input text (after the
+            /// prompt); each nesting level moves right one more column.
+            getKeyMap().bind((Widget) () -> {
+                final Buffer buffer = reader.getBuffer();
+                final String text = buffer.toString();
+                // Count existing \_ lines to determine the new level's depth
+                int depth = 0;
+                int idx = -1;
+                while ((idx = text.indexOf("\\_ ", idx + 1)) >= 0) {
+                    depth++;
+                }
+                // Indent to align with the mtron> input column + one space per level
+                final int promptWidth = Highlighter.visualLength(
+                        Console.this.getCurrentLanguage().prompt);
+                // Append a new \_ line at the end with appropriate indentation
+                buffer.cursor(buffer.length());
+                buffer.write("\n" + " ".repeat(promptWidth - 2 + depth) + "\\_ ");
+                // Clear the JLine "|" secondary prompt from continuation lines
+                reader.setVariable(LineReader.SECONDARY_PROMPT_PATTERN,
+                        Graphitty.string("{{-X-}}{{v1&^1&m}}"));
+                return true;
+            }, alt('c'));
+            /// CANCEL DEEPEST CHAT LEVEL (ESC) — removes the innermost \_ line,
+            /// backing out one nesting level.  When no \_ lines exist, clears
+            /// the entire buffer (JLine default ESC behaviour).
+            getKeyMap().bind((Widget) () -> {
+                final Buffer buffer = reader.getBuffer();
+                final String text = buffer.toString();
+                // Find the last \_ in the buffer
+                int lastChat = -1, pos = -1;
+                while ((pos = text.indexOf("\\_ ", pos + 1)) >= 0) {
+                    lastChat = pos;
+                }
+                if (lastChat >= 0) {
+                    // Walk back from the \_ to the preceding \n
+                    int lineStart = text.lastIndexOf('\n', lastChat - 1);
+                    if (lineStart < 0) lineStart = 0;
+                    buffer.cursor(lineStart);
+                    buffer.delete(buffer.length() - lineStart);
+                    // If that was the last \_ line, restore normal secondary prompt
+                    if (!buffer.toString().contains("\\_ ")) {
+                        reader.setVariable(LineReader.SECONDARY_PROMPT_PATTERN,
+                                Graphitty.string("{{-X&v1&^1&m}}     {{g}}| {{X}}"));
+                    }
+                } else {
+                    buffer.clear();
+                }
+                return true;
+            }, "\033");
             /// EXPLAIN BUFFER CODE (IF IS CODE) OR DOT-COMPLETION FOR INSTRUCTIONS
             getKeyMap().bind((Widget) () -> {
                 try {
