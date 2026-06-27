@@ -288,7 +288,9 @@ bin/metatron</code></pre>
   /m/tble/inst/rewrite/sql_where?code{?}&lt;=code(),
   /m/tble/inst/rewrite/sql_where_count?code{?}&lt;=code(),
   /m/tble/inst/rewrite/sql_where_limit?code{?}&lt;=code(),
-  /m/tble/inst/rewrite/sql_select?code{?}&lt;=code()]]@/m/tble</code></pre>
+  /m/tble/inst/rewrite/sql_select?code{?}&lt;=code(),
+  /m/tble/inst/rewrite/kv_count?code{?}&lt;=code(),
+  /m/tble/inst/rewrite/kv_limit?code{?}&lt;=code()]]@/m/tble</code></pre>
                     </div>
                 </div>
             </div>
@@ -296,7 +298,7 @@ bin/metatron</code></pre>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <a href="#consts" class="btn btn-outline-primary">Consts <span class="pill-label badge bg-secondary">1</span></a><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">3</span></a><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">1</span></a><a href="#spaces" class="btn btn-outline-primary">Spaces <span class="pill-label badge bg-info">1</span></a><a href="#rewrites" class="btn btn-outline-primary">Rewrites <span class="pill-label badge bg-warning">9</span></a>
+        <a href="#consts" class="btn btn-outline-primary">Consts <span class="pill-label badge bg-secondary">1</span></a><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">3</span></a><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">1</span></a><a href="#spaces" class="btn btn-outline-primary">Spaces <span class="pill-label badge bg-info">1</span></a><a href="#rewrites" class="btn btn-outline-primary">Rewrites <span class="pill-label badge bg-warning">11</span></a>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="card">
@@ -333,7 +335,13 @@ bin/metatron</code></pre>
 </a></div>
 </div><div class="mb-3">
     <h6 class="text-primary mb-2">Rewrites</h6>
-    <div class="d-flex flex-wrap"><a href="#rewrite-sql_count" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <div class="d-flex flex-wrap"><a href="#rewrite-kv_count" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">kv_count</span>
+    <span class="pill-label badge bg-warning text-dark ms-2">R</span>
+</a><a href="#rewrite-kv_limit" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">kv_limit</span>
+    <span class="pill-label badge bg-warning text-dark ms-2">R</span>
+</a><a href="#rewrite-sql_count" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">sql_count</span>
     <span class="pill-label badge bg-warning text-dark ms-2">R</span>
 </a><a href="#rewrite-sql_has" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
@@ -458,8 +466,40 @@ bin/metatron</code></pre>
 </div>
 </div>
 </div><div class="container-xxl mb-4" id="rewrites">
-    <h3 class="text-primary mb-3">Rewrites <span class="pill-label badge bg-warning text-dark">9</span></h3>
-    <div class="card mb-3" id="rewrite-sql_count">
+    <h3 class="text-primary mb-3">Rewrites <span class="pill-label badge bg-warning text-dark">11</span></h3>
+    <div class="card mb-3" id="rewrite-kv_count">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-warning fw-bold">kv_count</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#type-code" data-bs-toggle="tooltip" title="domain" class="code text-info">code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#type-code" data-bs-toggle="tooltip" title="maybe range" class="code text-success">code{?}</a></span></span>
+        </span>
+        <small class="text-muted code">/m/tble/inst/rewrite/kv_count?rng=/m/code{?}&amp;dom=/m/code</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/tble/inst/rewrite/kv_count?rng=code{?}&amp;dom=code(){&lt;j&gt;}</code></pre></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">leverages native SELECT COUNT(*) FROM kv_store with LIKE-based pattern matching</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">/col/+, /col/+/+, /col/* <span class="text-light">=&gt;</span> kv_count(kv_store, WHERE furi LIKE ...)</pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"></pre>
+</div>
+</div><div class="card mb-3" id="rewrite-kv_limit">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-warning fw-bold">kv_limit</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#type-code" data-bs-toggle="tooltip" title="domain" class="code text-info">code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#type-code" data-bs-toggle="tooltip" title="maybe range" class="code text-success">code{?}</a></span></span>
+        </span>
+        <small class="text-muted code">/m/tble/inst/rewrite/kv_limit?rng=/m/code{?}&amp;dom=/m/code</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/tble/inst/rewrite/kv_limit?rng=code{?}&amp;dom=code(){&lt;j&gt;}</code></pre></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">leverages native SELECT ... FROM kv_store ... LIMIT n to avoid loading all KV entries</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">/col/+.take(5) <span class="text-light">=&gt;</span> kv_limit(kv_store, WHERE furi LIKE ..., LIMIT n)</pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"></pre>
+</div>
+</div><div class="card mb-3" id="rewrite-sql_count">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-warning fw-bold">sql_count</span>

@@ -1461,11 +1461,53 @@ mtron&gt; catalog::[host         =&gt; &lt;https://api.openai.com/v1&gt;,
                  pattern      =&gt; &lt;openai:#&gt;,
                  name         =&gt; &lt;openai&gt;,
                  route        =&gt; [&lt;openai:&gt;=&gt;&lt;&gt;]]@/sys/space/openai
+==&gt;ERROR: httpexception: {
+  "error": {
+    "message": "Incorrect API key provided: ''. You can find your API key at https://platform.openai.com/account/api-keys.",
+    "type": "invalid_request_error",
+    "param": null,
+    "code": "invalid_api_key"
+  }
+}
+  	dev.langchain4j.http.client.jdk.JdkHttpClient [line 54]
+  	dev.langchain4j.model.openai.internal.SyncRequestExecutor [line 20]
+  	dev.langchain4j.model.openai.internal.RequestExecutor [line 44]
+  	dev.langchain4j.model.openai.internal.RequestExecutor [line 38]
+  	dev.langchain4j.model.openai.OpenAiModelCatalog [line 61]
+  	studio.phaseshift.metatron.isa.llm.LLMFactory [line 133]
+  	studio.phaseshift.metatron.isa.llm.space.modelCatalogSpace [line 62]
+  	studio.phaseshift.metatron.isa.m.type.Inst$f [line 692]
+  	studio.phaseshift.metatron.isa.m.type.Inst [line 313]
+  	studio.phaseshift.metatron.isa.m.type.Obj$Helper [line 927]
+  	studio.phaseshift.metatron.isa.m.type.impl.MObj [line 46]
+  	studio.phaseshift.metatron.isa.m.type.impl.MRec [line 76]
+   ...
 mtron&gt; catalog::[host         =&gt; &lt;https://api.deepseek.com/&gt;,
                  api_key      =&gt; !*&lt;/sys/env/DEEPSEEK_API_KEY&gt;,
                  pattern      =&gt; &lt;deep:#&gt;,
                  name         =&gt; &lt;openai&gt;,
-                 route        =&gt; [&lt;deep:&gt;=&gt;&lt;&gt;]]@/sys/space/deepseek</code></pre>
+                 route        =&gt; [&lt;deep:&gt;=&gt;&lt;&gt;]]@/sys/space/deepseek
+==&gt;ERROR: httpexception: Authentication Fails (auth header format should be Bearer sk-...)
+  	dev.langchain4j.http.client.jdk.JdkHttpClient [line 54]
+  	dev.langchain4j.model.openai.internal.SyncRequestExecutor [line 20]
+  	dev.langchain4j.model.openai.internal.RequestExecutor [line 44]
+  	dev.langchain4j.model.openai.internal.RequestExecutor [line 38]
+  	dev.langchain4j.model.openai.OpenAiModelCatalog [line 61]
+  	studio.phaseshift.metatron.isa.llm.LLMFactory [line 133]
+  	studio.phaseshift.metatron.isa.llm.space.modelCatalogSpace [line 62]
+  	studio.phaseshift.metatron.isa.m.type.Inst$f [line 692]
+  	studio.phaseshift.metatron.isa.m.type.Inst [line 313]
+  	studio.phaseshift.metatron.isa.m.type.Obj$Helper [line 927]
+  	studio.phaseshift.metatron.isa.m.type.impl.MObj [line 46]
+  	studio.phaseshift.metatron.isa.m.type.impl.MRec [line 76]
+  	studio.phaseshift.metatron.isa.m.parser.mParser [line 242]
+  	org.petitparser.parser.actions.ActionParser [line 39]
+  	org.petitparser.parser.combinators.DelegateParser [line 25]
+  	org.petitparser.parser.combinators.ChoiceParser [line 34]
+  	org.petitparser.parser.combinators.DelegateParser [line 25]
+  	org.petitparser.parser.combinators.ChoiceParser [line 34]
+  	org.petitparser.parser.combinators.OptionalParser [line 23]
+   ...</code></pre>
 </div>
 </div>
 <h3 id="sec-llm-space-encoding" class="discrete">LLM Space Encoding</h3>
@@ -1564,7 +1606,6 @@ mtron&gt; *&lt;fs:agent.mtron/feature&gt;     ​2​
    ...</code></pre>
 </div>
 </div>
-<!--   skill   => [!*<fs:skills/mtron>.as(skill::T)],     -->
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; [,]@/usr/ai/session     ​1​
@@ -1578,11 +1619,11 @@ mtron&gt; *ollama:+.
               session  =&gt; [agent     =&gt; /usr/ai,
                            user      =&gt; /usr/marko,
                            name      =&gt; 'general chat',
-                           algorithm =&gt; [max=&gt;15]],
+                           algorithm =&gt; [max=&gt;15]]@/usr/ai/session/1,
               tool     =&gt; [!*eval],
               think    =&gt; print(_),
               response =&gt; [to=&gt;to(/usr/ai/response)]]].
-        to(ai)
+        to(aix)
 ==&gt;model::[
     provider=&gt;!*/sys/space/ollama,
     name=&gt;qwen3:latest,
@@ -1590,7 +1631,7 @@ mtron&gt; *ollama:+.
     skill=&gt;[completion,tools,thinking],
     size=&gt;gB::4.8665,
     feature=&gt;[
-     session=&gt;[agent=&gt;/usr/ai,user=&gt;/usr/marko,name=&gt;'general chat',algorithm=&gt;[max=&gt;15]],
+     session=&gt;[agent=&gt;/usr/ai,user=&gt;/usr/marko,name=&gt;'general chat',algorithm=&gt;[max=&gt;15]]@/usr/ai/session/1,
      tool=&gt;[!*eval],
      think=&gt;print(id()),
      response=&gt;[to=&gt;to(/usr/ai/response)]]]@ollama:qwen3:latest</code></pre>
@@ -1644,7 +1685,7 @@ mtron&gt; *ollama:+.
 </tr>
 <tr>
 <td><i class="conum" data-value="12"></i><b>12</b></td>
-<td>write the model to <code>ai</code>.</td>
+<td>write the model to <code>aix</code>.</td>
 </tr>
 </table>
 </div>
@@ -1659,8 +1700,8 @@ mtron&gt; *ollama:+.
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; @ai.chat("I need you evaluate the mtron expresion `-&lt;[_=&gt;_]&gt;&gt;.&gt;-[,]-&lt;[_,-&lt;[_=&gt;_]&gt;&gt;]&gt;&gt;.&gt;-` with a lhs of `1`. Please don't tell me the result of the evaluation until I ask for it sometime in the near future.")
-==&gt;"The evaluation of the mtron expression with the given left-hand side (lhs) of `1` has been completed. I will provide the result when you ask for it."</code></pre>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; @aix.chat("I need you evaluate the mtron expresion `-&lt;[_=&gt;_]&gt;&gt;.&gt;-[,]-&lt;[_,-&lt;[_=&gt;_]&gt;&gt;]&gt;&gt;.&gt;-` with a lhs of `1`. Please don't tell me the result of the evaluation until I ask for it sometime in the near future.")
+==&gt;fail::[no active space supports pattern null:msg/1/0][...]@/sys/fail/18</code></pre>
 </div>
 </div>
 <div class="openblock card">
@@ -1761,8 +1802,12 @@ mtron&gt; tB::1.0.as(mB::T)     ​3​
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; @ai.chat("It's been many years since we last talked. For I am a tired, old man. Before I let my last breathe flutter into this world, I must know one last thing. Please tell me, what was the result of the mtron expression I provided you all those years ago?")
-==&gt;"I'm sorry to hear that you're feeling this way. However, I don't have access to the specific mtron expression you provided years ago, as our conversation history doesn't include that information. If you could please share the mtron expression, I would be happy to evaluate it for you."
-mtron&gt; */usr/ai/session/+</code></pre>
+==&gt;fail::[unable to evaluate inst: chat?dom=rec("It's been many years since we last talked. For I am a tired...")@&lt;1&gt;][...]@/sys/fail/22
+mtron&gt; */usr/ai/session/+
+==&gt;/usr/ai
+==&gt;[max=&gt;15]
+==&gt;/usr/marko
+==&gt;'general chat'</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -2351,7 +2396,7 @@ mtron&gt; 1+b.catch(cause())     ​2​
    	  \_pred | []
    	[inst]   | plus?rng=uri{?}&amp;dom=int(b){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
    	 \_dom   | int::T
-   	 \_args  | [b][studio.phaseshift.metatron.util.MTronException:54]]
+   	 \_args  | [b][studio.phaseshift.metatron.util.MTronException:60]]
 mtron&gt; throw('bad').catch(cause())     ​3​</code></pre>
 </div>
 </div>
@@ -2520,7 +2565,7 @@ The predicate component of the type definition tests an <code>int</code> to dete
 <div class="paragraph">
 <p>While every <code>type</code> is an <code>obj</code>, not every <code>obj</code> is a <code>type</code>.
 Those <code>objs</code> that are not <code>types</code> are <em>instances</em> of some <code>type</code>.
-This is the foundation for all other <code>objs</code> in {{r}}M{{r}}E{{m}}t{{g}}a{{m}}T{{r}}r{{y}}o{{r}}N{{X}}.</p>
+This is the foundation for all other <code>objs</code> in {{m}}m{{b}}e{{b}}t{{c}}a{{m}}t{{c}}R{{b}}O{{r}}N{{X}}.</p>
 </div>
 <h4 id="sec-cascading-type-constructions" class="discrete">cascading type constructions</h4>
 <h3 id="sec-mono-types" class="discrete">mono types</h3>
@@ -3521,7 +3566,7 @@ mtron&gt; memspace::[
     redirect/output=&gt;noobj,
     prefix=&gt;'',
     postfix=&gt;'',
-    pane=&gt;lst[/m/mach/console/pane{*}]::[/m/mach/console/pane::[prompt=&gt;inst?noobj{0}&lt;=#{?}(#{*}::T),stream=&gt;inst?noobj{0}&lt;=#{?}(#{*}::T),result=&gt;inst?noobj{0}&lt;=#{?}(#{*}::T)]@/usr/ui/console/pane/0],
+    pane=&gt;lst[/m/mach/console/pane{*}]::[/m/mach/console/pane::[result=&gt;inst?noobj{0}&lt;=#{?}(#{*}::T),prompt=&gt;inst?noobj{0}&lt;=#{?}(#{*}::T),stream=&gt;inst?noobj{0}&lt;=#{?}(#{*}::T)]@/usr/ui/console/pane/0],
     menu=&gt;[
      console=&gt;console::[
       metatron_version=&gt;&lt;0.1-alpha&gt;,
@@ -3530,13 +3575,13 @@ mtron&gt; memspace::[
       redirect/output=&gt;noobj,
       prefix=&gt;'',
       postfix=&gt;'',
-      pane=&gt;lst[/m/mach/console/pane{*}]::[/m/mach/console/pane::[prompt=&gt;inst?noobj{0}&lt;=#{?}(#{*}::T),stream=&gt;inst?noobj{0}&lt;=#{?}(#{*}::T),result=&gt;inst?noobj{0}&lt;=#{?}(#{*}::T)]@/usr/ui/console/pane/0]]@/usr/ui/console,
+      pane=&gt;lst[/m/mach/console/pane{*}]::[/m/mach/console/pane::[result=&gt;inst?noobj{0}&lt;=#{?}(#{*}::T),prompt=&gt;inst?noobj{0}&lt;=#{?}(#{*}::T),stream=&gt;inst?noobj{0}&lt;=#{?}(#{*}::T)]@/usr/ui/console/pane/0]]@/usr/ui/console,
      help=&gt;inst?noobj&lt;=#{?}(),
      chat=&gt;inst?noobj&lt;=#{?}(),
      connect=&gt;inst?noobj&lt;=#{?}(),
    ...
 mtron&gt; */usr/ui/console/pane/0     ​2​
-==&gt;/m/mach/console/pane::[prompt=&gt;inst?noobj{0}&lt;=#{?}(#{*}::T),stream=&gt;inst?noobj{0}&lt;=#{?}(#{*}::T),result=&gt;inst?noobj{0}&lt;=#{?}(#{*}::T)]
+==&gt;/m/mach/console/pane::[result=&gt;inst?noobj{0}&lt;=#{?}(#{*}::T),prompt=&gt;inst?noobj{0}&lt;=#{?}(#{*}::T),stream=&gt;inst?noobj{0}&lt;=#{?}(#{*}::T)]
 mtron&gt; /usr/ui/console/pane/0/result('printed at ==&gt;xyz')     ​3​</code></pre>
 </div>
 </div>
@@ -4839,7 +4884,7 @@ The inspiration for metatron&#8217;s URI addressing schema was inspired by the v
   	studio.phaseshift.metatron.isa.iot.space.mqtt.mqttSpace [line 80]
   	studio.phaseshift.metatron.isa.m.type.Inst$f [line 692]
   	studio.phaseshift.metatron.isa.m.type.Inst [line 313]
-  	studio.phaseshift.metatron.isa.m.type.Obj$Helper [line 926]
+  	studio.phaseshift.metatron.isa.m.type.Obj$Helper [line 927]
   	studio.phaseshift.metatron.isa.m.type.impl.MObj [line 46]
   	studio.phaseshift.metatron.isa.m.type.impl.MRec [line 76]
   	studio.phaseshift.metatron.isa.m.parser.mParser [line 242]
@@ -5053,17 +5098,16 @@ mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T).as(str::T)     ​5​
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; bin:bash('-c',df)
-==&gt;'Filesystem      1K-blocks      Used  Available Use% Mounted on'
-==&gt;'tmpfs             6356184      6340    6349844   1% /run'
-==&gt;'efivarfs              128        42         82  34% /sys/firmware/efi/efivars'
-==&gt;'/dev/nvme1n1p2  959786032 611234920  299722904  68% /'
-==&gt;'tmpfs            31780908    213528   31567380   1% /dev/shm'
-==&gt;'tmpfs                5120        20       5100   1% /run/lock'
-==&gt;'tmpfs            31780908         0   31780908   0% /run/qemu'
-==&gt;'/dev/nvme1n1p1     523248      6288     516960   2% /boot/efi'
-==&gt;'tmpfs             6356180       288    6355892   1% /run/user/1000'
-==&gt;'/dev/nvme0n1p2  976744444 248754076  727990368  26% /media/hdd0'
-==&gt;'/dev/sdb5      2112645040 606563564 1398691012  31% /media/killswitch/hdd1'
+==&gt;'Filesystem     1K-blocks      Used Available Use% Mounted on'
+==&gt;'tmpfs            6356184      6336   6349848   1% /run'
+==&gt;'efivarfs             128        42        82  34% /sys/firmware/efi/efivars'
+==&gt;'/dev/nvme1n1p2 959786032 608692680 302265144  67% /'
+==&gt;'tmpfs           31780908    414340  31366568   2% /dev/shm'
+==&gt;'tmpfs               5120        20      5100   1% /run/lock'
+==&gt;'tmpfs           31780908         0  31780908   0% /run/qemu'
+==&gt;'/dev/nvme1n1p1    523248      6288    516960   2% /boot/efi'
+==&gt;'tmpfs            6356180       264   6355916   1% /run/user/1000'
+==&gt;'/dev/nvme0n1p2 976744444 248754076 727990368  26% /media/hdd0'
 mtron&gt; bin:bash('-c',ls)
 ==&gt;'AGENTS.md'
 ==&gt;bin
@@ -5072,6 +5116,7 @@ mtron&gt; bin:bash('-c',ls)
 ==&gt;'CONTRIBUTING.md'
 ==&gt;dist
 ==&gt;docs
+==&gt;jdeploy-bundle
 ...</code></pre>
 </div>
 </div>
@@ -5917,7 +5962,7 @@ mtron&gt; /te/cold/1/x -&gt; [item   =&gt; 'book',total=&gt;15.0,
      	java.util.Optional [line 403]
      	studio.phaseshift.metatron.isa.tble.space.ExistingTableSchema [line 659]
      	studio.phaseshift.metatron.isa.tble.space.ExistingTableSchema [line 575]
-     	studio.phaseshift.metatron.isa.tble.tbleSpace [line 490]
+     	studio.phaseshift.metatron.isa.tble.tbleSpace [line 479]
      	studio.phaseshift.metatron.isa.Space$Helper [line 326]
      	studio.phaseshift.metatron.isa.AbstractSpace [line 130]
      	java.util.Optional [line 364]
@@ -5926,7 +5971,7 @@ mtron&gt; /te/cold/1/x -&gt; [item   =&gt; 'book',total=&gt;15.0,
      	studio.phaseshift.metatron.isa.AbstractSpace [line 129]
      	studio.phaseshift.metatron.isa.mach.type.router.BasicRouter [line 314]
      	studio.phaseshift.metatron.isa.mach.type.Router [line 88]
-     	studio.phaseshift.metatron.isa.m.type.Obj$ObjType [line 1116]
+     	studio.phaseshift.metatron.isa.m.type.Obj$ObjType [line 1117]
      	studio.phaseshift.metatron.isa.m.type.Inst$f [line 692]
      	studio.phaseshift.metatron.isa.m.type.Inst [line 313]
      	studio.phaseshift.metatron.isa.mach.type.PCMonad [line 172]
@@ -6991,7 +7036,7 @@ mtron&gt; catalog::[host         =&gt; &lt;http://localhost:1234/v1&gt;,
   	studio.phaseshift.metatron.isa.llm.space.modelCatalogSpace [line 62]
   	studio.phaseshift.metatron.isa.m.type.Inst$f [line 692]
   	studio.phaseshift.metatron.isa.m.type.Inst [line 313]
-  	studio.phaseshift.metatron.isa.m.type.Obj$Helper [line 926]
+  	studio.phaseshift.metatron.isa.m.type.Obj$Helper [line 927]
   	studio.phaseshift.metatron.isa.m.type.impl.MObj [line 46]
   	studio.phaseshift.metatron.isa.m.type.impl.MRec [line 76]
   	studio.phaseshift.metatron.isa.m.parser.mParser [line 242]
@@ -7022,28 +7067,7 @@ mtron&gt; catalog::[host         =&gt; &lt;http://localhost:1234/v1&gt;,
                      /mcp     =&gt; mcp_mtron_http,
                      /docs    =&gt; target/docs,
                      /console =&gt; src/main/resources/web/console]
-       ]@/sys/space/web/http
-==&gt;ERROR: bindexception: Address already in use
-  	sun.nio.ch.Net [line -2]
-  	sun.nio.ch.Net [line 522]
-  	sun.nio.ch.ServerSocketChannelImpl [line 335]
-  	sun.nio.ch.ServerSocketChannelImpl [line 297]
-  	sun.nio.ch.ServerSocketAdaptor [line 80]
-  	sun.net.httpserver.ServerImpl [line 145]
-  	sun.net.httpserver.HttpServerImpl [line 45]
-  	sun.net.httpserver.DefaultHttpServerProvider [line 35]
-  	com.sun.net.httpserver.HttpServer [line 152]
-  	studio.phaseshift.metatron.isa.web.space.http.httpSpace [line 225]
-  	studio.phaseshift.metatron.isa.web.space.http.httpSpace [line 85]
-  	studio.phaseshift.metatron.isa.m.type.Inst$f [line 692]
-  	studio.phaseshift.metatron.isa.m.type.Inst [line 313]
-  	studio.phaseshift.metatron.isa.m.type.Obj$Helper [line 926]
-  	studio.phaseshift.metatron.isa.m.type.impl.MObj [line 46]
-  	studio.phaseshift.metatron.isa.m.type.impl.MRec [line 76]
-  	studio.phaseshift.metatron.isa.m.parser.mParser [line 242]
-  	org.petitparser.parser.actions.ActionParser [line 39]
-  	org.petitparser.parser.combinators.DelegateParser [line 25]
-   ...</code></pre>
+       ]@/sys/space/web/http</code></pre>
 </div>
 </div>
 <h3 id="sec-html-type" class="discrete">HTML Type</h3>
@@ -7055,11 +7079,39 @@ mtron&gt; catalog::[host         =&gt; &lt;http://localhost:1234/v1&gt;,
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; html::T     ​1​
 ==&gt;xml::T[?[html=&gt;[head=&gt;[{?}title=&gt;str::T],body=&gt;rec::T]]]@/m/web/mime/html
 mtron&gt; *&lt;http://phaseshift.studio/splash.html&gt;     ​2​
-==&gt;fail::[no active space supports pattern &lt;http://phaseshift.studio/splash.html&gt;][...]@/sys/fail/18
+==&gt;html::[html=&gt;[head=&gt;[title=&gt;'PhaseShift Studio',out=&gt;[
+    [
+     tag=&gt;link,
+     href=&gt;&lt;https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css&gt;,
+     rel=&gt;'stylesheet'],
+    [tag=&gt;link,href=&gt;&lt;css/metatron.css&gt;,rel=&gt;'stylesheet']]],body=&gt;[
+    out=&gt;[
+     [tag=&gt;p],
+     [
+      tag=&gt;h1,
+      style=&gt;'padding-left:125px;color:var(--pri...',
+      text=&gt;'PhaseShift Studio'],
+     [
+      tag=&gt;img,
+      style=&gt;'padding-left:100px',
+      src=&gt;&lt;http://metatron.phaseshift.studio/images/metatron-character.png&gt;,
+      width=&gt;'500px']],
+    style=&gt;'background-color: black;']]]
 mtron&gt; *&lt;http://phaseshift.studio/splash.html/html/head/title&gt;     ​3​
-==&gt;fail::[no active space supports pattern &lt;http://phaseshift.studio/splash.html/html/head/title&gt;][...]@/sys/fail/24
+==&gt;'PhaseShift Studio'
 mtron&gt; *&lt;http://phaseshift.studio/splash.html&gt;.as(str::T)     ​4​
-==&gt;fail::[no active space supports pattern &lt;http://phaseshift.studio/splash.html&gt;][...]@/sys/fail/30</code></pre>
+==&gt;"""&lt;html&gt;
+    &lt;head&gt;
+     &lt;title&gt;PhaseShift Studio&lt;/title&gt;
+     &lt;link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet"&gt;
+     &lt;link href="css/metatron.css" rel="stylesheet"&gt;
+    &lt;/head&gt;
+    &lt;body style="background-color: black;"&gt;
+     &lt;p&gt;&lt;/p&gt;
+     &lt;h1 style="padding-left:125px;color:var(--primary)"&gt;PhaseShift Studio&lt;/h1&gt;
+     &lt;img style="padding-left:100px" src="http://metatron.phaseshift.studio/images/metatron-character.png" width="500px"&gt;
+    &lt;/body&gt;
+   &lt;/html&gt;"""</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -7092,9 +7144,49 @@ mtron&gt; *&lt;http://phaseshift.studio/splash.html&gt;.as(str::T)     ​4​
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *&lt;http://localhost:1234/v1&gt;     ​1​
-==&gt;fail::[no active space supports pattern http://localhost:1234/v1][...]@/sys/fail/36
+==&gt;fail::[java.net.ConnectException: null
+     	jdk.internal.net.http.HttpClientImpl [line 923]
+     	jdk.internal.net.http.HttpClientFacade [line 133]
+     	org.jsoup.helper.HttpClientExecutor [line 90]
+     	org.jsoup.helper.HttpConnection$Response [line 892]
+     	org.jsoup.helper.HttpConnection$Response [line 866]
+     	org.jsoup.helper.HttpConnection [line 365]
+     	studio.phaseshift.metatron.isa.web.space.http.httpSpace [line 281]
+     	studio.phaseshift.metatron.isa.Space$Helper [line 267]
+     	studio.phaseshift.metatron.isa.AbstractSpace [line 71]
+     	java.util.Optional [line 364]
+     	studio.phaseshift.metatron.isa.AbstractSpace [line 70]
+     	studio.phaseshift.metatron.isa.mach.type.router.BasicRouter [line 290]
+     	studio.phaseshift.metatron.isa.mach.type.Router [line 80]
+     	studio.phaseshift.metatron.isa.m.type.Obj$ObjType [line 1109]
+     	studio.phaseshift.metatron.isa.m.type.Inst$f [line 692]
+     	studio.phaseshift.metatron.isa.m.type.Inst [line 313]
+     	studio.phaseshift.metatron.isa.m.type.Obj [line 249]
+     	studio.phaseshift.metatron.docs.MtronDocPreprocessor [line 201]
+     	studio.phaseshift.metatron.docs.MtronDocPreprocessor [line 92]
+   ...
 mtron&gt; *&lt;http://localhost:1234/v1/models&gt;     ​2​
-==&gt;fail::[no active space supports pattern http://localhost:1234/v1/models][...]@/sys/fail/42</code></pre>
+==&gt;fail::[java.net.ConnectException: null
+     	jdk.internal.net.http.HttpClientImpl [line 923]
+     	jdk.internal.net.http.HttpClientFacade [line 133]
+     	org.jsoup.helper.HttpClientExecutor [line 90]
+     	org.jsoup.helper.HttpConnection$Response [line 892]
+     	org.jsoup.helper.HttpConnection$Response [line 866]
+     	org.jsoup.helper.HttpConnection [line 365]
+     	studio.phaseshift.metatron.isa.web.space.http.httpSpace [line 281]
+     	studio.phaseshift.metatron.isa.Space$Helper [line 267]
+     	studio.phaseshift.metatron.isa.AbstractSpace [line 71]
+     	java.util.Optional [line 364]
+     	studio.phaseshift.metatron.isa.AbstractSpace [line 70]
+     	studio.phaseshift.metatron.isa.mach.type.router.BasicRouter [line 290]
+     	studio.phaseshift.metatron.isa.mach.type.Router [line 80]
+     	studio.phaseshift.metatron.isa.m.type.Obj$ObjType [line 1109]
+     	studio.phaseshift.metatron.isa.m.type.Inst$f [line 692]
+     	studio.phaseshift.metatron.isa.m.type.Inst [line 313]
+     	studio.phaseshift.metatron.isa.m.type.Obj [line 249]
+     	studio.phaseshift.metatron.docs.MtronDocPreprocessor [line 201]
+     	studio.phaseshift.metatron.docs.MtronDocPreprocessor [line 92]
+   ...</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -7149,7 +7241,27 @@ mtron&gt; */m/llm/inst/+?dom=model
          -&lt;[provider=&gt; !*/sys/space/lmstudio,
             name    =&gt; &gt;&gt;id.as(uri::T)].as(model::T)
          .chat('are you there?')
-==&gt;ERROR: null</code></pre>
+==&gt;fail::[java.net.ConnectException: null
+     	jdk.internal.net.http.HttpClientImpl [line 923]
+     	jdk.internal.net.http.HttpClientFacade [line 133]
+     	org.jsoup.helper.HttpClientExecutor [line 90]
+     	org.jsoup.helper.HttpConnection$Response [line 892]
+     	org.jsoup.helper.HttpConnection$Response [line 866]
+     	org.jsoup.helper.HttpConnection [line 365]
+     	studio.phaseshift.metatron.isa.web.space.http.httpSpace [line 281]
+     	studio.phaseshift.metatron.isa.Space$Helper [line 267]
+     	studio.phaseshift.metatron.isa.AbstractSpace [line 71]
+     	java.util.Optional [line 364]
+     	studio.phaseshift.metatron.isa.AbstractSpace [line 70]
+     	studio.phaseshift.metatron.isa.mach.type.router.BasicRouter [line 290]
+     	studio.phaseshift.metatron.isa.mach.type.Router [line 80]
+     	studio.phaseshift.metatron.isa.m.type.Obj$ObjType [line 1109]
+     	studio.phaseshift.metatron.isa.m.type.Inst$f [line 692]
+     	studio.phaseshift.metatron.isa.m.type.Inst [line 313]
+     	studio.phaseshift.metatron.isa.mach.type.PCMonad [line 172]
+     	studio.phaseshift.metatron.isa.mach.type.machine.SwarmMachine [line 297]
+     	studio.phaseshift.metatron.isa.mach.type.machine.SwarmMachine [line 258]
+   ...</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -7752,7 +7864,19 @@ mtron&gt; *lite:person/+/id     ​6​
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *lite:+
-==&gt;rrow::T[?[id=&gt;int{?}::T,name=&gt;str::T,age=&gt;int::T,uri{?}::T=&gt;#::T]]@/sys/space/lite/schema/instset/person</code></pre>
+==&gt;rrow::T[?[id=&gt;int{?}::T,name=&gt;str::T,age=&gt;int::T]]@person
+==&gt;rrow::T[?[id=&gt;int{?}::T,trophy=&gt;str::T,recipient=&gt;isa(person/+/id).!*id()]]@award
+==&gt;rrow::T[?[id=&gt;int{?}::T,trophy=&gt;str::T,recipient=&gt;isa(person/+/id).!*id(),uri{?}::T=&gt;#::T]]@/sys/space/lite/schema/instset/award
+==&gt;rrow::T[?[id=&gt;int{?}::T,name=&gt;str::T,age=&gt;int::T,uri{?}::T=&gt;#::T]]@/sys/space/lite/schema/instset/person
+==&gt;rrow::T[?[
+     id=&gt;int{?}::T,
+     name=&gt;str::T,
+     location=&gt;isa(area:V/+/id).!*id(),
+     parent=&gt;str::T,
+     uri{?}::T=&gt;#::T]]@/sys/space/lite/schema/instset/venue
+==&gt;rrow::T[?[id=&gt;int{?}::T,player=&gt;str::T,points=&gt;int::T]]@score
+==&gt;rrow::T[?[id=&gt;int{?}::T,name=&gt;str::T,location=&gt;isa(area:V/+/id).!*id(),parent=&gt;str::T]]@venue
+==&gt;rrow::T[?[id=&gt;int{?}::T,player=&gt;str::T,points=&gt;int::T,uri{?}::T=&gt;#::T]]@/sys/space/lite/schema/instset/score</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -7864,8 +7988,8 @@ code''' └────────────────┘ └────�
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *lite:person/+.=?=[age=&gt;?&lt;30]     ​1​
-==&gt;rrow{2}::[id=&gt;1,name=&gt;'marko',age=&gt;29]@lite:/sys/space/lite/person/1
-==&gt;rrow{2}::[id=&gt;2,name=&gt;'grant',age=&gt;25]@lite:/sys/space/lite/person/2
+==&gt;[name=&gt;'grant',age=&gt;25]
+==&gt;[name=&gt;'marko',age=&gt;29]
 mtron&gt; *lite:person/+/name.count()     ​2​
 ==&gt;2
 mtron&gt; *lite:person/+.==[name=&gt;_]     ​3​
@@ -7953,7 +8077,7 @@ whose values happen to match <code>person.name</code> — the link is purely alg
      	studio.phaseshift.metatron.isa.tble.tbleSpace [line 139]
      	studio.phaseshift.metatron.isa.m.type.Inst$f [line 692]
      	studio.phaseshift.metatron.isa.m.type.Inst [line 313]
-     	studio.phaseshift.metatron.isa.m.type.Obj$Helper [line 945]
+     	studio.phaseshift.metatron.isa.m.type.Obj$Helper [line 946]
      	studio.phaseshift.metatron.isa.m.type.impl.MObj [line 111]
      	studio.phaseshift.metatron.isa.m.type.impl.MRec [line 107]
      	studio.phaseshift.metatron.isa.m.type.impl.MRec [line 36]
@@ -7963,7 +8087,7 @@ whose values happen to match <code>person.name</code> — the link is purely alg
      	studio.phaseshift.metatron.isa.m.type.Poly$Helper [line 280]
      	studio.phaseshift.metatron.isa.m.type.Poly$Helper [line 258]
      	studio.phaseshift.metatron.isa.m.type.Poly$Helper [line 250]
-     	studio.phaseshift.metatron.isa.m.type.Obj$ObjType [line 1146]
+     	studio.phaseshift.metatron.isa.m.type.Obj$ObjType [line 1147]
      	studio.phaseshift.metatron.isa.m.type.Inst$f [line 692]
      	studio.phaseshift.metatron.isa.m.type.Inst [line 313]
    ...
@@ -7972,7 +8096,7 @@ mtron&gt; lite:score/1 -&gt; [player=&gt;'marko', points=&gt;42]     ​2​
 mtron&gt; lite:score/2 -&gt; [player=&gt;'grant', points=&gt;99]     ​3​
 ==&gt;[player=&gt;'grant',points=&gt;99]
 mtron&gt; *lite:score/+.=?=[player=&gt;'marko']     ​4​
-==&gt;rrow{2}::[id=&gt;1,player=&gt;'marko',points=&gt;42]@lite:/sys/space/lite/score/1
+==&gt;[player=&gt;'marko',points=&gt;42]
 mtron&gt; */sys/space/lite.sql("SELECT p.name,p.age,s.points FROM person p JOIN score s ON p.name=s.player")     ​5​
 ==&gt;rrow::[name=&gt;'marko',age=&gt;29,points=&gt;42]
 ==&gt;rrow::[name=&gt;'grant',age=&gt;25,points=&gt;99]</code></pre>
@@ -8353,13 +8477,13 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
 ==&gt;/sys/env/GTK3_MODULES=&gt;'xapp-gtk3-module'
 ==&gt;/sys/env/BUN_INSTALL=&gt;'/home/killswitch/.bun'
 ==&gt;/sys/env/JAVA_HOME=&gt;'/home/killswitch/.sdkman/candidates/java/current'
-==&gt;/sys/env/QT_IM_MODULE=&gt;'ibus'
-==&gt;/sys/env/GNOME_DESKTOP_SESSION_ID=&gt;'this-is-deprecated'
 ==&gt;/sys/env/HOMEBREW_CELLAR=&gt;'/home/linuxbrew/.linuxbrew/Cellar'
-==&gt;/sys/env/JBANG_HOME=&gt;'/home/killswitch/.sdkman/candidates/jbang/current'
-==&gt;/sys/env/USER=&gt;'killswitch'
-==&gt;/sys/env/HOMEBREW_PREFIX=&gt;'/home/linuxbrew/.linuxbrew'
-==&gt;/sys/env/LIBVIRT_DEFAULT_URI=&gt;'qemu:///system'</code></pre>
+==&gt;/sys/env/LIBVIRT_DEFAULT_URI=&gt;'qemu:///system'
+==&gt;/sys/env/XDG_SEAT=&gt;'seat0'
+==&gt;/sys/env/VTE_VERSION=&gt;'7600'
+==&gt;/sys/env/CONDA_PYTHON_EXE=&gt;'/home/killswitch/software/miniconda3/bin/python'
+==&gt;/sys/env/BROWSER_INACTIVITY_TIMEOUT=&gt;'120'
+==&gt;/sys/env/CINNAMON_VERSION=&gt;'6.6.7'</code></pre>
 </div>
 </div>
 <h3 id="sec-boot-loader" class="discrete">Boot Loader</h3>

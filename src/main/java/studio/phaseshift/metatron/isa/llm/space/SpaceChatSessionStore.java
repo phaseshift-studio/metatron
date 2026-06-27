@@ -66,7 +66,7 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
     private final Space space;
 
     /**
-     * Hashes already mirrored to typed tables, keyed by session VID.
+     * Hashes already mirrored to typed collections, keyed by session VID.
      * Prevents duplicates across instances (mModel creates a new store per
      * chat call) without leaking state between different sessions.
      */
@@ -93,7 +93,7 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
     private static final String CONTENT_HASH = "content_hash";
 
     /**
-     * Mirror a pre-built system message Rec to the typed table.
+     * Mirror a pre-built system message Rec to the typed collection.
      * System messages bypass {@code ChatMemoryStore.updateMessages()} — they're
      * injected via {@code AiServices.systemMessage()}.  This method provides
      * the same fire-and-forget mirror that user/AI messages get.
@@ -102,13 +102,13 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
         final String hash = contentHash(systemRec);
         systemRec.recValue().put(uri(CONTENT_HASH), str(hash));
         // System messages bypass — use a synthetic URI for the back-link
-        systemRec.recValue().put(uri(URI), str("<" + sessionVID.scheme() + ":msg/" + sessionVID.name() + "/system>"));
+        systemRec.recValue().put(uri(URI), uri(sessionVID.retract(1).extend(MSG).extend(sessionVID.name()).extend("system")));
         synchronized (MIRRORED_HASHES) {
             final Set<String> seen = MIRRORED_HASHES.computeIfAbsent(sessionVID, k -> new LinkedHashSet<>());
             if (!seen.add(hash)) return;
         }
         try {
-            space.write(f(sessionVID.scheme() + ":llm_message_system/+?incrq"), systemRec);
+            space.write(sessionVID.retract(2).extend("llm_message_system").extend("+").addQ("incrq"), systemRec);
         } catch (final Exception e) {
             LOG.debug("mirror system message failed (non-blocking): %s", e.getMessage());
         }
@@ -121,22 +121,26 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
 
     /**
      * Builds a KV-safe base URI for message storage derived from a session VID.
-     * Uses a separate {@code msg} collection prefix (not under the session table
-     * path) to avoid colliding with tbleSpace's table-mapped field-write semantics.
+     * Uses a separate {@code msg} collection prefix (not under the session
+     * collection path) to avoid colliding with field-write semantics.
      *
-     * <p>Example: session VID {@code llm:llm_session/1} → {@code llm:msg/1}
+     * <p>Works for both scheme-prefix and path-based URIs:
+     * <pre>
+     *   llm:llm_session/1        → llm:msg/1
+     *   /my/db/llm_session/1     → /my/db/msg/1
+     * </pre>
      */
     private static fURI msgPath(final fURI sessionVID) {
-        return f(sessionVID.scheme() + ":" + MSG).extend(sessionVID.name());
+        return sessionVID.retract(2).extend(MSG).extend(sessionVID.name());
     }
 
     /**
-     * Fire-and-forget mirror of a message Rec to its per-type table.
-     * Uses {@code +?incrq} so tbleSpace's DB-backed incrQ delegates
-     * ID generation to AUTO_INCREMENT / SERIAL — no overwrites.
-     * Purely additive; the per-type tables grow with every message.
+     * Fire-and-forget mirror of a message Rec to its per-type collection.
+     * Uses {@code +?incrq} so DB-backed incrQ delegates ID generation to
+     * AUTO_INCREMENT / SERIAL — no overwrites.  Purely additive.
+     * Gracefully degrades on non-DB backing spaces (exceptions caught).
      * <p>
-     * TID → table mapping:
+     * TID → collection mapping:
      * <pre>
      *   /m/llm/system      → llm_message_system/+?incrq
      *   /m/llm/user        → llm_message_user/+?incrq
@@ -144,9 +148,9 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
      *   /m/llm/tool_result → llm_message_tool_result/+?incrq
      * </pre>
      */
-    private void mirrorToTypedTable(final fURI sessionVID, final Rec msgRec, final fURI kvURI) {
-        final String table = perTypeTableName(msgRec.tid());
-        if (table == null) return;
+    private void mirrorToTypedCollection(final fURI sessionVID, final Rec msgRec, final fURI kvURI) {
+        final String collection = perTypeCollectionName(msgRec.tid());
+        if (collection == null) return;
         final Obj hf = msgRec.at(uri(CONTENT_HASH));
         if (hf.isNoObj()) return;
         final String hash = hf.strValue();
@@ -179,17 +183,17 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
             // Stamp the KV URI so the typed row links back to the authoritative
             // message in the key-value store (reconstruction, navigation).
             toMirror.recValue().put(uri(TIME), str(now.toString()));
-            toMirror.recValue().put(uri(URI), str("<" + kvURI + ">"));
-            this.space.write(f(sessionVID.scheme() + ":" + table + "/+?incrq"), toMirror);
+            toMirror.recValue().put(uri(URI), uri(kvURI));
+            this.space.write(sessionVID.retract(2).extend(collection).extend("+").addQ("incrq"), toMirror);
         } catch (final Exception e) {
-            LOG.debug("mirror to typed table failed (non-blocking): %s", e.getMessage());
+            LOG.debug("mirror to typed collection failed (non-blocking): %s", e.getMessage());
         }
     }
 
     /**
-     * Map a message TID to its per-type table name.
+     * Map a message TID to its per-type collection name.
      */
-    private static String perTypeTableName(final fURI tid) {
+    private static String perTypeCollectionName(final fURI tid) {
         if (tid == null) return null;
         if (tid.equals(SYSTEM_MESSAGE_TID)) return "llm_message_system";
         if (tid.equals(USER_MESSAGE_TID)) return "llm_message_user";
@@ -244,6 +248,7 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
             final String keyName = e.getKey().uriValue().name();
             if (knownKeys.contains(keyName)) continue;
             if (CONTENT_HASH.equals(keyName)) continue;  // internal infrastructure
+            if (URI.equals(keyName) || TIME.equals(keyName)) continue;
             attrs.put(keyName, e.getValue().strValue());
         }
         return attrs;
@@ -265,10 +270,10 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
     // The session policy object (sessionVID) carries the algorithm rec with max,
     // message_count, and future algorithm parameters.
     //
-    // URI topology:
-    //   {scheme}:llm_session/1        → session policy (agent, user, session, name, algorithm)
-    //   {scheme}:msg/1/0              → message at position 0
-    //   {scheme}:msg/1/1              → message at position 1
+    // URI topology (scheme-agnostic — works for llm:... and /path/...):
+    //   .../llm_session/1             → session policy (agent, user, session, name, algorithm)
+    //   .../msg/1/0                   → message at position 0
+    //   .../msg/1/1                   → message at position 1
     //   ...
 
     /// ////////////////////////////////////////////////////////////////////////
@@ -424,7 +429,7 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
         }
         // Write mirrors — last message per URI wins (streaming dedup)
         for (final Map.Entry<fURI, Rec> e : batchedMirrors.entrySet())
-            mirrorToTypedTable(sesVID, e.getValue(), e.getKey());
+            mirrorToTypedCollection(sesVID, e.getValue(), e.getKey());
 
         // -- 5. Delete messages no longer in the window ----------------------
         // Guard: never delete positions we just wrote (hash may have changed

@@ -270,7 +270,7 @@ public class RewriteBuilder<S extends Space> {
      * Create the optimized instruction that executes the native database operation.
      */
     protected Inst createOptimizedInst(final S typedSpace, final fURI expandedfURI, final C<?,?> coeff) {
-        final DataPath dp = DataPath.of(f("-").extend(expandedfURI));
+        final DataPath dp = DataPath.withoutDB(expandedfURI);
         return instC(
                 this.rewriteTid.dom(ALL.zero()).rng(this.resultTid),
                 lst(uri(expandedfURI)),

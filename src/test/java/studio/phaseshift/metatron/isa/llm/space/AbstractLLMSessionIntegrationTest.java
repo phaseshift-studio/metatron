@@ -64,7 +64,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * Subclasses must implement:
  * <ul>
  *   <li>{@link #createSessionSpace()} — create and return a Space with the
- *       {@code llm_session} table and per-type message tables pre-created</li>
+ *       {@code llm_session} collection and per-type message collections pre-created</li>
  *   <li>{@link #sessionVID()} — return the fURI of the session policy row</li>
  *   <li>{@link #cleanupSession()} — tear down the space and any resources</li>
  * </ul>
@@ -248,12 +248,12 @@ public abstract class AbstractLLMSessionIntegrationTest extends AbstractMetatron
     }
 
     /* ------------------------------------------------------------
-     * Typed-table mirror verification
+     * Typed-collection mirror verification
      * ---------------------------------------------------------- */
 
     @Test
-    public void testTypedTablePopulation() {
-        // Chat three times to exercise the per-type table mirrors
+    public void testTypedCollectionPopulation() {
+        // Chat three times to exercise the per-type collection mirrors
         try {
             chatModel.chat("Remember the word DOG. Just say 'ok'.");
             chatModel.chat("What word were you asked to remember? Just say the word.");
@@ -263,18 +263,18 @@ public abstract class AbstractLLMSessionIntegrationTest extends AbstractMetatron
             throw e;
         }
 
-        final String scheme = sessionVID().scheme();
+        final fURI basePath = sessionVID().retract(2);  // strip entry + collection → scheme/prefix root
 
         // ── Verify llm_message_system ────────────────────────────
-        assertTypedTable(scheme, "llm_message_system",
+        assertTypedCollection(basePath, "llm_message_system",
                 "system", 1, 1, this::verifyMirrorRow);
 
         // ── Verify llm_message_user ──────────────────────────────
-        assertTypedTable(scheme, "llm_message_user",
+        assertTypedCollection(basePath, "llm_message_user",
                 "user", 3, 3, this::verifyMirrorRow);
 
         // ── Verify llm_message_ai ────────────────────────────────
-        assertTypedTable(scheme, "llm_message_ai",
+        assertTypedCollection(basePath, "llm_message_ai",
                 "ai", 3, 3, this::verifyMirrorRow);
 
         // ── KV store remains authoritative ───────────────────────
@@ -285,9 +285,9 @@ public abstract class AbstractLLMSessionIntegrationTest extends AbstractMetatron
     @Test
     public void testSessionMessageWriteReadBack() {
         final fURI sessionVID = sessionVID();
-        final String scheme = sessionVID.scheme();
         final int memoryId = 1;
-        final fURI msgBase = f(scheme + ":msg");
+        // msg base: retract entry + collection, then extend with "msg"
+        final fURI msgBase = sessionVID.retract(2).extend("msg");
 
         // -- Build typed message Recs (TID = message type discriminator) --
         final Obj systemMsg = rec(uri(TEXT), str("You are helpful."))
@@ -348,7 +348,7 @@ public abstract class AbstractLLMSessionIntegrationTest extends AbstractMetatron
         assertFalse(stillThere.isNoObj(), "undeleted message should still exist");
     }
 
-    /** Per-row validation for typed-table mirror: text + kv URI back-link. */
+    /** Per-row validation for typed-collection mirror: text + kv URI back-link. */
     private void verifyMirrorRow(final Rec rec, final int id) {
         final Obj text = rec.at(uri(TEXT));
         assertFalse(text.isNoObj(), "row[" + id + "]: missing text");
@@ -363,15 +363,15 @@ public abstract class AbstractLLMSessionIntegrationTest extends AbstractMetatron
         assertTrue(uriStr.contains("/"), "row[" + id + "]: uri should be a full path, got: " + uriStr);
     }
 
-    /** Validate a typed table: sequential IDs, unique hashes, per-row assertions. */
-    private void assertTypedTable(final String scheme, final String tableName,
-                                  final String label, final int minRows, final int maxRows,
-                                  final java.util.function.BiConsumer<Rec, Integer> perRow) {
+    /** Validate a typed collection: sequential IDs, unique hashes, per-row assertions. */
+    private void assertTypedCollection(final fURI basePath, final String collectionName,
+                                       final String label, final int minRows, final int maxRows,
+                                       final java.util.function.BiConsumer<Rec, Integer> perRow) {
         final Map<String, Integer> hashCounts = new LinkedHashMap<>();
         int rows = 0;
         int lastId = 0;
         for (int id = 1; ; id++) {
-            final Obj row = Router.readFromSpace(f(scheme + ":" + tableName + "/" + id));
+            final Obj row = Router.readFromSpace(basePath.extend(collectionName).extend(String.valueOf(id)));
             if (row.isNoObj()) break;
             assertTrue(row.isRec(), label + "[" + id + "]: must be Rec, got " + row.getClass().getSimpleName());
             final Rec rec = row.asRec();
@@ -392,19 +392,19 @@ public abstract class AbstractLLMSessionIntegrationTest extends AbstractMetatron
         }
 
         assertTrue(rows >= minRows,
-                label + " table: expected >= " + minRows + " rows, got " + rows);
+                label + " collection: expected >= " + minRows + " rows, got " + rows);
         assertTrue(rows <= maxRows,
-                label + " table: expected <= " + maxRows + " rows (no duplicates), got " + rows);
+                label + " collection: expected <= " + maxRows + " rows (no duplicates), got " + rows);
 
         // All hashes unique (= row count)
         final long duplicates = hashCounts.values().stream().filter(c -> c > 1).count();
         assertEquals(0, duplicates,
-                label + " table: " + duplicates + " duplicate hashes in " + rows
+                label + " collection: " + duplicates + " duplicate hashes in " + rows
                         + " rows: " + hashCounts);
 
         // Hash count == row count (no hash appears more than once)
         assertEquals(rows, hashCounts.size(),
-                label + " table: hash unique count (" + hashCounts.size()
+                label + " collection: hash unique count (" + hashCounts.size()
                         + ") != row count (" + rows + ")");
     }
 

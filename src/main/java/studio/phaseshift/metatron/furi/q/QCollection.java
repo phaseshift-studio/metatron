@@ -356,18 +356,30 @@ public final class QCollection {
     /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     public static QProc incrQ() {
-        final AtomicLong counter = new AtomicLong(0);
+        final java.util.Map<String, AtomicLong> counters = new java.util.concurrent.ConcurrentHashMap<>();
         return QProc.Helper.build(INCRQ_TID, INCRQ_PATTERN).
                 preWrite((vid, obj) -> {
                     final fURI incrPattern = vid.extend(vid.qValue(INCRQ_PATTERN, fURI.class)).resolve();
+                    // Per-collection counter so each typed collection has its own ID sequence.
+                    final StringBuilder prefix = new StringBuilder();
                     final List<String> newPath = new ArrayList<>();
                     for (final String p : incrPattern.path()) {
-                        if (fURI.isPattern(p))
+                        if (fURI.isPattern(p)) {
+                            final AtomicLong counter = counters.computeIfAbsent(
+                                    prefix.toString(), k -> new AtomicLong(0));
                             newPath.add(counter.incrementAndGet() + "");
-                        else
+                        } else {
+                            if (!prefix.isEmpty()) prefix.append("/");
+                            prefix.append(p);
                             newPath.add(p);
+                        }
                     }
-                    return obj.vid(vid.removeQ(INCRQ_PATTERN).path(newPath));
+                    final fURI cleaned = vid.removeQ(INCRQ_PATTERN).path(newPath);
+                    final Obj stored = obj.vid(cleaned);
+                    // QProc handles storage itself (same pattern as tbleIncrQ).
+                    // cleaned URI has no ?incrq → won't rematch on recursive write.
+                    Router.writeToSpace(cleaned, stored);
+                    return obj;
                 }).create();
     }
 
