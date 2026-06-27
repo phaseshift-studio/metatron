@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
+import java.util.function.BiPredicate;
 import java.util.function.Function;
 
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
@@ -96,6 +97,23 @@ public final class CommonRewrites {
             final Class<S> spaceType,
             final fURI rewriteTid,
             final BiFunction<S, DataPath, Long> countFunction) {
+        return countRewrite(spaceType, rewriteTid, countFunction, null);
+    }
+
+    /**
+     * Create a count optimization rewrite with an optional space-aware guard.
+     *
+     * @param matchSpacePredicate optional predicate receiving the typed space and
+     *                            matched instructions; return {@code false} to skip
+     *                            the rewrite (e.g., when the collection is not a
+     *                            real table)
+     * @see #countRewrite(Class, fURI, BiFunction)
+     */
+    public static <S extends Space> Inst countRewrite(
+            final Class<S> spaceType,
+            final fURI rewriteTid,
+            final BiFunction<S, DataPath, Long> countFunction,
+            final BiPredicate<S, List<Inst>> matchSpacePredicate) {
 
         return RewriteBuilder.forDatabase(spaceType)
                 .tid(rewriteTid)
@@ -109,6 +127,7 @@ public final class CommonRewrites {
                     final DataPath dp = DataPath.of(ref.uriValue());
                     return !dp.collectionIsWildcard() && !dp.hasField() && !dp.hasExtension();
                 })
+                .matchSpacePredicate(matchSpacePredicate)
                 .optimize("from_count", (space, dp, coeff) -> {
                     final long count = countFunction.apply(space, dp);
                     return jnt(count).c(c -> c.mult((cInt) coeff));
@@ -131,11 +150,20 @@ public final class CommonRewrites {
             final Class<S> spaceType,
             final fURI rewriteTID,
             final BiFunction<S, DataPath, Number> sumFunction) {
+        return sumRewrite(spaceType, rewriteTID, sumFunction, null);
+    }
+
+    public static <S extends Space> Inst sumRewrite(
+            final Class<S> spaceType,
+            final fURI rewriteTID,
+            final BiFunction<S, DataPath, Number> sumFunction,
+            final BiPredicate<S, List<Inst>> matchSpacePredicate) {
 
         return RewriteBuilder.forDatabase(spaceType)
                 .tid(rewriteTID)
                 .rng(A)
                 .match(FROM_INST_TID, SUM_INST_TID)
+                .matchSpacePredicate(matchSpacePredicate)
                 .optimize("from_sum", (space, dp, coeff) -> {
                     final Number sum = sumFunction.apply(space, dp);
                     return (sum instanceof Double || sum instanceof Float)
@@ -161,11 +189,20 @@ public final class CommonRewrites {
             final Class<S> spaceType,
             final fURI rewriteTID,
             final BiFunction<S, DataPath, Double> meanFunction) {
+        return meanRewrite(spaceType, rewriteTID, meanFunction, null);
+    }
+
+    public static <S extends Space> Inst meanRewrite(
+            final Class<S> spaceType,
+            final fURI rewriteTID,
+            final BiFunction<S, DataPath, Double> meanFunction,
+            final BiPredicate<S, List<Inst>> matchSpacePredicate) {
 
         return RewriteBuilder.forDatabase(spaceType)
                 .tid(rewriteTID)
                 .rng(REAL_TID)
                 .match(FROM_INST_TID, MEAN_INST_TID)
+                .matchSpacePredicate(matchSpacePredicate)
                 .optimize("from_mean", (space, dp, coeff) -> {
                     final double mean = meanFunction.apply(space, dp);
                     return real(mean);
@@ -224,8 +261,16 @@ public final class CommonRewrites {
             final Class<S> spaceType,
             final fURI rewriteTID,
             final LimitOperation<S> limitFunction) {
+        return limitRewrite(spaceType, rewriteTID, limitFunction, null);
+    }
 
-        return new LimitRewriteBuilder<>(spaceType, limitFunction)
+    public static <S extends Space> Inst limitRewrite(
+            final Class<S> spaceType,
+            final fURI rewriteTID,
+            final LimitOperation<S> limitFunction,
+            final BiPredicate<S, List<Inst>> matchSpacePredicate) {
+
+        return new LimitRewriteBuilder<>(spaceType, limitFunction, matchSpacePredicate)
                 .tid(rewriteTID)
                 .rng(ALL_STAR)
                 .match(FROM_INST_TID, TAKE_INST_TID)
@@ -240,8 +285,14 @@ public final class CommonRewrites {
         private final LimitOperation<S> limitOperation;
 
         LimitRewriteBuilder(final Class<S> spaceType, final LimitOperation<S> limitOperation) {
+            this(spaceType, limitOperation, null);
+        }
+
+        LimitRewriteBuilder(final Class<S> spaceType, final LimitOperation<S> limitOperation,
+                            final BiPredicate<S, List<Inst>> matchSpacePredicate) {
             super(spaceType);
             this.limitOperation = limitOperation;
+            this.matchSpacePredicate = matchSpacePredicate;
             this.rewriteName = "from_take";
             // Set a dummy optimization since we override createRewriteFunction
             this.optimization = (space, furi, coeff) -> null;
@@ -261,6 +312,13 @@ public final class CommonRewrites {
                 // Check if this is the correct space type
                 if (this.spaceType.isInstance(space) && (this.matchPredicate == null || this.matchPredicate.test(matchedInsts))) {
                     final S typedSpace = this.spaceType.cast(space);
+
+                    // Check space-aware predicate (e.g., table-existence guard)
+                    if (this.matchSpacePredicate != null && !this.matchSpacePredicate.test(typedSpace, matchedInsts)) {
+                        LOG.debug("matchSpacePredicate rejected limit rewrite for URI %s", oldfURI);
+                        return matchedInsts.stream().map(Obj::asInst).toList();
+                    }
+
                     final fURI expandedfURI = space.redirect(oldfURI, true);
                     final DataPath dp = DataPath.of(f("-").extend(expandedfURI));
 
@@ -337,6 +395,14 @@ public final class CommonRewrites {
             final Class<S> spaceType,
             final fURI rewriteTID,
             final BiFunction<S, DataPath, Boolean> hasFunction) {
+        return hasRewrite(spaceType, rewriteTID, hasFunction, null);
+    }
+
+    public static <S extends Space> Inst hasRewrite(
+            final Class<S> spaceType,
+            final fURI rewriteTID,
+            final BiFunction<S, DataPath, Boolean> hasFunction,
+            final BiPredicate<S, List<Inst>> matchSpacePredicate) {
 
         return RewriteBuilder.forDatabase(spaceType)
                 .tid(rewriteTID)
@@ -349,6 +415,7 @@ public final class CommonRewrites {
                     final DataPath dp = DataPath.of(f("-").extend(ref.uriValue()));
                     return !dp.hasField() && !dp.hasExtension() && !dp.collectionIsWildcard();
                 })
+                .matchSpacePredicate(matchSpacePredicate)
                 .optimize("from_has", (space, dp, coeff) -> {
                     final boolean exists = hasFunction.apply(space, dp);
                     return studio.phaseshift.metatron.isa.m.type.impl.MBool.bool(exists);
@@ -397,8 +464,16 @@ public final class CommonRewrites {
             final Class<S> spaceType,
             final fURI rewriteTID,
             final SelectOperation<S> selectFunction) {
+        return selectRewrite(spaceType, rewriteTID, selectFunction, null);
+    }
 
-        return new SelectRewriteBuilder<>(spaceType, selectFunction)
+    public static <S extends Space> Inst selectRewrite(
+            final Class<S> spaceType,
+            final fURI rewriteTID,
+            final SelectOperation<S> selectFunction,
+            final BiPredicate<S, List<Inst>> matchSpacePredicate) {
+
+        return new SelectRewriteBuilder<>(spaceType, selectFunction, matchSpacePredicate)
                 .tid(rewriteTID)
                 .rng(ALL_STAR)
                 .match(FROM_INST_TID, RSHIFT_INST_TID)
@@ -413,8 +488,14 @@ public final class CommonRewrites {
         private final SelectOperation<S> selectOperation;
 
         SelectRewriteBuilder(final Class<S> spaceType, final SelectOperation<S> selectOperation) {
+            this(spaceType, selectOperation, null);
+        }
+
+        SelectRewriteBuilder(final Class<S> spaceType, final SelectOperation<S> selectOperation,
+                             final BiPredicate<S, List<Inst>> matchSpacePredicate) {
             super(spaceType);
             this.selectOperation = selectOperation;
+            this.matchSpacePredicate = matchSpacePredicate;
             this.rewriteName = "from_select";
             this.optimization = (space, furi, coeff) -> null;
         }
@@ -445,6 +526,13 @@ public final class CommonRewrites {
                 }
 
                 final S typedSpace = this.spaceType.cast(space);
+
+                // Check space-aware predicate (e.g., table-existence guard)
+                if (this.matchSpacePredicate != null && !this.matchSpacePredicate.test(typedSpace, matchedInsts)) {
+                    LOG.debug("matchSpacePredicate rejected select rewrite for URI %s", oldfURI);
+                    return matchedInsts.stream().map(Obj::asInst).toList();
+                }
+
                 final fURI expandedfURI = space.redirect(oldfURI, true);
                 final DataPath dp = DataPath.of(f("-").extend(expandedfURI));
 
@@ -570,8 +658,16 @@ public final class CommonRewrites {
             final Class<S> spaceType,
             final fURI rewriteTID,
             final WhereOperation<S> whereFunction) {
+        return whereRewrite(spaceType, rewriteTID, whereFunction, null);
+    }
 
-        return new WhereRewriteBuilder<>(spaceType, whereFunction)
+    public static <S extends Space> Inst whereRewrite(
+            final Class<S> spaceType,
+            final fURI rewriteTID,
+            final WhereOperation<S> whereFunction,
+            final BiPredicate<S, List<Inst>> matchSpacePredicate) {
+
+        return new WhereRewriteBuilder<>(spaceType, whereFunction, matchSpacePredicate)
                 .tid(rewriteTID)
                 .rng(ALL_STAR)
                 .match(FROM_INST_TID, WHERE_INST_TID)
@@ -586,8 +682,14 @@ public final class CommonRewrites {
         private final WhereOperation<S> whereOperation;
 
         WhereRewriteBuilder(final Class<S> spaceType, final WhereOperation<S> whereOperation) {
+            this(spaceType, whereOperation, null);
+        }
+
+        WhereRewriteBuilder(final Class<S> spaceType, final WhereOperation<S> whereOperation,
+                            final BiPredicate<S, List<Inst>> matchSpacePredicate) {
             super(spaceType);
             this.whereOperation = whereOperation;
+            this.matchSpacePredicate = matchSpacePredicate;
             this.rewriteName = "from_where";
             this.optimization = (space, furi, coeff) -> null;
         }
@@ -617,6 +719,13 @@ public final class CommonRewrites {
                 }
 
                 final S typedSpace = this.spaceType.cast(space);
+
+                // Check space-aware predicate (e.g., table-existence guard)
+                if (this.matchSpacePredicate != null && !this.matchSpacePredicate.test(typedSpace, matchedInsts)) {
+                    LOG.debug("matchSpacePredicate rejected where rewrite for URI %s", oldfURI);
+                    return matchedInsts.stream().map(Obj::asInst).toList();
+                }
+
                 final fURI expandedfURI = space.redirect(oldfURI, true);
                 final DataPath dp = DataPath.of(f("-").extend(expandedfURI));
 
@@ -797,8 +906,17 @@ public final class CommonRewrites {
             final fURI whereRewriteTID,
             final fURI rewriteTID,
             final WhereCountOperation<S> whereCountFunction) {
+        return whereCountRewrite(spaceType, whereRewriteTID, rewriteTID, whereCountFunction, null);
+    }
 
-        return new WhereCountRewriteBuilder<>(spaceType, whereRewriteTID, whereCountFunction)
+    public static <S extends Space> Inst whereCountRewrite(
+            final Class<S> spaceType,
+            final fURI whereRewriteTID,
+            final fURI rewriteTID,
+            final WhereCountOperation<S> whereCountFunction,
+            final BiPredicate<S, List<Inst>> matchSpacePredicate) {
+
+        return new WhereCountRewriteBuilder<>(spaceType, whereRewriteTID, whereCountFunction, matchSpacePredicate)
                 .tid(rewriteTID)
                 .rng(INT_TID)
                 .match(whereRewriteTID, COUNT_INST_TID)
@@ -815,9 +933,16 @@ public final class CommonRewrites {
 
         WhereCountRewriteBuilder(final Class<S> spaceType, final fURI whereRewriteTID,
                                  final WhereCountOperation<S> whereCountOperation) {
+            this(spaceType, whereRewriteTID, whereCountOperation, null);
+        }
+
+        WhereCountRewriteBuilder(final Class<S> spaceType, final fURI whereRewriteTID,
+                                 final WhereCountOperation<S> whereCountOperation,
+                                 final BiPredicate<S, List<Inst>> matchSpacePredicate) {
             super(spaceType);
             this.whereRewriteTID = whereRewriteTID;
             this.whereCountOperation = whereCountOperation;
+            this.matchSpacePredicate = matchSpacePredicate;
             this.rewriteName = "from_where_count";
             this.optimization = (space, furi, coeff) -> null;
         }
@@ -845,6 +970,13 @@ public final class CommonRewrites {
                 }
 
                 final S typedSpace = this.spaceType.cast(space);
+
+                // Check space-aware predicate (e.g., table-existence guard)
+                if (this.matchSpacePredicate != null && !this.matchSpacePredicate.test(typedSpace, matchedInsts)) {
+                    LOG.debug("matchSpacePredicate rejected where+count rewrite for URI %s", furi);
+                    return matchedInsts.stream().map(Obj::asInst).toList();
+                }
+
                 final DataPath dp = DataPath.of(f("-").extend(furi));
 
                 LOG.debug("evaluating native where+count on %s with clause '%s' in space %s",
@@ -917,8 +1049,17 @@ public final class CommonRewrites {
             final fURI whereRewriteTID,
             final fURI rewriteTID,
             final WhereLimitOperation<S> whereLimitFunction) {
+        return whereLimitRewrite(spaceType, whereRewriteTID, rewriteTID, whereLimitFunction, null);
+    }
 
-        return new WhereLimitRewriteBuilder<>(spaceType, whereRewriteTID, whereLimitFunction)
+    public static <S extends Space> Inst whereLimitRewrite(
+            final Class<S> spaceType,
+            final fURI whereRewriteTID,
+            final fURI rewriteTID,
+            final WhereLimitOperation<S> whereLimitFunction,
+            final BiPredicate<S, List<Inst>> matchSpacePredicate) {
+
+        return new WhereLimitRewriteBuilder<>(spaceType, whereRewriteTID, whereLimitFunction, matchSpacePredicate)
                 .tid(rewriteTID)
                 .rng(ALL_STAR)
                 .match(whereRewriteTID, TAKE_INST_TID)
@@ -936,9 +1077,16 @@ public final class CommonRewrites {
 
         WhereLimitRewriteBuilder(final Class<S> spaceType, final fURI whereRewriteTID,
                                  final WhereLimitOperation<S> whereLimitOperation) {
+            this(spaceType, whereRewriteTID, whereLimitOperation, null);
+        }
+
+        WhereLimitRewriteBuilder(final Class<S> spaceType, final fURI whereRewriteTID,
+                                 final WhereLimitOperation<S> whereLimitOperation,
+                                 final BiPredicate<S, List<Inst>> matchSpacePredicate) {
             super(spaceType);
             this.whereRewriteTID = whereRewriteTID;
             this.whereLimitOperation = whereLimitOperation;
+            this.matchSpacePredicate = matchSpacePredicate;
             this.rewriteName = "from_where_limit";
             this.optimization = (space, furi, coeff) -> null;
         }
@@ -969,6 +1117,13 @@ public final class CommonRewrites {
                 }
 
                 final S typedSpace = this.spaceType.cast(space);
+
+                // Check space-aware predicate (e.g., table-existence guard)
+                if (this.matchSpacePredicate != null && !this.matchSpacePredicate.test(typedSpace, matchedInsts)) {
+                    LOG.debug("matchSpacePredicate rejected where+limit rewrite for URI %s", furi);
+                    return matchedInsts.stream().map(Obj::asInst).toList();
+                }
+
                 final DataPath dp = DataPath.of(f("-").extend(furi));
 
                 LOG.debug("evaluating native where+limit on %s with clause '%s' and limit %d in space %s",

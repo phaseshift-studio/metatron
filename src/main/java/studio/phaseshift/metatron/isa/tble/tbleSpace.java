@@ -382,7 +382,7 @@ public class tbleSpace extends AbstractSpace<Connection> implements SchemaSpace 
      * and its result set — if any — is converted to mtron {@link Rec} rows via
      * {@link ObjSQLSerializer#readCurrentAsRec(ResultSet)} and returned as an
      * {@code Objs} stream.  When the final statement produces no result set
-     * (e.g. a terminal INSERT or CREATE), {@link NoObj#noobj()} is returned.
+     * (e.g. a terminal INSERT or CREATE), {@code noobj} is returned.
      *
      * @param sqlExpression one or more SQL statements separated by semicolons
      * @return the result of the last statement as a stream of rows, or noobj
@@ -421,7 +421,7 @@ public class tbleSpace extends AbstractSpace<Connection> implements SchemaSpace 
         }
 
         // 3. Execute the final statement and return its result
-        final String lastStmt = valid.get(valid.size() - 1);
+        final String lastStmt = valid.getLast();
         LOG.info("sql query: %s", lastStmt);
         try (final Statement stmt = this.sjvm().createStatement()) {
             final boolean hasResultSet = stmt.execute(lastStmt);

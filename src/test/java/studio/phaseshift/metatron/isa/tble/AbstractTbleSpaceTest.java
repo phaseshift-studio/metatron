@@ -1697,4 +1697,77 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathTest impleme
             space.close();
         }
     }
+
+    // =========================================================================
+    //  Schema sanity — catches instset loading regressions
+    // =========================================================================
+
+    /**
+     * Verifies {@code *db:+} returns table schema Types.  If the instset
+     * fails to load (e.g. a rewrite builder throws during {@code setup()}),
+     * the Router cannot resolve this pattern and this test fails first.
+     */
+    @Test
+    public void testWildcardCollectionReturnsSchemaTypes() throws Exception {
+        final Obj result = ObjmtronSerializer.parse("*db:+").apply();
+        assertTrue(result.isObjs() || result.isLst(),
+                "*db:+ should return a stream of Types, got: " + result);
+        final List<Obj> types = result.stream().toList();
+        assertFalse(types.isEmpty(),
+                "*db:+ should return at least one schema Type");
+        for (final Obj t : types) {
+            assertTrue(t.isType() || t.isRec(),
+                    "each result from *db:+ should be a Type or rrow, got: " + t);
+        }
+    }
+
+    // =========================================================================
+    //  KV store rewrites
+    // =========================================================================
+
+    private static final String KV_PREFIX = "db:kvtest";
+    private static final String[][] KV_SEED = {
+            {"a", "str('alpha')"}, {"b", "str('beta')"}, {"c", "str('gamma')"},
+            {"d", "str('delta')"}, {"e", "str('epsilon')"},
+            {"sub/x", "str('xray')"}, {"sub/y", "str('yankee')"},
+            {"deep/1/a", "str('deep_a')"}, {"deep/1/b", "str('deep_b')"},
+            {"deep/2/a", "str('deep_c')"},
+    };
+
+    private static void seedKVData() {
+        for (final String[] kv : KV_SEED)
+            ObjmtronSerializer.parse(KV_PREFIX + "/" + kv[0] + " -> " + kv[1]).apply();
+    }
+
+    private static void cleanKVData() {
+        for (final String[] kv : KV_SEED)
+            ObjmtronSerializer.parse(KV_PREFIX + "/" + kv[0] + " -> none").apply();
+    }
+
+    static Stream<Arguments> provideKVStoreRewriteTestCases() {
+        return Stream.of(
+                // kv_count
+                Arguments.of("kv: single +", "*db:kvtest/+.count()", jnt(5)),
+                Arguments.of("kv: nested +", "*db:kvtest/sub/+.count()", jnt(2)),
+                Arguments.of("kv: double +", "*db:kvtest/+/+.count()", jnt(2)),
+                Arguments.of("kv: deep ++", "*db:kvtest/deep/+/+.count()", jnt(3)),
+                Arguments.of("kv: exact path", "*db:kvtest/b.count()", jnt(1)),
+                Arguments.of("kv: empty path", "*db:kvtest/nonexistent/+.count()", jnt(0)),
+                // kv_limit
+                Arguments.of("kv: take 3", "*db:kvtest/+.take(3).count()", jnt(3)),
+                Arguments.of("kv: take 10", "*db:kvtest/+.take(10).count()", jnt(5)),
+                Arguments.of("kv: take 0", "*db:kvtest/+.take(0).count()", jnt(0))
+        );
+    }
+
+    @ParameterizedTest(name = "[{index}] {0}")
+    @MethodSource("provideKVStoreRewriteTestCases")
+    public void testKVStoreRewrites(String description, String code, Obj expected) throws Exception {
+        seedKVData();
+        try {
+            runRewriteTest(description, code, expected);
+        } finally {
+            cleanKVData();
+        }
+    }
 }

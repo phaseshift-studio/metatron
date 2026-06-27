@@ -19,10 +19,14 @@
 package studio.phaseshift.metatron.isa.tble;
 
 import studio.phaseshift.metatron.algebra.rewrite.CommonRewrites;
+import studio.phaseshift.metatron.algebra.rewrite.RewriteBuilder;
+import studio.phaseshift.metatron.furi.DataPath;
+import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSQLSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.web.webHelper;
@@ -36,10 +40,12 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.sql.*;
 import java.util.*;
+import java.util.function.BiPredicate;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
@@ -98,6 +104,24 @@ public class tbleInstSet extends AbstractInstSet {
 
     @Override
     public void setup() {
+        final BiPredicate<tbleSpace, List<Inst>> tableGuard = (space, matches) -> {
+            final Obj ref = matches.getFirst().arg(0);
+            if (!ref.isUri()) return true;
+            final DataPath dp = DataPath.of(ref.uriValue());
+            if (!dp.hasCollection() || dp.collectionIsWildcard()) return false;
+            return TableStoreUtil.isTableCollection(space, dp.collection());
+        };
+
+        final BiPredicate<tbleSpace, List<Inst>> kvGuard = (space, matches) -> {
+            final Obj ref = matches.getFirst().arg(0);
+            if (!ref.isUri()) return false;
+            final DataPath dp = DataPath.of(f("-").extend(ref.uriValue()));
+            if (!dp.hasCollection() || dp.collectionIsWildcard()) return false;
+            if (TableStoreUtil.isTableCollection(space, dp.collection()))
+                return false;
+            return KVStoreUtil.translateKVPatternToSQL(ref.uriValue()) != null;
+        };
+
         this.jvm().putAll(mutableMap(
                 uri(CONST), lst(
                         docWrap(rec(mutableMap(
@@ -143,7 +167,8 @@ public class tbleInstSet extends AbstractInstSet {
                                             return 0L;
                                         throw MTronException.of(e);
                                     }
-                                }
+                                },
+                                tableGuard
                         ), "pre-rewrite code", "post-rewrite code", Map.of(), "leverages native SELECT COUNT(*) to count rows in a table"),
 
                         // Optimize: *table.sum() → SELECT SUM(*)
@@ -168,7 +193,8 @@ public class tbleInstSet extends AbstractInstSet {
                                             return 0L;
                                         throw MTronException.of(e);
                                     }
-                                }
+                                },
+                                tableGuard
                         ), "pre-rewrite code", "post-rewrite code", Map.of(), "leverages native SELECT SUM(column) to sum entries in a table column"),
                         // Optimize: *table.mean() → SELECT AVG(*)
                         docWrap(CommonRewrites.meanRewrite(
@@ -186,7 +212,8 @@ public class tbleInstSet extends AbstractInstSet {
                                     } catch (SQLException e) {
                                         throw MTronException.of(e);
                                     }
-                                }
+                                },
+                                tableGuard
                         ), "pre-rewrite code", "post-rewrite code", Map.of(), "leverages native SELECT AVG(column) to average entries in a table column"),
                         docWrap(CommonRewrites.limitRewrite(
                                 tbleSpace.class,
@@ -233,7 +260,8 @@ public class tbleInstSet extends AbstractInstSet {
                                     } catch (final Exception e) {
                                         throw MTronException.of(e, "%s", sql);
                                     }
-                                }
+                                },
+                                tableGuard
                         ), "pre-rewrite code", "post-rewrite code", Map.of(), "leverages native SELECT ... LIMIT to take first n rows from a table"),
 
                         // Optimize: *table.has() → SELECT EXISTS(SELECT 1 FROM table LIMIT 1)
@@ -250,7 +278,8 @@ public class tbleInstSet extends AbstractInstSet {
                                             return false;
                                         throw MTronException.of(e);
                                     }
-                                }
+                                },
+                                tableGuard
                         ), "pre-rewrite code", "post-rewrite code", Map.of(), "leverages native SELECT EXISTS to check if table has any rows"),
 
                         // Optimize: *table.where([col=>val]) → SELECT * FROM table WHERE col = val
@@ -300,7 +329,8 @@ public class tbleInstSet extends AbstractInstSet {
                                     } catch (final Exception e) {
                                         throw MTronException.of(e, "%s", sql);
                                     }
-                                }
+                                },
+                                tableGuard
                         ), "pre-rewrite code", "post-rewrite code", Map.of(), "leverages native SELECT ... WHERE to filter rows in a table"),
 
                         // Optimize: sql_where.count() → SELECT COUNT(*) FROM table WHERE ...
@@ -319,7 +349,8 @@ public class tbleInstSet extends AbstractInstSet {
                                             return 0L;
                                         throw MTronException.of(e, "%s", sql);
                                     }
-                                }
+                                },
+                                tableGuard
                         ), "pre-rewrite code", "post-rewrite code", Map.of(), "leverages native SELECT COUNT(*) ... WHERE to count filtered rows"),
 
                         // Optimize: sql_where.take(n) → SELECT * FROM table WHERE ... LIMIT n
@@ -366,7 +397,8 @@ public class tbleInstSet extends AbstractInstSet {
                                     } catch (final Exception e) {
                                         throw MTronException.of(e, "%s", sql);
                                     }
-                                }
+                                },
+                                tableGuard
                         ), "pre-rewrite code", "post-rewrite code", Map.of(), "leverages native SELECT ... WHERE ... LIMIT to filter and limit rows in a table"),
 
                         // Optimize: from(table/+).>>{col1,col2} → SELECT col1, col2 FROM table
@@ -407,13 +439,114 @@ public class tbleInstSet extends AbstractInstSet {
                                             return noobj();
                                         throw MTronException.of(e, "%s", sql);
                                     }
-                                }
-                        ), "*table/+>>{name,age}", "sql_select(table, [name,age])", Map.of(), "leverages native SELECT col1, col2 FROM table for projections")
+                                },
+                                tableGuard
+                        ), "*table/+>>{name,age}", "sql_select(table, [name,age])", Map.of(), "leverages native SELECT col1, col2 FROM table for projections"),
+
+                        // Optimize: *kvPath/+.count() → SELECT COUNT(*) FROM kv_store WHERE furi LIKE ...
+                        docWrap(RewriteBuilder.forDatabase(tbleSpace.class)
+                                .tid(TBLE_ISA_REWRITE_TID.extend("kv_count"))
+                                .rng(INT_TID)
+                                .match(FROM_INST_TID, COUNT_INST_TID)
+                                .matchSpacePredicate(kvGuard)
+                                .optimizeWithURI("kv_from_count", (space, dp, expandedURI, coeff) -> {
+                                    final fURI stored = Space.Helper.routeFromSpace(expandedURI, space.routes());
+                                    final String whereClause = KVStoreUtil.translateKVPatternToSQL(stored);
+                                    if (whereClause == null) throw MTronException.of("untranslatable KV pattern: %s", stored);
+                                    final String sql = "SELECT COUNT(*) FROM kv_store WHERE " + whereClause;
+                                    try (final Statement stmt = space.sjvm().createStatement();
+                                         final ResultSet rs = stmt.executeQuery(sql)) {
+                                        final long count = rs.next() ? rs.getLong(1) : 0L;
+                                        return jnt(count).c(c -> c.mult((cInt) coeff));
+                                    } catch (SQLException e) {
+                                        throw MTronException.of(e, "%s", sql);
+                                    }
+                                })
+                                .build(),
+                                "/col/+, /col/+/+, /col/*",
+                                "kv_count(kv_store, WHERE furi LIKE ...)",
+                                Map.of(),
+                                "leverages native SELECT COUNT(*) FROM kv_store with LIKE-based pattern matching"),
+
+                        // Optimize: *kvPath/+.take(n) → SELECT * FROM kv_store WHERE furi LIKE ... LIMIT n
+                        docWrap(new KVLimitRewriteBuilder(TBLE_ISA_REWRITE_TID.extend("kv_limit"))
+                                .match(FROM_INST_TID, TAKE_INST_TID)
+                                .matchSpacePredicate(kvGuard)
+                                .build(),
+                                "/col/+.take(5)",
+                                "kv_limit(kv_store, WHERE furi LIKE ..., LIMIT n)",
+                                Map.of(),
+                                "leverages native SELECT ... FROM kv_store ... LIMIT n to avoid loading all KV entries")
 
                 )));
         docWrap(this,
                 "relational tables, typed rows, and SQL rewrites within the metatron",
                 "*acme:customer.where[person=>[name=>_=>age=>?>29]]");
         super.setup();
+    }
+
+    // =========================================================================
+    //  Inner builder: kv_limit rewrite
+    // =========================================================================
+
+    private static final class KVLimitRewriteBuilder extends RewriteBuilder<tbleSpace> {
+        KVLimitRewriteBuilder(final fURI rewriteTid) {
+            super(tbleSpace.class);
+            this.rewriteTid = rewriteTid;
+            this.resultTid = ALL_STAR;
+            this.rewriteName = "kv_from_limit";
+            this.optimization = (space, dp, coeff) -> null; // dummy — overrides createRewriteFunction
+        }
+
+        @Override
+        protected java.util.function.Function<java.util.Map<Inst, Inst>, java.util.List<Inst>> createRewriteFunction() {
+            return map -> {
+                final java.util.List<Inst> matchedInsts = new java.util.ArrayList<>(map.values());
+                final Inst fromInst = matchedInsts.get(0);
+                final Inst takeInst = matchedInsts.get(1);
+                final long limitValue = takeInst.arg(0).asInt().jvm();
+
+                final fURI oldfURI = fromInst.arg(0).asUri().uriValue();
+                final Space space = Router.global().getSpaceFor(oldfURI);
+
+                if (!this.spaceType.isInstance(space))
+                    return matchedInsts.stream().map(Obj::asInst).toList();
+
+                final tbleSpace typedSpace = this.spaceType.cast(space);
+
+                if (this.matchSpacePredicate != null
+                        && !this.matchSpacePredicate.test(typedSpace, matchedInsts))
+                    return matchedInsts.stream().map(Obj::asInst).toList();
+
+                final fURI expandedfURI = space.redirect(oldfURI, true);
+                final fURI stored = Space.Helper.routeFromSpace(expandedfURI, typedSpace.routes());
+                final String whereClause = KVStoreUtil.translateKVPatternToSQL(stored);
+                if (whereClause == null)
+                    return matchedInsts.stream().map(Obj::asInst).toList();
+
+                final String sql = "SELECT furi, obj FROM kv_store WHERE "
+                        + whereClause + " LIMIT " + limitValue;
+
+                return java.util.List.of(instC(
+                        this.rewriteTid.dom(ALL.zero()).rng(this.resultTid),
+                        lst(uri(expandedfURI), jnt(limitValue)),
+                        (lhs, inst) -> {
+                            try (final Statement stmt = typedSpace.sjvm().createStatement();
+                                 final ResultSet rs = stmt.executeQuery(sql)) {
+                                final Objs rows = objs0();
+                                while (rs.next()) {
+                                    final fURI rowFuri = f(rs.getString("furi"));
+                                    final Obj deserialized = ObjSimpleJSONSerializer.parse(rs.getString("obj"));
+                                    final fURI rowVID = Space.Helper.routeToSpace(rowFuri, typedSpace.routes());
+                                    rows.append(deserialized.selfVID(rowVID));
+                                }
+                                return rows.asObjs();
+                            } catch (SQLException e) {
+                                throw MTronException.of(e, "%s", sql);
+                            }
+                        }
+                ));
+            };
+        }
     }
 }
