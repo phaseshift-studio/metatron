@@ -115,7 +115,7 @@ public class tbleInstSet extends AbstractInstSet {
         final BiPredicate<tbleSpace, List<Inst>> kvGuard = (space, matches) -> {
             final Obj ref = matches.getFirst().arg(0);
             if (!ref.isUri()) return false;
-            final DataPath dp = DataPath.of(f("-").extend(ref.uriValue()));
+            final DataPath dp = DataPath.withoutDB(ref.uriValue());
             if (!dp.hasCollection() || dp.collectionIsWildcard()) return false;
             if (TableStoreUtil.isTableCollection(space, dp.collection()))
                 return false;

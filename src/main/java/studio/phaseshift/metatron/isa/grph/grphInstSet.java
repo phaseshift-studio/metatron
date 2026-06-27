@@ -332,7 +332,7 @@ public class grphInstSet extends AbstractInstSet {
                                                             // guard: only V/E collections, no traversals (no field/extensions)
                                                             if (!ref.isUri())
                                                                 return matchList.stream().map(Obj::asInst).toList();
-                                                            final DataPath dp = DataPath.of(f("-").extend(ref.uriValue()));
+                                                            final DataPath dp = DataPath.withoutDB(ref.uriValue());
                                                             if (!("V".equals(dp.collection()) || "E".equals(dp.collection()))
                                                                     || !dp.entryIsWildcard()
                                                                     || dp.hasField() || dp.hasExtension())
@@ -400,7 +400,7 @@ public class grphInstSet extends AbstractInstSet {
                                                             final studio.phaseshift.metatron.isa.Space space = Router.global().getSpaceFor(furi);
                                                             if (!(space instanceof grphSpace gs))
                                                                 return matchList.stream().map(Obj::asInst).toList();
-                                                            //final DataPath dp = DataPath.of(f("-").extend(furi));
+                                                            //final DataPath dp = DataPath.withoutDB(furi);
                                                             final org.apache.tinkerpop.gremlin.process.traversal.P<?> pred = parseGremlinPredicate(sqlWhere);
                                                             final String field = extractPredicateField(sqlWhere);
                                                             if (pred == null || field == null)
@@ -436,7 +436,7 @@ public class grphInstSet extends AbstractInstSet {
                                                             final studio.phaseshift.metatron.isa.Space space = Router.global().getSpaceFor(furi);
                                                             if (!(space instanceof grphSpace gs))
                                                                 return matchList.stream().map(Obj::asInst).toList();
-                                                            final DataPath dp = DataPath.of(f("-").extend(furi));
+                                                            final DataPath dp = DataPath.withoutDB(furi);
                                                             final org.apache.tinkerpop.gremlin.process.traversal.P<?> pred = parseGremlinPredicate(sqlWhere);
                                                             final String field = extractPredicateField(sqlWhere);
                                                             if (pred == null || field == null)

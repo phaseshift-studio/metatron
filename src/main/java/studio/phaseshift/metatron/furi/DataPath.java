@@ -74,6 +74,20 @@ public record DataPath(String db, String collection, String entry, String field,
     public static final String NONE = "-";
 
     /**
+     * Decompose an fURI into a DataPath, treating segment 0 as the
+     * collection (db is always {@code null}).  This is the right choice
+     * for URIs that have already been routed through
+     * {@link Space.Helper#routeFromSpace} — the space prefix is stripped
+     * and the first remaining segment is the collection.
+     *
+     * <p>Equivalent to {@code of(f("-").extend(furi))} without the
+     * sentinel ceremony.
+     */
+    public static DataPath withoutDB(final fURI furi) {
+        return of(fURI.Singleton.f("-").extend(furi));
+    }
+
+    /**
      * Decompose an fURI into a DataPath.
      * Segment 0 → {@code db}, segment 1 → {@code collection},
      * segment 2 → {@code entry}, segment 3 → {@code field},
@@ -83,6 +97,9 @@ public record DataPath(String db, String collection, String entry, String field,
      * set to {@code null} and segments 1-3 become collection, entry, field.
      * Callers whose URI path has no database segment prepend {@code f("-")}
      * to mark the absent position (e.g. {@code f("-").extend(furi)}).
+     * <p>
+     * Prefer {@link #withoutDB(fURI)} when the URI has already been
+     * routed through the space — the first segment is the collection.
      */
     public static DataPath of(final fURI vid) {
         final String seg0 = vid.segments(0, null);

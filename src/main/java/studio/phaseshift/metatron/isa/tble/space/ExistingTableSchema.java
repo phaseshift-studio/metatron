@@ -448,7 +448,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
      * table name is not a recognized table.
      */
     private DataPath resolveDataPath(final fURI furi) {
-        final DataPath dp = DataPath.of(f("-").extend(furi));
+        final DataPath dp = DataPath.withoutDB(furi);
         if (!dp.hasCollection())
             return null;
         if (!dp.collectionIsWildcard()
@@ -589,6 +589,12 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
 
     private int writeRowFromList(final Connection conn, final TableMetadata metadata, final String rowId,
                                  final studio.phaseshift.metatron.isa.m.type.Lst lst) throws SQLException {
+        if (rowId != null && rowId.startsWith("+")) {
+            final Map<Obj, Obj> recMap = new LinkedHashMap<>();
+            for (int i = 0; i < Math.min(lst.jvm().size(), metadata.columns.size()); i++)
+                recMap.put(uri(metadata.columns.get(i).name), lst.jvm().get(i));
+            return insertRowAuto(conn, metadata, rec(recMap));
+        }
         final Map<Obj, Obj> recMap = new LinkedHashMap<>();
         final List<Obj> values = lst.jvm();
 
@@ -685,6 +691,11 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
 
 
     private int writeRow(final Connection conn, final TableMetadata metadata, final String rowId, final Rec rec) throws SQLException {
+        // +?incrq and similar wildcard entry patterns tell the DB to
+        // auto-generate the primary key (AUTO_INCREMENT / SERIAL).
+        if (rowId != null && rowId.startsWith("+"))
+            return insertRowAuto(conn, metadata, rec);
+
         final String pkColumn = metadata.primaryKeys.getFirst();
 
         // Read the current row to diff against
@@ -1217,7 +1228,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
 
     @Override
     public int delete(final Connection conn, final fURI furi) throws SQLException {
-        final DataPath dp = DataPath.of(f("-").extend(furi));
+        final DataPath dp = DataPath.withoutDB(furi);
         if (!dp.hasEntry()) return 0;
 
         final String tableName = dp.collection();

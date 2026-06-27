@@ -519,7 +519,7 @@ public class ObjSQLSerializer extends AbstractObjSerializer<ResultSet> {
                 if (value.isStr()) {
                     stmt.setString(paramIndex, value.asStr().jvm());
                 } else if (value.isUri()) {
-                    stmt.setString(paramIndex, value.asUri().uriValue().toString());
+                    stmt.setString(paramIndex, "<" + value.asUri().uriValue().toString() + ">");
                 } else {
                     stmt.setString(paramIndex, value.toString());
                 }

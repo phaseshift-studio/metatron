@@ -320,7 +320,7 @@ public final class CommonRewrites {
                     }
 
                     final fURI expandedfURI = space.redirect(oldfURI, true);
-                    final DataPath dp = DataPath.of(f("-").extend(expandedfURI));
+                    final DataPath dp = DataPath.withoutDB(expandedfURI);
 
                     // Extract limit value from take() instruction
                     final long limitValue = takeInst.arg(0).asInt().jvm();
@@ -412,7 +412,7 @@ public final class CommonRewrites {
                     final Obj ref = matches.getFirst().arg(0);
                     // only apply when the path ends at collection level (no field/extensions)
                     if (!ref.isUri()) return true;
-                    final DataPath dp = DataPath.of(f("-").extend(ref.uriValue()));
+                    final DataPath dp = DataPath.withoutDB(ref.uriValue());
                     return !dp.hasField() && !dp.hasExtension() && !dp.collectionIsWildcard();
                 })
                 .matchSpacePredicate(matchSpacePredicate)
@@ -534,7 +534,7 @@ public final class CommonRewrites {
                 }
 
                 final fURI expandedfURI = space.redirect(oldfURI, true);
-                final DataPath dp = DataPath.of(f("-").extend(expandedfURI));
+                final DataPath dp = DataPath.withoutDB(expandedfURI);
 
                 LOG.debug("evaluating native select operation on %s with columns %s in space %s",
                         expandedfURI, columns, space);
@@ -727,7 +727,7 @@ public final class CommonRewrites {
                 }
 
                 final fURI expandedfURI = space.redirect(oldfURI, true);
-                final DataPath dp = DataPath.of(f("-").extend(expandedfURI));
+                final DataPath dp = DataPath.withoutDB(expandedfURI);
 
                 LOG.debug("evaluating native where operation on %s with clause '%s' in space %s",
                         expandedfURI, sqlWhere, space);
@@ -977,7 +977,7 @@ public final class CommonRewrites {
                     return matchedInsts.stream().map(Obj::asInst).toList();
                 }
 
-                final DataPath dp = DataPath.of(f("-").extend(furi));
+                final DataPath dp = DataPath.withoutDB(furi);
 
                 LOG.debug("evaluating native where+count on %s with clause '%s' in space %s",
                         furi, sqlWhere, space);
@@ -1124,7 +1124,7 @@ public final class CommonRewrites {
                     return matchedInsts.stream().map(Obj::asInst).toList();
                 }
 
-                final DataPath dp = DataPath.of(f("-").extend(furi));
+                final DataPath dp = DataPath.withoutDB(furi);
 
                 LOG.debug("evaluating native where+limit on %s with clause '%s' and limit %d in space %s",
                         furi, sqlWhere, limitValue, space);

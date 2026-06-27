@@ -4,15 +4,10 @@ mcp_mtron_ws::[host => <ws://localhost:8555/mcp>]@/usr/ai/mcp/mtron;
 mcp_ws::[host => <http://127.0.0.1:29170/index-mcp/streamable-http>]@/usr/ai/mcp/index-mcp;
 mcp_http::[host => <http://127.0.0.1:64342/stream>]@/usr/ai/mcp/intellij;
 model::[ desc     => "testy the agent",
-         provider => !*deep:deepseek-v4-pro/provider,
-         name     => !*deep:deepseek-v4-pro/name,
+         provider => !*<ollama:maxwell1500/ornith-35b:Q6_K/provider>,
+         name     => !*<ollama:maxwell1500/ornith-35b:Q6_K/name>,
          feature  => [think    => |/usr/ui/console/pane/0/stream(_), 
-                      memory   => !@</usr/agent/memory>,
-                      tool     => [!*eval,
-                                    !*sql,
-                                   !*</usr/ai/mcp/index-mcp>,
-                                   !*</usr/ai/mcp/intellij>,
-                                   !*</usr/ai/mcp/mtron>],
+                      session   => !@</usr/agent/session>,
+                      tool     => [!*eval],
                       note     => !@</usr/agent/notes>,
-                      skill    => [!*<mtronfs:skills/mtron>.as(skill::T)],
                       response => [to=>print(_)]]]@<testy>;
