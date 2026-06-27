@@ -879,7 +879,8 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                         final int width = Math.max(Math.max(
                                 CommonUtil.width(matchDiffString),
                                 CommonUtil.width(obj.toString())), CommonUtil.width(obj.type().toString()));
-                        throw MTronException.of("obj does not match specified type:\n%s\n%s\n%s\n%s\n%s",
+                        throw new TypeMismatchException(obj, obj.type(),
+                                "obj does not match specified type:\n%s\n%s\n%s\n%s\n%s",
                                 indent(obj.tid(obj.baseType()).toString(), 2),
                                 indent("X=>", 6),
                                 indent(obj.type().toString(), 2), indent("-".repeat(width), 2), indent(matchDiffString, 2));

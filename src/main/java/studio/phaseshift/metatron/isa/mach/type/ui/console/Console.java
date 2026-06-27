@@ -977,9 +977,26 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                     LOG.error("\n%s%s", ((0 == y++) ? "" : (" ".repeat(y) + "\\_")), x.getMessage());
                     x = x.getCause();
                 }
-                final String stackTrace = this.reader.readLine(Highlighter.format("{{y}}display stack trace {{g}}[y/N]{{y}}?{{X}} "));
-                if (stackTrace.trim().equalsIgnoreCase("y")) {
+                final boolean isTypeMismatch = e instanceof TypeMismatchException;
+                final String prompt = isTypeMismatch
+                        ? "{{y}}display stack trace / type table {{g}}[y/N/t]{{y}}?{{X}} "
+                        : "{{y}}display stack trace {{g}}[y/N]{{y}}?{{X}} ";
+                final String response = this.reader.readLine(Highlighter.format(prompt));
+                if (response.trim().equalsIgnoreCase("y")) {
                     e.printStackTrace();
+                } else if (isTypeMismatch && response.trim().equalsIgnoreCase("t")) {
+                    final TypeMismatchException tme = (TypeMismatchException) e;
+                    terminal.writer().write("\n");
+                    final TypeDiffWidget widget = new TypeDiffWidget(tme.instance(), tme.type());
+                    if (Console.this.splitMode && Console.this.activePane != null) {
+                        final int[] pos = Console.this.calculatePanePosition(Console.this.activePane);
+                        if (pos != null) widget.setPaneBounds(pos[0], pos[1], pos[2], pos[3]);
+                    }
+                    Utilities.runCursorLessWidget(widget, true);
+                    if (Console.this.splitMode) {
+                        Console.this.renderPanes(false);
+                    }
+                    redrawBuffer();
                 }
             } finally {
                 this.status.stopTimer();

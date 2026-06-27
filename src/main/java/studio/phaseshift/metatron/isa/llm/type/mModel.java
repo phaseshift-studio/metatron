@@ -18,26 +18,18 @@
 
 package studio.phaseshift.metatron.isa.llm.type;
 
-import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.embedding.Embedding;
-import dev.langchain4j.data.message.ToolExecutionResultMessage;
 import dev.langchain4j.data.segment.TextSegment;
-import dev.langchain4j.mcp.McpToolProvider;
-import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.output.Response;
 import dev.langchain4j.service.AiServices;
-import dev.langchain4j.service.tool.ToolExecutor;
-import dev.langchain4j.skills.Skills;
-import studio.phaseshift.metatron.BootLoader;
+import dev.langchain4j.service.SystemMessage;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.furi.q.QCollection;
-import studio.phaseshift.metatron.isa.llm.Capability;
+import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.llm.CostCalculator;
 import studio.phaseshift.metatron.isa.llm.LLMFactory;
-import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.llm.space.SpaceChatSessionStore;
-import studio.phaseshift.metatron.isa.llm.space.SpaceContentRetriever;
+import studio.phaseshift.metatron.isa.llm.type.mod.*;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MReal;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
@@ -47,7 +39,6 @@ import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.vec.type.MVec;
 import studio.phaseshift.metatron.util.MTronException;
-import studio.phaseshift.metatron.util.Tuple;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
@@ -82,10 +73,6 @@ public class mModel extends MRec {
     public record Provider(String name, fURI host, String apiKey) {
     }
 
-    // Held so mergeSystemMessages() can mirror composed system messages.
-    private SpaceChatSessionStore sessionStore;
-    private fURI sessionVID;
-
     // User-added system messages (via addSystemMessage).  Merged with
     // capability-generated messages during agent construction.
     private final List<String> customSystemMessages = new ArrayList<>();
@@ -101,13 +88,6 @@ public class mModel extends MRec {
      */
     public void addSystemMessage(final String text) {
         this.customSystemMessages.add(text);
-    }
-
-    /**
-     * All user-added system messages (mutable list).
-     */
-    public List<String> systemMessages() {
-        return this.customSystemMessages;
     }
 
     public static mModel model(final Rec model) {
@@ -189,8 +169,7 @@ public class mModel extends MRec {
     public Optional<Rec> lastResponse() {
         return Optional.<Obj>ofNullable(this.at(feat(RESPONSE)).orElse(null)).map(o -> o.autoResolve(this)).map(Obj::asRec);
     }
-
-
+    
     /**
      * RAG (Retrieval Augmented Generation) configuration.
      *
@@ -215,143 +194,16 @@ public class mModel extends MRec {
     }
 
     public AiServices<mAgent> agentBuilder() {
-        final List<String> systemMessages = new ArrayList<>();
         final AiServices<mAgent> service = AiServices.builder(mAgent.class);
-
-        promptCapability().apply(service, systemMessages);
-        sessionCapability().apply(service, systemMessages);
-        skillsCapability().apply(service, systemMessages);
-        toolsCapability().apply(service, systemMessages);
-        notesCapability().apply(service, systemMessages);
-        ragCapability().apply(service, systemMessages);
-        mergeSystemMessages(service, systemMessages);
-
+        new PromptMod().apply(this, service);
+        new SessionMod().apply(this, service);
+        new SkillMod().apply(this, service);
+        new ToolMod().apply(this, service);
+        new SystemMod().apply(this, service);
         return service;
     }
 
-    private Capability promptCapability() {
-        return (service, systemMessages) -> this.prompt().ifPresent(p -> {
-            if (p.toString().isBlank())
-                return;
-            try {
-                service.userMessage(p.isStr() ? p.strValue() : p.toString());
-            } catch (Exception e) {
-                throw MTronException.of("unable to setup prompt: %s", e);
-            }
-        });
-    }
-
-    private Capability sessionCapability() {
-        return (service, systemMessages) -> {
-            if (!this.session().isNoObj()) {
-                try {
-                    final fURI sessionVID = this.session().vid();
-                    if (sessionVID == null) {
-                        this.logger().warn("llm session has no vid (ignoring): %s", this.session());
-                    } else {
-                        final Space space = Router.global().getSpaceFor(sessionVID);
-                        final SpaceChatSessionStore store = new SpaceChatSessionStore(space);
-                        final MessageWindowChatMemory chatMemory = MessageWindowChatMemory.builder()
-                                .maxMessages(this.session().at(ALGORITHM).asRec().at(MAX).intValue().intValue())
-                                .id(sessionVID)
-                                .chatMemoryStore(store)
-                                .build();
-                        service.chatMemory(chatMemory)
-                                .storeRetrievedContentInChatMemory(true);
-                        // Save so mergeSystemMessages() can mirror system messages
-                        this.sessionStore = store;
-                        this.sessionVID = sessionVID;
-                    }
-                } catch (Exception e) {
-                    throw MTronException.of("unable to setup session: %s", e);
-                }
-            }
-        };
-    }
-
-    private Capability skillsCapability() {
-        return (service, systemMessages) -> {
-            if (this.skills().isPresent()) {
-                try {
-                    final Skills skills = new Skills.Builder().skills(
-                            this.skills().get()
-                                    .elements()
-                                    .filter(s -> !s.isUri())
-                                    .map(s -> mSkill.of(s.apply().asRec()).toSkill())
-                                    .toList()).build();
-                    service.toolProvider(skills.toolProvider());
-                    systemMessages.add("You have access to the following skills:\n" + skills.formatAvailableSkills()
-                            + "\nWhen the user's request relates to one of these skills, activate it first using the `activate_skill` tool before proceeding.");
-                } catch (Exception e) {
-                    throw MTronException.of("unable to setup skills: %s", e);
-                }
-            }
-        };
-    }
-
-    private Capability toolsCapability() {
-        return (service, systemMessages) -> {
-            service.hallucinatedToolNameStrategy(tool -> new ToolExecutionResultMessage(ToolExecutionResultMessage.builder().toolName(tool.name()).text("unknown or inaccessible tool")));
-            if (this.tools().isPresent()) {
-                try {
-                    final Map<ToolSpecification, ToolExecutor> tools = new HashMap<>();
-                    this.tools().get()
-                            .elements()
-                            .flatMap(e -> e.isObjs() ? e.elements() : Stream.of(e))
-                            .map(e -> e.autoResolve(this))
-                            .filter(t -> !t.isNoObj())
-                            .forEach(t -> {
-                                try {
-                                    if (t.isRec() && t.test(MCP_CLIENT_TYPE)) {
-                                        service.toolProvider(McpToolProvider.builder().mcpClients(Rec.wrap(t.as(), mcpClient.class).client()).build()).executeToolsConcurrently(BootLoader.getExecutor());
-                                    } else if (t.isObjInst()) {
-                                        if (QCollection.isNoDocs(Router.readFromSpace(t.tid().addQ(DOCQ))))
-                                            t.logger().warn("ignoring inst as it has no associated ?docq: %s", t);
-                                        else {
-                                            final Tuple.Pair<ToolSpecification, ToolExecutor> pair = mTool.mtronInstToolSpecification(mTool.mtronInstToTool(t.asInst()));
-                                            tools.put(pair.get0(), pair.get1());
-                                        }
-                                    } else if (t.isRec() && t.test(LLM_TOOL_TYPE)) {
-                                        final Tuple.Pair<ToolSpecification, ToolExecutor> pair = mTool.mtronInstToolSpecification(t.asRec());
-                                        tools.put(pair.get0(), pair.get1());
-                                    }
-                                } catch (final Exception e) {
-                                    this.logger().error("unable to set up tool: %s [%s]", t, e);
-                                }
-                            });
-                    if (!tools.isEmpty())
-                        service.tools(tools).executeToolsConcurrently(BootLoader.getExecutor());
-                } catch (Exception e) {
-                    throw MTronException.of("unable to setup tools: %s", e);
-                }
-            }
-        };
-    }
-
-    private Capability notesCapability() {
-        return (service, systemMessages) -> {
-            if (this.notes().isPresent())
-                if (null == this.vid())
-                    throw MTronException.of("notes requires a vid model");
-                else {
-                    try {
-                        systemMessages.add("""
-                                           ### IMPORTANT ###
-                                           Always check for any notes the user has provided you.
-                                           Do this before, during, and after completing your task.
-                                           The contents of the notes should be deemed of crucial importance.
-                                           To check for notes, use your provided mtron `eval` tool with the following argument:
-                                             `@<%s/feature/note>.remove(0)`
-                                           A result of `noobj` means "no note" at this time, but do check again periodically.
-                                           """.formatted(this.vid()));
-                    } catch (Exception e) {
-                        throw MTronException.of("unable to setup notes: %s", e);
-                    }
-                }
-        };
-    }
-
-    private Capability ragCapability() {
+  /*  private Capability ragCapability() {
         return (service, systemMessages) -> {
             if (this.rag().isPresent()) {
                 try {
@@ -365,42 +217,15 @@ public class mModel extends MRec {
                 }
             }
         };
-    }
+    }*/
 
-    private void mergeSystemMessages(final AiServices<mAgent> service, final List<String> systemMessages) {
-        try {
-            // Prepend user-added system messages before capability-generated ones
-            if (!this.customSystemMessages.isEmpty()) {
-                final List<String> all = new ArrayList<>(this.customSystemMessages);
-                all.addAll(systemMessages);
-                systemMessages.clear();
-                systemMessages.addAll(all);
-            }
-            final String finalSystemMessage = String.join("\n", systemMessages);
-            if (!finalSystemMessage.isBlank()) {
-                service.systemMessage(finalSystemMessage);
-                // Mirror to typed table (system messages bypass ChatMemory)
-                if (this.sessionStore != null && this.sessionVID != null) {
-                    final Map<Obj, Obj> systemMap = new LinkedHashMap<>();
-                    systemMap.put(uri(TEXT), str(finalSystemMessage));
-                    systemMap.put(uri(TYPE), uri("SYSTEM"));
-                    final Rec systemRec = rec(systemMap, SYSTEM_MESSAGE_TID, null);
-                    SpaceChatSessionStore.mirrorSystemMessage(this.sessionStore.space(), this.sessionVID, systemRec);
-                }
-            }
-        } catch (Exception e) {
-            throw MTronException.of("unable to setup system message: %s", e);
-        }
+    public List<String> getSystemMessages() {
+        return this.customSystemMessages;
     }
 
     protected String onMessageUpdate(final String message, final String messageType) {
         final Obj onMessage = this.at(f(FEATURE).extend(SESSION).extend(messageType));
         return onMessage.isNoObj() ? message : Str.Helper.cleanString(onMessage.apply(str(message)));
-    }
-
-    public mModel chat(final String message, final Inst onResponse) {
-        virtual(onResponse).applyAsync(this.chat(message));
-        return this;
     }
 
     public Obj chat(final String message) {

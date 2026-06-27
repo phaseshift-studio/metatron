@@ -530,7 +530,8 @@ table {
 }
 
 code.hljs {
-    font-size: 1.1rem;
+    font-size: 1.0rem;
+    line-height: 1.1rem;
     display: inline;
     /*width: 90%;*/
     overflow: hidden;
