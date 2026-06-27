@@ -35,6 +35,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -78,10 +79,12 @@ public class RewriteBuilder<S extends Space> {
     protected final Class<S> spaceType;
     protected final List<fURI> matchPattern = new ArrayList<>();
     protected Predicate<List<Inst>> matchPredicate = null;
+    protected BiPredicate<S, List<Inst>> matchSpacePredicate = null;
     protected String rewriteName;
     protected fURI rewriteTid;
     protected fURI resultTid;
     protected NativeOptimization<S> optimization;
+    protected NativeOptimizationWithURI<S> optimizationWithURI;
 
     protected RewriteBuilder(final Class<S> spaceType) {
         this.spaceType = spaceType;
@@ -141,6 +144,27 @@ public class RewriteBuilder<S extends Space> {
     }
 
     /**
+     * Set a space-aware match predicate for the rewrite.
+     *
+     * <p>Unlike {@link #matchPredicate(Predicate)}, this predicate receives the
+     * typed space instance alongside the matched instructions.  Use it for
+     * guards that depend on space state — for example, checking whether a
+     * collection name corresponds to an actual database table.
+     *
+     * <p>The predicate is AND-ed with {@link #matchPredicate}: if either
+     * returns {@code false} the rewrite is skipped and the original
+     * instructions are preserved.
+     *
+     * @param matchSpacePredicate a predicate receiving the typed space and
+     *                            the matched instructions
+     * @return This builder for chaining
+     */
+    public RewriteBuilder<S> matchSpacePredicate(final BiPredicate<S, List<Inst>> matchSpacePredicate) {
+        this.matchSpacePredicate = matchSpacePredicate;
+        return this;
+    }
+
+    /**
      * Define the native optimization with a type-safe lambda.
      *
      * <p>The optimization function receives the typed space, the resolved fURI,
@@ -154,6 +178,20 @@ public class RewriteBuilder<S extends Space> {
     public RewriteBuilder<S> optimize(final String name, final NativeOptimization<S> optimization) {
         this.rewriteName = name;
         this.optimization = optimization;
+        return this;
+    }
+
+    /**
+     * Define the native optimization with a URI-aware lambda.
+     *
+     * <p>Like {@link #optimize(String, NativeOptimization)} but the lambda also
+     * receives the expanded fURI (after space routing).  Use this when the
+     * optimization needs the URI itself — for example, to strip the space
+     * prefix and match against an internal key-value store.
+     */
+    public RewriteBuilder<S> optimizeWithURI(final String name, final NativeOptimizationWithURI<S> optimization) {
+        this.rewriteName = name;
+        this.optimizationWithURI = optimization;
         return this;
     }
 
@@ -172,7 +210,7 @@ public class RewriteBuilder<S extends Space> {
         if (this.matchPattern.isEmpty()) {
             throw MTronException.of("match pattern must be set");
         }
-        if (this.optimization == null) {
+        if (this.optimization == null && this.optimizationWithURI == null) {
             throw MTronException.of("optimization function must be set");
         }
         if (this.resultTid == null) {
@@ -201,6 +239,13 @@ public class RewriteBuilder<S extends Space> {
             // Check if this is the correct space type
             if (this.spaceType.isInstance(space) && (this.matchPredicate == null || this.matchPredicate.test(map.values().stream().toList()))) {
                 final S typedSpace = this.spaceType.cast(space);
+
+                // Check space-aware predicate (e.g., table-existence guard)
+                if (this.matchSpacePredicate != null && !this.matchSpacePredicate.test(typedSpace, map.values().stream().toList())) {
+                    LOG.debug("matchSpacePredicate rejected rewrite %s for URI %s", this.rewriteName, oldfURI);
+                    return map.values().stream().map(Obj::asInst).toList();
+                }
+
                 final fURI expandedfURI = space.redirect(oldfURI, true);
 
                 // Extract coefficient from the last instruction in the chain
@@ -231,6 +276,8 @@ public class RewriteBuilder<S extends Space> {
                 lst(uri(expandedfURI)),
                 (lhs, inst) -> {
                     try {
+                        if (this.optimizationWithURI != null)
+                            return this.optimizationWithURI.execute(typedSpace, dp, expandedfURI, coeff);
                         return this.optimization.execute(typedSpace, dp, coeff);
                     } catch (final Exception e) {
                         throw MTronException.of(e, "failed to execute native %s operation", this.rewriteName);
@@ -256,5 +303,30 @@ public class RewriteBuilder<S extends Space> {
          * @throws Exception if the operation fails
          */
         Obj execute(final S space, final DataPath dp, final C<?,?> coefficient) throws Exception;
+    }
+
+    /**
+     * Functional interface for URI-aware native database optimizations.
+     *
+     * <p>Like {@link NativeOptimization} but also receives the expanded
+     * fURI (after space routing) — useful when the optimization needs
+     * the raw URI segments, e.g., to strip a space prefix and match
+     * against an internal key-value store.
+     *
+     * @param <S> The space type
+     */
+    @FunctionalInterface
+    public interface NativeOptimizationWithURI<S extends Space> {
+        /**
+         * Execute the native database operation.
+         *
+         * @param space       The database space
+         * @param dp          The decomposed DataPath for the operation target
+         * @param expandedURI The expanded fURI after space routing
+         * @param coefficient The coefficient from the instruction chain
+         * @return The result object
+         * @throws Exception if the operation fails
+         */
+        Obj execute(final S space, final DataPath dp, final fURI expandedURI, final C<?,?> coefficient) throws Exception;
     }
 }
