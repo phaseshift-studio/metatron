@@ -111,11 +111,11 @@ public class mTool extends MRec {
             final Poly<?, ?> args = inst.args().isNoObj() ? lst() : (inst.args().isLst() ?
                     lst(arguments.entrySet().stream().filter(e -> !e.getKey().equals(LHS)).map(e -> ObjmtronSerializer.<Obj>parse(e.getValue().toString())).collect(Collectors.toList())) :
                     rec(arguments.entrySet().stream().filter(e -> !e.getKey().equals(LHS)).collect(Collectors.toMap(e -> uri(e.getKey()), e -> ObjmtronSerializer.parse(e.getValue().toString())))));
-            final Object result = inst
+            final Obj result = inst
                     .args(args)
                     .apply(arguments.containsKey(LHS) ? ObjmtronSerializer.parse(arguments.get(LHS).toString()) : noobj());
             inst.logger().info("evaluating mtron_inst tool: %s => %s => %s", arguments.getOrDefault(LHS, noobj()), inst, result);
-            final String stringResult = result.toString();
+            final String stringResult = ObjmtronSerializer.single().write(result);
             return (null == stringResult || stringResult.isBlank()) ? "noobj" : stringResult; // prevents llm protocol from failing on empty or null results
         };
         return Tuple.Pair.with(toolSpecBuilder.build(), toolExecutor);

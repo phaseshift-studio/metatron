@@ -11,7 +11,8 @@
                      obj_write    => true,
                      code_resolve => false]],
  external     =>
-  [ web       => [ http => <http://localhost:8777> ],
+  [ web       => [ http => <http://localhost:8777>,
+                   ws   => <ws://localhost:8555> ],
     ollama    => <http://ginger.local:11434>,
     session   => <mariadb://localhost:3306/dr_sessions?createDatabaseIfNotExist=true&user=mtron&password=mtron>,
     localfs   => </home/killswitch/.hermes_clone>],
@@ -83,7 +84,12 @@ fsspace::[
             
 httpspace::[host     => !*<boot/args/external/web/http>,
             pattern  => <http://#>,
-            route    => [/ => <>]]@/sys/space/web/http;    
+            route    => [/ => <>]]@/sys/space/web/http;   
+            
+wsspace::[host     => !*<boot/args/external/web/ws>,
+         pattern  => <ws://#>,
+         route    => [/mcp   => mcp_mtron_ws,
+                      /mtron => mtron_ws]]@/sys/space/web/ws;    
     
         [=====================]  
         [======== LLM ========]
@@ -113,10 +119,10 @@ tblespace::[pattern    => drdb:#,
 model::[desc     => "the agent dr.stynx is here to be of use in the metatron",
         provider => !*<ollama:gemma4:26b/provider>,
         name     => !*<ollama:gemma4:26b/name>,
-        feature  => [think    => |/usr/marko/console/pane/0/stream(_), 
+        feature  => [think    => /usr/marko/console/pane/0/stream(_), 
                      session  => !@<drdb:llm_session/1>,
                      session/on_user  => _,
-                     tool     => [!*eval,!*sql.skip(1).take(1)],
+                     tool     => [!*eval,!*sql],
                      note     => [,],
                      skill    => [!*<metatronfs:skills/mtron>.as(skill::T)],
                      response => [to=>print(_)]]]@<dr>;
