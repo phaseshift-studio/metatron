@@ -34,6 +34,7 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.algebra.Form.PLUS_MONOID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.update_;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Poly.IMMUTABLE;
 import static studio.phaseshift.metatron.isa.m.type.Poly.MUTABLE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -196,6 +197,40 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
 
     @ParameterizedTest
     @CsvSource(value = {
+            // Step walk vs path walk vs hybrid — all equivalent
+            "[a=>[b=>[c=>[d=>e]]]]>>a>>b>>c>>d                                        % e",
+            "[a=>[b=>[c=>[d=>e]]]]>>a/b/c/d                                           % e",
+            "[a=>[b=>[c=>[d=>e]]]]>>a/b>>c>>d                                         % e",
+            "[a=>[b=>[c=>[d=>e]]]]>>a>>b/c/d                                          % e",
+            "[a=>[b=>[c=>[d=>e]]]]>>a/b/c>>d                                          % e",
+            // Deep nesting
+            "[a=>[b=>[c=>[d=>[e=>[f=>\"found!\"]]]]]]>>a/b/c/d/e/f                      % \"found!\"",
+            "[a=>[b=>[c=>[d=>[e=>[f=>\"found!\"]]]]]]>>a>>b>>c>>d>>e>>f                 % \"found!\"",
+            "[a=>[b=>[c=>[d=>[e=>[f=>\"found!\"]]]]]]>>a/b/c>>d/e>>f                    % \"found!\"",
+            // Missing mid-path
+            "[a=>[b=>[c=>d]]]>>a/b/x                                                    % noobj",
+            "[a=>[b=>[c=>d]]]>>a/x/c                                                    % noobj",
+            // Leaf is not a poly — can't walk further
+            "[a=>[b=>42]]>>a/b/c                                                        % noobj",
+            // Mixed poly types — walk through lst in the middle
+            "[a=>[b=>[1,2,[3,4,[5,6,7]]]]]>>a/b/2/2/0                                  % 5",
+            "[a=>[b=>[1,2,[3,4,[5,6,7]]]]]>>a/b>>2>>2>>0                               % 5",
+            // Inter-nesting: path segments traverse into nested poly values
+            "[x=>[y=>[z=>value]]]>>x/y/z                                                 % value",
+            "[x=>[y=>[z=>value]]]>>x>>y>>z                                               % value",
+            // Sibling branches — same depth, different leaves
+            "[left=>[a=>[b=>1]],right=>[a=>[b=>2]]]>>left/a/b                           % 1",
+            "[left=>[a=>[b=>1]],right=>[a=>[b=>2]]]>>right/a/b                          % 2",
+            // Path walks through a value that is itself a rec from a key lookup
+            "[outer=>[inner=>[a=>[b=>42]]]]>>outer/inner/a/b                            % 42",
+            "[outer=>[inner=>[a=>[b=>42]]]]>>outer>>inner>>a>>b                         % 42",
+    }, delimiter = '%')
+    public void testPathWalking(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
             "[a=>[knows=>[b=>[knows=>c]]]]>><a/+/b/knows>                                            % c",
             "(a=>(knows=>(b=>(knows=>c))))>><a/+/b/knows>                                            % c",
             "[a=>[knows=>[b=>[knows=>c]]]]>><a/+/b>                                                  % [knows=>c]",
@@ -318,6 +353,57 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
         AbstractMetatronTest.checkEquality(LOG, rec(uri("a"), jnt(1), uri("b"), jnt(22)), s2, true);
         AbstractMetatronTest.checkEquality(LOG, rec(uri("c"), jnt(3), uri("d"), jnt(33)), s3, true);
         AbstractMetatronTest.checkEquality(LOG, rec(uri("a"), jnt(1), uri("b"), rec(uri("c"), jnt(3), uri("d"), jnt(33))), s4, true);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            // MUTABLE set: mutate original in-place
+            "[a=>1,b=>2,c=>3]   | a   | 99  | 3   | 99  | true",     // existing key
+            "[a=>1,b=>2]        | c   | 42  | 3   | 42  | true",     // new key
+            "[x=>10]            | x   | -1  | 1   | -1  | true",     // overwrite
+    }, delimiter = '|')
+    public void testMutableSet(final String recStr, final String key, final int value,
+                                final int expectedCount, final int expectedVal,
+                                final boolean expectSame) {
+        final Rec original = ObjmtronSerializer.parse(recStr);
+        final Rec result = original.at(uri(key), jnt(value), MUTABLE);
+        if (expectSame)
+            assertSame(original, result, "MUTABLE should return same reference");
+        assertEquals(expectedCount, original.count());
+        assertEquals(jnt(expectedVal), original.at(uri(key)), "MUTABLE should mutate original");
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            // IMMUTABLE delete: return new rec, original untouched
+            "[a=>10,b=>20,c=>30]  | b   | 3   | 2",     // delete middle
+            "[x=>42]              | x   | 1   | 0",     // delete only
+    }, delimiter = '|')
+    public void testImmutableDelete(final String recStr, final String key,
+                                     final int expectedOrigCount, final int expectedCloneCount) {
+        final Rec original = ObjmtronSerializer.parse(recStr);
+        final Rec clone = original.at(uri(key), noobj(), IMMUTABLE);
+        assertNotSame(original, clone, "IMMUTABLE delete should return new reference");
+        assertEquals(expectedOrigCount, original.count());
+        assertEquals(expectedCloneCount, clone.count());
+        assertTrue(original.at(uri(key)).equals(original.at(uri(key))), "original should still have key");
+        assertTrue(clone.at(uri(key)).isNoObj(), "clone should not have deleted key");
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            // MUTABLE delete: remove from original in-place
+            "[a=>10,b=>20,c=>30]  | b   | 2",     // delete middle
+            "[a=>10,b=>20,c=>30]  | a   | 2",     // delete first
+            "[x=>42]              | x   | 0",     // delete only → empty
+    }, delimiter = '|')
+    public void testMutableDelete(final String recStr, final String key,
+                                   final int expectedCount) {
+        final Rec original = ObjmtronSerializer.parse(recStr);
+        final Rec result = original.at(uri(key), noobj(), MUTABLE);
+        assertSame(original, result, "MUTABLE delete should return same reference");
+        assertEquals(expectedCount, original.count());
+        assertTrue(original.at(uri(key)).isNoObj(), "MUTABLE delete should remove key");
     }
 
     @ParameterizedTest
@@ -456,6 +542,26 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
             "*y>>address/work/city                                                         % \"santa fe\""
     }, delimiter = '%')
     public void testSelect(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @TestData(value = {
+            "x -> [a => [b => {!*y,!*z}]]",
+            "y -> [c => [d => [1,2,3]]]",
+            "z -> [c => [d => [4,5,[e,f,g]]]]"})
+    @CsvSource(value = {
+            // Inter-poly path traversal with objs fan-out at b
+            "*x/a/b/c/d/0                                                                   % {1,4}",
+            "*x/a/b/c/d/2                                                                   % {3,[e,f,g]}",
+            "*x/a/b/c/d                                                                     % {[1,2,3],[4,5,[e,f,g]]}",
+            "*x/a/b/c                                                                       % {[d=>[1,2,3]],[d=>[4,5,[e,f,g]]]}",
+            // Step-walk equivalent
+            "*x>>a>>b>>c>>d>>0                                                              % {1,4}",
+            "*x>>a>>b>>c>>d>>2                                                              % {3,[e,f,g]}",
+            "*x>>a>>b>>c>>d>>2>>0                                                           % e",
+    }, delimiter = '%')
+    public void testInterPolyTraversal(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 

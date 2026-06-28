@@ -12,7 +12,7 @@
                      code_resolve => false]],
  external     =>
   [ web       => [ http => <http://localhost:8777>,
-                   ws   => <ws://localhost:8555> ],
+                   ws   => <ws://0.0.0.0:8555> ],
     ollama    => <http://ginger.local:11434>,
     session   => <mariadb://localhost:3306/dr_sessions?createDatabaseIfNotExist=true&user=mtron&password=mtron>,
     localfs   => </home/killswitch/.hermes_clone>],

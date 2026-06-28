@@ -68,7 +68,6 @@ public class mInstSetTest extends AbstractInstSetTest {
         assertTrue(new mInstSet().qs().elements().anyMatch(q -> q.<QProc>as().pattern().equals(f("docq"))));
         DocQTest.testWritingDocs(new mInstSet());
         DocQTest.analyzeDocs(new mInstSet());
-
     }
 
     @ParameterizedTest

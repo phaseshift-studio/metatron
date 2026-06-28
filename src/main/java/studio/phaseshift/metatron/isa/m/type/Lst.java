@@ -123,7 +123,7 @@ public interface Lst extends Poly<Lst, List<Obj>>, PlusMonoid.O<Lst> {
                 newList.remove(effectiveIdx);
             else
                 newList.set(effectiveIdx, value);
-            return this.clone(newList, this.tid(), this.vid());
+            return (Lst) operation.apply(this, newList);
         } else if (key.isUri()) {
             final Int k = jnt(Long.parseLong(key.uriValue().path().get(0)));
             if (key.uriValue().path().size() == 1) {

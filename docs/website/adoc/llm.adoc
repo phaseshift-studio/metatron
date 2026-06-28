@@ -67,7 +67,7 @@ An LLM is a `model::T < rec::T` with the following type definition:
 */m/llm/model
 ----
 
-The design makes a distinction between the **LLM** (general-purpose reasoning engine) and its **features** (accessories that can be attached to the LLM). Example features include tools, skills, sessions, thinking, response formats, and other similar enrichme. Features are agnostic to the underlying LLM and can be shared between LLMs making it easy to assemble new LLMs from a library of stored features. In `.metatron`, there exists an `agent.mtron` file that provides a sample library.
+The design makes a distinction between the **LLM** (general-purpose reasoning engine) and its **features** (accessories that can be attached to the LLM). Example features include https://en.wikipedia.org/wiki/Large_language_model#Tool_use[tools], https://agentskills.io/home[skills], https://learn.microsoft.com/en-us/semantic-kernel/concepts/ai-services/chat-completion/chat-history?pivots=programming-language-csharp[sessions], https://arxiv.org/abs/2410.10630[thinking], https://fvivas.com/en/response-formats-in-llms-guide-chatgpt-claude-more/[response formats], and other similar enrichments. While models do vary in their capacity to leverage certain features, features are agnostic to the underlying LLM and can be shared between LLMs making it easy to assemble new LLMs from pre-defined features. In `.metatron`, there exists an `agent.mtron` file that provides a sample library.
 
 [mtron]
 ----
@@ -80,15 +80,108 @@ The design makes a distinction between the **LLM** (general-purpose reasoning en
 [discrete]
 === Features
 
-[discrete]
-==== Sessions
+The following subsections will focus on a particular feature that is provided by the `/m/llm` instruction set. To ensure a speedy build time for metatron's documentation, the following `doc_model?model\<=#{?}` instruction is defined and will be used repeatedly. This `inst` searches Ollama for small model that supports both tool use and thinking.
 
-The following example demonstrates how to search for an appropriate LLM for a given task, then query it, and finally, have its session of the interaction stored in space for future use (to provide the agent context over longer interactions). This example relies on an agent `SKILL.md` file stored on the local file system (`fs:`).
+[mtron]
+----
+|inst?model{?}<=#{?}(a=>uri::T){                    /
+  *ollama:+.                                        /
+   where(>>skill.has(thinking).has(tools)).         /
+   where(>>size.?>gB::1.0.?<gB::5.0).               /
+   order(>>size * -1.0).                            /
+   take(1).                                         /
+   to(*a) }@doc_model
+----
+<1> stream all the models currently available on the local ollama server.
+<2> filter out those models that don't support thinking and tool use.
+<3> filter out models too small (for ollama, the cloud models) and models too big.
+<4> if all models have been filtered out, `fail::T`.
+<5> reverse sort the models by their size.
+<6> select the smallest model of those remaining.
+<7> store model at the `uri::T` `inst` argument.
+
+++++
+<!--
+else(throw('no model fits the spec'))            /
+-->
+++++
+
+
+[discrete]
+==== Tools
+
+Tools are functions that models can use for problem solving. In metatron, every `inst` is a tool. Moreover, from the agent's perspective, every MCP server tool is an `inst`. Thus, adding an `inst` from an `instset` and adding an `inst` from a `http` or `ws` MCP server endpoint, ultimately boils down to pointing the model towards `insts` it can use to solve the problem at hand.
+
+[discrete]
+===== Inst as Tool
+
+A model is loaded using `doc_model`. The loaded model is handed a `!*`-reference to the mtron `eval` instruction. This is the most general instruction in mtron enabling any mtron expression to be passed in as a `str`, parsed, compiled, evaluated, and `rhs` results returned.
+
+[mtron]
+----
+doc_model(aix).>>=+                      /
+ [feature =>[                            /
+   tool      => [!*eval],                / 
+   response  => [to=>_]]]
+----
+
+[mtron]
+----
+@aix.chat('evaluate the following expression using your mtron eval tool: [1,2]==[+2,-<[+3,+4]]==[_,>-]')
+----
+
+[discrete]
+===== MCP Tool as Inst
+
+metatron is capable of both hosting MCP tools (**servers**) and using MCP tools (**clients**). In the following example, an mtron MCP server is managed by a `wsspace` (web socket space). 
+
+.metatron hosted mcp server
+[mtron]
+----
+wsspace::[host     => ws://localhost:8555,                          /
+          pattern  => ws://#,                                       /
+          q        => [docq::[=>],subq::[=>]],                      /
+          route    => [/mcp => mcp_mtron_ws]]@/sys/space/web/ws
+----
+
+The `/m/web` instruction set realizes an MCP tool as a refinement of `inst`. As such, an MCP client has an natural mapping to an LLM tool feature.
+
+.metatron hosted mcp clients
+[mtron]
+----
+mcp_client::[host => ws://localhost:8555/mcp]@/usr/ai/mcp/mtron
+doc_model(aix).>>=+                                                  /
+ [feature =>[                                                        /
+   tool      => [!*/usr/ai/mcp/mtron],                               / 
+   response  => [to=>_]]]
+----
+
+Given that an `mcp_client::T` is an index of `insts`. Nothing prevents their `insts` being used by other processes such as a human user. And since, metatron is able to map common data formats to `obj`, its possible to take the result of the mcp tool and post process it to derive further more refined statistics not offered by the tool.
+
+[source,mtron]
+----
+/usr/ai/mcp/intellij/tool/ide_type_hierarchy(className=>'studio.phaseshift.metatron.isa.m.type.Obj'). /
+  -<[supers => -<[count => >>supertypes.count(),                                                      /
+                  kinds => >>supertypes>>kind>-[,]],                                                  /
+     subs   => -<[count => >>subtypes.count(),                                                        /
+                  kinds => >>subtypes>>kind>-[,]]]
+----
+
+[discrete]
+==== Skills
 
 [mtron]
 ----
 [MAXOUTPUT 20] *<fs:skills/mtron/SKILL.md>
 ----
+
+
+[discrete]
+==== Sessions
+
+The following example demonstrates how to search for an appropriate LLM for a given task, then query it, and finally, have its session of the interaction stored in space for future use (to provide the agent context over longer interactions). This example relies on an agent `SKILL.md` file stored on the local file system (`fs:`).
+
+
 
 [mtron]
 ----
@@ -180,83 +273,7 @@ Or, using structured responses, the unstructured text result can be turned into 
 
 @ai.chat("what was the answer again?", [answer=>?int::T])
 
-[discrete]
-==== Tools
 
-LLM tools provide the model a way of calling predefined functions as deemed necessary during chat interactions. In metatron, any `inst` can be a tool. Simply place an `!*` reference to the `inst` into the model's "tool box" (`lst`) at `features/tool`. Next, should MCP tools be required, realize that MCP servers expose their tools as `insts` in metatron as well. Thus, adding an `inst` from an `instset` and adding an `inst` from a `http` or `ws` MCP server endpoint, ultimately boils down to pointing the model towards `insts` it can use to solve problems.
-
-
-metatron is capable of hosting MCP tools (server), using MCP tools (client), or both. The example below spawns an mtron websocket server and then spawns a client to it as well as other mcp servers not local to metatron.
-
-.metatron hosted mcp server
-[source,mtron]
-----
-wsspace::[host     => <ws://localhost:8555>,                        /
-          pattern  => ws://#,                                       /
-          q        => [docq::[=>],subq::[=>]],                      /
-          route    => [/mtron=> mtron_ws,                           /
-                       /mcp  => mcp_mtron_ws]]@/sys/space/web/ws
-----
-
-
-.metatron hosted mcp clients
-[source,mtron]
-----
-mcp_client::[host =>                                /
- <ws://localhost:8555/mcp>                          /
-]@/usr/ai/mcp/mtron                                 [-- <1> --]
-mcp_client::[host =>                                /
- <http://127.0.0.1:29170/index-mcp/streamable-http> /
-]@/usr/ai/mcp/intellij                              [-- <2> --]
-*/usr/ai/mcp/intellij>>tool.dom()                   [-- <3> --]
-----
-
-
-[source,mtron]
-----
-*<openai:gpt-4o>.at(robotron).                                   /  
- side([,].at(<local:.agent/robotron/memory>)).                   /  
- >>=+[feature=>[think=>print(_),                                 /  
-      tool=>[!*eval],                                             / 
-      skill=>[                                                    /  
-  !*<local:.agent/skills/mtron>.as(skill::T)],                   / 
-     response=>[to=>print(_)],                                   / 
-     memory=>[mem=>!@<local:.agent/robotron/memory>,max=>20]]].  / 
- >>=[_=>^*_]                                                       
-----
-<1> clone the base model to the `robotron` address
-<2> as a side-effect, create a blank memory structure and store it on the local file system
-<3> print robotron's thoughts to the terminal
-<4> give robotron access to the `eval?A\<=#{?}(str::T)` instruction for evaluating mtron expressions
-<5> give robotron the `mtron` skill set (`SKILL.md` file in `.agent/skills/mtron` directory)
-<6> print roboton's response to the terminal
-<7> pass robotron a reference to the memory structure and cap its growth to 15 entries.
-<8> re-reference any resolved `!\*` (`auto_from`) references using `^*` (`auto_to`).
-
-[source,mtron]
-----
-@robotron.chat('what tools do you have access to?',          /
-            [number_of_tools=>int::T,tool_names=>str::T])        
-@robotron.chat('what skills do you have?')                        
-*robotron>>feature/session                                                 
-*robotron>>feature/session/mem/2/attributes/format                        
-----
-<1> providing a response format `rec` yields a structured response.
-<2> without a response format, the agent replies in free, unstructured text.
-<3> the chat session records structured responses.
-
-Given that an `mcp_client::T` is an index of `insts`. Nothing prevents their `insts` being used by other processes such
-as a human user. And since, metatron is able to map common data formats to `obj`, its possible to take the result of the
-mcp tool and post process it to derive further more refined statistics not offered by the tool.
-
-[source,mtron]
-----
-/usr/ai/mcp/intellij/tool/ide_type_hierarchy(className=>'studio.phaseshift.metatron.isa.m.type.Obj'). /
-  -<[supers => -<[count => >>supertypes.count(),                                                      /
-                  kinds => >>supertypes>>kind>-[,]],                                                  /
-     subs   => -<[count => >>subtypes.count(),                                                        /
-                  kinds => >>subtypes>>kind>-[,]]]
-----
 
 [discrete]
 === Notes

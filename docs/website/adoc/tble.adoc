@@ -37,7 +37,7 @@ lite:person/2 -> [name=>'grant', age=>25]             [-- <3> --]
 *lite:person/+/name                                   [-- <5> --]
 *lite:person/+/id                                     [-- <6> --]              
 ----
-<1> a `tblespace` mounted at `/sys/space/lite` and responsible for objs in `lite:#`.
+<1> a `tblespace` is mounted at `/sys/space/lite` and is responsible for objs in `lite:#`.
 <2> writing a row to the `person` table (table created on first write).
 <3> writing a second row.
 <4> listing all rows in the `person` table.

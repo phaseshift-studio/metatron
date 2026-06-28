@@ -1,0 +1,26 @@
+[== boot args ==]
+[
+ internal        =>
+  [ sys          => /sys,
+    agent_home   => /usr/dr,
+    user_home    => /usr/marko,
+    session_id   => 1,
+    typer/stages => [inst_dom     => true, 
+                     inst_rng     => true,
+                     type_ctor    => true,
+                     obj_write    => true,
+                     code_resolve => false]],
+ external     =>
+  [ web       => [ http => <http://localhost:8777>,
+                   ws   => <ws://0.0.0.0:8555> ],
+    ollama    => <http://ginger.local:11434>,
+    session   => <mariadb://localhost:3306/dr_sessions?createDatabaseIfNotExist=true&user=mtron&password=mtron>,
+    localfs   => </home/killswitch/.hermes_clone>],
+ header       => """
+            __          __          __   
+.----.-----|  PhaseShift  |presents|  |_ 
+|   _|  _  |  _  |  _  |  _  |  _  |   _|
+|__| |_____|_____|_____|a metatron bomb|                                                                 
+"""
+]
+[===============]

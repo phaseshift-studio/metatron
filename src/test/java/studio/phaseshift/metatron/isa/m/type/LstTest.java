@@ -33,8 +33,11 @@ import studio.phaseshift.metatron.isa.m.parser.mParser;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static studio.phaseshift.metatron.algebra.Form.PLUS_MONOID;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 
@@ -118,6 +121,42 @@ public class LstTest extends AbstractAlgebraTest<Lst> {
             // "{2}[a=>1,b=>2,c=>3]>>{a,{23}b/,c}.<<                                       % {25}[a=>1,b=>2,c=>3]", // TODO: review: is this the semantics we want?
     }, delimiter = '%')
     public void testAt(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            // Step walk vs path walk vs hybrid — all equivalent
+            "[1,2,[3,4,[5,6,7]]]>>2>>2>>0                                            % 5",
+            "[1,2,[3,4,[5,6,7]]]>><2/2/0>                                            % 5",
+            "[1,2,[3,4,[5,6,7]]]>><2/2>>>0                                           % 5",
+            "[1,2,[3,4,[5,6,7]]]>><2>>><2/0>                                         % 5",
+            // Deep nesting
+            "[\"deep\"].>><0>                                                     % \"deep\"",
+            "[[\"deep\"]].>><0/0>                                                 % \"deep\"",
+            "[[[\"deep\"]]].>><0/0/0>                                             % \"deep\"",
+            "[[[[\"deep\"]]]].>><0/0/0/0>                                         % \"deep\"",
+            "[[[[\"deep\"]]]].>><0/0>.>><0/0>                                     % \"deep\"",
+            "[[[[\"deep\"]]]].>><0>.>><0>.>><0>.>><0>                             % \"deep\"",
+           // "[[[[[\"deep\"]]]]].>><0>.>><0>.>><0>.>><0>.>><0>                     % \"deep\"",
+           // "[[[[[\"deep\"]]]]].>><0/0/0/0/0>                                     % \"deep\"",
+           // "[[[[[[[\"deep\"]]]]]]]>><0/0>.>><0/0>.>><0>                          % \"deep\"",
+            // Missing index
+            "[1,2,3]>><2/0>                                                                % noobj",
+            "[1,2,3]>><5>                                                                  % noobj",
+            // Leaf is not a poly — can't walk further
+            "[1,2,3]>><0/0>                                                                % noobj",
+            // Mixed — walk through rec nested in lst
+            "[[a=>[b=>42]]]>><0/a/b>                                                       % 42",
+            "[[a=>[b=>42]]]>><0>>>a>>b                                                     % 42",
+            // Lst multi-segment URI path walks — parentheses needed so the
+            // parser treats the full path as a single >> argument.
+            "[1,2,[3,4,[5,6,7]]]>><2/2/0>                                                  % 5",
+            "[1,2,[3,4,[5,6,7]]]>><2/2>                                                    % [5,6,7]",
+            "[[3,4,[5,6,7]]]>><0/2>                                                        % [5,6,7]",
+            "[1,2,3]>><0/0>                                                                % noobj",
+    }, delimiter = '%')
+    public void testPathWalking(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
@@ -320,5 +359,85 @@ public class LstTest extends AbstractAlgebraTest<Lst> {
     }, delimiter = '%')
     public void testPoly(final String list, final String type, final boolean matches) {
         AbstractMetatronTest.checkMatches(LOG, list, type, matches);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            // MUTABLE set: should mutate original in-place
+            "[1,2,3]   | 1   | 99  | 99 | 3   | true",     // middle element
+            "[1,2,3]   | 0   | 99  | 99 | 3   | true",     // first element
+            "[1,2,3]   | -1  | 99  | 99 | 3   | true",     // negative index (last)
+            "[10,20]   | 0   | 5   | 5  | 2   | true",     // singleton result
+    }, delimiter = '|')
+    public void testMutableSet(final String lstStr, final int key, final int value,
+                                final int expectedVal, final int expectedCount,
+                                final boolean expectSame) {
+        final Obj parsed = mParser.m_obj().parse(lstStr).get();
+        assertTrue(parsed.isLst());
+        final Lst original = parsed.asLst();
+        final Lst result = original.at(jnt(key), jnt(value), Poly.MUTABLE);
+        if (expectSame)
+            assertSame(original, result, "MUTABLE should return same reference");
+        assertEquals(jnt(expectedVal), original.at(jnt(key)), "MUTABLE should mutate original at key");
+        assertEquals(expectedCount, original.count());
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            // MUTABLE delete (value = noobj)
+            "[10,20,30] | 1   | 2   | 10 | 30",     // delete middle
+            "[10,20,30] | 0   | 2   | 20 | 30",     // delete first
+            "[10,20,30] | -1  | 2   | 10 | 20",     // delete last via negative
+            "[42]       | 0   | 0   |    |   ",     // delete only → empty
+    }, delimiter = '|')
+    public void testMutableDelete(final String lstStr, final int key, final int expectedCount,
+                                   final String remaining0, final String remaining1) {
+        final Obj parsed = mParser.m_obj().parse(lstStr).get();
+        assertTrue(parsed.isLst());
+        final Lst original = parsed.asLst();
+        final Lst result = original.at(jnt(key), noobj(), Poly.MUTABLE);
+        assertSame(original, result, "MUTABLE delete should return same reference");
+        assertEquals(expectedCount, original.count());
+        if (expectedCount > 0)
+            assertTrue(mParser.m_obj().parse(remaining0).get().equals(original.at(jnt(0))));
+        if (expectedCount > 1)
+            assertTrue(mParser.m_obj().parse(remaining1).get().equals(original.at(jnt(1))));
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            // IMMUTABLE set: should NOT mutate original
+            "[1,2,3]   | 1   | 99  | 3   | 99",     // original unchanged, clone gets value
+            "[1,2,3]   | -1  | 99  | 3   | 99",     // negative index
+    }, delimiter = '|')
+    public void testImmutableSet(final String lstStr, final int key, final int value,
+                                  final int expectedOrigCount, final int expectedCloneVal) {
+        final Obj parsed = mParser.m_obj().parse(lstStr).get();
+        assertTrue(parsed.isLst());
+        final Lst original = parsed.asLst();
+        final Lst clone = original.at(jnt(key), jnt(value), Poly.IMMUTABLE);
+        assertNotSame(original, clone, "IMMUTABLE should return new reference");
+        assertEquals(expectedOrigCount, original.count());
+        assertEquals(jnt(expectedCloneVal), clone.at(jnt(key)), "IMMUTABLE clone should have new value");
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            // IMMUTABLE delete: should NOT mutate original
+            "[10,20,30] | 1   | 3   | 2   | 30",     // delete middle
+            "[10,20,30] | -1  | 3   | 2   | 20",     // delete last via negative
+    }, delimiter = '|')
+    public void testImmutableDelete(final String lstStr, final int key,
+                                     final int expectedOrigCount, final int expectedCloneCount,
+                                     final String cloneIdx1) {
+        final Obj parsed = mParser.m_obj().parse(lstStr).get();
+        assertTrue(parsed.isLst());
+        final Lst original = parsed.asLst();
+        final Lst clone = original.at(jnt(key), noobj(), Poly.IMMUTABLE);
+        assertNotSame(original, clone, "IMMUTABLE delete should return new reference");
+        assertEquals(expectedOrigCount, original.count());
+        assertEquals(expectedCloneCount, clone.count());
+        if (expectedCloneCount > 1)
+            assertTrue(mParser.m_obj().parse(cloneIdx1).get().equals(clone.at(jnt(1))));
     }
 }

@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.web.space.ws;
 
+import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
@@ -30,6 +31,7 @@ import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Highlighter;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.web.type.MIME;
 import studio.phaseshift.metatron.isa.web.webInstSet;
 import studio.phaseshift.metatron.util.CommonUtil;
@@ -164,6 +166,7 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
         protected wsSpace space;
         protected final fURI baseURI;
         protected final AtomicInteger counter = new AtomicInteger(0);
+        protected final GraphittyLogger LOG = Graphitty.log(this);
 
         public mWebSocketServer(final String host, final int port) {
             super(new InetSocketAddress(host, port));
@@ -176,14 +179,14 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
                         try {
                             this.stop(1000, "server shutdown");
                         } catch (final Exception e) {
-                            Graphitty.log(this).error(e);
+                            LOG.error(e);
                         }
                     }));
                     this.start();
-                    Graphitty.log(this).info("server started: %s", this.getAddress());
+                    LOG.info("server started: %s", this.getAddress());
 
                 } catch (final Exception e) {
-                    Graphitty.log(this).error(e);
+                    LOG.error(e);
                 }
             } else {
                 throw MTronException.of("unable to start server as router not loaded");
@@ -205,7 +208,7 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
                 final Obj wsHandlerType = Router.global().read(wsHandlerTypeID);
                 if (!wsHandlerType.isType())
                     throw MTronException.of("websocket handler type required: %s at %s", wsHandlerType, wsHandlerTypeID);
-                this.space.LOG.info("starting session with websocket handler: %s", wsHandlerType);
+                LOG.info("starting session with websocket handler: %s", wsHandlerType);
                 final fURI vid = this.baseURI.extend(routePath.qLess()).extend(this.counter.getAndIncrement() + "");
 
                 // Delegate construction to the metatron type system:
@@ -246,9 +249,9 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
         @Override
         public void onOpen(final WebSocket conn, final ClientHandshake handshake) {
             try {
-                this.space.logger().info("creating new websocket server session w/ %s over %s", conn.getRemoteSocketAddress(), conn.getResourceDescriptor());
+                LOG.info("creating new websocket server session w/ %s over %s", conn.getRemoteSocketAddress(), conn.getResourceDescriptor());
                 if (conn.getResourceDescriptor().equals("/")) {
-                    
+
                     for (final String line : CommonUtil.getHeader(CommonUtil.HEADER_FILE, null, true).split("\n"))
                         conn.send(line);
                     conn.send(String.format("metatron wsspace at {{b}}%s{{X}}\n", this.space.vid().toString()));
@@ -264,7 +267,7 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
                     }
                 }
             } catch (final Exception e) {
-                this.space.LOG.error("error on new connection with %s: %s", conn.getRemoteSocketAddress(), e);
+                LOG.error("error on new connection with %s: %s", conn.getRemoteSocketAddress(), e);
                 conn.closeConnection(3000, "error on connection: " + e);
                 // Do NOT re-throw — propagating an exception from an event handler
                 // to the WebSocketWorker thread kills the entire server.
@@ -280,7 +283,7 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
                 session.onClose(conn, code, reason, remote);
                 this.space.cache.write(session.getThisVID(), noobj());
             } catch (final Exception e) {
-                this.space.LOG.error(e);
+                LOG.error(e);
             }
         }
 
@@ -292,7 +295,7 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
                 final WebSocketObj session = this.getSession(conn).orElseThrow(() -> MTronException.of("no session found for %s", conn));
                 session.onMessage(conn, session.getIO().input().fromBytes(message));
             } catch (final Exception e) {
-                this.space.LOG.error(e);
+                LOG.error(e);
             }
         }
 
@@ -303,7 +306,7 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
                 final WebSocketObj session = this.getSession(conn).orElseThrow(() -> MTronException.of("no session found for %s", conn));
                 session.onMessage(conn, session.getIO().input().fromBytes(message.array()));
             } catch (final Exception e) {
-                this.space.LOG.error(e);
+                LOG.error(e);
             }
         }
 
@@ -315,7 +318,7 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
                 final WebSocketObj session = this.getSession(conn).orElseThrow(() -> MTronException.of("no session found for %s", conn));
                 session.onError(conn, ex);
             } catch (final Exception e) {
-                this.space.LOG.error(e);
+                LOG.error(e);
             }
         }
 
