@@ -76,18 +76,15 @@
   */
  public class grphSpace extends AbstractSpace<GraphTraversalSource> implements SchemaSpace {
 
-     public static final String GRAPH_CONFIGURATION_KEY = "mtron.grph.vid";
      public static final ObjSerializer<String> SERIALIZER = new ObjmtronSerializer();
-     public static final Rec GRAPH_CONFIG = rec(uri(GRAPH).maybe().asUri(), URI_TYPE);
-
 
      protected static ObjFactory FACTORY = null;
-     private static final fURI V_SOME = f("V/+");
-     
 
      protected static final String AUTO_TX = "auto_tx";
 
-     /** Tracked for proper cleanup of the remote JanusGraph connection. */
+     /**
+      * Tracked for proper cleanup of the remote JanusGraph connection.
+      */
      private transient DriverRemoteConnection remoteConnection;
 
      public static final fURI GRPH_SPACE_TID = grphInstSet.GRPH_ISA_TID.extend(SPACE).extend("grphspace");
@@ -96,8 +93,7 @@
              .vid(GRPH_SPACE_TID)
              .isaPredicate(rec(
                      uri(SCHEMA).maybe().asUri(), INSTSET_TYPE,
-                     uri(CONFIG).maybe(), rec(
-                             uri(MTRON).maybe().asUri(), rec(uri(AUTO_TX).maybe().asUri(), BOOL_TYPE))))
+                     uri(CONFIG).maybe(), REC_TYPE))
              .constructor(
                      instC(INST_CTOR_TID.dom(ALL.maybe()).rng(GRPH_SPACE_TID),
                              lst(REC_TYPE),
@@ -110,8 +106,15 @@
      public static grphSpace of(final Rec grph, final fURI vid) {
          grph.logger().info("using config: %s", grph.at(CONFIG));
          final Configuration graphConfig = toApacheConfiguration(grph.at(CONFIG));
-         final DriverRemoteConnection drc = DriverRemoteConnection.using(graphConfig);
-         final GraphTraversalSource g = AnonymousTraversalSource.traversal().with(drc);
+         final GraphTraversalSource g;
+         final DriverRemoteConnection drc;
+         if (graphConfig.containsKey("hosts") || graphConfig.containsKey("clusterConfigurationFile")) {
+             drc = DriverRemoteConnection.using(graphConfig);
+             g = AnonymousTraversalSource.traversal().with(drc);
+         } else {
+             drc = null;
+             g = TinkerGraph.open().traversal();
+         }
          final grphSpace space = new grphSpace(g, grph.jvm(), vid);
          space.remoteConnection = drc;
          return space;
@@ -119,34 +122,46 @@
 
      /**
       * Converts metatron rec configuration to Apache Commons Configuration.
-      * Defaults to using TinkerGraph.
+      * Returns empty config when no connection properties are provided,
       *
       * @param config metatron configuration rec
-      * @return Apache Commons Configuration for GraphFactory
+      * @return Apache Commons Configuration for Cluster.open() or Settings.from()
       */
      private static Configuration toApacheConfiguration(final Rec config) {
          final BaseConfiguration apacheConfig = new BaseConfiguration();
 
          config.logger().info("config: %s", config.at("#/"));
          if (!config.isEmpty()) {
+             final StringBuilder yaml = new StringBuilder();
              config.elements().forEach(rel -> {
                  final String key = rel.first().uriValue().toString();
                  String value = rel.second().toString();
-                 // Strip metatron URI angle brackets (<...>)
                  if (value.startsWith("<") && value.endsWith(">")) {
                      value = value.substring(1, value.length() - 1);
                  }
-                 // hosts must be a list property for TinkerPop's Settings.from()
-                 if ("hosts".equals(key)) {
-                     apacheConfig.addProperty(key, value);
-                 } else {
-                     apacheConfig.setProperty(key, value);
+                 // Route cluster-connection properties into inline YAML so
+                 // TinkerPop 3.8+ Cluster.open() parses them with correct types
+                 // (hosts as list, port as int) rather than as flat strings.
+                 switch (key) {
+                     case "hosts" -> yaml.append("hosts: [").append(value).append("]\n");
+                     case "port" -> yaml.append("port: ").append(value).append("\n");
+                     case "serializer.className" -> {
+                         yaml.append("serializer:\n");
+                         yaml.append("  className: ").append(value).append("\n");
+                     }
+                     case "serializer.config.ioRegistries" -> {
+                         yaml.append("  config:\n");
+                         yaml.append("    ioRegistries: [").append(value).append("]\n");
+                     }
+                     default -> apacheConfig.setProperty(key, value);
                  }
              });
+             if (!yaml.isEmpty()) {
+                 apacheConfig.setProperty("clusterConfiguration", yaml.toString());
+             }
              config.logger().info("using apache configuration: %s", apacheConfig);
          } else {
-             apacheConfig.setProperty(Graph.GRAPH, TinkerGraph.class.getCanonicalName());
-             config.logger().info("defaulting to in-memory tinkergraph configuration: %s", apacheConfig);
+             config.logger().info("no remote config provided — defaulting to local TinkerGraph");
          }
          return apacheConfig;
      }
@@ -158,44 +173,17 @@
       * @param graph  graph instance
       * @param config metatron configuration record
       */
-     private static void loadDatasetIfSpecified(final Graph graph, final Rec config) {
-         if (!config.has(NATIVE)) {
-             return;
-         }
-         final Obj dataset = config.at(NATIVE).asRec().at(LOAD);
-         if (dataset.isNoObj()) {
-             return;
-         }
-         // Only TinkerGraph has the TinkerFactory datasets
-         if (graph instanceof TinkerGraph) {
-             final TinkerGraph tinkerGraph = (TinkerGraph) graph;
-             final String datasetName = dataset.uriValue().toString();
-             Graphitty.log(grphSpace.class).info("loading dataset %s into TinkerGraph", datasetName);
-             switch (datasetName) {
-                 case "modern" -> {
-                     TinkerFactory.generateModern(tinkerGraph);
-                     final modernSchema schema = new modernSchema();
-                     // InstSets created directly (not via importInstSetStream) need explicit registration
-                     Router.global().addSpace(schema);
-                     schema.setup();
-                     config.at(uri(SCHEMA), schema, MUTABLE);
-                 }
-                 case "grateful" -> TinkerFactory.generateGratefulDead(tinkerGraph);
-                 case "air_routes" -> TinkerFactory.generateAirRoutes(tinkerGraph);
-                 default -> throw MTronException.of("unknown TinkerGraph dataset: %s", datasetName);
-             }
-         } else {
-             Graphitty.log(grphSpace.class).warn(
-                     "dataset loading requested but graph type %s does not support TinkerFactory datasets",
-                     graph.getClass().getSimpleName());
-         }
-     }
+    /** Last-created grphSpace — used by {@link #from(Element)}. */
+    private static grphSpace lastCreated;
 
-     public static grphSpace from(final Element element) {
-         return (grphSpace) Router.readFromSpace(f(element.graph().configuration().get(String.class, grphSpace.GRAPH_CONFIGURATION_KEY)));
-     }
+    /** Return the last created grphSpace. Used by the serializer. */
+    public static grphSpace from(final Element element) {
+        if (lastCreated == null)
+            throw MTronException.of("No grphSpace created yet");
+        return lastCreated;
+    }
 
-     protected fURI elementVID(final Element element) {
+    protected fURI elementVID(final Element element) {
          return element instanceof Vertex ?
                  Space.Helper.routeToSpace(f("V/" + element.id().toString()), this.routes()) :
                  Space.Helper.routeToSpace(f("E/" + element.id().toString()), this.routes());
@@ -210,6 +198,7 @@
 
      protected grphSpace(final GraphTraversalSource graph, final Map<Obj, Obj> config, final fURI vid) {
          super(graph, config, GRPH_SPACE_TID, vid);
+         lastCreated = this;
          LOG.debug("tp3 space: %s", this);
          // graph.configuration().setProperty(GRAPH_CONFIGURATION_KEY, vid.toString());
          // ── schema discovery ──
@@ -241,10 +230,16 @@
      //  I/O — readStream / writeStream (new API)
      // =========================================================================
 
-     /** Coerce a URI path segment to a typed element ID.
-      *  Tries Long first (JanusGraph default vertex IDs), falls back to String (edge IDs, custom vertex IDs). */
+     /**
+      * Coerce a URI path segment to a typed element ID.
+      * Tries Long first (JanusGraph default vertex IDs), falls back to String (edge IDs, custom vertex IDs).
+      */
      private static Object coerceId(final String entry) {
-         try { return Long.parseLong(entry); } catch (NumberFormatException e) { return entry; }
+         try {
+             return Long.parseLong(entry);
+         } catch (NumberFormatException e) {
+             return entry;
+         }
      }
 
      private Iterator<IdObj> readVertexTraversal(final DataPath dp) {
