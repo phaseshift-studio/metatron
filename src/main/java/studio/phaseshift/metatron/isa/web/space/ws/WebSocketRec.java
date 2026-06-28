@@ -93,7 +93,7 @@ public class WebSocketRec extends MRec implements WebSocketObj {
     public boolean state() {
         return this.state(this.getWebSocket());
     }
-    
+
     @Override
     public void onOpen(final WebSocket conn, final Handshakedata handshake) {
         try {
@@ -110,7 +110,7 @@ public class WebSocketRec extends MRec implements WebSocketObj {
     @Override
     public void onClose(final WebSocket conn, final int code, final String reason, final boolean remote) {
         try {
-            this.logger().info("{{y}}%s {{g}}<=> {{y}}%s{{X}} closed: code={{y}}%s{{X}}, reason={{y}}%s{{X}}", this.vid(), this.getOtherVID(), code, reason);
+            this.logger().info("{{y}}%s {{g}}<=> {{y}}%s{{X}} closed: code={{y}}%s{{X}}, reason={{y}}%s{{X}}", this.vid(), this.getOtherVID() == null ? "{{r}}noobj" : this.getOtherVID(), code, reason);
             this.at(uri(ON_CLOSE)).apply(rec(uri(CODE), jnt(code), uri(REASON), str(reason)));
             this.close();
         } catch (final Exception e) {
@@ -130,7 +130,7 @@ public class WebSocketRec extends MRec implements WebSocketObj {
     @Override
     public void onError(final WebSocket conn, final Exception ex) {
         try {
-            this.logger().error("{{y}}%s {{g}}<=> {{y}}%s{{X}} errored: %s", this.vid(), this.getOtherVID(), ex);
+            this.logger().error("{{y}}%s {{g}}<=> {{y}}%s{{X}} errored: %s", this.vid(), this.getOtherVID() == null ? "{{r}}noobj" : this.getOtherVID(), ex);
             this.at(uri(ON_ERROR)).apply(fail(ex));
         } catch (final Exception e) {
             LOG.error("error processing error: %s", this.vid(), e);

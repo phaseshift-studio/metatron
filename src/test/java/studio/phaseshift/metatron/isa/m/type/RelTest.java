@@ -23,11 +23,17 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.algebra.AbstractAlgebraTest;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 
 import java.util.Set;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static studio.phaseshift.metatron.algebra.Form.MULT_MONOID;
 import static studio.phaseshift.metatron.algebra.Form.PLUS_MONOID;
+import static studio.phaseshift.metatron.isa.m.type.Poly.IMMUTABLE;
+import static studio.phaseshift.metatron.isa.m.type.Poly.MUTABLE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -565,5 +571,47 @@ public class RelTest extends AbstractAlgebraTest<Rel> {
     }, delimiter = '%')
     public void testRelRingWithCoefficients(final String code, final String expected) {
         AbstractMetatronTest.checkCodeEvaluate(LOG, code, expected);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // MUTABILITY — at(first, second, operation)
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            // MUTABLE set: mutate same reference
+            "(a=>b)  | c   | d   | true",
+            "(1=>2)  | 3   | 4   | true",
+    }, delimiter = '|')
+    public void testMutableSet(final String relStr, final String first, final String second,
+                                final boolean expectSame) {
+        final Rel original = ObjmtronSerializer.parse(relStr).asRel();
+        final Obj f = ObjmtronSerializer.parse(first);
+        final Obj s = ObjmtronSerializer.parse(second);
+        final Rel result = (Rel) original.at(f, s, MUTABLE);
+        if (expectSame)
+            assertSame(original, result, "MUTABLE should return same reference");
+        assertEquals(f, result.first());
+        assertEquals(s, result.second());
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            // IMMUTABLE set: return new reference, original untouched
+            "(a=>b)  | c   | d",
+            "(1=>2)  | 3   | 4",
+    }, delimiter = '|')
+    public void testImmutableSet(final String relStr, final String first, final String second) {
+        final Rel original = ObjmtronSerializer.parse(relStr).asRel();
+        final Obj f = ObjmtronSerializer.parse(first);
+        final Obj s = ObjmtronSerializer.parse(second);
+        final Rel clone = (Rel) original.at(f, s, IMMUTABLE);
+        assertNotSame(original, clone, "IMMUTABLE should return new reference");
+        // original unchanged
+        final Rel originalRef = ObjmtronSerializer.parse(relStr).asRel();
+        assertEquals(originalRef.first(), original.first());
+        assertEquals(originalRef.second(), original.second());
+        // clone has new values
+        assertEquals(f, clone.first());
+        assertEquals(s, clone.second());
     }
 }

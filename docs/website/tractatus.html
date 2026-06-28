@@ -972,9 +972,9 @@ mtron&gt; 2.band(min=&gt;1,max=&gt;1)     ​1​</code></pre>
 ==&gt;ERROR: is_divisible -&gt; |is_divisble?bool&lt;=int(by?int=&gt;is(neq(0)).else(print('error').map(1)))[mod(*by).eq(0)]
                                       ^ end of input expected
 mtron&gt;  10.is_divisible(2)
-==&gt;fail::[unable to locate inst-f of is_divisible(2)@&lt;1&gt;][...]@/sys/fail/18
+==&gt;fail::[unable to locate inst-f of is_divisible(2)@&lt;1&gt;][...]@&lt;/sys/fail?incrq=./+&gt;
 mtron&gt;  10.is_divisible('abc')
-==&gt;fail::[unable to locate inst-f of is_divisible('abc')@&lt;1&gt;][...]@/sys/fail/20</code></pre>
+==&gt;fail::[unable to locate inst-f of is_divisible('abc')@&lt;1&gt;][...]@&lt;/sys/fail?incrq=./+&gt;</code></pre>
 </div>
 </div>
 </div>
@@ -1029,7 +1029,7 @@ This ensures the uri <code>trpl</code> is not applied to the <code>inst</code> p
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;  trpl -&gt; inst?lst[int,int,int]&lt;=int{3}(){&gt;-[,]}     ​1​
-==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(){merge([,])}]][...]@/sys/fail/22
+==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(){merge([,])}]][...]@&lt;/sys/fail?incrq=./+&gt;
 mtron&gt; trpl -&gt; |inst?lst[int,int,int]&lt;=int{3}(){&gt;-[,]}     ​2​
 ==&gt;inst?rng=lst[int,int,int]&amp;dom=int{3}(){merge([,])}
 mtron&gt; *trpl     ​3​
@@ -1354,8 +1354,11 @@ ultimately dependent on the incoming lhs <code>obj</code>, where</p>
 <li class="legend-lvl-3"><a href="#sec-catalogs" onclick="var t=document.getElementById('sec-catalogs');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Catalogs</a></li>
 <li class="legend-lvl-3"><a href="#sec-llm-space-encoding" onclick="var t=document.getElementById('sec-llm-space-encoding');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">LLM Space Encoding</a></li>
 <li class="legend-lvl-3"><a href="#sec-features" onclick="var t=document.getElementById('sec-features');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Features</a></li>
-<li class="legend-lvl-4"><a href="#sec-sessions" onclick="var t=document.getElementById('sec-sessions');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Sessions</a></li>
 <li class="legend-lvl-4"><a href="#sec-tools" onclick="var t=document.getElementById('sec-tools');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Tools</a></li>
+<li class="legend-lvl-5"><a href="#sec-inst-as-tool" onclick="var t=document.getElementById('sec-inst-as-tool');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Inst as Tool</a></li>
+<li class="legend-lvl-5"><a href="#sec-mcp-tool-as-inst" onclick="var t=document.getElementById('sec-mcp-tool-as-inst');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">MCP Tool as Inst</a></li>
+<li class="legend-lvl-4"><a href="#sec-skills" onclick="var t=document.getElementById('sec-skills');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Skills</a></li>
+<li class="legend-lvl-4"><a href="#sec-sessions" onclick="var t=document.getElementById('sec-sessions');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Sessions</a></li>
 <li class="legend-lvl-3"><a href="#sec-notes" onclick="var t=document.getElementById('sec-notes');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Notes</a></li>
 <li class="legend-lvl-4"><a href="#sec-mcp-server-client-notifications-in-mtron" onclick="var t=document.getElementById('sec-mcp-server-client-notifications-in-mtron');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">mcp server->client notifications in mtron</a></li>
 <li class="legend-lvl-3"><a href="#sec-agent-based-programming-language" onclick="var t=document.getElementById('sec-agent-based-programming-language');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">agent-based programming language</a></li>
@@ -1461,53 +1464,11 @@ mtron&gt; catalog::[host         =&gt; &lt;https://api.openai.com/v1&gt;,
                  pattern      =&gt; &lt;openai:#&gt;,
                  name         =&gt; &lt;openai&gt;,
                  route        =&gt; [&lt;openai:&gt;=&gt;&lt;&gt;]]@/sys/space/openai
-==&gt;ERROR: httpexception: {
-  "error": {
-    "message": "Incorrect API key provided: ''. You can find your API key at https://platform.openai.com/account/api-keys.",
-    "type": "invalid_request_error",
-    "param": null,
-    "code": "invalid_api_key"
-  }
-}
-  	dev.langchain4j.http.client.jdk.JdkHttpClient [line 54]
-  	dev.langchain4j.model.openai.internal.SyncRequestExecutor [line 20]
-  	dev.langchain4j.model.openai.internal.RequestExecutor [line 44]
-  	dev.langchain4j.model.openai.internal.RequestExecutor [line 38]
-  	dev.langchain4j.model.openai.OpenAiModelCatalog [line 61]
-  	studio.phaseshift.metatron.isa.llm.LLMFactory [line 133]
-  	studio.phaseshift.metatron.isa.llm.space.modelCatalogSpace [line 62]
-  	studio.phaseshift.metatron.isa.m.type.Inst$f [line 692]
-  	studio.phaseshift.metatron.isa.m.type.Inst [line 313]
-  	studio.phaseshift.metatron.isa.m.type.Obj$Helper [line 927]
-  	studio.phaseshift.metatron.isa.m.type.impl.MObj [line 46]
-  	studio.phaseshift.metatron.isa.m.type.impl.MRec [line 76]
-   ...
 mtron&gt; catalog::[host         =&gt; &lt;https://api.deepseek.com/&gt;,
                  api_key      =&gt; !*&lt;/sys/env/DEEPSEEK_API_KEY&gt;,
                  pattern      =&gt; &lt;deep:#&gt;,
                  name         =&gt; &lt;openai&gt;,
-                 route        =&gt; [&lt;deep:&gt;=&gt;&lt;&gt;]]@/sys/space/deepseek
-==&gt;ERROR: httpexception: Authentication Fails (auth header format should be Bearer sk-...)
-  	dev.langchain4j.http.client.jdk.JdkHttpClient [line 54]
-  	dev.langchain4j.model.openai.internal.SyncRequestExecutor [line 20]
-  	dev.langchain4j.model.openai.internal.RequestExecutor [line 44]
-  	dev.langchain4j.model.openai.internal.RequestExecutor [line 38]
-  	dev.langchain4j.model.openai.OpenAiModelCatalog [line 61]
-  	studio.phaseshift.metatron.isa.llm.LLMFactory [line 133]
-  	studio.phaseshift.metatron.isa.llm.space.modelCatalogSpace [line 62]
-  	studio.phaseshift.metatron.isa.m.type.Inst$f [line 692]
-  	studio.phaseshift.metatron.isa.m.type.Inst [line 313]
-  	studio.phaseshift.metatron.isa.m.type.Obj$Helper [line 927]
-  	studio.phaseshift.metatron.isa.m.type.impl.MObj [line 46]
-  	studio.phaseshift.metatron.isa.m.type.impl.MRec [line 76]
-  	studio.phaseshift.metatron.isa.m.parser.mParser [line 242]
-  	org.petitparser.parser.actions.ActionParser [line 39]
-  	org.petitparser.parser.combinators.DelegateParser [line 25]
-  	org.petitparser.parser.combinators.ChoiceParser [line 34]
-  	org.petitparser.parser.combinators.DelegateParser [line 25]
-  	org.petitparser.parser.combinators.ChoiceParser [line 34]
-  	org.petitparser.parser.combinators.OptionalParser [line 23]
-   ...</code></pre>
+                 route        =&gt; [&lt;deep:&gt;=&gt;&lt;&gt;]]@/sys/space/deepseek</code></pre>
 </div>
 </div>
 <h3 id="sec-llm-space-encoding" class="discrete">LLM Space Encoding</h3>
@@ -1527,39 +1488,27 @@ mtron&gt; catalog::[host         =&gt; &lt;https://api.deepseek.com/&gt;,
 </div>
 </div>
 <div class="paragraph">
-<p>The design makes a distinction between the <strong>LLM</strong> (general-purpose reasoning engine) and its <strong>features</strong> (accessories that can be attached to the LLM). Example features include tools, skills, sessions, thinking, response formats, and other similar enrichme. Features are agnostic to the underlying LLM and can be shared between LLMs making it easy to assemble new LLMs from a library of stored features. In <code>.metatron</code>, there exists an <code>agent.mtron</code> file that provides a sample library.</p>
+<p>The design makes a distinction between the <strong>LLM</strong> (general-purpose reasoning engine) and its <strong>features</strong> (accessories that can be attached to the LLM). Example features include <a href="https://en.wikipedia.org/wiki/Large_language_model#Tool_use">tools</a>, <a href="https://agentskills.io/home">skills</a>, <a href="https://learn.microsoft.com/en-us/semantic-kernel/concepts/ai-services/chat-completion/chat-history?pivots=programming-language-csharp">sessions</a>, <a href="https://arxiv.org/abs/2410.10630">thinking</a>, <a href="https://fvivas.com/en/response-formats-in-llms-guide-chatgpt-claude-more/">response formats</a>, and other similar enrichments. While models do vary in their capacity to leverage certain features, features are agnostic to the underlying LLM and can be shared between LLMs making it easy to assemble new LLMs from pre-defined features. In <code>.metatron</code>, there exists an <code>agent.mtron</code> file that provides a sample library.</p>
 </div>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *&lt;fs:agent.mtron&gt;     ​1​
 ==&gt;model::[
     desc=&gt;'testy the agent',
-    provider=&gt;!*deep:deepseek-v4-pro/provider,
-    name=&gt;!*deep:deepseek-v4-pro/name,
+    provider=&gt;!*ollama:maxwell1500/ornith-35b:Q6_K/provider,
+    name=&gt;!*ollama:maxwell1500/ornith-35b:Q6_K/name,
     feature=&gt;[
      think=&gt;block(/usr/ui/console/pane/0/stream(id())),
-     memory=&gt;!@/usr/agent/memory,
-     tool=&gt;[
-      !*eval,
-      !*sql,
-      !*/usr/ai/mcp/index-mcp,
-      !*/usr/ai/mcp/intellij,
-      !*/usr/ai/mcp/mtron],
+     session=&gt;!@/usr/agent/session,
+     tool=&gt;[!*eval],
      note=&gt;!@/usr/agent/notes,
-     skill=&gt;[!*mtronfs:skills/mtron.as(skill::T)],
      response=&gt;[to=&gt;print(id())]]]
 mtron&gt; *&lt;fs:agent.mtron/feature&gt;     ​2​
 ==&gt;[
     think=&gt;block(/usr/ui/console/pane/0/stream(id())),
-    memory=&gt;!@/usr/agent/memory,
-    tool=&gt;[
-     !*eval,
-     !*sql,
-     !*/usr/ai/mcp/index-mcp,
-     !*/usr/ai/mcp/intellij,
-     !*/usr/ai/mcp/mtron],
+    session=&gt;!@/usr/agent/session,
+    tool=&gt;[!*eval],
     note=&gt;!@/usr/agent/notes,
-    skill=&gt;[!*mtronfs:skills/mtron.as(skill::T)],
     response=&gt;[to=&gt;print(id())]]</code></pre>
 </div>
 </div>
@@ -1576,10 +1525,186 @@ mtron&gt; *&lt;fs:agent.mtron/feature&gt;     ​2​
 </table>
 </div>
 <h3 id="sec-features" class="discrete">Features</h3>
-<h4 id="sec-sessions" class="discrete">Sessions</h4>
 <div class="paragraph">
-<p>The following example demonstrates how to search for an appropriate LLM for a given task, then query it, and finally, have its session of the interaction stored in space for future use (to provide the agent context over longer interactions). This example relies on an agent <code>SKILL.md</code> file stored on the local file system (<code>fs:</code>).</p>
+<p>The following subsections will focus on a particular feature that is provided by the <code>/m/llm</code> instruction set. To ensure a speedy build time for metatron&#8217;s documentation, the following <code>doc_model?model&lt;=#{?}</code> instruction is defined and will be used repeatedly. This <code>inst</code> searches Ollama for small model that supports both tool use and thinking.</p>
 </div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; |inst?model{?}&lt;=#{?}(a=&gt;uri::T){
+         *ollama:+.
+          where(&gt;&gt;skill.has(thinking).has(tools)).
+          where(&gt;&gt;size.?&gt;gB::1.0.?&lt;gB::5.0).
+          order(&gt;&gt;size * -1.0).
+          take(1).
+          to(*a) }@doc_model
+==&gt;inst?rng=model{?}&amp;dom=#{?}(a=&gt;uri::T){*ollama:+.where(rshift(skill).has(thinking).has(tools)).where(rshift(size).is(gt(gB::1.0000)).is(lt(gB::5.0000))).order(rshift(size).mult(-1.0000)).take(1).to(*a)}@doc_model</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>stream all the models currently available on the local ollama server.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>filter out those models that don&#8217;t support thinking and tool use.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>filter out models too small (for ollama, the cloud models) and models too big.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>if all models have been filtered out, <code>fail::T</code>.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="5"></i><b>5</b></td>
+<td>reverse sort the models by their size.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="6"></i><b>6</b></td>
+<td>select the smallest model of those remaining.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="7"></i><b>7</b></td>
+<td>store model at the <code>uri::T</code> <code>inst</code> argument.</td>
+</tr>
+</table>
+</div>
+<!--
+else(throw('no model fits the spec'))            /
+-->
+<h4 id="sec-tools" class="discrete">Tools</h4>
+<div class="paragraph">
+<p>Tools are functions that models can use for problem solving. In metatron, every <code>inst</code> is a tool. Moreover, from the agent&#8217;s perspective, every MCP server tool is an <code>inst</code>. Thus, adding an <code>inst</code> from an <code>instset</code> and adding an <code>inst</code> from a <code>http</code> or <code>ws</code> MCP server endpoint, ultimately boils down to pointing the model towards <code>insts</code> it can use to solve the problem at hand.</p>
+</div>
+<h5 id="sec-inst-as-tool" class="discrete">Inst as Tool</h5>
+<div class="paragraph">
+<p>A model is loaded using <code>doc_model</code>. The loaded model is handed a <code>!*</code>-reference to the mtron <code>eval</code> instruction. This is the most general instruction in mtron enabling any mtron expression to be passed in as a <code>str</code>, parsed, compiled, evaluated, and <code>rhs</code> results returned.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; doc_model(aix).&gt;&gt;=+
+        [feature =&gt;[
+          tool      =&gt; [!*eval],
+          response  =&gt; [to=&gt;_]]]
+==&gt;model::[
+    provider=&gt;!*/sys/space/ollama,
+    name=&gt;qwen3:latest,
+    think=&gt;[=&gt;],
+    skill=&gt;[completion,tools,thinking],
+    size=&gt;gB::4.8665,
+    feature=&gt;[tool=&gt;[!*eval],response=&gt;[to=&gt;id()]]]@ollama:qwen3:latest</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; @aix.chat('evaluate the following expression using your mtron eval tool: [1,2]==[+2,-&lt;[+3,+4]]==[_,&gt;-]')
+==&gt;"""The expression you've provided is not a standard mathematical or programming expression. It appears to be a mix of list notation, custom operators, and possibly some symbolic or abstract syntax. Let's break it down and interpret it step by step.
+
+   ---
+
+   ### Expression:
+   ```
+   [1,2]==[+2,-&lt;[+3,+4]]==[_,&gt;-]
+   ```
+
+   ---
+
+   ### Step 1: Understand the Components
+
+   We can split the expression into three parts:
+
+   1. **Left Side:** `[1,2]`
+   2. **Middle Part:** `[+2,-&lt;[+3,+4]]`
+   3. **Right Side:** `[_,&gt;-]`
+
+   Let’s interpret each part.
+   ...</code></pre>
+</div>
+</div>
+<h5 id="sec-mcp-tool-as-inst" class="discrete">MCP Tool as Inst</h5>
+<div class="paragraph">
+<p>metatron is capable of both hosting MCP tools (<strong>servers</strong>) and using MCP tools (<strong>clients</strong>). In the following example, an mtron MCP server is managed by a <code>wsspace</code> (web socket space).</p>
+</div>
+<div class="listingblock">
+<div class="title">metatron hosted mcp server</div>
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; wsspace::[host     =&gt; ws://localhost:8555,
+                 pattern  =&gt; ws://#,
+                 q        =&gt; [docq::[=&gt;],subq::[=&gt;]],
+                 route    =&gt; [/mcp =&gt; mcp_mtron_ws]]@/sys/space/web/ws</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The <code>/m/web</code> instruction set realizes an MCP tool as a refinement of <code>inst</code>. As such, an MCP client has an natural mapping to an LLM tool feature.</p>
+</div>
+<div class="listingblock">
+<div class="title">metatron hosted mcp clients</div>
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; mcp_client::[host =&gt; ws://localhost:8555/mcp]@/usr/ai/mcp/mtron
+==&gt;ERROR: java.util.concurrent.ExecutionException: java.lang.RuntimeException: java.util.concurrent.ExecutionException: java.net.ConnectException: java.util.concurrent.ExecutionException: java.lang.RuntimeException: java.util.concurrent.ExecutionException: java.net.ConnectException
+  	dev.langchain4j.mcp.client.DefaultMcpClient [line 233]
+  	dev.langchain4j.mcp.client.DefaultMcpClient [line 206]
+  	dev.langchain4j.mcp.client.DefaultMcpClient$Builder [line 1103]
+  	studio.phaseshift.metatron.isa.llm.type.mcpClient [line 96]
+  	studio.phaseshift.metatron.isa.web.webInstSet [line 237]
+  	studio.phaseshift.metatron.isa.m.type.Inst$f [line 692]
+  	studio.phaseshift.metatron.isa.m.type.Inst [line 313]
+  	studio.phaseshift.metatron.isa.m.type.Obj$Helper [line 927]
+  	studio.phaseshift.metatron.isa.m.type.impl.MObj [line 46]
+  	studio.phaseshift.metatron.isa.m.type.impl.MRec [line 76]
+  	studio.phaseshift.metatron.isa.m.parser.mParser [line 242]
+  	org.petitparser.parser.actions.ActionParser [line 39]
+  	org.petitparser.parser.combinators.DelegateParser [line 25]
+  	org.petitparser.parser.combinators.ChoiceParser [line 34]
+  	org.petitparser.parser.combinators.DelegateParser [line 25]
+  	org.petitparser.parser.combinators.ChoiceParser [line 34]
+  	org.petitparser.parser.combinators.OptionalParser [line 23]
+  	org.petitparser.parser.combinators.SequenceParser [line 25]
+  	org.petitparser.parser.actions.ActionParser [line 37]
+   ...
+mtron&gt; doc_model(aix).&gt;&gt;=+
+        [feature =&gt;[
+          tool      =&gt; [!*/usr/ai/mcp/mtron],
+          response  =&gt; [to=&gt;_]]]
+==&gt;fail::[obj does not match specified type:
+     [
+      provider=&gt;!*/sys/space/ollama,
+      name=&gt;qwen3:latest,
+      think=&gt;[=&gt;],
+      skill=&gt;[completion,tools,thinking],
+      size=&gt;gB::4.8665,
+      feature=&gt;[tool=&gt;[eval?#{*}&lt;=#{?}(#::T),mcp_client::[host=&gt;ws://localhost:8555/mcp]],response=&gt;[to=&gt;id{2}()]]]@ollama:qwen3:latest
+         X=&gt;
+     rec::T[?[
+       provider=&gt;catalog::T,
+       name=&gt;uri::T,
+       {?}desc=&gt;str::T,
+       {?}cost=&gt;{?}[in=&gt;currency::T,out=&gt;currency::T],
+       {?}size=&gt;bB::T,
+       {?}feature=&gt;feature::T]]@/m/llm/model
+     ----------------------------------------------------------------------------------------------------------------------------------------------
+     [
+      provider=&gt;(==&gt;provider)=&gt;/m/llm/space::[
+      host=&gt;http://localhost:11434,
+   ...</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Given that an <code>mcp_client::T</code> is an index of <code>insts</code>. Nothing prevents their <code>insts</code> being used by other processes such as a human user. And since, metatron is able to map common data formats to <code>obj</code>, its possible to take the result of the mcp tool and post process it to derive further more refined statistics not offered by the tool.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">/usr/ai/mcp/intellij/tool/ide_type_hierarchy(className=&gt;'studio.phaseshift.metatron.isa.m.type.Obj'). /
+  -&lt;[supers =&gt; -&lt;[count =&gt; &gt;&gt;supertypes.count(),                                                      /
+                  kinds =&gt; &gt;&gt;supertypes&gt;&gt;kind&gt;-[,]],                                                  /
+     subs   =&gt; -&lt;[count =&gt; &gt;&gt;subtypes.count(),                                                        /
+                  kinds =&gt; &gt;&gt;subtypes&gt;&gt;kind&gt;-[,]]]</code></pre>
+</div>
+</div>
+<h4 id="sec-skills" class="discrete">Skills</h4>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;  *&lt;fs:skills/mtron/SKILL.md&gt;
@@ -1606,6 +1731,10 @@ mtron&gt; *&lt;fs:agent.mtron/feature&gt;     ​2​
    ...</code></pre>
 </div>
 </div>
+<h4 id="sec-sessions" class="discrete">Sessions</h4>
+<div class="paragraph">
+<p>The following example demonstrates how to search for an appropriate LLM for a given task, then query it, and finally, have its session of the interaction stored in space for future use (to provide the agent context over longer interactions). This example relies on an agent <code>SKILL.md</code> file stored on the local file system (<code>fs:</code>).</p>
+</div>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; [,]@/usr/ai/session     ​1​
@@ -1624,17 +1753,27 @@ mtron&gt; *ollama:+.
               think    =&gt; print(_),
               response =&gt; [to=&gt;to(/usr/ai/response)]]].
         to(aix)
-==&gt;model::[
-    provider=&gt;!*/sys/space/ollama,
-    name=&gt;qwen3:latest,
-    think=&gt;[=&gt;],
-    skill=&gt;[completion,tools,thinking],
-    size=&gt;gB::4.8665,
-    feature=&gt;[
-     session=&gt;[agent=&gt;/usr/ai,user=&gt;/usr/marko,name=&gt;'general chat',algorithm=&gt;[max=&gt;15]]@/usr/ai/session/1,
-     tool=&gt;[!*eval],
-     think=&gt;print(id()),
-     response=&gt;[to=&gt;to(/usr/ai/response)]]]@ollama:qwen3:latest</code></pre>
+==&gt;fail::[selector rshift(size).mult(gB::-1.0000) does not return a comparable value for [obj does not match specified type:
+     [
+      provider=&gt;!*/sys/space/ollama,
+      name=&gt;qwen3:latest,
+      think=&gt;[=&gt;],
+      skill=&gt;[completion,tools,thinking],
+      size=&gt;gB::4.8665,
+      feature=&gt;[tool=&gt;[eval?#{*}&lt;=#{?}(#::T),mcp_client::[host=&gt;ws://localhost:8555/mcp]],response=&gt;[to=&gt;id{2}()]]]@ollama:qwen3:latest
+         X=&gt;
+     rec::T[?[
+       provider=&gt;catalog::T,
+       name=&gt;uri::T,
+       {?}desc=&gt;str::T,
+       {?}cost=&gt;{?}[in=&gt;currency::T,out=&gt;currency::T],
+       {?}size=&gt;bB::T,
+       {?}feature=&gt;feature::T]]@/m/llm/model
+     ----------------------------------------------------------------------------------------------------------------------------------------------
+     [
+      provider=&gt;(==&gt;provider)=&gt;/m/llm/space::[
+      host=&gt;http://localhost:11434,
+   ...</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -1701,7 +1840,7 @@ mtron&gt; *ollama:+.
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; @aix.chat("I need you evaluate the mtron expresion `-&lt;[_=&gt;_]&gt;&gt;.&gt;-[,]-&lt;[_,-&lt;[_=&gt;_]&gt;&gt;]&gt;&gt;.&gt;-` with a lhs of `1`. Please don't tell me the result of the evaluation until I ask for it sometime in the near future.")
-==&gt;fail::[no active space supports pattern null:msg/1/0][...]@/sys/fail/18</code></pre>
+==&gt;"I have evaluated the mtron expression with the given left-hand side (lhs) of `1`. The result is stored and will be provided to you when you ask for it. Let me know when you're ready to see the result!"</code></pre>
 </div>
 </div>
 <div class="openblock card">
@@ -1802,7 +1941,7 @@ mtron&gt; tB::1.0.as(mB::T)     ​3​
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; @ai.chat("It's been many years since we last talked. For I am a tired, old man. Before I let my last breathe flutter into this world, I must know one last thing. Please tell me, what was the result of the mtron expression I provided you all those years ago?")
-==&gt;fail::[unable to evaluate inst: chat?dom=rec("It's been many years since we last talked. For I am a tired...")@&lt;1&gt;][...]@/sys/fail/22
+==&gt;fail::[unable to evaluate inst: chat?dom=rec("It's been many years since we last talked. For I am a tired...")@&lt;1&gt;][...]@&lt;/sys/fail?incrq=./+&gt;
 mtron&gt; */usr/ai/session/+
 ==&gt;/usr/ai
 ==&gt;[max=&gt;15]
@@ -1815,123 +1954,6 @@ mtron&gt; */usr/ai/session/+
 </div>
 <div class="paragraph">
 <p>@ai.chat("what was the answer again?", [answer&#8658;?int::T])</p>
-</div>
-<h4 id="sec-tools" class="discrete">Tools</h4>
-<div class="paragraph">
-<p>LLM tools provide the model a way of calling predefined functions as deemed necessary during chat interactions. In metatron, any <code>inst</code> can be a tool. Simply place an <code>!*</code> reference to the <code>inst</code> into the model&#8217;s "tool box" (<code>lst</code>) at <code>features/tool</code>. Next, should MCP tools be required, realize that MCP servers expose their tools as <code>insts</code> in metatron as well. Thus, adding an <code>inst</code> from an <code>instset</code> and adding an <code>inst</code> from a <code>http</code> or <code>ws</code> MCP server endpoint, ultimately boils down to pointing the model towards <code>insts</code> it can use to solve problems.</p>
-</div>
-<div class="paragraph">
-<p>metatron is capable of hosting MCP tools (server), using MCP tools (client), or both. The example below spawns an mtron websocket server and then spawns a client to it as well as other mcp servers not local to metatron.</p>
-</div>
-<div class="listingblock">
-<div class="title">metatron hosted mcp server</div>
-<div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">wsspace::[host     =&gt; &lt;ws://localhost:8555&gt;,                        /
-          pattern  =&gt; ws://#,                                       /
-          q        =&gt; [docq::[=&gt;],subq::[=&gt;]],                      /
-          route    =&gt; [/mtron=&gt; mtron_ws,                           /
-                       /mcp  =&gt; mcp_mtron_ws]]@/sys/space/web/ws</code></pre>
-</div>
-</div>
-<div class="listingblock">
-<div class="title">metatron hosted mcp clients</div>
-<div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mcp_client::[host =&gt;                                /
- &lt;ws://localhost:8555/mcp&gt;                          /
-]@/usr/ai/mcp/mtron                                 [-- &lt;1&gt; --]
-mcp_client::[host =&gt;                                /
- &lt;http://127.0.0.1:29170/index-mcp/streamable-http&gt; /
-]@/usr/ai/mcp/intellij                              [-- &lt;2&gt; --]
-*/usr/ai/mcp/intellij&gt;&gt;tool.dom()                   [-- &lt;3&gt; --]</code></pre>
-</div>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">*&lt;openai:gpt-4o&gt;.at(robotron).                                   /
- side([,].at(&lt;local:.agent/robotron/memory&gt;)).                   /
- &gt;&gt;=+[feature=&gt;[think=&gt;print(_),                                 /
-      tool=&gt;[!*eval],                                             /
-      skill=&gt;[                                                    /
-  !*&lt;local:.agent/skills/mtron&gt;.as(skill::T)],                   /
-     response=&gt;[to=&gt;print(_)],                                   /
-     memory=&gt;[mem=&gt;!@&lt;local:.agent/robotron/memory&gt;,max=&gt;20]]].  /
- &gt;&gt;=[_=&gt;^*_]</code></pre>
-</div>
-</div>
-<div class="colist arabic">
-<table>
-<tr>
-<td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>clone the base model to the <code>robotron</code> address</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="2"></i><b>2</b></td>
-<td>as a side-effect, create a blank memory structure and store it on the local file system</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="3"></i><b>3</b></td>
-<td>print robotron&#8217;s thoughts to the terminal</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="4"></i><b>4</b></td>
-<td>give robotron access to the <code>eval?A&lt;=#{?}(str::T)</code> instruction for evaluating mtron expressions</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="5"></i><b>5</b></td>
-<td>give robotron the <code>mtron</code> skill set (<code>SKILL.md</code> file in <code>.agent/skills/mtron</code> directory)</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="6"></i><b>6</b></td>
-<td>print roboton&#8217;s response to the terminal</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="7"></i><b>7</b></td>
-<td>pass robotron a reference to the memory structure and cap its growth to 15 entries.</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="8"></i><b>8</b></td>
-<td>re-reference any resolved <code>!*</code> (<code>auto_from</code>) references using <code>^*</code> (<code>auto_to</code>).</td>
-</tr>
-</table>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">@robotron.chat('what tools do you have access to?',          /
-            [number_of_tools=&gt;int::T,tool_names=&gt;str::T])
-@robotron.chat('what skills do you have?')
-*robotron&gt;&gt;feature/session
-*robotron&gt;&gt;feature/session/mem/2/attributes/format</code></pre>
-</div>
-</div>
-<div class="colist arabic">
-<table>
-<tr>
-<td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>providing a response format <code>rec</code> yields a structured response.</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="2"></i><b>2</b></td>
-<td>without a response format, the agent replies in free, unstructured text.</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="3"></i><b>3</b></td>
-<td>the chat session records structured responses.</td>
-</tr>
-</table>
-</div>
-<div class="paragraph">
-<p>Given that an <code>mcp_client::T</code> is an index of <code>insts</code>. Nothing prevents their <code>insts</code> being used by other processes such
-as a human user. And since, metatron is able to map common data formats to <code>obj</code>, its possible to take the result of the
-mcp tool and post process it to derive further more refined statistics not offered by the tool.</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">/usr/ai/mcp/intellij/tool/ide_type_hierarchy(className=&gt;'studio.phaseshift.metatron.isa.m.type.Obj'). /
-  -&lt;[supers =&gt; -&lt;[count =&gt; &gt;&gt;supertypes.count(),                                                      /
-                  kinds =&gt; &gt;&gt;supertypes&gt;&gt;kind&gt;-[,]],                                                  /
-     subs   =&gt; -&lt;[count =&gt; &gt;&gt;subtypes.count(),                                                        /
-                  kinds =&gt; &gt;&gt;subtypes&gt;&gt;kind&gt;-[,]]]</code></pre>
-</div>
 </div>
 <h3 id="sec-notes" class="discrete">Notes</h3>
 <div class="paragraph">
@@ -2351,7 +2373,7 @@ can access it accordingly and naturally.</p>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;  1.plus(b)     ​1​
-==&gt;fail::[1 [int::T] unable to convert uri::T][...]@/sys/fail/60
+==&gt;fail::[1 [int::T] unable to convert uri::T][...]@&lt;/sys/fail?incrq=./+&gt;
 mtron&gt; */sys/fail/+     ​2​
 mtron&gt; */sys/fail/+.catch(_)     ​3​
 mtron&gt; */sys/fail     ​4​</code></pre>
@@ -2473,7 +2495,7 @@ mtron&gt; 4.as(int::T[?&gt;0]@nat)
 ==&gt;nat::4
 mtron&gt;  -4.as(nat::T)
 ==&gt;fail::[-4 is not a is(gt(0))
-     -4=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/6
+     -4=&gt;(X=&gt;is(gt(0)))][...]@&lt;/sys/fail?incrq=./+&gt;
 mtron&gt; [-- refining rec::T  --]
 mtron&gt; [name=&gt;'snowbutt',age=&gt;7].as(rec::T[?[name=&gt;str::T,age=&gt;int::T]@chicken)
 ==&gt;ERROR: [name=&gt;'snowbutt',age=&gt;7].as(rec::T[?[name=&gt;str::T,age=&gt;int::T]@chicken)
@@ -2536,9 +2558,9 @@ mtron&gt; 2.as(nat::T)     ​5​
 ==&gt;2
 mtron&gt;  -2.as(nat::T)     ​6​
 ==&gt;fail::[-2 is not a is(gt(0))
-     -2=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/12
+     -2=&gt;(X=&gt;is(gt(0)))][...]@&lt;/sys/fail?incrq=./+&gt;
 mtron&gt;  nat::2 * -1     ​7​
-==&gt;fail::[nat::-2 is not a int::T[is(gt(0))][choose([is(lt(0))=&gt;mult(-1),id()=&gt;id()]).rshift()]][...]@/sys/fail/18</code></pre>
+==&gt;fail::[nat::-2 is not a int::T[is(gt(0))][choose([is(lt(0))=&gt;mult(-1),id()=&gt;id()]).rshift()]][...]@&lt;/sys/fail?incrq=./+&gt;</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -2565,7 +2587,7 @@ The predicate component of the type definition tests an <code>int</code> to dete
 <div class="paragraph">
 <p>While every <code>type</code> is an <code>obj</code>, not every <code>obj</code> is a <code>type</code>.
 Those <code>objs</code> that are not <code>types</code> are <em>instances</em> of some <code>type</code>.
-This is the foundation for all other <code>objs</code> in {{m}}m{{b}}e{{b}}t{{c}}a{{m}}t{{c}}R{{b}}O{{r}}N{{X}}.</p>
+This is the foundation for all other <code>objs</code> in {{m}}M{{g}}E{{y}}T{{c}}A{{y}}t{{b}}r{{c}}o{{y}}N{{X}}.</p>
 </div>
 <h4 id="sec-cascading-type-constructions" class="discrete">cascading type constructions</h4>
 <h3 id="sec-mono-types" class="discrete">mono types</h3>
@@ -3221,7 +3243,7 @@ mtron&gt;  nat::-10
 ==&gt;ERROR: nat::-10 is not a int::T[is(gt(0))]
 mtron&gt;  int::-10.as(nat::T)
 ==&gt;fail::[-10 is not a is(gt(0))
-     -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/156</code></pre>
+     -10=&gt;(X=&gt;is(gt(0)))][...]@&lt;/sys/fail?incrq=./+&gt;</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -3320,7 +3342,7 @@ mtron&gt;  nat::-10
 ==&gt;ERROR: nat::-10 is not a int::T[is(gt(0))]
 mtron&gt;  int::-10.as(nat::T)
 ==&gt;fail::[-10 is not a is(gt(0))
-     -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/162</code></pre>
+     -10=&gt;(X=&gt;is(gt(0)))][...]@&lt;/sys/fail?incrq=./+&gt;</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -3346,10 +3368,10 @@ mtron&gt; age::125
 ==&gt;ERROR: age::125 is not a int::T[is(lt(120))]
 mtron&gt;  nat::125.as(age::T)
 ==&gt;fail::[nat::125 is not a is(lt(120))
-     nat::125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/168
+     nat::125=&gt;(X=&gt;is(lt(120)))][...]@&lt;/sys/fail?incrq=./+&gt;
 mtron&gt;  125.as(nat::T).as(age::T)
 ==&gt;fail::[125 is not a is(lt(120))
-     125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/174</code></pre>
+     125=&gt;(X=&gt;is(lt(120)))][...]@&lt;/sys/fail?incrq=./+&gt;</code></pre>
 </div>
 </div>
 <div class="listingblock">
@@ -3566,7 +3588,8 @@ mtron&gt; memspace::[
     redirect/output=&gt;noobj,
     prefix=&gt;'',
     postfix=&gt;'',
-    pane=&gt;lst[/m/mach/console/pane{*}]::[/m/mach/console/pane::[result=&gt;inst?noobj{0}&lt;=#{?}(#{*}::T),prompt=&gt;inst?noobj{0}&lt;=#{?}(#{*}::T),stream=&gt;inst?noobj{0}&lt;=#{?}(#{*}::T)]@/usr/ui/console/pane/0],
+    exp=&gt;[,],
+    pane=&gt;lst[/m/mach/console/pane{*}]::[/m/mach/console/pane::[result=&gt;inst?noobj{0}&lt;=#{?}(#{*}::T),stream=&gt;inst?noobj{0}&lt;=#{?}(#{*}::T),prompt=&gt;inst?noobj{0}&lt;=#{?}(#{*}::T)]@/usr/ui/console/pane/0],
     menu=&gt;[
      console=&gt;console::[
       metatron_version=&gt;&lt;0.1-alpha&gt;,
@@ -3575,13 +3598,12 @@ mtron&gt; memspace::[
       redirect/output=&gt;noobj,
       prefix=&gt;'',
       postfix=&gt;'',
-      pane=&gt;lst[/m/mach/console/pane{*}]::[/m/mach/console/pane::[result=&gt;inst?noobj{0}&lt;=#{?}(#{*}::T),prompt=&gt;inst?noobj{0}&lt;=#{?}(#{*}::T),stream=&gt;inst?noobj{0}&lt;=#{?}(#{*}::T)]@/usr/ui/console/pane/0]]@/usr/ui/console,
+      exp=&gt;[,],
+      pane=&gt;lst[/m/mach/console/pane{*}]::[/m/mach/console/pane::[result=&gt;inst?noobj{0}&lt;=#{?}(#{*}::T),stream=&gt;inst?noobj{0}&lt;=#{?}(#{*}::T),prompt=&gt;inst?noobj{0}&lt;=#{?}(#{*}::T)]@/usr/ui/console/pane/0]]@/usr/ui/console,
      help=&gt;inst?noobj&lt;=#{?}(),
-     chat=&gt;inst?noobj&lt;=#{?}(),
-     connect=&gt;inst?noobj&lt;=#{?}(),
    ...
 mtron&gt; */usr/ui/console/pane/0     ​2​
-==&gt;/m/mach/console/pane::[result=&gt;inst?noobj{0}&lt;=#{?}(#{*}::T),prompt=&gt;inst?noobj{0}&lt;=#{?}(#{*}::T),stream=&gt;inst?noobj{0}&lt;=#{?}(#{*}::T)]
+==&gt;/m/mach/console/pane::[result=&gt;inst?noobj{0}&lt;=#{?}(#{*}::T),stream=&gt;inst?noobj{0}&lt;=#{?}(#{*}::T),prompt=&gt;inst?noobj{0}&lt;=#{?}(#{*}::T)]
 mtron&gt; /usr/ui/console/pane/0/result('printed at ==&gt;xyz')     ​3​</code></pre>
 </div>
 </div>
@@ -5054,7 +5076,7 @@ mtron&gt; *&lt;fs:m/bin/metatron&gt;     ​3​
 mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T)     ​4​
 ==&gt;bytes(#{*}::T){&lt;j&gt;}
 mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T).as(str::T)     ​5​
-==&gt;fail::[bytes(#{*}::T){&lt;j&gt;} [bytes::T] unable to convert bytes::T][...]@/sys/fail/6</code></pre>
+==&gt;fail::[bytes(#{*}::T){&lt;j&gt;} [bytes::T] unable to convert bytes::T][...]@&lt;/sys/fail?incrq=./+&gt;</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -5099,15 +5121,15 @@ mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T).as(str::T)     ​5​
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; bin:bash('-c',df)
 ==&gt;'Filesystem     1K-blocks      Used Available Use% Mounted on'
-==&gt;'tmpfs            6356184      6336   6349848   1% /run'
+==&gt;'tmpfs            6356184      6288   6349896   1% /run'
 ==&gt;'efivarfs             128        42        82  34% /sys/firmware/efi/efivars'
-==&gt;'/dev/nvme1n1p2 959786032 608692680 302265144  67% /'
-==&gt;'tmpfs           31780908    414340  31366568   2% /dev/shm'
+==&gt;'/dev/nvme1n1p2 959786032 609163828 301793996  67% /'
+==&gt;'tmpfs           31780908    398780  31382128   2% /dev/shm'
 ==&gt;'tmpfs               5120        20      5100   1% /run/lock'
 ==&gt;'tmpfs           31780908         0  31780908   0% /run/qemu'
 ==&gt;'/dev/nvme1n1p1    523248      6288    516960   2% /boot/efi'
-==&gt;'tmpfs            6356180       264   6355916   1% /run/user/1000'
-==&gt;'/dev/nvme0n1p2 976744444 248754076 727990368  26% /media/hdd0'
+==&gt;'tmpfs            6356180       288   6355892   1% /run/user/1000'
+==&gt;'/dev/nvme0n1p2 976744444 252064636 724679808  26% /media/hdd0'
 mtron&gt; bin:bash('-c',ls)
 ==&gt;'AGENTS.md'
 ==&gt;bin
@@ -5958,9 +5980,9 @@ mtron&gt; /te/hot/1/b  -&gt; [item   =&gt; 'mouse',total=&gt;25.0]
 mtron&gt; /te/cold/1/x -&gt; [item   =&gt; 'book',total=&gt;15.0,
                        seller =&gt; !*g:V/4]
 ==&gt;fail::[sqlexception: column not found: 1
-     	studio.phaseshift.metatron.isa.tble.space.ExistingTableSchema [line 659]
+     	studio.phaseshift.metatron.isa.tble.space.ExistingTableSchema [line 665]
      	java.util.Optional [line 403]
-     	studio.phaseshift.metatron.isa.tble.space.ExistingTableSchema [line 659]
+     	studio.phaseshift.metatron.isa.tble.space.ExistingTableSchema [line 665]
      	studio.phaseshift.metatron.isa.tble.space.ExistingTableSchema [line 575]
      	studio.phaseshift.metatron.isa.tble.tbleSpace [line 479]
      	studio.phaseshift.metatron.isa.Space$Helper [line 326]
@@ -7067,7 +7089,28 @@ mtron&gt; catalog::[host         =&gt; &lt;http://localhost:1234/v1&gt;,
                      /mcp     =&gt; mcp_mtron_http,
                      /docs    =&gt; target/docs,
                      /console =&gt; src/main/resources/web/console]
-       ]@/sys/space/web/http</code></pre>
+       ]@/sys/space/web/http
+==&gt;ERROR: bindexception: Address already in use
+  	sun.nio.ch.Net [line -2]
+  	sun.nio.ch.Net [line 522]
+  	sun.nio.ch.ServerSocketChannelImpl [line 335]
+  	sun.nio.ch.ServerSocketChannelImpl [line 297]
+  	sun.nio.ch.ServerSocketAdaptor [line 80]
+  	sun.net.httpserver.ServerImpl [line 145]
+  	sun.net.httpserver.HttpServerImpl [line 45]
+  	sun.net.httpserver.DefaultHttpServerProvider [line 35]
+  	com.sun.net.httpserver.HttpServer [line 152]
+  	studio.phaseshift.metatron.isa.web.space.http.httpSpace [line 225]
+  	studio.phaseshift.metatron.isa.web.space.http.httpSpace [line 85]
+  	studio.phaseshift.metatron.isa.m.type.Inst$f [line 692]
+  	studio.phaseshift.metatron.isa.m.type.Inst [line 313]
+  	studio.phaseshift.metatron.isa.m.type.Obj$Helper [line 927]
+  	studio.phaseshift.metatron.isa.m.type.impl.MObj [line 46]
+  	studio.phaseshift.metatron.isa.m.type.impl.MRec [line 76]
+  	studio.phaseshift.metatron.isa.m.parser.mParser [line 242]
+  	org.petitparser.parser.actions.ActionParser [line 39]
+  	org.petitparser.parser.combinators.DelegateParser [line 25]
+   ...</code></pre>
 </div>
 </div>
 <h3 id="sec-html-type" class="discrete">HTML Type</h3>
@@ -7079,39 +7122,11 @@ mtron&gt; catalog::[host         =&gt; &lt;http://localhost:1234/v1&gt;,
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; html::T     ​1​
 ==&gt;xml::T[?[html=&gt;[head=&gt;[{?}title=&gt;str::T],body=&gt;rec::T]]]@/m/web/mime/html
 mtron&gt; *&lt;http://phaseshift.studio/splash.html&gt;     ​2​
-==&gt;html::[html=&gt;[head=&gt;[title=&gt;'PhaseShift Studio',out=&gt;[
-    [
-     tag=&gt;link,
-     href=&gt;&lt;https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css&gt;,
-     rel=&gt;'stylesheet'],
-    [tag=&gt;link,href=&gt;&lt;css/metatron.css&gt;,rel=&gt;'stylesheet']]],body=&gt;[
-    out=&gt;[
-     [tag=&gt;p],
-     [
-      tag=&gt;h1,
-      style=&gt;'padding-left:125px;color:var(--pri...',
-      text=&gt;'PhaseShift Studio'],
-     [
-      tag=&gt;img,
-      style=&gt;'padding-left:100px',
-      src=&gt;&lt;http://metatron.phaseshift.studio/images/metatron-character.png&gt;,
-      width=&gt;'500px']],
-    style=&gt;'background-color: black;']]]
+==&gt;fail::[no active space supports pattern &lt;http://phaseshift.studio/splash.html&gt;][...]@&lt;/sys/fail?incrq=./+&gt;
 mtron&gt; *&lt;http://phaseshift.studio/splash.html/html/head/title&gt;     ​3​
-==&gt;'PhaseShift Studio'
+==&gt;fail::[no active space supports pattern &lt;http://phaseshift.studio/splash.html/html/head/title&gt;][...]@&lt;/sys/fail?incrq=./+&gt;
 mtron&gt; *&lt;http://phaseshift.studio/splash.html&gt;.as(str::T)     ​4​
-==&gt;"""&lt;html&gt;
-    &lt;head&gt;
-     &lt;title&gt;PhaseShift Studio&lt;/title&gt;
-     &lt;link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet"&gt;
-     &lt;link href="css/metatron.css" rel="stylesheet"&gt;
-    &lt;/head&gt;
-    &lt;body style="background-color: black;"&gt;
-     &lt;p&gt;&lt;/p&gt;
-     &lt;h1 style="padding-left:125px;color:var(--primary)"&gt;PhaseShift Studio&lt;/h1&gt;
-     &lt;img style="padding-left:100px" src="http://metatron.phaseshift.studio/images/metatron-character.png" width="500px"&gt;
-    &lt;/body&gt;
-   &lt;/html&gt;"""</code></pre>
+==&gt;fail::[no active space supports pattern &lt;http://phaseshift.studio/splash.html&gt;][...]@&lt;/sys/fail?incrq=./+&gt;</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -7144,49 +7159,9 @@ mtron&gt; *&lt;http://phaseshift.studio/splash.html&gt;.as(str::T)     ​4​
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *&lt;http://localhost:1234/v1&gt;     ​1​
-==&gt;fail::[java.net.ConnectException: null
-     	jdk.internal.net.http.HttpClientImpl [line 923]
-     	jdk.internal.net.http.HttpClientFacade [line 133]
-     	org.jsoup.helper.HttpClientExecutor [line 90]
-     	org.jsoup.helper.HttpConnection$Response [line 892]
-     	org.jsoup.helper.HttpConnection$Response [line 866]
-     	org.jsoup.helper.HttpConnection [line 365]
-     	studio.phaseshift.metatron.isa.web.space.http.httpSpace [line 281]
-     	studio.phaseshift.metatron.isa.Space$Helper [line 267]
-     	studio.phaseshift.metatron.isa.AbstractSpace [line 71]
-     	java.util.Optional [line 364]
-     	studio.phaseshift.metatron.isa.AbstractSpace [line 70]
-     	studio.phaseshift.metatron.isa.mach.type.router.BasicRouter [line 290]
-     	studio.phaseshift.metatron.isa.mach.type.Router [line 80]
-     	studio.phaseshift.metatron.isa.m.type.Obj$ObjType [line 1109]
-     	studio.phaseshift.metatron.isa.m.type.Inst$f [line 692]
-     	studio.phaseshift.metatron.isa.m.type.Inst [line 313]
-     	studio.phaseshift.metatron.isa.m.type.Obj [line 249]
-     	studio.phaseshift.metatron.docs.MtronDocPreprocessor [line 201]
-     	studio.phaseshift.metatron.docs.MtronDocPreprocessor [line 92]
-   ...
+==&gt;fail::[no active space supports pattern http://localhost:1234/v1][...]@&lt;/sys/fail?incrq=./+&gt;
 mtron&gt; *&lt;http://localhost:1234/v1/models&gt;     ​2​
-==&gt;fail::[java.net.ConnectException: null
-     	jdk.internal.net.http.HttpClientImpl [line 923]
-     	jdk.internal.net.http.HttpClientFacade [line 133]
-     	org.jsoup.helper.HttpClientExecutor [line 90]
-     	org.jsoup.helper.HttpConnection$Response [line 892]
-     	org.jsoup.helper.HttpConnection$Response [line 866]
-     	org.jsoup.helper.HttpConnection [line 365]
-     	studio.phaseshift.metatron.isa.web.space.http.httpSpace [line 281]
-     	studio.phaseshift.metatron.isa.Space$Helper [line 267]
-     	studio.phaseshift.metatron.isa.AbstractSpace [line 71]
-     	java.util.Optional [line 364]
-     	studio.phaseshift.metatron.isa.AbstractSpace [line 70]
-     	studio.phaseshift.metatron.isa.mach.type.router.BasicRouter [line 290]
-     	studio.phaseshift.metatron.isa.mach.type.Router [line 80]
-     	studio.phaseshift.metatron.isa.m.type.Obj$ObjType [line 1109]
-     	studio.phaseshift.metatron.isa.m.type.Inst$f [line 692]
-     	studio.phaseshift.metatron.isa.m.type.Inst [line 313]
-     	studio.phaseshift.metatron.isa.m.type.Obj [line 249]
-     	studio.phaseshift.metatron.docs.MtronDocPreprocessor [line 201]
-     	studio.phaseshift.metatron.docs.MtronDocPreprocessor [line 92]
-   ...</code></pre>
+==&gt;fail::[no active space supports pattern http://localhost:1234/v1/models][...]@&lt;/sys/fail?incrq=./+&gt;</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -7241,27 +7216,7 @@ mtron&gt; */m/llm/inst/+?dom=model
          -&lt;[provider=&gt; !*/sys/space/lmstudio,
             name    =&gt; &gt;&gt;id.as(uri::T)].as(model::T)
          .chat('are you there?')
-==&gt;fail::[java.net.ConnectException: null
-     	jdk.internal.net.http.HttpClientImpl [line 923]
-     	jdk.internal.net.http.HttpClientFacade [line 133]
-     	org.jsoup.helper.HttpClientExecutor [line 90]
-     	org.jsoup.helper.HttpConnection$Response [line 892]
-     	org.jsoup.helper.HttpConnection$Response [line 866]
-     	org.jsoup.helper.HttpConnection [line 365]
-     	studio.phaseshift.metatron.isa.web.space.http.httpSpace [line 281]
-     	studio.phaseshift.metatron.isa.Space$Helper [line 267]
-     	studio.phaseshift.metatron.isa.AbstractSpace [line 71]
-     	java.util.Optional [line 364]
-     	studio.phaseshift.metatron.isa.AbstractSpace [line 70]
-     	studio.phaseshift.metatron.isa.mach.type.router.BasicRouter [line 290]
-     	studio.phaseshift.metatron.isa.mach.type.Router [line 80]
-     	studio.phaseshift.metatron.isa.m.type.Obj$ObjType [line 1109]
-     	studio.phaseshift.metatron.isa.m.type.Inst$f [line 692]
-     	studio.phaseshift.metatron.isa.m.type.Inst [line 313]
-     	studio.phaseshift.metatron.isa.mach.type.PCMonad [line 172]
-     	studio.phaseshift.metatron.isa.mach.type.machine.SwarmMachine [line 297]
-     	studio.phaseshift.metatron.isa.mach.type.machine.SwarmMachine [line 258]
-   ...</code></pre>
+==&gt;ERROR: null</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -7295,7 +7250,7 @@ In the following example, the "remote" metatron instance is <code>localhost</cod
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; wsclient::[host=&gt;&lt;ws://localhost:8555/mtron&gt;]@/usr/ui/console/remote     ​1​
-==&gt;wsclient::[
+==&gt;[
     host=&gt;ws://localhost:8555/mtron,
     send=&gt;inst?#{*}&lt;=#{?}(#{*}::T),
     send_recv=&gt;inst?#{*}&lt;=#{?}(#{*}::T),
@@ -7547,7 +7502,7 @@ mtron&gt; farmset::[type=&gt;[animal::T,equipment::T,chicken::T]]@/m/dcmnt/schem
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;  farm:animals/1 -&gt; 'a chicken named trill'     ​1​
-==&gt;fail::[space /sys/space/farm requires rec::T[?[{?}animals=&gt;animals::T]] at root; got str::T][...]@/sys/fail/2
+==&gt;fail::[space /sys/space/farm requires rec::T[?[{?}animals=&gt;animals::T]] at root; got str::T][...]@&lt;/sys/fail?incrq=./+&gt;
 mtron&gt; farm:animals/1 -&gt; chicken::[name=&gt;'trill',age=&gt;7]     ​2​
 ==&gt;chicken::[name=&gt;'trill',age=&gt;7]
 mtron&gt; *farm:animals/1     ​3​
@@ -7826,7 +7781,7 @@ mtron&gt; *lite:person/+/id     ​6​
 <table>
 <tr>
 <td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>a <code>tblespace</code> mounted at <code>/sys/space/lite</code> and responsible for objs in <code>lite:#</code>.</td>
+<td>a <code>tblespace</code> is mounted at <code>/sys/space/lite</code> and is responsible for objs in <code>lite:#</code>.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="2"></i><b>2</b></td>
@@ -8022,7 +7977,7 @@ mtron&gt; *lite:person/+.==[name=&gt;_]     ​3​
 ==&gt;rrow::[name=&gt;'marko',age=&gt;29]
 ==&gt;rrow::[name=&gt;'grant',age=&gt;25]
 mtron&gt; */sys/space/lite.sql("SELECT name,age FROM person WHERE age &lt; 30")&gt;&gt;age.sum()     ​2​
-==&gt;fail::[unable to convert int::T to rec::T[studio.phaseshift.metatron.isa.m.type.Obj:597]][...]@/sys/fail/6</code></pre>
+==&gt;fail::[unable to convert int::T to rec::T[studio.phaseshift.metatron.isa.m.type.Obj:597]][...]@&lt;/sys/fail?incrq=./+&gt;</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -8477,13 +8432,13 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
 ==&gt;/sys/env/GTK3_MODULES=&gt;'xapp-gtk3-module'
 ==&gt;/sys/env/BUN_INSTALL=&gt;'/home/killswitch/.bun'
 ==&gt;/sys/env/JAVA_HOME=&gt;'/home/killswitch/.sdkman/candidates/java/current'
+==&gt;/sys/env/QT_IM_MODULE=&gt;'ibus'
+==&gt;/sys/env/GNOME_DESKTOP_SESSION_ID=&gt;'this-is-deprecated'
 ==&gt;/sys/env/HOMEBREW_CELLAR=&gt;'/home/linuxbrew/.linuxbrew/Cellar'
-==&gt;/sys/env/LIBVIRT_DEFAULT_URI=&gt;'qemu:///system'
-==&gt;/sys/env/XDG_SEAT=&gt;'seat0'
-==&gt;/sys/env/VTE_VERSION=&gt;'7600'
-==&gt;/sys/env/CONDA_PYTHON_EXE=&gt;'/home/killswitch/software/miniconda3/bin/python'
-==&gt;/sys/env/BROWSER_INACTIVITY_TIMEOUT=&gt;'120'
-==&gt;/sys/env/CINNAMON_VERSION=&gt;'6.6.7'</code></pre>
+==&gt;/sys/env/JBANG_HOME=&gt;'/home/killswitch/.sdkman/candidates/jbang/current'
+==&gt;/sys/env/USER=&gt;'killswitch'
+==&gt;/sys/env/HOMEBREW_PREFIX=&gt;'/home/linuxbrew/.linuxbrew'
+==&gt;/sys/env/LIBVIRT_DEFAULT_URI=&gt;'qemu:///system'</code></pre>
 </div>
 </div>
 <h3 id="sec-boot-loader" class="discrete">Boot Loader</h3>

@@ -999,8 +999,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                             }
                         }
                         // Pop the evaluated expression (>> -1)
-                        // at() always clones regardless of operation; reassign required.
-                        this.expressionStack = this.expressionStack
+                        this.expressionStack
                                 .at(jnt(-1), noobj(), Poly.MUTABLE);
                     }
                     // Rebuild seed buffer: >>0 (mtron>), then remaining \_ lines
