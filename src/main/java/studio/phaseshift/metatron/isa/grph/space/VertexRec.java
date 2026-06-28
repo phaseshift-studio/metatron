@@ -19,12 +19,14 @@
 package studio.phaseshift.metatron.isa.grph.space;
 
 import org.apache.tinkerpop.gremlin.structure.Direction;
+import org.apache.tinkerpop.gremlin.structure.Edge;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Uri;
 import studio.phaseshift.metatron.util.IteratorUtil;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -48,19 +50,29 @@ public class VertexRec extends ElementRec<Vertex> {
     }
 
     /**
-     * Edge lookup by direction with label filter — traverses live graph.
+     * Edge lookup via remote traversal — DetachedVertex.edges() returns empty.
      */
     public Stream<Obj> edges(final Direction direction, final String... labels) {
-        return IteratorUtil.stream(this.element.edges(direction, labels))
-                .map(e -> new EdgeRec(e, this.space));
+        final var t = this.space.sjvm().V(this.element.id());
+        final Iterator<Edge> it = switch (direction) {
+            case OUT -> labels.length > 0 ? t.outE(labels) : t.outE();
+            case IN -> labels.length > 0 ? t.inE(labels) : t.inE();
+            case BOTH -> labels.length > 0 ? t.bothE(labels) : t.bothE();
+        };
+        return IteratorUtil.stream(it).map(e -> new EdgeRec(e, this.space));
     }
 
     /**
-     * Adjacent vertex lookup by direction with label filter.
+     * Adjacent vertex lookup via remote traversal — DetachedVertex.vertices() returns empty.
      */
     public Stream<Obj> vertices(final Direction direction, final String... labels) {
-        return IteratorUtil.stream(this.element.vertices(direction, labels))
-                .map(v -> new VertexRec(v, this.space));
+        final var t = this.space.sjvm().V(this.element.id());
+        final Iterator<Vertex> it = switch (direction) {
+            case OUT -> labels.length > 0 ? t.out(labels) : t.out();
+            case IN -> labels.length > 0 ? t.in(labels) : t.in();
+            case BOTH -> labels.length > 0 ? t.both(labels) : t.both();
+        };
+        return IteratorUtil.stream(it).map(v -> new VertexRec(v, this.space));
     }
 
     /**

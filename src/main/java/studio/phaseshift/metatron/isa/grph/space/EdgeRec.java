@@ -20,11 +20,13 @@ package studio.phaseshift.metatron.isa.grph.space;
 
 import org.apache.tinkerpop.gremlin.structure.Direction;
 import org.apache.tinkerpop.gremlin.structure.Edge;
+import org.apache.tinkerpop.gremlin.structure.Vertex;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.grph.grphInstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Uri;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
+import studio.phaseshift.metatron.util.IteratorUtil;
 
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
@@ -48,6 +50,10 @@ public class EdgeRec extends ElementRec<Edge> {
     /**
      * Return the endpoint vertex, auto-resolving through {@code :redirect}
      * if the vertex is a reference to an object in another space.
+     * <p>
+     * Re-fetches the vertex via the traversal source because edge endpoints
+     * from remote traversals are bare {@code ReferenceVertex} references
+     * whose {@code properties()} iterator is empty.
      */
     private Obj resolveEndpoint(final org.apache.tinkerpop.gremlin.structure.Vertex v) {
         final var redirectProp = v.property(grphInstSet.REDIRECT_STRING);
@@ -55,16 +61,15 @@ public class EdgeRec extends ElementRec<Edge> {
             try {
                 final String redirectStr = redirectProp.value().toString();
                 final Obj redirectInst = ObjmtronSerializer.parse(redirectStr);
-                // Normalize colon-prefix (g:V/2) → absolute (/g/V/2) for Router matching
-                //final String targetStr = redirectInst.asInst().arg(0).uriValue().toString();
-                //final String normalized = targetStr.indexOf(':') > 0 && !targetStr.startsWith("/")
-                //        ? "/" + targetStr.replace(':', '/') : targetStr;
-                return redirectInst.apply();// studio.phaseshift.metatron.isa.mach.type.Router.readFromSpace(f(normalized));
+                return redirectInst.apply();
             } catch (final Exception e) {
                 // fall through to plain vertex if redirect resolution fails
             }
         }
-        return new VertexRec(v, this.space);
+        // Re-fetch full vertex — edge endpoint may be a ReferenceVertex with empty properties
+        final Vertex full = IteratorUtil.stream(
+                this.space.sjvm().V(v.id())).findFirst().orElse(v);
+        return new VertexRec(full, this.space);
     }
 
     public Obj inVertex() {

@@ -83,8 +83,12 @@
 
      protected static ObjFactory FACTORY = null;
      private static final fURI V_SOME = f("V/+");
+     
 
      protected static final String AUTO_TX = "auto_tx";
+
+     /** Tracked for proper cleanup of the remote JanusGraph connection. */
+     private transient DriverRemoteConnection remoteConnection;
 
      public static final fURI GRPH_SPACE_TID = grphInstSet.GRPH_ISA_TID.extend(SPACE).extend("grphspace");
      public static final Type GRPH_SPACE_TYPE = Type.Builder.build()
@@ -106,11 +110,11 @@
      public static grphSpace of(final Rec grph, final fURI vid) {
          grph.logger().info("using config: %s", grph.at(CONFIG));
          final Configuration graphConfig = toApacheConfiguration(grph.at(CONFIG));
-         final GraphTraversalSource g = AnonymousTraversalSource.traversal().withRemote(DriverRemoteConnection.using(graphConfig));
-         final Graph graph = g.getGraph();
-         grph.logger().info("HERE: %s", g.V().count().toList());
-         loadDatasetIfSpecified(graph, grph); // only loads if supported and specified
-         return new grphSpace(g, grph.jvm(), vid);
+         final DriverRemoteConnection drc = DriverRemoteConnection.using(graphConfig);
+         final GraphTraversalSource g = AnonymousTraversalSource.traversal().with(drc);
+         final grphSpace space = new grphSpace(g, grph.jvm(), vid);
+         space.remoteConnection = drc;
+         return space;
      }
 
      /**
@@ -123,16 +127,24 @@
      private static Configuration toApacheConfiguration(final Rec config) {
          final BaseConfiguration apacheConfig = new BaseConfiguration();
 
-         // Check for new-style GRAPH config (supports any TinkerPop3-compliant graph)
          config.logger().info("config: %s", config.at("#/"));
          if (!config.isEmpty()) {
              config.elements().forEach(rel -> {
-                 apacheConfig.setProperty(rel.first().uriValue().toString(), rel.second().toString());
+                 final String key = rel.first().uriValue().toString();
+                 String value = rel.second().toString();
+                 // Strip metatron URI angle brackets (<...>)
+                 if (value.startsWith("<") && value.endsWith(">")) {
+                     value = value.substring(1, value.length() - 1);
+                 }
+                 // hosts must be a list property for TinkerPop's Settings.from()
+                 if ("hosts".equals(key)) {
+                     apacheConfig.addProperty(key, value);
+                 } else {
+                     apacheConfig.setProperty(key, value);
+                 }
              });
-             apacheConfig.setProperty("clusterConfigurationFile", "/home/killswitch/software/metatron/conf/remote-objects.yaml");
              config.logger().info("using apache configuration: %s", apacheConfig);
          } else {
-             // Legacy format - default to TinkerGraph for backward compatibility
              apacheConfig.setProperty(Graph.GRAPH, TinkerGraph.class.getCanonicalName());
              config.logger().info("defaulting to in-memory tinkergraph configuration: %s", apacheConfig);
          }
@@ -199,17 +211,17 @@
      protected grphSpace(final GraphTraversalSource graph, final Map<Obj, Obj> config, final fURI vid) {
          super(graph, config, GRPH_SPACE_TID, vid);
          LOG.debug("tp3 space: %s", this);
-        // graph.configuration().setProperty(GRAPH_CONFIGURATION_KEY, vid.toString());
+         // graph.configuration().setProperty(GRAPH_CONFIGURATION_KEY, vid.toString());
          // ── schema discovery ──
          this.existingGraphSchema = new ExistingGraphSchema(this);
-        // this.existingGraphSchema.initialize(graph);
+         // this.existingGraphSchema.initialize(graph);
          if (null == FACTORY) {
              LOG.warn("no obj factory specified. defaulting to an extended mobjfactory that assumes 64-bit long element ids");
              FACTORY = MObjFactory.of()
                      .addExtension(Vertex.class, v -> new VertexRec(v, this))
                      .addExtension(Edge.class, e -> new EdgeRec(e, this));
          }
-        // final Rec tp3Config = rec();
+         // final Rec tp3Config = rec();
         /* new ConfigurationMap(sjvm.getGraph().configuration()).forEach((key, value) -> {
              try {
                  tp3Config.at(uri(key.toString()), MObjFactory.of().toObj(value), MUTABLE);
@@ -229,9 +241,15 @@
      //  I/O — readStream / writeStream (new API)
      // =========================================================================
 
+     /** Coerce a URI path segment to a typed element ID.
+      *  Tries Long first (JanusGraph default vertex IDs), falls back to String (edge IDs, custom vertex IDs). */
+     private static Object coerceId(final String entry) {
+         try { return Long.parseLong(entry); } catch (NumberFormatException e) { return entry; }
+     }
+
      private Iterator<IdObj> readVertexTraversal(final DataPath dp) {
          final Iterator<Vertex> vertices = dp.entryIsWildcard()
-                 ? this.sjvm.V() : this.sjvm.V(Integer.parseInt(dp.entry()));
+                 ? this.sjvm.V() : this.sjvm.V(coerceId(dp.entry()));
          return IteratorUtil.stream(vertices).flatMap(v -> traverseVertex(v, dp)).iterator();
      }
 
@@ -274,10 +292,17 @@
                      });
          }
 
-         // ── local TinkerPop traversal ──
-         final Iterator<Edge> edges = hasLabel
-                 ? v.edges(dir, firstExt)
-                 : v.edges(dir);
+         // ── remote traversal ── (Vertex.edges() returns empty on DetachedVertex)
+         final Iterator<Edge> edges;
+         if (hasLabel) {
+             edges = dir == Direction.OUT
+                     ? this.sjvm.V(v.id()).outE(firstExt)
+                     : this.sjvm.V(v.id()).inE(firstExt);
+         } else {
+             edges = dir == Direction.OUT
+                     ? this.sjvm.V(v.id()).outE()
+                     : this.sjvm.V(v.id()).inE();
+         }
          final List<String> cascade = dp.extension() != null
                  ? dp.extension().segments().subList(hasLabel ? 1 : 0, dp.extension().segmentLength())
                  : List.of();
@@ -293,10 +318,11 @@
      }
 
      private Iterator<IdObj> readEdgeTraversal(final DataPath dp) {
-         final int id = Integer.parseInt(dp.entry());
-         final Edge e = IteratorUtil.stream(this.sjvm.E(id)).findFirst().orElse(null);
+         final Edge e = IteratorUtil.stream(this.sjvm.E(coerceId(dp.entry()))).findFirst().orElse(null);
          if (e == null) return IteratorUtil.of();
-         final Vertex target = "OUT".equalsIgnoreCase(dp.field()) ? e.outVertex() : e.inVertex();
+         final Vertex bare = "OUT".equalsIgnoreCase(dp.field()) ? e.outVertex() : e.inVertex();
+         // Re-fetch full vertex — edge endpoints from remote traversals are ReferenceVertex refs
+         final Vertex target = IteratorUtil.stream(this.sjvm.V(bare.id())).findFirst().orElse(bare);
          Stream<Obj> stream = Stream.of(new VertexRec(target, this));
          if (dp.hasExtension())
              for (final String seg : dp.extension().segments()) {
@@ -365,8 +391,8 @@
                          return readVertexTraversal(dp);
                      }
                      Iterator<Vertex> iterator;
-                     if (!dp.entryIsWildcard() && CommonUtil.isInt(dp.entry()))
-                         iterator = this.sjvm.V(Integer.parseInt(dp.entry()));
+                     if (!dp.entryIsWildcard())
+                         iterator = this.sjvm.V(coerceId(dp.entry()));
                      else if (dp.entryIsWildcard())
                          iterator = this.sjvm.V();
                      else return readCollection(dp);
@@ -385,8 +411,8 @@
                          return readEdgeTraversal(dp);
                      }
                      Iterator<Edge> iterator;
-                     if (!dp.entryIsWildcard() && CommonUtil.isInt(dp.entry()))
-                         iterator = this.sjvm.E(Integer.parseInt(dp.entry()));
+                     if (!dp.entryIsWildcard())
+                         iterator = this.sjvm.E(coerceId(dp.entry()));
                      else if (dp.entryIsWildcard())
                          iterator = this.sjvm.E();
                      else return readCollection(dp);
@@ -415,8 +441,11 @@
              if (obj.isNoObj()) {
                  this.read(pattern).stream().forEach(e -> {
                      LOG.debug("deleting element %s", e.vid());
-                     if (e instanceof ElementRec<?> er)
-                         er.element().remove();
+                     if (e instanceof VertexRec vr) {
+                         this.sjvm.V(vr.element().id()).drop().hasNext();
+                     } else if (e instanceof EdgeRec er2) {
+                         this.sjvm.E(er2.element().id()).drop().hasNext();
+                     }
                  });
                  return noobj();
              }
@@ -426,13 +455,13 @@
              if ("V".equals(dp.collection()) && dp.hasEntry() && CommonUtil.isInt(dp.entry())) {
                  final Integer id = Integer.parseInt(dp.entry());
                  try {
-                     final Vertex vertex = IteratorUtil.stream(this.sjvm.V(id)).findFirst().orElseGet(() ->
+                     final Vertex vertex = IteratorUtil.stream(this.sjvm.V().has(MTRON_ID, id)).findFirst().orElseGet(() ->
                              this.sjvm.addV().property(
                                      org.apache.tinkerpop.gremlin.structure.T.label,
                                      obj.isRec() && obj.asRec().jvm().containsKey(grphInstSet.LABEL)
                                              ? obj.asRec().jvm().get(grphInstSet.LABEL).uriValue().toString()
                                              : obj.tid().basePath().toString()).property(
-                                     org.apache.tinkerpop.gremlin.structure.T.id, id).next());
+                                     MTRON_ID, id).next());
                      LOG.debug("writing vertex %s => %s", vid, vertex);
                      // write properties from the Rec to the TinkerPop vertex
                      obj.asRec().jvm().entrySet().stream()
@@ -440,11 +469,11 @@
                              .forEach(e -> {
                                  final Obj value = e.getValue();
                                  if (value.isNoObj() || value.isNone()) {
-                                     vertex.property(e.getKey().uriValue().toString()).remove();
+                                     this.sjvm.V(vertex.id()).properties(e.getKey().uriValue().toString()).drop().hasNext();
                                  } else if (!value.isAuto()) {
                                      final Object jvm = value.jvm();
-                                     vertex.property(e.getKey().uriValue().toString(),
-                                             jvm instanceof String || jvm instanceof Number || jvm instanceof Boolean ? jvm : value);
+                                     this.sjvm.V(vertex.id()).property(e.getKey().uriValue().toString(),
+                                             jvm instanceof String || jvm instanceof Number || jvm instanceof Boolean ? jvm : value).next();
                                  }
                              });
                      this.at(AUTO_TX).ifPresent(x -> {
@@ -461,66 +490,22 @@
          };
      }
 
-  /*  @Override
-    public Obj read(final fURI vid) {
-        final String vidString = vid.toString();
-        if (vidString.startsWith(this.schemaPrefix))
-            return vid.isNode() ? this.schema : rel(uri(this.schemaPrefix), this.schema);
-        else if (vidString.startsWith(this.vertexPrefix)) {
-            final String suffix = vidString.replaceFirst(this.vertexPrefix, "");
-            LOG.info("reading vertices %s => %s", vid, suffix);
-            if (suffix.equals("+") || suffix.equals("#"))
-                return objs(IteratorUtil.stream(this.sjvm.vertices()).map(VertexMap::vrtxRec));
-            final Integer id = Integer.valueOf(vidString.replaceFirst(this.vertexPrefix, ""));
-            LOG.debug("reading vertex %s => %s", vid, id);
-            return objs(IteratorUtil.stream(this.sjvm.vertices(id)).map(VertexMap::vrtxRec));
-        } else if (vidString.startsWith(this.edgePrefix)) {
-            final String suffix = vidString.replaceFirst(this.edgePrefix, "");
-            LOG.info("reading edges %s => %s", vid, suffix);
-            if (suffix.equals("+") || suffix.equals("#"))
-                return objs(IteratorUtil.stream(this.sjvm.edges()).map(EdgeMap::edgeRec));
-            final Long id = Long.valueOf(vidString.replaceFirst(this.edgePrefix, ""));
-            LOG.debug("reading edge %s => %s", vid, id);
-            return objs(IteratorUtil.stream(this.sjvm.edges(id)).map(EdgeMap::edgeRec));
-        } else {
-            throw MTronException.of("unknown tp3 vid: %s", vid);
-        }
-    }*/
-/*
-    @Override
-    public Obj write(final fURI vid, final Obj obj) {
-        if (obj.isNoObj()) {
-            this.read(vid).stream().forEach(e -> {
-                LOG.info("deleting vertex %s", e.vid());
-                ((ElementMap) e.jvm()).getBase().remove();
-            });
-            return noobj();
-        } else {
-            final String vidString = vid.toString();
-            if (vidString.startsWith(this.vertexPrefix)) {
-                final String suffix = vidString.replaceFirst(this.vertexPrefix, "");
-                final long id = Long.parseLong(suffix);
-                try {
-                    final Vertex vertex = IteratorUtil.stream(this.sjvm.vertices(id)).findFirst().orElseGet(() -> this.sjvm.addVertex(T.label, obj.tid().basePath().toString(), T.id, id));
-                    LOG.info("writing vertex %s => %s", vid, vertex);
-                    obj.asRec().elements().forEach(e -> vertex.property(e.jvm().get0().uriValue().toString(), FACTORY.toObj(e.jvm().get1()).jvm()));
-                    return VertexMap.vrtxRec(vertex);
-                } catch (final Exception e) {
-                    return obj;
-                }
-            } else {
-                throw MTronException.of("unknown tp3 vid: %s", vid);
-            }
-        }
-    }*/
-
      @Override
      public void close() {
          try {
              this.sjvm().close();
-             SchemaSpace.super.close();
          } catch (final Exception e) {
-             LOG.error(MTronException.of(e));
+             LOG.error("error closing GraphTraversalSource", e);
+         }
+         try {
+             if (this.remoteConnection != null) {
+                 this.remoteConnection.close();
+             }
+         } catch (final Exception e) {
+             LOG.error("error closing DriverRemoteConnection", e);
+         }
+         try {
+             SchemaSpace.super.close();
          } finally {
              super.close();
          }
