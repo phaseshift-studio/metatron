@@ -79,6 +79,8 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  */
 public class grphSpaceTest extends AbstractDataPathTest implements CommonRewritesTestContract {
 
+    private static final JanusGraphContainer JANUS_GRAPH = new JanusGraphContainer();
+
     public grphSpaceTest() {
 
         super(f("/g"), () -> {
@@ -89,14 +91,16 @@ public class grphSpaceTest extends AbstractDataPathTest implements CommonRewrite
                                     uri("/g/E"), uri("E"),
                                     uri("/g/S"), uri(MODERN_SCHEMA_TID)),
                             CONFIG, rec(
-                                    uri("clusterConfigurationFile"), uri("/home/killswitch/software/metatron/conf/remote-objects.yaml"),
-                                    uri("gremlin.removeConnectionClass"), uri("org.apache.tinkerpop.gremlin.driver.remote.DriverRemoteConnection"),
+                                    uri("hosts"), uri(JANUS_GRAPH.getHost()),
+                                    uri("port"), uri(String.valueOf(JANUS_GRAPH.getPort())),
+                                    uri("serializer.className"), uri("org.apache.tinkerpop.gremlin.util.ser.GraphBinaryMessageSerializerV1"),
+                                    uri("serializer.config.ioRegistries"), uri("org.janusgraph.graphdb.tinkerpop.JanusGraphIoRegistry"),
                                     uri("gremlin.remote.remoteTraversalSourceName"), uri("g"))),
                     f("/sys/space/test_" + System.nanoTime()));
             Graphitty.log(graph).warn(graph);
             assertFalse(graph.sjvm().V().drop().hasNext());
             TinkerFactory.createModern().traversal().V().forEachRemaining(v -> {
-                final Vertex v1 = graph.sjvm().addV(v.label()).property(MTRON_ID, v.id()).next();
+                final Vertex v1 = graph.sjvm().addV(v.label()).property(org.apache.tinkerpop.gremlin.structure.T.id, Long.parseLong(v.id().toString())).property(MTRON_ID, v.id()).next();
                 v.properties().forEachRemaining(p -> {
                     graph.sjvm().V(v1).property(p.key(), p.value()).next();
                 });
@@ -129,22 +133,8 @@ public class grphSpaceTest extends AbstractDataPathTest implements CommonRewrite
     private static final fURI REWRITE_TEST_SPACE_URI = f("/grt");
     private static final fURI REWRITE_TEST_SPACE_VID = f("/sys/space/grph/rewrite_test");
 
-    @BeforeAll
-    public static void setupRewriteTestSpace() {
-        // Isolated TinkerGraph for rewrite tests — no "modern" dataset contamination
-
-        final grphSpace rewriteSpace = grphSpace.of(rec(
-                        PATTERN, uri("/grt/#"),
-                        ROUTE, rec(
-                                uri("/grt/V"), uri("V"),
-                                uri("/grt/E"), uri("E"),
-                                uri("/grt/S"), uri(MODERN_SCHEMA_TID)),
-                        CONFIG, rec(
-                                uri("clusterConfigurationFile"), uri("/home/killswitch/software/metatron/conf/remote-objects.yaml"),
-                                uri("gremlin.removeConnectionClass"), uri("org.apache.tinkerpop.gremlin.driver.remote.DriverRemoteConnection"),
-                                uri("gremlin.remote.remoteTraversalSourceName"), uri("g"))),
-                f("/sys/space/grph/rewrite_test"));
-    }
+    // Rewrite test space is created in setupAll() after container start
+    // to guarantee @BeforeAll ordering (container must be ready first).
 
     // @BeforeEach removed — seedRewriteTestData nuked shared JanusGraph data.
     // Rewrite tests that need isolated data should seed explicitly when re-enabled.
@@ -171,15 +161,31 @@ public class grphSpaceTest extends AbstractDataPathTest implements CommonRewrite
     }
 
     @BeforeAll
-    public static void setupAll() {
+    public static void setupAll() throws Exception {
+        JANUS_GRAPH.setup();
         InstSet.importInstSet(GRPH_ISA_TID);
         InstSet.importInstSet(MODERN_SCHEMA_TID);
+        // Isolated rewrite test space — shares the same JanusGraph container
+        grphSpace.of(rec(
+                        PATTERN, uri("/grt/#"),
+                        ROUTE, rec(
+                                uri("/grt/V"), uri("V"),
+                                uri("/grt/E"), uri("E"),
+                                uri("/grt/S"), uri(MODERN_SCHEMA_TID)),
+                        CONFIG, rec(
+                                uri("hosts"), uri(JANUS_GRAPH.getHost()),
+                                uri("port"), uri(String.valueOf(JANUS_GRAPH.getPort())),
+                                uri("serializer.className"), uri("org.apache.tinkerpop.gremlin.util.ser.GraphBinaryMessageSerializerV1"),
+                                uri("serializer.config.ioRegistries"), uri("org.janusgraph.graphdb.tinkerpop.JanusGraphIoRegistry"),
+                                uri("gremlin.remote.remoteTraversalSourceName"), uri("g"))),
+                f("/sys/space/grph/rewrite_test"));
     }
 
 
     @AfterAll
     public static void cleanupSchema() {
         Router.global().removeSpace(GRPH_ISA_TID);
+        JANUS_GRAPH.teardown();
     }
 
     /**
@@ -326,9 +332,8 @@ public class grphSpaceTest extends AbstractDataPathTest implements CommonRewrite
             // vertex → IN edges
             "*/g/V/2/IN.count()                                                   % 1",
             "*/g/V/4/IN.count()                                                   % 1",
-            // edge → endpoint vertex
-            "*/g/E/7/IN/name                                                       % \"vadas\"",
-            "*/g/E/7/OUT/name                                                      % \"marko\"",
+            // Edge-ID tests removed — JanusGraph auto-assigns edge IDs.
+            // Use vertex-based traversals instead (see testInstructionCallTraversals).
             // OUT → IN cascade (vertex → edge → target vertex)
             "*/g/V/+.?[name=>'marko'].out(created)>>name                                           % \"lop\"",
             "*/g/V/1/OUT/created/IN/lang                                           % \"java\"",
@@ -409,7 +414,6 @@ public class grphSpaceTest extends AbstractDataPathTest implements CommonRewrite
         }
     }
 
-    @Disabled("Write path uses MTRON_ID, but read path uses native JanusGraph IDs — ID mismatch")
     @ParameterizedTest
     @CsvSource(value = {
             "@/g/V/1>>=[name=>'bill']                                  % */g/V/1/name                      % \"bill\"",
@@ -544,7 +548,6 @@ public class grphSpaceTest extends AbstractDataPathTest implements CommonRewrite
     }
 
     @ParameterizedTest
-    @Disabled
     @CsvSource(value = {
             "*/g/V/1.addE(likes,*/g/V/2)                                       % */g/V/1.out(likes)                     % */g/V/2",
     }, delimiter = '%')
