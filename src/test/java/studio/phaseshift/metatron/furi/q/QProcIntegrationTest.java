@@ -36,6 +36,7 @@ import java.nio.ByteBuffer;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.at_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
@@ -50,7 +51,7 @@ public class QProcIntegrationTest extends AbstractMetatronTest {
 
     @BeforeEach
     public void setup() {
-        space = memSpace.of(f(BASE + "/#"), f("/sys/space/qc"));
+        space = memSpace.of(BASE.extend("#"), f("/sys/space/qc"));
         space.addQ(QCollection.constQ());
         space.addQ(QCollection.typeQ());
         space.addQ(QCollection.incrQ());
@@ -166,19 +167,21 @@ public class QProcIntegrationTest extends AbstractMetatronTest {
 
     @ParameterizedTest(name = "[{index}] {3}")
     @CsvSource(value = {
-            "/i1 % /counter/#/data % first  % single-increment counter",
-            "/i2 % /idx/#/v        % one    % simple counter",
-            "/i3 % /a/#/data       % two    % mid-path counter",
+            "i0/_              % 2      % a    % basic-increment counter",
+            "i1/counter/_/data % 3      % b    % single-increment counter",
+            "i2/idx/_/a/b      % 3      % c    % simple counter",
+            "i3/a/b/c/_/d      % 5      % d    % mid-path counter",
     }, delimiter = '%')
-    void testIncrQ(final String uri, final String pattern, final String value, final String desc) {
-        final String expr1 = BASE + uri + "?incrq=" + pattern + " -> " + value;
-        final Obj r1 = ObjmtronSerializer.parse(expr1).apply();
+    void testIncrQ(final String uri, final int pattern, final String value, final String desc) {
+        final fURI vid = BASE.extend(uri).addQ("incrq");
+        final Obj r1 = Router.writeToSpace(vid,ObjmtronSerializer.parse(value));// ObjmtronSerializer.parse(value).vid(f(vid));
+        LOG.warn("incr %s => %s", vid,r1.vid());
         assertNotNull(r1.vid(), desc + ": should have a VID");
-        final String prefix = pattern.contains("/#") ? pattern.split("/#")[0] : pattern;
-        assertTrue(r1.vid().toString().contains(prefix), desc + ": VID should contain counter prefix " + prefix);
+        final int index = BASE.segmentLength()-1 + pattern;
+        assertTrue(CommonUtil.isInt(r1.vid().segments(index,"NOT_AN_INT")), desc + ": " + r1.vid() + " should contain counter at " + index);
 
-        // Second write produces a different path
-        final Obj r2 = ObjmtronSerializer.parse(expr1).apply();
+        //Second write produces a different path
+        final Obj r2 = ObjmtronSerializer.parse(value).vid(vid);
         assertNotNull(r2.vid(), desc + ": second write should also have VID");
         assertNotEquals(r1.vid(), r2.vid(), desc + ": paths should increment");
     }

@@ -34,7 +34,7 @@ public final class Tokens {
 
     public static final String MTRON = "mtron";
     public static final String METATRON = "metatron";
-    public static final String MTRON_ID = "mID";
+    public static final String MTRON_ID = "mid_";
     public static final String METATRON_VERSION = "0.1-SNAPSHOT";
     public static final fURI HASH_FURI = f("#");
     public static final fURI PLUS_FURI = f("+");

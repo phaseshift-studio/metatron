@@ -309,6 +309,10 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
 
     fURI port(final int port);
 
+    default int portOrDefault(final int defaultPort) {
+        return this.hasPort() ? this.port() : defaultPort;
+    }
+
     List<String> path();
 
     fURI path(final List<String> path);

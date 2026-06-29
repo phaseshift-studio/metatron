@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.mach.type.ui.console;
 
+import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerIoRegistryV3;
 import org.jline.builtins.ConfigurationPath;
 import org.jline.console.SystemRegistry;
 import org.jline.console.impl.Builtins;
@@ -1316,7 +1317,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                 try {
                     final String bufferText = this.reader.getBuffer().toString();
                     if (bufferText.trim().startsWith(COLON)) {
-                        // add completer on : colon menu items
+                        // colon menu selector widget
                     } else {
                         // Check if buffer ends with '.' for instruction completion
                         if (bufferText.trim().endsWith(".")) {
@@ -1337,7 +1338,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                                     }
                                 }
                             }
-                        } else if (bufferText.trim().startsWith("*") && bufferText.trim().endsWith("/")) {
+                        } else if (bufferText.trim().startsWith("*") && (bufferText.trim().endsWith("/") || bufferText.trim().endsWith(":"))) {
                             terminal.writer().write("\n");
                             final fURISelector selector = new fURISelector(bufferText);
                             if (selector.hasItems()) {

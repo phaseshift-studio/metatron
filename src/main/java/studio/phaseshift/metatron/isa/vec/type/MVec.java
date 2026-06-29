@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -23,9 +23,14 @@ package studio.phaseshift.metatron.isa.vec.type;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Poly;
+import studio.phaseshift.metatron.isa.m.type.Real;
+import studio.phaseshift.metatron.isa.m.type.impl.MLst;
 import studio.phaseshift.metatron.isa.m.type.impl.MObj;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
+import studio.phaseshift.metatron.isa.m.type.impl.MReal;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Vector;
 import java.util.stream.Stream;
 
@@ -36,38 +41,17 @@ import static studio.phaseshift.metatron.isa.vec.vecInstSet.VEC_TID;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class MVec<E> extends MObj implements Vec {
+public class MVec extends MLst implements Vec {
 
-    public MVec(final Vector<E> value, final fURI tid, final fURI vid) {
-        super(value, tid, vid);
+    public MVec(final List<Real> value, final fURI tid, final fURI vid) {
+        super((List) value, tid, vid);
     }
 
-    public Vector<E> jvm() {
-        return this.jvm();
+    public static Vec vec(final double[] values, final fURI tid, final fURI vid) {
+        return new MVec(Arrays.stream(values).mapToObj(MReal::real).toList(), tid, vid);
     }
 
-    @Override
-    public long count() {
-        return this.jvm().size();
-    }
-
-    @Override
-    public <O extends Obj> Stream<O> elements() {
-        return this.jvm().stream().map(e -> (O) MObjFactory.single().toObj(e));
-    }
-
-    @Override
-    public <O extends Obj> Stream<O> valueElements() {
-        return this.elements();
-    }
-
-    @Override
-    public Poly<?, ?> zero() {
-        return new MVec<>(new Vector<>(this.stream().map(e -> real(0.0d)).toList()), VEC_TID, null);
-    }
-
-    @Override
-    public <O extends Obj> O at(final Obj key) {
-        return key.isInt() ? (O) this.jvm().elementAt(key.asInt().intValue().intValue()) : (O) noobj();
+    public static Vec vec(final double[] values) {
+        return MVec.vec(values, VEC_TID, null);
     }
 }

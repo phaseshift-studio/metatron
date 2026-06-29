@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -115,7 +115,10 @@ public interface Str extends Mono, PlusMonoid.O<Str> {
 
         public static String cleanString(final Obj obj) {
             if (obj.isStr()) return obj.strValue();
-            if (obj.isUri()) return obj.uriValue().toString();
+            if (obj.isUri()) {
+                final String uriString = obj.uriValue().toString();
+                return uriString.startsWith("<") && uriString.endsWith(">") ? uriString.substring(1, uriString.length() - 1) : uriString;
+            }
             return "" + obj.jvm();
         }
     }
@@ -143,8 +146,8 @@ public interface Str extends Mono, PlusMonoid.O<Str> {
                     docWrap(instC(MERGE_INST_TID.dom(STR_TID.maybeSome()).rng(STR_TID), lst(T(STR_TID)), (lhs, inst) -> str(lhs.stream().map(Obj::<String>jvmAs).reduce((a, b) -> a + inst.arg(0).strValue() + b).orElse(""))),
                             "an str barrier", "the join of the str barrier", Map.of(jnt(0), "the join token"), "join the barrier given the str arg"),
                     docWrap(instC(REGEX_INST_TID.dom(STR_TID).rng(LST_TID), lst(T(STR_TID)), (lhs, inst) ->
-                            lst(REGEX_CACHE.compute(inst.arg(0).strValue(), (k, v) -> null == v ? Pattern.compile(k) : v).matcher(lhs.strValue()).results().map(MatchResult::group).map(MStr::str).map(Obj::<Obj>as).toList())),
-                            "a str to split by regex", "the regex groups of the lhs str", Map.of(jnt(0),"regex"), "split the lhs str into a regex groups",
+                                    lst(REGEX_CACHE.compute(inst.arg(0).strValue(), (k, v) -> null == v ? Pattern.compile(k) : v).matcher(lhs.strValue()).results().map(MatchResult::group).map(MStr::str).map(Obj::<Obj>as).toList())),
+                            "a str to split by regex", "the regex groups of the lhs str", Map.of(jnt(0), "regex"), "split the lhs str into a regex groups",
                             "'abc.cde'.regex('[^.]+') [-- ['abc','cde'] --]",
                             "'abc.cde'.regex('.\\..') [-- ['c.c'] --]"),
                     instC(GT_INST_TID.dom(STR_TID).rng(BOOL_TID), lst(T(STR_TID)), (lhs, inst) -> bool(Inst.Helper.alignLHSType(lhs, inst.arg(0)).filter(l -> l.strValue().compareTo(inst.arg(0).strValue()) > 0).isPresent())),

@@ -62,6 +62,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.type.thread.VirtualThread.virtual;
+import static studio.phaseshift.metatron.isa.vec.type.MVec.vec;
 import static studio.phaseshift.metatron.isa.vec.vecInstSet.VEC_TID;
 import static studio.phaseshift.metatron.isa.web.webInstSet.MCP_CLIENT_TYPE;
 
@@ -169,7 +170,7 @@ public class mModel extends MRec {
     public Optional<Rec> lastResponse() {
         return Optional.<Obj>ofNullable(this.at(feat(RESPONSE)).orElse(null)).map(o -> o.autoResolve(this)).map(Obj::asRec);
     }
-    
+
     /**
      * RAG (Retrieval Augmented Generation) configuration.
      *
@@ -309,11 +310,12 @@ public class mModel extends MRec {
         final EmbeddingModel agent = LLMFactory.createEmbeddingInteraction(this, this.model());
         if (this.cost().isPresent())
             agent.addListener(new CostCalculator(this.cost().get()));
-        final TextSegment embeddingString = TextSegment.from(toEmbed.toString());
+        final TextSegment embeddingString = TextSegment.from(Str.Helper.cleanString(toEmbed));
         final Response<Embedding> response = agent.embed(embeddingString);
         if (null != response.tokenUsage())
             this.logger().info("embedding token usage: %s", response.tokenUsage());
-        return lst((List) new MVec<>(new Vector<>(response.content().vectorAsList().stream().map(MReal::real).toList()), VEC_TID, null).jvm().stream().toList());
+
+        return vec(response.content().vectorAsDoubleArray());
     }
 
 }

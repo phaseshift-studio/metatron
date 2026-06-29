@@ -21,14 +21,21 @@
  import org.apache.commons.configuration2.BaseConfiguration;
  import org.apache.commons.configuration2.Configuration;
  import org.apache.commons.configuration2.ConfigurationMap;
+ import org.apache.commons.configuration2.PropertiesConfiguration;
+ import org.apache.tinkerpop.gremlin.driver.Cluster;
  import org.apache.tinkerpop.gremlin.driver.remote.DriverRemoteConnection;
  import org.apache.tinkerpop.gremlin.process.remote.traversal.RemoteTraversal;
  import org.apache.tinkerpop.gremlin.process.traversal.AnonymousTraversalSource;
  import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
  import org.apache.tinkerpop.gremlin.structure.*;
+ import org.apache.tinkerpop.gremlin.structure.io.binary.TypeSerializerRegistry;
  import org.apache.tinkerpop.gremlin.structure.util.GraphFactory;
+ import org.apache.tinkerpop.gremlin.structure.util.GraphFactoryClass;
  import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerFactory;
  import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerGraph;
+ import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerIoRegistryV3;
+ import org.apache.tinkerpop.gremlin.util.ser.GraphBinaryMessageSerializerV1;
+ import org.janusgraph.graphdb.tinkerpop.JanusGraphIoRegistry;
  import studio.phaseshift.metatron.furi.DataPath;
  import studio.phaseshift.metatron.furi.fURI;
  import studio.phaseshift.metatron.isa.AbstractSpace;
@@ -46,10 +53,7 @@
  import studio.phaseshift.metatron.util.IteratorUtil;
  import studio.phaseshift.metatron.util.MTronException;
 
- import java.util.ArrayList;
- import java.util.Iterator;
- import java.util.List;
- import java.util.Map;
+ import java.util.*;
  import java.util.function.BiFunction;
  import java.util.function.Function;
  import java.util.stream.Stream;
@@ -67,6 +71,7 @@
  import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
  import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
  import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
+ import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
  import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
  import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
  import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -104,19 +109,28 @@
                              })).create();
 
      public static grphSpace of(final Rec grph, final fURI vid) {
-         grph.logger().info("using config: %s", grph.at(CONFIG));
-         final Configuration graphConfig = toApacheConfiguration(grph.at(CONFIG));
-         final GraphTraversalSource g;
-         final DriverRemoteConnection drc;
-         if (graphConfig.containsKey("hosts") || graphConfig.containsKey("clusterConfigurationFile")) {
-             drc = DriverRemoteConnection.using(graphConfig);
-             g = AnonymousTraversalSource.traversal().with(drc);
+         final Configuration graphConfig = toApacheConfiguration(grph.at(CONFIG)
+                 .orElse(rec())
+                 .at("hosts", lst(grph.at(HOST).elements().map(e -> (Obj) uri(e.uriValue().host())).toList()))
+                 .at("ports", lst(grph.at(HOST).elements().map(e -> (Obj) jnt(e.uriValue().port())).toList())));
+         final GraphTraversalSource graphTraversalSource;
+         final DriverRemoteConnection driverRemoteConnection;
+         if (graphConfig.containsKey("clusterConfiguration") || graphConfig.containsKey("clusterConfigurationFile")) {
+             TypeSerializerRegistry typeSerializerRegistry = TypeSerializerRegistry.build()
+                     .addRegistry(JanusGraphIoRegistry.instance())
+                     .create();
+             Cluster cluster = Cluster.build()
+                     .addContactPoints(grph.at(HOST).elements().map(e -> e.uriValue().host()).toList().toArray(new String[1]))
+                     .port(grph.at(HOST).uriValue().port() == -1 ? 8182 : grph.at(HOST).uriValue().port())
+                     .serializer(new GraphBinaryMessageSerializerV1(typeSerializerRegistry)).create();
+             driverRemoteConnection = DriverRemoteConnection.using(cluster);
+             graphTraversalSource = AnonymousTraversalSource.traversal().with(driverRemoteConnection);
          } else {
-             drc = null;
-             g = TinkerGraph.open().traversal();
+             driverRemoteConnection = null;
+             graphTraversalSource = TinkerGraph.open().traversal();
          }
-         final grphSpace space = new grphSpace(g, grph.jvm(), vid);
-         space.remoteConnection = drc;
+         final grphSpace space = new grphSpace(graphTraversalSource, grph.jvm(), vid);
+         space.remoteConnection = driverRemoteConnection;
          return space;
      }
 
@@ -129,40 +143,25 @@
       */
      private static Configuration toApacheConfiguration(final Rec config) {
          final BaseConfiguration apacheConfig = new BaseConfiguration();
-
-         config.logger().info("config: %s", config.at("#/"));
+         config.logger().info("processing configuration: %s", config);
          if (!config.isEmpty()) {
-             final StringBuilder yaml = new StringBuilder();
+             apacheConfig.setProperty("clusterConfiguration", ".");
              config.elements().forEach(rel -> {
-                 final String key = rel.first().uriValue().toString();
-                 String value = rel.second().toString();
-                 if (value.startsWith("<") && value.endsWith(">")) {
-                     value = value.substring(1, value.length() - 1);
-                 }
+                 final String key = Str.Helper.cleanString(rel.first());
+                 final Object value = rel.second().isLst() ?
+                         rel.second().elements().map(Str.Helper::cleanString).toList() :
+                         Str.Helper.cleanString(rel.second());
                  // Route cluster-connection properties into inline YAML so
                  // TinkerPop 3.8+ Cluster.open() parses them with correct types
                  // (hosts as list, port as int) rather than as flat strings.
-                 switch (key) {
-                     case "hosts" -> yaml.append("hosts: [").append(value).append("]\n");
-                     case "port" -> yaml.append("port: ").append(value).append("\n");
-                     case "serializer.className" -> {
-                         yaml.append("serializer:\n");
-                         yaml.append("  className: ").append(value).append("\n");
-                     }
-                     case "serializer.config.ioRegistries" -> {
-                         yaml.append("  config:\n");
-                         yaml.append("    ioRegistries: [").append(value).append("]\n");
-                     }
-                     default -> apacheConfig.setProperty(key, value);
-                 }
+                 config.logger().info("clusterConfiguration.%s => %s", key, value);
+                 apacheConfig.setProperty("clusterConfiguration." + key, value);
+                 apacheConfig.setProperty(key, value);
              });
-             if (!yaml.isEmpty()) {
-                 apacheConfig.setProperty("clusterConfiguration", yaml.toString());
-             }
-             config.logger().info("using apache configuration: %s", apacheConfig);
          } else {
              config.logger().info("no remote config provided — defaulting to local TinkerGraph");
          }
+         config.logger().info("built configuration: %s", apacheConfig.toString());
          return apacheConfig;
      }
 
@@ -173,17 +172,21 @@
       * @param graph  graph instance
       * @param config metatron configuration record
       */
-    /** Last-created grphSpace — used by {@link #from(Element)}. */
-    private static grphSpace lastCreated;
+     /**
+      * Last-created grphSpace — used by {@link #from(Element)}.
+      */
+     private static grphSpace lastCreated;
 
-    /** Return the last created grphSpace. Used by the serializer. */
-    public static grphSpace from(final Element element) {
-        if (lastCreated == null)
-            throw MTronException.of("No grphSpace created yet");
-        return lastCreated;
-    }
+     /**
+      * Return the last created grphSpace. Used by the serializer.
+      */
+     public static grphSpace from(final Element element) {
+         if (lastCreated == null)
+             throw MTronException.of("No grphSpace created yet");
+         return lastCreated;
+     }
 
-    protected fURI elementVID(final Element element) {
+     protected fURI elementVID(final Element element) {
          return element instanceof Vertex ?
                  Space.Helper.routeToSpace(f("V/" + element.id().toString()), this.routes()) :
                  Space.Helper.routeToSpace(f("E/" + element.id().toString()), this.routes());
@@ -199,7 +202,8 @@
      protected grphSpace(final GraphTraversalSource graph, final Map<Obj, Obj> config, final fURI vid) {
          super(graph, config, GRPH_SPACE_TID, vid);
          lastCreated = this;
-         LOG.debug("tp3 space: %s", this);
+         //this.graphClass = MTronException.wrap(() -> (Class<GraphFactory>) Class.forName(Str.Helper.cleanString(this.at("config/gremlin/graph"))));
+         //LOG.info("connected to %s", this.graphClass);
          // graph.configuration().setProperty(GRAPH_CONFIGURATION_KEY, vid.toString());
          // ── schema discovery ──
          this.existingGraphSchema = new ExistingGraphSchema(this);
@@ -210,6 +214,7 @@
                      .addExtension(Vertex.class, v -> new VertexRec(v, this))
                      .addExtension(Edge.class, e -> new EdgeRec(e, this));
          }
+
          // final Rec tp3Config = rec();
         /* new ConfigurationMap(sjvm.getGraph().configuration()).forEach((key, value) -> {
              try {
@@ -433,13 +438,14 @@
      @Override
      public BiFunction<fURI, Obj, Obj> directWriter() {
          return (pattern, obj) -> {
+             // DELETING A VERTEX OR EDGE
              if (obj.isNoObj()) {
                  this.read(pattern).stream().forEach(e -> {
                      LOG.debug("deleting element %s", e.vid());
-                     if (e instanceof VertexRec vr) {
-                         this.sjvm.V(vr.element().id()).drop().hasNext();
-                     } else if (e instanceof EdgeRec er2) {
-                         this.sjvm.E(er2.element().id()).drop().hasNext();
+                     if (e instanceof VertexRec vertexToDrop) {
+                         this.sjvm.V(vertexToDrop.element().id()).drop().hasNext();
+                     } else if (e instanceof EdgeRec edgeToDrop) {
+                         this.sjvm.E(edgeToDrop.element().id()).drop().hasNext();
                      }
                  });
                  return noobj();
@@ -448,15 +454,13 @@
              LOG.debug("writing tp3 vid: %s => %s", pattern, routed);
              final DataPath dp = DataPath.withoutDB(routed);
              if ("V".equals(dp.collection()) && dp.hasEntry() && CommonUtil.isInt(dp.entry())) {
-                 final Integer id = Integer.parseInt(dp.entry());
+                 final Object id = CommonUtil.isInt(dp.entry()) ? Long.parseLong(dp.entry()) : dp.entry();
                  try {
-                     final Vertex vertex = IteratorUtil.stream(this.sjvm.V().has(MTRON_ID, id)).findFirst().orElseGet(() ->
-                             this.sjvm.addV().property(
-                                     org.apache.tinkerpop.gremlin.structure.T.label,
-                                     obj.isRec() && obj.asRec().jvm().containsKey(grphInstSet.LABEL)
+                     final Vertex vertex = IteratorUtil.stream(this.sjvm.V(id)).findFirst().orElseGet(() ->
+                             this.sjvm.addV(obj.isRec() && obj.asRec().jvm().containsKey(grphInstSet.LABEL)
                                              ? obj.asRec().jvm().get(grphInstSet.LABEL).uriValue().toString()
-                                             : obj.tid().basePath().toString()).property(
-                                     MTRON_ID, id).next());
+                                             : obj.tid().basePath().toString())
+                                     .property(MTRON_ID, id).next());
                      LOG.debug("writing vertex %s => %s", vid, vertex);
                      // write properties from the Rec to the TinkerPop vertex
                      obj.asRec().jvm().entrySet().stream()
