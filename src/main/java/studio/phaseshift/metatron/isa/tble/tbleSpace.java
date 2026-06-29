@@ -191,7 +191,7 @@ public class tbleSpace extends AbstractSpace<Connection> implements SchemaSpace 
             for (final QProc q : snapshot)
                 this.addQ(q);
         }
-        LOG.info("connected {{b}}%s{{X}}", config.get(uri(HOST)));
+        LOG.info("connected {{b}}%s{{X}}", this.at(HOST));
         try {
             this.databaseName = sjvm.getCatalog() != null ? sjvm.getCatalog() : "db";
             initializeSchema(sjvm);

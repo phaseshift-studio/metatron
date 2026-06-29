@@ -235,39 +235,51 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
         /// //////////////////////////////////////////////////////////////////////////
 
         public static Obj updateRecursion(final Obj lhs, final Obj rhs, final BiFunction<Poly<?, ?>, Object, Poly<?, ?>> operation) {
-            if (rhs.isNoObj())
-                return noobj();
-            if (rhs.isNone())
-                return null;
-            // Objs (coefficient collection) with a structural RHS: apply per-element
-            // BEFORE type-matched recursion — ALL_STAR.test(REC_TID) would otherwise
-            // route to updatePolyRecursion which doesn't know how to decompose Objs
-            if (lhs.isObjs() && rhs.isPoly())
-                return objs(lhs.asObjs().elements()
+            final Obj result;
+            if (rhs.isNoObj() || rhs.isNone())
+                result = Router.writeToSpace(lhs.vid(), noobj());
+                // Objs (coefficient collection) with a structural RHS: apply per-element
+                // BEFORE type-matched recursion — ALL_STAR.test(REC_TID) would otherwise
+                // route to updatePolyRecursion which doesn't know how to decompose Objs
+            else if (lhs.isObjs() && rhs.isPoly())
+                result = objs(lhs.asObjs().elements()
                         .map(e -> updateRecursion(e, rhs, operation).vid(e.vid()))
                         .filter(e -> !e.isNoObj()));
-            if (lhs.isPoly() && rhs.isPoly() && lhs.type().test(rhs.type()))
-                return updatePolyRecursion(lhs.as(), rhs.as(), operation).vid(lhs.vid());
-            return rhs.apply(lhs).vid(lhs.vid());
+            else if (lhs.isPoly() && rhs.isPoly())
+                result = updatePolyRecursion(lhs.as(), rhs.as(), operation).vid(lhs.vid());
+            else
+                result = rhs.apply(lhs).vid(lhs.vid());
+            //////////////////////////////////////////////////////////////////////////////
+            if ((result.isNone() || result.isNone()) && null != lhs.vid())
+                Router.writeToSpace(lhs.vid(), noobj());
+            return result;//.vid(lhs.vid());
         }
 
 
         public static Obj updatePolyRecursion(final Poly<?, ?> lhs, final Obj rhs, final BiFunction<Poly<?, ?>, Object, Poly<?, ?>> operation) {
-            if (rhs.isCall()) return updatePolyRecursion(lhs, rhs.apply(lhs), operation);
-            if (lhs.isRec() && rhs.isRec())
-                return updateRecRecursion(lhs.asRec(), rhs.asRec(), operation);
+            final Obj result;
+            if (rhs.isNoObj() || rhs.isNone())
+                result = rhs;
+            else if (rhs.isObjCall())
+                result = updatePolyRecursion(lhs, rhs.apply(lhs), operation);
+            else if (lhs.isRec() && rhs.isRec())
+                result = updateRecRecursion(lhs.asRec(), rhs.asRec(), operation);
             else if (lhs.isLst() && rhs.isLst())
-                return updateLstRecursion(lhs.asLst(), rhs.asLst(), operation);
+                result = updateLstRecursion(lhs.asLst(), rhs.asLst(), operation);
             else if (lhs.isRel() && rhs.isRel())
-                return updateRelRecursion(lhs.asRel(), rhs.asRel(), operation);
+                result = updateRelRecursion(lhs.asRel(), rhs.asRel(), operation);
             else
-                return rhs.apply(lhs);
+                result = rhs.apply(lhs);
+            /////////////////////////////////////////////////////////////////
+            if ((result.isNone() || result.isNone()) && null != lhs.vid())
+                Router.writeToSpace(lhs.vid(), noobj());
+            return result;//.vid(lhs.vid());
         }
 
         private static Obj updateRecRecursion(final Rec lhs, final Rec rhs, final BiFunction<Poly<?, ?>, Object, Poly<?, ?>> operation) {
             final Rec lhsClone = lhs.jvm().entrySet().stream().map(kv -> rel(kv.getKey().clone(), kv.getValue().clone())).collect(new CommonUtil.RecCollector());
-            final Map<Obj, Obj> result = Poly.Helper.selectRecRecursionRaw(lhsClone, rhs, (a, b) -> updatePolyRecursion(a.as(), b.as(), operation));
-            lhsClone.jvm().forEach((lhsKey, lhsValue) -> result.compute(lhsKey.c(cInt::one), (rhsKey, rhsValue) -> {
+            final Map<Obj, Obj> rhsApplied = Poly.Helper.selectRecRecursionRaw(lhsClone, rhs, (a, b) -> updatePolyRecursion(a.as(), b.as(), operation));
+            lhsClone.jvm().forEach((lhsKey, lhsValue) -> rhsApplied.compute(lhsKey.c(cInt::one), (rhsKey, rhsValue) -> {
                 if (null == rhsValue)
                     return lhsValue;
                 if (rhsValue.isNoObj())
@@ -277,7 +289,7 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
                 return rhsValue;
 
             }));
-            return operation.apply(lhsClone, result).tid(lhs.tid());
+            return operation.apply(lhsClone, rhsApplied).vid(lhs.vid()).tid(lhs.tid());
         }
 
         private static Obj updateLstRecursion(final Lst lhs, final Lst rhs, BiFunction<Poly<?, ?>, Object, Poly<?, ?>> operation) {
@@ -293,7 +305,7 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
                 if (!newElement.isNone())
                     result.add(newElement);
             }*/
-            return operation.apply(lhs, result).tid(lhs.tid());
+            return operation.apply(lhs, result).vid(lhs.vid()).tid(lhs.tid());
         }
 
         private static Obj updateRelRecursion(final Rel lhs, final Rel rhs, BiFunction<Poly<?, ?>, Object, Poly<?, ?>> operation) {

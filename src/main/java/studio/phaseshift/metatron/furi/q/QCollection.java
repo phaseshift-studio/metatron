@@ -355,6 +355,7 @@ public final class QCollection {
     /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////
     /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+    public static final String INCRQ_INCR_PATTERN = "_";
     public static QProc incrQ() {
         final java.util.Map<String, AtomicLong> counters = new java.util.concurrent.ConcurrentHashMap<>();
         return QProc.Helper.build(INCRQ_TID, INCRQ_PATTERN).
@@ -364,7 +365,7 @@ public final class QCollection {
                     final StringBuilder prefix = new StringBuilder();
                     final List<String> newPath = new ArrayList<>();
                     for (final String p : incrPattern.path()) {
-                        if (fURI.isPattern(p)) {
+                        if (p.equals(INCRQ_INCR_PATTERN)) {
                             final AtomicLong counter = counters.computeIfAbsent(
                                     prefix.toString(), k -> new AtomicLong(0));
                             newPath.add(counter.incrementAndGet() + "");
@@ -378,8 +379,8 @@ public final class QCollection {
                     final Obj stored = obj.vid(cleaned);
                     // QProc handles storage itself (same pattern as tbleIncrQ).
                     // cleaned URI has no ?incrq → won't rematch on recursive write.
-                    Router.writeToSpace(cleaned, stored);
-                    return obj;
+                    return Router.writeToSpace(cleaned, stored);
+                    //return obj;
                 }).create();
     }
 

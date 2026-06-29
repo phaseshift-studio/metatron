@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.vec.type;
 
+import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Poly;
 import studio.phaseshift.metatron.isa.m.type.Rel;
@@ -29,7 +30,7 @@ import java.util.stream.Stream;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public interface Vec extends Poly<Vec, Vector<?>> {
+public interface Vec extends Lst {
 
     @Override
     default Vec at(final Obj key, final Obj value, final BiFunction<Poly<?, ?>, Object, Poly<?, ?>> operation) {

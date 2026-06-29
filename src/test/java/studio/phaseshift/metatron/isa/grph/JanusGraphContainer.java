@@ -24,6 +24,8 @@ import org.testcontainers.utility.DockerImageName;
 
 import java.time.Duration;
 
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
+
 /**
  * JanusGraph TestContainer wrapper for grphSpace tests.
  * <p>
@@ -47,9 +49,12 @@ public class JanusGraphContainer {
     public void setup() {
         container = new GenericContainer<>(DockerImageName.parse("janusgraph/janusgraph:1.1.0"))
                 .withExposedPorts(8182)
+                .withEnv("janusgraph.storage.backend","inmemory")
+                .withEnv("janusgraph.storage.hostname", "0.0.0.0")
+                .withEnv("GREMLIN_REMOTE_HOSTS","localhost")
                 .withEnv("JANUS_PROPS_TEMPLATE", "inmemory")
-                .withEnv("janusgraph.graph.set-vertex-id", "true")
-                .withEnv("janusgraph.graph.allow-custom-vid-types", "true")
+                //.withEnv("janusgraph.graph.set-vertex-id", "true")
+                //.withEnv("janusgraph.graph.allow-custom-vid-types", "true")
                 .waitingFor(Wait.forLogMessage(".*Channel started at port 8182.*", 1))
                 .withStartupTimeout(Duration.ofMinutes(2));
         container.start();
@@ -62,6 +67,7 @@ public class JanusGraphContainer {
         if (container == null || !container.isRunning()) {
             throw new IllegalStateException("JanusGraph container not started. Call setup() first.");
         }
+        jnt(1).logger().error(container);
         return container.getHost();
     }
 

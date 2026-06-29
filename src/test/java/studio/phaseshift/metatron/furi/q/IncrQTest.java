@@ -26,6 +26,7 @@ import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.WILD_ONE;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -42,34 +43,34 @@ public interface IncrQTest {
 
     Space getSpace();
 
-    /** Optional hook for backend-specific setup. */
-    default void setupIncrQ() {}
+    /**
+     * Optional hook for backend-specific setup.
+     */
+    default void setupIncrQ() {
+    }
 
-    /** Base URI for incrQ test writes (e.g. {@code sqlite:incrq}). */
+    /**
+     * Base URI for incrQ test writes (e.g. {@code sqlite:incrq}).
+     */
     fURI incrQBaseURI();
 
     @TestCategory.Crud
     @Test
     default void testIncrQ() {
         final Space space = getSpace();
-
         if (space.qs().lstValue().stream().noneMatch(q -> ((QProc) q).pattern().equals(INCRQ_PATTERN)))
             space.addQ(QCollection.incrQ());
-
         setupIncrQ();
-
         final fURI base = incrQBaseURI();
-
         // Write 1: value 12
-        space.write(f(base + "/+?incrq"), jnt(12));
-        final Obj all1 = space.read(f(base + "/+/"));
+        space.write(base.extend(INCRQ_INCR_PATTERN).addQ("incrq"), jnt(12));
+        final Obj all1 = space.read(base.extend(WILD_ONE).asBranch());
         assertFalse(all1.isNoObj(), "read returned noobj after write 1");
         final long count1 = all1.stream().count();
         assertEquals(1, count1, "should have 1 entry after first write");
-
         // Write 2: value 13
-        space.write(f(base + "/+?incrq"), jnt(13));
-        final Obj all2 = space.read(f(base + "/+/"));
+        space.write(base.extend(INCRQ_INCR_PATTERN).addQ("incrq"), jnt(13));
+        final Obj all2 = space.read(base.extend(WILD_ONE).asBranch());
         assertFalse(all2.isNoObj(), "read returned noobj after write 2");
         final long count2 = all2.stream().count();
         assertEquals(2, count2, "should have 2 entries after second write");

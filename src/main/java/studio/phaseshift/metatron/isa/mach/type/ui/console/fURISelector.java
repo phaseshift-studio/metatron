@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.isa.mach.type.ui.console;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 
 import java.util.List;
 
@@ -61,6 +62,7 @@ public class fURISelector extends SelectorWidget<fURI, fURISelector> {
         final String furiName = item.toString();
         final var buf = Console.LOCAL_INSTANCE.getReader().getBuffer();
         buf.clear();
+        terminal.writer().write(Graphitty.string("{{<%d}}",item.name().length()+1));
         buf.write("*" + furiName + "/");
         buf.cursor(buf.length());
     }
