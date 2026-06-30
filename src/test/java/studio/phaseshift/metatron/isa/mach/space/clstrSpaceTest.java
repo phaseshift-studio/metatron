@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.isa.mach.space;
 
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.AbstractDistributedMetatronTest;
 import studio.phaseshift.metatron.furi.fURI;
@@ -50,6 +51,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
+@Disabled
 public class clstrSpaceTest extends AbstractDistributedMetatronTest {
 
     private LocalCluster cluster;

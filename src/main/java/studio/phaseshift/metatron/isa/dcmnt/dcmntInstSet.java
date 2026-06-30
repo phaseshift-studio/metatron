@@ -25,6 +25,7 @@ import org.bson.conversions.Bson;
 import studio.phaseshift.metatron.algebra.rewrite.CommonRewrites;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
+import studio.phaseshift.metatron.isa.dcmnt.schema.MQLRewriteUtils;
 import studio.phaseshift.metatron.isa.dcmnt.space.dcmntSpace;
 import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
@@ -229,7 +230,9 @@ public class dcmntInstSet extends AbstractInstSet {
                                         throw new IllegalArgumentException("Could not parse filter: " + predicateStr);
                                     }
                                     return readFilteredDocumentsAsObjs(collection, baseUri, space, filter);
-                                }
+                                },
+                                MQLRewriteUtils.PREDICATE_JOINER,
+                                MQLRewriteUtils.CONDITION_FORMATTER
                         ),
 
                         // Optimize: mql_where.count() → MongoDB countDocuments(filter)

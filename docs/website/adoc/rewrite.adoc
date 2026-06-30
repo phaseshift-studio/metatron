@@ -1,0 +1,154 @@
+[discrete]
+== Rewrite Architecture
+
+The **metatron** rewrite system optimizes instruction chains before evaluation by replacing recognized patterns with native database operations. A query like `*table/+.where([age\=>?>30]).count()` would naively load all rows, filter in memory, and count the survivors. The rewrite layer intercepts the instruction chain `from \=> where \=> count` and compiles it down to a single native operation that delegates the work to the underlying database.
+
+[discrete]
+=== Core Classes
+
+The rewrite infrastructure lives in `studio.phaseshift.metatron.algebra.rewrite` and has five key pieces:
+
+[cols="2a,5a",separator=🧱,role="table-bordered small"]
+|===
+🧱
+`CommonRewrites`
+🧱
+Factory class providing `countRewrite()`, `sumRewrite()`, `whereRewrite()`, and `whereCountRewrite()` — each returns a compiled `Inst` that the instruction engine invokes at evaluation time.
+
+🧱
+`RewriteBuilder`
+🧱
+Fluent builder for assembling a rewrite: match pattern, result type, optimization function, and optional space-guard predicate. The base `forDatabase(Class)` constructor scopes the rewrite to a particular space type.
+
+🧱
+`Rewriter`
+🧱
+Low-level search-and-replace engine. Given a match pattern (list of instruction TIDs), it walks the instruction list, identifies contiguous matches, and replaces them with the optimized output via a caller-supplied rewrite function.
+
+🧱
+`ConditionFormatter`
+🧱
+Interface each query language implements to format individual predicate conditions (equality, comparison, existence) into its native expression syntax.
+
+🧱
+`PredicateJoiner`
+🧱
+Functional interface for combining multiple conditions into a single filter expression (e.g., SQL's `AND`, MongoDB's `$and`).
+|===
+
+The flow is:
+`RewriteBuilder` assembles a match pattern (e.g. `FROM_INST_TID, WHERE_INST_TID`) and an optimization function. The result is an `Inst` whose `f()` rewrites the instruction chain at evaluation time via `Rewriter.search(code.insts()).match(...).rewrite(...)`. The rewrite function extracts the predicate from the where-instruction, translates it through `ConditionFormatter` and `PredicateJoiner`, and produces a single native instruction that replaces both matched instructions.
+
+[discrete]
+=== Rewrite Lifecycle
+
+Before execution, `Code.resolve(lhs)` calls `Code.rewrite()` which runs all registered rewrites in a convergence loop — each rewrite's `Inst.f()` is applied to the current instruction list, and the loop repeats until the hash stabilizes (no more rewrites fire). The rewritten code then goes through `InstResolver.resolveCode()` for type resolution, and finally the `Machine` monadic loop executes the resolved instructions.
+
+[discrete]
+=== Language-Specific Utilities
+
+Each query language owns its condition formatting and predicate joining:
+
+[cols="3a,4a,4a",separator=🧱,role="table-bordered small"]
+|===
+🧱
+`SQLRewriteUtils`
+🧱
+`ConditionFormatter`: `field = value`, `field op value`, `field IS NOT NULL`. Literal escaping: `'` → `''`.
+`PredicateJoiner`: `String.join(" AND ", conds)`.
+🧱
+Used by `tbleInstSet` for SQL-based backends (SQLite, MariaDB, PostgreSQL).
+
+🧱
+`GremlinRewriteUtils`
+🧱
+`ConditionFormatter`: same string format as SQL — the formatted string is re-parsed by `parseGremlinPredicate()` into field/op/value triples. `PredicateJoiner`: `conds \=> conds.get(0)` (single-condition only).
+🧱
+Used by `grphInstSet` for TinkerGraph and JanusGraph spaces.
+
+🧱
+`MQLRewriteUtils`
+🧱
+`ConditionFormatter`: same string format as SQL — the formatted string is re-parsed by `parseMongoFilter()` into a BSON filter. `PredicateJoiner`: `String.join(" AND ", conds)`.
+🧱
+Used by `dcmntInstSet` for MongoDB-backed document spaces.
+|===
+
+[discrete]
+=== Where Rewrite in Detail
+
+The `whereRewrite()` path is the most involved. It replaces `from(furi).where(predicate)` with a single native filter instruction:
+
+1. `WhereRewriteBuilder.match(FROM_INST_TID, WHERE_INST_TID)` — the `Rewriter` scans for contiguous `from :: where` pairs.
+2. On match, the rewrite function extracts the predicate from the where-instruction's argument.
+3. `tryTranslatePredicate()` decomposes the predicate `Rec` into a list of individual conditions. Each condition is classified — equality for literal values, comparison for `gt/lt/gte/lte/neq/eq` instructions, existence for wildcard `_` — and formatted through the backend's `ConditionFormatter`.
+4. The `PredicateJoiner` combines multiple conditions into the backend's conjunction.
+5. An `instC` is returned with a function closure that calls the `WhereOperation` — the caller-supplied lambda that executes the native query. The closure includes a barrier-reapplication guard (`if (lhs.isObjs()) return lhs`) to prevent the SwarmMachine from re-executing the native query when processing the gather barrier.
+
+[source,java]
+----
+// grphInstSet registers the rewrite:
+docWrap(CommonRewrites.whereRewrite(
+    grphSpace.class,
+    GRPH_REWRITE_TID.extend("gremlin_where"),
+    (space, dp, filterClause) -> {
+        final P<?> pred = parseGremlinPredicate(filterClause);
+        final String field = extractPredicateField(filterClause);
+        return objs(stream(space.sjvm().V().has(field, pred))
+            .map(v -> new VertexRec(v, space)));
+    },
+    GremlinRewriteUtils.PREDICATE_JOINER,
+    GremlinRewriteUtils.CONDITION_FORMATTER
+), ...);
+----
+
+[discrete]
+=== Composition Rewrites
+
+Where-based rewrites compose. After `whereRewrite` replaces `from :: where` with e.g. `gremlin_where`, subsequent rewrites can match on the output:
+
+[cols="2a,5a",separator=🧱,role="table-bordered small"]
+|===
+🧱
+`whereCountRewrite()`
+🧱
+Matches `native_where :: count`. Extracts the filter clause from the preceding native-where instruction and emits a new instruction that executes `SELECT COUNT(*) WHERE …` (SQL) or `countDocuments(filter)` (MQL).
+
+🧱
+`whereLimitRewrite()`
+🧱
+Matches `native_where :: take`. Extracts the filter clause and limit value, emits a native `LIMIT`-enhanced query.
+|===
+
+The composition pattern is:
+```
+from(V/+).where([age=>?>30]).count()
+  → gremlin_where(V/+, "age > 30").count()       (whereRewrite)
+  → gremlin_where_count(V/+, "age > 30")           (whereCountRewrite)
+```
+
+[discrete]
+=== The `ComparisonOp` Enum
+
+Predicate operators are represented by the `ComparisonOp` enum rather than raw strings:
+
+[source,java]
+----
+public enum ComparisonOp {
+    EQ("="), GT(">"), LT("<"),
+    GTE(">="), LTE("<="), NEQ("<>"),
+    EXISTS(null);
+}
+----
+
+The `tryTranslatePredicate()` method inside `WhereRewriteBuilder` converts metatron instruction names (`gt`, `lt`, `gte`, `lte`, `neq`, `eq`) to `ComparisonOp` values. Each backend's `ConditionFormatter.comparison()` receives the enum and can map it to native syntax — `>` for SQL, `$gt` for MQL, etc.
+
+[discrete]
+=== Extending with a New Backend
+
+To add rewrite support for a new query language:
+
+1. Create a `XXXRewriteUtils` class in the backend's ISA package with `CONDITION_FORMATTER` and `PREDICATE_JOINER` instances.
+2. In the backend's `InstSet.setup()`, register rewrites via `CommonRewrites.countRewrite()`, `.whereRewrite()`, `.whereCountRewrite()`, etc., passing the utils as arguments.
+3. Implement the `WhereOperation` (and optionally `WhereCountOperation`, `WhereLimitOperation`) lambdas that execute the native query.
+4. The infrastructure handles pattern matching, instruction replacement, predicate translation, and composition — the backend only provides formatting and execution.

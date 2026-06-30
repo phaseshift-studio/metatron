@@ -109,10 +109,13 @@
                              })).create();
 
      public static grphSpace of(final Rec grph, final fURI vid) {
-         final Configuration graphConfig = toApacheConfiguration(grph.at(CONFIG)
-                 .orElse(rec())
-                 .at("hosts", lst(grph.at(HOST).elements().map(e -> (Obj) uri(e.uriValue().host())).toList()))
-                 .at("ports", lst(grph.at(HOST).elements().map(e -> (Obj) jnt(e.uriValue().port())).toList())));
+        final Rec configBase = grph.at(CONFIG).orElse(rec());
+        final Rec configWithHosts = grph.at(HOST).isNoObj()
+                ? configBase
+                : configBase
+                        .at("hosts", lst(grph.at(HOST).elements().map(e -> (Obj) uri(e.uriValue().host())).toList()))
+                        .at("ports", lst(grph.at(HOST).elements().map(e -> (Obj) jnt(e.uriValue().port())).toList()));
+        final Configuration graphConfig = toApacheConfiguration(configWithHosts);
          final GraphTraversalSource graphTraversalSource;
          final DriverRemoteConnection driverRemoteConnection;
          if (graphConfig.containsKey("clusterConfiguration") || graphConfig.containsKey("clusterConfigurationFile")) {

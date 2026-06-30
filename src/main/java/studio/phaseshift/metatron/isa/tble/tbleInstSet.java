@@ -29,15 +29,10 @@ import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSQLSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
-import studio.phaseshift.metatron.isa.web.webHelper;
+import studio.phaseshift.metatron.isa.tble.schema.SQLRewriteUtils;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.io.BufferedInputStream;
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.sql.*;
 import java.util.*;
 import java.util.function.BiPredicate;
@@ -61,8 +56,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.mach.machInstSet.FILE_TID;
-import static studio.phaseshift.metatron.isa.mach.machInstSet.FILE_TYPE;
 import static studio.phaseshift.metatron.isa.tble.tbleSpace.*;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
@@ -109,7 +102,7 @@ public class tbleInstSet extends AbstractInstSet {
             if (!ref.isUri()) return true;
             final DataPath dp = DataPath.of(ref.uriValue());
             if (!dp.hasCollection() || dp.collectionIsWildcard()) return false;
-            return TableStoreUtil.isTableCollection(space, dp.collection());
+            return space.existingTableSchema != null && space.existingTableSchema.getTableNames().contains(dp.collection().toLowerCase());
         };
 
         final BiPredicate<tbleSpace, List<Inst>> kvGuard = (space, matches) -> {
@@ -117,7 +110,7 @@ public class tbleInstSet extends AbstractInstSet {
             if (!ref.isUri()) return false;
             final DataPath dp = DataPath.withoutDB(ref.uriValue());
             if (!dp.hasCollection() || dp.collectionIsWildcard()) return false;
-            if (TableStoreUtil.isTableCollection(space, dp.collection()))
+            if (space.existingTableSchema != null && space.existingTableSchema.getTableNames().contains(dp.collection().toLowerCase()))
                 return false;
             return KVStoreUtil.translateKVPatternToSQL(ref.uriValue()) != null;
         };
@@ -286,11 +279,11 @@ public class tbleInstSet extends AbstractInstSet {
                         docWrap(CommonRewrites.whereRewrite(
                                 tbleSpace.class,
                                 TBLE_ISA_REWRITE_TID.extend("sql_where"),
-                                (space, dp, sqlWhere) -> {
+                                (space, dp, filterClause) -> {
                                     if (!dp.hasCollection())
                                         throw MTronException.of("uri must contain a table reference: $s", dp);
                                     final String tableName = dp.collection();
-                                    final String sql = "SELECT * FROM " + tableName + " WHERE " + sqlWhere;
+                                    final String sql = "SELECT * FROM " + tableName + " WHERE " + filterClause;
                                     try (final Statement stmt = space.sjvm().createStatement();
                                          final ResultSet rs = stmt.executeQuery(sql)) {
 
@@ -330,6 +323,8 @@ public class tbleInstSet extends AbstractInstSet {
                                         throw MTronException.of(e, "%s", sql);
                                     }
                                 },
+                                SQLRewriteUtils.PREDICATE_JOINER,
+                                SQLRewriteUtils.CONDITION_FORMATTER,
                                 tableGuard
                         ), "pre-rewrite code", "post-rewrite code", Map.of(), "leverages native SELECT ... WHERE to filter rows in a table"),
 
@@ -338,9 +333,9 @@ public class tbleInstSet extends AbstractInstSet {
                                 tbleSpace.class,
                                 TBLE_ISA_REWRITE_TID.extend("sql_where"),
                                 TBLE_ISA_REWRITE_TID.extend("sql_where_count"),
-                                (space, dp, sqlWhere) -> {
+                                (space, dp, filterClause) -> {
                                     final String tableName = dp.collection();
-                                    final String sql = "SELECT COUNT(*) FROM " + tableName + " WHERE " + sqlWhere;
+                                    final String sql = "SELECT COUNT(*) FROM " + tableName + " WHERE " + filterClause;
                                     try (final Statement stmt = space.sjvm().createStatement();
                                          final ResultSet rs = stmt.executeQuery(sql)) {
                                         return rs.next() ? rs.getLong(1) : 0L;
@@ -358,9 +353,9 @@ public class tbleInstSet extends AbstractInstSet {
                                 tbleSpace.class,
                                 TBLE_ISA_REWRITE_TID.extend("sql_where"),
                                 TBLE_ISA_REWRITE_TID.extend("sql_where_limit"),
-                                (space, dp, sqlWhere, limit) -> {
+                                (space, dp, filterClause, limit) -> {
                                     final String tableName = dp.collection();
-                                    final String sql = "SELECT * FROM " + tableName + " WHERE " + sqlWhere + " LIMIT " + limit;
+                                    final String sql = "SELECT * FROM " + tableName + " WHERE " + filterClause + " LIMIT " + limit;
                                     try (final Statement stmt = space.sjvm().createStatement();
                                          final ResultSet rs = stmt.executeQuery(sql)) {
 
