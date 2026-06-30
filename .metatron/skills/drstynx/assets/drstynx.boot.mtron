@@ -110,13 +110,15 @@ tblespace::[pattern    => drdb:#,
            
  grphspace::[pattern  => g:#,
              host     => !*<boot/args/external/knowgraph>,
+             q        => [incrq::[=>],subq::[=>]],
+             schema   => noobj, [-- ensures auto discovery --]
              config   => [
                dataset                                    => <org.apache.tinkerpop.gremlin.LoadGraphWith.GraphData.MODERN>,
                <serializer.className>                     => <org.apache.tinkerpop.gremlin.util.ser.GraphBinaryMessageSerializerV1>,
                <serializer.config.ioRegistries>           => [<org.janusgraph.graphdb.tinkerpop.JanusGraphIoRegistry>],
                <gremlin.remote.remoteConnectionClass>     => <org.apache.tinkerpop.gremlin.driver.remote.DriverRemoteConnection>,
                <gremlin.remote.remoteTraversalSourceName> => g],
-             route    => [g:V => V, g:E => E]]@</sys/space/grph/kg>;
+             route    => [g: => <>]]@</sys/space/grph/kg>;
 
         [======================]  
         [======== AGENT =======]

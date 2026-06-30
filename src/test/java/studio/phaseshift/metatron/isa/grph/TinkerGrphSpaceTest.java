@@ -23,10 +23,13 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.furi.q.QCollection;
+import studio.phaseshift.metatron.isa.grph.space.grphIncrQ;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.grph.space.schema.modernSchema.MODERN_SCHEMA_TID;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
@@ -59,14 +62,17 @@ public class TinkerGrphSpaceTest extends AbstractGrphSpaceTest {
         // ── per-test space config (pattern /g/#) — no HOST/CONFIG → TinkerGraph fallback ──
         perTestConfigRec = rec(
                 uri(PATTERN), uri("/g/#"),
+                uri(QPROC), lst(QCollection.incrQ()),
                 uri(ROUTE), rec(
                         uri("/g/V"), uri("V"),
                         uri("/g/E"), uri("E"),
+                      //  uri("/g/+"), uri("+"),
                         uri("/g/S"), uri(MODERN_SCHEMA_TID)));
 
         // ── rewrite test space config (pattern /grt/#) ──
         rewriteTestConfigRec = rec(
                 uri(PATTERN), uri("/grt/#"),
+                uri(QPROC), lst(QCollection.incrQ()),
                 uri(ROUTE), rec(
                         uri("/grt/V"), uri("V"),
                         uri("/grt/E"), uri("E"),

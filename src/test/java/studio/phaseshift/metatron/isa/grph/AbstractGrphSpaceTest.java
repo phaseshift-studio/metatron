@@ -31,8 +31,10 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import studio.phaseshift.metatron.AbstractDataPathTest;
 import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.TestData;
 import studio.phaseshift.metatron.algebra.rewrite.CommonRewritesTestContract;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.furi.q.IncrQTest;
 import studio.phaseshift.metatron.isa.AbstractSpaceTest;
 import studio.phaseshift.metatron.isa.grph.space.GraphLoader;
 import studio.phaseshift.metatron.isa.grph.space.grphSpace;
@@ -169,6 +171,11 @@ public abstract class AbstractGrphSpaceTest extends AbstractDataPathTest impleme
             return graph;
         });
     }
+
+    /*@Override
+    public fURI incrQBaseURI() {
+        return f("/g/V");
+    }*/
 
     // ========================================================================
     //  Shared tests — property-based traversals (work on both backends)
@@ -685,5 +692,41 @@ public abstract class AbstractGrphSpaceTest extends AbstractDataPathTest impleme
     @Test
     public void testRewriteInstSanity() throws Exception {
         runRewriteInstSanityTest();
+    }
+
+    // ========================================================================
+    //  Serialization round-trip — URI <> wrapping
+    // ========================================================================
+
+    @ParameterizedTest(name = "[{index}] {3}")
+    @TestData("int::T[?>0]@nat")
+    @CsvSource(value = {
+            "/g/V/_?incrq -> dog::[test_uri=>a/b/c, test_str=>hello, test_nat=>nat::23]  %  */g/V/+.?[test_uri=>uri::T]>>test_uri  %   uri   %  uri::T round-trip",
+            "/g/V/_?incrq -> dog::[test_uri=>a/b/c, test_str=>hello, test_nat=>nat::23]  %  */g/V/+.has(test_str)>>test_str        %   str   %  str::T round-trip",
+            "/g/V/_?incrq -> dog::[test_uri=>a/b/c, test_str=>hello, test_nat=>nat::23]  %  */g/V/+.has(test_nat)>>test_nat        %   nat   %  nat::T round-trip",
+    }, delimiter = '%')
+    public void testSerializationRoundTrip(final String writeExpr,
+                                           final String readExpr,
+                                           final String expectedKind,
+                                           final String description) {
+        final Obj writeResult = ObjmtronSerializer.parse(writeExpr).apply();
+        LOG.warn("write result: %s", writeResult);
+        LOG.warn("DB: %s",ObjmtronSerializer.parse("*/g/V/+").apply());
+        LOG.warn("schema: %s", space.at(SCHEMA));
+        if (this.sleepBetweenReads > 0)
+            CommonUtil.sleepThread(this.sleepBetweenReads);
+        final Obj result = ObjmtronSerializer.parse(readExpr).apply();
+        LOG.warn("read result: %s", result);
+        assertFalse(result.isNoObj(),
+                description + ": read should not be noobj: " + make(readExpr));
+        switch (expectedKind) {
+            case "uri" -> assertTrue(result.isUri(),
+                    description + ": expected Uri, got " + result.tid());
+            case "str" -> assertTrue(result.isStr(),
+                    description + ": expected Str, got " + result.tid());
+            case "nat" -> assertEquals(f("nat"),
+                    result.tid().basePath(),
+                    description + ": expected nat::T TID, got " + result.tid());
+        }
     }
 }

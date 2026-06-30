@@ -23,7 +23,6 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
-import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSQLSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
@@ -1096,40 +1095,11 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
             return Collections.emptyIterator();
         final String tableName = dp.collection();
         if (!dp.hasEntry()) {
-            if (dp.collectionIsWildcard()) {
-                /*
-                 * Wildcard table query — return the instset-encoded Type for each
-                 * discovered table.  This makes the instset schema the single source
-                 * of truth (no separate SQL-specific TABLE_TID encoding).
-                 */
-                // Merge auto-generated types with user-declared instset types
-                final Set<Type> all = new LinkedHashSet<>(
-                        this.schemaGenerator.getTableTypes());
-                if (space.schemaInstset() != null)
-                    all.addAll(space.schemaInstset().types());
-                return all.stream()
-                        .map(t -> Space.IdObj.of(t.vid(), t))
-                        .iterator();
-            } else {
-                /*
-                 * Exact table dereference — check the generator first, then
-                 * fall back to the schema instset for user-declared types.
-                 */
-                final String tn = dp.collection().toLowerCase();
-                final Type tableType = this.schemaGenerator.getTableType(tn);
-                if (tableType != null) {
-                    return IteratorUtil.of(Space.IdObj.of(tableType.vid(), tableType));
-                }
-                if (space.schemaInstset() != null) {
-                    final Type declared = space.schemaInstset().types().stream()
-                            .filter(t -> t.vid().name().equalsIgnoreCase(tn))
-                            .findFirst().orElse(null);
-                    if (declared != null)
-                        return IteratorUtil.of(Space.IdObj.of(declared.vid(), declared));
-                }
-                return Collections.emptyIterator();
-            }
-        } else {
+            // Collection-level type resolution is now handled by
+            // SchemaSpace.resolveCollectionSchema() in the space's directReader.
+            return Collections.emptyIterator();
+        }
+        {
             final TableMetadata metadata = tableSchemas.get(tableName.toLowerCase());
             if (metadata == null)
                 return Collections.emptyIterator();

@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.isa.grph.space;
 
 import org.apache.tinkerpop.gremlin.structure.Element;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 
 /**

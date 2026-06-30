@@ -30,6 +30,9 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.WILD_ONE;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -62,17 +65,19 @@ public interface IncrQTest {
             space.addQ(QCollection.incrQ());
         setupIncrQ();
         final fURI base = incrQBaseURI();
-        // Write 1: value 12
-        space.write(base.extend(INCRQ_INCR_PATTERN).addQ("incrq"), jnt(12));
+        // Write poly (Rec) values — collections take polys, not monos
+        space.write(base.extend(INCRQ_INCR_PATTERN).addQ("incrq"),
+                rec(mutableMap(uri("a"), jnt(12))));
         final Obj all1 = space.read(base.extend(WILD_ONE).asBranch());
         assertFalse(all1.isNoObj(), "read returned noobj after write 1");
-        final long count1 = all1.stream().count();
-        assertEquals(1, count1, "should have 1 entry after first write");
-        // Write 2: value 13
-        space.write(base.extend(INCRQ_INCR_PATTERN).addQ("incrq"), jnt(13));
+        assertEquals(1, all1.stream().count(),
+                "should have 1 entry after first write");
+        // Write 2
+        space.write(base.extend(INCRQ_INCR_PATTERN).addQ("incrq"),
+                rec(mutableMap(uri("a"), jnt(13))));
         final Obj all2 = space.read(base.extend(WILD_ONE).asBranch());
         assertFalse(all2.isNoObj(), "read returned noobj after write 2");
-        final long count2 = all2.stream().count();
-        assertEquals(2, count2, "should have 2 entries after second write");
+        assertEquals(2, all2.stream().count(),
+                "should have 2 entries after second write");
     }
 }

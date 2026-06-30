@@ -1257,7 +1257,7 @@ public class InstSetDocGenerator {
                                <div class="container-xxl py-3">
                                    <div class="text-center mb-4">
                                        <h1 class="text-primary glow-text">metatron</h1>
-                                       <p class="subtitle text-light">instruction set documentation</p>
+                                       <p class="subtitle text-light">instruction set architectures</p>
                                    </div>
                                    <div class="row g-2">%s</div>
                                    <div class="py-3 text-center mt-4">

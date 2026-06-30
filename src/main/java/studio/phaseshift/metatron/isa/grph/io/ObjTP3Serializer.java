@@ -23,9 +23,14 @@ import org.apache.tinkerpop.gremlin.structure.Element;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.grph.space.EdgeRec;
+
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import studio.phaseshift.metatron.isa.grph.space.VertexRec;
 import studio.phaseshift.metatron.isa.grph.space.grphSpace;
-import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
+
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import studio.phaseshift.metatron.isa.mach.io.type.AbstractObjSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjByteBufferSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
@@ -34,6 +39,7 @@ import studio.phaseshift.metatron.util.MTronException;
 import java.nio.ByteBuffer;
 
 import static studio.phaseshift.metatron.isa.mach.io.ioInstSet.OBJ_SERIALIZER_TID;
+import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -73,6 +79,37 @@ public class ObjTP3Serializer extends AbstractObjSerializer<Element> {
     @Override
     public fURI vid() {
         return OBJ_TP3_SERIALIZER_VID;
+    }
+
+    /**
+     * Convert a metatron value to a TinkerPop-serializable Java primitive.
+     * URIs are wrapped in {@code <>} so they round-trip as URIs on read-back.
+     */
+    public static Object tp3Value(final Obj obj) {
+        return switch (obj) {
+            case NoObj __ -> null;
+            case Int i -> i.jvm();
+            case Real r -> r.jvm();
+            case Bool b -> b.jvm();
+            case Str s -> s.jvm();
+            case Uri u -> "<" + u.uriValue() + ">";
+            default -> obj.toString();
+        };
+    }
+
+    /**
+     * Reverse of {@link #tp3Value}: convert a TinkerPop property value
+     * back to a metatron Obj.  Strings wrapped in {@code <>} are
+     * recognized as URIs.
+     */
+    public static Obj tp3FromValue(final Object value) {
+        if (value instanceof String s && s.startsWith("<") && s.endsWith(">")) {
+            return uri(f(s.substring(1, s.length() - 1)));
+        }
+        if (value instanceof String s) {
+            return str(s);
+        }
+        return MObjFactory.single().toObj(value);
     }
 
 /*

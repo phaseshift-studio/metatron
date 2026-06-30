@@ -1211,7 +1211,9 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                         else return noobj();
                     }),
                     instC(LSHIFT_INST_TID.dom(A).rng(B.maybeSome()), lst(), (lhs, inst) -> {
-                        if (lhs.isRel()) {
+                        if (lhs.isRec()) {
+                            return Rec.Helper.lshiftRec(lhs.asRec(), inst.arg(0));
+                        } else if (lhs.isRel()) {
                             return Rel.Helper.lshiftRel(lhs.asRel(), inst.arg(0));
                         } else {
                             return lhs.parent();
