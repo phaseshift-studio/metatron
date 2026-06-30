@@ -127,13 +127,8 @@ public class tbleSpace extends AbstractSpace<Connection> implements SchemaSpace 
                     .tid(SPACE_TID)
                     .vid(TBLE_SPACE_TID)
                     .isaPredicate(rec(
-                            uri(PATTERN), URI_TYPE,
                             uri(HOST), URI_TYPE,
-                            uri(DRIVER), URI_TYPE,
-                            uri(ROUTE), rec(URI_TYPE, URI_TYPE),
-                            uri(TABLE).maybe(), LST_TYPE,
-                            uri(ROOT).maybe(), REC_TYPE,
-                            uri(SCHEMA).maybe(), INSTSET_TYPE))
+                            uri(DRIVER), URI_TYPE))
                     .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(TBLE_SPACE_TID),
                             lst(REC_TYPE),
                             (lhs, inst) -> tbleSpace.of(inst.arg(0).asRec().jvm(), inst.arg(0).vid())))

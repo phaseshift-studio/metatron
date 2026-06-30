@@ -278,6 +278,131 @@ pre code.hljs {
 }
 
 /* ==========================================================================
+   Type fields table — borderless grid for predicate / constructor rows
+   ========================================================================== */
+
+.type-fields-table {
+    border: none;
+    border-collapse: collapse;
+    margin: 0;
+}
+
+.type-fields-table td {
+    padding: 1px 8px 1px 0;
+    vertical-align: top;
+    border: none;
+}
+
+.field-label {
+    color: var(--text-muted, #888);
+    font-size: 0.85rem;
+    white-space: nowrap;
+    text-align: left;
+    width: 1%;
+    user-select: none;
+}
+
+/* ==========================================================================
+   Refinement chain — inherited fields from ancestor types
+   ========================================================================== */
+
+.inherited-fields {
+    opacity: 0.65;
+    font-size: 0.9rem;
+}
+
+.inherited-fields:hover {
+    opacity: 0.9;
+}
+
+.inherited-row {
+    line-height: 1.6;
+}
+
+.inherited-link {
+    color: var(--text-muted, #888) !important;
+    text-decoration: none;
+    font-size: 0.85rem;
+}
+
+.inherited-link:hover {
+    color: var(--primary) !important;
+    text-decoration: underline;
+}
+
+.inherited-code {
+    font-size: 0.85rem;
+    opacity: 0.8;
+}
+
+/* ==========================================================================
+   Splash / index page card grid
+   ========================================================================== */
+
+.splash-card {
+    background: var(--maincolor);
+    border: 1px solid var(--mdarkgray);
+    border-radius: 4px;
+    transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.2s ease;
+}
+
+.splash-card:hover {
+    border-color: var(--mred);
+    box-shadow: 0 0 18px rgba(151, 2, 7, 0.25);
+    transform: translateY(-2px);
+}
+
+.splash-icon {
+    width: 28px;
+    height: 28px;
+    flex-shrink: 0;
+    filter: brightness(0) saturate(100%) invert(1);
+}
+
+.splash-title {
+    font-size: 1.15rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.splash-desc {
+    font-size: 0.85rem;
+    line-height: 1.45;
+    margin-bottom: 0.35rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.splash-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px 14px;
+    border-top: 1px solid var(--mdarkgray);
+    padding-top: 0.3rem;
+    margin-top: auto;
+}
+
+.splash-stats > div {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.78rem;
+}
+
+.stat-label {
+    color: var(--text-muted, #888);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.stat-val {
+    color: var(--primary);
+    font-family: 'Fira Mono', Consolas, Menlo, Monaco, monospace;
+}
+
+/* ==========================================================================
    Anchor scroll offset — compensate for the sticky navbar (~80px)
    ========================================================================== */
 .card[id] {

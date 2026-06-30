@@ -18,9 +18,9 @@
 
 package studio.phaseshift.metatron.isa.grph;
 
+import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__;
 import org.apache.tinkerpop.gremlin.structure.Edge;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
-import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerFactory;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
@@ -34,6 +34,7 @@ import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.algebra.rewrite.CommonRewritesTestContract;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractSpaceTest;
+import studio.phaseshift.metatron.isa.grph.space.GraphLoader;
 import studio.phaseshift.metatron.isa.grph.space.grphSpace;
 import studio.phaseshift.metatron.isa.grph.space.schema.modernSchema;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
@@ -52,6 +53,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.grph.grphInstSet.GRPH_ISA_TID;
+import static studio.phaseshift.metatron.isa.grph.space.GraphLoader.MODERN;
 import static studio.phaseshift.metatron.isa.grph.space.schema.modernSchema.MODERN_SCHEMA_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
@@ -163,46 +165,9 @@ public abstract class AbstractGrphSpaceTest extends AbstractDataPathTest impleme
             }
             final fURI vid = f("/sys/space/test_" + System.nanoTime());
             final grphSpace graph = grphSpace.of(perTestConfigRec, vid);
-            seedModernGraph(graph);
+            GraphLoader.get(MODERN).accept(graph);
             return graph;
         });
-    }
-
-    // ========================================================================
-    //  Seed helper
-    // ========================================================================
-
-    /**
-     * Wipe any existing data and seed the TinkerPop "modern" dataset
-     * (6 vertices, 6 edges) into the given graph space.
-     */
-    protected static void seedModernGraph(final grphSpace graph) {
-        if (graph.sjvm().getGraph().features().graph().supportsTransactions())
-            graph.sjvm().tx().open();
-        assertTrue(graph.sjvm().V().drop().toList().isEmpty()); // wipe any existing data
-        TinkerFactory.createModern().traversal().V().forEachRemaining(v -> {
-            final Vertex v1 = graph.sjvm().addV(v.label()).property(MTRON_ID, v.id()).next();
-            v.properties().forEachRemaining(p -> {
-                graph.sjvm().V(v1).property(p.key(), p.value()).next();
-            });
-        });
-        TinkerFactory.createModern().traversal().E().forEachRemaining(e -> {
-            final Vertex outV = graph.sjvm().V().has(MTRON_ID, e.outVertex().id()).next();
-            final Vertex inV = graph.sjvm().V().has(MTRON_ID, e.inVertex().id()).next();
-            final Edge edge = graph.sjvm().V(outV).addE(e.label()).to(inV)
-                    .property(MTRON_ID, e.id()).next();
-            e.properties().forEachRemaining(p -> {
-                if (!p.key().equals("id")) {
-                    Object val = p.value();
-                    if (val instanceof Float f) val = f.doubleValue();
-                    graph.sjvm().E(edge).property(p.key(), val).next();
-                }
-            });
-        });
-        assertEquals(6, graph.sjvm().V().count().next().intValue());
-        assertEquals(6, graph.sjvm().E().count().next().intValue());
-        if (graph.sjvm().getGraph().features().graph().supportsTransactions())
-            graph.sjvm().tx().commit();
     }
 
     // ========================================================================
@@ -293,7 +258,7 @@ public abstract class AbstractGrphSpaceTest extends AbstractDataPathTest impleme
         // Find vertices by property to get live traversal refs, then add edge
         final Vertex outV = gs.sjvm().V().has("name", "alice").next();
         final Vertex inV = gs.sjvm().V().has("name", "bob").next();
-        final Edge edge = gs.sjvm().V(outV).addE("testEdge").to(inV)
+        final Edge edge = gs.sjvm().V(outV).addE("testEdge").to(__.V(inV.id()))
                 .property("rank", 42)
                 .property("score", 0.75)
                 .property("tag", "trusted")
@@ -340,26 +305,30 @@ public abstract class AbstractGrphSpaceTest extends AbstractDataPathTest impleme
     @CsvSource(value = {
             // ── basic edge creation + verification ──
             "basic addE then outE count                                                         % " +
-                    "@$$/V/+.?[name=>'marko'].addE(likes,*$$/V/+.?[name=>'lop'])             % " +
+                    "@$$/V/+.?[name=>'marko'].addE(likes,*$$/V/+.?[name=>'lop'])                % " +
                     "*$$/V/+.?[name=>'marko'].outE(likes).count()                               % 1",
 
-            "addE returns edge with correct label                                               % " +
-                    "@$$/V/+.?[name=>'marko'].addE(rates,*$$/V/+.?[name=>'lop'])>>label      % " +
-                    "*$$/V/+.?[name=>'marko'].outE(rates)>>label                                % \"rates\"",
+            "addE returns edge with correct label                                              % " +
+                    "@$$/V/+.?[name=>'marko'].addE(rates,*$$/V/+.?[name=>'lop']).tid()         % " +
+                    "*$$/V/+.?[name=>'marko'].outE(rates).tid()                                % rates",
 
             // ── edge with property ──
-            "addE with property then read property                                              % " +
-                    "@$$/V/+.?[name=>'marko'].addE(rated,*$$/V/+.?[name=>'lop'],[score=>5])  % " +
-                    "*$$/V/+.?[name=>'marko'].outE(rated).where([score=>5]).count()             % 1",
+            "addE with property then read property                                               % " +
+                    "@$$/V/+.?[name=>'marko'].addE(rated,*$$/V/+.?[name=>'lop'],[score=>5])      % " +
+                    "*$$/V/+.?[name=>'marko'].outE(rated)>>score.count?int<=int{*}()             % 1",
+
+            "addE with property then count edge                                                  % " +
+                    "@$$/V/+.?[name=>'marko'].addE(rated,*$$/V/+.?[name=>'lop'],[score=>5])      % " +
+                    "*$$/V/+.?[name=>'marko'].outE(rated).count?int<=rec{*}()                    % 1",
 
             // ── edge between same vertex (self-loop) ──
             "addE self-loop                                                                     % " +
-                    "@$$/V/+.?[name=>'marko'].addE(self,*$$/V/+.?[name=>'marko'])            % " +
-                    "*$$/V/+.?[name=>'marko'].outE(self).count()                                % 1",
+                    "@$$/V/+.?[name=>'marko'].addE(self,*$$/V/+.?[name=>'marko'])               % " +
+                    "*$$/V/+.?[name=>'marko'].outE(self).tid()                                  % self",
 
             // ── two edges between same pair (multi-edge) ──
             "multi-edge between same vertices                                                   % " +
-                    "@$$/V/+.?[name=>'josh'].addE(collab,*$$/V/+.?[name=>'peter'])           % " +
+                    "@$$/V/+.?[name=>'josh'].addE(collab,*$$/V/+.?[name=>'peter'])              % " +
                     "*$$/V/+.?[name=>'josh'].outE(collab).count()                               % 1",
     }, delimiter = '%')
     public void testAddEdge(final String description, final String updateExpression, final String readExpression, final String expected) {
@@ -380,17 +349,13 @@ public abstract class AbstractGrphSpaceTest extends AbstractDataPathTest impleme
     public void testAddEdgeChain() {
         final String[] steps = {
                 // add a likes edge + verify outE count
-                "@$$/V/+.?[name=>'marko'].addE(likes,*$$/V/+.?[name=>'lop'])                    % " +
-                        "*$$/V/+.?[name=>'marko'].outE(likes).count()                           % 1",
+                "@$$/V/+.?[name=>'marko'].addE(likes,*$$/V/+.?[name=>'lop'])  % *$$/V/+.?[name=>'marko'].outE(likes).count()  % 1",
                 // add a second likes edge to a different vertex
-                "@$$/V/+.?[name=>'marko'].addE(likes,*$$/V/+.?[name=>'josh'])                   % " +
-                        "*$$/V/+.?[name=>'marko'].outE(likes).count()                           % 2",
+                "@$$/V/+.?[name=>'marko'].addE(likes,*$$/V/+.?[name=>'josh']) % *$$/V/+.?[name=>'marko'].outE(likes).count()  % 2",
                 // add edge with property
-                "@$$/V/+.?[name=>'marko'].addE(trusts,*$$/V/+.?[name=>'vadas'], [weight=>10]) % " +
-                        "*$$/V/+.?[name=>'marko'].outE(trusts).where([weight=>10]).count()      % 1",
+                "@$$/V/+.?[name=>'marko'].addE(trusts,*$$/V/+.?[name=>'vadas'], [weight=>10]) % *$$/V/+.?[name=>'marko'].outE(trusts).where([weight=>10]).count()      % 1",
                 // total outE for marko: 2 (knows) + 1 (created) + 2 (likes) + 1 (trusts) = 6
-                ".                                                                              % " +
-                        "*$$/V/+.?[name=>'marko'].outE(+).count()                               % 6",
+                ".  %  *$$/V/+.?[name=>'marko'].outE(+).count()                               % 6",
         };
         for (int i = 0; i < steps.length; i++) {
             LOG.warn("TEST[%d]", i);

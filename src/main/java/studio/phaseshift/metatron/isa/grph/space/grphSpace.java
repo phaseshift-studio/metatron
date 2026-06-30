@@ -86,6 +86,10 @@
      protected static ObjFactory FACTORY = null;
 
      protected static final String AUTO_TX = "auto_tx";
+     /**
+      * Config key for loading a pre-defined toy dataset (e.g. {@code /tinkerpop/modern}).
+      */
+     public static final String DATASET = "dataset";
 
      /**
       * Tracked for proper cleanup of the remote JanusGraph connection.
@@ -109,13 +113,13 @@
                              })).create();
 
      public static grphSpace of(final Rec grph, final fURI vid) {
-        final Rec configBase = grph.at(CONFIG).orElse(rec());
-        final Rec configWithHosts = grph.at(HOST).isNoObj()
-                ? configBase
-                : configBase
-                        .at("hosts", lst(grph.at(HOST).elements().map(e -> (Obj) uri(e.uriValue().host())).toList()))
-                        .at("ports", lst(grph.at(HOST).elements().map(e -> (Obj) jnt(e.uriValue().port())).toList()));
-        final Configuration graphConfig = toApacheConfiguration(configWithHosts);
+         final Rec configBase = grph.at(CONFIG).orElse(rec());
+         final Rec configWithHosts = grph.at(HOST).isNoObj()
+                 ? configBase
+                 : configBase
+                 .at("hosts", lst(grph.at(HOST).elements().map(e -> (Obj) uri(e.uriValue().host())).toList()))
+                 .at("ports", lst(grph.at(HOST).elements().map(e -> (Obj) jnt(e.uriValue().port())).toList()));
+         final Configuration graphConfig = toApacheConfiguration(configWithHosts);
          final GraphTraversalSource graphTraversalSource;
          final DriverRemoteConnection driverRemoteConnection;
          if (graphConfig.containsKey("clusterConfiguration") || graphConfig.containsKey("clusterConfigurationFile")) {
@@ -134,6 +138,16 @@
          }
          final grphSpace space = new grphSpace(graphTraversalSource, grph.jvm(), vid);
          space.remoteConnection = driverRemoteConnection;
+
+         // Load a pre-defined toy dataset if configured
+         grph.at(uri(DATASET)).ifPresent(datasetUri -> {
+             final java.util.function.Consumer<grphSpace> loader = GraphLoader.get(datasetUri.uriValue());
+             if (loader != null) {
+                 loader.accept(space);
+             } else {
+                 Graphitty.log(grphSpace.class).warn("unknown dataset key: %s", datasetUri);
+             }
+         });
          return space;
      }
 
@@ -216,6 +230,9 @@
              FACTORY = MObjFactory.of()
                      .addExtension(Vertex.class, v -> new VertexRec(v, this))
                      .addExtension(Edge.class, e -> new EdgeRec(e, this));
+         }
+         if (!this.at(f(CONFIG).extend(DATASET)).isNoObj()) {
+             GraphLoader.get(this.at(f(CONFIG).extend(DATASET)).uriValue()).accept(this);
          }
 
          // final Rec tp3Config = rec();

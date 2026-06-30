@@ -220,7 +220,6 @@ public class mInstSet extends AbstractInstSet {
                     uri(PATTERN), URI_TYPE,
                     uri(QPROC).maybe(), lst(QPROC_TYPE),
                     uri(ROUTE).maybe(), rec(URI_TYPE, URI_TYPE),
-                    uri(ROOT).maybe(), T(TYPE_TID),     // nominal-only: avoids structural recursion in Type
                     uri(SCHEMA).maybe(), T(INSTSET_TID) // nominal-only: avoids structural recursion in InstSet
             )).create();
 

@@ -137,9 +137,17 @@ bin/metatron</code></pre>
                 </a>
                 <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="isa_dropdown">
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../instset/index.html';">
+                        <i class="bi bi-grid-3x3-gap-fill me-2"></i>overview</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
                            onclick="location.href='../instset/m.html';"><img
                             src="../images/icons/space/mtron-icon.svg" class="isa-row icon-color me-2"
                             alt="mtron"/>/m</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../instset/m_sys.html';"><img
+                            src="../images/icons/space/sys-icon.svg" class="isa-row icon-color me-2"
+                            alt="sys"/>/m/sys</a></li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
                            onclick="location.href='../instset/m_mach.html';"><img
                             src="../images/icons/space/mach-icon.svg" class="isa-row icon-color me-2" alt="mach"/>/m/mach</a>
@@ -156,12 +164,10 @@ bin/metatron</code></pre>
                            onclick="location.href='../instset/m_grph.html';"><img
                             src="../images/icons/space/grph-icon.svg" class="isa-row icon-color me-2" alt="grph"/>/m/grph</a>
                     </li>
-                    <!-- TODO: Add /m/vec docs
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='instset/m_vec.html';"><img
-                            src="../images/icons/space/olap-icon.svg" class="isa-row icon-color me-2"
+                           onclick="location.href='../instset/m_vec.html';"><img
+                            src="../images/icons/space/vec-icon.svg" class="isa-row icon-color me-2"
                             alt="vec"/>/m/vec</a></li>
-                    -->
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
                            onclick="location.href='../instset/m_web.html';"><img
                             src="../images/icons/space/web-icon.svg" class="isa-row icon-color me-2"
@@ -172,7 +178,7 @@ bin/metatron</code></pre>
                             alt="llm"/>/m/llm</a></li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
                            onclick="location.href='../instset/m_iot.html';"><img
-                            src="../images/icons/space/graphql-icon.svg" class="isa-row icon-color me-2" 
+                            src="../images/icons/space/iot-icon.svg" class="isa-row icon-color me-2"
                             alt="iot"/>/m/iot</a>
                     </li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
@@ -242,290 +248,237 @@ bin/metatron</code></pre>
         </div>
     </div>
 </nav>
-<main class="container my-4 flex-grow-1"><div class="container-xxl py-4">
-    <div class="text-center mb-5">
+<main class="container my-4 flex-grow-1"><div class="container-xxl py-3">
+    <div class="text-center mb-4">
         <h1 class="text-primary glow-text">metatron</h1>
         <p class="subtitle text-light">instruction set documentation</p>
     </div>
-    <div class="row g-3"><div class="col-md-6 col-lg-4">
+    <div class="row g-2"><div class="col-xl-4 col-md-6">
     <a href="m.html" class="text-decoration-none">
-        <div class="card h-100">
-            <div class="card-body">
-                <h5 class="card-title code text-primary">/m</h5>
-                <div class="d-flex gap-2 flex-wrap">
-                    <span class="pill-label badge bg-primary">35 types</span>
-                    <span class="pill-label badge bg-success">247 instructions</span>
-                    <span class="pill-label badge bg-info text-dark">3 spaces</span>
+        <div class="splash-card card">
+            <div class="card-body d-flex flex-column p-2">
+                <div class="d-flex align-items-center gap-2 mb-1">
+                    <img src="../images/icons/space/mtron-icon.svg" alt="" class="splash-icon"
+                         onerror="this.style.display='none'">
+                    <span class="code text-primary fw-bold splash-title">/m</span>
+                </div>
+                <p class="text-muted splash-desc">the core instruction set containing base types and fundamental operations</p>
+                <div class="splash-stats">
+                    <div><span class="stat-label">consts</span><span class="stat-val">1</span></div>
+                    <div><span class="stat-label">types</span><span class="stat-val">27</span></div>
+                    <div><span class="stat-label">spaces</span><span class="stat-val">3</span></div>
+                    <div><span class="stat-label">insts</span><span class="stat-val">247</span></div>
+                    <div><span class="stat-label">rewrites</span><span class="stat-val">8</span></div>
                 </div>
             </div>
         </div>
     </a>
-</div><div class="col-md-6 col-lg-4">
-    <a href="m_mach.html" class="text-decoration-none">
-        <div class="card h-100">
-            <div class="card-body">
-                <h5 class="card-title code text-primary">/m/mach</h5>
-                <div class="d-flex gap-2 flex-wrap">
-                    <span class="pill-label badge bg-primary">13 types</span>
-                    <span class="pill-label badge bg-success">12 instructions</span>
-                    <span class="pill-label badge bg-info text-dark">3 spaces</span>
-                </div>
-            </div>
-        </div>
-    </a>
-</div><div class="col-md-6 col-lg-4">
-    <a href="m_math.html" class="text-decoration-none">
-        <div class="card h-100">
-            <div class="card-body">
-                <h5 class="card-title code text-primary">/m/math</h5>
-                <div class="d-flex gap-2 flex-wrap">
-                    <span class="pill-label badge bg-primary">14 types</span>
-                    <span class="pill-label badge bg-success">14 instructions</span>
-                    <span class="pill-label badge bg-info text-dark">0 spaces</span>
-                </div>
-            </div>
-        </div>
-    </a>
-</div><div class="col-md-6 col-lg-4">
-    <a href="m_web.html" class="text-decoration-none">
-        <div class="card h-100">
-            <div class="card-body">
-                <h5 class="card-title code text-primary">/m/web</h5>
-                <div class="d-flex gap-2 flex-wrap">
-                    <span class="pill-label badge bg-primary">26 types</span>
-                    <span class="pill-label badge bg-success">2 instructions</span>
-                    <span class="pill-label badge bg-info text-dark">2 spaces</span>
-                </div>
-            </div>
-        </div>
-    </a>
-</div><div class="col-md-6 col-lg-4">
-    <a href="m_iot.html" class="text-decoration-none">
-        <div class="card h-100">
-            <div class="card-body">
-                <h5 class="card-title code text-primary">/m/iot</h5>
-                <div class="d-flex gap-2 flex-wrap">
-                    <span class="pill-label badge bg-primary">0 types</span>
-                    <span class="pill-label badge bg-success">0 instructions</span>
-                    <span class="pill-label badge bg-info text-dark">2 spaces</span>
-                </div>
-            </div>
-        </div>
-    </a>
-</div><div class="col-md-6 col-lg-4">
-    <a href="m_llm.html" class="text-decoration-none">
-        <div class="card h-100">
-            <div class="card-body">
-                <h5 class="card-title code text-primary">/m/llm</h5>
-                <div class="d-flex gap-2 flex-wrap">
-                    <span class="pill-label badge bg-primary">10 types</span>
-                    <span class="pill-label badge bg-success">3 instructions</span>
-                    <span class="pill-label badge bg-info text-dark">1 spaces</span>
-                </div>
-            </div>
-        </div>
-    </a>
-</div><div class="col-md-6 col-lg-4">
-    <a href="m_tble.html" class="text-decoration-none">
-        <div class="card h-100">
-            <div class="card-body">
-                <h5 class="card-title code text-primary">/m/tble</h5>
-                <div class="d-flex gap-2 flex-wrap">
-                    <span class="pill-label badge bg-primary">3 types</span>
-                    <span class="pill-label badge bg-success">1 instructions</span>
-                    <span class="pill-label badge bg-info text-dark">1 spaces</span>
-                </div>
-            </div>
-        </div>
-    </a>
-</div><div class="col-md-6 col-lg-4">
-    <a href="m_dcmnt.html" class="text-decoration-none">
-        <div class="card h-100">
-            <div class="card-body">
-                <h5 class="card-title code text-primary">/m/dcmnt</h5>
-                <div class="d-flex gap-2 flex-wrap">
-                    <span class="pill-label badge bg-primary">1 types</span>
-                    <span class="pill-label badge bg-success">2 instructions</span>
-                    <span class="pill-label badge bg-info text-dark">1 spaces</span>
-                </div>
-            </div>
-        </div>
-    </a>
-</div><div class="col-md-6 col-lg-4">
-    <a href="m_grph.html" class="text-decoration-none">
-        <div class="card h-100">
-            <div class="card-body">
-                <h5 class="card-title code text-primary">/m/grph</h5>
-                <div class="d-flex gap-2 flex-wrap">
-                    <span class="pill-label badge bg-primary">4 types</span>
-                    <span class="pill-label badge bg-success">13 instructions</span>
-                    <span class="pill-label badge bg-info text-dark">1 spaces</span>
-                </div>
-            </div>
-        </div>
-    </a>
-</div><div class="col-md-6 col-lg-4">
-    <a href="m_rdf.html" class="text-decoration-none">
-        <div class="card h-100">
-            <div class="card-body">
-                <h5 class="card-title code text-primary">/m/rdf</h5>
-                <div class="d-flex gap-2 flex-wrap">
-                    <span class="pill-label badge bg-primary">2 types</span>
-                    <span class="pill-label badge bg-success">1 instructions</span>
-                    <span class="pill-label badge bg-info text-dark">1 spaces</span>
-                </div>
-            </div>
-        </div>
-    </a>
-</div><div class="col-md-6 col-lg-4">
-    <a href="m.html" class="text-decoration-none">
-        <div class="card h-100">
-            <div class="card-body">
-                <h5 class="card-title code text-primary">/m</h5>
-                <div class="d-flex gap-2 flex-wrap">
-                    <span class="pill-label badge bg-primary">35 types</span>
-                    <span class="pill-label badge bg-success">268 instructions</span>
-                    <span class="pill-label badge bg-info text-dark">3 spaces</span>
-                </div>
-            </div>
-        </div>
-    </a>
-</div><div class="col-md-6 col-lg-4">
+</div><div class="col-xl-4 col-md-6">
     <a href="m_sys.html" class="text-decoration-none">
-        <div class="card h-100">
-            <div class="card-body">
-                <h5 class="card-title code text-primary">/m/sys</h5>
-                <div class="d-flex gap-2 flex-wrap">
-                    <span class="pill-label badge bg-primary">0 types</span>
-                    <span class="pill-label badge bg-success">4 instructions</span>
-                    <span class="pill-label badge bg-info text-dark">0 spaces</span>
+        <div class="splash-card card">
+            <div class="card-body d-flex flex-column p-2">
+                <div class="d-flex align-items-center gap-2 mb-1">
+                    <img src="../images/icons/space/sys-icon.svg" alt="" class="splash-icon"
+                         onerror="this.style.display='none'">
+                    <span class="code text-primary fw-bold splash-title">/m/sys</span>
+                </div>
+                <p class="text-muted splash-desc">system-level utilities, environment variables, and boot configuration</p>
+                <div class="splash-stats">
+                    <div><span class="stat-label">consts</span><span class="stat-val">0</span></div>
+                    <div><span class="stat-label">types</span><span class="stat-val">0</span></div>
+                    <div><span class="stat-label">spaces</span><span class="stat-val">0</span></div>
+                    <div><span class="stat-label">insts</span><span class="stat-val">4</span></div>
+                    <div><span class="stat-label">rewrites</span><span class="stat-val">0</span></div>
                 </div>
             </div>
         </div>
     </a>
-</div><div class="col-md-6 col-lg-4">
+</div><div class="col-xl-4 col-md-6">
     <a href="m_mach.html" class="text-decoration-none">
-        <div class="card h-100">
-            <div class="card-body">
-                <h5 class="card-title code text-primary">/m/mach</h5>
-                <div class="d-flex gap-2 flex-wrap">
-                    <span class="pill-label badge bg-primary">13 types</span>
-                    <span class="pill-label badge bg-success">12 instructions</span>
-                    <span class="pill-label badge bg-info text-dark">3 spaces</span>
+        <div class="splash-card card">
+            <div class="card-body d-flex flex-column p-2">
+                <div class="d-flex align-items-center gap-2 mb-1">
+                    <img src="../images/icons/space/mach-icon.svg" alt="" class="splash-icon"
+                         onerror="this.style.display='none'">
+                    <span class="code text-primary fw-bold splash-title">/m/mach</span>
+                </div>
+                <p class="text-muted splash-desc">machine primitives: console, router, threading, and i/o</p>
+                <div class="splash-stats">
+                    <div><span class="stat-label">consts</span><span class="stat-val">0</span></div>
+                    <div><span class="stat-label">types</span><span class="stat-val">13</span></div>
+                    <div><span class="stat-label">spaces</span><span class="stat-val">3</span></div>
+                    <div><span class="stat-label">insts</span><span class="stat-val">12</span></div>
+                    <div><span class="stat-label">rewrites</span><span class="stat-val">0</span></div>
                 </div>
             </div>
         </div>
     </a>
-</div><div class="col-md-6 col-lg-4">
+</div><div class="col-xl-4 col-md-6">
     <a href="m_math.html" class="text-decoration-none">
-        <div class="card h-100">
-            <div class="card-body">
-                <h5 class="card-title code text-primary">/m/math</h5>
-                <div class="d-flex gap-2 flex-wrap">
-                    <span class="pill-label badge bg-primary">14 types</span>
-                    <span class="pill-label badge bg-success">14 instructions</span>
-                    <span class="pill-label badge bg-info text-dark">0 spaces</span>
+        <div class="splash-card card">
+            <div class="card-body d-flex flex-column p-2">
+                <div class="d-flex align-items-center gap-2 mb-1">
+                    <img src="../images/icons/space/math-icon.svg" alt="" class="splash-icon"
+                         onerror="this.style.display='none'">
+                    <span class="code text-primary fw-bold splash-title">/m/math</span>
+                </div>
+                <p class="text-muted splash-desc">arithmetic, trigonometry, statistics, time, sizes, and currency</p>
+                <div class="splash-stats">
+                    <div><span class="stat-label">consts</span><span class="stat-val">2</span></div>
+                    <div><span class="stat-label">types</span><span class="stat-val">14</span></div>
+                    <div><span class="stat-label">spaces</span><span class="stat-val">0</span></div>
+                    <div><span class="stat-label">insts</span><span class="stat-val">14</span></div>
+                    <div><span class="stat-label">rewrites</span><span class="stat-val">0</span></div>
                 </div>
             </div>
         </div>
     </a>
-</div><div class="col-md-6 col-lg-4">
+</div><div class="col-xl-4 col-md-6">
     <a href="m_web.html" class="text-decoration-none">
-        <div class="card h-100">
-            <div class="card-body">
-                <h5 class="card-title code text-primary">/m/web</h5>
-                <div class="d-flex gap-2 flex-wrap">
-                    <span class="pill-label badge bg-primary">26 types</span>
-                    <span class="pill-label badge bg-success">2 instructions</span>
-                    <span class="pill-label badge bg-info text-dark">2 spaces</span>
+        <div class="splash-card card">
+            <div class="card-body d-flex flex-column p-2">
+                <div class="d-flex align-items-center gap-2 mb-1">
+                    <img src="../images/icons/space/web-icon.svg" alt="" class="splash-icon"
+                         onerror="this.style.display='none'">
+                    <span class="code text-primary fw-bold splash-title">/m/web</span>
+                </div>
+                <p class="text-muted splash-desc">web server, mime-types, http handlers, web socket sessions, and mcp gateway</p>
+                <div class="splash-stats">
+                    <div><span class="stat-label">consts</span><span class="stat-val">1</span></div>
+                    <div><span class="stat-label">types</span><span class="stat-val">26</span></div>
+                    <div><span class="stat-label">spaces</span><span class="stat-val">2</span></div>
+                    <div><span class="stat-label">insts</span><span class="stat-val">2</span></div>
+                    <div><span class="stat-label">rewrites</span><span class="stat-val">0</span></div>
                 </div>
             </div>
         </div>
     </a>
-</div><div class="col-md-6 col-lg-4">
+</div><div class="col-xl-4 col-md-6">
     <a href="m_iot.html" class="text-decoration-none">
-        <div class="card h-100">
-            <div class="card-body">
-                <h5 class="card-title code text-primary">/m/iot</h5>
-                <div class="d-flex gap-2 flex-wrap">
-                    <span class="pill-label badge bg-primary">0 types</span>
-                    <span class="pill-label badge bg-success">0 instructions</span>
-                    <span class="pill-label badge bg-info text-dark">2 spaces</span>
+        <div class="splash-card card">
+            <div class="card-body d-flex flex-column p-2">
+                <div class="d-flex align-items-center gap-2 mb-1">
+                    <img src="../images/icons/space/iot-icon.svg" alt="" class="splash-icon"
+                         onerror="this.style.display='none'">
+                    <span class="code text-primary fw-bold splash-title">/m/iot</span>
+                </div>
+                <p class="text-muted splash-desc">internet-of-things, mqtt messaging, home assistant, and device integration</p>
+                <div class="splash-stats">
+                    <div><span class="stat-label">consts</span><span class="stat-val">0</span></div>
+                    <div><span class="stat-label">types</span><span class="stat-val">0</span></div>
+                    <div><span class="stat-label">spaces</span><span class="stat-val">2</span></div>
+                    <div><span class="stat-label">insts</span><span class="stat-val">0</span></div>
+                    <div><span class="stat-label">rewrites</span><span class="stat-val">0</span></div>
                 </div>
             </div>
         </div>
     </a>
-</div><div class="col-md-6 col-lg-4">
+</div><div class="col-xl-4 col-md-6">
     <a href="m_llm.html" class="text-decoration-none">
-        <div class="card h-100">
-            <div class="card-body">
-                <h5 class="card-title code text-primary">/m/llm</h5>
-                <div class="d-flex gap-2 flex-wrap">
-                    <span class="pill-label badge bg-primary">10 types</span>
-                    <span class="pill-label badge bg-success">3 instructions</span>
-                    <span class="pill-label badge bg-info text-dark">1 spaces</span>
+        <div class="splash-card card">
+            <div class="card-body d-flex flex-column p-2">
+                <div class="d-flex align-items-center gap-2 mb-1">
+                    <img src="../images/icons/space/llm-icon.svg" alt="" class="splash-icon"
+                         onerror="this.style.display='none'">
+                    <span class="code text-primary fw-bold splash-title">/m/llm</span>
+                </div>
+                <p class="text-muted splash-desc">large language models, agents, tool use, chat sessions, and model catalogs</p>
+                <div class="splash-stats">
+                    <div><span class="stat-label">consts</span><span class="stat-val">0</span></div>
+                    <div><span class="stat-label">types</span><span class="stat-val">10</span></div>
+                    <div><span class="stat-label">spaces</span><span class="stat-val">1</span></div>
+                    <div><span class="stat-label">insts</span><span class="stat-val">3</span></div>
+                    <div><span class="stat-label">rewrites</span><span class="stat-val">0</span></div>
                 </div>
             </div>
         </div>
     </a>
-</div><div class="col-md-6 col-lg-4">
+</div><div class="col-xl-4 col-md-6">
     <a href="m_tble.html" class="text-decoration-none">
-        <div class="card h-100">
-            <div class="card-body">
-                <h5 class="card-title code text-primary">/m/tble</h5>
-                <div class="d-flex gap-2 flex-wrap">
-                    <span class="pill-label badge bg-primary">3 types</span>
-                    <span class="pill-label badge bg-success">1 instructions</span>
-                    <span class="pill-label badge bg-info text-dark">1 spaces</span>
+        <div class="splash-card card">
+            <div class="card-body d-flex flex-column p-2">
+                <div class="d-flex align-items-center gap-2 mb-1">
+                    <img src="../images/icons/space/tble-icon.svg" alt="" class="splash-icon"
+                         onerror="this.style.display='none'">
+                    <span class="code text-primary fw-bold splash-title">/m/tble</span>
+                </div>
+                <p class="text-muted splash-desc">relational database spaces: sqlite, mariadb, mysql, and postgresql backends</p>
+                <div class="splash-stats">
+                    <div><span class="stat-label">consts</span><span class="stat-val">1</span></div>
+                    <div><span class="stat-label">types</span><span class="stat-val">3</span></div>
+                    <div><span class="stat-label">spaces</span><span class="stat-val">1</span></div>
+                    <div><span class="stat-label">insts</span><span class="stat-val">1</span></div>
+                    <div><span class="stat-label">rewrites</span><span class="stat-val">11</span></div>
                 </div>
             </div>
         </div>
     </a>
-</div><div class="col-md-6 col-lg-4">
+</div><div class="col-xl-4 col-md-6">
     <a href="m_dcmnt.html" class="text-decoration-none">
-        <div class="card h-100">
-            <div class="card-body">
-                <h5 class="card-title code text-primary">/m/dcmnt</h5>
-                <div class="d-flex gap-2 flex-wrap">
-                    <span class="pill-label badge bg-primary">1 types</span>
-                    <span class="pill-label badge bg-success">2 instructions</span>
-                    <span class="pill-label badge bg-info text-dark">1 spaces</span>
+        <div class="splash-card card">
+            <div class="card-body d-flex flex-column p-2">
+                <div class="d-flex align-items-center gap-2 mb-1">
+                    <img src="../images/icons/space/dcmnt-icon.svg" alt="" class="splash-icon"
+                         onerror="this.style.display='none'">
+                    <span class="code text-primary fw-bold splash-title">/m/dcmnt</span>
+                </div>
+                <p class="text-muted splash-desc">document database spaces backed by mongodb, documentdb with collection schemas</p>
+                <div class="splash-stats">
+                    <div><span class="stat-label">consts</span><span class="stat-val">1</span></div>
+                    <div><span class="stat-label">types</span><span class="stat-val">1</span></div>
+                    <div><span class="stat-label">spaces</span><span class="stat-val">1</span></div>
+                    <div><span class="stat-label">insts</span><span class="stat-val">2</span></div>
+                    <div><span class="stat-label">rewrites</span><span class="stat-val">9</span></div>
                 </div>
             </div>
         </div>
     </a>
-</div><div class="col-md-6 col-lg-4">
+</div><div class="col-xl-4 col-md-6">
     <a href="m_grph.html" class="text-decoration-none">
-        <div class="card h-100">
-            <div class="card-body">
-                <h5 class="card-title code text-primary">/m/grph</h5>
-                <div class="d-flex gap-2 flex-wrap">
-                    <span class="pill-label badge bg-primary">4 types</span>
-                    <span class="pill-label badge bg-success">13 instructions</span>
-                    <span class="pill-label badge bg-info text-dark">1 spaces</span>
+        <div class="splash-card card">
+            <div class="card-body d-flex flex-column p-2">
+                <div class="d-flex align-items-center gap-2 mb-1">
+                    <img src="../images/icons/space/grph-icon.svg" alt="" class="splash-icon"
+                         onerror="this.style.display='none'">
+                    <span class="code text-primary fw-bold splash-title">/m/grph</span>
+                </div>
+                <p class="text-muted splash-desc">graph database spaces via tinkerpop and janusgraph</p>
+                <div class="splash-stats">
+                    <div><span class="stat-label">consts</span><span class="stat-val">0</span></div>
+                    <div><span class="stat-label">types</span><span class="stat-val">4</span></div>
+                    <div><span class="stat-label">spaces</span><span class="stat-val">1</span></div>
+                    <div><span class="stat-label">insts</span><span class="stat-val">13</span></div>
+                    <div><span class="stat-label">rewrites</span><span class="stat-val">7</span></div>
                 </div>
             </div>
         </div>
     </a>
-</div><div class="col-md-6 col-lg-4">
-    <a href="m_rdf.html" class="text-decoration-none">
-        <div class="card h-100">
-            <div class="card-body">
-                <h5 class="card-title code text-primary">/m/rdf</h5>
-                <div class="d-flex gap-2 flex-wrap">
-                    <span class="pill-label badge bg-primary">2 types</span>
-                    <span class="pill-label badge bg-success">1 instructions</span>
-                    <span class="pill-label badge bg-info text-dark">1 spaces</span>
+</div><div class="col-xl-4 col-md-6">
+    <a href="m_vec.html" class="text-decoration-none">
+        <div class="splash-card card">
+            <div class="card-body d-flex flex-column p-2">
+                <div class="d-flex align-items-center gap-2 mb-1">
+                    <img src="../images/icons/space/vec-icon.svg" alt="" class="splash-icon"
+                         onerror="this.style.display='none'">
+                    <span class="code text-primary fw-bold splash-title">/m/vec</span>
+                </div>
+                <p class="text-muted splash-desc">vector spaces for embeddings, similarity search, and tensor operations</p>
+                <div class="splash-stats">
+                    <div><span class="stat-label">consts</span><span class="stat-val">1</span></div>
+                    <div><span class="stat-label">types</span><span class="stat-val">3</span></div>
+                    <div><span class="stat-label">spaces</span><span class="stat-val">0</span></div>
+                    <div><span class="stat-label">insts</span><span class="stat-val">2</span></div>
+                    <div><span class="stat-label">rewrites</span><span class="stat-val">0</span></div>
                 </div>
             </div>
         </div>
     </a>
 </div></div>
-    <div class="py-3 text-center mt-5">
+    <div class="py-3 text-center mt-4">
         <hr class="border-secondary">
         <small class="text-muted">
-            metatron instset doc generator on build 0-2026-06-28 02:23:15<br>
-            (c) PhaseShift Studio, LLC
+            metatron instset doc generator — build 0<br>
+            &copy; PhaseShift Studio, LLC
         </small>
     </div>
 </div></main>

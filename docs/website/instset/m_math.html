@@ -137,9 +137,17 @@ bin/metatron</code></pre>
                 </a>
                 <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="isa_dropdown">
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../instset/index.html';">
+                        <i class="bi bi-grid-3x3-gap-fill me-2"></i>overview</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
                            onclick="location.href='../instset/m.html';"><img
                             src="../images/icons/space/mtron-icon.svg" class="isa-row icon-color me-2"
                             alt="mtron"/>/m</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../instset/m_sys.html';"><img
+                            src="../images/icons/space/sys-icon.svg" class="isa-row icon-color me-2"
+                            alt="sys"/>/m/sys</a></li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
                            onclick="location.href='../instset/m_mach.html';"><img
                             src="../images/icons/space/mach-icon.svg" class="isa-row icon-color me-2" alt="mach"/>/m/mach</a>
@@ -156,12 +164,10 @@ bin/metatron</code></pre>
                            onclick="location.href='../instset/m_grph.html';"><img
                             src="../images/icons/space/grph-icon.svg" class="isa-row icon-color me-2" alt="grph"/>/m/grph</a>
                     </li>
-                    <!-- TODO: Add /m/vec docs
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='instset/m_vec.html';"><img
-                            src="../images/icons/space/olap-icon.svg" class="isa-row icon-color me-2"
+                           onclick="location.href='../instset/m_vec.html';"><img
+                            src="../images/icons/space/vec-icon.svg" class="isa-row icon-color me-2"
                             alt="vec"/>/m/vec</a></li>
-                    -->
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
                            onclick="location.href='../instset/m_web.html';"><img
                             src="../images/icons/space/web-icon.svg" class="isa-row icon-color me-2"
@@ -172,7 +178,7 @@ bin/metatron</code></pre>
                             alt="llm"/>/m/llm</a></li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
                            onclick="location.href='../instset/m_iot.html';"><img
-                            src="../images/icons/space/graphql-icon.svg" class="isa-row icon-color me-2" 
+                            src="../images/icons/space/iot-icon.svg" class="isa-row icon-color me-2"
                             alt="iot"/>/m/iot</a>
                     </li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
@@ -310,12 +316,21 @@ bin/metatron</code></pre>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <a href="#consts" class="btn btn-outline-primary">Consts <span class="pill-label badge bg-secondary">2</span></a><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">14</span></a><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">14</span></a><button class="btn btn-outline-secondary" disabled>Spaces <span class="pill-label badge bg-dark">0</span></button><button class="btn btn-outline-secondary" disabled>Rewrites <span class="pill-label badge bg-dark">0</span></button>
+        <a href="#consts" class="btn btn-outline-primary">Consts <span class="pill-label badge bg-secondary">2</span></a><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">14</span></a><button class="btn btn-outline-secondary" disabled>Spaces <span class="pill-label badge bg-dark">0</span></button><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">14</span></a><button class="btn btn-outline-secondary" disabled>Rewrites <span class="pill-label badge bg-dark">0</span></button>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="card">
         <div class="card-header"><h5 class="mb-0 text-primary">Index</h5></div>
         <div class="card-body"><div class="mb-3">
+    <h6 class="text-primary mb-2">Constants</h6>
+    <div class="d-flex flex-wrap"><a href="#const-e" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">e</span>
+    <span class="pill-label badge bg-secondary ms-2">C</span>
+</a><a href="#const-pi" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">pi</span>
+    <span class="pill-label badge bg-secondary ms-2">C</span>
+</a></div>
+</div><div class="mb-3">
     <h6 class="text-primary mb-2">Types</h6>
     <div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">math</small></div><div class="d-flex flex-wrap"><a href="#type-currency" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">currency</span>
@@ -360,15 +375,6 @@ bin/metatron</code></pre>
     <span class="code" style="font-size:1.2rem;">second</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a></div></div>
-</div><div class="mb-3">
-    <h6 class="text-primary mb-2">Constants</h6>
-    <div class="d-flex flex-wrap"><a href="#const-e" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">e</span>
-    <span class="pill-label badge bg-secondary ms-2">C</span>
-</a><a href="#const-pi" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">pi</span>
-    <span class="pill-label badge bg-secondary ms-2">C</span>
-</a></div>
 </div><div class="mb-3">
     <h6 class="text-primary mb-2">Instructions</h6>
     <div class="d-flex flex-wrap"><a href="#inst-abs" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
@@ -444,6 +450,7 @@ bin/metatron</code></pre>
         <small class="text-muted code">/m/math/data/bB</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">data::T[][ctor?bB&lt;=#{?}(data::T)]@/m/math/data/bB</code></pre></div>
+    
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a byte of data</p>
 </div>
@@ -456,6 +463,7 @@ bin/metatron</code></pre>
         <small class="text-muted code">/m/math/currency</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">real::T@/m/math/currency</code></pre></div>
+    
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a currency amount</p>
 </div>
@@ -469,6 +477,7 @@ bin/metatron</code></pre>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">real::T@/m/math/data</code></pre></div>
     
+    
 </div><div class="card mb-3" id="type-euro">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -478,6 +487,7 @@ bin/metatron</code></pre>
         <small class="text-muted code">/m/math/currency/euro</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">currency::T@/m/math/currency/euro</code></pre></div>
+    
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">european union currency</p>
 </div>
@@ -490,6 +500,7 @@ bin/metatron</code></pre>
         <small class="text-muted code">/m/math/data/gB</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">data::T[][ctor?gB&lt;=#{?}(data::T)]@/m/math/data/gB</code></pre></div>
+    
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a gigabyte (1024 megabytes) of data</p>
 </div>
@@ -502,6 +513,7 @@ bin/metatron</code></pre>
         <small class="text-muted code">/m/math/time/hour</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/math/time::T[][ctor?hour&lt;=#{?}(time::T)]@/m/math/time/hour</code></pre></div>
+    
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">an hour of time (60 minutes)</p>
 </div>
@@ -514,6 +526,7 @@ bin/metatron</code></pre>
         <small class="text-muted code">/m/math/data/kB</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">data::T[][ctor?kB&lt;=#{?}(data::T)]@/m/math/data/kB</code></pre></div>
+    
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a kilobyte (1024 bytes) of data</p>
 </div>
@@ -526,6 +539,7 @@ bin/metatron</code></pre>
         <small class="text-muted code">/m/math/data/mB</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">data::T[][ctor?mB&lt;=#{?}(data::T)]@/m/math/data/mB</code></pre></div>
+    
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a megabyte (1024 kilobytes) of data</p>
 </div>
@@ -538,6 +552,7 @@ bin/metatron</code></pre>
         <small class="text-muted code">/m/math/time/millis</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/math/time::T[][ctor?millis&lt;=#{?}(time::T)]@/m/math/time/millis</code></pre></div>
+    
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a millisecond of time</p>
 </div>
@@ -550,6 +565,7 @@ bin/metatron</code></pre>
         <small class="text-muted code">/m/math/time/minute</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/math/time::T[][ctor?minute&lt;=#{?}(time::T)]@/m/math/time/minute</code></pre></div>
+    
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a minute of time (60 seconds)</p>
 </div>
@@ -562,6 +578,7 @@ bin/metatron</code></pre>
         <small class="text-muted code">/m/math/data/pB</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">data::T[][ctor?pB&lt;=#{?}(data::T)]@/m/math/data/pB</code></pre></div>
+    
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a petabyte (1024 terabytes) of data</p>
 </div>
@@ -574,6 +591,7 @@ bin/metatron</code></pre>
         <small class="text-muted code">/m/math/time/second</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/math/time::T[][ctor?second&lt;=#{?}(time::T)]@/m/math/time/second</code></pre></div>
+    
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a second of time (1000 millis)</p>
 </div>
@@ -586,6 +604,7 @@ bin/metatron</code></pre>
         <small class="text-muted code">/m/math/data/tB</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">data::T[][ctor?tB&lt;=#{?}(data::T)]@/m/math/data/tB</code></pre></div>
+    
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a terabyte (1024 gigabytes) of data</p>
 </div>
@@ -598,6 +617,7 @@ bin/metatron</code></pre>
         <small class="text-muted code">/m/math/currency/usd</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">currency::T@/m/math/currency/usd</code></pre></div>
+    
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">united states currency</p>
 </div>

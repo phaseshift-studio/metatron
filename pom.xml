@@ -599,7 +599,7 @@
                                 <argument>/m/tble</argument>
                                 <argument>/m/dcmnt</argument>
                                 <argument>/m/grph</argument>
-                                <argument>/m/rdf</argument>
+                                <argument>/m/vec</argument>
                             </arguments>
                         </configuration>
                     </execution>

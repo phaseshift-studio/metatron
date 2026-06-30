@@ -30,9 +30,7 @@ color green "\[" "\]" "\(" "\)" "\{" "\}"
 icolor yellow "(\.|[0-9])+E[-+]?[0-9]+"
 # uri slash or schema
 icolor blue "(/|([a-z]+(://))|[a-z])([0-9]|[a-z]|\.|-|_)+(:)?[0-9]*(/)?([a-z]|/|\_|[0-9])*"
-# rec/rel uri key
-icolor cyan "</?(<|>|[a-z]|[0-9]|/|_|-|:|\+|#|\s)*>\s*=>"
-icolor cyan "/?(<|>|\+|#|[a-z]|[0-9]|/|_|-|:)*\s*=>"
+# rec/rel uri key — applied after generic <> coloring below
 color green "=>"
 ### bytes
 icolor yellow "0x([0-9]|[A-F]|[a-f])+"
@@ -68,6 +66,9 @@ color green "::"
 ### uri <>
 color blue "[<][^>]*[>]"
 color green "<" ">"
+### uri key — overrides generic <> cyan before =>
+icolor cyan "</?(<|>|[a-z]|[0-9]|/|_|-|:|\+|#|\.|\s)*>\s*=>"
+icolor cyan "/?(<|>|\+|#|[a-z]|[0-9]|/|_|-|:|\.)*\s*=>"
 color yellow "\$\{[^}]*\}" "<="
 ### str
 color yellow "[\"][^\"]*[\"]"
