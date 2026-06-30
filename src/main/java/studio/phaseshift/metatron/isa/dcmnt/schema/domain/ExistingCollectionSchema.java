@@ -24,10 +24,12 @@ import org.bson.BsonValue;
 import org.bson.Document;
 import studio.phaseshift.metatron.furi.DataPath;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.SchemaSpace;
 import studio.phaseshift.metatron.isa.dcmnt.schema.BsonTypeMapper;
 import studio.phaseshift.metatron.isa.dcmnt.space.dcmntSpace;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
+import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.tble.space.ExistingTableSchema;
 
 import java.util.*;
@@ -52,6 +54,21 @@ public class ExistingCollectionSchema {
     private final Map<String, CollectionMetadata> collectionSchemas = new LinkedHashMap<>();
     private final int sampleSize;
     private CollectionSchemaInstSet schemaInstset;
+
+    /**
+     * Tracks the metatron TID of every field value written so new fields
+     * can be merged into the schema InstSet without re-sampling the database.
+     * Mirrors {@code ExistingTableSchema.logicalTypes}.
+     */
+    private final Map<String, Map<String, Obj>> logicalTypes = new LinkedHashMap<>();
+
+    /**
+     * Public accessor for {@code dcmntIncrQ} so it can check for
+     * new fields before calling {@link #onCollectionChanged}.
+     */
+    public Map<String, Map<String, Obj>> getLogicalTypes() {
+        return this.logicalTypes;
+    }
 
     /**
      * Inject the schema instset so that collection dereferences return instset-encoded
@@ -258,6 +275,64 @@ public class ExistingCollectionSchema {
     }
 
     // =======================================================================
+    // Field type tracking (incremental schema update on write)
+    // =======================================================================
+
+    /**
+     * Record the metatron TID of a written field value so the schema InstSet
+     * can be updated with type refinements without re-sampling the database.
+     */
+    public void trackFieldType(final String collectionName, final String fieldName,
+                               final Obj value) {
+        this.logicalTypes
+                .computeIfAbsent(collectionName.toLowerCase(), k -> new LinkedHashMap<>())
+                .put(fieldName.toLowerCase(),
+                        studio.phaseshift.metatron.isa.m.type.impl.MType.T(value.tid()));
+    }
+
+    /**
+     * Called after a write that may have introduced a new collection or new
+     * fields.  Regenerates the collection's Type from tracked field TIDs and
+     * writes it to the schema InstSet via the Router.  No-op when the schema
+     * InstSet is not wired or no fields have been tracked for the collection.
+     */
+    public void onCollectionChanged(final String collectionName, final boolean isNew) {
+        if (this.schemaInstset == null) return;
+        final Map<String, Obj> fieldTypes = this.logicalTypes.get(
+                collectionName.toLowerCase());
+        if (fieldTypes == null || fieldTypes.isEmpty()) return;
+
+        // Also fold in any sampled fields not yet seen by a write
+        final CollectionMetadata sampled = this.collectionSchemas.get(
+                collectionName.toLowerCase());
+        if (sampled != null) {
+            for (final PropertyMetadata field : sampled.fields()) {
+                final String key = field.path().toLowerCase();
+                if (field.path().contains(".")) continue;
+                if (field.path().equals("_id")) continue;
+                fieldTypes.putIfAbsent(key, BsonTypeMapper.toMtronType(field.bsonType()));
+            }
+        }
+
+        // Build the Type from field TIDs
+        final LinkedHashMap<Obj, Obj> fields = new LinkedHashMap<>();
+        fieldTypes.forEach((fieldName, tid) ->
+                fields.put(uri(fieldName), tid));
+
+        final fURI typeVID = this.schemaInstset.pattern()
+                .retractPattern().extend(collectionName);
+        final Type type = Type.Builder.build()
+                .tid(REC_TID)
+                .vid(typeVID)
+                .isaPredicate(rec(fields))
+                .create();
+
+        Router.writeToSpace(typeVID, type);
+        SchemaSpace.logSchemaChange(this.space.logger(), "collection", "field",
+                collectionName, fieldTypes.keySet(), isNew);
+    }
+
+    // =======================================================================
     // Path resolution via DataPath
     // =======================================================================
 
@@ -271,7 +346,8 @@ public class ExistingCollectionSchema {
         if (dp.collection() == null)
             return null;
         if (!dp.collectionIsWildcard()
-                && !this.collectionSchemas.containsKey(dp.collection().toLowerCase()))
+                && !this.collectionSchemas.containsKey(dp.collection().toLowerCase())
+                && !this.logicalTypes.containsKey(dp.collection().toLowerCase()))
             return null;
         return dp;
     }

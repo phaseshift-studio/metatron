@@ -78,7 +78,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class dcmntSpaceTest extends AbstractDataPathTest implements CommonRewritesTestContract { //SubQTest {
+public class dcmntSpaceTest extends AbstractDataPathTest implements CommonRewritesTestContract {
 
     protected static MongoServer mongoServer;
     protected static String connectionString;

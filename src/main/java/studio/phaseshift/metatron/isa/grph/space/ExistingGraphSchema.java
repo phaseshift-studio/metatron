@@ -24,13 +24,34 @@ import org.apache.tinkerpop.gremlin.structure.Edge;
 import org.apache.tinkerpop.gremlin.structure.Element;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import studio.phaseshift.metatron.furi.fURI;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import studio.phaseshift.metatron.isa.AbstractInstSet;
+import studio.phaseshift.metatron.isa.SchemaSpace;
+import studio.phaseshift.metatron.isa.Space;
+import studio.phaseshift.metatron.isa.grph.grphInstSet;
+
+import static studio.phaseshift.metatron.isa.grph.grphInstSet.EDGE_TID;
+import static studio.phaseshift.metatron.isa.grph.grphInstSet.VRTX_TID;
+import studio.phaseshift.metatron.isa.m.type.InstSet;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Type;
+import studio.phaseshift.metatron.isa.mach.type.Router;
 
 import java.util.*;
 
+import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.isa.m.mInstSet.INSTSET_TID;
+import static studio.phaseshift.metatron.isa.m.type.Poly.MUTABLE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
+import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /**
  * Auto-discovers vertex and edge labels, property types, and edge directions
@@ -42,6 +63,13 @@ public class ExistingGraphSchema {
     private final grphSpace space;
     private final Map</* label (lowercase) */ String, LabelMetadata> labelSchemas = new LinkedHashMap<>();
     private final int sampleSize;
+
+    /**
+     * Tracks the metatron TID of every property value written so new properties
+     * can be merged into the schema InstSet without re-sampling the graph.
+     * Mirrors {@code ExistingTableSchema.logicalTypes}.
+     */
+    private final Map<String, Map<String, Obj>> logicalTypes = new LinkedHashMap<>();
 
     // ---- records ------------------------------------------------------------
 
@@ -71,9 +99,8 @@ public class ExistingGraphSchema {
 
     // ---- main entry point ---------------------------------------------------
 
-    public void initialize(final Graph graph) {
+    public void initialize(final GraphTraversalSource g) {
         this.labelSchemas.clear();
-        final GraphTraversalSource g = graph.traversal();
         for (final String label : discoverEntities(g)) {
             // Determine element type: check if any vertex has this label
             final ElementType type = g.V().hasLabel(label).hasNext()
@@ -88,6 +115,67 @@ public class ExistingGraphSchema {
         }
         this.space.logger().info("discovered {{b}}%d{{X}} labels: %s",
                 this.labelSchemas.size(), this.labelSchemas.keySet());
+    }
+
+    /**
+     * Publish all discovered labels to the schema InstSet so that
+     * {@code *g:person}, {@code *g:knows}, etc. resolve immediately after
+     * dataset load.
+     */
+    public void publishDiscoveredLabels() {
+        // Build types from all discovered labels
+        final List<Type> types = new ArrayList<>();
+        // Default V and E meta-collections — always present (TinkerPop convention)
+        types.add(Type.Builder.build().tid(VRTX_TID).vid(f("V")).create());
+        types.add(Type.Builder.build().tid(EDGE_TID).vid(f("E")).create());
+        for (final LabelMetadata meta : this.labelSchemas.values()) {
+            final LinkedHashMap<Obj, Obj> fields = new LinkedHashMap<>();
+            for (final PropertyMetadata prop : meta.properties()) {
+                final Obj typeObj = mtronVal(prop.javaType());
+                if (typeObj != null)
+                    fields.put(uri(prop.path()), typeObj);
+            }
+            if (fields.isEmpty()) continue;
+            final fURI baseTid = meta.elementType() == ElementType.EDGE
+                    ? EDGE_TID : VRTX_TID;
+            types.add(Type.Builder.build()
+                    .tid(baseTid)
+                    .vid(f(meta.label()))
+                    .isaPredicate(rec(fields))
+                    .create());
+        }
+        if (types.isEmpty()) return;
+        // Merge into the InstSet at SCHEMA (bootstrap if needed)
+        final Obj schema = this.space.at(uri(SCHEMA));
+        if (schema.isInstSet() && schema.<InstSet>as().pattern() != null) {
+            for (final Type type : types)
+                schema.<Space>as().write(
+                        schema.<InstSet>as().pattern().retractPattern()
+                                .extend(type.vid().name()), type);
+        } else {
+            final fURI instSetVid = this.space.vid().extend(INSTSET);
+            final fURI instSetPattern = instSetVid.extend(ALL);
+            final InstSet instSet = new AbstractInstSet(
+                    mutableMap(
+                            uri(PATTERN), uri(instSetPattern),
+                            uri(TYPE), lst(types.stream().map(t -> (Obj) t).toList())
+                    ),
+                    INSTSET_TID, instSetVid
+            ) {};
+            Router.global().addSpace(instSet);
+            instSet.setup();
+            this.space.at(uri(SCHEMA), instSet, MUTABLE);
+        }
+        SchemaSpace.logSchemaChange(this.space.logger(), "dataset", "label",
+                "_discovered", this.labelSchemas.keySet(), true);
+    }
+
+    private static Obj mtronVal(final Class<?> javaType) {
+        if (javaType == String.class) return T(str("").tid());
+        if (javaType == Integer.class || javaType == Long.class) return T(jnt(0).tid());
+        if (javaType == Double.class || javaType == Float.class) return T(real(0.0).tid());
+        if (javaType == Boolean.class) return T(bool(false).tid());
+        return null;
     }
 
     // ---- entity discovery ---------------------------------------------------
@@ -184,6 +272,80 @@ public class ExistingGraphSchema {
         if (javaType == Double.class || javaType == Float.class) return real(0.0).tid().basePath();
         if (javaType == Boolean.class) return bool(false).tid().basePath();
         return str("").tid().basePath();
+    }
+
+    // ---- field type tracking -------------------------------------------------
+
+    public Map<String, Map<String, Obj>> getLogicalTypes() {
+        return this.logicalTypes;
+    }
+
+    /**
+     * Record the metatron TID of a written property so the schema InstSet
+     * can be updated without re-sampling the graph.
+     */
+    public void trackPropertyType(final String label, final String propertyName,
+                                  final Obj value) {
+        this.logicalTypes
+                .computeIfAbsent(label.toLowerCase(), k -> new LinkedHashMap<>())
+                .put(propertyName.toLowerCase(), T(value.tid()));
+    }
+
+    /**
+     * Called after a vertex or edge write that may have introduced a new
+     * label or new properties.  Regenerates the label's Type from tracked
+     * property TIDs and writes it to the schema InstSet via the space's
+     * {@code SCHEMA} key.
+     */
+    public void onLabelChanged(final String label, final boolean isNew) {
+        final Map<String, Obj> propTypes = this.logicalTypes.get(
+                label.toLowerCase());
+        if (propTypes == null || propTypes.isEmpty()) return;
+
+        // Build the Type from property TIDs: rec{*}::T[?prop1=>type1::T,...]
+        final LinkedHashMap<Obj, Obj> fields = new LinkedHashMap<>();
+        propTypes.forEach((propName, typeObj) ->
+                fields.put(uri(propName), typeObj));
+
+        // Determine element type (vertex vs edge) from existing metadata
+        final LabelMetadata existing = this.labelSchemas.get(label.toLowerCase());
+        final fURI baseTid = existing != null && existing.elementType() == ElementType.EDGE
+                ? grphInstSet.EDGE_TID
+                : grphInstSet.VRTX_TID;
+
+        // vid = type name so resolveCollectionSchema(label) matches on t.vid().name()
+        final Type type = Type.Builder.build()
+                .tid(baseTid)           // super-type: vrtx::T or edge::T
+                .vid(f(label))          // type name: "person", "knows", etc.
+                .isaPredicate(rec(fields))
+                .create();
+
+        // Merge into the schema InstSet at SCHEMA (bootstrap if needed)
+        final Obj schema = this.space.at(uri(SCHEMA));
+        if (schema.isInstSet() && schema.<InstSet>as().pattern() != null) {
+            Router.writeToSpace(
+                    schema.<InstSet>as().pattern().retractPattern().extend(label),
+                    type);
+        } else {
+            // Bootstrap: no InstSet at SCHEMA — create one seeded with this
+            // type plus the default V and E meta-collections
+            final fURI instSetVid = this.space.vid().extend(INSTSET);
+            final fURI instSetPattern = instSetVid.extend(ALL);
+            final Type vType = Type.Builder.build().tid(VRTX_TID).vid(f("V")).create();
+            final Type eType = Type.Builder.build().tid(EDGE_TID).vid(f("E")).create();
+            final InstSet instSet = new AbstractInstSet(
+                    mutableMap(
+                            uri(PATTERN), uri(instSetPattern),
+                            uri(TYPE), lst(List.of((Obj) vType, (Obj) eType, (Obj) type))
+                    ),
+                    INSTSET_TID, instSetVid
+            ) {};
+            Router.global().addSpace(instSet);
+            instSet.setup();
+            this.space.at(uri(SCHEMA), instSet, MUTABLE);
+        }
+        SchemaSpace.logSchemaChange(this.space.logger(), "label", "property",
+                label, propTypes.keySet(), isNew);
     }
 
     // ---- accessors ----------------------------------------------------------

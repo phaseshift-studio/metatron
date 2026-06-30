@@ -20,9 +20,9 @@ package studio.phaseshift.metatron.isa.grph.space;
 
 import org.apache.tinkerpop.gremlin.structure.Element;
 import org.jspecify.annotations.NonNull;
+import studio.phaseshift.metatron.isa.grph.io.ObjTP3Serializer;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Uri;
-import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
 import studio.phaseshift.metatron.util.IteratorUtil;
 
 import java.util.AbstractMap;
@@ -44,7 +44,7 @@ public class ElementMap<T extends Element> extends AbstractMap<Obj, Obj> {
 
     @Override
     public @NonNull Set<Entry<Obj, Obj>> entrySet() {
-        return IteratorUtil.stream(element.<Object>properties()).map(p -> new SimpleEntry<Obj,Obj>(uri(p.key()), MObjFactory.single().toObj(p.value()))).collect(Collectors.toSet());
+        return IteratorUtil.stream(element.<Object>properties()).map(p -> new SimpleEntry<Obj,Obj>(uri(p.key()), ObjTP3Serializer.tp3FromValue(p.value()))).collect(Collectors.toSet());
     }
     
     @Override
@@ -55,6 +55,6 @@ public class ElementMap<T extends Element> extends AbstractMap<Obj, Obj> {
 
     @Override
     public Obj get(final Object key) {
-       return MObjFactory.single().toObj(this.element.property(((Uri)key).uriValue().toString()).orElse(null));
+       return ObjTP3Serializer.tp3FromValue(this.element.property(((Uri)key).uriValue().toString()).orElse(null));
     }
 }

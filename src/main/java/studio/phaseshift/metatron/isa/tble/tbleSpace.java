@@ -268,7 +268,7 @@ public class tbleSpace extends AbstractSpace<Connection> implements SchemaSpace 
         // Schema VID is in /m/ namespace — backed by system memSpace, not this
         // tbleSpace.  A VID under the tbleSpace pattern would cause the Router
         // to route schema reads/writes back into this space → recursion.
-        final fURI schemaVid = this.vid().extend(SCHEMA).extend(INSTSET);
+        final fURI schemaVid = this.vid().extend(INSTSET);
         this.schemaGenerator = new SQLSchemaGenerator(
                 this.existingTableSchema.getTableMetadata(), schemaVid,
                 this.databaseName,
@@ -286,6 +286,10 @@ public class tbleSpace extends AbstractSpace<Connection> implements SchemaSpace 
         this.schemaInstset = this.schemaGenerator.generateSchemaInstset(schemaVid);
         Router.global().addSpace(this.schemaInstset);
         this.schemaInstset.setup();
+
+        // Wire schema into the space's own Rec so SchemaSpace.schema()
+        // (and resolveCollectionSchema) can find it at SCHEMA.
+        this.at(uri(SCHEMA), this.schemaInstset, MUTABLE);
 
         LOG.info("initialized {{g}}SQL schema{{X}} with %s table types",
                 this.existingTableSchema.getTableNames().size());
@@ -524,7 +528,19 @@ public class tbleSpace extends AbstractSpace<Connection> implements SchemaSpace 
                 LOG.debug("looking for table vid: %s", pattern);
                 final fURI aligned = Space.Helper.routeFromSpace(pattern, this.routes());
 
-                // ── table-mapped path ──
+                // ── collection-level schema resolution ──
+                // Shared across all SchemaSpaces: /db/collection → type from schema InstSet.
+                // Returns empty iterator when collection is unknown, falling through
+                // to the key-value path below.
+                final DataPath dp = DataPath.of(f(this.databaseName).extend(aligned));
+                if (dp.hasCollection() && !dp.hasEntry()) {
+                    final Iterator<IdObj> schemaResults =
+                            resolveCollectionSchema(dp.collection());
+                    if (schemaResults.hasNext())
+                        return collectResults(schemaResults, pattern);
+                }
+
+                // ── table-mapped path (entry-level) ──
                 if (this.existingTableSchema != null
                         && this.existingTableSchema.isTablePath(aligned)) {
                     final Iterator<IdObj> raw = this.existingTableSchema.read(

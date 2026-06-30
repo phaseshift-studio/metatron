@@ -36,6 +36,7 @@ import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.dcmnt.schema.domain.CollectionSchemaInstSet;
 import studio.phaseshift.metatron.isa.dcmnt.schema.domain.ExistingCollectionSchema;
 import studio.phaseshift.metatron.isa.dcmnt.schema.storage.ObjBSONSerializer;
+import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
@@ -53,6 +54,7 @@ import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.furi.q.QCollection.INCRQ_PATTERN;
 import static studio.phaseshift.metatron.furi.q.QCollection.SUBQ_PATTERN;
 import static studio.phaseshift.metatron.isa.dcmnt.dcmntInstSet.COLLECTION_TID;
 import static studio.phaseshift.metatron.isa.dcmnt.dcmntInstSet.DCMNT_SPACE_TID;
@@ -148,6 +150,7 @@ public class dcmntSpace extends AbstractSpace<MongoClient> implements SchemaSpac
     protected Supplier<ObjBSONSerializer> serializer;
     protected ExistingCollectionSchema existingCollectionSchema;
     protected dcmntSpaceSubQ dcmntSpaceSubQ;
+    protected dcmntIncrQ dcmntIncrQ;
 
     public static dcmntSpace of(final Map<Obj, Obj> config, final fURI vid) {
         final MongoClient client = MongoClients.create(config.get(uri(HOST)).uriValue().toString());
@@ -213,7 +216,7 @@ public class dcmntSpace extends AbstractSpace<MongoClient> implements SchemaSpac
         this.existingCollectionSchema = new ExistingCollectionSchema(this);
         this.existingCollectionSchema.initialize(this.database);
         final CollectionSchemaInstSet schemaInstset =
-                this.existingCollectionSchema.generateSchemaInstset(this.vid().extend(f(SCHEMA).extend(INSTSET)));
+                this.existingCollectionSchema.generateSchemaInstset(this.vid().extend(INSTSET));
         Router.global().addSpace(schemaInstset);
         schemaInstset.setup();
 
@@ -222,7 +225,7 @@ public class dcmntSpace extends AbstractSpace<MongoClient> implements SchemaSpac
         // instead of dcmnt-specific COLLECTION_TID URIs.
         this.existingCollectionSchema.setSchemaInstset(schemaInstset);
 
-        this.at(uri(f(SCHEMA).extend(INSTSET)), schemaInstset, MUTABLE);
+        this.at(uri(SCHEMA), schemaInstset, MUTABLE);
 
         // Build a structured root type encoding the per-collection type map.
         // Each collection type is a rec::T refinement (space-agnostic, not tied to MongoDB).
@@ -241,6 +244,23 @@ public class dcmntSpace extends AbstractSpace<MongoClient> implements SchemaSpac
 
         LOG.info("initialized {{g}}collection schema{{X}} for %d collections",
                 this.existingCollectionSchema.getCollectionNames().size());
+    }
+
+    @Override
+    public Space addQ(final QProc qProc) {
+        // Intercept subQ → dcmntSpaceSubQ, incrQ → dcmntIncrQ
+        final QProc toAdd;
+        if (qProc.pattern().equals(SUBQ_PATTERN))
+            toAdd = this.dcmntSpaceSubQ = new dcmntSpaceSubQ(this);
+        else if (qProc.pattern().equals(INCRQ_PATTERN))
+            toAdd = this.dcmntIncrQ = new dcmntIncrQ(this);
+        else
+            toAdd = qProc;
+        final Obj key = uri(QPROC);
+        if (this.at(key).isNoObj())
+            this.at(key, lst(), MUTABLE);
+        this.at(key).asLst().add(toAdd, MUTABLE);
+        return this;
     }
 
     public MongoDatabase getDatabase() {
@@ -331,6 +351,31 @@ public class dcmntSpace extends AbstractSpace<MongoClient> implements SchemaSpac
                     writeField(collection, dp.entry(), dp.fieldPathStr(), obj);
                 }
             });
+            // Track field types for schema update
+            if (obj.isRec() && dp.hasCollection()) {
+                final String collName = dp.collection();
+                final Map<String, Obj> existing =
+                        this.existingCollectionSchema.getLogicalTypes()
+                                .get(collName.toLowerCase());
+                final boolean isNewCollection = existing == null;
+                boolean hasNewFields = isNewCollection;
+                for (final Map.Entry<Obj, Obj> entry : obj.asRec().jvm().entrySet()) {
+                    if (entry.getValue().isAuto() || entry.getValue().isNoObj()
+                            || entry.getValue().isNone())
+                        continue;
+                    final String fieldName = entry.getKey().isUri()
+                            ? entry.getKey().asUri().uriValue().name()
+                            : entry.getKey().toString();
+                    this.existingCollectionSchema.trackFieldType(
+                            collName, fieldName, entry.getValue());
+                    if (!isNewCollection && !existing.containsKey(
+                            fieldName.toLowerCase()))
+                        hasNewFields = true;
+                }
+                if (hasNewFields)
+                    this.existingCollectionSchema.onCollectionChanged(
+                            collName, isNewCollection);
+            }
             return obj;
         };
     }
@@ -500,17 +545,17 @@ public class dcmntSpace extends AbstractSpace<MongoClient> implements SchemaSpac
 
             if (!dp.hasEntry()) {
                 /*
-                 * Collection dereference — return the instset-encoded Type for each
-                 * discovered collection.  This makes the instset schema the single source
-                 * of truth (no separate dcmnt-specific COLLECTION_TID encoding).
+                 * Collection dereference — resolve types from the schema InstSet
+                 * via the shared SchemaSpace method.  This makes the instset schema
+                 * the single source of truth across all database-backed spaces.
                  */
+                final Iterator<IdObj> schemaResults =
+                        resolveCollectionSchema(dp.collection());
+                if (schemaResults.hasNext())
+                    return schemaResults;
+
+                // Fallback when schema not wired: return COLLECTION_TID URIs
                 if (dp.collectionIsWildcard()) {
-                    if (this.existingCollectionSchema != null) {
-                        return this.existingCollectionSchema.getCollectionTypes().stream()
-                                .map(t -> IdObj.of(t.vid(), t))
-                                .iterator();
-                    }
-                    // Fallback when schema not wired: return COLLECTION_TID URIs
                     return resolveCollectionStream(dp.collection()).map(collection -> {
                         final fURI collectionVID = Space.Helper.routeToSpace(
                                 f(collection.getNamespace().getCollectionName()), this.routes());
@@ -519,16 +564,8 @@ public class dcmntSpace extends AbstractSpace<MongoClient> implements SchemaSpac
                                 .selfVID(collectionVID));
                     }).iterator();
                 } else {
-                    final String collName = dp.collection();
-                    if (this.existingCollectionSchema != null) {
-                        final Type collectionType = this.existingCollectionSchema.getCollectionType(collName);
-                        if (collectionType != null) {
-                            return IteratorUtil.of(IdObj.of(collectionType.vid(), collectionType));
-                        }
-                    }
-                    // Fallback: construct a self-referencing collection URI
                     final fURI collectionVID = Space.Helper.routeToSpace(
-                            f(collName), this.routes());
+                            f(dp.collection()), this.routes());
                     return IteratorUtil.of(IdObj.of(collectionVID, uri(collectionVID, COLLECTION_TID, null)
                             .selfVID(collectionVID)));
                 }

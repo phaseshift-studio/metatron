@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.algebra.rewrite;
 import org.junit.jupiter.params.provider.Arguments;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Code;
+import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
@@ -28,11 +29,11 @@ import studio.phaseshift.metatron.isa.mach.type.Router;
 
 import java.util.stream.Stream;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.fail;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
+import static studio.phaseshift.metatron.Tokens.REWRITE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
  * Contract interface for testing common rewrite optimizations across database implementations.
@@ -574,8 +575,10 @@ public interface CommonRewritesTestContract {
     default void runRewriteInstSanityTest() throws Exception {
         final fURI instUri = getRewriteInstUri();
         if (instUri == null) return; // skip — backend doesn't support InstSet fetching
-        final studio.phaseshift.metatron.isa.Space instSet = Router.readFromSpace(instUri).as();
-        final Obj rewritesObj = instSet.at(studio.phaseshift.metatron.isa.m.type.impl.MUri.uri(studio.phaseshift.metatron.Tokens.REWRITE));
+        final Obj instSet = Router.readFromSpace(instUri).as();
+        assertFalse(instSet.isNoObj(), "there is no schema instset for the space and thus, no rewrites");
+        assertTrue(instSet.isInstSet(), "the schema of the space must be an instset");
+        final Obj rewritesObj = instSet.<InstSet>as().at(uri(REWRITE));
         final boolean isLst = rewritesObj.isLst();
         final boolean isObjs = rewritesObj.isObjs();
         if (!isLst && !isObjs) {
