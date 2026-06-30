@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -24,6 +24,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Objs;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.ArrayList;
@@ -40,6 +41,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
+import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
@@ -55,7 +57,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * // In tbleInstSet:
  * CommonRewrites.countRewrite(
  *     tbleSpace.class,
- *     TBLE_ISA_REWRITE_TID.extend("sql_count"),
+ *     TBLE_ISA_REWRITE_TID.extend("native_count"),
  *     (space, furi) -> {
  *         String table = furi.segments().getFirst();
  *         try (Statement stmt = space.sjvm().createStatement();
@@ -134,6 +136,7 @@ public final class CommonRewrites {
                 })
                 .build();
     }
+
     /**
      * Create a sum optimization rewrite.
      *
@@ -239,12 +242,12 @@ public final class CommonRewrites {
      * <pre>{@code
      * CommonRewrites.limitRewrite(
      *     tbleSpace.class,
-     *     TBLE_ISA_REWRITE_TID.extend("sql_limit"),
+     *     TBLE_ISA_REWRITE_TID.extend("native_limit"),
      *     (space, furi, limit) -> {
      *         String table = furi.segments().getFirst();
-     *         String sql = "SELECT * FROM " + table + " LIMIT " + limit;
+     *         String query = "SELECT * FROM " + table + " LIMIT " + limit;
      *         try (Statement stmt = space.sjvm().createStatement();
-     *              ResultSet rs = stmt.executeQuery(sql)) {
+     *              ResultSet rs = stmt.executeQuery(query)) {
      *             return ObjSQLSerializer.readLimitedAsRecObjs(rs, (int) limit);
      *         }
      *     }
@@ -383,7 +386,7 @@ public final class CommonRewrites {
      * <p>Optimizes {@code from(furi).has()} to use native database EXISTS operations
      * instead of loading all records just to check if any exist.
      *
-     * <p>Example SQL: {@code SELECT EXISTS(SELECT 1 FROM table LIMIT 1)}
+     * <p>Example: {@code SELECT EXISTS(SELECT 1 FROM table LIMIT 1)}
      *
      * @param spaceType   The database space type
      * @param rewriteTID  The type ID for this specific rewrite
@@ -435,11 +438,11 @@ public final class CommonRewrites {
          *
          * @param space   The database space
          * @param furi    The resolved fURI for the table/collection
-         * @param columns The list of column/field names to select
+         * @param fields The list of field/field names to select
          * @return The projected results (typically an Objs of rows with only selected fields)
          * @throws Exception if the operation fails
          */
-        Obj execute(S space, DataPath dp, java.util.List<String> columns) throws Exception;
+        Obj execute(S space, DataPath dp, java.util.List<String> fields) throws Exception;
     }
 
     /**
@@ -514,13 +517,13 @@ public final class CommonRewrites {
                     return matchedInsts.stream().map(Obj::asInst).toList();
                 }
 
-                // Extract column names from the rshift argument
+                // Extract field names from the rshift argument
                 // >>{name, age} -> arg(0) is a rec/lst with the field names
                 final Obj fieldsArg = rshiftInst.arg(0);
-                final java.util.List<String> columns = extractColumnNames(fieldsArg);
+                final java.util.List<String> fields = extractColumnNames(fieldsArg);
 
-                // If we couldn't extract columns, fall back to normal execution
-                if (columns == null || columns.isEmpty()) {
+                // If we couldn't extract fields, fall back to normal execution
+                if (fields == null || fields.isEmpty()) {
                     LOG.debug("select fields too complex for native projection: %s", fieldsArg);
                     return matchedInsts.stream().map(Obj::asInst).toList();
                 }
@@ -536,12 +539,12 @@ public final class CommonRewrites {
                 final fURI expandedfURI = space.redirect(oldfURI, true);
                 final DataPath dp = DataPath.withoutDB(expandedfURI);
 
-                LOG.debug("evaluating native select operation on %s with columns %s in space %s",
-                        expandedfURI, columns, space);
+                LOG.debug("evaluating native select operation on %s with fields %s in space %s",
+                        expandedfURI, fields, space);
 
-                // Create a list of column name strings for the instruction args
-                final java.util.List<Obj> colObjs = columns.stream()
-                        .map(c -> (Obj) studio.phaseshift.metatron.isa.m.type.impl.MStr.str(c))
+                // Create a list of field name strings for the instruction args
+                final java.util.List<Obj> colObjs = fields.stream()
+                        .map(c -> (Obj) str(c))
                         .toList();
 
                 return java.util.List.of(
@@ -552,7 +555,7 @@ public final class CommonRewrites {
                                         lst(colObjs)),
                                 (lhs, inst) -> {
                                     try {
-                                        return this.selectOperation.execute(typedSpace, dp, columns);
+                                        return this.selectOperation.execute(typedSpace, dp, fields);
                                     } catch (final Exception e) {
                                         throw studio.phaseshift.metatron.util.MTronException.of(e,
                                                 "failed to execute native select operation");
@@ -564,7 +567,7 @@ public final class CommonRewrites {
         }
 
         /**
-         * Extract column names from the rshift argument.
+         * Extract field names from the rshift argument.
          * Handles both rec syntax {name, age} and list syntax [name, age].
          */
         private java.util.List<String> extractColumnNames(final Obj fieldsArg) {
@@ -572,16 +575,16 @@ public final class CommonRewrites {
                 return null;
             }
 
-            final java.util.List<String> columns = new java.util.ArrayList<>();
+            final java.util.List<String> fields = new java.util.ArrayList<>();
 
             if (fieldsArg.isRec()) {
                 // Rec syntax: {name, age} - keys are the field names
                 for (final var rel : (Iterable<studio.phaseshift.metatron.isa.m.type.Rel>) fieldsArg.asRec().elements()::iterator) {
                     final Obj key = rel.first();
                     if (key.isUri()) {
-                        columns.add(key.uriValue().name());
+                        fields.add(key.uriValue().name());
                     } else if (key.isStr()) {
-                        columns.add(key.strValue());
+                        fields.add(key.strValue());
                     } else {
                         return null; // Complex key, can't translate
                     }
@@ -590,24 +593,24 @@ public final class CommonRewrites {
                 // List syntax: [name, age]
                 for (final Obj item : fieldsArg.asLst().lstValue()) {
                     if (item.isUri()) {
-                        columns.add(item.uriValue().name());
+                        fields.add(item.uriValue().name());
                     } else if (item.isStr()) {
-                        columns.add(item.strValue());
+                        fields.add(item.strValue());
                     } else {
                         return null; // Complex item, can't translate
                     }
                 }
             } else if (fieldsArg.isUri()) {
                 // Single field: >>name
-                columns.add(fieldsArg.uriValue().name());
+                fields.add(fieldsArg.uriValue().name());
             } else if (fieldsArg.isStr()) {
                 // Single field as string
-                columns.add(fieldsArg.strValue());
+                fields.add(fieldsArg.strValue());
             } else {
                 return null; // Unknown format
             }
 
-            return columns;
+            return fields;
         }
     }
 
@@ -616,18 +619,62 @@ public final class CommonRewrites {
      *
      * @param <S> The space type
      */
+    /**
+     * Comparison operators extracted from metatron predicates.
+     */
+    public enum ComparisonOp {
+        EQ("="),
+        GT(">"),
+        LT("<"),
+        GTE(">="),
+        LTE("<="),
+        NEQ("<>"),
+        EXISTS(null);
+
+        private final String symbol;
+        ComparisonOp(final String symbol) { this.symbol = symbol; }
+        public String symbol() { return symbol; }
+    }
+
+    /**
+     * Formats a single predicate condition into a backend-specific string.
+     * Each query language provides its own implementation.
+     */
+    public interface ConditionFormatter {
+        /** Format an equality condition: field = value */
+        String equality(String field, String value);
+        /** Format a comparison: field op value */
+        String comparison(String field, ComparisonOp op, String value);
+        /** Format an existence check (field IS NOT NULL or equivalent) */
+        String exists(String field);
+        /** Escape a string literal for the backend */
+        default String escapeLiteral(String s) { return s; }
+    }
+
+    /**
+     * Joins translated predicate conditions into a single backend-specific
+     * filter expression.  Each query language provides its own implementation.
+     * <p>
+     * Example:  {@code conds -> String.join(" AND ", conds)}
+     * Gremlin:       single-condition only for now.
+     */
+    @FunctionalInterface
+    public interface PredicateJoiner {
+        String join(List<String> conditions);
+    }
+
     @FunctionalInterface
     public interface WhereOperation<S extends Space> {
         /**
          * Execute the native where/filter operation.
          *
-         * @param space    The database space
-         * @param furi     The resolved fURI for the table/collection
-         * @param sqlWhere The SQL WHERE clause (e.g., "column > 5")
-         * @return The filtered results (typically an Objs of rows)
+         * @param space       The database space
+         * @param dp          The decomposed DataPath
+         * @param filterClause The native filter clause
+         * @return The filtered results
          * @throws Exception if the operation fails
          */
-        Obj execute(S space, DataPath dp, String sqlWhere) throws Exception;
+        Obj execute(S space, DataPath dp, String filterClause) throws Exception;
     }
 
     /**
@@ -638,11 +685,11 @@ public final class CommonRewrites {
      *
      * <p>Currently supports simple predicates:
      * <ul>
-     *   <li>{@code where([column=>value])} → {@code WHERE column = value}</li>
-     *   <li>{@code where([column=>?>n])} → {@code WHERE column > n}</li>
-     *   <li>{@code where([column=>?<n])} → {@code WHERE column < n}</li>
-     *   <li>{@code where([column=>?>=n])} → {@code WHERE column >= n}</li>
-     *   <li>{@code where([column=>?<=n])} → {@code WHERE column <= n}</li>
+     *   <li>{@code where([field=>value])} → {@code WHERE field = value}</li>
+     *   <li>{@code where([field=>?>n])} → {@code WHERE field > n}</li>
+     *   <li>{@code where([field=>?<n])} → {@code WHERE field < n}</li>
+     *   <li>{@code where([field=>?>=n])} → {@code WHERE field >= n}</li>
+     *   <li>{@code where([field=>?<=n])} → {@code WHERE field <= n}</li>
      * </ul>
      *
      * <p>Complex predicates that cannot be translated will cause the rewrite to fail,
@@ -657,17 +704,21 @@ public final class CommonRewrites {
     public static <S extends Space> Inst whereRewrite(
             final Class<S> spaceType,
             final fURI rewriteTID,
-            final WhereOperation<S> whereFunction) {
-        return whereRewrite(spaceType, rewriteTID, whereFunction, null);
+            final WhereOperation<S> whereFunction,
+            final PredicateJoiner predicateJoiner,
+            final ConditionFormatter conditionFormatter) {
+        return whereRewrite(spaceType, rewriteTID, whereFunction, predicateJoiner, conditionFormatter, null);
     }
 
     public static <S extends Space> Inst whereRewrite(
             final Class<S> spaceType,
             final fURI rewriteTID,
             final WhereOperation<S> whereFunction,
+            final PredicateJoiner predicateJoiner,
+            final ConditionFormatter conditionFormatter,
             final BiPredicate<S, List<Inst>> matchSpacePredicate) {
 
-        return new WhereRewriteBuilder<>(spaceType, whereFunction, matchSpacePredicate)
+        return new WhereRewriteBuilder<>(spaceType, whereFunction, predicateJoiner, conditionFormatter, matchSpacePredicate)
                 .tid(rewriteTID)
                 .rng(ALL_STAR)
                 .match(FROM_INST_TID, WHERE_INST_TID)
@@ -676,19 +727,27 @@ public final class CommonRewrites {
 
     /**
      * Specialized RewriteBuilder for where operations that extracts and translates
-     * the predicate from the where() instruction to SQL WHERE clause.
+     * the predicate from the where() instruction to a native filter clause.
      */
     private static class WhereRewriteBuilder<S extends Space> extends RewriteBuilder<S> {
         private final WhereOperation<S> whereOperation;
+        private final PredicateJoiner predicateJoiner;
+        private final ConditionFormatter conditionFormatter;
 
-        WhereRewriteBuilder(final Class<S> spaceType, final WhereOperation<S> whereOperation) {
-            this(spaceType, whereOperation, null);
+        WhereRewriteBuilder(final Class<S> spaceType, final WhereOperation<S> whereOperation,
+                            final PredicateJoiner predicateJoiner,
+                            final ConditionFormatter conditionFormatter) {
+            this(spaceType, whereOperation, predicateJoiner, conditionFormatter, null);
         }
 
         WhereRewriteBuilder(final Class<S> spaceType, final WhereOperation<S> whereOperation,
+                            final PredicateJoiner predicateJoiner,
+                            final ConditionFormatter conditionFormatter,
                             final BiPredicate<S, List<Inst>> matchSpacePredicate) {
             super(spaceType);
             this.whereOperation = whereOperation;
+            this.predicateJoiner = predicateJoiner;
+            this.conditionFormatter = conditionFormatter;
             this.matchSpacePredicate = matchSpacePredicate;
             this.rewriteName = "from_where";
             this.optimization = (space, furi, coeff) -> null;
@@ -708,15 +767,18 @@ public final class CommonRewrites {
                     return matchedInsts.stream().map(Obj::asInst).toList();
                 }
 
-                // Try to translate the where predicate to SQL
+                // Try to translate the where predicate to backend-agnostic conditions
                 final Obj predicate = whereInst.arg(0);
-                final String sqlWhere = tryTranslateToSQL(predicate);
+                final List<String> conditions = tryTranslatePredicate(predicate);
 
                 // If translation failed, fall back to normal execution
-                if (sqlWhere == null) {
-                    LOG.debug("where predicate too complex for SQL translation: %s", predicate);
+                if (conditions == null) {
+                    LOG.debug("where predicate too complex for native translation: %s", predicate);
                     return matchedInsts.stream().map(Obj::asInst).toList();
                 }
+
+                // Let the backend join conditions into its native filter expression
+                final String filterClause = this.predicateJoiner.join(conditions);
 
                 final S typedSpace = this.spaceType.cast(space);
 
@@ -730,17 +792,21 @@ public final class CommonRewrites {
                 final DataPath dp = DataPath.withoutDB(expandedfURI);
 
                 LOG.debug("evaluating native where operation on %s with clause '%s' in space %s",
-                        expandedfURI, sqlWhere, space);
+                        expandedfURI, filterClause, space);
 
                 return java.util.List.of(
                         instC(
                                 this.rewriteTid.dom(ALL_STAR).rng(this.resultTid),
-                                lst(
-                                        uri(expandedfURI),
-                                        studio.phaseshift.metatron.isa.m.type.impl.MStr.str(sqlWhere)),
+                                lst(uri(expandedfURI), str(filterClause)),
                                 (lhs, inst) -> {
+                                    // Barrier re-application guard: if the SwarmMachine
+                                    // already accumulated results via the gather barrier,
+                                    // just return those results; re-querying g.V().has()
+                                    // would double them.
+                                    if (lhs instanceof Objs)
+                                        return lhs;
                                     try {
-                                        return this.whereOperation.execute(typedSpace, dp, sqlWhere);
+                                        return this.whereOperation.execute(typedSpace, dp, filterClause);
                                     } catch (final Exception e) {
                                         throw studio.phaseshift.metatron.util.MTronException.of(e,
                                                 "failed to execute native where operation");
@@ -752,10 +818,10 @@ public final class CommonRewrites {
         }
 
         /**
-         * Try to translate a mtron predicate to SQL WHERE clause.
+         * Try to translate a metatron predicate to a native filter clause.
          * Returns null if the predicate is too complex to translate.
          */
-        private String tryTranslateToSQL(final Obj predicate) {
+        private List<String> tryTranslatePredicate(final Obj predicate) {
             // Only handle Rec predicates for now
             if (!predicate.isRec()) {
                 return null;
@@ -768,17 +834,17 @@ public final class CommonRewrites {
                 final Obj key = rel.first();
                 final Obj value = rel.second();
 
-                // Key must be a URI (column name) - wildcards not supported yet
+                // Key must be a URI (field name) - wildcards not supported yet
                 if (!key.isUri()) {
                     return null;
                 }
-                final String columnName = key.asUri().uriValue().name();
-                if (columnName == null || columnName.isEmpty() || columnName.equals("_") || columnName.equals("+")) {
-                    return null; // Wildcard column names not supported
+                final String fieldName = key.asUri().uriValue().name();
+                if (fieldName == null || fieldName.isEmpty() || fieldName.equals("_") || fieldName.equals("+")) {
+                    return null; // Wildcard field names not supported
                 }
 
                 // Translate the value/predicate
-                final String condition = translateCondition(columnName, value);
+                final String condition = translateCondition(fieldName, value);
                 if (condition == null) {
                     return null; // Complex condition, can't translate
                 }
@@ -789,30 +855,32 @@ public final class CommonRewrites {
                 return null;
             }
 
-            return String.join(" AND ", conditions);
+            return conditions;
         }
 
         /**
-         * Translate a single column condition to SQL.
+         * Translate a single field condition to a native filter.
          */
-        private String translateCondition(final String columnName, final Obj value) {
-            // Handle underscore wildcard - column exists / is not null
+        private String translateCondition(final String fieldName, final Obj value) {
+            // Handle underscore wildcard - field exists / is not null
             if (value.isUri() && "_".equals(value.asUri().uriValue().toString())) {
-                return columnName + " IS NOT NULL";
+                return this.conditionFormatter.exists(fieldName);
             }
 
             // Handle literal values - equality check
             if (value.isInt()) {
-                return columnName + " = " + value.asInt().jvm();
+                return this.conditionFormatter.equality(fieldName, String.valueOf(value.asInt().jvm()));
             }
             if (value.isReal()) {
-                return columnName + " = " + value.asReal().jvm();
+                return this.conditionFormatter.equality(fieldName, String.valueOf(value.asReal().jvm()));
             }
             if (value.isStr()) {
-                return columnName + " = '" + escapeSqlString(value.asStr().jvm()) + "'";
+                return this.conditionFormatter.equality(fieldName,
+                        quoteLiteral(value.asStr().jvm()));
             }
             if (value.isBool()) {
-                return columnName + " = " + (value.asBool().jvm() ? "TRUE" : "FALSE");
+                return this.conditionFormatter.equality(fieldName,
+                        value.asBool().jvm() ? "true" : "false");
             }
 
             // Handle comparison instructions like ?>5, ?<10, etc.
@@ -828,26 +896,29 @@ public final class CommonRewrites {
                 }
 
                 // Check for comparison operators
-                final String sqlOp = switch (op) {
-                    case "gt" -> ">";
-                    case "lt" -> "<";
-                    case "gte" -> ">=";
-                    case "lte" -> "<=";
-                    case "neq" -> "<>";
-                    case "eq" -> "=";
+                final ComparisonOp nativeOp = switch (op) {
+                    case "gt" -> ComparisonOp.GT;
+                    case "lt" -> ComparisonOp.LT;
+                    case "gte" -> ComparisonOp.GTE;
+                    case "lte" -> ComparisonOp.LTE;
+                    case "neq" -> ComparisonOp.NEQ;
+                    case "eq" -> ComparisonOp.EQ;
                     default -> null;
                 };
 
-                if (sqlOp != null && inst.args().count() > 0) {
+                if (nativeOp != null && inst.args().count() > 0) {
                     final Obj arg = inst.arg(0);
                     if (arg.isInt()) {
-                        return columnName + " " + sqlOp + " " + arg.asInt().jvm();
+                        return this.conditionFormatter.comparison(fieldName, nativeOp,
+                                String.valueOf(arg.asInt().jvm()));
                     }
                     if (arg.isReal()) {
-                        return columnName + " " + sqlOp + " " + arg.asReal().jvm();
+                        return this.conditionFormatter.comparison(fieldName, nativeOp,
+                                String.valueOf(arg.asReal().jvm()));
                     }
                     if (arg.isStr()) {
-                        return columnName + " " + sqlOp + " '" + escapeSqlString(arg.asStr().jvm()) + "'";
+                        return this.conditionFormatter.comparison(fieldName, nativeOp,
+                                quoteLiteral(arg.asStr().jvm()));
                     }
                 }
             }
@@ -856,8 +927,10 @@ public final class CommonRewrites {
             return null;
         }
 
-        private String escapeSqlString(final String s) {
-            return s.replace("'", "''");
+        /** Quote a string literal using the backend's escaping rules. */
+        private String quoteLiteral(final String s) {
+            final String escaped = this.conditionFormatter.escapeLiteral(s);
+            return "'" + escaped + "'";
         }
     }
 
@@ -872,30 +945,30 @@ public final class CommonRewrites {
          * Execute the native count with where filter.
          *
          * @param space    The database space
-         * @param furi     The resolved fURI for the table/collection
-         * @param sqlWhere The SQL WHERE clause
+         * @param dp    The resolved data path
+         * @param filterClause The native filter clause
          * @return The count of matching rows
          * @throws Exception if the operation fails
          */
-        long execute(S space, DataPath dp, String sqlWhere) throws Exception;
+        long execute(S space, DataPath dp, String filterClause) throws Exception;
     }
 
     /**
      * Create a where+count optimization rewrite.
      *
-     * <p>Optimizes {@code sql_where.count()} to use native database
+     * <p>Optimizes {@code native_where.count()} to use native database
      * {@code SELECT COUNT(*) FROM table WHERE conditions} instead of fetching
      * all filtered rows and counting in memory.
      *
      * <p>This rewrite composes with whereRewrite:
      * <pre>
      * from.where.count
-     *   → sql_where.count      (whereRewrite)
-     *   → sql_where_count      (this rewrite)
+     *   → native_where.count      (whereRewrite)
+     *   → native_where.count      (this rewrite)
      * </pre>
      *
      * @param spaceType          The database space type
-     * @param whereRewriteTID    The TID of the sql_where instruction to match
+     * @param whereRewriteTID    The TID of the native where instruction to match
      * @param rewriteTID         The TID for this rewrite's output instruction
      * @param whereCountFunction Function that executes the native count with where
      * @param <S>                The space type
@@ -925,7 +998,7 @@ public final class CommonRewrites {
 
     /**
      * Specialized RewriteBuilder for where+count operations that extracts
-     * the fURI and WHERE clause from the preceding sql_where instruction.
+     * the fURI and WHERE clause from the preceding native where instruction.
      */
     private static class WhereCountRewriteBuilder<S extends Space> extends RewriteBuilder<S> {
         private final fURI whereRewriteTID;
@@ -951,17 +1024,17 @@ public final class CommonRewrites {
         protected java.util.function.Function<java.util.Map<Inst, Inst>, java.util.List<Inst>> createRewriteFunction() {
             return map -> {
                 final java.util.List<Inst> matchedInsts = new java.util.ArrayList<>(map.values());
-                final Inst whereInst = matchedInsts.get(0);  // sql_where instruction
+                final Inst whereInst = matchedInsts.get(0);  // native where instruction
                 // matchedInsts.get(1) is count - we don't need it, just matching it
 
-                // Extract fURI and sqlWhere from sql_where's args: [furi, sqlWhere]
+                // Extract fURI and filterClause from native where instruction's args: [furi, filterClause]
                 final Obj args = whereInst.args();
                 if (!args.isLst() || args.asLst().count() < 2) {
                     return matchedInsts.stream().map(Obj::asInst).toList();
                 }
 
                 final fURI furi = args.asLst().at(0).asUri().uriValue();
-                final String sqlWhere = args.asLst().at(1).asStr().jvm();
+                final String filterClause = args.asLst().at(1).asStr().jvm();
 
                 final Space space = studio.phaseshift.metatron.isa.mach.type.Router.global().getSpaceFor(furi);
 
@@ -980,17 +1053,17 @@ public final class CommonRewrites {
                 final DataPath dp = DataPath.withoutDB(furi);
 
                 LOG.debug("evaluating native where+count on %s with clause '%s' in space %s",
-                        furi, sqlWhere, space);
+                        furi, filterClause, space);
 
                 return java.util.List.of(
                         instC(
                                 this.rewriteTid.dom(ALL_STAR).rng(this.resultTid),
                                 lst(
                                         uri(furi),
-                                        studio.phaseshift.metatron.isa.m.type.impl.MStr.str(sqlWhere)),
+                                        str(filterClause)),
                                 (lhs, inst) -> {
                                     try {
-                                        final long count = this.whereCountOperation.execute(typedSpace, dp, sqlWhere);
+                                        final long count = this.whereCountOperation.execute(typedSpace, dp, filterClause);
                                         return jnt(count);
                                     } catch (final Exception e) {
                                         throw studio.phaseshift.metatron.util.MTronException.of(e,
@@ -1015,33 +1088,33 @@ public final class CommonRewrites {
          *
          * @param space    The database space
          * @param dp       The decomposed DataPath for the table/collection
-         * @param sqlWhere The SQL WHERE clause (or MongoDB filter)
+         * @param filterClause The native filter clause
          * @param limit    The limit value from take(n)
          * @return The filtered and limited results
          * @throws Exception if the operation fails
          */
-        Obj execute(S space, DataPath dp, String sqlWhere, long limit) throws Exception;
+        Obj execute(S space, DataPath dp, String filterClause, long limit) throws Exception;
     }
 
     /**
      * Create a where+limit optimization rewrite.
      *
-     * <p>Optimizes {@code sql_where.take(n)} to use native database
+     * <p>Optimizes {@code native_where.take(n)} to use native database
      * {@code SELECT * FROM table WHERE conditions LIMIT n} instead of
      * fetching all filtered rows and taking the first n in memory.
      *
      * <p>This rewrite composes with whereRewrite:
      * <pre>
      * from.where.take
-     *   → sql_where.take        (whereRewrite)
-     *   → sql_where_limit       (this rewrite)
+     *   → native_where.take        (whereRewrite)
+     *   → native_where_limit       (this rewrite)
      * </pre>
      *
-     * @param spaceType           The database space type
-     * @param whereRewriteTID     The TID of the sql_where/mql_where instruction to match
-     * @param rewriteTID          The TID for this rewrite's output instruction
-     * @param whereLimitFunction  Function that executes the native where+limit operation
-     * @param <S>                 The space type
+     * @param spaceType          The database space type
+     * @param whereRewriteTID    The TID of the native where instruction to match
+     * @param rewriteTID         The TID for this rewrite's output instruction
+     * @param whereLimitFunction Function that executes the native where+limit operation
+     * @param <S>                The space type
      * @return The rewrite instruction
      */
     public static <S extends Space> Inst whereLimitRewrite(
@@ -1068,7 +1141,7 @@ public final class CommonRewrites {
 
     /**
      * Specialized RewriteBuilder for where+limit operations that extracts
-     * the fURI and WHERE clause from the preceding sql_where/mql_where instruction
+     * the fURI and WHERE clause from the preceding native where instruction
      * and the limit value from the take() instruction.
      */
     private static class WhereLimitRewriteBuilder<S extends Space> extends RewriteBuilder<S> {
@@ -1095,17 +1168,17 @@ public final class CommonRewrites {
         protected java.util.function.Function<java.util.Map<Inst, Inst>, java.util.List<Inst>> createRewriteFunction() {
             return map -> {
                 final java.util.List<Inst> matchedInsts = new java.util.ArrayList<>(map.values());
-                final Inst whereInst = matchedInsts.get(0);   // sql_where / mql_where instruction
+                final Inst whereInst = matchedInsts.get(0);   // native where instruction
                 final Inst takeInst = matchedInsts.get(1);    // take(n) instruction
 
-                // Extract fURI and sqlWhere from the where instruction's args: [furi, sqlWhere]
+                // Extract fURI and filterClause from the where instruction's args: [furi, filterClause]
                 final Obj args = whereInst.args();
                 if (!args.isLst() || args.asLst().count() < 2) {
                     return matchedInsts.stream().map(Obj::asInst).toList();
                 }
 
                 final fURI furi = args.asLst().at(0).asUri().uriValue();
-                final String sqlWhere = args.asLst().at(1).asStr().jvm();
+                final String filterClause = args.asLst().at(1).asStr().jvm();
 
                 // Extract limit value from take() instruction
                 final long limitValue = takeInst.arg(0).asInt().jvm();
@@ -1127,18 +1200,18 @@ public final class CommonRewrites {
                 final DataPath dp = DataPath.withoutDB(furi);
 
                 LOG.debug("evaluating native where+limit on %s with clause '%s' and limit %d in space %s",
-                        furi, sqlWhere, limitValue, space);
+                        furi, filterClause, limitValue, space);
 
                 return java.util.List.of(
                         instC(
                                 this.rewriteTid.dom(ALL_STAR).rng(this.resultTid),
                                 lst(
                                         uri(furi),
-                                        studio.phaseshift.metatron.isa.m.type.impl.MStr.str(sqlWhere),
+                                        str(filterClause),
                                         jnt(limitValue)),
                                 (lhs, inst) -> {
                                     try {
-                                        return this.whereLimitOperation.execute(typedSpace, dp, sqlWhere, limitValue);
+                                        return this.whereLimitOperation.execute(typedSpace, dp, filterClause, limitValue);
                                     } catch (final Exception e) {
                                         throw studio.phaseshift.metatron.util.MTronException.of(e,
                                                 "failed to execute native where+limit operation");

@@ -41,14 +41,14 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 */
 public class vecInstSet extends AbstractInstSet {
 
-    public static final fURI VEC_INSTSET_TID = M_ISA_TID.extend("vec");
-    public static final fURI VEC_TID = VEC_INSTSET_TID.extend("vec");
+    public static final fURI VEC_ISA_TID = M_ISA_TID.extend("vec");
+    public static final fURI VEC_TID = VEC_ISA_TID.extend("vec");
     //public static final fURI RVEC_TID = MEXT_TID.extend("rvec");
-    public static final fURI MTRX_TID = VEC_INSTSET_TID.extend("mtrx");
-    public static final fURI CMPLX_TID = VEC_INSTSET_TID.extend("cmplx");
-    public static final fURI IMAGINARY_TID = VEC_INSTSET_TID.extend("imaginary");
+    public static final fURI MTRX_TID = VEC_ISA_TID.extend("mtrx");
+    public static final fURI CMPLX_TID = VEC_ISA_TID.extend("cmplx");
+    public static final fURI IMAGINARY_TID = VEC_ISA_TID.extend("imaginary");
     /// ////////////////////////////////////////////////////////////
-    public static final fURI INST_TID = VEC_INSTSET_TID.extend("inst");
+    public static final fURI INST_TID = VEC_ISA_TID.extend("inst");
     public static final fURI DOT_TID = INST_TID.extend("dot");
     public static final fURI TRANSPOSE_INST_TID = INST_TID.extend("transpose");
     public static final fURI SQRT_TID = INST_TID.extend("sqrt");
@@ -62,7 +62,7 @@ public class vecInstSet extends AbstractInstSet {
 
 
     public vecInstSet() {
-        super(mutableMap(uri(PATTERN), uri(VEC_INSTSET_TID.extend(ALL))), INSTSET_TID, VEC_INSTSET_TID);
+        super(mutableMap(uri(PATTERN), uri(VEC_ISA_TID.extend(ALL))), INSTSET_TID, VEC_ISA_TID);
     }
 
     @Override
