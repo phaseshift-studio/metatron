@@ -97,9 +97,10 @@ public class InstSetDocGenerator {
         boolean verbose = true;
         int buildNumber = 0;
         String relativeDepth = "..";
-        final List<String> instsetVids = new ArrayList<>(List.of(
-                "/m", "/m/mach", "/m/math", "/m/web", "/m/iot",
-                "/m/llm", "/m/tble", "/m/dcmnt", "/m/grph", "/m/rdf"
+        final Set<String> instsetVids = new LinkedHashSet<>(List.of(
+                "/m", "/m/sys", "/m/mach", "/m/math", "/m/web", "/m/iot",
+                "/m/llm", "/m/tble", "/m/dcmnt", "/m/grph",
+                "/m/vec"
         ));
 
         int i = 0;
@@ -153,11 +154,27 @@ public class InstSetDocGenerator {
 
                     final Meta meta = extractMeta(is, vid);
 
-                    final Set<Type> types = is.types().stream().filter(s -> !s.isRefinementOf(SPACE_TYPE)).collect(Collectors.toSet());
-                    final Set<Inst> insts = is.insts();
-                    final Set<Inst> rewrites = is.rewrites();
-                    final Set<Obj> consts = is.consts();
+                    // Types, insts, rewrites, consts come directly from the
+                    // instset's own tables.  However, checkPattern permits child-
+                    // instset items when patterns overlap (e.g. /m/* matches
+                    // /m/tble/rrow).  Filter to only items whose most-specific
+                    // matching instset prefix is the current one.
+                    final Set<Type> types = is.types().stream()
+                            .filter(t -> t.vid() != null && owns(t.vid().toString(), vid, instsetVids))
+                            .filter(s -> !s.isRefinementOf(SPACE_TYPE))
+                            .collect(Collectors.toSet());
+                    final Set<Inst> insts = is.insts().stream()
+                            .filter(inst -> owns(inst.tid().toString(), vid, instsetVids))
+                            .collect(Collectors.toSet());
+                    final Set<Inst> rewrites = is.rewrites().stream()
+                            .filter(rw -> owns(rw.tid().toString(), vid, instsetVids))
+                            .collect(Collectors.toSet());
+                    final Set<Obj> consts = is.consts().stream()
+                            .filter(c -> c.vid() != null && owns(c.vid().toString(), vid, instsetVids))
+                            .collect(Collectors.toSet());
+                    // Spaces are types that refine space::T
                     final List<SpaceEntry> spaces = is.types().stream()
+                            .filter(t -> t.vid() != null && owns(t.vid().toString(), vid, instsetVids))
                             .filter(s -> s.isRefinementOf(SPACE_TYPE))
                             .map(s -> new SpaceEntry(s.vid().toString(), s.vid().name(), s, s.toString()))
                             .toList();
@@ -165,6 +182,10 @@ public class InstSetDocGenerator {
 
                     LOG.info("  " + vid + ": " + types.size() + " types, " + insts.size() + " insts, "
                             + rewrites.size() + " rewrites, " + spaces.size() + " spaces, " + consts.size() + " consts");
+                    if (vid.equals("/m")) {
+                        LOG.info("  /m types: " + types.stream().map(t -> String.valueOf(t.vid())).collect(Collectors.joining(", ")));
+                        LOG.info("  /m spaces: " + spaces.stream().map(s -> s.vid()).collect(Collectors.joining(", ")));
+                    }
 
                     final String html = generateHtml(meta, types, insts, rewrites, spaces, consts,
                             websiteTemplate, depth, buildNumber);
@@ -186,7 +207,7 @@ public class InstSetDocGenerator {
 
             if (metas.size() > 1) {
                 final String indexHtml = generateIndexHtml(metas, allTypes, allInsts, allSpaces,
-                        websiteTemplate, depth, buildNumber);
+                        allRewrites, allConsts, websiteTemplate, depth, buildNumber);
                 Files.writeString(outputPath.resolve("index.html"), indexHtml);
                 LOG.info("  -> " + outputPath.resolve("index.html"));
             }
@@ -211,6 +232,12 @@ public class InstSetDocGenerator {
             Router.writeToSpace(is);
             is.setup();
         }
+        // Re-register mInstSet types that were created as static fields
+        // before the Router was initialized (ServiceLoader triggers early
+        // class loading at BootLoader.load line 339).
+        // Without this, parentType() -> T(fURI) creates bare types
+        // without predicates, breaking the refinement chain display.
+        Router.global().write(SPACE_TYPE.vid(), SPACE_TYPE);
         TypeCheck.disable(TypeCheck.code_resolve);
     }
 
@@ -364,8 +391,8 @@ public class InstSetDocGenerator {
         sb.append(sectionToc(meta.vid(), meta.name(), types, insts, rewrites, spaces, consts));
         sb.append(sectionConsts(meta.vid(), consts));
         sb.append(sectionTypes(meta.vid(), types));
-        sb.append(sectionInsts(meta.vid(), insts));
         sb.append(sectionSpaces(spaces));
+        sb.append(sectionInsts(meta.vid(), insts));
         sb.append(sectionRewrites(meta.vid(), rewrites));
         sb.append(sectionFooter(buildNumber));
         return sb.toString();
@@ -427,8 +454,8 @@ public class InstSetDocGenerator {
                </div>""".formatted(
                 navBtn("consts", "Consts", consts, "bg-secondary") +
                         navBtn("types", "Types", types, "bg-primary") +
-                        navBtn("instructions", "Insts", insts, "bg-success") +
                         navBtn("spaces", "Spaces", spaces, "bg-info") +
+                        navBtn("instructions", "Insts", insts, "bg-success") +
                         navBtn("rewrites", "Rewrites", rewrites, "bg-warning"));
     }
 
@@ -449,15 +476,21 @@ public class InstSetDocGenerator {
                                      final Set<Obj> consts) {
         final StringBuilder cols = new StringBuilder();
 
-        // Types (grouped by branch)
-        cols.append(tocTypesSection(instsetVid, instsetName, types));
-
         // Constants
         tocFlatGroup(cols, "Constants", "bg-secondary", "C",
                 consts.stream()
                         .filter(c -> c.vid() != null)
                         .map(c -> tocPill("const-" + c.vid().name(), c.vid().name(), "bg-secondary", "C"))
                         .sorted()
+                        .collect(Collectors.joining()));
+
+        // Types (grouped by branch)
+        cols.append(tocTypesSection(instsetVid, instsetName, types));
+
+        // Spaces
+        tocFlatGroup(cols, "Spaces", "bg-info text-dark", "S",
+                spaces.stream().sorted((a, b) -> a.name().compareTo(b.name()))
+                        .map(s -> tocPill("space-" + s.name(), s.name(), "bg-info text-dark", "S"))
                         .collect(Collectors.joining()));
 
         // Instructions
@@ -467,12 +500,6 @@ public class InstSetDocGenerator {
                         .map(inst -> inst.tid().name())
                         .distinct().sorted()
                         .map(n -> tocPill("inst-" + n, n, "bg-success", "I"))
-                        .collect(Collectors.joining()));
-
-        // Spaces
-        tocFlatGroup(cols, "Spaces", "bg-info text-dark", "S",
-                spaces.stream().sorted((a, b) -> a.name().compareTo(b.name()))
-                        .map(s -> tocPill("space-" + s.name(), s.name(), "bg-info text-dark", "S"))
                         .collect(Collectors.joining()));
 
         // Rewrites
@@ -638,11 +665,12 @@ public class InstSetDocGenerator {
             final String name = t.vid() != null ? t.vid().name() : "";
             final String uri = t.vid() != null ? t.vid().toString() : "";
             final String gid = "type-" + esc(name);
+            final String refines = superTypeRefines(t, instsetVid);
             final String defn = SER.write(t);
             final String defnBlock = !defn.isEmpty()
                     ? "<div class=\"card-body p-2\"><pre class=\"mb-0\"><code class=\"language-mtron\">"
                       + esc(defn) + "</code></pre></div>" : "";
-            final String refines = superTypeRefines(t, instsetVid);
+            final String inheritedFields = renderInheritedFields(t, instsetVid);
             final Rec doc = fetchDocByVid(t);
             cards.append("""
                          <div class="card mb-3" id="%s">
@@ -655,7 +683,9 @@ public class InstSetDocGenerator {
                              </div>
                              %s
                              %s
-                         </div>""".formatted(gid, esc(name), refines, esc(uri), defnBlock, renderDoc(doc, gid)));
+                             %s
+                         </div>""".formatted(gid, esc(name), refines, esc(uri),
+                    defnBlock, inheritedFields, renderDoc(doc, gid)));
         }
         return """
                <div class="container-xxl mb-4" id="types">
@@ -664,17 +694,138 @@ public class InstSetDocGenerator {
                </div>""".formatted(types.size(), cards.toString());
     }
 
+    // ── Refinement chain helpers ────────────────────────────────────────
+
+    /**
+     * Walk up the refinement chain via {@link Type#parentType()}, collecting
+     * each ancestor that carries its own predicate (structural requirements).
+     * Stops at base types and the root type.
+     */
+    private static List<Type> refinementChain(final Type t) {
+        final List<Type> chain = new ArrayList<>();
+        Type current = t.parentType();
+        LOG.info("refinementChain start: vid=" + t.vid() + " tid=" + t.tid() + " hasPred=" + t.hasPredicate());
+        while (current != null && !current.isRootType()) {
+            LOG.info("  ancestor: vid=" + current.vid() + " tid=" + current.tid()
+                    + " hasPred=" + current.hasPredicate() + " isBase=" + current.isBaseType()
+                    + " isaPred=" + current.isIsaPredicate());
+            if (current.hasPredicate())
+                chain.add(current);
+            if (current.isBaseType()) break;
+            current = current.parentType();
+        }
+        LOG.info("refinementChain result: " + chain.size() + " ancestors with predicates");
+        return chain;
+    }
+
+    /**
+     * Render this type's own predicate fields as a compact code block.
+     */
+    private static String renderOwnFields(final Type t) {
+        if (!t.hasPredicate() && !t.hasConstructor()) return "";
+        final StringBuilder sb = new StringBuilder();
+        sb.append("<div class=\"card-body p-2\">");
+        sb.append("<table class=\"type-fields-table\">");
+
+        // Predicate fields
+        if (t.hasPredicate()) {
+            final String predStr = predicateToCompactStr(t);
+            if (!predStr.isEmpty()) {
+                sb.append("<tr>")
+                        .append("<td class=\"field-label\">predicate</td>")
+                        .append("<td><pre class=\"mb-0\"><code class=\"language-mtron\">").append(esc(predStr)).append("</code></pre></td>")
+                        .append("</tr>");
+            }
+        }
+
+        // Constructor
+        if (t.hasConstructor()) {
+            final String ctorStr = SER.write(t.constructor());
+            if (!ctorStr.isEmpty()) {
+                sb.append("<tr>")
+                        .append("<td class=\"field-label\">constructor</td>")
+                        .append("<td><pre class=\"mb-0\"><code class=\"language-mtron\">").append(esc(ctorStr)).append("</code></pre></td>")
+                        .append("</tr>");
+            }
+        }
+
+        sb.append("</table>");
+        sb.append("</div>");
+        return sb.toString();
+    }
+
+    /**
+     * Render inherited fields from the refinement chain, each ancestor
+     * grouped under a dimmed label linking to its type definition.
+     */
+    private static String renderInheritedFields(final Type t, final String instsetVid) {
+        final List<Type> chain = refinementChain(t);
+        if (chain.isEmpty()) return "";
+
+        final StringBuilder sb = new StringBuilder();
+        sb.append("<div class=\"card-body p-2 inherited-fields\">");
+        sb.append("<hr class=\"my-1\" style=\"opacity:0.3;\">");
+
+        for (final Type ancestor : chain) {
+            final String ancestorVid = ancestor.vid() != null ? ancestor.vid().toString() : "";
+            final String ancestorName = ancestor.vid() != null ? ancestor.vid().name() : "";
+            final String ancestorInstset = extractInstset(ancestorVid);
+
+            // Determine whether this ancestor lives in the types section
+            // or the spaces section (anchors differ: #type- vs #space-)
+            final String ancAnchor = ancestorVid.contains("/space/") ? "space-" : "type-";
+
+            // Build clickable label linking to the ancestor type
+            final String label;
+            if (!ancestorInstset.isEmpty() && !ancestorInstset.equals(instsetVid)) {
+                final String target = vidToFilename(ancestorInstset) + "#" + ancAnchor + esc(ancestorName);
+                label = "<a href=\"" + target + "\" class=\"code inherited-link\">"
+                        + esc(ancestorName) + "::T</a>";
+            } else {
+                label = "<a href=\"#" + ancAnchor + esc(ancestorName) + "\" class=\"code inherited-link\">"
+                        + esc(ancestorName) + "::T</a>";
+            }
+
+            final String predStr = predicateToCompactStr(ancestor);
+            final String fieldsHtml = !predStr.isEmpty()
+                    ? " <code class=\"language-mtron inherited-code\" style=\"white-space:pre-wrap\">" + esc(predStr) + "</code>"
+                    : " <span class=\"text-muted fst-italic inherited-code\">(no additional requirements)</span>";
+
+            sb.append("<div class=\"mb-1 inherited-row\">")
+                    .append("<span class=\"text-muted instset-doc-small-code me-1\">↳</span>")
+                    .append(label)
+                    .append(fieldsHtml)
+                    .append("</div>");
+        }
+
+        sb.append("</div>");
+        return sb.toString();
+    }
+
+    /**
+     * Extract a compact, human-readable predicate string from a type.
+     * For isa-predicate types, renders just the inner predicate object.
+     * For other predicates, serializes the full predicate call.
+     */
+    private static String predicateToCompactStr(final Type t) {
+        if (!t.hasPredicate()) return "";
+        if (t.isIsaPredicate()) {
+            final Obj predObj = t.isPredicateObj();
+            return predObj != null ? "?" + SER.write(predObj) : "";
+        }
+        return SER.write(t.predicate());
+    }
+
     private static String superTypeRefines(final Type t, final String instsetVid) {
-        // Use parentType() to get the super type; skip root types
         if (t == null || t.isRootType()) return "";
         final Type parent = t.parentType();
         if (parent == null || parent.isRootType()) return "";
 
-        final fURI superTid = parent.vid() != null ? parent.vid() : parent.tid();
-        if (superTid == null) return "";
+        final fURI superVid = parent.vid();
+        if (superVid == null) return "";
 
-        final String superName = superTid.name();
-        final String superShort = superTid.toString();
+        final String superName = superVid.name();
+        final String superShort = superVid.toString();
         final String superInstset = extractInstset(superShort);
 
         if (superInstset != null && !superInstset.isEmpty() && !superInstset.equals(instsetVid)) {
@@ -807,6 +958,15 @@ public class InstSetDocGenerator {
             final String spec = sp.typeSpec() != null && !sp.typeSpec().isEmpty()
                     ? "<div class=\"mt-2\"><pre class=\"mb-0\"><code class=\"language-mtron\">"
                       + esc(sp.typeSpec()) + "</code></pre></div>" : "";
+            final Type spaceType = sp.obj() != null && sp.obj().isType()
+                    ? sp.obj().asType()
+                    : sp.obj() != null ? sp.obj().type().asType() : null;
+            LOG.info("space " + sp.name() + ": obj=" + (sp.obj() != null ? sp.obj().getClass().getSimpleName() : "null")
+                    + " isType=" + (sp.obj() != null ? sp.obj().isType() : "null")
+                    + " spaceType=" + (spaceType != null ? spaceType.vid() : "null"));
+            final String spaceInstset = extractInstset(sp.vid());
+            final String inheritedFields = spaceType != null
+                    ? renderInheritedFields(spaceType, spaceInstset) : "";
             final Rec doc = fetchDocByVid(sp.obj());
             cards.append("""
                          <div class="card mb-3" id="%s">
@@ -816,8 +976,9 @@ public class InstSetDocGenerator {
                              </div>
                              %s
                              %s
+                             %s
                          </div>""".formatted(gid, vidToFilename(sp.vid()), esc(sp.name()), esc(sp.vid()),
-                    spec, renderDoc(doc, gid)));
+                    spec, inheritedFields, renderDoc(doc, gid)));
         }
         return """
                <div class="container-xxl mb-4" id="spaces">
@@ -1015,6 +1176,25 @@ public class InstSetDocGenerator {
                 + cardinality + tooltip + "\" class=\"code " + cssClass + "\">" + esc(shortName) + "</a>";
     }
 
+    /**
+     * Return true when {@code instsetVid} is the longest matching prefix
+     * of {@code itemVid} among all known instset VIDs.
+     * <p>
+     * Example: item "/m/tble/rrow" owns to "/m/tble", not "/m".
+     */
+    private static boolean owns(final String itemVid, final String instsetVid,
+                                final Collection<String> allInstsetVids) {
+        if (itemVid == null || itemVid.isEmpty()) return false;
+        String best = "";
+        for (final String candidate : allInstsetVids) {
+            if (itemVid.equals(candidate) || itemVid.startsWith(candidate + "/")) {
+                if (candidate.length() > best.length())
+                    best = candidate;
+            }
+        }
+        return best.equals(instsetVid);
+    }
+
     // ========================================================================
     // INDEX PAGE
     // ========================================================================
@@ -1023,46 +1203,71 @@ public class InstSetDocGenerator {
                                             final List<Set<Type>> allTypes,
                                             final List<Set<Inst>> allInsts,
                                             final List<List<SpaceEntry>> allSpaces,
+                                            final List<Set<Inst>> allRewrites,
+                                            final List<Set<Obj>> allConsts,
                                             final boolean websiteTemplate, final String depth,
                                             final int buildNumber) {
         final StringBuilder cards = new StringBuilder();
         for (int i = 0; i < metas.size(); i++) {
             final Meta meta = metas.get(i);
             final String filename = vidToFilename(meta.vid());
+            final String iconName = iconName(leafName(meta.vid()));
+            final String iconPath = depth + "/images/icons/space/" + iconName + "-icon.svg";
+
+            // Fallback to a generated description if none is present
+            final String desc;
+            if (meta.desc() != null && !meta.desc().isEmpty() && !"null".equals(meta.desc())) {
+                desc = meta.desc();
+            } else {
+                desc = autoDescription(meta.vid());
+            }
+
+            final int nTypes = allTypes.get(i).size();
+            final int nInsts = allInsts.get(i).size();
+            final int nSpaces = allSpaces.get(i).size();
+            final int nConsts = allConsts.get(i).size();
+            final int nRewrites = allRewrites.get(i).size();
+
             cards.append("""
-                         <div class="col-md-6 col-lg-4">
+                         <div class="col-xl-4 col-md-6">
                              <a href="%s" class="text-decoration-none">
-                                 <div class="card h-100">
-                                     <div class="card-body">
-                                         <h5 class="card-title code text-primary">%s</h5>
-                                         <div class="d-flex gap-2 flex-wrap">
-                                             <span class="pill-label badge bg-primary">%d types</span>
-                                             <span class="pill-label badge bg-success">%d instructions</span>
-                                             <span class="pill-label badge bg-info text-dark">%d spaces</span>
+                                 <div class="splash-card card">
+                                     <div class="card-body d-flex flex-column p-2">
+                                         <div class="d-flex align-items-center gap-2 mb-1">
+                                             <img src="%s" alt="" class="splash-icon"
+                                                  onerror="this.style.display='none'">
+                                             <span class="code text-primary fw-bold splash-title">%s</span>
+                                         </div>
+                                         <p class="text-muted splash-desc">%s</p>
+                                         <div class="splash-stats">
+                                             <div><span class="stat-label">consts</span><span class="stat-val">%d</span></div>
+                                             <div><span class="stat-label">types</span><span class="stat-val">%d</span></div>
+                                             <div><span class="stat-label">spaces</span><span class="stat-val">%d</span></div>
+                                             <div><span class="stat-label">insts</span><span class="stat-val">%d</span></div>
+                                             <div><span class="stat-label">rewrites</span><span class="stat-val">%d</span></div>
                                          </div>
                                      </div>
                                  </div>
                              </a>
-                         </div>""".formatted(filename, esc(meta.vid()),
-                    allTypes.get(i).size(), allInsts.get(i).size(), allSpaces.get(i).size()));
+                         </div>""".formatted(filename, iconPath, esc(meta.vid()), esc(desc),
+                    nConsts, nTypes, nSpaces, nInsts, nRewrites));
         }
 
-        final String ts = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
         final String content = """
-                               <div class="container-xxl py-4">
-                                   <div class="text-center mb-5">
+                               <div class="container-xxl py-3">
+                                   <div class="text-center mb-4">
                                        <h1 class="text-primary glow-text">metatron</h1>
                                        <p class="subtitle text-light">instruction set documentation</p>
                                    </div>
-                                   <div class="row g-3">%s</div>
-                                   <div class="py-3 text-center mt-5">
+                                   <div class="row g-2">%s</div>
+                                   <div class="py-3 text-center mt-4">
                                        <hr class="border-secondary">
                                        <small class="text-muted">
-                                           metatron instset doc generator on build %d-%s<br>
-                                           (c) PhaseShift Studio, LLC
+                                           metatron instset doc generator — build %d<br>
+                                           &copy; PhaseShift Studio, LLC
                                        </small>
                                    </div>
-                               </div>""".formatted(cards.toString(), buildNumber, ts);
+                               </div>""".formatted(cards.toString(), buildNumber);
 
         if (websiteTemplate) {
             final String header = loadWebsiteHeader(depth);
@@ -1089,6 +1294,36 @@ public class InstSetDocGenerator {
                    <div class="container">%s</div>
                </body>
                </html>""".formatted(depth, depth, content);
+    }
+
+    /** Map leaf-name to icon filename (without extension). */
+    private static String iconName(final String leafName) {
+        return switch (leafName) {
+            case "m" -> "mtron";
+            default -> leafName;
+        };
+    }
+
+    /**
+     * Generate a short description for an instruction set from its URI.
+     */
+    private static String autoDescription(final String vid) {
+        final String name = leafName(vid);
+        return switch (name) {
+            case "m" -> "the core instruction set containing base types and fundamental operations";
+            case "sys" -> "system-level utilities, environment variables, and boot configuration";
+            case "mach" -> "machine primitives: console, router, threading, and i/o";
+            case "math" -> "arithmetic, trigonometry, statistics, time, sizes, and currency";
+            case "web" -> "web server, mime-types, http handlers, web socket sessions, and mcp gateway";
+            case "iot" -> "internet-of-things, mqtt messaging, home assistant, and device integration";
+            case "llm" -> "large language models, agents, tool use, chat sessions, and model catalogs";
+            case "tble" -> "relational database spaces: sqlite, mariadb, mysql, and postgresql backends";
+            case "dcmnt" -> "document database spaces backed by mongodb, documentdb with collection schemas";
+            case "grph" -> "graph database spaces via tinkerpop and janusgraph";
+            case "rdf" -> "rdf triple and quad stores with sparql-backed spaces";
+            case "vec" -> "vector spaces for embeddings, similarity search, and tensor operations";
+            default -> "the " + name + " instruction set";
+        };
     }
 
     // ========================================================================

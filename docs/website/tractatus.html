@@ -136,9 +136,17 @@ bin/metatron</code></pre>
                 </a>
                 <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="isa_dropdown">
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='./instset/index.html';">
+                        <i class="bi bi-grid-3x3-gap-fill me-2"></i>overview</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
                            onclick="location.href='./instset/m.html';"><img
                             src="./images/icons/space/mtron-icon.svg" class="isa-row icon-color me-2"
                             alt="mtron"/>/m</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='./instset/m_sys.html';"><img
+                            src="./images/icons/space/sys-icon.svg" class="isa-row icon-color me-2"
+                            alt="sys"/>/m/sys</a></li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
                            onclick="location.href='./instset/m_mach.html';"><img
                             src="./images/icons/space/mach-icon.svg" class="isa-row icon-color me-2" alt="mach"/>/m/mach</a>
@@ -155,12 +163,10 @@ bin/metatron</code></pre>
                            onclick="location.href='./instset/m_grph.html';"><img
                             src="./images/icons/space/grph-icon.svg" class="isa-row icon-color me-2" alt="grph"/>/m/grph</a>
                     </li>
-                    <!-- TODO: Add /m/vec docs
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='instset/m_vec.html';"><img
-                            src="./images/icons/space/olap-icon.svg" class="isa-row icon-color me-2"
+                           onclick="location.href='./instset/m_vec.html';"><img
+                            src="./images/icons/space/vec-icon.svg" class="isa-row icon-color me-2"
                             alt="vec"/>/m/vec</a></li>
-                    -->
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
                            onclick="location.href='./instset/m_web.html';"><img
                             src="./images/icons/space/web-icon.svg" class="isa-row icon-color me-2"
@@ -171,7 +177,7 @@ bin/metatron</code></pre>
                             alt="llm"/>/m/llm</a></li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
                            onclick="location.href='./instset/m_iot.html';"><img
-                            src="./images/icons/space/graphql-icon.svg" class="isa-row icon-color me-2" 
+                            src="./images/icons/space/iot-icon.svg" class="isa-row icon-color me-2"
                             alt="iot"/>/m/iot</a>
                     </li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
@@ -972,9 +978,9 @@ mtron&gt; 2.band(min=&gt;1,max=&gt;1)     ​1​</code></pre>
 ==&gt;ERROR: is_divisible -&gt; |is_divisble?bool&lt;=int(by?int=&gt;is(neq(0)).else(print('error').map(1)))[mod(*by).eq(0)]
                                       ^ end of input expected
 mtron&gt;  10.is_divisible(2)
-==&gt;fail::[unable to locate inst-f of is_divisible(2)@&lt;1&gt;][...]@&lt;/sys/fail?incrq=./+&gt;
+==&gt;fail::[unable to locate inst-f of is_divisible(2)@&lt;1&gt;][...]@/sys/fail/18
 mtron&gt;  10.is_divisible('abc')
-==&gt;fail::[unable to locate inst-f of is_divisible('abc')@&lt;1&gt;][...]@&lt;/sys/fail?incrq=./+&gt;</code></pre>
+==&gt;fail::[unable to locate inst-f of is_divisible('abc')@&lt;1&gt;][...]@/sys/fail/20</code></pre>
 </div>
 </div>
 </div>
@@ -1029,7 +1035,7 @@ This ensures the uri <code>trpl</code> is not applied to the <code>inst</code> p
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;  trpl -&gt; inst?lst[int,int,int]&lt;=int{3}(){&gt;-[,]}     ​1​
-==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(){merge([,])}]][...]@&lt;/sys/fail?incrq=./+&gt;
+==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(){merge([,])}]][...]@/sys/fail/22
 mtron&gt; trpl -&gt; |inst?lst[int,int,int]&lt;=int{3}(){&gt;-[,]}     ​2​
 ==&gt;inst?rng=lst[int,int,int]&amp;dom=int{3}(){merge([,])}
 mtron&gt; *trpl     ​3​
@@ -1601,26 +1607,26 @@ else(throw('no model fits the spec'))            /
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; @aix.chat('evaluate the following expression using your mtron eval tool: [1,2]==[+2,-&lt;[+3,+4]]==[_,&gt;-]')
-==&gt;"""The expression you've provided is not a standard mathematical or programming expression. It appears to be a mix of list notation, custom operators, and possibly some symbolic or abstract syntax. Let's break it down and interpret it step by step.
+==&gt;"""Let's break down and evaluate the expression step by step:
 
-   ---
+   **Given expression:**
 
-   ### Expression:
    ```
    [1,2]==[+2,-&lt;[+3,+4]]==[_,&gt;-]
    ```
 
+   We'll evaluate it from left to right using the logic of the Mtron language (assuming it's a simplified or custom language). Let's first interpret and evaluate each part.
+
    ---
 
-   ### Step 1: Understand the Components
+   ### Step 1: Evaluate the first list `[1,2]`
 
-   We can split the expression into three parts:
+   This is a simple list containing the elements 1 and 2.
 
-   1. **Left Side:** `[1,2]`
-   2. **Middle Part:** `[+2,-&lt;[+3,+4]]`
-   3. **Right Side:** `[_,&gt;-]`
+   **Result:** `[1,2]`
 
-   Let’s interpret each part.
+   ---
+
    ...</code></pre>
 </div>
 </div>
@@ -1840,7 +1846,7 @@ mtron&gt; *ollama:+.
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; @aix.chat("I need you evaluate the mtron expresion `-&lt;[_=&gt;_]&gt;&gt;.&gt;-[,]-&lt;[_,-&lt;[_=&gt;_]&gt;&gt;]&gt;&gt;.&gt;-` with a lhs of `1`. Please don't tell me the result of the evaluation until I ask for it sometime in the near future.")
-==&gt;"I have evaluated the mtron expression with the given left-hand side (lhs) of `1`. The result is stored and will be provided to you when you ask for it. Let me know when you're ready to see the result!"</code></pre>
+==&gt;'The evaluation of the mtron expression with the given lhs has been completed. I will provide the result when you ask for it.'</code></pre>
 </div>
 </div>
 <div class="openblock card">
@@ -1941,7 +1947,7 @@ mtron&gt; tB::1.0.as(mB::T)     ​3​
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; @ai.chat("It's been many years since we last talked. For I am a tired, old man. Before I let my last breathe flutter into this world, I must know one last thing. Please tell me, what was the result of the mtron expression I provided you all those years ago?")
-==&gt;fail::[unable to evaluate inst: chat?dom=rec("It's been many years since we last talked. For I am a tired...")@&lt;1&gt;][...]@&lt;/sys/fail?incrq=./+&gt;
+==&gt;fail::[unable to evaluate inst: chat?dom=rec("It's been many years since we last talked. For I am a tired...")@&lt;1&gt;][...]@/sys/fail/24
 mtron&gt; */usr/ai/session/+
 ==&gt;/usr/ai
 ==&gt;[max=&gt;15]
@@ -2373,7 +2379,7 @@ can access it accordingly and naturally.</p>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;  1.plus(b)     ​1​
-==&gt;fail::[1 [int::T] unable to convert uri::T][...]@&lt;/sys/fail?incrq=./+&gt;
+==&gt;fail::[1 [int::T] unable to convert uri::T][...]@/sys/fail/60
 mtron&gt; */sys/fail/+     ​2​
 mtron&gt; */sys/fail/+.catch(_)     ​3​
 mtron&gt; */sys/fail     ​4​</code></pre>
@@ -2495,7 +2501,7 @@ mtron&gt; 4.as(int::T[?&gt;0]@nat)
 ==&gt;nat::4
 mtron&gt;  -4.as(nat::T)
 ==&gt;fail::[-4 is not a is(gt(0))
-     -4=&gt;(X=&gt;is(gt(0)))][...]@&lt;/sys/fail?incrq=./+&gt;
+     -4=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/6
 mtron&gt; [-- refining rec::T  --]
 mtron&gt; [name=&gt;'snowbutt',age=&gt;7].as(rec::T[?[name=&gt;str::T,age=&gt;int::T]@chicken)
 ==&gt;ERROR: [name=&gt;'snowbutt',age=&gt;7].as(rec::T[?[name=&gt;str::T,age=&gt;int::T]@chicken)
@@ -2558,9 +2564,9 @@ mtron&gt; 2.as(nat::T)     ​5​
 ==&gt;2
 mtron&gt;  -2.as(nat::T)     ​6​
 ==&gt;fail::[-2 is not a is(gt(0))
-     -2=&gt;(X=&gt;is(gt(0)))][...]@&lt;/sys/fail?incrq=./+&gt;
+     -2=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/12
 mtron&gt;  nat::2 * -1     ​7​
-==&gt;fail::[nat::-2 is not a int::T[is(gt(0))][choose([is(lt(0))=&gt;mult(-1),id()=&gt;id()]).rshift()]][...]@&lt;/sys/fail?incrq=./+&gt;</code></pre>
+==&gt;fail::[nat::-2 is not a int::T[is(gt(0))][choose([is(lt(0))=&gt;mult(-1),id()=&gt;id()]).rshift()]][...]@/sys/fail/18</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -2587,7 +2593,7 @@ The predicate component of the type definition tests an <code>int</code> to dete
 <div class="paragraph">
 <p>While every <code>type</code> is an <code>obj</code>, not every <code>obj</code> is a <code>type</code>.
 Those <code>objs</code> that are not <code>types</code> are <em>instances</em> of some <code>type</code>.
-This is the foundation for all other <code>objs</code> in {{m}}M{{g}}E{{y}}T{{c}}A{{y}}t{{b}}r{{c}}o{{y}}N{{X}}.</p>
+This is the foundation for all other <code>objs</code> in {{b}}M{{g}}E{{c}}T{{g}}A{{b}}T{{y}}r{{m}}o{{b}}n{{X}}.</p>
 </div>
 <h4 id="sec-cascading-type-constructions" class="discrete">cascading type constructions</h4>
 <h3 id="sec-mono-types" class="discrete">mono types</h3>
@@ -3243,7 +3249,7 @@ mtron&gt;  nat::-10
 ==&gt;ERROR: nat::-10 is not a int::T[is(gt(0))]
 mtron&gt;  int::-10.as(nat::T)
 ==&gt;fail::[-10 is not a is(gt(0))
-     -10=&gt;(X=&gt;is(gt(0)))][...]@&lt;/sys/fail?incrq=./+&gt;</code></pre>
+     -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/156</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -3342,7 +3348,7 @@ mtron&gt;  nat::-10
 ==&gt;ERROR: nat::-10 is not a int::T[is(gt(0))]
 mtron&gt;  int::-10.as(nat::T)
 ==&gt;fail::[-10 is not a is(gt(0))
-     -10=&gt;(X=&gt;is(gt(0)))][...]@&lt;/sys/fail?incrq=./+&gt;</code></pre>
+     -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/162</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -3368,10 +3374,10 @@ mtron&gt; age::125
 ==&gt;ERROR: age::125 is not a int::T[is(lt(120))]
 mtron&gt;  nat::125.as(age::T)
 ==&gt;fail::[nat::125 is not a is(lt(120))
-     nat::125=&gt;(X=&gt;is(lt(120)))][...]@&lt;/sys/fail?incrq=./+&gt;
+     nat::125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/168
 mtron&gt;  125.as(nat::T).as(age::T)
 ==&gt;fail::[125 is not a is(lt(120))
-     125=&gt;(X=&gt;is(lt(120)))][...]@&lt;/sys/fail?incrq=./+&gt;</code></pre>
+     125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/174</code></pre>
 </div>
 </div>
 <div class="listingblock">
@@ -3589,7 +3595,7 @@ mtron&gt; memspace::[
     prefix=&gt;'',
     postfix=&gt;'',
     exp=&gt;[,],
-    pane=&gt;lst[/m/mach/console/pane{*}]::[/m/mach/console/pane::[result=&gt;inst?noobj{0}&lt;=#{?}(#{*}::T),stream=&gt;inst?noobj{0}&lt;=#{?}(#{*}::T),prompt=&gt;inst?noobj{0}&lt;=#{?}(#{*}::T)]@/usr/ui/console/pane/0],
+    pane=&gt;lst[/m/mach/console/pane{*}]::[/m/mach/console/pane::[prompt=&gt;inst?noobj{0}&lt;=#{?}(#{*}::T),stream=&gt;inst?noobj{0}&lt;=#{?}(#{*}::T),result=&gt;inst?noobj{0}&lt;=#{?}(#{*}::T)]@/usr/ui/console/pane/0],
     menu=&gt;[
      console=&gt;console::[
       metatron_version=&gt;&lt;0.1-alpha&gt;,
@@ -3599,11 +3605,11 @@ mtron&gt; memspace::[
       prefix=&gt;'',
       postfix=&gt;'',
       exp=&gt;[,],
-      pane=&gt;lst[/m/mach/console/pane{*}]::[/m/mach/console/pane::[result=&gt;inst?noobj{0}&lt;=#{?}(#{*}::T),stream=&gt;inst?noobj{0}&lt;=#{?}(#{*}::T),prompt=&gt;inst?noobj{0}&lt;=#{?}(#{*}::T)]@/usr/ui/console/pane/0]]@/usr/ui/console,
+      pane=&gt;lst[/m/mach/console/pane{*}]::[/m/mach/console/pane::[prompt=&gt;inst?noobj{0}&lt;=#{?}(#{*}::T),stream=&gt;inst?noobj{0}&lt;=#{?}(#{*}::T),result=&gt;inst?noobj{0}&lt;=#{?}(#{*}::T)]@/usr/ui/console/pane/0]]@/usr/ui/console,
      help=&gt;inst?noobj&lt;=#{?}(),
    ...
 mtron&gt; */usr/ui/console/pane/0     ​2​
-==&gt;/m/mach/console/pane::[result=&gt;inst?noobj{0}&lt;=#{?}(#{*}::T),stream=&gt;inst?noobj{0}&lt;=#{?}(#{*}::T),prompt=&gt;inst?noobj{0}&lt;=#{?}(#{*}::T)]
+==&gt;/m/mach/console/pane::[prompt=&gt;inst?noobj{0}&lt;=#{?}(#{*}::T),stream=&gt;inst?noobj{0}&lt;=#{?}(#{*}::T),result=&gt;inst?noobj{0}&lt;=#{?}(#{*}::T)]
 mtron&gt; /usr/ui/console/pane/0/result('printed at ==&gt;xyz')     ​3​</code></pre>
 </div>
 </div>
@@ -4896,7 +4902,7 @@ The inspiration for metatron&#8217;s URI addressing schema was inspired by the v
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; mqtt::[pattern =&gt; &lt;ha:#&gt;,
               host    =&gt; mqtt://localhost:1883,
               route   =&gt; [ha:=&gt;&lt;/home/chips&gt;]]@/sys/space/esp32     ​1​
-==&gt;ERROR: com.hivemq.client.mqtt.exceptions.ConnectionFailedException: io.netty.channel.AbstractChannel$AnnotatedConnectException: Connection refused: localhost/127.0.0.1:1883: com.hivemq.client.mqtt.exceptions.ConnectionFailedException: io.netty.channel.AbstractChannel$AnnotatedConnectException: Connection refused: localhost/127.0.0.1:1883
+==&gt;ERROR: com.hivemq.client.mqtt.exceptions.ConnectionFailedException: io.netty.channel.AbstractChannel$AnnotatedConnectException: finishConnect(..) failed: Connection refused: localhost/127.0.0.1:1883: com.hivemq.client.mqtt.exceptions.ConnectionFailedException: io.netty.channel.AbstractChannel$AnnotatedConnectException: finishConnect(..) failed: Connection refused: localhost/127.0.0.1:1883
   	java.util.concurrent.CompletableFuture [line 345]
   	java.util.concurrent.CompletableFuture [line 440]
   	java.util.concurrent.CompletableFuture [line 2117]
@@ -5076,7 +5082,7 @@ mtron&gt; *&lt;fs:m/bin/metatron&gt;     ​3​
 mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T)     ​4​
 ==&gt;bytes(#{*}::T){&lt;j&gt;}
 mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T).as(str::T)     ​5​
-==&gt;fail::[bytes(#{*}::T){&lt;j&gt;} [bytes::T] unable to convert bytes::T][...]@&lt;/sys/fail?incrq=./+&gt;</code></pre>
+==&gt;fail::[bytes(#{*}::T){&lt;j&gt;} [bytes::T] unable to convert bytes::T][...]@/sys/fail/6</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -5121,14 +5127,14 @@ mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T).as(str::T)     ​5​
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; bin:bash('-c',df)
 ==&gt;'Filesystem     1K-blocks      Used Available Use% Mounted on'
-==&gt;'tmpfs            6356184      6288   6349896   1% /run'
+==&gt;'tmpfs            6356184      6232   6349952   1% /run'
 ==&gt;'efivarfs             128        42        82  34% /sys/firmware/efi/efivars'
-==&gt;'/dev/nvme1n1p2 959786032 609163828 301793996  67% /'
-==&gt;'tmpfs           31780908    398780  31382128   2% /dev/shm'
+==&gt;'/dev/nvme1n1p2 959786032 519962948 390994876  58% /'
+==&gt;'tmpfs           31780908    564644  31216264   2% /dev/shm'
 ==&gt;'tmpfs               5120        20      5100   1% /run/lock'
 ==&gt;'tmpfs           31780908         0  31780908   0% /run/qemu'
 ==&gt;'/dev/nvme1n1p1    523248      6288    516960   2% /boot/efi'
-==&gt;'tmpfs            6356180       288   6355892   1% /run/user/1000'
+==&gt;'tmpfs            6356180       296   6355884   1% /run/user/1000'
 ==&gt;'/dev/nvme0n1p2 976744444 252064636 724679808  26% /media/hdd0'
 mtron&gt; bin:bash('-c',ls)
 ==&gt;'AGENTS.md'
@@ -5364,12 +5370,7 @@ The <code>graphspace</code> of <code>/m/grph</code> uses <a href="http://tinkerp
          native  =&gt; [factory  =&gt; mfactory::[=&gt;],
                      load     =&gt; modern]]@/sys/space/grph/modern     ​1​
 mtron&gt; *g:S/+     ​2​
-==&gt;vrtx::T[?[name=&gt;str::T,age=&gt;int::T]]@/m/grph/schema/modern/person
-==&gt;vrtx::T[?[name=&gt;str::T,lang=&gt;str::T]]@/m/grph/schema/modern/software
-==&gt;edge::T[?[weight=&gt;real::T]]@/m/grph/schema/modern/knows
-==&gt;edge::T[?[weight=&gt;real::T]]@/m/grph/schema/modern/created
-mtron&gt; *g:S/person     ​3​
-==&gt;vrtx::T[?[name=&gt;str::T,age=&gt;int::T]]@/m/grph/schema/modern/person</code></pre>
+mtron&gt; *g:S/person     ​3​</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -5402,44 +5403,26 @@ mtron&gt; *g:S/person     ​3​
 <div class="title">id-resolution traversals (path syntax)</div>
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *g:V/1     ​1​
-==&gt;person::[age=&gt;29,name=&gt;'marko']
 mtron&gt; *g:V/1/OUT     ​2​
-==&gt;created::[weight=&gt;0.4000]@g:E/9
-==&gt;knows::[weight=&gt;0.5000]@g:E/7
-==&gt;knows::[weight=&gt;1.0000]@g:E/8
 mtron&gt; *g:V/1/OUT/created     ​3​
-==&gt;created::[weight=&gt;0.4000]
 mtron&gt; *g:V/1/OUT/created/IN     ​4​
-==&gt;software::[name=&gt;'lop',lang=&gt;'java']
 mtron&gt; *g:V/1/OUT/knows/IN/name     ​5​
-==&gt;'josh'
-==&gt;'vadas'
 mtron&gt; *g:V/1/OUT/knows/IN/+.count()     ​6​
-==&gt;2
-mtron&gt; *g:E/7/IN/name     ​7​
-==&gt;'vadas'</code></pre>
+==&gt;0
+mtron&gt; *g:E/7/IN/name     ​7​</code></pre>
 </div>
 </div></div></td>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="title">instruction-call traversals (inst syntax)</div>
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *g:V/1     ​1​
-==&gt;person::[age=&gt;29,name=&gt;'marko']
 mtron&gt; *g:V/1.outE()     ​2​
-==&gt;created::[weight=&gt;0.4000]@g:E/9
-==&gt;knows::[weight=&gt;0.5000]@g:E/7
-==&gt;knows::[weight=&gt;1.0000]@g:E/8
 mtron&gt; *g:V/1.outE(created)     ​3​
-==&gt;created::[weight=&gt;0.4000]@g:E/9
 mtron&gt; *g:V/1.out(created)     ​4​
-==&gt;software::[name=&gt;'lop',lang=&gt;'java']@g:V/3
 mtron&gt; *g:V/1.out(knows)&gt;&gt;name     ​5​
-==&gt;'vadas'
-==&gt;'josh'
 mtron&gt; *g:V/1.out(knows).count()     ​6​
-==&gt;2
-mtron&gt; *g:E/7.inV()&gt;&gt;name     ​7​
-==&gt;'vadas'</code></pre>
+==&gt;0
+mtron&gt; *g:E/7.inV()&gt;&gt;name     ​7​</code></pre>
 </div>
 </div></div></td>
 </tr>
@@ -5621,19 +5604,12 @@ The following examples demonstrate selection and filtering using multi-segment u
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; @g:V/1&gt;&gt;=+[address/home/city =&gt; 'santa fe',
                   address/work/city =&gt; 'nomansland']     ​1​
-==&gt;person::[address/work/city=&gt;'nomansland',age=&gt;29,name=&gt;'marko',address/home/city=&gt;'santa fe']@g:V/1
 mtron&gt; *g:V/1/address/home/city     ​2​
-==&gt;'santa fe'
 mtron&gt; *g:V/+.=?=[address/+/city =&gt; 'santa fe']     ​3​
 mtron&gt; *g:V/+.==[address/+/city/ =&gt; _]     ​4​
-==&gt;[address/+/city/=&gt;{address/work/city=&gt;'nomansland',address/home/city=&gt;'santa fe'}]
 mtron&gt; *g:V/+.&gt;&gt;address/+/city
        *g:V/+.&gt;&gt;address/+/city     ​6​
-==&gt;{7}'nomansland'
-==&gt;{7}'santa fe'
-mtron&gt; *g:V/+.&gt;&gt;address/#     ​7​
-==&gt;'nomansland'
-==&gt;'santa fe'</code></pre>
+mtron&gt; *g:V/+.&gt;&gt;address/#     ​7​</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -5676,28 +5652,13 @@ mtron&gt; *g:V/+.&gt;&gt;address/#     ​7​
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; @g:V/1==[_=&gt;_]     ​1​
-==&gt;[address/work/city=&gt;'nomansland',age=&gt;29,name=&gt;'marko',address/home/city=&gt;'santa fe']
 mtron&gt; @g:V/1&gt;&gt;=+[address=&gt;[
                     home =&gt; [city =&gt;'santa fe',
                              state=&gt;NM],
                     work =&gt; !*&lt;../home&gt;]]     ​2​
-==&gt;person::[
-    address/work/city=&gt;'nomansland',
-    age=&gt;29,
-    address=&gt;[home=&gt;[city=&gt;'santa fe',state=&gt;NM],work=&gt;!*&lt;../home&gt;],
-    name=&gt;'marko',
-    address/home/city=&gt;'santa fe']@g:V/1
 mtron&gt; *g:V/1/address/home/city     ​3​
-==&gt;'santa fe'
 mtron&gt; *g:V/+.=?=[address=&gt;[_ =&gt; [state=&gt;NM]]]     ​4​
-==&gt;person::[
-    address/work/city=&gt;'nomansland',
-    age=&gt;29,
-    address=&gt;[home=&gt;[city=&gt;'santa fe',state=&gt;NM],work=&gt;!*&lt;../home&gt;],
-    name=&gt;'marko',
-    address/home/city=&gt;'santa fe']@g:V/1
-mtron&gt; *g:V/+.=?=[address=&gt;[_ =&gt; [state=&gt;NM]]].&gt;&gt;address/+/city     ​5​
-==&gt;'santa fe'</code></pre>
+mtron&gt; *g:V/+.=?=[address=&gt;[_ =&gt; [state=&gt;NM]]].&gt;&gt;address/+/city     ​5​</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -5797,18 +5758,10 @@ mtron&gt; *g:V/+.=?=[address=&gt;[_ =&gt; [state=&gt;NM]]].&gt;&gt;address/+/cit
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *g:V/1     ​1​
-==&gt;person::[
-    address/work/city=&gt;'nomansland',
-    age=&gt;29,
-    address=&gt;[home=&gt;[city=&gt;'santa fe',state=&gt;NM],work=&gt;!*&lt;../home&gt;],
-    name=&gt;'marko',
-    address/home/city=&gt;'santa fe']
 mtron&gt; *acme:customers/357     ​2​
 mtron&gt; @g:V/1.addE(consulted,|*acme:customers/357)     ​3​
-==&gt;consulted::[=&gt;]@g:E/22
 mtron&gt; *g:V/1.out(consulted)     ​4​
-mtron&gt; *g:V/1.out(consulted).matches(vrtx::T)     ​5​
-==&gt;false</code></pre>
+mtron&gt; *g:V/1.out(consulted).matches(vrtx::T)     ​5​</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -5984,7 +5937,7 @@ mtron&gt; /te/cold/1/x -&gt; [item   =&gt; 'book',total=&gt;15.0,
      	java.util.Optional [line 403]
      	studio.phaseshift.metatron.isa.tble.space.ExistingTableSchema [line 665]
      	studio.phaseshift.metatron.isa.tble.space.ExistingTableSchema [line 575]
-     	studio.phaseshift.metatron.isa.tble.tbleSpace [line 479]
+     	studio.phaseshift.metatron.isa.tble.tbleSpace [line 474]
      	studio.phaseshift.metatron.isa.Space$Helper [line 326]
      	studio.phaseshift.metatron.isa.AbstractSpace [line 130]
      	java.util.Optional [line 364]
@@ -6016,28 +5969,24 @@ mtron&gt; /te/cold/1/x -&gt; [item   =&gt; 'book',total=&gt;15.0,
 <div class="title">traversing a distributed edge set (path syntax)</div>
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *g:V/1/OUT/te:hot/+.count()     ​1​
-==&gt;2
+==&gt;0
 mtron&gt; *g:V/1/OUT/te:hot/a/item     ​2​
-==&gt;'laptop'
 mtron&gt; *g:V/1/OUT/te:hot/a/owner/name     ​3​
-==&gt;'vadas'
 mtron&gt; *g:V/1/OUT/te:cold/x/total     ​4​
 mtron&gt; *g:V/1/OUT/knows.count()     ​5​
-==&gt;2</code></pre>
+==&gt;0</code></pre>
 </div>
 </div></div></td>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="title">traversing a distributed edge set (instruction-call syntax)</div>
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *g:V/1.outE(te:hot).count()     ​1​
-==&gt;2
+==&gt;0
 mtron&gt; *g:V/1.outE(te:hot/a)&gt;&gt;item     ​2​
-==&gt;'laptop'
 mtron&gt; *g:V/1.outE(te:hot/a)&gt;&gt;owner&gt;&gt;name     ​3​
-==&gt;'vadas'
 mtron&gt; *g:V/1.outE(te:cold/x)&gt;&gt;total     ​4​
 mtron&gt; *g:V/1.outE(knows).count()     ​5​
-==&gt;2</code></pre>
+==&gt;0</code></pre>
 </div>
 </div></div></td>
 </tr>
@@ -7089,28 +7038,7 @@ mtron&gt; catalog::[host         =&gt; &lt;http://localhost:1234/v1&gt;,
                      /mcp     =&gt; mcp_mtron_http,
                      /docs    =&gt; target/docs,
                      /console =&gt; src/main/resources/web/console]
-       ]@/sys/space/web/http
-==&gt;ERROR: bindexception: Address already in use
-  	sun.nio.ch.Net [line -2]
-  	sun.nio.ch.Net [line 522]
-  	sun.nio.ch.ServerSocketChannelImpl [line 335]
-  	sun.nio.ch.ServerSocketChannelImpl [line 297]
-  	sun.nio.ch.ServerSocketAdaptor [line 80]
-  	sun.net.httpserver.ServerImpl [line 145]
-  	sun.net.httpserver.HttpServerImpl [line 45]
-  	sun.net.httpserver.DefaultHttpServerProvider [line 35]
-  	com.sun.net.httpserver.HttpServer [line 152]
-  	studio.phaseshift.metatron.isa.web.space.http.httpSpace [line 225]
-  	studio.phaseshift.metatron.isa.web.space.http.httpSpace [line 85]
-  	studio.phaseshift.metatron.isa.m.type.Inst$f [line 692]
-  	studio.phaseshift.metatron.isa.m.type.Inst [line 313]
-  	studio.phaseshift.metatron.isa.m.type.Obj$Helper [line 927]
-  	studio.phaseshift.metatron.isa.m.type.impl.MObj [line 46]
-  	studio.phaseshift.metatron.isa.m.type.impl.MRec [line 76]
-  	studio.phaseshift.metatron.isa.m.parser.mParser [line 242]
-  	org.petitparser.parser.actions.ActionParser [line 39]
-  	org.petitparser.parser.combinators.DelegateParser [line 25]
-   ...</code></pre>
+       ]@/sys/space/web/http</code></pre>
 </div>
 </div>
 <h3 id="sec-html-type" class="discrete">HTML Type</h3>
@@ -7122,11 +7050,39 @@ mtron&gt; catalog::[host         =&gt; &lt;http://localhost:1234/v1&gt;,
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; html::T     ​1​
 ==&gt;xml::T[?[html=&gt;[head=&gt;[{?}title=&gt;str::T],body=&gt;rec::T]]]@/m/web/mime/html
 mtron&gt; *&lt;http://phaseshift.studio/splash.html&gt;     ​2​
-==&gt;fail::[no active space supports pattern &lt;http://phaseshift.studio/splash.html&gt;][...]@&lt;/sys/fail?incrq=./+&gt;
+==&gt;html::[html=&gt;[head=&gt;[title=&gt;'PhaseShift Studio',out=&gt;[
+    [
+     tag=&gt;link,
+     href=&gt;&lt;https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css&gt;,
+     rel=&gt;'stylesheet'],
+    [tag=&gt;link,href=&gt;&lt;css/metatron.css&gt;,rel=&gt;'stylesheet']]],body=&gt;[
+    out=&gt;[
+     [tag=&gt;p],
+     [
+      tag=&gt;h1,
+      style=&gt;'padding-left:125px;color:var(--pri...',
+      text=&gt;'PhaseShift Studio'],
+     [
+      tag=&gt;img,
+      style=&gt;'padding-left:100px',
+      src=&gt;&lt;http://metatron.phaseshift.studio/images/metatron-character.png&gt;,
+      width=&gt;'500px']],
+    style=&gt;'background-color: black;']]]
 mtron&gt; *&lt;http://phaseshift.studio/splash.html/html/head/title&gt;     ​3​
-==&gt;fail::[no active space supports pattern &lt;http://phaseshift.studio/splash.html/html/head/title&gt;][...]@&lt;/sys/fail?incrq=./+&gt;
+==&gt;'PhaseShift Studio'
 mtron&gt; *&lt;http://phaseshift.studio/splash.html&gt;.as(str::T)     ​4​
-==&gt;fail::[no active space supports pattern &lt;http://phaseshift.studio/splash.html&gt;][...]@&lt;/sys/fail?incrq=./+&gt;</code></pre>
+==&gt;"""&lt;html&gt;
+    &lt;head&gt;
+     &lt;title&gt;PhaseShift Studio&lt;/title&gt;
+     &lt;link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet"&gt;
+     &lt;link href="css/metatron.css" rel="stylesheet"&gt;
+    &lt;/head&gt;
+    &lt;body style="background-color: black;"&gt;
+     &lt;p&gt;&lt;/p&gt;
+     &lt;h1 style="padding-left:125px;color:var(--primary)"&gt;PhaseShift Studio&lt;/h1&gt;
+     &lt;img style="padding-left:100px" src="http://metatron.phaseshift.studio/images/metatron-character.png" width="500px"&gt;
+    &lt;/body&gt;
+   &lt;/html&gt;"""</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -7159,9 +7115,49 @@ mtron&gt; *&lt;http://phaseshift.studio/splash.html&gt;.as(str::T)     ​4​
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *&lt;http://localhost:1234/v1&gt;     ​1​
-==&gt;fail::[no active space supports pattern http://localhost:1234/v1][...]@&lt;/sys/fail?incrq=./+&gt;
+==&gt;fail::[java.net.ConnectException: null
+     	jdk.internal.net.http.HttpClientImpl [line 923]
+     	jdk.internal.net.http.HttpClientFacade [line 133]
+     	org.jsoup.helper.HttpClientExecutor [line 90]
+     	org.jsoup.helper.HttpConnection$Response [line 892]
+     	org.jsoup.helper.HttpConnection$Response [line 866]
+     	org.jsoup.helper.HttpConnection [line 365]
+     	studio.phaseshift.metatron.isa.web.space.http.httpSpace [line 281]
+     	studio.phaseshift.metatron.isa.Space$Helper [line 267]
+     	studio.phaseshift.metatron.isa.AbstractSpace [line 71]
+     	java.util.Optional [line 364]
+     	studio.phaseshift.metatron.isa.AbstractSpace [line 70]
+     	studio.phaseshift.metatron.isa.mach.type.router.BasicRouter [line 290]
+     	studio.phaseshift.metatron.isa.mach.type.Router [line 80]
+     	studio.phaseshift.metatron.isa.m.type.Obj$ObjType [line 1109]
+     	studio.phaseshift.metatron.isa.m.type.Inst$f [line 692]
+     	studio.phaseshift.metatron.isa.m.type.Inst [line 313]
+     	studio.phaseshift.metatron.isa.m.type.Obj [line 249]
+     	studio.phaseshift.metatron.docs.MtronDocPreprocessor [line 201]
+     	studio.phaseshift.metatron.docs.MtronDocPreprocessor [line 92]
+   ...
 mtron&gt; *&lt;http://localhost:1234/v1/models&gt;     ​2​
-==&gt;fail::[no active space supports pattern http://localhost:1234/v1/models][...]@&lt;/sys/fail?incrq=./+&gt;</code></pre>
+==&gt;fail::[java.net.ConnectException: null
+     	jdk.internal.net.http.HttpClientImpl [line 923]
+     	jdk.internal.net.http.HttpClientFacade [line 133]
+     	org.jsoup.helper.HttpClientExecutor [line 90]
+     	org.jsoup.helper.HttpConnection$Response [line 892]
+     	org.jsoup.helper.HttpConnection$Response [line 866]
+     	org.jsoup.helper.HttpConnection [line 365]
+     	studio.phaseshift.metatron.isa.web.space.http.httpSpace [line 281]
+     	studio.phaseshift.metatron.isa.Space$Helper [line 267]
+     	studio.phaseshift.metatron.isa.AbstractSpace [line 71]
+     	java.util.Optional [line 364]
+     	studio.phaseshift.metatron.isa.AbstractSpace [line 70]
+     	studio.phaseshift.metatron.isa.mach.type.router.BasicRouter [line 290]
+     	studio.phaseshift.metatron.isa.mach.type.Router [line 80]
+     	studio.phaseshift.metatron.isa.m.type.Obj$ObjType [line 1109]
+     	studio.phaseshift.metatron.isa.m.type.Inst$f [line 692]
+     	studio.phaseshift.metatron.isa.m.type.Inst [line 313]
+     	studio.phaseshift.metatron.isa.m.type.Obj [line 249]
+     	studio.phaseshift.metatron.docs.MtronDocPreprocessor [line 201]
+     	studio.phaseshift.metatron.docs.MtronDocPreprocessor [line 92]
+   ...</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -7216,7 +7212,27 @@ mtron&gt; */m/llm/inst/+?dom=model
          -&lt;[provider=&gt; !*/sys/space/lmstudio,
             name    =&gt; &gt;&gt;id.as(uri::T)].as(model::T)
          .chat('are you there?')
-==&gt;ERROR: null</code></pre>
+==&gt;fail::[java.net.ConnectException: null
+     	jdk.internal.net.http.HttpClientImpl [line 923]
+     	jdk.internal.net.http.HttpClientFacade [line 133]
+     	org.jsoup.helper.HttpClientExecutor [line 90]
+     	org.jsoup.helper.HttpConnection$Response [line 892]
+     	org.jsoup.helper.HttpConnection$Response [line 866]
+     	org.jsoup.helper.HttpConnection [line 365]
+     	studio.phaseshift.metatron.isa.web.space.http.httpSpace [line 281]
+     	studio.phaseshift.metatron.isa.Space$Helper [line 267]
+     	studio.phaseshift.metatron.isa.AbstractSpace [line 71]
+     	java.util.Optional [line 364]
+     	studio.phaseshift.metatron.isa.AbstractSpace [line 70]
+     	studio.phaseshift.metatron.isa.mach.type.router.BasicRouter [line 290]
+     	studio.phaseshift.metatron.isa.mach.type.Router [line 80]
+     	studio.phaseshift.metatron.isa.m.type.Obj$ObjType [line 1109]
+     	studio.phaseshift.metatron.isa.m.type.Inst$f [line 692]
+     	studio.phaseshift.metatron.isa.m.type.Inst [line 313]
+     	studio.phaseshift.metatron.isa.mach.type.PCMonad [line 172]
+     	studio.phaseshift.metatron.isa.mach.type.machine.SwarmMachine [line 297]
+     	studio.phaseshift.metatron.isa.mach.type.machine.SwarmMachine [line 258]
+   ...</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -7502,7 +7518,7 @@ mtron&gt; farmset::[type=&gt;[animal::T,equipment::T,chicken::T]]@/m/dcmnt/schem
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;  farm:animals/1 -&gt; 'a chicken named trill'     ​1​
-==&gt;fail::[space /sys/space/farm requires rec::T[?[{?}animals=&gt;animals::T]] at root; got str::T][...]@&lt;/sys/fail?incrq=./+&gt;
+==&gt;fail::[space /sys/space/farm requires rec::T[?[{?}animals=&gt;animals::T]] at root; got str::T][...]@/sys/fail/2
 mtron&gt; farm:animals/1 -&gt; chicken::[name=&gt;'trill',age=&gt;7]     ​2​
 ==&gt;chicken::[name=&gt;'trill',age=&gt;7]
 mtron&gt; *farm:animals/1     ​3​
@@ -7744,14 +7760,7 @@ rows. In metatron, a relational database is a <strong>tblespace</strong> backed 
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *tblespace
-==&gt;space::T[?[
-     pattern=&gt;uri::T,
-     host=&gt;uri::T,
-     driver=&gt;uri::T,
-     route=&gt;[uri::T=&gt;uri::T],
-     {?}table=&gt;lst::T,
-     {?}root=&gt;rec::T,
-     {?}schema=&gt;instset::T]][ctor?tblespace&lt;=#{?}(rec::T)]@/m/tble/space/tblespace</code></pre>
+==&gt;space::T[?[host=&gt;uri::T,driver=&gt;uri::T]][ctor?tblespace&lt;=#{?}(rec::T)]@/m/tble/space/tblespace</code></pre>
 </div>
 </div></div></td>
 </tr>
@@ -7819,19 +7828,7 @@ mtron&gt; *lite:person/+/id     ​6​
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *lite:+
-==&gt;rrow::T[?[id=&gt;int{?}::T,name=&gt;str::T,age=&gt;int::T]]@person
-==&gt;rrow::T[?[id=&gt;int{?}::T,trophy=&gt;str::T,recipient=&gt;isa(person/+/id).!*id()]]@award
-==&gt;rrow::T[?[id=&gt;int{?}::T,trophy=&gt;str::T,recipient=&gt;isa(person/+/id).!*id(),uri{?}::T=&gt;#::T]]@/sys/space/lite/schema/instset/award
-==&gt;rrow::T[?[id=&gt;int{?}::T,name=&gt;str::T,age=&gt;int::T,uri{?}::T=&gt;#::T]]@/sys/space/lite/schema/instset/person
-==&gt;rrow::T[?[
-     id=&gt;int{?}::T,
-     name=&gt;str::T,
-     location=&gt;isa(area:V/+/id).!*id(),
-     parent=&gt;str::T,
-     uri{?}::T=&gt;#::T]]@/sys/space/lite/schema/instset/venue
-==&gt;rrow::T[?[id=&gt;int{?}::T,player=&gt;str::T,points=&gt;int::T]]@score
-==&gt;rrow::T[?[id=&gt;int{?}::T,name=&gt;str::T,location=&gt;isa(area:V/+/id).!*id(),parent=&gt;str::T]]@venue
-==&gt;rrow::T[?[id=&gt;int{?}::T,player=&gt;str::T,points=&gt;int::T,uri{?}::T=&gt;#::T]]@/sys/space/lite/schema/instset/score</code></pre>
+==&gt;rrow::T[?[id=&gt;int{?}::T,name=&gt;str::T,age=&gt;int::T,uri{?}::T=&gt;#::T]]@/sys/space/lite/schema/instset/person</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -7977,7 +7974,7 @@ mtron&gt; *lite:person/+.==[name=&gt;_]     ​3​
 ==&gt;rrow::[name=&gt;'marko',age=&gt;29]
 ==&gt;rrow::[name=&gt;'grant',age=&gt;25]
 mtron&gt; */sys/space/lite.sql("SELECT name,age FROM person WHERE age &lt; 30")&gt;&gt;age.sum()     ​2​
-==&gt;fail::[unable to convert int::T to rec::T[studio.phaseshift.metatron.isa.m.type.Obj:597]][...]@&lt;/sys/fail?incrq=./+&gt;</code></pre>
+==&gt;fail::[unable to convert int::T to rec::T[studio.phaseshift.metatron.isa.m.type.Obj:597]][...]@/sys/fail/6</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -8025,27 +8022,7 @@ whose values happen to match <code>person.name</code> — the link is purely alg
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; @/sys/space/lite &gt;&gt;= [table=&gt;[person,score]]     ​1​
-==&gt;fail::[nullpointerexception: Cannot invoke "studio.phaseshift.metatron.furi.fURI.extend(String)" because the return value of "studio.phaseshift.metatron.isa.tble.tbleSpace.vid()" is null
-     	studio.phaseshift.metatron.isa.tble.tbleSpace [line 276]
-     	studio.phaseshift.metatron.isa.tble.tbleSpace [line 198]
-     	studio.phaseshift.metatron.isa.tble.tbleSpace [line 172]
-     	studio.phaseshift.metatron.isa.tble.tbleSpace [line 139]
-     	studio.phaseshift.metatron.isa.m.type.Inst$f [line 692]
-     	studio.phaseshift.metatron.isa.m.type.Inst [line 313]
-     	studio.phaseshift.metatron.isa.m.type.Obj$Helper [line 946]
-     	studio.phaseshift.metatron.isa.m.type.impl.MObj [line 111]
-     	studio.phaseshift.metatron.isa.m.type.impl.MRec [line 107]
-     	studio.phaseshift.metatron.isa.m.type.impl.MRec [line 36]
-     	studio.phaseshift.metatron.isa.m.type.Obj [line 201]
-     	studio.phaseshift.metatron.isa.m.type.Rec [line 212]
-     	studio.phaseshift.metatron.isa.m.type.Rec [line 51]
-     	studio.phaseshift.metatron.isa.m.type.Poly$Helper [line 280]
-     	studio.phaseshift.metatron.isa.m.type.Poly$Helper [line 258]
-     	studio.phaseshift.metatron.isa.m.type.Poly$Helper [line 250]
-     	studio.phaseshift.metatron.isa.m.type.Obj$ObjType [line 1147]
-     	studio.phaseshift.metatron.isa.m.type.Inst$f [line 692]
-     	studio.phaseshift.metatron.isa.m.type.Inst [line 313]
-   ...
+==&gt;tblespace::[pattern=&gt;lite:#,host=&gt;sqlite:target/test,driver=&gt;&lt;org.sqlite.JDBC&gt;,route=&gt;[lite:=&gt;&lt;&gt;]]@/sys/space/lite
 mtron&gt; lite:score/1 -&gt; [player=&gt;'marko', points=&gt;42]     ​2​
 ==&gt;[player=&gt;'marko',points=&gt;42]
 mtron&gt; lite:score/2 -&gt; [player=&gt;'grant', points=&gt;99]     ​3​

@@ -108,16 +108,15 @@ tblespace::[pattern    => drdb:#,
             q          => [incrq::[=>],subq::[=>]],
             route      => [drdb:=><>]]@/sys/space/tble/dr;
            
- print('loading grphspace\n');
  grphspace::[pattern  => g:#,
              host     => !*<boot/args/external/knowgraph>,
              config   => [
-               <serializer.className>                    => <org.apache.tinkerpop.gremlin.util.ser.GraphBinaryMessageSerializerV1>,
-               <serializer.config.ioRegistries>          => [<org.janusgraph.graphdb.tinkerpop.JanusGraphIoRegistry>],
+               dataset                                    => <org.apache.tinkerpop.gremlin.LoadGraphWith.GraphData.MODERN>,
+               <serializer.className>                     => <org.apache.tinkerpop.gremlin.util.ser.GraphBinaryMessageSerializerV1>,
+               <serializer.config.ioRegistries>           => [<org.janusgraph.graphdb.tinkerpop.JanusGraphIoRegistry>],
                <gremlin.remote.remoteConnectionClass>     => <org.apache.tinkerpop.gremlin.driver.remote.DriverRemoteConnection>,
-               <gremlin.remote.remoteTraversalSourceName> => 'g'],
+               <gremlin.remote.remoteTraversalSourceName> => g],
              route    => [g:V => V, g:E => E]]@</sys/space/grph/kg>;
-print('finished loading grphspace\n');
 
         [======================]  
         [======== AGENT =======]

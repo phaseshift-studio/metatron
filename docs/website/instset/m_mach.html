@@ -137,9 +137,17 @@ bin/metatron</code></pre>
                 </a>
                 <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="isa_dropdown">
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../instset/index.html';">
+                        <i class="bi bi-grid-3x3-gap-fill me-2"></i>overview</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
                            onclick="location.href='../instset/m.html';"><img
                             src="../images/icons/space/mtron-icon.svg" class="isa-row icon-color me-2"
                             alt="mtron"/>/m</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../instset/m_sys.html';"><img
+                            src="../images/icons/space/sys-icon.svg" class="isa-row icon-color me-2"
+                            alt="sys"/>/m/sys</a></li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
                            onclick="location.href='../instset/m_mach.html';"><img
                             src="../images/icons/space/mach-icon.svg" class="isa-row icon-color me-2" alt="mach"/>/m/mach</a>
@@ -156,12 +164,10 @@ bin/metatron</code></pre>
                            onclick="location.href='../instset/m_grph.html';"><img
                             src="../images/icons/space/grph-icon.svg" class="isa-row icon-color me-2" alt="grph"/>/m/grph</a>
                     </li>
-                    <!-- TODO: Add /m/vec docs
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='instset/m_vec.html';"><img
-                            src="../images/icons/space/olap-icon.svg" class="isa-row icon-color me-2"
+                           onclick="location.href='../instset/m_vec.html';"><img
+                            src="../images/icons/space/vec-icon.svg" class="isa-row icon-color me-2"
                             alt="vec"/>/m/vec</a></li>
-                    -->
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
                            onclick="location.href='../instset/m_web.html';"><img
                             src="../images/icons/space/web-icon.svg" class="isa-row icon-color me-2"
@@ -172,7 +178,7 @@ bin/metatron</code></pre>
                             alt="llm"/>/m/llm</a></li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
                            onclick="location.href='../instset/m_iot.html';"><img
-                            src="../images/icons/space/graphql-icon.svg" class="isa-row icon-color me-2" 
+                            src="../images/icons/space/iot-icon.svg" class="isa-row icon-color me-2"
                             alt="iot"/>/m/iot</a>
                     </li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
@@ -315,7 +321,7 @@ bin/metatron</code></pre>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <button class="btn btn-outline-secondary" disabled>Consts <span class="pill-label badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">13</span></a><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">12</span></a><a href="#spaces" class="btn btn-outline-primary">Spaces <span class="pill-label badge bg-info">3</span></a><button class="btn btn-outline-secondary" disabled>Rewrites <span class="pill-label badge bg-dark">0</span></button>
+        <button class="btn btn-outline-secondary" disabled>Consts <span class="pill-label badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">13</span></a><a href="#spaces" class="btn btn-outline-primary">Spaces <span class="pill-label badge bg-info">3</span></a><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">12</span></a><button class="btn btn-outline-secondary" disabled>Rewrites <span class="pill-label badge bg-dark">0</span></button>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="card">
@@ -363,6 +369,18 @@ bin/metatron</code></pre>
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a></div></div>
 </div><div class="mb-3">
+    <h6 class="text-primary mb-2">Spaces</h6>
+    <div class="d-flex flex-wrap"><a href="#space-clstrspace" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">clstrspace</span>
+    <span class="pill-label badge bg-info text-dark ms-2">S</span>
+</a><a href="#space-fsspace" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">fsspace</span>
+    <span class="pill-label badge bg-info text-dark ms-2">S</span>
+</a><a href="#space-serial" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">serial</span>
+    <span class="pill-label badge bg-info text-dark ms-2">S</span>
+</a></div>
+</div><div class="mb-3">
     <h6 class="text-primary mb-2">Instructions</h6>
     <div class="d-flex flex-wrap"><a href="#inst-close" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">close</span>
@@ -401,18 +419,6 @@ bin/metatron</code></pre>
     <span class="code" style="font-size:1.2rem;">zero</span>
     <span class="pill-label badge bg-success ms-2">I</span>
 </a></div>
-</div><div class="mb-3">
-    <h6 class="text-primary mb-2">Spaces</h6>
-    <div class="d-flex flex-wrap"><a href="#space-clstrspace" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">clstrspace</span>
-    <span class="pill-label badge bg-info text-dark ms-2">S</span>
-</a><a href="#space-fsspace" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">fsspace</span>
-    <span class="pill-label badge bg-info text-dark ms-2">S</span>
-</a><a href="#space-serial" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">serial</span>
-    <span class="pill-label badge bg-info text-dark ms-2">S</span>
-</a></div>
 </div></div>
     </div>
 </div><div class="container-xxl mb-4" id="types">
@@ -427,6 +433,7 @@ bin/metatron</code></pre>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[=&gt;]][ctor?console&lt;=#{?}(rec::T)]@/m/mach/console</code></pre></div>
     
+    
 </div><div class="card mb-3" id="type-core">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -436,6 +443,13 @@ bin/metatron</code></pre>
         <small class="text-muted code">/m/mach/thread/core</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">thread::T[][ctor?core&lt;=#{?}(rec::T)]@/m/mach/thread/core</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#type-thread" class="code inherited-link">thread::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
+ code=&gt;#::T,
+ {?}source=&gt;uri::T,
+ {?}yield=&gt;thread::T,
+ {?}loop=&gt;time::T,
+ {?}state=&gt;is(or(eq(stop),eq(run),eq(pause))),
+ {?}result=&gt;#{*}::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">run a concurrent core thread</p>
 </div><div class="card-body py-2">
@@ -459,6 +473,7 @@ bin/metatron</code></pre>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">uri::T[][inst?dir{?}&lt;=#{?}(uri::T)]@/m/mach/dir</code></pre></div>
     
+    
 </div><div class="card mb-3" id="type-factory">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -468,6 +483,7 @@ bin/metatron</code></pre>
         <small class="text-muted code">/m/mach/factory</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T@/m/mach/factory</code></pre></div>
+    
     
 </div><div class="card mb-3" id="type-file">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -479,6 +495,7 @@ bin/metatron</code></pre>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">uri::T[][inst?file&lt;=#{?}(uri::T)]@/m/mach/file</code></pre></div>
     
+    
 </div><div class="card mb-3" id="type-image">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -489,6 +506,7 @@ bin/metatron</code></pre>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">file::T@/m/mach/file/image</code></pre></div>
     
+    
 </div><div class="card mb-3" id="type-machine">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -498,6 +516,13 @@ bin/metatron</code></pre>
         <small class="text-muted code">/m/mach/machine</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">virtual::T@/m/mach/machine</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#type-thread" class="code inherited-link">thread::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
+ code=&gt;#::T,
+ {?}source=&gt;uri::T,
+ {?}yield=&gt;thread::T,
+ {?}loop=&gt;time::T,
+ {?}state=&gt;is(or(eq(stop),eq(run),eq(pause))),
+ {?}result=&gt;#{*}::T]</code></div></div>
     
 </div><div class="card mb-3" id="type-mfactory">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -509,6 +534,7 @@ bin/metatron</code></pre>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">factory::T[][ctor?mfactory&lt;=#{?}()]@/m/mach/mfactory</code></pre></div>
     
+    
 </div><div class="card mb-3" id="type-router">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -519,6 +545,7 @@ bin/metatron</code></pre>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T@/m/mach/router</code></pre></div>
     
+    
 </div><div class="card mb-3" id="type-swarm">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -528,6 +555,13 @@ bin/metatron</code></pre>
         <small class="text-muted code">/m/mach/machine/swarm</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">machine::T[?[code=&gt;#::T]][ctor?swarm&lt;=#{?}(machine::T)]@/m/mach/machine/swarm</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#type-thread" class="code inherited-link">thread::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
+ code=&gt;#::T,
+ {?}source=&gt;uri::T,
+ {?}yield=&gt;thread::T,
+ {?}loop=&gt;time::T,
+ {?}state=&gt;is(or(eq(stop),eq(run),eq(pause))),
+ {?}result=&gt;#{*}::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a swarm machine makes use of a set of independently executing monads that move across the code inst chain.
 barriers serve as synchronization points where all running monads must aggregate before being released on the post-barrier segment of code.
@@ -554,6 +588,7 @@ the objs referenced by the monads that halt are the result of the machine execut
   {?}state=&gt;is(or(eq(stop),eq(run),eq(pause))),
   {?}result=&gt;#{*}::T]]@/m/mach/thread</code></pre></div>
     
+    
 </div><div class="card mb-3" id="type-thread_executor">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -563,6 +598,7 @@ the objs referenced by the monads that halt are the result of the machine execut
         <small class="text-muted code">/m/mach/thread_executor</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[run=&gt;[,],stop=&gt;[,]]]@/m/mach/thread_executor</code></pre></div>
+    
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">the gateway interface for all threads in metatron</p>
 </div>
@@ -575,6 +611,13 @@ the objs referenced by the monads that halt are the result of the machine execut
         <small class="text-muted code">/m/mach/thread/virtual</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">thread::T[][ctor?virtual&lt;=#{?}(rec::T)]@/m/mach/thread/virtual</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#type-thread" class="code inherited-link">thread::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
+ code=&gt;#::T,
+ {?}source=&gt;uri::T,
+ {?}yield=&gt;thread::T,
+ {?}loop=&gt;time::T,
+ {?}state=&gt;is(or(eq(stop),eq(run),eq(pause))),
+ {?}result=&gt;#{*}::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">run a concurrent virtual thread</p>
 </div><div class="card-body py-2">
@@ -588,6 +631,41 @@ the objs referenced by the monads that halt are the result of the machine execut
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">virtual::[code=&gt;ping(&lt;phaseshift.studio:80&gt;),loop=&gt;second::1.5]@/sys/thread/ping</code></pre>
 </div>
+</div>
+</div><div class="container-xxl mb-4" id="spaces">
+    <h3 class="text-primary mb-3">Spaces <span class="pill-label badge bg-info">3</span></h3>
+    <div class="card mb-3" id="space-clstrspace">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <a href="m_mach_clstrspace.html" class="code text-primary fw-bold text-decoration-none">clstrspace</a>
+        <small class="text-muted code">/m/mach/clstrspace</small>
+    </div>
+    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[?[{?}peer=&gt;{?}[uri::T[/m/inst/pred?rng=authority&amp;dom=#{?}(uri::T){&lt;j&gt;}]@/m/uri/authority=&gt;#::T]]][ctor?clstrspace&lt;=#{?}(space::T)]@/m/mach/clstrspace</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m.html#type-space" class="code inherited-link">space::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[pattern=&gt;uri::T,{?}q=&gt;[qproc::T],{?}route=&gt;[uri::T=&gt;uri::T],{?}schema=&gt;instset::T]</code></div></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">a peer is a wsclient to a mtron_ws handler.
+*x and x-&gt;y are the respective read/write insts sent to the peer for evaluation.
+</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  peer <span class="text-light">=&gt;</span> <span class="text-info">&#39;known metatron instance elsewhere in ws or http space&#39;</span>
+</pre>
+</div>
+</div><div class="card mb-3" id="space-fsspace">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <a href="m_mach_space_fsspace.html" class="code text-primary fw-bold text-decoration-none">fsspace</a>
+        <small class="text-muted code">/m/mach/space/fsspace</small>
+    </div>
+    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[?[pattern=&gt;uri::T,route=&gt;[uri::T=&gt;uri::T],{?}script=&gt;[uri::T=&gt;uri::T]]][inst?fsspace&lt;=#{?}(rec::T)]@/m/mach/space/fsspace</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m.html#type-space" class="code inherited-link">space::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[pattern=&gt;uri::T,{?}q=&gt;[qproc::T],{?}route=&gt;[uri::T=&gt;uri::T],{?}schema=&gt;instset::T]</code></div></div>
+    
+</div><div class="card mb-3" id="space-serial">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <a href="m_mach_space_serial.html" class="code text-primary fw-bold text-decoration-none">serial</a>
+        <small class="text-muted code">/m/mach/space/serial</small>
+    </div>
+    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[][inst?serial&lt;=#{?}(?[pattern=&gt;uri::T,route=&gt;rec::T])]@/m/mach/space/serial</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m.html#type-space" class="code inherited-link">space::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[pattern=&gt;uri::T,{?}q=&gt;[qproc::T],{?}route=&gt;[uri::T=&gt;uri::T],{?}schema=&gt;instset::T]</code></div></div>
+    
 </div>
 </div><div class="container-xxl mb-4" id="instructions">
     <h3 class="text-primary mb-3">Instructions <span class="pill-label badge bg-success">12</span></h3>
@@ -729,38 +807,6 @@ the objs referenced by the monads that halt are the result of the machine execut
     </div>
     <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-zero-doc-0-tab').click();document.getElementById('inst-zero-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">zero?rng=A&amp;dom=A(){&lt;j&gt;}</code></pre>
 </div>
-    
-</div>
-</div><div class="container-xxl mb-4" id="spaces">
-    <h3 class="text-primary mb-3">Spaces <span class="pill-label badge bg-info">3</span></h3>
-    <div class="card mb-3" id="space-clstrspace">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <a href="m_mach_clstrspace.html" class="code text-primary fw-bold text-decoration-none">clstrspace</a>
-        <small class="text-muted code">/m/mach/clstrspace</small>
-    </div>
-    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[?[{?}peer=&gt;{?}[uri::T[/m/inst/pred?rng=authority&amp;dom=#{?}(uri::T){&lt;j&gt;}]@/m/uri/authority=&gt;#::T]]][ctor?clstrspace&lt;=#{?}(space::T)]@/m/mach/clstrspace</code></pre></div>
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">a peer is a wsclient to a mtron_ws handler.
-*x and x-&gt;y are the respective read/write insts sent to the peer for evaluation.
-</p>
-</div><div class="card-body py-2">
-    <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  peer <span class="text-light">=&gt;</span> <span class="text-info">&#39;known metatron instance elsewhere in ws or http space&#39;</span>
-</pre>
-</div>
-</div><div class="card mb-3" id="space-fsspace">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <a href="m_mach_space_fsspace.html" class="code text-primary fw-bold text-decoration-none">fsspace</a>
-        <small class="text-muted code">/m/mach/space/fsspace</small>
-    </div>
-    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[?[pattern=&gt;uri::T,route=&gt;[uri::T=&gt;uri::T],{?}script=&gt;[uri::T=&gt;uri::T]]][inst?fsspace&lt;=#{?}(rec::T)]@/m/mach/space/fsspace</code></pre></div>
-    
-</div><div class="card mb-3" id="space-serial">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <a href="m_mach_space_serial.html" class="code text-primary fw-bold text-decoration-none">serial</a>
-        <small class="text-muted code">/m/mach/space/serial</small>
-    </div>
-    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[][inst?serial&lt;=#{?}(?[pattern=&gt;uri::T,route=&gt;rec::T])]@/m/mach/space/serial</code></pre></div>
     
 </div>
 </div><div class="container-xxl py-3 text-center">

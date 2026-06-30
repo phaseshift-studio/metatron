@@ -314,7 +314,7 @@ public class grphInstSet extends AbstractInstSet {
                                         throw MTronException.of("invalid edge vertex: %s", otherV);
                                     }
                                 }
-                                final Edge edge = g.V(outVertex.id()).addE(label).to(__.V(inVertex.id())).next();
+                                final Edge edge = g.V(outVertex.id()).addE(label).to(inVertex).next();
                                 if (inst.arg(2).isRec()) {
                                     inst.arg(2).asRec().jvm().forEach((key, value) -> edge.property(key.uriValue().toString(), value.jvm()));
                                 }

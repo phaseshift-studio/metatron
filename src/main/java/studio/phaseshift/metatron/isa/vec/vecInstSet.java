@@ -39,6 +39,7 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 /*
 @author Marko A. Rodriguez (http://markorodriguez.com)
 */
+@JREService(vid = "/m/vec")
 public class vecInstSet extends AbstractInstSet {
 
     public static final fURI VEC_ISA_TID = M_ISA_TID.extend("vec");
