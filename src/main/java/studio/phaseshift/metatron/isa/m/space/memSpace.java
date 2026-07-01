@@ -167,8 +167,7 @@ public class memSpace extends AbstractSpace<TopicTrie> {
                 } else {
                     if (obj.isRec())
                         Rec.Helper.stripNone(obj.asRec());
-                    final Obj newValue = obj;
-                    this.sjvm().put(pattern, newValue);
+                    this.sjvm().put(pattern, obj);
                 }
             }
             return obj;

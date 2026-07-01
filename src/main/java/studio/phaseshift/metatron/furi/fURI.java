@@ -724,7 +724,7 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
             final Matcher matcher = hasTemplates ? Singleton.FURI_TEMPLATE_PATTERN.matcher(furiParse) : Singleton.FURI_PATTERN.matcher(furiParse);
 
             if (!matcher.matches())
-                throw MTronException.of("unable to parse %s to a furi", furiParse);
+                throw MTronException.of("unable to parse %s to a furi: %s", furi, furiParse);
             final String scheme = matcher.group(SCHEME);
             final String host = matcher.group(HOST);
             final String portStr = matcher.group(PORT);
