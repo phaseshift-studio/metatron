@@ -49,6 +49,42 @@ public abstract class AbstractWidget<W extends AbstractWidget<W>> implements Wid
     protected int paneAvailHeight = -1;
     protected int paneAvailWidth = -1;
 
+    /** Tracks the number of lines the last render consumed, for in-place updates. */
+    private int lastRenderHeight;
+
+    /**
+     * Returns an ANSI string that renders this widget in-place, overwriting the
+     * previous render.  On the first call (or after {@link #renderFresh()}) this
+     * behaves like a normal render.  On subsequent calls the cursor moves up to
+     * erase the old lines before printing the new content.
+     *
+     * @return ANSI-escaped string suitable for writing directly to the terminal
+     */
+    public String renderInPlace() {
+        final String formatted = this.format();
+        final int newLines = formatted.split("\n").length;
+
+        final StringBuilder sb = new StringBuilder();
+        if (this.lastRenderHeight > 0) {
+            sb.append("\033[").append(this.lastRenderHeight).append("A"); // move up
+            sb.append("\033[J"); // clear from cursor to end of screen
+        }
+        sb.append(formatted).append("\n");
+        this.lastRenderHeight = newLines + 1; // +1 for the trailing newline
+        return sb.toString();
+    }
+
+    /**
+     * Resets the in-place tracking and returns a fresh render string.
+     * Useful after other output has been written to the terminal.
+     *
+     * @return the widget's formatted output with a trailing newline
+     */
+    public String renderFresh() {
+        this.lastRenderHeight = 0;
+        return this.format() + "\n";
+    }
+
     /**
      * Constrain this widget's rendering to the given pane region so it never
      * draws outside the pane's borders.

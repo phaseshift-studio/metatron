@@ -25,6 +25,7 @@ import studio.phaseshift.metatron.TypeCheck;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.type.mModel;
 import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.m.type.Str;
 import studio.phaseshift.metatron.isa.m.type.impl.MInst;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
@@ -36,10 +37,7 @@ import studio.phaseshift.metatron.isa.mach.type.ui.console.Highlighter;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.SubsWidget;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
-import studio.phaseshift.metatron.isa.mach.type.ui.widget.Pane;
-import studio.phaseshift.metatron.isa.mach.type.ui.widget.Panel;
-import studio.phaseshift.metatron.isa.mach.type.ui.widget.SplitLayout;
-import studio.phaseshift.metatron.isa.mach.type.ui.widget.Table;
+import studio.phaseshift.metatron.isa.mach.type.ui.widget.*;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.io.PrintStream;
@@ -69,6 +67,7 @@ public final class ColonMenu extends MRec {
     public static final fURI COLON_MENU_TID = CONSOLE_TID.extend("colon_menu");
     private final GraphittyLogger LOG = Graphitty.log(this);
     private final Console console;
+    private Accordion accordian;
 
     public Rec attach(final Rec menuRec, final String... menuItemsToAdd) {
         for (final String item : menuItemsToAdd.length == 0 ? this.getMenuItems() : menuItemsToAdd) {
@@ -134,6 +133,38 @@ public final class ColonMenu extends MRec {
             return noobj();
         }), MUTABLE);
 
+        this.at("accordian", instLambda((lhs, inst) -> {
+            final String input = lhs.isStr() ? lhs.strValue().trim() : "";
+
+            if ("close".equalsIgnoreCase(input) || "collapse".equalsIgnoreCase(input)) {
+                if (this.accordian != null) this.accordian.collapse();
+            } else if ("open".equalsIgnoreCase(input) || "expand".equalsIgnoreCase(input)) {
+                if (this.accordian != null) this.accordian.expand();
+            } else if ("toggle".equalsIgnoreCase(input)) {
+                if (this.accordian != null) this.accordian.toggle();
+            } else if (input.startsWith("append ")) {
+                if (this.accordian != null) this.accordian.appendLine(input.substring(7));
+            } else if (!input.isEmpty()) {
+                final String[] parts = input.split(" ", 2);
+                final String title = parts.length > 0 ? parts[0] : "";
+                final String body  = parts.length > 1 ? parts[1] : "";
+                this.accordian = new Accordion(title, body);
+                this.accordian.style()
+                        .border(Border.continuous.foreground("{{y}}"))
+                        .foreground("{{y}}")
+                        .apply();
+            }
+
+            if (this.accordian != null) {
+                final String output = this.accordian.renderInPlace();
+                if (console.isSplitMode() && console.getActivePane() != null) {
+                    console.getActivePane().appendOutput(output);
+                } else {
+                    Graphitty.out(Console.getTerminal().output(), output);
+                }
+            }
+            return noobj();
+        }), MUTABLE);
         // ===== connect =====
         this.at("connect", instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(NOOBJ_TID), lst(), (lhs, inst) -> {
             Router.writeToSpace("abc", block_(instLambda((lhs2, inst2) -> {
