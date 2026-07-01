@@ -50,7 +50,7 @@ public class TypeDiffWidget extends AbstractWidget<TypeDiffWidget> {
     /* ---- status markers ---- */
     private static final String GOOD = "{{g}}O{{X}}";
     private static final String FAIL = "{{r}}X{{X}}";
-    private static final String MISSING = "{{y}}-{{X}}";
+    private static final String MISSING = "noobj";
 
     /* ---- key map (exactly Explain's Action set) ---- */
     private enum Action {
@@ -81,11 +81,14 @@ public class TypeDiffWidget extends AbstractWidget<TypeDiffWidget> {
             this.spawnCol = spawnCol;
         }
 
-        int dataRowCount() { return this.rows.size(); }
+        int dataRowCount() {
+            return this.rows.size();
+        }
     }
 
     /* ---- row record ---- */
-    private record DiffRow(String path, String actual, String status, String expected) {}
+    private record DiffRow(String path, String actual, String status, String expected) {
+    }
 
     /* ---- static helpers (mirrors Explain's filterVisible / hasChildren) ---- */
 
@@ -112,14 +115,15 @@ public class TypeDiffWidget extends AbstractWidget<TypeDiffWidget> {
     }
 
     private static Table buildTable(final List<DiffRow> rows) {
-        final Table table = new Table(List.of("path", "actual", "status", "expected"));
-        table.style()
-                .headerDivider("{{[b]}} ")
-                .border(Border.simple.foreground("{{b}}"))
+        final Table table = new Table(List.of("path", "status", "actual", "expected"))
+                .style()
+                .headerDivider("{{[y]}} ")
+                .border(Border.continuous.foreground("{{y}}"))
+                .divider("{{y}}|")
                 .pointer("{{r}}>")
                 .apply();
         for (final DiffRow row : rows) {
-            table.addRow(List.of(row.path(), row.actual(), row.status(), row.expected()));
+            table.addRow(List.of(row.path(), row.status(), row.actual(), row.expected()));
         }
         return table;
     }
@@ -147,7 +151,7 @@ public class TypeDiffWidget extends AbstractWidget<TypeDiffWidget> {
 
     private void walkComparison(final Obj inst, final Type typ, final String path) {
         if (inst.isNoObj()) {
-            this.allRows.add(new DiffRow(path, MISSING, FAIL, typ.toShortString()));
+            this.allRows.add(new DiffRow(path, FAIL, MISSING, typ.toShortString()));
             return;
         }
         if (inst.test(typ)) return;
@@ -158,7 +162,7 @@ public class TypeDiffWidget extends AbstractWidget<TypeDiffWidget> {
         } else if (typePred != null && typePred.isLst() && inst.isLst()) {
             walkLstElements(inst, typePred.asLst(), path);
         } else {
-            this.allRows.add(new DiffRow(path, inst.toShortString(), FAIL, typ.toShortString()));
+            this.allRows.add(new DiffRow(path, FAIL, inst.toShortString(), typ.toShortString()));
         }
     }
 
@@ -173,35 +177,35 @@ public class TypeDiffWidget extends AbstractWidget<TypeDiffWidget> {
 
             if (instValue.isNoObj()) {
                 if (!key.c().isZeroable())
-                    this.allRows.add(new DiffRow(childPath, MISSING, FAIL, describe(fieldType, fieldTypeObj)));
+                    this.allRows.add(new DiffRow(childPath, FAIL, MISSING, describe(fieldType, fieldTypeObj)));
                 continue;
             }
             if (fieldType != null && instValue.test(fieldType)) {
-                this.allRows.add(new DiffRow(childPath, instValue.toShortString(), GOOD, fieldType.toShortString()));
+                this.allRows.add(new DiffRow(childPath, GOOD, instValue.toShortString(), fieldType.toShortString()));
                 continue;
             }
             if (instValue.isRec() && fieldTypeObj.isRec()) {
                 final int before = this.allRows.size();
                 walkRecFields(instValue, fieldTypeObj.asRec(), childPath);
                 if (this.allRows.size() == before)
-                    this.allRows.add(new DiffRow(childPath, instValue.toShortString(), FAIL, describe(fieldType, fieldTypeObj)));
+                    this.allRows.add(new DiffRow(childPath, FAIL, instValue.toShortString(), describe(fieldType, fieldTypeObj)));
                 continue;
             }
             if (instValue.isLst() && fieldTypeObj.isLst()) {
                 final int before = this.allRows.size();
                 walkLstElements(instValue, fieldTypeObj.asLst(), childPath);
                 if (this.allRows.size() == before)
-                    this.allRows.add(new DiffRow(childPath, instValue.toShortString(), FAIL, describe(fieldType, fieldTypeObj)));
+                    this.allRows.add(new DiffRow(childPath, FAIL, instValue.toShortString(), describe(fieldType, fieldTypeObj)));
                 continue;
             }
             if (fieldType != null && (instValue.isRec() || instValue.isLst())) {
                 final int before = this.allRows.size();
                 walkComparison(instValue, fieldType, childPath);
                 if (this.allRows.size() == before)
-                    this.allRows.add(new DiffRow(childPath, instValue.toShortString(), FAIL, fieldType.toShortString()));
+                    this.allRows.add(new DiffRow(childPath, FAIL, instValue.toShortString(), fieldType.toShortString()));
                 continue;
             }
-            this.allRows.add(new DiffRow(childPath, instValue.toShortString(), FAIL, describe(fieldType, fieldTypeObj)));
+            this.allRows.add(new DiffRow(childPath, FAIL, instValue.toShortString(), describe(fieldType, fieldTypeObj)));
         }
     }
 
@@ -215,35 +219,35 @@ public class TypeDiffWidget extends AbstractWidget<TypeDiffWidget> {
             final String childPath = path + "/[" + i + "]";
 
             if (instElem.isNoObj()) {
-                this.allRows.add(new DiffRow(childPath, MISSING, FAIL, describe(elemType, typeElem)));
+                this.allRows.add(new DiffRow(childPath, FAIL, MISSING, describe(elemType, typeElem)));
                 continue;
             }
             if (elemType != null && instElem.test(elemType)) {
-                this.allRows.add(new DiffRow(childPath, instElem.toShortString(), GOOD, elemType.toShortString()));
+                this.allRows.add(new DiffRow(childPath, GOOD, instElem.toShortString(), elemType.toShortString()));
                 continue;
             }
             if (typeElem != null && instElem.isRec() && typeElem.isRec()) {
                 final int before = this.allRows.size();
                 walkRecFields(instElem, typeElem.asRec(), childPath);
                 if (this.allRows.size() == before)
-                    this.allRows.add(new DiffRow(childPath, instElem.toShortString(), FAIL, typeElem.toShortString()));
+                    this.allRows.add(new DiffRow(childPath, FAIL, instElem.toShortString(), typeElem.toShortString()));
                 continue;
             }
             if (typeElem != null && instElem.isLst() && typeElem.isLst()) {
                 final int before = this.allRows.size();
                 walkLstElements(instElem, typeElem.asLst(), childPath);
                 if (this.allRows.size() == before)
-                    this.allRows.add(new DiffRow(childPath, instElem.toShortString(), FAIL, typeElem.toShortString()));
+                    this.allRows.add(new DiffRow(childPath, FAIL, instElem.toShortString(), typeElem.toShortString()));
                 continue;
             }
             if (elemType != null && (instElem.isRec() || instElem.isLst())) {
                 final int before = this.allRows.size();
                 walkComparison(instElem, elemType, childPath);
                 if (this.allRows.size() == before)
-                    this.allRows.add(new DiffRow(childPath, instElem.toShortString(), FAIL, elemType.toShortString()));
+                    this.allRows.add(new DiffRow(childPath, FAIL, instElem.toShortString(), elemType.toShortString()));
                 continue;
             }
-            this.allRows.add(new DiffRow(childPath, instElem.toShortString(), FAIL, describe(elemType, typeElem)));
+            this.allRows.add(new DiffRow(childPath, FAIL, instElem.toShortString(), describe(elemType, typeElem)));
         }
     }
 
@@ -294,9 +298,9 @@ public class TypeDiffWidget extends AbstractWidget<TypeDiffWidget> {
     private KeyMap<Action> buildKeyMap() {
         KeyMap<Action> keyMap = new KeyMap<>();
         keyMap.bind(Action.DOWN_ROW, key(terminal, InfoCmp.Capability.key_down));
-        keyMap.bind(Action.UP_ROW,   key(terminal, InfoCmp.Capability.key_up));
-        keyMap.bind(Action.QUIT,     Utilities.esc_key);
-        keyMap.bind(Action.SELECT,   Utilities.enter_key);
+        keyMap.bind(Action.UP_ROW, key(terminal, InfoCmp.Capability.key_up));
+        keyMap.bind(Action.QUIT, Utilities.esc_key);
+        keyMap.bind(Action.SELECT, Utilities.enter_key);
         return keyMap;
     }
 
@@ -353,20 +357,20 @@ public class TypeDiffWidget extends AbstractWidget<TypeDiffWidget> {
         final WidgetCanvas canvas = beginRedraw(totalHeightUsed);
 
         for (int levelIdx = 0; levelIdx < levels.size(); levelIdx++) {
-            final DiffLevel level   = levels.get(levelIdx);
-            final boolean isTop     = (levelIdx == levels.size() - 1);
-            final DiffLevel child   = (levelIdx + 1 < levels.size()) ? levels.get(levelIdx + 1) : null;
-            final boolean hasChild  = child != null && child.spawnRow >= 0;
+            final DiffLevel level = levels.get(levelIdx);
+            final boolean isTop = (levelIdx == levels.size() - 1);
+            final DiffLevel child = (levelIdx + 1 < levels.size()) ? levels.get(levelIdx + 1) : null;
+            final boolean hasChild = child != null && child.spawnRow >= 0;
             final List<String> lines = level.table.rowStrings();
-            final String dimColor   = isTop ? "" : "{{w}}";
-            final String indent     = " ".repeat(level.offsetX);
+            final String dimColor = isTop ? "" : "{{w}}";
+            final String indent = " ".repeat(level.offsetX);
 
             for (int lineIdx = 0; lineIdx < lines.size(); lineIdx++) {
-                final String line       = lines.get(lineIdx);
-                final int dataLineIdx   = lineIdx - 2;
+                final String line = lines.get(lineIdx);
+                final int dataLineIdx = lineIdx - 2;
                 final boolean isDataRow = dataLineIdx >= 0 && dataLineIdx < level.dataRowCount();
                 final boolean isSelected = isTop && isDataRow && dataLineIdx == level.selectedRow;
-                final boolean isSpawn   = !isTop && hasChild && isDataRow && dataLineIdx == child.spawnRow;
+                final boolean isSpawn = !isTop && hasChild && isDataRow && dataLineIdx == child.spawnRow;
 
                 final String content;
                 if (isSelected) {
@@ -407,7 +411,9 @@ public class TypeDiffWidget extends AbstractWidget<TypeDiffWidget> {
         totalHeightUsed = canvas.finish();
     }
 
-    /** Replace the first | divider with the red > pointer. */
+    /**
+     * Replace the first | divider with the red > pointer.
+     */
     private String highlightPointer(final String line) {
         final int firstDiv = line.indexOf('|');
         if (firstDiv >= 0) {
@@ -421,7 +427,9 @@ public class TypeDiffWidget extends AbstractWidget<TypeDiffWidget> {
      * ================================================================ */
 
     @Override
-    public String format() { return ""; }
+    public String format() {
+        return "";
+    }
 
     @Override
     public String toString() {

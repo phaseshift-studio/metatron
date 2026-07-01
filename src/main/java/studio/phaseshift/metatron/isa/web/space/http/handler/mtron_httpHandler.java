@@ -57,8 +57,8 @@ public class mtron_httpHandler extends HttpRec {
             .tid(HTTP_HANDLER_TID)
             .vid(MTRON_HTTP_TID)
             .isaPredicate(rec(
-                    uri(IN).maybe().asUri(), isa_(webInstSet.MIME_TYPE).else_(uri(MIME.MIMEType.APPLICATION_MTRON.value)),
-                    uri(OUT).maybe().asUri(), isa_(webInstSet.MIME_TYPE).else_(uri(MIME.MIMEType.APPLICATION_MTRON.value))))
+                    uri(IN).maybe().asUri(), isa_(webInstSet.MIME_OBJ_TYPE).else_(uri(MIME.MIMEType.APPLICATION_MTRON.value)),
+                    uri(OUT).maybe().asUri(), isa_(webInstSet.MIME_OBJ_TYPE).else_(uri(MIME.MIMEType.APPLICATION_MTRON.value))))
             .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(MTRON_HTTP_TID), lst(T(REC_TID)), (lhs, inst) -> {
                 final Map<Obj, Obj> config = new LinkedHashMap<>(inst.arg(0).asRec().jvm());
                 return new mtron_httpHandler(config, inst.arg(0).asRec().vid());

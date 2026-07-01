@@ -18,7 +18,6 @@
 
 package studio.phaseshift.metatron.isa.web.space.ws;
 
-import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
@@ -77,8 +76,8 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
             .tid(REC_TID)
             .vid(WS_WEBSOCKET_TID)
             .isaPredicate(rec(
-                    uri(IN).maybe().asUri(), isa_(webInstSet.MIME_TYPE).orElse(uri(MIME.MIMEType.APPLICATION_MTRON.value)),
-                    uri(OUT).maybe().asUri(), isa_(webInstSet.MIME_TYPE).orElse(uri(MIME.MIMEType.APPLICATION_MTRON.value)),
+                    uri(IN).maybe().asUri(), isa_(webInstSet.MIME_OBJ_TYPE).orElse(uri(MIME.MIMEType.APPLICATION_MTRON.value)),
+                    uri(OUT).maybe().asUri(), isa_(webInstSet.MIME_OBJ_TYPE).orElse(uri(MIME.MIMEType.APPLICATION_MTRON.value)),
                     uri(SEND).maybe().asUri(), INST_TYPE,
                     uri(SEND_RECV).maybe().asUri(), INST_TYPE,
                     uri(ON_OPEN).maybe(), T(ALL),

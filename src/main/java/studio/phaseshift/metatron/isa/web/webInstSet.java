@@ -24,7 +24,6 @@ import studio.phaseshift.metatron.isa.llm.type.mcpClient;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
-import studio.phaseshift.metatron.isa.m.type.Uri;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjJavaSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
 import studio.phaseshift.metatron.isa.web.parser.*;
@@ -99,12 +98,12 @@ public class webInstSet extends AbstractInstSet {
 
     public static final fURI DESKTOP_SPACE_VID = f("/sys/desktop");
 
-    public static Type MIME_TYPE = Type.Builder.build()
+    public static Type MIME_OBJ_TYPE = Type.Builder.build()
             .tid(URI_TID)
             .vid(MIME_TYPE_TID)
             .isaPredicate(inside_(Stream.of(MIME.MIMEType.values()).map(m -> uri(m.value)).collect(new CommonUtil.LstCollector())))
             .create();
-
+    
     public static final Type XML_TYPE = Type.Builder.build()
             .tid(REC_TID)
             .vid(XML_TID).create();
@@ -163,7 +162,7 @@ public class webInstSet extends AbstractInstSet {
                         //ObjJavaSerializer.single(),
                         ObjPlainTextSerializer.single()),
                 uri(TYPE), lst(
-                        docWrap(MIME_TYPE, "indicates the media type of the data as specified by RFC-9110"),
+                        docWrap(MIME_OBJ_TYPE, "indicates the media type of the data as specified by RFC-9110"),
                         docWrap(XML_TYPE, "a rec encoding of an xml document"),
                         docWrap(HTML_TYPE, "a rec encoding of an html document",
                                 "*<http://metatron.phaseshift.studio> [-- yields an html::T --]",

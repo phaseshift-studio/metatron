@@ -276,7 +276,7 @@ public class mModel extends MRec {
                     .onPartialResponse(s -> {
                         STAGE.set("RESPONDING");
                         if (!isResponding.getAndSet(true))
-                            this.logger().none(Graphitty.sillyPrint("responding...", true, true));
+                            this.logger().none(Graphitty.sillyPrint("\nresponding...", true, true));
                         Router.global().stats().ioStats().incrBytesRecv(s.getBytes().length);
                         response.append(s);
                     })

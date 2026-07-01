@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -21,6 +21,9 @@ package studio.phaseshift.metatron.isa.grph.space;
 import org.apache.tinkerpop.gremlin.structure.Direction;
 import org.apache.tinkerpop.gremlin.structure.Edge;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
+import org.apache.tinkerpop.gremlin.structure.VertexProperty;
+import org.apache.tinkerpop.gremlin.structure.util.detached.DetachedVertex;
+import org.apache.tinkerpop.gremlin.structure.util.reference.ReferenceVertex;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.grph.grphInstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -52,24 +55,23 @@ public class EdgeRec extends ElementRec<Edge> {
      * if the vertex is a reference to an object in another space.
      * <p>
      * Re-fetches the vertex via the traversal source because edge endpoints
-     * from remote traversals are bare {@code ReferenceVertex} references
+     * from remote traversals can be bare {@code ReferenceVertex} references
      * whose {@code properties()} iterator is empty.
      */
     private Obj resolveEndpoint(final org.apache.tinkerpop.gremlin.structure.Vertex v) {
-        final var redirectProp = v.property(grphInstSet.REDIRECT_STRING);
+        final Vertex fullVertex = v instanceof ReferenceVertex || v instanceof DetachedVertex ? IteratorUtil.stream(this.space.sjvm().V(v.id())).findFirst().orElse(v) : v;
+
+        final VertexProperty<?> redirectProp = fullVertex.property(grphInstSet.AUTO_ROUTE_STRING);
         if (redirectProp.isPresent()) {
             try {
                 final String redirectStr = redirectProp.value().toString();
-                final Obj redirectInst = ObjmtronSerializer.parse(redirectStr);
-                return redirectInst.apply();
+                this.logger().debug("auto resolution of %s", redirectStr);
+                return ObjmtronSerializer.parse(redirectStr).apply().parent(new VertexRec(fullVertex, this.space));
             } catch (final Exception e) {
-                // fall through to plain vertex if redirect resolution fails
+                this.logger().warn("an auto routing error occured: %s", e);
             }
         }
-        // Re-fetch full vertex — edge endpoint may be a ReferenceVertex with empty properties
-        final Vertex full = IteratorUtil.stream(
-                this.space.sjvm().V(v.id())).findFirst().orElse(v);
-        return new VertexRec(full, this.space);
+        return new VertexRec(fullVertex, this.space);
     }
 
     public Obj inVertex() {

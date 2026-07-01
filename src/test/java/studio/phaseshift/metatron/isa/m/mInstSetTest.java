@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -434,8 +434,8 @@ public class mInstSetTest extends AbstractInstSetTest {
             "{1,2,3,4,5}.as(int::T).reduce(|plus(0))                                % 15",
             "{int::1,int::2,int::3,int::4,int::5}.reduce(|plus(0))                  % 15",
             "{int::1,2,3,4,5}.reduce(|plus(0))                                      % 15",
-           // "{1,2,3,4,5}.reduce?<=int{*}(|plus(0))                                  % 15",
-           // "{1,2,3,4,5}.reduce?int<=(|plus(0))                                  % 15",
+            // "{1,2,3,4,5}.reduce?<=int{*}(|plus(0))                                  % 15",
+            // "{1,2,3,4,5}.reduce?int<=(|plus(0))                                  % 15",
             // TODO: why? "{1,2,3,4,5}.reduce?int<=int{*}(|plus(0))                 % 15",
             "{,}.reduce(|plus(0))                                                   % 0",
             "reduce(|mult(0))                                                       % 0",
@@ -1162,5 +1162,16 @@ public class mInstSetTest extends AbstractInstSetTest {
     }, delimiter = '%')
     public void testRewrites(final String code, final String expected, final String expectedResult) throws Exception {
         AbstractMetatronTest.checkCodeRewrite(LOG, code, expected, expectedResult, false);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "parse(application/json::'{\"a\":12}')          % [a=>12]",
+            "application/json::'{\"b\":[1,2,3]}'.parse(_)   % [b=>[1,2,3]]",
+            "application/mtron::'[c=>[4,5]]'.parse(_)       % [c=>[4,5]]",
+            "text/plain::'[d=>1]'.parse(_)                  % \"[d=>1]\"",
+    }, delimiter = '%')
+    public void testParse(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeEvaluate(LOG, code, expected);
     }
 }

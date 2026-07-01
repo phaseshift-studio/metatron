@@ -53,11 +53,11 @@ public class SubsWidget extends AbstractWidget<SubsWidget> {
     public SubsWidget(final Console console) {
         /// ///////////////////////////////////////////////////////
         this.spaceTable = new Table(List.of("space vid", "pattern")).style()
-                .border(Border.simple)
+                .border(Border.continuous)
                 .headerDivider("{{[b]&g}}|{{w}}")
                 .apply();
         this.subsTable = new Table(List.of("subscription vid", "target", "call")).style()
-                .border(Border.simple)
+                .border(Border.continuous)
                 .headerDivider("{{[b]&g}}|{{w}}")
                 .apply();
 

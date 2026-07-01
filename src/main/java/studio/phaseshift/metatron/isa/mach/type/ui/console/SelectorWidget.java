@@ -59,7 +59,7 @@ public abstract class SelectorWidget<T, S extends SelectorWidget<T, S>> extends 
     /**
      * Index of the {@code |} divider character that precedes the right-side item
      * within a rendered table row.  Value 4 matches the column layout produced by
-     * {@link Table} when the {@link Border#simple} border style is used — the left
+     * {@link Table} when the {@link Border#continuous} border style is used — the left
      * border itself counts as index 0.
      */
     protected static final int RIGHT_COL_DIVIDER_INDEX = 4;
@@ -69,7 +69,7 @@ public abstract class SelectorWidget<T, S extends SelectorWidget<T, S>> extends 
         this.table = new Table(headers);
         this.table.style()
                 .headerDivider("{{[b]}} ")
-                .border(Border.simple.foreground("{{b}}"))
+                .border(Border.continuous.foreground("{{b}}"))
                 .pointer(POINTER)
                 .apply();
     }

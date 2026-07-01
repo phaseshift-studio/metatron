@@ -546,6 +546,10 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
 
     String q(final String key);
 
+    default String q(final fURI key) {
+        return this.q(key.toString());
+    }
+
     fURI q(final String key, final Object value);
 
     default fURI addQ(final String key) {

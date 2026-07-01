@@ -22,7 +22,6 @@ import org.apache.tinkerpop.gremlin.jsr223.DefaultGremlinScriptEngineManager;
 import org.apache.tinkerpop.gremlin.jsr223.GremlinLangScriptEngineFactory;
 import org.apache.tinkerpop.gremlin.jsr223.GremlinScriptEngine;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
-import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__;
 import org.apache.tinkerpop.gremlin.structure.*;
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.algebra.rewrite.CommonRewrites;
@@ -98,8 +97,7 @@ public class grphInstSet extends AbstractInstSet {
     public static final fURI OUTE_INST_TID = GRPH_INST_TID.extend("outE");
     public static final fURI IN_INST_TID = GRPH_INST_TID.extend("in");
     public static final fURI OUT_INST_TID = GRPH_INST_TID.extend("out");
-    public static final String REDIRECT_STRING = ":redirect";
-    public static final fURI REDIRECT_FURI = f(REDIRECT_STRING);
+    public static final String AUTO_ROUTE_STRING = "!route";
     public static final Uri BOTH = uri(Direction.BOTH.name());
     public static final Uri ID = uri("ID");
     public static final fURI IN_FURI = f(Direction.IN.name());
@@ -308,7 +306,7 @@ public class grphInstSet extends AbstractInstSet {
                                     final Optional<fURI> pointer = Obj.Helper.getPointer(otherV);
                                     if (pointer.isPresent()) {
                                         inVertex = g.addV(otherV.apply(noobj()).tid().big().toString())
-                                                .property(REDIRECT_STRING, SERIALIZER.write(auto_from_(pointer.get())))
+                                                .property(AUTO_ROUTE_STRING, SERIALIZER.write(auto_from_(pointer.get())))
                                                 .next();
                                     } else {
                                         throw MTronException.of("invalid edge vertex: %s", otherV);
