@@ -62,8 +62,8 @@ public class web_httpHandler extends HttpRec {
             .tid(HTTP_HANDLER_TID)
             .vid(WEB_HTTP_TID)
             .isaPredicate(rec(
-                    uri(IN).maybe().asUri(), isa_(webInstSet.MIME_TYPE).else_(uri(MIME.MIMEType.APPLICATION_MTRON.value)),
-                    uri(OUT).maybe().asUri(), isa_(webInstSet.MIME_TYPE).else_(uri(MIME.MIMEType.APPLICATION_MTRON.value)),
+                    uri(IN).maybe().asUri(), isa_(webInstSet.MIME_OBJ_TYPE).else_(uri(MIME.MIMEType.APPLICATION_MTRON.value)),
+                    uri(OUT).maybe().asUri(), isa_(webInstSet.MIME_OBJ_TYPE).else_(uri(MIME.MIMEType.APPLICATION_MTRON.value)),
                     uri(WEB_ROOT).maybe(), T(ALL),
                     uri(DEFAULT_PAGE).maybe(), T(ALL),
                     uri(READ_ONLY).maybe(), T(ALL)))

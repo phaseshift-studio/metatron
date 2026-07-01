@@ -256,11 +256,14 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
             final Builtins builtins = new Builtins(currentDir, Console.configurations, null);
             SystemRegistry systemRegistry = new SystemRegistryImpl(parser, terminal, currentDir, Console.configurations);
             systemRegistry.setCommandRegistries(builtins);
+            final Highlighter highlighter = new Highlighter(new ObjConsoleSerializer());
+            highlighter.setTerminal(terminal);
+            Highlighter.single().setTerminal(terminal);
             this.reader = LineReaderBuilder.builder()
                     .terminal(terminal)
                     .appName("metatron")
                     .history(new DefaultHistory())
-                    .highlighter(new Highlighter(new ObjConsoleSerializer()))
+                    .highlighter(highlighter)
                     .parser(parser)
                     .variable(LineReader.HISTORY_FILE, HISTORY_FILE)
                     .option(LineReader.Option.AUTO_FRESH_LINE, true)

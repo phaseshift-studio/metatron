@@ -82,9 +82,11 @@ public class Explain extends AbstractWidget<Explain> {
             this.code = code;//.resolve(noobj());
             this.rewritten = code.isResolved(false);// false;//code.insts().stream().map(Inst::tid).toList().equals(code.clone().asCode().rewrite().insts().stream().map(Inst::tid).toList());
             this.profile = new Profile(this.code);
+            final Border border = Border.continuous.foreground("{{b}}");
             this.profile.instTable.style()
                     .headerDivider("{{[b]}} ")
-                    .border(Border.simple.foreground("{{b}}"))
+                    .border(border)
+                    .divider("{{b}}" + border.leftSide())
                     .pointer("{{r}}>")  // Configure pointer style
                     .apply();
             this.table = this.profile.instTable;
@@ -361,7 +363,7 @@ public class Explain extends AbstractWidget<Explain> {
             }
 
             if (atDivider) {
-                if (dividerCount == selectedCol + 1) {
+                if (dividerCount == selectedCol) {
                     // Replace this divider with pointer
                     result.append(Graphitty.string(level.pointer));
                     // Skip any additional divider chars if divider is multi-char

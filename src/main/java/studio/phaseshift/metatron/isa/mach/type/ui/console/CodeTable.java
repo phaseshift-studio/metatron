@@ -44,7 +44,7 @@ public class CodeTable extends AbstractWidget<CodeTable> {
         for (final String line : codeString.split("\n")) {
             this.table.addRow(List.of(line.replace(" ", ".")));
         }
-        this.panel = new Panel(this.table.toString()).style().border(Border.simple.foreground("{{b}}")).apply();
+        this.panel = new Panel(this.table.toString()).style().border(Border.continuous.foreground("{{b}}")).apply();
         this.selector = new Selector().style().margin(2, 2).pointer("{{r}}>{{X}}").attachment(this.panel, true).rowRange(1, this.panel.rowCount() - 1).apply();
     }
 

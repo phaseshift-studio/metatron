@@ -26,6 +26,7 @@ import studio.phaseshift.metatron.util.MTronException;
 
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Stream;
 
@@ -222,8 +223,13 @@ public class Graphitty {
         try {
             final int bufferLength = buffer.length();
             for (int i = 0; i < bufferLength; i++) {
-                if (buffer.charAt(i) > 126)
+                if (buffer.charAt(i) > 126) {
+                    // Characters above ASCII 126 are not Graphitty control codes
+                    // ({}, {{}}, \n, \t are all <= 126).  Write them as UTF-8 so
+                    // they survive the ByteArrayOutputStream → toString() round-trip.
+                    this.out.write(Character.toString(buffer.charAt(i)).getBytes(StandardCharsets.UTF_8));
                     continue;
+                }
                 if (buffer.charAt(i) == '\\') {
                     final char j = buffer.charAt(i + 1);
                     if ('n' == j) {

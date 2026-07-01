@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.isa.mach.type.ui.console;
 import org.jline.builtins.ConfigurationPath;
 import org.jline.builtins.SyntaxHighlighter;
 import org.jline.reader.LineReader;
+import org.jline.terminal.Terminal;
 import org.jline.utils.AttributedString;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
@@ -46,6 +47,7 @@ public class Highlighter implements org.jline.reader.Highlighter {
             Paths.get(System.getProperty("user.home"), ".metatron") // user-specific settings
     );
     private ObjSerializer<String> serializer;
+    private Terminal terminal;
 
     private static final Highlighter INSTANCE = new Highlighter(SyntaxHighlighter.build(Highlighter.configurations.getConfig("jnanorc"), "mtron"));
 
@@ -94,10 +96,15 @@ public class Highlighter implements org.jline.reader.Highlighter {
         return Highlighter.unformat(string).length();
     }
 
+    public void setTerminal(final Terminal terminal) {
+        this.terminal = terminal;
+    }
+
     public String highlight(final Object object) {
         try {
             if (object instanceof Obj) {
-                return this.highlight(null, this.serializer.write((Obj) object)).toAnsi();
+                final AttributedString styled = this.highlight(null, this.serializer.write((Obj) object));
+                return this.terminal != null ? styled.toAnsi(this.terminal) : styled.toAnsi();
             } else return this.graphitty.writeToString(this.highlight(null, object.toString()).toAnsi());
         } catch (final Exception e) {
             return object.toString();

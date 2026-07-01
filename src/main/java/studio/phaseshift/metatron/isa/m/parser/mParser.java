@@ -45,6 +45,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
@@ -427,7 +428,7 @@ public class mParser {
 
     public static <O extends Obj> O eval(final File source) {
         try {
-            return eval(new String(Files.readAllBytes(source.toPath())));
+            return eval(new String(Files.readAllBytes(source.toPath()), StandardCharsets.UTF_8));
         } catch (IOException e) {
             throw MTronException.of(e);
         }
@@ -470,10 +471,10 @@ public class mParser {
         long getTime = System.nanoTime() - start;
 
         // Log timing for expressions (disable in production)
-        if (parseTime > 1_000_000) { // > 1ms
-            LOG.debug("Parse timing for '%s': parse=%dms, get=%dms",
-                    trimmed, parseTime / 1_000_000, getTime / 1_000_000);
-        }
+        // Log timing for expressions (disable in production)
+        if (parseTime > 1_000_000) // > 1ms
+            LOG.debug("Parse timing for '%s': parse=%dms, get=%dms", trimmed, parseTime / 1_000_000, getTime / 1_000_000);
+
 
         return obj;
     }
@@ -501,9 +502,7 @@ public class mParser {
 
         while (!remaining.isBlank()) {
             if (++iterations > maxParseIterations) {
-                throw MTronException.of(
-                        "infinite recursion detected in parser: parseMulti() exceeded %d iterations on '%s'",
-                        maxParseIterations, remaining);
+                throw MTronException.of("infinite recursion detected in parser: parseMulti() exceeded %d iterations on '%s'", maxParseIterations, remaining);
             }
             remaining = remaining.trim();
 
@@ -520,9 +519,7 @@ public class mParser {
             try {
                 result = cachedExpressionParser.parse(remaining);
             } catch (final StackOverflowError e) {
-                throw MTronException.of(
-                        "infinite recursion detected in parser: possible left recursion in '%s'",
-                        remaining);
+                throw MTronException.of("infinite recursion detected in parser: possible left recursion in '%s'", remaining);
             }
             if (result.isFailure()) {
                 if (!allInsts.isEmpty()) break;   // partial parse, return what we have
@@ -536,9 +533,7 @@ public class mParser {
             // Guard: if the parser succeeded but consumed zero characters we
             // would loop forever on the same remaining string.
             if (consumed == 0) {
-                throw MTronException.of(
-                        "infinite recursion detected in parser: parser consumed 0 characters at '%s'",
-                        remaining);
+                throw MTronException.of("infinite recursion detected in parser: parser consumed 0 characters at '%s'", remaining);
             }
             remaining = remaining.substring(consumed);
 

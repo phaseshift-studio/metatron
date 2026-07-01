@@ -64,23 +64,88 @@ public interface Border {
         return this.border().split(";")[7];
     }
 
+    /** Character where a vertical inner divider meets the top border. */
+    default String topIntersection() {
+        final String[] p = this.border().split(";");
+        return p.length > 8 ? p[8] : this.topSide();
+    }
+
+    /** Character where a vertical inner divider meets the bottom border. */
+    default String bottomIntersection() {
+        final String[] p = this.border().split(";");
+        return p.length > 9 ? p[9] : this.bottomSide();
+    }
+
+    /** Character where a horizontal inner divider meets the left border. */
+    default String leftIntersection() {
+        final String[] p = this.border().split(";");
+        return p.length > 10 ? p[10] : this.leftSide();
+    }
+
+    /** Character where a horizontal inner divider meets the right border. */
+    default String rightIntersection() {
+        final String[] p = this.border().split(";");
+        return p.length > 11 ? p[11] : this.rightSide();
+    }
+
     default Border foreground(final String color) {
         final String colorBorder = Arrays.stream(this.border().split(";")).map(b -> color + b).reduce((a, b) -> a + ";" + b).orElseThrow();
         return () -> colorBorder;
     }
 
     default StringBuilder wrap(final StringBuilder builder) {
-        final StringBuilder sb = new StringBuilder();
-        List<String> inner = Arrays.asList(builder.toString().split("\n"));
-        int width = inner.stream().map(Highlighter::visualLength).max(Integer::compareTo).orElse(0);
-        sb.append(X).append(this.topLeftCorner()).append(this.topSide().repeat(width)).append(this.topRightCorner()).append(X).append("\n");
+        final String rawLeft = Highlighter.unformat(this.leftSide());
+        final char divider = rawLeft.isEmpty() ? '|' : rawLeft.charAt(0);
+
+        final List<String> inner = Arrays.asList(builder.toString().split("\n"));
+        final int width = inner.stream().map(Highlighter::visualLength).max(Integer::compareTo).orElse(0);
+
+        // Auto-detect vertical divider positions for T-junctions.
+        // Skip positions 0 and width-1 (outer dividers sit against corners).
+        final java.util.BitSet intersections = new java.util.BitSet(width);
         for (final String row : inner) {
-            sb.append(X).append(this.leftSide()).append(X).append(row).append(X).append(this.rightSide()).append(X).append("\n");
+            final String stripped = Highlighter.unformat(row);
+            for (int i = 1; i < stripped.length() - 1 && i < width - 1; i++) {
+                if (stripped.charAt(i) == divider) {
+                    intersections.set(i);
+                }
+            }
         }
-        sb.append(X).append(this.bottomLeftCorner()).append(this.bottomSide().repeat(width)).append(this.bottomRightCorner()).append(X);
+
+        final StringBuilder sb = new StringBuilder();
+        sb.append(X).append(this.topLeftCorner());
+        sb.append(buildBorderLine(width, this.topSide(), this.topIntersection(), intersections));
+        sb.append(this.topRightCorner()).append(X).append("\n");
+        for (final String row : inner) {
+            // Hide outer dividers so they don't visually overlap with the border
+            // side characters.  Inner dividers stay visible.
+            final int first = row.indexOf(divider);
+            final int last = row.lastIndexOf(divider);
+            final String sanitized;
+            if (first >= 0 && last > first) {
+                sanitized = row.substring(0, first) + ' '
+                          + row.substring(first + 1, last) + ' '
+                          + row.substring(last + 1);
+            } else {
+                sanitized = row;
+            }
+            sb.append(X).append(this.leftSide()).append(X).append(sanitized).append(X).append(this.rightSide()).append(X).append("\n");
+        }
+        sb.append(X).append(this.bottomLeftCorner());
+        sb.append(buildBorderLine(width, this.bottomSide(), this.bottomIntersection(), intersections));
+        sb.append(this.bottomRightCorner()).append(X);
         builder.delete(0, builder.length());
         builder.append(sb);
         return builder;
+    }
+
+    /** Build a single border line, placing intersection chars at the given column positions. */
+    private static StringBuilder buildBorderLine(final int width, final String normal, final String intersection, final java.util.BitSet positions) {
+        final StringBuilder sb = new StringBuilder(width);
+        for (int i = 0; i < width; i++) {
+            sb.append(positions.get(i) ? intersection : normal);
+        }
+        return sb;
     }
 
     default Border margin(int left, int right) {
@@ -92,24 +157,29 @@ public interface Border {
                         this.leftSide() + " ".repeat(left) + ";" +
                         " ".repeat(right) + this.rightSide() + ";" +
                         this.topSide() + ";" +
-                        this.bottomSide();
+                        this.bottomSide() + ";" +
+                        this.topIntersection() + ";" +
+                        this.bottomIntersection() + ";" +
+                        this.leftIntersection() + ";" +
+                        this.rightIntersection();
         return () -> marginBorder;
     }
 
-    Border simple = () -> "+;+;+;+;|;|;-;-";
+    // Format: tlCorner;trCorner;blCorner;brCorner;leftSide;rightSide;topSide;bottomSide;topIntersect;bottomIntersect;leftIntersect;rightIntersect
 
-    Border thick = () -> "[];[];[];[];||;||;=;=";
+    Border simple = () -> "+;+;+;+;|;|;-;-;-;-;|;|";
 
-    Border none = () -> " ; ; ; ; ; ; ; ";
+    Border thick = () -> "[];[];[];[];||;||;=;=;=;=;||;||";
 
-    Border clean = () -> "┌;┐;└;┘;│;│;─;─";
+    Border none = () -> " ; ; ; ; ; ; ; ; ; ; ; ";
 
-    Border hash = () -> "#;#;#;#;#;#;#;#";
+    Border hash = () -> "#;#;#;#;#;#;#;#;#;#;#;#";
 
-    Border asterisk = () -> "*;*;*;*;*;*;*;*";
+    Border asterisk = () -> "*;*;*;*;*;*;*;*;*;*;*;*";
 
-    Border period = () -> ".;.;.;.;.;.;.;.";
+    Border period = () -> ".;.;.;.;.;.;.;.;.;.;.;.";
 
-    Border rounded = () -> "/;\\;\\;/;|;|;-;-";
+    Border rounded = () -> "/;\\;\\;/;|;|;-;-;-;-;|;|";
 
+    Border continuous = () -> "┌;┐;└;┘;│;│;─;─;┬;┴;├;┤";
 }

@@ -53,7 +53,7 @@ public class TypeTable extends AbstractWidget<CodeTable> {
         } else {
             this.table.addRow(List.of("cons", noobj(), ""));
         }
-        this.panel = new Panel(this.type.tid().toString(), this.table.toString()).style().border(Border.simple.foreground("{{b}}")).apply();
+        this.panel = new Panel(this.type.tid().toString(), this.table.toString()).style().border(Border.continuous.foreground("{{b}}")).apply();
     }
 
     public void run() {

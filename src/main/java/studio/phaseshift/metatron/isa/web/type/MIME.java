@@ -97,6 +97,11 @@ public class MIME {
             return Arrays.stream(MIMEType.values()).filter(ct -> (normalized.equalsIgnoreCase(ct.value))).findAny().orElse(null);
         }
 
+        public static MIMEType of(final String contentType, final MIMEType defaultType) {
+            final MIMEType mimeType = MIMEType.of(contentType);
+            return null == mimeType ? defaultType : mimeType;
+        }
+
         public static MIMEType fromProbe(final File file, final MIMEType defaultType) {
             try {
                 final MIMEType contentType = of(Files.probeContentType(file.toPath()));
@@ -113,7 +118,7 @@ public class MIME {
          * defaults to application/mtron.
          */
         public static MIMEType fromType(final Obj obj, final MIMEType defaultType) {
-            final fURI basePath = obj.type().vid().basePath();
+            final fURI basePath = Obj.Helper.specificTypeId(obj).basePath();
             if (basePath.equals(HTML_TID)) return TEXT_HTML;
             if (basePath.equals(MARKDOWN_TID)) return TEXT_MARKDOWN;
             if (basePath.equals(JSON_TID)) return APPLICATION_JSON;
@@ -135,7 +140,7 @@ public class MIME {
             if (extension.equals("css")) return TEXT_CSS;
             if (extension.equals("js")) return APPLICATION_JAVASCRIPT;
             if (extension.equals("md")) return TEXT_MARKDOWN;
-            if (extension.equals("html") || lower.endsWith("htm")) return TEXT_HTML;
+            if (extension.equals("html") || extension.endsWith("htm")) return TEXT_HTML;
             if (extension.equals("json")) return APPLICATION_JSON;
             if (extension.equals("xml")) return APPLICATION_XML;
             if (extension.equals("png")) return IMAGE_PNG;

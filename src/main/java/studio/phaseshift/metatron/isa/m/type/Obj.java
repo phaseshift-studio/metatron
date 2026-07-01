@@ -47,6 +47,7 @@ import static java.lang.System.lineSeparator;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.furi.q.QCollection.MIMEQ_PATTERN;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
@@ -76,6 +77,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer.OBJ_SERIAL_TID;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_MONAD_TYPE;
 import static studio.phaseshift.metatron.isa.mach.type.monad.BasicPCMonad.pcmonad;
+import static studio.phaseshift.metatron.isa.web.webInstSet.MIME_OBJ_TYPE;
 import static studio.phaseshift.metatron.util.CommonUtil.indent;
 import static studio.phaseshift.metatron.util.CommonUtil.nullOrElse;
 import static studio.phaseshift.metatron.util.Tuple.Pair;
@@ -1186,6 +1188,14 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                     }),
                     docWrap(instC(EVAL_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(ALL_TYPE), (lhs, inst) -> inst.arg(0)),
                             "can be any obj", "the result of applying the lhs to the arg", Map.of(jnt(0), "the mtron obj to evaluate"), "evaluates an mtron obj"),
+                    docWrap(instC(PARSE_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(STR_TYPE), (lhs, inst) -> MIME.MIMEType.of(inst.arg(0).tid().toString(), MIME.MIMEType.APPLICATION_MTRON).serializer().inputBytes(inst.arg(0).strValue())),
+                            "can be any obj", "the result of parsing arg into obj", Map.of(jnt(0), "a str encoding of an obj"), "parses the arg str based on str mime type (default application/mtron)",
+                            """
+                            parse(application/json::'{"a":[1,2,3]}') [-- [a=>[1,2,3]] --]
+                            """,
+                            """
+                            parse('[a=>[b=>c]]')                     [-- [a=>[b=>c]]  --]
+                            """),
                     instC(SWAP_TID.dom(A).rng(A), lst(T(B)), (lhs, inst) -> lhs.apply(inst.arg(0))),
                     instC(RSHIFT_INST_TID.dom(ALL).rng(URI_TID.maybe()), lst(uri("vid")), (lhs, inst) -> null == lhs.vid() ? noobj() : lhs.vid().toUri()),
                     instC(RSHIFT_INST_TID.dom(A).rng(B.maybeSome()), lst(T(C.maybeSome())), (lhs, inst) -> {

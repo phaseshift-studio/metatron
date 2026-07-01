@@ -118,7 +118,7 @@ public final class ColonMenu extends MRec {
                     .addRow(List.of("prev pane", "<alt>+w", "cycle to previous pane"))
                     .addRow(List.of("shrink pane", "<alt>+<", "make active pane smaller"))
                     .addRow(List.of("grow pane", "<alt>+>", "make active pane larger"))
-                    .style().headerDivider("{{[b]&w}}|").margin(0, 0, 0, 0).apply().format()).style().margin(0, 0, 0, 0).border(Border.simple.foreground("{{b}}")).apply().format();
+                    .style().headerDivider("{{[b]&w}}|").margin(0, 0, 0, 0).apply().format()).style().margin(0, 0, 0, 0).border(Border.continuous.foreground("{{b}}")).apply().format();
             if (console.isSplitMode() && console.getActivePane() != null) {
                 console.getActivePane().appendOutput(helpText);
             } else {
