@@ -444,12 +444,7 @@ public class mModelTest extends AbstractMetatronTest {
                         uri(HOST), uri(PROVIDER_HOST)
                 )),
                 uri(FEATURE), rec(mutableMap(
-                        uri(MEMORY), rec(mutableMap(
-                                uri("mem"), auto_at_(MEM_VID).tryToInst(),
-                                uri(ALGORITHM), rec(mutableMap(
-                                        uri(MAX), jnt(20)
-                                ))
-                        ), LLM_SESSION_TID, MEM_VID)
+                        uri(SESSION), rec(mutableMap(uri(ALGORITHM), rec(mutableMap(uri(MAX), jnt(20)))), LLM_SESSION_TID, MEM_VID)
                 ))
         ), MODEL_TID, null);
 

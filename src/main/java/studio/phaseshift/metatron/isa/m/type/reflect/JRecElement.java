@@ -56,37 +56,6 @@ public @interface JRecElement {
             // do nothing
         }
 
-        /**
-         * Resolve an element's dom, with class-level fallback:
-         * <ol>
-         *   <li>Non-sentinel annotation value → {@code f(ann.dom())}</li>
-         *   <li>Sentinel + {@code @JRecType} on class → {@code f(typeAnn.tid())}</li>
-         *   <li>Sentinel with no class annotation → wildcard {@code f(DOM_WILDCARD)}</li>
-         * </ol>
-         */
-        public static fURI getDom(final JRecElement ann, final Class<?> declaringClass) {
-            if (!DOM_WILDCARD.equals(ann.dom()))
-                return f(ann.dom());
-            final JRecType typeAnn = declaringClass.getAnnotation(JRecType.class);
-            return null != typeAnn ? f(typeAnn.tid()) : f(ann.dom());
-        }
-
-        /**
-         * Same fallback chain for {@code rng}, using {@link #RNG_WILDCARD}.
-         */
-        public static fURI getRng(final JRecElement ann, final Class<?> declaringClass) {
-            if (!RNG_WILDCARD.equals(ann.rng()))
-                return f(ann.rng());
-            final JRecType typeAnn = declaringClass.getAnnotation(JRecType.class);
-            return null != typeAnn ? f(typeAnn.tid()) : f(ann.rng());
-        }
-
-        // -- legacy zero-arg overloads (for call sites without class context) --
-
-        public static fURI getDom(final JRecElement annotation) {
-            return DOM_WILDCARD.equals(annotation.dom()) ? null : f(annotation.dom());
-        }
-
         public static fURI getRng(final JRecElement annotation) {
             return RNG_WILDCARD.equals(annotation.rng()) ? null : f(annotation.rng());
         }

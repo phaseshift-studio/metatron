@@ -205,7 +205,7 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
                         ? conn.getResourceDescriptor()
                         : "/" + conn.getResourceDescriptor());
                 final fURI wsHandlerTypeID = Space.Helper.routeFromSpace(routePath.qLess(), this.space.routes());
-                final Obj wsHandlerType = Router.global().read(wsHandlerTypeID);
+                final Obj wsHandlerType = Router.readFromSpace(wsHandlerTypeID);
                 if (!wsHandlerType.isType())
                     throw MTronException.of("websocket handler type required: %s at %s", wsHandlerType, wsHandlerTypeID);
                 LOG.info("starting session with websocket handler: %s", wsHandlerType);
@@ -224,7 +224,7 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
                     conn.close(4000, "unable to construct server " + handler);
                     throw MTronException.of("client {{b}}%s{{X}} wsserver construction failed: {{y}}%s{{X}}", conn.getRemoteSocketAddress(), handler);
                 }
-                return (WebSocketRec) handler;
+                return handler.as();
             } catch (final Exception e) {
                 throw MTronException.of("unable to create ws server for %s: %s", conn.getRemoteSocketAddress(), e);
             }

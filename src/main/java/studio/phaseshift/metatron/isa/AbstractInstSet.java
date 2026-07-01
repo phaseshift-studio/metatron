@@ -62,17 +62,18 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
     protected boolean checkPattern(final Obj obj) {
         if (obj.isInst()) {
             if (obj.tid().isAbsolute() && !obj.tid().test(this.pattern())) {
-                LOG.warn("migrating inst at {{b}}%s{{X}} to respective instset: %s", obj.tid(), obj);
+                LOG.debug("migrating inst at {{b}}%s{{X}} to respective instset: %s", obj.tid(), obj);
                 return false;
             }
         } else if (null != obj.vid() && obj.vid().isAbsolute() && !obj.vid().test(this.pattern())) {
-            LOG.warn("migrating obj at {{b}}%s{{X}} to respective instset: %s", obj.vid(), obj);
+            LOG.debug("migrating obj at {{b}}%s{{X}} to respective instset: %s", obj.vid(), obj);
             return false;
         }
         return true;
     }
 
     protected boolean checkDepth(final Obj obj, final fURI requiredPrefix) {
+        // TODO: may not want this -- depends on inst set bleed through
         if (false && null != obj.tid() && !obj.tid().hasPrefix(requiredPrefix.toString())) {
             LOG.warn("obj at %s must have prefix at %s: (ignoring) %s", obj.tid(), requiredPrefix, obj);
             return false;

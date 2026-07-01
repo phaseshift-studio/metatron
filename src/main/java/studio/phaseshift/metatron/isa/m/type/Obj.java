@@ -420,6 +420,10 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
         return this.c().isZero();
     }
 
+    default boolean isNothing() {
+        return this.isNoObj() || this.isNone() || this.isFail();
+    }
+
     default boolean isFail() {
         return this instanceof Fail;
     }
@@ -785,6 +789,10 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
             return obj.isType() && null != obj.vid() ? obj.vid() : obj.tid();
         }
 
+        public static Type specificType(final Obj obj) {
+            return obj.isType() ? obj.asType() : obj.type();
+        }
+
         public static boolean isAuto(final Obj obj) {
             return obj.isObjCall() && obj.tid().basePath().toString().startsWith("auto");
         }
@@ -830,9 +838,6 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                 return true;
             if (!Objects.equals(obj.vid(), ((Obj) other).vid()))
                 return false;
-            //final BiPredicate<Obj, Obj> opt = Optimizations.optimizedEquals.get(obj.tid().basePath());
-            //if (null != opt)
-            //    return opt.test(obj, (Obj) other);
             if (obj.isObjs() && ((Obj) other).isObjs()) {
                 final Set<Obj> objSet = new HashSet<>(obj.jvm());
                 final Set<Obj> otherSet = new HashSet<>(((Obj) other).jvm());
@@ -852,20 +857,6 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
         public static String objToString(final Obj obj) {
             return SERIALIZER.write(obj);
         }
-
-        /*public static Obj stripVID(final Obj obj) {
-            if (obj.isNoObj() || obj.isCall() || obj.isType() || obj.isSpace() || obj.isAutoFrom() || obj.isInstSet())
-                return obj;
-            if (obj.isMono())
-                return obj.selfVID(null);
-            if (obj.isRel())
-                return obj.self(Tuple.Pair.with(stripVID(obj.asRel().jvm().get0()), stripVID(obj.asRel().jvm().get1())), obj.tid(), null);
-            //if (obj.isLst())
-            //    return obj.self(obj.asLst().jvm().stream().map(Helper::stripVID).collect(Collectors.toList()), obj.tid(), null);
-            if (obj.isRec())
-                return obj.self(obj.asRec().jvm().entrySet().stream().map(kv -> rel(stripVID(kv.getKey()), stripVID(kv.getValue()))).collect(new CommonUtil.RecCollector()).jvm(), obj.tid(), null);
-            return obj;
-        }*/
 
         /**
          * Check that {@code obj} satisfies its declared type (when type-checking is enabled).
@@ -1071,7 +1062,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             "any objs", "true if any objs are true", Map.of(), "logical \\(\\texttt{or}\\) function \\(f(X)\\to \\tt{true}\\) if any \\(X\\) are true"),
                     instC(APPLY_INST_TID.dom(ALL).rng(ALL_STAR), lst(T(ALL_STAR)), (lhs, inst) -> lhs.isInst() ?
                             lhs.asInst().apply(inst.args()) :
-                            Router.global().read(lhs.uriValue().basePath().extend("apply")).apply(inst.args())),
+                            Router.readFromSpace(lhs.uriValue().basePath().extend("apply")).apply(inst.args())),
                     //instC(MAP_INST_TID.dom(A).rng(ALL.maybe()), lst(T(B)), (lhs, inst) -> inst.arg(0)),
                     docWrap(instC(MAP_INST_TID.dom(A.maybe()).rng(B.maybe()), lst(T(B.maybe())), (lhs, inst) -> inst.arg(0)), "maybe some obj", "the lhs obj applied to the arg obj", Map.of(jnt(0), "any obj"), "applies the lhs obj to the arg obj to yield the rhs obj"),
                     instC(FILTER_INST_TID.dom(A).rng(A.maybe()), lst(T(ALL.maybe())), (lhs, inst) -> inst.arg(0).isNoObj() ? noobj() : lhs),

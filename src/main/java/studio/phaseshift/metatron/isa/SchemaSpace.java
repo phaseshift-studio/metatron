@@ -46,7 +46,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 public interface SchemaSpace extends Space {
 
     default InstSet schema() {
-        return this.at(uri(SCHEMA)).orElse(instset0).as();
+        return this.at(uri(SCHEMA)).orElse(instset0()).as();
     }
 
     /**

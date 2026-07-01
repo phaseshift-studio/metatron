@@ -209,7 +209,7 @@ public abstract class AbstractThread extends MRec implements mThread, Closeable 
                     }
                 } while (this.jvm().containsKey(uri(LOOP)));
             } catch (final Exception e) {
-                if (null != this.thread && !(e.getMessage().contains("nterrupt"))) {
+                if (null != this.thread && (null == e.getMessage() || !e.getMessage().contains("nterrupt"))) {
                     this.jvm().put(uri(RESULT), fail(e));
                     this.logger().error("thread execution failed: %s", e.getMessage());
                 }

@@ -29,12 +29,15 @@ import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Stream;
 
-import static studio.phaseshift.metatron.isa.m.mInstSet.AS_INST_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_INST_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.NOOBJ_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
  * Instruction resolver that scores candidates by specificity and selects the best match.
@@ -70,13 +73,26 @@ public class ScoringInstResolver implements InstResolver {
             return userInst;
         if (userInst.isNoObj())
             return null;
+        /////////////////////// FROM/AS FAST RESOLUTION ///////////////////////
+        final Optional<fURI> from = Inst.Helper.isFromInstToUri(userInst);
+        if (from.isPresent()) {
+            if (!from.get().hasPattern()) {
+                final Obj fromObj = Router.readFromSpace(from.get());
+                if (!fromObj.isNothing() && !fromObj.isCall()) {
+                    userInst.logger().debug("fast from() resolution: %s", from.get());
+                    return Router.readFromSpace(FROM_INST_TID).asInst().rng(fromObj.type()).asInst().args(lst(from.get().toUri()));
+                }
+            }
+            return Router.readFromSpace(FROM_INST_TID).asInst().args(lst(uri(from.get())));
+        }
         if (userInst.tid().big().test(AS_INST_TID)) {
-            final List<Obj> result = Router.readFromSpace(String.format("as?%s<=%s", userInst.arg(0).typeId(), lhs.typeId())).stream().toList();
+            final List<Obj> result = Router.readFromSpace(AS_INST_TID.dom(lhs.tid()).rng(Obj.Helper.specificTypeId(userInst.arg(0)))).stream().toList();
             if (result.size() == 1) {
-                userInst.logger().debug("fast as retrieval: %s", result);
+                userInst.logger().debug("fast as() resolution: %s", result);
                 return result.getFirst().as();
             }
         }
+        /////////////////////////////////////////////////////////////////////
 
         final fURI basePath = userInst.tid().basePath();
         Obj fetched = noobj();
