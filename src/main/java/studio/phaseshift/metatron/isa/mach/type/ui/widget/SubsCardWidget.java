@@ -18,8 +18,17 @@
 
 package studio.phaseshift.metatron.isa.mach.type.ui.widget;
 
+import studio.phaseshift.metatron.isa.mach.type.ui.console.Highlighter;
+
+import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class Label {
+public class SubsCardWidget extends CardWidget {
+    public SubsCardWidget(final fURI subscription, final Obj on_recv) {
+        super(Highlighter.format(subscription.toString()), Highlighter.format(on_recv.toString()));
+    }
+
 }

@@ -18,7 +18,6 @@
 
 package studio.phaseshift.metatron.isa.mach.type.ui.console;
 
-import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerIoRegistryV3;
 import org.jline.builtins.ConfigurationPath;
 import org.jline.console.SystemRegistry;
 import org.jline.console.impl.Builtins;
@@ -47,6 +46,14 @@ import studio.phaseshift.metatron.isa.mach.type.thread.FutureObj;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.menu.ColonMenu;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.isa.mach.type.ui.tmux.Pane;
+import studio.phaseshift.metatron.isa.mach.type.ui.tmux.PaneNode;
+import studio.phaseshift.metatron.isa.mach.type.ui.tmux.SplitContainer;
+import studio.phaseshift.metatron.isa.mach.type.ui.tmux.SplitLayout;
+import studio.phaseshift.metatron.isa.mach.type.ui.tool.ExplainTool;
+import studio.phaseshift.metatron.isa.mach.type.ui.tool.InstSelectorTool;
+import studio.phaseshift.metatron.isa.mach.type.ui.tool.TypeDiffTool;
+import studio.phaseshift.metatron.isa.mach.type.ui.tool.fURISelectorTool;
 import studio.phaseshift.metatron.isa.mach.type.ui.widget.*;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.IteratorUtil;
@@ -1077,7 +1084,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                 } else if (isTypeMismatch && response.trim().equalsIgnoreCase("t")) {
                     final TypeMismatchException tme = (TypeMismatchException) e;
                     terminal.writer().write("\n");
-                    final TypeDiffWidget widget = new TypeDiffWidget(tme.instance(), tme.type());
+                    final TypeDiffTool widget = new TypeDiffTool(tme.instance(), tme.type());
                     if (Console.this.splitMode && Console.this.activePane != null) {
                         final int[] pos = Console.this.calculatePanePosition(Console.this.activePane);
                         if (pos != null) widget.setPaneBounds(pos[0], pos[1], pos[2], pos[3]);
@@ -1327,7 +1334,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                             final Obj parsed = ObjmtronSerializer.parse(bufferText.trim().substring(0, bufferText.trim().length() - 1));
                             if (parsed.isCode()) {
                                 terminal.writer().write("\n");
-                                final InstSelector selector = new InstSelector(parsed.resolve(noobj()).as(), bufferText);
+                                final InstSelectorTool selector = new InstSelectorTool(parsed.resolve(noobj()).as(), bufferText);
                                 if (selector.hasItems()) {
                                     // Constrain the selector to the active pane when in split mode
                                     if (Console.this.splitMode && Console.this.activePane != null) {
@@ -1343,7 +1350,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                             }
                         } else if (bufferText.trim().startsWith("*") && (bufferText.trim().endsWith("/") || bufferText.trim().endsWith(":"))) {
                             terminal.writer().write("\n");
-                            final fURISelector selector = new fURISelector(bufferText);
+                            final fURISelectorTool selector = new fURISelectorTool(bufferText);
                             if (selector.hasItems()) {
                                 // Constrain the selector to the active pane when in split mode
                                 if (Console.this.splitMode && Console.this.activePane != null) {
@@ -1361,7 +1368,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                             final Obj code = ObjmtronSerializer.parse(bufferText);
                             if (code.isCode()) {
                                 terminal.writer().write("\n");
-                                final Explain explain = new Explain(code.as());
+                                final ExplainTool explain = new ExplainTool(code.as());
                                 // Constrain the widget to the active pane when in split mode
                                 if (Console.this.splitMode && Console.this.activePane != null) {
                                     final int[] pos = Console.this.calculatePanePosition(Console.this.activePane);

@@ -16,17 +16,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.mach.type.ui.console;
+package studio.phaseshift.metatron.isa.mach.type.ui.widget;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.Border;
-import studio.phaseshift.metatron.isa.mach.type.ui.widget.AbstractWidget;
-import studio.phaseshift.metatron.isa.mach.type.ui.widget.Grid;
-import studio.phaseshift.metatron.isa.mach.type.ui.widget.Selector;
-import studio.phaseshift.metatron.isa.mach.type.ui.widget.Table;
+import studio.phaseshift.metatron.isa.mach.type.ui.console.Console;
 
 import java.util.List;
 
@@ -43,20 +40,20 @@ public class SubsWidget extends AbstractWidget<SubsWidget> {
         EXIT
     }
 
-    private final Table spaceTable;
-    private final Table subsTable;
+    private final TableWidget spaceTable;
+    private final TableWidget subsTable;
     private final Selector spaceSelector;
     private final Selector subsSelector;
     // private final Selector selectorSelector;
-    private Grid grid = null;
+    private GridWidget grid = null;
 
     public SubsWidget(final Console console) {
         /// ///////////////////////////////////////////////////////
-        this.spaceTable = new Table(List.of("space vid", "pattern")).style()
+        this.spaceTable = new TableWidget(List.of("space vid", "pattern")).style()
                 .border(Border.continuous)
                 .headerDivider("{{[b]&g}}|{{w}}")
                 .apply();
-        this.subsTable = new Table(List.of("subscription vid", "target", "call")).style()
+        this.subsTable = new TableWidget(List.of("subscription vid", "target", "call")).style()
                 .border(Border.continuous)
                 .headerDivider("{{[b]&g}}|{{w}}")
                 .apply();
@@ -103,7 +100,7 @@ public class SubsWidget extends AbstractWidget<SubsWidget> {
                         // do nothing
                     }
                 });
-        this.grid = new Grid(List.of(this.spaceSelector, this.subsSelector), 1).style().border(Border.none).apply();
+        this.grid = new GridWidget(List.of(this.spaceSelector, this.subsSelector), 1).style().border(Border.none).apply();
         // this.grid.currentFocus(0);
         this.style().attachment(this.grid, true).apply();
     }

@@ -27,14 +27,14 @@ import java.util.List;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class Grid extends AbstractWidget<Grid> {
+public class GridWidget extends AbstractWidget<GridWidget> {
 
     protected final List<Widget<?>> widgets;
     protected final int columns;
     protected final int rows;
     protected int widgetFocus = 0;
 
-    public Grid(final List<Widget<?>> widgets, final int columns) {
+    public GridWidget(final List<Widget<?>> widgets, final int columns) {
         this.widgets = widgets;
         this.columns = columns;
         this.rows = widgets.size() / columns;

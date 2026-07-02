@@ -38,6 +38,7 @@ import studio.phaseshift.metatron.isa.m.type.impl.*;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.MTronException;
+import studio.phaseshift.metatron.util.TriConsumer;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.io.BufferedReader;
@@ -48,6 +49,8 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
@@ -896,27 +899,42 @@ public class mParser {
         return LINE_COMMENT_PATTERN.matcher(line).replaceAll("");
     }
 
-    public static Stream<Obj> eval(final File file, final Consumer<Exception> exhandler) throws IOException {
-        try (final FileReader read = new FileReader(file)) {
-            try (final BufferedReader reader = new BufferedReader(read)) {
-                final List<String> lines = reader.lines().toList();
-                final String source = removeBlockComments(lines.stream().reduce("", (a, b) -> a + b + "\n"));
-                return splitOnNonQuotedSequence(source, ';', false).stream()
-                        .map(mParser::removeLineComments)
-                        .filter(s -> !s.isBlank())
-                        .map(s -> Arrays.stream(s.split("\n")).reduce("", (a, b) -> a + b + "\n"))
-                        .peek(s -> LOG.debug("evaluating line: %s", s))
-                        .map(s -> {
-                            try {
-                                return mParser.parse(s).apply();
-                            } catch (final Exception e) {
-                                exhandler.accept(e);
-                                return noobj();
-                            }
-                        })
-                        .filter(o -> !o.isNoObj());
-            }
+    public record FileParseError(int lineNumber, String lineString, Exception parseException) {
+    }
+
+    private static String aggregateTillBlock(final List<String> lines, final int start, final String prefix) {
+        final StringBuilder builder = new StringBuilder();
+        for (final String line : lines.subList(start, lines.size() - 1)) {
+            builder.append(prefix).append(line).append("\n");
+            if (line.contains(";"))
+                break;
         }
+        if (builder.isEmpty())
+            builder.append("\n");
+        return builder.deleteCharAt(builder.length() - 1).toString();
+    }
+
+    public static Stream<Obj> eval(final File file, final Consumer<FileParseError> exhandler) throws IOException {
+        final List<String> lines = Files.readAllLines(file.toPath());
+        final String source = lines.stream().reduce("", (a, b) -> a + b + "\n");
+        final AtomicInteger lineNumber = new AtomicInteger(0);
+        return splitOnNonQuotedSequence(source, ';', false).stream()
+                .map(s -> Arrays.stream(s.split("\n"))
+                        .peek(x -> lineNumber.incrementAndGet())
+                        .map(mParser::removeBlockComments)
+                        .map(mParser::removeLineComments)
+                        .filter(x -> !x.isBlank())
+                        .reduce("", (a, b) -> a + b + "\n"))
+                .peek(s -> LOG.debug("evaluating line: %s", s))
+                .map(s -> {
+                    try {
+                        return mParser.parse(s).apply();
+                    } catch (final Exception e) {
+                        exhandler.accept(new FileParseError(lineNumber.get(), aggregateTillBlock(lines, lineNumber.get(), "{{r}}> "), e));
+                        return noobj();
+                    }
+                })
+                .filter(o -> !o.isNoObj());
     }
 
     /// //////////////////////////////////////////////////////////////////////////////////////////

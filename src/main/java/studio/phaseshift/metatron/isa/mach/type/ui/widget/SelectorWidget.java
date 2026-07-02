@@ -16,16 +16,18 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.mach.type.ui.console;
+package studio.phaseshift.metatron.isa.mach.type.ui.widget;
 
 import org.jline.keymap.BindingReader;
 import org.jline.keymap.KeyMap;
 import org.jline.terminal.Attributes;
 import org.jline.utils.InfoCmp;
 import studio.phaseshift.metatron.isa.mach.type.ui.Border;
+import studio.phaseshift.metatron.isa.mach.type.ui.console.Highlighter;
+import studio.phaseshift.metatron.isa.mach.type.ui.console.Console;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.widget.AbstractWidget;
-import studio.phaseshift.metatron.isa.mach.type.ui.widget.Table;
+import studio.phaseshift.metatron.isa.mach.type.ui.widget.TableWidget;
 import studio.phaseshift.metatron.isa.mach.type.ui.widget.Utilities;
 import studio.phaseshift.metatron.isa.mach.type.ui.widget.WidgetCanvas;
 
@@ -44,7 +46,7 @@ public abstract class SelectorWidget<T, S extends SelectorWidget<T, S>> extends 
     }
 
     protected final List<T> items = new ArrayList<>();
-    protected final Table table;
+    protected final TableWidget table;
     protected final String originalBufferText;
     protected Attributes savedAttributes;
     protected boolean running = false;
@@ -59,14 +61,14 @@ public abstract class SelectorWidget<T, S extends SelectorWidget<T, S>> extends 
     /**
      * Index of the {@code |} divider character that precedes the right-side item
      * within a rendered table row.  Value 4 matches the column layout produced by
-     * {@link Table} when the {@link Border#continuous} border style is used — the left
+     * {@link TableWidget} when the {@link Border#continuous} border style is used — the left
      * border itself counts as index 0.
      */
     protected static final int RIGHT_COL_DIVIDER_INDEX = 4;
 
     protected SelectorWidget(final String originalBufferText, final List<String> headers) {
         this.originalBufferText = originalBufferText;
-        this.table = new Table(headers);
+        this.table = new TableWidget(headers);
         this.table.style()
                 .headerDivider("{{[b]}} ")
                 .border(Border.continuous.foreground("{{b}}"))

@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.m.type.reflect;
 
+import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -47,6 +48,7 @@ import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.FILE_TID;
 
@@ -77,7 +79,11 @@ public class JObjFactory extends MObjFactory {
         Object newValue = value;
         if (value instanceof Obj)
             return (Obj) value;
-        if (tid.equals(STR_TID)) {
+        else if (tid.isZero()) {
+            return null;
+        } else if (!tid.c().isOne()) {
+            return objs(((List<Object>) value).stream().map(e -> this.toObj(e, tid.c(cInt.ONE()), null)).toList(), tid, vid());
+        } else if (tid.equals(STR_TID)) {
             newValue = value.toString();
         } else if (tid.equals(URI_TID)) {
             newValue = f(value.toString());

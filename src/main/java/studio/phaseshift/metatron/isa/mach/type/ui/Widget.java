@@ -39,6 +39,18 @@ public interface Widget<W extends Widget<W>> extends Stylable<W>, AutoCloseable,
 
     void display();
 
+    /**
+     * Render in-place: move cursor up over previous render, clear old lines,
+     * print new content.  First call renders normally; subsequent calls
+     * overwrite the previous output.
+     */
+    String renderInPlace();
+
+    /**
+     * Reset in-place tracking and return a fresh render string.
+     */
+    String renderFresh();
+
     default int height() {
         return this.rowStrings().size();
     }
