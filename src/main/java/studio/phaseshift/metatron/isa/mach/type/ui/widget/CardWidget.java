@@ -25,12 +25,12 @@ import java.util.Arrays;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class Card extends AbstractWidget<Card> {
+public class CardWidget extends AbstractWidget<CardWidget> {
 
     protected final String title;
     protected final String body;
 
-    public Card(final String title, final String body) {
+    public CardWidget(final String title, final String body) {
         this.title = title.trim();
         this.body = body.trim();
     }

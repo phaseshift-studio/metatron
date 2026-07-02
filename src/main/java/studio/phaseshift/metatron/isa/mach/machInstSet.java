@@ -76,7 +76,11 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.io.space.fs.fsSpace.FS_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.mach.io.space.fs.fsSpace.makeFile;
 import static studio.phaseshift.metatron.isa.mach.io.space.serial.serialSpace.SERIAL_SPACE_TYPE;
+import static studio.phaseshift.metatron.isa.mach.type.ui.Stylable.WIDGET_STYLE_TYPE;
 import static studio.phaseshift.metatron.isa.mach.type.ui.console.Console.CONSOLE_TYPE;
+import static studio.phaseshift.metatron.isa.mach.type.ui.widget.AccordionWidget.WIDGET_ACCORDION_TYPE;
+import static studio.phaseshift.metatron.isa.mach.type.ui.widget.TableWidget.WIDGET_TABLE_TYPE;
+import static studio.phaseshift.metatron.isa.mach.type.ui.widget.PanelWidget.WIDGET_PANEL_TYPE;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /*
@@ -180,6 +184,10 @@ public class machInstSet extends AbstractInstSet {
                         ROUTER_TYPE,
                         SPACE_TYPE,
                         CONSOLE_TYPE,
+                        WIDGET_STYLE_TYPE,
+                        WIDGET_ACCORDION_TYPE,
+                        WIDGET_TABLE_TYPE,
+                        WIDGET_PANEL_TYPE,
                         FS_SPACE_TYPE,
                         SERIAL_SPACE_TYPE,
                         FILE_TYPE,

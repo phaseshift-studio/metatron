@@ -167,6 +167,23 @@ public interface Border {
 
     // Format: tlCorner;trCorner;blCorner;brCorner;leftSide;rightSide;topSide;bottomSide;topIntersect;bottomIntersect;leftIntersect;rightIntersect
 
+    static Border parse(final String name) {
+        if (name == null || name.isEmpty()) return Border.none;
+        // Extract the last segment if it's a URI path (e.g. /.../content/continuous → continuous)
+        final String shortName = name.contains("/") ? name.substring(name.lastIndexOf('/') + 1) : name;
+        return switch (shortName.toLowerCase()) {
+            case "simple"     -> Border.simple;
+            case "thick"      -> Border.thick;
+            case "none"       -> Border.none;
+            case "hash"       -> Border.hash;
+            case "asterisk"   -> Border.asterisk;
+            case "period"     -> Border.period;
+            case "rounded"    -> Border.rounded;
+            case "continuous" -> Border.continuous;
+            default -> Border.none;
+        };
+    }
+
     Border simple = () -> "+;+;+;+;|;|;-;-;-;-;|;|";
 
     Border thick = () -> "[];[];[];[];||;||;=;=;=;=;||;||";

@@ -16,12 +16,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.mach.type.ui.console;
+package studio.phaseshift.metatron.isa.mach.type.ui.tool;
+
+import studio.phaseshift.metatron.isa.mach.type.ui.console.Console;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.mach.type.ui.widget.SelectorWidget;
 
 import java.util.List;
 
@@ -30,9 +33,9 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class fURISelector extends SelectorWidget<fURI, fURISelector> {
+public class fURISelectorTool extends SelectorWidget<fURI, fURISelectorTool> {
 
-    public fURISelector(final String originalBufferText) {
+    public fURISelectorTool(final String originalBufferText) {
         super(originalBufferText, List.of("furi", "", "furi"));
 
         if (!originalBufferText.isEmpty()) {

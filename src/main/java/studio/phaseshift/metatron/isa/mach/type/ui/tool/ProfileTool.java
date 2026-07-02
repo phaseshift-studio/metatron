@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.mach.type.ui.console;
+package studio.phaseshift.metatron.isa.mach.type.ui.tool;
 
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.isa.m.type.Call;
@@ -24,7 +24,7 @@ import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Poly;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.widget.AbstractWidget;
-import studio.phaseshift.metatron.isa.mach.type.ui.widget.Table;
+import studio.phaseshift.metatron.isa.mach.type.ui.widget.TableWidget;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -34,14 +34,14 @@ import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class Profile extends AbstractWidget<Profile> {
+public class ProfileTool extends AbstractWidget<ProfileTool> {
 
     protected Call call;
-    protected Table instTable;
+    protected TableWidget instTable;
     private static final int CLIP_LENGTH = 20;
 
-    public Profile(final Call call) {
-        this.instTable = new Table(List.of("op", "dom", "rng", "args", "f", "desc", "c_dom", "c_rng"));
+    public ProfileTool(final Call call) {
+        this.instTable = new TableWidget(List.of("op", "dom", "rng", "args", "f", "desc", "c_dom", "c_rng"));
         cInt dom = cInt.ONE();
         cInt rng = cInt.ONE();
         boolean first = true;

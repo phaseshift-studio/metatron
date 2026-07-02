@@ -26,6 +26,7 @@ import studio.phaseshift.metatron.isa.m.type.Rel;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.mach.type.ui.tool.ExplainTool;
 
 import java.util.List;
 
@@ -62,7 +63,7 @@ public class MCompleter implements Completer {
                 } else  {
                     final Obj o = ObjmtronSerializer.parse(bufferString);
                     if (o.isCode())
-                        candidates.add(new Candidate("", new Explain(o.as()).format(), null, null, "", null, false));
+                        candidates.add(new Candidate("", new ExplainTool(o.as()).format(), null, null, "", null, false));
                 }
             }
         } catch (final Exception e) {

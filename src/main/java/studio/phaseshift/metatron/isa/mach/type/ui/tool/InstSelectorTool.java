@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -16,13 +16,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.mach.type.ui.console;
+package studio.phaseshift.metatron.isa.mach.type.ui.tool;
+
+import org.jline.reader.Buffer;
+import studio.phaseshift.metatron.isa.mach.type.ui.console.Console;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.ui.widget.SelectorWidget;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,11 +43,11 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_INST_TID;
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class InstSelector extends SelectorWidget<Inst, InstSelector> {
+public class InstSelectorTool extends SelectorWidget<Inst, InstSelectorTool> {
 
     private final fURI domType;
 
-    public InstSelector(final Code code, final String originalBufferText) {
+    public InstSelectorTool(final Code code, final String originalBufferText) {
         super(originalBufferText, List.of("op", "dom", "rng", "", "op", "dom", "rng"));
 
         if (!code.codeValue().isEmpty()) {
@@ -80,9 +84,11 @@ public class InstSelector extends SelectorWidget<Inst, InstSelector> {
     @Override
     protected void writeSelection(final Inst item) {
         final String instName = item.tid().name();
-        final var buf = Console.LOCAL_INSTANCE.getReader().getBuffer();
+        final Buffer buf = Console.LOCAL_INSTANCE.getReader().getBuffer();
         buf.clear();
-        buf.write(originalBufferText + instName + "(");
+        buf.write(originalBufferText);
+        buf.write(instName);
+        buf.write(instName + "(");
         buf.cursor(buf.length());
     }
 

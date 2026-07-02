@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.mach.type.ui.widget;
+package studio.phaseshift.metatron.isa.mach.type.ui.tmux;
 
 import org.jline.terminal.Terminal;
 import org.slf4j.Logger;

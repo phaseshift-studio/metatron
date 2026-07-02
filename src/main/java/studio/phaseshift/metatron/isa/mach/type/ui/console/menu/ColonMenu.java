@@ -25,8 +25,6 @@ import studio.phaseshift.metatron.TypeCheck;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.type.mModel;
 import studio.phaseshift.metatron.isa.m.type.Rec;
-import studio.phaseshift.metatron.isa.m.type.Str;
-import studio.phaseshift.metatron.isa.m.type.impl.MInst;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.LogObj;
@@ -34,7 +32,9 @@ import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.Border;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Console;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Highlighter;
-import studio.phaseshift.metatron.isa.mach.type.ui.console.SubsWidget;
+import studio.phaseshift.metatron.isa.mach.type.ui.tmux.Pane;
+import studio.phaseshift.metatron.isa.mach.type.ui.tmux.SplitLayout;
+import studio.phaseshift.metatron.isa.mach.type.ui.widget.SubsWidget;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.mach.type.ui.widget.*;
@@ -55,6 +55,7 @@ import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.type.ui.console.Console.CONSOLE_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
@@ -67,7 +68,7 @@ public final class ColonMenu extends MRec {
     public static final fURI COLON_MENU_TID = CONSOLE_TID.extend("colon_menu");
     private final GraphittyLogger LOG = Graphitty.log(this);
     private final Console console;
-    private Accordion accordian;
+    private AccordionWidget accordian;
 
     public Rec attach(final Rec menuRec, final String... menuItemsToAdd) {
         for (final String item : menuItemsToAdd.length == 0 ? this.getMenuItems() : menuItemsToAdd) {
@@ -86,7 +87,7 @@ public final class ColonMenu extends MRec {
 
         // ===== help =====
         this.at("help", instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(NOOBJ_TID), lst(), (lhs, inst) -> {
-            final String helpText = new Panel("{{c}}metatron console help{{X}}", new Table(
+            final String helpText = new PanelWidget("{{c}}metatron console help{{X}}", new TableWidget(
                     List.of("name", "short", "description"))
                     /// ///////////////////////////////////////////////////////////////////////////////////////
                     .addRow(List.of("{{[g]&w}}mtron", "{{[g]&w}}", "{{[g]&w}}"))
@@ -137,18 +138,18 @@ public final class ColonMenu extends MRec {
             final String input = lhs.isStr() ? lhs.strValue().trim() : "";
 
             if ("close".equalsIgnoreCase(input) || "collapse".equalsIgnoreCase(input)) {
-                if (this.accordian != null) this.accordian.collapse();
+                if (this.accordian != null) this.accordian.at(str("collapse")).apply();
             } else if ("open".equalsIgnoreCase(input) || "expand".equalsIgnoreCase(input)) {
-                if (this.accordian != null) this.accordian.expand();
+                if (this.accordian != null) this.accordian.at(str("expand")).apply();
             } else if ("toggle".equalsIgnoreCase(input)) {
-                if (this.accordian != null) this.accordian.toggle();
+                if (this.accordian != null) this.accordian.at(str("toggle")).apply();
             } else if (input.startsWith("append ")) {
-                if (this.accordian != null) this.accordian.appendLine(input.substring(7));
+                if (this.accordian != null) this.accordian.at(str("append")).apply(str(input.substring(7)));
             } else if (!input.isEmpty()) {
                 final String[] parts = input.split(" ", 2);
                 final String title = parts.length > 0 ? parts[0] : "";
                 final String body  = parts.length > 1 ? parts[1] : "";
-                this.accordian = new Accordion(title, body);
+                this.accordian = new AccordionWidget(title, body);
                 this.accordian.style()
                         .border(Border.continuous.foreground("{{y}}"))
                         .foreground("{{y}}")

@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.mach.type.ui.console;
+package studio.phaseshift.metatron.isa.mach.type.ui.tool;
 
 import org.jline.keymap.BindingReader;
 import org.jline.keymap.KeyMap;
@@ -28,10 +28,7 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.type.ui.Border;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
-import studio.phaseshift.metatron.isa.mach.type.ui.widget.AbstractWidget;
-import studio.phaseshift.metatron.isa.mach.type.ui.widget.Table;
-import studio.phaseshift.metatron.isa.mach.type.ui.widget.Utilities;
-import studio.phaseshift.metatron.isa.mach.type.ui.widget.WidgetCanvas;
+import studio.phaseshift.metatron.isa.mach.type.ui.widget.*;
 
 import java.util.*;
 
@@ -50,9 +47,9 @@ import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class Explain extends AbstractWidget<Explain> {
+public class ExplainTool extends AbstractWidget<ExplainTool> {
 
-    private static final GraphittyLogger LOG = Graphitty.log(Explain.class);
+    private static final GraphittyLogger LOG = Graphitty.log(ExplainTool.class);
 
     private enum Action {
         QUIT, DOWN_ROW, UP_ROW, RIGHT_COL, LEFT_COL, SELECT, SPACE
@@ -63,9 +60,9 @@ public class Explain extends AbstractWidget<Explain> {
      */
     private static class ExplainLevel {
         final Code code;
-        final Profile profile;
+        final ProfileTool profile;
         final boolean rewritten;
-        final Table table;
+        final TableWidget table;
         final int offsetX;
         final int offsetY;
         int selectedRow;
@@ -81,7 +78,7 @@ public class Explain extends AbstractWidget<Explain> {
         ExplainLevel(final Code code, final int offsetX, final int offsetY, final int spawnRow, final int spawnCol) {
             this.code = code;//.resolve(noobj());
             this.rewritten = code.isResolved(false);// false;//code.insts().stream().map(Inst::tid).toList().equals(code.clone().asCode().rewrite().insts().stream().map(Inst::tid).toList());
-            this.profile = new Profile(this.code);
+            this.profile = new ProfileTool(this.code);
             final Border border = Border.continuous.foreground("{{b}}");
             this.profile.instTable.style()
                     .headerDivider("{{[b]}} ")
@@ -122,7 +119,7 @@ public class Explain extends AbstractWidget<Explain> {
     private int totalHeightUsed = 0;  // Track how many lines we've used
     private String statusMessage = null;  // Temporary message to show in status bar
 
-    public Explain(final Code code) {
+    public ExplainTool(final Code code) {
         this.rootCode = code;
     }
 

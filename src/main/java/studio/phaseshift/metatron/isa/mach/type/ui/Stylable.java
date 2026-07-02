@@ -18,17 +18,53 @@
 
 package studio.phaseshift.metatron.isa.mach.type.ui;
 
+import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.m.type.Type;
+
+import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.mInstSet.INST_CTOR_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.STR_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TID;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public interface Stylable<T extends Stylable<T>> {
+
+    fURI WIDGET_STYLE_TID = f("/m/mach/ui/widget/style");
+
+    Type WIDGET_STYLE_TYPE = Type.Builder.build()
+            .tid(REC_TID).vid(WIDGET_STYLE_TID)
+            .isaPredicate(rec(
+                    uri("border"),        T(URI_TID.maybe()),
+                    uri("background"),    T(STR_TID.maybe()),
+                    uri("foreground"),    T(STR_TID.maybe()),
+                    uri("divider"),       T(STR_TID.maybe()),
+                    uri("headerDivider"), T(STR_TID.maybe()),
+                    uri("pointer"),       T(STR_TID.maybe()),
+                    uri("leftMargin"),    T(STR_TID.maybe()),
+                    uri("rightMargin"),   T(STR_TID.maybe()),
+                    uri("topMargin"),     T(STR_TID.maybe()),
+                    uri("bottomMargin"),  T(STR_TID.maybe())))
+            .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(WIDGET_STYLE_TID),
+                    lst(T(REC_TID)), (lhs, inst) -> inst.arg(0).as()))
+            .create();
 
     default Style<T> style() {
         return new Style<>((T) this);
     }
 
     T style(final Style<T> style);
-    
+
     Style<T> getStyle();
 
     class Style<T extends Stylable<T>> {
@@ -137,6 +173,27 @@ public interface Stylable<T extends Stylable<T>> {
         public Style<T> freePrefix(final String prefix) {
             this.prefix = prefix;
             return this;
+        }
+
+        /** Read style fields from a mtron style Rec. */
+        public static <T extends Stylable<T>> Style<T> from(final Rec styleRec) {
+            if (styleRec == null) return new Style<>(null);
+            final Style<T> s = new Style<>(null);
+            final java.util.Map<Obj, Obj> j = styleRec.jvm();
+            j.forEach((k, v) -> {
+                final String key = k.uriValue().toString();
+                if ("border".equals(key) && v.isUri()) s.border(Border.parse(v.uriValue().toString()));
+                else if ("background".equals(key) && v.isStr()) s.background(v.strValue());
+                else if ("foreground".equals(key) && v.isStr()) s.foreground(v.strValue());
+                else if ("divider".equals(key) && v.isStr()) s.divider(v.strValue());
+                else if ("headerDivider".equals(key) && v.isStr()) s.headerDivider(v.strValue());
+                else if ("pointer".equals(key) && v.isStr()) s.pointer(v.strValue());
+                else if ("leftMargin".equals(key) && v.isInt()) s.leftMargin = v.intValue().intValue();
+                else if ("rightMargin".equals(key) && v.isInt()) s.rightMargin = v.intValue().intValue();
+                else if ("topMargin".equals(key) && v.isInt()) s.topMargin = v.intValue().intValue();
+                else if ("bottomMargin".equals(key) && v.isInt()) s.bottomMargin = v.intValue().intValue();
+            });
+            return s;
         }
 
         public T apply() {
