@@ -37,8 +37,6 @@ icolor yellow "0x([0-9]|[A-F]|[a-f])+"
 color yellow,underline "0x"
 ### bool
 color yellow "(true)|(false)"
-### type
-color magenta "::T"
 # qProc keys
 icolor cyan "(|#|\+|[a-z]|-|_|\{.\})+(=|<=)(?!>)"
 icolor blue "=([a-z]|[0-9]|\.|_|-|/|#|\+)+"
@@ -62,7 +60,9 @@ color green "\{\}"
 ###  uri
 color blue "[^-][<][^=]([^>])*[>][^-]^(=>)]"
 icolor blue "[,a-z0-9_/-]+::"
-color green "::" 
+color green "::"
+### type
+color magenta "::T"
 ### uri <>
 color blue "[<][^>]*[>]"
 color green "<" ">"

@@ -736,6 +736,10 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
         throw MTronException.of(xxxValue, this, T(tid()), MACH_MONAD_TYPE);
     }
 
+    default boolean hasVID() {
+        return null != this.vid();
+    }
+
     default String toCleanString() {
         if (this.isStr())
             return this.strValue();
@@ -785,7 +789,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
             // do nothing
         }
 
-        private static final ObjSerializer<String> SERIALIZER = new ObjmtronSerializer();
+        private static final ObjSerializer<String> SERIALIZER = ObjmtronSerializer.singleNoClip();
 
         public static fURI specificTypeId(final Obj obj) {
             return obj.isType() && null != obj.vid() ? obj.vid() : obj.tid();

@@ -203,7 +203,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                     console.run();
                     return noobj();
                 })), "console repl").applyAsync();
-                return console;
+                return docWrap(console, "a user terminal repl", ":help");
             })).create();
 
     public Console(final Rec options, final fURI vid) {
@@ -995,8 +995,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                     }
                     // Evaluate the deepest expression (>> -1, top of stack)
                     if (this.expressionStack.count() > 1) {
-                        final String chatPart = this.expressionStack
-                                .<Obj>at(jnt(-1)).strValue();
+                        final String chatPart = this.expressionStack.at(jnt(-1)).strValue();
                         if (!chatPart.isEmpty()) {
                             this.status.startTimer();
                             if (this.splitMode && this.activePane != null) {
@@ -1015,11 +1014,9 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                     }
                     // Rebuild seed buffer: >>0 (mtron>), then remaining \_ lines
                     // in display order (mtron> part first, then \_ lines).
-                    final Obj[] remaining = this.expressionStack
-                            .elements().toArray(Obj[]::new);
+                    final Obj[] remaining = this.expressionStack.elements().toArray(Obj[]::new);
                     if (remaining.length > 1) {
-                        final int promptWidth = Highlighter.visualLength(
-                                this.getCurrentLanguage().prompt);
+                        final int promptWidth = Highlighter.visualLength(this.getCurrentLanguage().prompt);
                         final StringBuilder sb = new StringBuilder(remaining[0].strValue());
                         for (int i = 1; i < remaining.length; i++) {
                             sb.append('\n');

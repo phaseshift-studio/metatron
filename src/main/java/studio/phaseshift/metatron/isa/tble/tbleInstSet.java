@@ -100,7 +100,13 @@ public class tbleInstSet extends AbstractInstSet {
         final BiPredicate<tbleSpace, List<Inst>> tableGuard = (space, matches) -> {
             final Obj ref = matches.getFirst().arg(0);
             if (!ref.isUri()) return true;
-            final DataPath dp = DataPath.of(ref.uriValue());
+            // Redirect through the space to resolve scheme/prefix before DataPath parsing.
+            // Without this, DataPath.withoutDB() receives the raw fURI whose toString()
+            // includes the scheme (e.g. "drdb:llm_message_user/+"), causing extend("/")
+            // to split it into ["drdb:llm_message_user", "+"] — misidentifying the
+            // collection as "drdb:llm_message_user" instead of "llm_message_user".
+            final fURI resolved = space.redirect(ref.uriValue(), true);
+            final DataPath dp = DataPath.withoutDB(resolved);
             if (!dp.hasCollection() || dp.collectionIsWildcard()) return false;
             return space.existingTableSchema != null && space.existingTableSchema.getTableNames().contains(dp.collection().toLowerCase());
         };
@@ -108,11 +114,14 @@ public class tbleInstSet extends AbstractInstSet {
         final BiPredicate<tbleSpace, List<Inst>> kvGuard = (space, matches) -> {
             final Obj ref = matches.getFirst().arg(0);
             if (!ref.isUri()) return false;
-            final DataPath dp = DataPath.withoutDB(ref.uriValue());
+            // Same redirect as tableGuard — resolve the scheme/prefix before parsing.
+            final fURI resolved = space.redirect(ref.uriValue(), true);
+            final DataPath dp = DataPath.withoutDB(resolved);
             if (!dp.hasCollection() || dp.collectionIsWildcard()) return false;
             if (space.existingTableSchema != null && space.existingTableSchema.getTableNames().contains(dp.collection().toLowerCase()))
                 return false;
-            return KVStoreUtil.translateKVPatternToSQL(ref.uriValue()) != null;
+            final fURI stored = Space.Helper.routeFromSpace(resolved, space.routes());
+            return KVStoreUtil.translateKVPatternToSQL(stored) != null;
         };
 
         this.jvm().putAll(mutableMap(
