@@ -282,53 +282,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
     }
 
     default boolean test(final Obj rhs) {
-        if (Obj.Helper.isAuto(rhs))
-            return true;
-        else if (this.isNoObj())
-            return (rhs.tid().c().isZeroable() || rhs.tid().equals(NOOBJ_TID));
-        else if (rhs.isNoObj())
-            return this.c().isZeroable();
-        else if (null != this.vid() && Objects.equals(this.vid(), rhs.vid()))
-            return true;
-        if (rhs.isObjCall() && !rhs.asCall().isPredicate(this))
-            return true;
-        if (rhs.isType() && !rhs.asType().isBaseType() && this.tid().test(rhs.vid()))
-            return rhs.asType().isRootType() ?
-                    this.c().within(rhs.c()) :
-                    (!rhs.asType().hasPredicate() || !rhs.asType().predicate().apply(this).isNoObj());
-        /// //////////////////////////////
-        if (rhs.isUri() && this.isUri() && !this.uriValue().test(rhs.uriValue()))
-            return false;
-        /*final fURI base = this.tid().basePath();
-        if (BASE_TYPES.contains(base) &&
-                !(this instanceof Objs) &&
-                !((this.isBool() && base.equals(BOOL_TID)) ||
-                        (this.isBytes() && base.equals(BYTES_TID)) ||
-                        (this.isInt() && base.equals(INT_TID)) ||
-                        (this.isReal() && base.equals(REAL_TID)) ||
-                        (this.isStr() && base.equals(STR_TID)) ||
-                        (this.isUri() && base.equals(URI_TID)) ||
-                        (this.isRec() && base.equals(REC_TID)) ||
-                        (this.isLst() && base.equals(LST_TID)) ||
-                        (this.isRel() && base.equals(REL_TID)) ||
-                        (this.isInst() && base.equals(M_ISA_INST_TID)) ||
-                        (this.isCode() && base.equals(CODE_TID)) ||
-                        (this.isType() && base.equals(TYPE_TID)) ||
-                        (this.isFail() || this.isCaughtFail() && base.equals(FAIL_TID)))) {
-            return false;
-        }*/
-        if (this.isObjCall())
-            return this.tid().c().within(rhs.tid().c()); // TODO: this is really flimsy.
-        if (rhs.isObjCall()) {
-            return rhs.apply(this).test(rhs.rng());
-        }
-        if (!this.c().within(rhs.c()))
-            return false;
-        if (rhs.isType()) {
-            return Type.Helper.typeCheck(this, rhs);
-        }
-        return this.tid().test(rhs.tid()) &&
-                Objects.equals(this.jvm(), rhs.jvm());
+        return Obj.Helper.testObjs(this, rhs);
     }
 
     @Override
@@ -801,6 +755,73 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
 
         public static boolean isAuto(final Obj obj) {
             return obj.isObjCall() && obj.tid().basePath().toString().startsWith("auto");
+        }
+
+        /**
+         * Consolidated type-check: is {@code lhs} an instance of type {@code rhs}?
+         * <p>
+         * Single canonical entry-point for the universal checks (auto, noobj,
+         * same-VID, ObjCall, coefficient, URI) followed by delegation to
+         * {@link Type.Helper#typeCheck(Obj, Obj)} for type-specific logic.
+         * All {@code test()} overrides route through here for non-structural
+         * comparisons.
+         */
+        public static boolean testObjs(final Obj lhs, final Obj rhs) {
+            // ── universal quick-exits ──
+            if (isAuto(rhs))
+                return true;
+            if (lhs.isNoObj())
+                return rhs.tid().c().isZeroable() || rhs.tid().equals(NOOBJ_TID);
+            if (rhs.isNoObj())
+                return lhs.c().isZeroable();
+
+            // ── same-VID fast-path (coefficient + predicate guard) ──
+            if (null != lhs.vid() && Objects.equals(lhs.vid(), rhs.vid()))
+                return lhs.c().within(rhs.c()) &&
+                        (!rhs.isType() || !rhs.asType().hasPredicate() ||
+                                (lhs.isType() && Objects.equals(lhs.asType().predicate(), rhs.asType().predicate())));
+
+            // ── ObjCall handling ──
+            if (rhs.isObjCall() && !rhs.asCall().isPredicate(lhs))
+                return true;
+
+            // ── non-base type with TID→VID match: predicate-aware early exit ──
+            if (rhs.isType() && !rhs.asType().isBaseType() && lhs.tid().test(rhs.vid()))
+                return rhs.asType().isRootType()
+                        ? lhs.c().within(rhs.c())
+                        : (!rhs.asType().hasPredicate() ||
+                                (lhs.isType()
+                                        ? Objects.equals(lhs.asType().predicate(), rhs.asType().predicate())
+                                        : !rhs.asType().predicate().apply(lhs).isNothing()));
+
+            // ── URI structural match ──
+            if (rhs.isUri() && lhs.isUri() && !lhs.uriValue().test(rhs.uriValue()))
+                return false;
+
+            // ── lhs is ObjCall ──
+            if (lhs.isObjCall())
+                return lhs.tid().c().within(rhs.tid().c());
+
+            // ── rhs is ObjCall: apply and recurse on range ──
+            if (rhs.isObjCall())
+                return rhs.apply(lhs).test(rhs.rng());
+
+            // ── coefficient bounds ──
+            if (!lhs.c().within(rhs.c()))
+                return false;
+
+            // ── root type (T::T or ALL without predicate) accepts everything ──
+            if (rhs.isType() && !rhs.asType().hasPredicate() &&
+                    (rhs.asType().isRootType() || rhs.tid().equals(ALL) || Objects.equals(rhs.vid(), ALL)))
+                return true;
+
+            // ── delegate type-specific logic ──
+            if (rhs.isType())
+                return Type.Helper.typeCheck(lhs, rhs);
+
+            // ── fallback: TID + JVM equality ──
+            return lhs.tid().test(rhs.tid()) &&
+                    Objects.equals(lhs.jvm(), rhs.jvm());
         }
 
         public static boolean isAutoPointer(final Obj obj) {

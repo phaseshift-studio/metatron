@@ -168,7 +168,8 @@ public interface Type extends Obj {
         if (!rhs.isType())
             return false;
         if (null != this.vid() && Objects.equals(this.vid(), rhs.vid()))
-            return true;
+            return this.c().within(rhs.c()) &&
+                    (!rhs.asType().hasPredicate() || Objects.equals(this.predicate(), rhs.asType().predicate()));
         if (rhs.isType() && rhs.asType().isRootType() && !rhs.asType().hasPredicate())
             return this.c().within(rhs.c());
         if (null != this.vid() &&
@@ -180,10 +181,10 @@ public interface Type extends Obj {
         if (!rhs.asType().parentType().isRootType() && !this.test(rhs.asType().parentType()))
             return false;
         if (rhs.asType().isBaseType() && !this.baseType().test(rhs.tid()))
-            return false;//&& (!rhs.asType().hasPredicate() || Objects.equals(this.predicate(), rhs.asType().predicate())); // matches any abstract type to it's base type as long as within the coefficient boundaries
+            return false;
         if (rhs.tid().isGeneric())
             return !this.tid().isGeneric() || (this.c().within(rhs.c()) && this.tid().basePath().equals(rhs.tid().basePath()));
-        return !rhs.asType().hasPredicate() || Objects.equals(this.asType().predicate(), rhs.asType().predicate());// || !rhs.asType().predicate().apply(this).isNoObj();
+        return !rhs.asType().hasPredicate() || Objects.equals(this.asType().predicate(), rhs.asType().predicate());
     }
 
     @Override
@@ -238,7 +239,9 @@ public interface Type extends Obj {
 
         public static boolean typeCheck(final Obj lhs, final Obj rhs) {
             if (null != lhs.vid() && Objects.equals(lhs.vid(), rhs.vid()))
-                return true;
+                return lhs.c().within(rhs.c()) &&
+                        (!rhs.isType() || !rhs.asType().hasPredicate() ||
+                                (lhs.isType() && Objects.equals(lhs.asType().predicate(), rhs.asType().predicate())));
             if (lhs.isType()) {
                 /// /////////////////////////
                 /// TYPE <=> OBJ or TYPE ///
@@ -279,11 +282,11 @@ public interface Type extends Obj {
                 }
                 if (lhs.isObjs() && lhs.stream().anyMatch(Obj::isObjCall)) // TODO: a hack (see RecTest requirements vs. TypeTest requirements)
                     return false;
-                if (lhs.isObjs() && lhs.stream().allMatch(o -> o.test(rhs.tid(rhs.tid().c(o.c())))))
+                if (lhs.isObjs() && lhs.stream().allMatch(o -> o.test(rhs.asType().hasPredicate() ? rhs : rhs.tid(rhs.tid().c(o.c())))))
                     return true;
                 if (rhs.asType().isBaseType() && !lhs.baseType().test(rhs.tid()))
                     return false;
-                return !rhs.asType().hasPredicate() || !rhs.asType().predicate().apply(lhs.clone().selfTID(lhs.baseType())).isNoObj(); // selfTID() prevents infinite recursion on type checking
+                return !rhs.asType().hasPredicate() || (!rhs.asType().predicate().apply(lhs.clone().selfTID(lhs.baseType())).isNothing()); // selfTID() prevents infinite recursion on type checking
             } else {
                 return lhs.test(rhs);
             }
