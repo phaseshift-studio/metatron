@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -72,8 +72,6 @@ public class vecInstSet extends AbstractInstSet {
         this.jvm().putAll(mutableMap(
                 uri(CONST), lst(real(Math.sqrt(-1.0d), IMAGINARY_TID, IMAGINARY_TID)),
                 uri(INST), lst(
-                        instC(PLUS_INST_TID.dom(VEC_TID).rng(VEC_TID), lst(VEC_TYPE), (lhs, inst) -> cross_(inst.arg(0)).apply(lhs)),
-                        //  instC(PLUS_TID.dom(RVEC_TID).rng(RVEC_TID), lst(T(RVEC_TID)), (lhs, inst) -> lhs.value(lhs.<MRealVec>as().value().add(inst.arg(0).<MRealVec>as().value()))),
                         instC(SQRT_TID.dom(REAL_TID).rng(REAL_TID), lst(), (lhs, inst) -> lhs.jvm(Math.sqrt(lhs.realValue()))),
                         instC(DOT_TID.dom(VEC_TID).rng(ALL), lst(VEC_TYPE), (lhs, inst) -> {
                                     Obj result = null;

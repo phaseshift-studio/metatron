@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -23,7 +23,8 @@ import studio.phaseshift.metatron.isa.m.type.Fail;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.util.FastNoSuchElementException;
 import studio.phaseshift.metatron.util.MTronException;
-import studio.phaseshift.metatron.util.Tuple;
+
+import java.util.Objects;
 
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.FAIL_TID;
@@ -34,8 +35,12 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.FAIL_TID;
 public class MFail extends MObj implements Fail {
 
     public static fURI FAIL_STACK_PATTERN = f("/sys/fail/_?incrq");
-    
-    protected MFail(Tuple.Pair<Throwable, Fail> jvm, final fURI tid, final fURI vid) {
+
+    /**
+     * The JVM is the Java {@link Throwable} that carries the message and stack trace.
+     * The cause chain is threaded through {@link Throwable#getCause()}.
+     */
+    protected MFail(final Throwable jvm, final fURI tid, final fURI vid) {
         super(jvm, null == tid ? FAIL_TID : tid, vid);
     }
 
@@ -45,25 +50,73 @@ public class MFail extends MObj implements Fail {
         return Router.writeToSpace(fail.vid(pattern)).as();
     }
 
-    public boolean isFail() {
-        return true;
+    @Override
+    public int hashCode() {
+        return Objects.hash(this.tid, this.message().getMessage(), this.message().getCause() != null);
     }
 
+    @Override
+    public boolean equals(final Object other) {
+        if (!(other instanceof Fail that))
+            return false;
+        if (!Objects.equals(this.tid(), that.tid()))
+            return false;
+        if (!Objects.equals(this.message().getMessage(), that.message().getMessage()))
+            return false;
+        // Compare cause chain recursively (structural equality)
+        final Throwable thisCause = this.message().getCause();
+        final Throwable thatCause = that.message().getCause();
+        if (thisCause == null)
+            return thatCause == null;
+        if (thatCause == null)
+            return false;
+        return Objects.equals(thisCause.getMessage(), thatCause.getMessage());
+    }
+
+    /**
+     * Create a transient (no VID) fail wrapping the given Throwable.
+     * Used by {@link Fail#cause()} to construct on-the-fly cause Fails
+     * without writing to the fail space.
+     * Preserves the Throwable as-is — no conversion through MTronException.of().
+     */
+    public static Fail transientFail(final Throwable t) {
+        return new MFail(t, FAIL_TID, null);
+    }
+
+    /**
+     * Create a fail from a message string (wrapped in {@link MTronException}).
+     */
     public static Fail fail(final String message, final Object... args) {
-        return fail(MTronException.of(message, args), null);
+        return incrStackWrap(new MFail(MTronException.of(message, args), FAIL_TID, null), FAIL_STACK_PATTERN);
     }
 
-    public static Fail fail(final Throwable t, final Fail cause) {
-        return incrStackWrap(new MFail(Tuple.Pair.with(MTronException.of(t), cause), FAIL_TID, null), FAIL_STACK_PATTERN);
-    }
-
+    /**
+     * Create a fail from a Throwable.
+     * If the Throwable already has a cause chain, the cause is preserved.
+     */
     public static Fail fail(final Throwable t) {
-        if (t.getCause() == null || (t.getCause() instanceof MTronException))
-            return incrStackWrap(new MFail(Tuple.Pair.with(MTronException.of(t), null), FAIL_TID, null), FAIL_STACK_PATTERN);
-        else
-            return incrStackWrap(new MFail(Tuple.Pair.with(MTronException.of(t.getCause()), fail(MTronException.of(t.getMessage()))), FAIL_TID, null), FAIL_STACK_PATTERN);
+        return incrStackWrap(new MFail(MTronException.of(t), FAIL_TID, null), FAIL_STACK_PATTERN);
     }
 
+    /**
+     * Create a fail with a nested mtron cause. The cause fail's Throwable becomes
+     * the Java {@link Throwable#getCause()} of the outer fail's Throwable.
+     * Uses RuntimeException with cause via constructor so the chain survives space writes.
+     */
+    public static Fail fail(final Throwable t, final Fail cause) {
+        final Throwable jvm;
+        if (null != cause) {
+            jvm = new RuntimeException(t.getMessage(), cause.message());
+            jvm.setStackTrace(t.getStackTrace());
+        } else {
+            jvm = t instanceof MTronException ? t : MTronException.of(t.getMessage());
+        }
+        return incrStackWrap(new MFail(jvm, FAIL_TID, null), FAIL_STACK_PATTERN);
+    }
+
+    /**
+     * Create a fail from a Throwable with a formatted message.
+     */
     public static Fail fail(final Throwable t, final String format, final Object... args) {
         return fail(MTronException.of(t, format, args));
     }
@@ -80,24 +133,31 @@ public class MFail extends MObj implements Fail {
     }
 
     @Override
-    public Tuple.Pair<Throwable, Fail> jvm() {
-        return super.jvm();
+    public Throwable jvm() {
+        return (Throwable) super.jvm();
     }
 
     @Override
     public Fail plus(final Fail rhs) {
-        return fail(this.jvm().get0(), rhs);
+        // Walk to the end of the lhs cause chain and attach rhs there
+        Throwable tail = this.message();
+        while (tail.getCause() != null)
+            tail = tail.getCause();
+        try { tail.initCause(rhs.message()); } catch (final IllegalStateException ignored) {}
+        return transientFail(this.message());
     }
 
     @Override
     public Fail zero() {
-        return fail(FastNoSuchElementException.instance(), null);
+        return fail(FastNoSuchElementException.instance());
     }
 
     public static class MCaughtFail extends MFail implements CaughtFail {
 
-        protected MCaughtFail(final Fail jvm) {
-            super(Tuple.Pair.with(jvm.message(), jvm.cause().map(MCaughtFail::new).orElse(null)), jvm.tid(), null);
+        protected MCaughtFail(final Fail other) {
+            // Cause chain is already embedded in other.message().getCause() —
+            // no need to re-thread it; this.message() IS other.message()
+            super(other.message(), other.tid(), null);
         }
 
         public boolean isFail() {

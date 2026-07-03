@@ -200,6 +200,7 @@ public class mInstSet extends AbstractInstSet {
     public static final fURI HOST_INST_TID = M_ISA_INST_TID.extend("host");
     public static final fURI PORT_INST_TID = M_ISA_INST_TID.extend("port");
     public static final fURI TYPER_TYPE_TID = f("/m/sys/typer");
+    public static final fURI REWRITER_TYPE_TID = f("/m/sys/rewriter");
     /// ////////////
     /// ////////////
     public static final fURI POLY_TID = M_ISA_TID.extend("poly");
@@ -224,6 +225,11 @@ public class mInstSet extends AbstractInstSet {
                     uri(SCHEMA).maybe(), T(INSTSET_TID) // nominal-only: avoids structural recursion in InstSet
             )).create();
 
+    public static final Type REWRITER_TYPE = Type.Builder.build()
+            .tid(REC_TID)
+            .vid(REWRITER_TYPE_TID)
+            .isaPredicate(rec(URI_TYPE, T(LST_TID.poly(M_ISA_INST_TID))))
+            .create();
     public static final Type TYPER_TYPE = Type.Builder.build()
             .tid(REC_TID)
             .vid(TYPER_TYPE_TID)

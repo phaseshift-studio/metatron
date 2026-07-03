@@ -599,9 +599,9 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
 
     String xxxValue = "%s [%s] unable to convert %s";
 
-    default Pair<Throwable, Fail> failValue() {
+    default Throwable failValue() {
         if (this.isFail() || this.isCaughtFail())
-            return this.jvm();
+            return (Throwable) this.jvm();
         throw MTronException.of(xxxValue, this, T(tid()), FAIL_TYPE);
     }
 
@@ -944,7 +944,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                         final Obj protoObj = MObjFactory.of().toObj(jvm, null, vid, clazz);
                         final O constructedObj = type.asType().constructor().apply(protoObj).as();
                         if (constructedObj.isFail())
-                            throw MTronException.of(constructedObj.<Fail>as().jvm().get0());
+                            throw MTronException.of(constructedObj.<Fail>as().jvm());
                         else {
                             constructedObj.self(constructedObj.jvm(), bigTID, vid);
                             if (null != vid)
@@ -963,7 +963,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                 if (!type.isNoObj() && type.isType() && type.<Type>as().hasConstructor()) {
                     final Obj clone = type.<Type>as().constructor().apply(obj);
                     if (clone.isFail())
-                        throw MTronException.of(clone.<Fail>as().jvm().get0());
+                        throw MTronException.of(clone.<Fail>as().jvm());
                     return (O) clone.selfTID(tid);
                 }
             }
@@ -1072,7 +1072,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             "the rhs obj", "the lhs obj", Map.of(jnt(0), "concatenated args followed by newline written to stdout"), "a side-effect function \\(f(x)\\nearrow x\\)"),
                     docWrap(instC(PRINT_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(ALL_STAR)), (lhs, inst) -> objs(inst.args().elements().peek(o -> inst.logger().none("%s", o.isStr() ? o.strValue() : o.toString())).reduce(noobj(), (a, b) -> noobj()).orElse(lhs))),
                             "the rhs obj", "the lhs obj", Map.of(jnt(0), "concatenated args followed by newline written to stdout"), "a side-effect function \\(f(x)\\nearrow x\\)"),
-                    instC(AT_INST_TID.dom(ALL.maybe()).rng(A.maybeSome()), lst(T(URI_TID)), (lhs, inst) -> {
+                    instC(AT_INST_TID.dom(A.maybe()).rng(B.maybeSome()), lst(T(URI_TID)), (lhs, inst) -> {
                         final fURI pattern = inst.arg(0).uriValue();
                         if (pattern.hasPattern()) {
                             return objs(Router.readFromSpace(pattern.asBranch()).stream().map(x -> x.asRel().second().selfVID(x.asRel().first().uriValue())));

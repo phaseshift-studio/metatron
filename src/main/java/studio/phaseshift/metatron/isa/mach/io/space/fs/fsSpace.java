@@ -161,18 +161,20 @@ public class fsSpace extends AbstractSpace<FileSystem> {
     }
 
     public Obj objToFile(final fURI vid, final Obj obj) {
+        final MIME.MIMEType mimeType = vid.hasQ(MIMEQ_PATTERN) ?
+                MIME.MIMEType.of(vid.q(MIMEQ_PATTERN.toString())) :
+                MIME.MIMEType.fromType(obj, MIME.MIMEType.APPLICATION_MTRON);
+        final File file = new File(this.redirect(vid.qLess(), true).toString());
+        if (file.isDirectory())
+            throw MTronException.of("unable to write obj to an existing directory with same vid: %s", vid);
+        LOG.info("writing %s to %s [mime:%s]", obj, file.getPath(), mimeType.value);
         try {
-            final MIME.MIMEType mimeType = vid.hasQ(MIMEQ_PATTERN) ?
-                    MIME.MIMEType.of(vid.q(MIMEQ_PATTERN.toString())) :
-                    MIME.MIMEType.fromType(obj, MIME.MIMEType.APPLICATION_MTRON);
-            final File file = new File(this.redirect(vid.qLess(), true).toString());
-            LOG.info("writing %s to %s [mime:%s]", obj, file.getPath(), mimeType.value);
             if (!file.exists()) {
                 new File(f(file.getAbsolutePath()).retract(1).toString()).mkdirs();
                 file.createNewFile();
             }
             final fURI selfVID = obj.vid();
-            try (final FileOutputStream writer = new FileOutputStream(file, vid.hasQ("append"))) {
+            try (final FileOutputStream writer = new FileOutputStream(file, vid.hasQ("append"))) { // TODO: writeq=append/replace?
                 if (mimeType.isMtron() && !vid.hasQ("append")) {
                     //  final String at_vid = selfVID == null ? null : "[-- @<" + selfVID + "> --]\n";
                     // if (null != at_vid) writer.write(at_vid.getBytes(StandardCharsets.UTF_8));
@@ -415,7 +417,7 @@ public class fsSpace extends AbstractSpace<FileSystem> {
             return null;
         try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
             String firstLine = reader.readLine();
-            if (firstLine != null && firstLine.startsWith("#!")) {
+            if (firstLine != null && firstLine.startsWith("#!")) { // shebang denotes script engine
                 final String engine = this.at(SCRIPT).orElse(rec0())
                         .elements()
                         .filter(pair -> firstLine.contains(pair.first().uriValue().toString()))

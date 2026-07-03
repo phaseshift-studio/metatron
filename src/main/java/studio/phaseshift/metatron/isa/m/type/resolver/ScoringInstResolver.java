@@ -74,16 +74,18 @@ public class ScoringInstResolver implements InstResolver {
         if (userInst.isNoObj())
             return null;
         /////////////////////// FROM/AS FAST RESOLUTION ///////////////////////
-        final Optional<fURI> from = Inst.Helper.isFromInstToUri(userInst);
-        if (from.isPresent()) {
-            if (!from.get().hasPattern()) {
-                final Obj fromObj = Router.readFromSpace(from.get());
-                if (!fromObj.isNothing() && !fromObj.isCall()) {
-                    userInst.logger().debug("fast from() resolution: %s", from.get());
-                    return Router.readFromSpace(FROM_INST_TID).asInst().rng(fromObj.type()).asInst().args(lst(from.get().toUri()));
+        if (!userInst.hasRng()) {
+            final Optional<fURI> fromOrAt = Inst.Helper.isFromOrAtInstToUri(userInst);
+            if (fromOrAt.isPresent()) {
+                if (!fromOrAt.get().hasPattern()) {
+                    final Obj fromOrAtObj = Router.readFromSpace(fromOrAt.get());
+                    if (!fromOrAtObj.isNothing() && !fromOrAtObj.isCall()) {
+                        userInst.logger().debug("fast from/at() resolution: %s", fromOrAt.get());
+                        return Router.readFromSpace(userInst.tid()).asInst().rng(fromOrAtObj.type()).asInst().args(lst(fromOrAt.get().toUri()));
+                    }
                 }
+                return Router.readFromSpace(userInst.tid()).asInst().args(lst(uri(fromOrAt.get())));
             }
-            return Router.readFromSpace(FROM_INST_TID).asInst().args(lst(uri(from.get())));
         }
         if (userInst.tid().big().test(AS_INST_TID)) {
             final List<Obj> result = Router.readFromSpace(AS_INST_TID.dom(lhs.tid()).rng(Obj.Helper.specificTypeId(userInst.arg(0)))).stream().toList();

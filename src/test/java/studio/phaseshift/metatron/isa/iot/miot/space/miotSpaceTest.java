@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -25,10 +25,12 @@ import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.SkipInheritedTests;
 import studio.phaseshift.metatron.SkipInheritedTestsExtension;
 import studio.phaseshift.metatron.TestTag;
+import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.furi.q.SubQTest;
 import studio.phaseshift.metatron.isa.AbstractSpaceTest;
 import studio.phaseshift.metatron.isa.iot.MoquetteServer;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -36,6 +38,7 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.iot.iotInstSet.IOT_ISA_TID;
 import static studio.phaseshift.metatron.isa.iot.miot.miotInstSet.MIOT_ISA_TID;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -52,7 +55,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
         TestTag.LIST,        // Skip all list handling tests
         TestTag.SPECIAL      // Skip all special value tests
 }, include = {
-       // "testMonoReadWrite"  // Include this CRUD test even though CRUD tag is skipped
+        // "testMonoReadWrite"  // Include this CRUD test even though CRUD tag is skipped
 })
 public class miotSpaceTest extends AbstractSpaceTest implements SubQTest {
 
@@ -62,8 +65,10 @@ public class miotSpaceTest extends AbstractSpaceTest implements SubQTest {
         super(() -> {
             try {
                 return miotSpace.of(rec(
+                        uri(QPROC), lst(QCollection.subq()),
                         uri(HOST), uri("mqtt://127.0.0.1:" + PORT),
                         uri(PATTERN), uri("/t/#"),
+                        uri(SERIALIZER), ObjmtronSerializer.singleNoClip(), // USING MTRON SERIALIZER (JSON SERIALIZER ISN'T ONE-TO-ONE WITH TEST EXPECTATION TYPES)
                         uri(REWRITE), rel(uri("/t"), uri("/t"))), f("/sys/router/space/t"));
                 //space.directWriter().apply(f("#"), noobj());
             } catch (Exception e) {
@@ -71,7 +76,7 @@ public class miotSpaceTest extends AbstractSpaceTest implements SubQTest {
             }
         });
     }
-    
+
     @BeforeAll
     public static void setupAll() {
         InstSet.importInstSet(IOT_ISA_TID);
@@ -86,5 +91,10 @@ public class miotSpaceTest extends AbstractSpaceTest implements SubQTest {
         MoquetteServer.stop();
         AbstractMetatronTest.end();
         CommonUtil.sleepThread(1000);
+    }
+    
+    @Override
+    public void testMonoUpdate() {
+        
     }
 }

@@ -42,6 +42,10 @@ public @interface JRecElement {
     String dom() default DOM_WILDCARD;
 
     String rng() default RNG_WILDCARD;
+    
+    String domPoly() default "";
+    
+    String rngPoly() default "";
 
     Mimic mimic() default Mimic.FIELD;
 

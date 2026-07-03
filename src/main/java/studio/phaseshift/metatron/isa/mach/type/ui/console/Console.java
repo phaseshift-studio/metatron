@@ -84,6 +84,7 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.START_INST_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
+import studio.phaseshift.metatron.isa.m.type.Fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -132,6 +133,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
     private Pane activePane;
     private final AtomicBoolean needsRedraw = new AtomicBoolean(false);
     private boolean splitMode = false;  // True when we have more than one pane
+    private boolean traceEnabled = false; // True when :trace toggled on — dumps Java stack on fail
 
     /**
      * Minimum ms between content-only live redraws triggered by pane output.
@@ -421,6 +423,14 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
 
     public boolean isSplitMode() {
         return this.splitMode;
+    }
+
+    public boolean isTraceEnabled() {
+        return this.traceEnabled;
+    }
+
+    public void setTraceEnabled(final boolean traceEnabled) {
+        this.traceEnabled = traceEnabled;
     }
 
     /**
@@ -817,16 +827,48 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
 
     protected void printResult(final Obj result) {
         if (this.splitMode && this.activePane != null) {
-            // In split mode, output to active pane's buffer
+            // In split mode, output to active pane's buffer (expects ANSI-formatted text)
             this.activePane.appendResult(result);
+            if (this.traceEnabled)
+                result.stream().filter(Obj::isFail).forEach(o -> this.activePane.appendOutput(formatTraceAnsi(o), false));
         } else {
-            // Normal mode - direct output
+            // Normal mode — raw Graphitty markup; write() runs it through the highlighter
             result.stream().forEach(o -> {
                 this.write("{{-X-}}{{m}}=={{g}}>{{X}}");
                 this.write(o);
                 this.write("\n");
+                if (this.traceEnabled && o.isFail()) {
+                    this.write(formatTraceMarkup(o));
+                }
             });
         }
+    }
+
+    /**
+     * Walk the fail's Throwable cause chain and render as Graphitty markup.
+     * The mtron cause chain is threaded through {@link Throwable#getCause()}.
+     */
+    private static String formatTraceMarkup(final Obj failObj) {
+        final StringBuilder sb = new StringBuilder();
+        Throwable current = failObj.asFail().message();
+        int depth = 0;
+        while (null != current) {
+            final String indent = "  ".repeat(depth);
+            sb.append("{{y}}").append(indent).append("\\_ ").append(current.toString()).append("{{X}}\n");
+            for (final StackTraceElement frame : current.getStackTrace()) {
+                sb.append("{{k}}").append(indent).append("    at ").append(frame.toString()).append("{{X}}\n");
+            }
+            current = current.getCause();
+            depth++;
+        }
+        return sb.toString();
+    }
+
+    /**
+     * Walk the fail's cause chain and render as ANSI (for pane appendOutput).
+     */
+    private static String formatTraceAnsi(final Obj failObj) {
+        return Highlighter.format(formatTraceMarkup(failObj));
     }
 
     /**

@@ -60,6 +60,7 @@ import static studio.phaseshift.metatron.isa.m.type.NoObj.NOOBJ_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.*;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
@@ -94,9 +95,6 @@ public class webInstSet extends AbstractInstSet {
     public static final fURI CSS_TID = MIME_TYPE_TID.extend("css");
     public static final fURI MARKDOWN_TID = MIME_TYPE_TID.extend("markdown");
     public static final fURI JAVA_TID = MIME_TYPE_TID.extend("java");
-
-
-    public static final fURI DESKTOP_SPACE_VID = f("/sys/desktop");
 
     public static Type MIME_OBJ_TYPE = Type.Builder.build()
             .tid(URI_TID)
@@ -246,7 +244,7 @@ public class webInstSet extends AbstractInstSet {
                                 "mcp_client::[host => <http://127.0.0.1:29170/index-mcp/streamable-http>]@/usr/ai/mcp/intellij [-- connection populates tool and status      --]",
                                 "mcp_client::[host => <ws://localhost:8999>]@/usr/ai/mcp/mtron                                 [-- mtron router server exposes an mcp server --]")),
                 uri(INST), lst(
-                        instC(WEB_ISA_TID.extend("inst/ping").dom(ALL.maybe()).rng(MATH_TIME_TID), lst(URI_TYPE), (lhs, inst) -> {
+                        docWrap(instC(WEB_ISA_TID.extend("inst/ping").dom(ALL.maybe()).rng(MATH_TIME_TID), lst(URI_TYPE), (lhs, inst) -> {
                             final fURI host = inst.arg(0).uriValue().hasScheme() ? inst.arg(0).uriValue() : f("http://" + inst.arg(0).uriValue());
                             long start = System.currentTimeMillis();
                             try (final SocketChannel sc = SocketChannel.open()) {
@@ -258,7 +256,10 @@ public class webInstSet extends AbstractInstSet {
                                 LOG.error("%s unavailable", inst.arg(0).uriValue());
                                 return real(-1.0d, MATH_MILLIS_TID, null);
                             }
-                        }),
+                        }), "maybe an obj", "the mean ping time", Map.of(jnt(0), "the host machine and port to ping"),"ping a machine via tcp",
+                                "<http://metatron.phaseshift.studio>.ping(_)",
+                                "ping(localhost:8777)",
+                                "virtual::[code=>ping(localhost:8777)-<{@x+*0,@y+1},loop=>second::2.0]"),
                         instC(WEB_ISA_TID.extend("inst/format").dom(MARKDOWN_TID).rng(STR_TID), lst(), (lhs, inst) -> str(ObjMarkdownSerializer.format(ObjMarkdownSerializer.single().write(lhs).getChars().toString()))),
                         instC(AS_INST_TID.dom(STR_TID).rng(JSON_TID), lst(JSON_TYPE), (lhs, inst) -> ObjSimpleJSONSerializer.parse(lhs.asStr().strValue())),
                         instC(AS_INST_TID.dom(STR_TID).rng(XML_TID), lst(T(XML_TID)), (lhs, inst) -> ObjXMLSerializer.parse(lhs.asStr().strValue())),
@@ -301,12 +302,7 @@ public class webInstSet extends AbstractInstSet {
         docWrap(this,
                 "the world of the web within the metatron",
                 "/usr/idea -> *<http://metatron.phaseshift.studio/html/head/title>");
-
-        // Create the /sys/desktop in-memory space as a data entry within /sys.
-        // It is written into the system space so it is queryable via the router.
-        final memSpace desktopSpace = memSpace.of(DESKTOP_SPACE_VID.extend(ALL), DESKTOP_SPACE_VID);
-        Router.writeToSpace(DESKTOP_SPACE_VID, desktopSpace);
-
+        
         super.setup();
     }
 }

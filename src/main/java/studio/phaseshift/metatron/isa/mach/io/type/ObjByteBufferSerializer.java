@@ -89,7 +89,10 @@ public class ObjByteBufferSerializer extends AbstractObjSerializer<ByteBuffer> {
 
     @Override
     public ByteBuffer writeFail(final Fail fail) {
-        return ByteBuffer.wrap(handleIds(fail, "['" + fail.jvm().get0().getMessage() + (null == fail.failValue().get1() ? "" : ("," + this.writeFail(fail.jvm().get1()))) + "']").getBytes());
+        final Throwable cause = fail.message().getCause();
+        return ByteBuffer.wrap(handleIds(fail, "['" + fail.message().getMessage()
+                + (null == cause ? "" : ("," + cause.getMessage()))
+                + "']").getBytes());
     }
 
     @Override

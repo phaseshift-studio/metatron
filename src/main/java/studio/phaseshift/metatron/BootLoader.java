@@ -119,6 +119,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
         String evalExpr = null;
         String filePath = null;
         String extraArgs = null;
+        boolean generateMode = false;
         boolean pipeMode = false;
         boolean quiet = false;
         boolean showVersion = false;
@@ -149,6 +150,14 @@ public class BootLoader implements Rec, Feature.SelfClone {
                         System.err.println("metatron: -f requires a file argument");
                         EXIT_HANDLER.accept(1);
                     }
+                }
+                case "-g", "--generate" -> {
+                    if (++i < args.length) filePath = args[i];
+                    else {
+                        System.err.println("metatron: -g requires a file or directory argument");
+                        EXIT_HANDLER.accept(1);
+                    }
+                    generateMode = true;
                 }
                 case "-p", "--pipe" -> pipeMode = true;
                 case "-q", "--quiet" -> quiet = true;
@@ -181,6 +190,12 @@ public class BootLoader implements Rec, Feature.SelfClone {
         }
         if (showHelp) {
             printHelp();
+            EXIT_HANDLER.accept(0);
+        }
+
+        if (generateMode) {
+            final Generator2 generator = new Generator2(filePath);
+            generator.start();
             EXIT_HANDLER.accept(0);
         }
 
@@ -260,7 +275,6 @@ public class BootLoader implements Rec, Feature.SelfClone {
                     if (!stdinStr.isEmpty())
                         stdinObj = mParser.parse(stdinStr).apply();
                 }
-
                 // Evaluate expression
                 final Obj result;
                 if (!stdinObj.isNoObj()) {
@@ -272,7 +286,6 @@ public class BootLoader implements Rec, Feature.SelfClone {
                 } else {
                     result = mParser.eval(new java.io.File(filePath));
                 }
-
                 if (!result.isNoObj())
                     System.out.print(ObjmtronSerializer.single().write(result) + "\n");
             } catch (final Exception e) {
@@ -292,13 +305,14 @@ public class BootLoader implements Rec, Feature.SelfClone {
                             A distributed data-oriented computing language and virtual machine.
                             
                             Options:
-                              -b, --boot <file>    Boot configuration file (env: $METATRON_BOOT)
-                              -e, --eval <expr>    Evaluate an mtron expression
-                              -f, --file <file>    Evaluate an mtron source file
-                              -p, --pipe           Read stdin as pipe input
-                              -q, --quiet          Suppress diagnostic output (for piping)
-                              -v, --version        Print version and exit
-                              -h, --help           Show this help message
+                              -b, --boot <file>      Boot configuration file (env: $METATRON_BOOT)
+                              -e, --eval <expr>      Evaluate an mtron expression
+                              -f, --file <file>      Evaluate an mtron source file
+                              -g, --generate <file>  Generate a custom mtron boot
+                              -p, --pipe             Read stdin as pipe input
+                              -q, --quiet            Suppress diagnostic output (for piping)
+                              -v, --version          Print version and exit
+                              -h, --help             Show this help message
                             
                               A bare positional argument is treated as an -e expression.
                             
@@ -347,7 +361,10 @@ public class BootLoader implements Rec, Feature.SelfClone {
                             .map(tc -> rel(uri(tc.name()), tc == TypeCheck.code_resolve ? BOOL_FALSE : BOOL_TRUE))
                             .collect(new CommonUtil.RecCollector()));
             TypeCheck.init(typer.tid(TYPER_TYPE_TID).as());
-            LOG.info("initial enabled typer stages: %s", typer);
+            LOG.info("initially enabled typer stages: %s", typer);
+            /// /// SET REWRITER FILTER /// ///
+            final Rec rewriter = args.at("rewriter").orElse(rec(uri("allow"), lst(uri(ALL)), uri("disallow"), lst()));
+            LOG.info("initialized rewriter: %s", rewriter);
             /// /// START OF BOOTING PROCESS /// ///
             String hostname = null;
             try {
@@ -369,6 +386,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
             Router.global().addSpace(sysSpace.self(sysSpace.jvm(), sysSpace.tid(), SYS_VID.extend("space/sys")).as());
             LOG.debug("router location: %s", ROUTER.vid());
             sysSpace.write("/sys/typer/stage", typer);
+            sysSpace.write("/sys/rewriter", rewriter);
             // LOAD STDIO INSTRUCTIONS
            /* sysSpace.write("/sys/io/stdout", docWrap(instC(f("/sys/io/stdout").dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL.maybe())), (lhs, inst) -> {
                 final Object arg = inst.arg(0).jvm();
@@ -434,7 +452,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
                     final Path bootPath = Path.of(args.at(Tokens.BOOT).uriValue().toString());
                     fsSpace.makeFile(bootPath).vid(f("boot/file"));
                     final long count = mParser.eval(bootPath.toFile(), e -> {
-                        LOG.error("{{r}}%s{{X}} starting at line {{y}}%d{{X}}\n%s", e.parseException(), e.lineNumber()+1, e.lineString());
+                        LOG.error("{{r}}%s{{X}} starting at line {{y}}%d{{X}}\n%s", e.parseException(), e.lineNumber() + 1, e.lineString());
                     }).count();
                     LOG.info("processed boot input: {{b}}%s{{/b}} {{g}}[{{y}}out: %d{{/y}}]{{/g}}", args.at(Tokens.BOOT).uriValue(), count);
                 } catch (final IOException e) {
