@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.furi.q;
 
 import studio.phaseshift.metatron.Tokens;
+import studio.phaseshift.metatron.furi.DataPath;
 import studio.phaseshift.metatron.furi.QProc;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
@@ -28,6 +29,8 @@ import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.m.type.impl.MStr;
 import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.vec.space.VectorDBClient;
+import studio.phaseshift.metatron.isa.vec.space.vecSpace;
 import studio.phaseshift.metatron.isa.web.type.MIME;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
@@ -85,6 +88,10 @@ public final class QCollection {
     public static final fURI INCRQ_PATTERN = f("incrq");
     public static final fURI INCRQ_TID = QPROC_TID.extend(INCRQ_PATTERN);
     public static final Type INCRQ_TYPE = Type.Builder.build().tid(QPROC_TID).vid(INCRQ_TID).constructor(QCollection::incrQ).create();
+    //
+    public static final fURI EMBEDQ_PATTERN = f("embedq");
+    public static final fURI EMBEDQ_TID = QPROC_TID.extend(EMBEDQ_PATTERN);
+    public static final Type EMBEDQ_TYPE = Type.Builder.build().tid(QPROC_TID).vid(EMBEDQ_TID).constructor(QCollection::embedQ).create();
     //
     public static final String DOCQ = "docq";
     public static final fURI DOCQ_PATTERN = f(DOCQ);
@@ -355,7 +362,31 @@ public final class QCollection {
     /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////
     /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+    public static final String EMBEDQ_INCR_PATTERN = "_";
+
+    public static QProc embedQ() {
+        final java.util.Map<String, AtomicLong> counters = new java.util.concurrent.ConcurrentHashMap<>();
+        return QProc.Helper.build(EMBEDQ_TID, EMBEDQ_PATTERN).
+                preRead((vid) -> {
+                    try {
+                        vecSpace space = Router.global().getSpaceFor(vid);
+                        System.out.println(space.sjvm().listCollections());
+                        final fURI routed = Space.Helper.routeFromSpace(vid.qLess(), space.routes());
+                        VectorDBClient.GetResult result = space.sjvm().get(space.sjvm().getCollection(DataPath.withoutDB(routed).collection()).id(), List.of(DataPath.withoutDB(routed).entry()));
+                        LOG.warn("embedding retreived: %s", result);
+                        return result.entities().isEmpty() ? noobj() : result.entities().getFirst().embedding();
+                    } catch (final Exception e) {
+                        throw MTronException.of(e);
+                    }
+                }).create();
+    }
+
+    /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////
+
     public static final String INCRQ_INCR_PATTERN = "_";
+
     public static QProc incrQ() {
         final java.util.Map<String, AtomicLong> counters = new java.util.concurrent.ConcurrentHashMap<>();
         return QProc.Helper.build(INCRQ_TID, INCRQ_PATTERN).

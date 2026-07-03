@@ -468,8 +468,8 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
         }
         if (this.sleepBetweenReads > 0)
             CommonUtil.sleepThread(this.sleepBetweenReads);
-        final Obj readObj = ObjmtronSerializer.parse(make(readExpression.equals(".") ? PREVIOUS_LINE.get(1) : readExpression)).apply();
-        final Obj resultObj = ObjmtronSerializer.parse(make(expectedExpression.equals(".") ? PREVIOUS_LINE.get(2) : expectedExpression)).apply();
+        final Obj readObj = ObjmtronSerializer.singleNoClip().read(make(readExpression.equals(".") ? PREVIOUS_LINE.get(1) : readExpression)).apply();
+        final Obj resultObj = ObjmtronSerializer.singleNoClip().read(make(expectedExpression.equals(".") ? PREVIOUS_LINE.get(2) : expectedExpression)).apply();
         if (!writeExpression.equals("."))
             PREVIOUS_LINE.set(0, make(writeExpression));
         if (!readExpression.equals("."))

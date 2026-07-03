@@ -33,6 +33,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HexFormat;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBytes.bytes;
@@ -47,13 +48,17 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
     private static final String NOOBJ_STRING = "noobj";
     protected boolean leftJustify;
     public static final int CLIP_LENGTH = 60;
+    public static final int LST_CLIP_LENGTH = 7;
+    public static final int REC_CLIP_LENGTH = 7;
     protected int clip = CLIP_LENGTH;
+    protected int lstClip = LST_CLIP_LENGTH;
+    protected int recClip = REC_CLIP_LENGTH;
     public static String REAL_FORMAT = "%.4f";
     public static final int INDENT_SIZE = 1;
     public static final int NESTED_STRING_THRESHOLD = 35;
 
     private static final ObjmtronSerializer INSTANCE = new ObjmtronSerializer();
-    private static final ObjmtronSerializer NO_CLIP_INSTANCE = new ObjmtronSerializer(Integer.MAX_VALUE);
+    private static final ObjmtronSerializer NO_CLIP_INSTANCE = new ObjmtronSerializer(Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE);
 
     public static ObjmtronSerializer single() {
         return INSTANCE;
@@ -71,9 +76,11 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
         this.leftJustify = leftJustify;
     }
 
-    public ObjmtronSerializer(final int clipLength) {
+    public ObjmtronSerializer(final int clipLength, final int recClipLength, final int lstClipLength) {
         this();
         this.clip = clipLength;
+        this.recClip = recClipLength;
+        this.lstClip = lstClipLength;
     }
 
     public fURI vid() {
@@ -306,7 +313,7 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
         final long count = poly.count();
         return count != 1 && (count > 4 || poly.values().anyMatch(o ->
                 (null != o.vid() && o.vid().toString().length() > NESTED_STRING_THRESHOLD) ||
-                        (o.isPoly() && o.<Poly<?,?>>as().count() > 2) ||
+                        (o.isPoly() && o.<Poly<?, ?>>as().count() > 2) ||
                         (o.isObjCall() && o.asCall().insts().size() > 2) ||
                         (o.isStr() && o.strValue().length() > NESTED_STRING_THRESHOLD) ||
                         (o.isUri() && o.uriValue().toString().length() > NESTED_STRING_THRESHOLD) ||
@@ -321,17 +328,25 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
         } else {
             boolean nested = isNested(lst);
             sb.append("[");
-            if (nested) sb.append("\n");
-            lst.jvm().forEach(v -> {
-                if (nested) {
-                    sb.append(" ".repeat((depth + 1) * INDENT_SIZE));
+            if (lst.count() > lstClip) {
+                for (int i = 0; i < lstClip; i++) {
+                    renderValue(sb, depth, lst.lstValue().get(i));
+                    sb.append(",");
                 }
-                renderValue(sb, nested ? depth + 1 : 0, v);
-                sb.append(",");
+                sb.append("...(").append(lst.count() - lstClip).append(" more)]");
+            } else {
                 if (nested) sb.append("\n");
-            });
-            cleanEnding(sb);
-            sb.append("]");
+                lst.jvm().forEach(v -> {
+                    if (nested) {
+                        sb.append(" ".repeat((depth + 1) * INDENT_SIZE));
+                    }
+                    renderValue(sb, nested ? depth + 1 : 0, v);
+                    sb.append(",");
+                    if (nested) sb.append("\n");
+                });
+                cleanEnding(sb);
+                sb.append("]");
+            }
         }
         return handleVID(sb, lst);
     }
@@ -389,20 +404,41 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
         } else {
             boolean nested = isNested(rec);
             sb.append("[");
-            if (nested) sb.append("\n");
-            rec.jvm().forEach((k, v) -> {
+            if (rec.count() > recClip) {
+                final AtomicInteger counter = new AtomicInteger(0);
+                rec.indexedStream().forEach(kv -> {
+                    if (counter.getAndIncrement() < recClip) {
+                        if (nested) {
+                            sb.append(" ".repeat((depth + 1) * INDENT_SIZE));
+                        }
+                        sb.append(write(kv.first())).append("=>");
+                        if (kv.second() == rec)
+                            throw MTronException.of("prevented infinite recursion on nested rec: key %s", kv.first());
+                        renderValue(sb, nested ? depth + 1 : 0, kv.second());
+                        sb.append(",");
+                        if (nested) sb.append("\n");
+                    }
+                });
                 if (nested) {
                     sb.append(" ".repeat((depth + 1) * INDENT_SIZE));
                 }
-                sb.append(write(k)).append("=>");
-                if (v == rec)
-                    throw MTronException.of("prevented infinite recursion on nested rec: key %s", k);
-                renderValue(sb, nested ? depth + 1 : 0, v);
-                sb.append(",");
+                sb.append("...(").append(rec.count()-recClip).append(" more)]");
+            } else {
                 if (nested) sb.append("\n");
-            });
-            cleanEnding(sb);
-            sb.append("]");
+                rec.jvm().forEach((k, v) -> {
+                    if (nested) {
+                        sb.append(" ".repeat((depth + 1) * INDENT_SIZE));
+                    }
+                    sb.append(write(k)).append("=>");
+                    if (v == rec)
+                        throw MTronException.of("prevented infinite recursion on nested rec: key %s", k);
+                    renderValue(sb, nested ? depth + 1 : 0, v);
+                    sb.append(",");
+                    if (nested) sb.append("\n");
+                });
+                cleanEnding(sb);
+                sb.append("]");
+            }
         }
         return handleVID(sb, rec);
     }
@@ -415,6 +451,12 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
             byte[] bb = Arrays.copyOf(obj.bytesValue().array(), this.clip - 1);
             sb.append(write(bytes(ByteBuffer.wrap(bb))));
             sb.append("...");
+        } else if (obj.isLst() && obj.asLst().count() > this.clip) {
+            sb.append("[");
+            for (int i = 0; i < 5; i++) {
+                sb.append(obj.lstValue().get(i));
+            }
+            sb.append("...]");
         } else if (obj.isFail()) {
             if (obj.failValue().get1() != null)
                 writeClip(sb, obj.failValue().get1());

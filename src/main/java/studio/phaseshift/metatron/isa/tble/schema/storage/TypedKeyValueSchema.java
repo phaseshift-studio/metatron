@@ -57,7 +57,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 public class TypedKeyValueSchema implements TableSchema {
 
     private static final String TABLE_NAME = "kv_store";
-    private static final ObjmtronSerializer SERIALIZER = new ObjmtronSerializer();
+    private static final ObjmtronSerializer SERIALIZER = ObjmtronSerializer.singleNoClip();
 
     @Override
     public void initialize(final Connection conn) throws SQLException {

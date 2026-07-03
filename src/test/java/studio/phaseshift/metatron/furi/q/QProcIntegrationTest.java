@@ -141,9 +141,9 @@ public class QProcIntegrationTest extends AbstractMetatronTest {
             "/m5 % application/json  % 42           % jnt serialized as JSON",
             "/m6 % application/json  % true         % bool serialized as JSON",
             "/m7 % application/json  % [a=>1,b=>2]  % rec serialized as JSON",
-            "/m8 % application/mtron % \"hello\"    % str serialized as mtron",
-            "/m9 % application/mtron % 42           % jnt serialized as mtron",
-            "/m10 % application/mtron % true        % bool serialized as mtron",
+            "/m8 % application/x-mtron % \"hello\"    % str serialized as mtron",
+            "/m9 % application/x-mtron % 42           % jnt serialized as mtron",
+            "/m10 % application/x-mtron % true        % bool serialized as mtron",
     }, delimiter = '%')
     void testMimeQ(final String uri, final String contentType, final String writeExpr,
                    final String desc) {
