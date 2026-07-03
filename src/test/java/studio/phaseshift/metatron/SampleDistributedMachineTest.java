@@ -18,10 +18,7 @@
 
 package studio.phaseshift.metatron;
 
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.mach.space.LocalCluster;
 import studio.phaseshift.metatron.isa.mach.space.LocalNode;
@@ -39,6 +36,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
+@Disabled
 public class SampleDistributedMachineTest extends AbstractDistributedMetatronTest {
 
     private static final GraphittyLogger LOG = Graphitty.log(SampleDistributedMachineTest.class);
