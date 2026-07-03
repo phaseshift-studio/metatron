@@ -46,10 +46,7 @@ import studio.phaseshift.metatron.isa.web.parser.ObjPlainTextSerializer;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
-import java.util.AbstractMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.slf4j.event.Level.WARN;
@@ -166,9 +163,9 @@ public class mcpClient extends MRec {
     }
 
     protected static McpTransport createTransport(final Obj transport, final Map<Obj, Obj> headers, final Obj host, final List<Obj> command) {
-        final Map<String, String> stringHeaders = headers.entrySet().stream()
+        final Map<String, String> stringHeaders = new LinkedHashMap<>(headers.entrySet().stream()
                 .map(e -> new AbstractMap.SimpleEntry<>(Str.Helper.cleanString(e.getKey()), Str.Helper.cleanString(e.getValue())))
-                .collect(Collectors.toMap(AbstractMap.SimpleEntry::getKey, AbstractMap.SimpleEntry::getValue));
+                .collect(Collectors.toMap(AbstractMap.SimpleEntry::getKey, AbstractMap.SimpleEntry::getValue)));
 
         if (null != transport && !transport.isNoObj() && f(STREAMABLE_HTTP).equals(transport.uriValue())) {
             return StreamableHttpMcpTransport.builder()

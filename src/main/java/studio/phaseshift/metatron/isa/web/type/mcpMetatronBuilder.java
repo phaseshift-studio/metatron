@@ -113,7 +113,7 @@ public final class mcpMetatronBuilder {
                                     return codeArg.apply();
                                 else {
                                     try {
-                                        return ObjmtronSerializer.parse(codeArg.strValue()).apply();
+                                        return ObjmtronSerializer.singleNoClip().read(codeArg.strValue()).apply();
                                     } catch (final Exception e) {
                                         // non-mtron text (e.g. already-evaluated result) — return as-is
                                         return codeArg;
