@@ -258,7 +258,7 @@ public final class Tokens {
     public static final String ARGS = "args";
     public static final String ENV = "env";
     public static final String MCP_SERVERS = "mcpServers";
-    public static final String INACTIVE = "inactive";
+   /* public static final String INACTIVE = "inactive";
     public static final String ACTIVE = "active";
     public static final String DESKTOP = "desktop";
     public static final String LAYOUT = "layout";
@@ -271,7 +271,7 @@ public final class Tokens {
     public static final String PANEL = "panel";
     public static final String PANEL_TYPE = "panel_type";
     public static final String PANEL_STATE = "panel_state";
-    public static final String PANEL_ID = "panel_id";
+    public static final String PANEL_ID = "panel_id";*/
 
 
 }

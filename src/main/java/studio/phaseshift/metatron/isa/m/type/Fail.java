@@ -22,13 +22,13 @@ import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.algebra.PlusMonoid;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.util.MTronException;
-import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.*;
 
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
+import studio.phaseshift.metatron.isa.m.type.impl.MFail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -47,7 +47,7 @@ public interface Fail extends Obj, PlusMonoid<Fail> {
     Fail clone(final Object jvm, final fURI tid, final fURI vid);
 
     @Override
-    Tuple.Pair<Throwable, Fail> jvm();
+    Throwable jvm();
 
     Fail plus(final Fail rhs);
 
@@ -59,12 +59,26 @@ public interface Fail extends Obj, PlusMonoid<Fail> {
         return this.clone(this.jvm(), tid, this.vid());
     }
 
+    /**
+     * The Java exception at this fail level.
+     */
     default Throwable message() {
-        return this.jvm().get0();
+        return this.jvm();
     }
 
+    /**
+     * The nested mtron cause, derived from {@link Throwable#getCause()} on the fly.
+     * Returns empty when there is no nested Java cause.
+     * If this fail is caught, the returned cause is also caught (recursive).
+     * The returned Fail is transient (no VID) — it is not written to the fail space.
+     */
     default Optional<Fail> cause() {
-        return Optional.ofNullable(this.jvm().get1());
+        return Optional.ofNullable(this.jvm().getCause()).map(t -> {
+            Fail inner = MFail.transientFail(t);
+            if (this instanceof CaughtFail)
+                inner = inner.caught();
+            return inner;
+        });
     }
 
     Fail caught();

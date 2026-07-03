@@ -331,8 +331,6 @@ public interface Inst extends Call {
                 }
             } catch (final Exception e) {
                 rhs = fail(MTronException.of("unable to evaluate inst: %s", cinst), fail(e));
-                if (e.getCause() != null)
-                    rhs = fail(e.getCause(), (Fail) rhs);
             }
             if (TypeCheck.inst_rng.enabled() && !isMonadicInst && !rhs.isType() && !rhs.isFail() && !clhs.isCaughtFail() && !rhs.test(cinst.rng()))
                 //rhs = fail(MTronException.of("inst resolution failure: %s", cinst, fail(MTronException.of("rhs does not match inst range:\n\t%s", Poly.Helper.diffObjRecursion(rhs, cinst.rng())))));
@@ -403,9 +401,8 @@ public interface Inst extends Call {
             // do nothing
         }
 
-        public static Optional<fURI> isFromInstToUri(final Inst inst) {
-            return Optional.ofNullable(inst.tid().equals(FROM_INST_TID) && inst.arg(0).isUri() ? inst.arg(0).uriValue() : null);
-
+        public static Optional<fURI> isFromOrAtInstToUri(final Inst inst) {
+            return Optional.ofNullable((inst.tid().equals(FROM_INST_TID) || inst.tid().equals(AT_INST_TID)) && inst.arg(0).isUri() ? inst.arg(0).uriValue() : null);
         }
 
         public static Rec rectifyLstArgs(final Lst lstArgs, final Rec recArgs) {

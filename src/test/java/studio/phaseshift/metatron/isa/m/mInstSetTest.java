@@ -467,6 +467,7 @@ public class mInstSetTest extends AbstractInstSetTest {
 
     @ParameterizedTest
     @CsvSource(value = {
+            "2.plus?dom=int(1)                                                      % 3", // old classic bug
             "math('1+2')                                                            % 3.0",
             "10.to(a).math('a^2')                                                   % 100.0",
             "10.to(a).plus(10).to(b).math('a+b')                                    % 30.0",

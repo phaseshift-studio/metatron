@@ -1,6 +1,5 @@
 # metatron — AGENTS.md
 
-## What is metatron?
 A distributed data-oriented computing language and virtual machine built in Java. Two key terms:
 - **metatron** (lowercase): the runtime system / VM environment
 - **mtron** (lowercase): the functional programming language (like Java to JVM)
@@ -21,7 +20,7 @@ A distributed data-oriented computing language and virtual machine built in Java
 ./mvnw test
 
 # Single test class
-./mvnw test -Dtest=MemSpaceTest
+./mvnw test -Dtest=memSpaceTest
 
 # Exclude tests (CI pattern)
 ./mvnw test -Dtest='!httpSpaceTest,!fsSpaceTest'
@@ -43,10 +42,15 @@ A distributed data-oriented computing language and virtual machine built in Java
 - **Use `@ParameterizedTest` + `@CsvSource`** as the default pattern for new tests. Each CSV row is a self-contained scenario using mtron string expressions. This keeps tests data-extensible — corner cases are one CSV line, not new Java methods.
 - Use standalone `@Test` methods only for multi-step orchestration (e.g., concurrency tests, complex setup/teardown) or non-tabular scenarios.
 - The `%` delimiter avoids collision with mtron syntax (commas, pipes, semicolons).
+- The `@TestData` test method annotation enables preloading data (or configuring metatron state) prior to test evaluation.
 
 **Example** — three scenarios, one test method:
 ```java
 @ParameterizedTest(name = "[{index}] {4}")
+@TestData(value = {
+        "a -> 555",
+        "@/sys/thread/executor >>= noobj"
+})
 @CsvSource(value = {
     "/c1 | \"immutable\" | \"mutated\" | blocks overwrite after constQ",
     "/c2 | \"first\"     | \"second\"  | preserves initial value",
@@ -61,22 +65,20 @@ void testConstQ(String uri, String initial, String mutate, String desc) { ... }
   - `<ERROR>` as an expected value triggers the fail-expected assertion path.
   - avoid `assertTrue/False` assertions as they provide information back to user on failure.
 
+### Canonical Test Examples
+The best example of the desired test-style can be found at:
+  `studio.phaseshift.metatron.isa.m.mInstSetTest`
+
 ### Test Bootstrap (Important)
 Every test class must extend `AbstractMetatronTest`. In `@BeforeAll`:
-1. `TypeCheck.disable(TypeCheck.code_resolve)` — disables code resolution in tests
+1. `TypeCheck.disable(TypeCheck.code_resolve)` — disables full code resolution requirement in tests
 2. `BootLoader.BOOTING = true` — sets booting state
 3. `BootLoader.TESTING = true` — skips shutdown hook headless wait
 4. `BootLoader.load(...)` — initializes the VM
 
-### Test Annotations
-- **`@SkipInheritedTests(methods = {...})`** — skip specific inherited method names
-- **`@SkipInheritedTests(tags = {...})`** — skip by test category tag (use `TestTag.CRUD`, `TestTag.BOUNDARY`, etc.)
-- **`@ExtendWith(TestSkip.TestSkipExtension.class)`** — enables skip behavior
-- **`@ExtendWith(TestData.TestDataExtension.class)`** — provides test data fixtures
-- **`@TestCategory.Crud`** etc. — nested annotations for categorizing tests (`@Crud`, `@Type`, `@Boundary`, `@Concurrent`, `@ReadWrite`, `@Nested`, `@List`, `@Special`); defined in `TestCategory` class but currently unused in the test suite
-
 ### Test Infrastructure
 - **Test containers**: MySQL (3306), PostgreSQL (5432), MariaDB (3307) — run in CI
+  - a custom container example exists with ChromaDB.
 - **In-memory**: MongoDB (`mongo-java-server`), MQTT (`moquette-broker`)
 - SQLite JDBC available in both compile and test scope
 
@@ -134,9 +136,18 @@ src/main/java/studio/phaseshift/metatron/
 
 **InstSet** (Instruction Sets) — discovered via `META-INF/services/` SPI. New sets go under `isa/<domain>/<domain>InstSet.java`.
 
-**Obj** — universal type system. Subtypes: `Int`, `Str`, `Rec` (record/map), `Lst` (list), `Type`, `Code`, etc.
+**Obj** — universal type system.
+  - mono types: `bool`, `bytes`, `int`, `real`, `str`, `uri`.`
+  - poly types: `rec` (record/map), `lst` (list),
+  - call types: `inst`, `code`
+IMPORTANT NOTE CONCERNING `tid` vs `vid`: 
+  - for a type: `vid` is the type's name and `tid` is the type's refinement. e.g. `int::T[?>0]@nat`. `vid = nat`, `tid = int`.
+  - for a value: `vid` is the value's location in space and `tid` is the type the constrains it. e.g. `nat::29@/usr/marko/age`. The `int` is a `nat::T` (tid) and it's located at `/usr/marko/age` (vid).
 
-**URI wildcards**: `+` = single segment, `#` = multi-segment (MQTT-style)
+**URI components**: 
+ - wildcards: `+` = single segment, `#` = multi-segment (MQTT-style)
+ - qprocs: `?incq` (auto-increment), `?subq` (pubsub), `?docq` (documentation associated with uri), etc.
+ - dom/rng: `inst?a<=b()` is an instruction that maps objs of type `b` to objs of type `a` (note reverse arrow `<=`). ultimately compiles to the URI `inst?dom=b&rng=a`
 
 ### Boot Loader Lifecycle
 1. `BootLoader.main()` → parses args, optionally loads boot file
@@ -173,6 +184,16 @@ Docker build is **disabled by default** (`skipDocker=true` in pom). Enable with 
 ## References
 - mtron language skills: `.metatron/skills/mtron/`
 - Agent memory: `.claude/memory/`
+
+---
+
+## Tool Quirks — Write/Edit Truncation Bug (2026-07-03, fixed upstream)
+
+The Cowork-mode Edit and Write tools **silently truncate files when the content exceeds the pre-edit file's byte size**. The tool returns success even though the file is corrupted. Shell heredocs (`cat > f <<HEREDOC`) also fail for large files with the same symptom.
+
+**Reliable workaround:** Use Python `pathlib` for any file write 200+ lines (or ~4KB+) — `python3 -c "import pathlib; pathlib.Path('/abs/path').write_text(content)"`. Shows ~100% success in user logs.
+
+**Verification:** Always check `wc -c <file>` after writing/editing large files to confirm integrity. Line counts are unreliable since truncation can strip content unpredictably (missing loop variables, broken expressions, etc.).
 
 ---
 

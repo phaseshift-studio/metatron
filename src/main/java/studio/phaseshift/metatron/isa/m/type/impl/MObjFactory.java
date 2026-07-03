@@ -192,7 +192,7 @@ public class MObjFactory extends MRec implements ObjFactory {
         else if (Type.class.isAssignableFrom(objClass))
             return (OBJ) new MType((Tuple.Pair<Call, Call>) value, null == vid ? TYPE_TID : tid, vid);
         else if (Fail.class.isAssignableFrom(objClass))
-            return (OBJ) new MFail((Pair<Throwable, Fail>) value, null == tid ? FAIL_TID : tid, vid);
+            return (OBJ) new MFail((Throwable) value, null == tid ? FAIL_TID : tid, vid);
         else if (NoObj.class.isAssignableFrom(objClass))
             return (OBJ) NoObj.noobj();
         else if (PCMonad.class.isAssignableFrom(objClass))

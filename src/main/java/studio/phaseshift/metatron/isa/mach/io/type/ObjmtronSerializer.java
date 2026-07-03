@@ -144,12 +144,9 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
     @Override
     public String writeFail(final Fail fail) {
         final StringBuilder sb = new StringBuilder();
-        if (fail.vid() != null) {
-            sb.append(handleIds(fail, "[" + fail.message().getMessage() + "][...]"));
-        } else {
-            sb.append(handleIds(fail, "[" + fail.message().getMessage() + "]"));
-            fail.cause().ifPresent(c -> sb.append("\n    \\_").append(this.writeFail(c)));
-        }
+        sb.append(handleIds(fail, "[" + fail.message().getMessage() + "]"));
+        if (fail.message().getCause() != null)
+            sb.append("[...]");
         return sb.toString();
     }
 
@@ -458,13 +455,11 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
             }
             sb.append("...]");
         } else if (obj.isFail()) {
-            if (obj.failValue().get1() != null)
-                writeClip(sb, obj.failValue().get1());
-            else {
-                String message = obj.asFail().message().getMessage().split("\n")[0];
-                message = message.length() > this.clip ? (message.substring(0, this.clip - 1) + "...") : message;
-                sb.append(writeFail(fail(message)));
-            }
+            String message = obj.asFail().message().getMessage().split("\n")[0];
+            message = message.length() > this.clip ? (message.substring(0, this.clip - 1) + "...") : message;
+            sb.append(writeFail(fail(message)));
+            if (obj.asFail().message().getCause() != null)
+                sb.append("[...]");
         } else {
             sb.append(obj.toShortString());
         }

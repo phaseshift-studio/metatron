@@ -181,7 +181,6 @@ import studio.phaseshift.metatron.isa.grph.space.schema.modernSchema;
          } else {
              config.logger().info("no remote config provided — defaulting to local TinkerGraph");
          }
-         config.logger().info("built configuration: %s", apacheConfig.toString());
          return apacheConfig;
      }
 

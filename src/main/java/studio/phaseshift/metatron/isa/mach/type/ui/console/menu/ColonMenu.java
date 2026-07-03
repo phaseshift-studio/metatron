@@ -107,6 +107,7 @@ public final class ColonMenu extends MRec {
                     .addRow(List.of("postfix", ":postfix <text>", "postfix input with text"))
                     .addRow(List.of("back erase", "<alt>+k <char>", "erase buffer back to first occurrence of char"))
                     .addRow(List.of("format buffer", "<ctrl>+f", "pretty-print current buffer (legal syntax only)"))
+                    .addRow(List.of("trace", ":trace [ |on|off]", "toggle Java stack trace dump on fail"))
                     /// ///////////////////////////////////////////////////////////////////////////////////////
                     .addRow(List.of("{{[g]&w}}panes", "{{[g]&w}}", "{{[g]&w}}"))
                     .addRow(List.of("split horizontal", ":split v | <ctrl>+<up>", "split current pane horizontally"))
@@ -273,6 +274,16 @@ public final class ColonMenu extends MRec {
         // ===== state =====
         this.at("state", instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(NOOBJ_TID), lst(), (lhs, inst) -> {
             console.getStatus().setState(Level.valueOf(lhs.isStr() ? lhs.strValue().toUpperCase() : ""));
+            return noobj();
+        }), MUTABLE);
+
+        // ===== trace =====
+        this.at("trace", instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(NOOBJ_TID), lst(), (lhs, inst) -> {
+            final boolean newState = lhs.isStr() && !lhs.strValue().isBlank()
+                    ? lhs.strValue().trim().equalsIgnoreCase("on")
+                    : !console.isTraceEnabled();
+            console.setTraceEnabled(newState);
+            LOG.info("trace {{%s}}%s{{X}}", newState ? "g" : "r", newState ? "ON" : "OFF");
             return noobj();
         }), MUTABLE);
 

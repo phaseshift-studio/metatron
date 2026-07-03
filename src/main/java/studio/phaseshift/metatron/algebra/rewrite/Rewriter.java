@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -19,8 +19,13 @@
 package studio.phaseshift.metatron.algebra.rewrite;
 
 import com.google.common.base.Objects;
+import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Uri;
+import studio.phaseshift.metatron.isa.m.type.impl.MRec;
+import studio.phaseshift.metatron.isa.m.type.reflect.JRec;
+import studio.phaseshift.metatron.isa.m.type.reflect.JRecElement;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -29,19 +34,26 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
+import static studio.phaseshift.metatron.isa.m.mInstSet.REWRITER_TYPE_TID;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
+
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class Rewriter {
+public class Rewriter extends JRec<Rewriter> {
 
     protected final List<Inst> sourceInsts;
     protected List<Inst> matchInsts;
     protected Predicate<List<Inst>> matchPredicate = null;
     protected boolean repeat = false;
     protected boolean matchC = true;
-
+    @JRecElement(key = "allow", rng = "/m/lst", rngPoly = "/m/uri")
+    public List<fURI> allow = new ArrayList<>();
+    @JRecElement(key = "disallow", rng = "/m/lst", rngPoly = "/m/uri")
+    public List<fURI> disallow = new ArrayList<>();
 
     private Rewriter(final List<Inst> sourceInsts) {
+        super(mutableMap(), REWRITER_TYPE_TID, null);
         this.sourceInsts = sourceInsts;
     }
 
@@ -69,6 +81,10 @@ public class Rewriter {
     public Rewriter matchCC() {
         this.matchC = true;
         return this;
+    }
+
+    public boolean allow(final Inst rewrite) {
+        return this.allow.stream().anyMatch(id -> rewrite.tid().test(id)) && this.disallow.stream().noneMatch(id -> rewrite.tid().test(id));
     }
 
 
