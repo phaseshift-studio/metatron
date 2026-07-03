@@ -108,7 +108,7 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
             if (!seen.add(hash)) return;
         }
         try {
-            space.write(sessionVID.retract(2).extend("llm_message_system").extend("+").addQ("incrq"), systemRec);
+            space.write(sessionVID.retract(2).extend("llm_message_system").extend("_").addQ("incrq"), systemRec);
         } catch (final Exception e) {
             LOG.debug("mirror system message failed (non-blocking): %s", e.getMessage());
         }
@@ -136,16 +136,16 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
 
     /**
      * Fire-and-forget mirror of a message Rec to its per-type collection.
-     * Uses {@code +?incrq} so DB-backed incrQ delegates ID generation to
-     * AUTO_INCREMENT / SERIAL — no overwrites.  Purely additive.
-     * Gracefully degrades on non-DB backing spaces (exceptions caught).
+     * Uses {@code _?incrq} so the generic incrQ QProc auto-generates sequential
+     * entry IDs — no overwrites.  Purely additive.  Gracefully degrades on
+     * non-DB backing spaces (exceptions caught).
      * <p>
      * TID → collection mapping:
      * <pre>
-     *   /m/llm/system      → llm_message_system/+?incrq
-     *   /m/llm/user        → llm_message_user/+?incrq
-     *   /m/llm/AI          → llm_message_ai/+?incrq
-     *   /m/llm/tool_result → llm_message_tool_result/+?incrq
+     *   /m/llm/system      → llm_message_system/_?incrq
+     *   /m/llm/user        → llm_message_user/_?incrq
+     *   /m/llm/AI          → llm_message_ai/_?incrq
+     *   /m/llm/tool_result → llm_message_tool_result/_?incrq
      * </pre>
      */
     private void mirrorToTypedCollection(final fURI sessionVID, final Rec msgRec, final fURI kvURI) {
@@ -184,7 +184,7 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
             // message in the key-value store (reconstruction, navigation).
             toMirror.recValue().put(uri(TIME), str(now.toString()));
             toMirror.recValue().put(uri(URI), uri(kvURI));
-            this.space.write(sessionVID.retract(2).extend(collection).extend("+").addQ("incrq"), toMirror);
+            this.space.write(sessionVID.retract(2).extend(collection).extend("_").addQ("incrq"), toMirror);
         } catch (final Exception e) {
             LOG.debug("mirror to typed collection failed (non-blocking): %s", e.getMessage());
         }
