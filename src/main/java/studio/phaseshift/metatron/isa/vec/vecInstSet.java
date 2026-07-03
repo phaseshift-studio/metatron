@@ -23,6 +23,7 @@ import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
+import studio.phaseshift.metatron.isa.vec.space.vecSpace;
 import studio.phaseshift.metatron.util.MTronException;
 
 import static studio.phaseshift.metatron.Tokens.*;
@@ -85,7 +86,7 @@ public class vecInstSet extends AbstractInstSet {
                                     return result;
                                 }
                         )),
-                uri(TYPE), lst(VEC_TYPE, CMPLX_TYPE, MTRX_TYPE)));
+                uri(TYPE), lst(VEC_TYPE, CMPLX_TYPE, MTRX_TYPE, vecSpace.VCTR_SPACE_TYPE)));
         super.setup();
     }
 }

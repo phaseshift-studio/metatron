@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -43,7 +43,7 @@ public class fURIAwareIndexedSchema implements TableSchema {
 
     private static final int MAX_SEGMENTS = 7;
     private static final String TABLE_NAME = "kv_store";
-    private static final ObjmtronSerializer SERIALIZER = new ObjmtronSerializer();
+    private static final ObjmtronSerializer SERIALIZER = ObjmtronSerializer.singleNoClip();
 
     @Override
     public void initialize(final Connection conn) throws SQLException {
@@ -236,7 +236,7 @@ public class fURIAwareIndexedSchema implements TableSchema {
             final fURI furiStr = f(rs.getString("furi"));
             // Double-check pattern match (for patterns beyond MAX_SEGMENTS)
             //if (f(furiStr.pathString()).test(f(pattern.asNode().pathString()))) {
-                results.add(Space.IdObj.of(furiStr, SERIALIZER.read(rs.getString("obj"))));
+            results.add(Space.IdObj.of(furiStr, SERIALIZER.read(rs.getString("obj"))));
             //}
         }
 

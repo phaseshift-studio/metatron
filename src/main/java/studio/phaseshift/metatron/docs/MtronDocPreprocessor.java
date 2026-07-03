@@ -70,7 +70,7 @@ public final class MtronDocPreprocessor {
     private static final Pattern NOPROMPT = Pattern.compile("\\[NO_PROMPT]");
     private static final Pattern MAXOUTPUT = Pattern.compile("\\[MAXOUTPUT \\d+]");
 
-    private static final ObjmtronSerializer SER = new ObjmtronSerializer(35);
+    private static final ObjmtronSerializer SER = new ObjmtronSerializer(35,7,7);
     private static final GraphittyLogger LOG = Graphitty.log(MtronDocPreprocessor.class);
 
     // ── Process entry point ─────────────────────────────────────────

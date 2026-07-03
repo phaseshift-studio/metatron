@@ -57,7 +57,7 @@ public class MIME {
         APPLICATION_OCTET_STREAM("application/octet-stream"),
         APPLICATION_ATOM_XML("application/atom+xml"),
         APPLICATION_XML("application/xml"),
-        APPLICATION_MTRON("application/mtron"),
+        APPLICATION_MTRON("application/x-mtron"),
         APPLICATION_JAVASCRIPT("application/javascript"),
         TEXT_HTML("text/html"),
         TEXT_PLAIN("text/plain"),

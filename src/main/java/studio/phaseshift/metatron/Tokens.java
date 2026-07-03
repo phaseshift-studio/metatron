@@ -48,6 +48,7 @@ public final class Tokens {
     public static final String TO = "to";
     public static final String JSONRPC = "jsonrpc";
     public static final String REQUIRED = "required";
+    public static final String EMBED = "embed";
     public static final String SRC = "src";
     public static final String TARGET = "target";
     public static final String INCR = "incr";

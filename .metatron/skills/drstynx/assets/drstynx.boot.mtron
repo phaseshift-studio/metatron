@@ -14,6 +14,7 @@
   [ web       => [ http => <http://localhost:8777>,
                    ws   => <ws://0.0.0.0:8555> ],
     ollama    => <http://ginger.local:11434>,
+    embedding => <http://ginger.local:8025/api/v2>,
     knowgraph => <ws://ginger.local:8182/gremlin>,
     session   => <mariadb://localhost:3306/dr_session?createDatabaseIfNotExist=true&user=mtron&password=mtron>,
     localfs   => </home/killswitch/.hermes_clone>],
@@ -40,6 +41,7 @@ import(/m/tble);
 import(/m/math);
 import(/m/llm);
 import(/m/grph);
+import(/m/vec);
 space_root -> <${*boot/args/internal/sys}/space/dr>;
 [===================================================================]
 [===================================================================]
@@ -107,6 +109,17 @@ tblespace::[pattern    => drdb:#,
             driver     => <org.mariadb.jdbc.Driver>,
             q          => [incrq::[=>],subq::[=>]],
             route      => [drdb:=><>]]@/sys/space/tble/dr;
+            
+vecspace::[pattern     => v:#,
+           host        => !*<boot/args/external/embedding>,
+           q           => [incrq::[=>],embedq::[=>]],
+           driver      => <studio.phaseshift.metatron.isa.vec.space.ChromaV2Client>,
+           route       => [v: => <>],
+           config      => [embed => [
+ [------------------------------------^--]
+ abc => inst?lst[real]<=#{?}(doc=>#::T){ *ollama:embeddinggemma:latest.embed(*doc)}
+ [------------------------------------^--]                                  
+                          ]]]@/sys/space/vec/embed;
            
  grphspace::[pattern  => g:#,
              host     => !*<boot/args/external/knowgraph>,
@@ -147,3 +160,9 @@ model::[desc     => "the agent dr.stynx is here to be of use in the metatron",
 
 [== user console ==]
 console::[header=>!*boot/args/header]@/usr/marko/console;
+
+[==
+on_prompt => inst(chat=>user::T) {          
+
+}
+==]

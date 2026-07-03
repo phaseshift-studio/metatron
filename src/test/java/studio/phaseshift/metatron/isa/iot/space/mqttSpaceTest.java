@@ -57,7 +57,7 @@ public class mqttSpaceTest extends AbstractSpaceTest implements SubQTest {
                         uri(QPROC), lst(QCollection.subq()),
                         uri(HOST), uri("mqtt://127.0.0.1:" + PORT),
                         uri(PATTERN), uri("/t/#"),
-                        uri(SERIALIZER), ObjmtronSerializer.single(), // USING MTRON SERIALIZER (JSON SERIALIZER ISN'T ONE-TO-ONE WITH TEST EXPECTATION TYPES)
+                        uri(SERIALIZER), ObjmtronSerializer.singleNoClip(), // USING MTRON SERIALIZER (JSON SERIALIZER ISN'T ONE-TO-ONE WITH TEST EXPECTATION TYPES)
                         uri(REWRITE), rel(uri("/t"), uri("/t"))), f("/sys/router/space/t"));
                 //space.directWriter().apply(f("#"), noobj());
             } catch (Exception e) {
