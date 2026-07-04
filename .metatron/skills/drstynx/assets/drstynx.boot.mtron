@@ -88,8 +88,9 @@ fsspace::[
             
 httpspace::[host     => !*<boot/args/external/web/http>,
             pattern  => <http://#>,
-            route    => [/mcp   => mcp_mtron_http,
-                         /      => <>]]@/sys/space/web/http;   
+            route    => [/mcp    => mcp_mtron_http,
+                         /memory => drdb:llm_message_user/, 
+                         /       => <>]]@/sys/space/web/http;   
             
 wsspace::[host     => !*<boot/args/external/web/ws>,
          pattern  => <ws://#>,

@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -26,17 +26,22 @@ import studio.phaseshift.metatron.util.MTronException;
 
 import java.nio.ByteBuffer;
 
-import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 
-public interface ObjSerializer<T> extends Uri {
+public interface ObjSerializer<T> extends Rec {
 
-    fURI OBJ_SERIAL_TID = f("/m/mach/io");
+    fURI OBJ_SERIAL_TID = fURI.Singleton.f("/m/mach/io");
+    fURI OBJ_MTRON_SERIALIZER_TID = OBJ_SERIAL_TID.extend("serializer").extend("mtron");
+    fURI OBJ_BYTE_BUFFER_SERIALIZER_TID = OBJ_SERIAL_TID.extend("serializer").extend("bytebuffer");
+    fURI OBJ_SIMPLE_JSON_SERIALIZER_TID = OBJ_SERIAL_TID.extend("serializer").extend("json").extend("simple");
+    fURI OBJ_MTRON_STRING_SERIALIZER_VID = OBJ_SERIAL_TID.extend("serializer").extend("string").extend("clean");
+    fURI OBJ_BYTE_BUFFER_SERIALIZER_VID = OBJ_SERIAL_TID.extend("serializer").extend("bytebuffer");
+    fURI OBJ_SIMPLE_JSON_SERIALIZER_VID = OBJ_SERIAL_TID.extend("serializer").extend("json").extend("simple");
 
     ByteBuffer outputBytes(final Obj obj) throws MTronException;
 
     Obj inputBytes(final ByteBuffer bytes) throws MTronException;
-    
+
     default Obj inputBytes(final byte[] bytes) {
         return this.inputBytes(ByteBuffer.wrap(bytes));
     }

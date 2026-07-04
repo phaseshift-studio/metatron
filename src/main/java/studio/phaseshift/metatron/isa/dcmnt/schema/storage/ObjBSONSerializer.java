@@ -55,7 +55,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.mach.io.ioInstSet.OBJ_SERIALIZER_TID;
+import static studio.phaseshift.metatron.isa.web.webInstSet.OBJ_BSON_SERIALIZER_TID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -68,7 +68,7 @@ public class ObjBSONSerializer extends AbstractObjSerializer<BsonValue> {
     public static final Byte URI_MAGIC_NUMBER = (byte) 0x01;
     public static final Byte FAIL_MAGIC_NUMBER = (byte) 0x02;
 
-    public static final fURI OBJ_BSON_SERIALIZER_VID = OBJ_SERIALIZER_TID.extend("bson");
+    public static final fURI OBJ_BSON_SERIALIZER_VID = OBJ_BSON_SERIALIZER_TID;
 
     /**
      * Hidden BSON field that stores the nominal TID of a document for round-trip fidelity.
@@ -98,6 +98,7 @@ public class ObjBSONSerializer extends AbstractObjSerializer<BsonValue> {
     }
 
     public ObjBSONSerializer() {
+        super(OBJ_BSON_SERIALIZER_TID, OBJ_BSON_SERIALIZER_VID);
     }
 
     /**
@@ -123,10 +124,6 @@ public class ObjBSONSerializer extends AbstractObjSerializer<BsonValue> {
     }
 
     public fURI vid() {
-        return OBJ_BSON_SERIALIZER_VID;
-    }
-
-    public fURI jvm() {
         return OBJ_BSON_SERIALIZER_VID;
     }
 

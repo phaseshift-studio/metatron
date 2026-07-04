@@ -40,7 +40,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.mach.io.ioInstSet.OBJ_SERIALIZER_TID;
+import static studio.phaseshift.metatron.isa.web.webInstSet.OBJ_HTML_SERIALIZER_TID;
 import static studio.phaseshift.metatron.isa.web.webInstSet.HTML_TID;
 
 /*
@@ -48,12 +48,16 @@ import static studio.phaseshift.metatron.isa.web.webInstSet.HTML_TID;
  */
 public class ObjHTMLSerializer extends AbstractObjSerializer<Document> {
 
-    public static final fURI OBJ_HTML_SERIALIZER_VID = OBJ_SERIALIZER_TID.extend(HTML);
+    public static final fURI OBJ_HTML_SERIALIZER_VID = OBJ_HTML_SERIALIZER_TID;
 
     private static final ObjHTMLSerializer INSTANCE = new ObjHTMLSerializer();
 
     public static ObjHTMLSerializer single() {
         return INSTANCE;
+    }
+
+    public ObjHTMLSerializer() {
+        super(OBJ_HTML_SERIALIZER_TID, OBJ_HTML_SERIALIZER_VID);
     }
 
     private Rec readElement(final Element element) {

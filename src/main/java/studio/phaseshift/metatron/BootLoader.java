@@ -194,7 +194,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
         }
 
         if (generateMode) {
-            final Generator2 generator = new Generator2(filePath);
+            final Generator generator = new Generator(filePath);
             generator.start();
             EXIT_HANDLER.accept(0);
         }

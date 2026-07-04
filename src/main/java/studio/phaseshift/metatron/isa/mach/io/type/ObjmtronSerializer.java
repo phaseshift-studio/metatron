@@ -33,63 +33,165 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HexFormat;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.Poly.MUTABLE;
+import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBytes.bytes;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
-import static studio.phaseshift.metatron.isa.mach.io.ioInstSet.OBJ_MTRON_STRING_SERIALIZER_VID;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer.OBJ_MTRON_SERIALIZER_TID;
+import static studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer.OBJ_MTRON_STRING_SERIALIZER_VID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class ObjmtronSerializer extends AbstractObjSerializer<String> {
     private static final String NOOBJ_STRING = "noobj";
-    protected boolean leftJustify;
-    public static final int CLIP_LENGTH = 60;
-    public static final int LST_CLIP_LENGTH = 7;
-    public static final int REC_CLIP_LENGTH = 7;
-    protected int clip = CLIP_LENGTH;
-    protected int lstClip = LST_CLIP_LENGTH;
-    protected int recClip = REC_CLIP_LENGTH;
-    public static String REAL_FORMAT = "%.4f";
     public static final int INDENT_SIZE = 1;
     public static final int NESTED_STRING_THRESHOLD = 35;
 
-    private static final ObjmtronSerializer INSTANCE = new ObjmtronSerializer();
-    private static final ObjmtronSerializer NO_CLIP_INSTANCE = new ObjmtronSerializer(Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE);
+    // ── Config key URIs ───────────────────────────────────────────
+    private static final fURI KEY_CLIP    = fURI.Singleton.f("clip");
+    private static final fURI KEY_REC     = KEY_CLIP.extend(REC_TID);
+    private static final fURI KEY_LST     = KEY_CLIP.extend(LST_TID);
+    private static final fURI KEY_STR     = KEY_CLIP.extend(STR_TID);
+    private static final fURI KEY_URI     = KEY_CLIP.extend(URI_TID);
+    private static final fURI KEY_REAL    = KEY_CLIP.extend(REAL_TID);
+    private static final fURI KEY_BYTES   = KEY_CLIP.extend(BYTES_TID);
+    private static final fURI KEY_FAIL    = KEY_CLIP.extend(FAIL_TID);
+    private static final fURI KEY_JUSTIFY = fURI.Singleton.f("justify");
+
+    // ── Singletons ───────────────────────────────────────────────
+    private static final ObjmtronSerializer INSTANCE = new ObjmtronSerializer((Void) null);
+    private static final ObjmtronSerializer NO_CLIP_INSTANCE;
+
+    static {
+        NO_CLIP_INSTANCE = new ObjmtronSerializer((Void) null);
+        NO_CLIP_INSTANCE.noClip = true;
+    }
 
     public static ObjmtronSerializer single() {
+        INSTANCE.ensureInit();
         return INSTANCE;
     }
 
+    protected ObjmtronSerializer(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
+        super(jvm, tid, vid);
+    }
+
     public static ObjmtronSerializer singleNoClip() {
+        // Must NOT call ensureInit() — called during class init from Obj.Helper
         return NO_CLIP_INSTANCE;
     }
 
+    public static ObjmtronSerializer of(final Rec rec, final fURI vid) {
+        return new ObjmtronSerializer(rec.jvm(), OBJ_MTRON_SERIALIZER_TID, vid);
+    }
+
+    // ── Lazy init ────────────────────────────────────────────────
+    private transient boolean needsInit = true;
+    private transient boolean noClip = false;
+
+    private void ensureInit() {
+        if (needsInit) {
+            needsInit = false;
+            this.at(KEY_CLIP, defaultClip(), MUTABLE);
+            this.at(KEY_JUSTIFY, bool(true), MUTABLE);
+        }
+    }
+
+    // ── Default clip config method ─────────────────────────────────
+    private static Rec defaultClip() {
+        return rec(
+                "rec", jnt(7),
+                "lst", jnt(10),
+                "str", jnt(60),
+                "uri", jnt(Integer.MAX_VALUE),
+                "real", jnt(4),
+                "bytes", jnt(60),
+                "fail", jnt(60)
+        );
+    }
+
+    // ── Constructors ─────────────────────────────────────────────
+
+    private ObjmtronSerializer(final Void dummy) {
+        super(OBJ_MTRON_SERIALIZER_TID, OBJ_MTRON_STRING_SERIALIZER_VID);
+    }
+
     public ObjmtronSerializer() {
-        this.leftJustify = true;
+        super(OBJ_MTRON_SERIALIZER_TID, OBJ_MTRON_STRING_SERIALIZER_VID);
+        ensureInit();
     }
 
     public ObjmtronSerializer(final boolean leftJustify) {
-        this.leftJustify = leftJustify;
-    }
-
-    public ObjmtronSerializer(final int clipLength, final int recClipLength, final int lstClipLength) {
         this();
-        this.clip = clipLength;
-        this.recClip = recClipLength;
-        this.lstClip = lstClipLength;
+        this.at(KEY_JUSTIFY, bool(leftJustify), MUTABLE);
     }
 
+    // ── Identity ─────────────────────────────────────────────────
+
+    @Override
     public fURI vid() {
         return OBJ_MTRON_STRING_SERIALIZER_VID;
     }
 
-    public fURI jvm() {
-        return OBJ_MTRON_STRING_SERIALIZER_VID;
+    // ── Config helpers ───────────────────────────────────────────
+
+    private boolean isLeftJustify() {
+        ensureInit();
+        return this.at(KEY_JUSTIFY).orElse(bool(true)).boolValue();
     }
+
+    private int clipBytes() {
+        if (noClip) return Integer.MAX_VALUE;
+        ensureInit();
+        return this.at(KEY_BYTES).orElse(jnt(60)).<Int>as().jvm().intValue();
+    }
+
+    private int clipStr() {
+        if (noClip) return Integer.MAX_VALUE;
+        ensureInit();
+        return this.at(KEY_STR).orElse(jnt(60)).<Int>as().jvm().intValue();
+    }
+
+    private int clipLst() {
+        if (noClip) return Integer.MAX_VALUE;
+        ensureInit();
+        return this.at(KEY_LST).orElse(jnt(10)).<Int>as().jvm().intValue();
+    }
+
+    private int clipRec() {
+        if (noClip) return Integer.MAX_VALUE;
+        ensureInit();
+        return this.at(KEY_REC).orElse(jnt(7)).<Int>as().jvm().intValue();
+    }
+
+    private int clipUri() {
+        if (noClip) return Integer.MAX_VALUE;
+        ensureInit();
+        return this.at(KEY_URI).orElse(jnt(Integer.MAX_VALUE)).<Int>as().jvm().intValue();
+    }
+
+    private int clipReal() {
+        ensureInit();
+        return this.at(KEY_REAL).orElse(jnt(4)).<Int>as().jvm().intValue();
+    }
+
+    private int clipFail() {
+        if (noClip) return Integer.MAX_VALUE;
+        ensureInit();
+        return this.at(KEY_FAIL).orElse(jnt(60)).<Int>as().jvm().intValue();
+    }
+
+    // ── Parsing ──────────────────────────────────────────────────
 
     public static <OBJ extends Obj> OBJ parse(final String code) {
         return mParser.parse(code);
@@ -103,6 +205,8 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
         return mParser.splitCodeAtEnd(code);
     }
 
+    // ── Byte I/O ─────────────────────────────────────────────────
+
     @Override
     public ByteBuffer outputBytes(final Obj obj) {
         return ByteBuffer.wrap(this.write(obj).getBytes(StandardCharsets.UTF_8));
@@ -113,6 +217,8 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
         return this.read(new String(bytes.array(), StandardCharsets.UTF_8));
     }
 
+    // ── ID rendering ─────────────────────────────────────────────
+
     private String handleIds(final Obj obj, final String objString) {
         final StringBuilder sb = new StringBuilder();
         this.handleTID(sb, obj, !obj.isObjInst()).append(objString);
@@ -120,10 +226,12 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
         return sb.toString();
     }
 
+    // ── Scalar writers ───────────────────────────────────────────
+
     @Override
     public String writeBytes(final Bytes bytes) {
         final StringBuilder sb = new StringBuilder();
-        if (bytes.bytesValue().capacity() > this.clip) {
+        if (bytes.bytesValue().capacity() > this.clipBytes()) {
             this.writeClip(sb, bytes);
         } else {
             sb.append("0x").append(HexFormat.of().formatHex(bytes.<Bytes>as().jvm().array()));
@@ -167,8 +275,11 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
 
     @Override
     public String writeReal(final Real real) {
-        return handleIds(real, String.format(REAL_FORMAT, real.jvm()));
+        final int decimals = this.clipReal();
+        return handleIds(real, String.format("%." + decimals + "f", real.jvm()));
     }
+
+    // ── URI writer ───────────────────────────────────────────────
 
     private static String wrapUri(final fURI furi) {
         final String uriString = furi.toString();
@@ -189,6 +300,8 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
     public String writeUri(final Uri uri) {
         return handleIds(uri, wrapUri(uri.uriValue()));
     }
+
+    // ── Composite writers ────────────────────────────────────────
 
     @Override
     public String writeLst(final Lst lst) {
@@ -215,6 +328,8 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
     public String writeInst(final Inst inst) {
         return this.generateInst(new StringBuilder(), inst, 0, 0, false).toString();
     }
+
+    // ── Inst generation ──────────────────────────────────────────
 
     public StringBuilder generateInst(final StringBuilder sb, final Inst inst, final int depth, final int padding, boolean nested) {
         if (inst.tid().basePath().equals(AUTO_FROM_INST_TID)) {
@@ -247,8 +362,6 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
 
     @Override
     public String writeCode(final Code code) {
-        //  final Obj t = code.tryToInst();
-        //  if (t.isInst()) return this.writeInst(t.as());
         final String internal = IteratorUtil.stream(code.insts()).map(this::writeInst).reduce("", (a, b) -> a + "." + b);
         return !internal.isEmpty() ? internal.substring(1) : "";
     }
@@ -269,6 +382,7 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
         return handleIds(monad, "M[" + this.write(monad.obj()) + "<=M=>" + this.write(monad.inst()));
     }
 
+    // ── Read ─────────────────────────────────────────────────────
 
     @Override
     public Obj read(final String data) throws MTronException {
@@ -282,6 +396,8 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
             }
         }
     }
+
+    // ── TID / VID rendering helpers ──────────────────────────────
 
     private StringBuilder handleTID(final StringBuilder sb, final Obj obj, final boolean hideBaseTID) {
         if (!obj.isFail() && !obj.isCaughtFail() && hideBaseTID && !obj.tid().hasPoly()) {
@@ -304,6 +420,8 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
         return sb.append("@").append(wrapUri(Router.loaded() ? Router.global().redirect(obj.vid(), false) : obj.vid()));
     }
 
+    // ── Nesting detection ────────────────────────────────────────
+
     private boolean isNested(final Poly<?, ?> poly) {
         if (!poly.isLst() && !poly.isRec())
             return false;
@@ -318,11 +436,14 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
                         isComplexType(o)));
     }
 
+    // ── List generation ──────────────────────────────────────────
+
     private StringBuilder generateLst(final StringBuilder sb, final Lst lst, final int depth) {
         handleTID(sb, lst, true);
         if (lst.isEmpty()) {
             sb.append("[,]");
         } else {
+            final int lstClip = this.clipLst();
             boolean nested = isNested(lst);
             sb.append("[");
             if (lst.count() > lstClip) {
@@ -348,6 +469,8 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
         return handleVID(sb, lst);
     }
 
+    // ── String cleaning ──────────────────────────────────────────
+
     private StringBuilder cleanEnding(final StringBuilder sb) {
         char last = sb.charAt(sb.length() - 1);
         while (last == ' ' || last == ',' || last == '\n') {
@@ -356,6 +479,8 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
         }
         return sb;
     }
+
+    // ── Type generation ──────────────────────────────────────────
 
     private StringBuilder generateType(final StringBuilder sb, final Type type, final int depth) {
         sb.append(
@@ -377,12 +502,9 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
                 sb.append("[]");
             sb.append("[");
             StringBuilder temp = new StringBuilder();
-            // temp.append(" ".repeat((depth + 1) * INDENT_SIZE));
             renderValue(temp, depth + 1, type.constructor());
             cleanEnding(temp);
             sb.append(temp);
-            //sb.append("\n");
-            //sb.append(" ".repeat(depth * INDENT_SIZE));
             sb.append("]");
         }
         if (type.vid() != null && !type.tid().equals(type.vid()))
@@ -394,11 +516,14 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
         return type.isType() && (type.asType().hasPredicate() || type.asType().hasConstructor());
     }
 
+    // ── Rec generation ───────────────────────────────────────────
+
     private StringBuilder generateRec(final StringBuilder sb, final Rec rec, final int depth) {
         handleTID(sb, rec, true);
         if (rec.isEmpty()) {
             sb.append("[=>]");
         } else {
+            final int recClip = this.clipRec();
             boolean nested = isNested(rec);
             sb.append("[");
             if (rec.count() > recClip) {
@@ -419,7 +544,7 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
                 if (nested) {
                     sb.append(" ".repeat((depth + 1) * INDENT_SIZE));
                 }
-                sb.append("...(").append(rec.count()-recClip).append(" more)]");
+                sb.append("...(").append(rec.count() - recClip).append(" more)]");
             } else {
                 if (nested) sb.append("\n");
                 rec.jvm().forEach((k, v) -> {
@@ -440,23 +565,49 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
         return handleVID(sb, rec);
     }
 
+    // ── Clip writer ──────────────────────────────────────────────
 
     private StringBuilder writeClip(final StringBuilder sb, final Obj obj) {
-        if (obj.isStr() && obj.strValue().length() > this.clip) {
-            sb.append(write(str(obj.strValue().substring(0, this.clip - 1) + "...")));
-        } else if (obj.isBytes() && obj.bytesValue().capacity() > this.clip) {
-            byte[] bb = Arrays.copyOf(obj.bytesValue().array(), this.clip - 1);
-            sb.append(write(bytes(ByteBuffer.wrap(bb))));
-            sb.append("...");
-        } else if (obj.isLst() && obj.asLst().count() > this.clip) {
-            sb.append("[");
-            for (int i = 0; i < 5; i++) {
-                sb.append(obj.lstValue().get(i));
+        if (obj.isStr()) {
+            final int max = this.clipStr();
+            if (obj.strValue().length() > max)
+                sb.append(write(str(obj.strValue().substring(0, max - 1) + "...")));
+            else
+                sb.append(writeStr(obj.asStr()));
+        } else if (obj.isBytes()) {
+            final int max = this.clipBytes();
+            if (obj.bytesValue().capacity() > max) {
+                byte[] bb = Arrays.copyOf(obj.bytesValue().array(), max - 1);
+                sb.append(write(bytes(ByteBuffer.wrap(bb))));
+                sb.append("...");
+            } else {
+                sb.append(writeBytes(obj.asBytes()));
             }
-            sb.append("...]");
+        } else if (obj.isLst()) {
+            final int max = this.clipLst();
+            sb.append("[");
+            final Lst lst = obj.asLst();
+            final long count = lst.count();
+            final long show = Math.min(count, max);
+            final java.util.Iterator<Obj> iter = lst.lstValue().iterator();
+            for (long i = 0; i < show && iter.hasNext(); i++) {
+                sb.append(write(iter.next()));
+                if (i < show - 1) sb.append(",");
+            }
+            if (count > max)
+                sb.append("...(").append(count - max).append(" more)");
+            sb.append("]");
+        } else if (obj.isUri()) {
+            final int max = this.clipUri();
+            final String uriStr = obj.uriValue().toString();
+            if (uriStr.length() > max)
+                sb.append(writeUri(uri(obj.uriValue().toString().substring(0, max - 1) + "...")));
+            else
+                sb.append(writeUri(obj.asUri()));
         } else if (obj.isFail()) {
+            final int max = this.clipFail();
             String message = obj.asFail().message().getMessage().split("\n")[0];
-            message = message.length() > this.clip ? (message.substring(0, this.clip - 1) + "...") : message;
+            message = message.length() > max ? (message.substring(0, max - 1) + "...") : message;
             sb.append(writeFail(fail(message)));
             if (obj.asFail().message().getCause() != null)
                 sb.append("[...]");
@@ -465,6 +616,8 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
         }
         return sb;
     }
+
+    // ── Value rendering ──────────────────────────────────────────
 
     private void renderValue(final StringBuilder sb, final int depth, final Obj v) {
         if (v.isRec()) {
@@ -488,6 +641,8 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
             this.writeClip(sb, arg);
         }
     }
+
+    // ── Pretty print ─────────────────────────────────────────────
 
     public StringBuilder prettyPrintCode(final StringBuilder sb, final Obj call, final int depth) {
         if (call.isCode()) {
@@ -514,4 +669,6 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
         final StringBuilder sb = new StringBuilder();
         return new ObjmtronSerializer().prettyPrintCode(sb, code, 0).toString();
     }
+
+
 }

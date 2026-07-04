@@ -25,10 +25,10 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjJavaSerializer;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjByteBufferSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.web.parser.*;
-import studio.phaseshift.metatron.isa.m.space.memSpace;
-import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.web.type.MIME;
 import studio.phaseshift.metatron.isa.web.type.mcpServer;
 import studio.phaseshift.metatron.util.CommonUtil;
@@ -52,6 +52,7 @@ import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_TIME_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.inside_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_FALSE;
+import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TRUE;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Inst.INST_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
@@ -96,12 +97,27 @@ public class webInstSet extends AbstractInstSet {
     public static final fURI MARKDOWN_TID = MIME_TYPE_TID.extend("markdown");
     public static final fURI JAVA_TID = MIME_TYPE_TID.extend("java");
 
+    // ── Serializer types ────────────────────────────────────────────
+    public static final fURI OBJ_SERIALIZER_TID = WEB_ISA_TID.extend("serializer");
+    public static final fURI OBJ_MTRON_SERIALIZER_TID = OBJ_SERIALIZER_TID.extend("obj_mtron");
+    public static final fURI OBJ_SIMPLE_JSON_SERIALIZER_TID = OBJ_SERIALIZER_TID.extend("obj_simple_json");
+    public static final fURI OBJ_BSON_SERIALIZER_TID = OBJ_SERIALIZER_TID.extend("obj_bson");
+    public static final fURI OBJ_BYTE_BUFFER_SERIALIZER_TID = OBJ_SERIALIZER_TID.extend("obj_bytebuffer");
+    public static final fURI OBJ_TP3_SERIALIZER_TID = OBJ_SERIALIZER_TID.extend("obj_tp3");
+    public static final fURI OBJ_JSON_SERIALIZER_TID = OBJ_SERIALIZER_TID.extend("obj_json");
+    public static final fURI OBJ_HTML_SERIALIZER_TID = OBJ_SERIALIZER_TID.extend("obj_html");
+    public static final fURI OBJ_XML_SERIALIZER_TID = OBJ_SERIALIZER_TID.extend("obj_xml");
+    public static final fURI OBJ_MARKDOWN_SERIALIZER_TID = OBJ_SERIALIZER_TID.extend("obj_markdown");
+    public static final fURI OBJ_JAVA_SERIALIZER_TID = OBJ_SERIALIZER_TID.extend("ojb_java");
+    public static final fURI OBJ_RDF_SERIALIZER_TID = OBJ_SERIALIZER_TID.extend("obj_rdf");
+    public static final fURI OBJ_PLAINTEXT_SERIALIZER_TID = OBJ_SERIALIZER_TID.extend("obj_text");
+    
     public static Type MIME_OBJ_TYPE = Type.Builder.build()
             .tid(URI_TID)
             .vid(MIME_TYPE_TID)
             .isaPredicate(inside_(Stream.of(MIME.MIMEType.values()).map(m -> uri(m.value)).collect(new CommonUtil.LstCollector())))
             .create();
-    
+
     public static final Type XML_TYPE = Type.Builder.build()
             .tid(REC_TID)
             .vid(XML_TID).create();
@@ -131,6 +147,13 @@ public class webInstSet extends AbstractInstSet {
             .tid(REC_TID)
             .vid(CSS_TID).create();
     public static final Type MARKDOWN_TYPE = Type.Builder.build().tid(REC_TID).vid(MARKDOWN_TID).create();
+
+    // ── Serializer type definitions ──────────────────────────────────
+    public static Type OBJ_SERIALIZER_TYPE;
+    public static Type OBJ_MTRON_SERIALIZER_TYPE;
+    public static Type OBJ_SIMPLE_JSON_SERIALIZER_TYPE;
+    public static Type OBJ_BSON_SERIALIZER_TYPE;
+    public static Type OBJ_BYTE_BUFFER_SERIALIZER_TYPE;
     public static final fURI MCP_SERVER_TID = WEB_ISA_TID.extend("mcp").extend("mcp_server");
     public static final fURI MCP_CLIENT_TID = WEB_ISA_TID.extend("mcp").extend("mcp_client");
     public static final fURI CLIENT_TID = WEB_ISA_TID.extend("client");
@@ -158,7 +181,11 @@ public class webInstSet extends AbstractInstSet {
                         ObjJSONSerializer.single(),
                         ObjMarkdownSerializer.single(),
                         //ObjJavaSerializer.single(),
-                        ObjPlainTextSerializer.single()),
+                        ObjPlainTextSerializer.single(),
+                        studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer.single(),
+                        studio.phaseshift.metatron.isa.mach.io.type.ObjByteBufferSerializer.singleton(),
+                        studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer.single(),
+                        studio.phaseshift.metatron.isa.dcmnt.schema.storage.ObjBSONSerializer.single()),
                 uri(TYPE), lst(
                         docWrap(MIME_OBJ_TYPE, "indicates the media type of the data as specified by RFC-9110"),
                         docWrap(XML_TYPE, "a rec encoding of an xml document"),
@@ -167,7 +194,7 @@ public class webInstSet extends AbstractInstSet {
                                 """
                                 html::[html=>
                                        [head=>
-                                        [title=>\"metatron\"]],
+                                        [title=>"metatron"]],
                                         body=>
                                          [out=>[
                                           [tag=>a,href=>...],
@@ -176,6 +203,65 @@ public class webInstSet extends AbstractInstSet {
                         docWrap(CSS_TYPE, "a rec encoding of a css document"),
                         docWrap(MARKDOWN_TYPE, "a rec encoding of a markdown document"),
                         docWrap(JAVA_TYPE, "a rec encoding of a java source file"),
+                        docWrap(OBJ_SERIALIZER_TYPE = Type.Builder.build()
+                                        .tid(OBJ_SERIALIZER_TID).vid(OBJ_SERIALIZER_TID).create(),
+                                "a serializer for converting objs to/from external formats"),
+                        docWrap(OBJ_MTRON_SERIALIZER_TYPE = Type.Builder.build()
+                                        .tid(OBJ_SERIALIZER_TID)
+                                        .vid(OBJ_MTRON_SERIALIZER_TID)
+                                        .isaPredicate(rec(
+                                                uri(CLIP), rec(
+                                                        uri(REC_TID).maybe().asUri(), isa_(INT_TYPE).orElse(jnt(7)),
+                                                        uri(LST_TID).maybe(), isa_(INT_TYPE).orElse(jnt(10)),
+                                                        uri(STR_TID).maybe(), isa_(INT_TYPE).orElse(jnt(60)),
+                                                        uri(URI_TID).maybe(), isa_(INT_TYPE).orElse(jnt(Integer.MAX_VALUE)),
+                                                        uri(REAL_TID).maybe(), isa_(INT_TYPE).orElse(jnt(4)),
+                                                        uri(BYTES_TID).maybe(), isa_(INT_TYPE).orElse(jnt(60)),
+                                                        uri(FAIL_TID).maybe(), isa_(INT_TYPE).orElse(jnt(60))),
+                                                uri(JUSTIFY).maybe(), isa_(BOOL_TYPE).orElse(BOOL_TRUE)))
+                                        .constructor(instC(INST_CTOR_TID.rng(OBJ_MTRON_SERIALIZER_TID), lst(T(OBJ_MTRON_SERIALIZER_TID)), (lhs, inst) -> ObjmtronSerializer.of(inst.arg(0).asRec(), inst.arg(0).vid())))
+                                        .create(), "mtron string serializer",
+                                "a serializer with configurable clipping for console display and data marshalling",
+                                mutableMap(
+                                        uri(f(CLIP).extend(REC_TID)).maybe().asUri(), "the max number of relations",
+                                        uri(f(CLIP).extend(LST_TID)).maybe().asUri(), "the max number of elements",
+                                        uri(f(CLIP).extend(STR_TID)).maybe().asUri(), "the max number of characters",
+                                        uri(f(CLIP).extend(URI_TID)).maybe().asUri(), "the max number of characters for a URI",
+                                        uri(f(CLIP).extend(REAL_TID)).maybe().asUri(), "the max number of significant decimal places",
+                                        uri(f(CLIP).extend(BYTES_TID)).maybe().asUri(), "the max number of bytes to display",
+                                        uri(f(CLIP).extend(FAIL_TID)).maybe().asUri(), "the max number of characters for a fail message",
+                                        // uri(f(CLIP).extend(INST_TID)).maybe().asUri(), "the max number of instructions to display",
+                                        // uri(f(CLIP).extend(CODE_TID)).maybe().asUri(), "the max number of code statements to display",
+                                        uri(JUSTIFY).maybe(), "whether to justify the text left"),
+                                "a serializer for converting objs to/from mtron string format",
+                                "obj_mtron::[clip=>[m=>[rec=>10]]]"),
+                        docWrap(OBJ_SIMPLE_JSON_SERIALIZER_TYPE = Type.Builder.build()
+                                        .tid(OBJ_SERIALIZER_TID)
+                                        .vid(OBJ_SIMPLE_JSON_SERIALIZER_TID)
+                                        .isaPredicate(rec(
+                                                uri("wrap_uri").maybe().asUri(), isa_(BOOL_TYPE).orElse(BOOL_TRUE),
+                                                uri("bias_towards_uri").maybe(), isa_(BOOL_TYPE).orElse(BOOL_TRUE),
+                                                uri("bias_towards_objs").maybe(), isa_(BOOL_TYPE).orElse(BOOL_FALSE),
+                                                uri("embed_candq").maybe(), isa_(BOOL_TYPE).orElse(BOOL_FALSE)))
+                                        .constructor(instC(INST_CTOR_TID.rng(OBJ_SIMPLE_JSON_SERIALIZER_TID), lst(T(OBJ_SIMPLE_JSON_SERIALIZER_TID)), (lhs, inst) -> ObjSimpleJSONSerializer.of(inst.arg(0).asRec(), inst.arg(0).vid())))
+                                        .create(), "simple json serializer",
+                                "a serializer for converting objs to/from a simple json format",
+                                mutableMap(
+                                        uri("wrap_uri").maybe().asUri(), "whether to wrap uris in angle brackets",
+                                        uri("bias_towards_uri").maybe().asUri(), "whether to bias ambiguous values towards URI",
+                                        uri("bias_towards_objs").maybe().asUri(), "whether to parse arrays as objs instead of lst",
+                                        uri("embed_candq").maybe().asUri(), "whether to embed tid coefficient and quality metadata"),
+                                "obj_simple_json::[wrap_uri=>true]"),
+                        docWrap(OBJ_BSON_SERIALIZER_TYPE = Type.Builder.build()
+                                        .tid(OBJ_BSON_SERIALIZER_TID).vid(OBJ_BSON_SERIALIZER_TID).create(),
+                                "a serializer for converting objs to/from bson format"),
+                        docWrap(OBJ_BYTE_BUFFER_SERIALIZER_TYPE = Type.Builder.build()
+                                        .tid(OBJ_SERIALIZER_TID)
+                                        .vid(OBJ_BYTE_BUFFER_SERIALIZER_TID)
+                                        .constructor(instC(INST_CTOR_TID.rng(OBJ_BYTE_BUFFER_SERIALIZER_TID), lst(T(OBJ_BYTE_BUFFER_SERIALIZER_TID)), (lhs, inst) -> ObjByteBufferSerializer.of(inst.arg(0).asRec(), inst.arg(0).vid())))
+                                        .create(), "byte buffer serializer",
+                                "a serializer for converting objs to/from raw byte buffers",
+                                "obj_bytebuffer::[=>]"),
                         docWrap(HTTP_SPACE_TYPE, """
                                                  a space for reading and writing web-related resources. 
                                                  for http://# patterns and remote routes, uri resolution will fetch remote web resources and httpspace will handle nested addresses client-side. 
@@ -245,18 +331,18 @@ public class webInstSet extends AbstractInstSet {
                                 "mcp_client::[host => <ws://localhost:8999>]@/usr/ai/mcp/mtron                                 [-- mtron router server exposes an mcp server --]")),
                 uri(INST), lst(
                         docWrap(instC(WEB_ISA_TID.extend("inst/ping").dom(ALL.maybe()).rng(MATH_TIME_TID), lst(URI_TYPE), (lhs, inst) -> {
-                            final fURI host = inst.arg(0).uriValue().hasScheme() ? inst.arg(0).uriValue() : f("http://" + inst.arg(0).uriValue());
-                            long start = System.currentTimeMillis();
-                            try (final SocketChannel sc = SocketChannel.open()) {
-                                sc.connect(new InetSocketAddress(host.host(), host.port()));
-                                long latency = System.currentTimeMillis() - start;
-                                LOG.info("%s available with latency %d ms", sc.getRemoteAddress(), latency);
-                                return real(Long.valueOf(latency).doubleValue(), MATH_MILLIS_TID, null);
-                            } catch (final Exception e) {
-                                LOG.error("%s unavailable", inst.arg(0).uriValue());
-                                return real(-1.0d, MATH_MILLIS_TID, null);
-                            }
-                        }), "maybe an obj", "the mean ping time", Map.of(jnt(0), "the host machine and port to ping"),"ping a machine via tcp",
+                                    final fURI host = inst.arg(0).uriValue().hasScheme() ? inst.arg(0).uriValue() : f("http://" + inst.arg(0).uriValue());
+                                    long start = System.currentTimeMillis();
+                                    try (final SocketChannel sc = SocketChannel.open()) {
+                                        sc.connect(new InetSocketAddress(host.host(), host.port()));
+                                        long latency = System.currentTimeMillis() - start;
+                                        LOG.info("%s available with latency %d ms", sc.getRemoteAddress(), latency);
+                                        return real(Long.valueOf(latency).doubleValue(), MATH_MILLIS_TID, null);
+                                    } catch (final Exception e) {
+                                        LOG.error("%s unavailable", inst.arg(0).uriValue());
+                                        return real(-1.0d, MATH_MILLIS_TID, null);
+                                    }
+                                }), "maybe an obj", "the mean ping time", Map.of(jnt(0), "the host machine and port to ping"), "ping a machine via tcp",
                                 "<http://metatron.phaseshift.studio>.ping(_)",
                                 "ping(localhost:8777)",
                                 "virtual::[code=>ping(localhost:8777)-<{@x+*0,@y+1},loop=>second::2.0]"),
@@ -298,11 +384,12 @@ public class webInstSet extends AbstractInstSet {
                             final mcpClient client = new mcpClient(next.asRec().jvm(), MCP_CLIENT_TID, lhs.vid());
                             return client;
                         }),
-                        instC(AS_INST_TID.dom(ALL).rng(STR_TID), lst(JSON_STR_TYPE), (lhs, inst) -> str(ObjSimpleJSONSerializer.single().write(lhs).toString())))));
+                        instC(AS_INST_TID.dom(ALL).rng(STR_TID), lst(JSON_STR_TYPE), (lhs, inst) -> str(ObjSimpleJSONSerializer.single().write(lhs).toString())))))
+        ;
         docWrap(this,
                 "the world of the web within the metatron",
                 "/usr/idea -> *<http://metatron.phaseshift.studio/html/head/title>");
-        
+
         super.setup();
     }
 }

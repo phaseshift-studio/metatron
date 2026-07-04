@@ -38,7 +38,7 @@ import studio.phaseshift.metatron.util.MTronException;
 
 import java.nio.ByteBuffer;
 
-import static studio.phaseshift.metatron.isa.mach.io.ioInstSet.OBJ_SERIALIZER_TID;
+import static studio.phaseshift.metatron.isa.web.webInstSet.OBJ_TP3_SERIALIZER_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 
 /*
@@ -46,7 +46,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
  */
 public class ObjTP3Serializer extends AbstractObjSerializer<Element> {
 
-    public static final fURI OBJ_TP3_SERIALIZER_VID = OBJ_SERIALIZER_TID.extend("tp3");
+    public static final fURI OBJ_TP3_SERIALIZER_VID = OBJ_TP3_SERIALIZER_TID;
     private static final ObjSerializer<ByteBuffer> BYTES_SERIALIZER = new ObjByteBufferSerializer();
 
     private static final ObjTP3Serializer INSTANCE = new ObjTP3Serializer();
@@ -56,7 +56,7 @@ public class ObjTP3Serializer extends AbstractObjSerializer<Element> {
     }
 
     public ObjTP3Serializer() {
-
+        super(OBJ_TP3_SERIALIZER_TID, OBJ_TP3_SERIALIZER_VID);
     }
 
     @Override

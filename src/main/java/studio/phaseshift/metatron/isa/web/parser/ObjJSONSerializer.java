@@ -54,7 +54,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.mach.io.ioInstSet.OBJ_SERIALIZER_TID;
+import static studio.phaseshift.metatron.isa.web.webInstSet.OBJ_JSON_SERIALIZER_TID;
 
 public class ObjJSONSerializer extends AbstractObjSerializer<JsonElement> {
 
@@ -63,7 +63,7 @@ public class ObjJSONSerializer extends AbstractObjSerializer<JsonElement> {
     public static final String BID_KEY = "_bid";
     public static final String VALUE_KEY = "_value";
 
-    public static final fURI OBJ_JSON_SERIALIZER_VID = OBJ_SERIALIZER_TID.extend("json");
+    public static final fURI OBJ_JSON_SERIALIZER_VID = OBJ_JSON_SERIALIZER_TID;
 
     private static final GraphittyLogger LOG = Graphitty.log(ObjJSONSerializer.class);
 
@@ -76,6 +76,7 @@ public class ObjJSONSerializer extends AbstractObjSerializer<JsonElement> {
     }
 
     public ObjJSONSerializer() {
+        super(OBJ_JSON_SERIALIZER_TID, OBJ_JSON_SERIALIZER_VID);
     }
 
     @Override

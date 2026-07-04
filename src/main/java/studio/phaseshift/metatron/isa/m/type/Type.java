@@ -97,7 +97,7 @@ public interface Type extends Obj {
             return this.c().within(other.c());
         Type current = this;
         while (!current.isRootType()) {
-            if (current.vid() != null && current.vid().equals(other.vid()))
+            if (current.hasVID() && current.vid().equals(other.vid()))
                 return this.c().within(other.c());
             if (current.isBaseType()) break;
             current = current.parentType();

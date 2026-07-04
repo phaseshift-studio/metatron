@@ -25,6 +25,8 @@ import studio.phaseshift.metatron.util.MTronException;
 
 import java.nio.ByteBuffer;
 
+import static studio.phaseshift.metatron.isa.web.webInstSet.OBJ_PLAINTEXT_SERIALIZER_TID;
+
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 
@@ -33,11 +35,15 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
  */
 public class ObjPlainTextSerializer extends AbstractObjSerializer<String> {
 
-    public static final fURI OBJ_PLAIN_TEXT_SERIALIZER_VID = f("/m/mach/io/serializer/plain/text");
+    public static final fURI OBJ_PLAIN_TEXT_SERIALIZER_VID = OBJ_PLAINTEXT_SERIALIZER_TID;
     public static final ObjPlainTextSerializer INSTANCE = new ObjPlainTextSerializer();
 
     public static final ObjPlainTextSerializer single() {
         return INSTANCE;
+    }
+
+    public ObjPlainTextSerializer() {
+        super(OBJ_PLAINTEXT_SERIALIZER_TID, OBJ_PLAIN_TEXT_SERIALIZER_VID);
     }
 
 

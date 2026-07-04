@@ -51,15 +51,15 @@ import static studio.phaseshift.metatron.isa.tble.tbleInstSet.REC_ROW_TID;
  */
 public class ObjSQLSerializer extends AbstractObjSerializer<ResultSet> {
 
-    public static final fURI OBJ_SQL_SERIALIZER_VID = f("/m/mach/io/serializer/sql");
+    public static final fURI OBJ_SQL_SERIALIZER_TID = f("/m/mach/io/serializer/sql");
+    public static final fURI OBJ_SQL_SERIALIZER_VID = OBJ_SQL_SERIALIZER_TID;
 
-    @Override
-    public fURI vid() {
-        return OBJ_SQL_SERIALIZER_VID;
+    public ObjSQLSerializer() {
+        super(OBJ_SQL_SERIALIZER_TID, OBJ_SQL_SERIALIZER_VID);
     }
 
     @Override
-    public fURI jvm() {
+    public fURI vid() {
         return OBJ_SQL_SERIALIZER_VID;
     }
 
