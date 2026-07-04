@@ -150,7 +150,7 @@ public class Graphitty {
 
     public String writeToString(final String f, final Object... args) {
         this.parseDSL(f.formatted(args));
-        final String result = ((ByteArrayOutputStream) this.out).toString();
+        final String result = new String(((ByteArrayOutputStream) this.out).toByteArray(), StandardCharsets.UTF_8);
         ((ByteArrayOutputStream) this.out).reset();
         return result;
     }
@@ -159,12 +159,12 @@ public class Graphitty {
         try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             final Graphitty temp = new Graphitty(out);
             temp.parseDSL(f.formatted(args));
-            return out.toString();
+            return out.toString(StandardCharsets.UTF_8);
         } catch (final Exception e) {
             try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
                 final Graphitty temp = new Graphitty(out);
                 temp.parseDSL(f.replace("%", "%%").formatted(args));
-                return out.toString();
+                return out.toString(StandardCharsets.UTF_8);
             } catch (final Exception e2) {
                 System.out.println("graphitty error processing: " + f);
                 throw MTronException.of(e);
@@ -198,7 +198,7 @@ public class Graphitty {
         final Graphitty temp = new Graphitty(out);
         temp.ansiOn = false;
         temp.parseDSL(AttributedString.stripAnsi(string));
-        return out.toString();
+        return out.toString(StandardCharsets.UTF_8);
     }
 
     public static int viewLength(final String string) {

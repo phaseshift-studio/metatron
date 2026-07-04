@@ -31,6 +31,7 @@ import org.jline.utils.InfoCmp;
 import org.jline.widget.Widgets;
 import org.slf4j.event.Level;
 import studio.phaseshift.metatron.BootLoader;
+import studio.phaseshift.metatron.Tracer;
 import studio.phaseshift.metatron.TypeCheck;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.*;
@@ -827,21 +828,23 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
 
     protected void printResult(final Obj result) {
         if (this.splitMode && this.activePane != null) {
-            // In split mode, output to active pane's buffer (expects ANSI-formatted text)
             this.activePane.appendResult(result);
-            if (this.traceEnabled)
-                result.stream().filter(Obj::isFail).forEach(o -> this.activePane.appendOutput(formatTraceAnsi(o), false));
         } else {
-            // Normal mode — raw Graphitty markup; write() runs it through the highlighter
             result.stream().forEach(o -> {
                 this.write("{{-X-}}{{m}}=={{g}}>{{X}}");
                 this.write(o);
                 this.write("\n");
-                if (this.traceEnabled && o.isFail()) {
-                    this.write(formatTraceMarkup(o));
-                }
             });
         }
+        if (Tracer.stack.enabled())
+            result.stream().filter(Obj::isFail).forEach(this::renderTrace);
+    }
+
+    private void renderTrace(final Obj failObj) {
+        if (this.splitMode && this.activePane != null)
+            this.activePane.appendOutput(formatTraceAnsi(failObj), false);
+        else
+            this.write(formatTraceMarkup(failObj));
     }
 
     /**
@@ -850,16 +853,28 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
      */
     private static String formatTraceMarkup(final Obj failObj) {
         final StringBuilder sb = new StringBuilder();
-        Throwable current = failObj.asFail().message();
-        int depth = 0;
-        while (null != current) {
-            final String indent = "  ".repeat(depth);
-            sb.append("{{y}}").append(indent).append("\\_ ").append(current.toString()).append("{{X}}\n");
+        // Collect the full cause chain first so we know which entries have siblings
+        final java.util.List<Throwable> chain = new java.util.ArrayList<>();
+        Throwable t = failObj.asFail().message();
+        while (null != t) { chain.add(t); t = t.getCause(); }
+
+        for (int i = 0; i < chain.size(); i++) {
+            final boolean last = (i == chain.size() - 1);
+            final Throwable current = chain.get(i);
+
+            // Build tree prefixes
+            final StringBuilder depthBar = new StringBuilder();
+            for (int d = 0; d < i; d++)
+                depthBar.append("{{y}}│{{X}}  ");
+            // Cause line: depth bars + branch connector
+            sb.append(depthBar).append(last ? "{{y}}└─{{X}}" : "{{y}}├─{{X}}")
+              .append("{{y}}").append(current.toString()).append("{{X}}\n");
+            // Frame prefix: depth bars + continuation under this cause
+            final StringBuilder framePrefix = new StringBuilder(depthBar);
+            framePrefix.append(last ? "   " : "{{y}}│{{X}}  ");
             for (final StackTraceElement frame : current.getStackTrace()) {
-                sb.append("{{k}}").append(indent).append("    at ").append(frame.toString()).append("{{X}}\n");
+                sb.append("{{k}}").append(framePrefix).append("at ").append(frame.toString()).append("{{X}}\n");
             }
-            current = current.getCause();
-            depth++;
         }
         return sb.toString();
     }

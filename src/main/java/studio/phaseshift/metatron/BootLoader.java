@@ -22,6 +22,7 @@ package studio.phaseshift.metatron;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.Space;
+import studio.phaseshift.metatron.Tracer;
 import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
@@ -64,6 +65,7 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.STR_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.TRACER_TYPE_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.TYPER_TYPE_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.block_;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_FALSE;
@@ -355,16 +357,24 @@ public class BootLoader implements Rec, Feature.SelfClone {
                     InstSet.loadInstSetProvider(ALL)
                             .map(p -> p.type().getAnnotation(InstSet.JREService.class).vid())
                             .reduce("", (a, b) -> a + "\n\t\t" + b));
+            /// // SET TRACER STAGES /// ///
+            LOG.info("registering the {{c}}x_ers{{X}}...");
+            final Rec tracer = args.at("tracer/stage")
+                    .orElse(Stream.of(Tracer.values())
+                            .map(t -> rel(uri(t.name()), BOOL_FALSE))
+                            .collect(new CommonUtil.RecCollector()));
+            Tracer.init(tracer.tid(TRACER_TYPE_TID).as());
+            LOG.info("{{c}}tracer{{X}} registered: %s", tracer);
             /// /// SET TYPE CHECKER STAGES /// ///
             final Rec typer = args.at("typer/stage")
                     .orElse(Stream.of(TypeCheck.values())
                             .map(tc -> rel(uri(tc.name()), tc == TypeCheck.code_resolve ? BOOL_FALSE : BOOL_TRUE))
-                            .collect(new CommonUtil.RecCollector()));
+                            .collect(new CommonUtil.RecCollector())).vid(f("/sys/typer"));
             TypeCheck.init(typer.tid(TYPER_TYPE_TID).as());
-            LOG.info("initially enabled typer stages: %s", typer);
+            LOG.info("{{c}}typer{{X}} registered: %s", typer);
             /// /// SET REWRITER FILTER /// ///
-            final Rec rewriter = args.at("rewriter").orElse(rec(uri("allow"), lst(uri(ALL)), uri("disallow"), lst()));
-            LOG.info("initialized rewriter: %s", rewriter);
+            final Rec rewriter = args.at("rewriter").orElse(rec(uri("allow"), lst(uri(ALL)), uri("disallow"), lst())).vid(f("/sys/rewriter"));
+            LOG.info("{{c}}rewriter{{X}}: %s", rewriter);
             /// /// START OF BOOTING PROCESS /// ///
             String hostname = null;
             try {
@@ -453,6 +463,8 @@ public class BootLoader implements Rec, Feature.SelfClone {
                     fsSpace.makeFile(bootPath).vid(f("boot/file"));
                     final long count = mParser.eval(bootPath.toFile(), e -> {
                         LOG.error("{{r}}%s{{X}} starting at line {{y}}%d{{X}}\n%s", e.parseException(), e.lineNumber() + 1, e.lineString());
+                        if (Tracer.stack.enabled())
+                            e.parseException().printStackTrace(System.err);
                     }).count();
                     LOG.info("processed boot input: {{b}}%s{{/b}} {{g}}[{{y}}out: %d{{/y}}]{{/g}}", args.at(Tokens.BOOT).uriValue(), count);
                 } catch (final IOException e) {

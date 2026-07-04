@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.isa.mach.type.ui.console.menu;
 import org.jline.builtins.Commands;
 import org.jline.builtins.TTop;
 import org.slf4j.event.Level;
+import studio.phaseshift.metatron.Tracer;
 import studio.phaseshift.metatron.TypeCheck;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.type.mModel;
@@ -281,8 +282,8 @@ public final class ColonMenu extends MRec {
         this.at("trace", instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(NOOBJ_TID), lst(), (lhs, inst) -> {
             final boolean newState = lhs.isStr() && !lhs.strValue().isBlank()
                     ? lhs.strValue().trim().equalsIgnoreCase("on")
-                    : !console.isTraceEnabled();
-            console.setTraceEnabled(newState);
+                    : !Tracer.stack.enabled();
+            if (newState) Tracer.enable(Tracer.stack); else Tracer.disable(Tracer.stack);
             LOG.info("trace {{%s}}%s{{X}}", newState ? "g" : "r", newState ? "ON" : "OFF");
             return noobj();
         }), MUTABLE);
