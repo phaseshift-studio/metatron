@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.m;
 
+import studio.phaseshift.metatron.Tracer;
 import studio.phaseshift.metatron.TypeCheck;
 import studio.phaseshift.metatron.algebra.MultMonoid;
 import studio.phaseshift.metatron.algebra.PlusMonoid;
@@ -201,6 +202,7 @@ public class mInstSet extends AbstractInstSet {
     public static final fURI PORT_INST_TID = M_ISA_INST_TID.extend("port");
     public static final fURI TYPER_TYPE_TID = f("/m/sys/typer");
     public static final fURI REWRITER_TYPE_TID = f("/m/sys/rewriter");
+    public static final fURI TRACER_TYPE_TID = f("/m/sys/tracer");
     /// ////////////
     /// ////////////
     public static final fURI POLY_TID = M_ISA_TID.extend("poly");
@@ -244,7 +246,14 @@ public class mInstSet extends AbstractInstSet {
                     uri(TypeCheck.inst_rng.name()), stages.asRec().at(uri(TypeCheck.inst_rng.name())).orElse(BOOL_FALSE),
                     uri(TypeCheck.type_ctor.name()), stages.asRec().at(uri(TypeCheck.type_ctor.name())).orElse(BOOL_FALSE),
                     uri(TypeCheck.code_resolve.name()), stages.asRec().at(uri(TypeCheck.code_resolve.name())).orElse(BOOL_FALSE),
-                    uri(TypeCheck.obj_write.name()), stages.asRec().at(uri(TypeCheck.obj_write.name())).orElse(BOOL_FALSE)))
+                    uri(TypeCheck.obj_write.name()), stages.asRec().at(uri(TypeCheck.obj_write.name())).orElse(BOOL_FALSE))).create();
+    public static final Type TRACER_TYPE = Type.Builder.build()
+            .tid(REC_TID)
+            .vid(TRACER_TYPE_TID)
+            .isaPredicate(rec(
+                    uri(Tracer.stack.name()), BOOL_TYPE))
+            .constructor(stages -> rec(
+                    uri(Tracer.stack.name()), stages.asRec().at(uri(Tracer.stack.name())).orElse(BOOL_FALSE)))
             .create();
     
    /* public static final Type MONO_TYPE = Type.Builder.build()
@@ -350,7 +359,7 @@ public class mInstSet extends AbstractInstSet {
                                 "abc(a=>else(1),b=>else(2)){ *a + *b }      [-- default args inst     --]",
                                 "abc(a=>?int::T,b=>?>3.else(4)){ *a + *b }  [-- contextual args inst  --]",
                                 "abc(a=>?int::T,b=>|(*a +10)){ _.*b }       [-- dependent arg inst    --]",
-                                "(_,_){*<0>+*<1>}                           [-- 2-arg lambda inst     --]"),
+                                "(_,_){*0 + *1}                             [-- 2-arg lambda inst     --]"),
                         docWrap(CODE_TYPE, "a call with apply defined by an lhs obj and a sequence of insts",
                                 "12.plus(mult(_))            [-- 2-depth code           --]",
                                 "1-<[_,-<[_,_]>-]>-.sum()    [-- sugar'd branching code --]"),
@@ -358,7 +367,7 @@ public class mInstSet extends AbstractInstSet {
                         docWrap(FAIL_TYPE, "a reified exception obj that can be caught",
                                 "fail::[ouch]                [-- a fail obj with message --]",
                                 "fail::[doh] + 2             [-- plus(2) skipped over    --]",
-                                "fail::[dah] + 2 + catch(9)  [-- fail flattened to 9       --]"),
+                                "fail::[dah] + 2 + catch(9)  [-- fail flattened to 9     --]"),
                         /// ///////////////////////////////////
                         docWrap(TYPER_TYPE, null, null, mutableMap(
                                         uri(TypeCheck.inst_dom.name()), "ensure lhs obj matches instruction domain",
@@ -372,6 +381,13 @@ public class mInstSet extends AbstractInstSet {
                                 however, more active stages reduces potential for data corruption.
                                 typically use many stages when designing code and once stable,
                                 remove stages accordingly for increased performance.
+                                """),
+                        docWrap(TRACER_TYPE, null, null, mutableMap(
+                                        uri(Tracer.stack.name()), "render java stack traces on uncaught fail::T"),
+                                """
+                                diagnostic stages for surfacing internal java state.
+                                useful for debugging native java issues that mtron instructions
+                                trigger but cannot introspect.
                                 """),
                         docWrap(SPACE_TYPE, "storage systems structured as uri addressed objs"),
                         docWrap(MEM_SPACE_TYPE, "an in-memory space with objs indexed by a topic trie"),

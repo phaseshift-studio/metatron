@@ -44,7 +44,7 @@
  import studio.phaseshift.metatron.isa.Space;
  import studio.phaseshift.metatron.isa.grph.grphInstSet;
  import studio.phaseshift.metatron.isa.grph.io.ObjTP3Serializer;
-import studio.phaseshift.metatron.isa.grph.space.schema.modernSchema;
+ import studio.phaseshift.metatron.isa.grph.space.schema.modernSchema;
  import studio.phaseshift.metatron.isa.m.type.*;
  import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
  import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
@@ -84,8 +84,7 @@ import studio.phaseshift.metatron.isa.grph.space.schema.modernSchema;
   */
  public class grphSpace extends AbstractSpace<GraphTraversalSource> implements SchemaSpace {
 
-     public static final ObjSerializer<String> SERIALIZER = new ObjmtronSerializer();
-
+     public static final ObjSerializer<String> SERIALIZER = ObjmtronSerializer.singleNoClip();
      protected static ObjFactory FACTORY = null;
 
      protected static final String AUTO_TX = "auto_tx";
@@ -98,6 +97,26 @@ import studio.phaseshift.metatron.isa.grph.space.schema.modernSchema;
       * Tracked for proper cleanup of the remote JanusGraph connection.
       */
      private transient DriverRemoteConnection remoteConnection;
+
+     /**
+      * Whether the underlying graph supports user-supplied IDs.
+      * Embedded graphs ({@code gremlin.graph}) support them; remote backends don't.
+      */
+     private final boolean supportsUserSuppliedIds;
+     private final Class<?> vertexIdClass;
+     private final Class<?> edgeIdClass;
+
+     public boolean supportsUserSuppliedIds() {
+         return this.supportsUserSuppliedIds;
+     }
+
+     public Class<?> vertexIdClass() {
+         return this.vertexIdClass;
+     }
+
+     public Class<?> edgeIdClass() {
+         return this.edgeIdClass;
+     }
 
      public static final fURI GRPH_SPACE_TID = grphInstSet.GRPH_ISA_TID.extend(SPACE).extend("grphspace");
      public static final Type GRPH_SPACE_TYPE = Type.Builder.build()
@@ -125,7 +144,11 @@ import studio.phaseshift.metatron.isa.grph.space.schema.modernSchema;
          final Configuration graphConfig = toApacheConfiguration(configWithHosts);
          final GraphTraversalSource graphTraversalSource;
          final DriverRemoteConnection driverRemoteConnection;
-         if (graphConfig.containsKey("clusterConfiguration") || graphConfig.containsKey("clusterConfigurationFile")) {
+         if (!configBase.at(uri(Graph.GRAPH)).isNoObj()) {
+             final Graph graph = GraphFactory.open(graphConfig);
+             graphTraversalSource = graph.traversal();
+             driverRemoteConnection = null;
+         } else if (graphConfig.containsKey("clusterConfiguration") || graphConfig.containsKey("clusterConfigurationFile")) {
              TypeSerializerRegistry typeSerializerRegistry = TypeSerializerRegistry.build()
                      .addRegistry(JanusGraphIoRegistry.instance())
                      .create();
@@ -139,7 +162,8 @@ import studio.phaseshift.metatron.isa.grph.space.schema.modernSchema;
              driverRemoteConnection = null;
              graphTraversalSource = TinkerGraph.open().traversal();
          }
-         final grphSpace space = new grphSpace(graphTraversalSource, grph.jvm(), vid);
+         final boolean supportsUserIds = driverRemoteConnection == null;
+         final grphSpace space = new grphSpace(graphTraversalSource, grph.jvm(), vid, supportsUserIds);
          space.remoteConnection = driverRemoteConnection;
 
          // Load a pre-defined toy dataset if configured
@@ -164,8 +188,10 @@ import studio.phaseshift.metatron.isa.grph.space.schema.modernSchema;
      private static Configuration toApacheConfiguration(final Rec config) {
          final BaseConfiguration apacheConfig = new BaseConfiguration();
          config.logger().info("processing configuration: %s", config);
+         boolean isLocal = !config.at(uri(Graph.GRAPH)).isNoObj();
          if (!config.isEmpty()) {
-             apacheConfig.setProperty("clusterConfiguration", ".");
+             if (!isLocal)
+                 apacheConfig.setProperty("clusterConfiguration", ".");
              config.elements().forEach(rel -> {
                  final String key = Str.Helper.cleanString(rel.first());
                  final Object value = rel.second().isLst() ?
@@ -174,8 +200,10 @@ import studio.phaseshift.metatron.isa.grph.space.schema.modernSchema;
                  // Route cluster-connection properties into inline YAML so
                  // TinkerPop 3.8+ Cluster.open() parses them with correct types
                  // (hosts as list, port as int) rather than as flat strings.
-                 config.logger().info("clusterConfiguration.%s => %s", key, value);
-                 apacheConfig.setProperty("clusterConfiguration." + key, value);
+                 if (!isLocal) {
+                     config.logger().info("clusterConfiguration.%s => %s", key, value);
+                     apacheConfig.setProperty("clusterConfiguration." + key, value);
+                 }
                  apacheConfig.setProperty(key, value);
              });
          } else {
@@ -219,8 +247,19 @@ import studio.phaseshift.metatron.isa.grph.space.schema.modernSchema;
      protected ExistingGraphSchema existingGraphSchema;
      protected grphIncrQ grphIncrQ;
 
-     protected grphSpace(final GraphTraversalSource graph, final Map<Obj, Obj> config, final fURI vid) {
+     protected grphSpace(final GraphTraversalSource graph, final Map<Obj, Obj> config, final fURI vid,
+                         final boolean supportsUserSuppliedIds) {
          super(graph, config, GRPH_SPACE_TID, vid);
+         this.supportsUserSuppliedIds = supportsUserSuppliedIds;
+         if (supportsUserSuppliedIds) {
+             final Optional<Object> vId = IteratorUtil.findFirst(graph.V()).map(v -> v.id());
+             final Optional<Object> eId = IteratorUtil.findFirst(graph.E()).map(e -> e.id());
+             this.vertexIdClass = vId.map(Object::getClass).orElse((Class) Integer.class);
+             this.edgeIdClass = eId.map(Object::getClass).orElse((Class) Integer.class);
+         } else {
+             this.vertexIdClass = Long.class;
+             this.edgeIdClass = Long.class;
+         }
          lastCreated = this;
          //this.graphClass = MTronException.wrap(() -> (Class<GraphFactory>) Class.forName(Str.Helper.cleanString(this.at("config/gremlin/graph"))));
          //LOG.info("connected to %s", this.graphClass);
@@ -276,16 +315,10 @@ import studio.phaseshift.metatron.isa.grph.space.schema.modernSchema;
      //  I/O — readStream / writeStream (new API)
      // =========================================================================
 
-     /**
-      * Coerce a URI path segment to a typed element ID.
-      * Tries Long first (JanusGraph default vertex IDs), falls back to String (edge IDs, custom vertex IDs).
-      */
-     private static Object coerceId(final String entry) {
-         try {
-             return Long.parseLong(entry);
-         } catch (NumberFormatException e) {
-             return entry;
-         }
+     private static Object coerceId(final Object entry) {
+         if (entry instanceof Number)
+             return ((Number) entry).intValue();
+         return CommonUtil.isInt(entry.toString()) ? Integer.parseInt(entry.toString()) : entry;
      }
 
      private Iterator<IdObj> readVertexTraversal(final DataPath dp) {
@@ -469,7 +502,7 @@ import studio.phaseshift.metatron.isa.grph.space.schema.modernSchema;
                                  new EdgeRec((Edge) e, this))).iterator();
              } else {
                  final fURI routed = Space.Helper.routeFromSpace(pattern, this.routes());
-                 
+
                  LOG.debug("reading tp3 vid: %s => %s", pattern, routed);
                  if (routed.hasScheme() && !routed.test(this.pattern())) {
                      return new IdObj(routed, Router.global().read(routed)).iterator();
@@ -592,8 +625,8 @@ import studio.phaseshift.metatron.isa.grph.space.schema.modernSchema;
                  final Object id = CommonUtil.isInt(dp.entry()) ? Long.parseLong(dp.entry()) : dp.entry();
                  final String label = "V".equals(dp.collection())
                          ? (obj.isRec() && obj.asRec().jvm().containsKey(grphInstSet.LABEL)
-                                 ? obj.asRec().jvm().get(grphInstSet.LABEL).uriValue().toString()
-                                 : obj.tid().basePath().toString())
+                            ? obj.asRec().jvm().get(grphInstSet.LABEL).uriValue().toString()
+                            : obj.tid().basePath().toString())
                          : dp.collection();
                  try {
                      final Vertex vertex = IteratorUtil.stream(this.sjvm.V(id)).findFirst().orElseGet(() ->

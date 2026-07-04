@@ -105,7 +105,12 @@ public class Highlighter implements org.jline.reader.Highlighter {
             if (object instanceof Obj) {
                 final AttributedString styled = this.highlight(null, this.serializer.write((Obj) object));
                 return this.terminal != null ? styled.toAnsi(this.terminal) : styled.toAnsi();
-            } else return this.graphitty.writeToString(this.highlight(null, object.toString()).toAnsi());
+            } else {
+                final String str = object.toString();
+                return this.GRAPHITTY_PATTERN.matcher(str).find()
+                        ? this.graphitty.writeToString(str)
+                        : this.highlight(null, str).toAnsi();
+            }
         } catch (final Exception e) {
             return object.toString();
         }

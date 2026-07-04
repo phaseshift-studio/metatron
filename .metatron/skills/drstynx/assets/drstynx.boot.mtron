@@ -5,7 +5,7 @@
     agent_home   => /usr/dr,
     user_home    => /usr/marko,
     session_id   => 1,
-    typer/stages => [inst_dom     => true, 
+    typer/stage  => [inst_dom     => true,
                      inst_rng     => true,
                      type_ctor    => true,
                      obj_write    => true,
@@ -18,6 +18,8 @@
     knowgraph => <ws://ginger.local:8182/gremlin>,
     session   => <mariadb://localhost:3306/dr_session?createDatabaseIfNotExist=true&user=mtron&password=mtron>,
     localfs   => </home/killswitch/.hermes_clone>],
+ tracer/stage => [stack=>true],
+
  header       => """
    ______          _______ __   {{r}}PhaseShift Studio                    
   |   _  \ .----. |   _   |  |_.--.--.-----.--.--.
@@ -122,22 +124,29 @@ vecspace::[pattern     => v:#,
  abc => inst?lst[real]<=#{?}(doc=>#::T){ *ollama:embeddinggemma:latest.embed(*doc)}
  [------------------------------------^--]                                  
                           ]]]@/sys/space/vec/embed;
-           
- grphspace::[pattern  => g:#,
+
+grphspace::[pattern  => h:#,
              host     => !*<boot/args/external/knowgraph>,
              q        => [incrq::[=>],subq::[=>]],
-             schema   => noobj, [-- ensures auto discovery --]
+             schema   => noobj,
              config   => [
-               dataset                                    => <org.apache.tinkerpop.gremlin.LoadGraphWith.GraphData.MODERN>,
+               dataset                                    => <org.apache.tinkerpop.gremlin.LoadGraphWith.GraphData.CREW>,
                <serializer.className>                     => <org.apache.tinkerpop.gremlin.util.ser.GraphBinaryMessageSerializerV1>,
                <serializer.config.ioRegistries>           => [<org.janusgraph.graphdb.tinkerpop.JanusGraphIoRegistry>],
                <gremlin.remote.remoteConnectionClass>     => <org.apache.tinkerpop.gremlin.driver.remote.DriverRemoteConnection>,
                <gremlin.remote.remoteTraversalSourceName> => g],
-             route    => [g: => <>]]@</sys/space/grph/kg>;
+             route    => [h: => <>]]@</sys/space/grph/kg>;
 
-        [======================]  
+ grphspace::[pattern  => g:#,
+             q        => [incrq::[=>],subq::[=>]],
+             schema   => noobj,
+             config   => [
+               dataset         => <org.apache.tinkerpop.gremlin.LoadGraphWith.GraphData.MODERN>,
+               <gremlin.graph> => <org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerGraph>],
+             route    => [g:   => <>]]@</sys/space/grph/local>;
+        [======================]
         [======== AGENT =======]
-        [======================]   
+        [======================]
 
 [== if the llm session already exists, continue, else create it ==]    
 *<drdb:llm_session/1>.
