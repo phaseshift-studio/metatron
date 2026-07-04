@@ -36,12 +36,6 @@ print("{{r}}------------\n{{g}}*{{y}}boot/args{{X}}: ",
 [== mount instruction sets ==]
 print("{{y}}mounting instruction sets\n{{X}}");
 import(/m/mach/io);
-[==import(/m/math);
-import(/m/web);
-import(/m/iot);
-import(/m/grph);
-import(/m/llm);
-import(/m/tble);==]
    
 [== mount computing spaces ==]
  memspace::[pattern   => /usr/#,                                 

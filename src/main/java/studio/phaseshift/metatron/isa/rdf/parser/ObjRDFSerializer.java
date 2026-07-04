@@ -93,8 +93,8 @@ public class ObjRDFSerializer extends AbstractObjSerializer<Stream<Value>> {
                 return uri(value.stringValue());
             } else if (value.isBNode()) {
                 return str(value.stringValue());
-            } else if (value.isTriple()) {
-                final Triple triple = (Triple) value;
+            } else if (value.isTripleTerm()) {
+                final TripleTerm triple = (TripleTerm) value;
                 return lst(this.read(Stream.of(triple.getSubject())), this.read(Stream.of(triple.getPredicate())), this.read(Stream.of(triple.getObject())));
             }
         } else {
@@ -137,13 +137,13 @@ public class ObjRDFSerializer extends AbstractObjSerializer<Stream<Value>> {
             List<Value> values = this.lstValue().stream().flatMap(this::write).toList();
             List<Value> triples = new ArrayList<>();
             Resource blankNode = bnode();
-            triples.add(SimpleValueFactory.getInstance().createTriple(blankNode, RDF.TYPE, RDF.LIST));
+            triples.add(SimpleValueFactory.getInstance().createTripleTerm(blankNode, RDF.TYPE, RDF.LIST));
             for (Value value : values) {
-                triples.add(SimpleValueFactory.getInstance().createTriple(blankNode, RDF.FIRST, value));
+                triples.add(SimpleValueFactory.getInstance().createTripleTerm(blankNode, RDF.FIRST, value));
                 blankNode = SimpleValueFactory.getInstance().createBNode();
-                triples.add(SimpleValueFactory.getInstance().createTriple(blankNode, RDF.REST, blankNode));
+                triples.add(SimpleValueFactory.getInstance().createTripleTerm(blankNode, RDF.REST, blankNode));
             }
-            triples.add(SimpleValueFactory.getInstance().createTriple(blankNode, RDF.REST, RDF.NIL));
+            triples.add(SimpleValueFactory.getInstance().createTripleTerm(blankNode, RDF.REST, RDF.NIL));
             return triples.stream();
         } else if (obj.isRec()) {
             Model model = new DynamicModelFactory().createEmptyModel();
@@ -151,7 +151,7 @@ public class ObjRDFSerializer extends AbstractObjSerializer<Stream<Value>> {
             this.recValue().forEach((key, value) -> {
                 this.write(value).forEach(v -> model.add(blankNode, iri(key.toString()), v));
             });
-            return model.stream().map(s -> SimpleValueFactory.getInstance().createTriple(s.getSubject(), s.getPredicate(), s.getObject()));
+            return model.stream().map(s -> SimpleValueFactory.getInstance().createTripleTerm(s.getSubject(), s.getPredicate(), s.getObject()));
         }
         throw MTronException.of("cannot write obj to rdf: %s".formatted(obj));
     }
