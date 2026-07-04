@@ -45,7 +45,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.mach.io.ioInstSet.OBJ_SERIALIZER_TID;
+import static studio.phaseshift.metatron.isa.web.webInstSet.OBJ_JAVA_SERIALIZER_TID;
 
 /*
  * A serializer that converts Java source code into a metatron Rec (and back) using
@@ -62,7 +62,7 @@ import static studio.phaseshift.metatron.isa.mach.io.ioInstSet.OBJ_SERIALIZER_TI
  */
 public class ObjJavaSerializer extends AbstractObjSerializer<String> {
 
-    public static final fURI OBJ_JAVA_SERIALIZER_VID = OBJ_SERIALIZER_TID.extend("java");
+    public static final fURI OBJ_JAVA_SERIALIZER_VID = OBJ_JAVA_SERIALIZER_TID;
 
     /**
      * Key for the TreeSitter node type — deliberately NOT "type"
@@ -120,6 +120,10 @@ public class ObjJavaSerializer extends AbstractObjSerializer<String> {
 
     public static ObjJavaSerializer single() {
         return INSTANCE;
+    }
+
+    public ObjJavaSerializer() {
+        super(OBJ_JAVA_SERIALIZER_TID, OBJ_JAVA_SERIALIZER_VID);
     }
 
     /**

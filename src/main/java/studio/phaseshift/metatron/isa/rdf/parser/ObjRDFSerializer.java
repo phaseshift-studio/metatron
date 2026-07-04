@@ -47,8 +47,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.mach.io.ioInstSet.OBJ_MTRON_STRING_SERIALIZER_VID;
-import static studio.phaseshift.metatron.isa.mach.io.ioInstSet.OBJ_SERIALIZER_TID;
+import static studio.phaseshift.metatron.isa.web.webInstSet.OBJ_RDF_SERIALIZER_TID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -56,12 +55,16 @@ import static studio.phaseshift.metatron.isa.mach.io.ioInstSet.OBJ_SERIALIZER_TI
 public class ObjRDFSerializer extends AbstractObjSerializer<Stream<Value>> {
 
 
-    public static final fURI OBJ_RDF_SERIALIZER_VID = OBJ_SERIALIZER_TID.extend(studio.phaseshift.metatron.Tokens.RDF);
+    public static final fURI OBJ_RDF_SERIALIZER_VID = OBJ_RDF_SERIALIZER_TID;
 
     private static final ObjRDFSerializer INSTANCE = new ObjRDFSerializer();
 
     public static ObjRDFSerializer single() {
         return INSTANCE;
+    }
+
+    public ObjRDFSerializer() {
+        super(OBJ_RDF_SERIALIZER_TID, OBJ_RDF_SERIALIZER_VID);
     }
     
     @Override
@@ -154,10 +157,6 @@ public class ObjRDFSerializer extends AbstractObjSerializer<Stream<Value>> {
     }
 
     public fURI vid() {
-        return OBJ_RDF_SERIALIZER_VID;
-    }
-
-    public fURI jvm() {
         return OBJ_RDF_SERIALIZER_VID;
     }
 }

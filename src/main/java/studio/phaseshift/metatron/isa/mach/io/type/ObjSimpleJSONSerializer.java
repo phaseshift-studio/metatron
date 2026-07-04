@@ -37,6 +37,7 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.BASE_TYPES;
 import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.Poly.MUTABLE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBytes.bytes;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -46,7 +47,8 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.mach.io.ioInstSet.OBJ_SIMPLE_JSON_SERIALIZER_VID;
+import static studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer.OBJ_SIMPLE_JSON_SERIALIZER_TID;
+import static studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer.OBJ_SIMPLE_JSON_SERIALIZER_VID;
 import static studio.phaseshift.metatron.isa.web.webInstSet.JSON_TID;
 
 /*
@@ -59,10 +61,11 @@ public class ObjSimpleJSONSerializer extends AbstractObjSerializer<JsonElement> 
     private static final String _TID = "_tid";
     private static final String _VID = "_vid";
 
-    private final boolean wrapURI;
-    private final boolean biasTowardsURI = true;
-    private final boolean biasTowardsObjs = false;
-    private final boolean embedCandQ = false;
+    // ── Config keys ──────────────────────────────────────────────
+    private static final fURI KEY_WRAP_URI       = fURI.Singleton.f("wrap_uri");
+    private static final fURI KEY_BIAS_TOWARDS_URI = fURI.Singleton.f("bias_towards_uri");
+    private static final fURI KEY_BIAS_TOWARDS_OBJS = fURI.Singleton.f("bias_towards_objs");
+    private static final fURI KEY_EMBED_CANDQ    = fURI.Singleton.f("embed_candq");
 
     private static JsonReader makeReader(final String json) {
         final JsonReader r = new JsonReader(new StringReader(json));
@@ -72,12 +75,24 @@ public class ObjSimpleJSONSerializer extends AbstractObjSerializer<JsonElement> 
 
     private static final ObjSimpleJSONSerializer INSTANCE = new ObjSimpleJSONSerializer();
 
+    // ── Constructors ─────────────────────────────────────────────
+
+    protected ObjSimpleJSONSerializer(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
+        super(jvm, tid, vid);
+    }
+
     public ObjSimpleJSONSerializer() {
-        this(true);
+        super(OBJ_SIMPLE_JSON_SERIALIZER_TID, OBJ_SIMPLE_JSON_SERIALIZER_VID);
+        this.at(KEY_WRAP_URI, bool(true), MUTABLE);
     }
 
     public ObjSimpleJSONSerializer(final boolean wrapURI) {
-        this.wrapURI = wrapURI;
+        this();
+        this.at(KEY_WRAP_URI, bool(wrapURI), MUTABLE);
+    }
+
+    public static ObjSimpleJSONSerializer of(final Rec rec, final fURI vid) {
+        return new ObjSimpleJSONSerializer(rec.jvm(), OBJ_SIMPLE_JSON_SERIALIZER_TID, vid);
     }
 
     public static ObjSimpleJSONSerializer single() {
@@ -93,9 +108,22 @@ public class ObjSimpleJSONSerializer extends AbstractObjSerializer<JsonElement> 
         return OBJ_SIMPLE_JSON_SERIALIZER_VID;
     }
 
-    @Override
-    public fURI jvm() {
-        return OBJ_SIMPLE_JSON_SERIALIZER_VID;
+    // ── Config accessors ─────────────────────────────────────────
+
+    private boolean isWrapURI() {
+        return this.at(KEY_WRAP_URI).orElse(bool(true)).boolValue();
+    }
+
+    private boolean isBiasTowardsURI() {
+        return this.at(KEY_BIAS_TOWARDS_URI).orElse(bool(true)).boolValue();
+    }
+
+    private boolean isBiasTowardsObjs() {
+        return this.at(KEY_BIAS_TOWARDS_OBJS).orElse(bool(false)).boolValue();
+    }
+
+    private boolean isEmbedCandQ() {
+        return this.at(KEY_EMBED_CANDQ).orElse(bool(false)).boolValue();
     }
 
     @Override
@@ -155,12 +183,12 @@ public class ObjSimpleJSONSerializer extends AbstractObjSerializer<JsonElement> 
                 for (var j : jp.getAsJsonArray()) {
                     list.add(this.read(j));
                 }
-                return this.biasTowardsObjs ? objs(list) : lst(list);
+                return this.isBiasTowardsObjs() ? objs(list) : lst(list);
             } else if (json.isJsonObject()) {
                 fURI vid = null;
                 fURI tid = null;
                 final JsonObject jp = (JsonObject) json;
-                if (this.embedCandQ) {
+                if (this.isEmbedCandQ()) {
                     for (var kv : jp.getAsJsonObject().asMap().entrySet()) {
                         if (kv.getKey().equals(_TID))
                             tid = f(kv.getValue().getAsString());
@@ -228,7 +256,7 @@ public class ObjSimpleJSONSerializer extends AbstractObjSerializer<JsonElement> 
 
     @Override
     public JsonPrimitive writeUri(final Uri uri) {
-        return new JsonPrimitive(this.wrapURI ? ("<" + uri.uriValue().toString() + ">") : uri.uriValue().toString());
+        return new JsonPrimitive(this.isWrapURI() ? ("<" + uri.uriValue().toString() + ">") : uri.uriValue().toString());
     }
 
     @Override
@@ -252,7 +280,7 @@ public class ObjSimpleJSONSerializer extends AbstractObjSerializer<JsonElement> 
     public JsonObject writeRec(final Rec rec) {
         JsonObject object = new JsonObject();
         rec.elements().forEach(rel -> object.add(rel.relValue().get0().toString(), this.write(rel.relValue().get1())));
-        if (this.embedCandQ && (!BASE_TYPES.contains(rec.tid()) || rec.vid() != null)) {
+        if (this.isEmbedCandQ() && (!BASE_TYPES.contains(rec.tid()) || rec.vid() != null)) {
             object.addProperty("_tid", rec.tid().toString());
             if (rec.vid() != null)
                 object.addProperty("_vid", rec.vid().toString());

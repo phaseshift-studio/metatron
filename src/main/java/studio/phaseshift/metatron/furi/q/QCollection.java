@@ -257,17 +257,27 @@ public final class QCollection {
                 REWRITE_TABLE.put(inst.tid(), obj.asRec());
             } else {
                 Router.global().registerRedirect(f(vid.name()), vid);
-                INST_TABLE.computeIfAbsent(inst.tid().basePath(), k -> new LinkedHashSet<>()).add(obj.asRec());
+                INST_TABLE.computeIfAbsent(inst.tid().basePath(), k -> Collections.synchronizedSet(new LinkedHashSet<>())).add(obj.asRec());
             }
             return obj;
         }
 
         @Override
         public Obj read(final fURI pattern) {
-            return objs(INST_TABLE.entrySet()
+            // snapshot to avoid ConcurrentModificationException during concurrent writes
+            final List<Map.Entry<fURI, Set<Rec>>> entries;
+            synchronized (INST_TABLE) {
+                entries = new ArrayList<>(INST_TABLE.entrySet());
+            }
+            return objs(entries
                     .stream()
                     .filter(kv -> kv.getKey().test(pattern.basePath().asNode()))
-                    .flatMap(kv -> kv.getValue().stream())
+                    .flatMap(kv -> {
+                        final Set<Rec> set = kv.getValue();
+                        synchronized (set) {
+                            return new ArrayList<>(set).stream();
+                        }
+                    })
                     .filter(i -> !pattern.hasDom() || i.asRec().at(OBJ).dom().test(T(pattern.dom().big())))
                     .filter(i -> !pattern.hasRng() || i.asRec().at(OBJ).rng().test(T(pattern.rng().big())))
                     .map(i -> pattern.isNode() ? i : rel(i.asRec().at(OBJ).tid().toUri(), i)))

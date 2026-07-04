@@ -27,9 +27,11 @@ import studio.phaseshift.metatron.util.MTronException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.HexFormat;
+import java.util.Map;
 
 import static studio.phaseshift.metatron.isa.m.mInstSet.CODE_TID;
-import static studio.phaseshift.metatron.isa.mach.io.ioInstSet.OBJ_BYTE_BUFFER_SERIALIZER_VID;
+import static studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer.OBJ_BYTE_BUFFER_SERIALIZER_TID;
+import static studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer.OBJ_BYTE_BUFFER_SERIALIZER_VID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -44,17 +46,20 @@ public class ObjByteBufferSerializer extends AbstractObjSerializer<ByteBuffer> {
         return INSTANCE;
     }
 
-    public ObjByteBufferSerializer() {
+    protected ObjByteBufferSerializer(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
+        super(jvm, tid, vid);
     }
 
+    public ObjByteBufferSerializer() {
+        super(OBJ_BYTE_BUFFER_SERIALIZER_TID, OBJ_BYTE_BUFFER_SERIALIZER_VID);
+    }
+
+    public static ObjByteBufferSerializer of(final Rec rec, final fURI vid) {
+        return new ObjByteBufferSerializer(rec.jvm(), OBJ_BYTE_BUFFER_SERIALIZER_TID, vid);
+    }
 
     @Override
     public fURI vid() {
-        return OBJ_BYTE_BUFFER_SERIALIZER_VID;
-    }
-
-    @Override
-    public fURI jvm() {
         return OBJ_BYTE_BUFFER_SERIALIZER_VID;
     }
 

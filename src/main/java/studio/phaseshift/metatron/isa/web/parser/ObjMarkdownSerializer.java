@@ -40,7 +40,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.mach.io.ioInstSet.OBJ_SERIALIZER_TID;
+import static studio.phaseshift.metatron.isa.web.webInstSet.OBJ_MARKDOWN_SERIALIZER_TID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -51,10 +51,14 @@ public class ObjMarkdownSerializer extends AbstractObjSerializer<Node> {
     private static final ObjMarkdownSerializer INSTANCE = new ObjMarkdownSerializer();
     private static final Parser parser = Parser.builder().build();
 
-    public static final fURI OBJ_MARKDOWN_SERIALIZER_VID = OBJ_SERIALIZER_TID.extend("markdown");
+    public static final fURI OBJ_MARKDOWN_SERIALIZER_VID = OBJ_MARKDOWN_SERIALIZER_TID;
 
     public static ObjMarkdownSerializer single() {
         return INSTANCE;
+    }
+
+    public ObjMarkdownSerializer() {
+        super(OBJ_MARKDOWN_SERIALIZER_TID, OBJ_MARKDOWN_SERIALIZER_VID);
     }
 
     public Obj toHTML(final Node markdown) {

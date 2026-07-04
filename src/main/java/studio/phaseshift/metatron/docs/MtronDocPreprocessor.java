@@ -29,6 +29,13 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static studio.phaseshift.metatron.isa.m.type.Poly.MUTABLE;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 /**
  * Pre-processes adoc text, evaluating {@code [mtron]----...----} blocks
  * and replacing each block's content with the mtron input/output listing.
@@ -70,7 +77,11 @@ public final class MtronDocPreprocessor {
     private static final Pattern NOPROMPT = Pattern.compile("\\[NO_PROMPT]");
     private static final Pattern MAXOUTPUT = Pattern.compile("\\[MAXOUTPUT \\d+]");
 
-    private static final ObjmtronSerializer SER = new ObjmtronSerializer(35,7,7);
+    private static final ObjmtronSerializer SER;
+    static {
+        SER = new ObjmtronSerializer();
+        SER.at(uri("clip"), rec("str", jnt(35), "rec", jnt(7), "lst", jnt(7)), MUTABLE);
+    }
     private static final GraphittyLogger LOG = Graphitty.log(MtronDocPreprocessor.class);
 
     // ── Process entry point ─────────────────────────────────────────

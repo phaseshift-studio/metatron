@@ -45,7 +45,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.mach.io.ioInstSet.OBJ_SERIALIZER_TID;
+import static studio.phaseshift.metatron.isa.web.webInstSet.OBJ_XML_SERIALIZER_TID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -53,12 +53,16 @@ import static studio.phaseshift.metatron.isa.mach.io.ioInstSet.OBJ_SERIALIZER_TI
 public class ObjXMLSerializer extends AbstractObjSerializer<Document> {
 
     private static final GraphittyLogger LOG = Graphitty.log(ObjXMLSerializer.class);
-    public static final fURI OBJ_XML_SERIALIZER_VID = OBJ_SERIALIZER_TID.extend("xml");
-    
+    public static final fURI OBJ_XML_SERIALIZER_VID = OBJ_XML_SERIALIZER_TID;
+
     private static final ObjXMLSerializer INSTANCE = new ObjXMLSerializer();
-    
+
     public static final ObjXMLSerializer single() {
         return INSTANCE;
+    }
+
+    public ObjXMLSerializer() {
+        super(OBJ_XML_SERIALIZER_TID, OBJ_XML_SERIALIZER_VID);
     }
 
     private Rec readElement(final Element element) {
