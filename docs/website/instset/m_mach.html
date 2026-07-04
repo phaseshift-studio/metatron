@@ -278,42 +278,8 @@ bin/metatron</code></pre>
  obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
  inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
  space=&gt;[super=&gt;!*/m],
- type=&gt;[
-  router::T,
-  space::T,
-  console::T,
-  fsspace::T,
-  serial::T,
-  file::T,
-  dir::T,
-  image::T,
-  factory::T,
-  mfactory::T,
-  machine::T,
-  swarm::T,
-  thread_executor::T,
-  thread::T,
-  core::T,
-  virtual::T,
-  clstrspace::T],
- inst=&gt;[
-  lift(#{?}::T),
-  rewrite?rec[short=&gt;uri,long=&gt;uri]&lt;=#{?}(uri::T),
-  close?noobj&lt;=router(),
-  nano?#{?}&lt;=#{?}(),
-  less?noobj{0}&lt;=str(isa(int::T).else(10)),
-  as?file&lt;=uri(file::T),
-  as?image&lt;=bytes(image::T,else(1.0000)),
-  as?file&lt;=uri(file::T),
-  as?bytes&lt;=file(bytes::T),
-  zero?A&lt;=A(),
-  one?A&lt;=A(),
-  which(uri::T),
-  inject(int::T,#::T),
-  /m/inst/thread?thread&lt;=#{?}(#::T),
-  stop?thread&lt;=thread(),
-  pause?thread&lt;=thread(),
-  resume?thread&lt;=thread()]]@/m/mach</code></pre>
+ type=&gt;[router::T,space::T,console::T,style{?}::T,accordion::T,table::T,panel::T,fsspace::T,serial::T,file::T,...(11 more)],
+ inst=&gt;[lift(#{?}::T),rewrite?rec[short=&gt;uri,long=&gt;uri]&lt;=#{?}(uri::T),close?noobj&lt;=router(),nano?#{?}&lt;=#{?}(),less?noobj{0}&lt;=str(isa(int::T).else(10)),as?file&lt;=uri(file::T),as?image&lt;=bytes(image::T,else(1.0000)),as?file&lt;=uri(file::T),as?bytes&lt;=file(bytes::T),zero?A&lt;=A(),...(7 more)]]@/m/mach</code></pre>
                     </div>
                 </div>
             </div>
@@ -321,7 +287,7 @@ bin/metatron</code></pre>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <button class="btn btn-outline-secondary" disabled>Consts <span class="pill-label badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">13</span></a><a href="#spaces" class="btn btn-outline-primary">Spaces <span class="pill-label badge bg-info">3</span></a><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">12</span></a><button class="btn btn-outline-secondary" disabled>Rewrites <span class="pill-label badge bg-dark">0</span></button>
+        <button class="btn btn-outline-secondary" disabled>Consts <span class="pill-label badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">17</span></a><a href="#spaces" class="btn btn-outline-primary">Spaces <span class="pill-label badge bg-info">3</span></a><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">12</span></a><button class="btn btn-outline-secondary" disabled>Rewrites <span class="pill-label badge bg-dark">0</span></button>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="card">
@@ -366,6 +332,18 @@ bin/metatron</code></pre>
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a><a href="#type-virtual" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">virtual</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;" style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;line-height:1.25;" class="micro-label"><div style="font-size:0.6rem;opacity:0.45;font-family:monospace;white-space:nowrap;">ui&thinsp;/</div><div><small class="mini-label fw-bold text-secondary" style="font-family:monospace;">widget</small></div></div><div class="d-flex flex-wrap"><a href="#type-accordion" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">accordion</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#type-panel" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">panel</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#type-style" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">style</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#type-table" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">table</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a></div></div>
 </div><div class="mb-3">
@@ -422,8 +400,22 @@ bin/metatron</code></pre>
 </div></div>
     </div>
 </div><div class="container-xxl mb-4" id="types">
-    <h3 class="text-primary mb-3">Types <span class="pill-label badge bg-primary">13</span></h3>
-    <div class="card mb-3" id="type-console">
+    <h3 class="text-primary mb-3">Types <span class="pill-label badge bg-primary">17</span></h3>
+    <div class="card mb-3" id="type-accordion">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">accordion::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#type-rec" class="instset-doc-small-code text-info code">/m/rec::T</a></span>
+        </span>
+        <small class="text-muted code">/m/mach/ui/widget/accordion</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[
+  title=&gt;str{?}::T,
+  body=&gt;str{*}::T,
+  style=&gt;style{?}::T]][ctor?accordion&lt;=#{?}(rec::T)]@/m/mach/ui/widget/accordion</code></pre></div>
+    
+    
+</div><div class="card mb-3" id="type-console">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">console::T</span>
@@ -535,6 +527,17 @@ bin/metatron</code></pre>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">factory::T[][ctor?mfactory&lt;=#{?}()]@/m/mach/mfactory</code></pre></div>
     
     
+</div><div class="card mb-3" id="type-panel">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">panel::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#type-rec" class="instset-doc-small-code text-info code">/m/rec::T</a></span>
+        </span>
+        <small class="text-muted code">/m/mach/ui/widget/panel</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[=&gt;]][ctor?panel&lt;=#{?}(rec::T)]@/m/mach/ui/widget/panel</code></pre></div>
+    
+    
 </div><div class="card mb-3" id="type-router">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -544,6 +547,24 @@ bin/metatron</code></pre>
         <small class="text-muted code">/m/mach/router</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T@/m/mach/router</code></pre></div>
+    
+    
+</div><div class="card mb-3" id="type-style">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">style::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#type-rec" class="instset-doc-small-code text-info code">/m/rec{?}::T</a></span>
+        </span>
+        <small class="text-muted code">/m/mach/ui/widget/style</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec{?}::T[?[  border=&gt;uri{?}::T,
+  background=&gt;str{?}::T,
+  foreground=&gt;str{?}::T,
+  divider=&gt;str{?}::T,
+  headerDivider=&gt;str{?}::T,
+  pointer=&gt;str{?}::T,
+  leftMargin=&gt;str{?}::T,
+  ...(3 more)]][ctor?style&lt;=#{?}(rec::T)]@/m/mach/ui/widget/style</code></pre></div>
     
     
 </div><div class="card mb-3" id="type-swarm">
@@ -572,6 +593,17 @@ the objs referenced by the monads that halt are the result of the machine execut
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  code <span class="text-light">=&gt;</span> <span class="text-info">&#39;the code the machine will evaluate&#39;</span>
 </pre>
 </div>
+</div><div class="card mb-3" id="type-table">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">table::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#type-rec" class="instset-doc-small-code text-info code">/m/rec::T</a></span>
+        </span>
+        <small class="text-muted code">/m/mach/ui/widget/table</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[=&gt;]][ctor?table&lt;=#{?}(rec::T)]@/m/mach/ui/widget/table</code></pre></div>
+    
+    
 </div><div class="card mb-3" id="type-thread">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
