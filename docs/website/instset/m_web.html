@@ -295,8 +295,8 @@ bin/metatron</code></pre>
     bytes=&gt;60,
     fail=&gt;60],
    justify=&gt;true]@/m/mach/io/serializer/string/clean,
-  bytebuffer::[=&gt;]@bytebuffer,
-  simple::[wrap_uri=&gt;true]@simple,
+  /m/mach/io/serializer/bytebuffer::[=&gt;]@/m/mach/io/serializer/bytebuffer,
+  /m/mach/io/serializer/json/simple::[wrap_uri=&gt;true]@/m/mach/io/serializer/json/simple,
   obj_bson::[=&gt;]@obj_bson],
  type=&gt;[mime::T,xml::T,html::T,json::T,css::T,markdown::T,java::T,serializer::T,obj_mtron::T,obj_simple_json::T,...(23 more)],
  inst=&gt;[ping?/m/math/time&lt;=#{?}(uri::T),format?str&lt;=markdown(),as?json&lt;=str(json::T),as?xml&lt;=str(xml::T),as?html&lt;=str(html::T),as?markdown&lt;=str(markdown::T),as?java&lt;=str(java::T),as?str&lt;=java(str::T),as?str&lt;=html(str::T),as?str&lt;=markdown(str::T),...(3 more)]]@/m/web</code></pre>
@@ -666,12 +666,12 @@ html::[html=&gt;
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">an mcp client type specification <span class="text-light">=&gt;</span> a connection to an existing mcp server</pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  {?}status <span class="text-light">=&gt;</span> <span class="text-info">&#39;the current status of the mcp client/server connection&#39;</span>
-  {?}command <span class="text-light">=&gt;</span> <span class="text-info">&#39;only necessary for stdio mcp servers, where the client is the server&#39;</span>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  {?}command <span class="text-light">=&gt;</span> <span class="text-info">&#39;only necessary for stdio mcp servers, where the client is the server&#39;</span>
   {?}host <span class="text-light">=&gt;</span> <span class="text-info">&#39;the mcp server endpoint (optional for stdio)&#39;</span>
   {?}transport <span class="text-light">=&gt;</span> <span class="text-info">&quot;specify the transport if host schema resolution isn&#39;t sufficient&quot;</span>
   {?}env <span class="text-light">=&gt;</span> <span class="text-info">&#39;environment variables for the stdio server process&#39;</span>
   {?}tool <span class="text-light">=&gt;</span> <span class="text-info">&#39;the tools/functions available for use on the mcp server&#39;</span>
+  {?}status <span class="text-light">=&gt;</span> <span class="text-info">&#39;the current status of the mcp client/server connection&#39;</span>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>

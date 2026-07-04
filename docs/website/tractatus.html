@@ -1603,26 +1603,26 @@ else(throw('no model fits the spec'))            /
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; @aix.chat('evaluate the following expression using your mtron eval tool: [1,2]==[+2,-&lt;[+3,+4]]==[_,&gt;-]')
-==&gt;"""The expression you've provided contains a mix of standard list notation and what appears to be a custom or non-standard syntax (possibly from a specific programming language or logic system). Let's break it down step by step.
+==&gt;"""Let's break down and evaluate the expression step by step:
 
-   ### Expression:
+   ### Given expression:
    ```
    [1,2]==[+2,-&lt;[+3,+4]]==[_,&gt;-]
    ```
 
-   This looks like it's using a mix of standard list comparison and some custom syntax. Let's assume the custom syntax is from a logic or functional programming system like **M-tron**, which may use special notations for lists, variables, and operations.
+   We'll assume this is a custom or symbolic expression, and we'll interpret it logically. We'll evaluate each part and compare them.
 
    ---
 
-   ### Step-by-step Interpretation
+   ### Step 1: Evaluate `[1,2]`
+   This is a list containing the elements `1` and `2`.
 
-   #### 1. Leftmost part: `[1,2]`
-   This is a standard list containing the elements `1` and `2`.
+   **Result:** `[1, 2]`
 
-   #### 2. Middle part: `[+2,-&lt;[+3,+4]]`
-   This is more complex. Let's parse it:
+   ---
 
-   - `+2`: This could mean a positive integer, or perhaps a unary operator applied to `2`.
+   ### Step 2: Evaluate `[+2,-&lt;[+3,+4]]`
+
    ...</code></pre>
 </div>
 </div>
@@ -1802,7 +1802,7 @@ mtron&gt; *ollama:+.
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; @aix.chat("I need you evaluate the mtron expresion `-&lt;[_=&gt;_]&gt;&gt;.&gt;-[,]-&lt;[_,-&lt;[_=&gt;_]&gt;&gt;]&gt;&gt;.&gt;-` with a lhs of `1`. Please don't tell me the result of the evaluation until I ask for it sometime in the near future.")
-==&gt;'The evaluation of the mtron expression with the given lhs has been completed. I will provide the result when you ask for it.'</code></pre>
+==&gt;"I have evaluated the mtron expression with the given left-hand side (lhs) of `1`. The result is stored and will be provided to you when you ask for it. Let me know when you're ready to see the result!"</code></pre>
 </div>
 </div>
 <div class="openblock card">
@@ -2537,7 +2537,7 @@ The predicate component of the type definition tests an <code>int</code> to dete
 <div class="paragraph">
 <p>While every <code>type</code> is an <code>obj</code>, not every <code>obj</code> is a <code>type</code>.
 Those <code>objs</code> that are not <code>types</code> are <em>instances</em> of some <code>type</code>.
-This is the foundation for all other <code>objs</code> in {{g}}m{{b}}E{{m}}t{{y}}A{{y}}t{{m}}r{{m}}o{{y}}N{{X}}.</p>
+This is the foundation for all other <code>objs</code> in {{c}}m{{c}}E{{y}}T{{g}}a{{c}}T{{y}}R{{y}}o{{y}}n{{X}}.</p>
 </div>
 <h4 id="sec-cascading-type-constructions" class="discrete">cascading type constructions</h4>
 <h3 id="sec-mono-types" class="discrete">mono types</h3>
@@ -5175,14 +5175,14 @@ mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T).as(str::T)     ​5​
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; bin:bash('-c',df)
 ==&gt;'Filesystem     1K-blocks      Used Available Use% Mounted on'
-==&gt;'tmpfs            6356184      5724   6350460   1% /run'
+==&gt;'tmpfs            6356184      5636   6350548   1% /run'
 ==&gt;'efivarfs             128        42        82  34% /sys/firmware/efi/efivars'
-==&gt;'/dev/nvme0n1p2 959786032 521164568 389793256  58% /'
-==&gt;'tmpfs           31780908    388088  31392820   2% /dev/shm'
+==&gt;'/dev/nvme0n1p2 959786032 521580584 389377240  58% /'
+==&gt;'tmpfs           31780908    478800  31302108   2% /dev/shm'
 ==&gt;'tmpfs               5120        20      5100   1% /run/lock'
 ==&gt;'tmpfs           31780908         0  31780908   0% /run/qemu'
 ==&gt;'/dev/nvme0n1p1    523248      6288    516960   2% /boot/efi'
-==&gt;'tmpfs            6356180       284   6355896   1% /run/user/1000'
+==&gt;'tmpfs            6356180       300   6355880   1% /run/user/1000'
 ==&gt;'/dev/nvme1n1p2 976744444 252064724 724679720  26% /media/hdd0'
 ==&gt;'/dev/sdb1       30521344    512864  30008480   2% /media/killswitch/EL RANCHO'
 mtron&gt; bin:bash('-c',ls)
@@ -5333,8 +5333,9 @@ mtron&gt; gB::1.0.lt(kB::12000000.0)
 <h2 id="sec-graph-computing" class="discrete">Graph Computing</h2>
 <div class="legend-index">
 <ul>
-<li class="legend-lvl-3"><a href="#sec-mgrphspace" onclick="var t=document.getElementById('sec-mgrphspace');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">/m/grph/space</a></li>
-<li class="legend-lvl-3"><a href="#sec-grph-instset" onclick="var t=document.getElementById('sec-grph-instset');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">grph instset</a></li>
+<li class="legend-lvl-3"><a href="#sec-connecting-a-graph-space" onclick="var t=document.getElementById('sec-connecting-a-graph-space');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Connecting a Graph Space</a></li>
+<li class="legend-lvl-3"><a href="#sec-traversing-graph-space" onclick="var t=document.getElementById('sec-traversing-graph-space');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Traversing Graph Space</a></li>
+<li class="legend-lvl-3"><a href="#sec-a-graph-instruction-set" onclick="var t=document.getElementById('sec-a-graph-instruction-set');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">A Graph Instruction Set</a></li>
 <li class="legend-lvl-3"><a href="#sec-property-graph-extensions" onclick="var t=document.getElementById('sec-property-graph-extensions');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Property Graph Extensions</a></li>
 <li class="legend-lvl-3"><a href="#sec-metatron-encoded-graphs" onclick="var t=document.getElementById('sec-metatron-encoded-graphs');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">metatron Encoded Graphs</a></li>
 <li class="legend-lvl-4"><a href="#sec-performance-tiering" onclick="var t=document.getElementById('sec-performance-tiering');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Performance Tiering</a></li>
@@ -5372,10 +5373,8 @@ mtron&gt; gB::1.0.lt(kB::12000000.0)
 </div>
 </details>
 <div class="paragraph">
-<p>A graph is a data structure composed of a set of vertices \(V\) connected by a set of edges \(E\), denoted
-\[
-G = (V,E),
-\]
+<p>A graph is a data structure composed of a set of vertices \(V\) connected by a set of edges \(E\), denoted \[
+G = (V,E), \]
 where \(E\) is typically a <a href="https://en.wikipedia.org/wiki/Partial_function">partial function</a> \(E \subseteq (V \times V)\).</p>
 </div>
 <div style="justify-self:center; width:80%;">
@@ -5390,7 +5389,14 @@ where \(E\) is typically a <a href="https://en.wikipedia.org/wiki/Partial_functi
 </div>
 </div>
 <div class="paragraph">
-<p>This classic structure has been extended in various ways since its inception in 1736 (by <a href="https://en.wikipedia.org/wiki/Leonhard_Euler">Leonard Euler</a>). Examples include variants where edges are undirected, labeled, can self-loop, can connect more than two vertices, and more. Modern graph database designers approach graphs with a focus on ease of modeling and speed of querying so to compete with contemporary, complementary technologies such as relational, key/value, column, vector, document, etc. They quickly converged on a particular graph data model colloquially known as a <strong>property graph</strong>. This structure is known more formally as a <em>directed, labeled, attributed, multi-relational binary graph</em>. The property graph extends \(G = (V,E)\) with properties (key/value pairs) associated with vertices and edges. This extension provides users a convenient path for moving between the dynamic state of a system represented using the constructs of modern object-oriented programming and the persisted state of the system stored in a graph database. As such, property graphs are useful when modeling multi-relational environments, where a heterogeneous set of "things" (different types of vertices) relate to one another via a heterogeneous set of "connections" (different types of edges).</p>
+<p>This classic structure has been extended in various ways since its inception in 1736 (by <a href="https://en.wikipedia.org/wiki/Leonhard_Euler">Leonard Euler</a>).
+Examples include variants where edges are undirected, labeled, can self-loop, can connect more than two vertices, and more.
+Modern graph database designers approach graphs with a focus on ease of modeling and speed of querying so to compete with contemporary, complementary technologies such as relational, key/value, column, vector, document, etc.
+They quickly converged on a particular graph data model colloquially known as a <strong>property graph</strong>.
+This structure is known more formally as a <em>directed, labeled, attributed, multi-relational binary graph</em>.
+The property graph extends \(G = (V,E)\) with properties (key/value pairs) associated with vertices and edges.
+This extension provides users a convenient path for moving between the dynamic state of a system represented using the constructs of modern object-oriented programming and the persisted state of the system stored in a graph database.
+As such, property graphs are useful when modeling multi-relational environments, where a heterogeneous set of "things" (different types of vertices) relate to one another via a heterogeneous set of "connections" (different types of edges).</p>
 </div>
 <div class="admonitionblock note">
 <table>
@@ -5399,46 +5405,105 @@ where \(E\) is typically a <a href="https://en.wikipedia.org/wiki/Partial_functi
 <i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-The <code>graphspace</code> of <code>/m/grph</code> uses <a href="http://tinkerpop.apache.org">Apache TinkerPop</a> as it&#8217;s underlying storage framework. While useful for the time being, once metatron&#8217;s approach to graphs is fully understood, the constraints imposed by Apache TinkerPop will be made salient. When that time arrives, a generalization will be presented demonstrating the depth of modeling, storage, and processing control one can wield with metatron. This fluidity, a naturalness of form, permeates throughout. It is here where the lines previously drawn between data structures/databases begin to blur, and what emerges renders concepts such as <em>multi-modal</em>, prosaic – a relic of the past.
+The <code>graphspace</code> of <code>/m/grph</code> uses <a href="http://tinkerpop.apache.org">Apache TinkerPop</a> as it&#8217;s underlying storage framework.
+While useful for the time being, once metatron&#8217;s approach to graphs is fully understood, the constraints imposed by Apache TinkerPop will be made salient.
+When that time arrives, a generalization will be presented demonstrating the depth of modeling, storage, and processing control one can wield with metatron.
+This fluidity, a naturalness of form, permeates throughout.
+It is here where the lines previously drawn between data structures/databases begin to blur, and what emerges renders concepts such as <em>multi-modal</em>, prosaic – a relic of the past.
 </td>
 </tr>
 </table>
 </div>
-<h3 id="sec-mgrphspace" class="discrete">/m/grph/space</h3>
+<h3 id="sec-connecting-a-graph-space" class="discrete">Connecting a Graph Space</h3>
 <div class="paragraph">
-<p>The following mtron snippet constructs a <code>grphspace</code>. A few routes are provided separating the elements of the graph into their common categories of vertics and edges. Moreover, with metatron&#8217;s type system, schemas and type checking are available. <code>g:S</code> routes extending uris to the graph&#8217;s schema (should one exist).</p>
+<p>The following mtron snippet constructs a <code>grphspace</code>.
+A few routes are provided separating the elements of the graph into their common categories of vertices and edges.
+Moreover, with metatron&#8217;s type system, schemas and type checking are available, with element labels serving as
+the demarcation of metatron path collections.</p>
 </div>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; grphspace::[
-         pattern =&gt; g:#,
-         route   =&gt; [g:V =&gt; V,
-                     g:E =&gt; E,
-                     g:S =&gt; /m/grph/schema/modern],
-         native  =&gt; [factory  =&gt; mfactory::[=&gt;],
-                     load     =&gt; modern]]@/sys/space/grph/modern     ​1​
-mtron&gt; *g:S/+     ​2​
-mtron&gt; *g:S/person     ​3​</code></pre>
+         pattern  =&gt; g:#,
+         schema   =&gt; noobj,
+         route    =&gt; [g: =&gt; &lt;&gt;],
+         config   =&gt; [
+           dataset         =&gt; &lt;org.apache.tinkerpop.gremlin.LoadGraphWith.GraphData.MODERN&gt;,
+           &lt;gremlin.graph&gt; =&gt; &lt;org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerGraph&gt;]
+         ]@&lt;/sys/space/grph/modern&gt;;     ​1​
+mtron&gt; *g:+     ​2​
+==&gt;edge::T[?[weight=&gt;real::T]]@knows
+==&gt;vrtx::T[?[name=&gt;str::T,age=&gt;int::T]]@person
+==&gt;edge::T@E
+==&gt;vrtx::T@V
+==&gt;vrtx::T[?[name=&gt;str::T,lang=&gt;str::T]]@software
+==&gt;edge::T[?[weight=&gt;real::T]]@created
+mtron&gt; *g:V/+     ​3​
+==&gt;software::[lang=&gt;'java',name=&gt;'ripple']@g:V/5
+==&gt;software::[name=&gt;'lop',lang=&gt;'java']@g:V/3
+==&gt;person::[name=&gt;'vadas',age=&gt;27]@g:V/2
+==&gt;person::[name=&gt;'peter',age=&gt;35]@g:V/6
+==&gt;person::[age=&gt;32,name=&gt;'josh']@g:V/4
+==&gt;person::[age=&gt;29,name=&gt;'marko']@g:V/1
+mtron&gt; *g:person/+     ​4​
+==&gt;person::[name=&gt;'vadas',age=&gt;27]@g:V/2
+==&gt;person::[name=&gt;'peter',age=&gt;35]@g:V/6
+==&gt;person::[age=&gt;32,name=&gt;'josh']@g:V/4
+==&gt;person::[age=&gt;29,name=&gt;'marko']@g:V/1</code></pre>
 </div>
 </div>
 <div class="colist arabic">
 <table>
 <tr>
 <td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>spawning a <code>grphspace</code>.</td>
+<td>spawning a <code>grphspace</code> backed by a locally embedded TinkerGraph.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="2"></i><b>2</b></td>
-<td>the schema that refines the <code>grphspace</code>.</td>
+<td>the complete schema (<code>instset</code>) that refines the <code>grphspace</code> (as a ring module).</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="3"></i><b>3</b></td>
-<td>the <code>rec::T &gt; elmnt::T &gt; vrtx::T &gt; person::T</code>.</td>
+<td>the refinement poset is <code>rec::T &gt; elmnt::T &gt; vrtx::T &gt; person::T</code>.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>graph element labels form the metatron data path collections.</td>
 </tr>
 </table>
 </div>
+<div class="openblock card">
+<div class="title">integrating a remote graph</div>
+<div class="content">
 <div class="paragraph">
-<p>Graph traversals in mtron are expressed using either <em>instruction-call</em> syntax or <em>uri-path</em> syntax. The uri-path form treats <code>OUT</code> and <code>IN</code> as path segments that route through the graph engine directly, without requiring <code>out()</code>, <code>in()</code>, etc. instruction calls. The same traversals expressed using both forms:</p>
+<p>In order to leverage a graph database on another machine or distributed across a cluster of machines, a
+<code>DriverRemoteConnection</code> provides the requisite infrastructrue for spawning a <code>GraphTraversalSource</code>
+that works over a network (typically via websockets). The example below demonstrate how to connect
+to JanusGraph. The pattern can be generalized to other remote providers. See specific remote provider
+documentation for configuration details.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">grphspace::[
+  pattern  =&gt; g:#,
+  host     =&gt; &lt;http://example.com:8123/gremlin&gt;
+  q        =&gt; [incrq::[=&gt;],subq::[=&gt;]],
+  route    =&gt; [g: =&gt; &lt;&gt;],
+  config   =&gt; [
+    &lt;serializer.className&gt;                     =&gt; &lt;org.apache.tinkerpop.gremlin.util.ser.GraphBinaryMessageSerializerV1&gt;,
+    &lt;serializer.config.ioRegistries&gt;           =&gt; [&lt;org.janusgraph.graphdb.tinkerpop.JanusGraphIoRegistry&gt;],
+    &lt;gremlin.remote.remoteConnectionClass&gt;     =&gt; &lt;org.apache.tinkerpop.gremlin.driver.remote.DriverRemoteConnection&gt;,
+    &lt;gremlin.remote.remoteTraversalSourceName&gt; =&gt; g]
+  ]@&lt;/sys/space/grph/kg&gt;;</code></pre>
+</div>
+</div>
+</div>
+</div>
+<h3 id="sec-traversing-graph-space" class="discrete">Traversing Graph Space</h3>
+<div class="paragraph">
+<p>Graph traversals in mtron are expressed using either <em>instruction-call</em> syntax or <em>uri-path</em> syntax.
+The uri-path form treats <code>OUT</code> and <code>IN</code> as path segments that route through the graph engine directly, without requiring <code>out()</code>, <code>in()</code>, etc. instruction calls.
+The same traversals expressed using both forms:</p>
 </div>
 <table class="tableblock frame-all grid-all stretch table-bordered small center">
 <colgroup>
@@ -5451,26 +5516,44 @@ mtron&gt; *g:S/person     ​3​</code></pre>
 <div class="title">id-resolution traversals (path syntax)</div>
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *g:V/1     ​1​
+==&gt;person::[age=&gt;29,name=&gt;'marko']
 mtron&gt; *g:V/1/OUT     ​2​
+==&gt;created::[weight=&gt;0.4000]@g:E/9
+==&gt;knows::[weight=&gt;0.5000]@g:E/7
+==&gt;knows::[weight=&gt;1.0000]@g:E/8
 mtron&gt; *g:V/1/OUT/created     ​3​
+==&gt;created::[weight=&gt;0.4000]
 mtron&gt; *g:V/1/OUT/created/IN     ​4​
+==&gt;software::[name=&gt;'lop',lang=&gt;'java']
 mtron&gt; *g:V/1/OUT/knows/IN/name     ​5​
+==&gt;'josh'
+==&gt;'vadas'
 mtron&gt; *g:V/1/OUT/knows/IN/+.count()     ​6​
-==&gt;0
-mtron&gt; *g:E/7/IN/name     ​7​</code></pre>
+==&gt;2
+mtron&gt; *g:E/7/IN/name     ​7​
+==&gt;'vadas'</code></pre>
 </div>
 </div></div></td>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="title">instruction-call traversals (inst syntax)</div>
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *g:V/1     ​1​
+==&gt;person::[age=&gt;29,name=&gt;'marko']
 mtron&gt; *g:V/1.outE()     ​2​
+==&gt;created::[weight=&gt;0.4000]@g:E/9
+==&gt;knows::[weight=&gt;0.5000]@g:E/7
+==&gt;knows::[weight=&gt;1.0000]@g:E/8
 mtron&gt; *g:V/1.outE(created)     ​3​
+==&gt;created::[weight=&gt;0.4000]@g:E/9
 mtron&gt; *g:V/1.out(created)     ​4​
+==&gt;software::[name=&gt;'lop',lang=&gt;'java']@g:V/3
 mtron&gt; *g:V/1.out(knows)&gt;&gt;name     ​5​
+==&gt;'vadas'
+==&gt;'josh'
 mtron&gt; *g:V/1.out(knows).count()     ​6​
-==&gt;0
-mtron&gt; *g:E/7.inV()&gt;&gt;name     ​7​</code></pre>
+==&gt;2
+mtron&gt; *g:E/7.inV()&gt;&gt;name     ​7​
+==&gt;'vadas'</code></pre>
 </div>
 </div></div></td>
 </tr>
@@ -5510,9 +5593,12 @@ mtron&gt; *g:E/7.inV()&gt;&gt;name     ​7​</code></pre>
 </div>
 <div class="openblock card">
 <div class="content">
-<h4 id="_graph_traversal_is_uri_resolution" class="discrete">graph traversal is uri resolution</h4>
+<h4 id="_graph_traversal_is_uri_resolution_at_its_core_metatron_is_a_system_designed_to_map_a_reference_to_its_referenti_e_to_resolve_identifiers" class="discrete">graph traversal is uri resolution At its core, metatron is a system designed <em>to map a reference to its referent</em>&#8201;&#8212;&#8201;i.e., to resolve identifiers.</h4>
 <div class="paragraph">
-<p>At its core, metatron is a system designed <em>to map a reference to its referent</em>&#8201;&#8212;&#8201;i.e., to resolve identifiers. In metatron, every piece of data has a unique id&#8201;&#8212;&#8201;and in fact, many unique ids: as an id is a uri which denotes a particular path through space from point <strong>A</strong> to point <strong>B</strong> (and many such paths may exist). However, not all potential paths can be solved with a URI. As such, when a URI segment requires more expressivity than what an explicit selection or wildcard pattern can offer, mtron instructions are attached. Thus, one way to think about mtron is that it&#8217;s resolving an identifier, where if a certain fragment requires a more in-depth computation, then that fragment defers to executable function&#8201;&#8212;&#8201;an <code>inst</code>.</p>
+<p>In metatron, every piece of data has a unique id&#8201;&#8212;&#8201;and in fact, many unique ids: as an id is a uri which denotes a particular path through space from point <strong>A</strong> to point <strong>B</strong> (and many such paths may exist).
+However, not all potential paths can be solved with a URI.
+As such, when a URI segment requires more expressivity than what an explicit selection or wildcard pattern can offer, mtron instructions are attached.
+Thus, one way to think about mtron is that it&#8217;s resolving an identifier, where if a certain fragment requires a more in-depth computation, then that fragment defers to executable function&#8201;&#8212;&#8201;an <code>inst</code>.</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -5528,9 +5614,10 @@ A │ * │g:V/1/OUT/knows/IN │=?=[age=&gt;?&gt;29]&gt;&gt;│ /OUT/created/IN
 </div>
 </div>
 </div>
-<h3 id="sec-grph-instset" class="discrete">grph instset</h3>
+<h3 id="sec-a-graph-instruction-set" class="discrete">A Graph Instruction Set</h3>
 <div class="paragraph">
-<p>The <code>/m/grph</code> instruction set extends the core <code>/m</code> instruction set with the following graph-oriented instructions. These navigation primitives hide the graph encoding specifics, enabling the same instructions to be used across different graph encodings (discussed later when presenting hypergraphs).</p>
+<p>The <code>/m/grph</code> instruction set extends the core <code>/m</code> instruction set with the following graph-oriented instructions.
+These navigation primitives hide the graph encoding specifics, enabling the same instructions to be used across different graph encodings (discussed later when presenting hypergraphs).</p>
 </div>
 <table class="tableblock frame-all grid-all stretch table-bordered small center">
 <colgroup>
@@ -5610,7 +5697,8 @@ A │ * │g:V/1/OUT/knows/IN │=?=[age=&gt;?&gt;29]&gt;&gt;│ /OUT/created/IN
 </table>
 <h3 id="sec-property-graph-extensions" class="discrete">Property Graph Extensions</h3>
 <div class="paragraph">
-<p>mtron&#8217;s design makes possible a swathe of natural extensions to both the standard property graph data model and associated traversal and pattern-matching query engines. The following itemization summarizes some of the more consequential realizations.</p>
+<p>mtron&#8217;s design makes possible a swathe of natural extensions to both the standard property graph data model and associated traversal and pattern-matching query engines.
+The following itemization summarizes some of the more consequential realizations.</p>
 </div>
 <div class="olist arabic">
 <ol class="arabic">
@@ -5621,14 +5709,15 @@ A │ * │g:V/1/OUT/knows/IN │=?=[age=&gt;?&gt;29]&gt;&gt;│ /OUT/created/IN
 <p><strong>nested properties</strong>: mtron supports <code>poly</code> values meaning element property values can be nested (via <code>rec</code>, <code>rel</code>, or <code>lst</code>).</p>
 </li>
 <li>
-<p><strong>interspace traversals</strong>: <code>!*</code> instructions can be encapsulated as vertices and/or property values, enabling inter- and intra-space
-traversals.</p>
+<p><strong>interspace traversals</strong>: <code>!*</code> instructions can be encapsulated as vertices and/or property values, enabling inter- and intra-space traversals.</p>
 </li>
 <li>
 <p><strong>process encodings</strong>: graph databases have historically been used for structuring data, where processes are exogenous to the graph (and execute only at query time). mtron&#8217;s <code>inst</code> objs make possible the graph encoding of processes, where, for example, vertices can become active objects within the larger application.</p>
 </li>
 <li>
-<p><strong>sympathetic partitions</strong>: an mtron <code>poly</code> is not constrained to a single space nor within a single space. Neither does an operation on the <code>poly</code> imply a particular physical layout of underlying data. In this way, mtron conveniently supports space agnostic retrieval of data across different physical layouts.</p>
+<p><strong>sympathetic partitions</strong>: an mtron <code>poly</code> is not constrained to a single space nor within a single space.
+Neither does an operation on the <code>poly</code> imply a particular physical layout of underlying data.
+In this way, mtron conveniently supports space agnostic retrieval of data across different physical layouts.</p>
 </li>
 </ol>
 </div>
@@ -5652,12 +5741,18 @@ The following examples demonstrate selection and filtering using multi-segment u
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; @g:V/1&gt;&gt;=+[address/home/city =&gt; 'santa fe',
                   address/work/city =&gt; 'nomansland']     ​1​
+==&gt;fail::[unable to evaluate inst: plus?rng=rec&amp;dom=rec([address/home/city=&gt;'santa fe',address/work/city=&gt;'nomansland']){&lt;j&gt;}]@g:V/1[...]
 mtron&gt; *g:V/1/address/home/city     ​2​
 mtron&gt; *g:V/+.=?=[address/+/city =&gt; 'santa fe']     ​3​
 mtron&gt; *g:V/+.==[address/+/city/ =&gt; _]     ​4​
+==&gt;{2}[address/+/city/=&gt;{address/work/city=&gt;'nomansland',address/home/city=&gt;'santa fe'}]
 mtron&gt; *g:V/+.&gt;&gt;address/+/city
        *g:V/+.&gt;&gt;address/+/city     ​6​
-mtron&gt; *g:V/+.&gt;&gt;address/#     ​7​</code></pre>
+==&gt;{22}'nomansland'
+==&gt;{22}'santa fe'
+mtron&gt; *g:V/+.&gt;&gt;address/#     ​7​
+==&gt;{2}'nomansland'
+==&gt;{2}'santa fe'</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -5700,13 +5795,19 @@ mtron&gt; *g:V/+.&gt;&gt;address/#     ​7​</code></pre>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; @g:V/1==[_=&gt;_]     ​1​
+==&gt;fail::[lhs range does not match inst domain: vrtx::T[?[age=&gt;int::T,name=&gt;str::T,city=&gt;str::T]]@person =&gt; vrtx::T[?[age=&gt;int::T,name=&gt;str::T,city=&gt;str::T]] [select?rng=rec{?}&amp;dom=vrtx([id()=&gt;id()]){&lt;j&gt;}@&lt;1&gt;]]@/sys/fail/12
 mtron&gt; @g:V/1&gt;&gt;=+[address=&gt;[
                     home =&gt; [city =&gt;'santa fe',
                              state=&gt;NM],
                     work =&gt; !*&lt;../home&gt;]]     ​2​
+==&gt;fail::[lhs range does not match inst domain: vrtx::T[?[age=&gt;int::T,name=&gt;str::T,city=&gt;str::T]]@person =&gt; vrtx::T[?[age=&gt;int::T,name=&gt;str::T,city=&gt;str::T]] [update?rng=#{*}&amp;dom=vrtx(plus([address=&gt;[home=&gt;[city=&gt;'santa fe',state=&gt;NM],work=&gt;!*&lt;../home&gt;]])){&lt;j&gt;}@&lt;1&gt;]]@/sys/fail/14
 mtron&gt; *g:V/1/address/home/city     ​3​
 mtron&gt; *g:V/+.=?=[address=&gt;[_ =&gt; [state=&gt;NM]]]     ​4​
-mtron&gt; *g:V/+.=?=[address=&gt;[_ =&gt; [state=&gt;NM]]].&gt;&gt;address/+/city     ​5​</code></pre>
+==&gt;fail{2}::[lhs range does not match inst domain: vrtx::T[?[name=&gt;str::T,lang=&gt;str::T]]@software =&gt; vrtx::T[?[age=&gt;int::T,name=&gt;str::T,city=&gt;str::T]] [where?dom=vrtx([address=&gt;[id()=&gt;[state=&gt;NM]]])@&lt;1&gt;]]@/sys/fail/16
+==&gt;fail{5}::[lhs range does not match inst domain: vrtx::T[?[age=&gt;int::T,name=&gt;str::T,city=&gt;str::T]]@person =&gt; vrtx::T[?[age=&gt;int::T,name=&gt;str::T,city=&gt;str::T]] [where?rng=vrtx&amp;dom=vrtx([address=&gt;[id()=&gt;[state=&gt;NM]]]){&lt;j&gt;}]]@/sys/fail/20
+==&gt;fail::[lhs range does not match inst domain: fail::T =&gt; fail::T [where?rng=fail{?}&amp;dom=fail([address=&gt;[id()=&gt;[state=&gt;NM]]]){&lt;j&gt;}]]@/sys/fail/30
+mtron&gt; *g:V/+.=?=[address=&gt;[_ =&gt; [state=&gt;NM]]].&gt;&gt;address/+/city     ​5​
+==&gt;fail::[mAchinE faILEd]@/sys/fail/52[...]</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -5739,7 +5840,8 @@ mtron&gt; *g:V/+.=?=[address=&gt;[_ =&gt; [state=&gt;NM]]].&gt;&gt;address/+/cit
 <div class="title">interspace traversals</div>
 <div class="content">
 <div class="paragraph">
-<p>The bootloader used for this documentation exposes a number of data sources. For the following example, a tp3 (graph database) and mariadb (relational database) storing social data and movie data, respectively.</p>
+<p>The bootloader used for this documentation exposes a number of data sources.
+For the following example, a tp3 (graph database) and mariadb (relational database) storing social data and movie data, respectively.</p>
 </div>
 <div class="paragraph">
 <p>The schemas for the respective data stores are provided in the expandable accordions below.</p>
@@ -5784,7 +5886,10 @@ mtron&gt; *g:V/+.=?=[address=&gt;[_ =&gt; [state=&gt;NM]]].&gt;&gt;address/+/cit
 </tbody>
 </table>
 <div class="paragraph">
-<p>The two data sources have a very particular understanding of how data should be structured and how it should be queried. The graph database&#8217;s take on modeling is to see the world as a collection of discrete objects related to one another, where traversals and structural pattern matching are the primary means of understanding the data at large. The relational database takes the perspective of spreadsheets and set operations. To unify these two contrasting perspectives, metatron capitalizes on each&#8217;s most important, distinguishing features.</p>
+<p>The two data sources have a very particular understanding of how data should be structured and how it should be queried.
+The graph database&#8217;s take on modeling is to see the world as a collection of discrete objects related to one another, where traversals and structural pattern matching are the primary means of understanding the data at large.
+The relational database takes the perspective of spreadsheets and set operations.
+To unify these two contrasting perspectives, metatron capitalizes on each&#8217;s most important, distinguishing features.</p>
 </div>
 <div class="olist arabic">
 <ol class="arabic">
@@ -5806,10 +5911,14 @@ mtron&gt; *g:V/+.=?=[address=&gt;[_ =&gt; [state=&gt;NM]]].&gt;&gt;address/+/cit
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *g:V/1     ​1​
+==&gt;person::[age=&gt;29,name=&gt;'marko']
 mtron&gt; *acme:customers/357     ​2​
 mtron&gt; @g:V/1.addE(consulted,|*acme:customers/357)     ​3​
+==&gt;fail::[lhs range does not match inst domain: vrtx::T[?[age=&gt;int::T,name=&gt;str::T,city=&gt;str::T]]@person =&gt; vrtx::T[?[age=&gt;int::T,name=&gt;str::T,city=&gt;str::T]] [addE?rng=edge&amp;dom=vrtx(consulted,block?#{+}&lt;=vrtx(*acme:customers/357),noobj){&lt;j&gt;}@&lt;1&gt;]]@/sys/fail/54
 mtron&gt; *g:V/1.out(consulted)     ​4​
-mtron&gt; *g:V/1.out(consulted).matches(vrtx::T)     ​5​</code></pre>
+==&gt;fail::[lhs range does not match inst domain: vrtx::T[?[age=&gt;int::T,name=&gt;str::T,city=&gt;str::T]]@person =&gt; vrtx::T[?[age=&gt;int::T,name=&gt;str::T,city=&gt;str::T]] [out?rng=edge{*}&amp;dom=vrtx(consulted){&lt;j&gt;}@&lt;1&gt;]]@/sys/fail/56
+mtron&gt; *g:V/1.out(consulted).matches(vrtx::T)     ​5​
+==&gt;fail::[lhs range does not match inst domain: vrtx::T[?[age=&gt;int::T,name=&gt;str::T,city=&gt;str::T]]@person =&gt; vrtx::T[?[age=&gt;int::T,name=&gt;str::T,city=&gt;str::T]] [out?rng=edge{*}&amp;dom=vrtx(consulted){&lt;j&gt;}@&lt;1&gt;]]@/sys/fail/58</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -5854,16 +5963,18 @@ These expressions highlight the nested structural pattern matching and data mani
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *g:V/1.out(consulted)-&lt;[
          name    =&gt;"${&gt;&gt;contactFirstName} ${&gt;&gt;contactLastName}",
          address =&gt;==[city=&gt;_,country=&gt;_]]
+==&gt;fail::[lhs range does not match inst domain: vrtx::T[?[age=&gt;int::T,name=&gt;str::T,city=&gt;str::T]]@person =&gt; vrtx::T[?[age=&gt;int::T,name=&gt;str::T,city=&gt;str::T]] [out?rng=edge{*}&amp;dom=vrtx(consulted){&lt;j&gt;}@&lt;1&gt;]]@/sys/fail/60
 mtron&gt; *g:V/1.out(consulted)
          &gt;&gt;salesRepEmployeeNumber
          &gt;&gt;reportsTo.-&lt;[
            name  =&gt;"${&gt;&gt;firstName} ${&gt;&gt;lastName}",
-           job   =&gt;-&lt;[title=&gt;&gt;&gt;jobTitle,email=&gt;&gt;&gt;email]]</code></pre>
+           job   =&gt;-&lt;[title=&gt;&gt;&gt;jobTitle,email=&gt;&gt;&gt;email]]
+==&gt;fail::[lhs range does not match inst domain: vrtx::T[?[age=&gt;int::T,name=&gt;str::T,city=&gt;str::T]]@person =&gt; vrtx::T[?[age=&gt;int::T,name=&gt;str::T,city=&gt;str::T]] [out?rng=edge{*}&amp;dom=vrtx(consulted){&lt;j&gt;}@&lt;1&gt;]]@/sys/fail/62</code></pre>
 </div>
 </div>
 <div class="paragraph">
 <p>The examples highlight important concepts necessary to understand
- in order to be effective at traversing and manipulating complex,
+in order to be effective at traversing and manipulating complex,
 nested structures existing across heterogeneous data sources.</p>
 </div>
 <div class="ulist">
@@ -5950,7 +6061,9 @@ nested structures existing across heterogeneous data sources.</p>
 <div class="title">sympathetic partitions</div>
 <div class="content">
 <div class="paragraph">
-<p>A vertex&#8217;s edges can span multiple storage backends. Hot edges (frequently traversed) live in an in-memory space; cold edges (archival) live in a disk-backed space. The vertex does not know the difference — <code>*/g/V/1/OUT/+</code> returns all edges regardless of where they reside.</p>
+<p>A vertex&#8217;s edges can span multiple storage backends.
+Hot edges (frequently traversed) live in an in-memory space; cold edges (archival) live in a disk-backed space.
+The vertex does not know the difference — <code>*/g/V/1/OUT/+</code> returns all edges regardless of where they reside.</p>
 </div>
 <div class="paragraph">
 <p>The following example configures the modern TinkerGraph dataset with two additional edge stores: <code>hot:</code> for in-memory edges and <code>cold:</code> for disk-backed edges.</p>
@@ -5980,11 +6093,12 @@ mtron&gt; /te/hot/1/b  -&gt; [item   =&gt; 'mouse',total=&gt;25.0]
 ==&gt;[item=&gt;'mouse',total=&gt;25.0000]
 mtron&gt; /te/cold/1/x -&gt; [item   =&gt; 'book',total=&gt;15.0,
                        seller =&gt; !*g:V/4]
-==&gt;fail::[unable to evaluate inst: ref?rng=#{*}&amp;dom=#([item=&gt;'book',total=&gt;15.0000,seller=&gt;!*g:V/4]){&lt;j&gt;}@&lt;1&gt;]@/sys/fail/4[...]</code></pre>
+==&gt;fail::[unable to evaluate inst: ref?rng=#{*}&amp;dom=#([item=&gt;'book',total=&gt;15.0000,seller=&gt;!*g:V/4]){&lt;j&gt;}@&lt;1&gt;]@/sys/fail/98[...]</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>Once seeded, the edges are accessible through the same <code>OUT</code> traversal used for native graph edges. The scheme prefix in the label (<code>te:hot</code>, <code>te:cold</code>) instructs the engine to route the read to the respective space.</p>
+<p>Once seeded, the edges are accessible through the same <code>OUT</code> traversal used for native graph edges.
+The scheme prefix in the label (<code>te:hot</code>, <code>te:cold</code>) instructs the engine to route the read to the respective space.</p>
 </div>
 <table class="tableblock frame-all grid-all stretch table-bordered small center">
 <colgroup>
@@ -5997,24 +6111,29 @@ mtron&gt; /te/cold/1/x -&gt; [item   =&gt; 'book',total=&gt;15.0,
 <div class="title">traversing a distributed edge set (path syntax)</div>
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *g:V/1/OUT/te:hot/+.count()     ​1​
-==&gt;0
+==&gt;2
 mtron&gt; *g:V/1/OUT/te:hot/a/item     ​2​
+==&gt;'laptop'
 mtron&gt; *g:V/1/OUT/te:hot/a/owner/name     ​3​
+==&gt;fail::[unable to evaluate inst: *g:V/1/OUT/te:hot/a/owner/name]@/sys/fail/118[...]
 mtron&gt; *g:V/1/OUT/te:cold/x/total     ​4​
 mtron&gt; *g:V/1/OUT/knows.count()     ​5​
-==&gt;0</code></pre>
+==&gt;{2}1</code></pre>
 </div>
 </div></div></td>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="title">traversing a distributed edge set (instruction-call syntax)</div>
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *g:V/1.outE(te:hot).count()     ​1​
-==&gt;0
+==&gt;fail::[lhs range does not match inst domain: fail::T =&gt; rec{*}::T [count?rng=int&amp;dom=rec{*}(){&lt;j&gt;}@&lt;2&gt;]]@/sys/fail/122
 mtron&gt; *g:V/1.outE(te:hot/a)&gt;&gt;item     ​2​
+==&gt;fail::[lhs range does not match inst domain: vrtx::T[?[age=&gt;int::T,name=&gt;str::T,city=&gt;str::T]]@person =&gt; vrtx::T[?[age=&gt;int::T,name=&gt;str::T,city=&gt;str::T]] [outE?rng=edge{*}&amp;dom=vrtx(te:hot/a){&lt;j&gt;}@&lt;1&gt;]]@/sys/fail/124
 mtron&gt; *g:V/1.outE(te:hot/a)&gt;&gt;owner&gt;&gt;name     ​3​
+==&gt;fail::[lhs range does not match inst domain: vrtx::T[?[age=&gt;int::T,name=&gt;str::T,city=&gt;str::T]]@person =&gt; vrtx::T[?[age=&gt;int::T,name=&gt;str::T,city=&gt;str::T]] [outE?rng=edge{*}&amp;dom=vrtx(te:hot/a){&lt;j&gt;}@&lt;1&gt;]]@/sys/fail/126
 mtron&gt; *g:V/1.outE(te:cold/x)&gt;&gt;total     ​4​
+==&gt;fail::[lhs range does not match inst domain: vrtx::T[?[age=&gt;int::T,name=&gt;str::T,city=&gt;str::T]]@person =&gt; vrtx::T[?[age=&gt;int::T,name=&gt;str::T,city=&gt;str::T]] [outE?rng=edge{*}&amp;dom=vrtx(te:cold/x){&lt;j&gt;}@&lt;1&gt;]]@/sys/fail/128
 mtron&gt; *g:V/1.outE(knows).count()     ​5​
-==&gt;0</code></pre>
+==&gt;fail::[lhs range does not match inst domain: fail::T =&gt; rec{*}::T [count?rng=int&amp;dom=rec{*}(){&lt;j&gt;}@&lt;2&gt;]]@/sys/fail/132</code></pre>
 </div>
 </div></div></td>
 </tr>
@@ -6045,21 +6164,29 @@ mtron&gt; *g:V/1.outE(knows).count()     ​5​
 </table>
 </div>
 <div class="paragraph">
-<p>The reference <code>!*g:V/2</code> in the hot edge&#8217;s <code>owner</code> field creates an <code>auto_from</code> pointer back to the graph. When accessed via <code>/owner/name</code>, the pointer resolves to vertex <code>2</code> in the graph, and its <code>name</code> property returns <code>"vadas"</code>. The traversal path <code>graph → external edge → graph</code> is transparent to the user.</p>
+<p>The reference <code>!*g:V/2</code> in the hot edge&#8217;s <code>owner</code> field creates an <code>auto_from</code> pointer back to the graph.
+When accessed via <code>/owner/name</code>, the pointer resolves to vertex <code>2</code> in the graph, and its <code>name</code> property returns <code>"vadas"</code>.
+The traversal path <code>graph → external edge → graph</code> is transparent to the user.</p>
 </div>
 <div class="paragraph">
-<p>The two syntactic forms — <code>*/g/V/1/OUT/te:hot/a/item</code> and <code>*g:V/1.outE(te:hot/a)&gt;&gt;item</code> — are dual representations of the same underlying identifier resolution. The <em>path form</em> decomposes into <code>g:V</code> (collection), <code>1</code> (entry), <code>OUT</code> (direction), <code>te:hot</code> (external-space label), <code>a</code> (edge key), and <code>item</code> (field). The <em>instruction form</em> wraps the same decomposition: <code>outE(te:hot/a)</code> encodes direction + label + key, and <code>&gt;&gt;item</code> projects the field. Both route through the graph engine&#8217;s <code>readVertexTraversal</code>, where the scheme prefix <code>te:</code> triggers a read from the external <code>memspace</code>. Whether expressed as uri-path segments or instruction calls, the traversal graph <code>⎡vertex⎦ &#8594; ⎡external edge⎦ &#8594; ⎡property⎦</code> is identical — the instructions are simply an alternate notation for the same underlying path resolution.</p>
+<p>The two syntactic forms — <code>*/g/V/1/OUT/te:hot/a/item</code> and <code>*g:V/1.outE(te:hot/a)&gt;&gt;item</code> — are dual representations of the same underlying identifier resolution.
+The <em>path form</em> decomposes into <code>g:V</code> (collection), <code>1</code> (entry), <code>OUT</code> (direction), <code>te:hot</code> (external-space label), <code>a</code> (edge key), and <code>item</code> (field).
+The <em>instruction form</em> wraps the same decomposition: <code>outE(te:hot/a)</code> encodes direction + label + key, and <code>&gt;&gt;item</code> projects the field.
+Both route through the graph engine&#8217;s <code>readVertexTraversal</code>, where the scheme prefix <code>te:</code> triggers a read from the external <code>memspace</code>.
+Whether expressed as uri-path segments or instruction calls, the traversal graph <code>⎡vertex⎦ &#8594; ⎡external edge⎦ &#8594; ⎡property⎦</code> is identical — the instructions are simply an alternate notation for the same underlying path resolution.</p>
 </div>
 </div>
 </div>
 <h3 id="sec-metatron-encoded-graphs" class="discrete">metatron Encoded Graphs</h3>
 <div class="paragraph">
-<p>It is possible to encode an arbitrary graph structure (i.e. any extension of \(G=(V,E)\)) in space. There are four aaspects of mtron that make graph encodings natural and universal&#8201;&#8212;&#8201;applicable in any metatron space, regardless of the underlying storage system.</p>
+<p>It is possible to encode an arbitrary graph structure (i.e. any extension of \(G=(V,E)\)) in space.
+There are four aaspects of mtron that make graph encodings natural and universal&#8201;&#8212;&#8201;applicable in any metatron space, regardless of the underlying storage system.</p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p><code>!*</code> (<strong>auto_from</strong>): ensures that simply accessing a reference yields the reference&#8217;s referent. To the user, there is no difference between the graph elements being colocated in the same <code>poly</code>, within the same space, within the same computer, or across the web as a whole.</p>
+<p><code>!*</code> (<strong>auto_from</strong>): ensures that simply accessing a reference yields the reference&#8217;s referent.
+To the user, there is no difference between the graph elements being colocated in the same <code>poly</code>, within the same space, within the same computer, or across the web as a whole.</p>
 </li>
 <li>
 <p><code>&gt;&gt;</code> (<strong>forward</strong>): ensures monads move along the underlying data structure in a manner respective of the provided argument.</p>
@@ -6076,7 +6203,8 @@ mtron&gt; *g:V/1.outE(knows).count()     ​5​
 <div class="title">directed single-relational binary graph</div>
 <div class="content">
 <div class="paragraph">
-<p>A directed single-relational binary graph connects vertices by binary edges (a single tail and a single head vertex), where all edges have the same label/meaning (single-relational). An example of such a graph is presented in the code and diagram below.</p>
+<p>A directed single-relational binary graph connects vertices by binary edges (a single tail and a single head vertex), where all edges have the same label/meaning (single-relational).
+An example of such a graph is presented in the code and diagram below.</p>
 </div>
 <table class="tableblock frame-all grid-all stretch table-bordered small center">
 <colgroup>
@@ -6157,7 +6285,8 @@ mtron&gt; *v1.&gt;&gt;.&gt;&gt;
 <div class="title">directed multi-relational binary graph</div>
 <div class="content">
 <div class="paragraph">
-<p>The previous graph structure can be further enhanced with multiple types of edges (multi-relational). Again, the code and diagram below exemplify this form.</p>
+<p>The previous graph structure can be further enhanced with multiple types of edges (multi-relational).
+Again, the code and diagram below exemplify this form.</p>
 </div>
 <table class="tableblock frame-all grid-all stretch table-bordered small center">
 <colgroup>
@@ -6297,8 +6426,8 @@ mtron&gt; *v1.outE(knows).outE(created).&gt;&gt;name     ​5​</code></pre>
 <div class="content">
 <div class="paragraph">
 <p>A graph can have both its vertices and edges annotated with attributes.
-This form is the classic <strong>property graph</strong> data model. For the sake of brevity, only vertex 1 and its incident edges
-will be developed and diagrammed.</p>
+This form is the classic <strong>property graph</strong> data model.
+For the sake of brevity, only vertex 1 and its incident edges will be developed and diagrammed.</p>
 </div>
 <table class="tableblock frame-all grid-all stretch table-bordered small center">
 <colgroup>
@@ -6486,7 +6615,10 @@ mtron&gt; *v1.out(knows).out(created).&gt;&gt;name     ​5​</code></pre>
 </tbody>
 </table>
 <div class="paragraph">
-<p>A typical configuration partitions subgraphs by access frequency. Frequently traversed <code>knows</code>-edges reside in <code>memspace</code> (sub-millisecond reads). Rarely queried <code>purchases</code>-edges reside in <code>tblespace</code> (disk-backed). The vertex&#8217;s <code>OUT</code> traversal remains a single expression regardless of how many spaces contribute edges.</p>
+<p>A typical configuration partitions subgraphs by access frequency.
+Frequently traversed <code>knows</code>-edges reside in <code>memspace</code> (sub-millisecond reads).
+Rarely queried <code>purchases</code>-edges reside in <code>tblespace</code> (disk-backed).
+The vertex&#8217;s <code>OUT</code> traversal remains a single expression regardless of how many spaces contribute edges.</p>
 </div>
 </div>
 <div class="collapse position-relative" id="card-15">
