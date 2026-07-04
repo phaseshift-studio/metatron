@@ -1222,7 +1222,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             parse('[a=>[b=>c]]')                     [-- [a=>[b=>c]]  --]
                             """),
                     instC(SWAP_TID.dom(A).rng(A), lst(T(B)), (lhs, inst) -> lhs.apply(inst.arg(0))),
-                    instC(RSHIFT_INST_TID.dom(ALL).rng(URI_TID.maybe()), lst(uri("vid")), (lhs, inst) -> null == lhs.vid() ? noobj() : lhs.vid().toUri()),
+                    //instC(RSHIFT_INST_TID.dom(ALL).rng(URI_TID.maybe()), lst(uri("vid")), (lhs, inst) -> null == lhs.vid() ? noobj() : lhs.vid().toUri()),
                     instC(RSHIFT_INST_TID.dom(A).rng(B.maybeSome()), lst(T(C.maybeSome())), (lhs, inst) -> {
                         if (lhs.isRec())
                             return Rec.Helper.rshiftRec(lhs.asRec(), inst.arg(0));
