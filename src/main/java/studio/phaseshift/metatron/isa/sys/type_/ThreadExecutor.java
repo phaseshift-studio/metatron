@@ -32,9 +32,11 @@ import java.util.*;
 import java.util.concurrent.*;
 
 import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
+
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
+import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst0;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
@@ -57,11 +59,6 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class ThreadExecutor extends AbstractExecutorService implements Rec {
-
-    /**
-     * ThreadExecutor type TID — registered in sysInstSet.
-     */
-    public static final fURI THREAD_EXECUTOR_TID = REC_TID;
 
     private fURI vid;
     private final ExecutorService service;
@@ -91,7 +88,7 @@ public class ThreadExecutor extends AbstractExecutorService implements Rec {
 
     @Override
     public fURI tid() {
-        return THREAD_EXECUTOR_TID;
+        return machInstSet.THREAD_EXECUTOR_TID;
     }
 
     @Override
@@ -140,11 +137,19 @@ public class ThreadExecutor extends AbstractExecutorService implements Rec {
     }
 
     /**
-     * Standard {@code Runnable} execution — delegates directly to the underlying service.
+     * Intercepts {@code Runnable} submissions (e.g. from 3rd-party libraries) and
+     * wraps them in a one-shot {@link CoreThread} so they gain full metatron
+     * visibility: a VID, lifecycle tracking, and exposure through
+     * {@code &#42;/sys/thread/active} / {@code &#42;/sys/thread/inactive}.
      */
     @Override
     public void execute(@NonNull Runnable command) {
-        this.service.execute(command);
+        final CoreThread wrapper = CoreThread.core(instLambda((lhs, inst) -> {
+            command.run();
+            return noobj();
+        }));
+        docWrap(wrapper, command.getClass().getName());
+        this.execute(wrapper);
     }
 
     private final Set<fURI> executedVids = Collections.synchronizedSet(new HashSet<>());
