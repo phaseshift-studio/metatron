@@ -61,9 +61,9 @@
         <java-websocket.version>1.6.0</java-websocket.version>
         <mariadb.version>3.5.9</mariadb.version>
         <mongodb.version>5.8.0</mongodb.version>
-        <langchain4j.version>1.17.1</langchain4j.version>
+        <langchain4j.version>1.17.2</langchain4j.version>
         <jlama.version>0.8.4</jlama.version>
-        <langchain4j.beta.version>1.17.1-beta27</langchain4j.beta.version>
+        <langchain4j.beta.version>1.17.2-beta27</langchain4j.beta.version>
         <langgraph4j.version>1.8.11</langgraph4j.version>
         <junit.version>6.1.1</junit.version>
         <tinkerpop.version>3.8.1</tinkerpop.version>
@@ -411,7 +411,7 @@
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
-            <version>42.7.12</version>
+            <version>42.7.13</version>
             <scope>test</scope>
         </dependency>
         <!-- in-memory mongodb for testing (BSD-3-Clause license) -->
