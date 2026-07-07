@@ -53,6 +53,7 @@ import static studio.phaseshift.metatron.isa.m.type.Type.LOG;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
@@ -83,7 +84,10 @@ public final class QCollection {
     public static final fURI SHORTQ_PATTERN = f("shortq");
     public static final fURI SHORTQ_TID = QPROC_TID.extend(SHORTQ_PATTERN);
     public static final Type SHORTQ_TYPE = Type.Builder.build().tid(QPROC_TID).vid(SHORTQ_TID).constructor(QCollection::shortQ).create();
-
+    //
+    public static final fURI SAFEQ_PATTERN = f("safeq");
+    public static final fURI SAFEQ_TID = QPROC_TID.extend(SAFEQ_PATTERN);
+    public static final Type SAFEQ_TYPE = Type.Builder.build().tid(QPROC_TID).vid(SAFEQ_TID).constructor(QCollection::safeQ).create();
     //
     public static final fURI INCRQ_PATTERN = f("incrq");
     public static final fURI INCRQ_TID = QPROC_TID.extend(INCRQ_PATTERN);
@@ -371,23 +375,47 @@ public final class QCollection {
     /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////
     /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////
     /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////
+    public static QProc safeQ() {
+        return QProc.Helper.build(SAFEQ_TID, SAFEQ_PATTERN).
+                qlessWrite((vid, obj) -> {
+                    LOG.warn("allow {{b}}%s{{m}}::T{{X}} to be written to {{b}}%s{{X}} [{{g}}Y{{X}}/{{r}}n{{X}}]?", obj.tid().small(), vid);
+                    final Obj result = instB(f("stdin"), lst()).apply();
+                    if (result.strValue().toLowerCase().startsWith("n")) {
+                        LOG.warn("{{r}}denying{{X}} writing to %s", vid);
+                        return str("access denied");
+                    } else {
+                        LOG.warn("{{g}}accepting{{X}} writing to %s", vid);
+                        return noobj();
+                    }
+                }).create();
+    }
+
+    /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     public static final String EMBEDQ_INCR_PATTERN = "_";
 
     public static QProc embedQ() {
-        final java.util.Map<String, AtomicLong> counters = new java.util.concurrent.ConcurrentHashMap<>();
-        return QProc.Helper.build(EMBEDQ_TID, EMBEDQ_PATTERN).
-                preRead((vid) -> {
-                    try {
-                        vecSpace space = Router.global().getSpaceFor(vid);
-                        System.out.println(space.sjvm().listCollections());
-                        final fURI routed = Space.Helper.routeFromSpace(vid.qLess(), space.routes());
-                        VectorDBClient.GetResult result = space.sjvm().get(space.sjvm().getCollection(DataPath.withoutDB(routed).collection()).id(), List.of(DataPath.withoutDB(routed).entry()));
-                        LOG.warn("embedding retreived: %s", result);
-                        return result.entities().isEmpty() ? noobj() : result.entities().getFirst().embedding();
-                    } catch (final Exception e) {
-                        throw MTronException.of(e);
-                    }
+        return QProc.Helper.build(EMBEDQ_TID, EMBEDQ_PATTERN)
+                .preRead(vid -> {
+                    // Derive embedding URI as a parallel collection:
+                    //   drdb:msg/1/0?embedq=abc
+                    //   → drdb:embedding/abc/{hash(drdb:msg/1/0)}
+                    // The space's route (e.g. drdb:embedding/abc => v:abc)
+                    // dispatches to the embedding space.
+                    final fURI model = vid.qValue(EMBEDQ_PATTERN, fURI.class);
+                    final fURI sourceVid = vid.qLess();
+                    final String hash = Integer.toHexString(sourceVid.toString().hashCode());
+                    final fURI embedVid = f(sourceVid.scheme() + ":embedding/" + model + "/" + hash);
+                    final Obj embedding = Router.readFromSpace(embedVid);
+                    if (!embedding.isNoObj())
+                        return embedding;
+                    // Lazy compute: read source, write to embedding URI.
+                    final Obj source = Router.readFromSpace(sourceVid);
+                    if (source.isNoObj())
+                        return source;
+                    return Router.writeToSpace(embedVid, source);
                 }).create();
     }
 

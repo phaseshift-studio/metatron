@@ -31,6 +31,7 @@ import static studio.phaseshift.metatron.furi.q.QCollection.INCRQ_PATTERN;
 import static studio.phaseshift.metatron.furi.q.QCollection.INCRQ_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
@@ -49,9 +50,9 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  * without specifying one.  Follows the same pattern as {@code tbleIncrQ}
  * and {@code grphIncrQ}.
  */
-public class vctrIncrQ extends BaseQ {
+public class vecIncrQ extends BaseQ {
 
-    public vctrIncrQ(final vecSpace space) {
+    public vecIncrQ(final vecSpace space) {
         super(buildJvm(space), INCRQ_PATTERN, INCRQ_TID);
     }
 
@@ -62,8 +63,7 @@ public class vctrIncrQ extends BaseQ {
                         M_ISA_INST_TID
                                 .dom(ALL.maybe())
                                 .rng(ALL.maybeSome()),
-                        lst(studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE,
-                                T(ALL)),
+                        lst(URI_TYPE, T(ALL)),
                         (lhs, inst) -> {
                             final fURI vid = inst.arg(0).uriValue();
                             final Obj obj = inst.arg(1);

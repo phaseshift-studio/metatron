@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -125,6 +125,11 @@ public interface QProc extends Rec {
         }
 
         @Override
+        default Rec self(final Object jvm, final fURI tid, final fURI vid) {
+            return this;
+        }
+
+        @Override
         default Obj clone() {
             return this;
         }
@@ -197,7 +202,7 @@ public interface QProc extends Rec {
                 final AtomicBoolean check = new AtomicBoolean(true);
                 final List<String> qSpace = space.qs().lstValue().stream().map(q -> q.asRec().at(PATTERN).uriValue()).map(fURI::toString).toList();
                 vid.qMap().keySet().stream().filter(k -> !k.equals(DOCQ) && !k.equals(DOM) && !k.equals(RNG)).forEach(k -> {
-                    if (!qSpace.contains(k)) { 
+                    if (!qSpace.contains(k)) {
                         space.logger().warn("no %s query processor attached", k);
                         check.set(false);
                     }

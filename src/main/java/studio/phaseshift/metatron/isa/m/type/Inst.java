@@ -330,7 +330,7 @@ public interface Inst extends Call {
                     //  Router.stack().pop();
                 }
             } catch (final Exception e) {
-                rhs = fail(MTronException.of("unable to evaluate inst: %s", cinst), fail(e));
+                rhs = fail(e);
             }
             if (TypeCheck.inst_rng.enabled() && !isMonadicInst && !rhs.isType() && !rhs.isFail() && !clhs.isCaughtFail() && !rhs.test(cinst.rng()))
                 //rhs = fail(MTronException.of("inst resolution failure: %s", cinst, fail(MTronException.of("rhs does not match inst range:\n\t%s", Poly.Helper.diffObjRecursion(rhs, cinst.rng())))));

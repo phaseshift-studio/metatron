@@ -790,9 +790,9 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                 return rhs.asType().isRootType()
                         ? lhs.c().within(rhs.c())
                         : (!rhs.asType().hasPredicate() ||
-                                (lhs.isType()
-                                        ? Objects.equals(lhs.asType().predicate(), rhs.asType().predicate())
-                                        : !rhs.asType().predicate().apply(lhs).isNothing()));
+                           (lhs.isType()
+                            ? Objects.equals(lhs.asType().predicate(), rhs.asType().predicate())
+                            : !rhs.asType().predicate().apply(lhs).isNothing()));
 
             // ── URI structural match ──
             if (rhs.isUri() && lhs.isUri() && !lhs.uriValue().test(rhs.uriValue()))
@@ -898,12 +898,13 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                                 CommonUtil.width(matchDiffString),
                                 CommonUtil.width(obj.toString())), CommonUtil.width(obj.type().toString()));
                         throw new TypeMismatchException(obj, obj.type(),
-                                "obj does not match specified type:\n%s\n%s\n%s\n%s\n%s",
+                                "obj does not match %s::T\n%s\n%s\n%s\n%s\n%s",
+                                obj.tid(),
                                 indent(obj.tid(obj.baseType()).toString(), 2),
                                 indent("X=>", 6),
-                                indent(obj.type().toString(), 2), indent("-".repeat(width), 2), indent(matchDiffString, 2));
+                                indent(obj.type().toString(), 2), indent("-" .repeat(width), 2), indent(matchDiffString, 2));
                     } else
-                        throw MTronException.of("%s is not a %s".formatted(obj, obj.type()));
+                        throw MTronException.of("%s is not a %s" .formatted(obj, obj.type()));
                 }
             }
         }
@@ -944,7 +945,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                         final Obj protoObj = MObjFactory.of().toObj(jvm, null, vid, clazz);
                         final O constructedObj = type.asType().constructor().apply(protoObj).as();
                         if (constructedObj.isFail())
-                            throw MTronException.of(constructedObj.<Fail>as().jvm());
+                            throw MTronException.of("unable to construct %s::T: %s", tid, constructedObj);
                         else {
                             constructedObj.self(constructedObj.jvm(), bigTID, vid);
                             if (null != vid)

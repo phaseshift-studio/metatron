@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -35,11 +35,10 @@ import dev.langchain4j.model.openai.OpenAiModelCatalog;
 import dev.langchain4j.model.openai.OpenAiStreamingChatModel;
 import org.slf4j.event.Level;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.furi.q.QCollection;
-import studio.phaseshift.metatron.isa.Space;
-import studio.phaseshift.metatron.isa.llm.space.LocalAiModelCatalog;
-import studio.phaseshift.metatron.isa.llm.space.modelCatalogSpace;
-import studio.phaseshift.metatron.isa.llm.type.mModel;
+
+import studio.phaseshift.metatron.isa.llm.type.Agent;
+import studio.phaseshift.metatron.isa.llm.type.Model;
+import studio.phaseshift.metatron.isa.llm.type.feature.ChatFeature;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Poly;
 import studio.phaseshift.metatron.isa.m.type.Rec;
@@ -52,17 +51,17 @@ import studio.phaseshift.metatron.util.Tuple;
 
 import java.time.Duration;
 import java.util.List;
-import java.util.Locale;
 import java.util.Optional;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.llm.llmInstSet.MODEL_TID;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_MODEL_TID;
+import static studio.phaseshift.metatron.isa.llm.type.Agent.agent;
+import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.GBYTE_TYPE;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_BYTE_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.Poly.MUTABLE;
 import static studio.phaseshift.metatron.isa.m.type.Rec.REC_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Str.str0;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -82,40 +81,47 @@ public final class LLMFactory {
         // do nothing
     }
 
-    public static Space createModelCatalog(final Rec spaceRec) {
-        return switch (spaceRec.at(NAME).uriValue().toString()) {
+    public static Rec createModel(final Rec preModel) {
+        return switch (preModel.at(PROTOCOL).uriValue().toString()) {
             case ANTHROPIC -> {
-                final AnthropicModelCatalog models = AnthropicModelCatalog.builder().baseUrl(spaceRec.at(HOST).uriValue().toString()).build();
-                final modelCatalogSpace<AnthropicModelCatalog> catalogSpace = modelCatalogSpace.of(spaceRec.jvm(), spaceRec.vid());
-                catalogSpace.at(QPROC, catalogSpace.at(QPROC).orElse(lst()).add(QCollection.subq(), MUTABLE), MUTABLE);
-                models.listModels().forEach(m -> rec(mutableMap(
-                                uri(NAME), uri(m.name()),
-                                uri(TYPE), m.type() == null ? noobj() : uri(m.type().name().toLowerCase(Locale.ROOT)),
-                                uri(CREATOR), str(m.provider().name()),
-                                uri(DESC), m.description() == null || m.description().isBlank() ? noobj() : str(m.description()),
-                                uri(PROVIDER), auto_from_(spaceRec.vid()).tryToInst()),
-                        MODEL_TID, catalogSpace.pattern().retractPattern().extend(m.name())));
-                yield catalogSpace;
+                final AnthropicModelCatalog models = AnthropicModelCatalog.builder().baseUrl(preModel.at(HOST).uriValue().toString()).build();
+                yield models.listModels().stream()
+                        .filter(m -> m.name().equals(preModel.at(LLM).uriValue().toString()))
+                        .map(m -> {
+                            final Rec postModel = rec(mutableMap(
+                                            uri(NAME), uri(m.name()),
+                                            uri(TYPE), m.type() == null ? noobj() : uri(m.type().name().toLowerCase()),
+                                            uri(CREATOR), str(m.provider().name()),
+                                            uri(DESC), m.description() == null || m.description().isBlank() ? noobj() : str(m.description())
+                                            // uri(PROVIDER), auto_from_(spaceRec.vid()).tryToInst()),
+                                    ),
+                                    LLM_MODEL_TID, null);
+                            postModel.jvm().putAll(preModel.jvm());
+                            return postModel;
+                        }).findFirst()
+                        .orElseThrow(() -> MTronException.of("unknown model: %s", preModel.at(LLM)));
             }
             case OLLAMA -> {
-                final OllamaModels models = OllamaModels.builder().baseUrl(spaceRec.at(HOST).uriValue().toString()).build();
-                final modelCatalogSpace<OllamaModels> catalogSpace = modelCatalogSpace.of(spaceRec.jvm(), spaceRec.vid());
-                catalogSpace.at(QPROC, catalogSpace.at(QPROC).orElse(lst()).add(QCollection.subq(), MUTABLE), MUTABLE);
-                models.availableModels().content().stream()
+                final OllamaModels models = OllamaModels.builder().baseUrl(preModel.at(HOST).uriValue().toString()).build();
+                yield models.availableModels().content().stream()
                         .map(m -> Tuple.Pair.with(m, models.modelCard(m.getName()).content()))
-                        .forEach(m -> {
-                            final fURI vid = catalogSpace.pattern().retractPattern().extend(m.get0().getName());
-                            rec(mutableMap(uri(PROVIDER), auto_from_(spaceRec.vid()).tryToInst(),
+                        .filter(m -> m.get0().getModel().equals(preModel.at(LLM).uriValue().toString()))
+                        .map(m -> {
+                            final Rec postModel = rec(mutableMap(
+                                            // uri(PROVIDER), auto_from_(spaceRec.vid()).tryToInst(),
                                             uri(NAME), uri(m.get0().getName()),
                                             //uri(LICENSE), Optional.ofNullable(m.get1().getLicense()).map(MStr::str).map(o -> (Obj) o).orElse(noobj()),
                                             uri(THINK), m.get1().getCapabilities().contains(THINKING) ? rec() : noobj(),
                                             uri(SKILL), lst(m.get1().getCapabilities().stream().map(MUri::uri)),
                                             uri(SIZE), real(Long.valueOf(m.get0().getSize()).doubleValue(), MATH_BYTE_TID, null).as(GBYTE_TYPE)),
-                                    MODEL_TID, vid);
-                        });
-                yield catalogSpace;
+                                    REC_TID, null);
+                            postModel.jvm().putAll(preModel.jvm());
+                            return postModel;
+                        })
+                        .findFirst()
+                        .orElseThrow(() -> MTronException.of("unknown model: %s", preModel.at(LLM)));
             }
-            case LOCALAI -> {
+           /* case LOCALAI -> {
                 final LocalAiModelCatalog models = new LocalAiModelCatalog(spaceRec.at(HOST).uriValue().toString());
                 final modelCatalogSpace<LocalAiModelCatalog> catalogSpace = modelCatalogSpace.of(spaceRec.jvm(), spaceRec.vid());
                 catalogSpace.at(QPROC, catalogSpace.at(QPROC).orElse(lst()).add(QCollection.subq(), MUTABLE), MUTABLE);
@@ -126,19 +132,26 @@ public final class LLMFactory {
                                 uri(PROVIDER), auto_from_(spaceRec.vid()).tryToInst()),
                         MODEL_TID, catalogSpace.pattern().retractPattern().extend(m.name())));
                 yield catalogSpace;
-            }
+            }*/
             case OPENAI -> {
-                final OpenAiModelCatalog models = OpenAiModelCatalog.builder().baseUrl(spaceRec.at(HOST).uriValue().toString()).apiKey(spaceRec.at(API_KEY).strValue()).build();
-                final modelCatalogSpace<OpenAiModelCatalog> catalogSpace = modelCatalogSpace.of(spaceRec.jvm(), spaceRec.vid());
-                models.listModels().forEach(m -> rec(mutableMap(
-                                uri(NAME), uri(m.name()),
-                                uri(DESC), Optional.ofNullable(m.description()).filter(d -> !d.isBlank()).map(MStr::str).map(o -> (Obj) o).orElse(noobj()),
-                                uri(TYPE), Optional.ofNullable(m.type()).map(t -> uri(t.name().toLowerCase(Locale.ROOT))).map(o -> (Obj) o).orElse(noobj()),
-                                uri(PROVIDER), auto_from_(spaceRec.vid()).tryToInst()),
-                        MODEL_TID, catalogSpace.pattern().retractPattern().extend(m.name())));
-                yield catalogSpace;
+                final OpenAiModelCatalog models = OpenAiModelCatalog.builder()
+                        .baseUrl(preModel.at(HOST).uriValue().toString()).apiKey(preModel.at(API_KEY).strValue()).build();
+                yield models.listModels().stream()
+                        .filter(m -> m.name().equals(preModel.at(LLM).uriValue().toString()))
+                        .map(m -> {
+                            final Rec postModel = rec(mutableMap(
+                                            uri(NAME), uri(m.name()),
+                                            uri(DESC), Optional.ofNullable(m.description()).filter(d -> !d.isBlank()).map(MStr::str).map(o -> (Obj) o).orElse(noobj()),
+                                            uri(TYPE), Optional.ofNullable(m.type()).map(t -> uri(t.name().toLowerCase())).map(o -> (Obj) o).orElse(noobj())
+                                    ),//uri(PROVIDER), auto_from_(spaceRec.vid()).tryToInst()),
+                                    LLM_MODEL_TID, null);
+                            postModel.jvm().putAll(preModel.jvm());
+                            return postModel;
+                        })
+                        .findFirst()
+                        .orElseThrow(() -> MTronException.of("unknown model: %s", preModel.at(LLM)));
             }
-            default -> throw new IllegalArgumentException("unsupported llm provider: " + spaceRec.at(PROVIDER));
+            default -> throw new IllegalArgumentException("unsupported llm protocol: " + preModel.at(PROTOCOL));
         };
     }
 
@@ -184,14 +197,19 @@ public final class LLMFactory {
                 null;
     }
 
-    public static StreamingChatModel createChatInteraction(final mModel model, String modelName, final Rec responseFormat) {
-        final fURI provider = model.at(f(PROVIDER)).asRec().at(NAME).uriValue();
-        final String host = model.at(f(PROVIDER)).asRec().at(HOST).uriValue().toString();
-        final boolean thinking = model.feature(THINK).isPresent();
-        final Str api_key = model.at(f(PROVIDER)).asRec().at(API_KEY).orElse(str0());
-        final Str organization = model.at(f(PROVIDER)).asRec().at(ORG).orElse(str0());
-        final String name = model.at(NAME).uriValue().toString();
-        final Rec responseFormat2 = responseFormat.isNoObj() ? model.responseFormat().orElse(noobjRec()) : responseFormat;
+    public static StreamingChatModel createChatInteraction(final Agent agent, final ChatFeature chatFeature) {
+        final Rec model = chatFeature.at(MODEL);
+        final Rec response = chatFeature.at(RESPONSE);
+        final Obj fmt = chatFeature.at(FORMAT);
+        final Rec responseFormat = fmt.isNoObj() ? rec0().c(c -> c.zero()).as() : fmt.asRec();
+        final fURI provider = model.at(f(PROTOCOL)).uriValue();
+        final String host = model.at(HOST).uriValue().toString();
+        final boolean thinking = agent.feature(THINK).isPresent();
+        final String modelName = Str.Helper.cleanString(model.at(NAME));
+        final Str api_key = model.at(API_KEY).orElse(str0());//model.at(f(PROVIDER)).asRec().at(API_KEY).orElse(str0());
+        // final Str organization = model.at(f(PROVIDER)).asRec().at(ORG).orElse(str0());
+        final String name = Str.Helper.cleanString(model.at(LLM));
+        final Rec responseFormat2 = responseFormat.isNoObj() ? agent.responseFormat().orElse(noobjRec()) : responseFormat;
         final boolean hasResponseFormat = !responseFormat2.isNoObj() && !responseFormat2.isEmpty();
         return switch (provider.toString().toLowerCase()) {
             case LOCALAI -> LocalAiStreamingChatModel.builder()
@@ -213,13 +231,13 @@ public final class LLMFactory {
                                 .logger(Graphitty.log(OllamaStreamingChatModel.class).logger(Level.WARN));
                 if (hasResponseFormat)
                     builder = builder.responseFormat(createResponseFormat(responseFormat2));
-                if (model.cost().isPresent())
-                    builder.listeners(List.of(new CostCalculator(model.cost().get())));
+                if (!model.at(COST).isNoObj())
+                    builder.listeners(List.of(new CostCalculator(model.at(COST).as())));
                 yield builder.build();
             }
             case OPENAI -> {
                 // don't pass empty organizationId - it causes hangs in some LangChain4j versions
-                final String orgId = organization.strValue().isBlank() ? null : organization.strValue();
+                // final String orgId = organization.strValue().isBlank() ? null : organization.strValue();
                 final String baseUrl = (host != null && !host.isBlank() && !host.equals("https://api.openai.com/v1")) ? host : null;
                 // Fail early if a response format was requested but the model can't honor it
                 if (hasResponseFormat && host != null && host.contains("api.openai.com") && !openAiSupportsJsonObject(modelName))
@@ -236,14 +254,14 @@ public final class LLMFactory {
                         .modelName(modelName)
                         .returnThinking(thinking)
                         .sendThinking(thinking, "reasoning_content")
-                        .organizationId(orgId)
+                        //.organizationId(orgId)
                         .logRequests(true)
                         .logResponses(true)
                         .logger(Graphitty.log(OpenAiStreamingChatModel.class).logger(Level.WARN))
                         .timeout(Duration.ofSeconds(60))
                         .responseFormat(openAiFormat);
-                if (model.cost().isPresent())
-                    builder.listeners(List.of(new CostCalculator(model.cost().get())));
+                if (!model.at(COST).isNoObj())
+                    builder.listeners(List.of(new CostCalculator(model.at(COST).as())));
                 yield builder.build();
             }
             case ANTHROPIC -> {
@@ -257,8 +275,8 @@ public final class LLMFactory {
                                 // .listeners(model.cost().isPresent() ? List.of(new CostCalculator(model.cost().get())) : null)
                                 .logger(Graphitty.log(AnthropicStreamingChatModel.class).logger(Level.WARN))
                                 .responseFormat(createResponseFormat(responseFormat));
-                if (model.cost().isPresent())
-                    builder.listeners(List.of(new CostCalculator(model.cost().get())));
+                if (!model.at(COST).isNoObj())
+                    builder.listeners(List.of(new CostCalculator(model.at(COST).as())));
                 yield builder.build();
             }
 
@@ -266,31 +284,32 @@ public final class LLMFactory {
         };
     }
 
-    public static EmbeddingModel createEmbeddingInteraction(final mModel model, String modelName) {
-        return switch (model.at(f(PROVIDER)).asRec().at(NAME).uriValue().toString().toLowerCase()) {
+    public static EmbeddingModel createEmbeddingInteraction(final Model model) {
+        final String modelName = Str.Helper.cleanString(model.llm());
+        return switch (model.protocol().uriValue().toString().toLowerCase()) {
             case LOCALAI -> LocalAiEmbeddingModel.builder()
-                    .baseUrl(model.at(f(PROVIDER)).asRec().at(HOST).uriValue().toString())
+                    .baseUrl(model.host().uriValue().toString())
                     .modelName(modelName)
                     .logRequests(true)
                     .logResponses(true)
                     .logger(Graphitty.log(LocalAiEmbeddingModel.class).logger(Level.WARN))
                     .build();
             case OLLAMA -> OllamaEmbeddingModel.builder()
-                    .baseUrl(model.at(f(PROVIDER)).asRec().at(HOST).uriValue().toString())
+                    .baseUrl(model.host().uriValue().toString())
                     .modelName(modelName)
                     .logRequests(true)
                     .logResponses(true)
                     .build();
             case OPENAI -> OpenAiEmbeddingModel.builder()
-                    .apiKey(model.at(f(PROVIDER)).asRec().at(API_KEY).strValue())
-                    .baseUrl(model.at(f(PROVIDER)).asRec().at(HOST).uriValue().toString())
+                    .apiKey(model.apiKey().strValue())
+                    .baseUrl(model.host().uriValue().toString())
                     .modelName(modelName)
                     .logRequests(true)
                     .logResponses(true)
                     .logger(Graphitty.log(OpenAiEmbeddingModel.class).logger(Level.WARN))
                     .build();
             default ->
-                    throw MTronException.of("llm provider does not support embedding: %s", model.at(f(PROVIDER)).asRec().at(NAME).uriValue());
+                    throw MTronException.of("llm provider does not support embedding: %s", model.provider().uriValue());
         };
 
     }

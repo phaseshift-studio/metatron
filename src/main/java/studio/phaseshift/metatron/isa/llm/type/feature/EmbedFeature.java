@@ -16,19 +16,22 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.llm.type.mod;
+package studio.phaseshift.metatron.isa.llm.type.feature;
 
 import dev.langchain4j.service.AiServices;
-import studio.phaseshift.metatron.isa.llm.type.mAgent;
-import studio.phaseshift.metatron.isa.llm.type.mModel;
+import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.llm.type.Agent;
+import studio.phaseshift.metatron.isa.llm.type.AgentServices;
+import studio.phaseshift.metatron.isa.m.type.Obj;
 
-import java.util.List;
+import java.util.Map;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-@FunctionalInterface
-public interface Mod {
+public class EmbedFeature extends Feature {
 
-    void apply(final mModel model, final AiServices<mAgent> services);
+    public EmbedFeature(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
+        super(jvm, tid, vid);
+    }
 }

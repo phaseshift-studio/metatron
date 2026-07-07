@@ -527,7 +527,10 @@ public class tbleSpace extends AbstractSpace<Connection> implements SchemaSpace 
             try {
                 LOG.debug("looking for table vid: %s", pattern);
                 final fURI aligned = Space.Helper.routeFromSpace(pattern, this.routes());
-
+                if (pattern.hasScheme() && aligned.hasScheme() && !pattern.scheme().equals(aligned.scheme())) {
+                    LOG.warn("interspace reroute: %s => %s", pattern, aligned);
+                    return Router.readFromSpace(aligned).stream().map(o -> new IdObj(aligned, o)).iterator();
+                }
                 // ── collection-level schema resolution ──
                 // Shared across all SchemaSpaces: /db/collection → type from schema InstSet.
                 // Returns empty iterator when collection is unknown, falling through

@@ -34,6 +34,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.m.type.Uri;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
@@ -126,6 +127,37 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
             data.put(furiPrefix.extend("x" + i), str("value" + i));
         }
         return data;
+    }
+
+    @TestCategory.Crud
+    @TestCategory.ReadWrite
+    @ParameterizedTest
+    @TestData(value = {
+            """
+            routes -> [db:abc                   => c,
+                       db:ddd                   => v:embed,
+                       db:llm_message_embedding => v:llm_embeddings,
+                       db:                      => <>,
+                       /x/y                     => v:]
+            """
+    })
+    @CsvSource(value = {
+            "db:abc/c                                        % c/c",
+            "db:x                                            % x",
+            "xyz:abc                                         % xyz:abc",
+            "db:a                                            % a",
+            "db:abc/def/                                     % c/def/",
+            "db:ddd/1                                        % v:embed/1",
+            "db:llm_message_embedding/10                     % v:llm_embeddings/10",
+            "db:llm_message_embedding/15?embedq              % v:llm_embeddings/15?embedq",
+            "db:llm_message_embedding/20?embedq=gemma4       % v:llm_embeddings/20?embedq=gemma4",
+            "/x/y/z                                          % v:z"
+    }, delimiter = '%')
+    public void testSpaceRouter(final String lhs, final String expected) {
+        final Map<Uri, Uri> routes = (Map) Router.readFromSpace(f("routes")).asRec().jvm();
+        final fURI actual = Space.Helper.routeFromSpace(f(lhs), routes);
+        LOG.debug("testing route from space: %s => %s [expected: %s]", lhs, actual, expected);
+        assertEquals(f(expected), actual);
     }
 
     @TestCategory.Crud

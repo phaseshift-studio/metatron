@@ -21,48 +21,39 @@ package studio.phaseshift.metatron.isa.llm;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
+import studio.phaseshift.metatron.isa.llm.type.Agent;
+import studio.phaseshift.metatron.isa.llm.type.feature.*;
 import studio.phaseshift.metatron.isa.llm.type.mSkill;
 import studio.phaseshift.metatron.isa.llm.type.mTool;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.ObjFactory;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
-import studio.phaseshift.metatron.isa.tble.tbleInstSet;
-import studio.phaseshift.metatron.isa.tble.tbleSpace;
 import studio.phaseshift.metatron.isa.vec.type.MVec;
-import studio.phaseshift.metatron.isa.web.webInstSet;
-import studio.phaseshift.metatron.util.MTronException;
 
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
-import java.sql.Connection;
-import java.sql.Statement;
+import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.q.QCollection.DOCS_TID;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
-import static studio.phaseshift.metatron.isa.llm.space.modelCatalogSpace.LLM_CATALOG_SPACE_TYPE;
-import static studio.phaseshift.metatron.isa.llm.type.mModel.model;
+import static studio.phaseshift.metatron.isa.llm.type.Agent.agent;
+import static studio.phaseshift.metatron.isa.llm.type.Model.model;
 import static studio.phaseshift.metatron.isa.llm.type.mTool.LLM_TOOL_TYPE;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
-import static studio.phaseshift.metatron.isa.m.math.mathInstSet.BYTE_TYPE;
-import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_CURRENCY_TYPE;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.split_;
+import static studio.phaseshift.metatron.isa.m.math.mathInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.Inst.INST_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.io.space.fs.fsSpace.staticObjToFile;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.DIR_TID;
@@ -75,7 +66,8 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 @InstSet.JREService(vid = "/m/llm")
 public class llmInstSet extends AbstractInstSet {
     public static final fURI LLM_ISA_TID = M_ISA_TID.extend(LLM);
-    public static final fURI MODEL_TID = LLM_ISA_TID.extend(MODEL);
+    public static final fURI LLM_MODEL_TID = LLM_ISA_TID.extend(MODEL);
+    public static final fURI LLM_AGENT_TID = LLM_ISA_TID.extend(AGENT);
     public static final fURI LLM_INST_TID = LLM_ISA_TID.extend(INST);
     public static final fURI LLM_FEATURE_TID = LLM_ISA_TID.extend(FEATURE);
     public static final fURI LLM_SPACE_TID = LLM_ISA_TID.extend(SPACE);
@@ -90,8 +82,18 @@ public class llmInstSet extends AbstractInstSet {
     public static final fURI TOOL_RESULT_MESSAGE_TID = MESSAGE_TID.extend("tool_result");
     //public static final fURI MCP_TOOL_TID = LLM_ISA_TID.extend("mcp");
     // public static Obj MTRON_EVAL_TOOL = mModel.Helper.mtronInstToolSpecification(ObjType.insts().stream().filter(i -> i.tid().equals(EVAL_INST_TID)).findFirst().orElse(null));    
+    public static final fURI LLM_CHAT_FEATURE_TID = LLM_FEATURE_TID.extend("chat_feature");
+    public static final fURI LLM_SESSION_FEATURE_TID = LLM_FEATURE_TID.extend("session_feature");
+    public static final fURI LLM_TOOL_FEATURE_TID = LLM_FEATURE_TID.extend("tool_feature");
+    public static final fURI LLM_SYSTEM_FEATURE_TID = LLM_FEATURE_TID.extend("system_feature");
+    public static final fURI LLM_NOTE_FEATURE_TID = LLM_FEATURE_TID.extend("note_feature");
+    public static final fURI LLM_RECALL_FEATURE_TID = LLM_FEATURE_TID.extend("recall_feature");
+    public static final fURI LLM_EMBED_FEATURE_TID = LLM_FEATURE_TID.extend("embed_feature");
+    public static final fURI LLM_SKILL_FEATURE_TID = LLM_FEATURE_TID.extend("skill_feature");
+    //public static final fURI LLM_SKILL_FEATU
 
-
+    public static Type LLM_MODEL_TYPE;
+    public static Type LLM_AGENT_TYPE;
     public static Type LLM_AI_MESSAGE_TYPE;
     public static Type LLM_USER_MESSAGE_TYPE;
     public static Type LLM_SYSTEM_MESSAGE_TYPE;
@@ -110,9 +112,44 @@ public class llmInstSet extends AbstractInstSet {
     @Override
     public void setup() {
         this.jvm().putAll(mutableMap(
-                //uri(PATTERN), uri(LLM_ISA_TID.extend(ALL)),
                 uri(TYPE), lst(
-                        LLM_CATALOG_SPACE_TYPE,
+                        LLM_MODEL_TYPE = docWrap(Type.Builder.build()
+                                        .tid(REC_TID)
+                                        .vid(LLM_MODEL_TID)
+                                        .isaPredicate(rec(
+                                                uri(PROVIDER), URI_TYPE,
+                                                uri(HOST), URI_TYPE,
+                                                uri(PROTOCOL), URI_TYPE,
+                                                uri(LLM), URI_TYPE,
+                                                uri(SIZE).maybe(), DATA_SIZE_TYPE,
+                                                uri(QUANT).maybe(), INT_TYPE,
+                                                uri(COST).maybe(), rec(uri(IN), MATH_CURRENCY_TYPE, uri(OUT), MATH_CURRENCY_TYPE).maybe()))
+                                        .constructor(instC(INST_CTOR_TID.rng(LLM_MODEL_TID), lst(REC_TYPE),
+                                                (lhs, inst) -> LLMFactory.createModel(inst.arg(0).asRec()).selfTID(LLM_MODEL_TID).vid(inst.arg(0).vid()))).create(),
+                                null, null,
+                                Map.of(uri(PROVIDER).maybe(), "optional name of ai model provider",
+                                        uri(HOST), "the ai model provider's http rest endpoint",
+                                        uri(PROTOCOL), "the http rest endpoint protocol (ollama, openai, anthropic)",
+                                        uri(LLM), "the name of a model offered by the ai provider",
+                                        uri(SIZE).maybe(), "the size of the model",
+                                        uri(QUANT).maybe(), "the level of quantization of the model",
+                                        uri(COST).maybe(), "the cost per million tokens to use this llm (in/out costs)"),
+                                "populate a model reference rec using data from the ai provider's http-endpoint",
+                                "model::[provider=>deepseek,host=><http://deepseek.com/api>,protocol=>openai,llm=>deepseek-v4-pro]"),
+                        LLM_AGENT_TYPE = docWrap(Type.Builder.build()
+                                        .tid(REC_TID)
+                                        .vid(LLM_AGENT_TID)
+                                        .isaPredicate(rec(
+                                                uri(NAME).maybe().asUri(), STR_TYPE,
+                                                uri(DESC).maybe(), STR_TYPE,
+                                                uri(FEATURE).maybe(), lst(REC_TYPE)))
+                                        .constructor(instC(INST_CTOR_TID.rng(LLM_AGENT_TID), lst(REC_TYPE),
+                                                (lhs, inst) -> new Agent(inst.arg(0).recValue(), LLM_AGENT_TID, inst.arg(0).vid())))
+                                        .create(), null, null, Map.of(
+                                        uri(NAME), "a convenient name for the agent",
+                                        uri(DESC), "a description of the agent given to the agent in their system prompt",
+                                        uri(FEATURE), "the ordered lst of capabilities attached to the agent"),
+                                "an agent is an llm enriched with embodied capabilities"),
                         LLM_TOOL_TYPE,
                         //////////////////////////////////////////////////
                         docWrap(LLM_SESSION_TYPE = Type.Builder.build()
@@ -195,31 +232,124 @@ public class llmInstSet extends AbstractInstSet {
                                         .tid(REC_TID)
                                         .vid(LLM_FEATURE_TID)
                                         .isaPredicate(rec(
-                                                uri(THINK).maybe().asUri(), ALL_TYPE,
-                                                uri(SESSION).maybe(), LLM_SESSION_TYPE.maybe(),
-                                                uri(PROMPT).maybe(), ALL_TYPE,
-                                                uri(RESPONSE).maybe(), rec(
-                                                        uri(TO).maybe().asUri(), INST_TYPE,
-                                                        uri(FORMAT).maybe(), ALL_TYPE,
-                                                        uri(COST).maybe(), MATH_CURRENCY_TYPE).maybe(),
-                                                uri(TOOL).maybe(), lst(split_(lst(
-                                                        isa_(LLM_TOOL_TYPE),
-                                                        isa_(webInstSet.MCP_SERVER_TYPE))).tryToInst()).maybe(),
-                                                uri(SKILL).maybe(), LST_TYPE.maybe(),
-                                                uri(RAG).maybe(), rec(
-                                                        URI_TYPE, isa_(INT_TYPE).else_(jnt(10)).tryToInst()).maybe(),
-                                                uri(NOTE).maybe(), LST_TYPE.maybe()).maybe()).create(),
-                                "llm features", "", mutableMap(
-                                        uri(RESPONSE).maybe(), "an obj to process llm responses",
-                                        uri(THINK).maybe(), "an obj to process llm thoughts",
-                                        uri(NOTE).maybe(), "a lst of notes llm will read and react to mid-chat",
-                                        uri(PROMPT).maybe(), "a user prompt to prefix chat messages with",
-                                        uri(SESSION).maybe(), "current llm session containing chat interactions",
-                                        uri(RAG).maybe(), "retrieval augmented generation configuration",
-                                        uri(SKILL).maybe(), "skills to extend the llm's abilities",
-                                        uri(TOOL).maybe(), "tool functions the llm can use to solve problems"),
-                                "llm features"),
-                        docWrap(Type.Builder.build().tid(REC_TID).vid(MODEL_TID).
+                                                // hook fields — each is an optional inst a feature can override
+                                                uri(ON_BEFORE_CHAT).maybe().asUri(), ALL_TYPE,
+                                                uri(ON_PARTIAL_RESPONSE).maybe(), ALL_TYPE,
+                                                uri(ON_PARTIAL_THINKING).maybe(), ALL_TYPE,
+                                                uri(ON_PARTIAL_TOOL_CALL).maybe(), ALL_TYPE,
+                                                uri(BEFORE_TOOL_EXECUTION).maybe(), ALL_TYPE,
+                                                uri(ON_TOOL_EXECUTED).maybe(), ALL_TYPE,
+                                                uri(ON_COMPLETE_RESPONSE).maybe(), ALL_TYPE,
+                                                uri("onError").maybe(), ALL_TYPE))
+                                        .create(),
+                                "llm feature type — each concrete feature refines this with its own hook implementations",
+                                "", mutableMap(
+                                        uri(ON_BEFORE_CHAT).maybe(), "inst?#{?}<=agent(){ [-- non-noobj to short-circuit --] }",
+                                        uri(ON_PARTIAL_RESPONSE).maybe(), "inst?noobj<=agent(text=>str::T)",
+                                        uri(ON_PARTIAL_THINKING).maybe(), "inst?noobj<=agent(text=>str::T)",
+                                        uri(ON_PARTIAL_TOOL_CALL).maybe(), "inst?noobj<=agent(request=>call::T)",
+                                        uri(BEFORE_TOOL_EXECUTION).maybe(), "inst?noobj<=agent(request=>call::T)",
+                                        uri(ON_TOOL_EXECUTED).maybe(), "inst?noobj<=agent(result=>call::T)",
+                                        uri(ON_COMPLETE_RESPONSE).maybe(), "inst?noobj<=agent(response=>str::T)",
+                                        uri("onError").maybe(), "inst?noobj<=agent(fail=>fail::T)"),
+                                "base feature type — concrete features override hook fields they care about"),
+                        // -- concrete feature types ------------------------------------------
+                        Type.Builder.build()
+                                .tid(LLM_FEATURE_TID)
+                                .vid(LLM_CHAT_FEATURE_TID)
+                                .isaPredicate(rec(MODEL, LLM_MODEL_TYPE, RESPONSE, rec(uri(TO), ALL_TYPE), uri(FORMAT).maybe(), ALL_TYPE))
+                                .constructor(instC(INST_CTOR_TID.rng(LLM_CHAT_FEATURE_TID),
+                                        lst(REC_TYPE), (lhs, inst) -> {
+                                            final ChatFeature f = new ChatFeature(inst.arg(0).asRec().jvm(),
+                                                    LLM_CHAT_FEATURE_TID, inst.arg(0).vid());
+                                            f.at(uri(ON_BEFORE_CHAT), instLambda((agent, ignored) ->
+                                                    f.onBeforeChat((Agent) agent)), MUTABLE);
+                                            return f;
+                                        }))
+                                .create(),
+                        Type.Builder.build()
+                                .tid(LLM_FEATURE_TID)
+                                .vid(LLM_SESSION_FEATURE_TID)
+                                .isaPredicate(rec(SESSION, LLM_SESSION_TYPE))
+                                .constructor(instC(INST_CTOR_TID.rng(LLM_SESSION_FEATURE_TID),
+                                        lst(REC_TYPE), (lhs, inst) -> {
+                                                final SessionFeature f = new SessionFeature(inst.arg(0).asRec().jvm(),
+                                                        LLM_SESSION_FEATURE_TID, inst.arg(0).vid());
+                                                f.at(uri(ON_BEFORE_CHAT), instLambda((agent, ignored) ->
+                                                        f.onBeforeChat((Agent) agent)), MUTABLE);
+                                                return f;
+                                        }))
+                                .create(),
+                        Type.Builder.build()
+                                .tid(LLM_FEATURE_TID)
+                                .vid(LLM_TOOL_FEATURE_TID)
+                                .isaPredicate(rec(CHEST, LST_TYPE))
+                                .constructor(instC(INST_CTOR_TID.rng(LLM_TOOL_FEATURE_TID),
+                                        lst(REC_TYPE), (lhs, inst) -> {
+                                            final ToolFeature f = new ToolFeature(inst.arg(0).asRec().jvm(),
+                                                    LLM_TOOL_FEATURE_TID, inst.arg(0).vid());
+                                            f.at(uri(ON_BEFORE_CHAT), instLambda((agent, ignored) ->
+                                                    f.onBeforeChat((Agent) agent)), MUTABLE);
+                                            f.at(uri(ON_TOOL_EXECUTED), instLambda((agent, i) -> {
+                                                    f.onToolExecuted((Agent) agent, i.arg(0));
+                                                    return noobj();
+                                            }), MUTABLE);
+                                            return f;
+                                        }))
+                                .create(),
+                        Type.Builder.build()
+                                .tid(LLM_FEATURE_TID)
+                                .vid(LLM_SKILL_FEATURE_TID)
+                                .constructor(instC(INST_CTOR_TID.rng(LLM_SKILL_FEATURE_TID),
+                                        lst(REC_TYPE), (lhs, inst) -> {
+                                                final SkillFeature f = new SkillFeature(inst.arg(0).asRec().jvm(),
+                                                        LLM_SKILL_FEATURE_TID, inst.arg(0).vid());
+                                                f.at(uri(ON_BEFORE_CHAT), instLambda((agent, ignored) ->
+                                                        f.onBeforeChat((Agent) agent)), MUTABLE);
+                                                return f;
+                                        }))
+                                .create(),
+                        Type.Builder.build()
+                                .tid(LLM_FEATURE_TID)
+                                .vid(LLM_SYSTEM_FEATURE_TID)
+                                .constructor(instC(INST_CTOR_TID.rng(LLM_SYSTEM_FEATURE_TID),
+                                        lst(REC_TYPE), (lhs, inst) -> {
+                                                final SystemFeature f = new SystemFeature(inst.arg(0).asRec().jvm(),
+                                                        LLM_SYSTEM_FEATURE_TID, inst.arg(0).vid());
+                                                f.at(uri(ON_BEFORE_CHAT), instLambda((agent, ignored) ->
+                                                        f.onBeforeChat((Agent) agent)), MUTABLE);
+                                                return f;
+                                        }))
+                                .create(),
+                        Type.Builder.build()
+                                .tid(LLM_FEATURE_TID)
+                                .vid(LLM_RECALL_FEATURE_TID)
+                                .constructor(instC(INST_CTOR_TID.rng(LLM_RECALL_FEATURE_TID),
+                                        lst(REC_TYPE), (lhs, inst) -> {
+                                            final SimilarityRecallFeature f = new SimilarityRecallFeature(inst.arg(0).asRec().jvm(),
+                                                    LLM_RECALL_FEATURE_TID, inst.arg(0).vid());
+                                            f.at(uri(ON_BEFORE_CHAT), instLambda((agent, ignored) ->
+                                                    f.onBeforeChat((Agent) agent)), MUTABLE);
+                                            return f;
+                                        }))
+                                .create(),
+                        Type.Builder.build()
+                                .tid(LLM_FEATURE_TID)
+                                .vid(LLM_NOTE_FEATURE_TID)
+                                .constructor(instC(INST_CTOR_TID.rng(LLM_NOTE_FEATURE_TID),
+                                        lst(REC_TYPE), (lhs, inst) ->
+                                                new NoteFeature(inst.arg(0).asRec().jvm(),
+                                                        LLM_NOTE_FEATURE_TID, inst.arg(0).vid())))
+                                .create()),
+                       /* Type.Builder.build()
+                                .tid(LLM_FEATURE_TID)
+                                .vid(LLM_FEATURE_TID.extend("mail"))
+                                .constructor(instC(INST_CTOR_TID.rng(LLM_FEATURE_TID.extend("mail")),
+                                        lst(REC_TYPE), (lhs, inst) ->
+                                                new MailFeature(inst.arg(0).asRec().jvm(),
+                                                        LLM_FEATURE_TID.extend("mail"), inst.arg(0).vid())))
+                                .create()),*/
+                      /*  docWrap(Type.Builder.build().tid(REC_TID).vid(LLM_MODEL_TID).
                                         isaPredicate(rec(
                                                 uri(PROVIDER), LLM_CATALOG_SPACE_TYPE,
                                                 uri(NAME), URI_TYPE,
@@ -232,7 +362,7 @@ public class llmInstSet extends AbstractInstSet {
                                         uri(NAME), "the model name from the host catalog",
                                         uri(COST).maybe(), "the cost per million tokens to use this llm (in/out costs)",
                                         uri(FEATURE).maybe(), "llm features can be moved or shared between multiple models"),
-                                "an mtron interface to a large language model")),
+                                "an mtron interface to a large language model")*/
                 uri(INST), lst(
                         docWrap(instC(AS_INST_TID.dom(DOCS_TID).rng(LLM_TOOL_TID),
                                         lst(LLM_TOOL_TYPE),
@@ -255,13 +385,13 @@ public class llmInstSet extends AbstractInstSet {
                                 "maps a directory to an llm skill where the dir follows the standard SKILL.md structure",
                                 "*<local:.agent/skills>.as(skill::T)"),
                         // CHAT INSTRUCTION        
-                        docWrap(instC(LLM_INST_TID.extend("chat").dom(MODEL_TID).rng(STR_TID), lst(STR_TYPE), (lhs, inst) -> model(lhs.asRec()).chat(inst.arg(0).strValue())),
+                        docWrap(instC(LLM_INST_TID.extend("chat").dom(LLM_AGENT_TID).rng(STR_TID), lst(STR_TYPE), (lhs, inst) -> agent(lhs.asRec()).chat(inst.arg(0).strValue())),
                                 "a model to chat with",  // dom
                                 "the models chat response", // rng
                                 mutableMap(jnt(0), "the message to send the model"), // args
                                 "communicate with an llm that may be enriched with a tool, skill, etc.", // desc
                                 "*<ollama:qwen3:latest>+[response=>[to=>print(_)],think=>to(/ai/thoughts/_?incrq)].chat('what is a database?')"),
-                        docWrap(instC(LLM_INST_TID.extend("embed").dom(MODEL_TID).rng(VEC_TID), lst(ALL_TYPE), (lhs, inst) -> model(lhs.asRec()).embed(inst.arg(0))),
+                        docWrap(instC(LLM_INST_TID.extend("embed").dom(LLM_MODEL_TID).rng(VEC_TID), lst(ALL_TYPE), (lhs, inst) -> model(lhs.asRec()).embed(inst.arg(0))),
                                 "a model to embed arg into",  // dom
                                 "the obj as a vector embedding", // rng
                                 mutableMap(jnt(0), "the object to embed"), // args
@@ -270,9 +400,9 @@ public class llmInstSet extends AbstractInstSet {
                         /*instC(LLM_INST_TID.extend("chat").dom(MODEL_TID).rng(A.maybe()),
                                 lst(STR_TYPE),
                                 (lhs, inst) -> model(lhs.asRec()).chat(inst.arg(0).strValue())),*/
-                        docWrap(instC(LLM_INST_TID.extend("chat").dom(MODEL_TID).rng(REC_TID),
+                        docWrap(instC(LLM_INST_TID.extend("chat").dom(LLM_AGENT_TID).rng(REC_TID),
                                         lst(STR_TYPE, REC_TYPE),
-                                        (lhs, inst) -> model(lhs.asRec()).chat(inst.arg(0).strValue(), inst.arg(1).asRec())),
+                                        (lhs, inst) -> agent(lhs.asRec()).chat(inst.arg(0).strValue(), inst.arg(1).asRec())),
                                 "a model to chat with",  // dom
                                 "the models chat response", // rng
                                 mutableMap(jnt(0), "the message to send the model", jnt(1), "the desired response format"), // args

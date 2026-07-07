@@ -16,7 +16,7 @@
     ollama    => <http://ginger.local:11434>,
     embedding => <http://ginger.local:8025/api/v2>,
     knowgraph => <ws://ginger.local:8182/gremlin>,
-    session   => <mariadb://localhost:3306/dr_session?createDatabaseIfNotExist=true&user=mtron&password=mtron>,
+    session   => <mariadb://ginger.local:3306/drdb?createDatabaseIfNotExist=true&user=mtron&password=mtron>,
     localfs   => </home/killswitch/.hermes_clone>],
  tracer/stage => [stack=>true],
 
@@ -44,6 +44,7 @@ import(/m/math);
 import(/m/llm);
 import(/m/grph);
 import(/m/vec);
+import(/m/iot);
 space_root -> <${*boot/args/internal/sys}/space/dr>;
 [===================================================================]
 [===================================================================]
@@ -77,7 +78,8 @@ fsspace::[
 fsspace::[
   pattern => localfs:#,
         q => [subq::[=>],
-              mimeq::[=>]],
+              mimeq::[=>],
+              safeq::[=>]],
     route => [localfs: => <~/.hermes_clone>]]@</sys/space/fs/dr>;
     
 fsspace::[
@@ -90,29 +92,40 @@ fsspace::[
             
 httpspace::[host     => !*<boot/args/external/web/http>,
             pattern  => <http://#>,
-            route    => [/mcp    => mcp_mtron_http,
+            route    => [/mcp     => mcp_mtron_http,
                          /memory => drdb:llm_message_user/, 
                          /       => <>]]@/sys/space/web/http;   
+   
+*boot/args/external/ollama.mult(api/tags/models).*(_).>-.
+  =?=[capabilities=>[embedding]].
+  -<[llm     => >>name.as(uri::T),
+    protocol => ollama,
+    provider => ollama,
+    host     => *boot/args/external/ollama].
+  as(model::T).
+  to(/usr/dr/model/embedding/_?incrq);
+
             
 wsspace::[host     => !*<boot/args/external/web/ws>,
          pattern  => <ws://#>,
          route    => [/mcp   => mcp_mtron_ws,
                       /mtron => mtron_ws]]@/sys/space/web/ws;    
     
+mqttspace::[host    => <mqtt://ginger.local:1883>,
+            pattern => z2m:#,
+            q       => [subq::[=>]],
+            route   => [z2m: => z2m/]]@/sys/space/iot/z2m;
+            
         [=====================]  
         [======== LLM ========]
         [=====================]       
-    
-catalog::[host    => !*<boot/args/external/ollama>,
-          pattern => ollama:#,
-          name    => ollama,
-          route   => [ollama:=><>]]@</sys/space/llm/ollama>;
           
 tblespace::[pattern    => drdb:#,
             host       => !*<boot/args/external/session>,
             driver     => <org.mariadb.jdbc.Driver>,
             q          => [incrq::[=>],subq::[=>]],
-            route      => [drdb:=><>]]@/sys/space/tble/dr;
+            route      => [drdb:embedding/abc => v:abc,
+                           drdb:              => <>]]@/sys/space/tble/dr;
             
 vecspace::[pattern     => v:#,
            host        => !*<boot/args/external/embedding>,
@@ -121,7 +134,7 @@ vecspace::[pattern     => v:#,
            route       => [v: => <>],
            config      => [embed => [
  [------------------------------------^--]
- abc => inst?lst[real]<=#{?}(doc=>#::T){ *ollama:embeddinggemma:latest.embed(*doc)}
+ abc => inst?lst[real]<=#{?}(doc=>#::T){ */usr/dr/model/embedding/+.=?=[llm=>embeddinggemma:latest].embed(*doc)}
  [------------------------------------^--]                                  
                           ]]]@/sys/space/vec/embed;
 
@@ -154,20 +167,22 @@ grphspace::[pattern  => h:#,
                  user      => !*boot/args/internal/user_home,
                  name      => 'general chat',
                  message   => <drdb:msg/1/+>,
-                 algorithm => [max=>15]]==[_=>_].
-  to(drdb:llm_session/1));
+                 algorithm => [max=>15]]==[_=>_].to(drdb:llm_session/1));
 
-  
-model::[desc     => "the agent dr.stynx is here to be of use in the metatron",
-        provider => !*<ollama:gemma4:26b/provider>,
-        name     => !*<ollama:gemma4:26b/name>,
-        feature  => [think    => print(_), 
-                     session  => !@<drdb:llm_session/1>,
-                     session/on_user  => _,
-                     tool     => [!*eval,!*sql,mcp_client::[host=><http://localhost:8777/mcp>]],
-                     note     => [,],
-                     skill    => [!*<metatronfs:skills/mtron>.as(skill::T)],
-                     response => [to=>print(_)]]]@<dr>;
+agent::[name     => 'dr.stynx',
+        desc     => 'the agent dr.stynx is here to be of use in the metatron',
+        feature  => [chat_feature::[model    => model::[provider => ollama,
+                                                        protocol => ollama,
+                                                        host     => <http://ginger.local:11434>,
+                                                        llm      => gemma4:26b],
+                                    response => [to => print(_)]],
+                     session_feature::[session => !@<drdb:llm_session/1>],
+                     system_feature::[=>],
+                     tool_feature::[chest=>[!*eval,
+                                    !*sql,
+                                    mcp_client::[host=><http://localhost:8777/mcp>]]]]]@<dr>; 
+
+
 
 [== user console ==]
 console::[header=>!*boot/args/header]@/usr/marko/console;

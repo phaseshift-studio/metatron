@@ -90,6 +90,17 @@ public final class Tokens {
     public static final String HISTORY = "history";
     public static final String HREF = "href";
     public static final String TOOL = "tool";
+    public static final String CHEST = "chest";
+    public static final String TOOLS = "tools";
+    public static final String TOOL_ARGUMENTS = "arguments";
+    // -- Feature hook tokens ---------------------------------------------------
+    public static final String ON_BEFORE_CHAT = "onBeforeChat";
+    public static final String ON_PARTIAL_RESPONSE = "onPartialResponse";
+    public static final String ON_PARTIAL_THINKING = "onPartialThinking";
+    public static final String ON_PARTIAL_TOOL_CALL = "onPartialToolCall";
+    public static final String BEFORE_TOOL_EXECUTION = "beforeToolExecution";
+    public static final String ON_TOOL_EXECUTED = "onToolExecuted";
+    public static final String ON_COMPLETE_RESPONSE = "onCompleteResponse";
     public static final String PROMPT = "prompt";
     public static final String RESOURCE = "resource";
     public static final String RESPONSE = "response";

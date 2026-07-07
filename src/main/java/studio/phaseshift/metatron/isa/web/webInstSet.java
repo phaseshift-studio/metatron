@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.isa.web;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
+import studio.phaseshift.metatron.isa.dcmnt.schema.storage.ObjBSONSerializer;
 import studio.phaseshift.metatron.isa.llm.type.mcpClient;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
@@ -182,10 +183,10 @@ public class webInstSet extends AbstractInstSet {
                         ObjMarkdownSerializer.single(),
                         //ObjJavaSerializer.single(),
                         ObjPlainTextSerializer.single(),
-                        studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer.single(),
-                        studio.phaseshift.metatron.isa.mach.io.type.ObjByteBufferSerializer.singleton(),
-                        studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer.single(),
-                        studio.phaseshift.metatron.isa.dcmnt.schema.storage.ObjBSONSerializer.single()),
+                        ObjmtronSerializer.single(),
+                        ObjByteBufferSerializer.singleton(),
+                       ObjSimpleJSONSerializer.single(),
+                       ObjBSONSerializer.single()),
                 uri(TYPE), lst(
                         docWrap(MIME_OBJ_TYPE, "indicates the media type of the data as specified by RFC-9110"),
                         docWrap(XML_TYPE, "a rec encoding of an xml document"),

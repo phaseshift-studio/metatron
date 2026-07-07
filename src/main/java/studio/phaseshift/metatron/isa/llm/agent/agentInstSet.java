@@ -31,7 +31,7 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_ISA_TID;
-import static studio.phaseshift.metatron.isa.llm.llmInstSet.MODEL_TID;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_MODEL_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.INSTSET_TID;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
@@ -62,7 +62,7 @@ public class agentInstSet extends AbstractInstSet {
                 uri(PATTERN), uri(AGENT_ISA_TID.extend(ALL)),
                 //  uri(CONST), lst(MTRON_EVAL_TOOL)),
                 uri(INST), lst(
-                        docWrap(instC(AGENT_FORGET_INST_TID.dom(MODEL_TID).rng(MODEL_TID), lst(), (lhs, inst) -> {
+                        docWrap(instC(AGENT_FORGET_INST_TID.dom(LLM_MODEL_TID).rng(LLM_MODEL_TID), lst(), (lhs, inst) -> {
                             if (!lhs.asRec().has(f(FEATURE).extend(MEMORY).extend("mem")))
                                 return lhs;
                             lhs.asRec().at(f(FEATURE).extend(MEMORY).extend("mem")).asLst().jvm(new ArrayList<>());
