@@ -109,7 +109,8 @@ public class memSpace extends AbstractSpace<TopicTrie> {
 
     @Override
     public Function<fURI, Iterator<IdObj>> directReader() {
-        return (pattern) -> {
+        return (qpattern) -> {
+            final fURI pattern = qpattern.qLessExceptDomRng();
             if (pattern.equals(ALL))
                 return this.sjvm().entrySet().stream().map(kv -> IdObj.of(kv.getKey(), kv.getValue())).iterator();
             else {

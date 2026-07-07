@@ -424,6 +424,7 @@ public class mInstSet extends AbstractInstSet {
                                 "1@abc?mintq [-- 1@abc/235ae3 --]"),
                         docWrap(SHORTQ_TYPE, "create an untyped smaller representation of obj referent",
                                 "*abc?shortq=10 [-- optional value is max length of obj components (default " + DEFAULT_SHORTQ_MAX_LENGTH + ") --]"),
+                        docWrap(SAFEQ_TYPE, "warns when the space is being written to"),
                         docWrap(INCRQ_TYPE, "internal counter increments and appends value to vid"),
                         docWrap(EMBEDQ_TYPE, "either store and retrieve obj's vector embedding"),
                         docWrap(CONSTQ_TYPE, "prevents the vid from being mutated once set"),

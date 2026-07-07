@@ -692,7 +692,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
     private int writeRow(final Connection conn, final TableMetadata metadata, final String rowId, final Rec rec) throws SQLException {
         // +?incrq and similar wildcard entry patterns tell the DB to
         // auto-generate the primary key (AUTO_INCREMENT / SERIAL).
-        if (rowId != null && rowId.startsWith("+"))
+        if (rowId != null && rowId.startsWith("_"))
             return insertRowAuto(conn, metadata, rec);
 
         final String pkColumn = metadata.primaryKeys.getFirst();

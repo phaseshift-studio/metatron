@@ -24,7 +24,6 @@ import org.slf4j.event.Level;
 import studio.phaseshift.metatron.Tracer;
 import studio.phaseshift.metatron.TypeCheck;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.llm.type.mModel;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
@@ -110,6 +109,11 @@ public final class ColonMenu extends MRec {
                     .addRow(List.of("format buffer", "<ctrl>+f", "pretty-print current buffer (legal syntax only)"))
                     .addRow(List.of("trace", ":trace [ |on|off]", "toggle Java stack trace dump on fail"))
                     /// ///////////////////////////////////////////////////////////////////////////////////////
+                    .addRow(List.of("{{[g]&w}}explain", "{{[g]&w}}", "{{[g]&w}}"))
+                    .addRow(List.of("auto-complete furi", "[/|:] <TAB>", "presents potential paths to complete"))
+                    .addRow(List.of("auto-complete code", ". <TAB>", "presents possible insts based on rng/dom match"))
+                    .addRow(List.of("compilation strategy", "<legal expression> <TAB>", "presents interactive compilation menu"))
+                    /// ///////////////////////////////////////////////////////////////////////////////////////
                     .addRow(List.of("{{[g]&w}}panes", "{{[g]&w}}", "{{[g]&w}}"))
                     .addRow(List.of("split horizontal", ":split v | <ctrl>+<up>", "split current pane horizontally"))
                     .addRow(List.of("split vertical", ":split h | <ctrl>+<right>", "split current pane vertically"))
@@ -120,7 +124,7 @@ public final class ColonMenu extends MRec {
                     .addRow(List.of("prev pane", "<alt>+w", "cycle to previous pane"))
                     .addRow(List.of("shrink pane", "<alt>+<", "make active pane smaller"))
                     .addRow(List.of("grow pane", "<alt>+>", "make active pane larger"))
-                    .style().headerDivider("{{[b]&w}}|").margin(0, 0, 0, 0).apply().format()).style().margin(0, 0, 0, 0).border(Border.continuous.foreground("{{b}}")).apply().format();
+                    .style().headerDivider("{{[b]&w}}│").divider("{{g}}│").margin(0, 0, 0, 0).apply().format()).style().margin(0, 0, 0, 0).border(Border.continuous.foreground("{{b}}")).apply().format();
             if (console.isSplitMode() && console.getActivePane() != null) {
                 console.getActivePane().appendOutput(helpText);
             } else {
@@ -128,14 +132,7 @@ public final class ColonMenu extends MRec {
             }
             return noobj();
         }), MUTABLE);
-
-        // ===== chat =====
-        this.at("chat", instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(NOOBJ_TID), lst(), (lhs, inst) -> {
-            final String chatLine = lhs.isStr() ? lhs.strValue() : "";
-            Rec.wrap(Router.global().read("testy"), mModel.class).chat(chatLine);
-            return noobj();
-        }), MUTABLE);
-
+        
         this.at("accordian", instLambda((lhs, inst) -> {
             final String input = lhs.isStr() ? lhs.strValue().trim() : "";
 

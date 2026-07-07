@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -61,12 +61,12 @@ public class llmInstSetTest extends AbstractInstSetTest {
                 uri(ROUTE), rec(uri("local:"), uri("src/test/resources/isa/sys/space/llm/"))
         ), f("/sys/space/fs"));
     }
-    
+
     @AfterAll
     public static void unloadFileSystem() {
         Router.global().removeSpace(f("/sys/space/fs"));
     }
-    
+
     @ParameterizedTest
     @CsvSource(value = {
             "*<local:skills/mtron>.as(skill::T) | *skill | true",
@@ -77,26 +77,10 @@ public class llmInstSetTest extends AbstractInstSetTest {
         assertFalse(result.isNoObj());
         assertTrue(result.test(LLM_SKILL_TYPE));
         assertTrue(result.type().test(LLM_SKILL_TYPE));
-        assertEquals(LLM_SKILL_TID,result.type().vid());
+        assertEquals(LLM_SKILL_TID, result.type().vid());
         assertNotNull(result.tid());
         Obj expected = ObjmtronSerializer.parse(expectedType).apply();
         LOG.info("result [%s] expected [%s] [should match: %b]", result, expected, shouldMatch);
-        assertEquals(shouldMatch, result.test(expected));
-    }
-    
-    // TODO: need to create a mock LLM ? (sounds painful)
-    @Disabled
-    @ParameterizedTest
-    @CsvSource(value = {
-            "abc->model::[ | *skill | true",
-    }, delimiter = '|')
-    public void testChatResolution(final String noNoObjCode, final String expectedType, final boolean shouldMatch) {
-        Obj result = ObjmtronSerializer.parse(noNoObjCode).apply();
-        assertTrue(result.test(LLM_SKILL_TYPE));
-        assertTrue(result.type().test(LLM_SKILL_TYPE));
-        assertNotNull(result.tid());
-        Obj expected = ObjmtronSerializer.parse(expectedType).apply();
-        LOG.debug("result [%s] expected [%s] [should match: %b]", result, expected, shouldMatch);
         assertEquals(shouldMatch, result.test(expected));
     }
 }

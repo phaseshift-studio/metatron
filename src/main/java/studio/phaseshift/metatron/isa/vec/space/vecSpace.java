@@ -224,9 +224,15 @@ public class vecSpace extends AbstractSpace<VectorDBClient> implements SchemaSpa
 
     @Override
     public Space addQ(final QProc qProc) {
-        final QProc toAdd = qProc.pattern().equals(
-                studio.phaseshift.metatron.furi.q.QCollection.INCRQ_PATTERN)
-                ? new vctrIncrQ(this) : qProc;
+        final QProc toAdd;
+        if (qProc.pattern().equals(
+                studio.phaseshift.metatron.furi.q.QCollection.INCRQ_PATTERN))
+            toAdd = new vecIncrQ(this);
+        else if (qProc.pattern().equals(
+                studio.phaseshift.metatron.furi.q.QCollection.EMBEDQ_PATTERN))
+            toAdd = new vecEmbedQ(this);
+        else
+            toAdd = qProc;
         final Obj key = uri(QPROC);
         if (this.at(key).isNoObj())
             this.at(key, lst(), MUTABLE);
@@ -264,7 +270,7 @@ public class vecSpace extends AbstractSpace<VectorDBClient> implements SchemaSpa
                 }
                 // ── exact entry ──
                 final VectorDBClient.GetResult result = this.sjvm().get(collId, List.of(f(docId).name()));
-                LOG.info("retrieving: %s => %s", collId, result);
+                LOG.debug("retrieving: %s => %s", collId, result);
                 return IteratorUtil.asIterator(result.entities().stream().map(e -> IdObj.of(e.id(), e.obj())));
             } catch (final Exception e) {
                 if (e.getMessage() != null && e.getMessage().contains("does not exist"))
@@ -311,7 +317,10 @@ public class vecSpace extends AbstractSpace<VectorDBClient> implements SchemaSpa
 
                 // ── WRITE: docId = routed path (e.g. "test/a") ──
                 final fURI collId = resolveCollectionId(dp.collection(), true);
-                final VectorDBClient.EntityData entity = new VectorDBClient.EntityData(f(aligned.name()), obj, rec0(), (Lst) this.sjvm().embeddingFunction(f(dp.collection())).apply(obj));
+                final Obj embedding = this.sjvm().embeddingFunction(f(dp.collection())).apply(obj);
+                if (embedding.isFail())
+                    throw embedding.asFail().asException();
+                final VectorDBClient.EntityData entity = new VectorDBClient.EntityData(f(aligned.name()), obj, rec0(), embedding.asLst());
                 this.sjvm().upsert(collId, f(dp.collection()), entity);
                 LOG.debug("wrote: %s => %s", collId, entity);
                 return obj;
@@ -320,6 +329,26 @@ public class vecSpace extends AbstractSpace<VectorDBClient> implements SchemaSpa
                 throw MTronException.of(e);
             }
         };
+    }
+
+    // =========================================================================
+    //  Similarity query
+    // =========================================================================
+
+    /**
+     * Query a collection for nearest neighbors of the given embedding vectors.
+     * Delegates to the underlying {@link VectorDBClient#query}.
+     *
+     * @param collectionName  the collection to query
+     * @param queryEmbeddings the query vectors
+     * @param nResults        max results per query vector
+     * @return one GetResult per query vector
+     */
+    public List<VectorDBClient.GetResult> query(final String collectionName,
+                                                final List<Lst> queryEmbeddings,
+                                                final int nResults) throws Exception {
+        final fURI collId = resolveCollectionId(collectionName, false);
+        return this.sjvm().query(collId, queryEmbeddings, nResults);
     }
 
     // =========================================================================

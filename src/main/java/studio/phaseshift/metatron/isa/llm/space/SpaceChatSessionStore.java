@@ -28,6 +28,7 @@ import dev.langchain4j.store.memory.chat.ChatMemoryStore;
 import studio.phaseshift.metatron.TokenMapper;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
+import studio.phaseshift.metatron.isa.llm.type.Agent;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
@@ -50,7 +51,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
-import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
@@ -64,6 +64,7 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
     private static final GraphittyLogger LOG = Graphitty.log(SpaceChatSessionStore.class);
 
     private final Space space;
+    private final Agent agent;
 
     /**
      * Hashes already mirrored to typed collections, keyed by session VID.
@@ -90,7 +91,7 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
     /**
      * Key for the content hash field embedded in each stored message Rec.
      */
-    private static final String CONTENT_HASH = "content_hash";
+    private static final String HASH = "hash";
 
     /**
      * Mirror a pre-built system message Rec to the typed collection.
@@ -100,7 +101,7 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
      */
     public static void mirrorSystemMessage(final Space space, final fURI sessionVID, final Rec systemRec) {
         final String hash = contentHash(systemRec);
-        systemRec.recValue().put(uri(CONTENT_HASH), str(hash));
+        systemRec.recValue().put(uri(HASH), str(hash));
         // System messages bypass — use a synthetic URI for the back-link
         systemRec.recValue().put(uri(URI), uri(sessionVID.retract(1).extend(MSG).extend(sessionVID.name()).extend("system")));
         synchronized (MIRRORED_HASHES) {
@@ -151,7 +152,7 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
     private void mirrorToTypedCollection(final fURI sessionVID, final Rec msgRec, final fURI kvURI) {
         final String collection = perTypeCollectionName(msgRec.tid());
         if (collection == null) return;
-        final Obj hf = msgRec.at(uri(CONTENT_HASH));
+        final Obj hf = msgRec.at(uri(HASH));
         if (hf.isNoObj()) return;
         final String hash = hf.strValue();
         final Date now = Date.from(Instant.now());
@@ -199,7 +200,7 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
         if (tid.equals(USER_MESSAGE_TID)) return "llm_message_user";
         if (tid.equals(AI_MESSAGE_TID)) return "llm_message_ai";
         if (tid.equals(TOOL_RESULT_MESSAGE_TID)) return "llm_message_tool_result";
-        if (tid.equals(TOOL_REQUEST_MESSAGE_TID)) return "llm_message_tool_result";
+        if (tid.equals(TOOL_REQUEST_MESSAGE_TID)) return "llm_message_tool_request";
         return null;
     }
 
@@ -247,14 +248,15 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
             if (!e.getKey().isUri()) continue;
             final String keyName = e.getKey().uriValue().name();
             if (knownKeys.contains(keyName)) continue;
-            if (CONTENT_HASH.equals(keyName)) continue;  // internal infrastructure
+            if (HASH.equals(keyName)) continue;  // internal infrastructure
             if (URI.equals(keyName) || TIME.equals(keyName)) continue;
             attrs.put(keyName, e.getValue().strValue());
         }
         return attrs;
     }
 
-    public SpaceChatSessionStore(final Space space) {
+    public SpaceChatSessionStore(final Agent agent, final Space space) {
+        this.agent = Objects.requireNonNull(agent, "agent must not be null");
         this.space = Objects.requireNonNull(space, "space must not be null");
     }
 
@@ -374,7 +376,7 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
             for (int pos = 0; pos < existingCount; pos++) {
                 final Obj msgObj = Router.readFromSpace(msgPath.extend(String.valueOf(pos)));
                 if (msgObj.isRec()) {
-                    final Obj hf = msgObj.asRec().at(uri(CONTENT_HASH));
+                    final Obj hf = msgObj.asRec().at(uri(HASH));
                     if (!hf.isNoObj())
                         storedHashMap.put(hf.strValue(), pos);
                 }
@@ -390,7 +392,7 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
             try {
                 final Rec msgRec = chatMessageToRec(msg);
                 final String hash = contentHash(msgRec);
-                msgRec.recValue().put(uri(CONTENT_HASH), str(hash));
+                msgRec.recValue().put(uri(HASH), str(hash));
                 msgRec.recValue().put(uri(TIME), str(Date.from(Instant.now()).toString()));
                 incomingRecs.add(msgRec);
                 incomingHashes.add(hash);
@@ -410,7 +412,7 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
         final java.util.Map<fURI, Rec> batchedMirrors = new LinkedHashMap<>();
         for (int pos = 0; pos < incomingRecs.size(); pos++) {
             final Rec incomingRec = incomingRecs.get(pos);
-            final String incomingHash = incomingRec.recValue().get(uri(CONTENT_HASH)).strValue();
+            final String incomingHash = incomingRec.recValue().get(uri(HASH)).strValue();
 
             if (storedHashMap.containsKey(incomingHash)) {
                 final int storedPos = storedHashMap.get(incomingHash);
@@ -801,7 +803,7 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
     static String contentHash(final Rec msgRec) {
         // Save and strip volatile fields that LC4j or infrastructure may change
         final Map<Obj, Obj> saved = new LinkedHashMap<>();
-        final Obj[] volatileKeys = {uri(CONTENT_HASH), uri(NAME), uri(TYPE), uri(THINKING), uri(TIME), uri(URI)};
+        final Obj[] volatileKeys = {uri(HASH), uri(NAME), uri(TYPE), uri(THINKING), uri(TIME), uri(URI)};
         for (final Obj key : volatileKeys) {
             final Obj val = msgRec.recValue().remove(key);
             if (val != null) saved.put(key, val);

@@ -435,7 +435,7 @@ public class fsSpace extends AbstractSpace<FileSystem> {
         return file.getAbsolutePath();
     }
 
-    @Override
+   /* @Override
     public Stream<IdObj> readStream(final fURI pattern) {
         final fURI keyQless = pattern.qLess();
         if (pattern.equals(ALL))
@@ -537,7 +537,7 @@ public class fsSpace extends AbstractSpace<FileSystem> {
         } catch (final Exception e) {
             throw MTronException.of(e);
         }
-    }
+    }*/
 
     @Override
     public Stream<IdObj> writeStream(final fURI pattern, final Obj obj) {

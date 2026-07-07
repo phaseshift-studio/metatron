@@ -189,6 +189,50 @@ public class ChromaV2Client implements VectorDBClient {
     }
 
     @Override
+    public List<VectorDBClient.GetResult> query(final fURI collectionId, final List<Lst> queryEmbeddings, final int nResults) throws Exception {
+        final List<List<Float>> embs = queryEmbeddings.stream()
+                .map(v -> v.lstValue().stream()
+                        .map(r -> r.asReal().realValue().floatValue())
+                        .toList())
+                .toList();
+        final Map<String, Object> body = Map.of(
+                "query_embeddings", embs,
+                "n_results", nResults,
+                "include", List.of("embeddings", "documents", "metadatas", "distances"));
+        final String json = post(collPath(collectionId).extend("query").toString(), body);
+
+        // ChromaDB nests every result field as [[...per query vector...]].
+        // Split into one flat GetResult per input query vector.
+        @SuppressWarnings("unchecked")
+        final Map<String, Object> raw = GSON.fromJson(json, Map.class);
+        final int count = embs.size();
+        final List<VectorDBClient.GetResult> results = new ArrayList<>(count);
+        for (int i = 0; i < count; i++) {
+            final String flatJson = GSON.toJson(Map.of(
+                    "ids", sliceAt(raw, "ids", i),
+                    "documents", sliceAt(raw, "documents", i),
+                    "metadatas", sliceAt(raw, "metadatas", i),
+                    "embeddings", sliceAt(raw, "embeddings", i),
+                    "distances", sliceAt(raw, "distances", i)));
+            results.add(GSON.fromJson(flatJson, VectorDBClient.GetResult.class));
+        }
+        return results;
+    }
+
+    /**
+     * ChromaDB query responses nest each field as {@code [[...per query vector]]}.
+     * Extracts the inner list at index {@code i} for the given key, or an empty
+     * list when the key is absent.
+     */
+    @SuppressWarnings("unchecked")
+    private static Object sliceAt(final Map<String, Object> map, final String key, final int i) {
+        final Object val = map.get(key);
+        if (val instanceof List<?> outer && i < outer.size() && outer.get(i) instanceof List<?> inner)
+            return inner;
+        return val != null ? val : List.of();
+    }
+
+    @Override
     public void delete(final fURI collectionId, final List<String> ids) throws Exception {
         post(collPath(collectionId).extend("delete").toString(), Map.of("ids", ids));
     }

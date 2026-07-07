@@ -25,7 +25,10 @@ import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
-import studio.phaseshift.metatron.isa.llm.type.mModel;
+import studio.phaseshift.metatron.isa.llm.type.Agent;
+import studio.phaseshift.metatron.isa.llm.type.Model;
+import studio.phaseshift.metatron.isa.llm.type.feature.ChatFeature;
+import studio.phaseshift.metatron.isa.llm.type.feature.SessionFeature;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.util.MTronException;
@@ -35,14 +38,17 @@ import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SESSION_TID;
-import static studio.phaseshift.metatron.isa.llm.llmInstSet.MODEL_TID;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
+import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_at_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableList;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -75,13 +81,19 @@ public abstract class AbstractLLMSessionIntegrationTest extends AbstractMetatron
      * Subclass contract
      * ---------------------------------------------------------- */
 
-    /** Create and return a space that stores session rows and message entries. */
+    /**
+     * Create and return a space that stores session rows and message entries.
+     */
     protected abstract Space createSessionSpace() throws Exception;
 
-    /** The fURI of the pre-created session policy row in the space. */
+    /**
+     * The fURI of the pre-created session policy row in the space.
+     */
     protected abstract fURI sessionVID();
 
-    /** Clean up the space and any associated resources (files, connections). */
+    /**
+     * Clean up the space and any associated resources (files, connections).
+     */
     protected abstract void cleanupSession() throws Exception;
 
     /* ------------------------------------------------------------
@@ -90,7 +102,7 @@ public abstract class AbstractLLMSessionIntegrationTest extends AbstractMetatron
 
     private Space space;
     private SpaceChatSessionStore sessionStore;
-    private mModel chatModel;
+    private Agent agent;
 
     private static final String MODEL_NAME = "qwen3:latest";
     private static final String PROVIDER_HOST = "http://localhost:11434";
@@ -108,16 +120,15 @@ public abstract class AbstractLLMSessionIntegrationTest extends AbstractMetatron
         // reads this row to extract the algorithm config (max, message_count) and
         // preserves non-algorithm fields (agent, name) on write-back.
         preCreateSessionRow();
-
-        this.sessionStore = new SpaceChatSessionStore(this.space);
-        this.chatModel = buildModel();
+        this.agent = buildAgent();
+        this.sessionStore = new SpaceChatSessionStore(this.agent, this.space);
         // Add a system message — gets mirrored to llm_message_system
-        this.chatModel.addSystemMessage("You are a helpful test assistant.");
+        this.agent.addSystemMessage("You are a helpful test assistant.");
     }
 
     @AfterEach
     void teardownSession() throws Exception {
-        this.chatModel = null;
+        this.agent = null;
         this.sessionStore = null;
         cleanupSession();
         this.space = null;
@@ -134,7 +145,7 @@ public abstract class AbstractLLMSessionIntegrationTest extends AbstractMetatron
     public void testSessionAcrossTurns() {
         // ── Turn 1: "remember the word DOG" ──────────────────────────
         try {
-            chatModel.chat("Remember the word DOG. Just say 'ok' and nothing else.");
+            agent.chat("Remember the word DOG. Just say 'ok' and nothing else.");
         } catch (final MTronException e) {
             if (isConnectionRefused(e))
                 return; // Ollama not running — skip test
@@ -161,7 +172,7 @@ public abstract class AbstractLLMSessionIntegrationTest extends AbstractMetatron
 
         // ── Turn 2: "what word?" ─────────────────────────────────────
         try {
-            chatModel.chat("What word were you asked to remember? Just say the word and nothing else.");
+            agent.chat("What word were you asked to remember? Just say the word and nothing else.");
         } catch (final MTronException e) {
             if (isConnectionRefused(e)) return;
             throw e;
@@ -181,7 +192,7 @@ public abstract class AbstractLLMSessionIntegrationTest extends AbstractMetatron
 
         // ── Turn 3: "what letter does it start with?" ──────────────
         try {
-            chatModel.chat("What letter does the word DOG start with? Just say the letter.");
+            agent.chat("What letter does the word DOG start with? Just say the letter.");
         } catch (final MTronException e) {
             if (isConnectionRefused(e)) return;
             throw e;
@@ -220,15 +231,15 @@ public abstract class AbstractLLMSessionIntegrationTest extends AbstractMetatron
         Router.writeToSpace(sessionVID(), updated);
 
         // Build a model whose session feature also uses the tight max
-        this.chatModel = buildModelWithMax(smallMax);
-        this.chatModel.addSystemMessage("You are a test assistant.");
-        this.sessionStore = new SpaceChatSessionStore(this.space);
+        this.agent = buildAgentWithMax(smallMax);
+        this.agent.addSystemMessage("You are a test assistant.");
+        this.sessionStore = new SpaceChatSessionStore(this.agent, this.space);
 
         // Chat 5 times — MessageWindowChatMemory evicts beyond 3 internally,
         // and getMessages() also applies the max filter
         for (int i = 1; i <= 5; i++) {
             try {
-                chatModel.chat("Say 'turn" + i + "' and nothing else.");
+                agent.chat("Say 'turn" + i + "' and nothing else.");
             } catch (final MTronException e) {
                 if (isConnectionRefused(e)) return;
                 throw e;
@@ -255,9 +266,9 @@ public abstract class AbstractLLMSessionIntegrationTest extends AbstractMetatron
     public void testTypedCollectionPopulation() {
         // Chat three times to exercise the per-type collection mirrors
         try {
-            chatModel.chat("Remember the word DOG. Just say 'ok'.");
-            chatModel.chat("What word were you asked to remember? Just say the word.");
-            chatModel.chat("How many letters are in that word? Just say the number.");
+            agent.chat("Remember the word DOG. Just say 'ok'.");
+            agent.chat("What word were you asked to remember? Just say the word.");
+            agent.chat("How many letters are in that word? Just say the number.");
         } catch (final MTronException e) {
             if (isConnectionRefused(e)) return;
             throw e;
@@ -348,7 +359,9 @@ public abstract class AbstractLLMSessionIntegrationTest extends AbstractMetatron
         assertFalse(stillThere.isNoObj(), "undeleted message should still exist");
     }
 
-    /** Per-row validation for typed-collection mirror: text + kv URI back-link. */
+    /**
+     * Per-row validation for typed-collection mirror: text + kv URI back-link.
+     */
     private void verifyMirrorRow(final Rec rec, final int id) {
         final Obj text = rec.at(uri(TEXT));
         assertFalse(text.isNoObj(), "row[" + id + "]: missing text");
@@ -363,7 +376,9 @@ public abstract class AbstractLLMSessionIntegrationTest extends AbstractMetatron
         assertTrue(uriStr.contains("/"), "row[" + id + "]: uri should be a full path, got: " + uriStr);
     }
 
-    /** Validate a typed collection: sequential IDs, unique hashes, per-row assertions. */
+    /**
+     * Validate a typed collection: sequential IDs, unique hashes, per-row assertions.
+     */
     private void assertTypedCollection(final fURI basePath, final String collectionName,
                                        final String label, final int minRows, final int maxRows,
                                        final java.util.function.BiConsumer<Rec, Integer> perRow) {
@@ -382,9 +397,9 @@ public abstract class AbstractLLMSessionIntegrationTest extends AbstractMetatron
             lastId = id;
 
             // Hash uniqueness
-            final Obj hf = rec.at(uri("content_hash"));
-            assertFalse(hf.isNoObj(), label + "[" + id + "]: missing content_hash");
-            assertTrue(hf.isStr(), label + "[" + id + "]: content_hash must be Str");
+            final Obj hf = rec.at(uri("hash"));
+            assertFalse(hf.isNoObj(), label + "[" + id + "]: missing hash");
+            assertTrue(hf.isStr(), label + "[" + id + "]: hash must be Str");
             hashCounts.merge(hf.strValue(), 1, Integer::sum);
 
             // Per-row validation
@@ -412,7 +427,9 @@ public abstract class AbstractLLMSessionIntegrationTest extends AbstractMetatron
      * Helpers
      * ---------------------------------------------------------- */
 
-    /** Verify the llm_session policy row has the expected fields. */
+    /**
+     * Verify the llm_session policy row has the expected fields.
+     */
     private void verifySessionPolicyRow() {
         final Obj row = Router.readFromSpace(sessionVID());
         assertTrue(row.isRec(), "session policy row must be Rec, got: " + row);
@@ -432,7 +449,9 @@ public abstract class AbstractLLMSessionIntegrationTest extends AbstractMetatron
                 "message_count should be > 0, got " + algo.at(uri("message_count")));
     }
 
-    /** Write the session policy row so the space has a target for message storage. */
+    /**
+     * Write the session policy row so the space has a target for message storage.
+     */
     private void preCreateSessionRow() {
         final Obj row = rec(
                 uri("agent"), str("test-agent"),
@@ -445,33 +464,42 @@ public abstract class AbstractLLMSessionIntegrationTest extends AbstractMetatron
         Router.writeToSpace(sessionVID(), row);
     }
 
-    /** Build an mModel wired to our space-backed session with the default max. */
-    private mModel buildModel() {
-        return buildModelWithMax(WINDOW_MAX);
+    /**
+     * Build an Agent wired to our space-backed session with the default max.
+     */
+    private Agent buildAgent() {
+        return buildAgentWithMax(WINDOW_MAX);
     }
 
-    /** Build an mModel with a specific window max. */
-    private mModel buildModelWithMax(final int max) {
+    /**
+     * Build an mModel with a specific window max.
+     */
+    private Agent buildAgentWithMax(final int max) {
         final fURI memVID = sessionVID();
-        final Rec modelRec = (Rec) rec(new LinkedHashMap<>(Map.of(
-                uri(NAME), uri(MODEL_NAME),
-                uri(PROVIDER), rec(new LinkedHashMap<>(Map.of(
-                        uri(NAME), uri("ollama"),
-                        uri(HOST), uri(PROVIDER_HOST)
-                ))),
-                uri(FEATURE), rec(new LinkedHashMap<>(Map.of(
-                        uri(SESSION), rec(new LinkedHashMap<>(Map.of(
-                                uri("mem"), auto_at_(memVID).tryToInst(),
-                                uri(ALGORITHM), rec(new LinkedHashMap<>(Map.of(
-                                        uri(MAX), jnt(max)
-                                )))
-                        )), LLM_SESSION_TID, memVID)  // VID = session row URI; TID = session type
-                )))
-        )), MODEL_TID, null);
-        return mModel.model(modelRec);
+        // Build features directly as Feature instances — no ISA lookup needed
+        final Model model = Model.model(rec(
+                NAME, uri(MODEL_NAME),
+                PROVIDER, uri("ollama"),
+                PROTOCOL, uri("ollama"),
+                HOST, uri(PROVIDER_HOST),
+                LLM, uri(MODEL_NAME)));
+        final ChatFeature chat = ChatFeature.chatFeature(model, rec(uri(TO), noobj()));
+        final Rec sessionConfig = rec(
+                SESSION, rec(mutableMap(
+                        uri("mem"), auto_at_(memVID).tryToInst(),
+                        uri(ALGORITHM), rec(mutableMap(uri(MAX), jnt(max)))),
+                        REC_TID, memVID));
+        final SessionFeature session = new SessionFeature(sessionConfig.jvm(), LLM_SESSION_FEATURE_TID, null);
+        final Rec agentRec = rec(mutableMap(
+                uri(NAME), str("llm-session-test-agent"),
+                uri(DESC), str("testing llm-session implementation"),
+                uri(FEATURE), lst(mutableList(chat, session))), LLM_AGENT_TID, null);
+        return Agent.agent(agentRec);
     }
 
-    /** Read the text of the last AI message from session. */
+    /**
+     * Read the text of the last AI message from session.
+     */
     private String readLastAiText() {
         final List<ChatMessage> messages = sessionStore.getMessages(sessionVID());
         for (int i = messages.size() - 1; i >= 0; i--) {

@@ -40,6 +40,7 @@ import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.reflect.JRec;
 import studio.phaseshift.metatron.isa.m.type.reflect.JRecElement;
 import studio.phaseshift.metatron.isa.m.type.impl.MCode;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.machine.SwarmMachine;
@@ -85,7 +86,9 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.START_INST_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
+
 import studio.phaseshift.metatron.isa.m.type.Fail;
+
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -117,6 +120,8 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
     public String prefix = "";
     @JRecElement(key = "postfix", rng = "/m/str")
     public String postfix = "";
+    @JRecElement(key = "serializer", rng = "/m/rec")
+    public ObjSerializer<String> serializer = new ObjmtronSerializer();
     private final GraphittyLogger LOG = Graphitty.log(this);
     private static Terminal terminal;
     private final LineReader reader;
@@ -375,7 +380,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
             // Secondary prompt: pad to the pane's left content column so
             // continuation lines also stay within the pane borders.
             final String secondaryPrompt =
-                    " ".repeat(Math.max(0, contentStartCol - 1))
+                    " " .repeat(Math.max(0, contentStartCol - 1))
                             + Graphitty.string("{{g}}|{{X}} ");
             this.reader.setVariable(LineReader.SECONDARY_PROMPT_PATTERN, secondaryPrompt);
 
@@ -805,12 +810,12 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
         final int lineAbove = promptRow - 1;
         if (lineAbove >= pos[0]) { // Only if within pane bounds
             terminal.writer().print("\u001b[" + lineAbove + ";" + promptCol + "H");
-            terminal.writer().print(" ".repeat(Math.max(0, paneWidth)));
+            terminal.writer().print(" " .repeat(Math.max(0, paneWidth)));
         }
 
         // Clear the prompt line within the pane
         terminal.writer().print("\u001b[" + promptRow + ";" + promptCol + "H");
-        terminal.writer().print(" ".repeat(Math.max(0, paneWidth)));
+        terminal.writer().print(" " .repeat(Math.max(0, paneWidth)));
         terminal.writer().print("\u001b[" + promptRow + ";" + promptCol + "H");
 
         terminal.writer().flush();
@@ -832,7 +837,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
         } else {
             result.stream().forEach(o -> {
                 this.write("{{-X-}}{{m}}=={{g}}>{{X}}");
-                this.write(o);
+                this.write(this.serializer.write(o));
                 this.write("\n");
             });
         }
@@ -856,7 +861,10 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
         // Collect the full cause chain first so we know which entries have siblings
         final java.util.List<Throwable> chain = new java.util.ArrayList<>();
         Throwable t = failObj.asFail().message();
-        while (null != t) { chain.add(t); t = t.getCause(); }
+        while (null != t) {
+            chain.add(t);
+            t = t.getCause();
+        }
 
         for (int i = 0; i < chain.size(); i++) {
             final boolean last = (i == chain.size() - 1);
@@ -868,7 +876,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                 depthBar.append("{{y}}│{{X}}  ");
             // Cause line: depth bars + branch connector
             sb.append(depthBar).append(last ? "{{y}}└─{{X}}" : "{{y}}├─{{X}}")
-              .append("{{y}}").append(current.toString()).append("{{X}}\n");
+                    .append("{{y}}").append(current.toString()).append("{{X}}\n");
             // Frame prefix: depth bars + continuation under this cause
             final StringBuilder framePrefix = new StringBuilder(depthBar);
             framePrefix.append(last ? "   " : "{{y}}│{{X}}  ");
@@ -1077,7 +1085,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                         final StringBuilder sb = new StringBuilder(remaining[0].strValue());
                         for (int i = 1; i < remaining.length; i++) {
                             sb.append('\n');
-                            sb.append(" ".repeat(promptWidth - 2 + (i - 1)));
+                            sb.append(" " .repeat(promptWidth - 2 + (i - 1)));
                             sb.append("\\_ ").append(remaining[i].strValue());
                         }
                         this.seedBuffer = sb.toString();
@@ -1125,7 +1133,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                 Throwable x = e;
                 int y = 0;
                 while (null != x) {
-                    LOG.error("\n%s%s", ((0 == y++) ? "" : (" ".repeat(y) + "\\_")), x.getMessage());
+                    LOG.error("\n%s%s", ((0 == y++) ? "" : (" " .repeat(y) + "\\_")), x.getMessage());
                     x = x.getCause();
                 }
                 final boolean isTypeMismatch = e instanceof TypeMismatchException;
@@ -1343,7 +1351,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                         Console.this.getCurrentLanguage().prompt);
                 // Append a new \_ line at the end with appropriate indentation
                 buffer.cursor(buffer.length());
-                buffer.write("\n" + " ".repeat(promptWidth - 2 + depth) + "\\_ ");
+                buffer.write("\n" + " " .repeat(promptWidth - 2 + depth) + "\\_ ");
                 // Clear the JLine "|" secondary prompt from continuation lines
                 reader.setVariable(LineReader.SECONDARY_PROMPT_PATTERN,
                         Graphitty.string("{{-X-}}{{v1&^1&m}}"));

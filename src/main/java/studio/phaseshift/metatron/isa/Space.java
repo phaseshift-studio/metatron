@@ -197,7 +197,9 @@ public interface Space extends Rec, Closeable {
             return routes.entrySet().stream()
                     //.sorted(Map.Entry.comparingByKey(Comparator.reverseOrder()))
                     .filter(e -> vid.toString().startsWith(e.getValue().apply(vidURI).uriValue().toString()))
-                    .map(e -> e.getKey().apply(vidURI).uriValue().extend(vid.toString().replaceFirst(e.getValue().apply(vidURI).uriValue().toString(), "")).q(vid.qMap()))
+                    .map(e -> e.getKey().apply(vidURI).uriValue().extend(
+                                    vid.toString().replaceFirst(e.getValue().apply(vidURI).uriValue().toString(), ""))
+                                    .qLess().q(vid.qMap()))
                     .findFirst()
                     .orElse(vid);
         }
@@ -216,7 +218,7 @@ public interface Space extends Rec, Closeable {
                         // on an empty base preserves that leading slash as an empty
                         // first path segment, which breaks isTablePath() and hasPattern().
                         // if (remainder.startsWith("/")) remainder = remainder.substring(1);
-                        return e.getValue().apply(vidURI).uriValue().extend(remainder).q(vid.qMap());
+                        return e.getValue().apply(vidURI).uriValue().extend(remainder.qLess()).q(vid.qMap());
                     })
                     .findFirst()
                     .orElse(vid);
@@ -263,7 +265,7 @@ public interface Space extends Rec, Closeable {
 
         public static Obj resolveRead(final Space space, final fURI patternPre, final Function<fURI, Iterator<IdObj>> directReader) { //final Map<fURI, Obj> store) {
             final Set<UriObj> listing = new HashSet<>();
-            final fURI pattern = patternPre.qLessExceptDomRng();
+            final fURI pattern = patternPre;//.qLessExceptDomRng();
             directReader.apply(pattern).forEachRemaining(kv -> listing.add(UriObj.of(kv.furi().toUri(), kv.obj())));
             if (listing.isEmpty()) {
                 if (pattern.isBranch() && !pattern.hasPattern()) {

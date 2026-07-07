@@ -61,11 +61,9 @@ public class PanelWidget extends JRec<PanelWidget> implements Widget<PanelWidget
             .create();
 
     @JRecElement(key = "title", rng = "/m/str")
-    protected String title;
-
+    public String title;
     @JRecElement(key = "body", rng = "/m/str")
-    protected String body;
-
+    public String body;
     private Style<PanelWidget> style = Style.empty();
     private Cursor cursor;
 

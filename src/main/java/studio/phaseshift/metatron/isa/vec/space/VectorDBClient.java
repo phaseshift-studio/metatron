@@ -61,6 +61,7 @@ public interface VectorDBClient {
         private List<String> documents;
         private List<Map<String, Object>> metadatas;
         private List<List<Float>> embeddings;
+        private List<Float> distances;
 
         public GetResult() {}
 
@@ -78,6 +79,16 @@ public interface VectorDBClient {
                         lst(emb.stream().map(r -> (Obj) real(r)).toList())));
             }
             return result;
+        }
+
+        /**
+         * Distance values for query results, index-aligned with {@link #entities()}.
+         * Returns an empty list when the receiver was populated by a non-query
+         * operation (get / getAll) where distances aren't present.
+         */
+        public List<Float> distances() {
+            if (distances == null) return List.of();
+            return distances;
         }
 
         public String toString() {
@@ -130,6 +141,16 @@ public interface VectorDBClient {
      * Get all documents in a collection.
      */
     GetResult getAll(fURI collectionId) throws Exception;
+
+    /**
+     * Query the collection for the nearest neighbors of the given embedding vectors.
+     *
+     * @param collectionId    the collection to query
+     * @param queryEmbeddings the query vectors, each as an {@code Lst} of {@code Real} values
+     * @param nResults        maximum number of nearest neighbors per query vector
+     * @return one GetResult per query vector, with distances populated
+     */
+    List<GetResult> query(fURI collectionId, List<Lst> queryEmbeddings, int nResults) throws Exception;
 
     /**
      * Delete documents by ID.

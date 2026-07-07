@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.isa.vec;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractDataPathTest;
@@ -30,16 +31,23 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
+import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.vec.space.VectorDBClient;
 import studio.phaseshift.metatron.isa.vec.space.vecSpace;
 
+import java.util.List;
+import java.util.Set;
 import java.util.function.Supplier;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec0;
+import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.vec.vecInstSet.VEC_ISA_TID;
 
@@ -229,6 +237,94 @@ public abstract class AbstractVecSpaceTest extends AbstractDataPathTest {
     @Override
     @Disabled("ChromaDB is a blob store — no sequential CRUD tracking")
     public void testBasicCRUD(String d, String k, String v) {
+    }
+
+    // =========================================================================
+    //  VectorDBClient.query() tests
+    // =========================================================================
+
+    @Test
+    public void testQueryNearestNeighbors() throws Exception {
+        final String collName = "querytest";
+        staticClient.createCollection(collName);
+        final VectorDBClient.CollectionData coll = staticClient.getCollection(collName);
+
+        // Write 5 documents — all get the same constant embedding [0.1, 0.2]
+        staticClient.upsert(coll.id(), f(collName),
+                new VectorDBClient.EntityData(f("a"), str("alpha"), rec0(), null),
+                new VectorDBClient.EntityData(f("b"), str("beta"), rec0(), null),
+                new VectorDBClient.EntityData(f("c"), str("gamma"), rec0(), null),
+                new VectorDBClient.EntityData(f("d"), str("delta"), rec0(), null),
+                new VectorDBClient.EntityData(f("e"), str("epsilon"), rec0(), null));
+
+        // Bulk query with a single vector
+        final Lst queryVec = lst(real(0.1), real(0.2));
+        final List<VectorDBClient.GetResult> results = staticClient.query(coll.id(), List.of(queryVec), 3);
+        assertEquals(1, results.size(), "one result per query vector");
+        final VectorDBClient.GetResult result = results.get(0);
+
+        // nResults should cap return count
+        assertEquals(3, result.entities().size(), "nResults should cap returned entities");
+        assertEquals(3, result.distances().size(), "distances size should match entities size");
+
+        // All docs share the same embedding → all distances should be ~0
+        for (int i = 0; i < result.distances().size(); i++) {
+            final float d = result.distances().get(i);
+            assertTrue(d >= 0.0f && d < 0.001f,
+                    "distance should be near zero for identical vectors, got " + d);
+        }
+
+        // Returned ids should be a subset of the written docs
+        final Set<String> expectedIds = Set.of("a", "b", "c", "d", "e");
+        for (final VectorDBClient.EntityData entity : result.entities()) {
+            assertTrue(expectedIds.contains(entity.id().name()),
+                    "returned id should be one of the written docs: " + entity.id());
+        }
+    }
+
+    @Test
+    public void testQueryRespectsNResults() throws Exception {
+        final String collName = "querylimit";
+        staticClient.createCollection(collName);
+        final VectorDBClient.CollectionData coll = staticClient.getCollection(collName);
+
+        // Write 10 documents
+        for (int i = 0; i < 10; i++) {
+            staticClient.upsert(coll.id(), f(collName),
+                    new VectorDBClient.EntityData(f(String.valueOf(i)), str("doc" + i), rec0(), null));
+        }
+
+        final Lst queryVec = lst(real(0.1), real(0.2));
+
+        // Ask for fewer than exist
+        assertEquals(1, staticClient.query(coll.id(), List.of(queryVec), 1).get(0).entities().size(),
+                "nResults=1 should return exactly 1");
+        assertEquals(5, staticClient.query(coll.id(), List.of(queryVec), 5).get(0).entities().size(),
+                "nResults=5 should return exactly 5");
+
+        // Ask for more than exist — should return all available
+        assertEquals(10, staticClient.query(coll.id(), List.of(queryVec), 20).get(0).entities().size(),
+                "nResults > count should return all available documents");
+    }
+
+    @Test
+    public void testGetResultDistancesEmptyForNonQuery() throws Exception {
+        final String collName = "nonquery";
+        staticClient.createCollection(collName);
+        final VectorDBClient.CollectionData coll = staticClient.getCollection(collName);
+
+        staticClient.upsert(coll.id(), f(collName),
+                new VectorDBClient.EntityData(f("x"), str("test"), rec0(), null));
+
+        // get() should NOT populate distances
+        final VectorDBClient.GetResult getResult = staticClient.get(coll.id(), List.of("x"));
+        assertTrue(getResult.distances().isEmpty(),
+                "distances should be empty for get() results");
+
+        // getAll() should NOT populate distances
+        final VectorDBClient.GetResult allResult = staticClient.getAll(coll.id());
+        assertTrue(allResult.distances().isEmpty(),
+                "distances should be empty for getAll() results");
     }
 
 }

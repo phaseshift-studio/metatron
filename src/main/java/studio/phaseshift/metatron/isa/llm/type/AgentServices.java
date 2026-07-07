@@ -16,30 +16,28 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.llm.type.mod;
+package studio.phaseshift.metatron.isa.llm.type;
 
-import dev.langchain4j.service.AiServices;
-import studio.phaseshift.metatron.isa.llm.type.mAgent;
-import studio.phaseshift.metatron.isa.llm.type.mModel;
-import studio.phaseshift.metatron.util.MTronException;
-
-import java.util.List;
+import dev.langchain4j.invocation.InvocationParameters;
+import dev.langchain4j.model.chat.request.ChatRequest;
+import dev.langchain4j.service.TokenStream;
+import dev.langchain4j.service.UserMessage;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.vec.type.Vec;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class PromptMod implements Mod {
+public interface AgentServices {
 
-    @Override
-    public void apply(final mModel model, final AiServices<mAgent> services) {
-        model.prompt().ifPresent(p -> {
-            if (p.toString().isBlank())
-                return;
-            try {
-                services.userMessage(p.isStr() ? p.strValue() : p.toString());
-            } catch (Exception e) {
-                throw MTronException.of("unable to setup prompt: %s", e);
-            }
-        });
-    }
+    TokenStream chat(final @UserMessage ChatRequest userMessage);
+
+    TokenStream chat(final @UserMessage ChatRequest userMessage, final InvocationParameters parameters);
+
+    TokenStream chat(final @UserMessage String userMessage);
+
+    Vec embed(final @UserMessage Obj obj);
+
+    Agent agent();
+
 }
