@@ -169,6 +169,31 @@ public class mathInstSet extends AbstractInstSet {
                 };
             }).create();
 
+    /**
+     * Normalizes a time {@link Real} to the most human-readable unit.
+     * Cascades upward through the time hierarchy when the value crosses
+     * a ~2× threshold of the next larger unit:
+     * <pre>
+     *   millis ≥ 2000  → seconds
+     *   seconds ≥ 120  → minutes
+     *   minutes ≥ 120  → hours
+     * </pre>
+     * Recurses until the value stabilizes in the appropriate unit.
+     */
+    public static Real normalizeTime(final Real time) {
+        final String tid = time.tid().toString();
+        final double value = time.realValue();
+
+        if (tid.equals(MATH_MILLIS_STRING) && value >= 2000.0d)
+            return normalizeTime(time.as(SECOND_TYPE).asReal());
+        if (tid.equals(MATH_SECOND_STRING) && value >= 120.0d)
+            return normalizeTime(time.as(MINUTE_TYPE).asReal());
+        if (tid.equals(MATH_MINUTE_STRING) && value >= 120.0d)
+            return normalizeTime(time.as(HOUR_TYPE).asReal());
+
+        return time;
+    }
+
     /// ////////////////////////////////////////////////////////////////////////
 
     public static final Type DATA_SIZE_TYPE = Type.Builder.build()
@@ -299,6 +324,7 @@ public class mathInstSet extends AbstractInstSet {
                             formatter.setTimeZone(TimeZone.getTimeZone(ZoneId.systemDefault()));
                             return str(formatter.format(date));
                         }),*/
+                        instC(MATH_TIME_TID.extend(INST).extend("normalize").dom(MATH_TIME_TID).rng(MATH_TIME_TID), lst(), (lhs, inst) -> normalizeTime(lhs.asReal())),
                         instC(MATH_COS_INST_TID.dom(ALL.maybe()).rng(REAL_TID), lst(as_(REAL_TYPE).tryToInst()), (lhs, inst) -> real(Math.cos(inst.arg(0).realValue()))),
                         instC(MATH_SIN_INST_TID.dom(ALL.maybe()).rng(REAL_TID), lst(REAL_TYPE), (lhs, inst) -> real(Math.sin(inst.arg(0).realValue()))),
                         instC(MATH_TAN_INST_TID.dom(ALL.maybe()).rng(REAL_TID), lst(REAL_TYPE), (lhs, inst) -> real(Math.tan(inst.arg(0).realValue()))),

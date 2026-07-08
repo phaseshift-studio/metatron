@@ -34,8 +34,10 @@ import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst0;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec0;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
@@ -71,6 +73,14 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
 
     default <O extends Obj> O at(final String key) {
         return this.at(uri(key));
+    }
+
+    default Lst atLst(final String key) {
+        return this.at(key).orElse(lst0());
+    }
+
+    default Rec atRec(final String key) {
+        return this.at(key).orElse(rec0());
     }
 
     default <O extends Obj> O at(final fURI key) {

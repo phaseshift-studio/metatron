@@ -18,13 +18,16 @@
 
 package studio.phaseshift.metatron.isa.llm.type.feature;
 
-import dev.langchain4j.service.AiServices;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
-import studio.phaseshift.metatron.isa.llm.type.AgentServices;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Str;
 
 import java.util.Map;
+
+import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.isa.llm.type.Agent.feat;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -33,5 +36,11 @@ public class ThinkFeature extends Feature {
 
     public ThinkFeature(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
+    }
+
+    @Override
+    public void onPartialThinking(final Agent agent, final Str text) {
+        // Apply the thought to whatever handler is configured at /feature/think
+        agent.at(feat(THINK)).apply(text);
     }
 }

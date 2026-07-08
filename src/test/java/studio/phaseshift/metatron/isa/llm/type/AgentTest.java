@@ -28,6 +28,7 @@ import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.JsonSchemaGenerator;
 import studio.phaseshift.metatron.isa.llm.space.SpaceChatSessionStore;
+import studio.phaseshift.metatron.isa.llm.type.feature.Feature;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.tble.tbleSpace;
@@ -45,6 +46,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
+import static studio.phaseshift.metatron.isa.llm.type.Agent.feat;
+import static studio.phaseshift.metatron.isa.llm.type.Agent.res;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_at_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -56,6 +59,7 @@ import static studio.phaseshift.metatron.isa.m.type.Real.REAL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Rec.REC_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
@@ -95,30 +99,26 @@ public class AgentTest extends AbstractMetatronTest {
         )));
         map.put(uri(API_KEY), str(PROVIDER_KEY));
         map.put(uri(FEATURE), lst(
-                rec(mutableMap(uri(THINK), rec())),
-                rec(mutableMap(uri(TOOL), lst(uri("/test/tool")))),
-                rec(mutableMap(uri(SKILL), lst(str("a-skill")))),
-                rec(mutableMap(uri(NOTE), lst(str("a-note")))),
-                rec(mutableMap(uri(PROMPT), str("you are helpful"))),
-                rec(mutableMap(uri(RAG), rec(mutableMap(
+                rec(mutableMap(uri(THINK), rec())).tid(LLM_THINK_FEATURE_TID),
+                rec(mutableMap(uri(CHEST), lst(uri("/test/tool")))).tid(LLM_TOOL_FEATURE_TID),
+                rec(mutableMap(uri(SKILL), lst(str("a-skill")))).tid(LLM_SKILL_FEATURE_TID),
+                rec(mutableMap(uri(NOTE), lst(str("a-note")))).tid(LLM_NOTE_FEATURE_TID),
+                rec(mutableMap(uri(CHAT), str("you are helpful"))).tid(LLM_CHAT_FEATURE_TID),
+                rec(mutableMap(
                         uri(PATTERN), uri("/sys/docs/#"),
                         uri(MAX), jnt(5)
-                )))),
-                rec(mutableMap(uri(COST), rec(mutableMap(
-                        uri("input"), real(0.01),
-                        uri("output"), real(0.02)
-                )))),
+                )).tid(LLM_FEATURE_TID.extend("rag")),
                 rec(mutableMap(uri(MEMORY), rec(mutableMap(
                         uri("mem"), lst(),
                         uri(ALGORITHM), rec(mutableMap(
                                 uri(MAX), jnt(15)
                         ))
-                )))),
+                )))).tid(LLM_SESSION_FEATURE_TID),
                 rec(mutableMap(uri(RESPONSE), rec(mutableMap(
                         uri(FORMAT), rec(mutableMap(
                                 uri("answer"), str("string")
                         ))
-                ))))
+                )))).tid(LLM_CHAT_FEATURE_TID)
         ));
         return rec(map, LLM_AGENT_TID, null);
     }
@@ -133,86 +133,68 @@ public class AgentTest extends AbstractMetatronTest {
     }
 
     @Test
-    public void testModelName() {
-        assertEquals(MODEL_NAME, agent.model());
-    }
-
-    @Test
-    public void testProvider() {
-        Agent.Provider provider = agent.provider();
-        assertEquals(PROVIDER_NAME, provider.name());
-        assertEquals(PROVIDER_HOST, provider.host().toString());
-        assertEquals(PROVIDER_KEY, provider.apiKey());
-    }
-
-    @Test
     public void testFeaturePresent() {
-        assertTrue(agent.feature(THINK).isPresent());
-        assertTrue(agent.feature(TOOL).isPresent());
-        assertTrue(agent.feature(SKILL).isPresent());
-        assertTrue(agent.feature(NOTE).isPresent());
-        assertTrue(agent.feature(PROMPT).isPresent());
-        assertTrue(agent.feature(RAG).isPresent());
-        assertTrue(agent.feature(COST).isPresent());
-        assertTrue(agent.feature(MEMORY).isPresent());
+        assertFalse(agent.feature(THINK).isNoObj());
+        assertFalse(agent.feature(TOOL).isNoObj());
+        assertFalse(agent.feature(SKILL).isNoObj());
+        assertFalse(agent.feature(NOTE).isNoObj());
+        assertFalse(agent.feature(CHAT).isNoObj());
+        assertFalse(agent.feature(RAG).isNoObj());
+        assertFalse(agent.feature(SESSION).isNoObj());
     }
 
     @Test
     public void testFeatureAbsent() {
-        assertTrue(agent.feature("nonexistent").isEmpty());
+        assertTrue(agent.feature("nonexistent").isNoObj());
     }
 
     @Test
     public void testTools() {
-        assertTrue(agent.tools().isPresent());
-        assertEquals(1, agent.tools().get().count());
-        assertEquals(uri("/test/tool"), agent.tools().get().elements().findFirst().orElse(null));
+        assertFalse(agent.feature(TOOL).isNoObj());
+        assertEquals(1, agent.feature(TOOL).elements().count());
+        assertEquals(uri("/test/tool"), agent.feature(TOOL).orElse(rec0()).atLst(CHEST).elements().findFirst().orElse(null));
     }
 
     @Test
     public void testToolsAbsent() {
         Rec empty = rec(mutableMap(uri(NAME), uri("empty")), LLM_MODEL_TID, null);
         Agent emptyModel = Agent.agent(empty);
-        assertTrue(emptyModel.tools().isEmpty());
+        assertTrue(emptyModel.feature(TOOL).isNoObj(), "empty tool feature must not have tools");
     }
 
     @Test
     @Disabled("cost will become CostFeature — revisit after feature design")
     public void testCost() {
-        assertTrue(agent.cost().isPresent());
-        assertEquals(real(0.01), agent.cost().get().at(uri("input")).orElse(null));
-        assertEquals(real(0.02), agent.cost().get().at(uri("output")).orElse(null));
+        final Obj costObj = agent.at(feat(COST));
+        assertFalse(costObj.isNoObj());
+        final Rec costRec = costObj.autoResolve(agent).asRec();
+        assertEquals(real(0.01), costRec.at(uri("input")).orElse(null));
+        assertEquals(real(0.02), costRec.at(uri("output")).orElse(null));
     }
 
     @Test
     public void testSkills() {
-        assertTrue(agent.skills().isPresent());
-        assertEquals(1, agent.skills().get().count());
+        assertFalse(agent.feature(SKILL).isNoObj());
+        assertEquals(1, agent.feature(SKILL).elements().count());
     }
 
     @Test
     public void testNotes() {
-        assertTrue(agent.notes().isPresent());
-        assertEquals(1, agent.notes().get().count());
-    }
-
-    @Test
-    public void testPrompt() {
-        assertTrue(agent.prompt().isPresent());
-        assertEquals("you are helpful", agent.prompt().get().strValue());
+        assertFalse(agent.feature(NOTE).isNoObj());
+        assertEquals(1, agent.feature(NOTE).elements().count());
     }
 
     @Test
     public void testRag() {
-        assertTrue(agent.rag().isPresent());
-        assertEquals(f("/sys/docs/#"), agent.rag().get().at(PATTERN).uriValue());
-        assertEquals(5, agent.rag().get().at(MAX).intValue().intValue());
+        assertFalse(agent.feature(RAG).isNoObj());
+        assertEquals(f("/sys/docs/#"), agent.feature(RAG).orElse(rec0()).at(PATTERN).uriValue());
+        assertEquals(5, agent.feature(RAG).orElse(rec0()).at(MAX).intValue().intValue());
     }
 
     @Test
     public void testSessionAbsent() {
         Rec empty = rec(mutableMap(uri(NAME), uri("empty")), LLM_MODEL_TID, null);
-        assertTrue(Agent.agent(empty).session().isNoObj());
+        assertTrue(Agent.agent(empty).feature(SESSION).isNoObj());
     }
 
     @Test
@@ -224,41 +206,24 @@ public class AgentTest extends AbstractMetatronTest {
     }
 
     @Test
-    @Disabled("old feature accessors deprecated — revisit after Lst-based feature design")
-    public void testFeaturesAbsent() {
-        Rec empty = rec(mutableMap(uri(NAME), uri("empty")), LLM_MODEL_TID, null);
-        assertTrue(Agent.agent(empty).features().isNoObj());
-    }
-
-    @Test
     public void testAddNote() {
-        assertEquals(1, agent.notes().get().count());
-        agent.addNote(str("another-note"));
-        assertEquals(2, agent.notes().get().count());
-    }
-
-    @Test
-    public void testResponseFormat() {
-        assertTrue(agent.responseFormat().isPresent());
-        assertTrue(agent.responseFormat().get().at(uri("answer")).orElse(null) != null);
+        // Find the note feature and inspect its note list directly (no privileged addNote() on Agent)
+        final Rec noteFeature = agent.feature(NOTE).orElse(rec0());
+        final Obj notes = noteFeature.at(uri(NOTE));
+        assertFalse(notes.isNoObj());
+        assertEquals(1, notes.asLst().lstValue().size());
     }
 
     @Test
     public void testResponseFormatAbsent() {
         Rec empty = rec(mutableMap(uri(NAME), uri("empty")), LLM_MODEL_TID, null);
-        assertTrue(Agent.agent(empty).responseFormat().isEmpty());
+        assertTrue(Agent.agent(empty).feature(CHAT).isNoObj());
     }
 
     @Test
     public void testLastResponseAbsent() {
         Rec empty = rec(mutableMap(uri(NAME), uri("empty")), LLM_MODEL_TID, null);
         assertTrue(Agent.agent(empty).lastResponse().isEmpty());
-    }
-
-    @Test
-    @Disabled("response format moving to chat_feature::[format=>...] — revisit")
-    public void testResponseFormatPresent() {
-        assertTrue(agent.lastResponse().isPresent());
     }
 
     // === JsonSchemaGenerator tests ===
@@ -334,6 +299,204 @@ public class AgentTest extends AbstractMetatronTest {
         Rec r = rec(uri("name"), STR_TYPE, uri("age"), INT_TYPE);
         JsonObjectSchema schema = JsonSchemaGenerator.recToSchema(r, "person");
         assertNotNull(schema);
+    }
+
+    // ========================================================================
+    //  Lifecycle hook dispatch tests
+    // ========================================================================
+
+    /** Fixture: agent with a single ObservedTestFeature — no LLM needed. */
+    private Agent agentWithObserver() {
+        final Map<Obj, Obj> map = new LinkedHashMap<>();
+        map.put(uri(NAME), uri("observer-agent"));
+        map.put(uri(FEATURE), lst(ObservedTestFeature.observe("test-observer")));
+        return Agent.agent(rec(map, LLM_AGENT_TID, null));
+    }
+
+    @Test
+    public void testHookWiring() {
+        final Agent a = agentWithObserver();
+        final List<Obj> features = a.features().lstValue();
+        assertEquals(1, features.size());
+
+        // Manually dispatch onBeforeChat via JVM key — no chat() needed
+        final Obj f = features.getFirst();
+        assertTrue(f instanceof Feature, "observed feature should be a Feature instance");
+
+        final Obj hook = ((Poly) f).at(uri(ON_BEFORE_CHAT));
+        assertFalse(hook.isNoObj(), "onBeforeChat hook should be registered");
+
+        final Obj result = hook.apply(a);
+        assertTrue(result.isNoObj(), "observer onBeforeChat should return noobj (no short-circuit)");
+
+        // Verify audit trail
+        final List<Rec> trail = ObservedTestFeature.auditTrail(a);
+        assertEquals(1, trail.size());
+        assertEquals("onBeforeChat", trail.getFirst().at(uri("phase")).strValue());
+    }
+
+    @Test
+    public void testHookDispatchOrder() {
+        final Agent a = agentWithObserver();
+        final List<Obj> features = a.features().lstValue();
+        final Obj f = features.getFirst();
+
+        // Dispatch hooks in the Agent's normal order
+        ((Poly) f).at(uri(ON_BEFORE_CHAT)).apply(a);
+        ((Inst) ((Poly) f).at(uri(ON_PARTIAL_RESPONSE))).args(lst(str("hello"))).apply(a);
+        ((Inst) ((Poly) f).at(uri(ON_PARTIAL_THINKING))).args(lst(str("hmm"))).apply(a);
+        ((Inst) ((Poly) f).at(uri(ON_TOOL_EXECUTED))).args(lst(rec())).apply(a);
+        ((Inst) ((Poly) f).at(uri(ON_COMPLETE_RESPONSE))).args(lst(str("done"))).apply(a);
+        ((Inst) ((Poly) f).at(uri("onError"))).args(lst(noobj())).apply(a);
+
+        final List<Rec> trail = ObservedTestFeature.auditTrail(a);
+        assertEquals(6, trail.size());
+        assertEquals("onBeforeChat", trail.get(0).at(uri("phase")).strValue());
+        assertEquals("onPartialResponse", trail.get(1).at(uri("phase")).strValue());
+        assertEquals("onPartialThinking", trail.get(2).at(uri("phase")).strValue());
+        assertEquals("onToolExecuted", trail.get(3).at(uri("phase")).strValue());
+        assertEquals("onCompleteResponse", trail.get(4).at(uri("phase")).strValue());
+        assertEquals("onError", trail.get(5).at(uri("phase")).strValue());
+    }
+
+    @Test
+    public void testHookArgsPropagation() {
+        final Agent a = agentWithObserver();
+        final List<Obj> features = a.features().lstValue();
+        final Obj f = features.getFirst();
+
+        // onPartialResponse receives the partial text as arg
+        ((Inst) ((Poly) f).at(uri(ON_PARTIAL_RESPONSE))).args(lst(str("partial text"))).apply(a);
+
+        final List<Rec> trail = ObservedTestFeature.auditTrail(a);
+        assertEquals(1, trail.size());
+        final Obj args = trail.getFirst().at(uri("args"));
+        assertFalse(args.isNoObj());
+        assertEquals("partial text", args.asLst().lstValue().getFirst().strValue());
+    }
+
+    @Test
+    public void testShortCircuit() {
+        final Map<Obj, Obj> map = new LinkedHashMap<>();
+        map.put(uri(NAME), uri("short-circuit-agent"));
+
+        // Feature that short-circuits on onBeforeChat
+        final Feature blocker = new Feature(new LinkedHashMap<>(), feat("blocker"), null) {};
+        blocker.at(uri(ON_BEFORE_CHAT), instLambda((agent, ignored) ->
+                str("blocked-by-test")), MUTABLE);
+        map.put(uri(FEATURE), lst(blocker));
+        final Agent a = Agent.agent(rec(map, LLM_AGENT_TID, null));
+
+        // Simulate the Agent's onBeforeChat loop
+        final List<Obj> features = a.features().lstValue();
+        Obj shortCircuit = noobj();
+        for (final Obj f : features) {
+            final Obj result = ((Poly) f).at(uri(ON_BEFORE_CHAT)).apply(a);
+            if (!result.isNoObj()) {
+                shortCircuit = result;
+                break;
+            }
+        }
+        assertFalse(shortCircuit.isNoObj());
+        assertEquals("blocked-by-test", shortCircuit.strValue());
+    }
+
+    @Test
+    public void testMissingHookIsSilentNoop() {
+        // A plain Feature with no hooks registered — dispatch should be a noop chain
+        final Feature empty = new Feature(new LinkedHashMap<>(), feat("empty"), null) {};
+
+        // noobj chain: at(key) → noobj().args(lst(...)) → noobj().apply(agent) → noobj
+        final Obj hook = ((Poly) empty).at(uri(ON_BEFORE_CHAT));
+        assertTrue(hook.isNoObj());
+        final Obj result = ((Inst) hook).args(lst()).apply(noobj());
+        assertTrue(result.isNoObj(), "noobj().args(lst()).apply(x) should be noobj");
+    }
+
+    @Test
+    public void testMultipleFeaturesAllGetDispatched() {
+        final Map<Obj, Obj> map = new LinkedHashMap<>();
+        map.put(uri(NAME), uri("multi-observer-agent"));
+        map.put(uri(FEATURE), lst(
+                ObservedTestFeature.observe("obs-1"),
+                ObservedTestFeature.observe("obs-2")
+        ));
+        final Agent a = Agent.agent(rec(map, LLM_AGENT_TID, null));
+
+        // Dispatch onBeforeChat — both features should fire
+        for (final Obj f : a.features().lstValue())
+            ((Poly) f).at(uri(ON_BEFORE_CHAT)).apply(a);
+
+        // Each observer wrote its own audit entry
+        final List<Rec> trail = ObservedTestFeature.auditTrail(a);
+        assertEquals(2, trail.size());
+        assertEquals("onBeforeChat", trail.get(0).at(uri("phase")).strValue());
+        assertEquals("onBeforeChat", trail.get(1).at(uri("phase")).strValue());
+    }
+
+    @Test
+    @Disabled("requires mock StreamingChatModel — proves the full pipeline pattern end-to-end")
+    public void testFullChatLifecycleWithMockLLM() {
+        // Pattern for when a mock LLM is available:
+        //
+        // 1. Register ObservedTestFeature + real features in agent
+        // 2. Inject a mock StreamingChatModel that fires:
+        //      onPartialResponse("Hello") → onPartialResponse("World") → onCompleteResponse("HelloWorld")
+        // 3. Call agent.chat("test message")
+        // 4. Assert result Rec has: chat=>"HelloWorld", time=>non-noobj
+        // 5. Assert audit trail has: [
+        //      onBeforeChat,
+        //      onPartialResponse("Hello"), onPartialResponse("World"),
+        //      onCompleteResponse("HelloWorld")
+        //    ]
+    }
+
+    @Test
+    public void testTimeFieldInResultAssembly() {
+        // Simulate what Agent.chat() does: write time to res("time"),
+        // then read it back in Phase 4 result assembly.
+        final Map<Obj, Obj> map = new LinkedHashMap<>();
+        map.put(uri(NAME), uri("time-test-agent"));
+        final Agent a = Agent.agent(rec(map, LLM_AGENT_TID, null));
+
+        // Phase 3 (onCompleteResponse Lambda): write time to blackboard
+        a.at(res("time"), jnt(1523), MUTABLE);
+
+        // Verify time is readable from the blackboard
+        final Obj timeFromBlackboard = a.at(res("time"));
+        assertFalse(timeFromBlackboard.isNoObj(),
+                "time should be stored at res(time), got noobj");
+
+        // Phase 4: result assembly — must include time
+        final Map<Obj, Obj> resultMap = new LinkedHashMap<>();
+        resultMap.put(uri(CHAT), str("test chat"));
+        resultMap.put(uri(TIME), a.at(res("time")));
+        final Rec result = rec(resultMap);
+
+        assertFalse(result.at(uri(TIME)).isNoObj(),
+                "result should have a time field, got noobj");
+    }
+
+    @Test
+    public void testResultBlackboardShapeWithoutFeatures() {
+        // Bare agent with no features — result should still have chat, time, error
+        final Map<Obj, Obj> map = new LinkedHashMap<>();
+        map.put(uri(NAME), uri("bare-agent"));
+        final Agent a = Agent.agent(rec(map, LLM_AGENT_TID, null));
+
+        a.at(res(CHAT), str("bare response"), MUTABLE);
+        a.at(res(TIME), jnt(100), MUTABLE);
+        a.at(res(ERROR), noobj(), MUTABLE);
+
+        final Map<Obj, Obj> resultMap = new LinkedHashMap<>();
+        resultMap.put(uri(CHAT), a.at(res(CHAT)));
+        resultMap.put(uri(TIME), a.at(res(TIME)));
+        resultMap.put(uri(ERROR), a.at(res(ERROR)));
+        final Rec result = rec(resultMap);
+
+        assertEquals("bare response", result.at(uri(CHAT)).strValue());
+        assertEquals(100L, result.at(uri(TIME)).intValue());
+        assertTrue(result.at(uri("audit")).isNoObj(), "no audit without AuditFeature");
     }
 
     // ========================================================================

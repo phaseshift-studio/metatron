@@ -38,7 +38,6 @@ import studio.phaseshift.metatron.furi.fURI;
 
 import studio.phaseshift.metatron.isa.llm.type.Agent;
 import studio.phaseshift.metatron.isa.llm.type.Model;
-import studio.phaseshift.metatron.isa.llm.type.feature.ChatFeature;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Poly;
 import studio.phaseshift.metatron.isa.m.type.Rec;
@@ -103,23 +102,33 @@ public final class LLMFactory {
             }
             case OLLAMA -> {
                 final OllamaModels models = OllamaModels.builder().baseUrl(preModel.at(HOST).uriValue().toString()).build();
+                preModel.logger().debug("connected to ollama server at %s", preModel.at(HOST));
                 yield models.availableModels().content().stream()
                         .map(m -> Tuple.Pair.with(m, models.modelCard(m.getName()).content()))
+                        .peek(m -> preModel.logger().debug("checking ollama server model %s", m.get0().getName()))
                         .filter(m -> m.get0().getModel().equals(preModel.at(LLM).uriValue().toString()))
+                        .peek(m -> preModel.logger().debug("located ollama server model %s", m.get0().getName()))
                         .map(m -> {
-                            final Rec postModel = rec(mutableMap(
-                                            // uri(PROVIDER), auto_from_(spaceRec.vid()).tryToInst(),
-                                            uri(NAME), uri(m.get0().getName()),
-                                            //uri(LICENSE), Optional.ofNullable(m.get1().getLicense()).map(MStr::str).map(o -> (Obj) o).orElse(noobj()),
-                                            uri(THINK), m.get1().getCapabilities().contains(THINKING) ? rec() : noobj(),
-                                            uri(SKILL), lst(m.get1().getCapabilities().stream().map(MUri::uri)),
-                                            uri(SIZE), real(Long.valueOf(m.get0().getSize()).doubleValue(), MATH_BYTE_TID, null).as(GBYTE_TYPE)),
-                                    REC_TID, null);
-                            postModel.jvm().putAll(preModel.jvm());
-                            return postModel;
+                            try {
+                                final Rec postModel = rec(mutableMap(
+                                                // uri(PROVIDER), auto_from_(spaceRec.vid()).tryToInst(),
+                                                //uri(NAME), uri(m.get0().getName()),
+                                                //uri(LICENSE), Optional.ofNullable(m.get1().getLicense()).map(MStr::str).map(o -> (Obj) o).orElse(noobj()),
+                                                //uri(THINK), m.get1().getCapabilities().contains(THINKING) ? rec() : noobj(),
+                                                uri(SKILL), lst(m.get1().getCapabilities().stream().map(MUri::uri)),
+                                                uri(SIZE), real(Long.valueOf(m.get0().getSize()).doubleValue(), MATH_BYTE_TID, null).as(GBYTE_TYPE)),
+                                        REC_TID, null);
+                                postModel.jvm().putAll(preModel.jvm());
+                                return postModel;
+                            } catch (final Exception e) {
+                                throw MTronException.of("unable to to construct model from %s", m);
+                            }
                         })
                         .findFirst()
-                        .orElseThrow(() -> MTronException.of("unknown model: %s", preModel.at(LLM)));
+                        .orElseThrow(() -> {
+                            preModel.logger().error("unable to locate model %s at %s", preModel.at(LLM).uriValue(), preModel.at(HOST).uriValue());
+                            return MTronException.of("unknown model: %s", preModel.at(LLM));
+                        });
             }
            /* case LOCALAI -> {
                 final LocalAiModelCatalog models = new LocalAiModelCatalog(spaceRec.at(HOST).uriValue().toString());
@@ -197,19 +206,18 @@ public final class LLMFactory {
                 null;
     }
 
-    public static StreamingChatModel createChatInteraction(final Agent agent, final ChatFeature chatFeature) {
-        final Rec model = chatFeature.at(MODEL);
-        final Rec response = chatFeature.at(RESPONSE);
-        final Obj fmt = chatFeature.at(FORMAT);
+    public static StreamingChatModel createChatInteraction(final Agent agent, final Obj modelObj, final Obj responseObj, final Obj fmt) {
+        final Rec model = modelObj.isNoObj() ? noobjRec() : modelObj.asRec();
+        final Rec response = responseObj.isNoObj() ? noobjRec() : responseObj.asRec();
         final Rec responseFormat = fmt.isNoObj() ? rec0().c(c -> c.zero()).as() : fmt.asRec();
         final fURI provider = model.at(f(PROTOCOL)).uriValue();
         final String host = model.at(HOST).uriValue().toString();
-        final boolean thinking = agent.feature(THINK).isPresent();
+        final boolean thinking = !agent.feature(THINK).isNoObj();
         final String modelName = Str.Helper.cleanString(model.at(NAME));
         final Str api_key = model.at(API_KEY).orElse(str0());//model.at(f(PROVIDER)).asRec().at(API_KEY).orElse(str0());
         // final Str organization = model.at(f(PROVIDER)).asRec().at(ORG).orElse(str0());
         final String name = Str.Helper.cleanString(model.at(LLM));
-        final Rec responseFormat2 = responseFormat.isNoObj() ? agent.responseFormat().orElse(noobjRec()) : responseFormat;
+        final Rec responseFormat2 = responseFormat.isNoObj() ? agent.feature(f(RESPONSE).extend(FORMAT).toString()).orElse(noobjRec()) : responseFormat;
         final boolean hasResponseFormat = !responseFormat2.isNoObj() && !responseFormat2.isEmpty();
         return switch (provider.toString().toLowerCase()) {
             case LOCALAI -> LocalAiStreamingChatModel.builder()
