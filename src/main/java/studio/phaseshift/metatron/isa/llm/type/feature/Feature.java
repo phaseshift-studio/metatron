@@ -61,6 +61,21 @@ public abstract class Feature extends MRec {
         super(jvm, tid, vid);
     }
 
+    // ── Skill ─────────────────────────────────────────────────────
+
+    /**
+     * Optional skill description for features that have a user-facing
+     * interaction model.  Returns {@code noobj()} by default — features
+     * with no interaction model (observational, internal) return noobj.
+     * <p>
+     * When non-noobj, the SkillFeature registers this as a lazy-loadable
+     * skill so the agent can learn usage details on demand rather than
+     * carrying them in every system prompt.
+     */
+    public Obj skill() {
+        return noobj();
+    }
+
     // ── Pre-chat ─────────────────────────────────────────────────
 
     /**

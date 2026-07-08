@@ -69,6 +69,11 @@ return this;
         return lst();
         //throw MTronException.of("%s has no accessible arguments", this);
     }
+    
+    @Override
+    public Inst args(final Poly<?,?> args) {
+        return this;
+    }
 
     @Override
     public fURI tid() {

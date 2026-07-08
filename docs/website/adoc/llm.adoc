@@ -14,7 +14,9 @@ wsspace::[host     => <ws://localhost:8555>,                          /
           q        => [docq::[=>],subq::[=>]],                        /
           route    => [/mtron  => mtron_ws,                           /
                        /mcp    => mcp_mtron_ws]]@/sys/space/web/ws
-fsspace::[pattern  => fs:#,                                      /
+httpspace::[host     => <http://localhost:8777>,                      /
+            pattern  => <http://localhost:11434/#>]@/sys/space/web/http
+fsspace::[pattern  => fs:#,                                           /
           route    => [fs:=><.metatron>]]@/sys/space/fs
 ----
 ====

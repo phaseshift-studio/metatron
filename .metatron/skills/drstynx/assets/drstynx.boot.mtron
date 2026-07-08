@@ -92,7 +92,7 @@ fsspace::[
             
 httpspace::[host     => !*<boot/args/external/web/http>,
             pattern  => <http://#>,
-            route    => [/mcp     => mcp_mtron_http,
+            route    => [[-- /mcp     => mcp_mtron_http, --]
                          /memory => drdb:llm_message_user/, 
                          /       => <>]]@/sys/space/web/http;   
    
@@ -174,13 +174,17 @@ agent::[name     => 'dr.stynx',
         feature  => [chat_feature::[model    => model::[provider => ollama,
                                                         protocol => ollama,
                                                         host     => <http://ginger.local:11434>,
-                                                        llm      => gemma4:26b],
+                                                        llm      => <batiai/gemma4-31b:q6>],
                                     response => [to => print(_)]],
+                     loop_feature::[max_loop=>5],
+                     ledger_feature::[=>],
+                     skill_feature::[skill=>[<metatronfs:skills/mtron>]],
                      session_feature::[session => !@<drdb:llm_session/1>],
-                     system_feature::[=>],
+                     [== system_feature::[=>], ==],
+                     audit_feature::[=>],
                      tool_feature::[chest=>[!*eval,
-                                    !*sql,
-                                    mcp_client::[host=><http://localhost:8777/mcp>]]]]]@<dr>; 
+                                    !*sql
+                                    [-- mcp_client::[host=><http://localhost:8777/mcp>] --]]]]]@<dr>; 
 
 
 

@@ -12,15 +12,15 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SESSION_FEATURE_TID;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.SYSTEM_MESSAGE_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.noobjRec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 public class SystemFeature extends Feature {
-
-    private String systemMessage;
 
     public SystemFeature(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
@@ -28,15 +28,15 @@ public class SystemFeature extends Feature {
 
     @Override
     public Obj onBeforeChat(final Agent agent) {
-        // Accumulate system messages from all features (user-added + capability-generated)
-        this.systemMessage = String.join("\n", agent.getSystemMessages());
-        if (!systemMessage.isBlank()) {
-            // Mirror to typed table — fire and forget
-            final Rec sess = agent.session();
+        // System messages are accumulated via agent.addSystemMessage() —
+        // this feature ensures they are mirrored to the session store.
+        final String systemMessage = String.join("\n", agent.getSystemMessages());
+        if (!systemMessage.isBlank() && agent.hasFeature(LLM_SESSION_FEATURE_TID)) {
+            final Rec sess = agent.feature(SESSION).orElse(noobjRec());
             if (!sess.isNoObj() && sess.vid() != null) {
                 try {
                     final Map<Obj, Obj> systemMap = new LinkedHashMap<>();
-                    systemMap.put(uri(TEXT), str(this.systemMessage));
+                    systemMap.put(uri(TEXT), str(systemMessage));
                     systemMap.put(uri(TYPE), uri("SYSTEM"));
                     final Rec systemRec = rec(systemMap, SYSTEM_MESSAGE_TID, null);
                     final Space space = Router.global().getSpaceFor(sess.vid());
@@ -48,6 +48,4 @@ public class SystemFeature extends Feature {
         }
         return noobj();
     }
-
-    public String systemMessage() { return this.systemMessage; }
 }
