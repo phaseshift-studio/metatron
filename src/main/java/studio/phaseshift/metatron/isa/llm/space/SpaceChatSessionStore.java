@@ -29,6 +29,7 @@ import studio.phaseshift.metatron.TokenMapper;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
+import studio.phaseshift.metatron.isa.m.math.mathInstSet;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
@@ -45,10 +46,12 @@ import java.util.*;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.LST_TID;
+import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_BYTE_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBytes.bytes;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
@@ -525,7 +528,11 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
     }
 
     private static Rec systemMessageToRec(final SystemMessage msg) {
-        return rec(mutableMap(uri(TEXT), str(msg.text()), uri(TYPE), uri(msg.type().name())), SYSTEM_MESSAGE_TID, null);
+        return rec(mutableMap(
+                        uri(TEXT), str(msg.text()),
+                        uri(TYPE), uri(msg.type().name())
+                        /*, uri(SIZE), real((double) msg.text().getBytes().length, MATH_BYTE_TID, null)*/),
+                SYSTEM_MESSAGE_TID, null);
     }
 
     private static Rec userMessageToRec(final UserMessage msg) {
@@ -541,6 +548,7 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
             map.put(uri(CONTENTS), lst(parts));
         }
         map.put(uri(TYPE), uri(msg.type().name()));
+        // map.put(uri(SIZE), real((double) map.getOrDefault(uri(CONTENTS), str("")).strValue().getBytes().length, MATH_BYTE_TID, null));
         // Attributes go in flat (not nested under an ATTRIBUTES key).
         // putIfAbsent ensures structural fields always win over attribute collisions.
         msg.attributes().forEach((k, v) -> map.putIfAbsent(uri(k), str(String.valueOf(v))));
@@ -601,6 +609,7 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
             map.put(uri(TOOL_REQUESTS), lst(toolReqs, LST_TID, null));
         }
         map.put(uri(TYPE), uri(msg.type().name()));
+        //  map.put(uri(SIZE), real((double) map.getOrDefault(uri(TEXT), str("")).strValue().getBytes().length, MATH_BYTE_TID, null));
         msg.attributes().forEach((k, v) -> map.putIfAbsent(uri(k), str(String.valueOf(v))));
         return rec(map, AI_MESSAGE_TID, null);
     }
@@ -624,6 +633,7 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
         if (msg.id() != null && !msg.id().isBlank())
             map.put(uri(ID), str(msg.id()));
         map.put(uri(TYPE), uri(msg.type().name()));
+        //  map.put(uri(SIZE), real((double) map.getOrDefault(uri(TEXT), str("")).strValue().getBytes().length, MATH_BYTE_TID, null));
         msg.attributes().forEach((k, v) -> map.putIfAbsent(uri(k), str(String.valueOf(v))));
         return rec(map, TOOL_RESULT_MESSAGE_TID, null);
     }

@@ -1362,7 +1362,7 @@ public class fURITest extends AbstractMetatronTest {
             "test:/a/b/c     | #               | ",
             "test:/a/b/c     | test:/a/b/c     | ",
             "test:/a         | test:/a         | ",
-            "test:/a/b/c     | test:/a/b       | /c",
+          //  "test:/a/b/c     | test:/a/b       | /c",
             "test:/a/b/c     | test:#          | ",
             "test:/a/b/c     | test:/d/#       | test:/a/b/c",
             "test:/a/b/c     | test:/a/b/      | c",

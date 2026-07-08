@@ -295,8 +295,8 @@ bin/metatron</code></pre>
     bytes=&gt;60,
     fail=&gt;60],
    justify=&gt;true]@/m/mach/io/serializer/string/clean,
-  /m/mach/io/serializer/bytebuffer::[=&gt;]@/m/mach/io/serializer/bytebuffer,
-  /m/mach/io/serializer/json/simple::[wrap_uri=&gt;true]@/m/mach/io/serializer/json/simple,
+  bytebuffer::[=&gt;]@bytebuffer,
+  simple::[wrap_uri=&gt;true]@simple,
   obj_bson::[=&gt;]@obj_bson],
  type=&gt;[mime::T,xml::T,html::T,json::T,css::T,markdown::T,java::T,serializer::T,obj_mtron::T,obj_simple_json::T,...(23 more)],
  inst=&gt;[ping?/m/math/time&lt;=#{?}(uri::T),format?str&lt;=markdown(),as?json&lt;=str(json::T),as?xml&lt;=str(xml::T),as?html&lt;=str(html::T),as?markdown&lt;=str(markdown::T),as?java&lt;=str(java::T),as?str&lt;=java(str::T),as?str&lt;=html(str::T),as?str&lt;=markdown(str::T),...(3 more)]]@/m/web</code></pre>
@@ -314,139 +314,139 @@ bin/metatron</code></pre>
         <div class="card-header"><h5 class="mb-0 text-primary">Index</h5></div>
         <div class="card-body"><div class="mb-3">
     <h6 class="text-primary mb-2">Constants</h6>
-    <div class="d-flex flex-wrap"><a href="#const-helper" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <div class="d-flex flex-wrap"><a href="#__m__web__helper" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">helper</span>
     <span class="pill-label badge bg-secondary ms-2">C</span>
-</a><a href="#const-obj_bson" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__web__serializer__obj_bson" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">obj_bson</span>
     <span class="pill-label badge bg-secondary ms-2">C</span>
-</a><a href="#const-obj_html" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__web__serializer__obj_html" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">obj_html</span>
     <span class="pill-label badge bg-secondary ms-2">C</span>
-</a><a href="#const-obj_json" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__web__serializer__obj_json" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">obj_json</span>
     <span class="pill-label badge bg-secondary ms-2">C</span>
-</a><a href="#const-obj_markdown" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__web__serializer__obj_markdown" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">obj_markdown</span>
     <span class="pill-label badge bg-secondary ms-2">C</span>
-</a><a href="#const-obj_text" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__web__serializer__obj_text" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">obj_text</span>
     <span class="pill-label badge bg-secondary ms-2">C</span>
-</a><a href="#const-obj_xml" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__web__serializer__obj_xml" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">obj_xml</span>
     <span class="pill-label badge bg-secondary ms-2">C</span>
 </a></div>
 </div><div class="mb-3">
     <h6 class="text-primary mb-2">Types</h6>
-    <div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">web</small></div><div class="d-flex flex-wrap"><a href="#type-client" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">web</small></div><div class="d-flex flex-wrap"><a href="#__m__web__client" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">client</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
-</a><a href="#type-mime" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__web__mime" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">mime</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
-</a><a href="#type-serializer" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__web__serializer" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">serializer</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
-</a><a href="#type-server" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__web__server" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">server</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
-</a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">mcp</small></div><div class="d-flex flex-wrap"><a href="#type-mcp_client" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">mcp</small></div><div class="d-flex flex-wrap"><a href="#__m__web__mcp__mcp_client" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">mcp_client</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
-</a><a href="#type-mcp_server" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__web__mcp__mcp_server" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">mcp_server</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
-</a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">mime</small></div><div class="d-flex flex-wrap"><a href="#type-css" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">mime</small></div><div class="d-flex flex-wrap"><a href="#__m__web__mime__css" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">css</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
-</a><a href="#type-html" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__web__mime__html" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">html</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
-</a><a href="#type-java" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__web__mime__java" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">java</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
-</a><a href="#type-json" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__web__mime__json" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">json</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
-</a><a href="#type-markdown" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__web__mime__markdown" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">markdown</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
-</a><a href="#type-xml" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__web__mime__xml" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">xml</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
-</a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">serializer</small></div><div class="d-flex flex-wrap"><a href="#type-obj_bson" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">serializer</small></div><div class="d-flex flex-wrap"><a href="#__m__web__serializer__obj_bson" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">obj_bson</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
-</a><a href="#type-obj_bytebuffer" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__web__serializer__obj_bytebuffer" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">obj_bytebuffer</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
-</a><a href="#type-obj_mtron" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__web__serializer__obj_mtron" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">obj_mtron</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
-</a><a href="#type-obj_simple_json" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__web__serializer__obj_simple_json" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">obj_simple_json</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
-</a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;" style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;line-height:1.25;" class="micro-label"><div style="font-size:0.6rem;opacity:0.45;font-family:monospace;white-space:nowrap;">space&thinsp;/</div><div><small class="mini-label fw-bold text-secondary" style="font-family:monospace;">httpspace</small></div></div><div class="d-flex flex-wrap"><a href="#type-http_client" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;" style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;line-height:1.25;" class="micro-label"><div style="font-size:0.6rem;opacity:0.45;font-family:monospace;white-space:nowrap;">space&thinsp;/</div><div><small class="mini-label fw-bold text-secondary" style="font-family:monospace;">httpspace</small></div></div><div class="d-flex flex-wrap"><a href="#__m__web__space__httpspace__http_client" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">http_client</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
-</a><a href="#type-http_handler" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__web__space__httpspace__http_handler" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">http_handler</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
-</a><a href="#type-socket" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__web__space__httpspace__socket" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">socket</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
-</a><a href="#type-web_http" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__web__space__httpspace__web_http" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">web_http</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
-</a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;" style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;line-height:1.25;" class="micro-label"><div style="font-size:0.6rem;opacity:0.45;font-family:monospace;white-space:nowrap;">space&thinsp;/</div><div><small class="mini-label fw-bold text-secondary" style="font-family:monospace;">wsspace</small></div></div><div class="d-flex flex-wrap"><a href="#type-mtron_ws" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;" style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;line-height:1.25;" class="micro-label"><div style="font-size:0.6rem;opacity:0.45;font-family:monospace;white-space:nowrap;">space&thinsp;/</div><div><small class="mini-label fw-bold text-secondary" style="font-family:monospace;">wsspace</small></div></div><div class="d-flex flex-wrap"><a href="#__m__web__space__wsspace__mtron_ws" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">mtron_ws</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
-</a><a href="#type-websocket" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__web__space__wsspace__websocket" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">websocket</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
-</a><a href="#type-wsclient" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__web__space__wsspace__wsclient" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">wsclient</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
-</a><a href="#type-wshandler" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__web__space__wsspace__wshandler" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">wshandler</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
-</a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;" style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;line-height:1.25;" class="micro-label"><div style="font-size:0.6rem;opacity:0.45;font-family:monospace;white-space:nowrap;">space/httpspace&thinsp;/</div><div><small class="mini-label fw-bold text-secondary" style="font-family:monospace;">mcp</small></div></div><div class="d-flex flex-wrap"><a href="#type-mcp_emulator_http" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;" style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;line-height:1.25;" class="micro-label"><div style="font-size:0.6rem;opacity:0.45;font-family:monospace;white-space:nowrap;">space/httpspace&thinsp;/</div><div><small class="mini-label fw-bold text-secondary" style="font-family:monospace;">mcp</small></div></div><div class="d-flex flex-wrap"><a href="#__m__web__space__httpspace__mcp__mcp_emulator_http" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">mcp_emulator_http</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
-</a><a href="#type-mcp_http" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__web__space__httpspace__mcp__mcp_http" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">mcp_http</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
-</a><a href="#type-mcp_mtron_http" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__web__space__httpspace__mcp__mcp_mtron_http" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">mcp_mtron_http</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
-</a><a href="#type-mtron_http" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__web__space__httpspace__mcp__mtron_http" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">mtron_http</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
-</a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;" style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;line-height:1.25;" class="micro-label"><div style="font-size:0.6rem;opacity:0.45;font-family:monospace;white-space:nowrap;">space/wsspace&thinsp;/</div><div><small class="mini-label fw-bold text-secondary" style="font-family:monospace;">mcp</small></div></div><div class="d-flex flex-wrap"><a href="#type-mcp_emulator_ws" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;" style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;line-height:1.25;" class="micro-label"><div style="font-size:0.6rem;opacity:0.45;font-family:monospace;white-space:nowrap;">space/wsspace&thinsp;/</div><div><small class="mini-label fw-bold text-secondary" style="font-family:monospace;">mcp</small></div></div><div class="d-flex flex-wrap"><a href="#__m__web__space__wsspace__mcp__mcp_emulator_ws" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">mcp_emulator_ws</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
-</a><a href="#type-mcp_mtron_ws" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__web__space__wsspace__mcp__mcp_mtron_ws" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">mcp_mtron_ws</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
-</a><a href="#type-mcp_ws" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__web__space__wsspace__mcp__mcp_ws" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">mcp_ws</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a></div></div>
 </div><div class="mb-3">
     <h6 class="text-primary mb-2">Spaces</h6>
-    <div class="d-flex flex-wrap"><a href="#space-httpspace" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <div class="d-flex flex-wrap"><a href="#__m__web__space__httpspace" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">httpspace</span>
     <span class="pill-label badge bg-info text-dark ms-2">S</span>
-</a><a href="#space-wsspace" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__web__space__wsspace" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">wsspace</span>
     <span class="pill-label badge bg-info text-dark ms-2">S</span>
 </a></div>
 </div><div class="mb-3">
     <h6 class="text-primary mb-2">Instructions</h6>
-    <div class="d-flex flex-wrap"><a href="#inst-format" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <div class="d-flex flex-wrap"><a href="#__m__web__inst__format?rng=__m__str&dom=__m__web__mime__markdown" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">format</span>
     <span class="pill-label badge bg-success ms-2">I</span>
-</a><a href="#inst-ping" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__web__inst__ping?rng=__m__math__time&dom=#{?}" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">ping</span>
     <span class="pill-label badge bg-success ms-2">I</span>
 </a></div>
@@ -454,7 +454,7 @@ bin/metatron</code></pre>
     </div>
 </div><div class="container-xxl mb-4" id="consts">
     <h3 class="text-primary mb-3">Constants <span class="pill-label badge bg-secondary">7</span></h3>
-    <div class="card mb-3" id="const-helper">
+    <div class="card mb-3" id="__m__web__helper">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span class="code text-secondary fw-bold">helper</span>
         <small class="text-muted code">/m/web/helper</small>
@@ -463,7 +463,7 @@ bin/metatron</code></pre>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a collection of web related utilities</p>
 </div>
-</div><div class="card mb-3" id="const-obj_bson">
+</div><div class="card mb-3" id="__m__web__serializer__obj_bson">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span class="code text-secondary fw-bold">obj_bson</span>
         <small class="text-muted code">/m/web/serializer/obj_bson</small>
@@ -472,35 +472,35 @@ bin/metatron</code></pre>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a serializer for converting objs to/from bson format</p>
 </div>
-</div><div class="card mb-3" id="const-obj_html">
+</div><div class="card mb-3" id="__m__web__serializer__obj_html">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span class="code text-secondary fw-bold">obj_html</span>
         <small class="text-muted code">/m/web/serializer/obj_html</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">obj_html::[=&gt;]@obj_html</code></pre></div>
     
-</div><div class="card mb-3" id="const-obj_json">
+</div><div class="card mb-3" id="__m__web__serializer__obj_json">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span class="code text-secondary fw-bold">obj_json</span>
         <small class="text-muted code">/m/web/serializer/obj_json</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">obj_json::[=&gt;]@obj_json</code></pre></div>
     
-</div><div class="card mb-3" id="const-obj_markdown">
+</div><div class="card mb-3" id="__m__web__serializer__obj_markdown">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span class="code text-secondary fw-bold">obj_markdown</span>
         <small class="text-muted code">/m/web/serializer/obj_markdown</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">obj_markdown::[=&gt;]@obj_markdown</code></pre></div>
     
-</div><div class="card mb-3" id="const-obj_text">
+</div><div class="card mb-3" id="__m__web__serializer__obj_text">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span class="code text-secondary fw-bold">obj_text</span>
         <small class="text-muted code">/m/web/serializer/obj_text</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">obj_text::[=&gt;]@obj_text</code></pre></div>
     
-</div><div class="card mb-3" id="const-obj_xml">
+</div><div class="card mb-3" id="__m__web__serializer__obj_xml">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span class="code text-secondary fw-bold">obj_xml</span>
         <small class="text-muted code">/m/web/serializer/obj_xml</small>
@@ -510,11 +510,11 @@ bin/metatron</code></pre>
 </div>
 </div><div class="container-xxl mb-4" id="types">
     <h3 class="text-primary mb-3">Types <span class="pill-label badge bg-primary">31</span></h3>
-    <div class="card mb-3" id="type-client">
+    <div class="card mb-3" id="__m__web__client">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">client::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#type-rec" class="instset-doc-small-code text-info code">/m/rec::T</a></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__rec" class="instset-doc-small-code text-info code">/m/rec::T</a></span>
         </span>
         <small class="text-muted code">/m/web/client</small>
     </div>
@@ -523,11 +523,11 @@ bin/metatron</code></pre>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a generic web client which can be refined with useful behaviors</p>
 </div>
-</div><div class="card mb-3" id="type-css">
+</div><div class="card mb-3" id="__m__web__mime__css">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">css::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#type-rec" class="instset-doc-small-code text-info code">/m/rec::T</a></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__rec" class="instset-doc-small-code text-info code">/m/rec::T</a></span>
         </span>
         <small class="text-muted code">/m/web/mime/css</small>
     </div>
@@ -536,11 +536,11 @@ bin/metatron</code></pre>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a rec encoding of a css document</p>
 </div>
-</div><div class="card mb-3" id="type-html">
+</div><div class="card mb-3" id="__m__web__mime__html">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">html::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m_web_mime.html#type-xml" class="instset-doc-small-code text-info code">/m/web/mime/xml::T</a></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__web__mime__xml" class="instset-doc-small-code text-info code">/m/web/mime/xml::T</a></span>
         </span>
         <small class="text-muted code">/m/web/mime/html</small>
     </div>
@@ -559,16 +559,16 @@ html::[html=&gt;
           [tag=&gt;a,href=&gt;...],
           [tag...]]]]</code></pre>
 </div>
-</div><div class="card mb-3" id="type-http_client">
+</div><div class="card mb-3" id="__m__web__space__httpspace__http_client">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">http_client::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m_web_space_httpspace.html#type-socket" class="instset-doc-small-code text-info code">/m/web/space/httpspace/socket::T</a></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__web__space__httpspace__socket" class="instset-doc-small-code text-info code">/m/web/space/httpspace/socket::T</a></span>
         </span>
         <small class="text-muted code">/m/web/space/httpspace/http_client</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">socket::T[][/m/web/space/httpspace/http_client/ctor?socket&lt;=#{?}(rec::T)]@/m/web/space/httpspace/http_client</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m_web_space_httpspace.html#space-socket" class="code inherited-link">socket::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[ {?}in=&gt;isa(mime::T),
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__space__httpspace__socket" class="code inherited-link">socket::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[ {?}in=&gt;isa(mime::T),
  {?}out=&gt;isa(mime::T),
  {?}send=&gt;inst::T,
  {?}on_get=&gt;#::T,
@@ -579,16 +579,16 @@ html::[html=&gt;
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">an http client which should be refined to implement protocol specs</p>
 </div>
-</div><div class="card mb-3" id="type-http_handler">
+</div><div class="card mb-3" id="__m__web__space__httpspace__http_handler">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">http_handler::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m_web_space_httpspace.html#type-socket" class="instset-doc-small-code text-info code">/m/web/space/httpspace/socket::T</a></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__web__space__httpspace__socket" class="instset-doc-small-code text-info code">/m/web/space/httpspace/socket::T</a></span>
         </span>
         <small class="text-muted code">/m/web/space/httpspace/http_handler</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">socket::T[][ctor?socket&lt;=#{?}(rec::T)]@/m/web/space/httpspace/http_handler</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m_web_space_httpspace.html#space-socket" class="code inherited-link">socket::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[ {?}in=&gt;isa(mime::T),
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__space__httpspace__socket" class="code inherited-link">socket::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[ {?}in=&gt;isa(mime::T),
  {?}out=&gt;isa(mime::T),
  {?}send=&gt;inst::T,
  {?}on_get=&gt;#::T,
@@ -599,11 +599,11 @@ html::[html=&gt;
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a http server which should be refined to implement protocol specs</p>
 </div>
-</div><div class="card mb-3" id="type-java">
+</div><div class="card mb-3" id="__m__web__mime__java">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">java::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#type-rec" class="instset-doc-small-code text-info code">/m/rec::T</a></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__rec" class="instset-doc-small-code text-info code">/m/rec::T</a></span>
         </span>
         <small class="text-muted code">/m/web/mime/java</small>
     </div>
@@ -612,11 +612,11 @@ html::[html=&gt;
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a rec encoding of a java source file</p>
 </div>
-</div><div class="card mb-3" id="type-json">
+</div><div class="card mb-3" id="__m__web__mime__json">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">json::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#type-rec" class="instset-doc-small-code text-info code">/m/rec::T</a></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__rec" class="instset-doc-small-code text-info code">/m/rec::T</a></span>
         </span>
         <small class="text-muted code">/m/web/mime/json</small>
     </div>
@@ -632,11 +632,11 @@ html::[html=&gt;
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a rec encoding of a json document</p>
 </div>
-</div><div class="card mb-3" id="type-markdown">
+</div><div class="card mb-3" id="__m__web__mime__markdown">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">markdown::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#type-rec" class="instset-doc-small-code text-info code">/m/rec::T</a></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__rec" class="instset-doc-small-code text-info code">/m/rec::T</a></span>
         </span>
         <small class="text-muted code">/m/web/mime/markdown</small>
     </div>
@@ -645,11 +645,11 @@ html::[html=&gt;
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a rec encoding of a markdown document</p>
 </div>
-</div><div class="card mb-3" id="type-mcp_client">
+</div><div class="card mb-3" id="__m__web__mcp__mcp_client">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">mcp_client::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">/m/web/client::T</span></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__web__client" class="instset-doc-small-code text-info code">/m/web/client::T</a></span>
         </span>
         <small class="text-muted code">/m/web/mcp/mcp_client</small>
     </div>
@@ -665,42 +665,42 @@ html::[html=&gt;
     <p class="mb-0 text-light">a client implementing the model content protocol used by llms for the acquisition of tools and access to external software systems</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">an mcp client type specification <span class="text-light">=&gt;</span> a connection to an existing mcp server</pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  {?}command <span class="text-light">=&gt;</span> <span class="text-info">&#39;only necessary for stdio mcp servers, where the client is the server&#39;</span>
-  {?}host <span class="text-light">=&gt;</span> <span class="text-info">&#39;the mcp server endpoint (optional for stdio)&#39;</span>
-  {?}transport <span class="text-light">=&gt;</span> <span class="text-info">&quot;specify the transport if host schema resolution isn&#39;t sufficient&quot;</span>
-  {?}env <span class="text-light">=&gt;</span> <span class="text-info">&#39;environment variables for the stdio server process&#39;</span>
-  {?}tool <span class="text-light">=&gt;</span> <span class="text-info">&#39;the tools/functions available for use on the mcp server&#39;</span>
-  {?}status <span class="text-light">=&gt;</span> <span class="text-info">&#39;the current status of the mcp client/server connection&#39;</span>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#an mcp client type specification" class="text-info">an mcp client type specification</a> <span class="text-light">=&gt;</span> <a href="#a connection to an existing mcp server" class="text-success">a connection to an existing mcp server</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}tool" class="text-light">{?}tool</a> <span class="text-light">=&gt;</span> <a href="#'the tools__functions available for use on the mcp server'" class="text-info">functions available for use on the mcp server&#39;</a>
+  <a href="#{?}env" class="text-light">{?}env</a> <span class="text-light">=&gt;</span> <a href="#'environment variables for the stdio server process'" class="text-info">&#39;environment variables for the stdio server process&#39;</a>
+  <a href="#{?}transport" class="text-light">{?}transport</a> <span class="text-light">=&gt;</span> <a href="#"specify the transport if host schema resolution isn't sufficient"" class="text-info">&quot;specify the transport if host schema resolution isn&#39;t sufficient&quot;</a>
+  <a href="#{?}host" class="text-light">{?}host</a> <span class="text-light">=&gt;</span> <a href="#'the mcp server endpoint (optional for stdio)'" class="text-info">&#39;the mcp server endpoint (optional for stdio)&#39;</a>
+  <a href="#{?}command" class="text-light">{?}command</a> <span class="text-light">=&gt;</span> <a href="#'only necessary for stdio mcp servers, where the client is the server'" class="text-info">&#39;only necessary for stdio mcp servers, where the client is the server&#39;</a>
+  <a href="#{?}status" class="text-light">{?}status</a> <span class="text-light">=&gt;</span> <a href="#'the current status of the mcp client__server connection'" class="text-info">server connection&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">mcp_client::[host =&gt; &lt;http://127.0.0.1:29170/index-mcp/streamable-http&gt;]@/usr/ai/mcp/intellij [-- connection populates tool and status      --]
 mcp_client::[host =&gt; &lt;ws://localhost:8999&gt;]@/usr/ai/mcp/mtron                                 [-- mtron router server exposes an mcp server --]</code></pre>
 </div>
-</div><div class="card mb-3" id="type-mcp_emulator_http">
+</div><div class="card mb-3" id="__m__web__space__httpspace__mcp__mcp_emulator_http">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">mcp_emulator_http::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m_web_space_httpspace_mcp.html#type-mcp_http" class="instset-doc-small-code text-info code">/m/web/space/httpspace/mcp/mcp_http::T</a></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__web__space__httpspace__mcp__mcp_http" class="instset-doc-small-code text-info code">/m/web/space/httpspace/mcp/mcp_http::T</a></span>
         </span>
         <small class="text-muted code">/m/web/space/httpspace/mcp/mcp_emulator_http</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">mcp_http::T[?[{?}tool=&gt;[uri::T=&gt;inst::T],{?}resource=&gt;#::T,{?}prompt=&gt;#::T]][ctor?mcp_emulator_http&lt;=#{?}(rec::T)]@/m/web/space/httpspace/mcp/mcp_emulator_http</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m_web_space_httpspace_mcp.html#space-mcp_http" class="code inherited-link">mcp_http::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}tool=&gt;{?}[uri::T=&gt;inst::T],{?}resource=&gt;#::T,{?}prompt=&gt;#::T]</code></div></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__space__httpspace__mcp__mcp_http" class="code inherited-link">mcp_http::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}tool=&gt;{?}[uri::T=&gt;inst::T],{?}resource=&gt;#::T,{?}prompt=&gt;#::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">an http mcp emulator server that provides an agent a stateful environment of mcp server access</p>
 </div>
-</div><div class="card mb-3" id="type-mcp_emulator_ws">
+</div><div class="card mb-3" id="__m__web__space__wsspace__mcp__mcp_emulator_ws">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">mcp_emulator_ws::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m_web_space_wsspace_mcp.html#type-mcp_ws" class="instset-doc-small-code text-info code">/m/web/space/wsspace/mcp/mcp_ws::T</a></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__web__space__wsspace__mcp__mcp_ws" class="instset-doc-small-code text-info code">/m/web/space/wsspace/mcp/mcp_ws::T</a></span>
         </span>
         <small class="text-muted code">/m/web/space/wsspace/mcp/mcp_emulator_ws</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">mcp_ws::T[?[{?}tool=&gt;[uri::T=&gt;inst::T],{?}resource=&gt;#::T,{?}prompt=&gt;#::T]][ctor?mcp_emulator_ws&lt;=#{?}(rec::T)]@/m/web/space/wsspace/mcp/mcp_emulator_ws</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m_web_space_wsspace_mcp.html#space-mcp_ws" class="code inherited-link">mcp_ws::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}tool=&gt;{?}[uri::T=&gt;inst::T],{?}resource=&gt;#::T,{?}prompt=&gt;#::T]</code></div><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m_web_space_wsspace.html#space-websocket" class="code inherited-link">websocket::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[ {?}in=&gt;isa(mime::T),
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__space__wsspace__mcp__mcp_ws" class="code inherited-link">mcp_ws::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}tool=&gt;{?}[uri::T=&gt;inst::T],{?}resource=&gt;#::T,{?}prompt=&gt;#::T]</code></div><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__space__wsspace__websocket" class="code inherited-link">websocket::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[ {?}in=&gt;isa(mime::T),
  {?}out=&gt;isa(mime::T),
  {?}send=&gt;inst::T,
  {?}send_recv=&gt;inst::T,
@@ -711,11 +711,11 @@ mcp_client::[host =&gt; &lt;ws://localhost:8999&gt;]@/usr/ai/mcp/mtron          
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a webLsocket mcp emulator server that provides an agent a stateful environment of mcp server access</p>
 </div>
-</div><div class="card mb-3" id="type-mcp_http">
+</div><div class="card mb-3" id="__m__web__space__httpspace__mcp__mcp_http">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">mcp_http::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m_web_space_httpspace.html#type-httprec" class="instset-doc-small-code text-info code">/m/web/space/httpspace/httprec::T</a></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__web__space__httpspace__httprec" class="instset-doc-small-code text-info code">/m/web/space/httpspace/httprec::T</a></span>
         </span>
         <small class="text-muted code">/m/web/space/httpspace/mcp/mcp_http</small>
     </div>
@@ -724,29 +724,29 @@ mcp_client::[host =&gt; &lt;ws://localhost:8999&gt;]@/usr/ai/mcp/mtron          
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">an abstract mcp http handler providing necessary json-rpc infrastructure for mcp servers to leverage</p>
 </div>
-</div><div class="card mb-3" id="type-mcp_mtron_http">
+</div><div class="card mb-3" id="__m__web__space__httpspace__mcp__mcp_mtron_http">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">mcp_mtron_http::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m_web_space_httpspace_mcp.html#type-mcp_http" class="instset-doc-small-code text-info code">/m/web/space/httpspace/mcp/mcp_http::T</a></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__web__space__httpspace__mcp__mcp_http" class="instset-doc-small-code text-info code">/m/web/space/httpspace/mcp/mcp_http::T</a></span>
         </span>
         <small class="text-muted code">/m/web/space/httpspace/mcp/mcp_mtron_http</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">mcp_http::T[?[{?}tool=&gt;[uri::T=&gt;inst::T],{?}resource=&gt;#::T,{?}prompt=&gt;#::T]][ctor?mcp_mtron_http&lt;=#{?}(rec::T)]@/m/web/space/httpspace/mcp/mcp_mtron_http</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m_web_space_httpspace_mcp.html#space-mcp_http" class="code inherited-link">mcp_http::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}tool=&gt;{?}[uri::T=&gt;inst::T],{?}resource=&gt;#::T,{?}prompt=&gt;#::T]</code></div></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__space__httpspace__mcp__mcp_http" class="code inherited-link">mcp_http::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}tool=&gt;{?}[uri::T=&gt;inst::T],{?}resource=&gt;#::T,{?}prompt=&gt;#::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">mcp streamable http transport handler with built-in metatron tools</p>
 </div>
-</div><div class="card mb-3" id="type-mcp_mtron_ws">
+</div><div class="card mb-3" id="__m__web__space__wsspace__mcp__mcp_mtron_ws">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">mcp_mtron_ws::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m_web_space_wsspace_mcp.html#type-mcp_ws" class="instset-doc-small-code text-info code">/m/web/space/wsspace/mcp/mcp_ws::T</a></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__web__space__wsspace__mcp__mcp_ws" class="instset-doc-small-code text-info code">/m/web/space/wsspace/mcp/mcp_ws::T</a></span>
         </span>
         <small class="text-muted code">/m/web/space/wsspace/mcp/mcp_mtron_ws</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">mcp_ws::T[?[{?}tool=&gt;[uri::T=&gt;inst::T],{?}resource=&gt;#::T,{?}prompt=&gt;#::T]][ctor?mcp_mtron_ws&lt;=#{?}(rec::T)]@/m/web/space/wsspace/mcp/mcp_mtron_ws</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m_web_space_wsspace_mcp.html#space-mcp_ws" class="code inherited-link">mcp_ws::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}tool=&gt;{?}[uri::T=&gt;inst::T],{?}resource=&gt;#::T,{?}prompt=&gt;#::T]</code></div><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m_web_space_wsspace.html#space-websocket" class="code inherited-link">websocket::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[ {?}in=&gt;isa(mime::T),
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__space__wsspace__mcp__mcp_ws" class="code inherited-link">mcp_ws::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}tool=&gt;{?}[uri::T=&gt;inst::T],{?}resource=&gt;#::T,{?}prompt=&gt;#::T]</code></div><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__space__wsspace__websocket" class="code inherited-link">websocket::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[ {?}in=&gt;isa(mime::T),
  {?}out=&gt;isa(mime::T),
  {?}send=&gt;inst::T,
  {?}send_recv=&gt;inst::T,
@@ -757,11 +757,11 @@ mcp_client::[host =&gt; &lt;ws://localhost:8999&gt;]@/usr/ai/mcp/mtron          
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">an mcp handler server with built-in mtron eval, space listing, router info and instruction listing tools</p>
 </div>
-</div><div class="card mb-3" id="type-mcp_server">
+</div><div class="card mb-3" id="__m__web__mcp__mcp_server">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">mcp_server::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">/m/web/server::T</span></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__web__server" class="instset-doc-small-code text-info code">/m/web/server::T</a></span>
         </span>
         <small class="text-muted code">/m/web/mcp/mcp_server</small>
     </div>
@@ -770,16 +770,16 @@ mcp_client::[host =&gt; &lt;ws://localhost:8999&gt;]@/usr/ai/mcp/mtron          
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">transport-agnostic mcp json-rpc protocol handler</p>
 </div>
-</div><div class="card mb-3" id="type-mcp_ws">
+</div><div class="card mb-3" id="__m__web__space__wsspace__mcp__mcp_ws">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">mcp_ws::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m_web_space_wsspace.html#type-wshandler" class="instset-doc-small-code text-info code">/m/web/space/wsspace/wshandler::T</a></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__web__space__wsspace__wshandler" class="instset-doc-small-code text-info code">/m/web/space/wsspace/wshandler::T</a></span>
         </span>
         <small class="text-muted code">/m/web/space/wsspace/mcp/mcp_ws</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">wshandler::T[?[{?}tool=&gt;{?}[uri::T=&gt;inst::T],{?}resource=&gt;#::T,{?}prompt=&gt;#::T]][ctor?mcp_ws&lt;=#{?}(rec::T)]@/m/web/space/wsspace/mcp/mcp_ws</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m_web_space_wsspace.html#space-websocket" class="code inherited-link">websocket::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[ {?}in=&gt;isa(mime::T),
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__space__wsspace__websocket" class="code inherited-link">websocket::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[ {?}in=&gt;isa(mime::T),
  {?}out=&gt;isa(mime::T),
  {?}send=&gt;inst::T,
  {?}send_recv=&gt;inst::T,
@@ -790,11 +790,11 @@ mcp_client::[host =&gt; &lt;ws://localhost:8999&gt;]@/usr/ai/mcp/mtron          
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">an abstract mcp websocket handler providing necessary json-rpc infrastructure for mcp servers to leverage</p>
 </div>
-</div><div class="card mb-3" id="type-mime">
+</div><div class="card mb-3" id="__m__web__mime">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">mime::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#type-uri" class="instset-doc-small-code text-info code">/m/uri::T</a></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__uri" class="instset-doc-small-code text-info code">/m/uri::T</a></span>
         </span>
         <small class="text-muted code">/m/web/mime</small>
     </div>
@@ -827,16 +827,16 @@ mcp_client::[host =&gt; &lt;ws://localhost:8999&gt;]@/usr/ai/mcp/mtron          
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">indicates the media type of the data as specified by RFC-9110</p>
 </div>
-</div><div class="card mb-3" id="type-mtron_http">
+</div><div class="card mb-3" id="__m__web__space__httpspace__mcp__mtron_http">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">mtron_http::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m_web_space_httpspace.html#type-http_handler" class="instset-doc-small-code text-info code">/m/web/space/httpspace/http_handler::T</a></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__web__space__httpspace__http_handler" class="instset-doc-small-code text-info code">/m/web/space/httpspace/http_handler::T</a></span>
         </span>
         <small class="text-muted code">/m/web/space/httpspace/mcp/mtron_http</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">http_handler::T[?[{?}in=&gt;isa(mime::T).else(application/x-mtron),{?}out=&gt;isa(mime::T).else(application/x-mtron)]][ctor?mtron_http&lt;=#{?}(rec::T)]@/m/web/space/httpspace/mcp/mtron_http</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m_web_space_httpspace.html#space-socket" class="code inherited-link">socket::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[ {?}in=&gt;isa(mime::T),
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__space__httpspace__socket" class="code inherited-link">socket::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[ {?}in=&gt;isa(mime::T),
  {?}out=&gt;isa(mime::T),
  {?}send=&gt;inst::T,
  {?}on_get=&gt;#::T,
@@ -850,16 +850,16 @@ mcp_client::[host =&gt; &lt;ws://localhost:8999&gt;]@/usr/ai/mcp/mtron          
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">mtron_http::[=&gt;]</code></pre>
 </div>
-</div><div class="card mb-3" id="type-mtron_ws">
+</div><div class="card mb-3" id="__m__web__space__wsspace__mtron_ws">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">mtron_ws::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m_web_space_wsspace.html#type-wshandler" class="instset-doc-small-code text-info code">/m/web/space/wsspace/wshandler::T</a></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__web__space__wsspace__wshandler" class="instset-doc-small-code text-info code">/m/web/space/wsspace/wshandler::T</a></span>
         </span>
         <small class="text-muted code">/m/web/space/wsspace/mtron_ws</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">wshandler::T[?[{?}in=&gt;isa(mime::T).else(application/x-mtron),{?}out=&gt;isa(mime::T).else(application/x-mtron)]][ctor?mtron_ws&lt;=#{?}(rec::T)]@/m/web/space/wsspace/mtron_ws</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m_web_space_wsspace.html#space-websocket" class="code inherited-link">websocket::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[ {?}in=&gt;isa(mime::T),
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__space__wsspace__websocket" class="code inherited-link">websocket::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[ {?}in=&gt;isa(mime::T),
  {?}out=&gt;isa(mime::T),
  {?}send=&gt;inst::T,
  {?}send_recv=&gt;inst::T,
@@ -873,7 +873,7 @@ mcp_client::[host =&gt; &lt;ws://localhost:8999&gt;]@/usr/ai/mcp/mtron          
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">mtron_ws::[=&gt;]</code></pre>
 </div>
-</div><div class="card mb-3" id="type-obj_bson">
+</div><div class="card mb-3" id="__m__web__serializer__obj_bson">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">obj_bson::T</span>
@@ -886,11 +886,11 @@ mcp_client::[host =&gt; &lt;ws://localhost:8999&gt;]@/usr/ai/mcp/mtron          
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a serializer for converting objs to/from bson format</p>
 </div>
-</div><div class="card mb-3" id="type-obj_bytebuffer">
+</div><div class="card mb-3" id="__m__web__serializer__obj_bytebuffer">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">obj_bytebuffer::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">/m/web/serializer::T</span></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__web__serializer" class="instset-doc-small-code text-info code">/m/web/serializer::T</a></span>
         </span>
         <small class="text-muted code">/m/web/serializer/obj_bytebuffer</small>
     </div>
@@ -903,11 +903,11 @@ mcp_client::[host =&gt; &lt;ws://localhost:8999&gt;]@/usr/ai/mcp/mtron          
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">a serializer for converting objs to/from raw byte buffers
 obj_bytebuffer::[=&gt;]</code></pre>
 </div>
-</div><div class="card mb-3" id="type-obj_mtron">
+</div><div class="card mb-3" id="__m__web__serializer__obj_mtron">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">obj_mtron::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">/m/web/serializer::T</span></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__web__serializer" class="instset-doc-small-code text-info code">/m/web/serializer::T</a></span>
         </span>
         <small class="text-muted code">/m/web/serializer/obj_mtron</small>
     </div>
@@ -926,25 +926,25 @@ obj_bytebuffer::[=&gt;]</code></pre>
     <p class="mb-0 text-light">a serializer for converting objs to/from mtron string format</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">mtron string serializer <span class="text-light">=&gt;</span> a serializer with configurable clipping for console display and data marshalling</pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  {?}clip/m/rec <span class="text-light">=&gt;</span> <span class="text-info">&#39;the max number of relations&#39;</span>
-  {?}clip/m/lst <span class="text-light">=&gt;</span> <span class="text-info">&#39;the max number of elements&#39;</span>
-  {?}clip/m/str <span class="text-light">=&gt;</span> <span class="text-info">&#39;the max number of characters&#39;</span>
-  {?}clip/m/uri <span class="text-light">=&gt;</span> <span class="text-info">&#39;the max number of characters for a URI&#39;</span>
-  {?}clip/m/real <span class="text-light">=&gt;</span> <span class="text-info">&#39;the max number of significant decimal places&#39;</span>
-  {?}clip/m/bytes <span class="text-light">=&gt;</span> <span class="text-info">&#39;the max number of bytes to display&#39;</span>
-  {?}clip/m/fail <span class="text-light">=&gt;</span> <span class="text-info">&#39;the max number of characters for a fail message&#39;</span>
-  {?}justify <span class="text-light">=&gt;</span> <span class="text-info">&#39;whether to justify the text left&#39;</span>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#mtron string serializer" class="text-info">mtron string serializer</a> <span class="text-light">=&gt;</span> <a href="#a serializer with configurable clipping for console display and data marshalling" class="text-success">a serializer with configurable clipping for console display and data marshalling</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}clip__m__rec" class="text-light">rec</a> <span class="text-light">=&gt;</span> <a href="#'the max number of relations'" class="text-info">&#39;the max number of relations&#39;</a>
+  <a href="#{?}clip__m__lst" class="text-light">lst</a> <span class="text-light">=&gt;</span> <a href="#'the max number of elements'" class="text-info">&#39;the max number of elements&#39;</a>
+  <a href="#{?}clip__m__str" class="text-light">str</a> <span class="text-light">=&gt;</span> <a href="#'the max number of characters'" class="text-info">&#39;the max number of characters&#39;</a>
+  <a href="#{?}clip__m__uri" class="text-light">uri</a> <span class="text-light">=&gt;</span> <a href="#'the max number of characters for a URI'" class="text-info">&#39;the max number of characters for a URI&#39;</a>
+  <a href="#{?}clip__m__real" class="text-light">real</a> <span class="text-light">=&gt;</span> <a href="#'the max number of significant decimal places'" class="text-info">&#39;the max number of significant decimal places&#39;</a>
+  <a href="#{?}clip__m__bytes" class="text-light">bytes</a> <span class="text-light">=&gt;</span> <a href="#'the max number of bytes to display'" class="text-info">&#39;the max number of bytes to display&#39;</a>
+  <a href="#{?}clip__m__fail" class="text-light">fail</a> <span class="text-light">=&gt;</span> <a href="#'the max number of characters for a fail message'" class="text-info">&#39;the max number of characters for a fail message&#39;</a>
+  <a href="#{?}justify" class="text-light">{?}justify</a> <span class="text-light">=&gt;</span> <a href="#'whether to justify the text left'" class="text-info">&#39;whether to justify the text left&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">obj_mtron::[clip=&gt;[m=&gt;[rec=&gt;10]]]</code></pre>
 </div>
-</div><div class="card mb-3" id="type-obj_simple_json">
+</div><div class="card mb-3" id="__m__web__serializer__obj_simple_json">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">obj_simple_json::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">/m/web/serializer::T</span></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__web__serializer" class="instset-doc-small-code text-info code">/m/web/serializer::T</a></span>
         </span>
         <small class="text-muted code">/m/web/serializer/obj_simple_json</small>
     </div>
@@ -954,14 +954,14 @@ obj_bytebuffer::[=&gt;]</code></pre>
     <p class="mb-0 text-light">obj_simple_json::[wrap_uri=&gt;true]</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">simple json serializer <span class="text-light">=&gt;</span> a serializer for converting objs to/from a simple json format</pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  {?}wrap_uri <span class="text-light">=&gt;</span> <span class="text-info">&#39;whether to wrap uris in angle brackets&#39;</span>
-  {?}bias_towards_uri <span class="text-light">=&gt;</span> <span class="text-info">&#39;whether to bias ambiguous values towards URI&#39;</span>
-  {?}bias_towards_objs <span class="text-light">=&gt;</span> <span class="text-info">&#39;whether to parse arrays as objs instead of lst&#39;</span>
-  {?}embed_candq <span class="text-light">=&gt;</span> <span class="text-info">&#39;whether to embed tid coefficient and quality metadata&#39;</span>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#simple json serializer" class="text-info">simple json serializer</a> <span class="text-light">=&gt;</span> <a href="#a serializer for converting objs to__from a simple json format" class="text-success">from a simple json format</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}wrap_uri" class="text-light">{?}wrap_uri</a> <span class="text-light">=&gt;</span> <a href="#'whether to wrap uris in angle brackets'" class="text-info">&#39;whether to wrap uris in angle brackets&#39;</a>
+  <a href="#{?}bias_towards_uri" class="text-light">{?}bias_towards_uri</a> <span class="text-light">=&gt;</span> <a href="#'whether to bias ambiguous values towards URI'" class="text-info">&#39;whether to bias ambiguous values towards URI&#39;</a>
+  <a href="#{?}bias_towards_objs" class="text-light">{?}bias_towards_objs</a> <span class="text-light">=&gt;</span> <a href="#'whether to parse arrays as objs instead of lst'" class="text-info">&#39;whether to parse arrays as objs instead of lst&#39;</a>
+  <a href="#{?}embed_candq" class="text-light">{?}embed_candq</a> <span class="text-light">=&gt;</span> <a href="#'whether to embed tid coefficient and quality metadata'" class="text-info">&#39;whether to embed tid coefficient and quality metadata&#39;</a>
 </pre>
 </div>
-</div><div class="card mb-3" id="type-serializer">
+</div><div class="card mb-3" id="__m__web__serializer">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">serializer::T</span>
@@ -974,11 +974,11 @@ obj_bytebuffer::[=&gt;]</code></pre>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a serializer for converting objs to/from external formats</p>
 </div>
-</div><div class="card mb-3" id="type-server">
+</div><div class="card mb-3" id="__m__web__server">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">server::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#type-rec" class="instset-doc-small-code text-info code">/m/rec::T</a></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__rec" class="instset-doc-small-code text-info code">/m/rec::T</a></span>
         </span>
         <small class="text-muted code">/m/web/server</small>
     </div>
@@ -987,11 +987,11 @@ obj_bytebuffer::[=&gt;]</code></pre>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a generic web server which can be refined with useful behaviors</p>
 </div>
-</div><div class="card mb-3" id="type-socket">
+</div><div class="card mb-3" id="__m__web__space__httpspace__socket">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">socket::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#type-rec" class="instset-doc-small-code text-info code">/m/rec::T</a></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__rec" class="instset-doc-small-code text-info code">/m/rec::T</a></span>
         </span>
         <small class="text-muted code">/m/web/space/httpspace/socket</small>
     </div>
@@ -1007,11 +1007,11 @@ obj_bytebuffer::[=&gt;]</code></pre>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a generic http obj which can be refined with useful behaviors</p>
 </div>
-</div><div class="card mb-3" id="type-web_http">
+</div><div class="card mb-3" id="__m__web__space__httpspace__web_http">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">web_http::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m_web_space_httpspace.html#type-http_handler" class="instset-doc-small-code text-info code">/m/web/space/httpspace/http_handler::T</a></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__web__space__httpspace__http_handler" class="instset-doc-small-code text-info code">/m/web/space/httpspace/http_handler::T</a></span>
         </span>
         <small class="text-muted code">/m/web/space/httpspace/web_http</small>
     </div>
@@ -1021,7 +1021,7 @@ obj_bytebuffer::[=&gt;]</code></pre>
   {?}web_root=&gt;#::T,
   {?}default_page=&gt;#::T,
   {?}read_only=&gt;#::T]][ctor?web_http&lt;=#{?}(rec::T)]@/m/web/space/httpspace/web_http</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m_web_space_httpspace.html#space-socket" class="code inherited-link">socket::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[ {?}in=&gt;isa(mime::T),
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__space__httpspace__socket" class="code inherited-link">socket::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[ {?}in=&gt;isa(mime::T),
  {?}out=&gt;isa(mime::T),
  {?}send=&gt;inst::T,
  {?}on_get=&gt;#::T,
@@ -1032,11 +1032,11 @@ obj_bytebuffer::[=&gt;]</code></pre>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a http handler serving web content from a router-backed space</p>
 </div>
-</div><div class="card mb-3" id="type-websocket">
+</div><div class="card mb-3" id="__m__web__space__wsspace__websocket">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">websocket::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#type-rec" class="instset-doc-small-code text-info code">/m/rec::T</a></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__rec" class="instset-doc-small-code text-info code">/m/rec::T</a></span>
         </span>
         <small class="text-muted code">/m/web/space/wsspace/websocket</small>
     </div>
@@ -1052,16 +1052,16 @@ obj_bytebuffer::[=&gt;]</code></pre>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a generic websocket obj which can be refined with useful behaviors</p>
 </div>
-</div><div class="card mb-3" id="type-wsclient">
+</div><div class="card mb-3" id="__m__web__space__wsspace__wsclient">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">wsclient::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m_web_space_wsspace.html#type-websocket" class="instset-doc-small-code text-info code">/m/web/space/wsspace/websocket::T</a></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__web__space__wsspace__websocket" class="instset-doc-small-code text-info code">/m/web/space/wsspace/websocket::T</a></span>
         </span>
         <small class="text-muted code">/m/web/space/wsspace/wsclient</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">websocket::T[][ctor?websocket&lt;=#{?}(rec::T)]@/m/web/space/wsspace/wsclient</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m_web_space_wsspace.html#space-websocket" class="code inherited-link">websocket::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[ {?}in=&gt;isa(mime::T),
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__space__wsspace__websocket" class="code inherited-link">websocket::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[ {?}in=&gt;isa(mime::T),
  {?}out=&gt;isa(mime::T),
  {?}send=&gt;inst::T,
  {?}send_recv=&gt;inst::T,
@@ -1072,16 +1072,16 @@ obj_bytebuffer::[=&gt;]</code></pre>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">an websocket client which should be refined to implement protocol specs</p>
 </div>
-</div><div class="card mb-3" id="type-wshandler">
+</div><div class="card mb-3" id="__m__web__space__wsspace__wshandler">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">wshandler::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m_web_space_wsspace.html#type-websocket" class="instset-doc-small-code text-info code">/m/web/space/wsspace/websocket::T</a></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__web__space__wsspace__websocket" class="instset-doc-small-code text-info code">/m/web/space/wsspace/websocket::T</a></span>
         </span>
         <small class="text-muted code">/m/web/space/wsspace/wshandler</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">websocket::T[][ctor?websocket&lt;=#{?}(rec::T)]@/m/web/space/wsspace/wshandler</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m_web_space_wsspace.html#space-websocket" class="code inherited-link">websocket::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[ {?}in=&gt;isa(mime::T),
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__space__wsspace__websocket" class="code inherited-link">websocket::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[ {?}in=&gt;isa(mime::T),
  {?}out=&gt;isa(mime::T),
  {?}send=&gt;inst::T,
  {?}send_recv=&gt;inst::T,
@@ -1092,11 +1092,11 @@ obj_bytebuffer::[=&gt;]</code></pre>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a websocket server which should be refined to implement protocol specs</p>
 </div>
-</div><div class="card mb-3" id="type-xml">
+</div><div class="card mb-3" id="__m__web__mime__xml">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">xml::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#type-rec" class="instset-doc-small-code text-info code">/m/rec::T</a></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__rec" class="instset-doc-small-code text-info code">/m/rec::T</a></span>
         </span>
         <small class="text-muted code">/m/web/mime/xml</small>
     </div>
@@ -1108,13 +1108,13 @@ obj_bytebuffer::[=&gt;]</code></pre>
 </div>
 </div><div class="container-xxl mb-4" id="spaces">
     <h3 class="text-primary mb-3">Spaces <span class="pill-label badge bg-info">2</span></h3>
-    <div class="card mb-3" id="space-httpspace">
+    <div class="card mb-3" id="__m__web__space__httpspace">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <a href="m_web_space_httpspace.html" class="code text-primary fw-bold text-decoration-none">httpspace</a>
         <small class="text-muted code">/m/web/space/httpspace</small>
     </div>
     <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[][/m/web/space/httpspace/ctor?httpspace&lt;=#{?}(rec::T)]@/m/web/space/httpspace</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m.html#type-space" class="code inherited-link">space::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[pattern=&gt;uri::T,{?}q=&gt;[qproc::T],{?}route=&gt;[uri::T=&gt;uri::T],{?}schema=&gt;instset::T]</code></div></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m.html#__m__space" class="code inherited-link">space::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[pattern=&gt;uri::T,{?}q=&gt;[qproc::T],{?}route=&gt;[uri::T=&gt;uri::T],{?}schema=&gt;instset::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a space for reading and writing web-related resources.
 for http://# patterns and remote routes, uri resolution will fetch remote web resources and httpspace will handle nested addresses client-side.
@@ -1127,13 +1127,13 @@ httpspace webserver is furi aware and will perform server-side extraction of nes
 *&lt;http://phaseshift.studio/head/html/title&gt; [-- client-side extraction of str::T title --]
 *&lt;http://localhost:8777/head/html/title&gt;    [-- server-side extraction of str::T title --]</code></pre>
 </div>
-</div><div class="card mb-3" id="space-wsspace">
+</div><div class="card mb-3" id="__m__web__space__wsspace">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <a href="m_web_space_wsspace.html" class="code text-primary fw-bold text-decoration-none">wsspace</a>
         <small class="text-muted code">/m/web/space/wsspace</small>
     </div>
     <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[?[host=&gt;uri::T,pattern=&gt;uri::T,route=&gt;rec::T]][ctor?wsspace&lt;=wsspace(rec::T)]@/m/web/space/wsspace</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m.html#type-space" class="code inherited-link">space::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[pattern=&gt;uri::T,{?}q=&gt;[qproc::T],{?}route=&gt;[uri::T=&gt;uri::T],{?}schema=&gt;instset::T]</code></div></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m.html#__m__space" class="code inherited-link">space::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[pattern=&gt;uri::T,{?}q=&gt;[qproc::T],{?}route=&gt;[uri::T=&gt;uri::T],{?}schema=&gt;instset::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a space for exposing and managing web socket servers.</p>
 </div><div class="card-body border-top py-2">
@@ -1144,33 +1144,33 @@ httpspace webserver is furi aware and will perform server-side extraction of nes
 </div>
 </div><div class="container-xxl mb-4" id="instructions">
     <h3 class="text-primary mb-3">Instructions <span class="pill-label badge bg-success">2</span></h3>
-    <div class="card mb-3" id="inst-format">
+    <div class="card mb-3" id="__m__web__inst__format?rng=__m__str&dom=__m__web__mime__markdown">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">format</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="m_web_mime.html#type-markdown" data-bs-toggle="tooltip" title="domain" class="code text-info">markdown</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#type-str" data-bs-toggle="tooltip" title="range" class="code text-success">str</a></span></span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="#__m__web__mime__markdown" data-bs-toggle="tooltip" title="domain" class="code text-info">markdown</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__str" data-bs-toggle="tooltip" title="range" class="code text-success">str</a></span></span>
         </span>
         <small class="text-muted code">/m/web/inst/format?rng=/m/str&amp;dom=/m/web/mime/markdown</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-format-doc-0-tab').click();document.getElementById('inst-format-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">format?rng=str&amp;dom=markdown(){&lt;j&gt;}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__web__inst__format?rng=__m__str&dom=__m__web__mime__markdown-doc-0-tab').click();document.getElementById('__m__web__inst__format?rng=__m__str&dom=__m__web__mime__markdown-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">format?rng=str&dom=markdown(){<j>}</code></pre>
 </div>
     
-</div><div class="card mb-3" id="inst-ping">
+</div><div class="card mb-3" id="__m__web__inst__ping?rng=__m__math__time&dom=#{?}">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">ping</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="#" data-bs-toggle="tooltip" title="maybe generic domain" class="code text-info">#{?}</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m_math.html#type-time" data-bs-toggle="tooltip" title="range" class="code text-success">time</a></span></span>
+            <span class="ms-1"><span class="instset-doc-small-code"><span class="code text-info">#{?}</span></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m_math.html#__m__math__time" data-bs-toggle="tooltip" title="range" class="code text-success">time</a></span></span>
         </span>
         <small class="text-muted code">/m/web/inst/ping?rng=/m/math/time&amp;dom=#{?}</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-ping-doc-0-tab').click();document.getElementById('inst-ping-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">ping?rng=/m/math/time&amp;dom=#{?}(uri::T){&lt;j&gt;}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__web__inst__ping?rng=__m__math__time&dom=#{?}-doc-0-tab').click();document.getElementById('__m__web__inst__ping?rng=__m__math__time&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">ping?rng=<a href="m_math.html#__m__math__time" data-bs-toggle="tooltip" title="range" class="code text-success">time</a>&dom=<span class="code text-info">#{?}</span>(uri::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">ping a machine via tcp</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">maybe an obj <span class="text-light">=&gt;</span> the mean ping time</pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  0 <span class="text-light">=&gt;</span> <span class="text-info">&#39;the host machine and port to ping&#39;</span>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#maybe an obj" class="text-info">maybe an obj</a> <span class="text-light">=&gt;</span> <a href="#the mean ping time" class="text-success">the mean ping time</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'the host machine and port to ping'" class="text-info">&#39;the host machine and port to ping&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>

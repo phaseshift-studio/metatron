@@ -58,15 +58,15 @@ html::T                                                    [-- <1> --]
 
 When a https://en.wikipedia.org/wiki/REST[REST] endpoint has a URL address that matches an `httpspace` pattern, the REST resources can be used in metatron. This is possible because `httpspace` transforms data "in the wild" (e.g. `application/json`) into an isomorphic `obj`. If the newly mapped `obj` is typed, then it inherits the instructions for that type as defined by the `instset` of the type. As such, REST resources can be enriched/typed to become active computational objs in metatron.
 
-A https://lmstudio.ai/[LMStudio] service will serve to demonstrate how to leverage foreign resources in metatron. LMStudio exposes an https://www.openapis.org/[OpenAPI]-compliant endpoint at `http://localhost:1234/v1` (this is specific to the author's local deployment of LMStudio).
+A http://ollama.com/[Ollama] will serve to demonstrate how to leverage foreign resources in metatron.
 
 [mtron]
 ----
-*<http://localhost:1234/v1>            [-- <1> --]            
-*<http://localhost:1234/v1/models>     [-- <2> --]
+*<http://localhost:11434>               [-- <1> --]            
+*<http://localhost:11434/api/tags>      [-- <2> --]
 ----
-<1> An error server side, but demonstrates that the endpoint is alive.
-<2> The `/models` resource contains a list of all LLM models available for use in LMStudio.
+<1> Ollama is up and running.
+<2> The `/api/tags` resource contains a list of all LLM models available for use.
 
 Once the desired REST resource has been accessed, it's possible to map the resource into a form that meets the structural requirements of an mtron `type`. In doing so, the resource then acquires the behaviors defined in the type's respective `instset`. For this example, that `instset` is `/m/llm`.
 
@@ -83,9 +83,11 @@ When the REST resource is manipulated to fit the structural specification of `mo
 
 [mtron]
 ----
-*<http://localhost:1234/v1/models>.>>data/1.     /
-  -<[provider=> !*/sys/space/lmstudio,           /
-     name    => >>id.as(uri::T)].as(model::T)    /
+*<http://localhost:11434/api/tags/0>.>>data/1.          /
+  -<[provider=> ollama,                                 /
+     protocol=> ollama,                                 /
+     host    => <http://localhost:11434>                /
+     name    => >>id.as(uri::T)].as(model::T)           /
   .chat('are you there?') 
 ----
 <1> The OpenAPI `application/json` resource is morphed into a metatron `model::T` and then the model is chatted with.
