@@ -279,7 +279,7 @@ bin/metatron</code></pre>
  inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
  space=&gt;[super=&gt;!*/m],
  type=&gt;[data::T,bB::T,kB::T,mB::T,gB::T,tB::T,pB::T,currency::T,usd::T,euro::T,...(4 more)],
- inst=&gt;[cos?real&lt;=#{?}(as(real::T)),sin?real&lt;=#{?}(real::T),tan?real&lt;=#{?}(real::T),sqrt?real&lt;=#{?}(real::T),pow?real&lt;=#{?}(real::T),atan?real&lt;=#{?}(real::T),atan2?real&lt;=#{?}(real{2}::T),log?real&lt;=#{?}(real::T),log10?real&lt;=#{?}(real::T),exp?real&lt;=#{?}(real::T),...(4 more)],
+ inst=&gt;[normalize?/m/math/time&lt;=/m/math/time(),cos?real&lt;=#{?}(as(real::T)),sin?real&lt;=#{?}(real::T),tan?real&lt;=#{?}(real::T),sqrt?real&lt;=#{?}(real::T),pow?real&lt;=#{?}(real::T),atan?real&lt;=#{?}(real::T),atan2?real&lt;=#{?}(real{2}::T),log?real&lt;=#{?}(real::T),log10?real&lt;=#{?}(real::T),...(5 more)],
  const=&gt;[2.7183@/m/math/e?constq,3.1416@/m/math/pi?constq]]@/m/math</code></pre>
                     </div>
                 </div>
@@ -288,107 +288,110 @@ bin/metatron</code></pre>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <a href="#consts" class="btn btn-outline-primary">Consts <span class="pill-label badge bg-secondary">2</span></a><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">14</span></a><button class="btn btn-outline-secondary" disabled>Spaces <span class="pill-label badge bg-dark">0</span></button><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">14</span></a><button class="btn btn-outline-secondary" disabled>Rewrites <span class="pill-label badge bg-dark">0</span></button>
+        <a href="#consts" class="btn btn-outline-primary">Consts <span class="pill-label badge bg-secondary">2</span></a><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">14</span></a><button class="btn btn-outline-secondary" disabled>Spaces <span class="pill-label badge bg-dark">0</span></button><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">15</span></a><button class="btn btn-outline-secondary" disabled>Rewrites <span class="pill-label badge bg-dark">0</span></button>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="card">
         <div class="card-header"><h5 class="mb-0 text-primary">Index</h5></div>
         <div class="card-body"><div class="mb-3">
     <h6 class="text-primary mb-2">Constants</h6>
-    <div class="d-flex flex-wrap"><a href="#const-e" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <div class="d-flex flex-wrap"><a href="#__m__math__e?constq" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">e</span>
     <span class="pill-label badge bg-secondary ms-2">C</span>
-</a><a href="#const-pi" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__math__pi?constq" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">pi</span>
     <span class="pill-label badge bg-secondary ms-2">C</span>
 </a></div>
 </div><div class="mb-3">
     <h6 class="text-primary mb-2">Types</h6>
-    <div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">math</small></div><div class="d-flex flex-wrap"><a href="#type-currency" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">math</small></div><div class="d-flex flex-wrap"><a href="#__m__math__currency" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">currency</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
-</a><a href="#type-data" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__math__data" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">data</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
-</a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">currency</small></div><div class="d-flex flex-wrap"><a href="#type-euro" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">currency</small></div><div class="d-flex flex-wrap"><a href="#__m__math__currency__euro" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">euro</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
-</a><a href="#type-usd" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__math__currency__usd" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">usd</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
-</a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">data</small></div><div class="d-flex flex-wrap"><a href="#type-bB" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">data</small></div><div class="d-flex flex-wrap"><a href="#__m__math__data__bB" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">bB</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
-</a><a href="#type-gB" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__math__data__gB" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">gB</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
-</a><a href="#type-kB" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__math__data__kB" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">kB</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
-</a><a href="#type-mB" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__math__data__mB" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">mB</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
-</a><a href="#type-pB" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__math__data__pB" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">pB</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
-</a><a href="#type-tB" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__math__data__tB" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">tB</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
-</a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">time</small></div><div class="d-flex flex-wrap"><a href="#type-hour" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">time</small></div><div class="d-flex flex-wrap"><a href="#__m__math__time__hour" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">hour</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
-</a><a href="#type-millis" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__math__time__millis" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">millis</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
-</a><a href="#type-minute" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__math__time__minute" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">minute</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
-</a><a href="#type-second" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__math__time__second" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">second</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a></div></div>
 </div><div class="mb-3">
     <h6 class="text-primary mb-2">Instructions</h6>
-    <div class="d-flex flex-wrap"><a href="#inst-abs" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <div class="d-flex flex-wrap"><a href="#__m__math__inst__abs?rng=__m__real&dom=#{?}" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">abs</span>
     <span class="pill-label badge bg-success ms-2">I</span>
-</a><a href="#inst-atan" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__math__inst__atan?rng=__m__real&dom=#{?}" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">atan</span>
     <span class="pill-label badge bg-success ms-2">I</span>
-</a><a href="#inst-atan2" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__math__inst__atan2?rng=__m__real&dom=#{?}" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">atan2</span>
     <span class="pill-label badge bg-success ms-2">I</span>
-</a><a href="#inst-ceil" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__math__inst__ceil?rng=__m__real&dom=#{?}" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">ceil</span>
     <span class="pill-label badge bg-success ms-2">I</span>
-</a><a href="#inst-cos" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__math__inst__cos?rng=__m__real&dom=#{?}" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">cos</span>
     <span class="pill-label badge bg-success ms-2">I</span>
-</a><a href="#inst-exp" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__math__inst__exp?rng=__m__real&dom=#{?}" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">exp</span>
     <span class="pill-label badge bg-success ms-2">I</span>
-</a><a href="#inst-floor" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__math__inst__floor?rng=__m__real&dom=#{?}" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">floor</span>
     <span class="pill-label badge bg-success ms-2">I</span>
-</a><a href="#inst-log" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__math__inst__log?rng=__m__real&dom=#{?}" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">log</span>
     <span class="pill-label badge bg-success ms-2">I</span>
-</a><a href="#inst-log10" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__math__inst__log10?rng=__m__real&dom=#{?}" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">log10</span>
     <span class="pill-label badge bg-success ms-2">I</span>
-</a><a href="#inst-pow" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__math__time__inst__normalize?rng=__m__math__time&dom=__m__math__time" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">normalize</span>
+    <span class="pill-label badge bg-success ms-2">I</span>
+</a><a href="#__m__math__inst__pow?rng=__m__real&dom=#{?}" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">pow</span>
     <span class="pill-label badge bg-success ms-2">I</span>
-</a><a href="#inst-round" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__math__inst__round?rng=__m__int&dom=#{?}" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">round</span>
     <span class="pill-label badge bg-success ms-2">I</span>
-</a><a href="#inst-sin" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__math__inst__sin?rng=__m__real&dom=#{?}" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">sin</span>
     <span class="pill-label badge bg-success ms-2">I</span>
-</a><a href="#inst-sqrt" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__math__inst__sqrt?rng=__m__real&dom=#{?}" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">sqrt</span>
     <span class="pill-label badge bg-success ms-2">I</span>
-</a><a href="#inst-tan" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__math__inst__tan?rng=__m__real&dom=#{?}" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">tan</span>
     <span class="pill-label badge bg-success ms-2">I</span>
 </a></div>
@@ -396,14 +399,14 @@ bin/metatron</code></pre>
     </div>
 </div><div class="container-xxl mb-4" id="consts">
     <h3 class="text-primary mb-3">Constants <span class="pill-label badge bg-secondary">2</span></h3>
-    <div class="card mb-3" id="const-e">
+    <div class="card mb-3" id="__m__math__e?constq">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span class="code text-secondary fw-bold">e</span>
         <small class="text-muted code">/m/math/e?constq</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">2.7183@/m/math/e?constq</code></pre></div>
     
-</div><div class="card mb-3" id="const-pi">
+</div><div class="card mb-3" id="__m__math__pi?constq">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span class="code text-secondary fw-bold">pi</span>
         <small class="text-muted code">/m/math/pi?constq</small>
@@ -413,11 +416,11 @@ bin/metatron</code></pre>
 </div>
 </div><div class="container-xxl mb-4" id="types">
     <h3 class="text-primary mb-3">Types <span class="pill-label badge bg-primary">14</span></h3>
-    <div class="card mb-3" id="type-bB">
+    <div class="card mb-3" id="__m__math__data__bB">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">bB::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">/m/math/data::T</span></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__math__data" class="instset-doc-small-code text-info code">/m/math/data::T</a></span>
         </span>
         <small class="text-muted code">/m/math/data/bB</small>
     </div>
@@ -426,11 +429,11 @@ bin/metatron</code></pre>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a byte of data</p>
 </div>
-</div><div class="card mb-3" id="type-currency">
+</div><div class="card mb-3" id="__m__math__currency">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">currency::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#type-real" class="instset-doc-small-code text-info code">/m/real::T</a></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__real" class="instset-doc-small-code text-info code">/m/real::T</a></span>
         </span>
         <small class="text-muted code">/m/math/currency</small>
     </div>
@@ -439,22 +442,22 @@ bin/metatron</code></pre>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a currency amount</p>
 </div>
-</div><div class="card mb-3" id="type-data">
+</div><div class="card mb-3" id="__m__math__data">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">data::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#type-real" class="instset-doc-small-code text-info code">/m/real::T</a></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__real" class="instset-doc-small-code text-info code">/m/real::T</a></span>
         </span>
         <small class="text-muted code">/m/math/data</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">real::T@/m/math/data</code></pre></div>
     
     
-</div><div class="card mb-3" id="type-euro">
+</div><div class="card mb-3" id="__m__math__currency__euro">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">euro::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">/m/math/currency::T</span></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__math__currency" class="instset-doc-small-code text-info code">/m/math/currency::T</a></span>
         </span>
         <small class="text-muted code">/m/math/currency/euro</small>
     </div>
@@ -463,11 +466,11 @@ bin/metatron</code></pre>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">european union currency</p>
 </div>
-</div><div class="card mb-3" id="type-gB">
+</div><div class="card mb-3" id="__m__math__data__gB">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">gB::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">/m/math/data::T</span></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__math__data" class="instset-doc-small-code text-info code">/m/math/data::T</a></span>
         </span>
         <small class="text-muted code">/m/math/data/gB</small>
     </div>
@@ -476,11 +479,11 @@ bin/metatron</code></pre>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a gigabyte (1024 megabytes) of data</p>
 </div>
-</div><div class="card mb-3" id="type-hour">
+</div><div class="card mb-3" id="__m__math__time__hour">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">hour::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">/m/math/time::T</span></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__math__time" class="instset-doc-small-code text-info code">/m/math/time::T</a></span>
         </span>
         <small class="text-muted code">/m/math/time/hour</small>
     </div>
@@ -489,11 +492,11 @@ bin/metatron</code></pre>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">an hour of time (60 minutes)</p>
 </div>
-</div><div class="card mb-3" id="type-kB">
+</div><div class="card mb-3" id="__m__math__data__kB">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">kB::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">/m/math/data::T</span></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__math__data" class="instset-doc-small-code text-info code">/m/math/data::T</a></span>
         </span>
         <small class="text-muted code">/m/math/data/kB</small>
     </div>
@@ -502,11 +505,11 @@ bin/metatron</code></pre>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a kilobyte (1024 bytes) of data</p>
 </div>
-</div><div class="card mb-3" id="type-mB">
+</div><div class="card mb-3" id="__m__math__data__mB">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">mB::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">/m/math/data::T</span></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__math__data" class="instset-doc-small-code text-info code">/m/math/data::T</a></span>
         </span>
         <small class="text-muted code">/m/math/data/mB</small>
     </div>
@@ -515,11 +518,11 @@ bin/metatron</code></pre>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a megabyte (1024 kilobytes) of data</p>
 </div>
-</div><div class="card mb-3" id="type-millis">
+</div><div class="card mb-3" id="__m__math__time__millis">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">millis::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">/m/math/time::T</span></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__math__time" class="instset-doc-small-code text-info code">/m/math/time::T</a></span>
         </span>
         <small class="text-muted code">/m/math/time/millis</small>
     </div>
@@ -528,11 +531,11 @@ bin/metatron</code></pre>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a millisecond of time</p>
 </div>
-</div><div class="card mb-3" id="type-minute">
+</div><div class="card mb-3" id="__m__math__time__minute">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">minute::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">/m/math/time::T</span></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__math__time" class="instset-doc-small-code text-info code">/m/math/time::T</a></span>
         </span>
         <small class="text-muted code">/m/math/time/minute</small>
     </div>
@@ -541,11 +544,11 @@ bin/metatron</code></pre>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a minute of time (60 seconds)</p>
 </div>
-</div><div class="card mb-3" id="type-pB">
+</div><div class="card mb-3" id="__m__math__data__pB">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">pB::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">/m/math/data::T</span></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__math__data" class="instset-doc-small-code text-info code">/m/math/data::T</a></span>
         </span>
         <small class="text-muted code">/m/math/data/pB</small>
     </div>
@@ -554,11 +557,11 @@ bin/metatron</code></pre>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a petabyte (1024 terabytes) of data</p>
 </div>
-</div><div class="card mb-3" id="type-second">
+</div><div class="card mb-3" id="__m__math__time__second">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">second::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">/m/math/time::T</span></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__math__time" class="instset-doc-small-code text-info code">/m/math/time::T</a></span>
         </span>
         <small class="text-muted code">/m/math/time/second</small>
     </div>
@@ -567,11 +570,11 @@ bin/metatron</code></pre>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a second of time (1000 millis)</p>
 </div>
-</div><div class="card mb-3" id="type-tB">
+</div><div class="card mb-3" id="__m__math__data__tB">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">tB::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">/m/math/data::T</span></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__math__data" class="instset-doc-small-code text-info code">/m/math/data::T</a></span>
         </span>
         <small class="text-muted code">/m/math/data/tB</small>
     </div>
@@ -580,11 +583,11 @@ bin/metatron</code></pre>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a terabyte (1024 gigabytes) of data</p>
 </div>
-</div><div class="card mb-3" id="type-usd">
+</div><div class="card mb-3" id="__m__math__currency__usd">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">usd::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">/m/math/currency::T</span></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__math__currency" class="instset-doc-small-code text-info code">/m/math/currency::T</a></span>
         </span>
         <small class="text-muted code">/m/math/currency/usd</small>
     </div>
@@ -595,159 +598,170 @@ bin/metatron</code></pre>
 </div>
 </div>
 </div><div class="container-xxl mb-4" id="instructions">
-    <h3 class="text-primary mb-3">Instructions <span class="pill-label badge bg-success">14</span></h3>
-    <div class="card mb-3" id="inst-abs">
+    <h3 class="text-primary mb-3">Instructions <span class="pill-label badge bg-success">15</span></h3>
+    <div class="card mb-3" id="__m__math__inst__abs?rng=__m__real&dom=#{?}">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">abs</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="#" data-bs-toggle="tooltip" title="maybe generic domain" class="code text-info">#{?}</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#type-real" data-bs-toggle="tooltip" title="range" class="code text-success">real</a></span></span>
+            <span class="ms-1"><span class="instset-doc-small-code"><span class="code text-info">#{?}</span></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__real" data-bs-toggle="tooltip" title="range" class="code text-success">real</a></span></span>
         </span>
         <small class="text-muted code">/m/math/inst/abs?rng=/m/real&amp;dom=#{?}</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-abs-doc-0-tab').click();document.getElementById('inst-abs-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">abs?rng=real&amp;dom=#{?}(real::T){&lt;j&gt;}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__inst__abs?rng=__m__real&dom=#{?}-doc-0-tab').click();document.getElementById('__m__math__inst__abs?rng=__m__real&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">abs?rng=real&dom=<span class="code text-info">#{?}</span>(real::T){<j>}</code></pre>
 </div>
     
-</div><div class="card mb-3" id="inst-atan">
+</div><div class="card mb-3" id="__m__math__inst__atan?rng=__m__real&dom=#{?}">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">atan</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="#" data-bs-toggle="tooltip" title="maybe generic domain" class="code text-info">#{?}</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#type-real" data-bs-toggle="tooltip" title="range" class="code text-success">real</a></span></span>
+            <span class="ms-1"><span class="instset-doc-small-code"><span class="code text-info">#{?}</span></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__real" data-bs-toggle="tooltip" title="range" class="code text-success">real</a></span></span>
         </span>
         <small class="text-muted code">/m/math/inst/atan?rng=/m/real&amp;dom=#{?}</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-atan-doc-0-tab').click();document.getElementById('inst-atan-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">atan?rng=real&amp;dom=#{?}(real::T){&lt;j&gt;}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__inst__atan?rng=__m__real&dom=#{?}-doc-0-tab').click();document.getElementById('__m__math__inst__atan?rng=__m__real&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">atan?rng=real&dom=<span class="code text-info">#{?}</span>(real::T){<j>}</code></pre>
 </div>
     
-</div><div class="card mb-3" id="inst-atan2">
+</div><div class="card mb-3" id="__m__math__inst__atan2?rng=__m__real&dom=#{?}">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">atan2</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="#" data-bs-toggle="tooltip" title="maybe generic domain" class="code text-info">#{?}</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#type-real" data-bs-toggle="tooltip" title="range" class="code text-success">real</a></span></span>
+            <span class="ms-1"><span class="instset-doc-small-code"><span class="code text-info">#{?}</span></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__real" data-bs-toggle="tooltip" title="range" class="code text-success">real</a></span></span>
         </span>
         <small class="text-muted code">/m/math/inst/atan2?rng=/m/real&amp;dom=#{?}</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-atan2-doc-0-tab').click();document.getElementById('inst-atan2-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">atan2?rng=real&amp;dom=#{?}(real{2}::T){&lt;j&gt;}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__inst__atan2?rng=__m__real&dom=#{?}-doc-0-tab').click();document.getElementById('__m__math__inst__atan2?rng=__m__real&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">atan2?rng=real&dom=<span class="code text-info">#{?}</span>(real{2}::T){<j>}</code></pre>
 </div>
     
-</div><div class="card mb-3" id="inst-ceil">
+</div><div class="card mb-3" id="__m__math__inst__ceil?rng=__m__real&dom=#{?}">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">ceil</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="#" data-bs-toggle="tooltip" title="maybe generic domain" class="code text-info">#{?}</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#type-real" data-bs-toggle="tooltip" title="range" class="code text-success">real</a></span></span>
+            <span class="ms-1"><span class="instset-doc-small-code"><span class="code text-info">#{?}</span></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__real" data-bs-toggle="tooltip" title="range" class="code text-success">real</a></span></span>
         </span>
         <small class="text-muted code">/m/math/inst/ceil?rng=/m/real&amp;dom=#{?}</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-ceil-doc-0-tab').click();document.getElementById('inst-ceil-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">ceil?rng=real&amp;dom=#{?}(real::T){&lt;j&gt;}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__inst__ceil?rng=__m__real&dom=#{?}-doc-0-tab').click();document.getElementById('__m__math__inst__ceil?rng=__m__real&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">ceil?rng=real&dom=<span class="code text-info">#{?}</span>(real::T){<j>}</code></pre>
 </div>
     
-</div><div class="card mb-3" id="inst-cos">
+</div><div class="card mb-3" id="__m__math__inst__cos?rng=__m__real&dom=#{?}">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">cos</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="#" data-bs-toggle="tooltip" title="maybe generic domain" class="code text-info">#{?}</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#type-real" data-bs-toggle="tooltip" title="range" class="code text-success">real</a></span></span>
+            <span class="ms-1"><span class="instset-doc-small-code"><span class="code text-info">#{?}</span></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__real" data-bs-toggle="tooltip" title="range" class="code text-success">real</a></span></span>
         </span>
         <small class="text-muted code">/m/math/inst/cos?rng=/m/real&amp;dom=#{?}</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-cos-doc-0-tab').click();document.getElementById('inst-cos-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">cos?rng=real&amp;dom=#{?}(as(real::T)){&lt;j&gt;}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__inst__cos?rng=__m__real&dom=#{?}-doc-0-tab').click();document.getElementById('__m__math__inst__cos?rng=__m__real&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">cos?rng=real&dom=<span class="code text-info">#{?}</span>(as(real::T)){<j>}</code></pre>
 </div>
     
-</div><div class="card mb-3" id="inst-exp">
+</div><div class="card mb-3" id="__m__math__inst__exp?rng=__m__real&dom=#{?}">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">exp</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="#" data-bs-toggle="tooltip" title="maybe generic domain" class="code text-info">#{?}</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#type-real" data-bs-toggle="tooltip" title="range" class="code text-success">real</a></span></span>
+            <span class="ms-1"><span class="instset-doc-small-code"><span class="code text-info">#{?}</span></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__real" data-bs-toggle="tooltip" title="range" class="code text-success">real</a></span></span>
         </span>
         <small class="text-muted code">/m/math/inst/exp?rng=/m/real&amp;dom=#{?}</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-exp-doc-0-tab').click();document.getElementById('inst-exp-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">exp?rng=real&amp;dom=#{?}(real::T){&lt;j&gt;}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__inst__exp?rng=__m__real&dom=#{?}-doc-0-tab').click();document.getElementById('__m__math__inst__exp?rng=__m__real&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">exp?rng=real&dom=<span class="code text-info">#{?}</span>(real::T){<j>}</code></pre>
 </div>
     
-</div><div class="card mb-3" id="inst-floor">
+</div><div class="card mb-3" id="__m__math__inst__floor?rng=__m__real&dom=#{?}">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">floor</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="#" data-bs-toggle="tooltip" title="maybe generic domain" class="code text-info">#{?}</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#type-real" data-bs-toggle="tooltip" title="range" class="code text-success">real</a></span></span>
+            <span class="ms-1"><span class="instset-doc-small-code"><span class="code text-info">#{?}</span></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__real" data-bs-toggle="tooltip" title="range" class="code text-success">real</a></span></span>
         </span>
         <small class="text-muted code">/m/math/inst/floor?rng=/m/real&amp;dom=#{?}</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-floor-doc-0-tab').click();document.getElementById('inst-floor-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">floor?rng=real&amp;dom=#{?}(real::T){&lt;j&gt;}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__inst__floor?rng=__m__real&dom=#{?}-doc-0-tab').click();document.getElementById('__m__math__inst__floor?rng=__m__real&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">floor?rng=real&dom=<span class="code text-info">#{?}</span>(real::T){<j>}</code></pre>
 </div>
     
-</div><div class="card mb-3" id="inst-log">
+</div><div class="card mb-3" id="__m__math__inst__log?rng=__m__real&dom=#{?}">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">log</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="#" data-bs-toggle="tooltip" title="maybe generic domain" class="code text-info">#{?}</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#type-real" data-bs-toggle="tooltip" title="range" class="code text-success">real</a></span></span>
+            <span class="ms-1"><span class="instset-doc-small-code"><span class="code text-info">#{?}</span></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__real" data-bs-toggle="tooltip" title="range" class="code text-success">real</a></span></span>
         </span>
         <small class="text-muted code">/m/math/inst/log?rng=/m/real&amp;dom=#{?}</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-log-doc-0-tab').click();document.getElementById('inst-log-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">log?rng=real&amp;dom=#{?}(real::T){&lt;j&gt;}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__inst__log?rng=__m__real&dom=#{?}-doc-0-tab').click();document.getElementById('__m__math__inst__log?rng=__m__real&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">log?rng=real&dom=<span class="code text-info">#{?}</span>(real::T){<j>}</code></pre>
 </div>
     
-</div><div class="card mb-3" id="inst-log10">
+</div><div class="card mb-3" id="__m__math__inst__log10?rng=__m__real&dom=#{?}">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">log10</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="#" data-bs-toggle="tooltip" title="maybe generic domain" class="code text-info">#{?}</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#type-real" data-bs-toggle="tooltip" title="range" class="code text-success">real</a></span></span>
+            <span class="ms-1"><span class="instset-doc-small-code"><span class="code text-info">#{?}</span></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__real" data-bs-toggle="tooltip" title="range" class="code text-success">real</a></span></span>
         </span>
         <small class="text-muted code">/m/math/inst/log10?rng=/m/real&amp;dom=#{?}</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-log10-doc-0-tab').click();document.getElementById('inst-log10-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">log10?rng=real&amp;dom=#{?}(real::T){&lt;j&gt;}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__inst__log10?rng=__m__real&dom=#{?}-doc-0-tab').click();document.getElementById('__m__math__inst__log10?rng=__m__real&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">log10?rng=real&dom=<span class="code text-info">#{?}</span>(real::T){<j>}</code></pre>
 </div>
     
-</div><div class="card mb-3" id="inst-pow">
+</div><div class="card mb-3" id="__m__math__time__inst__normalize?rng=__m__math__time&dom=__m__math__time">
+    <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
+        <span>
+            <span class="code text-primary fw-bold">normalize</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="#__m__math__time" data-bs-toggle="tooltip" title="domain" class="code text-info">time</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#__m__math__time" data-bs-toggle="tooltip" title="range" class="code text-success">time</a></span></span>
+        </span>
+        <small class="text-muted code">/m/math/time/inst/normalize?rng=/m/math/time&amp;dom=/m/math/time</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__time__inst__normalize?rng=__m__math__time&dom=__m__math__time-doc-0-tab').click();document.getElementById('__m__math__time__inst__normalize?rng=__m__math__time&dom=__m__math__time-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">normalize?rng=<a href="#__m__math__time" data-bs-toggle="tooltip" title="domain" class="code text-info">time</a>&dom=<a href="#__m__math__time" data-bs-toggle="tooltip" title="domain" class="code text-info">time</a>(){<j>}</code></pre>
+</div>
+    
+</div><div class="card mb-3" id="__m__math__inst__pow?rng=__m__real&dom=#{?}">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">pow</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="#" data-bs-toggle="tooltip" title="maybe generic domain" class="code text-info">#{?}</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#type-real" data-bs-toggle="tooltip" title="range" class="code text-success">real</a></span></span>
+            <span class="ms-1"><span class="instset-doc-small-code"><span class="code text-info">#{?}</span></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__real" data-bs-toggle="tooltip" title="range" class="code text-success">real</a></span></span>
         </span>
         <small class="text-muted code">/m/math/inst/pow?rng=/m/real&amp;dom=#{?}</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-pow-doc-0-tab').click();document.getElementById('inst-pow-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">pow?rng=real&amp;dom=#{?}(real::T){&lt;j&gt;}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__inst__pow?rng=__m__real&dom=#{?}-doc-0-tab').click();document.getElementById('__m__math__inst__pow?rng=__m__real&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">pow?rng=real&dom=<span class="code text-info">#{?}</span>(real::T){<j>}</code></pre>
 </div>
     
-</div><div class="card mb-3" id="inst-round">
+</div><div class="card mb-3" id="__m__math__inst__round?rng=__m__int&dom=#{?}">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">round</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="#" data-bs-toggle="tooltip" title="maybe generic domain" class="code text-info">#{?}</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#type-int" data-bs-toggle="tooltip" title="range" class="code text-success">int</a></span></span>
+            <span class="ms-1"><span class="instset-doc-small-code"><span class="code text-info">#{?}</span></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__int" data-bs-toggle="tooltip" title="range" class="code text-success">int</a></span></span>
         </span>
         <small class="text-muted code">/m/math/inst/round?rng=/m/int&amp;dom=#{?}</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-round-doc-0-tab').click();document.getElementById('inst-round-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">round?rng=int&amp;dom=#{?}(real::T){&lt;j&gt;}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__inst__round?rng=__m__int&dom=#{?}-doc-0-tab').click();document.getElementById('__m__math__inst__round?rng=__m__int&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">round?rng=int&dom=<span class="code text-info">#{?}</span>(real::T){<j>}</code></pre>
 </div>
     
-</div><div class="card mb-3" id="inst-sin">
+</div><div class="card mb-3" id="__m__math__inst__sin?rng=__m__real&dom=#{?}">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">sin</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="#" data-bs-toggle="tooltip" title="maybe generic domain" class="code text-info">#{?}</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#type-real" data-bs-toggle="tooltip" title="range" class="code text-success">real</a></span></span>
+            <span class="ms-1"><span class="instset-doc-small-code"><span class="code text-info">#{?}</span></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__real" data-bs-toggle="tooltip" title="range" class="code text-success">real</a></span></span>
         </span>
         <small class="text-muted code">/m/math/inst/sin?rng=/m/real&amp;dom=#{?}</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-sin-doc-0-tab').click();document.getElementById('inst-sin-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">sin?rng=real&amp;dom=#{?}(real::T){&lt;j&gt;}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__inst__sin?rng=__m__real&dom=#{?}-doc-0-tab').click();document.getElementById('__m__math__inst__sin?rng=__m__real&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">sin?rng=real&dom=<span class="code text-info">#{?}</span>(real::T){<j>}</code></pre>
 </div>
     
-</div><div class="card mb-3" id="inst-sqrt">
+</div><div class="card mb-3" id="__m__math__inst__sqrt?rng=__m__real&dom=#{?}">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">sqrt</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="#" data-bs-toggle="tooltip" title="maybe generic domain" class="code text-info">#{?}</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#type-real" data-bs-toggle="tooltip" title="range" class="code text-success">real</a></span></span>
+            <span class="ms-1"><span class="instset-doc-small-code"><span class="code text-info">#{?}</span></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__real" data-bs-toggle="tooltip" title="range" class="code text-success">real</a></span></span>
         </span>
         <small class="text-muted code">/m/math/inst/sqrt?rng=/m/real&amp;dom=#{?}</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-sqrt-doc-0-tab').click();document.getElementById('inst-sqrt-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">sqrt?rng=real&amp;dom=#{?}(real::T){&lt;j&gt;}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__inst__sqrt?rng=__m__real&dom=#{?}-doc-0-tab').click();document.getElementById('__m__math__inst__sqrt?rng=__m__real&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">sqrt?rng=real&dom=<span class="code text-info">#{?}</span>(real::T){<j>}</code></pre>
 </div>
     
-</div><div class="card mb-3" id="inst-tan">
+</div><div class="card mb-3" id="__m__math__inst__tan?rng=__m__real&dom=#{?}">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">tan</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="#" data-bs-toggle="tooltip" title="maybe generic domain" class="code text-info">#{?}</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#type-real" data-bs-toggle="tooltip" title="range" class="code text-success">real</a></span></span>
+            <span class="ms-1"><span class="instset-doc-small-code"><span class="code text-info">#{?}</span></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__real" data-bs-toggle="tooltip" title="range" class="code text-success">real</a></span></span>
         </span>
         <small class="text-muted code">/m/math/inst/tan?rng=/m/real&amp;dom=#{?}</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-tan-doc-0-tab').click();document.getElementById('inst-tan-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">tan?rng=real&amp;dom=#{?}(real::T){&lt;j&gt;}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__inst__tan?rng=__m__real&dom=#{?}-doc-0-tab').click();document.getElementById('__m__math__inst__tan?rng=__m__real&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">tan?rng=real&dom=<span class="code text-info">#{?}</span>(real::T){<j>}</code></pre>
 </div>
     
 </div>

@@ -1434,6 +1434,7 @@ public class dcmntSpaceTest extends AbstractDataPathTest implements CommonRewrit
     }
 
     @Test
+    @Disabled("no instset defined")
     public void testRewriteInstSanity() throws Exception {
         runRewriteInstSanityTest();
     }

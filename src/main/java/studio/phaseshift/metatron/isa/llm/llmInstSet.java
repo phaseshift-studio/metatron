@@ -177,10 +177,16 @@ public class llmInstSet extends AbstractInstSet {
                                 .vid(MESSAGE_TID)
                                 .create(), "a message that with ai, user, and system message refinements"),
                         docWrap(LLM_SYSTEM_MESSAGE_TYPE = Type.Builder.build()
-                                .tid(MESSAGE_TID)
-                                .vid(SYSTEM_MESSAGE_TID)
-                                .isaPredicate(rec(uri(TEXT), STR_TYPE))
-                                .create(), "a system message typically provides behavioral and response-style instructions to the model"),
+                                        .tid(MESSAGE_TID)
+                                        .vid(SYSTEM_MESSAGE_TID)
+                                        .isaPredicate(rec(
+                                                uri(TEXT), STR_TYPE))
+                                             //   uri(SIZE), DATA_SIZE_TYPE))
+                                        .create(),
+                                null, null,
+                                Map.of(uri(TEXT), "the system message text body"),
+                                      //  uri(SIZE), "the data size of the text body"),
+                                "a system message provides behavioral and response-style instructions to the model"),
                         docWrap(Type.Builder.build()
                                         .tid(REC_TID)
                                         .vid(LLM_CHAT_RESULT_TID)
@@ -193,17 +199,19 @@ public class llmInstSet extends AbstractInstSet {
                                         uri(CHAT), "the chat response — free-text str or structured rec per response format",
                                         uri(TIME), "elapsed time::T from user message to complete response",
                                         uri(ERROR).maybe(), "a fail chain if errors occurred"),
-                                "result rec from an agent chat — features may enrich with additional fields"),
+                                "a response message from a chat interaction"),
                         docWrap(LLM_USER_MESSAGE_TYPE = Type.Builder.build()
                                         .tid(MESSAGE_TID)
                                         .vid(USER_MESSAGE_TID)
                                         .isaPredicate(rec(
                                                 uri(NAME).maybe().asUri(), STR_TYPE,
                                                 uri(CONTENTS), rec(uri(TEXT), STR_TYPE)))
+                                                //uri(SIZE).maybe(), DATA_SIZE_TYPE))
                                         .create(),
                                 null, null, mutableMap(
                                         uri(NAME).maybe(), "sender identity for multi-user conversations",
-                                        uri(CONTENTS), "the message contents"), "a user message"),
+                                        uri(CONTENTS), "the message contents"
+                                      /*  uri(SIZE), "the data size of the message content"*/), "a user message"),
                         docWrap(LLM_AI_MESSAGE_TYPE = Type.Builder.build()
                                         .tid(MESSAGE_TID)
                                         .vid(AI_MESSAGE_TID)
@@ -211,6 +219,7 @@ public class llmInstSet extends AbstractInstSet {
                                                 uri(NAME).maybe().asUri(), STR_TYPE,
                                                 uri(TEXT).maybe().asUri(), STR_TYPE,
                                                 uri(THINKING).maybe(), INT_TYPE,
+                                         //       uri(SIZE).maybe().asUri(), DATA_SIZE_TYPE,
                                                 uri(TOOL_REQUESTS).maybe(), LST_TYPE,
                                                 uri(ATTRIBUTES).maybe(), REC_TYPE))
                                         .create(),
@@ -218,6 +227,7 @@ public class llmInstSet extends AbstractInstSet {
                                         uri(NAME), "the assistant identity",
                                         uri(TEXT), "the response text",
                                         uri(THINKING), "the internal reasoning and token count of the model",
+                                        uri(SIZE), "the data size of the message text",
                                         uri(TOOL_REQUESTS), "the tool execution requests made by the model",
                                         uri(ATTRIBUTES), "extra metadata from the provider"), "an ai/assistant message"),
                         docWrap(LLM_TOOL_RESULT_MESSAGE_TYPE = Type.Builder.build()
@@ -226,11 +236,13 @@ public class llmInstSet extends AbstractInstSet {
                                         .isaPredicate(rec(
                                                 uri(NAME), STR_TYPE,
                                                 uri(TEXT), STR_TYPE,
+                                          //      uri(SIZE), DATA_SIZE_TYPE,
                                                 uri(ID).maybe(), STR_TYPE))
                                         .create(),
                                 null, null, mutableMap(
                                         uri(NAME), "the tool that was executed",
                                         uri(TEXT), "the text result of the tool execution",
+                                     //   uri(SIZE), "the data size of the message text",
                                         uri(ID).maybe(), "correlation id matching the tool execution request"),
                                 "a tool execution result message"),
                         //////////////////////////////////////////////////

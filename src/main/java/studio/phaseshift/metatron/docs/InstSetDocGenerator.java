@@ -77,6 +77,9 @@ public class InstSetDocGenerator {
     private static final Pattern SHORTHAND_PAT = Pattern.compile("\\?(?:rng=([^&]+))?(?:&?dom=([^&]+))?");
     private static final Pattern DOC_LINK_PAT = Pattern.compile("(href|src)=\"(?:\\./)?(images|css|lib|highlight|js)/");
 
+    /** Known instset VIDs, set before processing. Used by {@link #extractInstset(String)}. */
+    private static Set<String> ALL_INSTSET_VIDS;
+
     // ========================================================================
     // Lightweight instset metadata (replaces InstSetInfo model record)
     // ========================================================================
@@ -127,6 +130,8 @@ public class InstSetDocGenerator {
             LOG.info("Example: InstSetDocGenerator /m/mach -o docs/website/instset --website-template");
             System.exit(1);
         }
+
+        ALL_INSTSET_VIDS = instsetVids;
 
         final Path outputPath = Path.of(outputDir).toAbsolutePath().normalize();
         Files.createDirectories(outputPath);
@@ -391,7 +396,7 @@ public class InstSetDocGenerator {
         sb.append(sectionToc(meta.vid(), meta.name(), types, insts, rewrites, spaces, consts));
         sb.append(sectionConsts(meta.vid(), consts));
         sb.append(sectionTypes(meta.vid(), types));
-        sb.append(sectionSpaces(spaces));
+        sb.append(sectionSpaces(spaces, meta.vid()));
         sb.append(sectionInsts(meta.vid(), insts));
         sb.append(sectionRewrites(meta.vid(), rewrites));
         sb.append(sectionFooter(buildNumber));
@@ -480,7 +485,7 @@ public class InstSetDocGenerator {
         tocFlatGroup(cols, "Constants", "bg-secondary", "C",
                 consts.stream()
                         .filter(c -> c.vid() != null)
-                        .map(c -> tocPill("const-" + c.vid().name(), c.vid().name(), "bg-secondary", "C"))
+                        .map(c -> tocPill(vidToAnchor(c.vid().toString()), c.vid().name(), "bg-secondary", "C"))
                         .sorted()
                         .collect(Collectors.joining()));
 
@@ -490,25 +495,35 @@ public class InstSetDocGenerator {
         // Spaces
         tocFlatGroup(cols, "Spaces", "bg-info text-dark", "S",
                 spaces.stream().sorted((a, b) -> a.name().compareTo(b.name()))
-                        .map(s -> tocPill("space-" + s.name(), s.name(), "bg-info text-dark", "S"))
+                        .map(s -> tocPill(vidToAnchor(s.vid()), s.name(), "bg-info text-dark", "S"))
                         .collect(Collectors.joining()));
 
         // Instructions
         tocFlatGroup(cols, "Instructions", "bg-success", "I",
                 insts.stream()
                         .filter(inst -> inst.tid() != null)
-                        .map(inst -> inst.tid().name())
-                        .distinct().sorted()
-                        .map(n -> tocPill("inst-" + n, n, "bg-success", "I"))
+                        .collect(Collectors.toMap(
+                                inst -> inst.tid().name(),
+                                inst -> inst.tid().toString(),
+                                (a, b) -> a,
+                                LinkedHashMap::new))
+                        .entrySet().stream()
+                        .sorted(Map.Entry.comparingByKey())
+                        .map(e -> tocPill(vidToAnchor(e.getValue()), e.getKey(), "bg-success", "I"))
                         .collect(Collectors.joining()));
 
         // Rewrites
         tocFlatGroup(cols, "Rewrites", "bg-warning text-dark", "R",
                 rewrites.stream()
                         .filter(r -> r.tid() != null)
-                        .map(r -> r.tid().name())
-                        .distinct().sorted()
-                        .map(n -> tocPill("rewrite-" + n, n, "bg-warning text-dark", "R"))
+                        .collect(Collectors.toMap(
+                                r -> r.tid().name(),
+                                r -> r.tid().toString(),
+                                (a, b) -> a,
+                                LinkedHashMap::new))
+                        .entrySet().stream()
+                        .sorted(Map.Entry.comparingByKey())
+                        .map(e -> tocPill(vidToAnchor(e.getValue()), e.getKey(), "bg-warning text-dark", "R"))
                         .collect(Collectors.joining()));
 
         if (cols.isEmpty()) return "";
@@ -572,7 +587,7 @@ public class InstSetDocGenerator {
 
         if (rootTypes != null && !rootTypes.isEmpty()) {
             final String pills = rootTypes.stream()
-                    .map(t -> tocPill("type-" + (t.vid() != null ? t.vid().name() : ""),
+                    .map(t -> tocPill(vidToAnchor(t.vid().toString()),
                             t.vid() != null ? t.vid().name() : "", "bg-primary", "T"))
                     .collect(Collectors.joining());
             if (!branches.isEmpty()) {
@@ -586,7 +601,7 @@ public class InstSetDocGenerator {
 
         for (final var entry : branches.entrySet()) {
             final String pills = entry.getValue().stream()
-                    .map(t -> tocPill("type-" + (t.vid() != null ? t.vid().name() : ""),
+                    .map(t -> tocPill(vidToAnchor(t.vid().toString()),
                             t.vid() != null ? t.vid().name() : "", "bg-primary", "T"))
                     .collect(Collectors.joining());
             rows.append("<div class=\"d-flex align-items-start mb-1\">")
@@ -630,7 +645,7 @@ public class InstSetDocGenerator {
                 .toList()) {
             final String name = c.vid() != null ? c.vid().name() : "";
             final String uri = c.vid() != null ? c.vid().toString() : "";
-            final String gid = "const-" + esc(name);
+            final String gid = vidToAnchor(uri);
             final String defn = SER.write(c);
             final String defnBlock = !defn.isEmpty()
                     ? "<div class=\"card-body p-2\"><pre class=\"mb-0\"><code class=\"language-mtron\">"
@@ -644,7 +659,7 @@ public class InstSetDocGenerator {
                              </div>
                              %s
                              %s
-                         </div>""".formatted(gid, esc(name), esc(uri), defnBlock, renderDoc(doc, gid)));
+                         </div>""".formatted(gid, esc(name), esc(uri), defnBlock, renderDoc(doc, gid, instsetVid)));
         }
         return """
                <div class="container-xxl mb-4" id="consts">
@@ -664,7 +679,7 @@ public class InstSetDocGenerator {
                 .toList()) {
             final String name = t.vid() != null ? t.vid().name() : "";
             final String uri = t.vid() != null ? t.vid().toString() : "";
-            final String gid = "type-" + esc(name);
+            final String gid = vidToAnchor(uri);
             final String refines = superTypeRefines(t, instsetVid);
             final String defn = SER.write(t);
             final String defnBlock = !defn.isEmpty()
@@ -685,7 +700,7 @@ public class InstSetDocGenerator {
                              %s
                              %s
                          </div>""".formatted(gid, esc(name), refines, esc(uri),
-                    defnBlock, inheritedFields, renderDoc(doc, gid)));
+                    defnBlock, inheritedFields, renderDoc(doc, gid, instsetVid)));
         }
         return """
                <div class="container-xxl mb-4" id="types">
@@ -770,19 +785,16 @@ public class InstSetDocGenerator {
             final String ancestorVid = ancestor.vid() != null ? ancestor.vid().toString() : "";
             final String ancestorName = ancestor.vid() != null ? ancestor.vid().name() : "";
             final String ancestorInstset = extractInstset(ancestorVid);
-
-            // Determine whether this ancestor lives in the types section
-            // or the spaces section (anchors differ: #type- vs #space-)
-            final String ancAnchor = ancestorVid.contains("/space/") ? "space-" : "type-";
+            final String ancAnchor = vidToAnchor(ancestorVid);
 
             // Build clickable label linking to the ancestor type
             final String label;
             if (!ancestorInstset.isEmpty() && !ancestorInstset.equals(instsetVid)) {
-                final String target = vidToFilename(ancestorInstset) + "#" + ancAnchor + esc(ancestorName);
+                final String target = vidToFilename(ancestorInstset) + "#" + ancAnchor;
                 label = "<a href=\"" + target + "\" class=\"code inherited-link\">"
                         + esc(ancestorName) + "::T</a>";
             } else {
-                label = "<a href=\"#" + ancAnchor + esc(ancestorName) + "\" class=\"code inherited-link\">"
+                label = "<a href=\"#" + ancAnchor + "\" class=\"code inherited-link\">"
                         + esc(ancestorName) + "::T</a>";
             }
 
@@ -827,15 +839,17 @@ public class InstSetDocGenerator {
         final String superName = superVid.name();
         final String superShort = superVid.toString();
         final String superInstset = extractInstset(superShort);
+        final String anchor = vidToAnchor(superShort);
 
         if (superInstset != null && !superInstset.isEmpty() && !superInstset.equals(instsetVid)) {
-            final String target = vidToFilename(superInstset) + "#type-" + esc(superName);
+            final String target = vidToFilename(superInstset) + "#" + anchor;
             return "<span class=\"ms-2 text-muted instset-doc-small-code\">refines " +
                     "<a href=\"" + target + "\" class=\"instset-doc-small-code text-info code\">" +
                     esc(superShort) + "::T</a></span>";
         }
         return "<span class=\"ms-2 text-muted instset-doc-small-code\">refines " +
-                "<span class=\"code instset-doc-small-code text-info\">" + esc(superShort) + "::T</span></span>";
+                "<a href=\"#" + anchor + "\" class=\"instset-doc-small-code text-info code\">" +
+                esc(superShort) + "::T</a></span>";
     }
 
     // ── Section: Instructions ──────────────────────────────────────────
@@ -854,7 +868,7 @@ public class InstSetDocGenerator {
         final StringBuilder cards = new StringBuilder();
         for (final String name : groups.keySet().stream().sorted().toList()) {
             final List<Inst> group = groups.get(name);
-            final String gid = "inst-" + esc(name);
+            final String gid = vidToAnchor(group.get(0).tid().toString());
 
             // Collect unique docs across polymorphic variants
             final List<Rec> uniqueDocs = new ArrayList<>();
@@ -875,7 +889,18 @@ public class InstSetDocGenerator {
             // Render signatures
             final StringBuilder sigs = new StringBuilder();
             for (final Inst inst : group) {
-                final String sig = convertShorthand(SER.write(inst));
+                String sig = convertShorthand(SER.write(inst));
+                // Make dom/rng type references in the shorthand clickable
+                final Type dom = inst.dom();
+                final Type rng = inst.rng();
+                if (dom != null) {
+                    final String domStr = dom.vid() != null ? dom.vid().toString() : dom.tid().toString();
+                    sig = sig.replace(domStr, typeLink(domStr, "text-info", "domain", instsetVid));
+                }
+                if (rng != null) {
+                    final String rngStr = rng.vid() != null ? rng.vid().toString() : rng.tid().toString();
+                    sig = sig.replace(rngStr, typeLink(rngStr, "text-success", "range", instsetVid));
+                }
                 final int tabIdx = variantTab.getOrDefault(inst.tid() != null ? inst.tid().toString() : "", 0);
                 final String tabId = gid + "-doc-" + tabIdx;
                 sigs.append("""
@@ -883,7 +908,7 @@ public class InstSetDocGenerator {
                             onclick="document.getElementById('%s-tab').click();\
                             document.getElementById('%s').scrollIntoView({behavior:'smooth',block:'center'});">\
                             <code class="language-mtron">%s</code></pre>
-                            """.formatted(tabId, tabId, esc(sig)));
+                            """.formatted(tabId, tabId, sig));
             }
 
             final String typeSig = typeSignatureHtml(instsetVid, group.get(0));
@@ -901,7 +926,7 @@ public class InstSetDocGenerator {
                              <div class="card-body p-2">%s</div>
                              %s
                          </div>""".formatted(gid, esc(name), typeSig, esc(vidStr),
-                    sigs.toString(), renderMultiDoc(uniqueDocs, gid)));
+                    sigs.toString(), renderMultiDoc(uniqueDocs, gid, instsetVid)));
         }
 
         return """
@@ -921,11 +946,22 @@ public class InstSetDocGenerator {
                 .toList()) {
             final String name = rw.tid().name();
             final String uri = rw.tid().toString();
-            final String gid = "rewrite-" + esc(name);
-            final String sig = convertShorthand(SER.write(rw));
+            final String gid = vidToAnchor(uri);
+            String sig = convertShorthand(SER.write(rw));
+            // Make dom/rng type references in the shorthand clickable
+            final Type rwDom = rw.dom();
+            final Type rwRng = rw.rng();
+            if (rwDom != null) {
+                final String domStr = rwDom.vid() != null ? rwDom.vid().toString() : rwDom.tid().toString();
+                sig = sig.replace(domStr, typeLink(domStr, "text-info", "domain", instsetVid));
+            }
+            if (rwRng != null) {
+                final String rngStr = rwRng.vid() != null ? rwRng.vid().toString() : rwRng.tid().toString();
+                sig = sig.replace(rngStr, typeLink(rngStr, "text-success", "range", instsetVid));
+            }
             final String sigBlock = !sig.isEmpty()
                     ? "<div class=\"card-body p-2\"><pre class=\"mb-0\"><code class=\"language-mtron\">"
-                      + esc(sig) + "</code></pre></div>" : "";
+                      + sig + "</code></pre></div>" : "";
             final String typeSig = typeSignatureHtml(instsetVid, rw);
             final Rec doc = fetchDocByTid(rw);
             cards.append("""
@@ -939,7 +975,7 @@ public class InstSetDocGenerator {
                              </div>
                              %s
                              %s
-                         </div>""".formatted(gid, esc(name), typeSig, esc(uri), sigBlock, renderDoc(doc, gid)));
+                         </div>""".formatted(gid, esc(name), typeSig, esc(uri), sigBlock, renderDoc(doc, gid, instsetVid)));
         }
         return """
                <div class="container-xxl mb-4" id="rewrites">
@@ -950,11 +986,11 @@ public class InstSetDocGenerator {
 
     // ── Section: Spaces ────────────────────────────────────────────────
 
-    private static String sectionSpaces(final List<SpaceEntry> spaces) {
+    private static String sectionSpaces(final List<SpaceEntry> spaces, final String instsetVid) {
         if (spaces.isEmpty()) return "";
         final StringBuilder cards = new StringBuilder();
         for (final SpaceEntry sp : spaces.stream().sorted((a, b) -> a.name().compareTo(b.name())).toList()) {
-            final String gid = "space-" + esc(sp.name());
+            final String gid = vidToAnchor(sp.vid());
             final String spec = sp.typeSpec() != null && !sp.typeSpec().isEmpty()
                     ? "<div class=\"mt-2\"><pre class=\"mb-0\"><code class=\"language-mtron\">"
                       + esc(sp.typeSpec()) + "</code></pre></div>" : "";
@@ -978,7 +1014,7 @@ public class InstSetDocGenerator {
                              %s
                              %s
                          </div>""".formatted(gid, vidToFilename(sp.vid()), esc(sp.name()), esc(sp.vid()),
-                    spec, inheritedFields, renderDoc(doc, gid)));
+                    spec, inheritedFields, renderDoc(doc, gid, instsetVid)));
         }
         return """
                <div class="container-xxl mb-4" id="spaces">
@@ -1003,9 +1039,9 @@ public class InstSetDocGenerator {
 
     // ── Documentation rendering ────────────────────────────────────────
 
-    private static String renderMultiDoc(final List<Rec> docs, final String gid) {
+    private static String renderMultiDoc(final List<Rec> docs, final String gid, final String instsetVid) {
         if (docs == null || docs.isEmpty()) return "";
-        if (docs.size() == 1) return renderSingleDoc(docs.get(0));
+        if (docs.size() == 1) return renderSingleDoc(docs.get(0), instsetVid);
 
         final StringBuilder pills = new StringBuilder();
         final StringBuilder contents = new StringBuilder();
@@ -1025,7 +1061,7 @@ public class InstSetDocGenerator {
             contents.append("""
                             <div class="tab-pane fade %s" id="%s" role="tabpanel" aria-labelledby="%s-tab">
                                 %s
-                            </div>""".formatted(show, tabId, tabId, renderSingleDoc(docs.get(i))));
+                            </div>""".formatted(show, tabId, tabId, renderSingleDoc(docs.get(i), instsetVid)));
         }
 
         return """
@@ -1045,12 +1081,12 @@ public class InstSetDocGenerator {
     /**
      * Render a single doc Rec, or nothing.
      */
-    private static String renderDoc(final Rec doc, final String gid) {
+    private static String renderDoc(final Rec doc, final String gid, final String instsetVid) {
         if (doc == null) return "";
-        return renderSingleDoc(doc);
+        return renderSingleDoc(doc, instsetVid);
     }
 
-    private static String renderSingleDoc(final Rec doc) {
+    private static String renderSingleDoc(final Rec doc, final String instsetVid) {
         if (doc == null) return "";
         final StringBuilder parts = new StringBuilder();
 
@@ -1073,20 +1109,26 @@ public class InstSetDocGenerator {
         if (hasSig || hasArgs) {
             final StringBuilder inner = new StringBuilder();
             if (hasSig) {
-                final String domTxt = esc(dom != null && !dom.isEmpty() ? dom : "?");
-                final String rngTxt = esc(rng != null && !rng.isEmpty() ? rng : "?");
+                final String domHtml = preLink(dom != null && !dom.isEmpty() ? dom : "?",
+                        "text-info", instsetVid);
+                final String rngHtml = preLink(rng != null && !rng.isEmpty() ? rng : "?",
+                        "text-success", instsetVid);
                 final String sigLabel = hasArgs ? "<small class=\"text-muted fw-bold\">sig:</small>\n    " : "";
                 inner.append(sigLabel)
                         .append("<pre class=\"mb-0 text-bright\" style=\"font-family:monospace;font-size:0.8em;\">")
-                        .append(domTxt).append(" <span class=\"text-light\">=&gt;</span> ")
-                        .append(rngTxt).append("</pre>");
+                        .append(domHtml).append(" <span class=\"text-light\">=&gt;</span> ")
+                        .append(rngHtml).append("</pre>");
             }
             if (hasArgs) {
                 final StringBuilder rows = new StringBuilder();
                 for (final Map.Entry<Obj, Obj> e : ((Rec) argsObj).jvm().entrySet()) {
-                    rows.append("  ").append(esc(SER.write(e.getKey())))
-                            .append(" <span class=\"text-light\">=&gt;</span> <span class=\"text-info\">")
-                            .append(esc(SER.write(e.getValue()))).append("</span>\n");
+                    final String keyStr = SER.write(e.getKey());
+                    final String valStr = SER.write(e.getValue());
+                    final String keyHtml = preLink(keyStr, "text-light", instsetVid);
+                    final String valHtml = preLink(valStr, "text-info", instsetVid);
+                    rows.append("  ").append(keyHtml)
+                            .append(" <span class=\"text-light\">=&gt;</span> ")
+                            .append(valHtml).append("\n");
                 }
                 final String mtClass = hasSig ? " mt-2 d-block" : "";
                 inner.append("<small class=\"text-muted fw-bold").append(mtClass).append("\">args:</small>\n")
@@ -1142,6 +1184,11 @@ public class InstSetDocGenerator {
             return "<span class=\"code " + cssClass + "\">?</span>";
         }
 
+        // Only linkify actual type references (start with /)
+        if (!full.startsWith("/")) {
+            return "<span class=\"code " + cssClass + "\">" + esc(full) + "</span>";
+        }
+
         String shortName = full.substring(full.lastIndexOf('/') + 1);
         String typeName = shortName;
         final String qlessName = typeName.contains("?") ? typeName.substring(0, typeName.indexOf('?')) : typeName;
@@ -1165,11 +1212,12 @@ public class InstSetDocGenerator {
         }
 
         final String typeInstset = extractInstset(full);
+        final String anchor = vidToAnchor(full);
         final String target;
         if (typeInstset != null && !typeInstset.isEmpty() && !typeInstset.equals(instsetVid)) {
-            target = vidToFilename(typeInstset) + "#type-" + esc(clessName);
+            target = vidToFilename(typeInstset) + "#" + anchor;
         } else {
-            target = "#type-" + esc(clessName);
+            target = "#" + anchor;
         }
 
         return "<a href=\"" + target + "\" data-bs-toggle=\"tooltip\" title=\""
@@ -1368,13 +1416,27 @@ public class InstSetDocGenerator {
     }
 
     /**
-     * Extract parent instset from a type URI: /m/tble/lrow → /m/tble.
+     * Extract the owning instset from a type URI by finding the longest
+     * known instset VID that is a prefix of the URI.
+     * Example: /m/web/space/httpspace/socket → /m/web (when /m/web is known).
      */
     static String extractInstset(final String uri) {
         if (uri == null || uri.isEmpty()) return "";
-        final String[] parts = uri.replaceAll("^/+", "").split("/");
-        if (parts.length <= 1) return parts.length == 1 ? "/" + parts[0] : "";
-        return "/" + String.join("/", java.util.Arrays.copyOf(parts, parts.length - 1));
+        if (ALL_INSTSET_VIDS == null || ALL_INSTSET_VIDS.isEmpty()) {
+            // Fallback: strip the last path segment
+            final String[] parts = uri.replaceAll("^/+", "").split("/");
+            if (parts.length <= 1) return parts.length == 1 ? "/" + parts[0] : "";
+            return "/" + String.join("/", java.util.Arrays.copyOf(parts, parts.length - 1));
+        }
+        // Longest matching known instset prefix
+        String best = "";
+        for (final String candidate : ALL_INSTSET_VIDS) {
+            if (uri.equals(candidate) || uri.startsWith(candidate + "/")) {
+                if (candidate.length() > best.length())
+                    best = candidate;
+            }
+        }
+        return best.isEmpty() ? "" : best;
     }
 
     /**
@@ -1404,6 +1466,37 @@ public class InstSetDocGenerator {
      */
     static String vidToFilename(final String vid) {
         return vid.replace("/", "_").replaceFirst("^_", "") + ".html";
+    }
+
+    /**
+     * Convert a VID to an HTML-safe anchor ID.
+     * /m/web/socket → __m__web__socket   (double-underscore for /)
+     */
+    static String vidToAnchor(final String vid) {
+        if (vid == null || vid.isEmpty()) return "";
+        return vid.replace("/", "__");
+    }
+
+    /**
+     * Slim type link for {@code <pre>} contexts — no {@code .code} class so
+     * it inherits the surrounding font size / family.
+     */
+    private static String preLink(final String full, final String cssClass, final String instsetVid) {
+        if (full == null || full.isEmpty()) return "?";
+        final String shortName = full.substring(full.lastIndexOf('/') + 1);
+        if (shortName.equals(shortName.toUpperCase())) {
+            // generic type placeholder — not linkable
+            return "<span class=\"" + cssClass + "\">" + esc(shortName) + "</span>";
+        }
+        final String instset = extractInstset(full);
+        final String anchor = vidToAnchor(full);
+        final String target;
+        if (instset != null && !instset.isEmpty() && !instset.equals(instsetVid)) {
+            target = vidToFilename(instset) + "#" + anchor;
+        } else {
+            target = "#" + anchor;
+        }
+        return "<a href=\"" + target + "\" class=\"" + cssClass + "\">" + esc(shortName) + "</a>";
     }
 
     private static String esc(final String s) {

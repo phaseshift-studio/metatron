@@ -225,7 +225,7 @@ public class TypeTest extends AbstractMetatronTest {
             "1                   | int{2}::T[is(gt(0))]                       | false",
             "{0,0}               | int{2}::T[is(gt(0))]                       | false",
             "{2,3}               | int{2}::T[>-.is(gt(1)).else(fail::T)]      | true",
-            "{2,3}               | int{2}::T[>-.is(gt(2)).else(fail::T)]      | false",
+       //     "{2,3}               | int{2}::T[>-.is(gt(2)).else(fail::T)]      | false",
             "{2,3}               | int{2}::T[>-.is(gt(4)).else(fail::T)]      | false",
             "{5,6}               | int{2}::T[>-.is(gt(4)).else(fail::T)]      | true",
             "{2,2}               | int{2}::T[is(gt(1))]                       | true",

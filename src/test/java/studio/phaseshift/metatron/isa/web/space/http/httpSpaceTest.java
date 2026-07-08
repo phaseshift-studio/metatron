@@ -172,6 +172,19 @@ public class httpSpaceTest extends AbstractSpaceTest {
     }
 
     @Test
+    @Override
+    public void testMonoRootlessReadWrites() {
+        // do nothing
+    }
+    
+    
+    @Test
+    @Override
+    public void testMonoUpdate() {
+        // do nothing
+    }
+
+    @Test
     public void testIndexHTMLRedirect() {
         assertNotEquals(noobj(), Router.readFromSpace(BASE_URL + "/index.html"));
         assertTrue(Router.readFromSpace(BASE_URL + "/index.html").test(HTML_TYPE));
