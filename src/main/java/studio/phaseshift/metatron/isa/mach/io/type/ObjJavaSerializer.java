@@ -114,7 +114,7 @@ public class ObjJavaSerializer extends AbstractObjSerializer<String> {
             }
             System.load(tmpLib.toAbsolutePath().toString());
         } catch (final Exception e) {
-            throw MTronException.of("failed to load tree-sitter native library", e);
+            Graphitty.log(ObjJavaSerializer.class).error("failed to load tree-sitter native library", e);
         }
     }
 
