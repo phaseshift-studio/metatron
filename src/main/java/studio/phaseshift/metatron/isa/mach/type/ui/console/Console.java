@@ -1317,6 +1317,15 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                             TypeCheck.disable(TypeCheck.getEnabled().stream().toList().getFirst());
                         return true;
                     }, ctrl('t'));
+            /// AGENT CHAT
+            getKeyMap().bind((Widget)
+                    () -> {
+                        if (!at("agent").isNoObj())
+                            getReader().getBuffer().write("@" + at("agent") + ".chat(\"\"\"");
+                        else
+                            LOG.warn("no agent reference stored at %s", vidOrTid().extend("agent"));
+                        return true;
+                    }, alt('c'));
             /// FAST NAVIGATION: JUMP BY WORD (Shift+Left/Right)
             getKeyMap().bind((Widget)
                     () -> {
@@ -1385,7 +1394,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                 reader.setVariable(LineReader.SECONDARY_PROMPT_PATTERN,
                         Graphitty.string("{{-X-}}{{v1&^1&m}}"));
                 return true;
-            }, alt('c'));
+            }, alt('l'));
             /// CANCEL DEEPEST CHAT LEVEL (ESC) — removes the innermost \_ line,
             /// backing out one nesting level.  When no \_ lines exist, clears
             /// the entire buffer (JLine default ESC behaviour).

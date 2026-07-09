@@ -121,6 +121,10 @@ public class WebSocketRecClient extends WebSocketClient implements Rec, Closeabl
         this.wsclient.send(message);
     }
 
+    public Obj sendRecv(final Obj message) {
+        return this.wsclient.sendRecv(message);
+    }
+
     @Override
     public void onClose(int code, String reason, boolean remote) {
         this.wsclient.onClose(this, code, reason, remote);
