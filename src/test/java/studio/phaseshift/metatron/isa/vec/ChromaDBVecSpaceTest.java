@@ -34,6 +34,7 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /**
  * Test suite for {@link vecSpace} backed by a TestContainers-managed
@@ -64,7 +65,7 @@ public class ChromaDBVecSpaceTest extends AbstractVecSpaceTest {
 
         final String endpoint = "http://" + chromaContainer.getHost()
                 + ":" + chromaContainer.getMappedPort(CHROMADB_PORT) + "/api/v2";
-        staticClient = new ChromaV2Client(f(endpoint), Map.of(uri("#"), lst(real(0.1), real(0.2))));
+        staticClient = new ChromaV2Client(f(endpoint), mutableMap(uri("#"), lst(real(0.1), real(0.2))));
 
         // Reset any leftover data from previous test runs
         try {
@@ -72,10 +73,10 @@ public class ChromaDBVecSpaceTest extends AbstractVecSpaceTest {
                 staticClient.deleteCollection(c.name());
             }
         } catch (final Exception e) {
-            System.err.println("ChromaDB startup cleanup warning: " + e.getMessage());
+            System.err.println("chromadb startup cleanup warning: " + e.getMessage());
         }
 
-        System.out.println("ChromaDB 1.5.3 container started at: " + endpoint);
+        System.out.println("chromaDB 1.5.3 container started at: " + endpoint);
     }
 
     @AfterAll

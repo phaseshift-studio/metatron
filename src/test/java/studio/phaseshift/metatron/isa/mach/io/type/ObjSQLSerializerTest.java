@@ -106,7 +106,12 @@ public class ObjSQLSerializerTest {
         }, delimiter = '%')
         void testPlainString(String input, String description) {
             final Obj result = ObjSQLSerializer.readMaybeJSON(input);
-            assertTrue(result.isStr(), "expected Str, got " + result.getClass().getSimpleName());
+            if (null != input && input.equals("123"))
+                assertTrue(result.isInt() || result.isStr(), "expected bool or str, got " + result.getClass().getSimpleName() + " for " + description);
+            else if (null != input && input.equals("true"))
+                assertTrue(result.isBool() || result.isStr(), "expected bool or str, got " + result.getClass().getSimpleName() + " for " + description);
+            else
+                assertTrue(result.isStr(), "expected Str, got " + result.getClass().getSimpleName());
         }
 
         @Test

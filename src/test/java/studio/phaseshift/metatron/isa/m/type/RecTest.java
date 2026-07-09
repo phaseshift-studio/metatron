@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -49,7 +49,7 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
         super(rec(uri("a"), jnt(1), uri("b"), jnt(2), uri("c"), jnt(3)), Set.of(PLUS_MONOID));
     }
 
-    
+
     @Test
     @Disabled
     public void testDereference() {
@@ -60,8 +60,8 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
         assertEquals(Long.valueOf(3), r.at("a").jvm());
         assertEquals(Long.valueOf(2), r.at("b").jvm());
     }
-    
-    
+
+
     @ParameterizedTest
     @CsvSource(value = {
             // rec                                 | key                  | value
@@ -168,8 +168,8 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
             "{1,2}[a=>{2,3}1,b=>2,c=>3]>>{4,5}a                                         % {8,30}1",
             "{1,2}[a=>{2,3}1,b=>2,c=>3]>>{{4,5}a,a,a}                                   % {12,42}1",
             "{1,2}[a=>{-2,3}1,b=>2,c=>3]>>?#{**}<=rec{{4,5}a,a,a}                       % {-12,42}1",
-           // "{-1,2}[a=>{-2,3}1,b=>2,c=>3]>>?#{**}<=rec{**}{{4,5}a,a,a}                  % {12,42}1",
-           // "{-1,2}[a=>{-2,3}1,b=>2,c=>3]>>?#{**}<=rec{**}{{4,5}a,a,{-1}a}              % {8,30}1",
+            // "{-1,2}[a=>{-2,3}1,b=>2,c=>3]>>?#{**}<=rec{**}{{4,5}a,a,a}                  % {12,42}1",
+            // "{-1,2}[a=>{-2,3}1,b=>2,c=>3]>>?#{**}<=rec{**}{{4,5}a,a,{-1}a}              % {8,30}1",
             "[a=>1,b=>2,c=>3]>>a                                                        % 1",
             "[a=>1,b=>2,c=>3]>>{a,b}                                                    % {1,2}",
             "[a=>1,b=>2,c=>3]>>{a,b,c}                                                  % {1,2,3}",
@@ -363,8 +363,8 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
             "[x=>10]            | x   | -1  | 1   | -1  | true",     // overwrite
     }, delimiter = '|')
     public void testMutableSet(final String recStr, final String key, final int value,
-                                final int expectedCount, final int expectedVal,
-                                final boolean expectSame) {
+                               final int expectedCount, final int expectedVal,
+                               final boolean expectSame) {
         final Rec original = ObjmtronSerializer.parse(recStr);
         final Rec result = original.at(uri(key), jnt(value), MUTABLE);
         if (expectSame)
@@ -380,7 +380,7 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
             "[x=>42]              | x   | 1   | 0",     // delete only
     }, delimiter = '|')
     public void testImmutableDelete(final String recStr, final String key,
-                                     final int expectedOrigCount, final int expectedCloneCount) {
+                                    final int expectedOrigCount, final int expectedCloneCount) {
         final Rec original = ObjmtronSerializer.parse(recStr);
         final Rec clone = original.at(uri(key), noobj(), IMMUTABLE);
         assertNotSame(original, clone, "IMMUTABLE delete should return new reference");
@@ -398,7 +398,7 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
             "[x=>42]              | x   | 0",     // delete only → empty
     }, delimiter = '|')
     public void testMutableDelete(final String recStr, final String key,
-                                   final int expectedCount) {
+                                  final int expectedCount) {
         final Rec original = ObjmtronSerializer.parse(recStr);
         final Rec result = original.at(uri(key), noobj(), MUTABLE);
         assertSame(original, result, "MUTABLE delete should return same reference");
@@ -492,8 +492,8 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
     @ParameterizedTest
     @CsvSource(value = {
             "[a=>1,b=>2].plus([c=>3])                                                    % [a=>1,b=>2,c=>3]",
-            "[a=>1,b=>2].plus([b=>3,c=>4])                                               % [a=>1,b=>5,c=>4]",
-            "[a=>1].plus([a=>2])                                                         % [a=>3]", // [a=>{1,2}]",
+            "[a=>1,b=>2].plus([b=>3,c=>4])                                               % [a=>1,b=>{2,3},c=>4]",
+            "[a=>1].plus([a=>2])                                                         % [a=>{1,2}]",
             "[=>].plus([a=>1])                                                           % [a=>1]",
             "[a=>1].plus([=>])                                                           % [a=>1]",
             "[=>].plus([=>])                                                             % [=>]",
@@ -518,7 +518,7 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
     @TestData(value = {
             "x -> [address/home/city=>\"santa fe\",address/work/city=>\"nomansland\"]",
             "y -> [address/home/city=>\"santa fe\",address/work/city=>\"santa fe\"]"})
-          //  "y -> [address/home/city=>\"santa fe\",address/work/city=>>>(address/home/city)]"})
+    //  "y -> [address/home/city=>\"santa fe\",address/work/city=>>>(address/home/city)]"})
     @CsvSource(value = {
             "[a=>1,b=>2,c=>3].select([a=>_,b=>_])                                          % [a=>1,b=>2]",
             "[a=>1,b=>2,c=>3].select([a=>_])                                               % [a=>1]",
@@ -569,7 +569,8 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
     @CsvSource(value = {
             "[a=>1,b=>2,c=>3].sum()                                                      % [a=>1,b=>2,c=>3]",
             "{[a=>1],[b=>2]}.sum()                                                       % [a=>1,b=>2]",
-            "{[a=>1],[a=>2]}.sum()                                                       % [a=>3]",//[a=>{1,2}]",
+            "{[a=>1],[a=>2]}.sum()                                                       % [a=>{1,2}]",
+            "{[a=>1],[a=>2],[a=>3,b=>4]}.sum()                                           % [a=>{1,2,3},b=>4]",
             "{[a=>1,b=>2],[c=>3,d=>4]}.sum()                                             % [a=>1,b=>2,c=>3,d=>4]",
     }, delimiter = '%')
     public void testSum(final String code, final String expected) {
@@ -607,8 +608,8 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
             "[a=>!*xyz]                             % [a=>_]                %  [a=>[x=>[y=>1,z=>2]]]",
             "[a=>1,b=>[c=>!*xyz]]                   % [b=>_]                %  [a=>1,b=>[c=>!*xyz]]",
             "[a=>1,b=>[c=>!*xyz]]                   % [b=>[c=>2]]           %  [a=>1,b=>[c=>2]]",
-           // TODO: equality issue    "[a=>1,b=>[c=>!*xyz]]                   % [a=>1,b=>[c=>^*]]     %  [a=>1,b=>[c=>!*xyz]]",
-           // "[a=>1,b=>[c=>!*xyz]]                   % [b=>[c=>[!*xyz]]]     %  [a=>1,[b=>[c=>[!*xyz]]]]",
+            // TODO: equality issue    "[a=>1,b=>[c=>!*xyz]]                   % [a=>1,b=>[c=>^*]]     %  [a=>1,b=>[c=>!*xyz]]",
+            // "[a=>1,b=>[c=>!*xyz]]                   % [b=>[c=>[!*xyz]]]     %  [a=>1,[b=>[c=>[!*xyz]]]]",
             "[a=>1,b=>[c=>2]]                       % [b=>[c=>[!*xyz]]]     %  [a=>1,b=>[c=>[!*xyz]]]",
             "[a=>1,b=>[c=>2]]                       % [b=>[c=>!*xyz]]       %  [a=>1,b=>[c=>[x=>[y=>1,z=>2]]]]",
             "[a=>1,b=>[c=>[1,2,3]]]                 % [b=>[c=>[2,_,_]]]     %  [a=>1,b=>[c=>[2,2,3]]]",
@@ -624,5 +625,220 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
         final Rec expectedRec = ObjmtronSerializer.parse(expected);
         final Rec actualRec = update_(updateRec).apply(originalRec).as();
         AbstractMetatronTest.checkEquality(LOG, expectedRec, actualRec, true);
+    }
+
+    // =========================================================================
+    //  Algebraic Operator Matrix — in-memory rec operations (no spaces)
+    // =========================================================================
+
+    // ── + (PLUS) ── structural merge, never computes ──
+
+    @ParameterizedTest(name = "[{index}] + : {0}  =>  {1}")
+    @CsvSource(value = {
+            // overlap: same-key same-type → Objs
+            "[a=>1] + [a=>2]                                   % [a=>{1,2}]",
+            "[a=>1] + [a=>1]                                   % [a=>{1,1}]",
+            // overlap: same-key diff-type → Objs (instruction stored, not computed)
+            "[a=>1] + [a=>+3]                                  % [a=>{1,plus(3)}]",
+            "[a=>1] + [a=>_]                                   % [a=>{1,id()}]",
+            // overlap: Objs + Objs → flat merge
+            "[a=>{1,2}] + [a=>{3,4}]                           % [a=>{1,2,3,4}]",
+            "[a=>{1}] + [a=>{2,3}]                             % [a=>{1,2,3}]",
+            // no overlap → field-add
+            "[a=>1] + [b=>2]                                   % [a=>1,b=>2]",
+            "[a=>1,b=>2] + [c=>3,d=>4]                         % [a=>1,b=>2,c=>3,d=>4]",
+            // mix overlap + new fields
+            "[a=>1,b=>2] + [b=>3,c=>4]                         % [a=>1,b=>{2,3},c=>4]",
+            "[a=>1,b=>2] + [a=>3,c=>4]                         % [a=>{1,3},b=>2,c=>4]",
+            // empty recs
+            "[=>] + [a=>1]                                     % [a=>1]",
+            "[a=>1] + [=>]                                     % [a=>1]",
+            "[=>] + [=>]                                       % [=>]",
+            // nested recs — structural merge, no deep recursion
+            "[a=>[b=>1]] + [a=>[c=>2]]                         % [a=>{[b=>1],[c=>2]}]",
+            "[a=>[b=>1,c=>2]] + [a=>[b=>3]]                    % [a=>{[b=>1,c=>2],[b=>3]}]",
+            // multi-key
+            "[a=>1] + [b=>2] + [c=>3]                          % [a=>1,b=>2,c=>3]",
+            // wildcard key _ (doesn't match any literal key → added as new field)
+            "[a=>1,b=>2,c=>3] + [_=>+2]                        % [a=>1,b=>2,c=>3,id()=>plus(2)]",
+            // ── deep nesting ──
+            "[a=>[b=>1]] + [a=>[b=>2]]                         % [a=>{[b=>1],[b=>2]}]",
+            "[a=>[b=>[c=>1,d=>2]]] + [a=>[b=>[e=>3]]]           % [a=>{[b=>[c=>1,d=>2]],[b=>[e=>3]]}]",
+            "[a=>[b=>[c=>1]]] + [a=>[b=>[c=>2]]]                % [a=>{[b=>[c=>1]],[b=>[c=>2]]}]",
+            "[a=>[b=>1,c=>2]] + [a=>[b=>3,d=>4]]               % [a=>{[b=>1,c=>2],[b=>3,d=>4]}]",
+            "[a=>[b=>1]] + [a=>[b=>+2]]                         % [a=>{[b=>1],[b=>plus(2)]}]",
+    }, delimiter = '%')
+    public void testRecPlus(final String expression, final String expected) {
+        final Obj result = ObjmtronSerializer.parse(expression).apply();
+        final Obj expectedObj = ObjmtronSerializer.parse(expected);
+        assertEquals(expectedObj, result, expression);
+    }
+
+    // ── == (SELECT) ── matches keys in BOTH LHS and RHS, replaces values,
+    // drops LHS-only keys, drops RHS-only keys, returns noobj when nothing matches.
+    // RHS values that are instructions compute against the LHS value.
+
+    @ParameterizedTest(name = "[{index}] == : {0}  =>  {1}")
+    @CsvSource(value = {
+            // literal match → value replaced with RHS value
+            "[a=>1] == [a=>1]                                  % [a=>1]",
+            "[a=>1] == [a=>2]                                  % [a=>2]",
+            "[a=>1,b=>2] == [a=>1]                             % [a=>1]",
+            // instruction on matching field → computes
+            "[a=>1] == [a=>+3]                                 % [a=>4]",
+            "[a=>1] == [a=>+1]                                 % [a=>2]",
+            // wildcard key _ matches all → instruction on every field
+            "[a=>1] == [_=>+2]                                 % [a=>3]",
+            "[a=>1,b=>2,c=>3] == [_=>+1]                       % [a=>2,b=>3,c=>4]",
+            "[a=>1,b=>2,c=>3] == [_=>+2]                       % [a=>3,b=>4,c=>5]",
+            // no matching keys → noobj
+            "[a=>1] == [b=>2]                                  % noobj",
+            "[a=>1,b=>2] == [c=>3]                             % noobj",
+            "[=>] == [a=>1]                                    % noobj",
+            "[a=>1] == [=>]                                    % noobj",
+            // partial match (LHS-only keys dropped)
+            "[a=>1,b=>2,c=>3] == [a=>+1,c=>+10]                % [a=>2,c=>13]",
+            // nested SELECT: LHS-only keys dropped at each level
+            "[a=>[b=>1,c=>2]] == [a=>[b=>+1]]                  % [a=>[b=>2]]",
+            "[a=>[b=>1,c=>[d=>2]]] == [a=>[c=>[d=>+3]]]         % [a=>[c=>[d=>5]]]",
+            // string compute
+            "[a=>'hello'] == [a=>+' world']                    % [a=>'hello world']",
+            // ── deep nesting ──
+            "[a=>[b=>[c=>1,d=>2]]] == [a=>[b=>[c=>+1]]]         % [a=>[b=>[c=>2]]]",
+            "[a=>[b=>[c=>1,d=>2]]] == [a=>[b=>[c=>+1,d=>+10]]]   % [a=>[b=>[c=>2,d=>12]]]",
+            "[a=>[b=>[c=>1]]] == [a=>[b=>[c=>_]]]                % [a=>[b=>[c=>1]]]",
+            // wildcard at depth
+            "[a=>[b=>1,c=>2]] == [a=>[_=>+1]]                   % [a=>[b=>2,c=>3]]",
+    }, delimiter = '%')
+    public void testRecSelect(final String expression, final String expected) {
+        final Obj result = ObjmtronSerializer.parse(expression).apply();
+        final Obj expectedObj = ObjmtronSerializer.parse(expected);
+        assertEquals(expectedObj, result, expression);
+    }
+
+    // ── >>= (UPDATE) ── SELECT semantics, same as == for in-memory ──
+
+    @ParameterizedTest(name = "[{index}] >>= : {0}  =>  {1}")
+    @CsvSource(value = {
+            // same as SELECT for matching fields
+            "[a=>1] >>= [a=>+3]                                % [a=>4]",
+            "[a=>1,b=>2] >>= [a=>+1]                           % [a=>2,b=>2]",
+            "[a=>1,b=>2,c=>3] >>= [b=>+10]                     % [a=>1,b=>12,c=>3]",
+            // RHS-only field dropped (SELECT semantics)
+            "[a=>1] >>= [b=>2]                                 % [a=>1]",
+            "[a=>1,b=>2] >>= [c=>3]                            % [a=>1,b=>2]",
+            // + prefix on RHS → merge bypasses SELECT
+            "[a=>1] >>= +[b=>2]                                % [a=>1,b=>2]",
+            "[a=>0] >>= +[a=>1]                                % [a=>{0,1}]",
+            "[a=>0,c=>3] >>= +[a=>1,b=>2]                      % [a=>{0,1},b=>2,c=>3]",
+            // field delete via none
+            "[a=>1,b=>2] >>= [a=>none]                         % [b=>2]",
+            "[a=>1,b=>2] >>= [a=>none,b=>none]                 % [=>]",
+            // no matching keys → no-op
+            "[a=>1] >>= [b=>+1]                                % [a=>1]",
+            "[a=>1] >>= [=>]                                   % [a=>1]",
+            // nested update
+            "[a=>[b=>0]] >>= [a=>[b=>+1]]                      % [a=>[b=>1]]",
+            "[a=>[b=>0,c=>2]] >>= [a=>[b=>+1]]                 % [a=>[b=>1,c=>2]]",
+            // nested + on sub-rec → merge at inner level
+            "[a=>[c=>2]] >>= [a=>+[b=>1]]                      % [a=>[b=>1,c=>2]]",
+            // + on sub-rec with overlapping key that's an instruction
+            "[a=>[b=>0,c=>2]] >>= [a=>+[b=>+1]]                % [a=>[b=>{0,plus(1)},c=>2]]",
+            // string compute
+            "[a=>'hello'] >>= [a=>+' world']                   % [a=>'hello world']",
+            // ── deep nesting ──
+            "[a=>[b=>[c=>1,d=>2]]] >>= [a=>[b=>[c=>+1]]]        % [a=>[b=>[c=>2,d=>2]]]",
+            "[a=>[b=>[c=>1,d=>2]]] >>= [a=>[b=>[c=>+1,d=>+10]]]  % [a=>[b=>[c=>2,d=>12]]]",
+            "[a=>[b=>[c=>1,d=>2]]] >>= [a=>[b=>[e=>3]]]          % [a=>[b=>[c=>1,d=>2]]]",
+            "[a=>[b=>[c=>1]]] >>= [a=>+[b=>[e=>3]]]              % [a=>[b=>{[c=>1],[e=>3]}]]",
+            "[a=>[b=>[c=>1]]] >>= [a=>[b=>+[e=>3]]]              % [a=>[b=>[c=>1,e=>3]]]",
+    }, delimiter = '%')
+    public void testUpdateOperator(final String expression, final String expected) {
+        final Obj result = ObjmtronSerializer.parse(expression).apply();
+        final Obj expectedObj = ObjmtronSerializer.parse(expected);
+        assertEquals(expectedObj, result, expression);
+    }
+
+    // ── >- (MERGE) ── coalesces Objs into a poly, returns Objs if not coalescable
+
+    @ParameterizedTest(name = "[{index}] >- : {0}  =>  {1}")
+    @CsvSource(value = {
+            // merge coalesces objs — the result is an Objs, not an Lst
+            "{1,2} >-                                         % {1,2}",
+            "{[a=>1],[b=>2]} >-                                % {a=>1,b=>2}",
+            // empty
+            "noobj >-                                          % noobj",
+    }, delimiter = '%')
+    public void testRecMerge(final String expression, final String expected) {
+        final Obj result = ObjmtronSerializer.parse(expression).apply();
+        final Obj expectedObj = ObjmtronSerializer.parse(expected);
+        assertEquals(expectedObj, result, expression);
+    }
+
+    // ── -< (SPLIT) ──
+
+    @ParameterizedTest(name = "[{index}] -< : {0}  =>  {1}")
+    @CsvSource(value = {
+            // split applies branches independently
+            "[a=>1,b=>2]-<[>>a,>>b]                            % [1,2]",
+            "[a=>1,b=>2]-<{>>a,>>b}                            % {1,2}",
+            "[a=>1,b=>2]-<[>>a.+1,>>b.+1]                      % [2,3]",
+            "[a=>1,b=>2]-<{>>a.+1,>>b.+1}                      % {2,3}",
+            // split nested branches
+            "[a=>1,b=>[c=>3]]-<[>>a +1,>>b/c.+2]               % [2,5]",
+            "[a=>1,b=>[c=>3]]-<[>>a +1,>>b>>c.+2]              % [2,5]",
+            "[a=>1,b=>[c=>3]]-<[>>a +1,>>.>>.+2]              % [2,5]",
+            "[a=>1,b=>[c=>3]]-<{>>a +1,>>b/c +2}               % {2,5}",
+            // single branch
+            "[a=>1]-<[>>a +1]                                   % [2]",
+            "[a=>1]-<?lst[int]<=rec([>>a.+1])                   % [2]",
+            "[a=>1]-<?lst[int{+}]<=rec([>>a.+1])                % [2]",
+            "[a=>1]-<?lst[int{*}]<=rec([>>a.+1])                % [2]",
+            "[a=>1]-<?lst[int{0}]<=rec([>>a.+1])                % <ERROR>",
+            // "[a=>1]-<?int{*}<=rec({>>a.+1})                     % 2",
+    }, delimiter = '%')
+    public void testSplit(final String expression, final String expected) {
+        final Obj result = ObjmtronSerializer.parse(expression).apply();
+        final Obj expectedObj = ObjmtronSerializer.parse(expected);
+        if (expected.equals("<ERROR>")) {
+            assertTrue(result.isFail());
+        } else
+            assertEquals(expectedObj, result, expression);
+    }
+
+    // ── =?= (WHERE) ──
+
+    @ParameterizedTest(name = "[{index}] =?= : {0}  =>  {1}")
+    @CsvSource(value = {
+            // filter: keeps matching
+            "[a=>1,b=>2] =?= [a=>1]                             % [a=>1,b=>2]",
+            // filter: non-matching → noobj
+            "[a=>1] =?= [a=>2]                                  % noobj",
+            // filter with instruction
+            "[a=>1] =?= [a=>?=1]                                % [a=>1]",
+            "[a=>2] =?= [a=>?=1]                                % noobj",
+    }, delimiter = '%')
+    public void testWhere(final String expression, final String expected) {
+        final Obj result = ObjmtronSerializer.parse(expression).apply();
+        final Obj expectedObj = ObjmtronSerializer.parse(expected);
+        assertEquals(expectedObj, result, expression);
+    }
+
+    // ── Combo operators ──
+
+    @ParameterizedTest(name = "[{index}] combo : {0}  =>  {1}")
+    @CsvSource(value = {
+            // =?= filter then >>= update
+            "[a=>1,b=>2] =?= [a=>1] >>= [a=>+10]               % [a=>11,b=>2]",
+            "[a=>1,b=>2] =?= [a=>2] >>= [a=>+10]               % noobj",
+            // split then merge
+            "[a=>1,b=>2] -<[>>a +1,>>b +1] >-                  % {2,3}",
+            // =?= then -<
+            "[a=>1,b=>2] =?= [a=>1] -<[>>a,>>b]               % [1,2]",
+    }, delimiter = '%')
+    public void testCombos(final String expression, final String expected) {
+        final Obj result = ObjmtronSerializer.parse(expression).apply();
+        final Obj expectedObj = ObjmtronSerializer.parse(expected);
+        assertEquals(expectedObj, result, expression);
     }
 }

@@ -190,9 +190,11 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
     @Override
     default Rec plus(final Rec rhs) {
         final Map<Obj, Obj> newMap = new LinkedHashMap<>(this.recValue());
-        rhs.elements().forEach(o -> newMap.compute(o.jvm().get0(), (k, v) -> null == v ? o.jvm().get1() :
-                v.isPlusMonoid() && o.jvm().get1().isPlusMonoid() ? (Obj) v.<PlusMonoid.O>as().plus(o.jvm().get1().<PlusMonoid.O>as()) :
-                        v.append(o.jvm().get1())));
+        // Overlapping keys always produce Objs via append (never eagerly compute).
+        // + is structural merge; use == or >>= for computation.
+        rhs.elements().forEach(o -> newMap.compute(o.jvm().get0(), (k, v) -> null == v
+                ? o.jvm().get1()
+                : v.append(o.jvm().get1())));
         return this.jvm(newMap);
     }
 

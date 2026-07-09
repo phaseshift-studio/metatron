@@ -44,6 +44,11 @@ import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
+import static studio.phaseshift.metatron.isa.m.type.Poly.MUTABLE;
+import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
+import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -167,6 +172,13 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
      * Throws {@link MTronException} with a clear message for constraint violations
      * and type mismatches that would otherwise fail with cryptic JDBC errors.
      */
+    private String q(final String identifier) {
+        if (identifier == null) return null;
+        final String backend = this.space.backend();
+        final char quote = (backend != null && (backend.contains("mysql") || backend.contains("mariadb"))) ? '`' : '"';
+        return quote + identifier + quote;
+    }
+
     private void validateColumnWrite(final Obj value, final ColumnMetadata column,
                                      final String tableName) {
         // NULL into a NOT NULL column
@@ -175,14 +187,8 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
                     "Cannot set column '%s.%s' to NULL: column has a NOT NULL constraint",
                     tableName, column.name());
         }
-        // Complex types (Rec, Lst, Rel) into scalar columns — toString() fallback
-        // produces garbage like "[field=>'val',...]" that can't parse as a number
-        if (value.isPoly() && column.isNumeric()) {
-            throw MTronException.of(
-                    "cannot write %s to column '%s.%s': column type is %s (numeric). "
-                            + "numbers, strings, and booleans are supported.",
-                    value.tid().name(), tableName, column.name(), column.typeName());
-        }
+        // Complex types (Rec, Lst, Objs) into scalar columns: coax to TEXT.
+        // The writeParameter call site handles serialization to VARCHAR.
         // Non-numeric string into a numeric column
         if (value.isStr() && column.isNumeric()) {
             try {
@@ -494,6 +500,8 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
                 final Object value = rs.getObject(col.name);
                 if (value == null || rs.wasNull()) return noobj();
                 if (logicalType.name().equals("bool")) {
+                    if (col.sqlType == Types.BOOLEAN || col.sqlType == Types.BIT)
+                        return bool(rs.getBoolean(col.name));
                     return bool(rs.getInt(col.name) != 0);
                 }
             }
@@ -501,10 +509,19 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
 
         if ("BOOLEAN".equalsIgnoreCase(col.typeName) &&
                 (col.sqlType == Types.INTEGER || col.sqlType == Types.TINYINT ||
-                        col.sqlType == Types.SMALLINT || col.sqlType == Types.BIT)) {
+                        col.sqlType == Types.SMALLINT)) {
             final Object value = rs.getObject(col.name);
             if (value == null || rs.wasNull()) return noobj();
             return bool(rs.getInt(col.name) != 0);
+        }
+        // Poly values (Objs, Rec) may have been serialized to text.
+        {
+            final String raw = rs.getString(col.name);
+            if (raw != null && !raw.isEmpty()) {
+                final char first = raw.stripLeading().charAt(0);
+                if (first == '{' || first == '[')
+                    return ObjSQLSerializer.readMaybeJSON(raw);
+            }
         }
         return readColumn(rs, col.name, col.sqlType);
     }
@@ -571,6 +588,16 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
         }
 
         if (dp.hasField()) {
+            if (dp.extension() != null) {
+                final String pkColumn = metadata.primaryKeys.getFirst();
+                final Rec current = readCurrentRow(conn, metadata, pkColumn, rowId);
+                if (current == null) return 0;
+                final Obj colValue = current.at(dp.field()).selfVID(null);
+                final Obj updated = colValue.isRec()
+                        ? colValue.asRec().at(dp.extension(), obj, MUTABLE)
+                        : obj;
+                return writeField(conn, metadata, rowId, dp.field(), updated);
+            }
             return writeField(conn, metadata, rowId, dp.field(), obj);
         }
 
@@ -656,6 +683,13 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
                 .put(columnName.toLowerCase(), value.tid());
     }
 
+    private static int sqlTypeForMono(final Obj value) {
+        if (value.isBool()) return Types.BOOLEAN;
+        if (value.isInt()) return Types.INTEGER;
+        if (value.isReal()) return Types.REAL;
+        return Types.VARCHAR;
+    }
+
     private int writeField(final Connection conn, final TableMetadata metadata, final String rowId,
                            final String fieldName, final Obj value) throws SQLException {
         final ColumnMetadata column = metadata.columns.stream()
@@ -665,12 +699,14 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
 
         final String pkColumn = metadata.primaryKeys.getFirst();
         final String sql = String.format("UPDATE %s SET %s = ? WHERE %s = ?",
-                metadata.tableName, column.name, pkColumn);
+                q(metadata.tableName), q(column.name), q(pkColumn));
 
         try (final PreparedStatement stmt = conn.prepareStatement(sql)) {
             trackLogicalType(metadata, column.name, value, column.sqlType);
             validateColumnWrite(value, column, metadata.tableName);
-            writeParameter(stmt, 1, value, column.sqlType);
+            final int sqlType = (!value.isPoly() && !value.isNoObj() && column.sqlType == Types.VARCHAR)
+                    ? sqlTypeForMono(value) : column.sqlType;
+            writeParameter(stmt, 1, value, sqlType);
 
             final ColumnMetadata pkColMeta = metadata.columns.stream()
                     .filter(c -> c.name.equals(pkColumn)).findFirst().orElseThrow();
@@ -710,9 +746,11 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
             final String fieldName = entry.getKey().asUri().uriValue().name();
             if (fieldName == null || fieldName.isEmpty()) continue;
 
-            final ColumnMetadata column = metadata.columns.stream()
+            ColumnMetadata column = metadata.columns.stream()
                     .filter(c -> c.name.equalsIgnoreCase(fieldName)).findFirst().orElse(null);
-            if (column == null) continue;
+            if (column == null) {
+                column = addColumnOnTheFly(conn, metadata, fieldName, entry.getValue());
+            }
 
             final Obj newValue = entry.getValue();
             final Obj currentValue = currentMap.get(entry.getKey());
@@ -794,12 +832,12 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
             final ColumnMetadata column = metadata.columns.stream()
                     .filter(c -> c.name.equalsIgnoreCase(colName)).findFirst().orElseThrow();
             trackLogicalType(metadata, column.name, value, column.sqlType);
-            setClauses.add(column.name + " = ?");
+            setClauses.add(q(column.name) + " = ?");
             values.add(Tuple.Pair.with(value, column));
         }
 
         final String sql = String.format("UPDATE %s SET %s WHERE %s = ?",
-                metadata.tableName, String.join(", ", setClauses), pkColumn);
+                q(metadata.tableName), String.join(", ", setClauses), q(pkColumn));
 
         try (final PreparedStatement stmt = conn.prepareStatement(sql)) {
             for (int i = 0; i < values.size(); i++) {
@@ -807,7 +845,8 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
                 final Obj value = pair.get0();
                 final ColumnMetadata column = pair.get1();
                 validateColumnWrite(value, column, metadata.tableName);
-                writeParameter(stmt, i + 1, value, column.sqlType);
+                final int sqlType = value.isPoly() ? Types.VARCHAR : column.sqlType;
+                writeParameter(stmt, i + 1, value, sqlType);
             }
 
             final ColumnMetadata pkColMeta = metadata.columns.stream()
@@ -846,7 +885,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
 
             if (column != null) {
                 trackLogicalType(metadata, column.name, entry.getValue(), column.sqlType);
-                setClauses.add(column.name + " = ?");
+                setClauses.add(q(column.name) + " = ?");
                 values.add(Tuple.Pair.with(entry.getValue(), column));
             } else {
                 this.space.logger().warn("ignoring update as column %s not found in table %s", fieldName, metadata.tableName);
@@ -860,7 +899,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
 
         final String pkColumn = metadata.primaryKeys.getFirst();
         final String sql = String.format("UPDATE %s SET %s WHERE %s = ?",
-                metadata.tableName, String.join(", ", setClauses), pkColumn);
+                q(metadata.tableName), String.join(", ", setClauses), q(pkColumn));
 
         try (final PreparedStatement stmt = conn.prepareStatement(sql)) {
             for (int i = 0; i < values.size(); i++) {
@@ -868,7 +907,8 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
                 final Obj value = pair.get0();
                 final ColumnMetadata column = pair.get1();
                 validateColumnWrite(value, column, metadata.tableName);
-                writeParameter(stmt, i + 1, value, column.sqlType);
+                final int sqlType = value.isPoly() ? Types.VARCHAR : column.sqlType;
+                writeParameter(stmt, i + 1, value, sqlType);
             }
 
             final ColumnMetadata pkColMeta = metadata.columns.stream()
@@ -914,7 +954,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
         }
 
         final String ddl = String.format("ALTER TABLE %s ADD COLUMN %s %s",
-                metadata.tableName, columnName, sqlType);
+                q(metadata.tableName), q(columnName), sqlType);
         this.space.logger().info("adding column on the fly: %s", ddl);
         try (final Statement stmt = conn.createStatement()) {
             stmt.executeUpdate(ddl);
@@ -997,7 +1037,8 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
                 final Obj value = pair.get0();
                 final ColumnMetadata column = pair.get1();
                 validateColumnWrite(value, column, metadata.tableName);
-                writeParameter(stmt, i + 1, value, column.sqlType);
+                final int sqlType = value.isPoly() ? Types.VARCHAR : column.sqlType;
+                writeParameter(stmt, i + 1, value, sqlType);
             }
             final int inserted = stmt.executeUpdate();
             this.space.logger().debug("inserted row into %s with id %s: %s rows affected",
@@ -1058,7 +1099,8 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
                 final Obj value = pair.get0();
                 final ColumnMetadata column = pair.get1();
                 validateColumnWrite(value, column, metadata.tableName);
-                writeParameter(stmt, i + 1, value, column.sqlType);
+                final int sqlType = value.isPoly() ? Types.VARCHAR : column.sqlType;
+                writeParameter(stmt, i + 1, value, sqlType);
             }
             final int inserted = stmt.executeUpdate();
             this.space.logger().debug("auto-inserted row into %s: %s rows affected",
@@ -1158,7 +1200,9 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
                         try (final ResultSet rs = stmt.executeQuery()) {
                             if (rs.next()) {
                                 final fURI rowFuri = f(tableName).extend(rowId).extend(fieldName);
-                                final Obj row = readTableRow(rs, metadata, fieldName);
+                                Obj row = readTableRow(rs, metadata, fieldName);
+                                if (dp.extension() != null && row.isRec())
+                                    row = row.asRec().at(dp.extension());
                                 results.add(Space.IdObj.of(rowFuri, row));
                             }
                         } catch (final SQLException e) {
@@ -1218,9 +1262,25 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
         final String pkCol = getPrimaryKeyColumn(conn, tableName);
         final String sql = "DELETE FROM \"" + tableName + "\" WHERE \"" + pkCol + "\" = ?";
         try (final PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, rowId);
+            setRowIdParam(stmt, 1, conn, tableName, pkCol, rowId);
             return stmt.executeUpdate();
         }
+    }
+
+    private void setRowIdParam(final PreparedStatement stmt, final int idx,
+                               final Connection conn, final String tableName,
+                               final String pkCol, final String rowId) throws SQLException {
+        final TableMetadata metadata = tableSchemas.get(tableName.toLowerCase());
+        if (metadata != null) {
+            final ColumnMetadata pkMeta = metadata.columns.stream()
+                    .filter(c -> c.name.equalsIgnoreCase(pkCol)).findFirst().orElse(null);
+            if (pkMeta != null && (pkMeta.sqlType == Types.INTEGER || pkMeta.sqlType == Types.BIGINT
+                    || pkMeta.sqlType == Types.SMALLINT || pkMeta.sqlType == Types.TINYINT)) {
+                stmt.setLong(idx, Long.parseLong(rowId));
+                return;
+            }
+        }
+        stmt.setString(idx, rowId);
     }
 
     private String getPrimaryKeyColumn(final Connection conn, final String tableName) throws SQLException {

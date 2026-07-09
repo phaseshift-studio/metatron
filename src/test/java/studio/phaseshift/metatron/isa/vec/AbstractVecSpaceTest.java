@@ -78,6 +78,19 @@ public abstract class AbstractVecSpaceTest extends AbstractDataPathTest {
 
     // ---- mtron $$ substitution for inherited parameterized tests ----
 
+    // VecSpace (ChromaDB) is a vector embedding store — add + similarity query,
+    // not a general CRUD space.  Wildcard writes, cross-ref FK resolution, and
+    // delete-by-noobj aren't supported.
+    @Override
+    protected boolean skipUpdateTestCase(final String id) {
+        return switch (id) {
+            case "M28","M29","M30","M31" -> true;  // wildcard/bulk writes
+            case "M32","M33","M34" -> true;        // cross-ref !* writes
+            case "M35","M36","M37","M38","M39" -> true; // delete via noobj
+            default -> false;
+        };
+    }
+
     @Override
     public fURI getTestDataUriPrefix() {
         return f("vctr:" + COLL + "/");

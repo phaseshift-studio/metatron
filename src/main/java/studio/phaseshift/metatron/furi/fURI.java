@@ -859,6 +859,20 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
         }
     }
 
+    static boolean validatefURI(final fURI furi) {
+        final String furiString = furi.toString();
+        char last = '/';
+        for (int i = 0; i < furiString.length(); i++) {
+            char current = furiString.charAt(i);
+            if ((current == '#' || current == '+') && last != '/')
+                return false;
+            if ((last == '#' || last == '+') && current != '/')
+                return false;
+            last = furiString.charAt(i);
+        }
+        return true;
+    }
+
 
     static fURI of(final String scheme,
                    final String host,

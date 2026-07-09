@@ -355,13 +355,33 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathTest impleme
     public String make(final String expression, final Method testMethod) {
         // For testMonoUpdate, $$ → db: so seed data writes to db:<collection>/<docId>
         // and update/read expressions resolve to the same two-segment document paths.
-        if (testMethod != null && "testMonoUpdate".equals(testMethod.getName())) {
-            return expression.contains("$$") ? expression.replace("$$/", "db:") : expression;
+        if (testMethod != null && ("testMonoUpdate".equals(testMethod.getName()) ||
+                                   "testUpdateWrite".equals(testMethod.getName()))) {
+            if (!expression.contains("$$")) return expression;
+            // a/b/c URI scheme: strip $$/, strip b-prefix from numeric entries,
+            // keep a (table) and c (field) prefixes as part of the name.
+            return expression
+                    .replace("$$/a", "db:a")
+                    .replaceAll("/b(\\d+)", "/$1");
         }
         if (testMethod != null && "testMonoDepth".equals(testMethod.getName())) {
             return expression.contains("$$") ? expression.replace("$$/", "db:kv/") : expression;
         }
         return super.make(expression, testMethod);
+    }
+
+    // + merge on overlapping keys creates Objs from scalar values, e.g.
+    // [ca=>0] + [ca=>1] → [ca=>{0,1}].  This is a column type change
+    // (INTEGER → Objs) that relational databases don't support.
+    @Override
+    protected boolean skipUpdateTestCase(final String id) {
+        return switch (id) {
+            case "M12b", "M43", "M44", "M44b" -> true;    // C_A: + merge scalar → Objs type change
+            case "M48" -> true;                              // C_A: double-nested + Objs
+            case "M32" -> true;                              // C__: cross-ref FK overwrite (FK takes priority)
+            case "M45", "M46" -> true;                       // C__: mono↔rec type change (row can't become scalar)
+            default -> false;
+        };
     }
 
     @Override

@@ -247,22 +247,16 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
         public static Obj updateRecursion(final Obj lhs, final Obj rhs, final BiFunction<Poly<?, ?>, Object, Poly<?, ?>> operation) {
             final Obj result;
             if (rhs.isNoObj() || rhs.isNone())
-                result = Router.writeToSpace(lhs.vid(), noobj());
-                // Objs (coefficient collection) with a structural RHS: apply per-element
-                // BEFORE type-matched recursion — ALL_STAR.test(REC_TID) would otherwise
-                // route to updatePolyRecursion which doesn't know how to decompose Objs
+                result = noobj();
             else if (lhs.isObjs() && rhs.isPoly())
                 result = objs(lhs.asObjs().elements()
                         .map(e -> updateRecursion(e, rhs, operation).vid(e.vid()))
                         .filter(e -> !e.isNoObj()));
-            else if (lhs.isPoly() && rhs.isPoly())
-                result = updatePolyRecursion(lhs.as(), rhs.as(), operation).vid(lhs.vid());
+            else if (lhs.isPoly() && (rhs.isPoly() || rhs.isObjCall()))
+                result = updatePolyRecursion(lhs.as(), rhs, operation).vid(lhs.vid());
             else
                 result = rhs.apply(lhs).vid(lhs.vid());
-            //////////////////////////////////////////////////////////////////////////////
-            if ((result.isNone() || result.isNone()) && null != lhs.vid())
-                Router.writeToSpace(lhs.vid(), noobj());
-            return result;//.vid(lhs.vid());
+            return result;
         }
 
 
@@ -270,8 +264,18 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
             final Obj result;
             if (rhs.isNoObj() || rhs.isNone())
                 result = rhs;
-            else if (rhs.isObjCall())
-                result = updatePolyRecursion(lhs, rhs.apply(lhs), operation);
+            else if (rhs.isObjCall()) {
+                // Structural instruction — compute against LHS directly, don't
+                // recurse into updateRecRecursion (which SELECT-filters).
+                // The top-level UPDATE instruction handles the space write.
+                final Obj computed;
+                if (lhs.isRec() && rhs.tid().basePath().toString().endsWith("/plus")) {
+                    computed = lhs.asRec().plus(rhs.asInst().arg(0).asRec());
+                } else {
+                    computed = rhs.apply(lhs);
+                }
+                result = computed.isFail() ? lhs : computed;
+            }
             else if (lhs.isRec() && rhs.isRec())
                 result = updateRecRecursion(lhs.asRec(), rhs.asRec(), operation);
             else if (lhs.isLst() && rhs.isLst())
@@ -280,10 +284,7 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
                 result = updateRelRecursion(lhs.asRel(), rhs.asRel(), operation);
             else
                 result = rhs.apply(lhs);
-            /////////////////////////////////////////////////////////////////
-            if ((result.isNone() || result.isNone()) && null != lhs.vid())
-                Router.writeToSpace(lhs.vid(), noobj());
-            return result;//.vid(lhs.vid());
+            return result;
         }
 
         private static Obj updateRecRecursion(final Rec lhs, final Rec rhs, final BiFunction<Poly<?, ?>, Object, Poly<?, ?>> operation) {

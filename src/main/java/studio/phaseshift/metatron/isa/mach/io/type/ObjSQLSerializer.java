@@ -141,7 +141,6 @@ public class ObjSQLSerializer extends AbstractObjSerializer<ResultSet> {
         }
 
         return switch (sqlType) {
-            case Types.BOOLEAN, Types.BIT -> bool(rs.getBoolean(columnName));
             case Types.TINYINT, Types.SMALLINT, Types.INTEGER, Types.BIGINT -> jnt(rs.getLong(columnName));
             case Types.REAL, Types.FLOAT, Types.DOUBLE, Types.DECIMAL, Types.NUMERIC -> real(rs.getDouble(columnName));
             case Types.CHAR, Types.VARCHAR, Types.LONGVARCHAR, Types.NCHAR, Types.NVARCHAR, Types.LONGNVARCHAR ->
@@ -184,7 +183,7 @@ public class ObjSQLSerializer extends AbstractObjSerializer<ResultSet> {
      * try JSON parsing first, then fall back to mtron parsing.  Otherwise return it as
      * a plain {@link Str}.
      */
-    static Obj readMaybeJSON(final String value) {
+    public static Obj readMaybeJSON(final String value) {
         if (value == null || value.isBlank()) return str(value);
         final String trimmed = value.stripLeading();
         if (trimmed.isEmpty()) return str(value);
@@ -203,6 +202,11 @@ public class ObjSQLSerializer extends AbstractObjSerializer<ResultSet> {
                 }
             }
         }
+        // Plain numbers stored in VARCHAR columns (e.g. mono written over a Rec)
+        try { return jnt(Long.parseLong(value)); } catch (NumberFormatException e) {}
+        try { return real(Double.parseDouble(value)); } catch (NumberFormatException e) {}
+        if ("true".equalsIgnoreCase(value) || "false".equalsIgnoreCase(value))
+            return bool(Boolean.parseBoolean(value));
         return str(value);
     }
 

@@ -160,6 +160,10 @@ public class tbleSpace extends AbstractSpace<Connection> implements SchemaSpace 
         try {
             final Connection conn = DriverManager.getConnection(
                     JDBC + config.get(uri(HOST)).autoResolve(noobj()).uriValue().toString());
+            // MariaDB/MySQL: allow explicit zero PK values (avoid AUTO_INCREMENT trigger).
+            try (final Statement stmt = conn.createStatement()) {
+                stmt.execute("SET sql_mode = 'NO_AUTO_VALUE_ON_ZERO'");
+            } catch (final SQLException ignored) { /* not MariaDB/MySQL, or no permission */ }
             // Defensive copy: the constructor mutates the config map (adds TABLE/SCHEMA
             // entries).  The original map is the shared jvm() of the caller's Rec —
             // modifying it concurrently while another thread iterates it causes
