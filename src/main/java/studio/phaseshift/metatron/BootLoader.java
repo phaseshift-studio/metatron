@@ -302,7 +302,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
                 final Obj result = client.sendRecv(ObjmtronSerializer.parse(evalExpr));
                 if (!result.isNoObj()) {
                     System.out.print(Graphitty.string("{{-X-}}{{<100}}"));
-                    System.out.println(CommonUtil.removeQuotes(ObjmtronSerializer.single().write(result)) + "\n");
+                    System.out.print(CommonUtil.removeQuotes(ObjmtronSerializer.single().write(result)) + "\n");
                 }
             } finally {
                 spinner.stop();
