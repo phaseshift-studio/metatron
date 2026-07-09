@@ -44,25 +44,13 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
-import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.mach.ui.uiInstSet.UI_TABLE_TID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class TableWidget extends JRec<TableWidget> implements Widget<TableWidget> {
-
-    public static final fURI WIDGET_TABLE_TID = f("/m/mach/ui/widget/table");
-
-    public static final Type WIDGET_TABLE_TYPE = Type.Builder.build()
-            .tid(REC_TID)
-            .vid(WIDGET_TABLE_TID)
-            .isaPredicate(rec())
-            .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(WIDGET_TABLE_TID),
-                    lst(T(REC_TID)), (lhs, inst) -> {
-                    final TableWidget t = new TableWidget(inst.arg(0).as().jvm(), WIDGET_TABLE_TID, inst.arg(0).vid());
-                    Graphitty.out(Console.getTerminal().output(), t.format() + "\n");
-                    return t;
-            })).create();
 
     @JRecElement(key = "headers", rng = "/m/lst")
     public final List<String> headers = new ArrayList<>();
@@ -81,20 +69,28 @@ public class TableWidget extends JRec<TableWidget> implements Widget<TableWidget
 
     public TableWidget(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
-        final Obj h = jvm.get(str("headers"));
-        if (h != null && h.isLst()) h.lstValue().forEach(o -> this.headers.add(o.strValue()));
+        this.at(uri("header")).ifPresent(h -> h.lstValue().forEach(o -> this.headers.add(o.strValue())));
+        this.at(uri("row")).ifPresent(r -> r.lstValue().forEach(o -> this.addRow((List) o)));
     }
 
     // ── convenience constructors ───────────────────────────────────
 
     public TableWidget() {
-        this(Map.of(), WIDGET_TABLE_TID, null);
+        this(Map.of(), UI_TABLE_TID, null);
     }
 
     public TableWidget(final List<String> headers) {
-        this(Map.of(), WIDGET_TABLE_TID, null);
+        this(Map.of(), UI_TABLE_TID, null);
         this.headers.addAll(headers);
     }
+
+
+    public TableWidget(final List<String> headers, final List<List<Object>> rows) {
+        this(Map.of(), UI_TABLE_TID, null);
+        this.headers.addAll(headers);
+        rows.forEach(this::addRow);
+    }
+
 
     // ── builders ───────────────────────────────────────────────────
 
@@ -116,11 +112,25 @@ public class TableWidget extends JRec<TableWidget> implements Widget<TableWidget
 
     // ── accessors ──────────────────────────────────────────────────
 
-    public String header(final int column) { return this.headers.get(column); }
-    public List<Object> row(final int index)    { return this.rows().get(index); }
-    public List<List<Object>> rows()            { return this.table; }
-    public List<Object> rowMetadata(final int index) { return this.metadata.get(index); }
-    public List<List<Object>> metadata()        { return this.metadata; }
+    public String header(final int column) {
+        return this.headers.get(column);
+    }
+
+    public List<Object> row(final int index) {
+        return this.rows().get(index);
+    }
+
+    public List<List<Object>> rows() {
+        return this.table;
+    }
+
+    public List<Object> rowMetadata(final int index) {
+        return this.metadata.get(index);
+    }
+
+    public List<List<Object>> metadata() {
+        return this.metadata;
+    }
 
     public List<Object> column(int col) {
         final List<Object> column = new ArrayList<>();
@@ -129,8 +139,13 @@ public class TableWidget extends JRec<TableWidget> implements Widget<TableWidget
         return column;
     }
 
-    public Object entry(final int row, final int col) { return this.row(row).get(col); }
-    public Object entryMetadata(final int row, final int col) { return this.rowMetadata(row).get(col); }
+    public Object entry(final int row, final int col) {
+        return this.row(row).get(col);
+    }
+
+    public Object entryMetadata(final int row, final int col) {
+        return this.rowMetadata(row).get(col);
+    }
 
     // ── formatting ─────────────────────────────────────────────────
 
@@ -155,11 +170,11 @@ public class TableWidget extends JRec<TableWidget> implements Widget<TableWidget
             for (int i = 0; i < this.row(0).size() - widths.size(); i++) widths.add(1);
         }
         final StringBuilder sb = new StringBuilder();
-        sb.append(this.style.divider);
+        sb.append(this.style.divider());
         for (int i = 0; i < this.table.get(index).size(); i++) {
             final String high = Highlighter.format(this.entry(index, i));
-            final String low  = Highlighter.unformat(this.entry(index, i).toString());
-            sb.append(high).append(this.addSpace(widths, i, low)).append(this.style.divider);
+            final String low = Highlighter.unformat(this.entry(index, i).toString());
+            sb.append(high).append(this.addSpace(widths, i, low)).append(this.style.divider());
         }
         return sb.toString();
     }
@@ -179,45 +194,75 @@ public class TableWidget extends JRec<TableWidget> implements Widget<TableWidget
     public String format() {
         final StringBuilder sb = new StringBuilder();
         if (!this.headers.isEmpty()) {
-            if (this.style.headerDivider.isEmpty() && !this.style.divider.isEmpty())
-                this.style.headerDivider = " ".repeat(Highlighter.visualLength(this.style.divider));
+            if (this.style.headerDivider().isEmpty() && !this.style.divider().isEmpty())
+                this.style.headerDivider(" ".repeat(Highlighter.visualLength(this.style.divider())));
             final List<Integer> widths = this.formattedWidths(this.headers);
-            sb.append(this.style.background).append(this.style.foreground)
-                    .append(this.style.headerDivider);
+            sb.append(this.style.background()).append(this.style.foreground())
+                    .append(this.style.headerDivider());
             for (int i = 0; i < this.headers.size(); i++) {
-                sb.append(this.headers.get(i)).append(this.style.foreground)
+                sb.append(this.headers.get(i)).append(this.style.foreground())
                         .append(this.addSpace(widths, i, this.headers.get(i)))
-                        .append(this.style.headerDivider);
+                        .append(this.style.headerDivider());
             }
             sb.append("\n");
         }
         sb.append(formattedRows().stream().map(row -> row + "\n")
                 .reduce("", (a, b) -> a + b));
         sb.deleteCharAt(sb.length() - 1);
-        return this.style.border.wrap(sb).toString();
+        return this.style.border().wrap(sb).toString();
     }
 
     @Override
-    public List<String> rowStrings() { return Arrays.asList(this.format().split("\n")); }
+    public List<String> rowStrings() {
+        return Arrays.asList(this.format().split("\n"));
+    }
 
     // ── Widget contract ────────────────────────────────────────────
 
-    @Override public TableWidget cursor(final Cursor cursor) { this.cursor = cursor; return this; }
-    @Override public Style<TableWidget> getStyle()           { return this.style; }
+    @Override
+    public TableWidget cursor(final Cursor cursor) {
+        this.cursor = cursor;
+        return this;
+    }
+
+    @Override
+    public Style<TableWidget> getStyle() {
+        return this.style;
+    }
 
     @Override
     public TableWidget style(final Style<TableWidget> style) {
         this.style = style;
-        if (this.style.foreground.isEmpty()) this.style.foreground = "{{w}}";
-        if (this.style.background.isEmpty()) this.style.background = "{{[X]}}";
-        if (this.style.divider.isEmpty())    this.style.divider    = "{{g}}|";
+        if (this.style.foreground().isEmpty()) this.style.foreground("{{w}}");
+        if (this.style.background().isEmpty()) this.style.background("{{[X]}}");
+        if (this.style.divider().isEmpty()) this.style.divider("{{g}}|");
         return this;
     }
 
-    @Override public void run()    {}
-    @Override public void close()  {}
-    @Override public void display() {}
-    @Override public String renderInPlace() { return this.format() + "\n"; }
-    @Override public String renderFresh()   { return this.format() + "\n"; }
-    @Override public String toString() { return this.format(); }
+    @Override
+    public void run() {
+    }
+
+    @Override
+    public void close() {
+    }
+
+    @Override
+    public void display() {
+    }
+
+    @Override
+    public String renderInPlace() {
+        return this.format() + "\n";
+    }
+
+    @Override
+    public String renderFresh() {
+        return this.format() + "\n";
+    }
+
+    @Override
+    public String toString() {
+        return this.format();
+    }
 }

@@ -37,8 +37,12 @@ import studio.phaseshift.metatron.isa.mach.type.machine.SwarmMachine;
 import studio.phaseshift.metatron.isa.mach.type.thread.AbstractThread;
 import studio.phaseshift.metatron.isa.mach.type.thread.CoreThread;
 import studio.phaseshift.metatron.isa.mach.type.thread.VirtualThread;
+import studio.phaseshift.metatron.isa.mach.type.ui.Widget;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Console;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Editor;
+import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.mach.type.ui.widget.TableWidget;
+import studio.phaseshift.metatron.isa.mach.type.ui.widget.Utilities;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.ImageUtil;
 import studio.phaseshift.metatron.util.MTronException;
@@ -76,11 +80,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.io.space.fs.fsSpace.FS_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.mach.io.space.fs.fsSpace.makeFile;
 import static studio.phaseshift.metatron.isa.mach.io.space.serial.serialSpace.SERIAL_SPACE_TYPE;
-import static studio.phaseshift.metatron.isa.mach.type.ui.Stylable.WIDGET_STYLE_TYPE;
-import static studio.phaseshift.metatron.isa.mach.type.ui.console.Console.CONSOLE_TYPE;
-import static studio.phaseshift.metatron.isa.mach.type.ui.widget.AccordionWidget.WIDGET_ACCORDION_TYPE;
-import static studio.phaseshift.metatron.isa.mach.type.ui.widget.TableWidget.WIDGET_TABLE_TYPE;
-import static studio.phaseshift.metatron.isa.mach.type.ui.widget.PanelWidget.WIDGET_PANEL_TYPE;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /*
@@ -183,11 +182,6 @@ public class machInstSet extends AbstractInstSet {
                 uri(TYPE), lst(
                         ROUTER_TYPE,
                         SPACE_TYPE,
-                        CONSOLE_TYPE,
-                        WIDGET_STYLE_TYPE,
-                        WIDGET_ACCORDION_TYPE,
-                        WIDGET_TABLE_TYPE,
-                        WIDGET_PANEL_TYPE,
                         FS_SPACE_TYPE,
                         SERIAL_SPACE_TYPE,
                         FILE_TYPE,
@@ -271,32 +265,6 @@ public class machInstSet extends AbstractInstSet {
                             CommonUtil.close(lhs);
                             return noobj();
                         }),
-                        instC(MACH_INST_TID.extend("nano").dom(ALL.maybe()).rng(ALL.maybe()), lst(), (lhs, inst) -> {
-                            try {
-                                final File file = Editor.createObjFile(lhs);
-                                Editor.of(Console.LOCAL_INSTANCE, file);
-                                return ObjmtronSerializer.parse(Files.readString(file.toPath()).trim());
-                            } catch (final IOException e) {
-                                throw MTronException.of(e);
-                            }
-                        }),
-                        docWrap(instC(MACH_INST_TID.extend("less").dom(STR_TID).rng(NOOBJ_TID.zero()), lst(isa_(T(INT_TID)).else_(jnt(10))), (lhs, inst) -> {
-                            Scanner scanner = new Scanner(System.in);
-                            final int pageSize = inst.arg(0).orElse(jnt(100)).intValue().intValue();
-                            final AtomicInteger page = new AtomicInteger(0);
-                            final AtomicInteger counter = new AtomicInteger(0);
-                            Arrays.stream(lhs.strValue().split("\n")).forEach(line -> {
-                                if (counter.getAndIncrement() < pageSize) {
-                                    LOG.none(line + "\n");
-                                } else {
-                                    LOG.none("{{g}}<{{m}}page %s{{g}}>{{X}}\n", page.incrementAndGet());
-                                    scanner.nextLine();
-                                    LOG.none("{{^2&-X-&v1}}");
-                                    counter.set(0);
-                                }
-                            });
-                            return noobj();
-                        }), "an str to page", "noobj terminal", Map.of(jnt(0), "number of lines per page"), "an f(x)->0 terminal page through the lines of an str"),
                         /// /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                         /*instC(RSHIFT_INST_TID.dom(FILE_TID).rng(FILE_TID.maybeSome()), lst(isa_(URI_TYPE).else_(uri("#"))), (lhs, inst) -> {
                             final File file = fsSpace.staticObjToFile(lhs);

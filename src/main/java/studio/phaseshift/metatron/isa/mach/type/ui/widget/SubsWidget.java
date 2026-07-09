@@ -49,28 +49,28 @@ public class SubsWidget extends AbstractWidget<SubsWidget> {
 
     public SubsWidget(final Console console) {
         /// ///////////////////////////////////////////////////////
-        this.spaceTable = new TableWidget(List.of("space vid", "pattern")).style()
+        this.spaceTable = ((TableWidget) new TableWidget(List.of("space vid", "pattern")).style()
                 .border(Border.continuous)
                 .headerDivider("{{[b]&g}}|{{w}}")
-                .apply();
-        this.subsTable = new TableWidget(List.of("subscription vid", "target", "call")).style()
+                .applyStyle());
+        this.subsTable = ((TableWidget) new TableWidget(List.of("subscription vid", "target", "call")).style()
                 .border(Border.continuous)
                 .headerDivider("{{[b]&g}}|{{w}}")
-                .apply();
+                .applyStyle());
 
 
         Router.global().spaces().elements().filter(r -> !(r.second() instanceof InstSet)).forEach(r -> {
             this.spaceTable.addRow(List.of(r.asRel().first().toString(), r.asRel().second().<Space>as().pattern()));
         });
 
-        this.subsSelector = new Selector().style().pointer("{{r}}>").attachment(this.subsTable, true).apply().onSelect((s, r, c) -> {
+        this.subsSelector = ((Selector) new Selector().style().pointer("{{r}}>").attachment(this.subsTable, true).applyStyle()).onSelect((s, r, c) -> {
             this.grid.currentFocus(0);
         });
-        this.spaceSelector = new Selector().style()
+        this.spaceSelector = ((Selector) new Selector().style()
                 .pointer("{{r}}>")
                 .attachment(this.spaceTable, true)
                 .rowRange(2, this.spaceTable.rowStrings().size() + 2)
-                .apply()
+                .applyStyle())
                 .onSelect((s, r, c) -> {
                     try {
                         final fURI pattern = (fURI) this.spaceTable.entry(r - 2, 1);
@@ -100,13 +100,13 @@ public class SubsWidget extends AbstractWidget<SubsWidget> {
                         // do nothing
                     }
                 });
-        this.grid = new GridWidget(List.of(this.spaceSelector, this.subsSelector), 1).style().border(Border.none).apply();
+        this.grid = (GridWidget) new GridWidget(List.of(this.spaceSelector, this.subsSelector), 1).style().border(Border.none).applyStyle();
         // this.grid.currentFocus(0);
-        this.style().attachment(this.grid, true).apply();
+        this.style().attachment(this.grid, true).applyStyle();
     }
 
     @Override
     public String format() {
-        return this.style.attachment.format();
+        return this.style.attachment().format();
     }
 }

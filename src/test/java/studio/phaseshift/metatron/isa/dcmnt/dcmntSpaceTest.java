@@ -235,7 +235,7 @@ public class dcmntSpaceTest extends AbstractDataPathTest implements CommonRewrit
     protected boolean expectWriteRejection(final Obj writeFailObj) {
         // Any root type constraint rejection from this space is expected and should cause the test to be skipped
         if (!writeFailObj.isFail() && !writeFailObj.isNoObj()) return false;
-        final String msg = writeFailObj.asFail().message().getMessage();
+        final String msg = writeFailObj.asFail().message();
         return msg != null && msg.contains("requires") && msg.contains("at root");
     }
 

@@ -69,7 +69,7 @@ public class GridWidget extends AbstractWidget<GridWidget> {
         final StringBuilder sb = new StringBuilder();
         gridRows.forEach(r -> sb.append(r).append("\n"));
         gridRows.addLast(gridRows.removeLast().trim());
-        return this.style.border.wrap(sb).toString();
+        return this.style.border().wrap(sb).toString();
     }
 
     @Override

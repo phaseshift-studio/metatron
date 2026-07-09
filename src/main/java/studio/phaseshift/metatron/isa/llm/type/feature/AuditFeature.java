@@ -8,6 +8,11 @@ import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Str;
+import studio.phaseshift.metatron.isa.mach.type.ui.Border;
+import studio.phaseshift.metatron.isa.mach.type.ui.Stylable;
+import studio.phaseshift.metatron.isa.mach.type.ui.Widget;
+import studio.phaseshift.metatron.isa.mach.type.ui.widget.PanelWidget;
+import studio.phaseshift.metatron.isa.mach.type.ui.widget.Selector;
 import studio.phaseshift.metatron.isa.mach.type.ui.widget.TableWidget;
 
 import java.util.List;
@@ -47,7 +52,7 @@ public class AuditFeature extends Feature {
         agent.at(AUDIT, noobj(), MUTABLE);
         snapshot(agent, "before_chat",
                 rec(uri("features"), jnt(agent.features().lstValue().size()),
-                    uri("systemMsgs"), jnt(agent.getSystemMessages().size())));
+                        uri("systemMsgs"), jnt(agent.getSystemMessages().size())));
         return noobj();
     }
 
@@ -102,29 +107,34 @@ public class AuditFeature extends Feature {
         }
 
         sb.append("\n").append('┌').append(repeat('─', widths[0]))
-          .append('┬').append(repeat('─', widths[1])).append('┐').append('\n');
+                .append('┬').append(repeat('─', widths[1])).append('┐').append('\n');
         sb.append('│').append(pad("phase", widths[0]))
-          .append('│').append(pad("detail", widths[1])).append('│').append('\n');
+                .append('│').append(pad("detail", widths[1])).append('│').append('\n');
         sb.append('├').append(repeat('─', widths[0]))
-          .append('┼').append(repeat('─', widths[1])).append('┤').append('\n');
+                .append('┼').append(repeat('─', widths[1])).append('┤').append('\n');
         for (final Rec row : rows) {
             final String phase = row.at(uri("phase")).strValue();
             final String detail = fmt(row.at(uri("detail")));
             sb.append('│').append(pad(phase, widths[0]))
-              .append('│').append(pad(fmtTrunc(detail, widths[1]), widths[1]))
-              .append('│').append('\n');
+                    .append('│').append(pad(fmtTrunc(detail, widths[1]), widths[1]))
+                    .append('│').append('\n');
         }
         sb.append('└').append(repeat('─', widths[0]))
-          .append('┴').append(repeat('─', widths[1])).append('┘').append("\n");
+                .append('┴').append(repeat('─', widths[1])).append('┘').append("\n");
         agent.at(res("audit", "table"), str(sb.toString()), MUTABLE);
 
         // Build interactive TableWidget
-        final TableWidget widget = new TableWidget(HEADERS);
+        final TableWidget table = new TableWidget(HEADERS).style().border(Border.continuous.foreground("{{y}}")).divider(Border.continuous.leftSide()).applyStyle();
         for (final Rec row : rows)
-            widget.addRow(List.of(
+            table.addRow(List.of(
                     row.at(uri("phase")).strValue(),
                     fmt(row.at(uri("detail")))));
-        agent.at(res("audit", "widget"), widget.vid(null), MUTABLE);
+        agent.at(res("audit", "widget"), table, MUTABLE);
+        final Selector selector = new Selector().style().attachment(table, true).pointer("{{r}}>").applyStyle()
+                .onSelect((s, r, c) -> {
+                    new PanelWidget(table.entry(r, c).toString(), table.row(r).toString()).display();
+                });
+        agent.at(res("audit", "widget"), selector, MUTABLE);
     }
 
     // ── Formatting helpers ─────────────────────────────────────────

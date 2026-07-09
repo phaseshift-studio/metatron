@@ -87,7 +87,7 @@ final class AgentUtility {
         final Obj chatFeat = agent.feature(CHAT);
         if (chatFeat.isNoObj())
             throw MTronException.of("agent has no chat feature: %s", agent.vidOrTid());
-        final Poly chat = (Poly) chatFeat;
+        final Rec chat = chatFeat.asRec();
         return LLMFactory.createChatInteraction(agent,
                 chat.at(uri(MODEL)),
                 chat.at(uri(RESPONSE)),
