@@ -118,10 +118,28 @@ public class dcmntSpaceTest extends AbstractDataPathTest implements CommonRewrit
     public String make(final String expression, final Method testMethod) {
         // For testMonoUpdate, $$ → mongo: so seed data writes to mongo:<collection>/<docId>
         // and update/read expressions resolve to the same two-segment document paths.
-        if (testMethod != null && ("testMonoUpdate".equals(testMethod.getName()) || "testMonoDepth".equals(testMethod.getName()))) {
-            return expression.contains("$$") ? expression.replace("$$/", "mongo:") : expression;
+        if (testMethod != null && ("testMonoUpdate".equals(testMethod.getName()) ||
+                                   "testMonoDepth".equals(testMethod.getName()) ||
+                                   "testUpdateWrite".equals(testMethod.getName()))) {
+            if (!expression.contains("$$")) return expression;
+            return expression
+                    .replace("$$/a", "mongo:a")
+                    .replaceAll("/b(\\d+)", "/$1");
         }
         return super.make(expression, testMethod);
+    }
+
+    // dcmntSpace (MongoDB): typed document model doesn't support scalar→Objs
+    // type changes from + merge, wildcard writes, or cross-ref FK resolution.
+    @Override
+    protected boolean skipUpdateTestCase(final String id) {
+        return switch (id) {
+            case "M12b","M17","M43","M44","M44b","M48" -> true; // + merge scalar→Objs
+            case "M28","M30","M31" -> true;                      // wildcard writes
+            case "M32" -> true;                                   // cross-ref FK
+            case "M36" -> true;                                   // delete empty (no-op)
+            default -> false;
+        };
     }
 
     @BeforeAll

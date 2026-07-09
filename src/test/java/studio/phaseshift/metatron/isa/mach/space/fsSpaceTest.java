@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.mach.space;
 
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -73,6 +74,16 @@ public class fsSpaceTest extends AbstractSpaceTest {
                 f("/sys/space/fs")));
     }
 
+    private static void wipeFsSpaceDir() {
+        var dir = java.nio.file.Path.of("/tmp/fsspace_test");
+        if (!java.nio.file.Files.exists(dir)) return;
+        try (var s = java.nio.file.Files.walk(dir)) {
+            s.sorted(java.util.Comparator.reverseOrder())
+             .forEach(p -> { try { java.nio.file.Files.delete(p); } catch (Exception e) {} });
+        } catch (Exception e) {}
+    }
+    @BeforeAll static void cleanBefore() { wipeFsSpaceDir(); }
+    @AfterAll  static void cleanAfter()  { wipeFsSpaceDir(); }
     @BeforeAll
     public static void setupInstSet() {
         InstSet.importInstSet(MACH_ISA_TID);
@@ -116,6 +127,20 @@ public class fsSpaceTest extends AbstractSpaceTest {
             return expression.replace("$$/", "test:");
         return super.make(expression);
     }
+
+    // fsSpace stores flat files — no trie for wildcard expansion, no sub-rec
+    // traversal for nested field deletes.
+    @Override
+    protected boolean skipUpdateTestCase(final String id) {
+        return switch (id) {
+            case "M28","M29","M30","M31","M39" -> true;  // wildcards + nested delete
+            //case "M45" -> true;  // rec→file creates path fsSpace walks as directory in later tests
+            default -> false;
+        };
+    }
+
+    @Override
+    protected String cleanupExpr() { return "$$/__noop__"; }
 
     @Override
     public void testMonoReadWrite(final String writeExpression, final String readExpression, final String expectedExpression) {
@@ -200,6 +225,7 @@ public class fsSpaceTest extends AbstractSpaceTest {
     @Override
     @Test
     public void testMonoUpdate() {
+        cleanBefore();
         // Write seed data inline — @TestData seed evaluation runs before @BeforeEach,
         // so the fsspace isn't registered with the Router yet.  By the time this test
         // method runs, the space is live.

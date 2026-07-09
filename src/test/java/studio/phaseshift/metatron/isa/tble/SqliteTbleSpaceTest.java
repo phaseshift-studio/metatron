@@ -50,7 +50,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class SqliteTbleSpaceTest extends AbstractTbleSpaceTest {
 
-    private static final String DB_PATH = "target/test-tabledb-space.db";
+    private static final String DB_PATH = "target/test-tabledb-space.db"; 
 
     public SqliteTbleSpaceTest() {
         super(new SqliteDatabaseConfig(DB_PATH));

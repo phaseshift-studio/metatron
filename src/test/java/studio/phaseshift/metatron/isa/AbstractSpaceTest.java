@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.isa;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -1379,6 +1380,174 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
                 "should contain incrQ");
         assertTrue(qprocs.stream().anyMatch(qp -> qp.pattern().equals(QCollection.SUBQ_PATTERN)),
                 "should contain subq");
+    }
+
+    // =========================================================================
+    //  Update Write Matrix (>>=) — Comprehensive Cross-Space Contract Tests
+    //
+    //  URI scheme:  $$/a<testId>[/b<entryId>[/c<fieldName>[/...]]]
+    //  C/R/A tags:  C=change existing, R=remove, A=add new, _=no change
+    //    tbleSpace: supports __A (ALTER column), _R_, C__ without type change
+    //    memSpace:  supports all combinations
+    // =========================================================================
+
+    public record UpdateTestCase(
+            String id, String description, String[] seed,
+            String update, String read, String expected, String[] tags) {
+        @Override public String toString() { return id + ": " + description; }
+    }
+
+    protected boolean skipUpdateTestCase(final String id) { return false; }
+    protected String cleanupExpr() { return "$$/+/#"; }
+
+    static Stream<UpdateTestCase> provideAllUpdateWriteCases() {
+        return Stream.concat(Stream.concat(Stream.concat(Stream.concat(Stream.concat(Stream.concat(
+                provideMonoWriteCases(), provideRecWriteCases()),
+                provideNestedFieldCases()), provideWildcardCases()),
+                provideCrossRefCases()), provideDeleteCases()), provideEdgeCases());
+    }
+
+    static String[] seed(final String... e) { return e; }
+    static String[] tags(final String... t) { return t; }
+
+    // ── Mono (M01–M05) ──
+
+    static Stream<UpdateTestCase> provideMonoWriteCases() {
+        return Stream.of(
+            tc("M01","Overwrite existing mono", s("$$/a01->0"), "@$$/a01>>=1","*$$/a01","1",t("mono","C__")),
+            tc("M02","Write mono over existing mono", s("$$/a02->42"), "@$$/a02>>=1","*$$/a02","1",t("mono","C__")),
+            tc("M03","Compute mono from existing (+1)", s("$$/a03->41"), "@$$/a03>>=+1","*$$/a03","42",t("mono","C__")),
+            tc("M04","Compute mono with complex expr", s("$$/a04->10"), "@$$/a04 >>= (+ 12 * 2)","*$$/a04","44",t("mono","C__")),
+            tc("M05","Overwrite string mono", s("$$/a05->'old'"), "@$$/a05>>='hello'","*$$/a05","'hello'",t("mono","C__"))
+        );
+    }
+
+    // ── Rec (M06–M19) ──
+
+    static Stream<UpdateTestCase> provideRecWriteCases() {
+        return Stream.of(
+            tc("M06","SELECT: no match in empty LHS", s("$$/a06/b0->[=>]"), "@$$/a06/b0>>=[ca=>1]","*$$/a06/b0","[=>]",t("rec","___")),
+            tc("M07","Merge rec: field replace", s("$$/a07/b0->[ca=>0,cb=>2]"), "@$$/a07/b0>>=[ca=>1]","*$$/a07/b0==[ca=>_,cb=>_]","[ca=>1,cb=>2]",t("rec","C__")),
+            tc("M08","Replace single field", s("$$/a08/b0->[ca=>0]"), "@$$/a08/b0>>=[ca=>1]","*$$/a08/b0","[ca=>1]",t("rec","C__")),
+            tc("M09","Compute field from existing", s("$$/a09/b0->[ca=>0]"), "@$$/a09/b0>>=[ca=>+1]","*$$/a09/b0","[ca=>1]",t("rec","C__")),
+            tc("M10","Field delete via none", s("$$/a10/b0->[ca=>0,cb=>2]"), "@$$/a10/b0>>=[ca=>none]","*$$/a10/b0","[cb=>2]",t("rec","_R_")),
+            tc("M11","Delete last field → empty rec", s("$$/a11/b0->[ca=>0]"), "@$$/a11/b0>>=[ca=>none]","*$$/a11/b0","[=>]",t("rec","_R_")),
+            tc("M12a","SELECT: RHS-only field dropped", s("$$/a120/b0->[ca=>0,cc=>3]"), "@$$/a120/b0>>=[ca=>1,cb=>2]","*$$/a120/b0","[ca=>1,cc=>3]",t("rec","C__")),
+            tc("M12b","MERGE: + adds fields, overlap → Objs", s("$$/a121/b0->[ca=>0,cc=>3]"), "@$$/a121/b0>>=+[ca=>1,cb=>2]","*$$/a121/b0==[ca=>_,cb=>_,cc=>_]","[ca=>{0,1},cb=>2,cc=>3]",t("rec","C_A")),
+            tc("M13","String concat on field", s("$$/a13/b0->[cname=>'Alice']"), "@$$/a13/b0>>=[cname=>+' Specialist']","*$$/a13/b0","[cname=>'Alice Specialist']",t("rec","C__")),
+            tc("M14","SELECT: no match in empty LHS nested", s("$$/a14/b0->[=>]"), "@$$/a14/b0>>=[ca=>[cb=>1]]","*$$/a14/b0","[=>]",t("rec","___")),
+            tc("M15a","SELECT on sub-rec: no-op", s("$$/a150/b0->[ca=>[cc=>2]]"), "@$$/a150/b0>>=[ca=>[cb=>1]]","*$$/a150/b0/ca","[cc=>2]",t("rec","___")),
+            tc("M15b","Merge sub-rec (+ prefix)", s("$$/a151/b0->[ca=>[cc=>2]]"), "@$$/a151/b0>>=[ca=>+[cb=>1]]","*$$/a151/b0/ca==[cb=>_,cc=>_]","[cb=>1,cc=>2]",t("rec","__A")),
+            tc("M16","Deep compute on nested leaf", s("$$/a16/b0->[ca=>[cb=>0]]"), "@$$/a16/b0>>=[ca=>[cb=>+1]]","*$$/a16/b0/ca","[cb=>1]",t("rec","C__")),
+            tc("M17","+ on sub-rec: overlap → Objs", s("$$/a17/b0->[ca=>[cb=>0,cc=>2]]"), "@$$/a17/b0>>=[ca=>+[cb=>+1]]","*$$/a17/b0/ca==[cb=>_,cc=>_]","[cb=>{0,plus(1)},cc=>2]",t("rec","C_A")),
+            tc("M18","Deep field delete", s("$$/a18/b0->[ca=>[cb=>0,cc=>2]]"), "@$$/a18/b0>>=[ca=>[cb=>none]]","*$$/a18/b0/ca","[cc=>2]",t("rec","_R_")),
+            tc("M19","Self-ref compute on rec field", s("$$/a19/b0->[cname=>'Bob',ctitle=>'Designer']"), "@$$/a19/b0 >>= [cname=><<.-<[>>cname,' the ',>>ctitle]._/sum()\\_>-]","*$$/a19/b0==[cname=>_]","[cname=>'Bob the Designer']",t("rec","C__"))
+        );
+    }
+
+    // ── Nested Field (M20–M27) ──
+
+    static Stream<UpdateTestCase> provideNestedFieldCases() {
+        return Stream.of(
+            tc("M20","Overwrite nested field mono", s("$$/a20/b0->[ca=>1]"), "@$$/a20/b0/ca>>=2","*$$/a20/b0/ca","2",t("nested","C__")),
+            tc("M21","Compute nested field mono", s("$$/a21/b0->[ca=>41]"), "@$$/a21/b0/ca>>=+1","*$$/a21/b0/ca","42",t("nested","C__")),
+            tc("M22","Complex expr on nested field", s("$$/a22/b0->[ca=>10]"), "@$$/a22/b0/ca >>= (+ 12 * 2)","*$$/a22/b0/ca","44",t("nested","C__")),
+            tc("M23","Delete nested field via noobj", s("$$/a23/b0->[ca=>1,cb=>2]"), "@$$/a23/b0/ca>>=noobj","*$$/a23/b0==[cb=>_]","[cb=>2]",t("nested","_R_")),
+            tc("M24","SELECT on sub-rec via path: no-op", s("$$/a24/b0->[ca=>[cb=>0]]"), "@$$/a24/b0/ca>>=[cc=>1]","*$$/a24/b0/ca","[cb=>0]",t("nested","___")),
+            tc("M25","Merge sub-rec via path (+ prefix)", s("$$/a25/b0->[ca=>[cb=>0]]"), "@$$/a25/b0/ca>>=+[cc=>1]","*$$/a25/b0/ca==[cb=>_,cc=>_]","[cb=>0,cc=>1]",t("nested","__A")),
+            tc("M26","SELECT deep sub-rec: no-op", s("$$/a26/b0->[ca=>[cb=>[cc=>0]]]"), "@$$/a26/b0/ca/cb>>=[cd=>1]","*$$/a26/b0/ca/cb","[cc=>0]",t("nested","___")),
+            tc("M27","Deep field compute (3 levels)", s("$$/a27/b0->[ca=>[cb=>41]]"), "@$$/a27/b0/ca/cb>>=+1","*$$/a27/b0/ca/cb","42",t("nested","C__"))
+        );
+    }
+
+    // ── Wildcard (M28–M31) ──
+
+    static Stream<UpdateTestCase> provideWildcardCases() {
+        return Stream.of(
+            tc("M28","Bulk rec write to wildcard", s("$$/a28/b1->[cname=>'Alice',ccount=>0]","$$/a28/b2->[cname=>'Bob',ccount=>0]"), "@<$$/a28/+> >>= [cname=>'Mickey']","*<$$/a28/+/cname>","{2}'Mickey'",t("wildcard","C__")),
+            tc("M29","Bulk toggle boolean", s("$$/a29/b1->[cactive=>true]","$$/a29/b2->[cactive=>false]"), "@<$$/a29/+> >>= [cactive=>not(_)]","*<$$/a29/+/cactive>","{false,true}",t("wildcard","C__")),
+            tc("M30","Bulk compute on counter", s("$$/a30/b1->[ccnt=>0]","$$/a30/b2->[ccnt=>5]"), "@<$$/a30/+> >>= [ccnt=>+1]","*<$$/a30/+/ccnt>","{1,6}",t("wildcard","C__")),
+            tc("M31","Bulk self-ref string compute", s("$$/a31/b1->[cname=>'Acme Corp',ccity=>'NYC']","$$/a31/b2->[cname=>'Globex Inc',ccity=>'LA']"), "@<$$/a31/+> >>= [cname=>_+' '+(<<.>>ccity)]","*<$$/a31/+/cname>","{'Acme Corp NYC','Globex Inc LA'}",t("wildcard","C__"))
+        );
+    }
+
+    // ── CrossRef (M32–M34) ──
+
+    static Stream<UpdateTestCase> provideCrossRefCases() {
+        return Stream.of(
+            tc("M32",">>= through cross-ref overwrites ref field", s("$$/a32/b0->[cref=>!*$$/a32y/b0]","$$/a32y/b0->[cname=>'Old']"), "@$$/a32/b0/cref>>=[cname=>'New']","*$$/a32/b0/cref/cname","'New'",t("crossref","C__")),
+            tc("M33","Write !* cross-ref as field value", s("$$/a33x/b0->[ca=>0]","$$/a33y/b0->[cz=>1]"), "@$$/a33x/b0>>=[ca=>!*$$/a33y/b0]","*$$/a33x/b0/ca","[cz=>1]",t("crossref","C_A")),
+            tc("M34","Cross-ref field replace + deref", s("$$/a34x/b0->[ca=>1]","$$/a34y/b0->[cb=>2]"), "@$$/a34x/b0>>=[ca=>!*$$/a34y/b0]","*$$/a34x/b0/ca/cb","2",t("crossref","C_A"))
+        );
+    }
+
+    // ── Delete (M35–M39) ──
+
+    static Stream<UpdateTestCase> provideDeleteCases() {
+        return Stream.of(
+            tc("M35","Delete mono via noobj", s("$$/a35->42"), "@$$/a35>>=noobj","*$$/a35","noobj",t("delete","_R_")),
+            tc("M36","Delete empty location (no-op)", null, "@$$/a36>>=noobj","*$$/a36","noobj",t("delete","_R_")),
+            tc("M37","Delete entire rec via noobj", s("$$/a37/b0->[ca=>1,cb=>2]"), "@$$/a37/b0>>=noobj","*$$/a37/b0","noobj",t("delete","_R_")),
+            tc("M38","Bulk delete via wildcard noobj", s("$$/a38/b1->1","$$/a38/b2->2","$$/a38/b3->3"), "@<$$/a38/+> >>= noobj","*<$$/a38/+>","noobj",t("delete","_R_")),
+            tc("M39","Delete nested field (parent persists)", s("$$/a39/b0->[ca=>1,cb=>2]"), "@$$/a39/b0/ca>>=noobj","*$$/a39/b0","[cb=>2]",t("delete","_R_"))
+        );
+    }
+
+    // ── Edge Cases (M40–M49) ──
+
+    static Stream<UpdateTestCase> provideEdgeCases() {
+        return Stream.of(
+            tc("M40","SELECT: overlapping sub-rec fields merge", s("$$/a40/b0->[ca=>[cb=>0,cc=>2]]"), "@$$/a40/b0>>=[ca=>[cb=>1]]","*$$/a40/b0/ca==[cb=>_,cc=>_]","[cb=>1,cc=>2]",t("edge","C__")),
+            tc("M41","SELECT: empty sub-rec RHS → no-op", s("$$/a41/b0->[ca=>[cb=>1]]"), "@$$/a41/b0>>=[ca=>[=>]]","*$$/a41/b0/ca","[cb=>1]",t("edge","___")),
+            tc("M42","Mono replaces sub-rec via field path", s("$$/a42/b0->[ca=>[cb=>0]]"), "@$$/a42/b0/ca>>=42","*$$/a42/b0/ca","42",t("edge","C__")),
+            tc("M43","+ merge same-key: should be Objs NOT compute", s("$$/a43/b0->[ca=>0]"), "@$$/a43/b0>>=+[ca=>1]","*$$/a43/b0","[ca=>{0,1}]",t("edge","C__")),
+            tc("M44","+ merge same-key diff-type → Objs", s("$$/a44/b0->[ca=>0]"), "@$$/a44/b0>>=+[ca=>+1]","*$$/a44/b0","[ca=>{0,plus(1)}]",t("edge","C__")),
+            tc("M44b","+ merge: 1+2→3 is BUG, should be {1,2}", s("$$/a441/b0->[ca=>1]"), "@$$/a441/b0>>=+[ca=>2]","*$$/a441/b0","[ca=>{1,2}]",t("edge","C__")),
+            tc("M44c","+ merge no overlap (pure field-add)", s("$$/a442/b0->[cb=>2]"), "@$$/a442/b0>>=+[ca=>1]","*$$/a442/b0==[ca=>_,cb=>_]","[ca=>1,cb=>2]",t("edge","__A")),
+            tc("M45",">>= rec overwrites mono", s("$$/a45->42"), "@$$/a45>>=[ca=>1]","*$$/a45","[ca=>1]",t("edge","C__")),
+            tc("M46",">>= mono overwrites rec", s("$$/a46/b0->[ca=>0]"), "@$$/a46/b0>>=1","*$$/a46/b0","1",t("edge","C__")),
+            tc("M47","Deep compute via field path (like M16)", s("$$/a47/b0->[ca=>[cb=>0]]"), "@$$/a47/b0/ca>>=[cb=>+1]","*$$/a47/b0/ca","[cb=>1]",t("edge","C__")),
+            tc("M48","Double-nested +: outer + creates Objs", s("$$/a48/b0->[ca=>[cb=>0,cc=>2]]"), "@$$/a48/b0>>=+[ca=>+[cb=>+1]]","*$$/a48/b0/ca","{[cb=>0,cc=>2],plus([cb=>plus(1)])}",t("edge","C_A")),
+            tc("M49","Muted write (*x, no @) no persist", s("$$/a49->42"), "*$$/a49>>=1","*$$/a49","42",t("edge","___"))
+        );
+    }
+
+    // ── harness helpers ──
+
+    static UpdateTestCase tc(String id, String desc, String[] seed, String upd, String read, String exp, String[] tags) {
+        return new UpdateTestCase(id, desc, seed, upd, read, exp, tags);
+    }
+    static String[] s(String... e) { return e; }
+    static String[] t(String... t) { return t; }
+
+    // ========================================
+
+    @TestCategory.Crud
+    @ParameterizedTest(name = "[{index}] {0}")
+    @MethodSource("provideAllUpdateWriteCases")
+    public void testUpdateWrite(final UpdateTestCase tc) {
+        if (skipUpdateTestCase(tc.id())) {
+            Assumptions.assumeTrue(false, "space does not support: " + tc.id());
+            return;
+        }
+        try {
+            if (tc.seed() != null)
+                for (final String expr : tc.seed()) {
+                    final Obj r = ObjmtronSerializer.parse(make(expr)).apply();
+                    if (r.isFail() && expectWriteRejection(r)) return;
+                }
+            final Obj up = ObjmtronSerializer.parse(make(tc.update())).apply();
+            if (up.isFail() && expectWriteRejection(up)) return;
+            if (this.sleepBetweenReads > 0) CommonUtil.sleepThread(this.sleepBetweenReads);
+            final Obj rd = ObjmtronSerializer.parse(make(tc.read())).apply();
+            final Obj ex = ObjmtronSerializer.parse(make(tc.expected())).apply();
+            assertEquals(ex, rd.selfVID(null),
+                    tc.id() + ": " + tc.description() +
+                    "\n\tupdate: " + make(tc.update()) +
+                    "\n\tread:   " + make(tc.read()));
+        } finally {
+            Router.global().write(make(cleanupExpr()), noobj());
+        }
     }
 
 }

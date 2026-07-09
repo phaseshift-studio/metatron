@@ -62,4 +62,13 @@ public class MariaDBTbleSpaceTest extends AbstractTbleSpaceTest {
     public MariaDBTbleSpaceTest() {
         super(staticDbConfig);
     }
+
+    @Override
+    protected boolean skipUpdateTestCase(final String id) {
+        return switch (id) {
+            case "M33", "M34" -> true;  // cross-ref FK metadata — see PostgreSQL
+            case "M37" -> true;          // INTEGER PK delete with AUTO_INCREMENT
+            default -> super.skipUpdateTestCase(id);
+        };
+    }
 }

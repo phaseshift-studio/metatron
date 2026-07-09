@@ -27,6 +27,7 @@ import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Uri;
+import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.*;
@@ -36,6 +37,7 @@ import static studio.phaseshift.metatron.Tokens.DOM;
 import static studio.phaseshift.metatron.Tokens.RNG;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.parseQuery;
+import static studio.phaseshift.metatron.furi.fURI.validatefURI;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 
@@ -1355,6 +1357,19 @@ public class fURITest extends AbstractMetatronTest {
         assertEquals(name, parse.segments(parse.segmentLength() - 1, ""));
         assertEquals(penultimate, parse.segments(parse.segmentLength() - 2, ""));
 
+    }
+    
+    @ParameterizedTest
+    @CsvSource(value = {
+            "/a/b#",
+            "abc#",
+            "##/a/b",
+            "+/a+",
+            "+/+/aa+a"
+    })
+    public void testSingletonWildcards(final String badURI) {
+        assertFalse(validatefURI(f(badURI)));
+        //assertThrows(MTronException.class,() -> f(badURI));
     }
 
     @ParameterizedTest

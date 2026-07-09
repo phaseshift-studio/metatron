@@ -1163,7 +1163,13 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             "any objs", "the objs after skipping", Map.of(jnt(0), "the number of objs to skip"), "skips the first n objs"),
                     docWrap(instC(TAKE_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(T(INT_TID)), (lhs, inst) -> lhs.take(cInt.of(inst.arg(0).intValue())).get0()), // remaining
                             "any objs", "the objs before skipping", Map.of(jnt(0), "the number of objs to take"), "takes the first n objs"),
-                    instC(UPDATE_INST_TID.dom(A).rng(B.maybeSome()), lst(T(B.maybeSome())), (lhs, inst) -> Poly.Helper.updateRecursion(lhs.as(), inst.arg(0).as(), MUTABLE)),
+                    // Mutation box: detach the anchor (no auto-write during compute),
+                    // compute in-memory (IMMUTABLE), then atomically write the result.
+                    instC(UPDATE_INST_TID.dom(A).rng(B.maybeSome()), lst(T(B.maybeSome())), (lhs, inst) -> {
+                        final Obj detached = lhs.clone().selfVID(null);
+                        final Obj result = Poly.Helper.updateRecursion(detached, inst.arg(0).as(), IMMUTABLE);
+                        return null != lhs.vid() ? Router.writeToSpace(lhs.vid(), result) : result;
+                    }),
                     instC(REIFY_INST_TID.dom(A).rng(REC_TID), lst(), (lhs, inst) -> rec(
                             "type", rec(
                                     "tid", rec(

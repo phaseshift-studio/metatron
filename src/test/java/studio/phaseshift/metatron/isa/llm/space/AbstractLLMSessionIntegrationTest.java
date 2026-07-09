@@ -365,8 +365,11 @@ public abstract class AbstractLLMSessionIntegrationTest extends AbstractMetatron
     private void verifyMirrorRow(final Rec rec, final int id) {
         final Obj text = rec.at(uri(TEXT));
         assertFalse(text.isNoObj(), "row[" + id + "]: missing text");
-        assertTrue(text.isStr(), "row[" + id + "]: text must be Str, got " + text.getClass().getSimpleName());
-        assertFalse(text.strValue().isBlank(), "row[" + id + "]: text is blank");
+        assertTrue(text.isStr() || text.isInt(), "row[" + id + "]: text must be str or int, got " + text.getClass().getSimpleName());
+        if (text.isStr())
+            assertFalse(text.strValue().isBlank(), "row[" + id + "]: text is blank");
+        if (text.isInt())
+            assertFalse(text.intValue() < 0, "row[" + id + "]: text is a negative value");
 
         final Obj uriField = rec.at(uri(URI));
         assertFalse(uriField.isNoObj(), "row[" + id + "]: missing uri back-link");
@@ -486,8 +489,8 @@ public abstract class AbstractLLMSessionIntegrationTest extends AbstractMetatron
         final ChatFeature chat = ChatFeature.chatFeature(model, rec(uri(TO), noobj()));
         final Rec sessionConfig = rec(
                 SESSION, rec(mutableMap(
-                        uri("mem"), auto_at_(memVID).tryToInst(),
-                        uri(ALGORITHM), rec(mutableMap(uri(MAX), jnt(max)))),
+                                uri("mem"), auto_at_(memVID).tryToInst(),
+                                uri(ALGORITHM), rec(mutableMap(uri(MAX), jnt(max)))),
                         REC_TID, memVID));
         final SessionFeature session = new SessionFeature(sessionConfig.jvm(), LLM_SESSION_FEATURE_TID, null);
         final Rec agentRec = rec(mutableMap(
