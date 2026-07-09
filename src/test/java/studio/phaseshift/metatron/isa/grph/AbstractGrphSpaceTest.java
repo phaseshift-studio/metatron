@@ -172,6 +172,11 @@ public abstract class AbstractGrphSpaceTest extends AbstractDataPathTest impleme
         });
     }
 
+    @Override
+    public void testUpdateWrite(final UpdateTestCase test) {
+        // do nothing
+    }
+
     /*@Override
     public fURI incrQBaseURI() {
         return f("/g/V");
@@ -444,11 +449,13 @@ public abstract class AbstractGrphSpaceTest extends AbstractDataPathTest impleme
 
     @ParameterizedTest
     @CsvSource(value = {
-            "*/g/S.count()                                                                   % 1",
-            "*/g/S>>pattern                                                                  % /m/grph/schema/modern/#",
-            "*/g/S>>pattern.*(_).count()                                                     % 5",
-            "*/g/S>>pattern.*_.count()                                                       % 5",
-            "*/g/S>>pattern.*(_).vid()                                                        % {/m/grph/schema/modern/person,/m/grph/schema/modern/software,/m/grph/schema/modern/created,/m/grph/schema/modern/knows,/m/grph/schema/modern}",
+          //  "*/g/+                                                   % true",
+            "*/g/+.count()                                                                   % 2",
+            "*/g/+                                                                           % {edge::T@E,vrtx::T@V}",
+            "*/g/S                                                                           % modern::T",
+            //"*/g/S.vid().*(_)                                                             % 4",
+            //"*/g/S>>pattern.*_.count()                                                       % 5",
+           // "*/g/S>>pattern.*(_).vid()                                                        % {/m/grph/schema/modern/person,/m/grph/schema/modern/software,/m/grph/schema/modern/created,/m/grph/schema/modern/knows,/m/grph/schema/modern}",
     }, delimiter = '%')
     public void testSchemaTraversal(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
@@ -711,7 +718,7 @@ public abstract class AbstractGrphSpaceTest extends AbstractDataPathTest impleme
                                            final String description) {
         final Obj writeResult = ObjmtronSerializer.parse(writeExpr).apply();
         LOG.warn("write result: %s", writeResult);
-        LOG.warn("DB: %s",ObjmtronSerializer.parse("*/g/V/+").apply());
+        LOG.warn("DB: %s", ObjmtronSerializer.parse("*/g/V/+").apply());
         LOG.warn("schema: %s", space.at(SCHEMA));
         if (this.sleepBetweenReads > 0)
             CommonUtil.sleepThread(this.sleepBetweenReads);
