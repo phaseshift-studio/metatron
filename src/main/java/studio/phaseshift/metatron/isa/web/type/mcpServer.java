@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -142,7 +142,7 @@ public class mcpServer extends MRec {
             final Obj toolLhs = arguments.at(uri(LHS)).orElse(noobj());
             final Obj toolResult = toolEntry.asInst().args(arguments).apply(toolLhs);
             if (toolResult.isFail())
-                return mcpError(id, jnt(-32603), str(toolResult.asFail().message().getMessage()));
+                return mcpError(id, jnt(-32603), str(toolResult.asFail().message()));
             return mcpResponse(id, rec(uri(CONTENT), lst(rec(
                     uri(TYPE), str("text"),
                     uri(TEXT), str(toolResult.toCleanString())))));

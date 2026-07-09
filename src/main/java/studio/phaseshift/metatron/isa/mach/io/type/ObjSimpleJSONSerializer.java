@@ -234,7 +234,7 @@ public class ObjSimpleJSONSerializer extends AbstractObjSerializer<JsonElement> 
 
     @Override
     public JsonPrimitive writeFail(final Fail fail) {
-        return new JsonPrimitive(fail.message().getMessage());
+        return new JsonPrimitive(fail.message());
     }
 
     @Override

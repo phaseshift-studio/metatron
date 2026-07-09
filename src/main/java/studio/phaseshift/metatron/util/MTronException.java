@@ -20,21 +20,56 @@ package studio.phaseshift.metatron.util;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Fail;
+import studio.phaseshift.metatron.isa.m.type.impl.MFail;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Highlighter;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 
 import java.util.Arrays;
 import java.util.Objects;
 
-import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
-
 public class MTronException extends RuntimeException {
 
+    /** Back-pointer to the mtron-level {@link Fail} wrapping this exception. Set-once. */
+    private volatile Fail failRef;
+
+    /** @return the mtron {@link Fail} that wraps this exception, or {@code null} */
+    public Fail fail() {
+        return this.failRef;
+    }
+
+    /**
+     * Set the back-pointer.  First writer wins — subsequent calls are ignored
+     * so the original (uncaught) Fail is always preferred.
+     */
+    public void setFailRef(final Fail f) {
+        if (null == this.failRef)
+            this.failRef = f;
+    }
+
+    /**
+     * Find the first stack frame outside of MTronException itself — the actual throw site.
+     */
+    public static StackTraceElement originOf(final Throwable t) {
+        for (final StackTraceElement frame : t.getStackTrace()) {
+            if (!frame.getClassName().equals(MTronException.class.getName()))
+                return frame;
+        }
+        return t.getStackTrace()[0]; // fallback: shouldn't happen
+    }
+
+    /** First line of the cause message, truncated if multi-line. */
+    private static String causeSummary(final Throwable cause) {
+        final String msg = cause.getMessage();
+        if (msg == null) return "(null)";
+        final int nl = msg.indexOf('\n');
+        return nl < 0 ? msg : msg.substring(0, nl) + "...";
+    }
 
     private MTronException(final String message, final Throwable cause) {
-        super(null == cause ? Graphitty.string(message) : Graphitty.string(message.replace("%", "%%") + "[%s:%d]",
-                cause.getStackTrace()[0].getClassName(),
-                cause.getStackTrace()[0].getLineNumber()), cause);
+        super(null == cause ? Graphitty.string(message) : Graphitty.string(message.replace("%", "%%") + "[%s<%d>:%s]",
+                originOf(cause).getClassName().substring(originOf(cause).getClassName().lastIndexOf('.') + 1),
+                originOf(cause).getLineNumber(),
+                causeSummary(cause)), cause);
     }
 
     private MTronException(final String message) {
@@ -42,13 +77,16 @@ public class MTronException extends RuntimeException {
     }
 
     protected MTronException(final String message, final Throwable cause, final boolean dummy) {
-        super(null == cause ? Graphitty.string(message) : Graphitty.string(message.replace("%", "%%") + "[%s:%d]",
-                cause.getStackTrace()[0].getClassName(),
-                cause.getStackTrace()[0].getLineNumber()), cause);
+        super(null == cause ? Graphitty.string(message) : Graphitty.string(message.replace("%", "%%") + "[%s<%d>:%s]",
+                originOf(cause).getClassName().substring(originOf(cause).getClassName().lastIndexOf('.') + 1),
+                originOf(cause).getLineNumber(),
+                causeSummary(cause)), cause);
     }
 
     public static MTronException of(final Throwable cause) {
-        final MTronException m = cause instanceof MTronException ? (MTronException) cause : convert(cause);
+        if(cause instanceof MTronException)
+            return (MTronException) cause;
+        final MTronException m = convert(cause);
         return cause.getCause() != null ? m.cause(convert(cause.getCause())) : m;
     }
 
@@ -161,7 +199,7 @@ public class MTronException extends RuntimeException {
     }
 
     public Fail asFail() {
-        return fail(this, null);
+        return MFail.fail(this, null);
     }
 
     public String toString() {

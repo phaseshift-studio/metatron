@@ -29,11 +29,27 @@ import studio.phaseshift.metatron.isa.mach.type.ui.console.Console;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 
 import java.util.Arrays;
+import java.util.Map;
+import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.reflect.JRec;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public abstract class AbstractWidget<W extends AbstractWidget<W>> implements Widget<W> {
+public abstract class AbstractWidget<W extends AbstractWidget<W>> extends JRec<W> implements Widget<W> {
+
+    public AbstractWidget() {
+        this(java.util.Map.of(), studio.phaseshift.metatron.isa.m.mInstSet.REC_TID, null);
+    }
+
+    public AbstractWidget(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
+        super(jvm, tid, vid);
+        this.size = this.terminal.getSize();
+        this.display = new Display(this.terminal, false);
+        this.display.resize(this.size.getRows(), this.size.getColumns());
+        this.cursor = new Cursor(0, 0);
+    }
 
     protected Terminal terminal = Console.getTerminal();
     protected Style<W> style = Style.empty();
@@ -154,22 +170,19 @@ public abstract class AbstractWidget<W extends AbstractWidget<W>> implements Wid
         terminal.writer().flush();
     }
 
-    public AbstractWidget() {
-        this.size = this.terminal.getSize();
-        this.display = new Display(this.terminal, false);
-        this.display.resize(this.size.getRows(), this.size.getColumns());
-        this.cursor = new Cursor(0, 0);
-    }
     
+    @Override
     public Style<W> getStyle() {
         return this.style;
     }
 
+    @Override
     public W cursor(final Cursor cursor) {
         this.cursor = cursor;
         return (W) this;
     }
 
+    @Override
     public W style(final Style<W> style) {
         this.style = style;
         return (W) this;
@@ -188,13 +201,16 @@ public abstract class AbstractWidget<W extends AbstractWidget<W>> implements Wid
         this.terminal.puts(InfoCmp.Capability.keypad_xmit);
         this.terminal.writer().flush();
         //this.display.updateAnsi(Arrays.stream(this.format().split("\n")).map(Graphitty::string).toList(), -1);
-        if (this.style.attachment != null)
-            this.style.attachment.run();
+        final Widget<?> attachment = this.style.attachment();
+        if (attachment != null)
+            attachment.run();
     }
 
+    @Override
     public void close() {
-        if (null != this.style.attachment)
-            this.style.attachment.close();
+        final Widget<?> attachment = this.style.attachment();
+        if (null != attachment)
+            attachment.close();
         //this.terminal.puts(InfoCmp.Capability.clear_screen);
         //this.display.update(List.of(), this.size.cursorPos(this.cursor.getX(), this.cursor.getY()));
         //this.display.reset();

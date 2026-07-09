@@ -58,14 +58,14 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
     public static final int NESTED_STRING_THRESHOLD = 35;
 
     // ── Config key URIs ───────────────────────────────────────────
-    private static final fURI KEY_CLIP    = fURI.Singleton.f("clip");
-    private static final fURI KEY_REC     = KEY_CLIP.extend(REC_TID);
-    private static final fURI KEY_LST     = KEY_CLIP.extend(LST_TID);
-    private static final fURI KEY_STR     = KEY_CLIP.extend(STR_TID);
-    private static final fURI KEY_URI     = KEY_CLIP.extend(URI_TID);
-    private static final fURI KEY_REAL    = KEY_CLIP.extend(REAL_TID);
-    private static final fURI KEY_BYTES   = KEY_CLIP.extend(BYTES_TID);
-    private static final fURI KEY_FAIL    = KEY_CLIP.extend(FAIL_TID);
+    private static final fURI KEY_CLIP = fURI.Singleton.f("clip");
+    private static final fURI KEY_REC = KEY_CLIP.extend(REC_TID);
+    private static final fURI KEY_LST = KEY_CLIP.extend(LST_TID);
+    private static final fURI KEY_STR = KEY_CLIP.extend(STR_TID);
+    private static final fURI KEY_URI = KEY_CLIP.extend(URI_TID);
+    private static final fURI KEY_REAL = KEY_CLIP.extend(REAL_TID);
+    private static final fURI KEY_BYTES = KEY_CLIP.extend(BYTES_TID);
+    private static final fURI KEY_FAIL = KEY_CLIP.extend(FAIL_TID);
     private static final fURI KEY_JUSTIFY = fURI.Singleton.f("justify");
 
     // ── Singletons ───────────────────────────────────────────────
@@ -252,8 +252,8 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
     @Override
     public String writeFail(final Fail fail) {
         final StringBuilder sb = new StringBuilder();
-        sb.append(handleIds(fail, "[" + fail.message().getMessage() + "]"));
-        if (fail.message().getCause() != null)
+        sb.append(handleIds(fail, "[" + fail.message() + "]"));
+        if (fail.jvm().getCause() != null)
             sb.append("[...]");
         return sb.toString();
     }
@@ -606,10 +606,10 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
                 sb.append(writeUri(obj.asUri()));
         } else if (obj.isFail()) {
             final int max = this.clipFail();
-            String message = obj.asFail().message().getMessage().split("\n")[0];
+            String message = obj.asFail().message().split("\n")[0];
             message = message.length() > max ? (message.substring(0, max - 1) + "...") : message;
             sb.append(writeFail(fail(message)));
-            if (obj.asFail().message().getCause() != null)
+            if (obj.asFail().jvm().getCause() != null)
                 sb.append("[...]");
         } else {
             sb.append(obj.toShortString());

@@ -47,28 +47,16 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.mach.ui.uiInstSet.UI_ACCORDIAN_TID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class AccordionWidget extends JRec<AccordionWidget> implements Widget<AccordionWidget> {
 
-    public static final fURI WIDGET_ACCORDION_TID = f("/m/mach/ui/widget/accordion");
     private static final String KEY_TITLE = "title";
     private static final String KEY_BODY  = "body";
     private static final String KEY_EXP   = "expanded";
-
-    public static final Type WIDGET_ACCORDION_TYPE = Type.Builder.build()
-            .tid(REC_TID).vid(WIDGET_ACCORDION_TID)
-            .isaPredicate(rec(uri(KEY_TITLE), T(STR_TID.maybe()),
-                              uri(KEY_BODY),  T(STR_TID.maybeSome()),
-                              uri("style"),   T(Stylable.WIDGET_STYLE_TID.maybe())))
-            .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(WIDGET_ACCORDION_TID),
-                    lst(T(REC_TID)), (lhs, inst) -> {
-                    final AccordionWidget a = new AccordionWidget(inst.arg(0).as().jvm(), WIDGET_ACCORDION_TID, inst.arg(0).vid());
-                    Graphitty.out(Console.getTerminal().output(), a.format() + "\n");
-                    return a;
-            })).create();
 
     @JRecElement(key = KEY_TITLE, rng = "/m/str")
     public String _title = "";
@@ -129,7 +117,7 @@ public class AccordionWidget extends JRec<AccordionWidget> implements Widget<Acc
         this.at(uri("append"),   instLambda((l, i) -> { this.appendLine(l.isStr() ? l.strValue() : ""); Graphitty.out(Console.getTerminal().output(), this.format() + "\n"); return this; }), MUTABLE);
     }
 
-    public AccordionWidget() { this(Map.of(), WIDGET_ACCORDION_TID, null); }
+    public AccordionWidget() { this(Map.of(), UI_ACCORDIAN_TID, null); }
     public AccordionWidget(final String title) { this(); this._title = title; }
     public AccordionWidget(final String title, final String body) { this(); this._title = title; if (body != null) this._body.addAll(Arrays.asList(body.split("\n"))); }
 
@@ -167,8 +155,8 @@ public class AccordionWidget extends JRec<AccordionWidget> implements Widget<Acc
     @Override
     public AccordionWidget style(final Style<AccordionWidget> s) {
         this.style = s;
-        if (this.style.border == Border.none) this.style.border = Border.simple;
-        if (this.style.foreground.isEmpty())  this.style.foreground = "{{g}}";
+        if (this.style.border() == Border.none) this.style.border(Border.simple);
+        if (this.style.foreground().isEmpty())  this.style.foreground("{{g}}");
         return this;
     }
 
@@ -198,7 +186,7 @@ public class AccordionWidget extends JRec<AccordionWidget> implements Widget<Acc
         final String ind = indicator();
         final int titleW = Highlighter.visualLength(title()) + Highlighter.visualLength(ind) + 3;
         final int width = Math.max(titleW, bodyWidth + 2);
-        final Border border = this.style.border == Border.none ? Border.simple : this.style.border;
+        final Border border = this.style.border() == Border.none ? Border.simple : this.style.border();
         final StringBuilder sb = new StringBuilder();
 
         if (isExpanded() && !this._body.isEmpty()) {
@@ -206,7 +194,7 @@ public class AccordionWidget extends JRec<AccordionWidget> implements Widget<Acc
             sb.append("\n");
             for (final String line : this._body) {
                 sb.append(Widget.X).append(border.leftSide()).append(Widget.X)
-                        .append(this.style.foreground).append(" ").append(line)
+                        .append(this.style.foreground()).append(" ").append(line)
                         .append(" ".repeat(Math.max(0, width - Highlighter.visualLength(line) - 1)))
                         .append(Widget.X).append(border.rightSide()).append(Widget.X).append("\n");
             }

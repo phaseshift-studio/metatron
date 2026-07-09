@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -21,20 +21,37 @@ package studio.phaseshift.metatron.isa.mach.type.ui.widget;
 import org.jline.keymap.BindingReader;
 import org.jline.keymap.KeyMap;
 import org.jline.utils.InfoCmp;
+import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.mach.type.ui.Widget;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.util.TriConsumer;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static org.jline.keymap.KeyMap.key;
+
+import studio.phaseshift.metatron.isa.mach.type.ui.widget.Utilities;
+
 import static studio.phaseshift.metatron.isa.mach.type.ui.widget.Selector.Operation.*;
+import static studio.phaseshift.metatron.isa.mach.ui.uiInstSet.UI_SELECTOR_TID;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class Selector extends AbstractWidget<Selector> {
+
+    public Selector() {
+        super(mutableMap(), UI_SELECTOR_TID, null);
+    }
+
+    public Selector(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
+        super(jvm, tid, vid);
+    }
 
     protected enum Operation {
         QUIT,
@@ -61,14 +78,15 @@ public class Selector extends AbstractWidget<Selector> {
 
     @Override
     public String format() {
-        return this.style.attachment.format();
+        final Widget<?> attachment = this.style.attachment();
+        return attachment == null ? "" : attachment.format();
     }
 
     public void run() {
         super.run();
         try {
             final BindingReader bindingReader = new BindingReader(terminal.reader());
-            int selectRow = style.lowRowRange;
+            int selectRow = style.lowRowRange();
             int selectCol = 0;
             KeyMap<Operation> keyMap = new KeyMap<>();
             keyMap.bind(DOWN_ROW, key(this.terminal, InfoCmp.Capability.key_down));
@@ -77,19 +95,21 @@ public class Selector extends AbstractWidget<Selector> {
             keyMap.bind(LEFT_COL, key(this.terminal, InfoCmp.Capability.key_left));
             keyMap.bind(QUIT, Utilities.esc_key);
             keyMap.bind(SELECTED, Utilities.enter_key);
-            // Graphitty.log(this).none("{{^%s}}", this.style.attachment.rowCount() + 1);
+            // Graphitty.log(this).none("{{^%s}}", this.style.attachment().rowCount() + 1);
             boolean done = false;
             while (!done) {
                 final List<String> currentStateDisplay = new ArrayList<>();
                 /// ///////////////////////////////////////////////////////////////////////////////////////////////
                 final String divider = "{{g}}|";
                 final int dividerLength = divider.length() - 1;
-                for (int i = 0; i < this.style.attachment.rowCount(); i++) {
+                final Widget<?> attachment = this.style.attachment();
+                if (attachment == null) return;
+                for (int i = 0; i < attachment.rowCount(); i++) {
                     boolean selectedRow = i == selectRow;
                     final StringBuilder current = new StringBuilder();
-                    current.append(" ".repeat(this.style.leftMargin));
+                    current.append(" ".repeat(this.style.leftMargin()));
                     if (selectedRow) {
-                        final String currentRow = this.style.attachment.rowString(i);
+                        final String currentRow = attachment.rowString(i);
                         int pointer = 0;
                         int counter = 0;
                         for (int j = 0; j < currentRow.length(); j++) {
@@ -101,13 +121,13 @@ public class Selector extends AbstractWidget<Selector> {
                         }
                         if (counter < currentRow.length() - dividerLength) {
                             current.append(currentRow, 0, counter + dividerLength);
-                            current.append(this.style.pointer);
+                            current.append(this.style.pointer());
                             current.append(currentRow, counter + dividerLength + 1, currentRow.length());
                         } else {
-                            current.append(this.style.attachment.rowString(i));
+                            current.append(attachment.rowString(i));
                         }
                     } else {
-                        current.append(this.style.attachment.rowString(i));
+                        current.append(attachment.rowString(i));
                     }
                     currentStateDisplay.add(Graphitty.string(current.toString()));
                 }
@@ -118,23 +138,23 @@ public class Selector extends AbstractWidget<Selector> {
                 switch (op) {
                     case RIGHT_COL:
                         selectCol++;
-                        if (selectCol > this.style.highColRange - 1)
-                            selectCol = this.style.lowColRange;
+                        if (selectCol > this.style.highColRange() - 1)
+                            selectCol = this.style.lowColRange();
                         break;
                     case LEFT_COL:
                         selectCol--;
                         if (selectCol < 0)
-                            selectCol = this.style.highColRange - 1;
+                            selectCol = this.style.highColRange() - 1;
                         break;
                     case DOWN_ROW:
                         selectRow++;
-                        if (selectRow > this.style.highRowRange - 1)
-                            selectRow = this.style.lowRowRange;
+                        if (selectRow > this.style.highRowRange() - 1)
+                            selectRow = this.style.lowRowRange();
                         break;
                     case UP_ROW:
                         selectRow--;
-                        if (selectRow < this.style.lowRowRange)
-                            selectRow = this.style.highRowRange - 1;
+                        if (selectRow < this.style.lowRowRange())
+                            selectRow = this.style.highRowRange() - 1;
                         break;
                     case SELECTED:
                         done = true;

@@ -88,8 +88,8 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
     }
 
     @Override
-    default Rec jvm(final Object jvm) {
-        return this.clone(jvm, this.tid(), this.vid());
+    default <O extends Obj> O jvm(final Object jvm) {
+        return (O) this.clone(jvm, this.tid(), this.vid());
     }
 
     @Override

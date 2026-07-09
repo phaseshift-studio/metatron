@@ -49,15 +49,15 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
  */
 public class PanelWidget extends JRec<PanelWidget> implements Widget<PanelWidget> {
 
-    public static final fURI WIDGET_PANEL_TID = f("/m/mach/ui/widget/panel");
+    public static final fURI UI_PANEL_TID = f("/m/mach/ui/widget/panel");
 
-    public static final Type WIDGET_PANEL_TYPE = Type.Builder.build()
+    public static final Type UI_PANEL_TYPE = Type.Builder.build()
             .tid(REC_TID)
-            .vid(WIDGET_PANEL_TID)
+            .vid(UI_PANEL_TID)
             .isaPredicate(rec())
-            .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(WIDGET_PANEL_TID),
+            .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(UI_PANEL_TID),
                     lst(T(REC_TID)), (lhs, inst) ->
-                    new PanelWidget(inst.arg(0).as().jvm(), WIDGET_PANEL_TID, inst.arg(0).vid())))
+                    new PanelWidget(inst.arg(0).as().jvm(), UI_PANEL_TID, inst.arg(0).vid())))
             .create();
 
     @JRecElement(key = "title", rng = "/m/str")
@@ -80,7 +80,7 @@ public class PanelWidget extends JRec<PanelWidget> implements Widget<PanelWidget
     // ── convenience constructors ───────────────────────────────────
 
     public PanelWidget() {
-        this(Map.of(), WIDGET_PANEL_TID, null);
+        this(Map.of(), UI_PANEL_TID, null);
     }
 
     public PanelWidget(final String body) {
@@ -88,7 +88,7 @@ public class PanelWidget extends JRec<PanelWidget> implements Widget<PanelWidget
     }
 
     public PanelWidget(final String title, final String body) {
-        this(Map.of(), WIDGET_PANEL_TID, null);
+        this(Map.of(), UI_PANEL_TID, null);
         this.title = title;
         this.body = body;
     }
@@ -108,7 +108,7 @@ public class PanelWidget extends JRec<PanelWidget> implements Widget<PanelWidget
             sb.append("\n");
         }
         sb.deleteCharAt(sb.length() - 1);
-        return new PanelWidget(sb.toString()).style().border(this.style.border).apply();
+        return new PanelWidget(sb.toString()).style().border(this.style.border()).applyStyle();
     }
 
     public PanelWidget setTitle(final String title) {
@@ -124,7 +124,7 @@ public class PanelWidget extends JRec<PanelWidget> implements Widget<PanelWidget
     @Override
     public PanelWidget style(final Style<PanelWidget> style) {
         this.style = style;
-        if (this.style.border == Border.none) this.style.border = Border.simple;
+        if (this.style.border() == Border.none) this.style.border(Border.simple);
         return this;
     }
 
@@ -145,24 +145,24 @@ public class PanelWidget extends JRec<PanelWidget> implements Widget<PanelWidget
                 .max(Integer::compareTo).orElse(0);
 
         final StringBuilder sb = new StringBuilder();
-        sb.append(this.style.prefix);
+        sb.append(this.style.prefix());
         final String top = "%s%s".formatted(
                 null == this.title ? "" : this.title,
-                this.style.border.topSide().repeat(
+                this.style.border().topSide().repeat(
                         null == this.title ? maxLen : maxLen - Highlighter.visualLength(this.title)))
                 .stripTrailing();
         if (!top.isEmpty())
-            sb.append(this.style.border.topLeftCorner()).append(top)
-                    .append(this.style.border.topRightCorner()).append('\n');
+            sb.append(this.style.border().topLeftCorner()).append(top)
+                    .append(this.style.border().topRightCorner()).append('\n');
         for (final String line : lines) {
-            sb.append(this.style.border.leftSide()).append(line)
+            sb.append(this.style.border().leftSide()).append(line)
                     .append(" ".repeat(maxLen - Highlighter.visualLength(line)))
-                    .append(this.style.border.rightSide()).append("{{X}}\n");
+                    .append(this.style.border().rightSide()).append("{{X}}\n");
         }
-        final String bottom = this.style.border.bottomSide().repeat(maxLen).stripTrailing();
+        final String bottom = this.style.border().bottomSide().repeat(maxLen).stripTrailing();
         if (!bottom.isEmpty())
-            sb.append(this.style.border.bottomLeftCorner()).append(bottom)
-                    .append(this.style.border.bottomRightCorner()).append("\n");
+            sb.append(this.style.border().bottomLeftCorner()).append(bottom)
+                    .append(this.style.border().bottomRightCorner()).append("\n");
         return sb.toString();
     }
 

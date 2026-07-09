@@ -157,21 +157,25 @@ public class Agent extends MRec {
         return path;
     }
 
-    /** Matches {@code <<TYPE:KEY>>...<</TYPE:KEY>>} blocks for LLM-to-blackboard signaling. */
+    /**
+     * Matches {@code <<TYPE:KEY>>...<</TYPE:KEY>>} blocks for LLM-to-blackboard signaling.
+     */
     private static final Pattern MTRON_BLOCK =
             Pattern.compile("<<(\\w+):(\\w+)>>\\s*(.+?)\\s*<</\\1:\\2>>\\s*$", Pattern.DOTALL);
 
-    /** Maps block tag names to MIME types for deserialization. */
+    /**
+     * Maps block tag names to MIME types for deserialization.
+     */
     private static MIME.MIMEType mimeForTag(final String tag) {
         return switch (tag) {
             case "mtron" -> MIME.MIMEType.APPLICATION_MTRON;
-            case "json"  -> MIME.MIMEType.APPLICATION_JSON;
-            case "html"  -> MIME.MIMEType.TEXT_HTML;
-            case "md"    -> MIME.MIMEType.TEXT_MARKDOWN;
-            case "xml"   -> MIME.MIMEType.APPLICATION_XML;
+            case "json" -> MIME.MIMEType.APPLICATION_JSON;
+            case "html" -> MIME.MIMEType.TEXT_HTML;
+            case "md" -> MIME.MIMEType.TEXT_MARKDOWN;
+            case "xml" -> MIME.MIMEType.APPLICATION_XML;
             case "txt", "plain" -> MIME.MIMEType.TEXT_PLAIN;
-            case "bson"  -> MIME.MIMEType.APPLICATION_BSON;
-            default      -> MIME.MIMEType.APPLICATION_MTRON;
+            case "bson" -> MIME.MIMEType.APPLICATION_BSON;
+            default -> MIME.MIMEType.APPLICATION_MTRON;
         };
     }
 
@@ -224,11 +228,10 @@ public class Agent extends MRec {
                     return result;
                 }
             }
-
+            this.feature(CHAT).ifPresent(chat -> chat.asRec().at(FORMAT, (responseFormat.isNoObj() || responseFormat.asRec().isEmpty()) ? noobj() : responseFormat, MUTABLE));
             // ── Phase 2: Build LC4j service from Agent's own JVM state ──
             final AiServices<AgentServices> service = AiServices.builder(AgentServices.class);
             AgentUtility.buildService(this, service);
-
             final AgentServices agent = (this.has(DESC) && !this.at(DESC).strValue().isBlank() ?
                     service.systemMessageTransformer((current, content) ->
                             (this.at(DESC).orElse(str0()).strValue() + "\n\n" +
@@ -236,7 +239,7 @@ public class Agent extends MRec {
                     service).streamingChatModel(AgentUtility.createChatModel(this)).build();
 
             // ── Phase 3: Stream — write events to result blackboard, dispatch hooks ──
-            LOG.info("processed message: %s", this.userMessage);
+            LOG.info("processed message: %s %s", this.userMessage, this.feature(CHAT).asRec().at(FORMAT).orElse(rec(uri(FORMAT), uri("none"))));
             agent.chat(this.userMessage)
                     .onToolExecuted(tool -> {
                         isTooling.set(false);
@@ -282,8 +285,7 @@ public class Agent extends MRec {
                         // Parse response format if requested
                         final boolean formatted = !responseFormat.isNoObj() && !responseFormat.isEmpty();
                         final Obj chatResult = formatted ?
-                                ObjSimpleJSONSerializer.single().inputBytes(
-                                        ByteBuffer.wrap(fullText.getBytes(StandardCharsets.UTF_8))) :
+                                ObjSimpleJSONSerializer.single().inputBytes(fullText) :
                                 str(fullText);
                         // Parse <<TYPE:KEY>>...<</TYPE:KEY>> blocks into res(KEY), strip from chat
                         final Matcher blockMatcher = MTRON_BLOCK.matcher(fullText);
@@ -314,7 +316,7 @@ public class Agent extends MRec {
                         this.asRec().at(feat(RESPONSE, TO)).apply(chatResult);
                         // Elapsed time — written before hook dispatch so features can read it
                         final long elapsed = (System.nanoTime() - startNanos) / 1_000_000;
-                        this.at(res("time"), mathInstSet.normalizeTime(real((double) elapsed, MATH_MILLIS_TID, null)), MUTABLE);
+                        this.at(res(TIME), mathInstSet.normalizeTime(real((double) elapsed, MATH_MILLIS_TID, null)), MUTABLE);
                         this.logger().none("\n");
                         features.forEach(f -> dispatchHook(f, ON_COMPLETE_RESPONSE, str(fullText)));
                         // Signal main thread AFTER all blackboard writes complete

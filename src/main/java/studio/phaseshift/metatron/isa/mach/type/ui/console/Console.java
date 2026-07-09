@@ -18,6 +18,8 @@
 
 package studio.phaseshift.metatron.isa.mach.type.ui.console;
 
+import java.util.function.Consumer;
+
 import org.jline.builtins.ConfigurationPath;
 import org.jline.console.SystemRegistry;
 import org.jline.console.impl.Builtins;
@@ -54,6 +56,7 @@ import studio.phaseshift.metatron.isa.mach.type.ui.tmux.SplitContainer;
 import studio.phaseshift.metatron.isa.mach.type.ui.tmux.SplitLayout;
 import studio.phaseshift.metatron.isa.mach.type.ui.tool.ExplainTool;
 import studio.phaseshift.metatron.isa.mach.type.ui.tool.InstSelectorTool;
+import studio.phaseshift.metatron.isa.mach.type.ui.tool.TraceTool;
 import studio.phaseshift.metatron.isa.mach.type.ui.tool.TypeDiffTool;
 import studio.phaseshift.metatron.isa.mach.type.ui.tool.fURISelectorTool;
 import studio.phaseshift.metatron.isa.mach.type.ui.widget.*;
@@ -99,11 +102,11 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_ISA_TID;
 import static studio.phaseshift.metatron.isa.mach.type.thread.VirtualThread.virtual;
+import static studio.phaseshift.metatron.isa.mach.ui.uiInstSet.UI_CONSOLE_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.HEADER_FILE;
 
 public class Console extends JRec<Console> implements Closeable, Runnable {
 
-    public static final fURI CONSOLE_TID = MACH_ISA_TID.extend("console");
     @JRecElement(key = "metatron_version", rng = "/m/uri")
     public static final String METATRON_VERSION = "0.1-alpha";
     //@JRecElement(key = "mtron", rng = "/m/uri")
@@ -200,22 +203,8 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
 
     private Language currentLanguage = Language.MTRON;
 
-    public static final Type CONSOLE_TYPE = Type.Builder.build()
-            .tid(REC_TID)
-            .vid(CONSOLE_TID)
-            .isaPredicate(rec())
-            .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(CONSOLE_TID), lst(T(REC_TID)), (lhs, inst) -> {
-                final Console console = new Console(inst.arg(0).as(), inst.arg(0).vid());
-                new ColonMenu(console).attach(rec());
-                docWrap(virtual(instLambda((_lhs, inst2) -> {
-                    console.run();
-                    return noobj();
-                })), "console repl").applyAsync();
-                return docWrap(console, "a user terminal repl", ":help");
-            })).create();
-
     public Console(final Rec options, final fURI vid) {
-        super(options.jvm(), CONSOLE_TID, vid);
+        super(options.jvm(), UI_CONSOLE_TID, vid);
         BootLoader.ONE_SHOT = false;
         Console.LOCAL_INSTANCE = this;
         try {
@@ -325,7 +314,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
     }
 
     public void write(final Object object) {
-        terminal.writer().write(((Highlighter) this.reader.getHighlighter()).write(object));
+        terminal.writer().write(object instanceof Obj ? this.serializer.write((Obj) object) : ((Highlighter) this.reader.getHighlighter()).write(object));
     }
 
     public static Terminal getTerminal() {
@@ -380,7 +369,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
             // Secondary prompt: pad to the pane's left content column so
             // continuation lines also stay within the pane borders.
             final String secondaryPrompt =
-                    " " .repeat(Math.max(0, contentStartCol - 1))
+                    " ".repeat(Math.max(0, contentStartCol - 1))
                             + Graphitty.string("{{g}}|{{X}} ");
             this.reader.setVariable(LineReader.SECONDARY_PROMPT_PATTERN, secondaryPrompt);
 
@@ -810,12 +799,12 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
         final int lineAbove = promptRow - 1;
         if (lineAbove >= pos[0]) { // Only if within pane bounds
             terminal.writer().print("\u001b[" + lineAbove + ";" + promptCol + "H");
-            terminal.writer().print(" " .repeat(Math.max(0, paneWidth)));
+            terminal.writer().print(" ".repeat(Math.max(0, paneWidth)));
         }
 
         // Clear the prompt line within the pane
         terminal.writer().print("\u001b[" + promptRow + ";" + promptCol + "H");
-        terminal.writer().print(" " .repeat(Math.max(0, paneWidth)));
+        terminal.writer().print(" ".repeat(Math.max(0, paneWidth)));
         terminal.writer().print("\u001b[" + promptRow + ";" + promptCol + "H");
 
         terminal.writer().flush();
@@ -841,8 +830,6 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                 this.write("\n");
             });
         }
-        if (Tracer.stack.enabled())
-            result.stream().filter(Obj::isFail).forEach(this::renderTrace);
     }
 
     private void renderTrace(final Obj failObj) {
@@ -853,6 +840,40 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
     }
 
     /**
+     * If {@link Tracer#stack} is enabled, prompt the user to launch the
+     * {@link TraceTool} for each fail object.  Falls back to
+     * {@link #renderTrace} when the user declines.
+     */
+    private void promptTraceForFails(final Obj result) {
+        if (!Tracer.stack.enabled()) return;
+        result.stream().filter(Obj::isFail).forEach(failObj -> {
+            terminal.writer().write(Graphitty.string("{{y}}display trace tool? {{g}}[Y/n]{{y}} {{X}}"));
+            terminal.writer().flush();
+            try {
+                final int ch = terminal.reader().read();
+                if (ch == -1 || ch == 'y' || ch == 'Y' || ch == '\r' || ch == '\n') {
+                    terminal.writer().write("\n");
+                    final TraceTool traceTool = new TraceTool(failObj.asFail());
+                    if (Console.this.splitMode && Console.this.activePane != null) {
+                        final int[] pos = Console.this.calculatePanePosition(Console.this.activePane);
+                        if (pos != null) traceTool.setPaneBounds(pos[0], pos[1], pos[2], pos[3]);
+                    }
+                    Utilities.runCursorLessWidget(traceTool, true);
+                    if (Console.this.splitMode) {
+                        Console.this.renderPanes(false);
+                    }
+                    redrawBuffer();
+                } else {
+                    terminal.writer().write("\n");
+                    renderTrace(failObj);
+                }
+            } catch (final Exception e) {
+                renderTrace(failObj);
+            }
+        });
+    }
+
+    /**
      * Walk the fail's Throwable cause chain and render as Graphitty markup.
      * The mtron cause chain is threaded through {@link Throwable#getCause()}.
      */
@@ -860,10 +881,10 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
         final StringBuilder sb = new StringBuilder();
         // Collect the full cause chain first so we know which entries have siblings
         final java.util.List<Throwable> chain = new java.util.ArrayList<>();
-        Throwable t = failObj.asFail().message();
-        while (null != t) {
-            chain.add(t);
-            t = t.getCause();
+        Throwable throwable = failObj.asFail().jvm();
+        while (null != throwable) {
+            chain.add(throwable);
+            throwable = throwable.getCause();
         }
 
         for (int i = 0; i < chain.size(); i++) {
@@ -945,7 +966,12 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                 });
                 final AtomicReference<Obj> computeResult = new AtomicReference<>(noobj());
                 if (this.input.isNoObj()) {
-                    final Machine mach = SwarmMachine.of(resolvedResult.as()).onHalt(this::printResult);
+                    final Machine mach = SwarmMachine.of(resolvedResult.as());
+                    final Consumer<Obj> defaultOnHalt = mach.onHalt(); // accumulate into HALTED
+                    mach.onHalt(o -> {
+                        defaultOnHalt.accept(o);  // persist in HALTED collection
+                        this.printResult(o);      // display
+                    });
                     // Track machine in both places for interruption
                     this.machine = mach;
                     if (this.activePane != null) {
@@ -972,9 +998,12 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                 }
                 running.set(computeResult.get());
                 computeResult.get().stream().forEach(this::printResult);
+                this.promptTraceForFails(computeResult.get());
                 this.status.setState(startLevel);
             } catch (final Exception e) {
-                this.printResult(fail(e));
+                final Obj failResult = fail(e);
+                this.printResult(failResult);
+                this.promptTraceForFails(failResult);
             } finally {
                 if (this.activePane != null) {
                     this.activePane.clearMachine();
@@ -1085,7 +1114,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                         final StringBuilder sb = new StringBuilder(remaining[0].strValue());
                         for (int i = 1; i < remaining.length; i++) {
                             sb.append('\n');
-                            sb.append(" " .repeat(promptWidth - 2 + (i - 1)));
+                            sb.append(" ".repeat(promptWidth - 2 + (i - 1)));
                             sb.append("\\_ ").append(remaining[i].strValue());
                         }
                         this.seedBuffer = sb.toString();
@@ -1133,7 +1162,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                 Throwable x = e;
                 int y = 0;
                 while (null != x) {
-                    LOG.error("\n%s%s", ((0 == y++) ? "" : (" " .repeat(y) + "\\_")), x.getMessage());
+                    LOG.error("\n%s%s", ((0 == y++) ? "" : (" ".repeat(y) + "\\_")), x.getMessage());
                     x = x.getCause();
                 }
                 final boolean isTypeMismatch = e instanceof TypeMismatchException;
@@ -1351,7 +1380,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                         Console.this.getCurrentLanguage().prompt);
                 // Append a new \_ line at the end with appropriate indentation
                 buffer.cursor(buffer.length());
-                buffer.write("\n" + " " .repeat(promptWidth - 2 + depth) + "\\_ ");
+                buffer.write("\n" + " ".repeat(promptWidth - 2 + depth) + "\\_ ");
                 // Clear the JLine "|" secondary prompt from continuation lines
                 reader.setVariable(LineReader.SECONDARY_PROMPT_PATTERN,
                         Graphitty.string("{{-X-}}{{v1&^1&m}}"));

@@ -57,7 +57,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.mach.type.ui.console.Console.CONSOLE_TID;
+import static studio.phaseshift.metatron.isa.mach.ui.uiInstSet.UI_CONSOLE_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /*
@@ -65,16 +65,16 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  */
 public final class ColonMenu extends MRec {
 
-    public static final fURI COLON_MENU_TID = CONSOLE_TID.extend("colon_menu");
+    public static final fURI COLON_MENU_TID = UI_CONSOLE_TID.extend("colon_menu");
     private final GraphittyLogger LOG = Graphitty.log(this);
     private final Console console;
     private AccordionWidget accordian;
 
     public Rec attach(final Rec menuRec, final String... menuItemsToAdd) {
         for (final String item : menuItemsToAdd.length == 0 ? this.getMenuItems() : menuItemsToAdd) {
-            menuRec.at(item, this.at(item).clone(), MUTABLE);
+            menuRec.at(uri(item), this.at(uri(item)).clone(), MUTABLE);
         }
-        return this.console.at("menu", menuRec, MUTABLE);
+        return this.console.at(uri("menu"), menuRec, MUTABLE);
     }
 
     public String[] getMenuItems() {
@@ -124,7 +124,7 @@ public final class ColonMenu extends MRec {
                     .addRow(List.of("prev pane", "<alt>+w", "cycle to previous pane"))
                     .addRow(List.of("shrink pane", "<alt>+<", "make active pane smaller"))
                     .addRow(List.of("grow pane", "<alt>+>", "make active pane larger"))
-                    .style().headerDivider("{{[b]&w}}│").divider("{{g}}│").margin(0, 0, 0, 0).apply().format()).style().margin(0, 0, 0, 0).border(Border.continuous.foreground("{{b}}")).apply().format();
+                    .style().headerDivider("{{[b]&w}}│").divider("{{g}}│").margin(0, 0, 0, 0).applyStyle().format()).style().margin(0, 0, 0, 0).border(Border.continuous.foreground("{{b}}")).applyStyle().format();
             if (console.isSplitMode() && console.getActivePane() != null) {
                 console.getActivePane().appendOutput(helpText);
             } else {

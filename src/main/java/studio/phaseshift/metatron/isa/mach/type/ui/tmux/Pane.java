@@ -50,7 +50,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.mach.type.ui.console.Console.CONSOLE_TID;
+import static studio.phaseshift.metatron.isa.mach.ui.uiInstSet.UI_CONSOLE_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /**
@@ -103,14 +103,14 @@ public class Pane extends JRec<Pane> implements PaneNode, Stylable<Pane> {
     }
 
     public Pane(final Console.Language language, final int maxOutputLines) {
-        super(mutableMap(), CONSOLE_TID.extend("pane"), Console.LOCAL_INSTANCE.vid().extend("pane").extend("" + ID_COUNTER.getAndIncrement()));
+        super(mutableMap(), UI_CONSOLE_TID.extend("pane"), Console.LOCAL_INSTANCE.vid().extend("pane").extend("" + ID_COUNTER.getAndIncrement()));
         this.id = ID_COUNTER.get() - 1;
         this.language = language;
         this.maxOutputLines = maxOutputLines;
         this.outputBuffer = Collections.synchronizedList(new ArrayList<>());
         this.machine = null;
         // Default to simple border style (ASCII: +, |, -) for visibility
-        this.style = this.style().border(Border.continuous).apply().getStyle();
+        this.style = Stylable.Style.from(this.style().border(Border.continuous).applyStyle());
         //  this.subscribe();
     }
 
@@ -293,7 +293,7 @@ public class Pane extends JRec<Pane> implements PaneNode, Stylable<Pane> {
         final List<String> visible = this.visibleOutput(height);
 
         // Get border style - use foreground color based on active state
-        final Border border = this.style.border;
+        final Border border = this.style.border();
         final String borderColor = isActive ? "{{g}}" : "{{b}}";
 
         // Build the pane content
@@ -375,7 +375,7 @@ public class Pane extends JRec<Pane> implements PaneNode, Stylable<Pane> {
      */
     public void renderContentOnly(final Terminal terminal, final int startRow, final int startCol,
                                   final int height, final int width) {
-        final Border border = this.style.border;
+        final Border border = this.style.border();
         final String borderColor = "{{b}}"; // non-active colour; active border was drawn by full render
         final List<String> visible = this.visibleOutput(height);
         final int contentWidth = width - 2; // -2 for left/right border chars

@@ -45,6 +45,7 @@ import(/m/llm);
 import(/m/grph);
 import(/m/vec);
 import(/m/iot);
+import(/m/mach/ui);
 space_root -> <${*boot/args/internal/sys}/space/dr>;
 [===================================================================]
 [===================================================================]
@@ -176,8 +177,8 @@ agent::[name     => 'dr.stynx',
                                                         host     => <http://ginger.local:11434>,
                                                         llm      => <batiai/gemma4-31b:q6>],
                                     response => [to => print(_)]],
-                     loop_feature::[max_loop=>5],
-                     ledger_feature::[=>],
+                     loop_feature::[max_loop=>100],
+                     ledger_feature::[ledger=>/usr/dr/ledger],
                      skill_feature::[skill=>[<metatronfs:skills/mtron>]],
                      session_feature::[session => !@<drdb:llm_session/1>],
                      [== system_feature::[=>], ==],

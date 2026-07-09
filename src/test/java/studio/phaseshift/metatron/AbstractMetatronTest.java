@@ -230,9 +230,9 @@ public abstract class AbstractMetatronTest {
                 actual2.stream().forEach(actual -> {
                     if (!(cd.isFail() || actual.isFail())) {
                         if (cd.isFail())
-                            cd.<Fail>as().message().printStackTrace();
+                            cd.<Fail>as().jvm().printStackTrace();
                         if (actual.isFail())
-                            actual.<Fail>as().message().printStackTrace();
+                            actual.<Fail>as().jvm().printStackTrace();
                         fail(Graphitty.string("testing %s => %s [expected:%s]", cd, actual, expected));
 
                     }

@@ -114,11 +114,11 @@ public class Generator {
                 .filter(s -> s.asType().isRefinementOf(SPACE_TYPE) || s.asType().vid().toString().contains("space"))
                 .toList();
         final Selector select = new Selector();
-        final TableWidget spaceTable = new TableWidget(List.of("", "space", "description"))
+        final TableWidget spaceTable = (TableWidget) new TableWidget(List.of("", "space", "description"))
                 .style()
                 .border(Border.continuous.foreground("{{b}}"))
                 .headerDivider("{{b}}" + Border.continuous.leftSide())
-                .apply();
+                .applyStyle();
         spaceTypes.forEach(s -> {
             spaceTable.addRow(List.of("[ ]", s.vid().name(), Router.readFromSpace(s.vid().addQ(DOCQ_PATTERN.toString())).orElse(rec()).at(DESC)));
         });

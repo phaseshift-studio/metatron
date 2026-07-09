@@ -586,6 +586,7 @@
                                 <argument>/m/sys</argument>
                                 <argument>/m/mach</argument>
                                 <argument>/m/math</argument>
+                                <argument>/m/mach/ui</argument>
                                 <argument>/m/web</argument>
                                 <argument>/m/iot</argument>
                                 <argument>/m/llm</argument>

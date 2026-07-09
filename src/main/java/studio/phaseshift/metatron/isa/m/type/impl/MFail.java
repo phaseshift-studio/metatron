@@ -42,6 +42,8 @@ public class MFail extends MObj implements Fail {
      */
     protected MFail(final Throwable jvm, final fURI tid, final fURI vid) {
         super(jvm, null == tid ? FAIL_TID : tid, vid);
+        if (jvm instanceof MTronException e)
+            e.setFailRef(this);
     }
 
     protected static Fail incrStackWrap(final Fail fail, final fURI pattern) {
@@ -52,7 +54,7 @@ public class MFail extends MObj implements Fail {
 
     @Override
     public int hashCode() {
-        return Objects.hash(this.tid, this.message().getMessage(), this.message().getCause() != null);
+        return Objects.hash(this.tid, this.jvm().getMessage(), this.jvm().getCause() != null);
     }
 
     @Override
@@ -61,11 +63,11 @@ public class MFail extends MObj implements Fail {
             return false;
         if (!Objects.equals(this.tid(), that.tid()))
             return false;
-        if (!Objects.equals(this.message().getMessage(), that.message().getMessage()))
+        if (!Objects.equals(this.jvm().getMessage(), that.jvm().getMessage()))
             return false;
         // Compare cause chain recursively (structural equality)
-        final Throwable thisCause = this.message().getCause();
-        final Throwable thatCause = that.message().getCause();
+        final Throwable thisCause = this.jvm().getCause();
+        final Throwable thatCause = that.jvm().getCause();
         if (thisCause == null)
             return thatCause == null;
         if (thatCause == null)
@@ -84,10 +86,25 @@ public class MFail extends MObj implements Fail {
     }
 
     /**
+     * Walk the cause chain of {@code jvm} and create transient {@link MFail}
+     * back-links for any {@link MTronException} that doesn't already have one.
+     * This ensures {@code walkFailChain} can traverse the full mtron-level nesting.
+     */
+    private static void ensureFailRefs(final Throwable jvm) {
+        for (Throwable cause = jvm.getCause(); cause != null; cause = cause.getCause()) {
+            if (cause instanceof MTronException e && e.fail() == null)
+                transientFail(e); // constructs MFail, which calls e.setFailRef(this)
+        }
+    }
+
+    /**
      * Create a fail from a message string (wrapped in {@link MTronException}).
      */
     public static Fail fail(final String message, final Object... args) {
-        return incrStackWrap(new MFail(MTronException.of(message, args), FAIL_TID, null), FAIL_STACK_PATTERN);
+        final MTronException mte = MTronException.of(message, args);
+        final MFail mfail = new MFail(mte, FAIL_TID, null);
+        ensureFailRefs(mte);
+        return incrStackWrap(mfail, FAIL_STACK_PATTERN);
     }
 
     /**
@@ -95,7 +112,10 @@ public class MFail extends MObj implements Fail {
      * If the Throwable already has a cause chain, the cause is preserved.
      */
     public static Fail fail(final Throwable t) {
-        return incrStackWrap(new MFail(MTronException.of(t), FAIL_TID, null), FAIL_STACK_PATTERN);
+        final MTronException mte = MTronException.of(t);
+        final MFail mfail = new MFail(mte, FAIL_TID, null);
+        ensureFailRefs(mte);
+        return incrStackWrap(mfail, FAIL_STACK_PATTERN);
     }
 
     /**
@@ -106,10 +126,12 @@ public class MFail extends MObj implements Fail {
     public static Fail fail(final Throwable t, final Fail cause) {
         final Throwable jvm;
         if (null != cause) {
-            jvm = new RuntimeException(t.getMessage(), cause.message());
+            jvm = new RuntimeException(t.getMessage(), cause.jvm());
             jvm.setStackTrace(t.getStackTrace());
         } else {
             jvm = t instanceof MTronException ? t : MTronException.of(t.getMessage());
+            if (jvm instanceof MTronException)
+                ensureFailRefs(jvm);
         }
         return incrStackWrap(new MFail(jvm, FAIL_TID, null), FAIL_STACK_PATTERN);
     }
@@ -140,11 +162,11 @@ public class MFail extends MObj implements Fail {
     @Override
     public Fail plus(final Fail rhs) {
         // Walk to the end of the lhs cause chain and attach rhs there
-        Throwable tail = this.message();
+        Throwable tail = this.jvm();
         while (tail.getCause() != null)
             tail = tail.getCause();
-        try { tail.initCause(rhs.message()); } catch (final IllegalStateException ignored) {}
-        return transientFail(this.message());
+        try { tail.initCause(rhs.jvm()); } catch (final IllegalStateException ignored) {}
+        return transientFail(this.jvm());
     }
 
     @Override
@@ -157,7 +179,7 @@ public class MFail extends MObj implements Fail {
         protected MCaughtFail(final Fail other) {
             // Cause chain is already embedded in other.message().getCause() —
             // no need to re-thread it; this.message() IS other.message()
-            super(other.message(), other.tid(), null);
+            super(other.jvm(), other.tid(), null);
         }
 
         public boolean isFail() {

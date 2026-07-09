@@ -115,13 +115,13 @@ public class TypeDiffTool extends AbstractWidget<TypeDiffTool> {
     }
 
     private static TableWidget buildTable(final List<DiffRow> rows) {
-        final TableWidget table = new TableWidget(List.of("path", "status", "actual", "expected"))
+        final TableWidget table = (TableWidget) new TableWidget(List.of("path", "status", "actual", "expected"))
                 .style()
                 .headerDivider("{{[y]}} ")
                 .border(Border.continuous.foreground("{{y}}"))
                 .divider("{{y}}|")
                 .pointer("{{r}}>")
-                .apply();
+                .applyStyle();
         for (final DiffRow row : rows) {
             table.addRow(List.of(row.path(), row.status(), row.actual(), row.expected()));
         }

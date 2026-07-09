@@ -19,7 +19,10 @@
 package studio.phaseshift.metatron.isa.mach.type.ui;
 
 import org.jline.terminal.Cursor;
+import studio.phaseshift.metatron.isa.mach.type.ui.console.Console;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Highlighter;
+import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.mach.type.ui.widget.TableWidget;
 
 import java.util.List;
 
@@ -37,7 +40,9 @@ public interface Widget<W extends Widget<W>> extends Stylable<W>, AutoCloseable,
 
     W cursor(final Cursor cursor);
 
-    void display();
+    default void display() {
+        Graphitty.out(Console.getTerminal().output(), this.format() + "\n");
+    }
 
     /**
      * Render in-place: move cursor up over previous render, clear old lines,

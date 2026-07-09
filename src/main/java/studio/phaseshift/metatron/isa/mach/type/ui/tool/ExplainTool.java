@@ -85,7 +85,7 @@ public class ExplainTool extends AbstractWidget<ExplainTool> {
                     .border(border)
                     .divider("{{b}}" + border.leftSide())
                     .pointer("{{r}}>")  // Configure pointer style
-                    .apply();
+                    .applyStyle();
             this.table = this.profile.instTable;
             this.offsetX = offsetX;
             this.offsetY = offsetY;
@@ -93,9 +93,9 @@ public class ExplainTool extends AbstractWidget<ExplainTool> {
             this.selectedCol = 0;
             this.savedScreen = new ArrayList<>();
             // Get divider and pointer from table style
-            this.divider = this.table.getStyle().divider;
+            this.divider = this.table.getStyle().divider();
             this.rawDivider = Graphitty.strip(this.divider);
-            this.pointer = this.table.getStyle().pointer.isEmpty() ? "{{r}}>" : this.table.getStyle().pointer;
+            this.pointer = this.table.getStyle().pointer().isEmpty() ? "{{r}}>" : this.table.getStyle().pointer();
             this.spawnRow = spawnRow;
             this.spawnCol = spawnCol;
         }
