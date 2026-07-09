@@ -100,6 +100,8 @@ public final class ColonMenu extends MRec {
                     .addRow(List.of("clear", ":clear", "clear the console"))
                     .addRow(List.of("header", ":header [ |<name>]", "print random or named metatron header"))
                     .addRow(List.of("log", ":log [ |trace|debug|info|warn|error] [ |int]", "show or set log level (and target a output to a pane)"))
+                    .addRow(List.of("line stack", "<alt>+l", "start a new line that executes independently of previous"))
+                    .addRow(List.of("chat", "<alt>+c", "prefix line with agent referenced at <console>/agent"))
                     .addRow(List.of("input redirect", ":redirect/input <inst text>", "redirect console input elsewhere via inst (noobj for default)"))
                     .addRow(List.of("word jump", "<shift>+<left/right>", "jump to start/end of a word"))
                     .addRow(List.of("word delete", "<ctrl>+<backspace>", "delete previous word"))
@@ -204,7 +206,6 @@ public final class ColonMenu extends MRec {
             console.getStatus().refresh();
             return noobj();
         }), MUTABLE);
-
         // ===== log =====
         this.at("log", instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(NOOBJ_TID), lst(), (lhs, inst) -> {
             if (lhs.isStr() && !lhs.strValue().isBlank()) {

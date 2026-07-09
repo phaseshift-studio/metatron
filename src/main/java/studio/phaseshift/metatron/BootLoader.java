@@ -19,6 +19,8 @@
 package studio.phaseshift.metatron;
 /// ///////////////////////////////////////////////
 
+import org.apache.http.util.CharArrayBuffer;
+import org.java_websocket.client.WebSocketClient;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.Space;
@@ -43,12 +45,18 @@ import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.sys.sysInstSet;
 import studio.phaseshift.metatron.isa.sys.type_.ThreadExecutor;
+import studio.phaseshift.metatron.isa.web.space.ws.WebSocketRec;
+import studio.phaseshift.metatron.isa.web.space.ws.WebSocketRecClient;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.IteratorUtil;
+import studio.phaseshift.metatron.util.MTronException;
 
+import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.net.InetAddress;
+import java.nio.CharBuffer;
 import java.nio.file.FileSystem;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -80,6 +88,8 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_CLIENT_TID;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 public class BootLoader implements Rec, Feature.SelfClone {
     private static final String SUREFIRE_REAL_CLASS_PATH = "surefire.real.class.path";
@@ -121,6 +131,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
         String evalExpr = null;
         String filePath = null;
         String extraArgs = null;
+        fURI webSocket = null;
         boolean generateMode = false;
         boolean pipeMode = false;
         boolean quiet = false;
@@ -139,6 +150,17 @@ public class BootLoader implements Rec, Feature.SelfClone {
                         EXIT_HANDLER.accept(1);
                     }
                 }
+                case "-w", "--ws" -> {
+                    try {
+                        if (++i < args.length) webSocket = f(args[i]);
+                        else {
+                            webSocket = f("ws://localhost:8555/mtron");
+                        }
+                    } catch (final Exception e) {
+                        System.err.println("metatron: -w requires a legal websocket uri");
+                        EXIT_HANDLER.accept(1);
+                    }
+                }
                 case "-e", "--eval" -> {
                     if (++i < args.length) evalExpr = args[i];
                     else {
@@ -150,6 +172,13 @@ public class BootLoader implements Rec, Feature.SelfClone {
                     if (++i < args.length) filePath = args[i];
                     else {
                         System.err.println("metatron: -f requires a file argument");
+                        EXIT_HANDLER.accept(1);
+                    }
+                }
+                case "-c", "--chat" -> {
+                    if (++i < args.length) evalExpr = "@dr.chat(\"\"\"" + args[i] + "\"\"\").>>chat";
+                    else {
+                        System.err.println("metatron: -c requires a prompt argument");
                         EXIT_HANDLER.accept(1);
                     }
                 }
@@ -261,6 +290,30 @@ public class BootLoader implements Rec, Feature.SelfClone {
             }
         }
 
+        if (null != webSocket) {
+            final WebSocketRecClient client = new WebSocketRecClient(new WebSocketRec(mutableMap(uri(HOST), uri(webSocket)), WS_CLIENT_TID, null));
+            final CommonUtil.Spinner spinner = CommonUtil.spinner("waiting for response...");
+            final Thread shutdownHook = new Thread(() -> {
+                spinner.stop();
+                client.close();
+            }, "ws-shutdown");
+            Runtime.getRuntime().addShutdownHook(shutdownHook);
+            try {
+                final Obj result = client.sendRecv(ObjmtronSerializer.parse(evalExpr));
+                if (!result.isNoObj()) {
+                    System.out.print(Graphitty.string("{{-X-}}{{<100}}"));
+                    System.out.println(CommonUtil.removeQuotes(ObjmtronSerializer.single().write(result)) + "\n");
+                }
+            } finally {
+                spinner.stop();
+                client.close();
+                try {
+                    Runtime.getRuntime().removeShutdownHook(shutdownHook);
+                } catch (final IllegalStateException ignored) { /* shutting down */ }
+            }
+            EXIT_HANDLER.accept(0);
+        }
+
         // --- Boot the system ------------------------------------------------
         if (evalExpr != null || filePath != null)
             ONE_SHOT = true;
@@ -307,14 +360,16 @@ public class BootLoader implements Rec, Feature.SelfClone {
                             A distributed data-oriented computing language and virtual machine.
                             
                             Options:
-                              -b, --boot <file>      Boot configuration file (env: $METATRON_BOOT)
-                              -e, --eval <expr>      Evaluate an mtron expression
-                              -f, --file <file>      Evaluate an mtron source file
-                              -g, --generate <file>  Generate a custom mtron boot
-                              -p, --pipe             Read stdin as pipe input
-                              -q, --quiet            Suppress diagnostic output (for piping)
-                              -v, --version          Print version and exit
-                              -h, --help             Show this help message
+                              -b, --boot <file>       Boot configuration file (env: $METATRON_BOOT)
+                              -w, --ws <uri>          WebSocket of running metatron (default: ws://localhost:8555/mtron)
+                              -e, --eval <expr>       Evaluate an mtron expression
+                              -c, --chat <prompt>     Chat with an agent loaded via boot or websocket
+                              -f, --file <file>       Evaluate an mtron source file
+                              -g, --generate <file>   Generate a custom mtron boot
+                              -p, --pipe              Read stdin as pipe input
+                              -q, --quiet             Suppress diagnostic output (for piping)
+                              -v, --version           Print version and exit
+                              -h, --help              Show this help message
                             
                               A bare positional argument is treated as an -e expression.
                             
@@ -507,11 +562,13 @@ public class BootLoader implements Rec, Feature.SelfClone {
                 Router.global().close();
             ROUTER = null;
             ARGS = null;
-            EXECUTOR.shutdownNow();
-            EXECUTOR = null;
+            if (EXECUTOR != null) {
+                EXECUTOR.shutdownNow();
+                EXECUTOR = null;
+            }
             LOG.info("%s {{g}}successfully{{/g}} shutdown", Graphitty.sillyPrint("metatron", true, true));
         } catch (final Exception e) {
-            LOG.error("%s {{r}}unsuccessfully{{/r}} shutdown:\n\t", Graphitty.sillyPrint("metatron", true, true), e);
+            LOG.error("%s {{r}}unsuccessfully{{/r}} shutdown: %s\n\t", Graphitty.sillyPrint("metatron", true, true), e);
         }
     }
 

@@ -39,6 +39,31 @@ public class LoopFeature extends Feature {
     private static final fURI LOOP = res("loop");
     private static final fURI LOOP_RESULTS = res("loop_results");
 
+    protected static final
+    String LOOP_FEATURE_INSTRUCTIONS = """
+                                       You can operate in a multi-pass reasoning loop.
+                                       When a task requires multiple rounds of tool use, verification,
+                                       or information gathering, append the `<<mtron:loop>>` markup block
+                                       to your response. For example:
+                                       
+                                           <<mtron:loop>>
+                                               [prompt=>"instructions for your next pass",
+                                                label=>"research",
+                                                delay=>second::10.0]
+                                           <</mtron:loop>>
+                                       
+                                       The `prompt` becomes your next user message — be precise.
+                                       The `label` and `delay` are optional.
+                                       `delay` accepts any time::T (millis, second, minute, hour).
+                                       The delay between iterations can be used for polling or rate-limited workflows.
+                                       
+                                       When the task is complete, respond normally without the <<mtron:loop>> block.
+                                       
+                                       **IMPORTANT**: This skill is about formatting your response, not calling a function.
+                                       
+                                       You are constrained to %%%1 max loops and %%%2 maximum time.
+                                       """;
+
     final int maxLoops;
     final long maxTimeMillis;
     final long delayMillis;
@@ -63,9 +88,12 @@ public class LoopFeature extends Feature {
 
     @Override
     public Obj skill() {
+        final String instructions = LOOP_FEATURE_INSTRUCTIONS
+                .replace("%%%1", this.maxLoops > 0 ? this.maxLoops + "" : "<no limit>")
+                .replace("%%%2", this.maxTimeMillis > 0 ? this.maxTimeMillis + "" : "<no limit>");
         return rec(uri(NAME), uri("loop"),
                 uri(DESC), str("Multi-pass reasoning loop with iteration control and polling support"),
-                uri(CONTENT), str(buildInstructions()));
+                uri(CONTENT), str(instructions));
     }
 
     @Override
@@ -78,27 +106,6 @@ public class LoopFeature extends Feature {
             agent.at(LOOP_RESULTS, lst(), MUTABLE);
         }
         return noobj();
-    }
-
-    private String buildInstructions() {
-        final StringBuilder sb = new StringBuilder();
-            sb.append("You are operating in a multi-pass reasoning loop. ");
-            sb.append("When a task requires multiple rounds of tool use, verification, ");
-            sb.append("or information gathering, append a block to the END of your response: \\n\\n");
-            sb.append("<<mtron:loop>>\\n");
-            sb.append("[prompt=>\"instructions for your next pass\",\\n");
-            sb.append(" label=>\"research\",\\n");
-            sb.append(" delay=>second::10.0]\\n");
-            sb.append("<</mtron:loop>>\\n\\n");
-            sb.append("The `prompt` becomes your next user message — be precise. ");
-            sb.append("The `label` and `delay` are optional. ");
-            sb.append("`delay` accepts any time::T (millis, second, minute, hour). ");
-            if (this.delayMillis > 0)
-                sb.append(String.format("\\nThere is a %dms delay between iterations — use this for polling or rate-limited workflows. ", this.delayMillis));
-            if (this.maxLoops < 10)
-                sb.append(String.format("\\nYou are limited to %d total iterations. ", this.maxLoops));
-            sb.append("\\nWhen the task is complete, respond normally without the mtron:loop block.");
-        return sb.toString();
     }
 
     @Override
@@ -148,7 +155,12 @@ public class LoopFeature extends Feature {
 
         // Delay before next pass (polling, rate-limiting)
         if (this.delayMillis > 0) {
-            try { Thread.sleep(this.delayMillis); } catch (final InterruptedException e) { Thread.currentThread().interrupt(); return; }
+            try {
+                Thread.sleep(this.delayMillis);
+            } catch (final InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return;
+            }
         }
 
         // Next pass

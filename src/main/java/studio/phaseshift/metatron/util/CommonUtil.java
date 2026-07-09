@@ -183,6 +183,17 @@ public final class CommonUtil {
         return mParser.removeLineComments(mParser.removeBlockComments(mtron));
     }
 
+    public static String removeQuotes(final String quotedString) {
+        String unquotedString = quotedString.trim();
+        while (unquotedString.startsWith("\"") || unquotedString.startsWith("'")) {
+            unquotedString = unquotedString.substring(1);
+        }
+        while (unquotedString.endsWith("\"") || unquotedString.endsWith("'")) {
+            unquotedString = unquotedString.substring(0, unquotedString.length() - 1);
+        }
+        return unquotedString;
+    }
+
     public static List<String> splitOnNonQuotedSequence(final String sequence, final char split, boolean includeSplitCharacter) {
         List<String> result = new ArrayList<>();
         StringBuilder current = new StringBuilder();
@@ -470,5 +481,74 @@ public final class CommonUtil {
 
     public static <K, V> Map<K, V> immutableOrderedMap(final Object... args) {
         return Map.copyOf(mapBuilder(LinkedHashMap::new, args));
+    }
+
+    /* ================================================================
+     * Spinner
+     * ================================================================ */
+
+    /**
+     * A terminal spinner that animates while blocking work runs on another thread.
+     * <pre>{@code
+     *   final var spinner = CommonUtil.spinner("loading...");
+     *   try {
+     *       ... blocking work ...
+     *   } finally {
+     *       spinner.stop();
+     *   }
+     * }</pre>
+     */
+    public static Spinner spinner(final String message) {
+        return new Spinner(message);
+    }
+
+    public static final class Spinner implements AutoCloseable {
+        private static final String[] FRAMES = {"|", "/", "-", "\\"};
+        private static final long INTERVAL_MS = 120;
+
+        private final String message;
+        private final java.util.concurrent.atomic.AtomicBoolean running = new java.util.concurrent.atomic.AtomicBoolean(true);
+        private final Thread thread;
+
+        private Spinner(final String message) {
+            this.message = message;
+            this.thread = new Thread(() -> {
+                int idx = 0;
+                while (running.get()) {
+                    System.out.print(Graphitty.string(Graphitty.sillyPrint("\r  " + FRAMES[idx++ % 4] + " " + message, true, true)));
+                    System.out.flush();
+                    try {
+                        Thread.sleep(INTERVAL_MS);
+                    } catch (final InterruptedException e) {
+                        break;
+                    }
+                }
+                System.out.print(Graphitty.string("{{-X-}}")); // overwrite with spaces, then return to col 0
+                System.out.flush();
+            }, "spinner");
+            this.thread.setDaemon(true);
+            this.thread.start();
+        }
+
+        /**
+         * Stop the animation and wait for the line to clear.
+         */
+        public void stop() {
+            running.set(false);
+            thread.interrupt();
+            try {
+                thread.join(200);
+            } catch (final InterruptedException ignored) {
+                Thread.currentThread().interrupt();
+            }
+        }
+
+        /**
+         * Convenience for try-with-resources.
+         */
+        @Override
+        public void close() {
+            stop();
+        }
     }
 }

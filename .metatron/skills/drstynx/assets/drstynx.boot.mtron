@@ -127,17 +127,7 @@ tblespace::[pattern    => drdb:#,
             q          => [incrq::[=>],subq::[=>]],
             route      => [drdb:embedding/abc => v:abc,
                            drdb:              => <>]]@/sys/space/tble/dr;
-            
-vecspace::[pattern     => v:#,
-           host        => !*<boot/args/external/embedding>,
-           q           => [incrq::[=>],embedq::[=>]],
-           driver      => <studio.phaseshift.metatron.isa.vec.space.ChromaV2Client>,
-           route       => [v: => <>],
-           config      => [embed => [
- [------------------------------------^--]
- abc => inst?lst[real]<=#{?}(doc=>#::T){ */usr/dr/model/embedding/+.=?=[llm=>embeddinggemma:latest].embed(*doc)}
- [------------------------------------^--]                                  
-                          ]]]@/sys/space/vec/embed;
+
 
 grphspace::[pattern  => h:#,
              host     => !*<boot/args/external/knowgraph>,
@@ -189,8 +179,6 @@ agent::[name     => 'dr.stynx',
 
 
 
-[== user console ==]
-console::[header=>!*boot/args/header]@/usr/marko/console;
 
 [==
 on_prompt => inst(chat=>user::T) {          

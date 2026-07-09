@@ -166,8 +166,11 @@ final class AgentUtility {
         final List<dev.langchain4j.skills.Skill> allSkills = new ArrayList<>();
 
         // Collect skills from features that have the skill() method
-        for (final Obj entry : agent.features().lstValue()) {
-            if (!(entry instanceof Feature f)) continue;
+        for (final Obj entry : agent.features().asLst().elements().toList()) {
+            if (!(entry instanceof Feature f)) {
+                agent.logger().warn("non-feature obj in agent features: %s", Obj.Helper.specificTypeId(entry));
+                continue;
+            }
             final Obj skillObj = f.skill();
             if (skillObj.isNoObj()) continue;
             try {
