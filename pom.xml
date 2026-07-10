@@ -72,9 +72,9 @@
         <petitparser.version>2.4.0</petitparser.version>
         <jline.version>3.30.15</jline.version>
         <rdf4j.version>6.0.0</rdf4j.version>
-        <logback.version>1.5.37</logback.version>
+        <logback.version>1.5.38</logback.version>
         <slf4j.version>2.0.18</slf4j.version>
-        <hive.version>1.3.16</hive.version>
+        <hive.version>1.3.17</hive.version>
         <jakarta.version>2.2.0</jakarta.version>
         <jsoup.version>1.22.2</jsoup.version>
         <asciidoctor.version>3.2.0</asciidoctor.version>
@@ -91,7 +91,7 @@
         <rhino.j2r223.version>1.7.14</rhino.j2r223.version>
         <sqlite.version>3.53.2.0</sqlite.version>
         <mcp.version>2.0.0</mcp.version>
-        <zt.version>1.12</zt.version>
+        <zt.version>1.13.0</zt.version>
         <treesitter.version>1.12.0</treesitter.version>
         <!-- LOGBACK PROPERTIES -->
     </properties>
