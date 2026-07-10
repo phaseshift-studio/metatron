@@ -17,7 +17,7 @@ public class ToolFeature extends Feature {
     }
 
     // ToolFeature is pure config — the chest lives in its JVM.
-    // AgentUtility.buildTools reads it via agent.feature(TOOL).at(uri(CHEST))
+    // AgentUtility.buildTools reads it via agent.feature(TOOL).at(uri(TOOL))
 
     @Override
     public void onToolExecuted(final Agent agent, final Obj result) {

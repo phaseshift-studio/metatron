@@ -91,7 +91,6 @@ public final class Tokens {
     public static final String HISTORY = "history";
     public static final String HREF = "href";
     public static final String TOOL = "tool";
-    public static final String CHEST = "chest";
     public static final String TOOLS = "tools";
     public static final String TOOL_ARGUMENTS = "arguments";
     // -- Feature hook tokens ---------------------------------------------------
@@ -242,11 +241,13 @@ public final class Tokens {
     public static final String QUANT = "quant";
     public static final String FAMILY = "family";
     public static final String FROM = "from";
-    public static final String PROBABILITY = "probability";
+    public static final String PROB = "prob";
     public static final String FIELD = "field";
     public static final String CLUSTER = "cluster";
     public static final String BOOT = "boot";
     public static final String TITLE = "title";
+    public static final String STYLE = "style";
+    public static final String ROW = "row";
     public static final String HR = "hr";
     public static final String ON_RECV = "on_recv";
     public static final String HOSTNAME = "HOSTNAME";

@@ -44,6 +44,7 @@ import java.time.Instant;
 import java.util.*;
 
 import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.LST_TID;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_BYTE_TID;
@@ -293,6 +294,7 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
         // Read session policy first — gives us max window and message_count
         int windowMax = 15;
         int msgCount = 0;
+        fURI name = null;
         try {
             final Obj sessionObj = Router.readFromSpace(sesVID);
             if (sessionObj.isRec()) {
@@ -300,6 +302,7 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
                 if (algorithm.isRec()) {
                     windowMax = algorithm.asRec().at(uri(MAX)).orElse(jnt(15)).intValue().intValue();
                     msgCount = algorithm.asRec().at(uri(MESSAGE_COUNT)).orElse(jnt(0)).intValue().intValue();
+                    name = algorithm.asRec().at(NAME).orThrow(MTronException.of("algorithm name missing")).uriValue();
                 }
             }
         } catch (final Exception e) {
@@ -334,8 +337,8 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
         if (result.size() > windowMax) {
             return result.subList(result.size() - windowMax, result.size());
         }
-        LOG.debug("read %d messages for session %s (window max=%d, stored=%d)",
-                result.size(), sesVID, windowMax, msgCount);
+        LOG.debug("read %d messages for session %s (name=%s, window max=%d, stored=%d)",
+                result.size(), sesVID, name, windowMax, msgCount);
         return result;
     }
 
@@ -349,6 +352,7 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
         // -- 1. Read existing session policy ----------------------------------
         int windowMax = 15;
         int existingCount = 0;
+        fURI name = null;
         final Map<Obj, Obj> existingSessionFields = new LinkedHashMap<>();
         try {
             final Obj existingObj = Router.readFromSpace(sesVID);
@@ -367,6 +371,7 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
                 if (algorithm.isRec()) {
                     windowMax = algorithm.asRec().at(uri(MAX)).orElse(jnt(15)).intValue().intValue();
                     existingCount = algorithm.asRec().at(uri(MESSAGE_COUNT)).orElse(jnt(0)).intValue().intValue();
+                    name = algorithm.asRec().at(uri(NAME)).orThrow(MTronException.of("no algorithm name specified")).uriValue();
                 }
             }
         } catch (final Exception e) {
@@ -465,6 +470,7 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
         final Map<Obj, Obj> algorithmMap = new LinkedHashMap<>();
         algorithmMap.put(uri(MAX), jnt(windowMax));
         algorithmMap.put(uri(MESSAGE_COUNT), jnt(newMessageCount));
+        algorithmMap.put(uri(NAME), uri(name));
 
         existingSessionFields.put(uri(ALGORITHM), rec(algorithmMap));
         // Ensure required columns are always present (first write may not have
@@ -473,8 +479,8 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
         existingSessionFields.putIfAbsent(uri(USER), str("default"));
 
         Router.writeToSpace(sesVID, rec(existingSessionFields).selfVID(sesVID));
-        LOG.debug("wrote %d messages for session %s (window max=%d, total count=%d)",
-                incomingRecs.size(), sesVID, windowMax, newMessageCount);
+        LOG.debug("wrote %d messages for session %s (window name=%s, max=%d, total count=%d)",
+                incomingRecs.size(), sesVID, name, windowMax, newMessageCount);
     }
 
     @Override

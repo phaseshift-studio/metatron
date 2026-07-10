@@ -92,9 +92,10 @@ fsspace::[
         [=====================]   
             
 httpspace::[host     => !*<boot/args/external/web/http>,
+            q        => [mimeq::[=>]],
             pattern  => <http://#>,
             route    => [[-- /mcp     => mcp_mtron_http, --]
-                         /memory => drdb:llm_message_user/, 
+                         /memory => drdb:llm_message_user/,
                          /       => <>]]@/sys/space/web/http;   
    
 *boot/args/external/ollama.mult(api/tags/models).*(_).>-.
@@ -127,7 +128,17 @@ tblespace::[pattern    => drdb:#,
             q          => [incrq::[=>],subq::[=>]],
             route      => [drdb:embedding/abc => v:abc,
                            drdb:              => <>]]@/sys/space/tble/dr;
-
+            
+vecspace::[pattern     => v:#,
+           host        => !*<boot/args/external/embedding>,
+           q           => [incrq::[=>],embedq::[=>]],
+           driver      => <studio.phaseshift.metatron.isa.vec.space.ChromaV2Client>,
+           route       => [v: => <>],
+           config      => [embed => [
+ [------------------------------------^--]
+ abc => inst?lst[real]<=#{?}(doc=>#::T){ */usr/dr/model/embedding/+.=?=[llm=>embeddinggemma:latest].embed(*doc)}
+ [------------------------------------^--]                                  
+                          ]]]@/sys/space/vec/embed;
 
 grphspace::[pattern  => h:#,
              host     => !*<boot/args/external/knowgraph>,
@@ -158,8 +169,9 @@ grphspace::[pattern  => h:#,
                  user      => !*boot/args/internal/user_home,
                  name      => 'general chat',
                  message   => <drdb:msg/1/+>,
-                 algorithm => [max=>15]]==[_=>_].to(drdb:llm_session/1));
-
+                 algorithm => [name=><token_window>, max=>100000]]==[_=>_].to(drdb:llm_session/1));
+[-- token_window --]
+codegraph -> mcp_client::[command=>[</home/killswitch/.local/bin/codegraph>,'serve', '--mcp']];
 agent::[name     => 'dr.stynx',
         desc     => 'the agent dr.stynx is here to be of use in the metatron',
         feature  => [chat_feature::[model    => model::[provider => ollama,
@@ -167,18 +179,20 @@ agent::[name     => 'dr.stynx',
                                                         host     => <http://ginger.local:11434>,
                                                         llm      => <batiai/gemma4-31b:q6>],
                                     response => [to => print(_)]],
-                     loop_feature::[max_loop=>100],
-                     ledger_feature::[ledger=>/usr/dr/ledger],
-                     skill_feature::[skill=>[<metatronfs:skills/mtron>]],
+                     loop_feature::[max_loop=>100],                       [-- \          --]
+                     ledger_feature::[ledger=>/usr/dr/ledger],            [--  | skills  --]
+                     skill_feature::[skill=>[<metatronfs:skills/mtron>]], [-- /          --]
                      session_feature::[session => !@<drdb:llm_session/1>],
                      [== system_feature::[=>], ==],
                      audit_feature::[=>],
-                     tool_feature::[chest=>[!*eval,
-                                    !*sql
+                     tool_feature::[tool=>[
+                                    !*eval,
+                                    !*sql,
+                                    !*codegraph
                                     [-- mcp_client::[host=><http://localhost:8777/mcp>] --]]]]]@<dr>; 
 
-
-
+[== user console ==]
+console::[agent=>dr,header=>!*boot/args/header]@/usr/marko/console;
 
 [==
 on_prompt => inst(chat=>user::T) {          

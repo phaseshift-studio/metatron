@@ -100,7 +100,7 @@ public class AgentTest extends AbstractMetatronTest {
         map.put(uri(API_KEY), str(PROVIDER_KEY));
         map.put(uri(FEATURE), lst(
                 rec(mutableMap(uri(THINK), rec())).tid(LLM_THINK_FEATURE_TID),
-                rec(mutableMap(uri(CHEST), lst(uri("/test/tool")))).tid(LLM_TOOL_FEATURE_TID),
+                rec(mutableMap(uri(TOOL), lst(uri("/test/tool")))).tid(LLM_TOOL_FEATURE_TID),
                 rec(mutableMap(uri(SKILL), lst(str("a-skill")))).tid(LLM_SKILL_FEATURE_TID),
                 rec(mutableMap(uri(NOTE), lst(str("a-note")))).tid(LLM_NOTE_FEATURE_TID),
                 rec(mutableMap(uri(CHAT), str("you are helpful"))).tid(LLM_CHAT_FEATURE_TID),
@@ -152,7 +152,7 @@ public class AgentTest extends AbstractMetatronTest {
     public void testTools() {
         assertFalse(agent.feature(TOOL).isNoObj());
         assertEquals(1, agent.feature(TOOL).elements().count());
-        assertEquals(uri("/test/tool"), agent.feature(TOOL).orElse(rec0()).atLst(CHEST).elements().findFirst().orElse(null));
+        assertEquals(uri("/test/tool"), agent.feature(TOOL).orElse(rec0()).atLst(TOOL).elements().findFirst().orElse(null));
     }
 
     @Test

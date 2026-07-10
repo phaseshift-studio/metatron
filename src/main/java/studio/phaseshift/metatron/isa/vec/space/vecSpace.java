@@ -98,9 +98,9 @@ public class vecSpace extends AbstractSpace<VectorDBClient> implements SchemaSpa
             .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(VEC_SPACE_TID),
                     lst(REC_TYPE),
                     (lhs, inst) -> {
-                        final VectorDBClient client = VectorDBClient.Helper.loadService(lhs.asRec().at(DRIVER).uriValue());
-                        client.setup(lhs.asRec().at(HOST).uriValue(), mutableMap((Map) lhs.asRec().at(CONFIG).orElse(rec0()).at(EMBED).orElse(rec0()).recValue()));
-                        return vecSpace.of(client, lhs.recValue(), lhs.vid());
+                        final VectorDBClient client = VectorDBClient.Helper.loadService(inst.arg(0).asRec().at(DRIVER).uriValue());
+                        client.setup(lhs.asRec().at(HOST).uriValue(), mutableMap((Map) inst.arg(0).asRec().at(CONFIG).orElse(rec0()).at(EMBED).orElse(rec0()).recValue()));
+                        return vecSpace.of(client, inst.arg(0).recValue(), inst.arg(0).vid());
                     }))
             .create();
 

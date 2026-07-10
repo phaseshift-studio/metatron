@@ -168,7 +168,7 @@ public class ExplainTool extends AbstractWidget<ExplainTool> {
         keyMap.bind(Action.UP_ROW, key(terminal, InfoCmp.Capability.key_up));
         keyMap.bind(Action.RIGHT_COL, key(terminal, InfoCmp.Capability.key_right));
         keyMap.bind(Action.LEFT_COL, key(terminal, InfoCmp.Capability.key_left));
-        keyMap.bind(Action.QUIT, Utilities.esc_key);
+        keyMap.bind(Action.QUIT, "\u0004"); // Ctrl-D
         keyMap.bind(Action.SELECT, Utilities.enter_key);
         keyMap.bind(Action.SPACE," ");
         return keyMap;
@@ -316,7 +316,7 @@ public class ExplainTool extends AbstractWidget<ExplainTool> {
         final ExplainLevel top = stack.peek();
         if (top != null) {
             final String mark = top.rewritten ? "{{[g]&w}} R {{X}}" : "{{[y]&w}} R {{X}}";
-            canvas.statusLine(mark + " {{w}}esc{{g}}:back {{w}}<^v>{{g}}:nav {{w}}enter{{g}}:inspect {{w}}space{{g}}:rewrite {{X}}");
+            canvas.statusLine(mark + " {{w}}ctrl-d{{g}}:back {{w}}<^v>{{g}}:nav {{w}}enter{{g}}:inspect {{w}}space{{g}}:rewrite {{X}}");
         }
 
         totalHeightUsed = canvas.finish();

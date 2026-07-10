@@ -970,7 +970,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                     final Consumer<Obj> defaultOnHalt = mach.onHalt(); // accumulate into HALTED
                     mach.onHalt(o -> {
                         defaultOnHalt.accept(o);  // persist in HALTED collection
-                        this.printResult(o);      // display
+                        //this.printResult(o);      // display
                     });
                     // Track machine in both places for interruption
                     this.machine = mach;

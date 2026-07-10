@@ -21,10 +21,7 @@ package studio.phaseshift.metatron.util;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
-import studio.phaseshift.metatron.isa.m.type.Lst;
-import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.Rec;
-import studio.phaseshift.metatron.isa.m.type.Rel;
+import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Highlighter;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
@@ -37,10 +34,7 @@ import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.function.BiConsumer;
-import java.util.function.BinaryOperator;
-import java.util.function.Function;
-import java.util.function.Supplier;
+import java.util.function.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
@@ -551,4 +545,77 @@ public final class CommonUtil {
             stop();
         }
     }
+
+    /* ================================================================
+     * Tree walking
+     * ================================================================ */
+
+    /**
+     * A node visited during a {@link #treeConsumer} walk.
+     *
+     * @param uri        the full URI of this node
+     * @param name       the last segment of the URI (display name)
+     * @param obj        the object at this URI, or {@link NoObj#noobj()} if none
+     * @param depth      0 = root
+     * @param isLast     true if this node is the last child of its parent
+     * @param childCount number of immediate children (0 = leaf)
+     */
+    public record TreeEntry(fURI uri, String name, Obj obj, int depth,
+                            boolean isLast, int childCount) {
+        /**
+         * @return true if this node has children to expand.
+         */
+        public boolean hasChildren() {
+            return childCount > 0;
+        }
+    }
+
+    /**
+     * Walk a metatron space tree depth-first.
+     * <p>
+     * Starting from {@code root}, each node's children are discovered by reading
+     * the branch URI {@code uri.extend("+/")}, which returns {@link Rel Rel}
+     * objects mapping each child URI to its value.
+     * <p>
+     * The consumer receives nodes in DFS pre-order so that a {@code TreeWidget}
+     * can reconstruct the visual tree structure from the sequence of
+     * {@link TreeEntry#isLast} flags and {@link TreeEntry#depth} changes.
+     *
+     * @param root     the root URI to start from
+     * @param maxDepth maximum levels to descend (0 = root only)
+     * @param consumer receives each node as it is visited
+     */
+    public static void treeConsumer(final fURI root, final int maxDepth,
+                                    final Consumer<TreeEntry> consumer) {
+        _treeWalk(root, maxDepth, 0, true, consumer);
+    }
+
+    private static void _treeWalk(final fURI uri, final int maxDepth, final int depth,
+                                  final boolean isLast, final Consumer<TreeEntry> consumer) {
+        final Obj obj = Router.readFromSpace(uri);
+        final String name = uri.name();
+
+        final java.util.List<fURI> childUris = new java.util.ArrayList<>();
+        if (depth < maxDepth) {
+            // Read direct children via +/ on the specific parent URI.
+            // Each space implements +/ to return the immediate children
+            // of the given node (e.g. local:a/+/ → a1, a2).  This is the
+            // universal "list children" query pattern.
+            Router.readFromSpace(uri.extend("+/")).stream()
+                    .filter(o -> !o.isNoObj())
+                    .forEach(o -> {
+                        final Rel rel = o.asRel();
+                        childUris.add(rel.first().uriValue());
+                    });
+            childUris.sort(java.util.Comparator.comparing(fURI::name));
+        }
+
+        consumer.accept(new TreeEntry(uri, name, obj, depth, isLast, childUris.size()));
+
+        for (int i = 0; i < childUris.size(); i++) {
+            _treeWalk(childUris.get(i), maxDepth, depth + 1,
+                      i == childUris.size() - 1, consumer);
+        }
+    }
+
 }

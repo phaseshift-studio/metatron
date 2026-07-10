@@ -47,10 +47,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.id_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
+import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
@@ -59,6 +62,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_ISA_TID;
@@ -83,6 +87,8 @@ public class uiInstSet extends AbstractInstSet {
     public static Type UI_ACCORDIAN_TYPE;
     public static final fURI UI_TABLE_TID = UI_WIDGET_TID.extend("table");
     public static Type UI_TABLE_TYPE;
+    public static final fURI UI_TREE_TID = UI_WIDGET_TID.extend("tree");
+    public static Type UI_TREE_TYPE;
     public static final fURI UI_SELECTOR_TID = UI_WIDGET_TID.extend("selector");
     public static Type UI_SELECTOR_TYPE;
     public static final fURI UI_PANEL_TID = UI_WIDGET_TID.extend("panel");
@@ -113,89 +119,112 @@ public class uiInstSet extends AbstractInstSet {
                                     return docWrap(console, "a user terminal repl", ":help");
                                 })).create(), "a terminal user interface"),
                         docWrap(UI_STYLE_TYPE = Type.Builder.build()
-                                .tid(REC_TID)
-                                .vid(UI_STYLE_TID)
-                                .isaPredicate(rec(
-                                        uri("border").maybe().asUri(), URI_TYPE,
-                                        uri("background").maybe(), STR_TYPE,
-                                        uri("foreground").maybe(), STR_TYPE,
-                                        uri("divider").maybe(), STR_TYPE,
-                                        uri("headerDivider").maybe(), STR_TYPE,
-                                        uri("pointer").maybe(), STR_TYPE,
-                                        uri("leftMargin").maybe(), STR_TYPE,
-                                        uri("rightMargin").maybe(), STR_TYPE,
-                                        uri("topMargin").maybe(), STR_TYPE,
-                                        uri("bottomMargin").maybe(), STR_TYPE))
-                                .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(UI_STYLE_TID), lst(T(REC_TID)), (lhs, inst) -> Stylable.Style.from(inst.arg(0).asRec())))
-                                .create(), "maybe an obj", "a style obj", Map.of(
-                                uri("border").maybe().asUri(), "the border style of the widget (e.g. border::none, border::simple, etc.)",
-                                uri("background").maybe(), "the background color of the widget",
-                                uri("foreground").maybe(), "the foreground color of the widget",
-                                uri("divider").maybe(), "the divider character used in the widget",
-                                uri("headerDivider").maybe(), "the header divider character used in the widget",
-                                uri("pointer").maybe(), "the pointer character used in the widget",
-                                uri("leftMargin").maybe(), "the left margin of the widget",
-                                uri("rightMargin").maybe(), "the right margin of the widget",
-                                uri("topMargin").maybe(), "the top margin of the widget",
-                                uri("bottomMargin").maybe(), "the bottom margin of the widget"), "a UI style specification"),
+                                        .tid(REC_TID)
+                                        .vid(UI_STYLE_TID)
+                                        .isaPredicate(rec(
+                                                uri("border").maybe().asUri(), URI_TYPE,
+                                                uri("background").maybe(), STR_TYPE,
+                                                uri("foreground").maybe(), STR_TYPE,
+                                                uri("divider").maybe(), STR_TYPE,
+                                                uri("headerDivider").maybe(), STR_TYPE,
+                                                uri("pointer").maybe(), STR_TYPE,
+                                                uri("leftMargin").maybe(), STR_TYPE,
+                                                uri("rightMargin").maybe(), STR_TYPE,
+                                                uri("topMargin").maybe(), STR_TYPE,
+                                                uri("bottomMargin").maybe(), STR_TYPE))
+                                        .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(UI_STYLE_TID), lst(T(REC_TID)), (lhs, inst) -> Stylable.Style.from(inst.arg(0).asRec())))
+                                        .create(), "maybe an obj", "a style obj", Map.of(
+                                        uri("border").maybe().asUri(), "the border style of the widget (e.g. border::none, border::simple, etc.)",
+                                        uri("background").maybe(), "the background color of the widget",
+                                        uri("foreground").maybe(), "the foreground color of the widget",
+                                        uri("divider").maybe(), "the divider character used in the widget",
+                                        uri("headerDivider").maybe(), "the header divider character used in the widget",
+                                        uri("pointer").maybe(), "the pointer character used in the widget",
+                                        uri("leftMargin").maybe(), "the left margin of the widget",
+                                        uri("rightMargin").maybe(), "the right margin of the widget",
+                                        uri("topMargin").maybe(), "the top margin of the widget",
+                                        uri("bottomMargin").maybe(), "the bottom margin of the widget"),
+                                "a widget style specification"),
                         docWrap(UI_WIDGET_TYPE = Type.Builder.build()
-                                .tid(REC_TID)
-                                .vid(UI_WIDGET_TID)
-                                .isaPredicate(rec(uri("style").maybe().asUri(), UI_STYLE_TYPE))
-                                .create(), "rec", null, Map.of(uri("style"), "the style specification for the widget"), "the base UI widget type"),
+                                        .tid(REC_TID)
+                                        .vid(UI_WIDGET_TID)
+                                        .isaPredicate(rec(uri(STYLE).maybe().asUri(), UI_STYLE_TYPE))
+                                        .create(), "", "",
+                                Map.of(uri(STYLE), "the style specification for the widget"),
+                                "the base widget type"),
                         docWrap(UI_ACCORDIAN_TYPE = Type.Builder.build()
-                                .tid(UI_WIDGET_TID)
-                                .vid(UI_ACCORDIAN_TID)
-                                .isaPredicate(rec(
-                                        uri(TITLE).maybe().asUri(), STR_TYPE,
-                                        uri(BODY).maybe(), T(STR_TID.maybeSome())))
-                                .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(UI_ACCORDIAN_TID),
-                                        lst(T(REC_TID)), (lhs, inst) -> {
-                                            final AccordionWidget a = new AccordionWidget(inst.arg(0).asRec().jvm(), UI_ACCORDIAN_TID, inst.arg(0).vid());
-                                            //Graphitty.out(Console.getTerminal().output(), a.format() + "\n");
-                                            return a;
-                                        })).create(), "maybe an obj", "an accordian obj", Map.of(
-                                uri(TITLE).maybe().asUri(), "the title of the accordion",
-                                uri(BODY).maybe(), "the body content of the accordion"), "an expandable/collapsible accordion widget"),
+                                        .tid(UI_WIDGET_TID)
+                                        .vid(UI_ACCORDIAN_TID)
+                                        .isaPredicate(rec(
+                                                uri(TITLE).maybe().asUri(), STR_TYPE,
+                                                uri(BODY).maybe(), T(STR_TID.maybeSome())))
+                                        .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(UI_ACCORDIAN_TID),
+                                                lst(T(REC_TID)), (lhs, inst) -> {
+                                                    final AccordionWidget a = new AccordionWidget(inst.arg(0).asRec().jvm(), UI_ACCORDIAN_TID, inst.arg(0).vid());
+                                                    //Graphitty.out(Console.getTerminal().output(), a.format() + "\n");
+                                                    return a;
+                                                })).create(), "maybe an obj", "an accordian obj", Map.of(
+                                        uri(TITLE).maybe().asUri(), "the title of the accordion",
+                                        uri(BODY).maybe(), "the body content of the accordion"),
+                                "an expandable/collapsible accordion widget"),
                         docWrap(UI_TABLE_TYPE = Type.Builder.build()
-                                .tid(UI_WIDGET_TID)
-                                .vid(UI_TABLE_TID)
-                                .isaPredicate(rec(
-                                        uri("header").maybe().asUri(), LST_TYPE,
-                                        uri("row").maybe(), T(LST_TID.maybeSome())))
-                                .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(UI_TABLE_TID),
-                                        lst(T(REC_TID)), (lhs, inst) -> {
-                                            final TableWidget t = new TableWidget(inst.arg(0).asRec().jvm(), UI_TABLE_TID, inst.arg(0).vid());
-                                            //Graphitty.out(Console.getTerminal().output(), t.format() + "\n");
-                                            return t;
-                                        })).create(), "rec", "table", Map.of(), "a tabular data widget"),
+                                        .tid(UI_WIDGET_TID)
+                                        .vid(UI_TABLE_TID)
+                                        .isaPredicate(rec(
+                                                uri(HEADER).maybe().asUri(), LST_TYPE,
+                                                uri(ROW).maybe(), T(LST_TID.maybeSome())))
+                                        .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(UI_TABLE_TID),
+                                                lst(T(REC_TID)), (lhs, inst) -> new TableWidget(inst.arg(0).asRec().jvm(), UI_TABLE_TID, inst.arg(0).vid()))).create(),
+                                "maybe an obj", "a table widget",
+                                Map.of(uri(HEADER).maybe().asUri(), "a lst of obj table headers",
+                                        uri(ROW).maybe(), "a lst of poly table rows"),
+                                "a tabular data widget"),
+                        docWrap(UI_TREE_TYPE = Type.Builder.build()
+                                        .tid(UI_WIDGET_TID)
+                                        .vid(UI_TREE_TID)
+                                        .isaPredicate(rec(
+                                                uri(ROOT), URI_TYPE,
+                                                uri(MAX), INT_TYPE,
+                                                uri(CODE).maybe(), ALL_TYPE.orElse(id_().tryToInst())))
+                                        .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(UI_TREE_TID),
+                                                lst(T(REC_TID)), (lhs, inst) ->
+                                                        new TreeWidget(inst.arg(0).as().jvm(), UI_TREE_TID, inst.arg(0).vid())))
+                                        .create(), "maybe an obj", "a tree widget",
+                                Map.of(uri(ROOT), "the root uri to traverse from",
+                                        uri(MAX), "the max depth to traverse",
+                                        uri(CODE).maybe(), "transform obj prior to insertion into tree (default _)"),
+                                "the root uri space is traversed to specified depth generating a tree data structure"),
                         docWrap(UI_SELECTOR_TYPE = Type.Builder.build()
-                                .tid(UI_WIDGET_TID)
-                                .vid(UI_SELECTOR_TID)
-                                .isaPredicate(rec())
-                                .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(UI_SELECTOR_TID),
-                                        lst(T(REC_TID)), (lhs, inst) -> {
-                                            final Selector s = new Selector(inst.arg(0).asRec().jvm(), UI_SELECTOR_TID, inst.arg(0).vid());
-                                            return s;
-                                        })).create(), "rec", "selector", Map.of(), "an interactive item selector widget"),
+                                        .tid(UI_WIDGET_TID)
+                                        .vid(UI_SELECTOR_TID)
+                                        .isaPredicate(rec())
+                                        .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(UI_SELECTOR_TID),
+                                                lst(T(REC_TID)), (lhs, inst) -> {
+                                                    final Selector s = new Selector(inst.arg(0).asRec().jvm(), UI_SELECTOR_TID, inst.arg(0).vid());
+                                                    return s;
+                                                })).create(), "maybe an obj",
+                                "a selector widget", Map.of(),
+                                "an interactive item selector widget"),
                         docWrap(UI_PANEL_TYPE = Type.Builder.build()
-                                .tid(UI_WIDGET_TID)
-                                .vid(UI_PANEL_TID)
-                                .isaPredicate(rec(
-                                        uri(TITLE).maybe().asUri(), STR_TYPE,
-                                        uri(BODY).maybe(), T(STR_TID.maybeSome())))
-                                .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(UI_PANEL_TID),
-                                        lst(T(REC_TID)), (lhs, inst) -> new PanelWidget(inst.arg(0).asRec().jvm(), UI_PANEL_TID, inst.arg(0).vid())))
-                                .create(), "rec", "panel", Map.of(
-                                uri(TITLE), "the title of the panel",
-                                uri(BODY), "the body content of the panel"), "a simple bordered UI panel widget")),
+                                        .tid(UI_WIDGET_TID)
+                                        .vid(UI_PANEL_TID)
+                                        .isaPredicate(rec(
+                                                uri(TITLE).maybe().asUri(), STR_TYPE,
+                                                uri(BODY).maybe(), T(STR_TID.maybeSome())))
+                                        .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(UI_PANEL_TID),
+                                                lst(T(REC_TID)), (lhs, inst) -> new PanelWidget(inst.arg(0).asRec().jvm(), UI_PANEL_TID, inst.arg(0).vid())))
+                                        .create(), "rec", "panel", Map.of(
+                                        uri(TITLE), "the title of the panel",
+                                        uri(BODY), "the body content of the panel"),
+                                "a simple bordered UI panel widget")),
                 uri(INST), lst(
+                        instC(AS_INST_TID.dom(UI_TREE_TID).rng(STR_TID), lst(STR_TYPE), (lhs, inst) -> str(((Widget<?>) lhs).format())),
                         docWrap(instC(UI_INST_TID.extend("display").dom(UI_WIDGET_TID).rng(UI_WIDGET_TID), lst(), (lhs, inst) -> {
                             final Widget widget = ((Widget) lhs);
                             if (widget instanceof Selector)
                                 Utilities.runCursorLessWidget(widget, true);
                             else
-                                Graphitty.out(Console.getTerminal().output(), widget.format() + "\n");
+                                Graphitty.out(null == Console.LOCAL_INSTANCE ? System.out : Console.getTerminal().output(), widget.format() + "\n");
                             return lhs;
                         }), "display the widget on the terminal"),
                         docWrap(instC(UI_INST_TID.extend("nano").dom(ALL.maybe()).rng(ALL.maybe()), lst(), (lhs, inst) -> {

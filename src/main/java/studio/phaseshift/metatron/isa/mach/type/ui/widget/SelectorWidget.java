@@ -187,7 +187,7 @@ public abstract class SelectorWidget<T, S extends SelectorWidget<T, S>> extends 
         keyMap.bind(Action.UP_ROW, key(terminal, InfoCmp.Capability.key_up));
         keyMap.bind(Action.LEFT_COL, key(terminal, InfoCmp.Capability.key_left));
         keyMap.bind(Action.RIGHT_COL, key(terminal, InfoCmp.Capability.key_right));
-        keyMap.bind(Action.QUIT, Utilities.esc_key);
+        keyMap.bind(Action.QUIT, "\u0004"); // Ctrl-D
         keyMap.bind(Action.SELECT, Utilities.enter_key);
         return keyMap;
     }
@@ -246,7 +246,7 @@ public abstract class SelectorWidget<T, S extends SelectorWidget<T, S>> extends 
             canvas.line(isSelected ? highlightSelectedColumn(line, selectedCol) : line);
         }
 
-        canvas.statusLine("{{w}}{{[b]}} esc{{g}}:cancel {{w}}<>^v{{g}}:nav {{w}}enter{{g}}:select {{X}}");
+        canvas.statusLine("{{w}}{{[b]}}ctrl-d{{g}}:cancel {{w}}<>^v{{g}}:nav {{w}}enter{{g}}:select {{X}}");
         totalHeightUsed = canvas.finish();
     }
 

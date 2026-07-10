@@ -36,8 +36,7 @@ import java.util.function.BiFunction;
 
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.m.mInstSet.STR_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Bytes.BYTES_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
@@ -47,6 +46,7 @@ import static studio.phaseshift.metatron.isa.m.type.Real.REAL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
@@ -89,7 +89,7 @@ public class JObjFactory extends MObjFactory {
             newValue = f(value.toString());
         } else if (tid.equals(FILE_TID)) {
             return fsSpace.makeFile((Path) value);
-        } else if (tid.equals(f("/m/inst"))) {
+        } else if (tid.equals(M_ISA_INST_TID)) {
             return instC(f(field.getName()), lst(), (BiFunction<Obj, Inst, Obj>) value);
         }
         return this.toObj(newValue, tid, vid);
