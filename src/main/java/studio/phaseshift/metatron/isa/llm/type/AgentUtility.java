@@ -19,10 +19,13 @@
 package studio.phaseshift.metatron.isa.llm.type;
 
 import dev.langchain4j.agent.tool.ToolSpecification;
+import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.mcp.McpToolProvider;
 import dev.langchain4j.mcp.client.McpClient;
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
+import dev.langchain4j.memory.chat.TokenWindowChatMemory;
+import dev.langchain4j.model.TokenCountEstimator;
 import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.service.AiServices;
 import dev.langchain4j.service.tool.ToolExecutor;
@@ -34,6 +37,7 @@ import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.llm.LLMFactory;
 import studio.phaseshift.metatron.isa.llm.space.SpaceChatSessionStore;
 import studio.phaseshift.metatron.isa.llm.type.feature.Feature;
+import studio.phaseshift.metatron.isa.llm.type.feature.SessionFeature;
 import studio.phaseshift.metatron.isa.llm.type.mSkill;
 import studio.phaseshift.metatron.isa.llm.type.mTool;
 import studio.phaseshift.metatron.isa.llm.type.mcpClient;
@@ -52,6 +56,7 @@ import java.util.List;
 import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.DOCQ;
 import static studio.phaseshift.metatron.isa.llm.type.mTool.LLM_TOOL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -99,14 +104,14 @@ final class AgentUtility {
     static void buildTools(final Agent agent, final AiServices<AgentServices> service) {
         final Obj toolFeat = agent.feature(TOOL);
         if (toolFeat.isNoObj()) return;
-        final Poly tool = (Poly) toolFeat;
-        final Obj chest = tool.at(uri(CHEST));
-        if (chest.isNoObj()) return;
+        final Feature toolFeature = toolFeat.as();
+        final Obj tool = toolFeature.at(uri(TOOL));
+        if (tool.isNoObj()) return;
 
         final Map<ToolSpecification, ToolExecutor> tools = new HashMap<>();
         final List<McpClient> mcpClients = new ArrayList<>();
 
-        chest.elements().forEach(t -> {
+        tool.elements().forEach(t -> {
             try {
                 if (t.isRec() && t.test(MCP_CLIENT_TYPE)) {
                     mcpClients.add(Rec.wrap(t.as(), mcpClient.class).client());
@@ -147,13 +152,27 @@ final class AgentUtility {
         try {
             final Space space = Router.global().getSpaceFor(sessionVID);
             final SpaceChatSessionStore store = new SpaceChatSessionStore(agent, space);
-            final int max = session.at(ALGORITHM).asRec().at(MAX).orElse(jnt(15)).intValue().intValue();
-            final ChatMemory chatMemory = MessageWindowChatMemory.builder()
-                    .alwaysKeepSystemMessageFirst(true)
-                    .maxMessages(max)
-                    .id(sessionVID)
-                    .chatMemoryStore(store)
-                    .build();
+            if (session.at(ALGORITHM).isNoObj() || session.at(ALGORITHM).asRec().at(NAME).isNoObj())
+                throw MTronException.of("no session memory algorithm provided: token_window or message_window");
+            final int max = session.at(ALGORITHM).asRec().at(MAX).orElse(jnt(50)).intValue().intValue();
+            final ChatMemory chatMemory;
+            if (session.at(ALGORITHM).asRec().at(NAME).uriValue().equals(f("token_window"))) {
+                chatMemory = TokenWindowChatMemory.builder()
+                        .alwaysKeepSystemMessageFirst(true)
+                        .maxTokens(max, SessionFeature.DefaultTokenCountEstimator.singleton())
+                        .id(sessionVID)
+                        .chatMemoryStore(store)
+                        .build();
+            } else if (session.at(ALGORITHM).asRec().at(NAME).uriValue().equals(f("message_window"))) {
+                chatMemory = MessageWindowChatMemory.builder()
+                        .alwaysKeepSystemMessageFirst(true)
+                        .maxMessages(max)
+                        .id(sessionVID)
+                        .chatMemoryStore(store)
+                        .build();
+            } else {
+                throw MTronException.of("unknown session memory algorithm: %s", session.at(ALGORITHM).asRec().at(NAME));
+            }
             service.chatMemory(chatMemory).storeRetrievedContentInChatMemory(true);
         } catch (final Exception e) {
             throw MTronException.of("unable to setup session: %s", e);

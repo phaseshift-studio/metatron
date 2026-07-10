@@ -226,6 +226,7 @@ public abstract class AbstractLLMSessionIntegrationTest extends AbstractMetatron
         final Rec updated = rec(new LinkedHashMap<>(memRow.asRec().recValue()));
         updated.recValue().put(uri(ALGORITHM), rec(
                 uri(MAX), jnt(smallMax),
+                uri(NAME), uri("token_window"),
                 uri("message_count"), jnt(0)
         ));
         Router.writeToSpace(sessionVID(), updated);
@@ -490,7 +491,7 @@ public abstract class AbstractLLMSessionIntegrationTest extends AbstractMetatron
         final Rec sessionConfig = rec(
                 SESSION, rec(mutableMap(
                                 uri("mem"), auto_at_(memVID).tryToInst(),
-                                uri(ALGORITHM), rec(mutableMap(uri(MAX), jnt(max)))),
+                                uri(ALGORITHM), rec(mutableMap(uri(NAME), uri("message_window"), uri(MAX), jnt(max)))),
                         REC_TID, memVID));
         final SessionFeature session = new SessionFeature(sessionConfig.jvm(), LLM_SESSION_FEATURE_TID, null);
         final Rec agentRec = rec(mutableMap(

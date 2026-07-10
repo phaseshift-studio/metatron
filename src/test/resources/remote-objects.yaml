@@ -1,5 +1,5 @@
-# Example JanusGraph remote connection configuration for production use.
-# Tests use TestContainers-managed JanusGraph instances — see JanusGraphContainer.java.
+# example JanusGraph remote connection configuration for production use.
+# tests use TestContainers-managed JanusGraph instances — see JanusGraphContainer.java.
 hosts: [localhost]
 port: 8182
 serializer: {

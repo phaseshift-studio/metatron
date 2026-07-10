@@ -235,7 +235,7 @@ public class TraceTool extends AbstractWidget<TraceTool> {
         KeyMap<Action> keyMap = new KeyMap<>();
         keyMap.bind(Action.DOWN_ROW, key(terminal, InfoCmp.Capability.key_down));
         keyMap.bind(Action.UP_ROW, key(terminal, InfoCmp.Capability.key_up));
-        keyMap.bind(Action.QUIT, Utilities.esc_key);
+        keyMap.bind(Action.QUIT, "\u0004"); // Ctrl-D
         keyMap.bind(Action.SELECT, Utilities.enter_key);
         return keyMap;
     }
@@ -344,7 +344,7 @@ public class TraceTool extends AbstractWidget<TraceTool> {
         final TraceLevel top = stack.peek();
         if (top != null) {
             final boolean isDetail = stack.size() > 1;
-            final String backHint = isDetail ? " {{w}}esc{{g}}:back" : " {{w}}esc{{g}}:close";
+            final String backHint = isDetail ? " {{w}}ctrl-d{{g}}:back" : " {{w}}ctrl-d{{g}}:close";
             final String selectHint = isDetail ? "" : " {{w}}enter{{g}}:stack-trace";
             canvas.statusLine(Graphitty.string(
                     "{{w}}{{[b]}}%s {{w}}^v{{g}}:navigate%s{{X}}%s  %d %s",

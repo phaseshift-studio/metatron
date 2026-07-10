@@ -268,7 +268,13 @@ public class fsSpace extends AbstractSpace<FileSystem> {
                     if (!Files.exists(walkRoot))
                         return IteratorUtil.of();
                     final fURI walkRootFuri = Space.Helper.routeToSpace(f(walkRoot.toString()), this.routes());
-                    try (final Stream<Path> walk = Files.walk(walkRoot, keyQless.hasPattern("#") ? Integer.MAX_VALUE : keyQless.asNode().path().size())) {
+                    // +/ means "direct children only" — walk exactly one level.
+                    // asNode().path().size() counts the +/ segment, so for
+                    // local:a/+/ it returns 2 (a, +/) which would reach
+                    // grandchildren.  Force depth=1 for branch reads.
+                    final int walkDepth = keyQless.hasPattern("#") ? Integer.MAX_VALUE
+                            : keyQless.hasPattern("+") ? 1 : keyQless.asNode().path().size();
+                    try (final Stream<Path> walk = Files.walk(walkRoot, walkDepth)) {
                         return walk
                                 .filter(p -> {
                                     try {

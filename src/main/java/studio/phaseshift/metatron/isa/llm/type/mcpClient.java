@@ -86,7 +86,7 @@ public class mcpClient extends MRec {
                 .transport(createTransport(
                         this.at(uri(TRANSPORT)),
                         this.at(uri(HEADERS)).orElse(rec()).jvm(),
-                        this.at(uri(HOST)),
+                        this.at(uri(HOST)).orElse(uri("")),
                         this.at(COMMAND).orElse(lst()).jvm()))
                 .autoHealthCheck(false)
                 .cacheToolList(true)
@@ -106,7 +106,7 @@ public class mcpClient extends MRec {
                         .map(JsonObjectSchema::properties)
                         .map(p -> p.entrySet().stream()
                                 .map(kv -> new AbstractMap.SimpleEntry<Obj, String>(uri(kv.getKey()), kv.getValue().description()))
-                                .collect(Collectors.toMap(kv -> kv.getKey(), kv -> kv.getValue()))).orElse(null);
+                                .collect(Collectors.toMap(AbstractMap.SimpleEntry::getKey, AbstractMap.SimpleEntry::getValue))).orElse(null);
                 final Rec evaluationArgs = Optional.ofNullable(t.parameters())
                         .map(JsonObjectSchema::properties)
                         .map(p -> p.entrySet().stream()

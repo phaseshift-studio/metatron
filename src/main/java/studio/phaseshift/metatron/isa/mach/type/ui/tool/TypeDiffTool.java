@@ -299,7 +299,7 @@ public class TypeDiffTool extends AbstractWidget<TypeDiffTool> {
         KeyMap<Action> keyMap = new KeyMap<>();
         keyMap.bind(Action.DOWN_ROW, key(terminal, InfoCmp.Capability.key_down));
         keyMap.bind(Action.UP_ROW, key(terminal, InfoCmp.Capability.key_up));
-        keyMap.bind(Action.QUIT, Utilities.esc_key);
+        keyMap.bind(Action.QUIT, "\u0004"); // Ctrl-D
         keyMap.bind(Action.SELECT, Utilities.enter_key);
         return keyMap;
     }
@@ -399,7 +399,7 @@ public class TypeDiffTool extends AbstractWidget<TypeDiffTool> {
                     && hasChildren(top.rows.get(top.selectedRow).path(), this.allRows))
                     ? " {{w}}enter{{g}}:expand"
                     : "";
-            final String backHint = stack.size() > 1 ? " {{w}}esc{{g}}:back" : " {{w}}esc{{g}}:close";
+            final String backHint = stack.size() > 1 ? " {{w}}ctrl-d{{g}}:back" : " {{w}}ctrl-d{{g}}:close";
             canvas.statusLine(Graphitty.string(
                     "{{w}}{{[b]}}%s {{w}}^v{{g}}:navigate%s {{w}}%d row%s {{w}}(%d {{r}}X{{w}}){{X}}",
                     backHint.trim(), expandHint,

@@ -164,7 +164,11 @@ public class llmInstSet extends AbstractInstSet {
                         docWrap(LLM_SESSION_TYPE = Type.Builder.build()
                                         .tid(REC_TID)
                                         .vid(LLM_SESSION_TID)
-                                        .isaPredicate(rec(uri(AGENT), T(URI_TID.some()), uri(USER), T(URI_TID.some()), uri(MESSAGE), T(URI_TID.maybe()), uri(ALGORITHM), REC_TYPE))
+                                        .isaPredicate(rec(
+                                                uri(AGENT), T(URI_TID.some()), 
+                                                uri(USER), T(URI_TID.some()), 
+                                                uri(MESSAGE), T(URI_TID.maybe()),
+                                                uri(ALGORITHM), REC_TYPE))
                                         .create(),
                                 null, null, mutableMap(
                                         uri(AGENT), "the agent(s) involved in the chat session",
@@ -324,7 +328,7 @@ public class llmInstSet extends AbstractInstSet {
                         Type.Builder.build()
                                 .tid(LLM_FEATURE_TID)
                                 .vid(LLM_TOOL_FEATURE_TID)
-                                .isaPredicate(rec(CHEST, LST_TYPE))
+                                .isaPredicate(rec(TOOL, LST_TYPE))
                                 .constructor(instC(INST_CTOR_TID.rng(LLM_TOOL_FEATURE_TID),
                                         lst(REC_TYPE), (lhs, inst) -> {
                                             final ToolFeature f = new ToolFeature(inst.arg(0).asRec().jvm(),

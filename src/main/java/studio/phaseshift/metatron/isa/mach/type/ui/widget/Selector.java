@@ -93,7 +93,7 @@ public class Selector extends AbstractWidget<Selector> {
             keyMap.bind(UP_ROW, key(this.terminal, InfoCmp.Capability.key_up));
             keyMap.bind(RIGHT_COL, key(this.terminal, InfoCmp.Capability.key_right));
             keyMap.bind(LEFT_COL, key(this.terminal, InfoCmp.Capability.key_left));
-            keyMap.bind(QUIT, Utilities.esc_key);
+            keyMap.bind(QUIT, "\u0004"); // Ctrl-D
             keyMap.bind(SELECTED, Utilities.enter_key);
             // Graphitty.log(this).none("{{^%s}}", this.style.attachment().rowCount() + 1);
             boolean done = false;

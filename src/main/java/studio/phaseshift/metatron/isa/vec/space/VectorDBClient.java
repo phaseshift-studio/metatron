@@ -188,7 +188,7 @@ public interface VectorDBClient {
         public static VectorDBClient loadService(final fURI clientURI) {
             final Optional<VectorDBClient> client = ServiceLoader.load(VectorDBClient.class)
                     .stream()
-                    .filter(p -> p.type().getName().equals(clientURI.toString()))
+                    .filter(p -> p.type().getName().contains(clientURI.toString()))
                     .map(ServiceLoader.Provider::get)
                     .findFirst();
             if (client.isEmpty())
