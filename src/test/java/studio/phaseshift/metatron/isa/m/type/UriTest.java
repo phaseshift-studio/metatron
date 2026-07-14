@@ -294,4 +294,14 @@ public class UriTest extends AbstractMetatronTest {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
+    @ParameterizedTest
+    @CsvSource(value = {
+            "<http://dev.local:8080/v1/search?q=metatron&debug=true>==[host=><prod.net>,port=>443,path=>[api,v2],q=>[debug=>false]] % <http://prod.net:443/api/v2?q=metatron&debug=false>",
+            "<http://api.local/v1/user/marko?auth=true&debug=true>==[path=>-<[>>0,>>1,profile,>>3],q=>[debug=>false]]               % <http://api.local/v1/profile/marko?debug=false&auth=true>",
+            "<http://api.local/v1/user/marko?auth=true&debug=true>==[path=>-<[>>0,>>1,profile,>>3],q=>[debug=>false,_=>xyz]]        % <http://api.local/v1/profile/marko?debug=false&auth=xyz>",
+            "<http://api.local/v1/user/marko?auth=true&debug=true>==[path=>-<[>>0,>>1,profile,>>3],q=>[debug=>false,_=>none]]       % <http://api.local/v1/profile/marko?debug=false>"
+}, delimiter = '%', quoteCharacter = '~')
+    public void testSelect(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
 }
