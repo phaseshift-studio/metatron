@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.isa.m.type;
 import studio.phaseshift.metatron.algebra.Ring;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
+import studio.phaseshift.metatron.isa.m.type.impl.MStr;
 import studio.phaseshift.metatron.isa.m.type.impl.MUri;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
@@ -389,7 +390,80 @@ public interface Uri extends Mono, Ring.O<Uri>, Comparable<Uri> {
                     instC(HOST_INST_TID.dom(URI_TID).rng(URI_TID), lst(T(URI_TID)), (lhs, inst) -> uri(lhs.uriValue().host(inst.arg(0).uriValue().toString().isEmpty() ? null : inst.arg(0).uriValue().toString()))),
                     instC(PORT_INST_TID.dom(URI_TID).rng(INT_TID.maybe()), lst(), (lhs, inst) -> lhs.uriValue().hasPort() ? jnt(lhs.uriValue().port()) : noobj()),
                     instC(PORT_INST_TID.dom(URI_TID).rng(URI_TID), lst(T(INT_TID).predicate(is_(gte_(jnt(-1))).tryToInst())), (lhs, inst) -> uri(lhs.uriValue().port(inst.arg(0).intValue().intValue()))),
-                    instC(SELECT_INST_TID.dom(URI_TID).rng(URI_TID.maybe()), lst(T(URI_TID)), (lhs, inst) -> Helper.selectUri(lhs.asUri(), inst.arg(0).uriValue())),
+                    instC(SELECT_INST_TID.dom(URI_TID).rng(URI_TID), lst(REC_TYPE), (lhs, inst) -> {
+                        final fURI lhsURI = lhs.uriValue();
+                        final Rec rules = inst.arg(0).orElse(rec0());
+                        if (rules.isNoObj()) return lhs;
+                        // 1. Basic Components: Scheme & Host
+                        String scheme = lhsURI.scheme();
+                        String host = lhsURI.host();
+                        if (rules.has(SCHEME))
+                            scheme = Str.Helper.cleanString(rules.at(SCHEME).apply(str(scheme)));
+                        if (rules.has(HOST))
+                            host = Str.Helper.cleanString(rules.at(HOST).apply(str(host)));
+                        // 2. Port: Int -> String transition for Metatron Instructions
+                        int port = lhsURI.port();
+                        if (rules.has(PORT)) {
+                            String newPortStr = Str.Helper.cleanString(rules.at(PORT).apply(jnt(port)));
+                            if (CommonUtil.isInt(newPortStr))
+                                port = Integer.parseInt(newPortStr);
+                            else
+                                throw MTronException.of("unable to convert to a port value: %s", newPortStr);
+                        }
+                        // 3. Path: Handle both full rewrite and segment-based projection (path>>n)
+                        List<String> newPath;
+                        if (rules.asRec().has(PATH)) {
+                            Lst pathSegments = lst((List) lhsURI.path().stream().map(MStr::str).toList());
+                            Obj pathResult = rules.at(PATH).apply(pathSegments);
+                            newPath = pathResult.isLst() ? pathResult.elements().map(Str.Helper::cleanString).toList() : Arrays.asList(Str.Helper.cleanString(pathResult).split("/"));
+                        } else {
+                            newPath = lhsURI.path();
+                        }
+
+                        // 4. Query: Map-based projection
+                        Map<String, String> queryMap = new HashMap<>(lhsURI.qMap()); // Mutable copy
+                        // 4. Query Projection: Predicate-based matching
+                        if (rules.has("q")) {
+                            Obj qRules = rules.at("q");
+                            if (qRules.isRec()) {
+                                Map<String, String> nextQMap = new HashMap<>();
+                                queryMap.forEach((k, v) -> {
+                                    // Wrap keys and values as URIs to leverage .matches() logic
+                                    Obj keyUri = uri(k);
+                                    Obj valUri = uri(v);
+
+                                    // Find the first predicate in our rule-set that matches this key
+                                    Obj matchingRule = null;
+                                    for (Map.Entry<Obj, Obj> entry : qRules.asRec().recValue().entrySet()) {
+                                        final String entryKeyString = Str.Helper.cleanString(entry.getKey());
+                                        Pattern pattern = REGEX_CACHE.get(entryKeyString);
+                                        if (null == pattern) {
+                                            pattern = Pattern.compile(entryKeyString);
+                                            REGEX_CACHE.put(entryKeyString, pattern);
+                                        }
+                                        if (pattern.asPredicate().test(Str.Helper.cleanString(keyUri))) {
+                                            matchingRule = entry.getValue();
+                                            break;
+                                        }
+                                    }
+                                    if (null != matchingRule) {
+                                        if (!matchingRule.isNone())
+                                            nextQMap.put(k, Str.Helper.cleanString(matchingRule.apply(valUri)));
+                                    } else {
+                                        // Pass through untransformed
+                                        nextQMap.put(k, v);
+                                    }
+                                });
+                                queryMap = nextQMap;
+                            } else {
+                                // Fallback: if 'q' is just a string, replace the entire query string
+                                String qStr = qRules.apply(str(lhsURI.qString())).strValue();
+                                queryMap = f("?" + qStr).qMap(); // helper to turn "a=1&b=2" -> Map
+                            }
+                        }
+                        // 5. Final Reassembly
+                        return uri(fURI.of(scheme, host, port, newPath, lhsURI.c(), lhsURI.poly(), queryMap, List.of()));
+                    }),
                     instC(WHERE_INST_TID.dom(URI_TID).rng(URI_TID.maybe()), lst(T(URI_TID)), (lhs, inst) -> Helper.whereUri(lhs.asUri(), inst.arg(0).uriValue()) ? lhs : noobj())
                     // instC(UPDATE_INST_TID.dom(URI_TID).rng(URI_TID.maybe()), lst(T(URI_TID)), (lhs, inst) -> uri(lhs.uriValue().update(inst.arg(0).uriValue())))
                     // GROUP
