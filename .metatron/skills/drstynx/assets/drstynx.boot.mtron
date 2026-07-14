@@ -53,9 +53,9 @@ space_root -> <${*boot/args/internal/sys}/space/dr>;
         [======== HOME =======]
         [=====================]   
 memspace::[
-  pattern => </usr/dr/#>,                                 
-        q => [mintq::[=>],
-               docq::[=>],
+  pattern => </usr/dr/#>, 
+     data => </home/killswitch/.metatron/drstynx/usr_dr.mtron>,                             
+     q    => [docq::[=>],
                subq::[=>],
               incrq::[=>]]]@</sys/space/usr/dr>;   
 
@@ -164,12 +164,13 @@ grphspace::[pattern  => h:#,
         [======================]
 
 [== if the llm session already exists, continue, else create it ==]    
-*<drdb:llm_session/1>.
+</usr/dr/llm_session>.mult(print('\n what session number?: ').stdin().as(uri::T)).to(session_vid);
+
+*(*session_vid).
   else(session::[agent     => !*boot/args/internal/agent_home,
                  user      => !*boot/args/internal/user_home,
                  name      => 'general chat',
-                 message   => <drdb:msg/1/+>,
-                 algorithm => [name=><token_window>, max=>100000]]==[_=>_].to(drdb:llm_session/1));
+                 algorithm => [name=><token_window>, max=>100000]]==[_=>_].to(*session_vid));
 [-- token_window --]
 codegraph -> mcp_client::[command=>[</home/killswitch/.local/bin/codegraph>,'serve', '--mcp']];
 agent::[name     => 'dr.stynx',
@@ -177,13 +178,15 @@ agent::[name     => 'dr.stynx',
         feature  => [chat_feature::[model    => model::[provider => ollama,
                                                         protocol => ollama,
                                                         host     => <http://ginger.local:11434>,
-                                                        llm      => <batiai/gemma4-31b:q6>],
+                                                        llm      => <gemma4:26b>],
                                     response => [to => print(_)]],
+                     think_feature::[think=>[to=>print(_)]],
                      loop_feature::[max_loop=>100],                       [-- \          --]
                      ledger_feature::[ledger=>/usr/dr/ledger],            [--  | skills  --]
                      skill_feature::[skill=>[<metatronfs:skills/mtron>]], [-- /          --]
-                     session_feature::[session => !@<drdb:llm_session/1>],
-                     [== system_feature::[=>], ==],
+                     session_feature::[session => !*session_vid],
+                     concept_feature::[base => /usr/dr/concept],
+                     system_feature::[=>],
                      audit_feature::[=>],
                      tool_feature::[tool=>[
                                     !*eval,

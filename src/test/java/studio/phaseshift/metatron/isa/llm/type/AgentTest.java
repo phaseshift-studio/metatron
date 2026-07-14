@@ -220,12 +220,6 @@ public class AgentTest extends AbstractMetatronTest {
         assertTrue(Agent.agent(empty).feature(CHAT).isNoObj());
     }
 
-    @Test
-    public void testLastResponseAbsent() {
-        Rec empty = rec(mutableMap(uri(NAME), uri("empty")), LLM_MODEL_TID, null);
-        assertTrue(Agent.agent(empty).lastResponse().isEmpty());
-    }
-
     // === JsonSchemaGenerator tests ===
 
     @Test

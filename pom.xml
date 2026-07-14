@@ -93,6 +93,8 @@
         <mcp.version>2.0.0</mcp.version>
         <zt.version>1.12</zt.version>
         <treesitter.version>1.12.0</treesitter.version>
+        <eclipsestore.version>4.1.0</eclipsestore.version>
+        <janusgraph.version>1.1.0</janusgraph.version>
         <!-- LOGBACK PROPERTIES -->
     </properties>
     <dependencyManagement>
@@ -170,6 +172,12 @@
             <groupId>com.oath.cyclops</groupId>
             <artifactId>cyclops</artifactId>
             <version>10.4.1</version>
+        </dependency>
+        <!-- ECLIPSE STORE -->
+        <dependency>
+            <groupId>org.eclipse.store</groupId>
+            <artifactId>storage-embedded</artifactId>
+            <version>${eclipsestore.version}</version>
         </dependency>
         <!-- SERIAL PORTS -->
         <dependency>
@@ -249,7 +257,7 @@
         <dependency>
             <groupId>org.janusgraph</groupId>
             <artifactId>janusgraph-driver</artifactId>
-            <version>1.1.0</version>
+            <version>${janusgraph.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.tinkerpop</groupId>

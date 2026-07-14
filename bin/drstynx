@@ -10,4 +10,6 @@ cat <<'EOF'
  `------'        `-------'                                          
 EOF
 
-$METATRON_HOME/bin/metatron -b .metatron/skills/drstynx/assets/drstynx.boot.mtron "[log=>info]"
+# $METATRON_HOME/bin/metatron 
+
+metatron -b .metatron/skills/drstynx/assets/drstynx.boot.mtron "[log=>info]"

@@ -110,7 +110,7 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
     // ── Default clip config method ─────────────────────────────────
     private static Rec defaultClip() {
         return rec(
-                "rec", jnt(7),
+                "rec", jnt(10),
                 "lst", jnt(10),
                 "str", jnt(60),
                 "uri", jnt(Integer.MAX_VALUE),
@@ -620,7 +620,9 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
     // ── Value rendering ──────────────────────────────────────────
 
     private void renderValue(final StringBuilder sb, final int depth, final Obj v) {
-        if (v.isRec()) {
+        if (null == v) {
+            this.writeClip(sb, noobj());
+        } else if (v.isRec()) {
             this.generateRec(sb, v.as(), depth);
         } else if (v.isLst()) {
             this.generateLst(sb, v.as(), depth);

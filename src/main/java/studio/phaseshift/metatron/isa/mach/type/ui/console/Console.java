@@ -847,11 +847,11 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
     private void promptTraceForFails(final Obj result) {
         if (!Tracer.stack.enabled()) return;
         result.stream().filter(Obj::isFail).forEach(failObj -> {
-            terminal.writer().write(Graphitty.string("{{y}}display trace tool? {{g}}[Y/n]{{y}} {{X}}"));
+            terminal.writer().write(Graphitty.string("{{y}}display trace tool? {{g}}[y/N]{{y}} {{X}}"));
             terminal.writer().flush();
             try {
                 final int ch = terminal.reader().read();
-                if (ch == -1 || ch == 'y' || ch == 'Y' || ch == '\r' || ch == '\n') {
+                if (ch == 'y' || ch == 'Y') {
                     terminal.writer().write("\n");
                     final TraceTool traceTool = new TraceTool(failObj.asFail());
                     if (Console.this.splitMode && Console.this.activePane != null) {

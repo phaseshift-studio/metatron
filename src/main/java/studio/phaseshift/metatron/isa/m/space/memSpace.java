@@ -29,6 +29,7 @@ import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.Uri;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjByteBufferSerializer;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.IteratorUtil;
@@ -44,13 +45,14 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
+import static studio.phaseshift.metatron.Tokens.DATA;
 import static studio.phaseshift.metatron.Tokens.PERSIST;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
-import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.SPACE_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.Uri.uri0;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -61,26 +63,14 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 public class memSpace extends AbstractSpace<TopicTrie> {
 
-    public static final fURI MEM_SPACE_TID = M_ISA_TID.extend("space").extend("memspace");
-
-    protected static final Rec MEM_SPACE_CONFIG = SPACE_CONFIG.plus(rec(uri(PERSIST).maybe().asUri(), FILE_TYPE));
-
-    public static final Type MEM_SPACE_TYPE = Type.Builder.build()
-            .tid(SPACE_TID)
-            .vid(MEM_SPACE_TID)
-            // .isaPredicate(rec(uri(PERSIST).maybe().asUri(),URI_TYPE).maybe())
-            .constructor(
-                    instC(mInstSet.M_ISA_INST_TID.dom(ALL.maybe()).rng(MEM_SPACE_TID),
-                            lst(isa_(MEM_SPACE_CONFIG).tryToInst()),
-                            (lhs, inst) -> memSpace.of(inst.arg(0).asRec(), inst.arg(0).vid()))).create();
-
     protected memSpace(final Map<Obj, Obj> config, final fURI vid) {
-        super(new TopicTrie(), config, MEM_SPACE_TID, vid);
-        load();
+        this(config, MEM_SPACE_TID, vid);
     }
 
     protected memSpace(final Map<Obj, Obj> config, final fURI tid, final fURI vid) {
         super(new TopicTrie(), config, tid, vid);
+        if (!this.at(DATA).isNoObj())
+            Runtime.getRuntime().addShutdownHook(new Thread(() -> this.save()));
         load();
     }
 
@@ -90,7 +80,7 @@ public class memSpace extends AbstractSpace<TopicTrie> {
     }
 
     public static memSpace of(final Rec config, final fURI vid) {
-        return new memSpace(new HashMap<>(config.jvm()), vid);
+        return new memSpace(mutableMap(config.jvm()), vid);
     }
 
     @Override
@@ -259,11 +249,10 @@ public class memSpace extends AbstractSpace<TopicTrie> {
         return Stream.of(IdObj.of(pattern, result));
     }
 
-    public Obj load() {
-        final Uri path = (Uri) this.jvm().getOrDefault(uri(PERSIST), null);
-        if (null == path)
+    public memSpace load() {
+        final Uri path = this.at(DATA).orElse(uri0());
+        if (path.isNoObj())
             return this;
-        //final ObjByteBufferSerializer serializer = new ObjByteBufferSerializer();
         final File file = new File(path.uriValue().toString());
         if (!file.exists()) {
             LOG.warn("no persisted data at {{y}}%s", file.getAbsolutePath());
@@ -282,28 +271,30 @@ public class memSpace extends AbstractSpace<TopicTrie> {
     }
 
     public Obj save() {
-        final Uri path = (Uri) this.jvm().getOrDefault(uri(PERSIST), null);
-        if (null == path)
+        final Uri path = this.at(DATA).orElse(uri0());
+        if (path.isNoObj())
             return this;
-        final ObjByteBufferSerializer serializer = new ObjByteBufferSerializer();
-        final File file = new File(path.uriValue().toString());
-        if (file.exists()) assert file.delete();
         if (!this.sjvm().isEmpty()) {
             try {
-                assert file.createNewFile();
+                final File file = new File(path.uriValue().toString());
+                if (file.exists())
+                    file.delete();
+                else
+                    file.getParentFile().mkdirs();
+                file.createNewFile();
             } catch (IOException e) {
                 throw MTronException.of(e);
             }
             try (final FileOutputStream out = new FileOutputStream(path.uriValue().toString())) {
-                out.write("print('loading persisted data');\n".getBytes());
                 // TopicTrie.forEach() iterates all entries across all nodes
                 this.sjvm().forEach((key, value) -> {
                     try {
-                        out.write((key + " -> " + new String(serializer.outputBytes(value).array(), StandardCharsets.UTF_8) + ";\n").getBytes(StandardCharsets.UTF_8));
+                        out.write((key + " ->(" + ObjmtronSerializer.singleNoClip().write(value) + ");\n").getBytes(StandardCharsets.UTF_8));
                     } catch (IOException e) {
                         throw MTronException.of(e);
                     }
                 });
+                LOG.info("saved space to %s", this.at(DATA).uriValue());
             } catch (final Exception e) {
                 throw MTronException.of(e);
             }

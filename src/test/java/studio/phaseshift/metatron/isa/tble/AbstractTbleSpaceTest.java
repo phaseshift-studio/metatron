@@ -68,6 +68,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.tble.tbleInstSet.TBLE_ISA_TID;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.AI_MESSAGE_TID;
 
 /**
  * Abstract base test suite for tbleSpace with database-agnostic tests.
@@ -1788,6 +1789,189 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathTest impleme
             runRewriteTest(description, code, expected);
         } finally {
             cleanKVData();
+        }
+    }
+
+    // =========================================================================
+    //  Non-INTEGER primary key — auto-create table with VARCHAR PK
+    // =========================================================================
+
+    /**
+     * Verifies that writing a Rec to a URI with a non-numeric rowId
+     * auto-creates the table with a {@code VARCHAR(255)} PK, while numeric
+     * rowIds still use {@code INTEGER}.  This test runs against every
+     * database backend (SQLite, PostgreSQL, MariaDB, MySQL).
+     */
+    @Test
+    public void testTextPrimaryKeyAutoCreate() throws Exception {
+        final tbleSpace space = createTestSpace();
+        try {
+            // ── 1. Write with a string rowId → should create VARCHAR PK ──
+            final fURI textRowURI = f("db:textpk_people/marko");
+            Router.writeToSpace(textRowURI, rec(
+                    uri("name"), str("Marko"),
+                    uri("role"), str("engineer")
+            ));
+            // Verify the table exists in the schema
+            assertTrue(space.existingTableSchema().getTableNames()
+                            .contains("textpk_people"),
+                    "table should be auto-created");
+
+            // Verify the PK column type is VARCHAR (not INTEGER) via JDBC metadata
+            // Use the space's own connection to avoid cross-connection visibility issues
+            final java.sql.DatabaseMetaData md = space.sjvm().getMetaData();
+            try (final java.sql.ResultSet cols = md.getColumns(
+                    space.sjvm().getCatalog(), null, "textpk_people", "id")) {
+                assertTrue(cols.next(), "PK column 'id' should exist");
+                final int sqlType = cols.getInt("DATA_TYPE");
+                assertTrue(
+                        sqlType == java.sql.Types.VARCHAR
+                                || sqlType == java.sql.Types.NVARCHAR
+                                || sqlType == java.sql.Types.LONGVARCHAR,
+                        "PK should be VARCHAR for text rowId, got sqlType=" + sqlType);
+            }
+
+            // Read the row back
+            final Obj row1 = Router.readFromSpace(textRowURI);
+            assertFalse(row1.isNoObj(), "row should exist");
+            assertTrue(row1.isRec(), "row should be a Rec");
+            assertEquals(str("Marko"), row1.asRec().at(uri("name")));
+            assertEquals(str("engineer"), row1.asRec().at(uri("role")));
+
+            // ── 2. Write another row to the same table ──
+            final fURI textRow2URI = f("db:textpk_people/josh");
+            Router.writeToSpace(textRow2URI, rec(
+                    uri("name"), str("Josh"),
+                    uri("role"), str("designer")
+            ));
+            final Obj row2 = Router.readFromSpace(textRow2URI);
+            assertEquals(str("Josh"), row2.asRec().at(uri("name")));
+
+            // ── 3. Update a field on the string-PK row ──
+            Router.writeToSpace(f("db:textpk_people/marko/role"), str("architect"));
+            final Obj row1Updated = Router.readFromSpace(textRowURI);
+            assertEquals(str("architect"), row1Updated.asRec().at(uri("role")));
+            // Name should be unchanged
+            assertEquals(str("Marko"), row1Updated.asRec().at(uri("name")));
+
+            // ── 4. Write with a numeric rowId → should create INTEGER PK ──
+            final fURI intRowURI = f("db:intpk_items/42");
+            Router.writeToSpace(intRowURI, rec(
+                    uri("label"), str("widget"),
+                    uri("price"), real(9.99)
+            ));
+            assertTrue(space.existingTableSchema().getTableNames()
+                            .contains("intpk_items"),
+                    "integer-keyed table should be auto-created");
+
+            // Verify the PK column type is INTEGER via JDBC metadata
+            final java.sql.DatabaseMetaData md2 = space.sjvm().getMetaData();
+            try (final java.sql.ResultSet cols = md2.getColumns(
+                    space.sjvm().getCatalog(), null, "intpk_items", "id")) {
+                assertTrue(cols.next(), "PK column 'id' should exist");
+                final int sqlType = cols.getInt("DATA_TYPE");
+                assertTrue(
+                        sqlType == java.sql.Types.INTEGER
+                                || sqlType == java.sql.Types.BIGINT
+                                || sqlType == java.sql.Types.SMALLINT
+                                || sqlType == java.sql.Types.TINYINT,
+                        "PK should be INTEGER for numeric rowId, got sqlType=" + sqlType);
+            }
+
+            // Read the integer-PK row back
+            final Obj intRow = Router.readFromSpace(intRowURI);
+            assertFalse(intRow.isNoObj(), "int-PK row should exist");
+            assertEquals(str("widget"), intRow.asRec().at(uri("label")));
+            assertEquals(9.99, intRow.asRec().at(uri("price")).asReal().realValue(), 0.001,
+                    "price should round-trip as 9.99");
+
+            // ── 5. Write another integer-PK row ──
+            Router.writeToSpace(f("db:intpk_items/99"), rec(
+                    uri("label"), str("gadget"),
+                    uri("price"), real(4.50)
+            ));
+            final Obj intRow2 = Router.readFromSpace(f("db:intpk_items/99"));
+            assertEquals(str("gadget"), intRow2.asRec().at(uri("label")));
+
+            LOG.info("text PK auto-create test passed on {}",
+                    staticDbConfig.getDatabaseName());
+
+            // Cleanup: drop the test tables
+            try (final Connection conn = staticDbConfig.getConnection();
+                 final java.sql.Statement stmt = conn.createStatement()) {
+                stmt.executeUpdate("DROP TABLE IF EXISTS textpk_people");
+                stmt.executeUpdate("DROP TABLE IF EXISTS intpk_items");
+            }
+        } finally {
+            Router.global().removeSpace(space.vid());
+            space.close();
+        }
+    }
+
+    // =========================================================================
+    //  _tid column round-trip
+    // =========================================================================
+
+    /**
+     * Verifies that the {@code _tid} column is created with every rec table,
+     * stored as a {@code <uri>} wrapped string, and restored as the rec's TID
+     * on read.
+     */
+    @Test
+    public void testTidColumnRoundTrip() throws Exception {
+        final tbleSpace space = createTestSpace();
+        final String tableName = "tid_test";
+        try {
+            // -- Write a rec with a specific, non-trivial TID --
+            final fURI knownTid = AI_MESSAGE_TID;  // /m/llm/message/ai
+            final Rec rec = rec(
+                    uri("text"), str("hello"),
+                    uri("name"), str("assistant")
+            ).tid(knownTid).asRec();
+            Router.writeToSpace(f("db:" + tableName + "/1"), rec);
+
+            // -- Verify _tid column exists in the database --
+            final java.sql.DatabaseMetaData md = space.sjvm().getMetaData();
+            boolean hasTidCol = false;
+            try (final java.sql.ResultSet cols = md.getColumns(
+                    space.sjvm().getCatalog(), null, tableName, "_tid")) {
+                hasTidCol = cols.next();
+            }
+            assertTrue(hasTidCol, "_tid column should exist in the table");
+
+            // -- Verify raw value: < > wrapped URI --
+            final Obj raw = space.sql("SELECT _tid FROM " + tableName + " WHERE id = 1");
+            final List<Obj> rawRows = raw.stream().toList();
+            assertEquals(1, rawRows.size(), "should have one row");
+            final Obj tidField = rawRows.get(0).asRec().at(uri("_tid"));
+            assertTrue(tidField.isUri(),
+                    "_tid should be parsed as a uri, got: " + tidField);
+            assertEquals(knownTid, tidField.uriValue(),
+                    "_tid value should be " + knownTid);
+
+            // -- Read back via space: rec.tid() restored from _tid --
+            final Obj row = space.read(f("db:" + tableName + "/1"));
+            assertTrue(row.isRec(), "row should be a Rec");
+            assertEquals(knownTid, row.asRec().tid(),
+                    "rec.tid() should be restored from _tid column");
+            // _tid must NOT appear as a field in the rec — it's system metadata
+            assertFalse(row.asRec().has(uri("_tid")),
+                    "_tid column should not appear as a field in the rec");
+
+            // -- Verify user fields are intact --
+            assertEquals(str("hello"), row.asRec().at(uri("text")));
+            assertEquals(str("assistant"), row.asRec().at(uri("name")));
+
+            LOG.info("_tid round-trip test passed on {}",
+                    staticDbConfig.getDatabaseName());
+        } finally {
+            try {
+                space.sql("DROP TABLE IF EXISTS " + tableName);
+            } catch (final Exception ex) {
+                LOG.warn("[ignored] %s", ex);
+            }
+            Router.global().removeSpace(space.vid());
+            space.close();
         }
     }
 }

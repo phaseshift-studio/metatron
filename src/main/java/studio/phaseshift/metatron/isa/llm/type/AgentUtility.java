@@ -140,43 +140,7 @@ final class AgentUtility {
     // ── Session capability ────────────────────────────────────────
 
     static void buildSession(final Agent agent, final AiServices<AgentServices> service) {
-        final Obj sessFeat = agent.feature(SESSION);
-        if (sessFeat.isNoObj()) return;
-        final Obj sessionObj = ((Poly) sessFeat).at(uri(SESSION));
-        if (sessionObj.isNoObj()) return;
-
-        final Rec session = sessionObj.asRec();
-        final fURI sessionVID = session.vid();
-        if (sessionVID == null) return;
-
-        try {
-            final Space space = Router.global().getSpaceFor(sessionVID);
-            final SpaceChatSessionStore store = new SpaceChatSessionStore(agent, space);
-            if (session.at(ALGORITHM).isNoObj() || session.at(ALGORITHM).asRec().at(NAME).isNoObj())
-                throw MTronException.of("no session memory algorithm provided: token_window or message_window");
-            final int max = session.at(ALGORITHM).asRec().at(MAX).orElse(jnt(50)).intValue().intValue();
-            final ChatMemory chatMemory;
-            if (session.at(ALGORITHM).asRec().at(NAME).uriValue().equals(f("token_window"))) {
-                chatMemory = TokenWindowChatMemory.builder()
-                        .alwaysKeepSystemMessageFirst(true)
-                        .maxTokens(max, SessionFeature.DefaultTokenCountEstimator.singleton())
-                        .id(sessionVID)
-                        .chatMemoryStore(store)
-                        .build();
-            } else if (session.at(ALGORITHM).asRec().at(NAME).uriValue().equals(f("message_window"))) {
-                chatMemory = MessageWindowChatMemory.builder()
-                        .alwaysKeepSystemMessageFirst(true)
-                        .maxMessages(max)
-                        .id(sessionVID)
-                        .chatMemoryStore(store)
-                        .build();
-            } else {
-                throw MTronException.of("unknown session memory algorithm: %s", session.at(ALGORITHM).asRec().at(NAME));
-            }
-            service.chatMemory(chatMemory).storeRetrievedContentInChatMemory(true);
-        } catch (final Exception e) {
-            throw MTronException.of("unable to setup session: %s", e);
-        }
+        service.chatMemory(((SessionFeature) agent.feature(SESSION)).memory()).storeRetrievedContentInChatMemory(true);
     }
 
     // ── Skill capability ──────────────────────────────────────────

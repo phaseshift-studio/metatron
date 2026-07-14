@@ -46,6 +46,7 @@ import java.util.*;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
+import static studio.phaseshift.metatron.isa.llm.type.Agent.res;
 import static studio.phaseshift.metatron.isa.m.mInstSet.LST_TID;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_BYTE_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -67,159 +68,68 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
 
     private static final GraphittyLogger LOG = Graphitty.log(SpaceChatSessionStore.class);
 
-    private final Space space;
     private final Agent agent;
+    private final Space space;
 
     /**
-     * Hashes already mirrored to typed collections, keyed by session VID.
-     * Prevents duplicates across instances (mModel creates a new store per
-     * chat call) without leaking state between different sessions.
+     * Messages written by this store instance, keyed by TID.
+     * Used by ConceptFeature to link concepts to recently written messages.
      */
-    private static final Map<fURI, Set<String>> MIRRORED_HASHES = new LinkedHashMap<>();
+    private final Map<fURI, Set<fURI>> currentMessages = new HashMap<>();
 
     /**
-     * Clear the static mirror dedup cache.  Called between tests that
-     * reuse the same session VID pattern on fresh space instances.
+     * Name of the unified polymorphic message table stored under the session path.
      */
-    static void clearMirrorCache() {
-        synchronized (MIRRORED_HASHES) {
-            MIRRORED_HASHES.clear();
+    private static final String LLM_MESSAGE_TABLE = "llm_message";
+
+    /**
+     * Per-session dedup: set of content hashes already written, keyed by session VID.
+     * Prevents duplicates across store instances (LC4j creates a new store per chat call)
+     * without leaking state between different sessions.
+     */
+    private static final Map<fURI, Set<String>> WRITTEN_HASHES = new LinkedHashMap<>();
+
+    /**
+     * Clear the static dedup cache.  Called between tests that reuse the same
+     * session VID pattern on fresh space instances.
+     */
+    static void clearDedupCache() {
+        synchronized (WRITTEN_HASHES) {
+            WRITTEN_HASHES.clear();
         }
     }
 
     /**
-     * Sub-path under the session VID where individual messages are stored.
+     * Build the write URI for the unified message table.
+     * <pre>
+     *   llm:llm_session/1  →  llm:llm_message/_?incrq
+     *   /db/llm_session/1  →  /db/llm_message/_?incrq
+     * </pre>
      */
-    private static final String MSG = "msg";
+    private static fURI llmMessagePath(final fURI sessionVID) {
+        return sessionVID.retract(2).extend(LLM_MESSAGE_TABLE).extend("_").addQ("incrq");
+    }
 
     /**
-     * Key for the content hash field embedded in each stored message Rec.
-     */
-    private static final String HASH = "hash";
-
-    /**
-     * Mirror a pre-built system message Rec to the typed collection.
+     * Mirror a pre-built system message Rec to the unified message table.
      * System messages bypass {@code ChatMemoryStore.updateMessages()} — they're
-     * injected via {@code AiServices.systemMessage()}.  This method provides
-     * the same fire-and-forget mirror that user/AI messages get.
+     * injected via {@code AiServices.systemMessage()}.
      */
     public static void mirrorSystemMessage(final Space space, final fURI sessionVID, final Rec systemRec) {
         final String hash = contentHash(systemRec);
         systemRec.recValue().put(uri(HASH), str(hash));
-        // System messages bypass — use a synthetic URI for the back-link
-        systemRec.recValue().put(uri(URI), uri(sessionVID.retract(1).extend(MSG).extend(sessionVID.name()).extend("system")));
-        synchronized (MIRRORED_HASHES) {
-            final Set<String> seen = MIRRORED_HASHES.computeIfAbsent(sessionVID, k -> new LinkedHashSet<>());
+        systemRec.recValue().put(uri(TIME), str(Date.from(Instant.now()).toString()));
+        systemRec.recValue().put(uri(SESSION), uri(sessionVID));
+        synchronized (WRITTEN_HASHES) {
+            final Set<String> seen = WRITTEN_HASHES.computeIfAbsent(sessionVID, k -> new LinkedHashSet<>());
             if (!seen.add(hash)) return;
         }
         try {
-            space.write(sessionVID.retract(2).extend("llm_message_system").extend("_").addQ("incrq"), systemRec);
+            Router.writeToSpace(llmMessagePath(sessionVID), systemRec);
         } catch (final Exception e) {
             LOG.debug("mirror system message failed (non-blocking): %s", e.getMessage());
         }
     }
-
-    /**
-     * Key for the message count field within the algorithm_json rec.
-     */
-    private static final String MESSAGE_COUNT = "message_count";
-
-    /**
-     * Builds a KV-safe base URI for message storage derived from a session VID.
-     * Uses a separate {@code msg} collection prefix (not under the session
-     * collection path) to avoid colliding with field-write semantics.
-     *
-     * <p>Works for both scheme-prefix and path-based URIs:
-     * <pre>
-     *   llm:llm_session/1        → llm:msg/1
-     *   /my/db/llm_session/1     → /my/db/msg/1
-     * </pre>
-     */
-    private static fURI msgPath(final fURI sessionVID) {
-        return sessionVID.retract(2).extend(MSG).extend(sessionVID.name());
-    }
-
-    /**
-     * Fire-and-forget mirror of a message Rec to its per-type collection.
-     * Uses {@code _?incrq} so the generic incrQ QProc auto-generates sequential
-     * entry IDs — no overwrites.  Purely additive.  Gracefully degrades on
-     * non-DB backing spaces (exceptions caught).
-     * <p>
-     * TID → collection mapping:
-     * <pre>
-     *   /m/llm/system      → llm_message_system/_?incrq
-     *   /m/llm/user        → llm_message_user/_?incrq
-     *   /m/llm/AI          → llm_message_ai/_?incrq
-     *   /m/llm/tool_result → llm_message_tool_result/_?incrq
-     * </pre>
-     */
-    private void mirrorToTypedCollection(final fURI sessionVID, final Rec msgRec, final fURI kvURI) {
-        final String collection = perTypeCollectionName(msgRec.tid());
-        if (collection == null) return;
-        final Obj hf = msgRec.at(uri(HASH));
-        if (hf.isNoObj()) return;
-        final String hash = hf.strValue();
-        final Date now = Date.from(Instant.now());
-        // Already mirrored for this memory — skip
-        synchronized (MIRRORED_HASHES) {
-            final Set<String> seen = MIRRORED_HASHES.computeIfAbsent(sessionVID, k -> new LinkedHashSet<>());
-            if (!seen.add(hash)) return;
-        }
-        try {
-            // Flatten nested content for SQL-friendly columns: for single-text
-            // user messages, promote contents.text → text so the column stores
-            // the plain string instead of [text=>"..."].
-            final Rec toMirror;
-            if (msgRec.tid().equals(USER_MESSAGE_TID)) {
-                final Obj contents = msgRec.at(uri(CONTENTS));
-                if (contents.isRec() && contents.asRec().has(uri(TEXT))) {
-                    final Map<Obj, Obj> flat = new LinkedHashMap<>(msgRec.recValue());
-                    flat.put(uri(TEXT), contents.asRec().at(uri(TEXT)));
-                    flat.putIfAbsent(uri(NAME), str(""));
-                    toMirror = rec(flat, msgRec.tid(), null);
-                } else {
-                    final Map<Obj, Obj> flat = new LinkedHashMap<>(msgRec.recValue());
-                    flat.putIfAbsent(uri(NAME), str(""));
-                    toMirror = rec(flat, msgRec.tid(), null);
-                }
-            } else {
-                toMirror = msgRec;
-            }
-            // Stamp the KV URI so the typed row links back to the authoritative
-            // message in the key-value store (reconstruction, navigation).
-            toMirror.recValue().put(uri(TIME), str(now.toString()));
-            toMirror.recValue().put(uri(URI), uri(kvURI));
-            this.space.write(sessionVID.retract(2).extend(collection).extend("_").addQ("incrq"), toMirror);
-        } catch (final Exception e) {
-            LOG.debug("mirror to typed collection failed (non-blocking): %s", e.getMessage());
-        }
-    }
-
-    /**
-     * Map a message TID to its per-type collection name.
-     */
-    private static String perTypeCollectionName(final fURI tid) {
-        if (tid == null) return null;
-        if (tid.equals(SYSTEM_MESSAGE_TID)) return "llm_message_system";
-        if (tid.equals(USER_MESSAGE_TID)) return "llm_message_user";
-        if (tid.equals(AI_MESSAGE_TID)) return "llm_message_ai";
-        if (tid.equals(TOOL_RESULT_MESSAGE_TID)) return "llm_message_tool_result";
-        if (tid.equals(TOOL_REQUEST_MESSAGE_TID)) return "llm_message_tool_request";
-        return null;
-    }
-
-    /**
-     * Token vocabulary mapping for the LC4j API boundary.
-     * Only non-identity mappings are registered; identity is the default fallback.
-     * <pre>
-     *   Context                   Metatron token   LC4j field
-     *   TOOL_RESULT_MESSAGE_TID   NAME          -> toolName
-     *   LLM_TOOL_TID              ARGS          -> arguments
-     * </pre>
-     */
-    static final TokenMapper VOCAB = new TokenMapper()
-            .add(TOOL_RESULT_MESSAGE_TID, NAME, "toolName")
-            .add(LLM_TOOL_TID, ARGS, "arguments");
 
     // -- content-part type discrimination tokens --
     private static final String IMG = "image";
@@ -228,23 +138,18 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
     private static final String PF = "pdf";
 
     // -- Known structural field sets per message type -------------------------
-    // Fields NOT in these sets (and not infrastructure like content_hash)
-    // are treated as attributes during Rec→ChatMessage conversion.
-    // This ensures extra fields like TIME, URI, and user-defined attributes
-    // faithfully round-trip through the ChatMemoryStore boundary.
+    // Fields NOT in these sets are treated as attributes during Rec→ChatMessage
+    // conversion.  System fields (_tid, session, time, hash) are stripped by
+    // the read path and never reach extractAttributes.
 
-    private static final Set<String> SYSTEM_KNOWN_KEYS = Set.of(TEXT, TYPE);
-    private static final Set<String> USER_KNOWN_KEYS = Set.of(NAME, CONTENTS, TYPE);
-    private static final Set<String> AI_KNOWN_KEYS = Set.of(TEXT, THINKING, TOOL_REQUESTS, TYPE);
-    private static final Set<String> TOOL_RESULT_KNOWN_KEYS = Set.of(TEXT, ID, NAME, TYPE);
+    private static final Set<String> SYSTEM_KNOWN_KEYS = Set.of(TEXT);
+    private static final Set<String> USER_KNOWN_KEYS = Set.of(NAME, CONTENTS);
+    private static final Set<String> AI_KNOWN_KEYS = Set.of(TEXT, THINKING, TOOL_REQUESTS);
+    private static final Set<String> TOOL_RESULT_KNOWN_KEYS = Set.of(TEXT, ID, NAME);
 
     /**
-     * Collect extra rec fields (not in {@code knownKeys}) as a string-keyed
-     * attribute map for placement into {@code ChatMessage.attributes()}.
-     * <p>
-     * Attributes are stored flat at the top level of the rec — any field
-     * whose key is not a known structural field and not internal infrastructure
-     * ({@code content_hash}) becomes an attribute.
+     * Collect extra rec fields as a string-keyed attribute map for placement
+     * into {@code ChatMessage.attributes()}.
      */
     private static Map<String, Object> extractAttributes(final Rec rec, final Set<String> knownKeys) {
         final Map<String, Object> attrs = new LinkedHashMap<>();
@@ -252,12 +157,20 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
             if (!e.getKey().isUri()) continue;
             final String keyName = e.getKey().uriValue().name();
             if (knownKeys.contains(keyName)) continue;
-            if (HASH.equals(keyName)) continue;  // internal infrastructure
-            if (URI.equals(keyName) || TIME.equals(keyName)) continue;
+            // Internal infrastructure — never expose to LC4j
+            if (HASH.equals(keyName) || TIME.equals(keyName) || SESSION.equals(keyName)) continue;
             attrs.put(keyName, e.getValue().strValue());
         }
         return attrs;
     }
+
+    // -- Token vocabulary ----------------------------------------------------
+    static final TokenMapper VOCAB = new TokenMapper()
+            .add(TOOL_RESULT_MESSAGE_TID, NAME, "toolName")
+            .add(LLM_TOOL_TID, ARGS, "arguments");
+
+    // -- HASH key ------------------------------------------------------------
+    private static final String HASH = "hash";
 
     public SpaceChatSessionStore(final Agent agent, final Space space) {
         this.agent = Objects.requireNonNull(agent, "agent must not be null");
@@ -268,19 +181,21 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
         return this.space;
     }
 
+    public Map<fURI, Set<fURI>> getCurrentMessages() {
+        return currentMessages;
+    }
+
     ///////////////////////////////////////////////////////////////////////////
     // ChatMemoryStore interface
     //
-    // Messages are stored individually at {scheme}:msg/{memId}/{position}.
-    // Each message Rec carries a content_hash field for incremental diffing.
-    // The session policy object (sessionVID) carries the algorithm rec with max,
-    // message_count, and future algorithm parameters.
+    // All messages are stored in a single polymorphic llm_message table under
+    // the session's parent path.  The table is append-only; the sliding window
+    // is a read-time view.  Message type is carried by the rec's TID, which
+    // tbleSpace persists in the _tid column.
     //
-    // URI topology (scheme-agnostic — works for llm:... and /path/...):
-    //   .../llm_session/1             → session policy (agent, user, session, name, algorithm)
-    //   .../msg/1/0                   → message at position 0
-    //   .../msg/1/1                   → message at position 1
-    //   ...
+    // URI topology:
+    //   .../llm_session/1           → session policy (agent, user, algorithm)
+    //   .../llm_message/_?incrq     → unified append-only message ledger
 
     /// ////////////////////////////////////////////////////////////////////////
 
@@ -289,43 +204,52 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
         if (!(sessionVID instanceof fURI sesVID))
             return new ArrayList<>();
 
-        final fURI msgPath = msgPath(sesVID);
-
-        // Read session policy first — gives us max window and message_count
+        // Read session policy for window config
         int windowMax = 15;
-        int msgCount = 0;
-        fURI name = null;
         try {
             final Obj sessionObj = Router.readFromSpace(sesVID);
             if (sessionObj.isRec()) {
                 final Obj algorithm = sessionObj.asRec().at(uri(ALGORITHM));
                 if (algorithm.isRec()) {
                     windowMax = algorithm.asRec().at(uri(MAX)).orElse(jnt(15)).intValue().intValue();
-                    msgCount = algorithm.asRec().at(uri(MESSAGE_COUNT)).orElse(jnt(0)).intValue().intValue();
-                    name = algorithm.asRec().at(NAME).orThrow(MTronException.of("algorithm name missing")).uriValue();
                 }
             }
         } catch (final Exception e) {
-            LOG.debug("could not read session policy for %s (using default max=15): %s", sesVID, e);
+            LOG.warn("could not read session policy for %s (using default max=15): %s", sesVID, e);
         }
 
-        // Read messages by position up to message_count (may have gaps from eviction)
-        final TreeMap<Integer, Rec> positionMap = new TreeMap<>();
-        try {
-            for (int pos = 0; pos < msgCount; pos++) {
-                final Obj msgObj = Router.readFromSpace(msgPath.extend(String.valueOf(pos)));
-                if (msgObj.isRec()) positionMap.put(pos, msgObj.asRec());
-            }
-        } catch (final Exception e) {
-            LOG.warn("error reading messages for session %s: %s", sesVID, e);
-            return new ArrayList<>();
-        }
-
-        // Convert to ChatMessage list in position order
-        final List<ChatMessage> result = new ArrayList<>();
-        for (final Rec msgRec : positionMap.values()) {
+        // Read messages sequentially by incrQ-assigned id (1, 2, 3, ...).
+        // Collect messages matching this session, skip thinking rows, take last N.
+        final fURI msgBase = sesVID.retract(2).extend(LLM_MESSAGE_TABLE);
+        final List<Rec> allMessages = new ArrayList<>();
+        int found = 0;
+        for (int id = 1; ; id++) {
+            final fURI readURI = msgBase.extend(String.valueOf(id));
             try {
-                final ChatMessage cm = recToChatMessage(msgRec);
+                final Obj msgObj = Router.readFromSpace(readURI);
+                if (msgObj.isNoObj()) break;
+                if (!msgObj.isRec()) continue;
+                final Rec msgRec = msgObj.asRec();
+                // Filter by session — the table is shared across sessions
+                final Obj sessionField = msgRec.at(uri(SESSION));
+                if (sessionField.isNoObj() || !sessionField.isUri() || !sessionField.uriValue().equals(sesVID)) {
+                    continue;
+                }
+                // Skip thinking rows — they're for the ledger, not the LC4j window
+                if (msgRec.tid().equals(THINKING_MESSAGE_TID)) continue;
+                allMessages.add(msgRec);
+                found++;
+            } catch (final Exception e) {
+                LOG.warn("unable to process message %s (ignoring): %s", readURI, e);
+            }
+        }
+        LOG.info("messages found for context window: " + found);
+        // Messages are in ascending id order.  Take the last windowMax.
+        final List<ChatMessage> result = new ArrayList<>();
+        final int start = Math.max(0, allMessages.size() - windowMax);
+        for (int i = start; i < allMessages.size(); i++) {
+            try {
+                final ChatMessage cm = recToChatMessage(allMessages.get(i));
                 if (cm != null)
                     result.add(cm);
             } catch (final Exception e) {
@@ -333,12 +257,7 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
             }
         }
 
-        // Apply max window — return only the last N messages
-        if (result.size() > windowMax) {
-            return result.subList(result.size() - windowMax, result.size());
-        }
-        LOG.debug("read %d messages for session %s (name=%s, window max=%d, stored=%d)",
-                result.size(), sesVID, name, windowMax, msgCount);
+        LOG.debug("read %d messages for session %s (window max=%d, total stored=%d)", result.size(), sesVID, windowMax, allMessages.size());
         return result;
     }
 
@@ -347,18 +266,14 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
         if (!(sessionVID instanceof fURI sesVID))
             return;
 
-        final fURI msgPath = msgPath(sesVID);
-
-        // -- 1. Read existing session policy ----------------------------------
+        // -- 1. Read session policy -------------------------------------------
         int windowMax = 15;
-        int existingCount = 0;
         fURI name = null;
         final Map<Obj, Obj> existingSessionFields = new LinkedHashMap<>();
         try {
             final Obj existingObj = Router.readFromSpace(sesVID);
             if (existingObj.isRec()) {
                 final Rec existingRec = existingObj.asRec();
-                // Preserve all existing fields except those we recalculate
                 for (final Obj key : existingRec.keys().toList()) {
                     if (key.isUri()) {
                         final String keyName = key.uriValue().name();
@@ -366,11 +281,9 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
                             existingSessionFields.put(key, existingRec.at(key));
                     }
                 }
-                // Read algorithm config
                 final Obj algorithm = existingRec.at(uri(ALGORITHM));
                 if (algorithm.isRec()) {
                     windowMax = algorithm.asRec().at(uri(MAX)).orElse(jnt(15)).intValue().intValue();
-                    existingCount = algorithm.asRec().at(uri(MESSAGE_COUNT)).orElse(jnt(0)).intValue().intValue();
                     name = algorithm.asRec().at(uri(NAME)).orThrow(MTronException.of("no algorithm name specified")).uriValue();
                 }
             }
@@ -378,109 +291,82 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
             LOG.debug("could not read existing session policy for %s (creating new): %s", sesVID, e);
         }
 
-        // -- 2. Read stored message hashes (up to existingCount) --------------
-        final Map<String, Integer> storedHashMap = new LinkedHashMap<>(); // hash -> position
-        try {
-            for (int pos = 0; pos < existingCount; pos++) {
-                final Obj msgObj = Router.readFromSpace(msgPath.extend(String.valueOf(pos)));
-                if (msgObj.isRec()) {
-                    final Obj hf = msgObj.asRec().at(uri(HASH));
-                    if (!hf.isNoObj())
-                        storedHashMap.put(hf.strValue(), pos);
-                }
-            }
-        } catch (final Exception e) {
-            LOG.debug("could not read stored messages for %s (starting fresh): %s", sesVID, e);
-        }
-
-        // -- 3. Convert incoming messages to typed Recs + compute hashes -----
+        // -- 2. Convert incoming messages to typed Recs + compute hashes -----
         final List<Rec> incomingRecs = new ArrayList<>();
-        final Set<String> incomingHashes = new LinkedHashSet<>();
+       // final Set<String> incomingHashes = new LinkedHashSet<>();
         for (final ChatMessage msg : messages) {
             try {
                 final Rec msgRec = chatMessageToRec(msg);
                 final String hash = contentHash(msgRec);
                 msgRec.recValue().put(uri(HASH), str(hash));
                 msgRec.recValue().put(uri(TIME), str(Date.from(Instant.now()).toString()));
+                msgRec.recValue().put(uri(SESSION), uri(sesVID));
                 incomingRecs.add(msgRec);
-                incomingHashes.add(hash);
+       //         incomingHashes.add(hash);
             } catch (final Exception e) {
                 LOG.error("error converting incoming chat message (type=%s, class=%s): %s",
                         msg.type(), msg.getClass().getSimpleName(), e);
             }
         }
 
-        // -- 4. Write new messages & reposition existing ones ----------------
-        // Messages are stored at incoming-list-index positions (0..N-1).
-        // Messages with matching hashes at different positions are moved.
-        // Messages with matching hashes at the same position are skipped.
-        // Mirrors are batched: if two messages land on the same KV URI
-        // (streaming partial → complete), only the last one is mirrored.
-        final Set<Integer> writtenPositions = new HashSet<>();
-        final java.util.Map<fURI, Rec> batchedMirrors = new LinkedHashMap<>();
-        for (int pos = 0; pos < incomingRecs.size(); pos++) {
-            final Rec incomingRec = incomingRecs.get(pos);
-            final String incomingHash = incomingRec.recValue().get(uri(HASH)).strValue();
-
-            if (storedHashMap.containsKey(incomingHash)) {
-                final int storedPos = storedHashMap.get(incomingHash);
-                if (storedPos == pos) {
-                    writtenPositions.add(pos);
-                    continue; // idempotent
-                }
-                Router.writeToSpace(msgPath.extend(String.valueOf(storedPos)), noobj());
-                Router.writeToSpace(msgPath.extend(String.valueOf(pos)), incomingRec);
-            } else {
-                final fURI kvURI = msgPath.extend(String.valueOf(pos));
-                Router.writeToSpace(kvURI, incomingRec);
-                batchedMirrors.put(kvURI, incomingRec);
-            }
-            writtenPositions.add(pos);
+        // -- 3. Append new messages (hash-based dedup) -----------------------
+        final Set<String> sessionHashes;
+        synchronized (WRITTEN_HASHES) {
+            sessionHashes = WRITTEN_HASHES.computeIfAbsent(sesVID, k -> new LinkedHashSet<>());
         }
-        // Write mirrors — last message per URI wins (streaming dedup)
-        for (final Map.Entry<fURI, Rec> e : batchedMirrors.entrySet())
-            mirrorToTypedCollection(sesVID, e.getValue(), e.getKey());
-
-        // -- 5. Delete messages no longer in the window ----------------------
-        // Guard: never delete positions we just wrote (hash may have changed
-        // between calls, causing step 4's write to be undone by step 5).
-        for (final Map.Entry<String, Integer> entry : storedHashMap.entrySet()) {
-            if (!incomingHashes.contains(entry.getKey())
-                    && !writtenPositions.contains(entry.getValue())) {
-                Router.writeToSpace(msgPath.extend(String.valueOf(entry.getValue())), noobj());
+        int written = 0;
+        for (final Rec incomingRec : incomingRecs) {
+            final String hash = incomingRec.recValue().get(uri(HASH)).strValue();
+            synchronized (WRITTEN_HASHES) {
+                if (!sessionHashes.add(hash)) continue; // already written
             }
-        }
-
-        // Also clean up any positions beyond the current window
-        for (int pos = incomingRecs.size(); pos <= existingCount + 10; pos++) {
             try {
-                final Obj orphan = Router.readFromSpace(msgPath.extend(String.valueOf(pos)));
-                if (!orphan.isNoObj()) {
-                    Router.writeToSpace(msgPath.extend(String.valueOf(pos)), noobj());
-                } else {
-                    break; // no more orphaned entries beyond this point
+                final fURI writePath = llmMessagePath(sesVID);
+                final Obj writtenObj = Router.writeToSpace(writePath, incomingRec);
+                if (writtenObj.hasVID()) {
+                    currentMessages.computeIfAbsent(incomingRec.tid(), k -> new HashSet<>())
+                            .add(writtenObj.vid());
                 }
+                written++;
             } catch (final Exception e) {
-                break;
+                LOG.warn("error writing message to llm_message (non-blocking): %s", e.getMessage());
             }
         }
 
-        // -- 6. Update session policy (algorithm + required fields) -----------
-        final int newMessageCount = Math.max(existingCount, incomingRecs.size());
+        // -- 4. Write thinking row if accumulated ----------------------------
+        final Obj thinking = this.agent.at(res("thinking"));
+        if (!thinking.isNoObj() && !thinking.strValue().isBlank()) {
+            final Map<Obj, Obj> thinkingMap = new LinkedHashMap<>();
+            thinkingMap.put(uri(TEXT), str(thinking.strValue()));
+            thinkingMap.put(uri(TIME), str(Date.from(Instant.now()).toString()));
+            thinkingMap.put(uri(SESSION), uri(sesVID));
+            final Rec thinkingRec = rec(thinkingMap, THINKING_MESSAGE_TID, null);
+            final String thinkingHash = contentHash(thinkingRec);
+            thinkingRec.recValue().put(uri(HASH), str(thinkingHash));
+            synchronized (WRITTEN_HASHES) {
+                if (sessionHashes.add(thinkingHash)) {
+                    try {
+                        Router.writeToSpace(llmMessagePath(sesVID), thinkingRec);
+                    } catch (final Exception e) {
+                        LOG.warn("error writing thinking to llm_message (non-blocking): %s", e.getMessage());
+                    }
+                }
+            }
+            // Clear thinking from blackboard so it isn't re-written next turn
+            this.agent.at(res("thinking"), noobj(), Poly.MUTABLE);
+        }
+
+        // -- 5. Update session policy ----------------------------------------
         final Map<Obj, Obj> algorithmMap = new LinkedHashMap<>();
         algorithmMap.put(uri(MAX), jnt(windowMax));
-        algorithmMap.put(uri(MESSAGE_COUNT), jnt(newMessageCount));
         algorithmMap.put(uri(NAME), uri(name));
-
         existingSessionFields.put(uri(ALGORITHM), rec(algorithmMap));
-        // Ensure required columns are always present (first write may not have
-        // stored them if createTableFromRecord dropped fields)
         existingSessionFields.putIfAbsent(uri(AGENT), str("default"));
         existingSessionFields.putIfAbsent(uri(USER), str("default"));
-
         Router.writeToSpace(sesVID, rec(existingSessionFields).selfVID(sesVID));
-        LOG.debug("wrote %d messages for session %s (window name=%s, max=%d, total count=%d)",
-                incomingRecs.size(), sesVID, name, windowMax, newMessageCount);
+
+        LOG.debug("wrote %d messages + %s thinking for session %s (window name=%s, max=%d)",
+                written, thinking.isNoObj() ? "no" : "yes", sesVID, name, windowMax);
     }
 
     @Override
@@ -488,28 +374,28 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
         if (!(sessionVID instanceof fURI sesVID))
             return;
 
-        // Read message_count so we know how many positions to scan
-        int msgCount = 0;
-        try {
-            final Obj sessionObj = Router.readFromSpace(sesVID);
-            if (sessionObj.isRec()) {
-                final Obj algorithm = sessionObj.asRec().at(uri(ALGORITHM));
-                if (algorithm.isRec())
-                    msgCount = algorithm.asRec().at(uri(MESSAGE_COUNT)).orElse(jnt(0)).intValue().intValue();
+        // Read and delete all messages for this session sequentially by id
+        final fURI msgBase = sesVID.retract(2).extend(LLM_MESSAGE_TABLE);
+        for (int id = 1; ; id++) {
+            try {
+                final Obj msgObj = Router.readFromSpace(msgBase.extend(String.valueOf(id)));
+                if (msgObj.isNoObj()) break;
+                if (!msgObj.isRec()) continue;
+                final Rec msgRec = msgObj.asRec();
+                final Obj sessionField = msgRec.at(uri(SESSION));
+                if (sessionField.isNoObj() || !sessionField.isUri()
+                        || !sessionField.uriValue().equals(sesVID))
+                    continue;
+                Router.writeToSpace(msgBase.extend(String.valueOf(id)), noobj());
+            } catch (final Exception e) {
+                break; // no more entries
             }
-        } catch (final Exception e) {
-            LOG.warn("could not read message_count for deletion: %s", e);
         }
 
-        final fURI msgPath = msgPath(sesVID);
-        for (int pos = 0; pos < msgCount; pos++) {
-            try {
-                Router.writeToSpace(msgPath.extend(String.valueOf(pos)), noobj());
-            } catch (final Exception e) {
-                LOG.warn("error deleting message at position %d for session %s: %s", pos, sesVID, e);
-            }
+        synchronized (WRITTEN_HASHES) {
+            WRITTEN_HASHES.remove(sesVID);
         }
-        LOG.debug("deleted %d messages for session %s", msgCount, sesVID);
+        LOG.debug("deleted messages for session %s", sesVID);
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -518,7 +404,6 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
     /// ////////////////////////////////////////////////////////////////////////
 
     public static Rec chatMessageToRec(final ChatMessage message) {
-
         if (SystemMessage.class.isAssignableFrom(message.type().messageClass()))
             return systemMessageToRec((SystemMessage) message);
         if (UserMessage.class.isAssignableFrom(message.type().messageClass()))
@@ -527,18 +412,12 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
             return aiMessageToRec((AiMessage) message);
         if (ToolExecutionResultMessage.class.isAssignableFrom(message.type().messageClass()))
             return toolResultMessageToRec((ToolExecutionResultMessage) message);
-            //if (CustomMessage.class.isAssignableFrom(message.type().messageClass()))
-            //   return toolResultMessageToRec((ToolExecutionResultMessage) message);
         else
             throw MTronException.of("unsupported message type: %s [%s]", message.type(), message.getClass().getSimpleName());
     }
 
     private static Rec systemMessageToRec(final SystemMessage msg) {
-        return rec(mutableMap(
-                        uri(TEXT), str(msg.text()),
-                        uri(TYPE), uri(msg.type().name())
-                        /*, uri(SIZE), real((double) msg.text().getBytes().length, MATH_BYTE_TID, null)*/),
-                SYSTEM_MESSAGE_TID, null);
+        return rec(mutableMap(uri(TEXT), str(msg.text())), SYSTEM_MESSAGE_TID, null);
     }
 
     private static Rec userMessageToRec(final UserMessage msg) {
@@ -547,16 +426,14 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
             map.put(uri(NAME), str(msg.name()));
         if (msg.hasSingleText()) {
             map.put(uri(CONTENTS), rec(uri(TEXT), str(msg.singleText())));
+            map.put(uri(TEXT), str(msg.singleText()));
         } else {
             final List<Obj> parts = new ArrayList<>();
             for (final Content content : msg.contents())
                 parts.add(contentToRec(content));
             map.put(uri(CONTENTS), lst(parts));
+            map.put(uri(TEXT), str(parts.stream().map(x -> x.jvm() + "").reduce("", (a, b) -> a + ";" + b)));
         }
-        map.put(uri(TYPE), uri(msg.type().name()));
-        // map.put(uri(SIZE), real((double) map.getOrDefault(uri(CONTENTS), str("")).strValue().getBytes().length, MATH_BYTE_TID, null));
-        // Attributes go in flat (not nested under an ATTRIBUTES key).
-        // putIfAbsent ensures structural fields always win over attribute collisions.
         msg.attributes().forEach((k, v) -> map.putIfAbsent(uri(k), str(String.valueOf(v))));
         return rec(map, USER_MESSAGE_TID, null);
     }
@@ -589,7 +466,7 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
                 final PdfFile pdf = ((PdfFileContent) content).pdfFile();
                 yield rec(uri(PF), mediaToRec(pdf.url(), pdf.base64Data(), pdf.mimeType()));
             }
-            default -> rec(uri(TEXT), str("none"));
+            default -> rec(uri(TEXT), str(content.toString()));
         };
     }
 
@@ -612,55 +489,62 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
             final List<Obj> toolReqs = new ArrayList<>();
             for (final ToolExecutionRequest req : msg.toolExecutionRequests())
                 toolReqs.add(toolRequestToRec(req));
-            map.put(uri(TOOL_REQUESTS), lst(toolReqs, LST_TID, null));
+            map.put(uri(TOOL_REQUESTS), lst(toolReqs));
+            //map.put(uri(TEXT), str(toolReqs.toString()));
         }
-        map.put(uri(TYPE), uri(msg.type().name()));
-        //  map.put(uri(SIZE), real((double) map.getOrDefault(uri(TEXT), str("")).strValue().getBytes().length, MATH_BYTE_TID, null));
         msg.attributes().forEach((k, v) -> map.putIfAbsent(uri(k), str(String.valueOf(v))));
         return rec(map, AI_MESSAGE_TID, null);
     }
 
-    private static Rec toolRequestToRec(final ToolExecutionRequest req) {
+    private static Rec toolRequestToRec(final ToolExecutionRequest toolRequest) {
         final Map<Obj, Obj> map = new LinkedHashMap<>();
-        if (req.name() != null && !req.name().isBlank())
-            map.put(uri(NAME), str(req.name()));
-        if (req.arguments() != null && !req.arguments().isBlank())
-            map.put(uri(VOCAB.from(LLM_TOOL_TID, "arguments")), str(req.arguments()));
-        if (req.id() != null && !req.id().isBlank())
-            map.put(uri(ID), str(req.id()));
-        map.put(uri(TYPE), uri("tool_request"));
+        if (toolRequest.name() != null && !toolRequest.name().isBlank())
+            map.put(uri(NAME), uri(toolRequest.name()));
+        if (toolRequest.arguments() != null && !toolRequest.arguments().isBlank())
+            map.put(uri(VOCAB.from(LLM_TOOL_TID, "arguments")), str(toolRequest.arguments()));
+        if (toolRequest.id() != null && !toolRequest.id().isBlank())
+            map.put(uri(ID), str(toolRequest.id()));
         return rec(map, TOOL_REQUEST_MESSAGE_TID, null);
     }
 
     private static Rec toolResultMessageToRec(final ToolExecutionResultMessage msg) {
         final Map<Obj, Obj> map = new LinkedHashMap<>();
-        map.put(uri(VOCAB.from(TOOL_RESULT_MESSAGE_TID, "toolName")), str(msg.toolName()));
-        map.put(uri(TEXT), msg.text() != null && !msg.text().isBlank() ? str(msg.text()) : str("none"));
+        map.put(uri(VOCAB.from(TOOL_RESULT_MESSAGE_TID, "toolName")), uri(msg.toolName()));
+        map.put(uri(TEXT), msg.text() != null && !msg.text().isBlank() ? str(msg.text()) : str(""));
         if (msg.id() != null && !msg.id().isBlank())
             map.put(uri(ID), str(msg.id()));
-        map.put(uri(TYPE), uri(msg.type().name()));
-        //  map.put(uri(SIZE), real((double) map.getOrDefault(uri(TEXT), str("")).strValue().getBytes().length, MATH_BYTE_TID, null));
         msg.attributes().forEach((k, v) -> map.putIfAbsent(uri(k), str(String.valueOf(v))));
         return rec(map, TOOL_RESULT_MESSAGE_TID, null);
     }
 
     ///////////////////////////////////////////////////////////////////////////
-    // typed Rec -> ChatMessage  (boundary: metatron token -> LC4j field)
+    // typed Rec -> ChatMessage (boundary: metatron token -> LC4j field)
+    // Message type is determined by rec.tid() (populated from _tid column
+    // on read), not by a redundant "type" field.
 
     /// ////////////////////////////////////////////////////////////////////////
 
     public static ChatMessage recToChatMessage(final Rec rec) {
         final fURI tid = rec.tid();
-        final String type = Str.Helper.cleanString(rec.at(TYPE).orElse(str("")));
-        if (tid.equals(SYSTEM_MESSAGE_TID) || type.equals(ChatMessageType.SYSTEM.name()))
+        if (tid.equals(SYSTEM_MESSAGE_TID))
             return recToSystemMessage(rec);
-        if (tid.equals(USER_MESSAGE_TID) || type.equals(ChatMessageType.USER.name())) return recToUserMessage(rec);
-        if (tid.equals(AI_MESSAGE_TID) || type.equals(ChatMessageType.AI.name())) return recToAiMessage(rec);
-        if (tid.equals(TOOL_REQUEST_MESSAGE_TID) || type.equals(ChatMessageType.CUSTOM.name()))
+        if (tid.equals(USER_MESSAGE_TID))
+            return recToUserMessage(rec);
+        if (tid.equals(AI_MESSAGE_TID))
+            return recToAiMessage(rec);
+        if (tid.equals(TOOL_REQUEST_MESSAGE_TID) || tid.equals(TOOL_RESULT_MESSAGE_TID))
             return recToToolResultMessage(rec);
-        if (tid.equals(TOOL_RESULT_MESSAGE_TID) || type.equals(ChatMessageType.TOOL_EXECUTION_RESULT.name()))
+        // Fallback: check legacy "type" field for compatibility with old data
+        final String type = Str.Helper.cleanString(rec.at(uri(TYPE)).orElse(str("")));
+        if (type.equals(ChatMessageType.SYSTEM.name()))
+            return recToSystemMessage(rec);
+        if (type.equals(ChatMessageType.USER.name()))
+            return recToUserMessage(rec);
+        if (type.equals(ChatMessageType.AI.name()))
+            return recToAiMessage(rec);
+        if (type.equals(ChatMessageType.TOOL_EXECUTION_RESULT.name()))
             return recToToolResultMessage(rec);
-        LOG.warn("unknown message type: %s", rec);
+        LOG.warn("unknown message type (tid=%s): %s", tid, rec);
         return recToSystemMessage(rec);
     }
 
@@ -801,25 +685,17 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
     }
 
     ///////////////////////////////////////////////////////////////////////////
-    // Content hashing for incremental update diffing
-    // The hash covers the canonical message Rec (excluding the hash field itself)
-    // so that identical messages produce identical hashes regardless of storage
-    // position or metadata.
-
-    /// ////////////////////////////////////////////////////////////////////////
+    // Content hashing
+    ///////////////////////////////////////////////////////////////////////////
 
     /**
      * Computes a SHA-256 content hash of the given message Rec.
-     * Strips volatile metadata fields ({@code content_hash}, {@code name},
-     * {@code type}, {@code thinking}, {@code time}, {@code uri}) so the
-     * same logical message produces the same hash across calls even when
-     * LC4j mutates metadata or infrastructure fields round-trip through
-     * {@code ChatMessage.attributes()}.
+     * Strips volatile metadata fields so the same logical message produces
+     * the same hash across calls.
      */
     static String contentHash(final Rec msgRec) {
-        // Save and strip volatile fields that LC4j or infrastructure may change
         final Map<Obj, Obj> saved = new LinkedHashMap<>();
-        final Obj[] volatileKeys = {uri(HASH), uri(NAME), uri(TYPE), uri(THINKING), uri(TIME), uri(URI)};
+        final Obj[] volatileKeys = {uri(HASH), uri(NAME), uri(TYPE), uri(THINKING), uri(TIME), uri(SESSION), uri(URI)};
         for (final Obj key : volatileKeys) {
             final Obj val = msgRec.recValue().remove(key);
             if (val != null) saved.put(key, val);
@@ -835,9 +711,7 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
         } catch (final NoSuchAlgorithmException e) {
             throw MTronException.of("SHA-256 not available: %s", e);
         } finally {
-            // Restore stripped fields
             msgRec.recValue().putAll(saved);
         }
     }
-
 }

@@ -26,6 +26,8 @@ import studio.phaseshift.metatron.util.MTronException;
 
 import java.nio.ByteBuffer;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BiFunction;
 import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -145,11 +147,28 @@ public interface Str extends Mono, PlusMonoid.O<Str> {
                             "a str to split", "lst encoded components of the split lhs str", Map.of(jnt(0), "a token to split on"), "split the lhs string according to the token arg and insert components into an ordered lst"),
                     docWrap(instC(MERGE_INST_TID.dom(STR_TID.maybeSome()).rng(STR_TID), lst(T(STR_TID)), (lhs, inst) -> str(lhs.stream().map(Obj::<String>jvmAs).reduce((a, b) -> a + inst.arg(0).strValue() + b).orElse(""))),
                             "an str barrier", "the join of the str barrier", Map.of(jnt(0), "the join token"), "join the barrier given the str arg"),
-                    docWrap(instC(REGEX_INST_TID.dom(STR_TID).rng(LST_TID), lst(T(STR_TID)), (lhs, inst) ->
-                                    lst(REGEX_CACHE.compute(inst.arg(0).strValue(), (k, v) -> null == v ? Pattern.compile(k) : v).matcher(lhs.strValue()).results().map(MatchResult::group).map(MStr::str).map(Obj::<Obj>as).toList())),
-                            "a str to split by regex", "the regex groups of the lhs str", Map.of(jnt(0), "regex"), "split the lhs str into a regex groups",
+                    docWrap(instC(REGEX_INST_TID.dom(STR_TID).rng(LST_TID), lst(T(STR_TID)), (lhs, inst) -> {
+                                final Pattern pattern = REGEX_CACHE.compute(inst.arg(0).strValue(), (k, v) -> null == v ? Pattern.compile(k) : v);
+                                final Matcher matcher = pattern.matcher(lhs.strValue());
+                                if (matcher.groupCount() == 0) {
+                                    return lst(matcher.results().map(MatchResult::group).map(MStr::str).map(Obj::<Obj>as).toList());
+                                } else {
+                                    return lst(matcher.results().map(mr -> {
+                                        final List<Obj> groups = new ArrayList<>();
+                                        groups.add(str(mr.group())); // full match
+                                        for (int i = 1; i <= mr.groupCount(); i++) {
+                                            final String g = mr.group(i);
+                                            groups.add(str(g != null ? g : ""));
+                                        }
+                                        return (Obj) lst(groups);
+                                    }).toList());
+                                }
+                            }),
+                            "a str to split by regex", "the regex capture groups (or full matches) of the lhs str", Map.of(jnt(0), "regex"), "split the lhs str by regex matches; if the regex has capture groups, each match is a lst of [fullMatch, group1, group2, ...], otherwise a flat lst of full matches",
                             "'abc.cde'.regex('[^.]+') [-- ['abc','cde'] --]",
-                            "'abc.cde'.regex('.\\..') [-- ['c.c'] --]"),
+                            "'abc.cde'.regex('.\\..') [-- ['c.c'] --]",
+                            "'241G'.regex('(\\d+)([KMGT])') [-- [['241G','241','G']] --]"),
+
                     instC(GT_INST_TID.dom(STR_TID).rng(BOOL_TID), lst(T(STR_TID)), (lhs, inst) -> bool(Inst.Helper.alignLHSType(lhs, inst.arg(0)).filter(l -> l.strValue().compareTo(inst.arg(0).strValue()) > 0).isPresent())),
                     instC(GTE_INST_TID.dom(STR_TID).rng(BOOL_TID), lst(T(STR_TID)), (lhs, inst) -> bool(Inst.Helper.alignLHSType(lhs, inst.arg(0)).filter(l -> l.strValue().compareTo(inst.arg(0).strValue()) >= 0).isPresent())),
                     instC(LT_INST_TID.dom(STR_TID).rng(BOOL_TID), lst(T(STR_TID)), (lhs, inst) -> bool(Inst.Helper.alignLHSType(lhs, inst.arg(0)).filter(l -> l.strValue().compareTo(inst.arg(0).strValue()) < 0).isPresent())),
@@ -158,7 +177,55 @@ public interface Str extends Mono, PlusMonoid.O<Str> {
                     instC(SUM_INST_TID.dom(STR_TID.maybeSome()).rng(STR_TID), lst(T(STR_TID.maybe())), (lhs, inst) -> str(lhs.stream().map(Obj::strValue).reduce(inst.arg(0).orElse(str("")).strValue(), (a, b) -> a + b))),
                     instC(UCASE_INST_TID.dom(STR_TID).rng(STR_TID), lst(), (lhs, inst) -> lhs.jvm(lhs.strValue().toUpperCase())),
                     instC(LCASE_INST_TID.dom(STR_TID).rng(STR_TID), lst(), (lhs, inst) -> lhs.jvm(lhs.strValue().toLowerCase())),
-                    instC(WITHIN_INST_TID.dom(STR_TID).rng(B), lst(T(B)), (lhs, inst) -> Arrays.stream(lhs.strValue().split("")).map(s -> inst.arg(0).apply(str(s))).map(o -> (PlusMonoid.O) o).reduce((a, b) -> (PlusMonoid.O) a.plus(b)).map(Obj::<Obj>as).orElse(noobj()))));
+                    instC(SELECT_INST_TID.dom(STR_TID).rng(STR_TID), lst(REC_TYPE), (lhs, inst) -> {
+                        BiFunction<String, Obj, String> transform = new BiFunction<>() {
+                            @Override
+                            public String apply(final String input, final Obj rulesObj) {
+                                if (rulesObj == null || rulesObj.isNoObj()) return "";
+                                // 1. If the rules object is actually an instruction, just execute it and get the value
+                                if (rulesObj.isObjCall())
+                                    return rulesObj.apply(str(input)).strValue();
+                                // 2. If the rules object is a rec, treat it as a nested set of rewrite rules
+                                if (rulesObj.isRec()) {
+                                    final AtomicReference<String> current = new AtomicReference<>(input);
+                                    rulesObj.asRec().elements().forEach(r -> {
+                                        final String regex = r.first().strValue();
+                                        final Obj replacement = r.second();
+                                        Pattern pattern = REGEX_CACHE.get(regex);
+                                        if (null == pattern) {
+                                            pattern = Pattern.compile(regex);
+                                            REGEX_CACHE.put(regex, pattern);
+                                        }
+                                        final Matcher matcher = pattern.matcher(current.get());
+                                        final StringBuilder sb = new StringBuilder();
+                                        int lastEnd = 0;
+                                        while (matcher.find()) {
+                                            sb.append(current.get(), lastEnd, matcher.start());
+                                            String matchText = matcher.group();
+
+                                            // RECURSION: Apply the same transformation logic to the inner slice
+                                            sb.append(this.apply(matchText, replacement));
+                                            lastEnd = matcher.end();
+                                        }
+                                        sb.append(current.get().substring(lastEnd));
+                                        current.set(sb.toString());
+                                    });
+                                    return current.get();
+                                }
+                                // 3. Fallback: treat as a simple static value
+                                return Str.Helper.cleanString(rulesObj);
+                            }
+                        };
+
+                        // Execute the top-level transformation
+                        return str(transform.apply(lhs.strValue(), inst.arg(0)));
+                    }),
+                    instC(WITHIN_INST_TID.dom(STR_TID).rng(B), lst(T(B)), (lhs, inst) -> Arrays.stream(lhs.strValue().split("")).map(s -> inst.arg(0).apply(str(s))).
+                            map(o -> (PlusMonoid.O) o).
+                            reduce((a, b) -> (PlusMonoid.O) a.plus(b)).
+                            map(Obj::<Obj>as).
+                            orElse(noobj()))));
+
         }
     }
 

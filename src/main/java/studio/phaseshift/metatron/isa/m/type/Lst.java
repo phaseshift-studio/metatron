@@ -99,7 +99,7 @@ public interface Lst extends Poly<Lst, List<Obj>>, PlusMonoid.O<Lst> {
     }
 
     default <OBJ extends Obj> Stream<OBJ> elements() {
-        return (Stream) IteratorUtil.stream(this.jvm()).map(e -> e.autoResolve(this).c(c -> c.mult(this.c())));
+        return (Stream) this.jvm().stream().map(e -> e.autoResolve(this).c(c -> c.mult(this.c())));
     }
 
     @Override

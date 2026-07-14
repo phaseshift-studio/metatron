@@ -91,6 +91,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema {
 
     static final String MTRON_META_TABLE = "_mtron_meta";
+    static final String TID_COLUMN = "_tid";
 
     private final tbleSpace space;
     private final Map<String, TableMetadata> tableSchemas = new LinkedHashMap<>();
@@ -464,8 +465,23 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
 
     private Obj readTableRow(final ResultSet rs, final TableMetadata metadata, final String... rowNames) throws SQLException {
         final Map<Obj, Obj> labeledValues = new LinkedHashMap<>();
+        fURI storedTid = null;
         for (final ColumnMetadata col : metadata.columns) {
             if (rowNames.length == 0 && metadata.primaryKeys.contains(col.name)) continue;
+            if (TID_COLUMN.equalsIgnoreCase(col.name)) {
+                // _tid is system metadata, not a user field — extract for rec TID.
+                // Stored as <uri> so readMaybeJSON reconstitutes it correctly.
+                try {
+                    final String tidStr = rs.getString(col.name);
+                    if (tidStr != null && !tidStr.isBlank()) {
+                        final Obj parsed = readMaybeJSON(tidStr);
+                        storedTid = parsed.isUri() ? parsed.uriValue() : f(tidStr);
+                    }
+                } catch (final SQLException ignored) {
+                    // column may not exist in older tables — use REC_TID fallback
+                }
+                continue;
+            }
             if (rowNames.length == 0 || Arrays.asList(rowNames).contains(col.name)) {
                 final Obj value = readColumnWithMetadata(rs, col, metadata.tableName);
                 labeledValues.put(uri(col.name), value);
@@ -473,7 +489,8 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
                     Router.global().stats().ioStats().incrBytesRecv(value.toString().getBytes().length);
             }
         }
-        return rowNames.length == 1 ? objs(labeledValues.values()) : rec(labeledValues, REC_TID, null);
+        final fURI tid = storedTid != null ? storedTid : REC_TID;
+        return rowNames.length == 1 ? objs(labeledValues.values()) : rec(labeledValues, tid, null);
     }
 
     private Obj readColumnWithMetadata(final ResultSet rs, final ColumnMetadata col,
@@ -1001,6 +1018,18 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
         }
         values.add(Tuple.Pair.with(pkValue, pkColMeta));
 
+        // Ensure _tid column exists and include rec type identity
+        final ColumnMetadata tidColumn = metadata.columns.stream()
+                .filter(c -> c.name.equals(TID_COLUMN)).findFirst().orElse(null);
+        final ColumnMetadata resolvedTidCol;
+        if (tidColumn != null) {
+            resolvedTidCol = tidColumn;
+        } else {
+            resolvedTidCol = addColumnOnTheFly(conn, metadata, TID_COLUMN, str("<" + rec.tid().toString() + ">"));
+        }
+        columnNames.add(TID_COLUMN);
+        values.add(Tuple.Pair.with(str("<" + rec.tid().toString() + ">"), resolvedTidCol));
+
         for (final Map.Entry<Obj, Obj> entry : rec.recValue().entrySet()) {
             if (!entry.getKey().isUri()) {
                 this.space.logger().warn("ignoring non-uri key in rec: %s", entry.getKey());
@@ -1012,6 +1041,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
                 continue;
             }
             if (fieldName.equalsIgnoreCase(pkColumn)) continue;
+            if (TID_COLUMN.equalsIgnoreCase(fieldName)) continue;
 
             final ColumnMetadata column = metadata.columns.stream()
                     .filter(c -> c.name.equalsIgnoreCase(fieldName)).findFirst().orElse(null);
@@ -1057,6 +1087,18 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
         final List<String> columnNames = new ArrayList<>();
         final List<Tuple.Pair<Obj, ColumnMetadata>> values = new ArrayList<>();
 
+        // Ensure _tid column exists and include rec type identity
+        final ColumnMetadata tidColumn = metadata.columns.stream()
+                .filter(c -> c.name.equals(TID_COLUMN)).findFirst().orElse(null);
+        final ColumnMetadata resolvedTidCol;
+        if (tidColumn != null) {
+            resolvedTidCol = tidColumn;
+        } else {
+            resolvedTidCol = addColumnOnTheFly(conn, metadata, TID_COLUMN, str("<" + rec.tid().toString() + ">"));
+        }
+        columnNames.add(TID_COLUMN);
+        values.add(Tuple.Pair.with(str("<" + rec.tid().toString() + ">"), resolvedTidCol));
+
         for (final Map.Entry<Obj, Obj> entry : rec.recValue().entrySet()) {
             if (!entry.getKey().isUri()) {
                 this.space.logger().warn("ignoring non-uri key in rec: %s", entry.getKey());
@@ -1067,8 +1109,9 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
                 this.space.logger().warn("ignoring empty field name for key: %s", entry.getKey());
                 continue;
             }
-            // Skip PK columns and user-provided 'id' — DB auto-assigns
-            if (metadata.primaryKeys.contains(fieldName) || "id".equalsIgnoreCase(fieldName))
+            // Skip PK columns, user-provided 'id', and system _tid column
+            if (metadata.primaryKeys.contains(fieldName) || "id".equalsIgnoreCase(fieldName)
+                    || TID_COLUMN.equalsIgnoreCase(fieldName))
                 continue;
 
             final ColumnMetadata column = metadata.columns.stream()
@@ -1119,7 +1162,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
                                      final Rec rec) throws java.sql.SQLException {
         final boolean isNew = !tableSchemas.containsKey(tableName.toLowerCase());
         if (isNew)
-            createTableFromRecord(conn, tableName, rec);
+            createTableFromRecord(conn, tableName, rec, null);
         final TableMetadata metadata = tableSchemas.get(tableName.toLowerCase());
         if (metadata == null)
             throw new java.sql.SQLException("failed to create table: " + tableName);
@@ -1351,15 +1394,19 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
     }
 
     public void createTableFromRecord(final Connection conn, final String tableName,
-                                      final studio.phaseshift.metatron.isa.m.type.Rec rec) throws SQLException {
+                                      final studio.phaseshift.metatron.isa.m.type.Rec rec,
+                                      final String rowId) throws SQLException {
         final StringBuilder ddl = new StringBuilder("CREATE TABLE IF NOT EXISTS ")
                 .append(tableName).append(" (");
 
-        // Always use auto-increment integer PK — never let the user's
-        // Rec dictate the PK type (avoids TEXT-in-key errors on MariaDB).
-        // Dialect: SERIAL for PostgreSQL, AUTO_INCREMENT for MariaDB/MySQL,
-        // plain INTEGER PRIMARY KEY for SQLite (which auto-increments it).
-        if (this.space instanceof studio.phaseshift.metatron.isa.tble.tbleSpace tble) {
+        // Infer PK type from the rowId: numeric → INTEGER (with dialect-specific
+        // auto-increment), non-numeric text → VARCHAR(255).  A null rowId means
+        // the caller wants auto-increment (incrQ path), so default to INTEGER.
+        // VARCHAR is used instead of TEXT to avoid TEXT-in-key errors on MariaDB.
+        final boolean textPK = rowId != null && !studio.phaseshift.metatron.util.CommonUtil.isInt(rowId);
+        if (textPK) {
+            ddl.append("id VARCHAR(255) PRIMARY KEY");
+        } else if (this.space instanceof studio.phaseshift.metatron.isa.tble.tbleSpace tble) {
             final String b = tble.backend();
             if (b != null && b.contains("postgresql"))
                 ddl.append("id SERIAL PRIMARY KEY");
@@ -1371,6 +1418,11 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
             ddl.append("id INTEGER PRIMARY KEY");
         }
 
+        // _tid column — preserves rec type identity across write/read.
+        // Nullable: write paths that bypass insertRow/insertRowAuto (e.g. raw SQL,
+        // writeRow field-level diffs, writeRowFromList) won't populate it.
+        ddl.append(", ").append(TID_COLUMN).append(" TEXT");
+
         boolean first = false; // id column already added
 
         final Map<String, String> autoFromColumns = new LinkedHashMap<>();
@@ -1380,6 +1432,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
             final String colName = entry.getKey().asUri().uriValue().name();
             if (colName == null || colName.isEmpty()) continue;
             if ("id".equalsIgnoreCase(colName)) continue;
+            if (TID_COLUMN.equalsIgnoreCase(colName)) continue;
             if (!first) ddl.append(", ");
             first = false;
 

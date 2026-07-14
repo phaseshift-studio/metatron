@@ -213,6 +213,8 @@ public class SQLSchemaGenerator {
 
         // Add each column as a field in the record type
         for (final ExistingTableSchema.ColumnMetadata column : table.columns()) {
+            // _tid is a system column — it's rec identity, not a user field
+            if (ExistingTableSchema.TID_COLUMN.equalsIgnoreCase(column.name())) continue;
             final FKTarget fkTarget = getFKTarget(tbl, column.name());
             if (fkTarget != null) {
                 // Encode FK as an isa predicate on the column type
