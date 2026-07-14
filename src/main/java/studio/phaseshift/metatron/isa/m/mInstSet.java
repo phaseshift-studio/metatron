@@ -27,6 +27,7 @@ import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.Sugar;
+import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MCode;
 import studio.phaseshift.metatron.isa.mach.type.Router;
@@ -40,7 +41,6 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
-import static studio.phaseshift.metatron.isa.m.space.memSpace.MEM_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.m.space.stackSpace.STACK_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_FALSE;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TYPE;
@@ -55,8 +55,7 @@ import static studio.phaseshift.metatron.isa.m.type.Real.REAL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Rel.REL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instA;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -208,6 +207,9 @@ public class mInstSet extends AbstractInstSet {
     public static final fURI POLY_TID = M_ISA_TID.extend("poly");
     public static final fURI MONO_TID = M_ISA_TID.extend("mono");
     public static final fURI NUM_TID = M_ISA_TID.extend("num");
+
+    public static final fURI MEM_SPACE_TID = M_ISA_TID.extend("space").extend("memspace");
+    public static Type MEM_SPACE_TYPE;
 
     //public static final Set<fURI> MARKER_TYPES = Set.of(MONO_TID, POLY_TID, NUM_TID);
     public static final Set<fURI> BASE_TYPES = Set.of(
@@ -390,7 +392,16 @@ public class mInstSet extends AbstractInstSet {
                                 trigger but cannot introspect.
                                 """),
                         docWrap(SPACE_TYPE, "storage systems structured as uri addressed objs"),
-                        docWrap(MEM_SPACE_TYPE, "an in-memory space with objs indexed by a topic trie"),
+                        docWrap(MEM_SPACE_TYPE = Type.Builder.build()
+                                        .tid(SPACE_TID)
+                                        .vid(MEM_SPACE_TID)
+                                        // .isaPredicate(rec(uri(DATA).maybe().asUri(), URI_TYPE).maybe())
+                                        .constructor(
+                                                instC(INST_CTOR_TID.rng(MEM_SPACE_TID),
+                                                        lst(isa_(REC_TYPE).tryToInst()),
+                                                        (lhs, inst) -> memSpace.of(inst.arg(0).asRec(), inst.arg(0).vid()))).create(), "", "",
+                                Map.of(uri(DATA).maybe(), "a file location to save space state (reads on creation and writes on close)"),
+                                "an in-memory space with objs indexed by a topic trie"),
                         docWrap(STACK_SPACE_TYPE, "a thread local stack used for global variables and machine inst frames",
                                 "2.to(a).plus(from(a))     [-- 4 via writing/reading a         --]",
                                 "a->2+*a                   [-- 4 via sugar'd writing/reading a --]"),
@@ -458,6 +469,7 @@ public class mInstSet extends AbstractInstSet {
                         SpaceType.insts().stream(),
                         ObjType.insts().stream(),
                         NoObj.NoObjType.insts().stream(),
+                        Stream.of(instC(M_ISA_INST_TID.extend("save").dom(ALL).rng(ALL), lst(), (lhs, inst) -> lhs.save())),
                         Stream.of(instA(INST_CTOR_TID))
                 ).flatMap(i -> i)),
                 uri(REWRITE), lst(

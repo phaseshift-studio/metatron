@@ -489,8 +489,8 @@ public class tbleSpace extends AbstractSpace<Connection> implements SchemaSpace 
                             final boolean isNew = !this.existingTableSchema.getTableNames().contains(coll);
                             if (isNew)
                                 this.existingTableSchema.createTableFromRecord(
-                                        this.sjvm(), coll, obj.asRec());
-                            this.existingTableSchema.write(this.sjvm(), aligned, obj.asRec());
+                                        this.sjvm(), coll, obj.asRec(), dp.entry());
+                            final int id = this.existingTableSchema.write(this.sjvm(), aligned, obj.asRec());
                             if (isNew)
                                 onTableChanged(coll);
                         } else {

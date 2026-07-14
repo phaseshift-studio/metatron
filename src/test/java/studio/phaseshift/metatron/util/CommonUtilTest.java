@@ -21,6 +21,8 @@ package studio.phaseshift.metatron.util;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.mach.io.space.fs.fsSpace;
@@ -126,7 +128,7 @@ public class CommonUtilTest extends AbstractMetatronTest {
         assertEquals(12, nodes.size(), "1 root + 3 dirs + 5 files + 3 sub-dirs");
 
         // DFS order from recursive +/ branch reads:
-        // [idx] name        depth  isLast  childCount
+        // [idx] name depth  isLast  childCount
 
         // [0]  (root)        0      true    3
         assertEquals("", nodes.get(0).name());
@@ -201,5 +203,30 @@ public class CommonUtilTest extends AbstractMetatronTest {
         assertEquals(0, nodes.get(11).childCount());
 
         LOG.info("collected %d tree nodes — all DFS assertions passed", nodes.size());
+    }
+
+    @ParameterizedTest(name = "[{index}] {0} -> {1}")
+    @CsvSource(value = {
+            "intelligence | intelligence",
+            "Context Windows | context_window",
+            "indexing | indexing",
+            "searching | searching",
+            "memory systems | memory_system",
+            "processes | process",
+            "indexes | index",
+            "buses | bus",
+            "cherries | cherry",
+            "stories | story",
+            "apples | apple",
+            "cats | cat",
+            "bosses | boss",
+            "boxes | box",
+            "churches | church",
+            "wishes | wish",
+            " | ''"
+    }, delimiter = '|')
+    void testNormalization(String input, String expected) {
+        if (input == null) input = "";
+        assertEquals(expected, CommonUtil.normalize(input));
     }
 }

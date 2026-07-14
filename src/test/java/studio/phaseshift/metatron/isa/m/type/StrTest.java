@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -41,12 +41,12 @@ public class StrTest extends AbstractAlgebraTest<Str> {
     @CsvSource(value = {
             "1.map(\"the number: ${plus(23)}\")                                                  % \"the number: 24\"",
             "1.map(\"the number: ${+23}\")                                                       % \"the number: 24\"",
-          //  "[1,2,3,4].map(\"list count: ${merge().count()}\")                                   % \"list count: [4]\"",
+            //  "[1,2,3,4].map(\"list count: ${merge().count()}\")                                   % \"list count: [4]\"",
     }, delimiter = '%', quoteCharacter = '~')
     public void testTemplates(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
-    
+
     @ParameterizedTest
     @CsvSource(value = {
             "'true'.as(bool::T)                                                             % true",
@@ -57,8 +57,8 @@ public class StrTest extends AbstractAlgebraTest<Str> {
             "'123.122'.as(real::T)                                                          % 123.122",
             "'abcd'.as(uri::T)                                                              % abcd",
             "'abc'.as(bytes::T)                                                             % 0x616263",
-          //  "'abc'.as(bytes::T).as(str::T)                                                  % \"abc\"",
-          // "'abc'.as(bytes::T).as?str<=bytes(str::T)                                       % \"abc\""
+            //  "'abc'.as(bytes::T).as(str::T)                                                  % \"abc\"",
+            // "'abc'.as(bytes::T).as?str<=bytes(str::T)                                       % \"abc\""
 
     }, delimiter = '%', quoteCharacter = '~')
     public void testAsInst(final String code, final String expected) {
@@ -69,13 +69,25 @@ public class StrTest extends AbstractAlgebraTest<Str> {
     @CsvSource(value = {
             "'123'.regex('\\d')                                                             % ['1','2','3']",
             "'abcd'.regex('[a-z]{2}')                                                       % ['ab','cd']",
-            "'ab3cd'.regex('([a-z]+)(\\d?)([a-z]?)')                                        % ['ab3c','d']",
-            "'ab3cd'.regex('(?<a>[a-z]+)(?<b>\\d?)(?<c>[a-z]?)')                            % ['ab3c','d']",
+            "'ab3cd'.regex('([a-z]+)(\\d?)([a-z]?)')                                        % [['ab3c','ab','3','c'],['d','d','','']]",
+            "'ab3cd'.regex('(?<a>[a-z]+)(?<b>\\d?)(?<c>[a-z]?)')                            % [['ab3c','ab','3','c'],['d','d','','']]",
             "'ab3cd'.regex('\\d*')                                                          % ['','','3','','','']",
             "'ab3cd'.regex('\\d+')                                                          % ['3']",
             "'ab3cd'.regex('\\d{2}')                                                        % [,]",
+            "'241G'.regex('(\\d+)([KMGT])')                                                  % [['241G','241','G']]",
+            "'241G 502G'.regex('(\\d+)([KMGT])')                                             % [['241G','241','G'],['502G','502','G']]",
+            "'foo:bar'.regex('(\\w+):(\\w+)')                                                % [['foo:bar','foo','bar']]",
+            "'a1b2c3'.regex('([a-z])(\\d)')                                                  % [['a1','a','1'],['b2','b','2'],['c3','c','3']]",
     }, delimiter = '%', quoteCharacter = '~')
     public void testRegexInst(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "'abc de fgh'==['bc' => 'xx', 'f[a-z]{2}' => +'XYZ', '\\s.{2}\\s' => -<''>-.count().as(str::T)]        % 'axx4fghXYZ'"
+    }, delimiter = '%', quoteCharacter='~')
+    public void testSelectInst(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
@@ -158,7 +170,7 @@ public class StrTest extends AbstractAlgebraTest<Str> {
             "\"abc\".reverse()                % \"cba\"",
             "\"12bac2545_245\".reverse()      % \"542_5452cab21\"",
             // "\"abc\".reverse().reverse()      % \"abc\"", TODO instructions are being seen as the same
-        //    "\"\".reverse().map(_).reverse()         % \"\"",
+            //    "\"\".reverse().map(_).reverse()         % \"\"",
             "\"\".reverse()                  % \"\"",
             "\"a\".reverse()                 % \"a\"",
             "\"hello world\".reverse()       % \"dlrow olleh\"",

@@ -188,6 +188,28 @@ public final class CommonUtil {
         return unquotedString;
     }
 
+    public static String normalize(String concept) {
+        if (concept == null || concept.isBlank()) return "";
+        concept = concept.trim().toLowerCase();
+        // Basic singularization
+        if (concept.endsWith("ies") && concept.length() > 3) {
+            concept = concept.substring(0, concept.length() - 3) + "y";
+        } else if (concept.endsWith("es") && concept.length() > 2) {
+            // Handle cases like "indexes" -> "index", "buses" -> "bus"
+            // If it ends in "ses", "xes", "ches", "shes", we strip "es"
+            if (concept.endsWith("ses") || concept.endsWith("xes") || concept.endsWith("ches") || concept.endsWith("shes")) {
+                concept = concept.substring(0, concept.length() - 2);
+            } else {
+                // Default to stripping "s" if it ends in "es" but not one of the above? 
+                // e.g., "apples" -> "apple" (ends in es)
+                concept = concept.substring(0, concept.length() - 1);
+            }
+        } else if (concept.endsWith("s") && !concept.endsWith("ss") && concept.length() > 1) {
+            concept = concept.substring(0, concept.length() - 1);
+        }
+        return concept.replace(' ', '_').replace("'","").replace("\"","");
+    }
+
     public static List<String> splitOnNonQuotedSequence(final String sequence, final char split, boolean includeSplitCharacter) {
         List<String> result = new ArrayList<>();
         StringBuilder current = new StringBuilder();
@@ -614,7 +636,7 @@ public final class CommonUtil {
 
         for (int i = 0; i < childUris.size(); i++) {
             _treeWalk(childUris.get(i), maxDepth, depth + 1,
-                      i == childUris.size() - 1, consumer);
+                    i == childUris.size() - 1, consumer);
         }
     }
 

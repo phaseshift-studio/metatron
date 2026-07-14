@@ -212,7 +212,7 @@ public final class LLMFactory {
         final Rec responseFormat = fmt.isNoObj() ? rec0().c(c -> c.zero()).as() : fmt.asRec();
         final fURI provider = model.at(f(PROTOCOL)).uriValue();
         final String host = model.at(HOST).uriValue().toString();
-        final boolean thinking = !agent.feature(THINK).isNoObj();
+        final boolean thinking = true; //!agent.feature(THINK).isNoObj();
         final String modelName = Str.Helper.cleanString(model.at(NAME));
         final Str api_key = model.at(API_KEY).orElse(str0());//model.at(f(PROVIDER)).asRec().at(API_KEY).orElse(str0());
         // final Str organization = model.at(f(PROVIDER)).asRec().at(ORG).orElse(str0());

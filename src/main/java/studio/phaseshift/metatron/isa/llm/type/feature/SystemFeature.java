@@ -37,7 +37,6 @@ public class SystemFeature extends Feature {
                 try {
                     final Map<Obj, Obj> systemMap = new LinkedHashMap<>();
                     systemMap.put(uri(TEXT), str(systemMessage));
-                    systemMap.put(uri(TYPE), uri("SYSTEM"));
                     final Rec systemRec = rec(systemMap, SYSTEM_MESSAGE_TID, null);
                     final Space space = Router.global().getSpaceFor(sess.vid());
                     SpaceChatSessionStore.mirrorSystemMessage(space, sess.vid(), systemRec);

@@ -1,5 +1,34 @@
-#!/usr/bin/sh
+#!/bin/sh
+# bin/metatron-dev — developer entry point for the edit-build-run loop.
+# Builds the uber-jar (offline, skipping tests), then delegates to the same
+# java invocation as bin/metatron.  Run from anywhere — the script resolves
+# its own location to find the project root.
 #
-#
+# Usage:
+#   metatron-dev                                    # boots from boot/boot.mtron
+#   metatron-dev -b boot/dev.mtron "[port=>8556]"
+#   metatron-dev "[boot=><boot/boot.mtron>,log=>info]"
+#   metatron-dev --headless "[boot=><boot/boot.mtron>,log=>info]"
 
-~/software/metatron/bin/metatron "$@"
+set -e
+
+# Resolve symlinks to the real script path, then cd to the project root
+cd "$(dirname "$(readlink -f "$0")")/.."
+
+# Source ANSI color definitions
+. "$(dirname "$(readlink -f "$0")")/color.sh"
+
+# Dev default: no args → boot from boot/boot.mtron at info log level
+if [ $# -eq 0 ]; then
+    set -- "[boot=><boot/boot.mtron>,log=>info]"
+fi
+
+# Required JVM flags (same as bin/metatron) — exec:java reuses Maven's JVM
+export MAVEN_OPTS="--add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED --enable-native-access=ALL-UNNAMED"
+
+# Compile and run via Maven classpath (fast — no uber-jar assembly)
+# The [✓] prints after metatron exits, confirming clean shutdown
+printf "${PHASESHIFT} presents\n${BLUE}  metatron-dev${NC}\n\n"
+printf "  ${GREEN}co${YELLOW}mpi${BLUE}ling me${CYAN}tatr${MAGENTA}on${NC} ...\n"
+mvn compile exec:java -q -Dexec.args="$*"
+printf "\n${LB}${BOLDGREEN}done.${RB}\n"

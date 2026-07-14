@@ -95,11 +95,15 @@ public class mInstSetTest extends AbstractInstSetTest {
     @CsvSource(value = {
             "'123'.regex('\\d')                                                             % ['1','2','3']",
             "'abcd'.regex('[a-z]{2}')                                                       % ['ab','cd']",
-            "'ab3cd'.regex('([a-z]+)(\\d?)([a-z]?)')                                        % ['ab3c','d']",
-            "'ab3cd'.regex('(?<a>[a-z]+)(?<b>\\d?)(?<c>[a-z]?)')                            % ['ab3c','d']",
+            "'ab3cd'.regex('([a-z]+)(\\d?)([a-z]?)')                                        % [['ab3c','ab','3','c'],['d','d','','']]",
+            "'ab3cd'.regex('(?<a>[a-z]+)(?<b>\\d?)(?<c>[a-z]?)')                            % [['ab3c','ab','3','c'],['d','d','','']]",
             "'ab3cd'.regex('\\d*')                                                          % ['','','3','','','']",
             "'ab3cd'.regex('\\d+')                                                          % ['3']",
             "'ab3cd'.regex('\\d{2}')                                                        % [,]",
+            "'241G'.regex('(\\d+)([KMGT])')                                                  % [['241G','241','G']]",
+            "'241G 502G'.regex('(\\d+)([KMGT])')                                             % [['241G','241','G'],['502G','502','G']]",
+            "'foo:bar'.regex('(\\w+):(\\w+)')                                                % [['foo:bar','foo','bar']]",
+            "'a1b2c3'.regex('([a-z])(\\d)')                                                  % [['a1','a','1'],['b2','b','2'],['c3','c','3']]",
     }, delimiter = '%', quoteCharacter = '~')
     public void testStrCode(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);

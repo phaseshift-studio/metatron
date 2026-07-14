@@ -27,6 +27,8 @@ import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Str;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
+import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 
 import java.util.Map;
 
@@ -57,6 +59,9 @@ import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
  * </ol>
  */
 public abstract class Feature extends MRec {
+
+    protected final GraphittyLogger LOG = Graphitty.log(this);
+
     public Feature(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
     }
@@ -93,20 +98,30 @@ public abstract class Feature extends MRec {
 
     // ── Streaming (observation) ──────────────────────────────────
 
-    public void onPartialResponse(final Agent agent, final Str text) {}
-    public void onPartialThinking(final Agent agent, final Str text) {}
-    public void onPartialToolCall(final Agent agent, final Inst request) {}
+    public void onPartialResponse(final Agent agent, final Str text) {
+    }
+
+    public void onPartialThinking(final Agent agent, final Str text) {
+    }
+
+    public void onPartialToolCall(final Agent agent, final Inst request) {
+    }
 
     // ── Tool execution ───────────────────────────────────────────
 
-    public void beforeToolExecution(final Agent agent, final Inst request) {}
-    public void onToolExecuted(final Agent agent, final Obj result) {}
+    public void beforeToolExecution(final Agent agent, final Inst request) {
+    }
+
+    public void onToolExecuted(final Agent agent, final Obj result) {
+    }
 
     // ── Completion ───────────────────────────────────────────────
 
-    public void onCompleteResponse(final Agent agent, final Str response) {}
+    public void onCompleteResponse(final Agent agent, final Str response) {
+    }
 
     // ── Error ────────────────────────────────────────────────────
 
-    public void onError(final Agent agent, final Fail fail) {}
+    public void onError(final Agent agent, final Fail fail) {
+    }
 }

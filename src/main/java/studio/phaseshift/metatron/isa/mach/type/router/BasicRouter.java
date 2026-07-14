@@ -69,7 +69,7 @@ public class BasicRouter extends AbstractSpace<Map<Obj, Obj>> implements Router 
     private fURI primary = M_ISA_TID;
 
     public BasicRouter(final fURI vid) {
-        super(new HashMap<>(), new ConcurrentHashMap<>(Map.of(
+        super(new ConcurrentHashMap<>(), new ConcurrentHashMap<>(Map.of(
                         uri(PATTERN), uri(ALL),
                         PRIMARY, uri(M_ISA_TID),
                         uri(Tokens.SPACE), rec(new ConcurrentHashMap<>(Map.of(uri("+/#"), new stackSpace(f("+/#"))))))),
