@@ -411,20 +411,20 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
             "[a=>1,b=>2].where([a=>?>0])                              % true",
             "[a=>1,b=>2].where([a=>?>1])                              % false",
             "[a=>1,b=>2].where([a=>?>0,b=>?>1])                       % true",
-            "[a=>1,b=>2].where([a=>?>0]).where([b=>?>2])                % false",
+            "[a=>1,b=>2].where([a=>?>0]).where([b=>?>2])              % false",
             "[a=>1,b=>2].where([a=>?>0,b=>?>2])                       % false",
             "[a=>1,b=>2].where([a=>?>0,b=>?>0])                       % true",
             "[a=>1,b=>2].where([a=>?>0,b=>?>0,c=>?>0])                % false",
-            "[=>].where(a=>?>0)                                     % false",
+            "[=>].where([a=>?>0])                                     % false",
             /// ///////////////////////////////////////////////////////
-           /* "[a=>1,b=>2].where([a=>gt(0)])                          % true",
-            "[a=>1,b=>2].where([a=>gt(1)])                          % false",
-            "[a=>1,b=>2].where([a=>gt(0),b=>gt(1)])                % true",
-            "[a=>1,b=>2].where([a=>gt(0),b=>gt(2)])                % false",
-            "[a=>1,b=>2].where([a=>gt(0),b=>gt(0)])                % true",
-            "[a=>1,b=>2].where([a=>gt(0),b=>gt(0),c=>gt(0)])      % false",*/
-            "[a=>[b=>1,c=>2]].where(a=>isa(rec::T))               % true",
-            "[a=>[b=>1,c=>2]].where(a=>isa(lst::T))               % false",
+            "[a=>1,b=>2].where([a=>?>0])                            % true",
+            "[a=>1,b=>2].where([a=>?>1])                            % false",
+            "[a=>1,b=>2].where([a=>?>0,b=>?>1])                     % true",
+            "[a=>1,b=>2].where([a=>?>0,b=>?>2])                     % false",
+            "[a=>1,b=>2].where([a=>?>0,b=>?>0])                     % true",
+            "[a=>1,b=>2].where([a=>?>0,b=>?>0,c=>?>0])              % false",
+            "[a=>[b=>1,c=>2]].where([a=>isa(rec::T)])               % true",
+            "[a=>[b=>1,c=>2]].where([a=>isa(lst::T)])               % false",
     }, delimiter = '%', quoteCharacter = '~')
     public void testHas(final String code, final boolean matches) {
         final Obj codeObj = ObjmtronSerializer.parse(code);

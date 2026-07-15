@@ -27,6 +27,7 @@ import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.Sugar;
+import studio.phaseshift.metatron.isa.m.space.estoreSpace;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MCode;
@@ -210,6 +211,8 @@ public class mInstSet extends AbstractInstSet {
 
     public static final fURI MEM_SPACE_TID = M_ISA_TID.extend("space").extend("memspace");
     public static Type MEM_SPACE_TYPE;
+    public static final fURI ESTORE_SPACE_TID = M_ISA_TID.extend("space").extend("estorespace");
+    public static Type ESTORE_SPACE_TYPE;
 
     //public static final Set<fURI> MARKER_TYPES = Set.of(MONO_TID, POLY_TID, NUM_TID);
     public static final Set<fURI> BASE_TYPES = Set.of(
@@ -400,6 +403,16 @@ public class mInstSet extends AbstractInstSet {
                                                 instC(INST_CTOR_TID.rng(MEM_SPACE_TID),
                                                         lst(isa_(REC_TYPE).tryToInst()),
                                                         (lhs, inst) -> memSpace.of(inst.arg(0).asRec(), inst.arg(0).vid()))).create(), "", "",
+                                Map.of(uri(DATA).maybe(), "a file location to save space state (reads on creation and writes on close)"),
+                                "an in-memory space with objs indexed by a topic trie"),
+                        docWrap(ESTORE_SPACE_TYPE = Type.Builder.build()
+                                        .tid(SPACE_TID)
+                                        .vid(ESTORE_SPACE_TID)
+                                        // .isaPredicate(rec(uri(DATA).maybe().asUri(), URI_TYPE).maybe())
+                                        .constructor(
+                                                instC(INST_CTOR_TID.rng(ESTORE_SPACE_TID),
+                                                        lst(isa_(REC_TYPE).tryToInst()),
+                                                        (lhs, inst) -> estoreSpace.of(inst.arg(0).asRec(), inst.arg(0).vid()))).create(), "", "",
                                 Map.of(uri(DATA).maybe(), "a file location to save space state (reads on creation and writes on close)"),
                                 "an in-memory space with objs indexed by a topic trie"),
                         docWrap(STACK_SPACE_TYPE, "a thread local stack used for global variables and machine inst frames",

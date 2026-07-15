@@ -93,6 +93,15 @@ public class StrTest extends AbstractAlgebraTest<Str> {
 
     @ParameterizedTest
     @CsvSource(value = {
+            "'abc de fgh'=?=['bc' => 'xx', 'f[a-z]{2}' => +'XYZ', '\\s.{2}\\s' => -<''>-.count().as(str::T)]        % 'abc de fgh'",
+            "'abc de fgh'=?=['bc' => 'xx', 'f[a-z]{2}' => +'XYZ', '\\s.{2}\\s' => -<''>-.count()?>5]                % noobj"
+    }, delimiter = '%', quoteCharacter='~')
+    public void testWhereInst(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
             "{'a','b','c','123'}.sum()                                                      % \"abc123\"",
             "{'a','b','c','123'}.sum('22')                                                  % \"22abc123\"",
             "{}.sum('22')                                                                   % \"22\"",

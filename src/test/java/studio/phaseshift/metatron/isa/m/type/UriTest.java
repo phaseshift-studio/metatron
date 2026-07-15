@@ -300,8 +300,19 @@ public class UriTest extends AbstractMetatronTest {
             "<http://api.local/v1/user/marko?auth=true&debug=true>==[path=>-<[>>0,>>1,profile,>>3],q=>[debug=>false]]               % <http://api.local/v1/profile/marko?debug=false&auth=true>",
             "<http://api.local/v1/user/marko?auth=true&debug=true>==[path=>-<[>>0,>>1,profile,>>3],q=>[debug=>false,_=>xyz]]        % <http://api.local/v1/profile/marko?debug=false&auth=xyz>",
             "<http://api.local/v1/user/marko?auth=true&debug=true>==[path=>-<[>>0,>>1,profile,>>3],q=>[debug=>false,_=>none]]       % <http://api.local/v1/profile/marko?debug=false>"
-}, delimiter = '%', quoteCharacter = '~')
+    }, delimiter = '%', quoteCharacter = '~')
     public void testSelect(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "<http://dev.local:8080/v1/search?q=metatron&debug=true>=?=[host=>_,port=>_,path=>_,q=>_]                                % <http://dev.local:8080/v1/search?q=metatron&debug=true>",
+            "<http://api.local/v1/user/marko?auth=true&debug=true>=?=[path=>-<[>>0,>>1,profile,>>3],q=>[debug=>is(not(_))]]          % noobj",
+            "<http://api.local/v1/user/marko?auth=true&debug=true>=?=[path=>-<[>>0,>>1,>>2,>>3],q=>[debug=>?_,_=>?_]]                % <http://api.local/v1/user/marko?auth=true&debug=true>",
+            "<http://api.local/v1/user/marko?auth=true&debug=true>=?=[path=>-<[>>0,>>1,profile,>>3],q=>[debug=>false,_=>none]]       % noobj"
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testWhere(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 }

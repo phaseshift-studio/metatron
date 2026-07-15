@@ -55,6 +55,7 @@ public class SessionFeature extends Feature {
         try {
             final Space space = Router.global().getSpaceFor(sessionID);
             final SpaceChatSessionStore store = new SpaceChatSessionStore(agent, space);
+            this.store = store;
             if (session.at(ALGORITHM).isNoObj() || session.at(ALGORITHM).asRec().at(NAME).isNoObj())
                 throw MTronException.of("no session memory algorithm provided: token_window or message_window");
             final int max = session.at(ALGORITHM).asRec().at(MAX).orElse(jnt(50)).intValue().intValue();

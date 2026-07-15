@@ -184,10 +184,10 @@ agent::[name     => 'dr.stynx',
                      loop_feature::[max_loop=>100],                       [-- \          --]
                      ledger_feature::[ledger=>/usr/dr/ledger],            [--  | skills  --]
                      skill_feature::[skill=>[<metatronfs:skills/mtron>]], [-- /          --]
-                     session_feature::[session => !*session_vid],
-                     concept_feature::[base => /usr/dr/concept],
+                     session_feature::[session=>!*session_vid],
                      system_feature::[=>],
                      audit_feature::[=>],
+                     concept_feature::[base=>/usr/dr/concept],
                      tool_feature::[tool=>[
                                     !*eval,
                                     !*sql,

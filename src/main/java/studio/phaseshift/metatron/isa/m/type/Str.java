@@ -22,10 +22,13 @@ import studio.phaseshift.metatron.algebra.PlusMonoid;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.impl.MStr;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
+import studio.phaseshift.metatron.util.FastNoSuchElementException;
 import studio.phaseshift.metatron.util.MTronException;
 
+import java.io.Serial;
 import java.nio.ByteBuffer;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiFunction;
 import java.util.regex.MatchResult;
@@ -40,6 +43,7 @@ import static studio.phaseshift.metatron.isa.m.type.Bytes.BYTES_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Real.REAL_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.Str.Helper.REGEX_CACHE;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBytes.bytes;
@@ -115,6 +119,8 @@ public interface Str extends Mono, PlusMonoid.O<Str> {
             // do nothing
         }
 
+        public final static Map<String, Pattern> REGEX_CACHE = new ConcurrentHashMap<>();
+
         public static String cleanString(final Obj obj) {
             if (obj.isStr()) return obj.strValue();
             if (obj.isUri()) {
@@ -123,11 +129,68 @@ public interface Str extends Mono, PlusMonoid.O<Str> {
             }
             return "" + obj.jvm();
         }
+
+        // 1. Define a private Exception for signaling project failure
+        public static class ProjectionFailureException extends RuntimeException {
+            @Serial
+            private static final long serialVersionUID = 233338654157697L;
+            private static final ProjectionFailureException INSTANCE = new ProjectionFailureException();
+
+            private ProjectionFailureException() {
+            }
+
+            public static ProjectionFailureException instance() {
+                return INSTANCE;
+            }
+
+            public synchronized Throwable fillInStackTrace() {
+                return this;
+            }
+        }
+
+        public static String project(final String input, final Obj rulesObj) {
+            if (rulesObj == null || rulesObj.isNoObj()) return "";
+
+            if (rulesObj.isObjCall()) {
+                final Obj result = rulesObj.apply(str(input));
+                // CRITICAL: If the instruction explicitly fails or returns false,
+                // we must halt the entire projection immediately.
+                if (result == null || result.isNothing()) {
+                    throw ProjectionFailureException.instance();
+                }
+                return Str.Helper.cleanString(result);
+            }
+
+            if (rulesObj.isRec()) {
+                String current = input;
+                for (Map.Entry<Obj, Obj> entry : rulesObj.asRec().recValue().entrySet()) {
+                    final String regex = Str.Helper.cleanString(entry.getKey());
+                    final Obj replacement = entry.getValue();
+
+                    final Pattern pattern = REGEX_CACHE.computeIfAbsent(regex, Pattern::compile);
+                    final Matcher matcher = pattern.matcher(current);
+                    final StringBuilder sb = new StringBuilder();
+                    int lastEnd = 0;
+
+                    while (matcher.find()) {
+                        sb.append(current, lastEnd, matcher.start());
+                        String matchText = matcher.group();
+
+                        // RECURSION: This will now propagate the ProjectionFailureException upwards
+                        sb.append(project(matchText, replacement));
+                        lastEnd = matcher.end();
+                    }
+                    sb.append(current.substring(lastEnd));
+                    current = sb.toString();
+                }
+                return current;
+            }
+
+            return Str.Helper.cleanString(rulesObj);
+        }
     }
 
     class StrType {
-        private final static Map<String, Pattern> REGEX_CACHE = new HashMap<>();
-
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
                     instC(AS_INST_TID.dom(STR_TID).rng(STR_TID), lst(STR_TYPE), (lhs, inst) -> lhs.tid(inst.arg(0).vidOrTid().c(c -> c.mult(lhs.c())))),
@@ -177,49 +240,18 @@ public interface Str extends Mono, PlusMonoid.O<Str> {
                     instC(SUM_INST_TID.dom(STR_TID.maybeSome()).rng(STR_TID), lst(T(STR_TID.maybe())), (lhs, inst) -> str(lhs.stream().map(Obj::strValue).reduce(inst.arg(0).orElse(str("")).strValue(), (a, b) -> a + b))),
                     instC(UCASE_INST_TID.dom(STR_TID).rng(STR_TID), lst(), (lhs, inst) -> lhs.jvm(lhs.strValue().toUpperCase())),
                     instC(LCASE_INST_TID.dom(STR_TID).rng(STR_TID), lst(), (lhs, inst) -> lhs.jvm(lhs.strValue().toLowerCase())),
-                    instC(SELECT_INST_TID.dom(STR_TID).rng(STR_TID), lst(REC_TYPE), (lhs, inst) -> {
-                        BiFunction<String, Obj, String> transform = new BiFunction<>() {
-                            @Override
-                            public String apply(final String input, final Obj rulesObj) {
-                                if (rulesObj == null || rulesObj.isNoObj()) return "";
-                                // 1. If the rules object is actually an instruction, just execute it and get the value
-                                if (rulesObj.isObjCall())
-                                    return rulesObj.apply(str(input)).strValue();
-                                // 2. If the rules object is a rec, treat it as a nested set of rewrite rules
-                                if (rulesObj.isRec()) {
-                                    final AtomicReference<String> current = new AtomicReference<>(input);
-                                    rulesObj.asRec().elements().forEach(r -> {
-                                        final String regex = r.first().strValue();
-                                        final Obj replacement = r.second();
-                                        Pattern pattern = REGEX_CACHE.get(regex);
-                                        if (null == pattern) {
-                                            pattern = Pattern.compile(regex);
-                                            REGEX_CACHE.put(regex, pattern);
-                                        }
-                                        final Matcher matcher = pattern.matcher(current.get());
-                                        final StringBuilder sb = new StringBuilder();
-                                        int lastEnd = 0;
-                                        while (matcher.find()) {
-                                            sb.append(current.get(), lastEnd, matcher.start());
-                                            String matchText = matcher.group();
-
-                                            // RECURSION: Apply the same transformation logic to the inner slice
-                                            sb.append(this.apply(matchText, replacement));
-                                            lastEnd = matcher.end();
-                                        }
-                                        sb.append(current.get().substring(lastEnd));
-                                        current.set(sb.toString());
-                                    });
-                                    return current.get();
-                                }
-                                // 3. Fallback: treat as a simple static value
-                                return Str.Helper.cleanString(rulesObj);
-                            }
-                        };
-
-                        // Execute the top-level transformation
-                        return str(transform.apply(lhs.strValue(), inst.arg(0)));
+                    instC(SELECT_INST_TID.dom(STR_TID).rng(STR_TID), lst(REC_TYPE), (lhs, inst) -> str(Str.Helper.project(lhs.strValue(), inst.arg(0)))),
+                    instC(WHERE_INST_TID.dom(STR_TID).rng(STR_TID.maybe()), lst(REC_TYPE), (lhs, inst) -> {
+                        try {
+                            // If any part of the projection returns noobj/false,
+                            // it throws ProjectionFailureException and lands in the catch block.
+                            Str.Helper.project(lhs.strValue(), inst.arg(0));
+                            return lhs; // All predicates passed!
+                        } catch (Str.Helper.ProjectionFailureException e) {
+                            return noobj(); // Structural verification failed
+                        }
                     }),
+
                     instC(WITHIN_INST_TID.dom(STR_TID).rng(B), lst(T(B)), (lhs, inst) -> Arrays.stream(lhs.strValue().split("")).map(s -> inst.arg(0).apply(str(s))).
                             map(o -> (PlusMonoid.O) o).
                             reduce((a, b) -> (PlusMonoid.O) a.plus(b)).
