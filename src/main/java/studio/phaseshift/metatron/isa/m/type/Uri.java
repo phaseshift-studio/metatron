@@ -28,6 +28,7 @@ import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -391,83 +392,37 @@ public interface Uri extends Mono, Ring.O<Uri>, Comparable<Uri> {
                     instC(PORT_INST_TID.dom(URI_TID).rng(INT_TID.maybe()), lst(), (lhs, inst) -> lhs.uriValue().hasPort() ? jnt(lhs.uriValue().port()) : noobj()),
                     instC(PORT_INST_TID.dom(URI_TID).rng(URI_TID), lst(T(INT_TID).predicate(is_(gte_(jnt(-1))).tryToInst())), (lhs, inst) -> uri(lhs.uriValue().port(inst.arg(0).intValue().intValue()))),
                     instC(SELECT_INST_TID.dom(URI_TID).rng(URI_TID), lst(REC_TYPE), (lhs, inst) -> {
-                        final fURI lhsURI = lhs.uriValue();
-                        final Rec rules = inst.arg(0).orElse(rec0());
-                        if (rules.isNoObj()) return lhs;
-                        // 1. Basic Components: Scheme & Host
-                        String scheme = lhsURI.scheme();
-                        String host = lhsURI.host();
-                        if (rules.has(SCHEME))
-                            scheme = Str.Helper.cleanString(rules.at(SCHEME).apply(str(scheme)));
-                        if (rules.has(HOST))
-                            host = Str.Helper.cleanString(rules.at(HOST).apply(str(host)));
-                        // 2. Port: Int -> String transition for Metatron Instructions
-                        int port = lhsURI.port();
-                        if (rules.has(PORT)) {
-                            String newPortStr = Str.Helper.cleanString(rules.at(PORT).apply(jnt(port)));
-                            if (CommonUtil.isInt(newPortStr))
-                                port = Integer.parseInt(newPortStr);
-                            else
-                                throw MTronException.of("unable to convert to a port value: %s", newPortStr);
-                        }
-                        // 3. Path: Handle both full rewrite and segment-based projection (path>>n)
-                        List<String> newPath;
-                        if (rules.asRec().has(PATH)) {
-                            Lst pathSegments = lst((List) lhsURI.path().stream().map(MStr::str).toList());
-                            Obj pathResult = rules.at(PATH).apply(pathSegments);
-                            newPath = pathResult.isLst() ? pathResult.elements().map(Str.Helper::cleanString).toList() : Arrays.asList(Str.Helper.cleanString(pathResult).split("/"));
-                        } else {
-                            newPath = lhsURI.path();
-                        }
-
-                        // 4. Query: Map-based projection
-                        Map<String, String> queryMap = new HashMap<>(lhsURI.qMap()); // Mutable copy
-                        // 4. Query Projection: Predicate-based matching
-                        if (rules.has("q")) {
-                            Obj qRules = rules.at("q");
-                            if (qRules.isRec()) {
-                                Map<String, String> nextQMap = new HashMap<>();
-                                queryMap.forEach((k, v) -> {
-                                    // Wrap keys and values as URIs to leverage .matches() logic
-                                    Obj keyUri = uri(k);
-                                    Obj valUri = uri(v);
-
-                                    // Find the first predicate in our rule-set that matches this key
-                                    Obj matchingRule = null;
-                                    for (Map.Entry<Obj, Obj> entry : qRules.asRec().recValue().entrySet()) {
-                                        final String entryKeyString = Str.Helper.cleanString(entry.getKey());
-                                        Pattern pattern = REGEX_CACHE.get(entryKeyString);
-                                        if (null == pattern) {
-                                            pattern = Pattern.compile(entryKeyString);
-                                            REGEX_CACHE.put(entryKeyString, pattern);
-                                        }
-                                        if (pattern.asPredicate().test(Str.Helper.cleanString(keyUri))) {
-                                            matchingRule = entry.getValue();
-                                            break;
-                                        }
-                                    }
-                                    if (null != matchingRule) {
-                                        if (!matchingRule.isNone())
-                                            nextQMap.put(k, Str.Helper.cleanString(matchingRule.apply(valUri)));
-                                    } else {
-                                        // Pass through untransformed
-                                        nextQMap.put(k, v);
-                                    }
-                                });
-                                queryMap = nextQMap;
-                            } else {
-                                // Fallback: if 'q' is just a string, replace the entire query string
-                                String qStr = qRules.apply(str(lhsURI.qString())).strValue();
-                                queryMap = f("?" + qStr).qMap(); // helper to turn "a=1&b=2" -> Map
-                            }
-                        }
-                        // 5. Final Reassembly
-                        return uri(fURI.of(scheme, host, port, newPath, lhsURI.c(), lhsURI.poly(), queryMap, List.of()));
+                        final Uri.Helper.UriProjected projected = Uri.Helper.project(lhs.uriValue(), inst.arg(0).orElse(rec0()));
+                        return uri(fURI.of(
+                                projected.scheme(),
+                                projected.host(),
+                                projected.port(),
+                                projected.path(),
+                                lhs.uriValue().c(),
+                                lhs.uriValue().poly(),
+                                projected.query(),
+                                List.of()
+                        ));
                     }),
-                    instC(WHERE_INST_TID.dom(URI_TID).rng(URI_TID.maybe()), lst(T(URI_TID)), (lhs, inst) -> Helper.whereUri(lhs.asUri(), inst.arg(0).uriValue()) ? lhs : noobj())
-                    // instC(UPDATE_INST_TID.dom(URI_TID).rng(URI_TID.maybe()), lst(T(URI_TID)), (lhs, inst) -> uri(lhs.uriValue().update(inst.arg(0).uriValue())))
-                    // GROUP
-                    // UPDATE
+                    instC(WHERE_INST_TID.dom(URI_TID).rng(URI_TID.maybe()), lst(REC_TYPE), (lhs, inst) -> {
+                        try {
+                            Uri.Helper.UriProjected projected = Uri.Helper.project(lhs.uriValue(), inst.arg(0).orElse(rec0()));
+                            final fURI original = lhs.uriValue();
+                            // STRICT CHECK: For where(), if the projection result differs from origin
+                            // (e.g., something was replaced by 'none' and removed), it means the
+                            // target does not match this specific projected profile exactly.
+                            if (!Objects.equals(original.scheme(), projected.scheme()) ||
+                                    !Objects.equals(original.host(), projected.host()) ||
+                                    original.port() != projected.port() ||
+                                    !Objects.equals(original.path(), projected.path()) ||
+                                    !Objects.equals(original.qMap(), projected.query())) {
+                                return noobj();
+                            }
+                            return lhs;
+                        } catch (Str.Helper.ProjectionFailureException e) {
+                            return noobj();
+                        }
+                    })
             ));
         }
 
@@ -529,23 +484,102 @@ public interface Uri extends Mono, Ring.O<Uri>, Comparable<Uri> {
             return true;
         }
 
-        public static Uri selectUri(final Uri lhs, final fURI selection) {
-            String path = "";
-            boolean all_found = false;
-            for (int i = 0; i < selection.path().size(); i++) {
-                final String segment = selection.path().get(i);
-                if (segment.equals("#"))
-                    all_found = true;
-                if (!all_found && lhs.uriValue().path().size() <= i)
-                    return null;
-                if (all_found || lhs.uriValue().path().get(i).equals(segment) || segment.equals("+"))
-                    path += "/" + lhs.uriValue().path().get(i);
-                else
-                    return null;
+        // Use the same singleton exception from StrProjectionHelper or a shared one
+        private static final Map<String, Pattern> REGEX_CACHE = new ConcurrentHashMap<>();
+
+        public record UriProjected(String scheme, String host, int port, List<String> path, Map<String, String> query) {
+        }
+
+        public static UriProjected project(final fURI lhsURI, final Obj rulesObj) {
+            if (rulesObj == null || rulesObj.isNoObj()) {
+                return new UriProjected(lhsURI.scheme(), lhsURI.host(), lhsURI.port(), lhsURI.path(), lhsURI.qMap());
             }
-            return uri(lhs.uriValue().path(path));
+
+            // 1. Basic Components: Scheme & Host
+            String scheme = lhsURI.scheme();
+            String host = lhsURI.host();
+            final Rec rulesRec = rulesObj.asRec();
+            if (rulesRec.has(SCHEME)) {
+                Obj res = rulesRec.at(SCHEME).apply(str(scheme));
+                // Use a helper to check for actual failures vs purposeful 'none'
+                if (res == null || (res.isNothing() && !rulesRec.at(SCHEME).isNone()))
+                    throw Str.Helper.ProjectionFailureException.instance();
+                scheme = Str.Helper.cleanString(res);
+            }
+            if (rulesRec.has(HOST)) {
+                Obj res = rulesRec.at(HOST).apply(str(host));
+                if (res == null || (res.isNothing() && !rulesRec.at(HOST).isNone()))
+                    throw Str.Helper.ProjectionFailureException.instance();
+                host = Str.Helper.cleanString(res);
+            }
+
+            // 2. Port
+            int port = lhsURI.port();
+            if (rulesRec.has(PORT)) {
+                Obj res = rulesRec.at(PORT).apply(jnt(port));
+                if (res == null || (res.isNothing() && !rulesRec.at(PORT).isNone()))
+                    throw Str.Helper.ProjectionFailureException.instance();
+                String newPortStr = Str.Helper.cleanString(res);
+                if (CommonUtil.isInt(newPortStr)) {
+                    port = Integer.parseInt(newPortStr);
+                } else if (!res.isNone()) { // Only throw error if it wasn't intentionally 'none'
+                    throw MTronException.of("unable to convert to a port value: %s", newPortStr);
+                }
+            }
+
+            // 3. Path
+            List<String> newPath;
+            if (rulesRec.has(PATH)) {
+                Lst pathSegments = lst((List) lhsURI.path().stream().map(MStr::str).toList());
+                Obj pathResult = rulesRec.at(PATH).apply(pathSegments);
+                if (pathResult == null || (pathResult.isNothing() && !rulesRec.at(PATH).isNone()))
+                    throw Str.Helper.ProjectionFailureException.instance();
+                newPath = pathResult.isLst() ?
+                        pathResult.elements().map(Str.Helper::cleanString).toList() :
+                        Arrays.asList(Str.Helper.cleanString(pathResult).split("/"));
+            } else {
+                newPath = lhsURI.path();
+            }
+
+            // 4. Query: Predicate-based matching
+            Map<String, String> queryMap = new HashMap<>(lhsURI.qMap());
+            if (rulesRec.has(QPROC)) {
+                Obj qRules = rulesRec.at(QPROC);
+                if (qRules.isRec()) {
+                    Map<String, String> nextQMap = new HashMap<>();
+                    queryMap.forEach((k, v) -> {
+                        Obj matchingRule = null;
+                        for (Map.Entry<Obj, Obj> entry : qRules.asRec().recValue().entrySet()) {
+                            final String entryKeyString = Str.Helper.cleanString(entry.getKey());
+                            Pattern pattern = REGEX_CACHE.computeIfAbsent(entryKeyString, Pattern::compile);
+                            if (pattern.asPredicate().test(k)) {
+                                matchingRule = entry.getValue();
+                                break;
+                            }
+                        }
+
+                        if (null != matchingRule) {
+                            if (!matchingRule.isNone()) {
+                                Obj res = matchingRule.apply(uri(v));
+                                // If an instruction is called and returns noobj, that's a failure.
+                                if (res == null || res.isNothing())
+                                    throw Str.Helper.ProjectionFailureException.instance();
+                                nextQMap.put(k, Str.Helper.cleanString(res));
+                            }
+                            // Note: matchingRule.isNone() is handled by simply NOT adding it to nextQMap (removal)
+                        } else {
+                            nextQMap.put(k, v);
+                        }
+                    });
+                    queryMap = nextQMap;
+                } else {
+                    Obj res = qRules.apply(str(lhsURI.qString()));
+                    if (res == null || (res.isNothing() && !qRules.isNone()))
+                        throw Str.Helper.ProjectionFailureException.instance();
+                    queryMap = f("?" + Str.Helper.cleanString(res)).qMap();
+                }
+            }
+            return new UriProjected(scheme, host, port, newPath, queryMap);
         }
     }
-
-
 }

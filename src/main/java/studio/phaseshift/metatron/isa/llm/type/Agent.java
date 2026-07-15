@@ -259,12 +259,10 @@ public class Agent extends MRec {
                     .onPartialResponse(s -> {
                         Router.global().stats().ioStats().incrBytesRecv(s.getBytes().length);
                         response.append(s);
-                        //this.at(res("partial"), str(response.toString()), MUTABLE);
                         features.stream().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_PARTIAL_RESPONSE, str(s)));
                     })
                     .onPartialThinking(t -> {
                         Router.global().stats().ioStats().incrBytesRecv(t.text().getBytes().length);
-                        //this.at(res("thinking"), str(t.text()), MUTABLE);
                         features.stream().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_PARTIAL_THINKING, str(t.text())));
                     })
                     .onError(e -> {
@@ -273,7 +271,7 @@ public class Agent extends MRec {
                         features.stream().map(Obj::asRec).forEach(f -> dispatchHook(f, "onError"));
                         latch.countDown();
                     }).onCompleteResponse(c -> {
-                        final String fullText = c.aiMessage().text();
+                        final String fullText = null == c.aiMessage().text() ? "" : c.aiMessage().text();
                         Router.global().stats().ioStats().incrBytesRecv(fullText.getBytes().length);
 
                         // Parse response format if requested
@@ -327,11 +325,11 @@ public class Agent extends MRec {
         final Map<Obj, Obj> resultMap = new LinkedHashMap<>();
         final Obj chatResult = this.at(res(CHAT));
         resultMap.put(uri(CHAT), chatResult.isNoObj() ? str(response.toString()) : chatResult);
-        resultMap.put(uri(TIME), this.at(res("time")));
+        resultMap.put(uri(TIME), this.at(res(TIME)));
         // if (!this.at(res(COST)).isNoObj()) resultMap.put(uri(COST), this.at(res(COST)));
         if (!this.at(res("stages")).isNoObj()) resultMap.put(uri("stages"), this.at(res("stages")));
         resultMap.put(uri(ERROR), this.at(res(ERROR)));
-        if (!this.at(res("audit")).isNoObj()) resultMap.put(uri("audit"), this.at(res("audit")));
+        if (!this.at(res(AUDIT)).isNoObj()) resultMap.put(uri(AUDIT), this.at(res(AUDIT)));
         if (!this.at(res("loop_results")).isNoObj()) resultMap.put(uri("loop_results"), this.at(res("loop_results")));
         return rec(resultMap, LLM_CHAT_RESULT_TID, null);
     }

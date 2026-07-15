@@ -279,6 +279,111 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
                 return arg.uriValue().segmentLength() > 1 ? auto_(map_(lhs.parent()).rshift_(arg.uriValue().pretract(1).toUri())).tryToInst() : lhs.parent();
             else return noobj();
         }
+
+        /**
+         * The Universal Structural Projection logic for Records.
+         *
+         * @param lhs      The target record to be projected.
+         * @param rulesObj The la-palette projector (a Record of Predicate -> Transformation/Constraint).
+         * @param verify   If true, operates in 'where' mode (strict validation).
+         *                 If false, operates in 'select' mode (structural mutation).
+         * @return A map containing the results of the projection. In verify mode,
+         * this is primarily used for internal state; the real result is either
+         * success or a ProjectionFailureException.
+         * @throws Str.Helper.ProjectionFailureException if verification fails or a transformation errors.
+         */
+        public static Map<Obj, Obj> project(final Rec lhs, final Obj rulesObj, boolean verify) {
+            // If no projector is provided, the projection is an identity mapping of the original record.
+            if (rulesObj == null || rulesObj.isNoObj()) {
+                return lhs.recValue();
+            }
+
+            // Ensure we are working with a Record as our la-palette profile
+            Rec rulesRec;
+            try {
+                rulesRec = rulesObj.asRec();
+            } catch (Exception e) {
+                if (verify) throw Str.Helper.ProjectionFailureException.instance();
+                return lhs.recValue();
+            }
+
+            Map<Obj, Obj> result = new LinkedHashMap<>();
+
+            // We iterate over the la-palette RULES first to treat them as requirements/instructions
+            for (Map.Entry<Obj, Obj> entry : rulesRec.recValue().entrySet()) {
+                Obj predicate = entry.getKey();
+                Obj transformationC = entry.getValue();
+
+                // Identify all components in the target that match this specific predicate
+                List<Rel> matches = lhs.elements()
+                        .filter(rel -> rel.first().test(predicate))
+                        .toList();
+
+                if (verify) {
+                    /* --- VERIFY MODE: Structural Validation Contract --- */
+
+                    // 1. MANDATORY EXISTENCE
+                    // If the projector requires a predicate but no components match it, the structure is invalid.
+                    if (matches.isEmpty()) {
+                        throw Str.Helper.ProjectionFailureException.instance();
+                    }
+
+                    // 2. CONSTRAINT SATISFACTION
+                    // Every component that matched must satisfy the constraint (the rule's value).
+                    for (Rel rel : matches) {
+                        Obj val = rel.second();
+                        if (!val.test(transformationC)) {
+                            throw Str.Helper.ProjectionFailureException.instance();
+                        }
+                    }
+                } else {
+                    /* --- TRANSFORM MODE: Surgical Mutation --- */
+                    for (Rel rel : matches) {
+                        Obj val = rel.second();
+
+                        if (transformationC.isNone()) {
+                            // 'none' is a signal to remove this component from the la-palette result.
+                            // We handle this by skipping the add operation.
+                        } else {
+                            // Execute the transformation instruction on the slice
+                            Obj resVal = transformationC.apply(val);
+
+                            if (resVal == null || resVal.isNothing()) {
+                                // An a-priori rule should not return noobj unless it is explicitly 'none'
+                                if (!transformationC.isNone()) {
+                                    throw Str.Helper.ProjectionFailureException.instance();
+                                }
+                            } else {
+                                // Map the original key to the new transformed value
+                                result.put(rel.first(), resVal);
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (!verify) {
+                /* --- REASSEMBLY: Finalize the la-palette mutation --- */
+                // Start with a copy of the original record's state (Identity Preservation)
+                Map<Obj, Obj> finalResult = new LinkedHashMap<>(lhs.recValue());
+
+                // Overwrite/Add transformed values from our project loop
+                finalResult.putAll(result);
+
+                // Explicitly process 'none' removals: remove any key that matched a rule mapped to none
+                rulesRec.recValue().forEach((k, v) -> {
+                    if (v.isNone()) {
+                        lhs.elements().forEach(rel -> {
+                            if (rel.first().test(k)) finalResult.remove(rel.first());
+                        });
+                    }
+                });
+                return finalResult;
+            }
+
+            // In verify mode, if we reached this point without throwing an exception, the profile is satisfied.
+            return result;
+        }
     }
 
     final class RecType {
@@ -327,9 +432,29 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
                     instC(SELECT_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(T(REC_TID)), (lhs, inst) -> selectRecRecursion(lhs.asRec(), inst.arg(0).asRec())),
                     instC(SELECT_INST_TID.dom(REC_TID).rng(ALL.maybe()), lst(T(URI_TID)), (lhs, inst) -> lhs.asRec().at(inst.arg(0))),
                     //  instC(SELECT_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(T(URI_TID).c(cInt.of(2,null)).asType()), (lhs, inst) -> inst.args().elements().map(u -> rel(u,lhs.asRec().at(u))).collect(new CommonUtil.RecCollector())),
-                    instC(SELECT_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(T(URI_TID.c(cInt.of(2, null)))), (lhs, inst) -> inst.arg(0).stream().map(u -> rel(u, lhs.asRec().at(u))).collect(new CommonUtil.RecCollector())),
+                    //instC(SELECT_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(T(URI_TID.c(cInt.of(2, null)))), (lhs, inst) -> inst.arg(0).stream().map(u -> rel(u, lhs.asRec().at(u))).collect(new CommonUtil.RecCollector())),
                     //instC(UPDATE_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(REC_TYPE), (lhs, inst) -> Poly.Helper.updateRecRecursion(lhs.asRec(), inst.arg(0).asRec(), MUTABLE)),// inst.arg(0).asRec().elements().map(r -> lhs.asRec().at(r.first(), r.second(), MUTABLE)).filter(o -> false).findFirst().orElse(lhs.as())),
                     //instC(UPDATE_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(REL_TYPE), (lhs, inst) -> Poly.Helper.updateRecRecursion(lhs.asRec(), rec(inst.arg(0).asRel().jvm().get0(), inst.arg(1).asRel().jvm().get1()), MUTABLE)),// inst.arg(0).asRec().elements().map(r -> lhs.asRec().at(r.first(), r.second(), MUTABLE)).filter(o -> false).findFirst().orElse(lhs.as())),
+                    instC(SELECT_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(T(REC_TID)), (lhs, inst) -> {
+                        // 1. Extract the projector record from the arguments
+                        Obj rules = inst.arg(0);
+                        if (rules == null || rules.isNoObj()) return lhs;
+
+                        // 2. Execute the generalized projection logic
+                        Map<Obj, Obj> resultJvm = Rec.Helper.project(lhs.asRec(), rules, false);
+
+                        // 3. Wrap the resulting map back into a Rec object using your existing factory/collectors
+                        return rec(resultJvm);//.vid(lhs.vid()).tid(lhs.tid());
+                    }),
+                    /*instC(WHERE_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(REC_TYPE), (lhs, inst) -> {
+                        try {
+                            // MUST pass 'true' for the verify flag here!
+                            Rec.Helper.project(lhs.asRec(), inst.arg(0).orElse(rec0()), true);
+                            return lhs;
+                        } catch (Str.Helper.ProjectionFailureException e) {
+                            return noobj();
+                        }
+                    }),*/
                     instC(WITHIN_INST_TID.dom(REC_TID).rng(REC_TID), lst(T(ALL_STAR)), (lhs, inst) -> rec(lhs.elements().map(r -> inst.arg(0).apply(r).<Rel>as()))),
                     instC(SUM_INST_TID.dom(REC_TID.maybeSome()).rng(REC_TID), lst(), (lhs, inst) -> lhs.stream().map(Obj::asRec).reduce(rec(), Rec::plus))
             ));

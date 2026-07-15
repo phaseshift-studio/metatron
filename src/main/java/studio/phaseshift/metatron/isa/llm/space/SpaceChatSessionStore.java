@@ -182,7 +182,7 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
     }
 
     public Map<fURI, Set<fURI>> getCurrentMessages() {
-        return currentMessages;
+        return this.currentMessages;
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -263,8 +263,11 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
 
     @Override
     public void updateMessages(final Object sessionVID, final List<ChatMessage> messages) {
-        if (!(sessionVID instanceof fURI sesVID))
+        if (!(sessionVID instanceof fURI sesVID)) {
+            LOG.warn("session obj is not a uri: %s", sessionVID);
             return;
+        }
+        LOG.info("updating messages [size: %d]", messages.size());
 
         // -- 1. Read session policy -------------------------------------------
         int windowMax = 15;
@@ -293,7 +296,7 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
 
         // -- 2. Convert incoming messages to typed Recs + compute hashes -----
         final List<Rec> incomingRecs = new ArrayList<>();
-       // final Set<String> incomingHashes = new LinkedHashSet<>();
+        // final Set<String> incomingHashes = new LinkedHashSet<>();
         for (final ChatMessage msg : messages) {
             try {
                 final Rec msgRec = chatMessageToRec(msg);
@@ -302,7 +305,7 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
                 msgRec.recValue().put(uri(TIME), str(Date.from(Instant.now()).toString()));
                 msgRec.recValue().put(uri(SESSION), uri(sesVID));
                 incomingRecs.add(msgRec);
-       //         incomingHashes.add(hash);
+                //         incomingHashes.add(hash);
             } catch (final Exception e) {
                 LOG.error("error converting incoming chat message (type=%s, class=%s): %s",
                         msg.type(), msg.getClass().getSimpleName(), e);
@@ -310,6 +313,7 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
         }
 
         // -- 3. Append new messages (hash-based dedup) -----------------------
+        LOG.info("appending new messages [size:%d]", messages.size());
         final Set<String> sessionHashes;
         synchronized (WRITTEN_HASHES) {
             sessionHashes = WRITTEN_HASHES.computeIfAbsent(sesVID, k -> new LinkedHashSet<>());
@@ -324,7 +328,9 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
                 final fURI writePath = llmMessagePath(sesVID);
                 final Obj writtenObj = Router.writeToSpace(writePath, incomingRec);
                 if (writtenObj.hasVID()) {
-                    currentMessages.computeIfAbsent(incomingRec.tid(), k -> new HashSet<>())
+                    LOG.info("updating current messages [size:%d]", this.currentMessages.size());
+                    this.currentMessages
+                            .computeIfAbsent(incomingRec.tid(), k -> new HashSet<>())
                             .add(writtenObj.vid());
                 }
                 written++;
