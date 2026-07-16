@@ -123,7 +123,7 @@ public interface Space extends Rec, Closeable {
         final Obj result = this.write(pattern, obj);
         if (result.isNoObj())
             return Stream.empty();
-        return Stream.of(IdObj.of(pattern, result));
+        return Stream.of(IdObj.of(result.hasVID() ? result.vid() : pattern, result));
     }
 
     fURI redirect(final fURI furi, final boolean big);

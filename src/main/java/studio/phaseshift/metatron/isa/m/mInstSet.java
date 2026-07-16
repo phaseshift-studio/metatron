@@ -25,6 +25,7 @@ import studio.phaseshift.metatron.algebra.PlusMonoid;
 import studio.phaseshift.metatron.algebra.rewrite.Rewriter;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.Sugar;
 import studio.phaseshift.metatron.isa.m.space.estoreSpace;
@@ -37,6 +38,7 @@ import java.util.*;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.furi.QProc.QPROC_TID;
 import static studio.phaseshift.metatron.furi.QProc.QPROC_TYPE;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
@@ -427,14 +429,22 @@ public class mInstSet extends AbstractInstSet {
                                                  \\(\\texttt{*space/vid/qProc => lst[qProc]::T}\\)
                                             """),
                         /// ///////////////////////////////////
-                        docWrap(SUBQ_TYPE, """
-                                           uri publish-subscribe qproc.
-                                           when writing an inst to a subq uri, be sure to |-block prefix 
-                                           so as to store the inst and not its evaluation in the assignment.
-                                           """,
-                                "/usr/ai/#?subq -> |print('ai update: ${_}') [-- /usr/ai subtree watch  --]",
-                                "a?subq         -> |(>>1+1.println(_).to(a)) [-- infinite incr loop     --]",
-                                "*+?subq                                     [-- all subs for addr tree --]"),
+                        SUBQ_TYPE = docWrap(Type.Builder.build()
+                                        .vid(SUBQ_TID)
+                                        .tid(QPROC_TID)
+                                        .isaPredicate(rec(uri(SUB).maybe().asUri(), rec(URI_TYPE, SUBQ_TYPE)))
+                                        .constructor(QCollection::subq)
+                                        .create(), "", "",
+                                Map.of(uri(SUB).maybe().asUri(), "subscriptions to register immediately upon construction"),
+                                """
+                                uri publish-subscribe qproc.
+                                when writing an inst to a subq uri, be sure to |-block prefix 
+                                so as to store the inst and not its evaluation in the assignment.
+                                """,
+                                "/usr/ai/#?subq -> sub::[code=>print('ai update: ${_}')] [-- /usr/ai subtree watch  --]",
+                                "a?subq         -> sub::[code=>>>1+1.println(_).to(a)]   [-- infinite incr loop     --]",
+                                "*tree?subq                                              [-- all subs for tree      --]",
+                                "*tree/#?subq                                            [-- all subs for all tree  --]"),
                         docWrap(SUB_TYPE, "a subscription obj used by ?subq qproc.",
                                 "abc?subq -> sub::[target=>abc,on_recv=>print(_)]  [-- the inst form of abc -> |print(_) is sugar for sub-form --]"),
                         docWrap(TYPEQ_TYPE, "addr type constraint qproc",

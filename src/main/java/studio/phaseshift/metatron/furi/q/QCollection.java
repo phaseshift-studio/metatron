@@ -129,17 +129,17 @@ public final class QCollection {
     public static final fURI SUBQ_PATTERN = f("subq");
     public static final fURI SUBQ_TID = QPROC_TID.extend(SUBQ_PATTERN);
     public static final fURI SUBSCRIPTION_TID = SUBQ_TID.extend("sub");
-    public static final Type SUBQ_TYPE = Type.Builder.build().vid(SUBQ_TID).tid(QPROC_TID).constructor(QCollection::subq).create();
+    public static Type SUBQ_TYPE;
     public static final Type SUB_TYPE =
             docWrap(Type.Builder.build()
                             .tid(REC_TID)
                             .vid(SUBSCRIPTION_TID)
                             .isaPredicate(rec(
                                     uri(TARGET).maybe().asUri(), URI_TYPE,
-                                    uri(ON_RECV), T(ALL.dom(LST_TID))))
+                                    uri(CODE), T(ALL.dom(LST_TID))))
                             .create(), "a subscription specification", "", mutableMap(
-                            uri(TARGET), "the pattern that will trigger the on_recv callback (automatically added when new sub created)",
-                            uri(ON_RECV), "a callback when scope of subscription changes"),
+                            uri(TARGET), "the pattern that will trigger the code callback (automatically added when new sub created)",
+                            uri(CODE), "the code to execute when target state changes"),
                     "subscribe to mutations within a pattern of space",
                     "abc?subq -> |(?[uri::T,#::T].print(_))  [-- [target,new_obj] to on_recv --]");
 
@@ -483,7 +483,7 @@ public final class QCollection {
                             subscription.logger().info("subscribing to %s", vid.basePath());
                         }
                     } else {
-                        subscription = rec(mutableMap(uri(TARGET), uri(vid.basePath()), uri(ON_RECV), obj), SUBSCRIPTION_TID, null);
+                        subscription = rec(mutableMap(uri(TARGET), uri(vid.basePath()), uri(CODE), obj), SUBSCRIPTION_TID, null);
                         subscriptions.lstValue().add(subscription);
                         subscription.logger().info("subscribing to %s", vid.basePath());
                     }
@@ -497,7 +497,7 @@ public final class QCollection {
                     subscriptions.elements().filter(e -> vid.basePath().test(e.asRec().at(TARGET).uriValue()))
                             .forEach(s -> {
                                 subscriptions.logger().debug("spawning virtual thread for subscription recv: %s", s);
-                                virtual(s.asRec().jvm().getOrDefault(uri(ON_RECV), noobj())).applyAsync(lst(List.of(vid.basePath().toUri(), obj)));
+                                virtual(s.asRec().jvm().getOrDefault(uri(CODE), noobj())).applyAsync(lst(List.of(vid.basePath().toUri(), obj)));
                             });
                     return noobj();
                 }).create();

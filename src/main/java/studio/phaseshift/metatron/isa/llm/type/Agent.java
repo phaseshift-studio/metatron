@@ -180,12 +180,11 @@ public class Agent extends MRec {
         try {
             feature.at(uri(hookKey)).asInst().args(lst(args)).apply(this);
         } catch (final Exception e) {
+            LOG.error(e);
             if (feature instanceof studio.phaseshift.metatron.isa.llm.type.feature.Feature) {
                 ((studio.phaseshift.metatron.isa.llm.type.feature.Feature) feature).onError(this, fail(e));
             } else if (feature.has("onError")) {
                 feature.at("onError").apply(fail(e).caught());
-            } else {
-                LOG.error(e);
             }
         }
     }
@@ -266,6 +265,7 @@ public class Agent extends MRec {
                         features.stream().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_PARTIAL_THINKING, str(t.text())));
                     })
                     .onError(e -> {
+                        LOG.error(e);
                         isError.set(MTronException.of("error during chat: %s", e));
                         this.at(res(ERROR), str(e.getMessage()), MUTABLE);
                         features.stream().map(Obj::asRec).forEach(f -> dispatchHook(f, "onError"));
@@ -275,39 +275,43 @@ public class Agent extends MRec {
                         Router.global().stats().ioStats().incrBytesRecv(fullText.getBytes().length);
 
                         // Parse response format if requested
-                        final boolean formatted = !responseFormat.isNoObj() && !responseFormat.isEmpty();
-                        final Obj chatResult = formatted ?
-                                ObjSimpleJSONSerializer.single().inputBytes(fullText) :
-                                str(fullText);
-                        // Parse <<TYPE:KEY>>...<</TYPE:KEY>> blocks into res(KEY), strip from chat
-                        final Matcher blockMatcher = MTRON_BLOCK.matcher(fullText);
-                        final StringBuilder cleaned = new StringBuilder(fullText);
-                        int stripped = 0;
-                        while (blockMatcher.find()) {
-                            final String tag = blockMatcher.group(1);
-                            final String key = blockMatcher.group(2);
-                            final String body = blockMatcher.group(3);
-                            try {
-                                final MIME.MIMEType mime = mimeForTag(tag);
-                                final Obj parsed = mime.fromBytes(body.getBytes(StandardCharsets.UTF_8));
-                                this.at(res(key), parsed, MUTABLE);
-                                // Strip block from visible text
-                                final int start = blockMatcher.start() - stripped;
-                                final int end = blockMatcher.end() - stripped;
-                                cleaned.delete(start, end);
-                                stripped += (end - start);
-                            } catch (final Exception e) {
-                                LOG.warn("failed to parse <<%s:%s>> block: %s", tag, key, e.getMessage());
+                        final boolean formatted = !responseFormat.isNoObj();
+                        final Obj chatResult;
+                        if (formatted) {
+                            chatResult = ObjSimpleJSONSerializer.single().inputBytes(fullText);
+                        } else {
+                            // Parse <<TYPE:KEY>>...<</TYPE:KEY>> blocks into res(KEY), strip from chat
+                            final Matcher blockMatcher = MTRON_BLOCK.matcher(fullText);
+                            final StringBuilder cleaned = new StringBuilder(fullText);
+                            int stripped = 0;
+                            while (blockMatcher.find()) {
+                                final String tag = blockMatcher.group(1);
+                                final String key = blockMatcher.group(2);
+                                final String body = blockMatcher.group(3);
+                                try {
+                                    final MIME.MIMEType mime = mimeForTag(tag);
+                                    final Obj parsed = mime.fromBytes(body.getBytes(StandardCharsets.UTF_8));
+                                    this.at(res(key), parsed, MUTABLE);
+                                    // Strip block from visible text
+                                    final int start = blockMatcher.start() - stripped;
+                                    final int end = blockMatcher.end() - stripped;
+                                    cleaned.delete(start, end);
+                                    stripped += (end - start);
+                                } catch (final Exception e) {
+                                    LOG.warn("failed to parse <<%s:%s>> block: %s", tag, key, e.getMessage());
+                                }
                             }
+                            final String cleanText = cleaned.toString().stripTrailing();
+                            chatResult = str(cleanText);
                         }
-                        final String cleanText = cleaned.toString().stripTrailing();
                         //if (!cleanText.equals(fullText))
-                        this.at(res(CHAT), cleanText.isBlank() ? chatResult : str(cleanText), MUTABLE);
+                        this.at(res(CHAT), chatResult);
+                        //this.at(res(CHAT), cleanText.isBlank() ? chatResult : str(cleanText), MUTABLE);
                         // Elapsed time — written before hook dispatch so features can read it
                         final long elapsed = (System.nanoTime() - startNanos) / 1_000_000;
                         this.at(res(TIME), mathInstSet.normalizeTime(real((double) elapsed, MATH_MILLIS_TID, null)), MUTABLE);
                         this.logger().none("\n");
-                        features.stream().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_COMPLETE_RESPONSE, str(cleanText)));
+                        features.stream().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_COMPLETE_RESPONSE, chatResult));
                         // Signal main thread AFTER all blackboard writes complete
                         latch.countDown();
                     }).start();

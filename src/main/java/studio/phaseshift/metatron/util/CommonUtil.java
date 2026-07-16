@@ -207,7 +207,7 @@ public final class CommonUtil {
         } else if (concept.endsWith("s") && !concept.endsWith("ss") && concept.length() > 1) {
             concept = concept.substring(0, concept.length() - 1);
         }
-        return concept.replace(' ', '_').replace("'","").replace("\"","");
+        return concept.replace(' ', '_').replace("'","").replace("\"","").replace("&","and");
     }
 
     public static List<String> splitOnNonQuotedSequence(final String sequence, final char split, boolean includeSplitCharacter) {

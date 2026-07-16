@@ -250,7 +250,7 @@ public final class Tokens {
     public static final String STYLE = "style";
     public static final String ROW = "row";
     public static final String HR = "hr";
-    public static final String ON_RECV = "on_recv";
+    //public static final String ON_RECV = "on_recv";
     public static final String HOSTNAME = "HOSTNAME";
     public static final String SCHEMA = "schema";
     public static final String INSTSET = "instset";

@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -18,21 +18,15 @@
 
 package studio.phaseshift.metatron.isa.iot.space.mqtt;
 
-import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.QProc;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.BaseQ;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
-import studio.phaseshift.metatron.isa.mach.type.Router;
 
-import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Optional;
 
-import static studio.phaseshift.metatron.Tokens.SERIALIZER;
 import static studio.phaseshift.metatron.Tokens.SUBQ;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.SUBQ_TID;
@@ -62,56 +56,28 @@ public class mqttSpaceSubQ extends BaseQ {
 
         @Override
         public Optional<Obj> qlessWrite(final fURI vid, final Obj obj) {
-            return Optional.empty();
+            // Delegate to the SubQ qproc's qlessWrite handler, which matches
+            // subscriptions against the vid and fires callbacks in virtual threads.
+            // This is invoked by QProc.Helper.processQlessWrite() from both:
+            //   - mqttSpace.write() for internal writes
+            //   - mqttSpace's constructor-level MQTT callback for external writes
+            return mqttSpaceSubQ.this.subq.onWrite().get().qlessWrite(vid, obj);
+        }
+
+        @Override
+        public boolean hasQlessHandler() {
+            return true;
         }
 
         @Override
         public Optional<Obj> preWrite(final fURI vid, final Obj obj) {
-            LOG.trace("evaluating {{y}}prewrite{{/y}}: %s => %s", obj, vid);
+            LOG.info("evaluating {{y}}prewrite{{/y}}: %s => %s", obj, vid);
             if (vid.hasQ(SUBQ)) {
-                if (obj.isNoObj()) {
-                    space.sjvm().toAsync()
-                            .unsubscribeWith()
-                            .topicFilter(space.redirect(vid.basePath(), true).toString())
-                            .send()
-                            .whenComplete((m, e) -> {
-                                if (null != e) {
-                                    Router.global().stats().ioStats().incrBytesRecv(e.toString().length());
-                                    LOG.error(e);
-                                } else {
-                                    Router.global().stats().ioStats().incrBytesRecv(m.toString().length());
-                                    // super.qlessWrite(source, vid, noobj());
-                                    // space.cache.write(vid, noobj());
-                                    // subscriptions = subscriptions.stream().filter(x -> !x.<Subscription>as().target().bimatches(vid.qLess())).reduce(noobj(), (a, b) -> a.append(b));
-                                    LOG.info("unsubscribed from {{y}}%s{{X}}\n\t%s", vid.basePath(), m);
-                                }
-                            });
-                } else {
-                    space.sjvm().toAsync()
-                            .subscribeWith()
-                            .topicFilter(space.redirect(vid.basePath(), true).toString())
-                            .callback(p -> {
-                                LOG.trace("received %s", p);
-                                final fURI topic = space.redirect(f(p.getTopic().toString()), false);
-                                Obj o;
-                                if (p.getPayload().isPresent()) {
-                                    Router.global().stats().ioStats().incrBytesRecv(p.toString().length());
-                                    o = space.at(SERIALIZER).<ObjSerializer<?>>as().inputBytes(ByteBuffer.wrap(p.getPayloadAsBytes()));
-                                } else
-                                    o = noobj();
-                                super.qlessWrite(topic, o);
-                                space.cache.write(topic, o);
-
-                            })
-                            .executor(BootLoader.getExecutor())
-                            .send()
-                            .whenComplete((m, e) -> {
-                                if (null != e)
-                                    LOG.error(e);
-                                else
-                                    LOG.info("subscribed to {{y}}%s{{X}}\n\t%s", vid.basePath(), MObjFactory.of().toObj(m).asRec());
-                            });
-                }
+                // Delegate to the SubQ qproc's preWrite to store/remove the
+                // subscription in its internal list.  The constructor-level
+                // MQTT callback handles firing subscriptions for both internal
+                // and external messages — no per-SubQ MQTT subscriptions needed.
+                return mqttSpaceSubQ.this.subq.onWrite().get().preWrite(vid, obj);
             }
             return Optional.empty();
         }

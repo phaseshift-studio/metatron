@@ -164,13 +164,13 @@ grphspace::[pattern  => h:#,
         [======================]
 
 [== if the llm session already exists, continue, else create it ==]    
-</usr/dr/llm_session>.mult(print('\n what session number?: ').stdin().as(uri::T)).to(session_vid);
+[== <drdb:llm_session>.mult(print('\n what session number?: ').stdin().as(uri::T)).to(session_vid) ==]
 
-*(*session_vid).
+*drdb:llm_session/1.
   else(session::[agent     => !*boot/args/internal/agent_home,
                  user      => !*boot/args/internal/user_home,
                  name      => 'general chat',
-                 algorithm => [name=><token_window>, max=>100000]]==[_=>_].to(*session_vid));
+                 algorithm => [name=><token_window>, max=>100000]]==[_=>_].to(drdb:llm_session/1));
 [-- token_window --]
 codegraph -> mcp_client::[command=>[</home/killswitch/.local/bin/codegraph>,'serve', '--mcp']];
 agent::[name     => 'dr.stynx',
@@ -180,14 +180,18 @@ agent::[name     => 'dr.stynx',
                                                         host     => <http://ginger.local:11434>,
                                                         llm      => <gemma4:26b>],
                                     response => [to => print(_)]],
+                     session_feature::[session=>drdb:llm_session/1],
                      think_feature::[think=>[to=>print(_)]],
                      loop_feature::[max_loop=>100],                       [-- \          --]
                      ledger_feature::[ledger=>/usr/dr/ledger],            [--  | skills  --]
                      skill_feature::[skill=>[<metatronfs:skills/mtron>]], [-- /          --]
-                     session_feature::[session=>!*session_vid],
                      system_feature::[=>],
                      audit_feature::[=>],
-                     concept_feature::[base=>/usr/dr/concept],
+                     concept_feature::[base  => /usr/dr/concept, 
+                                       model => model::[provider => ollama,
+                                                        protocol => ollama,
+                                                        host     => <http://ginger.local:11434>,
+                                                        llm      => <qwen3:latest>]],
                      tool_feature::[tool=>[
                                     !*eval,
                                     !*sql,
