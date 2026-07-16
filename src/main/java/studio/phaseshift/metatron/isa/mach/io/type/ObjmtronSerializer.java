@@ -171,7 +171,7 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
     private int clipRec() {
         if (noClip) return Integer.MAX_VALUE;
         ensureInit();
-        return this.at(KEY_REC).orElse(jnt(7)).<Int>as().jvm().intValue();
+        return this.at(KEY_REC).orElse(jnt(10)).<Int>as().jvm().intValue();
     }
 
     private int clipUri() {

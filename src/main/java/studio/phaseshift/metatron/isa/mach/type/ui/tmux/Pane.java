@@ -159,14 +159,14 @@ public class Pane extends JRec<Pane> implements PaneNode, Stylable<Pane> {
         }
         Router.global().write(this.vid().extend(IN).addQ(SUBQ), rec(mutableMap(
                 uri(TARGET), uri(this.vid().extend(IN)),
-                uri(ON_RECV), instC(f("in_pane").dom(ALL).rng(NOOBJ_TID.zero()), lst(), (lhs, inst) -> {
+                uri(CODE), instC(f("in_pane").dom(ALL).rng(NOOBJ_TID.zero()), lst(), (lhs, inst) -> {
                     this.appendInput(lhs.asLst().at(1));
                     this.console.renderPanes();
                     return noobj();
                 })), SUBSCRIPTION_TID, null));
         Router.global().write(this.vid().extend(OUT).addQ(SUBQ), rec(mutableMap(
                 uri(TARGET), uri(this.vid().extend(OUT)),
-                uri(ON_RECV), instC(f("out_pane").dom(ALL).rng(NOOBJ_TID.zero()), lst(), (lhs, inst) -> {
+                uri(CODE), instC(f("out_pane").dom(ALL).rng(NOOBJ_TID.zero()), lst(), (lhs, inst) -> {
                     this.appendResult(lhs.asLst().at(1));
                     this.console.renderPanes();
                     return noobj();

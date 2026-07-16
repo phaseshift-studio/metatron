@@ -467,23 +467,7 @@ public interface Uri extends Mono, Ring.O<Uri>, Comparable<Uri> {
                 }
             }));
         }
-
-
-        public static boolean whereUri(final Uri lhs, final fURI filter) {
-            if (filter.path().size() < lhs.uriValue().path().size() && !filter.hasPattern("#"))
-                return false;
-            for (int i = 0; i < filter.path().size(); i++) {
-                final String segment = filter.path().get(i);
-                if (segment.equals("#"))
-                    return true;
-                if (lhs.uriValue().path().size() <= i)
-                    return false;
-                if (!lhs.uriValue().path().get(i).equals(segment) && !segment.equals("+"))
-                    return false;
-            }
-            return true;
-        }
-
+        
         // Use the same singleton exception from StrProjectionHelper or a shared one
         private static final Map<String, Pattern> REGEX_CACHE = new ConcurrentHashMap<>();
 
@@ -528,10 +512,10 @@ public interface Uri extends Mono, Ring.O<Uri>, Comparable<Uri> {
             }
 
             // 3. Path
-            List<String> newPath;
+            List<String> newPath = null;
             if (rulesRec.has(PATH)) {
-                Lst pathSegments = lst((List) lhsURI.path().stream().map(MStr::str).toList());
-                Obj pathResult = rulesRec.at(PATH).apply(pathSegments);
+                final Lst pathSegments = lst((List) lhsURI.path().stream().map(MStr::str).toList());
+                final Obj pathResult = rulesRec.at(PATH).apply(pathSegments);
                 if (pathResult == null || (pathResult.isNothing() && !rulesRec.at(PATH).isNone()))
                     throw Str.Helper.ProjectionFailureException.instance();
                 newPath = pathResult.isLst() ?
@@ -540,18 +524,27 @@ public interface Uri extends Mono, Ring.O<Uri>, Comparable<Uri> {
             } else {
                 newPath = lhsURI.path();
             }
-
+            if (rulesRec.has(NAME)) {
+                if (null == newPath)
+                    newPath = new ArrayList<>(lhsURI.path());
+                final Str nameSegment = str(lhsURI.name());
+                final Obj nameResult = rulesRec.at(NAME).apply(nameSegment);
+                if (nameResult == null || (nameResult.isNothing() && !rulesRec.at(NAME).isNone()))
+                    throw Str.Helper.ProjectionFailureException.instance();
+                newPath.removeLast();
+                newPath.add(nameResult.strValue());
+            }
             // 4. Query: Predicate-based matching
             Map<String, String> queryMap = new HashMap<>(lhsURI.qMap());
             if (rulesRec.has(QPROC)) {
-                Obj qRules = rulesRec.at(QPROC);
+                final Obj qRules = rulesRec.at(QPROC);
                 if (qRules.isRec()) {
-                    Map<String, String> nextQMap = new HashMap<>();
+                    final Map<String, String> nextQMap = new HashMap<>();
                     queryMap.forEach((k, v) -> {
                         Obj matchingRule = null;
                         for (Map.Entry<Obj, Obj> entry : qRules.asRec().recValue().entrySet()) {
                             final String entryKeyString = Str.Helper.cleanString(entry.getKey());
-                            Pattern pattern = REGEX_CACHE.computeIfAbsent(entryKeyString, Pattern::compile);
+                            final Pattern pattern = REGEX_CACHE.computeIfAbsent(entryKeyString, Pattern::compile);
                             if (pattern.asPredicate().test(k)) {
                                 matchingRule = entry.getValue();
                                 break;

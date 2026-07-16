@@ -81,7 +81,7 @@ public class MRec extends MObj implements Rec {
     }
 
     public static Rec rec() {
-        return rec(new LinkedHashMap<>(), null, null);
+        return rec(new LinkedHashMap<>(), REC_TID, null);
     }
 
     public static Rec rec(final Stream<Rel> stream) {

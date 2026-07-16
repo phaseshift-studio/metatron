@@ -35,6 +35,8 @@ import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.ui.console.Console;
+import studio.phaseshift.metatron.isa.mach.type.ui.console.StatusLine;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -57,6 +59,7 @@ import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.web.webInstSet.OBJ_SERIALIZER_TYPE;
@@ -134,21 +137,25 @@ public class mqttSpace extends AbstractSpace<Mqtt5Client> {
                     .retainHandling(Mqtt5RetainHandling.SEND)
                     .callback(p -> {
                         try {
-                            LOG.debug("received %s", p);
+                            final fURI topic = this.redirect(f(p.getTopic().toString()), false);
+                            LOG.debug("received %s => %s", p.getTopic(), topic);
+                            StatusLine.message(str("received %s => %s".formatted(p.getTopic(), topic)));
                             Router.global().stats().ioStats().incrBytesRecv(p.getPayload().isPresent() ? p.getPayloadAsBytes().length : 0);
+                            final Obj obj;
                             if (p.getPayload().isPresent()) {
                                 final String json = StandardCharsets.UTF_8.decode(p.getPayload().get()).toString();
-                                this.cache.write(
-                                        this.redirect(f(p.getTopic().toString()), false),
-                                        this.at(SERIALIZER).<ObjSerializer<?>>as().inputBytes(ByteBuffer.wrap(json.getBytes(StandardCharsets.UTF_8))));
+                                obj = this.at(SERIALIZER).<ObjSerializer<?>>as().inputBytes(ByteBuffer.wrap(json.getBytes(StandardCharsets.UTF_8)));
                             } else {
-                                this.cache.write(
-                                        this.redirect(f(p.getTopic().toString()), false),
-                                        noobj());
+                                obj = noobj();
                             }
+                            this.cache.write(topic, obj);
+                            // Fire SubQ and other QProc callbacks for external writes.
+                            // Use routeToSpace to convert the MQTT topic back to the internal
+                            // URI format (e.g. z2m/office/knob → z2m:office/knob) so it matches
+                            // the subscription TARGET stored by preWrite.
+                            QProc.Helper.processQlessWrite(this.qs(), topic, obj);
                         } catch (final Exception e) {
                             LOG.error(e);
-                            // e.printStackTrace();
                         }
                     })
                     .send()
@@ -195,8 +202,13 @@ public class mqttSpace extends AbstractSpace<Mqtt5Client> {
             this.send(vid.qLess(), value.c(cInt.ONE()));
             return value;
         }, this.cache.directReader());*/
+        // Fire SubQ callbacks for internal writes.  MQTT clients do NOT receive
+        // their own publishes, so the constructor-level MQTT callback only fires for
+        // external messages.  We use the MQTT-format topic here so the URI matches
+        // the subscription TARGET (which preWrite normalizes to MQTT format).
+        final fURI mqttPattern = this.redirect(pattern, true);
         return QProc.Helper.processPostWrite(this.qs(), pattern, obj)
-                .orElse(QProc.Helper.processQlessWrite(this.qs(), pattern, obj.c(cInt.ONE())).orElse(obj));
+                .orElse(QProc.Helper.processQlessWrite(this.qs(), mqttPattern, obj.c(cInt.ONE())).orElse(obj));
     }
 
     private void send(final fURI pattern, final Obj obj) {

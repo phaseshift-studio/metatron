@@ -45,12 +45,12 @@ public interface SubQTest {
     @TestCategory.Concurrent
     @ParameterizedTest(name = "[{index}] String: {0}")
     @CsvSource(value = {
-            "$$/xyz?subq     ->sub::[on_recv=>>>1.to($$/abc)]             % $$/xyz -> 32            % *$$/abc.eq(32)",
-            "$$/xyz?subq     ->sub::[on_recv=>>>1.plus(10).to($$/abc)]    % $$/xyz -> 12            % *$$/abc.eq(22)",
-            "$$/xyz/a?subq   ->sub::[on_recv=>>>0.to($$/abc)]             % $$/xyz/a -> 12          % *$$/abc.eq($$/xyz/a)",
-            "$$/xyz/#?subq   ->sub::[on_recv=>>>0.to($$/abc)]             % $$/xyz/a -> 12          % *$$/abc.eq($$/xyz/a)",
-         //   "$$/xyz/+/+?subq ->sub::[on_recv=>>>0.to($$/abc)]             % $$/xyz/a -> 12          % *$$/abc.else(true)",
-            "$$/xyz/+/+?subq ->sub::[on_recv=>>>1.to($$/abc)]             % $$/xyz/a/b -> 12        % *$$/abc.eq(12)"
+            "$$/xyz?subq     ->sub::[code=>>>1.to($$/abc)]             % $$/xyz -> 32            % *$$/abc.eq(32)",
+            "$$/xyz?subq     ->sub::[code=>>>1.plus(10).to($$/abc)]    % $$/xyz -> 12            % *$$/abc.eq(22)",
+            "$$/xyz/a?subq   ->sub::[code=>>>0.to($$/abc)]             % $$/xyz/a -> 12          % *$$/abc.eq($$/xyz/a)",
+            "$$/xyz/#?subq   ->sub::[code=>>>0.to($$/abc)]             % $$/xyz/a -> 12          % *$$/abc.eq($$/xyz/a)",
+         //   "$$/xyz/+/+?subq ->sub::[code=>>>0.to($$/abc)]             % $$/xyz/a -> 12          % *$$/abc.else(true)",
+            "$$/xyz/+/+?subq ->sub::[code=>>>1.to($$/abc)]             % $$/xyz/a/b -> 12        % *$$/abc.eq(12)"
     }, delimiter = '%')
     default void testSubQ(String subscription, String writing, String expecting) {
         final Space space = this.getSpace();

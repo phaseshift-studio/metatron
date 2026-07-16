@@ -405,7 +405,7 @@ public class llmInstSet extends AbstractInstSet {
                                         .vid(LLM_CONCEPT_FEATURE_TID)
                                         .constructor(instC(INST_CTOR_TID.rng(LLM_CONCEPT_FEATURE_TID),
                                                 lst(REC_TYPE), (lhs, inst) ->
-                                                        createStageLambdas(new ConceptFeature(inst.arg(0).asRec().jvm(), LLM_CONCEPT_FEATURE_TID, inst.arg(0).vid()), ON_PARTIAL_THINKING, ON_PARTIAL_RESPONSE, ON_COMPLETE_RESPONSE)))
+                                                        createStageLambdas(new ConceptFeature(inst.arg(0).asRec().jvm(), LLM_CONCEPT_FEATURE_TID, inst.arg(0).vid()), ON_BEFORE_CHAT, ON_PARTIAL_THINKING, ON_PARTIAL_RESPONSE, ON_COMPLETE_RESPONSE)))
                                         .create(),
                                 "",
                                 "",

@@ -32,6 +32,7 @@ import studio.phaseshift.metatron.isa.llm.type.Agent;
 import studio.phaseshift.metatron.isa.m.math.mathInstSet;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
@@ -40,8 +41,11 @@ import studio.phaseshift.metatron.util.MTronException;
 import java.nio.ByteBuffer;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.time.DateTimeException;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
@@ -49,6 +53,7 @@ import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
 import static studio.phaseshift.metatron.isa.llm.type.Agent.res;
 import static studio.phaseshift.metatron.isa.m.mInstSet.LST_TID;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_BYTE_TID;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.from_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBytes.bytes;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -75,7 +80,7 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
      * Messages written by this store instance, keyed by TID.
      * Used by ConceptFeature to link concepts to recently written messages.
      */
-    private final Map<fURI, Set<fURI>> currentMessages = new HashMap<>();
+    private final Set<fURI> currentMessages = new HashSet<>();
 
     /**
      * Name of the unified polymorphic message table stored under the session path.
@@ -159,7 +164,7 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
             if (knownKeys.contains(keyName)) continue;
             // Internal infrastructure — never expose to LC4j
             if (HASH.equals(keyName) || TIME.equals(keyName) || SESSION.equals(keyName)) continue;
-            attrs.put(keyName, e.getValue().strValue());
+            attrs.put(keyName, Str.Helper.cleanString(e.getValue()));
         }
         return attrs;
     }
@@ -181,7 +186,7 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
         return this.space;
     }
 
-    public Map<fURI, Set<fURI>> getCurrentMessages() {
+    public Set<fURI> getCurrentMessages() {
         return this.currentMessages;
     }
 
@@ -222,12 +227,24 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
         // Collect messages matching this session, skip thinking rows, take last N.
         final fURI msgBase = sesVID.retract(2).extend(LLM_MESSAGE_TABLE);
         final List<Rec> allMessages = new ArrayList<>();
-        int found = 0;
+        final AtomicInteger found = new AtomicInteger(0);
+        /*from_(msgBase.extend("+").toUri()).where_(rec(uri(SESSION), sesVID.toUri())).apply(jnt(1)).stream().forEach(msg -> {
+            if (!msg.isRec()) {
+                LOG.warn("non-message obj in llm messages: %s", msg);
+            } else {
+                final Rec msgRec = msg.asRec();
+                final Obj sessionField = msgRec.at(uri(SESSION));
+                if (!sessionField.isNoObj() && sessionField.isUri() && sessionField.uriValue().equals(sesVID) && !msgRec.tid().equals(THINKING_MESSAGE_TID)) {
+                    allMessages.add(msgRec);
+                    found.incrementAndGet();
+                }
+            }
+        });*/
         for (int id = 1; ; id++) {
             final fURI readURI = msgBase.extend(String.valueOf(id));
             try {
                 final Obj msgObj = Router.readFromSpace(readURI);
-                if (msgObj.isNoObj()) break;
+                if (null == msgObj || msgObj.isNoObj()) break;
                 if (!msgObj.isRec()) continue;
                 final Rec msgRec = msgObj.asRec();
                 // Filter by session — the table is shared across sessions
@@ -238,13 +255,17 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
                 // Skip thinking rows — they're for the ledger, not the LC4j window
                 if (msgRec.tid().equals(THINKING_MESSAGE_TID)) continue;
                 allMessages.add(msgRec);
-                found++;
+                found.incrementAndGet();
             } catch (final Exception e) {
                 LOG.warn("unable to process message %s (ignoring): %s", readURI, e);
             }
         }
-        LOG.info("messages found for context window: " + found);
-        // Messages are in ascending id order.  Take the last windowMax.
+        try {
+            allMessages.sort(Comparator.comparing(a -> LocalDateTime.parse(Str.Helper.cleanString(a.at(TIME)))));
+        } catch (final DateTimeException e) {
+            LOG.debug("unable to form datetime: %s", e);
+        }
+        LOG.info("messages found for context window: " + found.get());
         final List<ChatMessage> result = new ArrayList<>();
         final int start = Math.max(0, allMessages.size() - windowMax);
         for (int i = start; i < allMessages.size(); i++) {
@@ -257,7 +278,7 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
             }
         }
 
-        LOG.debug("read %d messages for session %s (window max=%d, total stored=%d)", result.size(), sesVID, windowMax, allMessages.size());
+        LOG.info("read %d messages for session %s (window max=%d, total stored=%d)", result.size(), sesVID, windowMax, allMessages.size());
         return result;
     }
 
@@ -267,7 +288,10 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
             LOG.warn("session obj is not a uri: %s", sessionVID);
             return;
         }
-        LOG.info("updating messages [size: %d]", messages.size());
+        if (null == messages || messages.isEmpty())
+            return;
+
+        LOG.info("updating messages %s", messages);
 
         // -- 1. Read session policy -------------------------------------------
         int windowMax = 15;
@@ -327,12 +351,8 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
             try {
                 final fURI writePath = llmMessagePath(sesVID);
                 final Obj writtenObj = Router.writeToSpace(writePath, incomingRec);
-                if (writtenObj.hasVID()) {
-                    LOG.info("updating current messages [size:%d]", this.currentMessages.size());
-                    this.currentMessages
-                            .computeIfAbsent(incomingRec.tid(), k -> new HashSet<>())
-                            .add(writtenObj.vid());
-                }
+                LOG.debug("updating current messages [size:%d]", this.currentMessages.size());
+                this.currentMessages.add(writtenObj.vid());
                 written++;
             } catch (final Exception e) {
                 LOG.warn("error writing message to llm_message (non-blocking): %s", e.getMessage());
@@ -496,7 +516,8 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
             for (final ToolExecutionRequest req : msg.toolExecutionRequests())
                 toolReqs.add(toolRequestToRec(req));
             map.put(uri(TOOL_REQUESTS), lst(toolReqs));
-            //map.put(uri(TEXT), str(toolReqs.toString()));
+            if (!map.containsKey(uri(CONTENTS)))
+                map.put(uri(CONTENTS), str(toolReqs.toString()));
         }
         msg.attributes().forEach((k, v) -> map.putIfAbsent(uri(k), str(String.valueOf(v))));
         return rec(map, AI_MESSAGE_TID, null);
@@ -509,16 +530,22 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
         if (toolRequest.arguments() != null && !toolRequest.arguments().isBlank())
             map.put(uri(VOCAB.from(LLM_TOOL_TID, "arguments")), str(toolRequest.arguments()));
         if (toolRequest.id() != null && !toolRequest.id().isBlank())
-            map.put(uri(ID), str(toolRequest.id()));
+            map.put(uri(CONTENTS), str(toolRequest.id()));
+        map.put(uri(TEXT), str(toolRequest.name() + "(" + toolRequest.arguments() + ")"));
         return rec(map, TOOL_REQUEST_MESSAGE_TID, null);
     }
 
     private static Rec toolResultMessageToRec(final ToolExecutionResultMessage msg) {
         final Map<Obj, Obj> map = new LinkedHashMap<>();
         map.put(uri(VOCAB.from(TOOL_RESULT_MESSAGE_TID, "toolName")), uri(msg.toolName()));
-        map.put(uri(TEXT), msg.text() != null && !msg.text().isBlank() ? str(msg.text()) : str(""));
+        // Serialize the text through ObjmtronSerializer.writeStr() so the stored
+        // value is mtron-escaped (e.g. 'text' or """text""").  This prevents
+        // tbleSpace's {/[ heuristic in readColumnWithMetadata from mis-parsing
+        // tool-result text that happens to look like structured mtron data.
+        final String rawText = msg.hasSingleText() && msg.text() != null && !msg.text().isBlank() ? msg.text() : msg.toString();
+        map.put(uri(TEXT), str(ObjmtronSerializer.singleNoClip().write(str(rawText))));
         if (msg.id() != null && !msg.id().isBlank())
-            map.put(uri(ID), str(msg.id()));
+            map.put(uri(CONTENTS), str(msg.id()));
         msg.attributes().forEach((k, v) -> map.putIfAbsent(uri(k), str(String.valueOf(v))));
         return rec(map, TOOL_RESULT_MESSAGE_TID, null);
     }
@@ -670,7 +697,7 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
                         return ToolExecutionRequest.builder()
                                 .name(Str.Helper.cleanString(trRec.at(uri(NAME)).orElse(str(""))))
                                 .arguments(Str.Helper.cleanString(trRec.at(uri(argsToken)).orElse(str(""))))
-                                .id(Str.Helper.cleanString(trRec.at(uri(ID)).orElse(str(""))))
+                                .id(Str.Helper.cleanString(trRec.at(uri(CONTENTS)).orElse(str(""))))
                                 .build();
                     })
                     .toList();
@@ -682,10 +709,20 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
     private static ToolExecutionResultMessage recToToolResultMessage(final Rec rec) {
         final String nameToken = VOCAB.from(TOOL_RESULT_MESSAGE_TID, "toolName");
         final Map<String, Object> attrs = extractAttributes(rec, TOOL_RESULT_KNOWN_KEYS);
+        // If the text was serialized through ObjmtronSerializer.writeStr()
+        // (starts with a quote), deserialize it back.  Otherwise use as-is.
+        final String rawText = Str.Helper.cleanString(rec.at(uri(TEXT)).orElse(str("none")));
+        final String text;
+        if (!rawText.isEmpty() && (rawText.charAt(0) == '\'' || rawText.charAt(0) == '"')) {
+            final Obj parsed = ObjmtronSerializer.singleNoClip().inputBytes(rawText);
+            text = parsed.isFail() ? rawText : Str.Helper.cleanString(parsed);
+        } else {
+            text = rawText;
+        }
         return ToolExecutionResultMessage.builder()
-                .id(Str.Helper.cleanString(rec.at(uri(ID)).orElse(str(""))))
+                .id(Str.Helper.cleanString(rec.at(uri(CONTENTS)).orElse(str(""))))
                 .toolName(Str.Helper.cleanString(rec.at(uri(nameToken)).orElse(str(""))))
-                .text(Str.Helper.cleanString(rec.at(uri(TEXT)).orElse(str("none"))))
+                .text(text)
                 .attributes(attrs)
                 .build();
     }

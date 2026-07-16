@@ -210,7 +210,7 @@ public class QProcIntegrationTest extends AbstractMetatronTest {
         final int numSubscriptions = 5;
 
         for (int i = 0; i < numSubscriptions; i++) {
-            final String expr = BASE + "/sub" + i + "?subq -> sub::[on_recv=>>>1.to($$/callback/" + i + ")]";
+            final String expr = BASE + "/sub" + i + "?subq -> sub::[code=>>>1.to($$/callback/" + i + ")]";
             ObjmtronSerializer.parse(expr).apply();
         }
 

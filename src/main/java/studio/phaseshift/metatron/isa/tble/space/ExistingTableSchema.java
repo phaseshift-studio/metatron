@@ -1136,7 +1136,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
         final String sql = String.format("INSERT INTO %s (%s) VALUES (%s)",
                 metadata.tableName, String.join(", ", columnNames), placeholders);
 
-        try (final PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (final PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             for (int i = 0; i < values.size(); i++) {
                 final Tuple.Pair<Obj, ColumnMetadata> pair = values.get(i);
                 final Obj value = pair.get0();
@@ -1145,10 +1145,18 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
                 final int sqlType = value.isPoly() ? Types.VARCHAR : column.sqlType;
                 writeParameter(stmt, i + 1, value, sqlType);
             }
-            final int inserted = stmt.executeUpdate();
-            this.space.logger().debug("auto-inserted row into %s: %s rows affected",
-                    metadata.tableName, inserted);
-            return inserted;
+            stmt.executeUpdate();
+            try (final ResultSet generatedKeys = stmt.getGeneratedKeys()) {
+                if (generatedKeys.next()) {
+                    final int key = generatedKeys.getInt(1);
+                    this.space.logger().debug("auto-inserted row into %s: generated key %s",
+                            metadata.tableName, key);
+                    return key;
+                }
+            }
+            this.space.logger().debug("auto-inserted row into %s: no generated key returned",
+                    metadata.tableName);
+            return 0;
         }
     }
 
@@ -1158,7 +1166,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
      * Called from {@link tbleIncrQ#onPreWrite} — the QProc handles the
      * write so the normal {@code directWriter} path is never reached.
      */
-    public void ensureTableAndInsert(final Connection conn, final String tableName,
+    public int ensureTableAndInsert(final Connection conn, final String tableName,
                                      final Rec rec) throws java.sql.SQLException {
         final boolean isNew = !tableSchemas.containsKey(tableName.toLowerCase());
         if (isNew)
@@ -1166,11 +1174,12 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
         final TableMetadata metadata = tableSchemas.get(tableName.toLowerCase());
         if (metadata == null)
             throw new java.sql.SQLException("failed to create table: " + tableName);
-        insertRowAuto(conn, metadata, rec);
+        final int generatedKey = insertRowAuto(conn, metadata, rec);
         // Update the instset type AFTER the first insert so logical type
         // tracking (e.g. URI stored in TEXT) has already fired.
         if (isNew)
             this.space.onTableChanged(tableName);
+        return generatedKey;
     }
 
     @Override

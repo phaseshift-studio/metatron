@@ -140,7 +140,8 @@ final class AgentUtility {
     // ── Session capability ────────────────────────────────────────
 
     static void buildSession(final Agent agent, final AiServices<AgentServices> service) {
-        service.chatMemory(((SessionFeature) agent.feature(SESSION)).memory()).storeRetrievedContentInChatMemory(true);
+        if (!agent.feature(SESSION).isNoObj())
+            service.chatMemory(((SessionFeature) agent.feature(SESSION)).memory()).storeRetrievedContentInChatMemory(true);
     }
 
     // ── Skill capability ──────────────────────────────────────────

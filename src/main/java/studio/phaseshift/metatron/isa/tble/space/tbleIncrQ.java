@@ -81,12 +81,14 @@ public class tbleIncrQ extends BaseQ {
                                                 : studio.phaseshift.metatron.isa.m.type.impl.MRec.rec(
                                                 studio.phaseshift.metatron.util.CommonUtil.mutableMap(
                                                         studio.phaseshift.metatron.isa.m.type.impl.MUri.uri("val"), obj));
-                                space.existingTableSchema().ensureTableAndInsert(
+                                final int generatedKey = space.existingTableSchema().ensureTableAndInsert(
                                         space.sjvm(), dp.collection(), rec);
+                                // Replace the _ placeholder entry with the actual auto-generated key
+                                final fURI actualVid = cleaned.retract(1).extend(String.valueOf(generatedKey));
+                                return obj.vid(actualVid);
                             } catch (final Exception e) {
                                 throw MTronException.of(e);
                             }
-                            return obj;
                         }),
                 uri(POST_WRITE), noobj(),
                 uri(PRE_READ), noobj(),

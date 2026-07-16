@@ -451,13 +451,14 @@ public class tbleSpace extends AbstractSpace<Connection> implements SchemaSpace 
     @Override
     public BiFunction<fURI, Obj, Obj> directWriter() {
         return (pattern, obj) -> {
+            fURI aligned = null;
             try {
                 if (pattern.hasPattern()) {
                     // Wildcard write: expand to matching keys, write to each
                     this.directReader().apply(pattern)
                             .forEachRemaining(kv -> this.write(kv.furi(), obj));
                 } else {
-                    final fURI aligned = Space.Helper.routeFromSpace(pattern, this.routes());
+                    aligned = Space.Helper.routeFromSpace(pattern, this.routes());
 
                     // -- Collection-path type declaration ----------------
                     // Writing a Type to a collection path (no entry) is a
@@ -505,7 +506,10 @@ public class tbleSpace extends AbstractSpace<Connection> implements SchemaSpace 
             } catch (final SQLException e) {
                 throw MTronException.of(e);
             }
-            return obj;
+            // Attach the actual write location as the object's VID so the
+            // caller can discover where the object was stored (important
+            // for auto-increment and routed writes).
+            return obj.vid(pattern.hasPattern() ? obj.vid() : aligned);
         };
     }
 
