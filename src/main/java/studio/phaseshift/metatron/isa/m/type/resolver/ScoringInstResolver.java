@@ -32,6 +32,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.NOOBJ_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -81,10 +82,10 @@ public class ScoringInstResolver implements InstResolver {
                     final Obj fromOrAtObj = Router.readFromSpace(fromOrAt.get());
                     if (!fromOrAtObj.isNothing() && !fromOrAtObj.isCall()) {
                         userInst.logger().debug("fast from/at() resolution: %s", fromOrAt.get());
-                        return Router.readFromSpace(userInst.tid()).asInst().rng(fromOrAtObj.type()).asInst().args(lst(fromOrAt.get().toUri()));
+                        return Router.readFromSpace(userInst.tid()).asInst().args(lst(fromOrAt.get().toUri())).rng(T(fromOrAtObj.typeId().maybeSome()));
                     }
                 }
-                return Router.readFromSpace(userInst.tid()).asInst().args(lst(uri(fromOrAt.get())));
+                return Router.readFromSpace(userInst.tid()).asInst().args(lst(uri(fromOrAt.get()))).rng(T(ALL.maybeSome()));
             }
         }
         if (userInst.tid().big().test(AS_INST_TID)) {

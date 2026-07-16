@@ -796,7 +796,7 @@ public class mInstSetTest extends AbstractInstSetTest {
             "*a.>>{a,b/c}                                        % {1,2}",
             "*a.>>{a,b/c}.sum()                                  % 3",
             "*a.-<{>>a,>>b/c}                                    % {1,2}",
-            "*a.-<{>>a,>>b/c}.sum().sum()                        % 3",
+            "*a.-<{>>a,>>b/c}.sum?int<=int{*}().sum()            % 3",
             "*a.-<{>>a,>>b/c}.<<.<<                              % *a",
             "*a.-<{>>a,>>b/c}.<<.<<                              % *a",
             "*b.>>b>>d>>b/c                                      % 2",
