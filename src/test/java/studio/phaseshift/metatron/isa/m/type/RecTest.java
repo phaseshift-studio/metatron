@@ -524,12 +524,12 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
             "[a=>1,b=>2,c=>3].select([a=>_])                                               % [a=>1]",
             "[a=>1,b=>2,c=>3].select([d=>_])                                               % noobj",
             "[a=>1,b=>2,c=>3].select([a=>_,d=>_])                                          % [a=>1]",
-            "*x>>address/home/city                                                         % \"santa fe\"",
-            "*x>>address/work/city                                                         % \"nomansland\"",
-            "*x>><address/+/city>                                                          % {\"nomansland\",\"santa fe\"}",
-            "*x>><address/+/city/>                                                         % {address/home/city=>\"santa fe\",address/work/city=>\"nomansland\"}",
-            "*x>><address/+/#/>                                                            % {address/home/city=>\"santa fe\",address/work/city=>\"nomansland\"}",
-            "*x>>#/                                                                        % {address/home/city=>\"santa fe\",address/work/city=>\"nomansland\"}",
+            "*x==address/home/city                                                         % \"santa fe\"",
+            "*x==address/work/city                                                         % \"nomansland\"",
+            "*x==<address/+/city>                                                          % {\"nomansland\",\"santa fe\"}",
+            "*x==<address/+/city/>                                                         % {address/home/city=>\"santa fe\",address/work/city=>\"nomansland\"}",
+            "*x==<address/+/#/>                                                            % {address/home/city=>\"santa fe\",address/work/city=>\"nomansland\"}",
+            "*x==#/                                                                        % {address/home/city=>\"santa fe\",address/work/city=>\"nomansland\"}",
             "*x==[address/+/city=>_]                                                  % [address/+/city=>{\"nomansland\",\"santa fe\"}]",
             "*x==[address/+/+=>_]                                                     % [address/+/+=>{\"nomansland\",\"santa fe\"}]",
             "*x==[address/#=>_]                                                       % [address/#=>{\"nomansland\",\"santa fe\"}]",
@@ -539,7 +539,7 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
             "*x==[<address/work/home/../../work/city>=>_]>>                           % \"nomansland\"",
             "*x==[<address/work/city/../../+/city>=>_]>>                              % {\"nomansland\",\"santa fe\"}",
             "*x==[<address/work/city/../../+/city/../../../#>=>_]>>                   % {\"nomansland\",\"santa fe\"}",
-            "*y>>address/work/city                                                         % \"santa fe\""
+            "*y==address/work/city                                                         % \"santa fe\""
     }, delimiter = '%')
     public void testSelect(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
@@ -557,7 +557,10 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
             "*x/a/b/c/d                                                                     % {[1,2,3],[4,5,[e,f,g]]}",
             "*x/a/b/c                                                                       % {[d=>[1,2,3]],[d=>[4,5,[e,f,g]]]}",
             // Step-walk equivalent
-            "*x>>a>>b>>c>>d>>0                                                              % {1,4}",
+            "*x==a==b==c==d==0                                                              % {1,4}",
+            "*x==a/b/c/d==0                                                                 % {1,4}",
+            "*x==a/b/c/d/0                                                                  % {1,4}",
+            "*x==a/b==c/d==0                                                                % {1,4}",
             "*x>>a>>b>>c>>d>>2                                                              % {3,[e,f,g]}",
             "*x>>a>>b>>c>>d>>2>>0                                                           % e",
     }, delimiter = '%')

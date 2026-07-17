@@ -22,6 +22,7 @@ import studio.phaseshift.metatron.isa.m.type.Objs;
 
 import java.util.EmptyStackException;
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 import java.util.Stack;
 
 public final class StackIterator<T> implements Iterator<T> {
@@ -55,7 +56,7 @@ public final class StackIterator<T> implements Iterator<T> {
                 return next;
             }
         } catch (final EmptyStackException e) {
-            throw FastNoSuchElementException.instance();
+            throw new NoSuchElementException();
         }
     }
 }

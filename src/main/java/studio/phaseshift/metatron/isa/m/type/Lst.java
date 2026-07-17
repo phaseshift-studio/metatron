@@ -18,17 +18,14 @@
 
 package studio.phaseshift.metatron.isa.m.type;
 
+import studio.phaseshift.metatron.util.ProjectionFailureException;
 import studio.phaseshift.metatron.algebra.PlusMonoid;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.util.CommonUtil;
-import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -150,7 +147,7 @@ public interface Lst extends Poly<Lst, List<Obj>>, PlusMonoid.O<Lst> {
         final cInt cKey = key.c();
         if (key.isInt())
             return (OBJ) (key.intValue() < 0 ?
-                    ((this.jvm().size()+1 > (-1 * key.intValue())) ? this.jvm().get((int) (this.jvm().size() + key.asInt().intValue())) : noobj()) :
+                    ((this.jvm().size() + 1 > (-1 * key.intValue())) ? this.jvm().get((int) (this.jvm().size() + key.asInt().intValue())) : noobj()) :
                     ((this.jvm().size() > key.intValue()) ? this.jvm().get(key.asInt().intValue().intValue()) : noobj())
                             .autoResolve(this)
                             .parent(this)
@@ -250,8 +247,19 @@ public interface Lst extends Poly<Lst, List<Obj>>, PlusMonoid.O<Lst> {
                     instC(HAS_INST_TID.dom(LST_TID).rng(LST_TID.maybe()), lst(T(ALL), T(ALL).maybe(), T(ALL).maybe()), (lhs, inst) -> lhs.<Lst>as().elements().anyMatch(r -> r.test(inst.arg(0)) || r.test(inst.arg(1)) || r.test(inst.arg(2))) ? lhs : noobj()),
                     instC(WITHIN_INST_TID.dom(LST_TID).rng(LST_TID), lst(T(ALL_STAR)), (lhs, inst) -> lst(inst.arg(0).apply(objs(lhs.stream().flatMap(Obj::elements))).stream().toList())),
                     instC(SUM_INST_TID.dom(LST_TID.maybeSome()).rng(LST_TID), lst(), (lhs, inst) -> inst.seed().jvm(lhs.stream().reduce(inst.seed(), (a, b) -> ((Lst) a).plus((Lst) b)).lstValue()), lst()),
+                    instC(SELECT_INST_TID.dom(LST_TID).rng(B.maybeSome()), lst(T(A.some())), (lhs, inst) -> objs(inst.arg(0).stream().map(s -> lhs.asLst().at(s)))),
                     instC(SELECT_INST_TID.dom(LST_TID).rng(LST_TID.maybe()), lst(T(LST_TID)), (lhs, inst) -> Poly.Helper.selectLstRecursion(lhs.asLst(), inst.arg(0).asLst())),
+                    instC(SELECT_INST_TID.dom(LST_TID).rng(LST_TID), lst(REC_TYPE), (lhs, inst) -> lst(Lst.Helper.project(lhs.asLst(), inst.arg(0).orElse(rec0()), false), lhs.tid(), lhs.vid())),
+                    instC(WHERE_INST_TID.dom(LST_TID).rng(LST_TID.maybe()), lst(REC_TYPE), (lhs, inst) -> {
+                        try {
+                            Lst.Helper.project(lhs.asLst(), inst.arg(0).orElse(rec0()), true);
+                            return lhs;
+                        } catch (final ProjectionFailureException e) {
+                            return noobj();
+                        }
+                    }),
                     //instC(UPDATE_INST_TID.dom(LST_TID).rng(LST_TID), lst(LST_TYPE), (lhs, inst) -> Poly.Helper.updateLstRecursion(lhs.asLst(), inst.arg(0).asLst(), MUTABLE)),
+
                     instC(REMOVE_INST_TID.dom(LST_TID).rng(A.maybeSome()), lst(INT_TYPE), (lhs, inst) -> {
                         if (lhs.isLst() && inst.arg(0).intValue() < lhs.lstValue().size()) {
                             final List<Obj> newList = new ArrayList<>(lhs.lstValue());
@@ -283,8 +291,98 @@ public interface Lst extends Poly<Lst, List<Obj>>, PlusMonoid.O<Lst> {
             return arg.isNoObj() ? objs(lhs.valueElements()) : objs(arg.stream().map(lhs::at));
         }
 
+        /**
+         * Universal Structural Projection for Lists.
+         */
+        public static List<Obj> project(final Lst lhs, final Obj rulesObj, boolean verify) {
+            if (rulesObj == null || rulesObj.isNoObj()) {
+                return lhs.elements().toList();
+            }
+            Rec rulesRec;
+            try {
+                rulesRec = rulesObj.asRec();
+            } catch (Exception e) {
+                if (verify) throw ProjectionFailureException.instance();
+                return lhs.elements().toList();
+            }
+            List<Obj> resultElements = new ArrayList<>();
+            // We'll use this to track which indices were actually transformed
+            // so we can handle identity pass-through for non-matched elements in select mode.
+            Set<Integer> matchedIndices = new HashSet<>();
 
+            // Iterate through the la-palette rules (the "Contract")
+            for (Map.Entry<Obj, Obj> entry : rulesRec.recValue().entrySet()) {
+                Obj predicate = entry.getKey();
+                Obj constraintOrTransform = entry.getValue();
+
+                // Find all indices in the target list that match this predicate
+                List<Integer> matchingIndices = new ArrayList<>();
+                int idx = 0;
+                for (Obj element : lhs.elements().toList()) {
+                    if (jnt(idx).test(predicate)) {
+                        matchingIndices.add(idx);
+                    }
+                    idx++;
+                }
+                if (verify) {
+                    /* --- VERIFY MODE: Structural Validation --- */
+                    // 1. MANDATORY EXISTENCE: The la-palette requires this predicate to match something.
+                    if (matchingIndices.isEmpty()) {
+                        throw ProjectionFailureException.instance();
+                    }
+                    // 2. CONSTRAINT SATISFACTION: Every matched element must satisfy the rule.
+                    for (Integer index : matchingIndices) {
+                        Obj val = lhs.elements().toList().get(index);
+                        if (!val.test(constraintOrTransform)) {
+                            throw ProjectionFailureException.instance();
+                        }
+                    }
+                } else {
+                    /* --- TRANSFORM MODE:L surgical mutation --- */
+                    for (Integer index : matchingIndices) {
+                        Obj val = lhs.elements().toList().get(index);
+                        if (constraintOrTransform.isNone()) {
+                            // Marked for removal - we don't add it to the result list
+                        } else {
+                            Obj resVal = constraintOrTransform.apply(val);
+                            if (resVal == null || resVal.isNothing()) {
+                                if (!constraintOrTransform.isNone())
+                                    throw ProjectionFailureException.instance();
+                            } else {
+                                // We'll handle the final ordering in the reassembly phase
+                                resultElements.add(resVal); // Note: Simple add is for logic; see below for order
+                            }
+                        }
+                        matchedIndices.add(index);
+                    }
+                }
+            }
+
+            if (!verify) {
+                // REASSEMBLY: Preserve original elements that weren't matched by any la-palette rule
+                List<Obj> finalElements = new ArrayList<>();
+                int idx = 0;
+                for (Obj element : lhs.elements().toList()) {
+                    if (matchedIndices.contains(idx)) {
+                        // Find the transformation for this specific index
+                        for (Map.Entry<Obj, Obj> entry : rulesRec.recValue().entrySet()) {
+                            if (jnt(idx).test(entry.getKey())) {
+                                Obj transformation = entry.getValue();
+                                if (!transformation.isNone()) {
+                                    finalElements.add(transformation.apply(element));
+                                }
+                                break;
+                            }
+                        }
+                    } else {
+                        // Identity pass-through for non-matched elements
+                        finalElements.add(element);
+                    }
+                    idx++;
+                }
+                return finalElements;
+            }
+            return resultElements;
+        }
     }
-
-
 }

@@ -18,19 +18,16 @@
 
 package studio.phaseshift.metatron.isa.m.type;
 
+import studio.phaseshift.metatron.util.ProjectionFailureException;
 import studio.phaseshift.metatron.algebra.PlusMonoid;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.impl.MStr;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.util.FastNoSuchElementException;
 import studio.phaseshift.metatron.util.MTronException;
 
-import java.io.Serial;
 import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.BiFunction;
 import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -130,24 +127,6 @@ public interface Str extends Mono, PlusMonoid.O<Str> {
             return "" + obj.jvm();
         }
 
-        // 1. Define a private Exception for signaling project failure
-        public static class ProjectionFailureException extends RuntimeException {
-            @Serial
-            private static final long serialVersionUID = 233338654157697L;
-            private static final ProjectionFailureException INSTANCE = new ProjectionFailureException();
-
-            private ProjectionFailureException() {
-            }
-
-            public static ProjectionFailureException instance() {
-                return INSTANCE;
-            }
-
-            public synchronized Throwable fillInStackTrace() {
-                return this;
-            }
-        }
-
         public static String project(final String input, final Obj rulesObj) {
             if (rulesObj == null || rulesObj.isNoObj()) return "";
 
@@ -240,14 +219,14 @@ public interface Str extends Mono, PlusMonoid.O<Str> {
                     instC(SUM_INST_TID.dom(STR_TID.maybeSome()).rng(STR_TID), lst(T(STR_TID.maybe())), (lhs, inst) -> str(lhs.stream().map(Obj::strValue).reduce(inst.arg(0).orElse(str("")).strValue(), (a, b) -> a + b))),
                     instC(UCASE_INST_TID.dom(STR_TID).rng(STR_TID), lst(), (lhs, inst) -> lhs.jvm(lhs.strValue().toUpperCase())),
                     instC(LCASE_INST_TID.dom(STR_TID).rng(STR_TID), lst(), (lhs, inst) -> lhs.jvm(lhs.strValue().toLowerCase())),
-                    instC(SELECT_INST_TID.dom(STR_TID).rng(STR_TID), lst(REC_TYPE), (lhs, inst) -> str(Str.Helper.project(lhs.strValue(), inst.arg(0)))),
+                    instC(SELECT_INST_TID.dom(STR_TID).rng(STR_TID), lst(REC_TYPE), (lhs, inst) -> str(Str.Helper.project(lhs.strValue(), inst.arg(0)),lhs.tid(),lhs.vid())),
                     instC(WHERE_INST_TID.dom(STR_TID).rng(STR_TID.maybe()), lst(REC_TYPE), (lhs, inst) -> {
                         try {
                             // If any part of the projection returns noobj/false,
                             // it throws ProjectionFailureException and lands in the catch block.
                             Str.Helper.project(lhs.strValue(), inst.arg(0));
                             return lhs; // All predicates passed!
-                        } catch (Str.Helper.ProjectionFailureException e) {
+                        } catch (ProjectionFailureException e) {
                             return noobj(); // Structural verification failed
                         }
                     }),

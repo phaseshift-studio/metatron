@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.isa.m.type;
 
 
+import studio.phaseshift.metatron.util.ProjectionFailureException;
 import studio.phaseshift.metatron.algebra.PlusMonoid;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
@@ -34,7 +35,6 @@ import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
-import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -290,7 +290,7 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
          * @return A map containing the results of the projection. In verify mode,
          * this is primarily used for internal state; the real result is either
          * success or a ProjectionFailureException.
-         * @throws Str.Helper.ProjectionFailureException if verification fails or a transformation errors.
+         * @throws ProjectionFailureException if verification fails or a transformation errors.
          */
         public static Map<Obj, Obj> project(final Rec lhs, final Obj rulesObj, boolean verify) {
             // If no projector is provided, the projection is an identity mapping of the original record.
@@ -303,7 +303,7 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
             try {
                 rulesRec = rulesObj.asRec();
             } catch (Exception e) {
-                if (verify) throw Str.Helper.ProjectionFailureException.instance();
+                if (verify) throw ProjectionFailureException.instance();
                 return lhs.recValue();
             }
 
@@ -325,7 +325,7 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
                     // 1. MANDATORY EXISTENCE
                     // If the projector requires a predicate but no components match it, the structure is invalid.
                     if (matches.isEmpty()) {
-                        throw Str.Helper.ProjectionFailureException.instance();
+                        throw ProjectionFailureException.instance();
                     }
 
                     // 2. CONSTRAINT SATISFACTION
@@ -333,7 +333,7 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
                     for (Rel rel : matches) {
                         Obj val = rel.second();
                         if (!val.test(transformationC)) {
-                            throw Str.Helper.ProjectionFailureException.instance();
+                            throw ProjectionFailureException.instance();
                         }
                     }
                 } else {
@@ -351,7 +351,7 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
                             if (resVal == null || resVal.isNothing()) {
                                 // An a-priori rule should not return noobj unless it is explicitly 'none'
                                 if (!transformationC.isNone()) {
-                                    throw Str.Helper.ProjectionFailureException.instance();
+                                    throw ProjectionFailureException.instance();
                                 }
                             } else {
                                 // Map the original key to the new transformed value
@@ -429,24 +429,14 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
                     instC(LSHIFT_INST_TID.dom(REC_TID).rng(A.maybeSome()), lst(), (lhs, inst) -> lhs.parent()),
                     instC(PLUS_INST_TID.dom(REC_TID).rng(REC_TID), lst(T(REC_TID.maybeMaybe())), (lhs, inst) -> lhs.jvm(lhs.asRec().plus(inst.arg(0).asRec()).recValue())),
                     instC(MPLUS_INST_TID.dom(REC_TID).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> inst.arg(0).<Rec>as().elements().map(Obj::<Obj>as).reduce(lhs.<Rec>as(), (a, b) -> a.<Rec>as().at(((Rel) b).first(), ((Rel) b).second(), MUTABLE))),
-                    instC(SELECT_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(T(REC_TID)), (lhs, inst) -> selectRecRecursion(lhs.asRec(), inst.arg(0).asRec())),
+                    instC(SELECT_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(T(REC_TID)), (lhs, inst) -> selectRecRecursion(lhs.asRec(), inst.arg(0).asRec()).clone(null,lhs.tid(), lhs.vid())),
                     //instC(SELECT_INST_TID.dom(REC_TID).rng(ALL.maybe()), lst(T(URI_TID)), (lhs, inst) -> lhs.asRec().at(inst.arg(0))),
                     //  instC(SELECT_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(T(URI_TID).c(cInt.of(2,null)).asType()), (lhs, inst) -> inst.args().elements().map(u -> rel(u,lhs.asRec().at(u))).collect(new CommonUtil.RecCollector())),
                     //instC(SELECT_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(T(URI_TID.c(cInt.of(2, null)))), (lhs, inst) -> inst.arg(0).stream().map(u -> rel(u, lhs.asRec().at(u))).collect(new CommonUtil.RecCollector())),
                     //instC(UPDATE_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(REC_TYPE), (lhs, inst) -> Poly.Helper.updateRecRecursion(lhs.asRec(), inst.arg(0).asRec(), MUTABLE)),// inst.arg(0).asRec().elements().map(r -> lhs.asRec().at(r.first(), r.second(), MUTABLE)).filter(o -> false).findFirst().orElse(lhs.as())),
                     //instC(UPDATE_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(REL_TYPE), (lhs, inst) -> Poly.Helper.updateRecRecursion(lhs.asRec(), rec(inst.arg(0).asRel().jvm().get0(), inst.arg(1).asRel().jvm().get1()), MUTABLE)),// inst.arg(0).asRec().elements().map(r -> lhs.asRec().at(r.first(), r.second(), MUTABLE)).filter(o -> false).findFirst().orElse(lhs.as())),
                     instC(SELECT_INST_TID.dom(REC_TID).rng(B.maybeSome()), lst(T(A.some())), (lhs, inst) -> objs(inst.arg(0).stream().map(s -> lhs.asRec().at(s)))),
-                    instC(SELECT_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(T(REC_TID)), (lhs, inst) -> {
-                        // 1. Extract the projector record from the arguments
-                        Obj rules = inst.arg(0);
-                        if (rules == null || rules.isNoObj()) return lhs;
-
-                        // 2. Execute the generalized projection logic
-                        Map<Obj, Obj> resultJvm = Rec.Helper.project(lhs.asRec(), rules, false);
-
-                        // 3. Wrap the resulting map back into a Rec object using your existing factory/collectors
-                        return rec(resultJvm);//.vid(lhs.vid()).tid(lhs.tid());
-                    }),
+                    instC(SELECT_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(T(REC_TID)), (lhs, inst) -> rec(Rec.Helper.project(lhs.asRec(), inst.arg(0).asRec(), false), lhs.tid(), lhs.vid())),
                     /*instC(WHERE_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(REC_TYPE), (lhs, inst) -> {
                         try {
                             // MUST pass 'true' for the verify flag here!

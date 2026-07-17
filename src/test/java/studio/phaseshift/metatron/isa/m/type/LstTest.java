@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -76,8 +76,8 @@ public class LstTest extends AbstractAlgebraTest<Lst> {
             "{2,3}[{5,8}a,b,{7}c]>>{{4,6}0,0}                                           % {50,168}a", // two zeros collapse on the key select
             "[{5,8}a,b,{7}c]>>{{4,6}0,0}                                                % {25,56}a", // two zeros collapse on the key select
             "{2,3}[{5,8}a,b,{-7}c]>>{{4,6}0,0}                                          % {50,168}a", // two zeros collapse on the key select
-          //  "{2,3}[{-5,8}a,b,{-7}c]>>?#{*}<=lst{{4,6}0,0}                              % {-50,168}a", // two zeros collapse on the key select
-           // "{-2,3}[{-5,8}a,b,{-7}c]>>?#{**}<=lst{**}{{4,6}0,0}                             % {50,168}a", // two zeros collapse on the key select
+            //  "{2,3}[{-5,8}a,b,{-7}c]>>?#{*}<=lst{{4,6}0,0}                              % {-50,168}a", // two zeros collapse on the key select
+            // "{-2,3}[{-5,8}a,b,{-7}c]>>?#{**}<=lst{**}{{4,6}0,0}                             % {50,168}a", // two zeros collapse on the key select
             "[a,b,c]>>{<0>,<0>}                                                         % {2}a",
             "[a,b,c]>>{<0>,0}                                                           % {2}a",
             "[a,b,c]>>{<+>,0}                                                           % {{2}a,b,c}",
@@ -138,9 +138,21 @@ public class LstTest extends AbstractAlgebraTest<Lst> {
             "[[[[\"deep\"]]]].>><0/0/0/0>                                         % \"deep\"",
             "[[[[\"deep\"]]]].>><0/0>.>><0/0>                                     % \"deep\"",
             "[[[[\"deep\"]]]].>><0>.>><0>.>><0>.>><0>                             % \"deep\"",
-           // "[[[[[\"deep\"]]]]].>><0>.>><0>.>><0>.>><0>.>><0>                     % \"deep\"",
-           // "[[[[[\"deep\"]]]]].>><0/0/0/0/0>                                     % \"deep\"",
-           // "[[[[[[[\"deep\"]]]]]]]>><0/0>.>><0/0>.>><0>                          % \"deep\"",
+            "[\"deep\"].==0                                                       % \"deep\"",
+            "[[\"deep\"]].==0==0                                                  % \"deep\"",
+            "[[[\"deep\"]]].==0==0==0                                             % \"deep\"",
+            "[[[[\"deep\"]]]].==0==0==0==0                                        % \"deep\"",
+            "[[[[\"deep\"]]]].==0==0==0==0                                        % \"deep\"",
+            "[[[[\"deep\"]]]].==<0/0/0/0>                                         % \"deep\"",
+            "[[[[\"deep\"]]]].==<0/+/+/0>                                         % \"deep\"",
+            "[[[[\"deep\",\"seek\"]]]].==<0/0/0/+>                                % {\"deep\",\"seek\"}",
+            "[[[[\"deep\"]]]].==<0/0/0>==0                                        % \"deep\"",
+            "[[[[\"deep\"]]]].==0==<0/0>==0                                       % \"deep\"",
+            "[[[[\"deep\"]]]].==<0>.==<0>.==<0>.==<0>                             % \"deep\"",
+            //  "[[[[\"deep\"]]]].==<#>                                     % \"deep\"",
+            // "[[[[[\"deep\"]]]]].>><0>.>><0>.>><0>.>><0>.>><0>                     % \"deep\"",
+            // "[[[[[\"deep\"]]]]].>><0/0/0/0/0>                                     % \"deep\"",
+            // "[[[[[[[\"deep\"]]]]]]]>><0/0>.>><0/0>.>><0>                          % \"deep\"",
             // Missing index
             "[1,2,3]>><2/0>                                                                % noobj",
             "[1,2,3]>><5>                                                                  % noobj",
@@ -157,6 +169,16 @@ public class LstTest extends AbstractAlgebraTest<Lst> {
             "[1,2,3]>><0/0>                                                                % noobj",
     }, delimiter = '%')
     public void testPathWalking(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "[a,b,c,d,e]==[?<2 => * X, ?>=2 => * Y] % [a/X,b/X,c/Y,d/Y,e/Y]",
+            "[1,2,3,4,5]=?=[_ => ?>6]               % noobj",
+            "[1,2,3,4,5]=?=[_ => ?<6]               % [1,2,3,4,5]"
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testSelect(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
@@ -268,7 +290,7 @@ public class LstTest extends AbstractAlgebraTest<Lst> {
             "[1,2,3].as(rec::T).>-.>>.sum()                                    % 6",
             "{10}[1,2,3].as(rec::T).>-.>>.sum()                                % 60",
             "{10}[{5}1,2,3].as(rec::T).>-.>>.sum()                             % 100",
-           // "{10}[{5}1,{-10}2,{2}3].as(rec::T).>-.>>.sum()                     % -70",
+            // "{10}[{5}1,{-10}2,{2}3].as(rec::T).>-.>>.sum()                     % -70",
             "[1,2,3].as(rec::T).as(lst::T)                                     % [(0=>(0=>1)),(1=>(1=>2)),(2=>(2=>3))]",
             "{35}[1,{2}2,3].as(rec::T).as(lst::T)                              % {35}[(0=>(0=>1)),(1=>(1=>{2}2)),(2=>(2=>3))]",
             "[1,2,3].as(rec::T).as(rec::T)                                     % [0=>1,1=>2,2=>3]",
@@ -291,7 +313,7 @@ public class LstTest extends AbstractAlgebraTest<Lst> {
             "[,].reverse()                                                       % [,]",
             "[a].reverse()                                                       % [a]",
             "[a,b].reverse().reverse()                                           % [a,b]",
-             "[a,[b,c],[d,e]].reverse()==[reverse(),reverse(),reverse()]         % [[e,d],[c,b],a]",
+            "[a,[b,c],[d,e]].reverse()==[reverse(),reverse(),reverse()]         % [[e,d],[c,b],a]",
     }, delimiter = '%')
     public void testReverse(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
@@ -370,8 +392,8 @@ public class LstTest extends AbstractAlgebraTest<Lst> {
             "[10,20]   | 0   | 5   | 5  | 2   | true",     // singleton result
     }, delimiter = '|')
     public void testMutableSet(final String lstStr, final int key, final int value,
-                                final int expectedVal, final int expectedCount,
-                                final boolean expectSame) {
+                               final int expectedVal, final int expectedCount,
+                               final boolean expectSame) {
         final Obj parsed = mParser.m_obj().parse(lstStr).get();
         assertTrue(parsed.isLst());
         final Lst original = parsed.asLst();
@@ -391,7 +413,7 @@ public class LstTest extends AbstractAlgebraTest<Lst> {
             "[42]       | 0   | 0   |    |   ",     // delete only → empty
     }, delimiter = '|')
     public void testMutableDelete(final String lstStr, final int key, final int expectedCount,
-                                   final String remaining0, final String remaining1) {
+                                  final String remaining0, final String remaining1) {
         final Obj parsed = mParser.m_obj().parse(lstStr).get();
         assertTrue(parsed.isLst());
         final Lst original = parsed.asLst();
@@ -411,7 +433,7 @@ public class LstTest extends AbstractAlgebraTest<Lst> {
             "[1,2,3]   | -1  | 99  | 3   | 99",     // negative index
     }, delimiter = '|')
     public void testImmutableSet(final String lstStr, final int key, final int value,
-                                  final int expectedOrigCount, final int expectedCloneVal) {
+                                 final int expectedOrigCount, final int expectedCloneVal) {
         final Obj parsed = mParser.m_obj().parse(lstStr).get();
         assertTrue(parsed.isLst());
         final Lst original = parsed.asLst();
@@ -428,8 +450,8 @@ public class LstTest extends AbstractAlgebraTest<Lst> {
             "[10,20,30] | -1  | 3   | 2   | 20",     // delete last via negative
     }, delimiter = '|')
     public void testImmutableDelete(final String lstStr, final int key,
-                                     final int expectedOrigCount, final int expectedCloneCount,
-                                     final String cloneIdx1) {
+                                    final int expectedOrigCount, final int expectedCloneCount,
+                                    final String cloneIdx1) {
         final Obj parsed = mParser.m_obj().parse(lstStr).get();
         assertTrue(parsed.isLst());
         final Lst original = parsed.asLst();

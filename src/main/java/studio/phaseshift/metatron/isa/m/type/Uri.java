@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.m.type;
 
+import studio.phaseshift.metatron.util.ProjectionFailureException;
 import studio.phaseshift.metatron.algebra.Ring;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
@@ -402,7 +403,7 @@ public interface Uri extends Mono, Ring.O<Uri>, Comparable<Uri> {
                                 lhs.uriValue().poly(),
                                 projected.query(),
                                 List.of()
-                        ));
+                        ),lhs.tid(),lhs.vid());
                     }),
                     instC(WHERE_INST_TID.dom(URI_TID).rng(URI_TID.maybe()), lst(REC_TYPE), (lhs, inst) -> {
                         try {
@@ -419,7 +420,7 @@ public interface Uri extends Mono, Ring.O<Uri>, Comparable<Uri> {
                                 return noobj();
                             }
                             return lhs;
-                        } catch (Str.Helper.ProjectionFailureException e) {
+                        } catch (ProjectionFailureException e) {
                             return noobj();
                         }
                     })
@@ -487,13 +488,13 @@ public interface Uri extends Mono, Ring.O<Uri>, Comparable<Uri> {
                 Obj res = rulesRec.at(SCHEME).apply(str(scheme));
                 // Use a helper to check for actual failures vs purposeful 'none'
                 if (res == null || (res.isNothing() && !rulesRec.at(SCHEME).isNone()))
-                    throw Str.Helper.ProjectionFailureException.instance();
+                    throw ProjectionFailureException.instance();
                 scheme = Str.Helper.cleanString(res);
             }
             if (rulesRec.has(HOST)) {
                 Obj res = rulesRec.at(HOST).apply(str(host));
                 if (res == null || (res.isNothing() && !rulesRec.at(HOST).isNone()))
-                    throw Str.Helper.ProjectionFailureException.instance();
+                    throw ProjectionFailureException.instance();
                 host = Str.Helper.cleanString(res);
             }
 
@@ -502,7 +503,7 @@ public interface Uri extends Mono, Ring.O<Uri>, Comparable<Uri> {
             if (rulesRec.has(PORT)) {
                 Obj res = rulesRec.at(PORT).apply(jnt(port));
                 if (res == null || (res.isNothing() && !rulesRec.at(PORT).isNone()))
-                    throw Str.Helper.ProjectionFailureException.instance();
+                    throw ProjectionFailureException.instance();
                 String newPortStr = Str.Helper.cleanString(res);
                 if (CommonUtil.isInt(newPortStr)) {
                     port = Integer.parseInt(newPortStr);
@@ -517,7 +518,7 @@ public interface Uri extends Mono, Ring.O<Uri>, Comparable<Uri> {
                 final Lst pathSegments = lst((List) lhsURI.path().stream().map(MStr::str).toList());
                 final Obj pathResult = rulesRec.at(PATH).apply(pathSegments);
                 if (pathResult == null || (pathResult.isNothing() && !rulesRec.at(PATH).isNone()))
-                    throw Str.Helper.ProjectionFailureException.instance();
+                    throw ProjectionFailureException.instance();
                 newPath = pathResult.isLst() ?
                         pathResult.elements().map(Str.Helper::cleanString).toList() :
                         Arrays.asList(Str.Helper.cleanString(pathResult).split("/"));
@@ -530,7 +531,7 @@ public interface Uri extends Mono, Ring.O<Uri>, Comparable<Uri> {
                 final Str nameSegment = str(lhsURI.name());
                 final Obj nameResult = rulesRec.at(NAME).apply(nameSegment);
                 if (nameResult == null || (nameResult.isNothing() && !rulesRec.at(NAME).isNone()))
-                    throw Str.Helper.ProjectionFailureException.instance();
+                    throw ProjectionFailureException.instance();
                 newPath.removeLast();
                 newPath.add(nameResult.strValue());
             }
@@ -556,7 +557,7 @@ public interface Uri extends Mono, Ring.O<Uri>, Comparable<Uri> {
                                 Obj res = matchingRule.apply(uri(v));
                                 // If an instruction is called and returns noobj, that's a failure.
                                 if (res == null || res.isNothing())
-                                    throw Str.Helper.ProjectionFailureException.instance();
+                                    throw ProjectionFailureException.instance();
                                 nextQMap.put(k, Str.Helper.cleanString(res));
                             }
                             // Note: matchingRule.isNone() is handled by simply NOT adding it to nextQMap (removal)
@@ -568,7 +569,7 @@ public interface Uri extends Mono, Ring.O<Uri>, Comparable<Uri> {
                 } else {
                     Obj res = qRules.apply(str(lhsURI.qString()));
                     if (res == null || (res.isNothing() && !qRules.isNone()))
-                        throw Str.Helper.ProjectionFailureException.instance();
+                        throw ProjectionFailureException.instance();
                     queryMap = f("?" + Str.Helper.cleanString(res)).qMap();
                 }
             }
