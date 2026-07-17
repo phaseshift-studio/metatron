@@ -250,14 +250,7 @@ public interface Lst extends Poly<Lst, List<Obj>>, PlusMonoid.O<Lst> {
                     instC(SELECT_INST_TID.dom(LST_TID).rng(B.maybeSome()), lst(T(A.some())), (lhs, inst) -> objs(inst.arg(0).stream().map(s -> lhs.asLst().at(s)))),
                     instC(SELECT_INST_TID.dom(LST_TID).rng(LST_TID.maybe()), lst(T(LST_TID)), (lhs, inst) -> Poly.Helper.selectLstRecursion(lhs.asLst(), inst.arg(0).asLst())),
                     instC(SELECT_INST_TID.dom(LST_TID).rng(LST_TID), lst(REC_TYPE), (lhs, inst) -> lst(Lst.Helper.project(lhs.asLst(), inst.arg(0).orElse(rec0()), false), lhs.tid(), lhs.vid())),
-                    instC(WHERE_INST_TID.dom(LST_TID).rng(LST_TID.maybe()), lst(REC_TYPE), (lhs, inst) -> {
-                        try {
-                            Lst.Helper.project(lhs.asLst(), inst.arg(0).orElse(rec0()), true);
-                            return lhs;
-                        } catch (final ProjectionFailureException e) {
-                            return noobj();
-                        }
-                    }),
+                    instC(WHERE_INST_TID.dom(LST_TID).rng(LST_TID.maybe()), lst(REC_TYPE), (lhs, inst) -> ProjectionFailureException.predicateThrow(lhs, a -> Lst.Helper.project(lhs.asLst(), inst.arg(0).asRec(), true))),
                     //instC(UPDATE_INST_TID.dom(LST_TID).rng(LST_TID), lst(LST_TYPE), (lhs, inst) -> Poly.Helper.updateLstRecursion(lhs.asLst(), inst.arg(0).asLst(), MUTABLE)),
 
                     instC(REMOVE_INST_TID.dom(LST_TID).rng(A.maybeSome()), lst(INT_TYPE), (lhs, inst) -> {

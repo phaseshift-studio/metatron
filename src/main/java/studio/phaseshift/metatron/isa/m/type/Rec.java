@@ -429,7 +429,7 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
                     instC(LSHIFT_INST_TID.dom(REC_TID).rng(A.maybeSome()), lst(), (lhs, inst) -> lhs.parent()),
                     instC(PLUS_INST_TID.dom(REC_TID).rng(REC_TID), lst(T(REC_TID.maybeMaybe())), (lhs, inst) -> lhs.jvm(lhs.asRec().plus(inst.arg(0).asRec()).recValue())),
                     instC(MPLUS_INST_TID.dom(REC_TID).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> inst.arg(0).<Rec>as().elements().map(Obj::<Obj>as).reduce(lhs.<Rec>as(), (a, b) -> a.<Rec>as().at(((Rel) b).first(), ((Rel) b).second(), MUTABLE))),
-                    instC(SELECT_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(T(REC_TID)), (lhs, inst) -> selectRecRecursion(lhs.asRec(), inst.arg(0).asRec()).clone(null,lhs.tid(), lhs.vid())),
+                    instC(SELECT_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(T(REC_TID)), (lhs, inst) -> selectRecRecursion(lhs.asRec(), inst.arg(0).asRec()).clone(null, lhs.tid(), lhs.vid())),
                     //instC(SELECT_INST_TID.dom(REC_TID).rng(ALL.maybe()), lst(T(URI_TID)), (lhs, inst) -> lhs.asRec().at(inst.arg(0))),
                     //  instC(SELECT_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(T(URI_TID).c(cInt.of(2,null)).asType()), (lhs, inst) -> inst.args().elements().map(u -> rel(u,lhs.asRec().at(u))).collect(new CommonUtil.RecCollector())),
                     //instC(SELECT_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(T(URI_TID.c(cInt.of(2, null)))), (lhs, inst) -> inst.arg(0).stream().map(u -> rel(u, lhs.asRec().at(u))).collect(new CommonUtil.RecCollector())),
@@ -437,7 +437,10 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
                     //instC(UPDATE_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(REL_TYPE), (lhs, inst) -> Poly.Helper.updateRecRecursion(lhs.asRec(), rec(inst.arg(0).asRel().jvm().get0(), inst.arg(1).asRel().jvm().get1()), MUTABLE)),// inst.arg(0).asRec().elements().map(r -> lhs.asRec().at(r.first(), r.second(), MUTABLE)).filter(o -> false).findFirst().orElse(lhs.as())),
                     instC(SELECT_INST_TID.dom(REC_TID).rng(B.maybeSome()), lst(T(A.some())), (lhs, inst) -> objs(inst.arg(0).stream().map(s -> lhs.asRec().at(s)))),
                     instC(SELECT_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(T(REC_TID)), (lhs, inst) -> rec(Rec.Helper.project(lhs.asRec(), inst.arg(0).asRec(), false), lhs.tid(), lhs.vid())),
+                    //instC(WHERE_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(REC_TYPE), (lhs, inst) -> ProjectionFailureException.predicateThrow(lhs, a -> Rec.Helper.project(lhs.asRec(), inst.arg(0).asRec(), true))),
+                  
                     /*instC(WHERE_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(REC_TYPE), (lhs, inst) -> {
+                       ProjectionFailureException.predicateThrow(lhs, a -> (Obj) Lst.Helper.project(lhs.asLst(), inst.arg(0).orElse(rec0()), true))),
                         try {
                             // MUST pass 'true' for the verify flag here!
                             Rec.Helper.project(lhs.asRec(), inst.arg(0).orElse(rec0()), true);

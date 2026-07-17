@@ -12,8 +12,7 @@ syntax "mtron" ".*\.(mtron)$"
 # assume everything is a uri
 color blue ".*"
 ### qs
-color yellow "\?"
-color yellow "&"
+color yellow "\?" "\^" "&"
 # f (j,m,?)
 color yellow "\{.\}"
 color red "\{\?\}"
@@ -78,12 +77,12 @@ color gray "<[^>]>"
 ### fail
 color red "([a-z]|[0-9]|/)*fail::"
 ### sugars and structures
-color magenta "=>" ">-" "-<" "==" "_/" "\\_"
+color magenta "=>" ">-" "-<" "==" "_/" "\\_" "=?=" ">>="
 color green "\(" "\)" "\[" "\]" ","
 ### noobj 
 color magenta "noobj"
 ### @vid
-color yellow "@<(/|[a-zA-Z0-9]|\.| |:|-|_|\?)+>" "@(/|[a-zA-Z0-9]|:|-|_|\?)+"
+color yellow "@<(/|[a-zA-Z0-9]|\.| |:|-|_|\?|\^)+>" "@(/|[a-zA-Z0-9]|:|-|_|\?|\^)+"
 ### comments
 color gray start="\[--" end="--]"
 color gray start="\[==" end="==]"
