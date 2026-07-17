@@ -497,7 +497,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
             // The task blocks on SHUTDOWN_LATCH — stays in 'run' until shutdown.
             Thread.currentThread().setName("metatron-main");
             LOG.info("starting system thread");
-            final CoreThread systemThread = CoreThread.core(
+            final CoreThread systemThread = docWrap(CoreThread.core(
                     instLambda((lhs, inst) -> {
                         try {
                             SHUTDOWN_LATCH.await();
@@ -506,7 +506,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
                         }
                         return noobj();
                     }),
-                    f("/sys/thread/main"));
+                    f("/sys/thread/main")), "this root thread waits till all child threads are complete and then releases a latch to initiate metatron shutdown procedure");
             systemThread.applyAsync();
             Router.writeToSpace("/sys/thread/main", systemThread);
             BootLoader.CURRENT_THREAD.set(systemThread);

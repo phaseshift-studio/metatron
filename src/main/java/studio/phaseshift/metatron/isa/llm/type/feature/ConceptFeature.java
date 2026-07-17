@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.isa.llm.type.feature;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
 import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.thread.VirtualThread;
 import studio.phaseshift.metatron.util.CommonUtil;
@@ -31,12 +32,17 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
 import static studio.phaseshift.metatron.isa.llm.type.Agent.agent;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
+import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
@@ -54,29 +60,30 @@ public class ConceptFeature extends Feature {
     private static final String CONCEPT = "concept";
     private static final String LINK = "link";
     private static final Pattern CONCEPT_PATTERN = Pattern.compile("<<concept:([^>]+)>>");
-
-    private final Set<String> concepts = new ConcurrentSkipListSet<>();
     private Agent translatorAgent = null;
 
     private static final
-    String CONCEPT_FEATURE_INSTRUCTIONS_TEMPLATE = """
-                                          In any of your responses, you can tag important concepts using a <<concept:>>-block:
-                                          For instance, an agent may write:
-                                          
-                                          "Increasing the size of the <<concept:context windows>> is one way to increase an agent's
-                                          <<concept:intelligence>>. However, another way is to provide better <<concept:indexing>> and
-                                          <<concept:searching>> capabilities for existing <<concept:memory systems>>."
-                                          
-                                          Behind the scenes, these tags will form a growing co-location graph that will allow
-                                          for the automatic insertion of relevant historic memories the agent can choose
-                                          to review. For instance, given the above, the next system message may write:
-                                          
-                                          use the mtron eval tool for related historic content:
-                                         
-                                              %s
-                                          """;
-    private String CONCEPT_FEATURE_INSTRUCTION = "";
-
+    String CONCEPT_FEATURE_AGENT_TEMPLATE = """
+                                            In any of your responses, you can tag important concepts using a <<concept:>>-block:
+                                            For instance, an agent may write:
+                                            
+                                            "Increasing the size of the <<concept:context windows>> is one way to increase an agent's
+                                            <<concept:intelligence>>. However, another way is to provide better <<concept:indexing>> and
+                                            <<concept:searching>> capabilities for existing <<concept:memory systems>>."
+                                            
+                                            Behind the scenes, these tags will form a growing co-location graph that will allow
+                                            for the automatic insertion of relevant historic memories the agent can choose
+                                            to review. For instance, given the above, the next system message may write:
+                                            """;
+    String CONCEPT_FEATURE_SYSTEM_TEMPLATE = """
+                                             use the mtron eval tool for related historic content:
+                                             
+                                                 %s
+                                             
+                                             For related concepts use:
+                                             
+                                                %s
+                                             """;
 
     public ConceptFeature(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
@@ -84,25 +91,28 @@ public class ConceptFeature extends Feature {
 
 
     public Obj skill() {
-        return rec(uri(NAME), uri(CONCEPT),
-                uri(DESC), str("In situ concept graph construction w/ spreading activation recommendation"),
-                uri(CONTENT), str(CONCEPT_FEATURE_INSTRUCTION));
+        if (!this.has(MODEL)) {
+            return rec(uri(NAME), uri(CONCEPT),
+                    uri(DESC), str("In situ concept graph construction w/ spreading activation recommendation"),
+                    uri(CONTENT), str(CONCEPT_FEATURE_AGENT_TEMPLATE));
+        } else
+            return noobj();
     }
 
     private fURI getBaseURI() {
         return this.at(BASE).uriValue();
     }
 
-    private List<fURI> insertConcepts(final Agent agent) {
+    private List<fURI> insertConcepts(final Agent agent, final Set<String> conceptStrings) {
         final List<fURI> concepts = new ArrayList<>();
         try {
-            LOG.info("concepts to process: %s", this.concepts);
-            for (final String concept : this.concepts) {
+            LOG.debug("concepts to process: %s", conceptStrings);
+            for (final String concept : conceptStrings) {
                 final fURI conceptURI = this.getBaseURI().extend(concept);
                 final Rec conceptRec = Router.readFromSpace(conceptURI).orElse(rec());
                 final Lst conceptLink = conceptRec.at(LINK).orElse(Router.readFromSpace(conceptURI.extend(LINK)).orElse(lst()));
                 final List<Obj> conceptLinkList = mutableList(conceptLink.jvm());
-                conceptLinkList.addAll(this.concepts.stream()
+                conceptLinkList.addAll(conceptStrings.stream()
                         .filter(c -> !c.equals(concept))
                         .map(c -> auto_from_(this.getBaseURI().extend(c)).tryToInst()).toList());
                 conceptRec.at(LINK, lst(conceptLinkList), MUTABLE);
@@ -110,24 +120,24 @@ public class ConceptFeature extends Feature {
                     conceptRec.at(CONCEPT, uri(concept), MUTABLE);
                 if (!agent.feature(SESSION).isNoObj()) {
                     final SessionFeature sessionFeature = (SessionFeature) agent.feature(SESSION);
-                    LOG.info("concept feature has located session feature");
+                    LOG.debug("concept feature has located session feature");
                     if (null != sessionFeature.store() && null != sessionFeature.store().getCurrentMessages()) {
-                        LOG.info("concept feature preparing to read from session memory: [size:%d]", sessionFeature.store().getCurrentMessages().size());
+                        LOG.debug("concept feature preparing to read from session memory: [size:%d]", sessionFeature.store().getCurrentMessages().size());
                         final Set<fURI> messagesIDs = sessionFeature.store().getCurrentMessages();
-                        LOG.info("concept feature located %s ai messages", messagesIDs);
-                        LOG.info("messages linked: %s", messagesIDs.stream().filter(i -> !Objects.isNull(i)).map(id -> auto_from_(id).tryToInst()).collect(new CommonUtil.LstCollector()));
-                        conceptRec.at(MESSAGE, messagesIDs.stream().filter(i -> !Objects.isNull(i)).map(id -> auto_from_(id).tryToInst()).collect(new CommonUtil.LstCollector()), MUTABLE);
-                        LOG.info("new concept rec: %s", conceptRec);
+                        LOG.debug("concept feature located %s ai messages", messagesIDs);
+                        if (!messagesIDs.isEmpty()) {
+                            final Lst messages = conceptRec.at(MESSAGE).orElse(lst());
+                            conceptRec.at(MESSAGE, messages.plus(messagesIDs.stream().filter(i -> !Objects.isNull(i)).map(id -> auto_from_(id).tryToInst()).collect(new CommonUtil.LstCollector())), MUTABLE);
+                        }
                     }
                 }
                 Router.writeToSpace(conceptURI, conceptRec);
                 concepts.add(conceptURI);
-                LOG.info("extracted concept: %s", conceptURI);
+                LOG.debug("extracted concept: %s", conceptURI);
             }
         } catch (final Exception e) {
             LOG.error(e);
         }
-        this.concepts.clear();
         return concepts;
     }
 
@@ -143,22 +153,32 @@ public class ConceptFeature extends Feature {
                                                                  It should be rewritten as:
                                                                     "An agent's <<concept:context window>> can be <<concept:indexed>> like a <<concept:database>>."
                                                                  
-                                                                 The text to rewrite is:
+                                                                 Don't wrap common words nor stop words. Don't remove spaces. It's better to have fewer, highly specific concepts
+                                                                 then many general concepts. Thus, if the text has no significant concepts, then simply return the text
+                                                                 as is, no changes needed. The text to rewrite is:
                                                                  
                                                                  """ + text.strValue());
                     LOG.info("agent translation: %s", result);
+                    final Set<String> conceptStrings = new LinkedHashSet<>();
                     final Matcher matcher = CONCEPT_PATTERN.matcher(Str.Helper.cleanString(result));
                     while (matcher.find()) {
-                        final String concept = CommonUtil.normalize(matcher.group(1));
-                        this.concepts.add(concept);
-                        LOG.info("%s extracted", concept);
+                        final String concept = CommonUtil.stripStopwords(CommonUtil.normalize(matcher.group(1)));
+                        if (!concept.isEmpty()) {
+                            if (conceptStrings.add(concept))
+                                LOG.info("%s extracted", concept);
+                        }
                     }
-                    final List<fURI> concepts = this.insertConcepts(agent);
+                    final List<fURI> concepts = this.insertConcepts(agent, conceptStrings);
                     final StringBuilder sb = new StringBuilder();
-                     concepts.stream().map(i -> "\t*<" + i + ">.>>message.>>").forEach(i -> {
-                        sb.append(i).append("\n");
-                    });
-                    CONCEPT_FEATURE_INSTRUCTION = CONCEPT_FEATURE_INSTRUCTIONS_TEMPLATE.formatted(sb.toString());
+                    new HashSet<>(concepts).stream()
+                            .map(i -> "\t" + this.getBaseURI().extend("fetch_memories") + "(<" + i + ">)")
+                            .filter(i -> ObjmtronSerializer.singleNoClip().inputBytes(i + ".take(1).count().gt(0)").apply().boolValue())
+                            .peek(i -> LOG.info("adding memory recommendation: %s", i))
+                            .forEach(i -> sb.append(i).append("\n"));
+                    if (!sb.toString().trim().isEmpty())
+                        agent.addSystemMessage(CONCEPT_FEATURE_SYSTEM_TEMPLATE.formatted(
+                                sb.toString(),
+                                this.getBaseURI().extend("related_concepts").toString() + "(<concept_uri>)"));
                     return noobj();
                 }));
                 if (blocking) {
@@ -170,13 +190,14 @@ public class ConceptFeature extends Feature {
                 LOG.error(e);
             }
         } else {
+            final Set<String> conceptStrings = new LinkedHashSet<>();
             final Matcher matcher = CONCEPT_PATTERN.matcher(text.strValue());
             while (matcher.find()) {
                 final String concept = CommonUtil.normalize(matcher.group(1));
-                this.concepts.add(concept);
-                LOG.info("%s extracted", concept);
+                if (conceptStrings.add(concept))
+                    LOG.info("%s extracted", concept);
             }
-            this.insertConcepts(agent);
+            this.insertConcepts(agent, conceptStrings);
         }
     }
 
@@ -186,10 +207,19 @@ public class ConceptFeature extends Feature {
     public Obj onBeforeChat(final Agent agent) {
         if (!this.at(MODEL).isNoObj()) {
             this.translatorAgent = agent(rec(uri(FEATURE), lst(new ChatFeature(mutableMap(uri(MODEL), this.at(MODEL), uri(RESPONSE), rec(uri(TO), id_().tryToInst())), LLM_CHAT_FEATURE_TID, null))));
-            LOG.info("created translator agent: %s", this.translatorAgent);
+            LOG.debug("created translator agent: %s", this.translatorAgent);
             this.addConcepts(agent, str(agent.userMessage()), true);
-            LOG.info("processed user message into: " + this.concepts);
         }
+        final Inst fetchMemoriesInst = instC(getBaseURI().extend("fetch_memories").dom(ALL.maybe()).rng(ALL.maybeSome()),
+                rec(uri(CONCEPT), URI_TYPE,
+                        uri("max_messages"), isa_(INT_TYPE).else_(jnt(10))),
+                (lhs, inst) -> objs(from_(inst.arg(0)).rshift_(uri(MESSAGE)).rshift_(uri("+")).rshift_(uri(TEXT)).take_(inst.arg(1)).apply()));
+        final Inst relatedConceptsInst = instC(getBaseURI().extend("related_concepts").dom(ALL.maybe()).rng(ALL.maybeSome()),
+                rec(uri(CONCEPT), URI_TYPE),
+                (lhs, inst) -> objs(from_(inst.arg(0)).rshift_(uri(LINK)).apply()));
+        LOG.info("writing concept instructions:\n\t%s\n\t%s", fetchMemoriesInst, relatedConceptsInst);
+        Router.writeToSpace(this.getBaseURI().extend("fetch_memories"), fetchMemoriesInst);
+        Router.writeToSpace(this.getBaseURI().extend("related_concepts"), relatedConceptsInst);
         return noobj();
     }
 

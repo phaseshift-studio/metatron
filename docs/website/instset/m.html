@@ -277,9 +277,9 @@ bin/metatron</code></pre>
  pattern=&gt;docq,
  obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
  inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
- inst=&gt;[as?bool&lt;=bool(bool::T),as?bytes&lt;=bool(bytes::T),as?int&lt;=bool(int::T),as?real&lt;=bool(real::T),as?str&lt;=bool(str::T),plus?bool&lt;=bool(bool::T),mult?bool&lt;=bool(bool::T),not?bool&lt;=bool(),as?bool&lt;=bytes(bool::T),as?str&lt;=bytes(str::T),...(216 more)],
+ inst=&gt;[as?bool&lt;=bool(bool::T),as?bytes&lt;=bool(bytes::T),as?int&lt;=bool(int::T),as?real&lt;=bool(real::T),as?str&lt;=bool(str::T),plus?bool&lt;=bool(bool::T),mult?bool&lt;=bool(bool::T),not?bool&lt;=bool(),as?bool&lt;=bytes(bool::T),as?str&lt;=bytes(str::T),...(222 more)],
  const=&gt;[noobj],
- type=&gt;[#::T,bool::T,int::T,real::T,bytes::T,str::T,uri::T,rel::T,lst::T,rec::T,...(23 more)],
+ type=&gt;[#::T,bool::T,int::T,real::T,bytes::T,str::T,uri::T,rel::T,lst::T,rec::T,...(25 more)],
  rewrite=&gt;[
   /m/inst/rewrite/id_removal?code{?}&lt;=code(),
   /m/inst/rewrite/map_nest?code{?}&lt;=code(),
@@ -297,7 +297,7 @@ bin/metatron</code></pre>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <a href="#consts" class="btn btn-outline-primary">Consts <span class="pill-label badge bg-secondary">1</span></a><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">29</span></a><a href="#spaces" class="btn btn-outline-primary">Spaces <span class="pill-label badge bg-info">3</span></a><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">247</span></a><a href="#rewrites" class="btn btn-outline-primary">Rewrites <span class="pill-label badge bg-warning">8</span></a>
+        <a href="#consts" class="btn btn-outline-primary">Consts <span class="pill-label badge bg-secondary">1</span></a><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">30</span></a><a href="#spaces" class="btn btn-outline-primary">Spaces <span class="pill-label badge bg-info">4</span></a><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">253</span></a><a href="#rewrites" class="btn btn-outline-primary">Rewrites <span class="pill-label badge bg-warning">8</span></a>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="card">
@@ -352,6 +352,9 @@ bin/metatron</code></pre>
 </a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">space</small></div><div class="d-flex flex-wrap"><a href="#__m__space__qproc" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">qproc</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
+</a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">str</small></div><div class="d-flex flex-wrap"><a href="#__m__str__rx" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">rx</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
 </a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">uri</small></div><div class="d-flex flex-wrap"><a href="#__m__uri__authority" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">authority</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
@@ -400,7 +403,10 @@ bin/metatron</code></pre>
 </a></div></div>
 </div><div class="mb-3">
     <h6 class="text-primary mb-2">Spaces</h6>
-    <div class="d-flex flex-wrap"><a href="#__m__space__memspace" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <div class="d-flex flex-wrap"><a href="#__m__space__estorespace" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">estorespace</span>
+    <span class="pill-label badge bg-info text-dark ms-2">S</span>
+</a><a href="#__m__space__memspace" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">memspace</span>
     <span class="pill-label badge bg-info text-dark ms-2">S</span>
 </a><a href="#__m__space" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
@@ -421,7 +427,7 @@ bin/metatron</code></pre>
 </a><a href="#__m__inst__args?rng=__m__lst&dom=__m__inst" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">args</span>
     <span class="pill-label badge bg-success ms-2">I</span>
-</a><a href="#__m__inst__as?rng=__m__int&dom=__m__bool" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__inst__as?rng=__m__bytes&dom=__m__bool" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">as</span>
     <span class="pill-label badge bg-success ms-2">I</span>
 </a><a href="#__m__inst__at?rng=B{*}&dom=A{?}" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
@@ -553,7 +559,7 @@ bin/metatron</code></pre>
 </a><a href="#__m__inst__mean?rng=__m__real&dom=__m__real{*}" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">mean</span>
     <span class="pill-label badge bg-success ms-2">I</span>
-</a><a href="#__m__inst__merge?rng=A{*}&dom=__m__lst" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__inst__merge?rng=__m__str&dom=__m__str{*}" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">merge</span>
     <span class="pill-label badge bg-success ms-2">I</span>
 </a><a href="#__m__inst__minus?rng=__m__int&dom=__m__int" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
@@ -598,7 +604,7 @@ bin/metatron</code></pre>
 </a><a href="#__m__inst__path?rng=__m__uri&dom=__m__uri" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">path</span>
     <span class="pill-label badge bg-success ms-2">I</span>
-</a><a href="#__m__inst__plus?rng=__m__bool&dom=__m__bool" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__inst__plus?rng=__m__bytes&dom=__m__bytes" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">plus</span>
     <span class="pill-label badge bg-success ms-2">I</span>
 </a><a href="#__m__inst__port?rng=__m__int{?}&dom=__m__uri" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
@@ -649,10 +655,13 @@ bin/metatron</code></pre>
 </a><a href="#__m__inst__rshift?rng=B{*}&dom=A" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">rshift</span>
     <span class="pill-label badge bg-success ms-2">I</span>
+</a><a href="#__m__inst__save?rng=#&dom=#" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">save</span>
+    <span class="pill-label badge bg-success ms-2">I</span>
 </a><a href="#__m__inst__scheme?rng=__m__uri{?}&dom=__m__uri" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">scheme</span>
     <span class="pill-label badge bg-success ms-2">I</span>
-</a><a href="#__m__inst__select?rng=__m__uri{?}&dom=__m__uri" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__inst__select?rng=__m__rel{?}&dom=__m__rel" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">select</span>
     <span class="pill-label badge bg-success ms-2">I</span>
 </a><a href="#__m__inst__serialize?rng=B&dom=A" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
@@ -709,7 +718,7 @@ bin/metatron</code></pre>
 </a><a href="#__m__inst__vid?rng=__m__uri{?}&dom=A" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">vid</span>
     <span class="pill-label badge bg-success ms-2">I</span>
-</a><a href="#__m__inst__where?rng=__m__uri{?}&dom=__m__uri" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__inst__where?rng=__m__str{?}&dom=__m__str" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">where</span>
     <span class="pill-label badge bg-success ms-2">I</span>
 </a><a href="#__m__inst__within?rng=B&dom=__m__bytes" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
@@ -778,7 +787,7 @@ bin/metatron</code></pre>
 </div>
 </div>
 </div><div class="container-xxl mb-4" id="types">
-    <h3 class="text-primary mb-3">Types <span class="pill-label badge bg-primary">29</span></h3>
+    <h3 class="text-primary mb-3">Types <span class="pill-label badge bg-primary">30</span></h3>
     <div class="card mb-3" id="__m__uri__authority">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -1146,6 +1155,17 @@ a=&gt;b=&gt;c=&gt;d&gt;&gt;.&gt;&gt;  [-- c=&gt;d           --]
 {a,b}=&gt;{c,d}     [-- 2-2 hyper-rel  --]
 {a=&gt;b}=&gt;{e=&gt;f}   [-- functor rel    --]</code></pre>
 </div>
+</div><div class="card mb-3" id="__m__str__rx">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">rx::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__str" class="instset-doc-small-code text-info code">/m/str::T</a></span>
+        </span>
+        <small class="text-muted code">/m/str/rx</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">str::T@/m/str/rx</code></pre></div>
+    
+    
 </div><div class="card mb-3" id="__m__space__qproc__safeq">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -1204,7 +1224,7 @@ a=&gt;b=&gt;c=&gt;d&gt;&gt;.&gt;&gt;  [-- c=&gt;d           --]
         </span>
         <small class="text-muted code">/m/space/qproc/subq/sub</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[{?}target=&gt;uri::T,on_recv=&gt;#::T]]@/m/space/qproc/subq/sub</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[{?}target=&gt;uri::T,code=&gt;#::T]]@/m/space/qproc/subq/sub</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a subscription obj used by ?subq qproc.</p>
@@ -1220,18 +1240,23 @@ a=&gt;b=&gt;c=&gt;d&gt;&gt;.&gt;&gt;  [-- c=&gt;d           --]
         </span>
         <small class="text-muted code">/m/space/qproc/subq</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">qproc::T[][ctor?subq&lt;=#{?}()]@/m/space/qproc/subq</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">qproc::T[?[{?}sub=&gt;[=&gt;]]][ctor?subq&lt;=#{?}()]@/m/space/qproc/subq</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">uri publish-subscribe qproc.
 when writing an inst to a subq uri, be sure to |-block prefix
 so as to store the inst and not its evaluation in the assignment.
 </p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}sub" class="text-light">{?}sub</a> <span class="text-light">=&gt;</span> <a href="#'subscriptions to register immediately upon construction'" class="text-info">&#39;subscriptions to register immediately upon construction&#39;</a>
+</pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">/usr/ai/#?subq -&gt; |print(&#39;ai update: ${_}&#39;) [-- /usr/ai subtree watch  --]
-a?subq         -&gt; |(&gt;&gt;1+1.println(_).to(a)) [-- infinite incr loop     --]
-*+?subq                                     [-- all subs for addr tree --]</code></pre>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">/usr/ai/#?subq -&gt; sub::[code=&gt;print(&#39;ai update: ${_}&#39;)] [-- /usr/ai subtree watch  --]
+a?subq         -&gt; sub::[code=&gt;&gt;&gt;1+1.println(_).to(a)]   [-- infinite incr loop     --]
+*tree?subq                                              [-- all subs for tree      --]
+*tree/#?subq                                            [-- all subs for all tree  --]</code></pre>
 </div>
 </div><div class="card mb-3" id="__m__rdf__space__triple">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1285,18 +1310,34 @@ a/b/c/                           [-- relative/branch uri            --]
 </div>
 </div>
 </div><div class="container-xxl mb-4" id="spaces">
-    <h3 class="text-primary mb-3">Spaces <span class="pill-label badge bg-info">3</span></h3>
-    <div class="card mb-3" id="__m__space__memspace">
+    <h3 class="text-primary mb-3">Spaces <span class="pill-label badge bg-info">4</span></h3>
+    <div class="card mb-3" id="__m__space__estorespace">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <a href="m_space_estorespace.html" class="code text-primary fw-bold text-decoration-none">estorespace</a>
+        <small class="text-muted code">/m/space/estorespace</small>
+    </div>
+    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[][ctor?estorespace&lt;=#{?}(?rec::T)]@/m/space/estorespace</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__space" class="code inherited-link">space::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[pattern=&gt;uri::T,{?}q=&gt;[qproc::T],{?}route=&gt;[uri::T=&gt;uri::T],{?}schema=&gt;instset::T]</code></div></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">an in-memory space with objs indexed by a topic trie</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}data" class="text-light">{?}data</a> <span class="text-light">=&gt;</span> <a href="#'a file location to save space state (reads on creation and writes on close)'" class="text-info">&#39;a file location to save space state (reads on creation and writes on close)&#39;</a>
+</pre>
+</div>
+</div><div class="card mb-3" id="__m__space__memspace">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <a href="m_space_memspace.html" class="code text-primary fw-bold text-decoration-none">memspace</a>
         <small class="text-muted code">/m/space/memspace</small>
     </div>
-    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[][inst?memspace&lt;=#{?}(?[
- pattern=&gt;uri::T,
- {?}persist=&gt;file::T])]@/m/space/memspace</code></pre></div>
+    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[][ctor?memspace&lt;=#{?}(?rec::T)]@/m/space/memspace</code></pre></div>
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__space" class="code inherited-link">space::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[pattern=&gt;uri::T,{?}q=&gt;[qproc::T],{?}route=&gt;[uri::T=&gt;uri::T],{?}schema=&gt;instset::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">an in-memory space with objs indexed by a topic trie</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}data" class="text-light">{?}data</a> <span class="text-light">=&gt;</span> <a href="#'a file location to save space state (reads on creation and writes on close)'" class="text-info">&#39;a file location to save space state (reads on creation and writes on close)&#39;</a>
+</pre>
 </div>
 </div><div class="card mb-3" id="__m__space">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1324,7 +1365,7 @@ a-&gt;2+*a                   [-- 4 via sugar&#39;d writing/reading a --]</code><
 </div>
 </div>
 </div><div class="container-xxl mb-4" id="instructions">
-    <h3 class="text-primary mb-3">Instructions <span class="pill-label badge bg-success">247</span></h3>
+    <h3 class="text-primary mb-3">Instructions <span class="pill-label badge bg-success">253</span></h3>
     <div class="card mb-3" id="__m__inst__and?rng=__m__bool&dom=A">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
@@ -1364,134 +1405,126 @@ a-&gt;2+*a                   [-- 4 via sugar&#39;d writing/reading a --]</code><
     <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__args?rng=__m__lst&dom=__m__inst-doc-0-tab').click();document.getElementById('__m__inst__args?rng=__m__lst&dom=__m__inst-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">args?rng=lst&dom=inst(){<j>}</code></pre>
 </div>
     
-</div><div class="card mb-3" id="__m__inst__as?rng=__m__int&dom=__m__bool">
+</div><div class="card mb-3" id="__m__inst__as?rng=__m__bytes&dom=__m__bool">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">as</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="#__m__bool" data-bs-toggle="tooltip" title="domain" class="code text-info">bool</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#__m__int" data-bs-toggle="tooltip" title="range" class="code text-success">int</a></span></span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="#__m__bool" data-bs-toggle="tooltip" title="domain" class="code text-info">bool</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#__m__bytes" data-bs-toggle="tooltip" title="range" class="code text-success">bytes</a></span></span>
         </span>
-        <small class="text-muted code">/m/inst/as?rng=/m/int&amp;dom=/m/bool</small>
+        <small class="text-muted code">/m/inst/as?rng=/m/bytes&amp;dom=/m/bool</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=int&dom=bool(int::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=bool&dom=bytes(bool::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=bool&dom=bool(bool::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=lst&dom=lst(lst::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=xml&dom=str(xml::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=int&dom=uri(int::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=str&dom=uri(str::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=file&dom=uri(file::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=bytes&dom=file(bytes::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=bytes&dom=bool(bytes::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=bytes&dom=str(bytes::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=json&dom=str(json::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=mcp_client&dom=json(mcp_client::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=<span class="code text-success">noobj{0}</span>&dom=<span class="code text-info">A</span>(){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=str&dom=real(str::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=tool&dom=docs(tool::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-1-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-1').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=rrow&dom=lrow(rrow::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=code&dom=lst(code::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=real&dom=bool(real::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=str&dom=bool(str::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-2-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-2').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=skill&dom=dir(skill::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=str&dom=bytes(str::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=real&dom=str(real::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=<span class="code text-info"><span class="code text-success">A</span></span>&dom=<span class="code text-info"><span class="code text-success">A</span></span>(<span class="code text-info"><span class="code text-success">A</span></span>::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-3-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-3').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=lst&dom=rec(lst::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=bool&dom=int(bool::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=int&dom=real(int::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=str&dom=str(str::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=str&dom=markdown(str::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-3-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-3').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=lrow&dom=rrow(lrow::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=bool&dom=str(bool::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=uri&dom=int(uri::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=image&dom=bytes(image::T,else(1.0000)){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=markdown&dom=str(markdown::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=<span class="code text-success">B</span>&dom=<span class="code text-info">A</span>(#::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=java&dom=str(java::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=str&dom=<span class="code text-info">#</span>(json_str::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=int&dom=str(int::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-4-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-4').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=tool&dom=inst(tool::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=rec&dom=rel(rec::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=file&dom=uri(file::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=lst&dom=code(lst::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-2-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-2').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=rec&dom=uri(rec::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=bytes&dom=int(bytes::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=html&dom=str(html::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=lst&dom=rel(lst::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=str&dom=java(str::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=real&dom=int(real::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=uri&dom=str(uri::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=html&dom=markdown(html::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=uri&dom=rec(uri::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=str&dom=html(str::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=uri&dom=uri(uri::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-1-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-1').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=rec&dom=lst(rec::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=str&dom=int(str::T){<j>}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=bytes&dom=bool(bytes::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=bool&dom=bool(bool::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=lst&dom=lst(lst::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=file&dom=uri(file::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=xml&dom=str(xml::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=str&dom=html(str::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=str&dom=<span class="code text-info">#</span>(json_str::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=mcp_client&dom=json(mcp_client::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=int&dom=str(int::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=int&dom=uri(int::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=int&dom=bool(int::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=real&dom=bool(real::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=tool&dom=inst(tool::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-1-tab').click();document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-1').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=skill&dom=dir(skill::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=code&dom=lst(code::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=lst&dom=code(lst::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=str&dom=bool(str::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=image&dom=bytes(image::T,else(1.0000)){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-2-tab').click();document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-2').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=rrow&dom=lrow(rrow::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=str&dom=str(str::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=bool&dom=str(bool::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-2-tab').click();document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-2').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=rec&dom=lst(rec::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=html&dom=markdown(html::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-3-tab').click();document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-3').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=lrow&dom=rrow(lrow::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-1-tab').click();document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-1').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=rec&dom=uri(rec::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-4-tab').click();document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-4').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=tool&dom=docs(tool::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=html&dom=str(html::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=bool&dom=bytes(bool::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=bytes&dom=file(bytes::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=str&dom=markdown(str::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=java&dom=str(java::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=uri&dom=str(uri::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=<span class="code text-success">noobj{0}</span>&dom=<span class="code text-info">A</span>(){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=rec&dom=rel(rec::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=str&dom=bytes(str::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=uri&dom=int(uri::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=json&dom=str(json::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=uri&dom=rec(uri::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=bool&dom=int(bool::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=bytes&dom=int(bytes::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=lst&dom=rel(lst::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=int&dom=real(int::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=real&dom=int(real::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=file&dom=uri(file::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=str&dom=real(str::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=str&dom=int(str::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=bytes&dom=str(bytes::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=<span class="code text-info"><span class="code text-success">A</span></span>&dom=<span class="code text-info"><span class="code text-success">A</span></span>(<span class="code text-info"><span class="code text-success">A</span></span>::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=str&dom=uri(str::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=<span class="code text-success">B</span>&dom=<span class="code text-info">A</span>(#::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-3-tab').click();document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-3').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=lst&dom=rec(lst::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=real&dom=str(real::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=uri&dom=uri(uri::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=markdown&dom=str(markdown::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=str&dom=java(str::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top p-0">
-    <ul class="nav nav-pills p-2 bg-dark" id="__m__inst__as?rng=__m__int&dom=__m__bool-pills" role="tablist">
+    <ul class="nav nav-pills p-2 bg-dark" id="__m__inst__as?rng=__m__bytes&dom=__m__bool-pills" role="tablist">
         <li class="nav-item disabled me-2">
             <span class="nav-link disabled py-1 px-0 text-muted" style="font-size:0.75rem;">polymorph:</span>
         </li>
         <li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2 active text-start h-100"
-        id="__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as?rng=__m__int&dom=__m__bool-doc-0"
+        id="__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0"
         type="button" role="tab" aria-selected="true"
         style="font-size:0.75rem;max-width:60px;">
         <i class="fas fa-info-circle me-1"></i> 1
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
-        id="__m__inst__as?rng=__m__int&dom=__m__bool-doc-1-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as?rng=__m__int&dom=__m__bool-doc-1"
+        id="__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-1-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-1"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
         <i class="fas fa-info-circle me-1"></i> 2
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
-        id="__m__inst__as?rng=__m__int&dom=__m__bool-doc-2-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as?rng=__m__int&dom=__m__bool-doc-2"
+        id="__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-2-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-2"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
         <i class="fas fa-info-circle me-1"></i> 3
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
-        id="__m__inst__as?rng=__m__int&dom=__m__bool-doc-3-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as?rng=__m__int&dom=__m__bool-doc-3"
+        id="__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-3-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-3"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
         <i class="fas fa-info-circle me-1"></i> 4
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
-        id="__m__inst__as?rng=__m__int&dom=__m__bool-doc-4-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as?rng=__m__int&dom=__m__bool-doc-4"
+        id="__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-4-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-4"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
         <i class="fas fa-info-circle me-1"></i> 5
     </button>
 </li>
     </ul>
-    <div class="tab-content" id="__m__inst__as?rng=__m__int&dom=__m__bool-content">
-        <div class="tab-pane fade show active" id="__m__inst__as?rng=__m__int&dom=__m__bool-doc-0" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab">
+    <div class="tab-content" id="__m__inst__as?rng=__m__bytes&dom=__m__bool-content">
+        <div class="tab-pane fade show active" id="__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-0-tab">
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">maps an instruction doc to a tool specification for llm use</p>
+    <p class="mb-0 text-light">maps an instruction to a tool specification for llm use</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#instruction documentation" class="text-info">instruction documentation</a> <span class="text-light">=&gt;</span> <a href="#a tool specification" class="text-success">a tool specification</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#an instruction" class="text-info">an instruction</a> <span class="text-light">=&gt;</span> <a href="#a tool specification" class="text-success">a tool specification</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'the tool type'" class="text-info">&#39;the tool type&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*eval?docq.as(tool::T)</code></pre>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*eval.as(tool::T)</code></pre>
 </div>
-</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__int&dom=__m__bool-doc-1" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__int&dom=__m__bool-doc-1-tab">
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">maps a lst row to a rec row</p>
-</div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a table row indexed by column number" class="text-info">a table row indexed by column number</a> <span class="text-light">=&gt;</span> <a href="#a table row indexed by column name" class="text-success">a table row indexed by column name</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"></pre>
-</div>
-</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__int&dom=__m__bool-doc-2" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__int&dom=__m__bool-doc-2-tab">
+</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-1" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-1-tab">
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">maps a directory to an llm skill where the dir follows the standard SKILL.md structure</p>
 </div><div class="card-body py-2">
@@ -1503,7 +1536,15 @@ a-&gt;2+*a                   [-- 4 via sugar&#39;d writing/reading a --]</code><
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*&lt;local:.agent/skills&gt;.as(skill::T)</code></pre>
 </div>
-</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__int&dom=__m__bool-doc-3" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__int&dom=__m__bool-doc-3-tab">
+</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-2" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-2-tab">
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">maps a lst row to a rec row</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a table row indexed by column number" class="text-info">a table row indexed by column number</a> <span class="text-light">=&gt;</span> <a href="#a table row indexed by column name" class="text-success">a table row indexed by column name</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"></pre>
+</div>
+</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-3" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-3-tab">
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">maps a rec row to a lst row</p>
 </div><div class="card-body py-2">
@@ -1511,17 +1552,17 @@ a-&gt;2+*a                   [-- 4 via sugar&#39;d writing/reading a --]</code><
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a table row indexed by column name" class="text-info">a table row indexed by column name</a> <span class="text-light">=&gt;</span> <a href="#a table row indexed by column number" class="text-success">a table row indexed by column number</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"></pre>
 </div>
-</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__int&dom=__m__bool-doc-4" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__int&dom=__m__bool-doc-4-tab">
+</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-4" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-4-tab">
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">maps an instruction to a tool specification for llm use</p>
+    <p class="mb-0 text-light">maps an instruction doc to a tool specification for llm use</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#an instruction" class="text-info">an instruction</a> <span class="text-light">=&gt;</span> <a href="#a tool specification" class="text-success">a tool specification</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#instruction documentation" class="text-info">instruction documentation</a> <span class="text-light">=&gt;</span> <a href="#a tool specification" class="text-success">a tool specification</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'the tool type'" class="text-info">&#39;the tool type&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*eval.as(tool::T)</code></pre>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*eval?docq.as(tool::T)</code></pre>
 </div>
 </div>
     </div>
@@ -2220,24 +2261,24 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">{1.0,2.0,3.0}.mean() [-- 2.0 --]</code></pre>
 </div>
-</div><div class="card mb-3" id="__m__inst__merge?rng=A{*}&dom=__m__lst">
+</div><div class="card mb-3" id="__m__inst__merge?rng=__m__str&dom=__m__str{*}">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">merge</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="#__m__lst" data-bs-toggle="tooltip" title="domain" class="code text-info">lst</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><span class="code text-success">A{*}</span></span></span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="#__m__str{*}" data-bs-toggle="tooltip" title="maybe some domain" class="code text-info">str{*}</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#__m__str" data-bs-toggle="tooltip" title="range" class="code text-success">str</a></span></span>
         </span>
-        <small class="text-muted code">/m/inst/merge?rng=A{*}&amp;dom=/m/lst</small>
+        <small class="text-muted code">/m/inst/merge?rng=/m/str&amp;dom=/m/str{*}</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__merge?rng=A{*}&dom=__m__lst-doc-0-tab').click();document.getElementById('__m__inst__merge?rng=A{*}&dom=__m__lst-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">merge?rng=<span class="code text-success">A{*}</span>&dom=lst(){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__merge?rng=A{*}&dom=__m__lst-doc-0-tab').click();document.getElementById('__m__inst__merge?rng=A{*}&dom=__m__lst-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">merge?rng=str&dom=str{*}(str::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__merge?rng=A{*}&dom=__m__lst-doc-0-tab').click();document.getElementById('__m__inst__merge?rng=A{*}&dom=__m__lst-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">merge?rng=uri&dom=uri{*}(uri::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__merge?rng=A{*}&dom=__m__lst-doc-0-tab').click();document.getElementById('__m__inst__merge?rng=A{*}&dom=__m__lst-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">merge?rng=rec&dom=rel{*}(rec::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__merge?rng=A{*}&dom=__m__lst-doc-0-tab').click();document.getElementById('__m__inst__merge?rng=A{*}&dom=__m__lst-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">merge?rng=<span class="code text-success">#{*}</span>&dom=<span class="code text-info">A{*}</span>(<span class="code text-success">#{*}</span>::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__merge?rng=A{*}&dom=__m__lst-doc-0-tab').click();document.getElementById('__m__inst__merge?rng=A{*}&dom=__m__lst-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">merge?rng=<span class="code text-info"><span class="code text-success">A{*}</span></span>&dom=<span class="code text-info"><span class="code text-success">A{*}</span></span>(<span class="code text-info"><span class="code text-success">A{*}</span></span>::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__merge?rng=A{*}&dom=__m__lst-doc-0-tab').click();document.getElementById('__m__inst__merge?rng=A{*}&dom=__m__lst-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">merge?rng=<span class="code text-success">A{*}</span>&dom=lst(uri::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__merge?rng=A{*}&dom=__m__lst-doc-0-tab').click();document.getElementById('__m__inst__merge?rng=A{*}&dom=__m__lst-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">merge?rng=<span class="code text-success">A{*}</span>&dom=lst(str::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__merge?rng=A{*}&dom=__m__lst-doc-0-tab').click();document.getElementById('__m__inst__merge?rng=A{*}&dom=__m__lst-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">merge?rng=rel{*}&dom=rec(){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__merge?rng=A{*}&dom=__m__lst-doc-0-tab').click();document.getElementById('__m__inst__merge?rng=A{*}&dom=__m__lst-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">merge?rng=lst&dom=<span class="code text-info">A{*}</span>(lst::T){<j>}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__merge?rng=__m__str&dom=__m__str{*}-doc-0-tab').click();document.getElementById('__m__inst__merge?rng=__m__str&dom=__m__str{*}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">merge?rng=str&dom=str{*}(str::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__merge?rng=__m__str&dom=__m__str{*}-doc-0-tab').click();document.getElementById('__m__inst__merge?rng=__m__str&dom=__m__str{*}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">merge?rng=uri&dom=uri{*}(uri::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__merge?rng=__m__str&dom=__m__str{*}-doc-0-tab').click();document.getElementById('__m__inst__merge?rng=__m__str&dom=__m__str{*}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">merge?rng=rec&dom=rel{*}(rec::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__merge?rng=__m__str&dom=__m__str{*}-doc-0-tab').click();document.getElementById('__m__inst__merge?rng=__m__str&dom=__m__str{*}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">merge?rng=<span class="code text-success">#{*}</span>&dom=<span class="code text-info">A{*}</span>(<span class="code text-success">#{*}</span>::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__merge?rng=__m__str&dom=__m__str{*}-doc-0-tab').click();document.getElementById('__m__inst__merge?rng=__m__str&dom=__m__str{*}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">merge?rng=<span class="code text-success">A{*}</span>&dom=lst(){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__merge?rng=__m__str&dom=__m__str{*}-doc-0-tab').click();document.getElementById('__m__inst__merge?rng=__m__str&dom=__m__str{*}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">merge?rng=<span class="code text-info"><span class="code text-success">A{*}</span></span>&dom=<span class="code text-info"><span class="code text-success">A{*}</span></span>(<span class="code text-info"><span class="code text-success">A{*}</span></span>::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__merge?rng=__m__str&dom=__m__str{*}-doc-0-tab').click();document.getElementById('__m__inst__merge?rng=__m__str&dom=__m__str{*}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">merge?rng=<span class="code text-success">A{*}</span>&dom=lst(uri::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__merge?rng=__m__str&dom=__m__str{*}-doc-0-tab').click();document.getElementById('__m__inst__merge?rng=__m__str&dom=__m__str{*}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">merge?rng=<span class="code text-success">A{*}</span>&dom=lst(str::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__merge?rng=__m__str&dom=__m__str{*}-doc-0-tab').click();document.getElementById('__m__inst__merge?rng=__m__str&dom=__m__str{*}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">merge?rng=rel{*}&dom=rec(){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__merge?rng=__m__str&dom=__m__str{*}-doc-0-tab').click();document.getElementById('__m__inst__merge?rng=__m__str&dom=__m__str{*}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">merge?rng=lst&dom=<span class="code text-info">A{*}</span>(lst::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">join the barrier given the str arg</p>
@@ -2462,23 +2503,23 @@ parse(&#39;[a=&gt;[b=&gt;c]]&#39;)                     [-- [a=&gt;[b=&gt;c]]  --
     <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__path?rng=__m__uri&dom=__m__uri-doc-0-tab').click();document.getElementById('__m__inst__path?rng=__m__uri&dom=__m__uri-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">path?rng=uri&dom=uri(uri::T){<j>}</code></pre>
 </div>
     
-</div><div class="card mb-3" id="__m__inst__plus?rng=__m__bool&dom=__m__bool">
+</div><div class="card mb-3" id="__m__inst__plus?rng=__m__bytes&dom=__m__bytes">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">plus</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="#__m__bool" data-bs-toggle="tooltip" title="domain" class="code text-info">bool</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#__m__bool" data-bs-toggle="tooltip" title="range" class="code text-success">bool</a></span></span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="#__m__bytes" data-bs-toggle="tooltip" title="domain" class="code text-info">bytes</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#__m__bytes" data-bs-toggle="tooltip" title="range" class="code text-success">bytes</a></span></span>
         </span>
-        <small class="text-muted code">/m/inst/plus?rng=/m/bool&amp;dom=/m/bool</small>
+        <small class="text-muted code">/m/inst/plus?rng=/m/bytes&amp;dom=/m/bytes</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__plus?rng=__m__bool&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__plus?rng=__m__bool&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">plus?rng=bool&dom=bool(bool::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__plus?rng=__m__bool&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__plus?rng=__m__bool&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">plus?rng=bytes&dom=bytes(bytes::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__plus?rng=__m__bool&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__plus?rng=__m__bool&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">plus?rng=int&dom=int(int::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__plus?rng=__m__bool&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__plus?rng=__m__bool&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">plus?rng=real&dom=real(real::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__plus?rng=__m__bool&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__plus?rng=__m__bool&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">plus?rng=str&dom=str(str::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__plus?rng=__m__bool&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__plus?rng=__m__bool&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">plus?rng=uri{?}&dom=uri(uri{?}::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__plus?rng=__m__bool&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__plus?rng=__m__bool&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">plus?rng=rel{*}&dom=rel(rel{*}::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__plus?rng=__m__bool&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__plus?rng=__m__bool&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">plus?rng=lst&dom=lst(lst::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__plus?rng=__m__bool&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__plus?rng=__m__bool&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">plus?rng=rec&dom=rec(rec{??}::T){<j>}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__plus?rng=__m__bytes&dom=__m__bytes-doc-0-tab').click();document.getElementById('__m__inst__plus?rng=__m__bytes&dom=__m__bytes-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">plus?rng=bytes&dom=bytes(bytes::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__plus?rng=__m__bytes&dom=__m__bytes-doc-0-tab').click();document.getElementById('__m__inst__plus?rng=__m__bytes&dom=__m__bytes-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">plus?rng=bool&dom=bool(bool::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__plus?rng=__m__bytes&dom=__m__bytes-doc-0-tab').click();document.getElementById('__m__inst__plus?rng=__m__bytes&dom=__m__bytes-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">plus?rng=int&dom=int(int::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__plus?rng=__m__bytes&dom=__m__bytes-doc-0-tab').click();document.getElementById('__m__inst__plus?rng=__m__bytes&dom=__m__bytes-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">plus?rng=real&dom=real(real::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__plus?rng=__m__bytes&dom=__m__bytes-doc-0-tab').click();document.getElementById('__m__inst__plus?rng=__m__bytes&dom=__m__bytes-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">plus?rng=str&dom=str(str::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__plus?rng=__m__bytes&dom=__m__bytes-doc-0-tab').click();document.getElementById('__m__inst__plus?rng=__m__bytes&dom=__m__bytes-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">plus?rng=uri{?}&dom=uri(uri{?}::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__plus?rng=__m__bytes&dom=__m__bytes-doc-0-tab').click();document.getElementById('__m__inst__plus?rng=__m__bytes&dom=__m__bytes-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">plus?rng=rel{*}&dom=rel(rel{*}::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__plus?rng=__m__bytes&dom=__m__bytes-doc-0-tab').click();document.getElementById('__m__inst__plus?rng=__m__bytes&dom=__m__bytes-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">plus?rng=lst&dom=lst(lst::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__plus?rng=__m__bytes&dom=__m__bytes-doc-0-tab').click();document.getElementById('__m__inst__plus?rng=__m__bytes&dom=__m__bytes-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">plus?rng=rec&dom=rec(rec{??}::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">add the argument int to the lhs int</p>
@@ -2573,16 +2614,7 @@ parse(&#39;[a=&gt;[b=&gt;c]]&#39;)                     [-- [a=&gt;[b=&gt;c]]  --
     </div>
     <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__q?rng=__m__uri&dom=__m__uri-doc-0-tab').click();document.getElementById('__m__inst__q?rng=__m__uri&dom=__m__uri-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">q?rng=uri&dom=uri(rec::T){<j>}</code></pre>
 </div>
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">the query parameters associated with the uri</p>
-</div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a uri" class="text-info">a uri</a> <span class="text-light">=&gt;</span> <a href="#a rec of the uri query parameters" class="text-success">a rec of the uri query parameters</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"></pre>
-</div><div class="card-body border-top py-2">
-    <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">/usr/local?a=1&amp;b=2.q() [-- [a=&gt;1,b=&gt;2] --] </code></pre>
-</div>
+    
 </div><div class="card mb-3" id="__m__inst__range?rng=A{*}&dom=A{*}">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
@@ -2641,16 +2673,17 @@ parse(&#39;[a=&gt;[b=&gt;c]]&#39;)                     [-- [a=&gt;[b=&gt;c]]  --
     <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__regex?rng=__m__lst&dom=__m__str-doc-0-tab').click();document.getElementById('__m__inst__regex?rng=__m__lst&dom=__m__str-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">regex?rng=lst&dom=str(str::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">split the lhs str into a regex groups</p>
+    <p class="mb-0 text-light">split the lhs str by regex matches; if the regex has capture groups, each match is a lst of [fullMatch, group1, group2, ...], otherwise a flat lst of full matches</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a str to split by regex" class="text-info">a str to split by regex</a> <span class="text-light">=&gt;</span> <a href="#the regex groups of the lhs str" class="text-success">the regex groups of the lhs str</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a str to split by regex" class="text-info">a str to split by regex</a> <span class="text-light">=&gt;</span> <a href="#the regex capture groups (or full matches) of the lhs str" class="text-success">the regex capture groups (or full matches) of the lhs str</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'regex'" class="text-info">&#39;regex&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">&#39;abc.cde&#39;.regex(&#39;[^.]+&#39;) [-- [&#39;abc&#39;,&#39;cde&#39;] --]
-&#39;abc.cde&#39;.regex(&#39;.\..&#39;) [-- [&#39;c.c&#39;] --]</code></pre>
+&#39;abc.cde&#39;.regex(&#39;.\..&#39;) [-- [&#39;c.c&#39;] --]
+&#39;241G&#39;.regex(&#39;(\d+)([KMGT])&#39;) [-- [[&#39;241G&#39;,&#39;241&#39;,&#39;G&#39;]] --]</code></pre>
 </div>
 </div><div class="card mb-3" id="__m__inst__reify?rng=__m__rec&dom=__m__fail">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
@@ -2723,6 +2756,17 @@ parse(&#39;[a=&gt;[b=&gt;c]]&#39;)                     [-- [a=&gt;[b=&gt;c]]  --
     <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__rshift?rng=B{*}&dom=A-doc-0-tab').click();document.getElementById('__m__inst__rshift?rng=B{*}&dom=A-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">rshift?rng=<span class="code text-success">B{*}</span>&dom=<span class="code text-info">A</span>(C{*}::T){<j>}</code></pre>
 </div>
     
+</div><div class="card mb-3" id="__m__inst__save?rng=#&dom=#">
+    <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
+        <span>
+            <span class="code text-primary fw-bold">save</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><span class="code text-info">#</span></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><span class="code text-success">#</span></span></span>
+        </span>
+        <small class="text-muted code">/m/inst/save?rng=#&amp;dom=#</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__save?rng=#&dom=#-doc-0-tab').click();document.getElementById('__m__inst__save?rng=#&dom=#-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">save?rng=<span class="code text-info"><span class="code text-success">#</span></span>&dom=<span class="code text-info"><span class="code text-success">#</span></span>(){<j>}</code></pre>
+</div>
+    
 </div><div class="card mb-3" id="__m__inst__scheme?rng=__m__uri{?}&dom=__m__uri">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
@@ -2735,20 +2779,23 @@ parse(&#39;[a=&gt;[b=&gt;c]]&#39;)                     [-- [a=&gt;[b=&gt;c]]  --
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__scheme?rng=__m__uri{?}&dom=__m__uri-doc-0-tab').click();document.getElementById('__m__inst__scheme?rng=__m__uri{?}&dom=__m__uri-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">scheme?rng=uri&dom=uri(uri::T){<j>}</code></pre>
 </div>
     
-</div><div class="card mb-3" id="__m__inst__select?rng=__m__uri{?}&dom=__m__uri">
+</div><div class="card mb-3" id="__m__inst__select?rng=__m__rel{?}&dom=__m__rel">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">select</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="#__m__uri" data-bs-toggle="tooltip" title="domain" class="code text-info">uri</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#__m__uri{?}" data-bs-toggle="tooltip" title="maybe range" class="code text-success">uri{?}</a></span></span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="#__m__rel" data-bs-toggle="tooltip" title="domain" class="code text-info">rel</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#__m__rel{?}" data-bs-toggle="tooltip" title="maybe range" class="code text-success">rel{?}</a></span></span>
         </span>
-        <small class="text-muted code">/m/inst/select?rng=/m/uri{?}&amp;dom=/m/uri</small>
+        <small class="text-muted code">/m/inst/select?rng=/m/rel{?}&amp;dom=/m/rel</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__select?rng=__m__uri{?}&dom=__m__uri-doc-0-tab').click();document.getElementById('__m__inst__select?rng=__m__uri{?}&dom=__m__uri-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">select?rng=uri{?}&dom=uri(uri::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__select?rng=__m__uri{?}&dom=__m__uri-doc-0-tab').click();document.getElementById('__m__inst__select?rng=__m__uri{?}&dom=__m__uri-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">select?rng=rel{?}&dom=rel(rel::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__select?rng=__m__uri{?}&dom=__m__uri-doc-0-tab').click();document.getElementById('__m__inst__select?rng=__m__uri{?}&dom=__m__uri-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">select?rng=lst{?}&dom=lst(lst::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__select?rng=__m__uri{?}&dom=__m__uri-doc-0-tab').click();document.getElementById('__m__inst__select?rng=__m__uri{?}&dom=__m__uri-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">select?rng=rec{?}&dom=rec(rec::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__select?rng=__m__uri{?}&dom=__m__uri-doc-0-tab').click();document.getElementById('__m__inst__select?rng=__m__uri{?}&dom=__m__uri-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">select?rng=<span class="code text-success">#{?}</span>&dom=rec(uri::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__select?rng=__m__uri{?}&dom=__m__uri-doc-0-tab').click();document.getElementById('__m__inst__select?rng=__m__uri{?}&dom=__m__uri-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">select?rng=rec{?}&dom=rec(uri{2,}::T){<j>}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__select?rng=__m__rel{?}&dom=__m__rel-doc-0-tab').click();document.getElementById('__m__inst__select?rng=__m__rel{?}&dom=__m__rel-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">select?rng=rel{?}&dom=rel(rel::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__select?rng=__m__rel{?}&dom=__m__rel-doc-0-tab').click();document.getElementById('__m__inst__select?rng=__m__rel{?}&dom=__m__rel-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">select?rng=str&dom=str(rec::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__select?rng=__m__rel{?}&dom=__m__rel-doc-0-tab').click();document.getElementById('__m__inst__select?rng=__m__rel{?}&dom=__m__rel-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">select?rng=uri&dom=uri(rec::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__select?rng=__m__rel{?}&dom=__m__rel-doc-0-tab').click();document.getElementById('__m__inst__select?rng=__m__rel{?}&dom=__m__rel-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">select?rng=<span class="code text-success">B{*}</span>&dom=lst(A{+}::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__select?rng=__m__rel{?}&dom=__m__rel-doc-0-tab').click();document.getElementById('__m__inst__select?rng=__m__rel{?}&dom=__m__rel-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">select?rng=lst{?}&dom=lst(lst::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__select?rng=__m__rel{?}&dom=__m__rel-doc-0-tab').click();document.getElementById('__m__inst__select?rng=__m__rel{?}&dom=__m__rel-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">select?rng=lst&dom=lst(rec::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__select?rng=__m__rel{?}&dom=__m__rel-doc-0-tab').click();document.getElementById('__m__inst__select?rng=__m__rel{?}&dom=__m__rel-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">select?rng=rec{?}&dom=rec(rec::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__select?rng=__m__rel{?}&dom=__m__rel-doc-0-tab').click();document.getElementById('__m__inst__select?rng=__m__rel{?}&dom=__m__rel-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">select?rng=<span class="code text-success">B{*}</span>&dom=rec(A{+}::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__select?rng=__m__rel{?}&dom=__m__rel-doc-0-tab').click();document.getElementById('__m__inst__select?rng=__m__rel{?}&dom=__m__rel-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">select?rng=rec{?}&dom=rec(rec::T){<j>}</code></pre>
 </div>
     
 </div><div class="card mb-3" id="__m__inst__serialize?rng=B&dom=A">
@@ -3066,16 +3113,18 @@ nat::6.type()-&lt;[tid(),vid()] [-- [/m/int, nat] non-base types tids are the ty
 </div>
     </div>
 </div>
-</div><div class="card mb-3" id="__m__inst__where?rng=__m__uri{?}&dom=__m__uri">
+</div><div class="card mb-3" id="__m__inst__where?rng=__m__str{?}&dom=__m__str">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">where</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="#__m__uri" data-bs-toggle="tooltip" title="domain" class="code text-info">uri</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#__m__uri{?}" data-bs-toggle="tooltip" title="maybe range" class="code text-success">uri{?}</a></span></span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="#__m__str" data-bs-toggle="tooltip" title="domain" class="code text-info">str</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#__m__str{?}" data-bs-toggle="tooltip" title="maybe range" class="code text-success">str{?}</a></span></span>
         </span>
-        <small class="text-muted code">/m/inst/where?rng=/m/uri{?}&amp;dom=/m/uri</small>
+        <small class="text-muted code">/m/inst/where?rng=/m/str{?}&amp;dom=/m/str</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__where?rng=__m__uri{?}&dom=__m__uri-doc-0-tab').click();document.getElementById('__m__inst__where?rng=__m__uri{?}&dom=__m__uri-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">where?rng=uri{?}&dom=uri(uri::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__where?rng=__m__uri{?}&dom=__m__uri-doc-0-tab').click();document.getElementById('__m__inst__where?rng=__m__uri{?}&dom=__m__uri-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">where?rng=<span class="code text-info">A</span>{?}&dom=<span class="code text-info">A</span>(B::T){<j>}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__where?rng=__m__str{?}&dom=__m__str-doc-0-tab').click();document.getElementById('__m__inst__where?rng=__m__str{?}&dom=__m__str-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">where?rng=str{?}&dom=str(rec::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__where?rng=__m__str{?}&dom=__m__str-doc-0-tab').click();document.getElementById('__m__inst__where?rng=__m__str{?}&dom=__m__str-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">where?rng=uri{?}&dom=uri(rec::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__where?rng=__m__str{?}&dom=__m__str-doc-0-tab').click();document.getElementById('__m__inst__where?rng=__m__str{?}&dom=__m__str-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">where?rng=lst{?}&dom=lst(rec::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__where?rng=__m__str{?}&dom=__m__str-doc-0-tab').click();document.getElementById('__m__inst__where?rng=__m__str{?}&dom=__m__str-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">where?rng=<span class="code text-info">A</span>{?}&dom=<span class="code text-info">A</span>(B::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a filter function \(f(x)\to \{\emptyset \cup x\}\)</p>

@@ -38,10 +38,10 @@ Threads are addressable through the `/sys/thread` uri space. The thread executor
 [mtron]
 ----
 */sys/thread/executor/run/0                                                    [-- <1> --]
-[ --*/sys/thread/executor/stop/+=?[desc=>'console statusline']  --]            [-- <3> --]
+*/sys/thread==<+>==run==<+>.vid() * <.?docq>.*_                                [-- <2> --]
 ----
 <1> state of the first running thread
-<3> find a specific stopped thread by description
+<2> long running system threads may have associated documentation
 
 [discreate]
 ==== Thread State Machine
@@ -75,15 +75,15 @@ virtual::[code=>print('.'), loop=>second::5.0] [-- <2> --]
 core::[code=>expensive_computation]            [-- <3> --]
 ----
 <1> executes `1+2` once, stores `3` in `result`
-<2> prints a dot every second, looping until stopped
+<2> prints a dot every 5 seconds, looping until stopped
 <3> runs CPU-heavy work on a platform thread
 
 [mtron]
 ----
-*/sys/thread/run
-*/sys/thread/stop
-*/sys/thread/stop/+/source
-*/sys/thread/stop/+/source/source
+*/sys/thread/executor/run
+*/sys/thread/executor/stop
+*/sys/thread/executor/stop/+/source
+*/sys/thread/executor/stop/+/source/source
 ----
 
 [discrete]
@@ -94,11 +94,11 @@ A thread with `yield=>!*/sys/thread/<vid>` forms a cooperative pair. When one pa
 [mtron]
 ----
 ""@ab                                                      [-- <1> --]
-virtual::[code  => @ab >>= +'B',         /
-          loop  => second::1.0,          /
+virtual::[code  => @ab + 'B',                              /
+          loop  => second::1.0,                            /
           state => pause]@/sys/thread/b                    [-- <3> --]
-virtual::[code  => @ab >>= +'A',         /
-          loop  => second::1.0,          /
+virtual::[code  => @ab + 'A',                              /
+          loop  => second::1.0,                            /
           yield => !*/sys/thread/b]@/sys/thread/a          [-- <4> --]
 @/sys/thread/b >>= +[yield => !*/sys/thread/a]             [-- <5> --]
 sleep(second::5.0)
@@ -119,13 +119,17 @@ Any looping thread can be paused mid-execution. The current cycle always complet
 
 [mtron]
 ----
-*/sys/thread/run/0.pause()               [-- <1> --]
-*/sys/thread/run/0.state()               [-- <2> --]
-*/sys/thread/run/0.resume()              [-- <3> --]
+virtual::[code=>print('.'),loop=>second::2.5]@/sys/thread/example  [-- <1> --]
+*/sys/thread/example.pause()                                       [-- <2> --]
+*/sys/thread/example/state                                         [-- <3> --]
+*/sys/thread/example.resume()                                      [-- <4> --]
+*/sys/thread/example/state                                         [-- <5> --]
 ----
-<1> Pause the first running thread
-<2> Verify state is `pause`
-<3> Resume it
+<1> Create a simple looping virtual thread
+<2> Pause the simple looping virtual thread
+<3> Check the state of the simple looping virtual thread
+<4> Resume the simple looping virtual thread
+<5> Check the state of the simple looping virtual thread
 
 Non-looping threads (no `loop` key) cannot be paused — a warning is logged and the call is a no-op.
 
@@ -137,5 +141,5 @@ At boot, metatron establishes a root thread at `/sys/thread/main`. All user-spaw
 [mtron]
 ----
 */sys/thread/main
-*/sys/thread/main/desc
+*/sys/thread/main?docq
 ----

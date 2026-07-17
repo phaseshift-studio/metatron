@@ -278,7 +278,7 @@ bin/metatron</code></pre>
  obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
  inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
  space=&gt;[super=&gt;!*/m],
- type=&gt;[model::T,agent::T,tool::T,session::T,message::T,system::T,chat_result::T,user::T,ai::T,tool_result::T,...(15 more)],
+ type=&gt;[model::T,agent::T,tool::T,session::T,system::T,chat_result::T,user::T,ai::T,tool_result::T,thinking::T,...(17 more)],
  inst=&gt;[
   as?tool&lt;=docs(tool::T),
   as?tool&lt;=inst(tool::T),
@@ -293,7 +293,7 @@ bin/metatron</code></pre>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <button class="btn btn-outline-secondary" disabled>Consts <span class="pill-label badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">25</span></a><button class="btn btn-outline-secondary" disabled>Spaces <span class="pill-label badge bg-dark">0</span></button><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">3</span></a><button class="btn btn-outline-secondary" disabled>Rewrites <span class="pill-label badge bg-dark">0</span></button>
+        <button class="btn btn-outline-secondary" disabled>Consts <span class="pill-label badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">27</span></a><button class="btn btn-outline-secondary" disabled>Spaces <span class="pill-label badge bg-dark">0</span></button><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">3</span></a><button class="btn btn-outline-secondary" disabled>Rewrites <span class="pill-label badge bg-dark">0</span></button>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="card">
@@ -320,6 +320,9 @@ bin/metatron</code></pre>
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a><a href="#__m__llm__feature__chat_feature" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">chat_feature</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__llm__feature__concept_feature" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">concept_feature</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a><a href="#__m__llm__feature__cost_feature" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">cost_feature</span>
@@ -369,6 +372,9 @@ bin/metatron</code></pre>
 </a><a href="#__m__llm__message__system" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">system</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__llm__message__thinking" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">thinking</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
 </a><a href="#__m__llm__message__tool_result" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">tool_result</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
@@ -388,7 +394,7 @@ bin/metatron</code></pre>
 </div></div>
     </div>
 </div><div class="container-xxl mb-4" id="types">
-    <h3 class="text-primary mb-3">Types <span class="pill-label badge bg-primary">25</span></h3>
+    <h3 class="text-primary mb-3">Types <span class="pill-label badge bg-primary">27</span></h3>
     <div class="card mb-3" id="__m__llm__agent">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -422,7 +428,12 @@ bin/metatron</code></pre>
   {?}thinking=&gt;int::T,
   {?}tool_requests=&gt;lst::T,
   {?}attributes=&gt;rec::T]]@/m/llm/message/ai</code></pre></div>
-    
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__message" class="code inherited-link">message::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?or([
+  isa(system::T),
+  isa(user::T),
+  isa(ai::T),
+  isa(tool_result::T),
+  isa(thinking::T)])</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">an ai/assistant message</p>
 </div><div class="card-body py-2">
@@ -444,14 +455,15 @@ bin/metatron</code></pre>
         <small class="text-muted code">/m/llm/feature/audit_feature</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">feature::T[][ctor?audit_feature&lt;=#{?}(rec::T)]@/m/llm/feature/audit_feature</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[ {?}onBeforeChat=&gt;#::T,
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
+ {?}onBeforeChat=&gt;#::T,
  {?}onPartialResponse=&gt;#::T,
  {?}onPartialThinking=&gt;#::T,
  {?}onPartialToolCall=&gt;#::T,
  {?}beforeToolExecution=&gt;#::T,
  {?}onToolExecuted=&gt;#::T,
  {?}onCompleteResponse=&gt;#::T,
- ...(1 more)]</code></div></div>
+ {?}onError=&gt;#::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">lifecycle audit trail with table text and widget result</p>
 </div><div class="card-body py-2">
@@ -470,14 +482,15 @@ bin/metatron</code></pre>
   model=&gt;model::T,
   response=&gt;[to=&gt;#::T],
   {?}format=&gt;#::T]][ctor?chat_feature&lt;=#{?}(rec::T)]@/m/llm/feature/chat_feature</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[ {?}onBeforeChat=&gt;#::T,
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
+ {?}onBeforeChat=&gt;#::T,
  {?}onPartialResponse=&gt;#::T,
  {?}onPartialThinking=&gt;#::T,
  {?}onPartialToolCall=&gt;#::T,
  {?}beforeToolExecution=&gt;#::T,
  {?}onToolExecuted=&gt;#::T,
  {?}onCompleteResponse=&gt;#::T,
- ...(1 more)]</code></div></div>
+ {?}onError=&gt;#::T]</code></div></div>
     
 </div><div class="card mb-3" id="__m__llm__chat_result">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -498,6 +511,30 @@ bin/metatron</code></pre>
   <a href="#{?}error" class="text-light">{?}error</a> <span class="text-light">=&gt;</span> <a href="#'a fail chain if errors occurred'" class="text-info">&#39;a fail chain if errors occurred&#39;</a>
 </pre>
 </div>
+</div><div class="card mb-3" id="__m__llm__feature__concept_feature">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">concept_feature::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__llm__feature" class="instset-doc-small-code text-info code">/m/llm/feature::T</a></span>
+        </span>
+        <small class="text-muted code">/m/llm/feature/concept_feature</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">feature::T[][ctor?concept_feature&lt;=#{?}(rec::T)]@/m/llm/feature/concept_feature</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
+ {?}onBeforeChat=&gt;#::T,
+ {?}onPartialResponse=&gt;#::T,
+ {?}onPartialThinking=&gt;#::T,
+ {?}onPartialToolCall=&gt;#::T,
+ {?}beforeToolExecution=&gt;#::T,
+ {?}onToolExecuted=&gt;#::T,
+ {?}onCompleteResponse=&gt;#::T,
+ {?}onError=&gt;#::T]</code></div></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">extracts and normalizes concepts from the agent response and thinking stream</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"></pre>
+</div>
 </div><div class="card mb-3" id="__m__llm__feature__cost_feature">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -507,14 +544,15 @@ bin/metatron</code></pre>
         <small class="text-muted code">/m/llm/feature/cost_feature</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">feature::T[][ctor?cost_feature&lt;=#{?}(rec::T)]@/m/llm/feature/cost_feature</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[ {?}onBeforeChat=&gt;#::T,
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
+ {?}onBeforeChat=&gt;#::T,
  {?}onPartialResponse=&gt;#::T,
  {?}onPartialThinking=&gt;#::T,
  {?}onPartialToolCall=&gt;#::T,
  {?}beforeToolExecution=&gt;#::T,
  {?}onToolExecuted=&gt;#::T,
  {?}onCompleteResponse=&gt;#::T,
- ...(1 more)]</code></div></div>
+ {?}onError=&gt;#::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">tracks per-model pricing and accumulates cost during execution</p>
 </div><div class="card-body py-2">
@@ -529,14 +567,15 @@ bin/metatron</code></pre>
         </span>
         <small class="text-muted code">/m/llm/feature</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[  {?}onBeforeChat=&gt;#::T,
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[
+  {?}onBeforeChat=&gt;#::T,
   {?}onPartialResponse=&gt;#::T,
   {?}onPartialThinking=&gt;#::T,
   {?}onPartialToolCall=&gt;#::T,
   {?}beforeToolExecution=&gt;#::T,
   {?}onToolExecuted=&gt;#::T,
   {?}onCompleteResponse=&gt;#::T,
-  ...(1 more)]]@/m/llm/feature</code></pre></div>
+  {?}onError=&gt;#::T]]@/m/llm/feature</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">each concrete feature refines llm_feature::T with its own hook implementations</p>
@@ -561,14 +600,15 @@ bin/metatron</code></pre>
         <small class="text-muted code">/m/llm/feature/ledger_feature</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">feature::T[?[{?}init=&gt;lst::T]][ctor?ledger_feature&lt;=#{?}(rec::T)]@/m/llm/feature/ledger_feature</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[ {?}onBeforeChat=&gt;#::T,
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
+ {?}onBeforeChat=&gt;#::T,
  {?}onPartialResponse=&gt;#::T,
  {?}onPartialThinking=&gt;#::T,
  {?}onPartialToolCall=&gt;#::T,
  {?}beforeToolExecution=&gt;#::T,
  {?}onToolExecuted=&gt;#::T,
  {?}onCompleteResponse=&gt;#::T,
- ...(1 more)]</code></div></div>
+ {?}onError=&gt;#::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">Never cleared between chat calls. Agent reads via system message injection, writes via &lt;&lt;mtron:ledger&gt;&gt; blocks. Survives the entire session.</p>
 </div><div class="card-body py-2">
@@ -589,14 +629,15 @@ bin/metatron</code></pre>
         <small class="text-muted code">/m/llm/feature/loop_feature</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">feature::T[?[{?}max_loop=&gt;int::T,{?}max_time=&gt;#::T,{?}delay=&gt;#::T,{?}preserve=&gt;lst::T]][ctor?loop_feature&lt;=#{?}(rec::T)]@/m/llm/feature/loop_feature</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[ {?}onBeforeChat=&gt;#::T,
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
+ {?}onBeforeChat=&gt;#::T,
  {?}onPartialResponse=&gt;#::T,
  {?}onPartialThinking=&gt;#::T,
  {?}onPartialToolCall=&gt;#::T,
  {?}beforeToolExecution=&gt;#::T,
  {?}onToolExecuted=&gt;#::T,
  {?}onCompleteResponse=&gt;#::T,
- ...(1 more)]</code></div></div>
+ {?}onError=&gt;#::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">multi-pass reasoning loop with iteration control and polling</p>
 </div><div class="card-body py-2">
@@ -618,10 +659,18 @@ bin/metatron</code></pre>
         </span>
         <small class="text-muted code">/m/llm/message</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T@/m/llm/message</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?or([
+ isa(system::T),
+ isa(user::T),
+ isa(ai::T),
+ isa(tool_result::T),
+ isa(thinking::T)])]@/m/llm/message</code></pre></div>
     
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">a message that with ai, user, and system message refinements</p>
+    <p class="mb-0 text-light">polymorphic chat message — one of system, user, ai, tool_result, or thinking; discriminated by _tid column</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"></pre>
 </div>
 </div><div class="card mb-3" id="__m__llm__model">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -665,14 +714,15 @@ bin/metatron</code></pre>
         <small class="text-muted code">/m/llm/feature/note_feature</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">feature::T[][ctor?note_feature&lt;=#{?}(rec::T)]@/m/llm/feature/note_feature</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[ {?}onBeforeChat=&gt;#::T,
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
+ {?}onBeforeChat=&gt;#::T,
  {?}onPartialResponse=&gt;#::T,
  {?}onPartialThinking=&gt;#::T,
  {?}onPartialToolCall=&gt;#::T,
  {?}beforeToolExecution=&gt;#::T,
  {?}onToolExecuted=&gt;#::T,
  {?}onCompleteResponse=&gt;#::T,
- ...(1 more)]</code></div></div>
+ {?}onError=&gt;#::T]</code></div></div>
     
 </div><div class="card mb-3" id="__m__llm__feature__recall_feature">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -683,14 +733,15 @@ bin/metatron</code></pre>
         <small class="text-muted code">/m/llm/feature/recall_feature</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">feature::T[][ctor?recall_feature&lt;=#{?}(rec::T)]@/m/llm/feature/recall_feature</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[ {?}onBeforeChat=&gt;#::T,
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
+ {?}onBeforeChat=&gt;#::T,
  {?}onPartialResponse=&gt;#::T,
  {?}onPartialThinking=&gt;#::T,
  {?}onPartialToolCall=&gt;#::T,
  {?}beforeToolExecution=&gt;#::T,
  {?}onToolExecuted=&gt;#::T,
  {?}onCompleteResponse=&gt;#::T,
- ...(1 more)]</code></div></div>
+ {?}onError=&gt;#::T]</code></div></div>
     
 </div><div class="card mb-3" id="__m__llm__feature__session">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -700,7 +751,7 @@ bin/metatron</code></pre>
         </span>
         <small class="text-muted code">/m/llm/feature/session</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[agent=&gt;uri{+}::T,user=&gt;uri{+}::T,message=&gt;uri{?}::T,algorithm=&gt;rec::T]]@/m/llm/feature/session</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[agent=&gt;uri{+}::T,user=&gt;uri{+}::T,algorithm=&gt;rec::T]]@/m/llm/feature/session</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">llm session session policy with algorithm config and a resolved lst of messages from sub-path */msg/*</p>
@@ -720,15 +771,16 @@ bin/metatron</code></pre>
         </span>
         <small class="text-muted code">/m/llm/feature/session_feature</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">feature::T[?[session=&gt;session::T]][ctor?session_feature&lt;=#{?}(rec::T)]@/m/llm/feature/session_feature</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[ {?}onBeforeChat=&gt;#::T,
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">feature::T[?[session=&gt;uri::T]][ctor?session_feature&lt;=#{?}(rec::T)]@/m/llm/feature/session_feature</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
+ {?}onBeforeChat=&gt;#::T,
  {?}onPartialResponse=&gt;#::T,
  {?}onPartialThinking=&gt;#::T,
  {?}onPartialToolCall=&gt;#::T,
  {?}beforeToolExecution=&gt;#::T,
  {?}onToolExecuted=&gt;#::T,
  {?}onCompleteResponse=&gt;#::T,
- ...(1 more)]</code></div></div>
+ {?}onError=&gt;#::T]</code></div></div>
     
 </div><div class="card mb-3" id="__m__llm__feature__skill">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -763,14 +815,15 @@ bin/metatron</code></pre>
         <small class="text-muted code">/m/llm/feature/skill_feature</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">feature::T[][ctor?skill_feature&lt;=#{?}(rec::T)]@/m/llm/feature/skill_feature</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[ {?}onBeforeChat=&gt;#::T,
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
+ {?}onBeforeChat=&gt;#::T,
  {?}onPartialResponse=&gt;#::T,
  {?}onPartialThinking=&gt;#::T,
  {?}onPartialToolCall=&gt;#::T,
  {?}beforeToolExecution=&gt;#::T,
  {?}onToolExecuted=&gt;#::T,
  {?}onCompleteResponse=&gt;#::T,
- ...(1 more)]</code></div></div>
+ {?}onError=&gt;#::T]</code></div></div>
     
 </div><div class="card mb-3" id="__m__llm__feature__stage_feature">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -781,14 +834,15 @@ bin/metatron</code></pre>
         <small class="text-muted code">/m/llm/feature/stage_feature</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">feature::T[][ctor?stage_feature&lt;=#{?}(rec::T)]@/m/llm/feature/stage_feature</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[ {?}onBeforeChat=&gt;#::T,
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
+ {?}onBeforeChat=&gt;#::T,
  {?}onPartialResponse=&gt;#::T,
  {?}onPartialThinking=&gt;#::T,
  {?}onPartialToolCall=&gt;#::T,
  {?}beforeToolExecution=&gt;#::T,
  {?}onToolExecuted=&gt;#::T,
  {?}onCompleteResponse=&gt;#::T,
- ...(1 more)]</code></div></div>
+ {?}onError=&gt;#::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">appends typed stage entries to res(stages). purely observational — no configuration needed.</p>
 </div><div class="card-body py-2">
@@ -804,7 +858,12 @@ bin/metatron</code></pre>
         <small class="text-muted code">/m/llm/message/system</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">message::T[?[text=&gt;str::T]]@/m/llm/message/system</code></pre></div>
-    
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__message" class="code inherited-link">message::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?or([
+  isa(system::T),
+  isa(user::T),
+  isa(ai::T),
+  isa(tool_result::T),
+  isa(thinking::T)])</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a system message provides behavioral and response-style instructions to the model</p>
 </div><div class="card-body py-2">
@@ -821,14 +880,15 @@ bin/metatron</code></pre>
         <small class="text-muted code">/m/llm/feature/system_feature</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">feature::T[][ctor?system_feature&lt;=#{?}(rec::T)]@/m/llm/feature/system_feature</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[ {?}onBeforeChat=&gt;#::T,
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
+ {?}onBeforeChat=&gt;#::T,
  {?}onPartialResponse=&gt;#::T,
  {?}onPartialThinking=&gt;#::T,
  {?}onPartialToolCall=&gt;#::T,
  {?}beforeToolExecution=&gt;#::T,
  {?}onToolExecuted=&gt;#::T,
  {?}onCompleteResponse=&gt;#::T,
- ...(1 more)]</code></div></div>
+ {?}onError=&gt;#::T]</code></div></div>
     
 </div><div class="card mb-3" id="__m__llm__feature__think_feature">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -839,19 +899,42 @@ bin/metatron</code></pre>
         <small class="text-muted code">/m/llm/feature/think_feature</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">feature::T[][ctor?think_feature&lt;=#{?}(rec::T)]@/m/llm/feature/think_feature</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[ {?}onBeforeChat=&gt;#::T,
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
+ {?}onBeforeChat=&gt;#::T,
  {?}onPartialResponse=&gt;#::T,
  {?}onPartialThinking=&gt;#::T,
  {?}onPartialToolCall=&gt;#::T,
  {?}beforeToolExecution=&gt;#::T,
  {?}onToolExecuted=&gt;#::T,
  {?}onCompleteResponse=&gt;#::T,
- ...(1 more)]</code></div></div>
+ {?}onError=&gt;#::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">think feature captures thinking text during response generation</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"></pre>
+</div>
+</div><div class="card mb-3" id="__m__llm__message__thinking">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">thinking::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__llm__message" class="instset-doc-small-code text-info code">/m/llm/message::T</a></span>
+        </span>
+        <small class="text-muted code">/m/llm/message/thinking</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">message::T[?[text=&gt;str::T]]@/m/llm/message/thinking</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__message" class="code inherited-link">message::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?or([
+  isa(system::T),
+  isa(user::T),
+  isa(ai::T),
+  isa(tool_result::T),
+  isa(thinking::T)])</code></div></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">a thinking/reasoning trace message — stored in the ledger but excluded from the LC4j chat window</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#text" class="text-light">text</a> <span class="text-light">=&gt;</span> <a href="#"the model's internal reasoning text"" class="text-info">&quot;the model&#39;s internal reasoning text&quot;</a>
+</pre>
 </div>
 </div><div class="card mb-3" id="__m__llm__feature__tool">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -872,15 +955,16 @@ bin/metatron</code></pre>
         </span>
         <small class="text-muted code">/m/llm/feature/tool_feature</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">feature::T[?[chest=&gt;lst::T]][ctor?tool_feature&lt;=#{?}(rec::T)]@/m/llm/feature/tool_feature</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[ {?}onBeforeChat=&gt;#::T,
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">feature::T[?[tool=&gt;lst::T]][ctor?tool_feature&lt;=#{?}(rec::T)]@/m/llm/feature/tool_feature</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
+ {?}onBeforeChat=&gt;#::T,
  {?}onPartialResponse=&gt;#::T,
  {?}onPartialThinking=&gt;#::T,
  {?}onPartialToolCall=&gt;#::T,
  {?}beforeToolExecution=&gt;#::T,
  {?}onToolExecuted=&gt;#::T,
  {?}onCompleteResponse=&gt;#::T,
- ...(1 more)]</code></div></div>
+ {?}onError=&gt;#::T]</code></div></div>
     
 </div><div class="card mb-3" id="__m__llm__message__tool_result">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -890,8 +974,13 @@ bin/metatron</code></pre>
         </span>
         <small class="text-muted code">/m/llm/message/tool_result</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">message::T[?[name=&gt;str::T,text=&gt;str::T,{?}id=&gt;str::T]]@/m/llm/message/tool_result</code></pre></div>
-    
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">message::T[?[name=&gt;uri::T,text=&gt;str::T,{?}id=&gt;str::T]]@/m/llm/message/tool_result</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__message" class="code inherited-link">message::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?or([
+  isa(system::T),
+  isa(user::T),
+  isa(ai::T),
+  isa(tool_result::T),
+  isa(thinking::T)])</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a tool execution result message</p>
 </div><div class="card-body py-2">
@@ -910,7 +999,12 @@ bin/metatron</code></pre>
         <small class="text-muted code">/m/llm/message/user</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">message::T[?[{?}name=&gt;str::T,contents=&gt;[text=&gt;str::T]]]@/m/llm/message/user</code></pre></div>
-    
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__message" class="code inherited-link">message::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?or([
+  isa(system::T),
+  isa(user::T),
+  isa(ai::T),
+  isa(tool_result::T),
+  isa(thinking::T)])</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a user message</p>
 </div><div class="card-body py-2">
