@@ -215,6 +215,8 @@ public class mInstSet extends AbstractInstSet {
     public static Type MEM_SPACE_TYPE;
     public static final fURI ESTORE_SPACE_TID = M_ISA_TID.extend("space").extend("estorespace");
     public static Type ESTORE_SPACE_TYPE;
+    public static Type REGEX_TYPE;
+    public static final fURI REGEX_TID = STR_TID.extend("rx");
 
     //public static final Set<fURI> MARKER_TYPES = Set.of(MONO_TID, POLY_TID, NUM_TID);
     public static final Set<fURI> BASE_TYPES = Set.of(
@@ -428,6 +430,8 @@ public class mInstSet extends AbstractInstSet {
                                             
                                                  \\(\\texttt{*space/vid/qProc => lst[qProc]::T}\\)
                                             """),
+                        /// ///////////////////////////////////
+                        REGEX_TYPE = Type.Builder.build().tid(STR_TID).vid(REGEX_TID).create(),
                         /// ///////////////////////////////////
                         SUBQ_TYPE = docWrap(Type.Builder.build()
                                         .vid(SUBQ_TID)

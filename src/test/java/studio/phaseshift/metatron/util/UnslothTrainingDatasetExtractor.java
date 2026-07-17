@@ -299,7 +299,7 @@ public class UnslothTrainingDatasetExtractor {
             String lastSourceMethod = null;
             for (DatasetEntry entry : entries) {
                 if (entry.sourceMethod != null && !entry.sourceMethod.equals(lastSourceMethod)) {
-                    writer.write("# " + entry.sourceMethod + "\n");
+                    // writer.write("# " + entry.sourceMethod + "\n");
                     lastSourceMethod = entry.sourceMethod;
                 }
                 writer.write(entry.toJson() + "\n");

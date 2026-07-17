@@ -219,17 +219,8 @@ public interface Str extends Mono, PlusMonoid.O<Str> {
                     instC(SUM_INST_TID.dom(STR_TID.maybeSome()).rng(STR_TID), lst(T(STR_TID.maybe())), (lhs, inst) -> str(lhs.stream().map(Obj::strValue).reduce(inst.arg(0).orElse(str("")).strValue(), (a, b) -> a + b))),
                     instC(UCASE_INST_TID.dom(STR_TID).rng(STR_TID), lst(), (lhs, inst) -> lhs.jvm(lhs.strValue().toUpperCase())),
                     instC(LCASE_INST_TID.dom(STR_TID).rng(STR_TID), lst(), (lhs, inst) -> lhs.jvm(lhs.strValue().toLowerCase())),
-                    instC(SELECT_INST_TID.dom(STR_TID).rng(STR_TID), lst(REC_TYPE), (lhs, inst) -> str(Str.Helper.project(lhs.strValue(), inst.arg(0)),lhs.tid(),lhs.vid())),
-                    instC(WHERE_INST_TID.dom(STR_TID).rng(STR_TID.maybe()), lst(REC_TYPE), (lhs, inst) -> {
-                        try {
-                            // If any part of the projection returns noobj/false,
-                            // it throws ProjectionFailureException and lands in the catch block.
-                            Str.Helper.project(lhs.strValue(), inst.arg(0));
-                            return lhs; // All predicates passed!
-                        } catch (ProjectionFailureException e) {
-                            return noobj(); // Structural verification failed
-                        }
-                    }),
+                    instC(SELECT_INST_TID.dom(STR_TID).rng(STR_TID), lst(REC_TYPE), (lhs, inst) -> str(Str.Helper.project(lhs.strValue(), inst.arg(0)), lhs.tid(), lhs.vid())),
+                    instC(WHERE_INST_TID.dom(STR_TID).rng(STR_TID.maybe()), lst(REC_TYPE), (lhs, inst) -> ProjectionFailureException.predicateThrow(lhs, a -> Str.Helper.project(lhs.strValue(), inst.arg(0).asRec()))),
 
                     instC(WITHIN_INST_TID.dom(STR_TID).rng(B), lst(T(B)), (lhs, inst) -> Arrays.stream(lhs.strValue().split("")).map(s -> inst.arg(0).apply(str(s))).
                             map(o -> (PlusMonoid.O) o).
