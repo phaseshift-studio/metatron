@@ -104,12 +104,12 @@ public class MRec extends MObj implements Rec {
 
     @Override
     public Rec clone(final Object jvm, final fURI tid, final fURI vid) {
-        return super.clone(Rec.Helper.cleanMap((Map<Obj, Obj>) jvm), tid, vid);
+        return super.clone(null == jvm ? this.jvm : Rec.Helper.cleanMap((Map<Obj, Obj>) jvm), tid, vid);
     }
 
     @Override
     public Rec self(final Object jvm, final fURI tid, final fURI vid) {
-        return super.self(Rec.Helper.cleanMap((Map<Obj, Obj>) jvm), tid, vid);
+        return super.self(null == jvm ? this.jvm :Rec.Helper.cleanMap((Map<Obj, Obj>) jvm), tid, vid);
     }
 
     @Override

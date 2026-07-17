@@ -21,7 +21,6 @@ package studio.phaseshift.metatron.isa.m.type.impl;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Fail;
 import studio.phaseshift.metatron.isa.mach.type.Router;
-import studio.phaseshift.metatron.util.FastNoSuchElementException;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.Objects;
@@ -171,7 +170,7 @@ public class MFail extends MObj implements Fail {
 
     @Override
     public Fail zero() {
-        return fail(FastNoSuchElementException.instance());
+        return fail(MTronException.of(""));
     }
 
     public static class MCaughtFail extends MFail implements CaughtFail {

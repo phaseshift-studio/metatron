@@ -19,17 +19,17 @@
 package studio.phaseshift.metatron.util;
 
 import java.io.Serial;
-import java.util.NoSuchElementException;
 
-public final class FastNoSuchElementException extends NoSuchElementException {
+// 1. Define a private Exception for signaling project failure
+public class ProjectionFailureException extends RuntimeException {
     @Serial
-    private static final long serialVersionUID = 2303108654138257697L;
-    private static final FastNoSuchElementException INSTANCE = new FastNoSuchElementException();
+    private static final long serialVersionUID = 233338654157697L;
+    private static final ProjectionFailureException INSTANCE = new ProjectionFailureException();
 
-    private FastNoSuchElementException() {
+    private ProjectionFailureException() {
     }
 
-    public static NoSuchElementException instance() {
+    public static ProjectionFailureException instance() {
         return INSTANCE;
     }
 

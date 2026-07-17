@@ -902,9 +902,9 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                                 obj.tid(),
                                 indent(obj.tid(obj.baseType()).toString(), 2),
                                 indent("X=>", 6),
-                                indent(obj.type().toString(), 2), indent("-" .repeat(width), 2), indent(matchDiffString, 2));
+                                indent(obj.type().toString(), 2), indent("-".repeat(width), 2), indent(matchDiffString, 2));
                     } else
-                        throw MTronException.of("%s is not a %s" .formatted(obj, obj.type()));
+                        throw MTronException.of("%s is not a %s".formatted(obj, obj.type()));
                 }
             }
         }
@@ -968,7 +968,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                     return (O) clone.selfTID(tid);
                 }
             }
-            if (!Objects.equals(jvm, obj.jvm()) || !tid.equals(obj.tid()) || !Objects.equals(vid, obj.vid())) {
+            if (null != jvm && !Objects.equals(jvm, obj.jvm()) || !tid.equals(obj.tid()) || !Objects.equals(vid, obj.vid())) {
                 try {
                     final O clone = (O) obj.clone();
                     Obj.Helper.objCheckAndSave(clone, jvm, tid, null == vid || vid.isEmpty() ? null : vid);
