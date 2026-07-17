@@ -287,7 +287,7 @@ bin/metatron</code></pre>
   obj_text::[=&gt;]@obj_text,
   /m/mach/io/serializer/mtron::[
    clip=&gt;[
-    rec=&gt;7,
+    rec=&gt;10,
     lst=&gt;10,
     str=&gt;60,
     uri=&gt;2147483647,
@@ -575,7 +575,10 @@ html::[html=&gt;
  {?}on_post=&gt;#::T,
  {?}on_put=&gt;#::T,
  {?}on_delete=&gt;#::T,
- ...(5 more)]</code></div></div>
+ {?}on_patch=&gt;#::T,
+ {?}on_head=&gt;#::T,
+ {?}on_options=&gt;#::T,
+ ...(2 more)]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">an http client which should be refined to implement protocol specs</p>
 </div>
@@ -595,7 +598,10 @@ html::[html=&gt;
  {?}on_post=&gt;#::T,
  {?}on_put=&gt;#::T,
  {?}on_delete=&gt;#::T,
- ...(5 more)]</code></div></div>
+ {?}on_patch=&gt;#::T,
+ {?}on_head=&gt;#::T,
+ {?}on_options=&gt;#::T,
+ ...(2 more)]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a http server which should be refined to implement protocol specs</p>
 </div>
@@ -700,14 +706,15 @@ mcp_client::[host =&gt; &lt;ws://localhost:8999&gt;]@/usr/ai/mcp/mtron          
         <small class="text-muted code">/m/web/space/wsspace/mcp/mcp_emulator_ws</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">mcp_ws::T[?[{?}tool=&gt;[uri::T=&gt;inst::T],{?}resource=&gt;#::T,{?}prompt=&gt;#::T]][ctor?mcp_emulator_ws&lt;=#{?}(rec::T)]@/m/web/space/wsspace/mcp/mcp_emulator_ws</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__space__wsspace__mcp__mcp_ws" class="code inherited-link">mcp_ws::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}tool=&gt;{?}[uri::T=&gt;inst::T],{?}resource=&gt;#::T,{?}prompt=&gt;#::T]</code></div><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__space__wsspace__websocket" class="code inherited-link">websocket::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[ {?}in=&gt;isa(mime::T),
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__space__wsspace__mcp__mcp_ws" class="code inherited-link">mcp_ws::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}tool=&gt;{?}[uri::T=&gt;inst::T],{?}resource=&gt;#::T,{?}prompt=&gt;#::T]</code></div><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__space__wsspace__websocket" class="code inherited-link">websocket::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
+ {?}in=&gt;isa(mime::T),
  {?}out=&gt;isa(mime::T),
  {?}send=&gt;inst::T,
  {?}send_recv=&gt;inst::T,
  {?}on_open=&gt;#::T,
  {?}on_error=&gt;#::T,
  {?}on_message=&gt;#::T,
- ...(1 more)]</code></div></div>
+ {?}on_close=&gt;#::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a webLsocket mcp emulator server that provides an agent a stateful environment of mcp server access</p>
 </div>
@@ -746,14 +753,15 @@ mcp_client::[host =&gt; &lt;ws://localhost:8999&gt;]@/usr/ai/mcp/mtron          
         <small class="text-muted code">/m/web/space/wsspace/mcp/mcp_mtron_ws</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">mcp_ws::T[?[{?}tool=&gt;[uri::T=&gt;inst::T],{?}resource=&gt;#::T,{?}prompt=&gt;#::T]][ctor?mcp_mtron_ws&lt;=#{?}(rec::T)]@/m/web/space/wsspace/mcp/mcp_mtron_ws</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__space__wsspace__mcp__mcp_ws" class="code inherited-link">mcp_ws::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}tool=&gt;{?}[uri::T=&gt;inst::T],{?}resource=&gt;#::T,{?}prompt=&gt;#::T]</code></div><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__space__wsspace__websocket" class="code inherited-link">websocket::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[ {?}in=&gt;isa(mime::T),
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__space__wsspace__mcp__mcp_ws" class="code inherited-link">mcp_ws::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}tool=&gt;{?}[uri::T=&gt;inst::T],{?}resource=&gt;#::T,{?}prompt=&gt;#::T]</code></div><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__space__wsspace__websocket" class="code inherited-link">websocket::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
+ {?}in=&gt;isa(mime::T),
  {?}out=&gt;isa(mime::T),
  {?}send=&gt;inst::T,
  {?}send_recv=&gt;inst::T,
  {?}on_open=&gt;#::T,
  {?}on_error=&gt;#::T,
  {?}on_message=&gt;#::T,
- ...(1 more)]</code></div></div>
+ {?}on_close=&gt;#::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">an mcp handler server with built-in mtron eval, space listing, router info and instruction listing tools</p>
 </div>
@@ -779,14 +787,15 @@ mcp_client::[host =&gt; &lt;ws://localhost:8999&gt;]@/usr/ai/mcp/mtron          
         <small class="text-muted code">/m/web/space/wsspace/mcp/mcp_ws</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">wshandler::T[?[{?}tool=&gt;{?}[uri::T=&gt;inst::T],{?}resource=&gt;#::T,{?}prompt=&gt;#::T]][ctor?mcp_ws&lt;=#{?}(rec::T)]@/m/web/space/wsspace/mcp/mcp_ws</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__space__wsspace__websocket" class="code inherited-link">websocket::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[ {?}in=&gt;isa(mime::T),
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__space__wsspace__websocket" class="code inherited-link">websocket::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
+ {?}in=&gt;isa(mime::T),
  {?}out=&gt;isa(mime::T),
  {?}send=&gt;inst::T,
  {?}send_recv=&gt;inst::T,
  {?}on_open=&gt;#::T,
  {?}on_error=&gt;#::T,
  {?}on_message=&gt;#::T,
- ...(1 more)]</code></div></div>
+ {?}on_close=&gt;#::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">an abstract mcp websocket handler providing necessary json-rpc infrastructure for mcp servers to leverage</p>
 </div>
@@ -843,7 +852,10 @@ mcp_client::[host =&gt; &lt;ws://localhost:8999&gt;]@/usr/ai/mcp/mtron          
  {?}on_post=&gt;#::T,
  {?}on_put=&gt;#::T,
  {?}on_delete=&gt;#::T,
- ...(5 more)]</code></div></div>
+ {?}on_patch=&gt;#::T,
+ {?}on_head=&gt;#::T,
+ {?}on_options=&gt;#::T,
+ ...(2 more)]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a simple http handler accepting mtron expressions and return mtron results</p>
 </div><div class="card-body border-top py-2">
@@ -859,14 +871,15 @@ mcp_client::[host =&gt; &lt;ws://localhost:8999&gt;]@/usr/ai/mcp/mtron          
         <small class="text-muted code">/m/web/space/wsspace/mtron_ws</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">wshandler::T[?[{?}in=&gt;isa(mime::T).else(application/x-mtron),{?}out=&gt;isa(mime::T).else(application/x-mtron)]][ctor?mtron_ws&lt;=#{?}(rec::T)]@/m/web/space/wsspace/mtron_ws</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__space__wsspace__websocket" class="code inherited-link">websocket::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[ {?}in=&gt;isa(mime::T),
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__space__wsspace__websocket" class="code inherited-link">websocket::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
+ {?}in=&gt;isa(mime::T),
  {?}out=&gt;isa(mime::T),
  {?}send=&gt;inst::T,
  {?}send_recv=&gt;inst::T,
  {?}on_open=&gt;#::T,
  {?}on_error=&gt;#::T,
  {?}on_message=&gt;#::T,
- ...(1 more)]</code></div></div>
+ {?}on_close=&gt;#::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a simple websocket handler accepting mtron expressions and return mtron results</p>
 </div><div class="card-body border-top py-2">
@@ -1002,7 +1015,10 @@ obj_bytebuffer::[=&gt;]</code></pre>
   {?}on_post=&gt;#::T,
   {?}on_put=&gt;#::T,
   {?}on_delete=&gt;#::T,
-  ...(5 more)]]@/m/web/space/httpspace/socket</code></pre></div>
+  {?}on_patch=&gt;#::T,
+  {?}on_head=&gt;#::T,
+  {?}on_options=&gt;#::T,
+  ...(2 more)]]@/m/web/space/httpspace/socket</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a generic http obj which can be refined with useful behaviors</p>
@@ -1028,7 +1044,10 @@ obj_bytebuffer::[=&gt;]</code></pre>
  {?}on_post=&gt;#::T,
  {?}on_put=&gt;#::T,
  {?}on_delete=&gt;#::T,
- ...(5 more)]</code></div></div>
+ {?}on_patch=&gt;#::T,
+ {?}on_head=&gt;#::T,
+ {?}on_options=&gt;#::T,
+ ...(2 more)]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a http handler serving web content from a router-backed space</p>
 </div>
@@ -1040,14 +1059,15 @@ obj_bytebuffer::[=&gt;]</code></pre>
         </span>
         <small class="text-muted code">/m/web/space/wsspace/websocket</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[  {?}in=&gt;isa(mime::T),
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[
+  {?}in=&gt;isa(mime::T),
   {?}out=&gt;isa(mime::T),
   {?}send=&gt;inst::T,
   {?}send_recv=&gt;inst::T,
   {?}on_open=&gt;#::T,
   {?}on_error=&gt;#::T,
   {?}on_message=&gt;#::T,
-  ...(1 more)]]@/m/web/space/wsspace/websocket</code></pre></div>
+  {?}on_close=&gt;#::T]]@/m/web/space/wsspace/websocket</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a generic websocket obj which can be refined with useful behaviors</p>
@@ -1061,14 +1081,15 @@ obj_bytebuffer::[=&gt;]</code></pre>
         <small class="text-muted code">/m/web/space/wsspace/wsclient</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">websocket::T[][ctor?websocket&lt;=#{?}(rec::T)]@/m/web/space/wsspace/wsclient</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__space__wsspace__websocket" class="code inherited-link">websocket::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[ {?}in=&gt;isa(mime::T),
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__space__wsspace__websocket" class="code inherited-link">websocket::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
+ {?}in=&gt;isa(mime::T),
  {?}out=&gt;isa(mime::T),
  {?}send=&gt;inst::T,
  {?}send_recv=&gt;inst::T,
  {?}on_open=&gt;#::T,
  {?}on_error=&gt;#::T,
  {?}on_message=&gt;#::T,
- ...(1 more)]</code></div></div>
+ {?}on_close=&gt;#::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">an websocket client which should be refined to implement protocol specs</p>
 </div>
@@ -1081,14 +1102,15 @@ obj_bytebuffer::[=&gt;]</code></pre>
         <small class="text-muted code">/m/web/space/wsspace/wshandler</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">websocket::T[][ctor?websocket&lt;=#{?}(rec::T)]@/m/web/space/wsspace/wshandler</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__space__wsspace__websocket" class="code inherited-link">websocket::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[ {?}in=&gt;isa(mime::T),
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__space__wsspace__websocket" class="code inherited-link">websocket::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
+ {?}in=&gt;isa(mime::T),
  {?}out=&gt;isa(mime::T),
  {?}send=&gt;inst::T,
  {?}send_recv=&gt;inst::T,
  {?}on_open=&gt;#::T,
  {?}on_error=&gt;#::T,
  {?}on_message=&gt;#::T,
- ...(1 more)]</code></div></div>
+ {?}on_close=&gt;#::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a websocket server which should be refined to implement protocol specs</p>
 </div>

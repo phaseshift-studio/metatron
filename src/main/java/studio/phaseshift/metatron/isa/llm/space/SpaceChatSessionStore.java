@@ -352,7 +352,9 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
                 final fURI writePath = llmMessagePath(sesVID);
                 final Obj writtenObj = Router.writeToSpace(writePath, incomingRec);
                 LOG.debug("updating current messages [size:%d]", this.currentMessages.size());
-                this.currentMessages.add(writtenObj.vid());
+                if (writtenObj.typeId().equals(USER_MESSAGE_TID) ||
+                        writtenObj.typeId().equals(AI_MESSAGE_TID))
+                    this.currentMessages.add(writtenObj.vid());
                 written++;
             } catch (final Exception e) {
                 LOG.warn("error writing message to llm_message (non-blocking): %s", e.getMessage());
