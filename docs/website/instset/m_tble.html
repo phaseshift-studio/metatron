@@ -280,11 +280,9 @@ bin/metatron</code></pre>
  space=&gt;[super=&gt;!*/m],
  const=&gt;[[llm_chat_schema=&gt;inst?#{*}&lt;=#{*}()]@helper],
  type=&gt;[
-  lrow::T,
-  rrow::T,
   table::T,
   tblespace::T],
- inst=&gt;[as?rrow&lt;=lrow(rrow::T),as?lrow&lt;=rrow(lrow::T),sql?rec{*}&lt;=tblespace(str::T)],
+ inst=&gt;[sql?rec{*}&lt;=tblespace(str::T)],
  rewrite=&gt;[/m/tble/inst/rewrite/sql_count?code{?}&lt;=code(),/m/tble/inst/rewrite/sql_sum?code{?}&lt;=code(),/m/tble/inst/rewrite/sql_mean?code{?}&lt;=code(),/m/tble/inst/rewrite/sql_limit?code{?}&lt;=code(),/m/tble/inst/rewrite/sql_has?code{?}&lt;=code(),/m/tble/inst/rewrite/sql_where?code{?}&lt;=code(),/m/tble/inst/rewrite/sql_where_count?code{?}&lt;=code(),/m/tble/inst/rewrite/sql_where_limit?code{?}&lt;=code(),/m/tble/inst/rewrite/sql_select?code{?}&lt;=code(),/m/tble/inst/rewrite/kv_count?code{?}&lt;=code(),...(1 more)]]@/m/tble</code></pre>
                     </div>
                 </div>
@@ -293,7 +291,7 @@ bin/metatron</code></pre>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <a href="#consts" class="btn btn-outline-primary">Consts <span class="pill-label badge bg-secondary">1</span></a><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">2</span></a><a href="#spaces" class="btn btn-outline-primary">Spaces <span class="pill-label badge bg-info">2</span></a><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">1</span></a><a href="#rewrites" class="btn btn-outline-primary">Rewrites <span class="pill-label badge bg-warning">11</span></a>
+        <a href="#consts" class="btn btn-outline-primary">Consts <span class="pill-label badge bg-secondary">1</span></a><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">1</span></a><a href="#spaces" class="btn btn-outline-primary">Spaces <span class="pill-label badge bg-info">1</span></a><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">1</span></a><a href="#rewrites" class="btn btn-outline-primary">Rewrites <span class="pill-label badge bg-warning">11</span></a>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="card">
@@ -306,19 +304,13 @@ bin/metatron</code></pre>
 </a></div>
 </div><div class="mb-3">
     <h6 class="text-primary mb-2">Types</h6>
-    <div class="d-flex flex-wrap"><a href="#__m__tble__lrow" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">lrow</span>
-    <span class="pill-label badge bg-primary ms-2">T</span>
-</a><a href="#__m__tble__table" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <div class="d-flex flex-wrap"><a href="#__m__tble__table" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">table</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a></div>
 </div><div class="mb-3">
     <h6 class="text-primary mb-2">Spaces</h6>
-    <div class="d-flex flex-wrap"><a href="#__m__tble__rrow" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">rrow</span>
-    <span class="pill-label badge bg-info text-dark ms-2">S</span>
-</a><a href="#__m__tble__space__tblespace" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <div class="d-flex flex-wrap"><a href="#__m__tble__space__tblespace" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">tblespace</span>
     <span class="pill-label badge bg-info text-dark ms-2">S</span>
 </a></div>
@@ -379,21 +371,8 @@ bin/metatron</code></pre>
 </div>
 </div>
 </div><div class="container-xxl mb-4" id="types">
-    <h3 class="text-primary mb-3">Types <span class="pill-label badge bg-primary">2</span></h3>
-    <div class="card mb-3" id="__m__tble__lrow">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <span>
-            <span class="code text-primary fw-bold">lrow::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__lst" class="instset-doc-small-code text-info code">/m/lst::T</a></span>
-        </span>
-        <small class="text-muted code">/m/tble/lrow</small>
-    </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">lst::T@/m/tble/lrow</code></pre></div>
-    
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">a table row indexed by column number</p>
-</div>
-</div><div class="card mb-3" id="__m__tble__table">
+    <h3 class="text-primary mb-3">Types <span class="pill-label badge bg-primary">1</span></h3>
+    <div class="card mb-3" id="__m__tble__table">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">table::T</span>
@@ -401,25 +380,15 @@ bin/metatron</code></pre>
         </span>
         <small class="text-muted code">/m/tble/table</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">uri::T[?lrow{*}::T]@/m/tble/table</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">uri::T[?rec{*}::T]@/m/tble/table</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a stream of equally wide rows</p>
 </div>
 </div>
 </div><div class="container-xxl mb-4" id="spaces">
-    <h3 class="text-primary mb-3">Spaces <span class="pill-label badge bg-info">2</span></h3>
-    <div class="card mb-3" id="__m__tble__rrow">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <a href="m_tble_rrow.html" class="code text-primary fw-bold text-decoration-none">rrow</a>
-        <small class="text-muted code">/m/tble/rrow</small>
-    </div>
-    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[uri::T=&gt;#::T]]@/m/tble/rrow</code></pre></div>
-    
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">a table row indexed by column name</p>
-</div>
-</div><div class="card mb-3" id="__m__tble__space__tblespace">
+    <h3 class="text-primary mb-3">Spaces <span class="pill-label badge bg-info">1</span></h3>
+    <div class="card mb-3" id="__m__tble__space__tblespace">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <a href="m_tble_space_tblespace.html" class="code text-primary fw-bold text-decoration-none">tblespace</a>
         <small class="text-muted code">/m/tble/space/tblespace</small>
