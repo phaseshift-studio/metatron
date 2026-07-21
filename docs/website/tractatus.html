@@ -207,7 +207,7 @@ bin/metatron</code></pre>
                            onclick="location.href='./articles/parametric-identities-in-ring-theory.html';"><i class="bi bi-arrow-repeat icon-color me-2 isa-row"></i>parametric identities</a></li>
                     <li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='./articles/mm-adt.pdf';"><i class="bi bi-layout-wtf icon-color me-2 isa-row"></i>mm-ADT (metatron precursor)</a></li>
+                           onclick="location.href='./articles/mm-adt.pdf';"><i class="bi bi-layout-wtf icon-color me-2 isa-row"></i>mm-adt (metatron precursor)</a></li>
                     <li>
                 </ul>
             </li>
@@ -1386,7 +1386,7 @@ mtron&gt; httpspace::[host     =&gt; &lt;http://localhost:8777&gt;,
    	  \_pred | []
    	[inst]   | /m/web/space/httpspace/ctor?rng=httpspace&amp;dom=#{?}(rec::T){&lt;j&gt;}
    	 \_dom   | #{?}::T
-   	 \_args  | [rec::T][Inst&lt;319&gt;:unable to convert type to rec::T[Obj&lt;557&gt;:class studio.phaseshift.metatron.isa.m.type.impl.MType cannot be cast to class studio.phaseshift.metatron.isa.m.type.Rec (studio.phaseshift.metatron.isa.m.type.impl.MType and studio.phaseshift.metatron.isa.m.type.Rec are in unnamed module of loader 'app')]]]@/sys/fail/6[...]]@/sys/fail/8
+   	 \_args  | [rec::T][Inst&lt;319&gt;:unable to convert type to rec::T[Obj&lt;555&gt;:class studio.phaseshift.metatron.isa.m.type.impl.MType cannot be cast to class studio.phaseshift.metatron.isa.m.type.Rec (studio.phaseshift.metatron.isa.m.type.impl.MType and studio.phaseshift.metatron.isa.m.type.Rec are in unnamed module of loader 'app')]]]@/sys/fail/6[...]]@/sys/fail/8
 mtron&gt; fsspace::[pattern  =&gt; fs:#,
                  route    =&gt; [fs:=&gt;&lt;.metatron&gt;]]@/sys/space/fs</code></pre>
 </div>
@@ -2308,7 +2308,7 @@ can access it accordingly and naturally.</p>
    	  \_pred | []
    	[inst]   | plus?rng=uri{?}&amp;dom=int(b){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
    	 \_dom   | int::T
-   	 \_args  | [b][Obj&lt;641&gt;:1 [int::T] unable to convert uri::T]]@/sys/fail/22[...]
+   	 \_args  | [b][Obj&lt;639&gt;:1 [int::T] unable to convert uri::T]]@/sys/fail/22[...]
 mtron&gt; */sys/fail/+     ​2​
 mtron&gt; */sys/fail/+.catch(_)     ​3​
 mtron&gt; */sys/fail     ​4​</code></pre>
@@ -2427,7 +2427,7 @@ mtron&gt;  -4.as(nat::T)
    	  \_pred | []
    	[inst]   | as?rng=nat&amp;dom=int(nat::T){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
    	 \_dom   | int::T
-   	 \_args  | [nat::T][Obj&lt;526&gt;:-4 is not a is(gt(0))...]]@/sys/fail/4[...]
+   	 \_args  | [nat::T][Obj&lt;524&gt;:-4 is not a is(gt(0))...]]@/sys/fail/4[...]
 mtron&gt; [-- refining rec::T  --]
 mtron&gt; [name=&gt;'snowbutt',age=&gt;7].as(rec::T[?[name=&gt;str::T,age=&gt;int::T]@chicken)
 ==&gt;fail::[[name=&gt;'snowbutt',age=&gt;7].as(rec::T[?[name=&gt;str::T,age=&gt;int::T]@chicken)
@@ -2492,7 +2492,7 @@ mtron&gt;  -2.as(nat::T)     ​6​
    	  \_pred | []
    	[inst]   | as?rng=int&amp;dom=int(int::T){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
    	 \_dom   | int::T
-   	 \_args  | [int::T][Obj&lt;526&gt;:-2 is not a is(gt(0))...]]@/sys/fail/8[...]
+   	 \_args  | [int::T][Obj&lt;524&gt;:-2 is not a is(gt(0))...]]@/sys/fail/8[...]
 mtron&gt;  nat::2 * -1     ​7​
 ==&gt;fail::[apply failure:
    	[lhs]    | nat::2
@@ -2500,7 +2500,7 @@ mtron&gt;  nat::2 * -1     ​7​
    	  \_pred | [is(gt(0))]
    	[inst]   | mult?rng=int&amp;dom=int(-1){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
    	 \_dom   | int::T
-   	 \_args  | [-1][Obj$Helper&lt;911&gt;:nat::-2 is not a int::T[is(gt(0))][choose([is(lt(0))=&gt;mult(-1),id()=&gt;id()]).rshift()]]]@/sys/fail/10[...]</code></pre>
+   	 \_args  | [-1][Obj$Helper&lt;909&gt;:nat::-2 is not a int::T[is(gt(0))][choose([is(lt(0))=&gt;mult(-1),id()=&gt;id()]).rshift()]]]@/sys/fail/10[...]</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -2527,7 +2527,7 @@ The predicate component of the type definition tests an <code>int</code> to dete
 <div class="paragraph">
 <p>While every <code>type</code> is an <code>obj</code>, not every <code>obj</code> is a <code>type</code>.
 Those <code>objs</code> that are not <code>types</code> are <em>instances</em> of some <code>type</code>.
-This is the foundation for all other <code>objs</code> in {{r}}M{{r}}e{{y}}t{{m}}a{{m}}t{{g}}R{{y}}o{{c}}N{{X}}.</p>
+This is the foundation for all other <code>objs</code> in {{m}}M{{c}}e{{c}}T{{y}}A{{c}}t{{r}}R{{g}}o{{m}}N{{X}}.</p>
 </div>
 <h4 id="sec-cascading-type-constructions" class="discrete">cascading type constructions</h4>
 <h3 id="sec-mono-types" class="discrete">mono types</h3>
@@ -2651,7 +2651,7 @@ mtron&gt; bytes::'48656c6c6f'     ​2​
    	  \_pred | []
    	[inst]   | ctor?rng=kB&amp;dom=#{?}(1024){&lt;j&gt;}
    	 \_dom   | #{?}::T
-   	 \_args  | [1024][Inst&lt;319&gt;:unable to convert int::T to real::T[Obj&lt;545&gt;:class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Real (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Real are in unnamed module of loader 'app')]]]@/sys/fail/32[...]]@/sys/fail/34
+   	 \_args  | [1024][Inst&lt;319&gt;:unable to convert int::T to real::T[Obj&lt;543&gt;:class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Real (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Real are in unnamed module of loader 'app')]]]@/sys/fail/32[...]]@/sys/fail/34
 mtron&gt; mB::1.as(kB::T)     ​2​
 ==&gt;fail::[unable to construct mB::T: fail::[apply failure:
    	[lhs]    | 1
@@ -2659,7 +2659,7 @@ mtron&gt; mB::1.as(kB::T)     ​2​
    	  \_pred | []
    	[inst]   | ctor?rng=mB&amp;dom=#{?}(1){&lt;j&gt;}
    	 \_dom   | #{?}::T
-   	 \_args  | [1][Inst&lt;319&gt;:unable to convert int::T to real::T[Obj&lt;545&gt;:class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Real (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Real are in unnamed module of loader 'app')]]]@/sys/fail/38[...]]@/sys/fail/40
+   	 \_args  | [1][Inst&lt;319&gt;:unable to convert int::T to real::T[Obj&lt;543&gt;:class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Real (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Real are in unnamed module of loader 'app')]]]@/sys/fail/38[...]]@/sys/fail/40
 mtron&gt; gB::5.as(mB::T)     ​3​
 ==&gt;fail::[unable to construct gB::T: fail::[apply failure:
    	[lhs]    | 5
@@ -2667,7 +2667,7 @@ mtron&gt; gB::5.as(mB::T)     ​3​
    	  \_pred | []
    	[inst]   | ctor?rng=gB&amp;dom=#{?}(5){&lt;j&gt;}
    	 \_dom   | #{?}::T
-   	 \_args  | [5][Inst&lt;319&gt;:unable to convert int::T to real::T[Obj&lt;545&gt;:class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Real (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Real are in unnamed module of loader 'app')]]]@/sys/fail/44[...]]@/sys/fail/46
+   	 \_args  | [5][Inst&lt;319&gt;:unable to convert int::T to real::T[Obj&lt;543&gt;:class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Real (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Real are in unnamed module of loader 'app')]]]@/sys/fail/44[...]]@/sys/fail/46
 mtron&gt; pB::1.as(tB::T)     ​4​
 ==&gt;fail::[unable to construct pB::T: fail::[apply failure:
    	[lhs]    | 1
@@ -2675,7 +2675,7 @@ mtron&gt; pB::1.as(tB::T)     ​4​
    	  \_pred | []
    	[inst]   | ctor?rng=pB&amp;dom=#{?}(1){&lt;j&gt;}
    	 \_dom   | #{?}::T
-   	 \_args  | [1][Inst&lt;319&gt;:unable to convert int::T to real::T[Obj&lt;545&gt;:class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Real (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Real are in unnamed module of loader 'app')]]]@/sys/fail/50[...]]@/sys/fail/52</code></pre>
+   	 \_args  | [1][Inst&lt;319&gt;:unable to convert int::T to real::T[Obj&lt;543&gt;:class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Real (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Real are in unnamed module of loader 'app')]]]@/sys/fail/50[...]]@/sys/fail/52</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -2713,7 +2713,7 @@ mtron&gt; pB::1.as(tB::T)     ​4​
    	  \_pred | []
    	[inst]   | ctor?rng=mB&amp;dom=#{?}(1024){&lt;j&gt;}
    	 \_dom   | #{?}::T
-   	 \_args  | [1024][Inst&lt;319&gt;:unable to convert int::T to real::T[Obj&lt;545&gt;:class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Real (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Real are in unnamed module of loader 'app')]]]@/sys/fail/56[...]]@/sys/fail/58
+   	 \_args  | [1024][Inst&lt;319&gt;:unable to convert int::T to real::T[Obj&lt;543&gt;:class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Real (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Real are in unnamed module of loader 'app')]]]@/sys/fail/56[...]]@/sys/fail/58
 mtron&gt; kB::1024.eq(mB::1)     ​2​
 ==&gt;fail::[unable to construct kB::T: fail::[apply failure:
    	[lhs]    | 1024
@@ -2721,7 +2721,7 @@ mtron&gt; kB::1024.eq(mB::1)     ​2​
    	  \_pred | []
    	[inst]   | ctor?rng=kB&amp;dom=#{?}(1024){&lt;j&gt;}
    	 \_dom   | #{?}::T
-   	 \_args  | [1024][Inst&lt;319&gt;:unable to convert int::T to real::T[Obj&lt;545&gt;:class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Real (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Real are in unnamed module of loader 'app')]]]@/sys/fail/62[...]]@/sys/fail/64
+   	 \_args  | [1024][Inst&lt;319&gt;:unable to convert int::T to real::T[Obj&lt;543&gt;:class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Real (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Real are in unnamed module of loader 'app')]]]@/sys/fail/62[...]]@/sys/fail/64
 mtron&gt; gB::2.eq(mB::2048)     ​3​
 ==&gt;fail::[unable to construct gB::T: fail::[apply failure:
    	[lhs]    | 2
@@ -2729,7 +2729,7 @@ mtron&gt; gB::2.eq(mB::2048)     ​3​
    	  \_pred | []
    	[inst]   | ctor?rng=gB&amp;dom=#{?}(2){&lt;j&gt;}
    	 \_dom   | #{?}::T
-   	 \_args  | [2][Inst&lt;319&gt;:unable to convert int::T to real::T[Obj&lt;545&gt;:class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Real (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Real are in unnamed module of loader 'app')]]]@/sys/fail/68[...]]@/sys/fail/70
+   	 \_args  | [2][Inst&lt;319&gt;:unable to convert int::T to real::T[Obj&lt;543&gt;:class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Real (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Real are in unnamed module of loader 'app')]]]@/sys/fail/68[...]]@/sys/fail/70
 mtron&gt; tB::1.eq(gB::1024)     ​4​
 ==&gt;fail::[unable to construct tB::T: fail::[apply failure:
    	[lhs]    | 1
@@ -2737,7 +2737,7 @@ mtron&gt; tB::1.eq(gB::1024)     ​4​
    	  \_pred | []
    	[inst]   | ctor?rng=tB&amp;dom=#{?}(1){&lt;j&gt;}
    	 \_dom   | #{?}::T
-   	 \_args  | [1][Inst&lt;319&gt;:unable to convert int::T to real::T[Obj&lt;545&gt;:class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Real (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Real are in unnamed module of loader 'app')]]]@/sys/fail/74[...]]@/sys/fail/76</code></pre>
+   	 \_args  | [1][Inst&lt;319&gt;:unable to convert int::T to real::T[Obj&lt;543&gt;:class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Real (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Real are in unnamed module of loader 'app')]]]@/sys/fail/74[...]]@/sys/fail/76</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -3231,7 +3231,7 @@ mtron&gt;  int::-10.as(nat::T)
    	  \_pred | []
    	[inst]   | as?rng=int&amp;dom=int(int::T){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
    	 \_dom   | int::T
-   	 \_args  | [int::T][Obj&lt;526&gt;:-10 is not a is(gt(0))...]]@/sys/fail/98[...]</code></pre>
+   	 \_args  | [int::T][Obj&lt;524&gt;:-10 is not a is(gt(0))...]]@/sys/fail/98[...]</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -3334,7 +3334,7 @@ mtron&gt;  int::-10.as(nat::T)
    	  \_pred | []
    	[inst]   | as?rng=int&amp;dom=int(int::T){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
    	 \_dom   | int::T
-   	 \_args  | [int::T][Obj&lt;526&gt;:-10 is not a is(gt(0))...]]@/sys/fail/102[...]</code></pre>
+   	 \_args  | [int::T][Obj&lt;524&gt;:-10 is not a is(gt(0))...]]@/sys/fail/102[...]</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -3361,7 +3361,7 @@ mtron&gt;  nat::125.as(age::T)
    	  \_pred | [is(gt(0))]
    	[inst]   | as?rng=int&amp;dom=int(int::T){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
    	 \_dom   | int::T
-   	 \_args  | [int::T][Obj&lt;526&gt;:nat::125 is not a is(lt(120))...]]@/sys/fail/106[...]
+   	 \_args  | [int::T][Obj&lt;524&gt;:nat::125 is not a is(lt(120))...]]@/sys/fail/106[...]
 mtron&gt;  125.as(nat::T).as(age::T)
 ==&gt;fail::[apply failure:
    	[lhs]    | 125
@@ -3369,7 +3369,7 @@ mtron&gt;  125.as(nat::T).as(age::T)
    	  \_pred | []
    	[inst]   | as?rng=int&amp;dom=int(int::T){&lt;j&gt;}@<i class="conum" data-value="2"></i><b>(2)</b>
    	 \_dom   | int::T
-   	 \_args  | [int::T][Obj&lt;526&gt;:125 is not a is(lt(120))...]]@/sys/fail/108[...]</code></pre>
+   	 \_args  | [int::T][Obj&lt;524&gt;:125 is not a is(lt(120))...]]@/sys/fail/108[...]</code></pre>
 </div>
 </div>
 <div class="listingblock">
@@ -4996,7 +4996,7 @@ mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T).as(str::T)     ​5​
    	  \_pred | []
    	[inst]   | as?rng=str&amp;dom=bytes(str::T){&lt;j&gt;}
    	 \_dom   | bytes::T
-   	 \_args  | [str::T][Obj&lt;617&gt;:bytes(#{*}::T){&lt;j&gt;} [bytes::T] unable to convert bytes::T]]@/sys/fail/4[...]</code></pre>
+   	 \_args  | [str::T][Obj&lt;615&gt;:bytes(#{*}::T){&lt;j&gt;} [bytes::T] unable to convert bytes::T]]@/sys/fail/4[...]</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -5041,14 +5041,14 @@ mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T).as(str::T)     ​5​
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; bin:bash('-c',df)
 ==&gt;'Filesystem             1K-blocks      Used  Available Use% Mounted on'
-==&gt;'tmpfs                    6356184      6124    6350060   1% /run'
+==&gt;'tmpfs                    6356184      6112    6350072   1% /run'
 ==&gt;'efivarfs                     128        42         82  34% /sys/firmware/efi/efivars'
-==&gt;'/dev/nvme0n1p2         959786032 536527704  374430120  59% /'
-==&gt;'tmpfs                   31780908    505728   31275180   2% /dev/shm'
+==&gt;'/dev/nvme0n1p2         959786032 538444596  372513228  60% /'
+==&gt;'tmpfs                   31780908    632816   31148092   2% /dev/shm'
 ==&gt;'tmpfs                       5120        20       5100   1% /run/lock'
 ==&gt;'tmpfs                   31780908         0   31780908   0% /run/qemu'
 ==&gt;'/dev/nvme0n1p1            523248      6288     516960   2% /boot/efi'
-==&gt;'tmpfs                    6356180       404    6355776   1% /run/user/1000'
+==&gt;'tmpfs                    6356180       392    6355788   1% /run/user/1000'
 ==&gt;'/dev/nvme1n1p2         976744444 252064724  724679720  26% /media/hdd0'
 ==&gt;'//192.168.1.72/beast1 2112645040 713954028 1398691012  34% /srv/beast/hdd1'
 mtron&gt; bin:bash('-c',ls)
@@ -5069,9 +5069,6 @@ mtron&gt; bin:bash('-c',ls)
 ==&gt;'mvnw.cmd'
 ==&gt;node_modules
 ==&gt;'opencode.json'
-==&gt;'output2.pdf'
-==&gt;'output3.pdf'
-==&gt;'output.pdf'
 ==&gt;'package.json'
 ==&gt;'pom.xml'
 ==&gt;'README.md'
@@ -5081,7 +5078,7 @@ mtron&gt; bin:bash('-c',ls)
 ==&gt;test
 ==&gt;worktrees
 mtron&gt; bin:bash('-c','ls -all').regex('\b*\w+')._/count()\_&gt;-.sum()
-==&gt;716</code></pre>
+==&gt;677</code></pre>
 </div>
 </div>
 <h3 id="sec-shell-scripts" class="discrete">Shell Scripts</h3>
@@ -5614,7 +5611,7 @@ mtron&gt; *g:V/+.==[address/+/city/ =&gt; _]     ​4​
    	  \_pred | [isa([age=&gt;int::T,name=&gt;str::T,city=&gt;str::T]), isa([&lt;&gt;=&gt;rel{2}::T])]
    	[inst]   | select?rng=rec{?}&amp;dom=rec([address/+/city/=&gt;id()]){&lt;j&gt;}
    	 \_dom   | rec::T
-   	 \_args  | [[address/+/city/=&gt;id()]][Obj$Helper&lt;909&gt;:obj does not match person::T...]]@/sys/fail/4[...]
+   	 \_args  | [[address/+/city/=&gt;id()]][Obj$Helper&lt;907&gt;:obj does not match person::T...]]@/sys/fail/4[...]
 mtron&gt; *g:V/+.&gt;&gt;address/+/city
        *g:V/+.&gt;&gt;address/+/city     ​6​
 ==&gt;{8}'nomansland'
@@ -5676,7 +5673,7 @@ mtron&gt; *g:V/+.=?=[address=&gt;[_ =&gt; [state=&gt;NM]]]     ​4​
 ==&gt;fail{2}::[lhs range does not match inst domain: vrtx::T[?[name=&gt;str::T,lang=&gt;str::T]]@software =&gt; vrtx::T[?[&lt;&gt;=&gt;rel{2}::T]] [where?dom=vrtx([address=&gt;[id()=&gt;[state=&gt;NM]]])@&lt;1&gt;]]@/sys/fail/14
 ==&gt;fail{5}::[lhs range does not match inst domain: vrtx::T[?[age=&gt;int::T,name=&gt;str::T,city=&gt;str::T]]@person =&gt; vrtx::T[?[&lt;&gt;=&gt;rel{2}::T]] [where?dom=vrtx([address=&gt;[id()=&gt;[state=&gt;NM]]])@&lt;1&gt;]]@/sys/fail/18
 mtron&gt; *g:V/+.=?=[address=&gt;[_ =&gt; [state=&gt;NM]]].&gt;&gt;address/+/city     ​5​
-==&gt;fail::[MaCHine fAIlEd]@/sys/fail/46[...]</code></pre>
+==&gt;fail::[mAChinE fAiLed]@/sys/fail/46[...]</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -5962,13 +5959,7 @@ mtron&gt; /te/hot/1/b  -&gt; [item   =&gt; 'mouse',total=&gt;25.0]
 ==&gt;[item=&gt;'mouse',total=&gt;25.0000]
 mtron&gt; /te/cold/1/x -&gt; [item   =&gt; 'book',total=&gt;15.0,
                        seller =&gt; !*g:V/4]
-==&gt;fail::[apply failure:
-   	[lhs]    | /te/cold/1/x
-   	 \_type  | /m/uri
-   	  \_pred | []
-   	[inst]   | ref?rng=#{*}&amp;dom=#([item=&gt;'book',total=&gt;15.0000,seller=&gt;!*g:V/4]){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
-   	 \_dom   | #::T
-   	 \_args  | [[item=&gt;'book',total=&gt;15.0000,seller=&gt;!*g:V/4]][tbleSpace&lt;507&gt;:sqliteexception: [SQLITE_ERROR] SQL error or missing database (near "1": syntax error)...]]@/sys/fail/72[...]</code></pre>
+==&gt;[item=&gt;'book',total=&gt;15.0000,seller=&gt;!*g:V/4]</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -5996,8 +5987,9 @@ mtron&gt; *g:V/1/OUT/te:hot/a/owner/name     ​3​
    	  \_pred | []
    	[inst]   | *g:V/1/OUT/te:hot/a/owner/name
    	 \_dom   | #{?}::T
-   	 \_args  | [g:V/1/OUT/te:hot/a/owner/name][Inst&lt;319&gt;:unable to convert mfail to rec::T[Obj&lt;557&gt;:class studio.phaseshift.metatron.isa.m.type.impl.MFail cannot be cast to class studio.phaseshift.metatron.isa.m.type.Rec (studio.phaseshift.metatron.isa.m.type.impl.MFail and studio.phaseshift.metatron.isa.m.type.Rec are in unnamed module of loader 'app')]]]@/sys/fail/82[...]
+   	 \_args  | [g:V/1/OUT/te:hot/a/owner/name][Inst&lt;319&gt;:unable to convert mfail to rec::T[Obj&lt;555&gt;:class studio.phaseshift.metatron.isa.m.type.impl.MFail cannot be cast to class studio.phaseshift.metatron.isa.m.type.Rec (studio.phaseshift.metatron.isa.m.type.impl.MFail and studio.phaseshift.metatron.isa.m.type.Rec are in unnamed module of loader 'app')]]]@/sys/fail/78[...]
 mtron&gt; *g:V/1/OUT/te:cold/x/total     ​4​
+==&gt;15.0000
 mtron&gt; *g:V/1/OUT/knows.count()     ​5​
 ==&gt;{2}1</code></pre>
 </div>
@@ -6008,11 +6000,11 @@ mtron&gt; *g:V/1/OUT/knows.count()     ​5​
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *g:V/1.outE(te:hot).count()     ​1​
 ==&gt;1
 mtron&gt; *g:V/1.outE(te:hot/a)&gt;&gt;item     ​2​
-==&gt;fail::[lhs range does not match inst domain: vrtx::T[?[age=&gt;int::T,name=&gt;str::T,city=&gt;str::T]]@person =&gt; vrtx::T[?[&lt;&gt;=&gt;rel{2}::T]] [outE?rng=#{*}&amp;dom=vrtx(te:hot/a){&lt;j&gt;}@&lt;1&gt;]]@/sys/fail/86
+==&gt;fail::[lhs range does not match inst domain: vrtx::T[?[age=&gt;int::T,name=&gt;str::T,city=&gt;str::T]]@person =&gt; vrtx::T[?[&lt;&gt;=&gt;rel{2}::T]] [outE?rng=#{*}&amp;dom=vrtx(te:hot/a){&lt;j&gt;}@&lt;1&gt;]]@/sys/fail/82
 mtron&gt; *g:V/1.outE(te:hot/a)&gt;&gt;owner&gt;&gt;name     ​3​
-==&gt;fail::[lhs range does not match inst domain: vrtx::T[?[age=&gt;int::T,name=&gt;str::T,city=&gt;str::T]]@person =&gt; vrtx::T[?[&lt;&gt;=&gt;rel{2}::T]] [outE?rng=#{*}&amp;dom=vrtx(te:hot/a){&lt;j&gt;}@&lt;1&gt;]]@/sys/fail/88
+==&gt;fail::[lhs range does not match inst domain: vrtx::T[?[age=&gt;int::T,name=&gt;str::T,city=&gt;str::T]]@person =&gt; vrtx::T[?[&lt;&gt;=&gt;rel{2}::T]] [outE?rng=#{*}&amp;dom=vrtx(te:hot/a){&lt;j&gt;}@&lt;1&gt;]]@/sys/fail/84
 mtron&gt; *g:V/1.outE(te:cold/x)&gt;&gt;total     ​4​
-==&gt;fail::[lhs range does not match inst domain: vrtx::T[?[age=&gt;int::T,name=&gt;str::T,city=&gt;str::T]]@person =&gt; vrtx::T[?[&lt;&gt;=&gt;rel{2}::T]] [outE?rng=#{*}&amp;dom=vrtx(te:cold/x){&lt;j&gt;}@&lt;1&gt;]]@/sys/fail/90
+==&gt;fail::[lhs range does not match inst domain: vrtx::T[?[age=&gt;int::T,name=&gt;str::T,city=&gt;str::T]]@person =&gt; vrtx::T[?[&lt;&gt;=&gt;rel{2}::T]] [outE?rng=#{*}&amp;dom=vrtx(te:cold/x){&lt;j&gt;}@&lt;1&gt;]]@/sys/fail/86
 mtron&gt; *g:V/1.outE(knows).count()     ​5​
 ==&gt;1</code></pre>
 </div>
@@ -6308,11 +6300,11 @@ mtron&gt; v1     ​1​
 mtron&gt; *v1     ​2​
 ==&gt;[name=&gt;'marko',age=&gt;29,out_=&gt;[knows=&gt;{!*v2,!*v3},created=&gt;!*v4]]
 mtron&gt; *v1.outE(knows)     ​3​
-==&gt;fail::[lhs range does not match inst domain: rec::T =&gt; vrtx::T[?[&lt;&gt;=&gt;rel{2}::T]] [outE?rng=edge{*}&amp;dom=vrtx(knows){&lt;j&gt;}@&lt;1&gt;]]@/sys/fail/94
+==&gt;fail::[lhs range does not match inst domain: rec::T =&gt; vrtx::T[?[&lt;&gt;=&gt;rel{2}::T]] [outE?rng=edge{*}&amp;dom=vrtx(knows){&lt;j&gt;}@&lt;1&gt;]]@/sys/fail/90
 mtron&gt; *v1.outE(knows).outE(created)     ​4​
-==&gt;fail::[lhs range does not match inst domain: rec::T =&gt; vrtx::T[?[&lt;&gt;=&gt;rel{2}::T]] [outE?rng=edge{*}&amp;dom=vrtx(knows){&lt;j&gt;}@&lt;1&gt;]]@/sys/fail/96
+==&gt;fail::[lhs range does not match inst domain: rec::T =&gt; vrtx::T[?[&lt;&gt;=&gt;rel{2}::T]] [outE?rng=edge{*}&amp;dom=vrtx(knows){&lt;j&gt;}@&lt;1&gt;]]@/sys/fail/92
 mtron&gt; *v1.outE(knows).outE(created).&gt;&gt;name     ​5​
-==&gt;fail::[lhs range does not match inst domain: rec::T =&gt; vrtx::T[?[&lt;&gt;=&gt;rel{2}::T]] [outE?rng=edge{*}&amp;dom=vrtx(knows){&lt;j&gt;}@&lt;1&gt;]]@/sys/fail/98</code></pre>
+==&gt;fail::[lhs range does not match inst domain: rec::T =&gt; vrtx::T[?[&lt;&gt;=&gt;rel{2}::T]] [outE?rng=edge{*}&amp;dom=vrtx(knows){&lt;j&gt;}@&lt;1&gt;]]@/sys/fail/94</code></pre>
 </div>
 </div>
 </div>
@@ -6428,11 +6420,11 @@ mtron&gt; *v1     ​2​
      inV_=&gt;!*v3,
      outV_=&gt;!*v1]]
 mtron&gt; *v1.out(knows)     ​3​
-==&gt;fail::[lhs range does not match inst domain: rec::T =&gt; vrtx::T[?[&lt;&gt;=&gt;rel{2}::T]] [out?rng=vrtx{*}&amp;dom=vrtx(knows){&lt;j&gt;}@&lt;1&gt;]]@/sys/fail/100
+==&gt;fail::[lhs range does not match inst domain: rec::T =&gt; vrtx::T[?[&lt;&gt;=&gt;rel{2}::T]] [out?rng=vrtx{*}&amp;dom=vrtx(knows){&lt;j&gt;}@&lt;1&gt;]]@/sys/fail/96
 mtron&gt; *v1.out(knows).out(created)     ​4​
-==&gt;fail::[lhs range does not match inst domain: rec::T =&gt; vrtx::T[?[&lt;&gt;=&gt;rel{2}::T]] [out?rng=vrtx{*}&amp;dom=vrtx(knows){&lt;j&gt;}@&lt;1&gt;]]@/sys/fail/102
+==&gt;fail::[lhs range does not match inst domain: rec::T =&gt; vrtx::T[?[&lt;&gt;=&gt;rel{2}::T]] [out?rng=vrtx{*}&amp;dom=vrtx(knows){&lt;j&gt;}@&lt;1&gt;]]@/sys/fail/98
 mtron&gt; *v1.out(knows).out(created).&gt;&gt;name     ​5​
-==&gt;fail::[lhs range does not match inst domain: rec::T =&gt; vrtx::T[?[&lt;&gt;=&gt;rel{2}::T]] [out?rng=vrtx{*}&amp;dom=vrtx(knows){&lt;j&gt;}@&lt;1&gt;]]@/sys/fail/104</code></pre>
+==&gt;fail::[lhs range does not match inst domain: rec::T =&gt; vrtx::T[?[&lt;&gt;=&gt;rel{2}::T]] [out?rng=vrtx{*}&amp;dom=vrtx(knows){&lt;j&gt;}@&lt;1&gt;]]@/sys/fail/100</code></pre>
 </div>
 </div>
 </div>
@@ -7871,16 +7863,7 @@ mtron&gt; *lite:person/+/id     ​6​
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *lite:+
-==&gt;rrow::T[?[id=&gt;int{?}::T,_tid=&gt;str::T,name=&gt;str::T,age=&gt;int::T]]@person
-==&gt;rrow::T[?[id=&gt;int{?}::T,_tid=&gt;str::T,trophy=&gt;str::T,recipient=&gt;isa(person/+/id).!*id()]]@award
-==&gt;rrow::T[?[id=&gt;int{?}::T,_tid=&gt;str::T,player=&gt;str::T,points=&gt;int::T]]@score
-==&gt;rrow::T[?[
-     id=&gt;int{?}::T,
-     _tid=&gt;str::T,
-     name=&gt;str::T,
-     location=&gt;isa(area:V/+/id).!*id(),
-     parent=&gt;str::T]]@venue</code></pre>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *lite:+</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -7992,8 +7975,8 @@ code''' └────────────────┘ └────�
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *lite:person/+.=?=[age=&gt;?&lt;30]     ​1​
-==&gt;rrow::[id=&gt;1,_tid=&gt;/m/rec,name=&gt;'marko',age=&gt;29]@lite:/sys/space/lite/person/1
-==&gt;rrow::[id=&gt;2,_tid=&gt;/m/rec,name=&gt;'grant',age=&gt;25]@lite:/sys/space/lite/person/2
+==&gt;[id=&gt;1,_tid=&gt;'/m/rec',name=&gt;'marko',age=&gt;29]@lite:/sys/space/lite/person/1
+==&gt;[id=&gt;2,_tid=&gt;'/m/rec',name=&gt;'grant',age=&gt;25]@lite:/sys/space/lite/person/2
 mtron&gt; *lite:person/+/name.count()     ​2​
 ==&gt;2
 mtron&gt; *lite:person/+.==[name=&gt;_]     ​3​
@@ -8023,8 +8006,8 @@ mtron&gt; *lite:person/+.==[name=&gt;_]     ​3​
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys/space/lite.sql("SELECT name,age FROM person WHERE age &lt; 30")     ​1​
-==&gt;rrow::[name=&gt;'marko',age=&gt;29]
-==&gt;rrow::[name=&gt;'grant',age=&gt;25]
+==&gt;[name=&gt;'marko',age=&gt;29]
+==&gt;[name=&gt;'grant',age=&gt;25]
 mtron&gt; */sys/space/lite.sql("SELECT name,age FROM person WHERE age &lt; 30")&gt;&gt;age.sum()     ​2​
 ==&gt;54</code></pre>
 </div>
@@ -8079,10 +8062,10 @@ mtron&gt; lite:score/1 -&gt; [player=&gt;'marko', points=&gt;42]     ​2​
 mtron&gt; lite:score/2 -&gt; [player=&gt;'grant', points=&gt;99]     ​3​
 ==&gt;[player=&gt;'grant',points=&gt;99]
 mtron&gt; *lite:score/+.=?=[player=&gt;'marko']     ​4​
-==&gt;rrow::[id=&gt;1,_tid=&gt;/m/rec,player=&gt;'marko',points=&gt;42]@lite:/sys/space/lite/score/1
+==&gt;[id=&gt;1,_tid=&gt;'/m/rec',player=&gt;'marko',points=&gt;42]@lite:/sys/space/lite/score/1
 mtron&gt; */sys/space/lite.sql("SELECT p.name,p.age,s.points FROM person p JOIN score s ON p.name=s.player")     ​5​
-==&gt;rrow::[name=&gt;'marko',age=&gt;29,points=&gt;42]
-==&gt;rrow::[name=&gt;'grant',age=&gt;25,points=&gt;99]</code></pre>
+==&gt;[name=&gt;'marko',age=&gt;29,points=&gt;42]
+==&gt;[name=&gt;'grant',age=&gt;25,points=&gt;99]</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -8445,12 +8428,12 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
 ==&gt;/sys/env/BUN_INSTALL=&gt;'/home/killswitch/.bun'
 ==&gt;/sys/env/JAVA_HOME=&gt;'/home/killswitch/.sdkman/candidates/java/current'
 ==&gt;/sys/env/QT_IM_MODULE=&gt;'ibus'
+==&gt;/sys/env/GNOME_TERMINAL_SCREEN=&gt;'/org/gnome/Terminal/screen/c649f7f5_f490_4420_81d7_a1f62a4e2408'
 ==&gt;/sys/env/GNOME_DESKTOP_SESSION_ID=&gt;'this-is-deprecated'
 ==&gt;/sys/env/PATH=&gt;'/home/killswitch/.local/bin:/home/killswitch/.bun/bin:/home/killswitch/.npm-global/bin:/usr:/opt/rocm-6.4.0/bin:/opt/rocm/bin:/home/killswitch/.opencode/bin:/home/killswitch/.sdkman/candidates/tornadovm/current/bin:/home/killswitch/software/miniconda3/bin:/home/killswitch/.sdkman/candidates/tornadovm/current/bin:/home/killswitch/.sdkman/candidates/maven/current/bin:/home/killswitch/.sdkman/candidates/jbang/current/bin:/home/killswitch/.sdkman/candidates/java/current/bin:/home/killswitch/.local/bin:/home/killswitch/.elan/bin:/home/killswitch/.cargo/bin:/home/killswitch/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/home/killswitch/.lmstudio/bin:/home/killswitch/software/ijhttp:/home/killswitch/.surrealdb:/home/killswitch/.lmstudio/bin:/home/killswitch/go/bin'
 ==&gt;/sys/env/JBANG_HOME=&gt;'/home/killswitch/.sdkman/candidates/jbang/current'
 ==&gt;/sys/env/USER=&gt;'killswitch'
-==&gt;/sys/env/LIBVIRT_DEFAULT_URI=&gt;'qemu:///system'
-==&gt;/sys/env/XDG_SEAT=&gt;'seat0'</code></pre>
+==&gt;/sys/env/LIBVIRT_DEFAULT_URI=&gt;'qemu:///system'</code></pre>
 </div>
 </div>
 <h3 id="sec-boot-loader" class="discrete">Boot Loader</h3>
