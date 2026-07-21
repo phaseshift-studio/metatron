@@ -41,9 +41,7 @@ import studio.phaseshift.metatron.util.MTronException;
 import java.nio.ByteBuffer;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.time.DateTimeException;
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -193,10 +191,9 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
     ///////////////////////////////////////////////////////////////////////////
     // ChatMemoryStore interface
     //
-    // All messages are stored in a single polymorphic llm_message table under
-    // the session's parent path.  The table is append-only; the sliding window
-    // is a read-time view.  Message type is carried by the rec's TID, which
-    // tbleSpace persists in the _tid column.
+    // All messages are stored in a single polymorphic llm_message rec{*} under
+    // the session's parent path.  The rec{*} is append-only; the sliding window
+    // is a read-time view.
     //
     // URI topology:
     //   .../llm_session/1           → session policy (agent, user, algorithm)
@@ -208,78 +205,34 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
     public List<ChatMessage> getMessages(final Object sessionVID) {
         if (!(sessionVID instanceof fURI sesVID))
             return new ArrayList<>();
-
-        // Read session policy for window config
-        int windowMax = 15;
-        try {
-            final Obj sessionObj = Router.readFromSpace(sesVID);
-            if (sessionObj.isRec()) {
-                final Obj algorithm = sessionObj.asRec().at(uri(ALGORITHM));
-                if (algorithm.isRec()) {
-                    windowMax = algorithm.asRec().at(uri(MAX)).orElse(jnt(15)).intValue().intValue();
-                }
-            }
-        } catch (final Exception e) {
-            LOG.warn("could not read session policy for %s (using default max=15): %s", sesVID, e);
-        }
-
-        // Read messages sequentially by incrQ-assigned id (1, 2, 3, ...).
-        // Collect messages matching this session, skip thinking rows, take last N.
+        // Read all messages for this session, skip thinking rows
         final fURI msgBase = sesVID.retract(2).extend(LLM_MESSAGE_TABLE);
         final List<Rec> allMessages = new ArrayList<>();
         final AtomicInteger found = new AtomicInteger(0);
-        /*from_(msgBase.extend("+").toUri()).where_(rec(uri(SESSION), sesVID.toUri())).apply(jnt(1)).stream().forEach(msg -> {
+        from_(msgBase.extend("+").toUri()).where_(rec(uri(SESSION), sesVID.toUri())).apply(jnt(1)).stream().forEach(msg -> {
             if (!msg.isRec()) {
                 LOG.warn("non-message obj in llm messages: %s", msg);
             } else {
                 final Rec msgRec = msg.asRec();
+                if (msgRec.tid().equals(THINKING_MESSAGE_TID)) return;
                 final Obj sessionField = msgRec.at(uri(SESSION));
-                if (!sessionField.isNoObj() && sessionField.isUri() && sessionField.uriValue().equals(sesVID) && !msgRec.tid().equals(THINKING_MESSAGE_TID)) {
+                if (!sessionField.isNoObj() && sessionField.isUri() && sessionField.uriValue().equals(sesVID)) {
                     allMessages.add(msgRec);
                     found.incrementAndGet();
                 }
             }
-        });*/
-        for (int id = 1; ; id++) {
-            final fURI readURI = msgBase.extend(String.valueOf(id));
-            try {
-                final Obj msgObj = Router.readFromSpace(readURI);
-                if (null == msgObj || msgObj.isNoObj()) break;
-                if (!msgObj.isRec()) continue;
-                final Rec msgRec = msgObj.asRec();
-                // Filter by session — the table is shared across sessions
-                final Obj sessionField = msgRec.at(uri(SESSION));
-                if (sessionField.isNoObj() || !sessionField.isUri() || !sessionField.uriValue().equals(sesVID)) {
-                    continue;
-                }
-                // Skip thinking rows — they're for the ledger, not the LC4j window
-                if (msgRec.tid().equals(THINKING_MESSAGE_TID)) continue;
-                allMessages.add(msgRec);
-                found.incrementAndGet();
-            } catch (final Exception e) {
-                LOG.warn("unable to process message %s (ignoring): %s", readURI, e);
-            }
-        }
-        try {
-            allMessages.sort(Comparator.comparing(a -> LocalDateTime.parse(Str.Helper.cleanString(a.at(TIME)))));
-        } catch (final DateTimeException e) {
-            LOG.debug("unable to form datetime: %s", e);
-        }
+        });
         LOG.info("messages found for context window: " + found.get());
-        final List<ChatMessage> result = new ArrayList<>();
-        final int start = Math.max(0, allMessages.size() - windowMax);
-        for (int i = start; i < allMessages.size(); i++) {
+        // ChatMemory handles its own windowing (token-based or message-based)
+        // after hydrating from the store; we return all messages and let it prune
+        return allMessages.stream().map(m -> {
             try {
-                final ChatMessage cm = recToChatMessage(allMessages.get(i));
-                if (cm != null)
-                    result.add(cm);
+                return recToChatMessage(m);
             } catch (final Exception e) {
                 LOG.warn("error converting stored message to ChatMessage (ignoring): %s", e);
+                return null;
             }
-        }
-
-        LOG.info("read %d messages for session %s (window max=%d, total stored=%d)", result.size(), sesVID, windowMax, allMessages.size());
-        return result;
+        }).filter(m -> !Objects.isNull(m)).toList();
     }
 
     @Override
@@ -290,37 +243,10 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
         }
         if (null == messages || messages.isEmpty())
             return;
-
         LOG.info("updating messages %s", messages);
 
-        // -- 1. Read session policy -------------------------------------------
-        int windowMax = 15;
-        fURI name = null;
-        final Map<Obj, Obj> existingSessionFields = new LinkedHashMap<>();
-        try {
-            final Obj existingObj = Router.readFromSpace(sesVID);
-            if (existingObj.isRec()) {
-                final Rec existingRec = existingObj.asRec();
-                for (final Obj key : existingRec.keys().toList()) {
-                    if (key.isUri()) {
-                        final String keyName = key.uriValue().name();
-                        if (!ALGORITHM.equals(keyName))
-                            existingSessionFields.put(key, existingRec.at(key));
-                    }
-                }
-                final Obj algorithm = existingRec.at(uri(ALGORITHM));
-                if (algorithm.isRec()) {
-                    windowMax = algorithm.asRec().at(uri(MAX)).orElse(jnt(15)).intValue().intValue();
-                    name = algorithm.asRec().at(uri(NAME)).orThrow(MTronException.of("no algorithm name specified")).uriValue();
-                }
-            }
-        } catch (final Exception e) {
-            LOG.debug("could not read existing session policy for %s (creating new): %s", sesVID, e);
-        }
-
-        // -- 2. Convert incoming messages to typed Recs + compute hashes -----
+        // -- 1. Convert incoming messages to typed Recs + compute hashes -----
         final List<Rec> incomingRecs = new ArrayList<>();
-        // final Set<String> incomingHashes = new LinkedHashSet<>();
         for (final ChatMessage msg : messages) {
             try {
                 final Rec msgRec = chatMessageToRec(msg);
@@ -336,7 +262,7 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
             }
         }
 
-        // -- 3. Append new messages (hash-based dedup) -----------------------
+        // -- 2. Append new messages (hash-based dedup) -----------------------
         LOG.info("appending new messages [size:%d]", messages.size());
         final Set<String> sessionHashes;
         synchronized (WRITTEN_HASHES) {
@@ -352,8 +278,9 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
                 final fURI writePath = llmMessagePath(sesVID);
                 final Obj writtenObj = Router.writeToSpace(writePath, incomingRec);
                 LOG.debug("updating current messages [size:%d]", this.currentMessages.size());
-                if (writtenObj.typeId().equals(USER_MESSAGE_TID) ||
-                        writtenObj.typeId().equals(AI_MESSAGE_TID))
+                if ((writtenObj.typeId().equals(USER_MESSAGE_TID) ||
+                        writtenObj.typeId().equals(AI_MESSAGE_TID)) &&
+                        !writtenObj.asRec().has(TOOL_REQUESTS))
                     this.currentMessages.add(writtenObj.vid());
                 written++;
             } catch (final Exception e) {
@@ -361,8 +288,8 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
             }
         }
 
-        // -- 4. Write thinking row if accumulated ----------------------------
-        final Obj thinking = this.agent.at(res("thinking"));
+        // -- 3. Write thinking row if accumulated ----------------------------
+        final Obj thinking = this.agent.at(res(THINKING));
         if (!thinking.isNoObj() && !thinking.strValue().isBlank()) {
             final Map<Obj, Obj> thinkingMap = new LinkedHashMap<>();
             thinkingMap.put(uri(TEXT), str(thinking.strValue()));
@@ -381,20 +308,11 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
                 }
             }
             // Clear thinking from blackboard so it isn't re-written next turn
-            this.agent.at(res("thinking"), noobj(), Poly.MUTABLE);
+            this.agent.at(res(THINKING), noobj(), Poly.MUTABLE);
         }
 
-        // -- 5. Update session policy ----------------------------------------
-        final Map<Obj, Obj> algorithmMap = new LinkedHashMap<>();
-        algorithmMap.put(uri(MAX), jnt(windowMax));
-        algorithmMap.put(uri(NAME), uri(name));
-        existingSessionFields.put(uri(ALGORITHM), rec(algorithmMap));
-        existingSessionFields.putIfAbsent(uri(AGENT), str("default"));
-        existingSessionFields.putIfAbsent(uri(USER), str("default"));
-        Router.writeToSpace(sesVID, rec(existingSessionFields).selfVID(sesVID));
-
-        LOG.debug("wrote %d messages + %s thinking for session %s (window name=%s, max=%d)",
-                written, thinking.isNoObj() ? "no" : "yes", sesVID, name, windowMax);
+        LOG.debug("wrote %d messages + %s thinking for session %s",
+                written, thinking.isNoObj() ? "no" : "yes", sesVID);
     }
 
     @Override

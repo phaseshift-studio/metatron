@@ -43,7 +43,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.mInstSet.ALL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.tble.tbleInstSet.REC_ROW_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
 
 /**
  * Generates mtron type definitions from SQL table metadata.
@@ -73,8 +73,8 @@ public class SQLSchemaGenerator {
 
     private final List<ExistingTableSchema.TableMetadata> tableMetadata;
     private final fURI schemaBasePath;
-    private final String databaseName;
     private final Map<String, Map<String, fURI>> logicalTypes;
+    private final Map<String, fURI> tableTids;
     private Map<String, Type> tableTypes;
 
     /**
@@ -89,16 +89,17 @@ public class SQLSchemaGenerator {
      *
      * @param tableMetadata  metadata for all tables in the database
      * @param schemaBasePath base path for schema types (e.g., /m/tble/inst/schema/db)
-     * @param databaseName   the name of the database (for alignment with docdb schema)
+     * @param logicalTypes   column-level type overrides (may be null)
+     * @param tableTids      table-level TIDs from {@code $table} sentinel (may be null)
      */
     public SQLSchemaGenerator(final List<ExistingTableSchema.TableMetadata> tableMetadata,
                               final fURI schemaBasePath,
-                              final String databaseName,
-                              final Map<String, Map<String, fURI>> logicalTypes) {
+                              final Map<String, Map<String, fURI>> logicalTypes,
+                              final Map<String, fURI> tableTids) {
         this.tableMetadata = tableMetadata;
         this.schemaBasePath = schemaBasePath;
-        this.databaseName = databaseName;
         this.logicalTypes = logicalTypes;
+        this.tableTids = tableTids;
         this.tableTypes = null; // Lazy initialization
     }
 
@@ -110,22 +111,24 @@ public class SQLSchemaGenerator {
      */
     public SQLSchemaGenerator(final List<ExistingTableSchema.TableMetadata> tableMetadata,
                               final fURI schemaBasePath) {
-        this(tableMetadata, schemaBasePath, schemaBasePath.name(), null);
+        this(tableMetadata, schemaBasePath, null, null);
     }
 
     /**
      * Get all table types as a collection (generates them lazily on first access)
      */
-    public Collection<Type> getTableTypes() {
+    private Map<String, Type> ensureTableTypes() {
         if (tableTypes == null) {
             tableTypes = new LinkedHashMap<>();
-            // Generate all table types
             for (final ExistingTableSchema.TableMetadata table : tableMetadata) {
-                final Type tableType = generateTableType(table);
-                tableTypes.put(table.tableName().toLowerCase(), tableType);
+                tableTypes.put(table.tableName().toLowerCase(), generateTableType(table));
             }
         }
-        return tableTypes.values();
+        return tableTypes;
+    }
+
+    public Collection<Type> getTableTypes() {
+        return ensureTableTypes().values();
     }
 
     /**
@@ -135,16 +138,12 @@ public class SQLSchemaGenerator {
      */
     public Type refreshTableType(final ExistingTableSchema.TableMetadata table) {
         final String key = table.tableName().toLowerCase();
-        // Ensure the metadata list includes this table (may have been added
-        // to ExistingTableSchema.tableSchemas after the initial snapshot).
         final boolean known = tableMetadata.stream()
                 .anyMatch(t -> t.tableName().equalsIgnoreCase(table.tableName()));
         if (!known)
             tableMetadata.add(table);
         final Type tableType = generateTableType(table);
-        if (tableTypes == null)
-            tableTypes = new LinkedHashMap<>();
-        tableTypes.put(key, tableType);
+        ensureTableTypes().put(key, tableType);
         return tableType;
     }
 
@@ -185,10 +184,7 @@ public class SQLSchemaGenerator {
     public void registerFK(final String tableName, final String columnName,
                            final String toTable, final String toColumn) {
         final String key = tableName.toLowerCase() + "." + columnName.toLowerCase();
-        final String targetPath = toTable.contains(":")
-                ? toTable + "/+/" + toColumn
-                : toTable + "/+/" + toColumn;
-        fkLookup.put(key, new FKTarget(targetPath));
+        fkLookup.put(key, new FKTarget(toTable + "/+/" + toColumn));
     }
 
     /**
@@ -200,47 +196,38 @@ public class SQLSchemaGenerator {
 
 
     /**
+     * Resolve the table-level TID for {@code tableName}.
+     * Looks up the {@code $table} sentinel from {@link #tableTids}, falling
+     * back to {@link studio.phaseshift.metatron.isa.m.mInstSet#REC_TID}.
+     */
+    private fURI resolveTableTid(final String tableName) {
+        if (tableTids != null) {
+            final fURI tid = tableTids.get(tableName.toLowerCase());
+            if (tid != null) return tid;
+        }
+        return REC_TID;
+    }
+
+    /**
      * Generate a mtron type definition for a SQL table.
      * <p>
      * Foreign key columns are encoded as isa predicates on the column type,
      * pointing to the target table's primary key path via auto_from.
      * This eliminates the need for a separate "references" block — the instset
      * Type itself is the single source of truth.
+     * <p>
+     * Delegates to {@link #generateTableTypeAt} and adds a wildcard entry
+     * so that auto-generated types are open by default (new columns can be
+     * added on the fly).
      */
     private Type generateTableType(final ExistingTableSchema.TableMetadata table) {
-        final LinkedHashMap<Obj, Obj> fields = new LinkedHashMap<>();
-        final String tbl = table.tableName().toLowerCase();
-
-        // Add each column as a field in the record type
-        for (final ExistingTableSchema.ColumnMetadata column : table.columns()) {
-            // _tid is a system column — it's rec identity, not a user field
-            if (ExistingTableSchema.TID_COLUMN.equalsIgnoreCase(column.name())) continue;
-            final FKTarget fkTarget = getFKTarget(tbl, column.name());
-            if (fkTarget != null) {
-                // Encode FK as an isa predicate on the column type
-                // e.g., isa_(f("office/+/officeCode")).auto_from_(id_()).tryToInst()
-                final Obj fkPredicate = isa_(uri(fkTarget.targetPath()))
-                        .auto_from_(id_(), noobj())
-                        .tryToInst();
-                fields.put(uri(column.name()), fkPredicate);
-            } else {
-                Type columnType = sqlTypeToMtronType(column, tbl);
-                // Auto-increment PK never present in the rec at insert time
-                if (table.primaryKeys().contains(column.name()))
-                    columnType = columnType.maybe();
-                fields.put(uri(column.name()), columnType);
-            }
-        }
-
-        // Auto-generated types are open by default — the wildcard entry
-        // allows new columns to be added on the fly.  Remove it to lock.
+        final Type t = generateTableTypeAt(table, schemaBasePath.extend(table.tableName().toLowerCase()));
+        // Add wildcard entry so on-the-fly columns are accepted.
+        final Map<Obj, Obj> fields = new LinkedHashMap<>(t.isPredicateObj().recValue());
         fields.put(T(URI_TID.maybe()), ALL_TYPE);
-
-        // Build the type with full VID under schema instset namespace
-        final fURI tableTypePath = schemaBasePath.extend(tbl);
         return Type.Builder.build()
-                .tid(REC_ROW_TID)
-                .vid(tableTypePath)
+                .tid(t.tid())
+                .vid(t.vid())
                 .isaPredicate(rec(fields))
                 .create();
     }
@@ -364,6 +351,9 @@ public class SQLSchemaGenerator {
         final String tbl = table.tableName().toLowerCase();
 
         for (final ExistingTableSchema.ColumnMetadata column : table.columns()) {
+            // Skip system columns (see generateTableType above).
+            if (ExistingTableSchema.TID_COLUMN.equalsIgnoreCase(column.name())) continue;
+            if (table.primaryKeys().contains(column.name())) continue;
             final FKTarget fkTarget = getFKTarget(tbl, column.name());
             if (fkTarget != null) {
                 final Obj fkPredicate = isa_(uri(fkTarget.targetPath()))
@@ -371,10 +361,7 @@ public class SQLSchemaGenerator {
                         .tryToInst();
                 fields.put(uri(column.name()), fkPredicate);
             } else {
-                Type columnType = sqlTypeToMtronType(column, tbl);
-                // Auto-increment PK never present in the rec at insert time
-                if (table.primaryKeys().contains(column.name()))
-                    columnType = columnType.maybe();
+                final Type columnType = sqlTypeToMtronType(column, tbl);
                 fields.put(uri(column.name()), columnType);
             }
         }
@@ -382,7 +369,7 @@ public class SQLSchemaGenerator {
         //fields.put(URI_TYPE.maybe(), ALL_TYPE);
 
         return Type.Builder.build()
-                .tid(REC_ROW_TID)
+                .tid(resolveTableTid(tbl))
                 .vid(typeVid)
                 .isaPredicate(rec(fields))
                 .create();

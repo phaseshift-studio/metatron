@@ -206,6 +206,9 @@ bin/metatron</code></pre>
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
                            onclick="location.href='./articles/parametric-identities-in-ring-theory.html';"><i class="bi bi-arrow-repeat icon-color me-2 isa-row"></i>parametric identities</a></li>
                     <li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='./articles/mm-adt.pdf';"><i class="bi bi-layout-wtf icon-color me-2 isa-row"></i>mm-ADT (metatron precursor)</a></li>
+                    <li>
                 </ul>
             </li>
             <!----------------------------------------------------------------------------------------------------------
@@ -454,7 +457,8 @@ fsspace::[pattern   =&gt;local:#,route =&gt;[local: =&gt; &lt;~/&gt;]]       @/s
 httpspace::[pattern =&gt;http://#,
              host    =&gt;http://localhost:8765,
              route   =&gt;[/            =&gt;local:]]@/sys/space/http;
-console::[=&gt;]@/usr/ui/console;</code></pre>
+console::[=&gt;]@/usr/ui/console;
+==&gt;console::[=&gt;]@/usr/ui/console</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -550,7 +554,7 @@ mtron&gt; */sys/space/+.&gt;&gt;pattern
 ==&gt;mtronfs:#
 ==&gt;local:#
 mtron&gt; */sys/space/+.-&lt;[&gt;&gt;pattern=&gt;&gt;&gt;route]
-==&gt;{3}[=&gt;]
+==&gt;{3}[rshift(pattern)=&gt;rshift(route)]
 ==&gt;[http://#=&gt;[/=&gt;local:]]
 ==&gt;[mtronfs:#=&gt;[mtronfs:=&gt;&lt;.metatron&gt;]]
 ==&gt;[local:#=&gt;[local:=&gt;/home/killswitch/]]</code></pre>

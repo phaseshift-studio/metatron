@@ -19,7 +19,6 @@
 package studio.phaseshift.metatron.furi.q;
 
 import studio.phaseshift.metatron.Tokens;
-import studio.phaseshift.metatron.furi.DataPath;
 import studio.phaseshift.metatron.furi.QProc;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
@@ -29,8 +28,6 @@ import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.m.type.impl.MStr;
 import studio.phaseshift.metatron.isa.mach.type.Router;
-import studio.phaseshift.metatron.isa.vec.space.VectorDBClient;
-import studio.phaseshift.metatron.isa.vec.space.vecSpace;
 import studio.phaseshift.metatron.isa.web.type.MIME;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
@@ -54,6 +51,7 @@ import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
@@ -62,6 +60,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.type.thread.VirtualThread.virtual;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableList;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /*
@@ -128,20 +127,35 @@ public final class QCollection {
     //
     public static final fURI SUBQ_PATTERN = f("subq");
     public static final fURI SUBQ_TID = QPROC_TID.extend(SUBQ_PATTERN);
-    public static final fURI SUBSCRIPTION_TID = SUBQ_TID.extend("sub");
+    public static final fURI SUBQ_SUB_TID = SUBQ_TID.extend("sub");
+    public static final fURI SUBQ_PUB_TID = SUBQ_TID.extend("pub");
     public static Type SUBQ_TYPE;
     public static final Type SUB_TYPE =
             docWrap(Type.Builder.build()
                             .tid(REC_TID)
-                            .vid(SUBSCRIPTION_TID)
+                            .vid(SUBQ_SUB_TID)
                             .isaPredicate(rec(
                                     uri(TARGET).maybe().asUri(), URI_TYPE,
                                     uri(CODE), T(ALL.dom(LST_TID))))
-                            .create(), "a subscription specification", "", mutableMap(
+                            .create(), null, null, mutableMap(
                             uri(TARGET), "the pattern that will trigger the code callback (automatically added when new sub created)",
                             uri(CODE), "the code to execute when target state changes"),
-                    "subscribe to mutations within a pattern of space",
-                    "abc?subq -> |(?[uri::T,#::T].print(_))  [-- [target,new_obj] to on_recv --]");
+                    "subscribe to mutations over regions of space",
+                    "abc?subq -> sub::[code=>print(==obj+1)] [-- mutations to abc generate pub::T objs pass through sub::T code --]",
+                    "abc -> 5                                [-- prints 6 to stdout                                             --]",
+                    "see pub::T");
+    public static final Type PUB_TYPE =
+            docWrap(Type.Builder.build()
+                            .tid(LST_TID)
+                            .vid(SUBQ_PUB_TID)
+                            .isaPredicate(lst(URI_TYPE, T(ALL_STAR)))
+                            .create(), null, null, mutableMap(
+                            jnt(0), "the uri that triggered this publication",
+                            jnt(1), "the obj that triggered this publication"),
+                    "publications are generated when there is a source<=>target match with subscriptions",
+                    "abc?subq -> sub::[code=>>>1+1.println(_).to(abc)] [-- mutations to abc generate pub::T objs passed through sub::T code --]",
+                    "abc      -> 5                                       [-- triggers creation of pub::[abc,5]                      --]",
+                    "see sub::T");
 
     private QCollection() {
         // do nothing 
@@ -242,6 +256,12 @@ public final class QCollection {
         if (obj.isNoObj())
             return true;
         return obj.asRec().at(DESC).orElse(str("okay")).equals(str(NO_DOCS_STRING));
+    }
+
+    public static boolean hasDocs(final Obj obj) {
+        if (obj.isNoObj())
+            return false;
+        return !obj.asRec().at(DESC).orElse(str(NO_DOCS_STRING)).equals(str(NO_DOCS_STRING));
     }
 
     protected final static class DocInstSet extends AbstractInstSet {
@@ -474,7 +494,7 @@ public final class QCollection {
                                 (subID != null && null != existingSub.vid() && existingSub.vid().bimatches(subID)) ||
                                         vid.basePath().bimatches(existingSub.asRec().at(TARGET).uriValue()));
                         obj.logger().info("unsubscribing from %s", vid.basePath());
-                    } else if (obj.tid().basePath().equals(SUBSCRIPTION_TID)) {
+                    } else if (obj.tid().basePath().equals(SUBQ_SUB_TID)) {
                         subscription = obj;
                         if (!subscription.asRec().has(TARGET))
                             subscription.asRec().at(TARGET, uri(vid.basePath()), MUTABLE);
@@ -483,7 +503,7 @@ public final class QCollection {
                             subscription.logger().info("subscribing to %s", vid.basePath());
                         }
                     } else {
-                        subscription = rec(mutableMap(uri(TARGET), uri(vid.basePath()), uri(CODE), obj), SUBSCRIPTION_TID, null);
+                        subscription = rec(mutableMap(uri(TARGET), uri(vid.basePath()), uri(CODE), obj), SUBQ_SUB_TID, null);
                         subscriptions.lstValue().add(subscription);
                         subscription.logger().info("subscribing to %s", vid.basePath());
                     }
@@ -496,8 +516,8 @@ public final class QCollection {
                         return noobj();
                     subscriptions.elements().filter(e -> vid.basePath().test(e.asRec().at(TARGET).uriValue()))
                             .forEach(s -> {
-                                subscriptions.logger().debug("spawning virtual thread for subscription recv: %s", s);
-                                virtual(s.asRec().jvm().getOrDefault(uri(CODE), noobj())).applyAsync(lst(List.of(vid.basePath().toUri(), obj)));
+                                subscriptions.logger().debug("spawning virtual thread for subscription code: %s", s);
+                                virtual(s.asRec().jvm().getOrDefault(uri(CODE), noobj())).applyAsync(lst(List.of(vid.basePath().toUri(), obj), SUBQ_PUB_TID, null));
                             });
                     return noobj();
                 }).create();
@@ -560,8 +580,6 @@ public final class QCollection {
 
     public static class Docs extends MRec {
 
-        private static final String NONE = "<none>";
-
         public Docs(final Map<Obj, Obj> value, final fURI tid, final fURI vid) {
             super(value, tid, vid);
         }
@@ -598,10 +616,10 @@ public final class QCollection {
             final List<Str> ex = Arrays.stream(examples).map(MStr::str).toList();
             return new Docs(mutableMap(
                     uri(OBJ), inst,
-                    uri(DOM), null == domDesc ? noobj() : str(domDesc),
-                    uri(RNG), null == rngDesc ? noobj() : str(rngDesc),
-                    uri(ARGS), null == argDescription ? noobj() : rec(argDescription.entrySet().stream().map(kv -> rel(kv.getKey(), str(kv.getValue())))),
-                    uri(DESC), str(description),
+                    uri(DOM), null == domDesc || domDesc.isBlank() ? noobj() : str(domDesc),
+                    uri(RNG), null == rngDesc || rngDesc.isBlank() ? noobj() : str(rngDesc),
+                    uri(ARGS), null == argDescription || argDescription.isEmpty() ? noobj() : rec(argDescription.entrySet().stream().map(kv -> rel(kv.getKey(), str(kv.getValue())))),
+                    uri(DESC), null == description || description.isBlank() ? noobj() : str(description),
                     uri(EXAMPLE), (ex.isEmpty() ? noobj() : lst((List) ex))), DOCS_TID, null);
         }
     }

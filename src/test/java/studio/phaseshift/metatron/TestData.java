@@ -198,6 +198,7 @@ public @interface TestData {
                             });
                 }
             } catch (Exception e) {
+                e.printStackTrace();
                 throw MTronTestException.of(e);
             }
         }

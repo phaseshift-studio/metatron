@@ -205,6 +205,7 @@ public final class Tokens {
     public static final String SYSTEM = "system";
     public static final String PASS = "pass";
     public static final String NAME = "name";
+    public static final String DEFAULT = "default";
     public static final String BASE = "base";
     public static final String CREATOR = "creator";
     public static final String LEVEL = "level";

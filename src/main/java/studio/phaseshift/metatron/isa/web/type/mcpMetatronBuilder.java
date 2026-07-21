@@ -113,7 +113,7 @@ public final class mcpMetatronBuilder {
                                     return codeArg.apply();
                                 else {
                                     try {
-                                        final Obj parsed = ObjmtronSerializer.singleNoClip().read(codeArg.strValue());
+                                        final Obj parsed = ObjmtronSerializer.singleNoClip().inputBytes(codeArg.strValue());
                                         // read() swallows parse errors into fail() — propagate as exception
                                         // so the catch block returns the original non-mtron text as-is
                                         if (parsed.isFail())

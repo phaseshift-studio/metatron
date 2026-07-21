@@ -147,20 +147,6 @@ public class llmInstSet extends AbstractInstSet {
                                         uri(COST).maybe(), "the cost per million tokens to use this llm (in/out costs)"),
                                 "populate a model reference rec using data from the ai provider's http-endpoint",
                                 "model::[provider=>deepseek,host=><http://deepseek.com/api>,protocol=>openai,llm=>deepseek-v4-pro]"),
-                        LLM_AGENT_TYPE = docWrap(Type.Builder.build()
-                                        .tid(REC_TID)
-                                        .vid(LLM_AGENT_TID)
-                                        .isaPredicate(rec(
-                                                uri(NAME).maybe().asUri(), STR_TYPE,
-                                                uri(DESC).maybe(), STR_TYPE,
-                                                uri(FEATURE).maybe(), lst(REC_TYPE)))
-                                        .constructor(instC(INST_CTOR_TID.rng(LLM_AGENT_TID), lst(REC_TYPE),
-                                                (lhs, inst) -> new Agent(inst.arg(0).recValue(), LLM_AGENT_TID, inst.arg(0).vid())))
-                                        .create(), null, null, Map.of(
-                                        uri(NAME), "a convenient name for the agent",
-                                        uri(DESC), "a description of the agent given to the agent in their system prompt",
-                                        uri(FEATURE), "the ordered lst of capabilities attached to the agent"),
-                                "an agent is an llm enriched with embodied capabilities"),
                         LLM_TOOL_TYPE,
                         //////////////////////////////////////////////////
                         docWrap(LLM_SESSION_TYPE = Type.Builder.build()
@@ -174,7 +160,6 @@ public class llmInstSet extends AbstractInstSet {
                                 null, null, mutableMap(
                                         uri(AGENT), "the agent(s) involved in the chat session",
                                         uri(USER), "the user(s) involved in the chat session",
-                                        uri(MESSAGE), "a reference to all messages in the chat session",
                                         uri(ALGORITHM), "the algorithm used to manage the chat session (compaction, windowing, summarizing, etc.)"),
                                 "llm session session policy with algorithm config and a resolved lst of messages from sub-path */msg/*"),
                         // LLM_MESSAGE_TYPE defined below after all message sub-types
@@ -312,6 +297,20 @@ public class llmInstSet extends AbstractInstSet {
                                         uri(ON_COMPLETE_RESPONSE).maybe(), "inst?noobj<=agent(response=>str::T)",
                                         uri(ON_ERROR).maybe(), "inst?noobj<=agent(fail=>fail::T)"),
                                 "each concrete feature refines llm_feature::T with its own hook implementations"),
+                        LLM_AGENT_TYPE = docWrap(Type.Builder.build()
+                                        .tid(REC_TID)
+                                        .vid(LLM_AGENT_TID)
+                                        .isaPredicate(rec(
+                                                uri(NAME).maybe().asUri(), STR_TYPE,
+                                                uri(DESC).maybe(), STR_TYPE,
+                                                uri(FEATURE).maybe(), lst(LLM_FEATURE_TYPE)))
+                                        .constructor(instC(INST_CTOR_TID.rng(LLM_AGENT_TID), lst(REC_TYPE),
+                                                (lhs, inst) -> new Agent(inst.arg(0).recValue(), LLM_AGENT_TID, inst.arg(0).vid())))
+                                        .create(), null, null, Map.of(
+                                        uri(NAME), "a convenient name for the agent",
+                                        uri(DESC), "a description of the agent given to the agent in their system prompt",
+                                        uri(FEATURE), "the ordered lst of capabilities attached to the agent"),
+                                "an agent is an llm enriched with embodied capabilities"),
                         // -- concrete feature types ------------------------------------------
                         Type.Builder.build()
                                 .tid(LLM_FEATURE_TID)

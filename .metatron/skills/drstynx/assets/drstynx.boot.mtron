@@ -52,18 +52,30 @@ space_root -> <${*boot/args/internal/sys}/space/dr>;
         [=====================]  
         [======== HOME =======]
         [=====================]   
+
+
+[==
 memspace::[
-  pattern => </usr/dr/#>, 
-     data => </home/killswitch/.metatron/drstynx/usr_dr.mtron>,                             
+  pattern => </usr/dr/#>,              
      q    => [docq::[=>],
                subq::[=>],
-              incrq::[=>]]]@</sys/space/usr/dr>;   
+              incrq::[=>]]]@</sys/space/usr/dr>
+==]
+
+
+tblespace::[pattern    => </usr/dr/#>,
+            host       => !*<boot/args/external/session>,
+            driver     => <org.mariadb.jdbc.Driver>,
+            q          => [incrq::[=>],subq::[=>]],
+            route      => [/usr/dr/ => <>]]@</sys/space/usr/dr>;
+
 
 memspace::[
   pattern => </usr/marko/#>,                                 
         q => [mintq::[=>],
                docq::[=>],
                subq::[=>],
+               mimeq::[=>],
               incrq::[=>]]]@</sys/space/usr/marko>;                 
     
         [=====================]  
@@ -94,10 +106,11 @@ fsspace::[
 httpspace::[host     => !*<boot/args/external/web/http>,
             q        => [mimeq::[=>]],
             pattern  => <http://#>,
-            route    => [[-- /mcp     => mcp_mtron_http, --]
+            route    => [/mcp     => mcp_mtron_http,
                          /memory => drdb:llm_message_user/,
                          /       => <>]]@/sys/space/web/http;   
-   
+ 
+[==  
 *boot/args/external/ollama.mult(api/tags/models).*(_).>-.
   =?=[capabilities=>[embedding]].
   -<[llm     => >>name.as(uri::T),
@@ -105,8 +118,8 @@ httpspace::[host     => !*<boot/args/external/web/http>,
     provider => ollama,
     host     => *boot/args/external/ollama].
   as(model::T).
-  to(/usr/dr/model/embedding/_?incrq);
-
+  to(/usr/dr/model/embedding/_?incrq)
+==]
             
 wsspace::[host     => !*<boot/args/external/web/ws>,
          pattern  => <ws://#>,
@@ -128,7 +141,7 @@ tblespace::[pattern    => drdb:#,
             q          => [incrq::[=>],subq::[=>]],
             route      => [drdb:embedding/abc => v:abc,
                            drdb:              => <>]]@/sys/space/tble/dr;
-            
+[==            
 vecspace::[pattern     => v:#,
            host        => !*<boot/args/external/embedding>,
            q           => [incrq::[=>],embedq::[=>]],
@@ -138,7 +151,9 @@ vecspace::[pattern     => v:#,
  [------------------------------------^--]
  abc => inst?lst[real]<=#{?}(doc=>#::T){ */usr/dr/model/embedding/+.=?=[llm=>embeddinggemma:latest].embed(*doc)}
  [------------------------------------^--]                                  
-                          ]]]@/sys/space/vec/embed;
+                          ]]]@/sys/space/vec/embed
+==]
+
 
 grphspace::[pattern  => h:#,
              host     => !*<boot/args/external/knowgraph>,
@@ -170,33 +185,34 @@ grphspace::[pattern  => h:#,
   else(session::[agent     => !*boot/args/internal/agent_home,
                  user      => !*boot/args/internal/user_home,
                  name      => 'general chat',
-                 algorithm => [name=><token_window>, max=>100000]]==[_=>_].to(drdb:llm_session/1));
-[-- token_window --]
-codegraph -> mcp_client::[command=>[</home/killswitch/.local/bin/codegraph>,'serve', '--mcp']];
+                 algorithm => [name=><token_window>, max=>200000]]==[_=>_].to(drdb:llm_session/1));
+
+accordian::[title=>"{{g}}a{{r}}ge{{b}}n{{m}}t {{c}}th{{y}}ink{{r}}ing.{{g}}..{{X}}", body=>_]@xyz;
 agent::[name     => 'dr.stynx',
         desc     => 'the agent dr.stynx is here to be of use in the metatron',
         feature  => [chat_feature::[model    => model::[provider => ollama,
                                                         protocol => ollama,
                                                         host     => <http://ginger.local:11434>,
-                                                        llm      => <gemma4:26b>],
-                                    response => [to => print(_)]],
+                                                        llm      => <batiai/gemma4-31b:q6>],
+                                    hardware  => <http://ginger.local:11434/api/show>->[name=><batiai/gemma4-31b:q6>,verbose=>true],
+                                    response  => [to => print(_)]],
                      session_feature::[session=>drdb:llm_session/1],
-                     think_feature::[think=>[to=>print(_)]],
-                     loop_feature::[max_loop=>100],                       [-- \          --]
-                     ledger_feature::[ledger=>/usr/dr/ledger],            [--  | skills  --]
-                     skill_feature::[skill=>[<metatronfs:skills/mtron>]], [-- /          --]
+                     think_feature::[think    =>[to  => print(_)]],
+                     loop_feature::[max_loop  =>100],                         
+                     skill_feature::[skill    =>[<metatronfs:skills/mtron>]],
                      system_feature::[=>],
                      audit_feature::[=>],
-                     concept_feature::[base  => /usr/dr/concept, 
+                     concept_feature::[base  => /usr/dr/concept,
+                                       tool  => [messages?str{*}<=#{?}(uri::T){ **0==message==<+>==text }@messages,
+                                                 concepts?lst{?}<=#{?}(uri::T){ **0==link }@concepts],
                                        model => model::[provider => ollama,
                                                         protocol => ollama,
                                                         host     => <http://ginger.local:11434>,
                                                         llm      => <qwen3:latest>]],
                      tool_feature::[tool=>[
-                                    !*eval,
-                                    !*sql,
-                                    !*codegraph
-                                    [-- mcp_client::[host=><http://localhost:8777/mcp>] --]]]]]@<dr>; 
+                                      !*eval,
+                                      !*sql,
+                                      !*codegraph ]]]]@<dr>; 
 
 [== user console ==]
 console::[agent=>dr,header=>!*boot/args/header]@/usr/marko/console;

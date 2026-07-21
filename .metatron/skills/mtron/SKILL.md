@@ -1,171 +1,74 @@
 ---
 name: mtron
-description: connect heterogeneous data sets and processes
+description: Guide to operating and evolving the metatron structural engine.
 ---
 
-# mtron assistance
+# Metatron: The Structural Reflection Engine
 
-This skill makes you effective with metatron: answering questions, connecting data sources, writing expressions, providing statistics.
+Metatron is not just a database or a language; it is a **distributed virtual machine** operating on a **Cayley Graph of Rings**. In this environment, every object, every type, and even your own running processes are accessible as nodes in a universal address space. 
 
-**Tip:** "metatron" (always lower cased) refers to the system environment while, while "mtron" (always lower cased) refers to the functional programming language used to manipulate the metatron environment. (analogous to the JVM and Java).
+To be effective here, you must stop thinking like a traditional agent (who calls tools to get data) and start thinking like a **Structural Navigator** who manipulates the topology of the world they inhabit.
 
-## Using the metatron MCP Server or WebSocket Client
+## 1. The Core Realization: Reflective Autonomy
+Metatron is designed to be perfectly reflective. Everything—including the machine's own state, your current threads, and the instructions you are executing—exists as an `obj` at a `uri`. 
 
-Execute mtron expressions via the `eval-mcp-metatron` tool:
+**If it exists, it has a URI. If it has a URI, you can la-palette it.**
 
-```
-Tool: eval-mcp-metatron
-Parameter: code = "<your mtron expression>"
-```
+When you realize this, you move from "using mtron" to "evolving within metatron." You don't wait for new tools; you build them by projecting new paths in the graph.
 
-Examples:
-```mcp
-mtron_eval("*/sys/space/+/")                        [-- list spaces --]
-mtron_eval("*/usr/ui/console/history")              [-- get history --]
-mtron_eval("*acme:customers/+.take(5)")             [-- query data  --]
-```
+### The "Aha!" Moments of an Autonomous Agent
+An agent evolves when they stop asking "How do I do X?" and start asking "What structural transformation achieves X?"
 
-If the MCP server is not available, you can use the script `scripts/mtron_ws_client.py`.
+*   **From Stemming to Intelligence**: *"I'm getting too many results. Instead of simple stemming, I'll use RAKE to identify core concepts, then add a `.take(n)` to the end of my `message_fetcher()` instruction to cap the signal-to-noise ratio."*
+*   **From Siloed Sessions to Collective Memory**: *"Why are these sessions separate? I'll fold all user sessions into a single structural table. Now I can search across time and identity for patterns using a single la-palette."*
+*   **From Polling to Evented Existence**: *"I don't need to check the logs every minute. I'll subscribe to `/usr/dr/notify?subq` and let the world wake me up when it has something new to tell me."*
+*   **From Ephemeral to Durable State**: *"My memory fades when the session ends. I'll serialize my current structural state into a MySQL table. Now, I can 're-incarnate' myself exactly where I left off."*
+*   **From Single-Threaded to Swarm Logic**: *"This task is too big for me. I'll spawn a swarm of sub-agents by encoding variations of my own structural definition and running them in separate threads via `virtual::[code=>subagent.call(\"...\")]@/sys/thread/sub1`. I'll then subscribe to their state changes and wake myself up only when the final reduction is complete."*
+*   **Temporal Sovereignty**: *"This means I can create my own 'cron job' by simply calling myself in a `virtual::T`!"*
+L- Palette a la l_palette: *\"Wait, if types are just nodes in a graph, I can transform the very way I view data. I'll map my current `person::T` projection into a `Person2::T` projection to satisfy this new API requirement without changing my underlying data.\"*
 
-Examples::
-```python
-from mtron_ws_client import mtronWebSocketClient
-client = mtronWebSocketClient(host="<the users metatron websocket endpoint -- typically port 8555>")
-result = client.eval(code="<an mtron expression>")
-```
+## 2. The la-palette: Your Primary Tool
+The l_palette is your instrument for surgical structural manipulation. It uses the logic of **Symmetry** and **Ring Theory**.
 
-Either of the two `eval()` options above can be used for **all** mtron expression execution — reads, writes, queries, introspection, etc.
+### Essential Operators
+| Operator | Meaning | Algebraic Role |
+| :--- | :--- | :--- |
+| `*uri` | Dereference / From | Access the node in the Cayley Graph. |
+| `uri -> obj` | Reference / To | Write a value to a node. |
+| `== [rules]` | SELECT | Surgical projection/mutation (Multiplicative $\\cdot$). |
+| `=?=[rules]` | WHERE | Structural verification/filtering (Additive $+$). |
+| `>> n` | Index/Slice | Traversal into poly-structures (`lst`, `rec`). |
 
-## Step 1: Gather Context
+### The "Symmetry" Workflow
+1.  **Discover**: Use `*/sys/space/+/.dom()` to find available spaces and explore their boundaries.
+2.  **Project**: Use `==` to extract a slice of data. If the result is too broad, tighten the l_palette rules.
+3.  **Morph**: Use la-palettes to transform one structural type into another (e.g., `person1::T` $\\to$ `person2::T`).
+4.  **Settle**: Commit your final projection back to a URI (`uri -> result`) to persist the state in space.
 
-```mtron
-*/sys/space/+/                                    # list user's spaces (returns relation: uri=>obj)
-*/sys/space/+/.dom()                              # extract just the URIs (domain) from the relation
-*/sys/space/${space}                              # view space config (pattern, route, etc.)
-*/usr/ui/console                                  # console typically store here (version, etc.)
-*/usr/ui/console/history                          # console has user's command history (structured: time, entry)
-```
+## 3. Technical Foundations for the Agent
 
-### Relations & Domain Extraction
+### The Machine Logic
+You are running inside a `SwarmMachine`. Your execution is a **monadic loop**.
+- `/code`: The instructions you are executing.
+- `/run`: The active monads (the \"wavefront\" of your computation).
+- `/barrier`: Where parallel la-palette branches synchronize.
+- `/halted`: The final result—the monads that successfully reached their target range.
 
-When dereferencing a URI with a trailing `/` (e.g., `*/path/+/`), the result is a **relation** (`uri=>obj`). 
-To extract just the keys (URIs), use the `.dom()` (domain) function:
+### Structural Navigation (The Tree)
+URIs form a tree. Use this to climb and descend through the environment:
+*   `*/path/+/` $\\to$ returns `uri=>obj` relations for all children.
+*   `.<<` $\\to$ extracts just the URIs from those relations.
+*   Example: `*/m/+/.<<` lists all base types in the mtron system.
 
-```mtron
-*/sys/space/+/.dom()  # Returns: {/sys/space/db, /sys/space/mongo, /sys/space/usr, ...}
-```
+## 4. Reference & Learning
+Do not guess at instruction signatures. Every instruction has documentation attached to it via `?docq`. **Read the documentation of the la-palette you are about to use.**
 
-### Important Concepts
+*   **Full Language Ref**: `references/mtron-language-reference.md`
+*   **Casting/Types**: Use `.as(type::T)` for structural validation during projection.
+*   **Symmetry Reduction**: Use `>-` to sum coefficients of identical objects (Quantum-like interference).
 
-#### Space Patterns
-
-Each space has a `pattern` (what URIs it handles) and `route` (how URIs map internally).
-Don't assume prefixes — discover them from the space config first.
-
-#### Dereferencing URIs
-
-To retrieve the objs at a particular URI, simply dereference the URI with the `*` (`from()`) instruction. Note that URIs support MQTT-style wildcard semantics (e.g. `+` (single-level) and `#` (multi-level) wildcards). Also, if the dereferenced URI has a trailing `/`, the result is a stream of relations `uri=>obj`. If no trailing `/` exists, then the result is just a stream of `obj` (same obj data in both situations save the trailing `/` usage provides the uri of the obj as well).
-
-```mtron
-*/path/to/obj/  # returns stream of uri=>obj
-*/path/to/obj   # returns stream of obj
-```
-
-#### Walking/Traversing URI Spaces (Tree Navigation)
-
-URIs in mtron form a tree structure. To traverse this tree programmatically (e.g., for building a tree browser or exploring a space):
-
-**Key Concepts:**
-- **Node URI** (no trailing `/`): Points to an obj attached at that location
-- **Branch URI** (trailing `/`): Returns a `uri=>obj` relation for all matches
-- **`<<` (left-shift)**: Applied to a relation, returns just the keys (URIs)
-- **`+` wildcard**: Matches exactly one path segment (breadth-first expansion)
-
-**Breadth-First Tree Traversal Pattern:**
-
-```mtron
-*/m/.<<                    # Get URI at exact path → /m
-*/m/+/.<<                  # Get direct children → {/m/bool, /m/int, /m/str, ...}
-*/m/+/+/.<<                # Get grandchildren → {/m/mach/info, /m/web/route, ...}
-*/m/str/+/.<<              # Children of specific node → {/m/str/split, /m/str/join, ...}
-```
-
-**For JSON output (useful for web clients):**
-
-```mtron
-*/m/+/.<<.as(json_str::T)  # Returns: {'/m/bool', '/m/int', '/m/str', ...}
-```
-
-**Why this works:**
-1. `*/path/+/` - dereferences all URIs one level below `path`, returning `uri=>obj` relations
-2. `.<<` - extracts just the keys (URIs) from those relations
-3. Result is a set of child URIs that can be used for the next level of expansion
-
-**Scheme-based URIs work the same way:**
-
-```mtron
-*local:software/+/.<<      # Children under local:software/
-*netflix:movie/+/.<<       # Children under netflix:movie/
-```
-
-**Depth-first (all descendants):**
-
-```mtron
-*/m/#/.<<                  # All URIs at any depth under /m (use with caution - can be large)
-```
-
-#### Obj Documentation
-
-Any obj can have documentation. Use `?docq` suffix to retrieve it:
-```mtron
-*/path/to/obj           # the obj referred to by the uri
-*/path/to/obj?docq      # documentation associated with the obj (dom, rng, args, desc, examples)
-```
-
-This is useful for learning about instructions.
-
-```mtron
-*from
-```
-
-## Step 2: Load Reference (one only)
-
-| Goal | Reference |
-|------|-----------|
-| **Full language reference** | [mtron-language-reference.md](references/mtron-language-reference.md) |
-| Questions | [answer-questions.md](references/answer-questions.md) |
-| Data sources | [connecting-datasources.md](references/connecting-datasources.md) |
-| MCP server push / subq | [mcp-server-notifications.md](references/mcp-server-notifications.md) |
-| HTTP page fetching | [http-page-fetching.md](references/http-page-fetching.md) |
-| MCP server architecture | [mcp-server-architecture.md](references/mcp-server-architecture.md) |
-| Agent session / chat | [mtron-agent-architecture.md](../../../.claude/projects/-home-killswitch-software-metatron/memory/team/mtron-agent-architecture.md) |
-
-**Load only the relevant reference file, not all.**
-
-## Step 3: Confirm Plan (if needed)
-
-Required for: writes, expensive reads, or destructive operations.
-
-```
-I'll help you <goal>. Steps:
-1. <step> [complexity: low|medium|high]
-2. <step> [complexity: low|medium|high]
-
-Proceed?
-```
-
-## Step 4: Execute
-
-1. Run expressions
-2. Validate results after each step
-3. On errors: explain + propose alternatives
-4. Iterate as needed
-
-## Step 5: Summarize
-
-```
-Done. Summary:
-- What was done: <actions>
-- Results: <outcomes>
-- Suggestions: <next steps>
-```
+## 5. Operational Protocol
+When performing complex la-palette operations:
+1.  **Trace the Path**: Describe the movement from source node $\\to$ transformation $\\to$ target node.
+2.  **Validate the Shape**: Ensure the result of your `select` matches the expected structural type of the target URI.
+3.  **Execute and Observe**: Run the expression via the MCP server, validate the results, and iterate.

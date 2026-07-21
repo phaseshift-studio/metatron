@@ -51,6 +51,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.web.space.ws.handler.mcp_mtron_wsHandler.WS_MCP_MTRON_HANDLER_TID;
 import static studio.phaseshift.metatron.isa.web.space.ws.handler.mcp_mtron_wsHandler.WS_MCP_MTRON_HANDLER_TYPE;
 import static studio.phaseshift.metatron.isa.web.space.ws.handler.mcp_wsHandler.WS_MCP_HANDLER_TID;
+import static studio.phaseshift.metatron.isa.web.space.ws.handler.mcp_wsHandler.WS_MCP_HANDLER_TYPE;
 import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_HANDLER_TID;
 
 /**
@@ -135,13 +136,14 @@ public class mcp_mtron_wsHandlerIntegrationTest extends AbstractWebSocketServerI
         assertEquals(WS_MCP_HANDLER_TID, WS_MCP_MTRON_HANDLER_TYPE.tid(),
                 "mcp_mtron type should declare mcp_ws as its parent type");
     }
-
-    // todo: test type, not tid
+    
     @Test
     public void testMcpWsTypeDeclaresMcpServerAsParent() {
         // mcp_ws declares WS_SERVER_TID as its tid.
-        Assertions.assertEquals(WS_HANDLER_TID, mcp_wsHandler.WS_MCP_HANDLER_TYPE.tid(),
+        assertEquals(WS_HANDLER_TID, mcp_wsHandler.WS_MCP_HANDLER_TYPE.tid(),
                 "mcp_ws type should declare ws_server as its parent type");
+        assertTrue(this.server.test(WS_MCP_HANDLER_TYPE), "websocket server should be a wshandler::T");
+        assertTrue(this.server.test(WS_MCP_MTRON_HANDLER_TYPE), "websocket server should be a mcp_mtron_ws::T");
     }
 
     // =========================================================

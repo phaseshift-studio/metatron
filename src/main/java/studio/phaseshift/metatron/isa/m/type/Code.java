@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -25,6 +25,7 @@ import studio.phaseshift.metatron.isa.mach.type.machine.SwarmMachine;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.m.type.resolver.InstResolver;
+import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.*;
@@ -77,7 +78,12 @@ public interface Code extends Call {
                     //.peek(r -> this.logger().warn("REWRITE RULE: %s => %s [hash:%d][stage:%d]", rewrittenCode.get(), r, rewrittenCode.get().hashCode(), stage))
                     .forEach(r -> {
                         // rewrittenCode.get().insts().forEach(i -> i.args(Code.Helper.tryRewrite(i.args()).as()));
-                        rewrittenCode.set(r.apply(rewrittenCode.get()).asCode());
+                        final Obj rewritten = r.apply(rewrittenCode.get());
+                        if (rewritten.isCode()) {
+                            rewrittenCode.set(rewritten.asCode());
+                        } else {
+                            throw MTronException.of("rewrite %s rewrote to non-code %s", r, rewritten);
+                        }
                     });
             if (hash == (hash = rewrittenCode.get().hashCode()))
                 done--;
@@ -153,7 +159,7 @@ public interface Code extends Call {
         }
 
         public static Set<Inst> insts() {
-            return new LinkedHashSet<>(List.of(instC(AS_INST_TID.dom(CODE_TID).rng(LST_TID), lst(LST_TYPE), (lhs, inst) -> lst(lhs.asCode().codeValue().stream().map(Obj::<Obj>as).toList()).c(c->c.mult(lhs.c())))));
+            return new LinkedHashSet<>(List.of(instC(AS_INST_TID.dom(CODE_TID).rng(LST_TID), lst(LST_TYPE), (lhs, inst) -> lst(lhs.asCode().codeValue().stream().map(Obj::<Obj>as).toList()).c(c -> c.mult(lhs.c())))));
         }
 
     }

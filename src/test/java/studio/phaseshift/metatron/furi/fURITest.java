@@ -481,7 +481,7 @@ public class fURITest extends AbstractMetatronTest {
             "//x/a/b/c                  |  x        | false",
             "a/b/c/d                    |  a        | true",
             "a/b/c/d                    |  a/b     | true",
-            // "a/b/c/d                    |  a/b/     | true",
+            "a/b/c/d                    |  a/b/     | true",
             "a/b/c/d                    |  a/+      | true",
             "a/b/c/d                    |  a/d      | false",
             "a/b/c/d                    |  a/+/c    | true",

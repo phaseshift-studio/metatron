@@ -207,6 +207,9 @@ bin/metatron</code></pre>
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
                            onclick="location.href='../articles/parametric-identities-in-ring-theory.html';"><i class="bi bi-arrow-repeat icon-color me-2 isa-row"></i>parametric identities</a></li>
                     <li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../articles/mm-adt.pdf';"><i class="bi bi-layout-wtf icon-color me-2 isa-row"></i>mm-ADT (metatron precursor)</a></li>
+                    <li>
                 </ul>
             </li>
             <!----------------------------------------------------------------------------------------------------------
@@ -293,7 +296,7 @@ bin/metatron</code></pre>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <a href="#consts" class="btn btn-outline-primary">Consts <span class="pill-label badge bg-secondary">1</span></a><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">3</span></a><a href="#spaces" class="btn btn-outline-primary">Spaces <span class="pill-label badge bg-info">1</span></a><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">1</span></a><a href="#rewrites" class="btn btn-outline-primary">Rewrites <span class="pill-label badge bg-warning">11</span></a>
+        <a href="#consts" class="btn btn-outline-primary">Consts <span class="pill-label badge bg-secondary">1</span></a><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">2</span></a><a href="#spaces" class="btn btn-outline-primary">Spaces <span class="pill-label badge bg-info">2</span></a><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">1</span></a><a href="#rewrites" class="btn btn-outline-primary">Rewrites <span class="pill-label badge bg-warning">11</span></a>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="card">
@@ -309,16 +312,16 @@ bin/metatron</code></pre>
     <div class="d-flex flex-wrap"><a href="#__m__tble__lrow" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">lrow</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
-</a><a href="#__m__tble__rrow" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">rrow</span>
-    <span class="pill-label badge bg-primary ms-2">T</span>
 </a><a href="#__m__tble__table" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">table</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a></div>
 </div><div class="mb-3">
     <h6 class="text-primary mb-2">Spaces</h6>
-    <div class="d-flex flex-wrap"><a href="#__m__tble__space__tblespace" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <div class="d-flex flex-wrap"><a href="#__m__tble__rrow" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">rrow</span>
+    <span class="pill-label badge bg-info text-dark ms-2">S</span>
+</a><a href="#__m__tble__space__tblespace" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">tblespace</span>
     <span class="pill-label badge bg-info text-dark ms-2">S</span>
 </a></div>
@@ -379,7 +382,7 @@ bin/metatron</code></pre>
 </div>
 </div>
 </div><div class="container-xxl mb-4" id="types">
-    <h3 class="text-primary mb-3">Types <span class="pill-label badge bg-primary">3</span></h3>
+    <h3 class="text-primary mb-3">Types <span class="pill-label badge bg-primary">2</span></h3>
     <div class="card mb-3" id="__m__tble__lrow">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -392,19 +395,6 @@ bin/metatron</code></pre>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a table row indexed by column number</p>
-</div>
-</div><div class="card mb-3" id="__m__tble__rrow">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <span>
-            <span class="code text-primary fw-bold">rrow::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__rec" class="instset-doc-small-code text-info code">/m/rec::T</a></span>
-        </span>
-        <small class="text-muted code">/m/tble/rrow</small>
-    </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[uri::T=&gt;#::T]]@/m/tble/rrow</code></pre></div>
-    
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">a table row indexed by column name</p>
 </div>
 </div><div class="card mb-3" id="__m__tble__table">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -421,8 +411,18 @@ bin/metatron</code></pre>
 </div>
 </div>
 </div><div class="container-xxl mb-4" id="spaces">
-    <h3 class="text-primary mb-3">Spaces <span class="pill-label badge bg-info">1</span></h3>
-    <div class="card mb-3" id="__m__tble__space__tblespace">
+    <h3 class="text-primary mb-3">Spaces <span class="pill-label badge bg-info">2</span></h3>
+    <div class="card mb-3" id="__m__tble__rrow">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <a href="m_tble_rrow.html" class="code text-primary fw-bold text-decoration-none">rrow</a>
+        <small class="text-muted code">/m/tble/rrow</small>
+    </div>
+    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[uri::T=&gt;#::T]]@/m/tble/rrow</code></pre></div>
+    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">a table row indexed by column name</p>
+</div>
+</div><div class="card mb-3" id="__m__tble__space__tblespace">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <a href="m_tble_space_tblespace.html" class="code text-primary fw-bold text-decoration-none">tblespace</a>
         <small class="text-muted code">/m/tble/space/tblespace</small>
@@ -471,9 +471,7 @@ bin/metatron</code></pre>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">leverages native SELECT COUNT(*) FROM kv_store with LIKE-based pattern matching</p>
 </div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><span class="text-info">*</span> <span class="text-light">=&gt;</span> <a href="#kv_count(kv_store, WHERE furi LIKE ...)" class="text-success">kv_count(kv_store, WHERE furi LIKE ...)</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"></pre>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><span class="text-info">*</span> <span class="text-light">=&gt;</span> <a href="#kv_count(kv_store, WHERE furi LIKE ...)" class="text-success">kv_count(kv_store, WHERE furi LIKE ...)</a></pre>
 </div>
 </div><div class="card mb-3" id="__m__tble__inst__rewrite__kv_limit?rng=__m__code{?}&dom=__m__code">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -487,9 +485,7 @@ bin/metatron</code></pre>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">leverages native SELECT ... FROM kv_store ... LIMIT n to avoid loading all KV entries</p>
 </div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#__col__+.take(5)" class="text-info">+.take(5)</a> <span class="text-light">=&gt;</span> <a href="#kv_limit(kv_store, WHERE furi LIKE ..., LIMIT n)" class="text-success">kv_limit(kv_store, WHERE furi LIKE ..., LIMIT n)</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"></pre>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#__col__+.take(5)" class="text-info">+.take(5)</a> <span class="text-light">=&gt;</span> <a href="#kv_limit(kv_store, WHERE furi LIKE ..., LIMIT n)" class="text-success">kv_limit(kv_store, WHERE furi LIKE ..., LIMIT n)</a></pre>
 </div>
 </div><div class="card mb-3" id="__m__tble__inst__rewrite__sql_count?rng=__m__code{?}&dom=__m__code">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -503,9 +499,7 @@ bin/metatron</code></pre>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">leverages native SELECT COUNT(*) to count rows in a table</p>
 </div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#pre-rewrite code" class="text-info">pre-rewrite code</a> <span class="text-light">=&gt;</span> <a href="#post-rewrite code" class="text-success">post-rewrite code</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"></pre>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#pre-rewrite code" class="text-info">pre-rewrite code</a> <span class="text-light">=&gt;</span> <a href="#post-rewrite code" class="text-success">post-rewrite code</a></pre>
 </div>
 </div><div class="card mb-3" id="__m__tble__inst__rewrite__sql_has?rng=__m__code{?}&dom=__m__code">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -519,9 +513,7 @@ bin/metatron</code></pre>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">leverages native SELECT EXISTS to check if table has any rows</p>
 </div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#pre-rewrite code" class="text-info">pre-rewrite code</a> <span class="text-light">=&gt;</span> <a href="#post-rewrite code" class="text-success">post-rewrite code</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"></pre>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#pre-rewrite code" class="text-info">pre-rewrite code</a> <span class="text-light">=&gt;</span> <a href="#post-rewrite code" class="text-success">post-rewrite code</a></pre>
 </div>
 </div><div class="card mb-3" id="__m__tble__inst__rewrite__sql_limit?rng=__m__code{?}&dom=__m__code">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -535,9 +527,7 @@ bin/metatron</code></pre>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">leverages native SELECT ... LIMIT to take first n rows from a table</p>
 </div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#pre-rewrite code" class="text-info">pre-rewrite code</a> <span class="text-light">=&gt;</span> <a href="#post-rewrite code" class="text-success">post-rewrite code</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"></pre>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#pre-rewrite code" class="text-info">pre-rewrite code</a> <span class="text-light">=&gt;</span> <a href="#post-rewrite code" class="text-success">post-rewrite code</a></pre>
 </div>
 </div><div class="card mb-3" id="__m__tble__inst__rewrite__sql_mean?rng=__m__code{?}&dom=__m__code">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -551,9 +541,7 @@ bin/metatron</code></pre>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">leverages native SELECT AVG(column) to average entries in a table column</p>
 </div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#pre-rewrite code" class="text-info">pre-rewrite code</a> <span class="text-light">=&gt;</span> <a href="#post-rewrite code" class="text-success">post-rewrite code</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"></pre>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#pre-rewrite code" class="text-info">pre-rewrite code</a> <span class="text-light">=&gt;</span> <a href="#post-rewrite code" class="text-success">post-rewrite code</a></pre>
 </div>
 </div><div class="card mb-3" id="__m__tble__inst__rewrite__sql_select?rng=__m__code{?}&dom=__m__code">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -567,9 +555,7 @@ bin/metatron</code></pre>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">leverages native SELECT col1, col2 FROM table for projections</p>
 </div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#*table__+>>{name,age}" class="text-info">+&gt;&gt;{name,age}</a> <span class="text-light">=&gt;</span> <a href="#sql_select(table, [name,age])" class="text-success">sql_select(table, [name,age])</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"></pre>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#*table__+>>{name,age}" class="text-info">+&gt;&gt;{name,age}</a> <span class="text-light">=&gt;</span> <a href="#sql_select(table, [name,age])" class="text-success">sql_select(table, [name,age])</a></pre>
 </div>
 </div><div class="card mb-3" id="__m__tble__inst__rewrite__sql_sum?rng=__m__code{?}&dom=__m__code">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -583,9 +569,7 @@ bin/metatron</code></pre>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">leverages native SELECT SUM(column) to sum entries in a table column</p>
 </div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#pre-rewrite code" class="text-info">pre-rewrite code</a> <span class="text-light">=&gt;</span> <a href="#post-rewrite code" class="text-success">post-rewrite code</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"></pre>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#pre-rewrite code" class="text-info">pre-rewrite code</a> <span class="text-light">=&gt;</span> <a href="#post-rewrite code" class="text-success">post-rewrite code</a></pre>
 </div>
 </div><div class="card mb-3" id="__m__tble__inst__rewrite__sql_where?rng=__m__code{?}&dom=__m__code">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -599,9 +583,7 @@ bin/metatron</code></pre>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">leverages native SELECT ... WHERE to filter rows in a table</p>
 </div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#pre-rewrite code" class="text-info">pre-rewrite code</a> <span class="text-light">=&gt;</span> <a href="#post-rewrite code" class="text-success">post-rewrite code</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"></pre>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#pre-rewrite code" class="text-info">pre-rewrite code</a> <span class="text-light">=&gt;</span> <a href="#post-rewrite code" class="text-success">post-rewrite code</a></pre>
 </div>
 </div><div class="card mb-3" id="__m__tble__inst__rewrite__sql_where_count?rng=__m__code{?}&dom=__m__code">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -615,9 +597,7 @@ bin/metatron</code></pre>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">leverages native SELECT COUNT(*) ... WHERE to count filtered rows</p>
 </div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#pre-rewrite code" class="text-info">pre-rewrite code</a> <span class="text-light">=&gt;</span> <a href="#post-rewrite code" class="text-success">post-rewrite code</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"></pre>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#pre-rewrite code" class="text-info">pre-rewrite code</a> <span class="text-light">=&gt;</span> <a href="#post-rewrite code" class="text-success">post-rewrite code</a></pre>
 </div>
 </div><div class="card mb-3" id="__m__tble__inst__rewrite__sql_where_limit?rng=__m__code{?}&dom=__m__code">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -631,9 +611,7 @@ bin/metatron</code></pre>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">leverages native SELECT ... WHERE ... LIMIT to filter and limit rows in a table</p>
 </div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#pre-rewrite code" class="text-info">pre-rewrite code</a> <span class="text-light">=&gt;</span> <a href="#post-rewrite code" class="text-success">post-rewrite code</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"></pre>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#pre-rewrite code" class="text-info">pre-rewrite code</a> <span class="text-light">=&gt;</span> <a href="#post-rewrite code" class="text-success">post-rewrite code</a></pre>
 </div>
 </div>
 </div><div class="container-xxl py-3 text-center">

@@ -39,7 +39,11 @@ import studio.phaseshift.metatron.util.MTronException;
 import java.nio.ByteBuffer;
 
 import static studio.phaseshift.metatron.isa.web.webInstSet.OBJ_TP3_SERIALIZER_TID;
+import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
+import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -110,6 +114,18 @@ public class ObjTP3Serializer extends AbstractObjSerializer<Element> {
             return str(s);
         }
         return MObjFactory.single().toObj(value);
+    }
+
+    /**
+     * Map a Java property type to its mtron Type representation.
+     * Returns {@code null} for unsupported types.
+     */
+    public static Type javaTypeToMtronType(final Class<?> javaType) {
+        if (javaType == String.class) return T(str("").tid());
+        if (javaType == Integer.class || javaType == Long.class) return T(jnt(0).tid());
+        if (javaType == Double.class || javaType == Float.class) return T(real(0.0).tid());
+        if (javaType == Boolean.class) return T(bool(false).tid());
+        return null;
     }
 
 /*

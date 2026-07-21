@@ -427,7 +427,13 @@ public abstract class AbstractfURI implements fURI {
                 return false;
             if (prefixURI.hasAuthority() && (!this.hasAuthority() || !this.authority().equals(prefixURI.authority())))
                 return false;
-            for (int i = 0; i < prefixURI.pathLength(); i++) {
+            int prefixLen = prefixURI.pathLength();
+            // A trailing empty segment (artifact of a trailing slash like
+            // "/usr/dr/" -> ["","usr","dr",""]) should not block matching
+            // the next real segment in the target URI.
+            if (prefixLen > 0 && prefixURI.path().get(prefixLen - 1).isEmpty())
+                prefixLen--;
+            for (int i = 0; i < prefixLen; i++) {
                 if (this.pathLength() <= i)
                     return false;
                 if (!this.path().get(i).equals(prefixURI.path().get(i)))

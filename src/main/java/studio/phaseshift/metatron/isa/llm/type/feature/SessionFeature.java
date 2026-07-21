@@ -24,12 +24,15 @@ import java.util.Set;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SESSION_FEATURE_TID;
 import static studio.phaseshift.metatron.isa.llm.type.Agent.res;
 import static studio.phaseshift.metatron.isa.llm.type.Agent.feat;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 public class SessionFeature extends Feature {
 
@@ -48,14 +51,57 @@ public class SessionFeature extends Feature {
         return this.memory;
     }
 
+    public static void buildSession(final Agent agent, final AiServices<AgentServices> service) {
+        if (agent.hasFeature(SESSION))
+            service.chatMemory(agent.feature(SESSION).<SessionFeature>as().memory()).storeRetrievedContentInChatMemory(true);
+    }
+
+    /**
+     * Create a session policy record with the canonical fields.
+     * Used by {@link #onBeforeChat} to persist new sessions and by tests
+     * that need to pre-seed a session before the first chat.
+     */
+    public static Rec createSession(final String agentName, final String userName,
+                                     final String algorithmName, final int max) {
+        return rec(mutableMap(
+                uri(AGENT), str(agentName),
+                uri(USER), str(userName),
+                uri(ALGORITHM), rec(mutableMap(
+                        uri(NAME), uri(algorithmName),
+                        uri(MAX), jnt(max)
+                ))
+        ));
+    }
+    
     @Override
     public Obj onBeforeChat(final Agent agent) {
         final fURI sessionID = this.at(SESSION).uriValue();
-        final Rec session = Router.readFromSpace(sessionID).orElse(rec());
+        Rec session = Router.readFromSpace(sessionID).orElse(rec());
         try {
             final Space space = Router.global().getSpaceFor(sessionID);
             final SpaceChatSessionStore store = new SpaceChatSessionStore(agent, space);
             this.store = store;
+            // Ensure session exists in space with required fields
+            if (session.at(ALGORITHM).isNoObj()) {
+                if (!this.asRec().at(ALGORITHM).isNoObj()) {
+                    // Create session from feature config
+                    final Rec algo = this.asRec().at(ALGORITHM).asRec();
+                    session = createSession(
+                            agent.at(NAME).orElse(str("default")).strValue(),
+                            "default",
+                            algo.at(NAME).uriValue().name(),
+                            algo.at(MAX).orElse(jnt(50)).intValue().intValue()
+                    );
+                }
+            } else {
+                // Session exists — patch missing agent/user if needed
+                if (session.at(AGENT).isNoObj())
+                    session.at(AGENT, agent.at(NAME).orElse(str("default")), MUTABLE);
+                if (session.at(USER).isNoObj())
+                    session.at(USER, str("default"), MUTABLE);
+            }
+            if (!session.at(ALGORITHM).isNoObj() && null == session.vid())
+                Router.writeToSpace(sessionID, session.selfVID(sessionID));
             if (session.at(ALGORITHM).isNoObj() || session.at(ALGORITHM).asRec().at(NAME).isNoObj())
                 throw MTronException.of("no session memory algorithm provided: token_window or message_window");
             final int max = session.at(ALGORITHM).asRec().at(MAX).orElse(jnt(50)).intValue().intValue();

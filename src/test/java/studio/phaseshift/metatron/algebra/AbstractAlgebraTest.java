@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -27,9 +27,9 @@ import studio.phaseshift.metatron.isa.mach.type.Router;
 
 import java.util.Set;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assume.assumeTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static studio.phaseshift.metatron.algebra.Form.*;
 
 /*
@@ -60,27 +60,27 @@ public abstract class AbstractAlgebraTest<O extends Obj> extends AbstractObjTest
     public void testPlusGroup(final String lhs, final String rhs) {
         if (this.obj instanceof PlusGroup.O) {
             LOG.warn("testing plus group for %s %s", this.obj.type(), this.forms);
-            assertTrue(this.obj.type() + " is not a plus group", this.forms.contains(PLUS_GROUP));
+            assertTrue(this.forms.contains(PLUS_GROUP), this.obj.type() + " is not a plus group");
             final PlusGroup.O group = (PlusGroup.O) this.obj;
-            assertEquals("0 + 0         = 0", group.zero(), group.zero().plus(group.zero()));
-            assertEquals("(0+a) + (a+0) = 2a", group.plus(group), group.plus(group.zero()).plus(group.zero().plus(group)));
-            assertEquals("0 + a         = a", group, group.zero().plus(group));
-            assertEquals("a + 0         = a", group, group.plus(group.zero()));
-            assertEquals("a + (-a)      = 0", group.zero(), group.plus(group.neg()));
-            assertEquals("(-a) + a      = 0", group.zero(), group.neg().plus(group));
-            assertEquals("a + (-a)      = 0", group.zero(), group.plus(group.neg()));
-            assertEquals("(-a) + a      = 0", group.zero(), group.neg().plus(group));
-            assertEquals("a - a         = 0", group.zero(), group.minus(group));
-            assertEquals("0 - a         = (-a)", group.neg(), group.zero().minus(group));
+            assertEquals(group.zero(), group.zero().plus(group.zero()), "0 + 0         = 0");
+            assertEquals(group.plus(group), group.plus(group.zero()).plus(group.zero().plus(group)), "(0+a) + (a+0) = 2a");
+            assertEquals(group, group.zero().plus(group), "0 + a         = a");
+            assertEquals(group, group.plus(group.zero()), "a + 0         = a");
+            assertEquals(group.zero(), group.plus(group.neg()), "a + (-a)      = 0");
+            assertEquals(group.zero(), group.neg().plus(group), "(-a) + a      = 0");
+            assertEquals(group.zero(), group.plus(group.neg()), "a + (-a)      = 0");
+            assertEquals(group.zero(), group.neg().plus(group), "(-a) + a      = 0");
+            assertEquals(group.zero(), group.minus(group), "a - a         = 0");
+            assertEquals(group.neg(), group.zero().minus(group), "0 - a         = (-a)");
             /// /////////////////////////////////////////////////////////////////////////
             Router.global().write("a", group);
             final Obj lhsObj = ObjmtronSerializer.parse(lhs).apply();
             final Obj rhsObj = ObjmtronSerializer.parse(rhs).apply();
-            assertEquals(lhs + " != " + rhs, lhsObj, rhsObj);
+            assertEquals(lhsObj, rhsObj, lhs + " != " + rhs);
 
         } else {
             LOG.warn("skipping testing for non plus group: %s %s", this.obj.type(), this.forms);
-            assumeTrue(this.obj.type() + " is not a plus group", this.forms.contains(PLUS_GROUP));
+            assumeTrue(this.forms.contains(PLUS_GROUP), this.obj.type() + " is not a plus group");
         }
     }
 
@@ -98,24 +98,24 @@ public abstract class AbstractAlgebraTest<O extends Obj> extends AbstractObjTest
     public void testMultGroup(final String lhs, final String rhs) {
         if (this.obj instanceof MultGroup.O) {
             LOG.warn("testing mult group for %s %s", this.obj.type(), this.forms);
-            assertTrue(this.obj.type() + " is not a mult group", this.forms.contains(MULT_GROUP));
+            assertTrue(this.forms.contains(MULT_GROUP), this.obj.type() + " is not a mult group");
             final MultGroup.O group = (MultGroup.O) this.obj;
-            assertEquals("1 * 1         = 1", group.one(), group.one().mult(group.one()));
-            assertEquals("1 * a         = a", group, group.one().mult(group));
-            assertEquals("(1*a) * (a*1) = a^2", group.mult(group), group.one().mult(group).mult(group.mult(group.one())));
-            assertEquals("a * 1         = a", group, group.mult(group.one()));
-            assertEquals("a * (1/a)     = 1", group.one(), group.mult(group.inv()));
-            assertEquals("(1/a) * a     = 1", group.one(), group.inv().mult(group));
-            assertEquals("1 / a         = (1/a)", group.one().div(group), group.inv());
-            assertEquals("a / 1         = a", group.div(group.one()), group);
+            assertEquals(group.one(), group.one().mult(group.one()), "1 * 1         = 1");
+            assertEquals(group, group.one().mult(group), "1 * a         = a");
+            assertEquals(group.mult(group), group.one().mult(group).mult(group.mult(group.one())), "(1*a) * (a*1) = a^2");
+            assertEquals(group, group.mult(group.one()), "a * 1         = a");
+            assertEquals(group.one(), group.mult(group.inv()), "a * (1/a)     = 1");
+            assertEquals(group.one(), group.inv().mult(group), "(1/a) * a     = 1");
+            assertEquals(group.one().div(group), group.inv(), "1 / a         = (1/a)");
+            assertEquals(group.div(group.one()), group, "a / 1         = a");
             /// /////////////////////////////////////////////////////////////////////////
             Router.global().write("a", group);
             final Obj lhsObj = ObjmtronSerializer.parse(lhs).apply();
             final Obj rhsObj = ObjmtronSerializer.parse(rhs).apply();
-            assertEquals(lhs + " != " + rhs, lhsObj, rhsObj);
+            assertEquals(lhsObj, rhsObj, lhs + " != " + rhs);
         } else {
             LOG.warn("skipping testing for non mult group: %s %s", this.obj.type(), this.forms);
-            assumeTrue(this.obj.type() + " is not a mult group", this.forms.contains(MULT_GROUP));
+            assumeTrue(this.forms.contains(MULT_GROUP), this.obj.type() + " is not a mult group");
         }
     }
 
@@ -129,19 +129,19 @@ public abstract class AbstractAlgebraTest<O extends Obj> extends AbstractObjTest
     public void testPlusMonoid(final String lhs, final String rhs) {
         if (this.obj instanceof PlusMonoid.O) {
             LOG.warn("testing plus monoid for %s", this.obj.type());
-            assertTrue(this.obj.type() + " is not a plus monoid", this.forms.contains(PLUS_MONOID));
+            assertTrue(this.forms.contains(PLUS_MONOID), this.obj.type() + " is not a plus monoid");
             final PlusMonoid.O monoid = (PlusMonoid.O) this.obj;
-            assertEquals("0 + 0 = 0", monoid.zero(), monoid.zero().plus(monoid.zero()));
-            assertEquals("0 + a = a", monoid, monoid.zero().plus(monoid));
-            assertEquals("a + 0 = a", monoid, monoid.plus(monoid.zero()));
+            assertEquals(monoid.zero(), monoid.zero().plus(monoid.zero()), "0 + 0 = 0");
+            assertEquals(monoid, monoid.zero().plus(monoid), "0 + a = a");
+            assertEquals(monoid, monoid.plus(monoid.zero()), "a + 0 = a");
             /// /////////////////////////////////////////////////////////////////////////
             Router.global().write("a", monoid);
             final Obj lhsObj = ObjmtronSerializer.parse(lhs).apply();
             final Obj rhsObj = ObjmtronSerializer.parse(rhs).apply();
-            assertEquals(lhs + " != " + rhs, lhsObj, rhsObj);
+            assertEquals(lhsObj, rhsObj, lhs + " != " + rhs);
         } else {
             LOG.warn("skipping testing for non plus monoid: %s %s", this.obj.type(), this.forms);
-            assumeTrue(this.obj.type() + " is not a plus monoid", this.forms.contains(PLUS_MONOID));
+            assumeTrue(this.forms.contains(PLUS_MONOID), this.obj.type() + " is not a plus monoid");
         }
     }
 
@@ -154,19 +154,19 @@ public abstract class AbstractAlgebraTest<O extends Obj> extends AbstractObjTest
     public void testMultMonoid(final String lhs, final String rhs) {
         if (this.obj instanceof MultMonoid.O) {
             LOG.warn("testing mult monoid for %s", this.obj.type());
-            assertTrue(this.obj.type() + " is not a mult monoid", this.forms.contains(MULT_MONOID));
+            assertTrue(this.forms.contains(MULT_MONOID), this.obj.type() + " is not a mult monoid");
             final MultMonoid.O monoid = (MultMonoid.O) this.obj;
-            assertEquals("1 * 1 = 1", monoid.one(), monoid.one().mult(monoid.one()));
-            assertEquals("1 * a = a", monoid, monoid.one().mult(monoid));
-            assertEquals("a * 1 = a", monoid, monoid.mult(monoid.one()));
+            assertEquals(monoid.one(), monoid.one().mult(monoid.one()), "1 * 1 = 1");
+            assertEquals(monoid, monoid.one().mult(monoid), "1 * a = a");
+            assertEquals(monoid, monoid.mult(monoid.one()), "a * 1 = a");
             /// /////////////////////////////////////////////////////////////////////////
             Router.global().write("a", monoid);
             final Obj lhsObj = ObjmtronSerializer.parse(lhs).apply();
             final Obj rhsObj = ObjmtronSerializer.parse(rhs).apply();
-            assertEquals(lhs + " != " + rhs, lhsObj, rhsObj);
+            assertEquals(lhsObj, rhsObj, lhs + " != " + rhs);
         } else {
             LOG.warn("skipping testing for non mult monoid: %s %s", this.obj.type(), this.forms);
-            assumeTrue(this.obj.type() + " is not a mult monoid", this.forms.contains(MULT_MONOID));
+            assumeTrue(this.forms.contains(MULT_MONOID), this.obj.type() + " is not a mult monoid");
         }
     }
 

@@ -37,7 +37,15 @@ import java.sql.*;
 import java.util.*;
 
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.mInstSet.BOOL_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.CODE_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.INT_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.LST_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_INST_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.REAL_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.REL_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.STR_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -45,9 +53,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.Poly.MUTABLE;
-import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
-import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
@@ -103,19 +108,18 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
      */
     public void setSchemaGenerator(final SQLSchemaGenerator schemaGenerator) {
         this.schemaGenerator = schemaGenerator;
-        // Register any FKs discovered before the generator was set
-        for (final FKInfo fk : pendingFKs) {
+        for (final FKInfo fk : pendingFKs)
             schemaGenerator.registerFK(fk.fromTable(), fk.fromColumn(), fk.toTable(), fk.toColumn());
-        }
         pendingFKs.clear();
     }
 
     private final String excludeTableName;
 
     /**
-     * Logical type overrides: tableName → (columnName → mtronTypeTID).
+     * Table-level TIDs discovered from the {@code $table} sentinel row in
+     * {@link #_mtron_meta}.  Keyed by lowercase table name.
      */
-    private final Map<String, Map<String, fURI>> logicalTypes = new LinkedHashMap<>();
+    private final Map<String, fURI> tableTids = new LinkedHashMap<>();
 
     /**
      * Exposed for {@link SQLSchemaGenerator} so it can produce correct instset types.
@@ -125,11 +129,11 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
     }
 
     /**
-     * Single-column lookup for the schema generator.
+     * Table-level TIDs discovered from the {@code $table} sentinel in
+     * {@link #MTRON_META_TABLE}.  Exposed for {@link SQLSchemaGenerator}.
      */
-    public fURI getLogicalType(final String tableName, final String columnName) {
-        final Map<String, fURI> tableTypes = logicalTypes.get(tableName.toLowerCase());
-        return tableTypes != null ? tableTypes.get(columnName.toLowerCase()) : null;
+    public Map<String, fURI> getTableTids() {
+        return tableTids;
     }
 
     public record TableMetadata(String dbName, String tableName, List<ColumnMetadata> columns,
@@ -160,11 +164,15 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
         }
 
         public boolean isNumeric() {
-            return sqlType == Types.INTEGER || sqlType == Types.BIGINT ||
-                    sqlType == Types.SMALLINT || sqlType == Types.TINYINT ||
+            return isIntegerType() ||
                     sqlType == Types.REAL || sqlType == Types.FLOAT ||
                     sqlType == Types.DOUBLE || sqlType == Types.DECIMAL ||
                     sqlType == Types.NUMERIC;
+        }
+
+        public boolean isIntegerType() {
+            return sqlType == Types.INTEGER || sqlType == Types.BIGINT ||
+                    sqlType == Types.SMALLINT || sqlType == Types.TINYINT;
         }
     }
 
@@ -215,6 +223,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
     }
 
     public ExistingTableSchema(final tbleSpace space, final String excludeTableName) {
+        super(new LinkedHashMap<>());  // logicalTypes shared with parent ObjSQLSerializer
         this.excludeTableName = excludeTableName;
         this.space = space;
     }
@@ -230,7 +239,9 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
                     "CREATE TABLE IF NOT EXISTS " + MTRON_META_TABLE + " (" +
                             "  table_name  VARCHAR(255) NOT NULL, " +
                             "  column_name VARCHAR(255) NOT NULL, " +
-                            "  ref_table   VARCHAR(512) NOT NULL, " +
+                            "  base_vid    VARCHAR(128) NOT NULL, " +
+                            "  obj_tid     VARCHAR(512), " +
+                            "  ref_table   VARCHAR(512), " +
                             "  PRIMARY KEY (table_name, column_name)" +
                             ")"
             );
@@ -277,7 +288,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
         }
         this.space.logger().info("discovered {{b}}%s{{X}} tables: %s", tableSchemas.size(), tableSchemas.keySet());
         ensureMetaTable(conn);
-        loadMetaForeignKeys(conn);
+        loadMetaTable(conn);
         // Discover FKs by naming convention: a column named after another table
         // (e.g. company in people → companies) is inferred as an FK.
         discoverFKByConvention(conn);
@@ -306,14 +317,13 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
                 // Already registered (from JDBC metadata or _mtron_meta)
                 if (isFKAlreadyRegistered(srcTbl, colName))
                     continue;
-                // Try matching column name to table name (with convention variants)
+                // Try matching column name to table name (with convention variants).
+                // Skip when the matched table is the same table — a column named
+                // after its own table (e.g. 'concept' in 'concept') is a data
+                // column, not a self-referencing FK.
                 final String refTable = findReferencedTable(colName, tableNames);
-                if (refTable != null) {
-                    if (schemaGenerator != null) {
-                        schemaGenerator.registerFK(meta.tableName(), col.name(), refTable, "id");
-                    } else {
-                        pendingFKs.add(new FKInfo(meta.tableName(), col.name(), refTable, "id"));
-                    }
+                if (refTable != null && !refTable.equalsIgnoreCase(srcTbl)) {
+                    registerOrPendingFK(meta.tableName(), col.name(), refTable, "id");
                     this.space.logger().info("inferred FK by convention: {{b}}%s.%s{{X}} → {{b}}%s{{X}}",
                             meta.tableName(), col.name(), refTable);
                 }
@@ -378,39 +388,32 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
         final DatabaseMetaData metaData = conn.getMetaData();
         try (final ResultSet fks = metaData.getImportedKeys(catalog, null, tableName)) {
             while (fks.next()) {
-                final String fromCol = fks.getString("FKCOLUMN_NAME");
-                final String toTable = fks.getString("PKTABLE_NAME");
-                final String toCol = fks.getString("PKCOLUMN_NAME");
-                if (schemaGenerator != null) {
-                    schemaGenerator.registerFK(tableName, fromCol, toTable, toCol);
-                } else {
-                    // Store temporarily; will register when generator is set
-                    pendingFKs.add(new FKInfo(tableName, fromCol, toTable, toCol));
-                }
+                registerOrPendingFK(tableName,
+                        fks.getString("FKCOLUMN_NAME"),
+                        fks.getString("PKTABLE_NAME"),
+                        fks.getString("PKCOLUMN_NAME"));
             }
         }
     }
 
     /**
-     * Load FK mappings from the _mtron_meta table and register them with the
-     * schema generator (or store temporarily if the generator isn't set yet).
+     * Load column type metadata and FK mappings from the {@link #MTRON_META_TABLE}
+     * and register them with the schema generator (or store temporarily if the
+     * generator isn't set yet).
+     * <p>
+     * Also populates {@link #logicalTypes} and {@link #tableTids} from the
+     * persisted metadata so types survive restarts.
      */
-    private void loadMetaForeignKeys(final Connection conn) {
+    private void loadMetaTable(final Connection conn) {
         try (final Statement stmt = conn.createStatement();
              final ResultSet rs = stmt.executeQuery(
-                     "SELECT table_name, column_name, ref_table FROM " + MTRON_META_TABLE)) {
+                     "SELECT table_name, column_name, base_vid, obj_tid, ref_table FROM " + MTRON_META_TABLE)) {
             while (rs.next()) {
                 final String tbl = rs.getString("table_name");
-                final String col = rs.getString("column_name");
-                final String ref = rs.getString("ref_table");
+                // Only load metadata for tables we've already discovered.
                 if (!this.tableSchemas.containsKey(tbl.toLowerCase())) continue;
-                // Check if already discovered from JDBC metadata
-                if (isFKAlreadyRegistered(tbl, col)) continue;
-                if (schemaGenerator != null) {
-                    schemaGenerator.registerFK(tbl, col, ref, "id");
-                } else {
-                    pendingFKs.add(new FKInfo(tbl, col, ref, "id"));
-                }
+                processMetaRow(tbl, rs.getString("column_name"),
+                        rs.getString("obj_tid"), rs.getString("ref_table"));
             }
         } catch (final SQLException ignored) {
         }
@@ -428,13 +431,55 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
         final Set<String> knownTables = this.tableSchemas.keySet();
         final String colName = columnName.toLowerCase();
         final String refTable = findReferencedTable(colName, knownTables);
-        if (refTable != null) {
+        if (refTable != null && !refTable.equalsIgnoreCase(tableName)) {
             schemaGenerator.registerFK(tableName, columnName, refTable, "id");
             this.space.logger().info("lazy foreign key by convention: {{b}}%s.%s{{X}} → {{b}}%s{{X}}",
                     tableName, columnName, refTable);
             return schemaGenerator.getFKTarget(tableName, columnName);
         }
         return null;
+    }
+
+    /**
+     * Process a single row from {@link #MTRON_META_TABLE}, populating
+     * {@link #tableTids}, {@link #logicalTypes}, and FK registrations.
+     * Shared by {@link #loadMetaTable} and {@link #registerTable}.
+     */
+    private void processMetaRow(final String tbl, final String col,
+                                final String objTidStr, final String ref) {
+        // $table sentinel — table-level TID
+        if ("$table".equalsIgnoreCase(col)) {
+            if (objTidStr != null && !objTidStr.isBlank())
+                this.tableTids.put(tbl.toLowerCase(), f(objTidStr));
+            return;
+        }
+
+        // FK registration — skip rows where column, table, and ref are all
+        // identical (e.g. concept.concept→concept — a naming collision, not
+        // a real FK).  Legitimate self-refs like manager_id→employee have
+        // different column names and are allowed through.
+        if (ref != null && !ref.isBlank() && !isFKAlreadyRegistered(tbl, col)
+                && !(ref.equalsIgnoreCase(tbl) && col.equalsIgnoreCase(tbl)))
+            registerOrPendingFK(tbl, col, ref, "id");
+
+        // Populate logical type overrides
+        if (objTidStr != null && !objTidStr.isBlank()) {
+            this.logicalTypes
+                    .computeIfAbsent(tbl.toLowerCase(), k -> new LinkedHashMap<>())
+                    .put(col.toLowerCase(), f(objTidStr));
+        }
+    }
+
+    /**
+     * Register an FK with the schema generator, or store temporarily in
+     * {@link #pendingFKs} if the generator hasn't been set yet.
+     */
+    private void registerOrPendingFK(final String tableName, final String columnName,
+                                     final String toTable, final String toColumn) {
+        if (schemaGenerator != null)
+            schemaGenerator.registerFK(tableName, columnName, toTable, toColumn);
+        else
+            pendingFKs.add(new FKInfo(tableName, columnName, toTable, toColumn));
     }
 
     /**
@@ -467,10 +512,10 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
         final Map<Obj, Obj> labeledValues = new LinkedHashMap<>();
         fURI storedTid = null;
         for (final ColumnMetadata col : metadata.columns) {
-            if (rowNames.length == 0 && metadata.primaryKeys.contains(col.name)) continue;
+            if (rowNames.length == 0 && metadata.primaryKeys.stream()
+                    .anyMatch(pk -> pk.equalsIgnoreCase(col.name))) continue;
             if (TID_COLUMN.equalsIgnoreCase(col.name)) {
-                // _tid is system metadata, not a user field — extract for rec TID.
-                // Stored as <uri> so readMaybeJSON reconstitutes it correctly.
+                // _tid is system metadata — extract for rec TID, skip from fields.
                 try {
                     final String tidStr = rs.getString(col.name);
                     if (tidStr != null && !tidStr.isBlank()) {
@@ -510,20 +555,8 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
             return noobj();
         }
 
-        final Map<String, fURI> tableTypes = this.logicalTypes.get(tableName.toLowerCase());
-        if (tableTypes != null) {
-            final fURI logicalType = tableTypes.get(col.name.toLowerCase());
-            if (logicalType != null) {
-                final Object value = rs.getObject(col.name);
-                if (value == null || rs.wasNull()) return noobj();
-                if (logicalType.name().equals("bool")) {
-                    if (col.sqlType == Types.BOOLEAN || col.sqlType == Types.BIT)
-                        return bool(rs.getBoolean(col.name));
-                    return bool(rs.getInt(col.name) != 0);
-                }
-            }
-        }
-
+        // BOOLEAN stored as INTEGER (SQLite): handle before delegating to the
+        // type-aware read, which only activates when _mtron_meta has a row.
         if ("BOOLEAN".equalsIgnoreCase(col.typeName) &&
                 (col.sqlType == Types.INTEGER || col.sqlType == Types.TINYINT ||
                         col.sqlType == Types.SMALLINT)) {
@@ -531,16 +564,11 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
             if (value == null || rs.wasNull()) return noobj();
             return bool(rs.getInt(col.name) != 0);
         }
-        // Poly values (Objs, Rec) may have been serialized to text.
-        {
-            final String raw = rs.getString(col.name);
-            if (raw != null && !raw.isEmpty()) {
-                final char first = raw.stripLeading().charAt(0);
-                if (first == '{' || first == '[')
-                    return ObjSQLSerializer.readMaybeJSON(raw);
-            }
-        }
-        return readColumn(rs, col.name, col.sqlType);
+
+        // Delegate to the parent's type-aware reader — uses _mtron_meta logical
+        // types (uri::T, lst::T, rec::T, str::T, bool::T, etc.) to reconstruct
+        // typed values.  No heuristic guessing needed.
+        return readColumnWithType(rs, col.name, col.sqlType, tableName);
     }
 
     /**
@@ -692,12 +720,96 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
      * Record the exact metatron TID of every value written so the instset
      * schema can preserve user-defined type refinements (e.g. {@code nat::T}
      * instead of plain {@code int::T}, {@code uri::T} instead of {@code str::T}).
+     * <p>
+     * Persisted to {@link #MTRON_META_TABLE} so type metadata survives restarts.
      */
-    private void trackLogicalType(final TableMetadata metadata, final String columnName,
-                                  final Obj value, final int sqlType) {
+    private void trackLogicalType(final Connection conn, final TableMetadata metadata,
+                                  final String columnName, final Obj value, final int sqlType) {
+        final String tbl = metadata.tableName.toLowerCase();
+        final String col = columnName.toLowerCase();
+        final fURI tid = value.tid();
         this.logicalTypes
-                .computeIfAbsent(metadata.tableName.toLowerCase(), k -> new LinkedHashMap<>())
-                .put(columnName.toLowerCase(), value.tid());
+                .computeIfAbsent(tbl, k -> new LinkedHashMap<>())
+                .put(col, tid);
+        persistColumnType(conn, tbl, col, baseVidForValue(value), tid.toString(), null);
+    }
+
+    /**
+     * Derive the base-type VID {@link fURI} string for {@code value}.
+     * Uses the actual TID constants from {@code mInstSet} so the stored
+     * string round-trips correctly through {@link fURI.Singleton#f(String)}.
+     */
+    private static String baseVidForValue(final Obj value) {
+        if (value.isBool()) return BOOL_TID.toString();
+        if (value.isInt()) return INT_TID.toString();
+        if (value.isReal()) return REAL_TID.toString();
+        if (value.isStr()) return STR_TID.toString();
+        if (value.isUri()) return URI_TID.toString();
+        if (value.isRec()) return REC_TID.toString();
+        if (value.isLst()) return LST_TID.toString();
+        if (value.isInst()) return M_ISA_INST_TID.toString();
+        if (value.isCode()) return CODE_TID.toString();
+        if (value.isRel()) return REL_TID.toString();
+        return REC_TID.toString();
+    }
+
+    /**
+     * Upsert a row into {@link #MTRON_META_TABLE}.
+     *
+     * @param conn      the JDBC connection
+     * @param tableName lowercase table name
+     * @param columnName lowercase column name
+     * @param baseVid   base type VID string (e.g. {@code "int::T"})
+     * @param objTid    full type ID string (e.g. {@code "int::T[nat]"}), may be null
+     * @param refTable  FK target table, may be null
+     */
+    private void persistColumnType(final Connection conn, final String tableName,
+                                   final String columnName, final String baseVid,
+                                   final String objTid, final String refTable) {
+        try {
+            // Preserve existing ref_table when the incoming write doesn't
+            // carry one — prevents trackLogicalType from overwriting FK info
+            // that createTableFromRecord already persisted.
+            String effectiveRef = refTable;
+            if (effectiveRef == null) {
+                try (final PreparedStatement sel = conn.prepareStatement(
+                        "SELECT ref_table FROM " + MTRON_META_TABLE +
+                                " WHERE table_name = ? AND column_name = ?")) {
+                    sel.setString(1, tableName);
+                    sel.setString(2, columnName);
+                    try (final ResultSet rs = sel.executeQuery()) {
+                        if (rs.next()) {
+                            final String existing = rs.getString("ref_table");
+                            if (existing != null && !existing.isBlank())
+                                effectiveRef = existing;
+                        }
+                    }
+                } catch (final SQLException ignored) { /* table may not exist yet */ }
+            }
+
+            // Delete-then-insert: portable across SQLite/PostgreSQL/MariaDB/MySQL
+            try (final PreparedStatement del = conn.prepareStatement(
+                    "DELETE FROM " + MTRON_META_TABLE +
+                            " WHERE table_name = ? AND column_name = ?")) {
+                del.setString(1, tableName);
+                del.setString(2, columnName);
+                del.executeUpdate();
+            }
+            try (final PreparedStatement ins = conn.prepareStatement(
+                    "INSERT INTO " + MTRON_META_TABLE +
+                            " (table_name, column_name, base_vid, obj_tid, ref_table) VALUES (?, ?, ?, ?, ?)")) {
+                ins.setString(1, tableName);
+                ins.setString(2, columnName);
+                ins.setString(3, baseVid);
+                if (objTid != null) ins.setString(4, objTid);
+                else ins.setNull(4, Types.VARCHAR);
+                if (effectiveRef != null) ins.setString(5, effectiveRef);
+                else ins.setNull(5, Types.VARCHAR);
+                ins.executeUpdate();
+            }
+        } catch (final SQLException e) {
+            this.space.logger().warn("failed to persist column type to %s: %s", MTRON_META_TABLE, e.getMessage());
+        }
     }
 
     private static int sqlTypeForMono(final Obj value) {
@@ -719,7 +831,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
                 q(metadata.tableName), q(column.name), q(pkColumn));
 
         try (final PreparedStatement stmt = conn.prepareStatement(sql)) {
-            trackLogicalType(metadata, column.name, value, column.sqlType);
+            trackLogicalType(conn, metadata, column.name, value, column.sqlType);
             validateColumnWrite(value, column, metadata.tableName);
             final int sqlType = (!value.isPoly() && !value.isNoObj() && column.sqlType == Types.VARCHAR)
                     ? sqlTypeForMono(value) : column.sqlType;
@@ -727,8 +839,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
 
             final ColumnMetadata pkColMeta = metadata.columns.stream()
                     .filter(c -> c.name.equals(pkColumn)).findFirst().orElseThrow();
-            if (pkColMeta.sqlType == Types.INTEGER || pkColMeta.sqlType == Types.BIGINT ||
-                    pkColMeta.sqlType == Types.SMALLINT || pkColMeta.sqlType == Types.TINYINT) {
+            if (pkColMeta.isIntegerType()) {
                 stmt.setLong(2, Long.parseLong(rowId));
             } else {
                 stmt.setString(2, rowId);
@@ -817,12 +928,11 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
     private Rec readCurrentRow(final Connection conn, final TableMetadata metadata,
                                final String pkColumn, final String rowId) throws SQLException {
         final String sql = String.format("SELECT * FROM %s WHERE %s = ?",
-                metadata.tableName, pkColumn);
+                q(metadata.tableName), q(pkColumn));
         try (final PreparedStatement stmt = conn.prepareStatement(sql)) {
             final ColumnMetadata pkColMeta = metadata.columns.stream()
                     .filter(c -> c.name.equals(pkColumn)).findFirst().orElseThrow();
-            if (pkColMeta.sqlType == Types.INTEGER || pkColMeta.sqlType == Types.BIGINT ||
-                    pkColMeta.sqlType == Types.SMALLINT || pkColMeta.sqlType == Types.TINYINT) {
+            if (pkColMeta.isIntegerType()) {
                 stmt.setLong(1, Long.parseLong(rowId));
             } else {
                 stmt.setString(1, rowId);
@@ -848,7 +958,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
             final Obj value = entry.getValue();
             final ColumnMetadata column = metadata.columns.stream()
                     .filter(c -> c.name.equalsIgnoreCase(colName)).findFirst().orElseThrow();
-            trackLogicalType(metadata, column.name, value, column.sqlType);
+            trackLogicalType(conn, metadata, column.name, value, column.sqlType);
             setClauses.add(q(column.name) + " = ?");
             values.add(Tuple.Pair.with(value, column));
         }
@@ -868,8 +978,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
 
             final ColumnMetadata pkColMeta = metadata.columns.stream()
                     .filter(c -> c.name.equals(pkColumn)).findFirst().orElseThrow();
-            if (pkColMeta.sqlType == Types.INTEGER || pkColMeta.sqlType == Types.BIGINT ||
-                    pkColMeta.sqlType == Types.SMALLINT || pkColMeta.sqlType == Types.TINYINT) {
+            if (pkColMeta.isIntegerType()) {
                 stmt.setLong(values.size() + 1, Long.parseLong(rowId));
             } else {
                 stmt.setString(values.size() + 1, rowId);
@@ -881,68 +990,6 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
             return updated;
         }
     }
-
-   /* private int updateRow(final Connection conn, final TableMetadata metadata, final String rowId, final Rec rec) throws SQLException {
-        final List<String> setClauses = new ArrayList<>();
-        final List<Tuple.Pair<Obj, ColumnMetadata>> values = new ArrayList<>();
-
-        for (final Map.Entry<Obj, Obj> entry : rec.recValue().entrySet()) {
-            if (!entry.getKey().isUri()) {
-                this.space.logger().warn("ignoring non-uri key in rec: %s", entry.getKey());
-                continue;
-            }
-            final String fieldName = entry.getKey().asUri().uriValue().name();
-            if (fieldName == null || fieldName.isEmpty()) {
-                this.space.logger().warn("ignoring empty field name for key: %s", entry.getKey());
-                continue;
-            }
-
-            final ColumnMetadata column = metadata.columns.stream()
-                    .filter(c -> c.name.equalsIgnoreCase(fieldName)).findFirst().orElse(null);
-
-            if (column != null) {
-                trackLogicalType(metadata, column.name, entry.getValue(), column.sqlType);
-                setClauses.add(q(column.name) + " = ?");
-                values.add(Tuple.Pair.with(entry.getValue(), column));
-            } else {
-                this.space.logger().warn("ignoring update as column %s not found in table %s", fieldName, metadata.tableName);
-            }
-        }
-
-        if (setClauses.isEmpty()) {
-            this.space.logger().warn("no valid columns to update for table %s", metadata.tableName);
-            return 0;
-        }
-
-        final String pkColumn = metadata.primaryKeys.getFirst();
-        final String sql = String.format("UPDATE %s SET %s WHERE %s = ?",
-                q(metadata.tableName), String.join(", ", setClauses), q(pkColumn));
-
-        try (final PreparedStatement stmt = conn.prepareStatement(sql)) {
-            for (int i = 0; i < values.size(); i++) {
-                final Tuple.Pair<Obj, ColumnMetadata> pair = values.get(i);
-                final Obj value = pair.get0();
-                final ColumnMetadata column = pair.get1();
-                validateColumnWrite(value, column, metadata.tableName);
-                final int sqlType = value.isPoly() ? Types.VARCHAR : column.sqlType;
-                writeParameter(stmt, i + 1, value, sqlType);
-            }
-
-            final ColumnMetadata pkColMeta = metadata.columns.stream()
-                    .filter(c -> c.name.equals(pkColumn)).findFirst().orElseThrow();
-            if (pkColMeta.sqlType == Types.INTEGER || pkColMeta.sqlType == Types.BIGINT ||
-                    pkColMeta.sqlType == Types.SMALLINT || pkColMeta.sqlType == Types.TINYINT) {
-                stmt.setLong(values.size() + 1, Long.parseLong(rowId));
-            } else {
-                stmt.setString(values.size() + 1, rowId);
-            }
-
-            final int updated = stmt.executeUpdate();
-            this.space.logger().debug("updated row in %s with id %s: %s rows affected",
-                    metadata.tableName, rowId, updated);
-            return updated;
-        }
-    }*/
 
     /**
      * ALTER TABLE on the fly — adds a missing column so writes never lose data
@@ -996,7 +1043,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
 
         final ColumnMetadata newCol = new ColumnMetadata(columnName, jdbcType, sqlType);
         metadata.columns.add(newCol);
-        trackLogicalType(metadata, columnName, value, jdbcType);
+        trackLogicalType(conn, metadata, columnName, value, jdbcType);
         this.space.onTableChanged(metadata.tableName);
         return newCol;
     }
@@ -1010,8 +1057,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
         final ColumnMetadata pkColMeta = metadata.columns.stream()
                 .filter(c -> c.name.equals(pkColumn)).findFirst().orElseThrow();
         final Obj pkValue;
-        if (pkColMeta.sqlType == Types.INTEGER || pkColMeta.sqlType == Types.BIGINT ||
-                pkColMeta.sqlType == Types.SMALLINT || pkColMeta.sqlType == Types.TINYINT) {
+        if (pkColMeta.isIntegerType()) {
             pkValue = jnt(Long.parseLong(rowId));
         } else {
             pkValue = str(rowId);
@@ -1025,10 +1071,10 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
         if (tidColumn != null) {
             resolvedTidCol = tidColumn;
         } else {
-            resolvedTidCol = addColumnOnTheFly(conn, metadata, TID_COLUMN, str("<" + rec.tid().toString() + ">"));
+            resolvedTidCol = addColumnOnTheFly(conn, metadata, TID_COLUMN, str(rec.tid().toString()));
         }
         columnNames.add(TID_COLUMN);
-        values.add(Tuple.Pair.with(str("<" + rec.tid().toString() + ">"), resolvedTidCol));
+        values.add(Tuple.Pair.with(str(rec.tid().toString()), resolvedTidCol));
 
         for (final Map.Entry<Obj, Obj> entry : rec.recValue().entrySet()) {
             if (!entry.getKey().isUri()) {
@@ -1047,7 +1093,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
                     .filter(c -> c.name.equalsIgnoreCase(fieldName)).findFirst().orElse(null);
 
             if (column != null) {
-                trackLogicalType(metadata, column.name, entry.getValue(), column.sqlType);
+                trackLogicalType(conn, metadata, column.name, entry.getValue(), column.sqlType);
                 columnNames.add(column.name);
                 values.add(Tuple.Pair.with(entry.getValue(), column));
             } else {
@@ -1059,7 +1105,8 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
 
         final String placeholders = String.join(", ", Collections.nCopies(columnNames.size(), "?"));
         final String sql = String.format("INSERT INTO %s (%s) VALUES (%s)",
-                metadata.tableName, String.join(", ", columnNames), placeholders);
+                q(metadata.tableName), columnNames.stream().map(this::q).reduce((a, b) -> a + ", " + b).orElse(""),
+                placeholders);
 
         try (final PreparedStatement stmt = conn.prepareStatement(sql)) {
             for (int i = 0; i < values.size(); i++) {
@@ -1094,10 +1141,10 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
         if (tidColumn != null) {
             resolvedTidCol = tidColumn;
         } else {
-            resolvedTidCol = addColumnOnTheFly(conn, metadata, TID_COLUMN, str("<" + rec.tid().toString() + ">"));
+            resolvedTidCol = addColumnOnTheFly(conn, metadata, TID_COLUMN, str(rec.tid().toString()));
         }
         columnNames.add(TID_COLUMN);
-        values.add(Tuple.Pair.with(str("<" + rec.tid().toString() + ">"), resolvedTidCol));
+        values.add(Tuple.Pair.with(str(rec.tid().toString()), resolvedTidCol));
 
         for (final Map.Entry<Obj, Obj> entry : rec.recValue().entrySet()) {
             if (!entry.getKey().isUri()) {
@@ -1117,7 +1164,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
             final ColumnMetadata column = metadata.columns.stream()
                     .filter(c -> c.name.equalsIgnoreCase(fieldName)).findFirst().orElse(null);
             if (column != null) {
-                trackLogicalType(metadata, column.name, entry.getValue(), column.sqlType);
+                trackLogicalType(conn, metadata, column.name, entry.getValue(), column.sqlType);
                 columnNames.add(column.name);
                 values.add(Tuple.Pair.with(entry.getValue(), column));
             } else {
@@ -1134,7 +1181,8 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
 
         final String placeholders = String.join(", ", Collections.nCopies(columnNames.size(), "?"));
         final String sql = String.format("INSERT INTO %s (%s) VALUES (%s)",
-                metadata.tableName, String.join(", ", columnNames), placeholders);
+                q(metadata.tableName), columnNames.stream().map(this::q).reduce((a, b) -> a + ", " + b).orElse(""),
+                placeholders);
 
         try (final PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             for (int i = 0; i < values.size(); i++) {
@@ -1200,9 +1248,10 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
             final List<Space.IdObj> results = new ArrayList<>();
             if (dp.entryIsWildcard()) {
                 if (dp.hasField() && !dp.fieldIsWildcard()) {
-                    final String pkColumns = String.join(", ", metadata.primaryKeys);
+                    final String pkColumns = metadata.primaryKeys.stream()
+                            .map(this::q).reduce((a, b) -> a + ", " + b).orElse("");
                     final String fieldName = dp.field();
-                    final String sql = String.format("SELECT %s, %s FROM %s", pkColumns, fieldName, metadata.tableName);
+                    final String sql = String.format("SELECT %s, %s FROM %s", pkColumns, q(fieldName), q(metadata.tableName));
                     try (final Statement stmt = conn.createStatement(); ResultSet rs = stmt.executeQuery(sql)) {
                         while (rs.next()) {
                             final String id = buildRowId(rs, metadata);
@@ -1215,7 +1264,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
                         throw MTronException.of(e, "SQL failed: %s", sql);
                     }
                 } else {
-                    final String sql = String.format("SELECT * FROM %s", metadata.tableName);
+                    final String sql = String.format("SELECT * FROM %s", q(metadata.tableName));
                     try (final Statement stmt = conn.createStatement(); ResultSet rs = stmt.executeQuery(sql)) {
                         while (rs.next()) {
                             final String id = buildRowId(rs, metadata);
@@ -1236,14 +1285,14 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
                 }
                 if (dp.hasField()) {
                     final String pkColumn = metadata.primaryKeys.getFirst();
-                    final String pkColumns = String.join(", ", metadata.primaryKeys);
+                    final String pkColumns = metadata.primaryKeys.stream()
+                            .map(this::q).reduce((a, b) -> a + ", " + b).orElse("");
                     final String fieldName = dp.field();
-                    final String sql = String.format("SELECT %s, %s FROM %s WHERE %s = ?", pkColumns, fieldName, metadata.tableName, pkColumn);
+                    final String sql = String.format("SELECT %s, %s FROM %s WHERE %s = ?", pkColumns, q(fieldName), q(metadata.tableName), q(pkColumn));
                     try (final PreparedStatement stmt = conn.prepareStatement(sql)) {
                         final ColumnMetadata pkColMeta = metadata.columns.stream()
                                 .filter(c -> c.name.equals(pkColumn)).findFirst().orElseThrow();
-                        if (pkColMeta.sqlType == Types.INTEGER || pkColMeta.sqlType == Types.BIGINT ||
-                                pkColMeta.sqlType == Types.SMALLINT || pkColMeta.sqlType == Types.TINYINT) {
+                        if (pkColMeta.isIntegerType()) {
                             if (!CommonUtil.isInt(rowId)) return IteratorUtil.of();
                             stmt.setLong(1, Long.parseLong(rowId));
                         } else {
@@ -1264,12 +1313,11 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
                     }
                 } else {
                     final String pkColumn = metadata.primaryKeys.getFirst();
-                    final String sql = String.format("SELECT * FROM %s WHERE %s = ?", metadata.tableName, pkColumn);
+                    final String sql = String.format("SELECT * FROM %s WHERE %s = ?", q(metadata.tableName), q(pkColumn));
                     try (final PreparedStatement stmt = conn.prepareStatement(sql)) {
                         final ColumnMetadata pkColMeta = metadata.columns.stream()
                                 .filter(c -> c.name.equals(pkColumn)).findFirst().orElseThrow();
-                        if (pkColMeta.sqlType == Types.INTEGER || pkColMeta.sqlType == Types.BIGINT ||
-                                pkColMeta.sqlType == Types.SMALLINT || pkColMeta.sqlType == Types.TINYINT) {
+                        if (pkColMeta.isIntegerType()) {
                             if (!CommonUtil.isInt(rowId)) return IteratorUtil.of();
                             stmt.setLong(1, Long.parseLong(rowId));
                         } else {
@@ -1303,8 +1351,8 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
         if (dp.hasField()) {
             final String column = dp.field();
             final String pkCol = getPrimaryKeyColumn(conn, tableName);
-            final String sql = "UPDATE \"" + tableName + "\" SET \"" + column
-                    + "\" = NULL WHERE \"" + pkCol + "\" = ?";
+            final String sql = "UPDATE " + q(tableName) + " SET " + q(column)
+                    + " = NULL WHERE " + q(pkCol) + " = ?";
             try (final PreparedStatement stmt = conn.prepareStatement(sql)) {
                 stmt.setString(1, rowId);
                 return stmt.executeUpdate();
@@ -1312,7 +1360,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
         }
 
         final String pkCol = getPrimaryKeyColumn(conn, tableName);
-        final String sql = "DELETE FROM \"" + tableName + "\" WHERE \"" + pkCol + "\" = ?";
+        final String sql = "DELETE FROM " + q(tableName) + " WHERE " + q(pkCol) + " = ?";
         try (final PreparedStatement stmt = conn.prepareStatement(sql)) {
             setRowIdParam(stmt, 1, conn, tableName, pkCol, rowId);
             return stmt.executeUpdate();
@@ -1326,8 +1374,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
         if (metadata != null) {
             final ColumnMetadata pkMeta = metadata.columns.stream()
                     .filter(c -> c.name.equalsIgnoreCase(pkCol)).findFirst().orElse(null);
-            if (pkMeta != null && (pkMeta.sqlType == Types.INTEGER || pkMeta.sqlType == Types.BIGINT
-                    || pkMeta.sqlType == Types.SMALLINT || pkMeta.sqlType == Types.TINYINT)) {
+            if (pkMeta != null && (pkMeta.isIntegerType())) {
                 stmt.setLong(idx, Long.parseLong(rowId));
                 return;
             }
@@ -1376,21 +1423,15 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
         // Discover FKs and register with generator
         discoverReferencesAndRegister(conn, catalog, tableName);
 
-        // Also check _mtron_meta for additional FK mappings
+        // Also check _mtron_meta for type metadata and FK mappings
         try (final PreparedStatement ps = conn.prepareStatement(
-                "SELECT column_name, ref_table FROM " + MTRON_META_TABLE + " WHERE table_name = ?")) {
+                "SELECT column_name, base_vid, obj_tid, ref_table FROM " + MTRON_META_TABLE +
+                        " WHERE table_name = ?")) {
             ps.setString(1, tableName);
             try (final ResultSet metaRs = ps.executeQuery()) {
                 while (metaRs.next()) {
-                    final String col = metaRs.getString("column_name");
-                    final String ref = metaRs.getString("ref_table");
-                    if (!isFKAlreadyRegistered(tableName, col)) {
-                        if (schemaGenerator != null) {
-                            schemaGenerator.registerFK(tableName, col, ref, "id");
-                        } else {
-                            pendingFKs.add(new FKInfo(tableName, col, ref, "id"));
-                        }
-                    }
+                    processMetaRow(tableName, metaRs.getString("column_name"),
+                            metaRs.getString("obj_tid"), metaRs.getString("ref_table"));
                 }
             }
         } catch (final SQLException ignored) {
@@ -1406,7 +1447,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
                                       final studio.phaseshift.metatron.isa.m.type.Rec rec,
                                       final String rowId) throws SQLException {
         final StringBuilder ddl = new StringBuilder("CREATE TABLE IF NOT EXISTS ")
-                .append(tableName).append(" (");
+                .append(q(tableName)).append(" (");
 
         // Infer PK type from the rowId: numeric → INTEGER (with dialect-specific
         // auto-increment), non-numeric text → VARCHAR(255).  A null rowId means
@@ -1414,27 +1455,23 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
         // VARCHAR is used instead of TEXT to avoid TEXT-in-key errors on MariaDB.
         final boolean textPK = rowId != null && !studio.phaseshift.metatron.util.CommonUtil.isInt(rowId);
         if (textPK) {
-            ddl.append("id VARCHAR(255) PRIMARY KEY");
+            ddl.append(q("id")).append(" VARCHAR(255) PRIMARY KEY");
         } else if (this.space instanceof studio.phaseshift.metatron.isa.tble.tbleSpace tble) {
             final String b = tble.backend();
             if (b != null && b.contains("postgresql"))
-                ddl.append("id SERIAL PRIMARY KEY");
+                ddl.append(q("id")).append(" SERIAL PRIMARY KEY");
             else if (b != null && (b.contains("mariadb") || b.contains("mysql")))
-                ddl.append("id INTEGER PRIMARY KEY AUTO_INCREMENT");
+                ddl.append(q("id")).append(" INTEGER PRIMARY KEY AUTO_INCREMENT");
             else
-                ddl.append("id INTEGER PRIMARY KEY");
+                ddl.append(q("id")).append(" INTEGER PRIMARY KEY");
         } else {
-            ddl.append("id INTEGER PRIMARY KEY");
+            ddl.append(q("id")).append(" INTEGER PRIMARY KEY");
         }
 
         // _tid column — preserves rec type identity across write/read.
         // Nullable: write paths that bypass insertRow/insertRowAuto (e.g. raw SQL,
         // writeRow field-level diffs, writeRowFromList) won't populate it.
-        ddl.append(", ").append(TID_COLUMN).append(" TEXT");
-
-        boolean first = false; // id column already added
-
-        final Map<String, String> autoFromColumns = new LinkedHashMap<>();
+        ddl.append(", ").append(q(TID_COLUMN)).append(" TEXT");
 
         for (final Map.Entry<Obj, Obj> entry : rec.recValue().entrySet()) {
             if (!entry.getKey().isUri()) continue;
@@ -1442,27 +1479,18 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
             if (colName == null || colName.isEmpty()) continue;
             if ("id".equalsIgnoreCase(colName)) continue;
             if (TID_COLUMN.equalsIgnoreCase(colName)) continue;
-            if (!first) ddl.append(", ");
-            first = false;
+            ddl.append(", ");
 
             final Obj val = entry.getValue();
             if (val.isAutoFrom()) {
-                final fURI refURI = val.asInst().arg(0).uriValue();
-                final String refTable;
-                if (refURI.test(space.pattern())) {
-                    refTable = refURI.segments().getFirst();
-                } else {
-                    refTable = refURI.segments(List.of(refURI.segments().getFirst())).toString();
-                }
-                autoFromColumns.put(colName, refTable);
-                ddl.append(colName).append(" INTEGER");
+                ddl.append(q(colName)).append(" INTEGER");
             } else {
                 final String sqlType;
                 if (val.isBool()) sqlType = "BOOLEAN";
                 else if (val.isInt()) sqlType = "INTEGER";
                 else if (val.isReal()) sqlType = "REAL";
                 else sqlType = "TEXT";
-                ddl.append(colName).append(" ").append(sqlType);
+                ddl.append(q(colName)).append(" ").append(sqlType);
                 if ("id".equalsIgnoreCase(colName)) {
                     ddl.append(" PRIMARY KEY");
                 }
@@ -1475,22 +1503,36 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
             stmt.executeUpdate(ddl.toString());
         }
 
-        if (!autoFromColumns.isEmpty()) {
-            ensureMetaTable(conn);
-        }
-        for (final Map.Entry<String, String> af : autoFromColumns.entrySet()) {
-            try (final PreparedStatement del = conn.prepareStatement(
-                    "DELETE FROM " + MTRON_META_TABLE + " WHERE table_name = ? AND column_name = ?")) {
-                del.setString(1, tableName);
-                del.setString(2, af.getKey());
-                del.executeUpdate();
-            }
-            try (final PreparedStatement ins = conn.prepareStatement(
-                    "INSERT INTO " + MTRON_META_TABLE + " (table_name, column_name, ref_table) VALUES (?, ?, ?)")) {
-                ins.setString(1, tableName);
-                ins.setString(2, af.getKey());
-                ins.setString(3, af.getValue());
-                ins.executeUpdate();
+        // Persist column types and FK references to _mtron_meta.
+        ensureMetaTable(conn);
+        final String tbl = tableName.toLowerCase();
+
+        // $table sentinel — records the table-level TID (e.g. person::T)
+        persistColumnType(conn, tbl, "$table", REC_TID.toString(), rec.tid().toString(), null);
+
+        // Column-level type metadata
+        for (final Map.Entry<Obj, Obj> entry : rec.recValue().entrySet()) {
+            if (!entry.getKey().isUri()) continue;
+            final String colName = entry.getKey().asUri().uriValue().name();
+            if (colName == null || colName.isEmpty()) continue;
+            if ("id".equalsIgnoreCase(colName)) continue;
+            if (TID_COLUMN.equalsIgnoreCase(colName)) continue;
+
+            final Obj val = entry.getValue();
+            if (val.isAutoFrom()) {
+                final fURI refURI = val.asInst().arg(0).uriValue();
+                final String refTable;
+                if (refURI.test(space.pattern())) {
+                    refTable = refURI.segments().getFirst();
+                } else {
+                    refTable = refURI.segments(List.of(refURI.segments().getFirst())).toString();
+                }
+                // FK column: INTEGER base, ref_table populated
+                persistColumnType(conn, tbl, colName.toLowerCase(),
+                        INT_TID.toString(), val.tid().toString(), refTable);
+            } else {
+                persistColumnType(conn, tbl, colName.toLowerCase(),
+                        baseVidForValue(val), val.tid().toString(), null);
             }
         }
 
@@ -1498,7 +1540,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
     }
 
     public boolean isTablePath(final fURI furi) {
-        return resolveDataPath(furi.asNode()) != null;
+        return resolveDataPath(furi) != null;
     }
 
     public Set<String> getTableNames() {

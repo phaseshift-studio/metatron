@@ -42,7 +42,7 @@ a -> 1  [-- write 1 to a --]
 *a      [-- read 1 from a --]
 ----
 
-From `to` and `from` more complex spatial read/write patterns are realized such `select` and `update` (discussed elsewhere in the Tractatus).
+From `to` and `from` more complex spatial read/write patterns are realized such as `select` and `update` (discussed elsewhere in the Tractatus).
 
 [source,mtron]
 ----
@@ -217,7 +217,7 @@ Form **B** has the equation:
 (a \cdot b) + (a \cdot c) = \{1,2\}
 \]
 
-Thus, due to the latexmath:[\small{+/*}]-coupling axiom of ring theory which states that multiplication distributes over addition, the two equations, while __typographically__ different, are, in fact, algebraically equivalent. Thus, the two structures, while __structurally__ different are referentially equivalent.
+Thus, due to the latexmath:[\small{+/*}]-coupling axiom of ring theory which states that multiplication distributes over addition, the two equations, while __typographically__ different, are, in fact, algebraically equivalent. Thus, the two structures, while __structurally__ different, are referentially equivalent.
 
 \[
 \begin{align}

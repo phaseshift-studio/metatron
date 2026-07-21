@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -225,7 +225,7 @@ public class TypeTest extends AbstractMetatronTest {
             "1                   | int{2}::T[is(gt(0))]                       | false",
             "{0,0}               | int{2}::T[is(gt(0))]                       | false",
             "{2,3}               | int{2}::T[>-.is(gt(1)).else(fail::T)]      | true",
-       //     "{2,3}               | int{2}::T[>-.is(gt(2)).else(fail::T)]      | false",
+            //     "{2,3}               | int{2}::T[>-.is(gt(2)).else(fail::T)]      | false",
             "{2,3}               | int{2}::T[>-.is(gt(4)).else(fail::T)]      | false",
             "{5,6}               | int{2}::T[>-.is(gt(4)).else(fail::T)]      | true",
             "{2,2}               | int{2}::T[is(gt(1))]                       | true",
@@ -601,6 +601,43 @@ public class TypeTest extends AbstractMetatronTest {
         assertEquals(matches, matchesTypeStack.stream().reduce(true, (a, b) -> a && b));
         //assertEquals(expectedTypeStack, deducedTypeStack.subList(1, deducedTypeStack.size()));
         checkMatches(LOG, instance, type, matches);
+    }
+
+    @ParameterizedTest
+    @TestData(value = {
+            "entity -> rec::T@entity",
+            "thing -> entity::T[]@thing",
+            "thing::T[?[name=>?str::T,age=>?int::T]]@person"
+    })
+    @CsvSource(value = {
+            "1                         %  1                              % true",
+            "int::T                    %  1                              % false",
+            "1                         %  2                              % false",
+            "1                         % '1'                             % false",
+            "1                         % int::T                          % true",
+      //      "1                         % entity::T                       % false",
+            "entity::T                 % entity::T                       % true",
+            "thing::T                  % entity::T                       % true",
+            "thing::T                  % thing::T                        % true",
+            "person::T                 % person::T                       % true",
+           // "entity::T                 % thing::T                        % false",
+           // "[a=>1]                    % entity::T                       % false",
+            "entity::[a=>1]            % entity::T                       % true",
+            "[a=>1]                    % person::T                       % false",
+            "entity::[a=>1]            % person::T                       % false",
+            "thing::[a=>1]             % entity::T                       % true",
+
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testNominalStructuralTypeSystem(final String objA, final String objB, final boolean matches) {
+        final Obj objAA = ObjmtronSerializer.parse(objA);
+        final Obj objBB = ObjmtronSerializer.parse(objB);
+        LOG.warn("%s is a %s@%s", objA, objAA.tid(), objAA.vid());
+        LOG.warn("%s is a %s@%s", objB, objBB.tid(), objBB.vid());
+        if (matches) {
+            assertTrue(objAA.test(objBB), objAA + " should match " + objBB);
+        } else {
+            assertFalse(objAA.test(objBB), objAA + " shouldn't match " + objBB);
+        }
     }
 
     @ParameterizedTest

@@ -92,12 +92,22 @@ public interface Type extends Obj {
         return (null != this.vid() && this.vid().hasPattern()) || this.tid().hasPattern();
     }
 
+    default boolean isNominal()  {
+        return !this.hasPredicate() && this.hasVID() && !this.vid().hasPattern() && !this.vid().isGeneric();
+    }
+    
+    default boolean isStructural() {
+        return this.hasPredicate();
+    }
+    
     default boolean isRefinementOf(final Type other) {
-        if (this == other || other.isRootType())
+        if (this == other)
+            return true;
+        if(other.isRootType())
             return this.c().within(other.c());
         Type current = this;
         while (!current.isRootType()) {
-            if (current.hasVID() && current.vid().equals(other.vid()))
+            if (current.hasVID() && current.vid().basePath().equals(other.tid().basePath()) || current.vid().basePath().equals(other.vid().basePath()))
                 return this.c().within(other.c());
             if (current.isBaseType()) break;
             current = current.parentType();
@@ -255,6 +265,8 @@ public interface Type extends Obj {
                 if (!rhs.isType())
                     return false;
                 if (!lhs.c().within(rhs.c()))
+                    return false;
+                if(rhs.asType().isNominal() && !lhs.vid().equals(rhs.vid()))
                     return false;
                 if (rhs.isType() && lhs.tid().hasPoly() && rhs.tid().hasPoly()) {
                     if (!lhs.tid().polyParsed().orElse(lst()).test(rhs.tid().polyParsed().orElse(lst())))

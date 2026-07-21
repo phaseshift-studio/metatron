@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -62,10 +62,10 @@ public class ObjSimpleJSONSerializer extends AbstractObjSerializer<JsonElement> 
     private static final String _VID = "_vid";
 
     // ── Config keys ──────────────────────────────────────────────
-    private static final fURI KEY_WRAP_URI       = fURI.Singleton.f("wrap_uri");
+    private static final fURI KEY_WRAP_URI = fURI.Singleton.f("wrap_uri");
     private static final fURI KEY_BIAS_TOWARDS_URI = fURI.Singleton.f("bias_towards_uri");
     private static final fURI KEY_BIAS_TOWARDS_OBJS = fURI.Singleton.f("bias_towards_objs");
-    private static final fURI KEY_EMBED_CANDQ    = fURI.Singleton.f("embed_candq");
+    private static final fURI KEY_EMBED_CANDQ = fURI.Singleton.f("embed_candq");
 
     private static JsonReader makeReader(final String json) {
         final JsonReader r = new JsonReader(new StringReader(json));
@@ -146,6 +146,17 @@ public class ObjSimpleJSONSerializer extends AbstractObjSerializer<JsonElement> 
         }
     }
 
+    private static Optional<Uri> isUri(final String string) {
+        if (string.startsWith("<") && string.endsWith(">"))
+            return Optional.of(uri(string.substring(1, string.length() - 1)));
+        else if (string.startsWith("http:") ||
+                string.startsWith("https:"))
+            return Optional.of(uri(string));
+        else if (string.startsWith("uri::"))
+            return Optional.of(uri(string.substring(5)));
+        else return Optional.empty();
+    }
+
     @Override
     public Obj read(final JsonElement json) throws MTronException {
         try {
@@ -165,8 +176,9 @@ public class ObjSimpleJSONSerializer extends AbstractObjSerializer<JsonElement> 
                         return bytes(ByteBuffer.wrap(HexFormat.of().parseHex(jp.getAsString().substring(2))));
                     final String jpstr = jp.getAsString();
                     try {
-                        if (jpstr.startsWith("<") && jpstr.endsWith(">"))
-                            return uri(jpstr.substring(1, jpstr.length() - 1));
+                        final Optional<Uri> uriParse = isUri(jpstr);
+                        if (uriParse.isPresent())
+                            return uriParse.get();
                         else if (jpstr.startsWith("'") && jpstr.endsWith("'"))
                             return str(jpstr.substring(1, jpstr.length() - 1));
                         else if (jpstr.startsWith("\"") && jpstr.endsWith("\""))
