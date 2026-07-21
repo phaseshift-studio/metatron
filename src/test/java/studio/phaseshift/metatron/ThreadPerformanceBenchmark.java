@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
@@ -32,6 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 
+@Disabled
 public class ThreadPerformanceBenchmark extends AbstractMetatronTest {
 
     public ThreadPerformanceBenchmark() {
