@@ -20,35 +20,30 @@ package studio.phaseshift.metatron.isa.llm.type.feature;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
-import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.m.type.Lst;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.m.type.Str;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.thread.VirtualThread;
 import studio.phaseshift.metatron.util.CommonUtil;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
-import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_CHAT_FEATURE_TID;
 import static studio.phaseshift.metatron.isa.llm.type.Agent.agent;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
-import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.id_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.type.thread.VirtualThread.virtual;
-import static studio.phaseshift.metatron.util.CommonUtil.mutableList;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /*
@@ -110,24 +105,28 @@ public class ConceptFeature extends Feature {
             for (final String concept : conceptStrings) {
                 final fURI conceptURI = this.getBaseURI().extend(concept);
                 final Rec conceptRec = Router.readFromSpace(conceptURI).orElse(rec());
+                if (!conceptRec.has(CONCEPT)) conceptRec.at(CONCEPT, uri(concept), MUTABLE);
                 final Lst conceptLink = conceptRec.at(LINK).orElse(Router.readFromSpace(conceptURI.extend(LINK)).orElse(lst()));
-                final List<Obj> conceptLinkList = mutableList(conceptLink.jvm());
+                final Set<Obj> conceptLinkList = new LinkedHashSet<>(conceptLink.jvm());
+                final int conceptLinkListSize = conceptLinkList.size();
                 conceptLinkList.addAll(conceptStrings.stream()
                         .filter(c -> !c.equals(concept))
                         .map(c -> auto_from_(this.getBaseURI().extend(c)).tryToInst()).toList());
-                conceptRec.at(LINK, lst(conceptLinkList), MUTABLE);
-                if (!conceptRec.has(CONCEPT))
-                    conceptRec.at(CONCEPT, uri(concept), MUTABLE);
-                if (!agent.feature(SESSION).isNoObj()) {
-                    final SessionFeature sessionFeature = (SessionFeature) agent.feature(SESSION);
-                    LOG.debug("concept feature has located session feature");
-                    if (null != sessionFeature.store() && null != sessionFeature.store().getCurrentMessages()) {
-                        LOG.debug("concept feature preparing to read from session memory: [size:%d]", sessionFeature.store().getCurrentMessages().size());
-                        final Set<fURI> messagesIDs = sessionFeature.store().getCurrentMessages();
-                        LOG.debug("concept feature located %s ai messages", messagesIDs);
-                        if (!messagesIDs.isEmpty()) {
-                            final Lst messages = conceptRec.at(MESSAGE).orElse(lst());
-                            conceptRec.at(MESSAGE, messages.plus(messagesIDs.stream().filter(i -> !Objects.isNull(i)).map(id -> auto_from_(id).tryToInst()).collect(new CommonUtil.LstCollector())), MUTABLE);
+                if (conceptLinkList.size() > conceptLinkListSize) {
+                    conceptRec.at(LINK, lst(new ArrayList<>(conceptLinkList)), MUTABLE);
+                    if (agent.hasFeature(SESSION)) {
+                        final SessionFeature sessionFeature = (SessionFeature) agent.feature(SESSION);
+                        LOG.debug("concept feature has located session feature");
+                        if (null != sessionFeature.store() && null != sessionFeature.store().getCurrentMessages()) {
+                            LOG.debug("concept feature preparing to read from session memory: [size:%d]", sessionFeature.store().getCurrentMessages().size());
+                            final Set<fURI> messagesIDs = sessionFeature.store().getCurrentMessages();
+                            LOG.debug("concept feature located %s ai messages", messagesIDs);
+                            if (!messagesIDs.isEmpty()) {
+                                final Lst messages = conceptRec.at(MESSAGE).orElse(lst());
+                                final Set<Obj> messageList = new LinkedHashSet<>(messages.lstValue());
+                                messageList.addAll(messagesIDs.stream().filter(i -> !Objects.isNull(i)).map(id -> auto_from_(id).tryToInst()).toList());
+                                conceptRec.at(MESSAGE, lst(new ArrayList<>(messageList)), MUTABLE);
+                            }
                         }
                     }
                 }
@@ -153,12 +152,16 @@ public class ConceptFeature extends Feature {
                                                                  It should be rewritten as:
                                                                     "An agent's <<concept:context window>> can be <<concept:indexed>> like a <<concept:database>>."
                                                                  
-                                                                 Don't wrap common words nor stop words. Don't remove spaces. It's better to have fewer, highly specific concepts
-                                                                 then many general concepts. Thus, if the text has no significant concepts, then simply return the text
-                                                                 as is, no changes needed. The text to rewrite is:
+                                                                 IMPORTANT:
+                                                                   1. Do not wrap common words nor stop words.
+                                                                   2. Do not remove spaces (e.g. context window should not be mapped to contextwindow).
+                                                                 Finally, it's better to have fewer, highly specific concepts then many general concepts.
+                                                                 Thus, if the text has no significant concepts, then simply return the text as is, no changes needed. 
+                                                                 
+                                                                 The text to rewrite is:
                                                                  
                                                                  """ + text.strValue());
-                    LOG.info("agent translation: %s", result);
+                    LOG.debug("agent translation: %s", result);
                     final Set<String> conceptStrings = new LinkedHashSet<>();
                     final Matcher matcher = CONCEPT_PATTERN.matcher(Str.Helper.cleanString(result));
                     while (matcher.find()) {
@@ -171,14 +174,14 @@ public class ConceptFeature extends Feature {
                     final List<fURI> concepts = this.insertConcepts(agent, conceptStrings);
                     final StringBuilder sb = new StringBuilder();
                     new HashSet<>(concepts).stream()
-                            .map(i -> "\t" + this.getBaseURI().extend("fetch_memories") + "(<" + i + ">)")
+                            .map(i -> "\t" + "messages" + "(<" + i + ">)")
                             .filter(i -> ObjmtronSerializer.singleNoClip().inputBytes(i + ".take(1).count().gt(0)").apply().boolValue())
                             .peek(i -> LOG.info("adding memory recommendation: %s", i))
                             .forEach(i -> sb.append(i).append("\n"));
                     if (!sb.toString().trim().isEmpty())
                         agent.addSystemMessage(CONCEPT_FEATURE_SYSTEM_TEMPLATE.formatted(
                                 sb.toString(),
-                                this.getBaseURI().extend("related_concepts").toString() + "(<concept_uri>)"));
+                                "concepts(uri::T)"));
                     return noobj();
                 }));
                 if (blocking) {
@@ -205,12 +208,12 @@ public class ConceptFeature extends Feature {
 
     @Override
     public Obj onBeforeChat(final Agent agent) {
-        if (!this.at(MODEL).isNoObj()) {
+        if (this.has(MODEL)) {
             this.translatorAgent = agent(rec(uri(FEATURE), lst(new ChatFeature(mutableMap(uri(MODEL), this.at(MODEL), uri(RESPONSE), rec(uri(TO), id_().tryToInst())), LLM_CHAT_FEATURE_TID, null))));
             LOG.debug("created translator agent: %s", this.translatorAgent);
             this.addConcepts(agent, str(agent.userMessage()), true);
         }
-        final Inst fetchMemoriesInst = instC(getBaseURI().extend("fetch_memories").dom(ALL.maybe()).rng(ALL.maybeSome()),
+        /*final Inst fetchMemoriesInst = instC(getBaseURI().extend("fetch_memories").dom(ALL.maybe()).rng(ALL.maybeSome()),
                 rec(uri(CONCEPT), URI_TYPE,
                         uri("max_messages"), isa_(INT_TYPE).else_(jnt(10))),
                 (lhs, inst) -> objs(from_(inst.arg(0)).rshift_(uri(MESSAGE)).rshift_(uri("+")).rshift_(uri(TEXT)).take_(inst.arg(1)).apply()));
@@ -219,7 +222,7 @@ public class ConceptFeature extends Feature {
                 (lhs, inst) -> objs(from_(inst.arg(0)).rshift_(uri(LINK)).apply()));
         LOG.info("writing concept instructions:\n\t%s\n\t%s", fetchMemoriesInst, relatedConceptsInst);
         Router.writeToSpace(this.getBaseURI().extend("fetch_memories"), fetchMemoriesInst);
-        Router.writeToSpace(this.getBaseURI().extend("related_concepts"), relatedConceptsInst);
+        Router.writeToSpace(this.getBaseURI().extend("related_concepts"), relatedConceptsInst);*/
         return noobj();
     }
 

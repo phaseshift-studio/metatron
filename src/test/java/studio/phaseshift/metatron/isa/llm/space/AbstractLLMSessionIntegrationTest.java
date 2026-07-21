@@ -116,10 +116,7 @@ public abstract class AbstractLLMSessionIntegrationTest extends AbstractMetatron
     void initSession() throws Exception {
         this.space = createSessionSpace();
 
-        // Pre-create the session policy row — updateMessages()
-        // reads this row to extract the algorithm config (max, message_count) and
-        // preserves non-algorithm fields (agent, name) on write-back.
-        preCreateSessionRow();
+        // SessionFeature.onBeforeChat() persists the session policy row on first chat
         this.agent = buildAgent();
         this.sessionStore = new SpaceChatSessionStore(this.agent, this.space);
         // Add a system message — gets mirrored to llm_message_system
@@ -142,7 +139,8 @@ public abstract class AbstractLLMSessionIntegrationTest extends AbstractMetatron
      * ---------------------------------------------------------- */
 
     @Test
-    public void testSessionAcrossTurns() {
+    public void testSessionAcrossTurns() { 
+       // org.junit.jupiter.api.Assumptions.assumeFalse(isConnectionRefused());
         // ── Turn 1: "remember the word DOG" ──────────────────────────
         try {
             agent.chat("Remember the word DOG. Just say 'ok' and nothing else.");
@@ -219,25 +217,18 @@ public abstract class AbstractLLMSessionIntegrationTest extends AbstractMetatron
 
     @Test
     public void testWindowEnforcement() {
-        // Tighten the window to 3 — update both the space row and the model
+        // Write session with tight window before first chat
         final int smallMax = 3;
-        final Obj memRow = Router.readFromSpace(sessionVID());
-        assertTrue(memRow.isRec(), "session row should exist");
-        final Rec updated = rec(new LinkedHashMap<>(memRow.asRec().recValue()));
-        updated.recValue().put(uri(ALGORITHM), rec(
-                uri(MAX), jnt(smallMax),
-                uri(NAME), uri("token_window"),
-                uri("message_count"), jnt(0)
-        ));
-        Router.writeToSpace(sessionVID(), updated);
+        Router.writeToSpace(sessionVID(), SessionFeature.createSession(
+                "test-agent", "test-user", "message_window", smallMax).selfVID(sessionVID()));
 
-        // Build a model whose session feature also uses the tight max
+        // Build agent with matching small max
+        // Session is pre-seeded via createSession above; onBeforeChat will use it as-is
         this.agent = buildAgentWithMax(smallMax);
         this.agent.addSystemMessage("You are a test assistant.");
         this.sessionStore = new SpaceChatSessionStore(this.agent, this.space);
 
-        // Chat 5 times — MessageWindowChatMemory evicts beyond 3 internally,
-        // and getMessages() also applies the max filter
+        // Chat 5 times — MessageWindowChatMemory evicts beyond max internally
         for (int i = 1; i <= 5; i++) {
             try {
                 agent.chat("Say 'turn" + i + "' and nothing else.");
@@ -247,7 +238,7 @@ public abstract class AbstractLLMSessionIntegrationTest extends AbstractMetatron
             }
         }
 
-        final List<ChatMessage> windowed = sessionStore.getMessages(sessionVID());
+        final List<ChatMessage> windowed = agent.feature(SESSION).<SessionFeature>as().memory().messages();
         assertTrue(windowed.size() <= smallMax,
                 "window max=" + smallMax + ": expected <= " + smallMax
                         + " messages, got " + windowed.size());
@@ -416,21 +407,6 @@ public abstract class AbstractLLMSessionIntegrationTest extends AbstractMetatron
     }
 
     /**
-     * Write the session policy row so the space has a target for message storage.
-     */
-    private void preCreateSessionRow() {
-        final Obj row = rec(
-                uri("agent"), str("test-agent"),
-                uri("name"), str("test-chat"),
-                uri(ALGORITHM), rec(
-                        uri(MAX), jnt(WINDOW_MAX),
-                        uri("message_count"), jnt(0)
-                )
-        );
-        Router.writeToSpace(sessionVID(), row);
-    }
-
-    /**
      * Build an Agent wired to our space-backed session with the default max.
      */
     private Agent buildAgent() {
@@ -449,13 +425,11 @@ public abstract class AbstractLLMSessionIntegrationTest extends AbstractMetatron
                 PROTOCOL, uri("ollama"),
                 HOST, uri(PROVIDER_HOST),
                 LLM, uri(MODEL_NAME)));
-        final Rec sessionObj = rec(mutableMap(
-                uri("mem"), auto_at_(memVID).tryToInst(),
-                uri(ALGORITHM), rec(mutableMap(uri(NAME), uri("message_window"), uri(MAX), jnt(max)))), REC_TID, memVID);
         final ChatFeature chat = ChatFeature.chatFeature(model, rec(uri(TO), noobj()));
         final Rec sessionConfig = rec(
                 SESSION, uri(memVID),
-                REC_TID, null);
+                uri("mem"), auto_at_(memVID).tryToInst(),
+                uri(ALGORITHM), rec(mutableMap(uri(NAME), uri("message_window"), uri(MAX), jnt(max))));
         final SessionFeature session = new SessionFeature(sessionConfig.jvm(), LLM_SESSION_FEATURE_TID, null);
         final Rec agentRec = rec(mutableMap(
                 uri(NAME), str("llm-session-test-agent"),

@@ -1,9 +1,11 @@
 package studio.phaseshift.metatron.isa.llm.type.feature;
 
+import dev.langchain4j.service.AiServices;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.llm.space.SpaceChatSessionStore;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
+import studio.phaseshift.metatron.isa.llm.type.AgentServices;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.mach.type.Router;
@@ -26,12 +28,19 @@ public class SystemFeature extends Feature {
         super(jvm, tid, vid);
     }
 
+
+    public static void buildSystemMessage(final Agent agent, final AiServices<AgentServices> service) {
+        final String systemMessage = String.join("\n", agent.getSystemMessages());
+        if (!systemMessage.isBlank())
+            service.systemMessage(systemMessage);
+    }
+    
     @Override
     public Obj onBeforeChat(final Agent agent) {
         // System messages are accumulated via agent.addSystemMessage() —
         // this feature ensures they are mirrored to the session store.
         final String systemMessage = String.join("\n", agent.getSystemMessages());
-        if (!systemMessage.isBlank() && agent.hasFeature(LLM_SESSION_FEATURE_TID)) {
+        if (!systemMessage.isBlank() && agent.hasFeature(SESSION)) {
             final Rec sess = agent.feature(SESSION).orElse(noobjRec());
             if (!sess.isNoObj() && sess.vid() != null) {
                 try {

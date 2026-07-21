@@ -75,7 +75,7 @@ public final class MtronDocPreprocessor {
     private static final Pattern ERROR = Pattern.compile("\\[ERROR]");
     private static final Pattern NOOUT = Pattern.compile("\\[NO_OUTPUT]");
     private static final Pattern NOPROMPT = Pattern.compile("\\[NO_PROMPT]");
-    private static final Pattern MAXOUTPUT = Pattern.compile("\\[MAXOUTPUT \\d+]");
+    private static final Pattern MAXOUTPUT = Pattern.compile("\\[MAXOUTPUT (\\d+)]");
 
     private static final ObjmtronSerializer SER;
     static {
@@ -172,12 +172,13 @@ public final class MtronDocPreprocessor {
             }
             boolean error = false;
             boolean noOutput = false;
-            int maxOutput = 20;
+            int maxOutput = 100;
             if (NOHDR.matcher(raw).find()) noHeader = true;
             if (ERROR.matcher(raw).find()) error = true;
             if (NOOUT.matcher(raw).find()) noOutput = true;
             if (NOPROMPT.matcher(raw).find()) noPrompt = true;
-            if (MAXOUTPUT.matcher(raw).find()) maxOutput = 20;
+            final Matcher maxm = MAXOUTPUT.matcher(raw);
+            if (maxm.find()) maxOutput = Integer.parseInt(maxm.group(1));
             final boolean hidden = HIDDEN.matcher(raw).find();
 
             // ── Line continuation ──
@@ -208,7 +209,7 @@ public final class MtronDocPreprocessor {
             // ── Evaluate ──
             try {
                 TypeCheck.disable(TypeCheck.code_resolve, TypeCheck.inst_rng);
-                final Obj input = ObjmtronSerializer.parse(expr);
+                final Obj input = ObjmtronSerializer.singleNoClip().inputBytes(expr);
                 final Obj result = input.apply();
                 if (result.isFail() && !error) {
                     LOG.error("no [ERROR] modifier in code block (docs are buggy): %s\n\t[{{r}}bad expression{{X}}]: %s\n", result, expr);
@@ -222,7 +223,7 @@ public final class MtronDocPreprocessor {
                     lines.add("==>" + SER.write(input).replace("\n", "\n   ")); // replacement so second+ lines are indented past the result prompt
                 }
                 // Clear fail stack so errors don't leak across blocks
-                if (!hidden) ObjmtronSerializer.parse("/sys/fail/+ -> noobj").apply();
+                if (!hidden) ObjmtronSerializer.singleNoClip().inputBytes("/sys/fail/+ -> noobj").apply();
             } catch (final Exception e) {
                 if (!hidden) lines.add("==>ERROR: " + e.getMessage());
             }

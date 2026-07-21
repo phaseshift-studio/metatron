@@ -207,6 +207,9 @@ bin/metatron</code></pre>
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
                            onclick="location.href='../articles/parametric-identities-in-ring-theory.html';"><i class="bi bi-arrow-repeat icon-color me-2 isa-row"></i>parametric identities</a></li>
                     <li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../articles/mm-adt.pdf';"><i class="bi bi-layout-wtf icon-color me-2 isa-row"></i>mm-ADT (metatron precursor)</a></li>
+                    <li>
                 </ul>
             </li>
             <!----------------------------------------------------------------------------------------------------------
@@ -279,7 +282,7 @@ bin/metatron</code></pre>
  inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
  inst=&gt;[as?bool&lt;=bool(bool::T),as?bytes&lt;=bool(bytes::T),as?int&lt;=bool(int::T),as?real&lt;=bool(real::T),as?str&lt;=bool(str::T),plus?bool&lt;=bool(bool::T),mult?bool&lt;=bool(bool::T),not?bool&lt;=bool(),as?bool&lt;=bytes(bool::T),as?str&lt;=bytes(str::T),...(222 more)],
  const=&gt;[noobj],
- type=&gt;[#::T,bool::T,int::T,real::T,bytes::T,str::T,uri::T,rel::T,lst::T,rec::T,...(25 more)],
+ type=&gt;[#::T,bool::T,int::T,real::T,bytes::T,str::T,uri::T,rel::T,lst::T,rec::T,...(26 more)],
  rewrite=&gt;[
   /m/inst/rewrite/id_removal?code{?}&lt;=code(),
   /m/inst/rewrite/map_nest?code{?}&lt;=code(),
@@ -297,7 +300,7 @@ bin/metatron</code></pre>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <a href="#consts" class="btn btn-outline-primary">Consts <span class="pill-label badge bg-secondary">1</span></a><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">30</span></a><a href="#spaces" class="btn btn-outline-primary">Spaces <span class="pill-label badge bg-info">4</span></a><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">253</span></a><a href="#rewrites" class="btn btn-outline-primary">Rewrites <span class="pill-label badge bg-warning">8</span></a>
+        <a href="#consts" class="btn btn-outline-primary">Consts <span class="pill-label badge bg-secondary">1</span></a><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">15</span></a><a href="#spaces" class="btn btn-outline-primary">Spaces <span class="pill-label badge bg-info">20</span></a><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">253</span></a><a href="#rewrites" class="btn btn-outline-primary">Rewrites <span class="pill-label badge bg-warning">8</span></a>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="card">
@@ -325,9 +328,6 @@ bin/metatron</code></pre>
 </a><a href="#__m__inst" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">inst</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
-</a><a href="#__m__instset" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">instset</span>
-    <span class="pill-label badge bg-primary ms-2">T</span>
 </a><a href="#__m__int" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">int</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
@@ -337,9 +337,6 @@ bin/metatron</code></pre>
 </a><a href="#__m__real" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">real</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
-</a><a href="#__m__rec" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">rec</span>
-    <span class="pill-label badge bg-primary ms-2">T</span>
 </a><a href="#__m__rel" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">rel</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
@@ -348,9 +345,6 @@ bin/metatron</code></pre>
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a><a href="#__m__uri" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">uri</span>
-    <span class="pill-label badge bg-primary ms-2">T</span>
-</a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">space</small></div><div class="d-flex flex-wrap"><a href="#__m__space__qproc" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">qproc</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">str</small></div><div class="d-flex flex-wrap"><a href="#__m__str__rx" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">rx</span>
@@ -364,56 +358,68 @@ bin/metatron</code></pre>
 </a><a href="#__m__rdf__space__triple" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">triple</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
-</a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;" style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;line-height:1.25;" class="micro-label"><div style="font-size:0.6rem;opacity:0.45;font-family:monospace;white-space:nowrap;">space&thinsp;/</div><div><small class="mini-label fw-bold text-secondary" style="font-family:monospace;">qproc</small></div></div><div class="d-flex flex-wrap"><a href="#__m__space__qproc__constq" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">constq</span>
-    <span class="pill-label badge bg-primary ms-2">T</span>
-</a><a href="#__m__space__qproc__docq" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">docq</span>
-    <span class="pill-label badge bg-primary ms-2">T</span>
-</a><a href="#__m__space__qproc__embedq" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">embedq</span>
-    <span class="pill-label badge bg-primary ms-2">T</span>
-</a><a href="#__m__space__qproc__incrq" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">incrq</span>
-    <span class="pill-label badge bg-primary ms-2">T</span>
-</a><a href="#__m__space__qproc__mimeq" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">mimeq</span>
-    <span class="pill-label badge bg-primary ms-2">T</span>
-</a><a href="#__m__space__qproc__mintq" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">mintq</span>
-    <span class="pill-label badge bg-primary ms-2">T</span>
-</a><a href="#__m__space__qproc__safeq" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">safeq</span>
-    <span class="pill-label badge bg-primary ms-2">T</span>
-</a><a href="#__m__space__qproc__shortq" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">shortq</span>
-    <span class="pill-label badge bg-primary ms-2">T</span>
-</a><a href="#__m__space__qproc__subq" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">subq</span>
-    <span class="pill-label badge bg-primary ms-2">T</span>
-</a><a href="#__m__space__qproc__typeq" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">typeq</span>
-    <span class="pill-label badge bg-primary ms-2">T</span>
-</a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;" style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;line-height:1.25;" class="micro-label"><div style="font-size:0.6rem;opacity:0.45;font-family:monospace;white-space:nowrap;">space/qproc&thinsp;/</div><div><small class="mini-label fw-bold text-secondary" style="font-family:monospace;">docq</small></div></div><div class="d-flex flex-wrap"><a href="#__m__space__qproc__docq__docs" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">docs</span>
-    <span class="pill-label badge bg-primary ms-2">T</span>
-</a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;" style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;line-height:1.25;" class="micro-label"><div style="font-size:0.6rem;opacity:0.45;font-family:monospace;white-space:nowrap;">space/qproc&thinsp;/</div><div><small class="mini-label fw-bold text-secondary" style="font-family:monospace;">subq</small></div></div><div class="d-flex flex-wrap"><a href="#__m__space__qproc__subq__sub" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">sub</span>
-    <span class="pill-label badge bg-primary ms-2">T</span>
 </a></div></div>
 </div><div class="mb-3">
     <h6 class="text-primary mb-2">Spaces</h6>
-    <div class="d-flex flex-wrap"><a href="#__m__space__estorespace" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <div class="d-flex flex-wrap"><a href="#__m__space__qproc__constq" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">constq</span>
+    <span class="pill-label badge bg-info text-dark ms-2">S</span>
+</a><a href="#__m__space__qproc__docq" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">docq</span>
+    <span class="pill-label badge bg-info text-dark ms-2">S</span>
+</a><a href="#__m__space__qproc__docq__docs" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">docs</span>
+    <span class="pill-label badge bg-info text-dark ms-2">S</span>
+</a><a href="#__m__space__qproc__embedq" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">embedq</span>
+    <span class="pill-label badge bg-info text-dark ms-2">S</span>
+</a><a href="#__m__space__estorespace" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">estorespace</span>
+    <span class="pill-label badge bg-info text-dark ms-2">S</span>
+</a><a href="#__m__space__qproc__incrq" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">incrq</span>
+    <span class="pill-label badge bg-info text-dark ms-2">S</span>
+</a><a href="#__m__instset" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">instset</span>
     <span class="pill-label badge bg-info text-dark ms-2">S</span>
 </a><a href="#__m__space__memspace" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">memspace</span>
+    <span class="pill-label badge bg-info text-dark ms-2">S</span>
+</a><a href="#__m__space__qproc__mimeq" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">mimeq</span>
+    <span class="pill-label badge bg-info text-dark ms-2">S</span>
+</a><a href="#__m__space__qproc__mintq" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">mintq</span>
+    <span class="pill-label badge bg-info text-dark ms-2">S</span>
+</a><a href="#__m__space__qproc__subq__pub" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">pub</span>
+    <span class="pill-label badge bg-info text-dark ms-2">S</span>
+</a><a href="#__m__space__qproc" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">qproc</span>
+    <span class="pill-label badge bg-info text-dark ms-2">S</span>
+</a><a href="#__m__rec" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">rec</span>
+    <span class="pill-label badge bg-info text-dark ms-2">S</span>
+</a><a href="#__m__space__qproc__safeq" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">safeq</span>
+    <span class="pill-label badge bg-info text-dark ms-2">S</span>
+</a><a href="#__m__space__qproc__shortq" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">shortq</span>
     <span class="pill-label badge bg-info text-dark ms-2">S</span>
 </a><a href="#__m__space" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">space</span>
     <span class="pill-label badge bg-info text-dark ms-2">S</span>
 </a><a href="#__m__space__stack" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">stack</span>
+    <span class="pill-label badge bg-info text-dark ms-2">S</span>
+</a><a href="#__m__space__qproc__subq__sub" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">sub</span>
+    <span class="pill-label badge bg-info text-dark ms-2">S</span>
+</a><a href="#__m__space__qproc__subq" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">subq</span>
+    <span class="pill-label badge bg-info text-dark ms-2">S</span>
+</a><a href="#__m__space__qproc__typeq" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">typeq</span>
     <span class="pill-label badge bg-info text-dark ms-2">S</span>
 </a></div>
 </div><div class="mb-3">
@@ -787,7 +793,7 @@ bin/metatron</code></pre>
 </div>
 </div>
 </div><div class="container-xxl mb-4" id="types">
-    <h3 class="text-primary mb-3">Types <span class="pill-label badge bg-primary">30</span></h3>
+    <h3 class="text-primary mb-3">Types <span class="pill-label badge bg-primary">15</span></h3>
     <div class="card mb-3" id="__m__uri__authority">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -855,66 +861,6 @@ true.or(_,not(_))  [-- true -- ]</code></pre>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">12.plus(mult(_))            [-- 2-depth code           --]
 1-&lt;[_,-&lt;[_,_]&gt;-]&gt;-.sum()    [-- sugar&#39;d branching code --]</code></pre>
 </div>
-</div><div class="card mb-3" id="__m__space__qproc__constq">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <span>
-            <span class="code text-primary fw-bold">constq::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__space__qproc" class="instset-doc-small-code text-info code">/m/space/qproc::T</a></span>
-        </span>
-        <small class="text-muted code">/m/space/qproc/constq</small>
-    </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">qproc::T[][ctor?constq&lt;=#{?}()]@/m/space/qproc/constq</code></pre></div>
-    
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">prevents the vid from being mutated once set</p>
-</div>
-</div><div class="card mb-3" id="__m__space__qproc__docq">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <span>
-            <span class="code text-primary fw-bold">docq::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__space__qproc" class="instset-doc-small-code text-info code">/m/space/qproc::T</a></span>
-        </span>
-        <small class="text-muted code">/m/space/qproc/docq</small>
-    </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">qproc::T[][ctor?docq&lt;=#{?}(qproc::T)]@/m/space/qproc/docq</code></pre></div>
-    
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">addr documentation qproc</p>
-</div><div class="card-body border-top py-2">
-    <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*docq?docq [-- this documentation --]
-*int?docq  [-- documentation for int::T --]</code></pre>
-</div>
-</div><div class="card mb-3" id="__m__space__qproc__docq__docs">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <span>
-            <span class="code text-primary fw-bold">docs::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__rec" class="instset-doc-small-code text-info code">/m/rec::T</a></span>
-        </span>
-        <small class="text-muted code">/m/space/qproc/docq/docs</small>
-    </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[
-  {?}obj=&gt;#{*}::T,
-  {?}dom=&gt;str::T,
-  {?}rng=&gt;str::T,
-  {?}args=&gt;#::T,
-  desc=&gt;str::T,
-  {?}example=&gt;lst::T]][ctor?docs&lt;=#{?}(rec::T)]@/m/space/qproc/docq/docs</code></pre></div>
-    
-    
-</div><div class="card mb-3" id="__m__space__qproc__embedq">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <span>
-            <span class="code text-primary fw-bold">embedq::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__space__qproc" class="instset-doc-small-code text-info code">/m/space/qproc::T</a></span>
-        </span>
-        <small class="text-muted code">/m/space/qproc/embedq</small>
-    </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">qproc::T[][ctor?embedq&lt;=#{?}()]@/m/space/qproc/embedq</code></pre></div>
-    
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">either store and retrieve obj&#39;s vector embedding</p>
-</div>
 </div><div class="card mb-3" id="__m__fail">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -933,19 +879,6 @@ true.or(_,not(_))  [-- true -- ]</code></pre>
 fail::[doh] + 2             [-- plus(2) skipped over    --]
 fail::[dah] + 2 + catch(9)  [-- fail flattened to 9     --]</code></pre>
 </div>
-</div><div class="card mb-3" id="__m__space__qproc__incrq">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <span>
-            <span class="code text-primary fw-bold">incrq::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__space__qproc" class="instset-doc-small-code text-info code">/m/space/qproc::T</a></span>
-        </span>
-        <small class="text-muted code">/m/space/qproc/incrq</small>
-    </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">qproc::T[][ctor?incrq&lt;=#{?}()]@/m/space/qproc/incrq</code></pre></div>
-    
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">internal counter increments and appends value to vid</p>
-</div>
 </div><div class="card mb-3" id="__m__inst">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -959,37 +892,7 @@ fail::[dah] + 2 + catch(9)  [-- fail flattened to 9     --]</code></pre>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">creates a remote console connection</p>
 </div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><span class="text-info">#</span> <span class="text-light">=&gt;</span> <span class="text-success">#</span></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"></pre>
-</div>
-</div><div class="card mb-3" id="__m__instset">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <span>
-            <span class="code text-primary fw-bold">instset::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__rec" class="instset-doc-small-code text-info code">/m/rec::T</a></span>
-        </span>
-        <small class="text-muted code">/m/instset</small>
-    </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[
-  {?}pattern=&gt;uri::T,
-  {?}const=&gt;[#{?}::T],
-  {?}type=&gt;{?}[#{*}::T],
-  {?}inst=&gt;{?}[inst::T],
-  {?}rewrite=&gt;{?}[inst::T],
-  {?}sugar=&gt;{?}[lst::T]]][ctor?instset&lt;=#{?}(rec::T)]@/m/instset</code></pre></div>
-    
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">an aggregate of consts, types, insts, rewrites, and sugars structuring a domain of discourse</p>
-</div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#an extension of space with structural requirements regarding obj construction" class="text-info">an extension of space with structural requirements regarding obj construction</a> <span class="text-light">=&gt;</span> <a href="#creates the instset and registers it with the global router" class="text-success">creates the instset and registers it with the global router</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}const" class="text-light">{?}const</a> <span class="text-light">=&gt;</span> <a href="#'constants used across the instset'" class="text-info">&#39;constants used across the instset&#39;</a>
-  <a href="#{?}type" class="text-light">{?}type</a> <span class="text-light">=&gt;</span> <a href="#'types used to structure objs of the instset'" class="text-info">&#39;types used to structure objs of the instset&#39;</a>
-  <a href="#{?}inst" class="text-light">{?}inst</a> <span class="text-light">=&gt;</span> <a href="#'instructions associated with the types of the instset'" class="text-info">&#39;instructions associated with the types of the instset&#39;</a>
-  <a href="#{?}rewrite" class="text-light">{?}rewrite</a> <span class="text-light">=&gt;</span> <a href="#'code<=code instructions that capture the algebraic equalities of the instset'" class="text-info">&#39;code&lt;=code instructions that capture the algebraic equalities of the instset&#39;</a>
-  <a href="#{?}sugar" class="text-light">{?}sugar</a> <span class="text-light">=&gt;</span> <a href="#'custom instruction syntax sugars given to the parser'" class="text-info">&#39;custom instruction syntax sugars given to the parser&#39;</a>
-</pre>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><span class="text-info">#</span> <span class="text-light">=&gt;</span> <span class="text-success">#</span></pre>
 </div>
 </div><div class="card mb-3" id="__m__int">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1028,60 +931,6 @@ fail::[dah] + 2 + catch(9)  [-- fail flattened to 9     --]</code></pre>
 [&#39;a&#39;,&#39;b&#39;,&#39;c&#39;]    [-- 3 str lst  --]
 [a,[b,[c,d],e]]  [-- nested lst --]</code></pre>
 </div>
-</div><div class="card mb-3" id="__m__space__qproc__mimeq">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <span>
-            <span class="code text-primary fw-bold">mimeq::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__space__qproc" class="instset-doc-small-code text-info code">/m/space/qproc::T</a></span>
-        </span>
-        <small class="text-muted code">/m/space/qproc/mimeq</small>
-    </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">qproc::T[][ctor?mimeq&lt;=#{?}()]@/m/space/qproc/mimeq</code></pre></div>
-    
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">maps the obj to the specified mime type</p>
-</div>
-</div><div class="card mb-3" id="__m__space__qproc__mintq">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <span>
-            <span class="code text-primary fw-bold">mintq::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__space__qproc" class="instset-doc-small-code text-info code">/m/space/qproc::T</a></span>
-        </span>
-        <small class="text-muted code">/m/space/qproc/mintq</small>
-    </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">qproc::T[][ctor?mintq&lt;=#{?}()]@/m/space/qproc/mintq</code></pre></div>
-    
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">mint a unique uri extension to obj vid</p>
-</div><div class="card-body border-top py-2">
-    <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">1@abc?mintq [-- 1@abc/235ae3 --]</code></pre>
-</div>
-</div><div class="card mb-3" id="__m__space__qproc">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <span>
-            <span class="code text-primary fw-bold">qproc::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__rec" class="instset-doc-small-code text-info code">/m/rec::T</a></span>
-        </span>
-        <small class="text-muted code">/m/space/qproc</small>
-    </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[][inst?qproc&lt;=#{?}([
- pattern=&gt;uri::T,
- pre_write{?}=&gt;inst::T,
- post_write{?}=&gt;inst::T,
- qless_write{?}=&gt;inst::T,
- pre_read{?}=&gt;inst::T,
- post_read{?}=&gt;inst::T])]@/m/space/qproc</code></pre></div>
-    
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">qprocs (query processors) are optional space components.
-qproc behaviors are driven by a qprocs specified uri ?-query pattern.
-not all spaces have the same set of attached qprocs.
-qprocs must be attached to a space before use. a space&#39;s qprocs are accessible at
-
-     \(\texttt{*space/vid/qProc =&gt; lst[qProc]::T}\)
-</p>
-</div>
 </div><div class="card mb-3" id="__m__rdf__space__quad">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -1113,25 +962,6 @@ qprocs must be attached to a space before use. a space&#39;s qprocs are accessib
 -234.56
 123.45+(-234.56) [-- -111.11   --]
 12.34E-5         [-- 0.0001234 --]</code></pre>
-</div>
-</div><div class="card mb-3" id="__m__rec">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <span>
-            <span class="code text-primary fw-bold">rec::T</span>
-            
-        </span>
-        <small class="text-muted code">/m/rec</small>
-    </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T</code></pre></div>
-    
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">a poly composed of uniquely keyed rels</p>
-</div><div class="card-body border-top py-2">
-    <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">[=&gt;]                  [-- empty rec      --]
-[a=&gt;1,b=&gt;2]           [-- 2 uri=&gt;int rec --]
-[a=&gt;[b=&gt;1,c=&gt;[d=&gt;3]]] [-- nested rec     --]
-[a=&gt;[b=&gt;+1,c=&gt;_]]     [-- inst values    --]</code></pre>
 </div>
 </div><div class="card mb-3" id="__m__rel">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1166,35 +996,6 @@ a=&gt;b=&gt;c=&gt;d&gt;&gt;.&gt;&gt;  [-- c=&gt;d           --]
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">str::T@/m/str/rx</code></pre></div>
     
     
-</div><div class="card mb-3" id="__m__space__qproc__safeq">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <span>
-            <span class="code text-primary fw-bold">safeq::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__space__qproc" class="instset-doc-small-code text-info code">/m/space/qproc::T</a></span>
-        </span>
-        <small class="text-muted code">/m/space/qproc/safeq</small>
-    </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">qproc::T[][ctor?safeq&lt;=#{?}()]@/m/space/qproc/safeq</code></pre></div>
-    
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">warns when the space is being written to</p>
-</div>
-</div><div class="card mb-3" id="__m__space__qproc__shortq">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <span>
-            <span class="code text-primary fw-bold">shortq::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__space__qproc" class="instset-doc-small-code text-info code">/m/space/qproc::T</a></span>
-        </span>
-        <small class="text-muted code">/m/space/qproc/shortq</small>
-    </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">qproc::T[][ctor?shortq&lt;=#{?}()]@/m/space/qproc/shortq</code></pre></div>
-    
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">create an untyped smaller representation of obj referent</p>
-</div><div class="card-body border-top py-2">
-    <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*abc?shortq=10 [-- optional value is max length of obj components (default 25) --]</code></pre>
-</div>
 </div><div class="card mb-3" id="__m__str">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -1216,48 +1017,6 @@ a=&gt;b=&gt;c=&gt;d&gt;&gt;.&gt;&gt;  [-- c=&gt;d           --]
 &quot;lhs processed by ${_} template parameter&quot;
 5.map(&#39;result: ${+2}&#39;)   [-- result 7 --]</code></pre>
 </div>
-</div><div class="card mb-3" id="__m__space__qproc__subq__sub">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <span>
-            <span class="code text-primary fw-bold">sub::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__rec" class="instset-doc-small-code text-info code">/m/rec::T</a></span>
-        </span>
-        <small class="text-muted code">/m/space/qproc/subq/sub</small>
-    </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[{?}target=&gt;uri::T,code=&gt;#::T]]@/m/space/qproc/subq/sub</code></pre></div>
-    
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">a subscription obj used by ?subq qproc.</p>
-</div><div class="card-body border-top py-2">
-    <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">abc?subq -&gt; sub::[target=&gt;abc,on_recv=&gt;print(_)]  [-- the inst form of abc -&gt; |print(_) is sugar for sub-form --]</code></pre>
-</div>
-</div><div class="card mb-3" id="__m__space__qproc__subq">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <span>
-            <span class="code text-primary fw-bold">subq::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__space__qproc" class="instset-doc-small-code text-info code">/m/space/qproc::T</a></span>
-        </span>
-        <small class="text-muted code">/m/space/qproc/subq</small>
-    </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">qproc::T[?[{?}sub=&gt;[=&gt;]]][ctor?subq&lt;=#{?}()]@/m/space/qproc/subq</code></pre></div>
-    
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">uri publish-subscribe qproc.
-when writing an inst to a subq uri, be sure to |-block prefix
-so as to store the inst and not its evaluation in the assignment.
-</p>
-</div><div class="card-body py-2">
-    <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}sub" class="text-light">{?}sub</a> <span class="text-light">=&gt;</span> <a href="#'subscriptions to register immediately upon construction'" class="text-info">&#39;subscriptions to register immediately upon construction&#39;</a>
-</pre>
-</div><div class="card-body border-top py-2">
-    <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">/usr/ai/#?subq -&gt; sub::[code=&gt;print(&#39;ai update: ${_}&#39;)] [-- /usr/ai subtree watch  --]
-a?subq         -&gt; sub::[code=&gt;&gt;&gt;1+1.println(_).to(a)]   [-- infinite incr loop     --]
-*tree?subq                                              [-- all subs for tree      --]
-*tree/#?subq                                            [-- all subs for all tree  --]</code></pre>
-</div>
 </div><div class="card mb-3" id="__m__rdf__space__triple">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -1270,23 +1029,6 @@ a?subq         -&gt; sub::[code=&gt;&gt;&gt;1+1.println(_).to(a)]   [-- infinite
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">an rdf triple as a subject, predicate, object</p>
-</div>
-</div><div class="card mb-3" id="__m__space__qproc__typeq">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <span>
-            <span class="code text-primary fw-bold">typeq::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__space__qproc" class="instset-doc-small-code text-info code">/m/space/qproc::T</a></span>
-        </span>
-        <small class="text-muted code">/m/space/qproc/typeq</small>
-    </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">qproc::T[][ctor?typeq&lt;=#{?}()]@/m/space/qproc/typeq</code></pre></div>
-    
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">addr type constraint qproc</p>
-</div><div class="card-body border-top py-2">
-    <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">abc?typeq -&gt; int::T       [-- abc can only reference a single integer --]
-abc?typeq -&gt; &#39;not an int&#39; [-- yields a fail::T --]</code></pre>
 </div>
 </div><div class="card mb-3" id="__m__uri">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1310,8 +1052,74 @@ a/b/c/                           [-- relative/branch uri            --]
 </div>
 </div>
 </div><div class="container-xxl mb-4" id="spaces">
-    <h3 class="text-primary mb-3">Spaces <span class="pill-label badge bg-info">4</span></h3>
-    <div class="card mb-3" id="__m__space__estorespace">
+    <h3 class="text-primary mb-3">Spaces <span class="pill-label badge bg-info">20</span></h3>
+    <div class="card mb-3" id="__m__space__qproc__constq">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <a href="m_space_qproc_constq.html" class="code text-primary fw-bold text-decoration-none">constq</a>
+        <small class="text-muted code">/m/space/qproc/constq</small>
+    </div>
+    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">qproc::T[][ctor?constq&lt;=#{?}()]@/m/space/qproc/constq</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__space__qproc" class="code inherited-link">qproc::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
+ pattern=&gt;uri::T,
+ pre_write{?}=&gt;inst::T,
+ post_write{?}=&gt;inst::T,
+ qless_write{?}=&gt;inst::T,
+ pre_read{?}=&gt;#::T,
+ post_read{?}=&gt;inst::T]</code></div></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">prevents the vid from being mutated once set</p>
+</div>
+</div><div class="card mb-3" id="__m__space__qproc__docq">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <a href="m_space_qproc_docq.html" class="code text-primary fw-bold text-decoration-none">docq</a>
+        <small class="text-muted code">/m/space/qproc/docq</small>
+    </div>
+    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">qproc::T[][ctor?docq&lt;=#{?}(qproc::T)]@/m/space/qproc/docq</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__space__qproc" class="code inherited-link">qproc::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
+ pattern=&gt;uri::T,
+ pre_write{?}=&gt;inst::T,
+ post_write{?}=&gt;inst::T,
+ qless_write{?}=&gt;inst::T,
+ pre_read{?}=&gt;#::T,
+ post_read{?}=&gt;inst::T]</code></div></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">addr documentation qproc</p>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*docq?docq [-- this documentation --]
+*int?docq  [-- documentation for int::T --]</code></pre>
+</div>
+</div><div class="card mb-3" id="__m__space__qproc__docq__docs">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <a href="m_space_qproc_docq_docs.html" class="code text-primary fw-bold text-decoration-none">docs</a>
+        <small class="text-muted code">/m/space/qproc/docq/docs</small>
+    </div>
+    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[
+  {?}obj=&gt;#{*}::T,
+  {?}dom=&gt;str::T,
+  {?}rng=&gt;str::T,
+  {?}args=&gt;#::T,
+  desc=&gt;str::T,
+  {?}example=&gt;lst::T]][ctor?docs&lt;=#{?}(rec::T)]@/m/space/qproc/docq/docs</code></pre></div>
+    
+    
+</div><div class="card mb-3" id="__m__space__qproc__embedq">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <a href="m_space_qproc_embedq.html" class="code text-primary fw-bold text-decoration-none">embedq</a>
+        <small class="text-muted code">/m/space/qproc/embedq</small>
+    </div>
+    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">qproc::T[][ctor?embedq&lt;=#{?}()]@/m/space/qproc/embedq</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__space__qproc" class="code inherited-link">qproc::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
+ pattern=&gt;uri::T,
+ pre_write{?}=&gt;inst::T,
+ post_write{?}=&gt;inst::T,
+ qless_write{?}=&gt;inst::T,
+ pre_read{?}=&gt;#::T,
+ post_read{?}=&gt;inst::T]</code></div></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">either store and retrieve obj&#39;s vector embedding</p>
+</div>
+</div><div class="card mb-3" id="__m__space__estorespace">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <a href="m_space_estorespace.html" class="code text-primary fw-bold text-decoration-none">estorespace</a>
         <small class="text-muted code">/m/space/estorespace</small>
@@ -1323,6 +1131,47 @@ a/b/c/                           [-- relative/branch uri            --]
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}data" class="text-light">{?}data</a> <span class="text-light">=&gt;</span> <a href="#'a file location to save space state (reads on creation and writes on close)'" class="text-info">&#39;a file location to save space state (reads on creation and writes on close)&#39;</a>
+</pre>
+</div>
+</div><div class="card mb-3" id="__m__space__qproc__incrq">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <a href="m_space_qproc_incrq.html" class="code text-primary fw-bold text-decoration-none">incrq</a>
+        <small class="text-muted code">/m/space/qproc/incrq</small>
+    </div>
+    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">qproc::T[][ctor?incrq&lt;=#{?}()]@/m/space/qproc/incrq</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__space__qproc" class="code inherited-link">qproc::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
+ pattern=&gt;uri::T,
+ pre_write{?}=&gt;inst::T,
+ post_write{?}=&gt;inst::T,
+ qless_write{?}=&gt;inst::T,
+ pre_read{?}=&gt;#::T,
+ post_read{?}=&gt;inst::T]</code></div></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">internal counter increments and appends value to vid</p>
+</div>
+</div><div class="card mb-3" id="__m__instset">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <a href="m_instset.html" class="code text-primary fw-bold text-decoration-none">instset</a>
+        <small class="text-muted code">/m/instset</small>
+    </div>
+    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[
+  {?}pattern=&gt;uri::T,
+  {?}const=&gt;[#{?}::T],
+  {?}type=&gt;{?}[#{*}::T],
+  {?}inst=&gt;{?}[inst::T],
+  {?}rewrite=&gt;{?}[inst::T],
+  {?}sugar=&gt;{?}[lst::T]]][ctor?instset&lt;=#{?}(rec::T)]@/m/instset</code></pre></div>
+    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">an aggregate of consts, types, insts, rewrites, and sugars structuring a domain of discourse</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#an extension of space with structural requirements regarding obj construction" class="text-info">an extension of space with structural requirements regarding obj construction</a> <span class="text-light">=&gt;</span> <a href="#creates the instset and registers it with the global router" class="text-success">creates the instset and registers it with the global router</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}const" class="text-light">{?}const</a> <span class="text-light">=&gt;</span> <a href="#'constants used across the instset'" class="text-info">&#39;constants used across the instset&#39;</a>
+  <a href="#{?}type" class="text-light">{?}type</a> <span class="text-light">=&gt;</span> <a href="#'types used to structure objs of the instset'" class="text-info">&#39;types used to structure objs of the instset&#39;</a>
+  <a href="#{?}inst" class="text-light">{?}inst</a> <span class="text-light">=&gt;</span> <a href="#'instructions associated with the types of the instset'" class="text-info">&#39;instructions associated with the types of the instset&#39;</a>
+  <a href="#{?}rewrite" class="text-light">{?}rewrite</a> <span class="text-light">=&gt;</span> <a href="#'code<=code instructions that capture the algebraic equalities of the instset'" class="text-info">&#39;code&lt;=code instructions that capture the algebraic equalities of the instset&#39;</a>
+  <a href="#{?}sugar" class="text-light">{?}sugar</a> <span class="text-light">=&gt;</span> <a href="#'custom instruction syntax sugars given to the parser'" class="text-info">&#39;custom instruction syntax sugars given to the parser&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__space__memspace">
@@ -1338,6 +1187,128 @@ a/b/c/                           [-- relative/branch uri            --]
     <small class="text-muted fw-bold">args:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}data" class="text-light">{?}data</a> <span class="text-light">=&gt;</span> <a href="#'a file location to save space state (reads on creation and writes on close)'" class="text-info">&#39;a file location to save space state (reads on creation and writes on close)&#39;</a>
 </pre>
+</div>
+</div><div class="card mb-3" id="__m__space__qproc__mimeq">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <a href="m_space_qproc_mimeq.html" class="code text-primary fw-bold text-decoration-none">mimeq</a>
+        <small class="text-muted code">/m/space/qproc/mimeq</small>
+    </div>
+    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">qproc::T[][ctor?mimeq&lt;=#{?}()]@/m/space/qproc/mimeq</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__space__qproc" class="code inherited-link">qproc::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
+ pattern=&gt;uri::T,
+ pre_write{?}=&gt;inst::T,
+ post_write{?}=&gt;inst::T,
+ qless_write{?}=&gt;inst::T,
+ pre_read{?}=&gt;#::T,
+ post_read{?}=&gt;inst::T]</code></div></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">maps the obj to the specified mime type</p>
+</div>
+</div><div class="card mb-3" id="__m__space__qproc__mintq">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <a href="m_space_qproc_mintq.html" class="code text-primary fw-bold text-decoration-none">mintq</a>
+        <small class="text-muted code">/m/space/qproc/mintq</small>
+    </div>
+    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">qproc::T[][ctor?mintq&lt;=#{?}()]@/m/space/qproc/mintq</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__space__qproc" class="code inherited-link">qproc::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
+ pattern=&gt;uri::T,
+ pre_write{?}=&gt;inst::T,
+ post_write{?}=&gt;inst::T,
+ qless_write{?}=&gt;inst::T,
+ pre_read{?}=&gt;#::T,
+ post_read{?}=&gt;inst::T]</code></div></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">mint a unique uri extension to obj vid</p>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">1@abc?mintq [-- 1@abc/235ae3 --]</code></pre>
+</div>
+</div><div class="card mb-3" id="__m__space__qproc__subq__pub">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <a href="m_space_qproc_subq_pub.html" class="code text-primary fw-bold text-decoration-none">pub</a>
+        <small class="text-muted code">/m/space/qproc/subq/pub</small>
+    </div>
+    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[source=&gt;uri::T,obj=&gt;#{*}::T]]@/m/space/qproc/subq/pub</code></pre></div>
+    
+    
+</div><div class="card mb-3" id="__m__space__qproc">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <a href="m_space_qproc.html" class="code text-primary fw-bold text-decoration-none">qproc</a>
+        <small class="text-muted code">/m/space/qproc</small>
+    </div>
+    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[
+  pattern=&gt;uri::T,
+  pre_write{?}=&gt;inst::T,
+  post_write{?}=&gt;inst::T,
+  qless_write{?}=&gt;inst::T,
+  pre_read{?}=&gt;#::T,
+  post_read{?}=&gt;inst::T]][inst?qproc&lt;=#{?}([
+ pattern=&gt;uri::T,
+ pre_write{?}=&gt;inst::T,
+ post_write{?}=&gt;inst::T,
+ qless_write{?}=&gt;inst::T,
+ pre_read{?}=&gt;inst::T,
+ post_read{?}=&gt;inst::T])]@/m/space/qproc</code></pre></div>
+    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">qprocs (query processors) are optional space components.
+qproc behaviors are driven by a qprocs specified uri ?-query pattern.
+not all spaces have the same set of attached qprocs.
+qprocs must be attached to a space before use. a space&#39;s qprocs are accessible at
+
+     \(\texttt{*space/vid/qProc =&gt; lst[qProc]::T}\)
+</p>
+</div>
+</div><div class="card mb-3" id="__m__rec">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <a href="m_rec.html" class="code text-primary fw-bold text-decoration-none">rec</a>
+        <small class="text-muted code">/m/rec</small>
+    </div>
+    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">rec::T</code></pre></div>
+    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">a poly composed of uniquely keyed rels</p>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">[=&gt;]                  [-- empty rec      --]
+[a=&gt;1,b=&gt;2]           [-- 2 uri=&gt;int rec --]
+[a=&gt;[b=&gt;1,c=&gt;[d=&gt;3]]] [-- nested rec     --]
+[a=&gt;[b=&gt;+1,c=&gt;_]]     [-- inst values    --]</code></pre>
+</div>
+</div><div class="card mb-3" id="__m__space__qproc__safeq">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <a href="m_space_qproc_safeq.html" class="code text-primary fw-bold text-decoration-none">safeq</a>
+        <small class="text-muted code">/m/space/qproc/safeq</small>
+    </div>
+    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">qproc::T[][ctor?safeq&lt;=#{?}()]@/m/space/qproc/safeq</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__space__qproc" class="code inherited-link">qproc::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
+ pattern=&gt;uri::T,
+ pre_write{?}=&gt;inst::T,
+ post_write{?}=&gt;inst::T,
+ qless_write{?}=&gt;inst::T,
+ pre_read{?}=&gt;#::T,
+ post_read{?}=&gt;inst::T]</code></div></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">warns when the space is being written to</p>
+</div>
+</div><div class="card mb-3" id="__m__space__qproc__shortq">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <a href="m_space_qproc_shortq.html" class="code text-primary fw-bold text-decoration-none">shortq</a>
+        <small class="text-muted code">/m/space/qproc/shortq</small>
+    </div>
+    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">qproc::T[][ctor?shortq&lt;=#{?}()]@/m/space/qproc/shortq</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__space__qproc" class="code inherited-link">qproc::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
+ pattern=&gt;uri::T,
+ pre_write{?}=&gt;inst::T,
+ post_write{?}=&gt;inst::T,
+ qless_write{?}=&gt;inst::T,
+ pre_read{?}=&gt;#::T,
+ post_read{?}=&gt;inst::T]</code></div></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">create an untyped smaller representation of obj referent</p>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*abc?shortq=10 [-- optional value is max length of obj components (default 25) --]</code></pre>
 </div>
 </div><div class="card mb-3" id="__m__space">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1363,6 +1334,63 @@ a/b/c/                           [-- relative/branch uri            --]
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">2.to(a).plus(from(a))     [-- 4 via writing/reading a         --]
 a-&gt;2+*a                   [-- 4 via sugar&#39;d writing/reading a --]</code></pre>
 </div>
+</div><div class="card mb-3" id="__m__space__qproc__subq__sub">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <a href="m_space_qproc_subq_sub.html" class="code text-primary fw-bold text-decoration-none">sub</a>
+        <small class="text-muted code">/m/space/qproc/subq/sub</small>
+    </div>
+    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[{?}target=&gt;uri::T,code=&gt;#::T]]@/m/space/qproc/subq/sub</code></pre></div>
+    
+    
+</div><div class="card mb-3" id="__m__space__qproc__subq">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <a href="m_space_qproc_subq.html" class="code text-primary fw-bold text-decoration-none">subq</a>
+        <small class="text-muted code">/m/space/qproc/subq</small>
+    </div>
+    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">qproc::T[?[{?}sub=&gt;[=&gt;]]][ctor?subq&lt;=#{?}()]@/m/space/qproc/subq</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__space__qproc" class="code inherited-link">qproc::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
+ pattern=&gt;uri::T,
+ pre_write{?}=&gt;inst::T,
+ post_write{?}=&gt;inst::T,
+ qless_write{?}=&gt;inst::T,
+ pre_read{?}=&gt;#::T,
+ post_read{?}=&gt;inst::T]</code></div></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">uri publish-subscribe qproc.
+when writing an inst to a subq uri, be sure to |-block prefix
+so as to store the inst and not its evaluation in the assignment.
+</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}sub" class="text-light">{?}sub</a> <span class="text-light">=&gt;</span> <a href="#'subscriptions to register immediately upon construction'" class="text-info">&#39;subscriptions to register immediately upon construction&#39;</a>
+</pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">/usr/ai/#?subq -&gt; sub::[code=&gt;print(&#39;ai update: ${_}&#39;)] [-- /usr/ai subtree watch  --]
+a?subq         -&gt; sub::[code=&gt;&gt;&gt;1+1.println(_).to(a)]   [-- infinite incr loop     --]
+*tree?subq                                              [-- all subs for tree      --]
+*tree/#?subq                                            [-- all subs for all tree  --]</code></pre>
+</div>
+</div><div class="card mb-3" id="__m__space__qproc__typeq">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <a href="m_space_qproc_typeq.html" class="code text-primary fw-bold text-decoration-none">typeq</a>
+        <small class="text-muted code">/m/space/qproc/typeq</small>
+    </div>
+    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">qproc::T[][ctor?typeq&lt;=#{?}()]@/m/space/qproc/typeq</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__space__qproc" class="code inherited-link">qproc::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
+ pattern=&gt;uri::T,
+ pre_write{?}=&gt;inst::T,
+ post_write{?}=&gt;inst::T,
+ qless_write{?}=&gt;inst::T,
+ pre_read{?}=&gt;#::T,
+ post_read{?}=&gt;inst::T]</code></div></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">addr type constraint qproc</p>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">abc?typeq -&gt; int::T       [-- abc can only reference a single integer --]
+abc?typeq -&gt; &#39;not an int&#39; [-- yields a fail::T --]</code></pre>
+</div>
 </div>
 </div><div class="container-xxl mb-4" id="instructions">
     <h3 class="text-primary mb-3">Instructions <span class="pill-label badge bg-success">253</span></h3>
@@ -1379,9 +1407,7 @@ a-&gt;2+*a                   [-- 4 via sugar&#39;d writing/reading a --]</code><
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">logical \(\texttt{and}\) function \(f(X)\to \tt{true}\) if all \(X\) are true</p>
 </div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#any objs" class="text-info">any objs</a> <span class="text-light">=&gt;</span> <a href="#true if all objs are true" class="text-success">true if all objs are true</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"></pre>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#any objs" class="text-info">any objs</a> <span class="text-light">=&gt;</span> <a href="#true if all objs are true" class="text-success">true if all objs are true</a></pre>
 </div>
 </div><div class="card mb-3" id="__m__inst__apply?rng=#{*}&dom=#">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
@@ -1540,17 +1566,13 @@ a-&gt;2+*a                   [-- 4 via sugar&#39;d writing/reading a --]</code><
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">maps a lst row to a rec row</p>
 </div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a table row indexed by column number" class="text-info">a table row indexed by column number</a> <span class="text-light">=&gt;</span> <a href="#a table row indexed by column name" class="text-success">a table row indexed by column name</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"></pre>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a table row indexed by column number" class="text-info">a table row indexed by column number</a> <span class="text-light">=&gt;</span> <a href="#a table row indexed by column name" class="text-success">a table row indexed by column name</a></pre>
 </div>
 </div><div class="tab-pane fade " id="__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-3" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-3-tab">
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">maps a rec row to a lst row</p>
 </div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a table row indexed by column name" class="text-info">a table row indexed by column name</a> <span class="text-light">=&gt;</span> <a href="#a table row indexed by column number" class="text-success">a table row indexed by column number</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"></pre>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a table row indexed by column name" class="text-info">a table row indexed by column name</a> <span class="text-light">=&gt;</span> <a href="#a table row indexed by column number" class="text-success">a table row indexed by column number</a></pre>
 </div>
 </div><div class="tab-pane fade " id="__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-4" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__bytes&dom=__m__bool-doc-4-tab">
     <div class="card-body border-top py-2">
@@ -1734,9 +1756,7 @@ a-&gt;2+*a                   [-- 4 via sugar&#39;d writing/reading a --]</code><
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">maps an obj to it&#39;s coefficient with a function f(lhs^c)-&gt;c</p>
 </div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#any obj" class="text-info">any obj</a> <span class="text-light">=&gt;</span> <a href="#the lhs obj coefficient" class="text-success">the lhs obj coefficient</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"></pre>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#any obj" class="text-info">any obj</a> <span class="text-light">=&gt;</span> <a href="#the lhs obj coefficient" class="text-success">the lhs obj coefficient</a></pre>
 </div>
 </div><div class="tab-pane fade " id="__m__inst__cc?rng=__m__int&dom=A{*}-doc-1" role="tabpanel" aria-labelledby="__m__inst__cc?rng=__m__int&dom=A{*}-doc-1-tab">
     <div class="card-body border-top py-2">
@@ -1781,9 +1801,7 @@ a-&gt;2+*a                   [-- 4 via sugar&#39;d writing/reading a --]</code><
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">counts the number of objs</p>
 </div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#any objs" class="text-info">any objs</a> <span class="text-light">=&gt;</span> <a href="#the count of objs" class="text-success">the count of objs</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"></pre>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#any objs" class="text-info">any objs</a> <span class="text-light">=&gt;</span> <a href="#the count of objs" class="text-success">the count of objs</a></pre>
 </div>
 </div><div class="card mb-3" id="__m__inst__ctor?dom=#{?}">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
@@ -1809,9 +1827,7 @@ a-&gt;2+*a                   [-- 4 via sugar&#39;d writing/reading a --]</code><
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a deduplication function \(f({c}X) \to {1&lt;=c}X\)</p>
 </div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#any objs" class="text-info">any objs</a> <span class="text-light">=&gt;</span> <a href="#the deduplicated objs" class="text-success">the deduplicated objs</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"></pre>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#any objs" class="text-info">any objs</a> <span class="text-light">=&gt;</span> <a href="#the deduplicated objs" class="text-success">the deduplicated objs</a></pre>
 </div>
 </div><div class="card mb-3" id="__m__inst__div?rng=__m__real&dom=__m__real">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
@@ -1867,9 +1883,7 @@ a-&gt;2+*a                   [-- 4 via sugar&#39;d writing/reading a --]</code><
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">the terminal function \(f(x)\to \emptyset\)</p>
 </div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#terminal objs" class="text-info">terminal objs</a> <span class="text-light">=&gt;</span> <a href="#noobj" class="text-success">noobj</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"></pre>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#terminal objs" class="text-info">terminal objs</a> <span class="text-light">=&gt;</span> <a href="#noobj" class="text-success">noobj</a></pre>
 </div>
 </div><div class="card mb-3" id="__m__inst__eq?rng=__m__bool&dom=A">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
@@ -2065,9 +2079,7 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">the obj identity function \(f(x)\to x\)</p>
 </div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#an rhs obj" class="text-info">an rhs obj</a> <span class="text-light">=&gt;</span> <a href="#an lhs obj" class="text-success">an lhs obj</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"></pre>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#an rhs obj" class="text-info">an rhs obj</a> <span class="text-light">=&gt;</span> <a href="#an lhs obj" class="text-success">an lhs obj</a></pre>
 </div>
 </div><div class="card mb-3" id="__m__inst__import?rng=__m__space{*}&dom=#{?}">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
@@ -2254,9 +2266,7 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">the mean of a stream of reals</p>
 </div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a stream of reals" class="text-info">a stream of reals</a> <span class="text-light">=&gt;</span> <a href="#the mean of the lhs real stream" class="text-success">the mean of the lhs real stream</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"></pre>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a stream of reals" class="text-info">a stream of reals</a> <span class="text-light">=&gt;</span> <a href="#the mean of the lhs real stream" class="text-success">the mean of the lhs real stream</a></pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">{1.0,2.0,3.0}.mean() [-- 2.0 --]</code></pre>
@@ -2433,9 +2443,7 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">logical \(\texttt{or}\) function \(f(X)\to \tt{true}\) if any \(X\) are true</p>
 </div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#any objs" class="text-info">any objs</a> <span class="text-light">=&gt;</span> <a href="#true if any objs are true" class="text-success">true if any objs are true</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"></pre>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#any objs" class="text-info">any objs</a> <span class="text-light">=&gt;</span> <a href="#true if any objs are true" class="text-success">true if any objs are true</a></pre>
 </div>
 </div><div class="card mb-3" id="__m__inst__order?rng=__m__lst&dom=__m__int{*}">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
@@ -2977,9 +2985,7 @@ parse(&#39;[a=&gt;[b=&gt;c]]&#39;)                     [-- [a=&gt;[b=&gt;c]]  --
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">the spatial location of the lhs obj [equivalent to f(x) ~ vid(type())]</p>
 </div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#any obj" class="text-info">any obj</a> <span class="text-light">=&gt;</span> <a href="#the lhs obj type id" class="text-success">the lhs obj type id</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"></pre>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#any obj" class="text-info">any obj</a> <span class="text-light">=&gt;</span> <a href="#the lhs obj type id" class="text-success">the lhs obj type id</a></pre>
 </div>
 </div><div class="card mb-3" id="__m__inst__to?rng=A{?}&dom=A{?}">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
@@ -3012,9 +3018,7 @@ parse(&#39;[a=&gt;[b=&gt;c]]&#39;)                     [-- [a=&gt;[b=&gt;c]]  --
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">the type of the lhs obj</p>
 </div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#any obj" class="text-info">any obj</a> <span class="text-light">=&gt;</span> <a href="#the lhs obj type" class="text-success">the lhs obj type</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"></pre>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#any obj" class="text-info">any obj</a> <span class="text-light">=&gt;</span> <a href="#the lhs obj type" class="text-success">the lhs obj type</a></pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">6.type()-&lt;[tid(),vid()]      [-- [/m/int, /m/int] base types are those where vid==tid --]
@@ -3190,9 +3194,7 @@ nat::6.type()-&lt;[tid(),vid()] [-- [/m/int, nat] non-base types tids are the ty
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">removes identity instructions</p>
 </div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#__m__code" class="text-info">code</a> <span class="text-light">=&gt;</span> <a href="#__m__code{?}" class="text-success">code{?}</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"></pre>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#__m__code" class="text-info">code</a> <span class="text-light">=&gt;</span> <a href="#__m__code{?}" class="text-success">code{?}</a></pre>
 </div>
 </div><div class="card mb-3" id="__m__inst__rewrite__map_nest?rng=__m__code{?}&dom=__m__code">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -3206,9 +3208,7 @@ nat::6.type()-&lt;[tid(),vid()] [-- [/m/int, nat] non-base types tids are the ty
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">flattens nested map instructions</p>
 </div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#__m__code" class="text-info">code</a> <span class="text-light">=&gt;</span> <a href="#__m__code{?}" class="text-success">code{?}</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"></pre>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#__m__code" class="text-info">code</a> <span class="text-light">=&gt;</span> <a href="#__m__code{?}" class="text-success">code{?}</a></pre>
 </div>
 </div><div class="card mb-3" id="__m__inst__rewrite__mult_one?rng=__m__code{?}&dom=__m__code">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -3242,9 +3242,7 @@ nat::6.type()-&lt;[tid(),vid()] [-- [/m/int, nat] non-base types tids are the ty
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">applies abelian monoid law on split code paths</p>
 </div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#__m__code" class="text-info">code</a> <span class="text-light">=&gt;</span> <a href="#__m__code{?}" class="text-success">code{?}</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"></pre>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#__m__code" class="text-info">code</a> <span class="text-light">=&gt;</span> <a href="#__m__code{?}" class="text-success">code{?}</a></pre>
 </div>
 </div><div class="card mb-3" id="__m__inst__rewrite__split_merge_left_factor?rng=__m__code{?}&dom=__m__code">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -3258,9 +3256,7 @@ nat::6.type()-&lt;[tid(),vid()] [-- [/m/int, nat] non-base types tids are the ty
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">leverages distributive ring law to pull common monoidally bound components to the right</p>
 </div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#__m__code" class="text-info">code</a> <span class="text-light">=&gt;</span> <a href="#__m__code{?}" class="text-success">code{?}</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"></pre>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#__m__code" class="text-info">code</a> <span class="text-light">=&gt;</span> <a href="#__m__code{?}" class="text-success">code{?}</a></pre>
 </div>
 </div><div class="card mb-3" id="__m__inst__rewrite__split_merge_right_factor?rng=__m__code{?}&dom=__m__code">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -3274,9 +3270,7 @@ nat::6.type()-&lt;[tid(),vid()] [-- [/m/int, nat] non-base types tids are the ty
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">leverages distributive ring law to pull common monoidally bound components to the left</p>
 </div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#__m__code" class="text-info">code</a> <span class="text-light">=&gt;</span> <a href="#__m__code{?}" class="text-success">code{?}</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"></pre>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#__m__code" class="text-info">code</a> <span class="text-light">=&gt;</span> <a href="#__m__code{?}" class="text-success">code{?}</a></pre>
 </div>
 </div>
 </div><div class="container-xxl py-3 text-center">

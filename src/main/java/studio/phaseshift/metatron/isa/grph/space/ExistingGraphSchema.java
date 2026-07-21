@@ -30,6 +30,7 @@ import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.SchemaSpace;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.grph.grphInstSet;
+import studio.phaseshift.metatron.isa.grph.io.ObjTP3Serializer;
 
 import static studio.phaseshift.metatron.isa.grph.grphInstSet.EDGE_TID;
 import static studio.phaseshift.metatron.isa.grph.grphInstSet.VRTX_TID;
@@ -131,7 +132,7 @@ public class ExistingGraphSchema {
         for (final LabelMetadata meta : this.labelSchemas.values()) {
             final LinkedHashMap<Obj, Obj> fields = new LinkedHashMap<>();
             for (final PropertyMetadata prop : meta.properties()) {
-                final Obj typeObj = mtronVal(prop.javaType());
+                final Obj typeObj = ObjTP3Serializer.javaTypeToMtronType(prop.javaType());
                 if (typeObj != null)
                     fields.put(uri(prop.path()), typeObj);
             }
@@ -168,14 +169,6 @@ public class ExistingGraphSchema {
         }
         SchemaSpace.logSchemaChange(this.space.logger(), "dataset", "label",
                 "_discovered", this.labelSchemas.keySet(), true);
-    }
-
-    private static Obj mtronVal(final Class<?> javaType) {
-        if (javaType == String.class) return T(str("").tid());
-        if (javaType == Integer.class || javaType == Long.class) return T(jnt(0).tid());
-        if (javaType == Double.class || javaType == Float.class) return T(real(0.0).tid());
-        if (javaType == Boolean.class) return T(bool(false).tid());
-        return null;
     }
 
     // ---- entity discovery ---------------------------------------------------
@@ -262,16 +255,6 @@ public class ExistingGraphSchema {
         inLabels.forEach((label, count) ->
                 dirs.add(new EdgeDirectionMetadata(Direction.IN, label)));
         return dirs;
-    }
-
-    // ---- mtron type mapping -------------------------------------------------
-
-    public static fURI toMtronType(final Class<?> javaType) {
-        if (javaType == String.class) return str("").tid().basePath();
-        if (javaType == Integer.class || javaType == Long.class) return jnt(0).tid().basePath();
-        if (javaType == Double.class || javaType == Float.class) return real(0.0).tid().basePath();
-        if (javaType == Boolean.class) return bool(false).tid().basePath();
-        return str("").tid().basePath();
     }
 
     // ---- field type tracking -------------------------------------------------

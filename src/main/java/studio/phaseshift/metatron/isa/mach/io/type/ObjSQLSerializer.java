@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -20,15 +20,12 @@ package studio.phaseshift.metatron.isa.mach.io.type;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.*;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -37,52 +34,114 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs0;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.tble.tbleInstSet.LST_ROW_TID;
-import static studio.phaseshift.metatron.isa.tble.tbleInstSet.REC_ROW_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
 
 /**
  * Serializer for converting between SQL types and Metatron objects.
- * Handles reading from ResultSet and writing to PreparedStatement.
+ * <p>
+ * Implements the full {@link ObjSerializer} contract with {@code T=Object}:
+ * {@link #write(Obj)} produces a SQL-safe String representation, and
+ * {@link #read(Object)} parses a String (or reads a {@link ResultSet} row)
+ * back to an {@link Obj}.
+ * <p>
+ * JDBC bridge methods ({@link #readColumn}, {@link #writeParameter},
+ * {@link #readColumnWithType}) handle direct {@link ResultSet} /
+ * {@link PreparedStatement} operations.  When constructed with a
+ * {@code logicalTypes} map (from {@code _mtron_meta}), type-aware
+ * deserialization is used instead of heuristic guessing.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class ObjSQLSerializer extends AbstractObjSerializer<ResultSet> {
+public class ObjSQLSerializer extends AbstractObjSerializer<Object> {
 
     public static final fURI OBJ_SQL_SERIALIZER_TID = f("/m/mach/io/serializer/sql");
     public static final fURI OBJ_SQL_SERIALIZER_VID = OBJ_SQL_SERIALIZER_TID;
 
+    // ---- logical type metadata (_mtron_meta) --------------------------------
+
+    /**
+     * Column-level type overrides from {@code _mtron_meta}: tableName → (columnName → mtronTID).
+     * When non-null, {@link #readColumnWithType} uses this to reconstruct typed values
+     * (e.g. {@code uri::T} from a TEXT column) without heuristic guessing.
+     */
+    protected final Map<String, Map<String, fURI>> logicalTypes;
+
+    // ---- constructors -------------------------------------------------------
+
     public ObjSQLSerializer() {
         super(OBJ_SQL_SERIALIZER_TID, OBJ_SQL_SERIALIZER_VID);
+        this.logicalTypes = null;
     }
+
+    public ObjSQLSerializer(final Map<String, Map<String, fURI>> logicalTypes) {
+        super(OBJ_SQL_SERIALIZER_TID, OBJ_SQL_SERIALIZER_VID);
+        this.logicalTypes = logicalTypes;
+    }
+
+    // ---- ObjSerializer core -------------------------------------------------
 
     @Override
     public fURI vid() {
         return OBJ_SQL_SERIALIZER_VID;
     }
 
+    private static final ObjmtronSerializer MTRON = ObjmtronSerializer.compact();
+
     @Override
     public ByteBuffer outputBytes(final Obj obj) throws MTronException {
-        throw new UnsupportedOperationException("SQL serializer does not support byte output");
+        return MTRON.outputBytes(obj);
     }
 
     @Override
     public Obj inputBytes(final ByteBuffer bytes) throws MTronException {
-        throw new UnsupportedOperationException("SQL serializer does not support byte input");
+        return MTRON.inputBytes(bytes);
     }
 
     /**
-     * Read the current row from a ResultSet as a Metatron Rec object.
-     * The Rec will contain column names as Uri keys and column values as Obj values.
-     *
-     * @param rs the ResultSet positioned at a row
-     * @return a Rec containing the row data
-     * @throws MTronException if reading fails
+     * Read a value back from its serialized form.
+     * <p>
+     * Accepts:
+     * <ul>
+     *   <li>{@link String} — parsed via {@link #readMaybeJSON(String)}</li>
+     *   <li>{@link ResultSet} — read as a full row (column-name-keyed {@link Rec})</li>
+     * </ul>
      */
     @Override
-    public Obj read(final ResultSet rs) throws MTronException {
+    public Obj read(final Object data) throws MTronException {
+        if (data instanceof ResultSet rs) {
+            return readResultSetRow(rs);
+        }
+        if (data instanceof String s) {
+            return MTRON.inputBytes(s.getBytes(StandardCharsets.UTF_8));
+        }
+        throw MTronException.of("ObjSQLSerializer.read: unsupported type %s", data.getClass().getName());
+    }
+
+    // ---- write(Obj) → String (type-dispatched) ------------------------------
+
+    /**
+     * Write an Obj to a SQL-safe String representation.
+     * Delegates to the type-specific {@code writeXxx} methods via the
+     * default {@link ObjSerializer#write(Obj)} dispatcher.
+     */
+    /**
+     * Write an Obj to its canonical mtron String representation.
+     * Delegates to {@link ObjmtronSerializer} — single format to maintain.
+     */
+    @Override
+    public Object write(final Obj obj) throws MTronException {
+        return MTRON.write(obj);
+    }
+
+    // ---- read helpers -------------------------------------------------------
+
+    /**
+     * Read the current row from a ResultSet as a Rec (column-name keys).
+     */
+    private Obj readResultSetRow(final ResultSet rs) throws MTronException {
         try {
             final ResultSetMetaData metaData = rs.getMetaData();
             final int columnCount = metaData.getColumnCount();
@@ -101,38 +160,10 @@ public class ObjSQLSerializer extends AbstractObjSerializer<ResultSet> {
         }
     }
 
-    /**
-     * Writing to ResultSet is not supported. Use writeParameter() to write to PreparedStatement.
-     *
-     * @param obj the object to write
-     * @return never returns
-     * @throws MTronException always
-     */
-    @Override
-    public ResultSet write(final Obj obj) throws MTronException {
-        throw new UnsupportedOperationException("SQL serializer does not support writing to ResultSet. Use writeParameter() to write to PreparedStatement.");
-    }
+    // ---- JDBC bridge: read --------------------------------------------------
 
     /**
-     * Parse a string representation of SQL data.
-     * This is a convenience method that delegates to the standard read() method.
-     *
-     * @param data the string to parse
-     * @return the parsed object
-     * @throws MTronException if parsing fails
-     */
-    public static Obj parse(final String data) throws MTronException {
-        throw new UnsupportedOperationException("SQL serializer does not support string parsing. Use read(ResultSet) instead.");
-    }
-
-    /**
-     * Read a metatron object from a SQL ResultSet column.
-     *
-     * @param rs         the ResultSet
-     * @param columnName the column name to read
-     * @param sqlType    the SQL type (from java.sql.Types)
-     * @return the Metatron object
-     * @throws SQLException if reading fails
+     * Read a metatron object from a SQL ResultSet column by name.
      */
     protected Obj readColumn(final ResultSet rs, final String columnName, final int sqlType) throws SQLException {
         final Object value = rs.getObject(columnName);
@@ -141,6 +172,7 @@ public class ObjSQLSerializer extends AbstractObjSerializer<ResultSet> {
         }
 
         return switch (sqlType) {
+            case Types.BOOLEAN, Types.BIT -> bool(rs.getBoolean(columnName));
             case Types.TINYINT, Types.SMALLINT, Types.INTEGER, Types.BIGINT -> jnt(rs.getLong(columnName));
             case Types.REAL, Types.FLOAT, Types.DOUBLE, Types.DECIMAL, Types.NUMERIC -> real(rs.getDouble(columnName));
             case Types.CHAR, Types.VARCHAR, Types.LONGVARCHAR, Types.NCHAR, Types.NVARCHAR, Types.LONGNVARCHAR ->
@@ -153,12 +185,6 @@ public class ObjSQLSerializer extends AbstractObjSerializer<ResultSet> {
 
     /**
      * Read a Metatron object from a SQL ResultSet column by index.
-     *
-     * @param rs          the ResultSet
-     * @param columnIndex the column index (1-based)
-     * @param sqlType     the SQL type (from java.sql.Types)
-     * @return the Metatron object
-     * @throws SQLException if reading fails
      */
     protected Obj readColumn(final ResultSet rs, final int columnIndex, final int sqlType) throws SQLException {
         final Object value = rs.getObject(columnIndex);
@@ -178,10 +204,80 @@ public class ObjSQLSerializer extends AbstractObjSerializer<ResultSet> {
         };
     }
 
+    // ---- _mtron_meta type-aware read ----------------------------------------
+
+    /**
+     * Look up the logical mtron TID for a column from {@link #logicalTypes}
+     * (populated from {@code _mtron_meta}).  Returns {@code null} when no type
+     * metadata is available.
+     */
+    public fURI getLogicalType(final String tableName, final String columnName) {
+        if (logicalTypes == null) return null;
+        final Map<String, fURI> tableTypes = logicalTypes.get(tableName.toLowerCase());
+        if (tableTypes == null) return null;
+        return tableTypes.get(columnName.toLowerCase());
+    }
+
+    /**
+     * Read a column with type awareness from {@link #logicalTypes}.
+     * <p>
+     * When {@code _mtron_meta} declares this column as {@code uri::T}, the raw
+     * TEXT value is reconstructed as a {@link Uri} instead of relying on the
+     * legacy {@code <>} wrapper heuristic.  Similarly, {@code bool::T} stored
+     * in an INTEGER column is coerced correctly.
+     * <p>
+     * Falls back to {@link #readColumn(ResultSet, String, int)} when no logical
+     * type is registered for the column.
+     */
+    protected Obj readColumnWithType(final ResultSet rs, final String columnName,
+                                     final int sqlType, final String tableName)
+            throws SQLException {
+        final fURI logicalType = getLogicalType(tableName, columnName);
+        if (logicalType != null) {
+            final Object value = rs.getObject(columnName);
+            if (value == null || rs.wasNull()) return noobj();
+            final String typeName = logicalType.name();
+
+            if ("uri".equals(typeName)) {
+                final String raw = rs.getString(columnName);
+                if (raw == null || raw.isBlank()) return noobj();
+                final String clean = (raw.startsWith("<") && raw.endsWith(">"))
+                        ? raw.substring(1, raw.length() - 1)
+                        : raw;
+                return uri(f(clean));
+            }
+
+            if ("bool".equals(typeName)) {
+                if (sqlType == Types.BOOLEAN || sqlType == Types.BIT)
+                    return bool(rs.getBoolean(columnName));
+                return bool(rs.getInt(columnName) != 0);
+            }
+
+            // Structured types serialized as mtron strings in TEXT columns.
+            // Use the canonical parser — no heuristic guessing needed.
+            if ("lst".equals(typeName) || "rec".equals(typeName)) {
+                final String raw = rs.getString(columnName);
+                if (raw == null || raw.isBlank()) return noobj();
+                return MTRON.inputBytes(raw.getBytes(StandardCharsets.UTF_8));
+            }
+
+            // Plain string — don't guess at JSON/mtron/numbers/bools.
+            if ("str".equals(typeName)) {
+                final String raw = rs.getString(columnName);
+                return raw != null ? str(raw) : noobj();
+            }
+        }
+        // No _mtron_meta entry — fall back to JDBC-type-based reading
+        // (which uses readMaybeJSON heuristics for VARCHAR columns).
+        return readColumn(rs, columnName, sqlType);
+    }
+
+    // ---- heuristic string parser --------------------------------------------
+
     /**
      * Probe a string value for structured data.  If it starts with {@code [} or {@code \{},
-     * try JSON parsing first, then fall back to mtron parsing.  Otherwise return it as
-     * a plain {@link Str}.
+     * try JSON parsing first, then fall back to mtron parsing.  If wrapped in {@code <>},
+     * treat as a URI (legacy format).  Otherwise return as a plain {@link Str}.
      */
     public static Obj readMaybeJSON(final String value) {
         if (value == null || value.isBlank()) return str(value);
@@ -196,7 +292,7 @@ public class ObjSQLSerializer extends AbstractObjSerializer<ResultSet> {
                 return ObjSimpleJSONSerializer.parse(value);
             } catch (final Exception jsonEx) {
                 try {
-                    return ObjmtronSerializer.singleNoClip().inputBytes(value.getBytes());
+                    return ObjmtronSerializer.compact().inputBytes(value.getBytes());
                 } catch (final Exception mtronEx) {
                     return str(value);
                 }
@@ -210,223 +306,7 @@ public class ObjSQLSerializer extends AbstractObjSerializer<ResultSet> {
         return str(value);
     }
 
-    // ==================== Bulk ResultSet Conversion Helpers ====================
-
-    /**
-     * Read all rows from a ResultSet as a list of Rec (rrows).
-     * Each row becomes a Rec with column names as Uri keys.
-     * The ResultSet cursor is advanced until exhausted.
-     *
-     * @param rs the ResultSet to read from (cursor should be before first row)
-     * @return a list of Rec objects, one per row
-     * @throws SQLException if reading fails
-     */
-    public static List<Rec> readAllAsRec(final ResultSet rs) throws SQLException {
-        final List<Rec> rows = new ArrayList<>();
-        final ResultSetMetaData metaData = rs.getMetaData();
-        final int columnCount = metaData.getColumnCount();
-
-        while (rs.next()) {
-            final Map<Obj, Obj> rowData = new LinkedHashMap<>();
-            for (int i = 1; i <= columnCount; i++) {
-                final String columnName = metaData.getColumnName(i);
-                final int sqlType = metaData.getColumnType(i);
-                final Obj value = readColumnStatic(rs, i, sqlType);
-                rowData.put(uri(columnName), value);
-            }
-            rows.add(rec(rowData, REC_ROW_TID, null));
-        }
-        return rows;
-    }
-
-    /**
-     * Read the current row from a ResultSet as a Rec without advancing the cursor.
-     *
-     * @param rs the ResultSet positioned at a valid row
-     * @return a Rec containing the current row's data
-     * @throws SQLException if reading fails
-     */
-    public static Rec readCurrentAsRec(final ResultSet rs) throws SQLException {
-        final ResultSetMetaData metaData = rs.getMetaData();
-        final int columnCount = metaData.getColumnCount();
-        final Map<Obj, Obj> rowData = new LinkedHashMap<>();
-        for (int i = 1; i <= columnCount; i++) {
-            final String columnName = metaData.getColumnName(i);
-            final int sqlType = metaData.getColumnType(i);
-            final Obj value = readColumnStatic(rs, i, sqlType);
-            rowData.put(uri(columnName), value);
-        }
-        return rec(rowData, REC_ROW_TID, null);
-    }
-
-    /**
-     * Read all rows from a ResultSet as an Objs stream of Rec (rrows).
-     * This is useful for returning from instruction implementations.
-     *
-     * @param rs the ResultSet to read from
-     * @return an Objs containing all rows as Rec objects
-     * @throws SQLException if reading fails
-     */
-    public static Objs readAllAsRecObjs(final ResultSet rs) throws SQLException {
-        Obj result = objs0();
-        for (final Rec row : readAllAsRec(rs)) {
-            result = result.append(row);
-        }
-        return result.asObjs();
-    }
-
-    /**
-     * Read all rows from a ResultSet as a list of Lst (lrows).
-     * Each row becomes a Lst with values in column order.
-     * The ResultSet cursor is advanced until exhausted.
-     *
-     * @param rs the ResultSet to read from (cursor should be before first row)
-     * @return a list of Lst objects, one per row
-     * @throws SQLException if reading fails
-     */
-    public static List<Lst> readAllAsLst(final ResultSet rs) throws SQLException {
-        final List<Lst> rows = new ArrayList<>();
-        final ResultSetMetaData metaData = rs.getMetaData();
-        final int columnCount = metaData.getColumnCount();
-
-        while (rs.next()) {
-            final List<Obj> rowData = new ArrayList<>();
-            for (int i = 1; i <= columnCount; i++) {
-                final int sqlType = metaData.getColumnType(i);
-                rowData.add(readColumnStatic(rs, i, sqlType));
-            }
-            rows.add(lst(rowData, LST_ROW_TID, null));
-        }
-        return rows;
-    }
-
-    /**
-     * Read all rows from a ResultSet as an Objs stream of Lst (lrows).
-     * This is useful for returning from instruction implementations.
-     *
-     * @param rs the ResultSet to read from
-     * @return an Objs containing all rows as Lst objects
-     * @throws SQLException if reading fails
-     */
-    public static Obj readAllAsLstObjs(final ResultSet rs) throws SQLException {
-        Obj result = objs0();
-        for (final Lst row : readAllAsLst(rs)) {
-            result = result.append(row);
-        }
-        return result;
-    }
-
-    /**
-     * Read up to 'limit' rows from a ResultSet as a list of Rec (rrows).
-     * Each row becomes a Rec with column names as Uri keys.
-     *
-     * @param rs    the ResultSet to read from
-     * @param limit maximum number of rows to read
-     * @return a list of Rec objects, up to 'limit' rows
-     * @throws SQLException if reading fails
-     */
-    public static List<Rec> readLimitedAsRec(final ResultSet rs, final int limit) throws SQLException {
-        final List<Rec> rows = new ArrayList<>();
-        final ResultSetMetaData metaData = rs.getMetaData();
-        final int columnCount = metaData.getColumnCount();
-        int count = 0;
-
-        while (rs.next() && count < limit) {
-            final Map<Obj, Obj> rowData = new LinkedHashMap<>();
-            for (int i = 1; i <= columnCount; i++) {
-                final String columnName = metaData.getColumnName(i);
-                final int sqlType = metaData.getColumnType(i);
-                final Obj value = readColumnStatic(rs, i, sqlType);
-                rowData.put(uri(columnName), value);
-            }
-            rows.add(rec(rowData, REC_ROW_TID, null));
-            count++;
-        }
-        return rows;
-    }
-
-    /**
-     * Read up to 'limit' rows from a ResultSet as an Objs stream of Rec (rrows).
-     *
-     * @param rs    the ResultSet to read from
-     * @param limit maximum number of rows to read
-     * @return an Objs containing up to 'limit' rows as Rec objects
-     * @throws SQLException if reading fails
-     */
-    public static Obj readLimitedAsRecObjs(final ResultSet rs, final int limit) throws SQLException {
-        Obj result = objs0();
-        for (final Rec row : readLimitedAsRec(rs, limit)) {
-            result = result.append(row);
-        }
-        return result;
-    }
-
-    /**
-     * Read up to 'limit' rows from a ResultSet as a list of Lst (lrows).
-     * Each row becomes a Lst with values in column order.
-     *
-     * @param rs    the ResultSet to read from
-     * @param limit maximum number of rows to read
-     * @return a list of Lst objects, up to 'limit' rows
-     * @throws SQLException if reading fails
-     */
-    public static List<Lst> readLimitedAsLst(final ResultSet rs, final int limit) throws SQLException {
-        final List<Lst> rows = new ArrayList<>();
-        final ResultSetMetaData metaData = rs.getMetaData();
-        final int columnCount = metaData.getColumnCount();
-        int count = 0;
-
-        while (rs.next() && count < limit) {
-            final List<Obj> rowData = new ArrayList<>();
-            for (int i = 1; i <= columnCount; i++) {
-                final int sqlType = metaData.getColumnType(i);
-                rowData.add(readColumnStatic(rs, i, sqlType));
-            }
-            rows.add(lst(rowData, LST_ROW_TID, null));
-            count++;
-        }
-        return rows;
-    }
-
-    /**
-     * Read up to 'limit' rows from a ResultSet as an Objs stream of Lst (lrows).
-     *
-     * @param rs    the ResultSet to read from
-     * @param limit maximum number of rows to read
-     * @return an Objs containing up to 'limit' rows as Lst objects
-     * @throws SQLException if reading fails
-     */
-    public static Obj readLimitedAsLstObjs(final ResultSet rs, final int limit) throws SQLException {
-        Obj result = objs0();
-        for (final Lst row : readLimitedAsLst(rs, limit)) {
-            result = result.append(row);
-        }
-        return result;
-    }
-
-    /**
-     * Static helper to read a column value by index.
-     * This is used by the static bulk conversion methods.
-     */
-    private static Obj readColumnStatic(final ResultSet rs, final int columnIndex, final int sqlType) throws SQLException {
-        final Object value = rs.getObject(columnIndex);
-        if (value == null || rs.wasNull()) {
-            return noobj();
-        }
-
-        return switch (sqlType) {
-            case Types.BOOLEAN, Types.BIT -> bool(rs.getBoolean(columnIndex));
-            case Types.TINYINT, Types.SMALLINT, Types.INTEGER, Types.BIGINT -> jnt(rs.getLong(columnIndex));
-            case Types.REAL, Types.FLOAT, Types.DOUBLE, Types.DECIMAL, Types.NUMERIC -> real(rs.getDouble(columnIndex));
-            case Types.CHAR, Types.VARCHAR, Types.LONGVARCHAR, Types.NCHAR, Types.NVARCHAR, Types.LONGNVARCHAR ->
-                    readMaybeJSON(rs.getString(columnIndex));
-            case Types.DATE, Types.TIME, Types.TIMESTAMP -> str(rs.getString(columnIndex));
-            case Types.BINARY, Types.VARBINARY, Types.LONGVARBINARY -> str(rs.getString(columnIndex));
-            default -> readMaybeJSON(value.toString());
-        };
-    }
-
-    // ==================== End Bulk ResultSet Conversion Helpers ====================
+    // ---- JDBC bridge: write -------------------------------------------------
 
     /**
      * Write a Metatron object to a PreparedStatement parameter.
@@ -446,8 +326,6 @@ public class ObjSQLSerializer extends AbstractObjSerializer<ResultSet> {
 
         // FK pointer — store only the raw PK value (last URI segment) so the column
         // holds a plain integer/string the database can enforce as a real FK.
-        // The auto_from inst is reconstructed on read by readColumnWithMetadata()
-        // via getForeignKeyForColumn() when the REFERENCES constraint is present.
         if (value.isAutoFrom()) {
             final String pkStr = value.asInst().arg(0).uriValue().name();
             if (sqlType == Types.INTEGER || sqlType == Types.BIGINT ||
@@ -523,7 +401,14 @@ public class ObjSQLSerializer extends AbstractObjSerializer<ResultSet> {
                 if (value.isStr()) {
                     stmt.setString(paramIndex, value.asStr().jvm());
                 } else if (value.isUri()) {
-                    stmt.setString(paramIndex, "<" + value.asUri().uriValue().toString() + ">");
+                    // Write the plain URI string — _mtron_meta tracks the column
+                    // type, so the read path knows this is a URI without needing
+                    // the legacy <> wrapper.
+                    stmt.setString(paramIndex, value.asUri().uriValue().toString());
+                } else if (value.isPoly()) {
+                    // Poly values (Lst, Rec, Inst, Code) — use canonical
+                    // no-clip mtron format so they round-trip cleanly.
+                    stmt.setString(paramIndex, MTRON.write(value));
                 } else {
                     stmt.setString(paramIndex, value.toString());
                 }
@@ -553,78 +438,98 @@ public class ObjSQLSerializer extends AbstractObjSerializer<ResultSet> {
         }
     }
 
-    @Override
-    public ResultSet writeNoObj(final NoObj noobj) {
-        throw new UnsupportedOperationException("SQL serializer does not support writing to ResultSet");
+    // ---- bulk ResultSet conversion helpers ----------------------------------
+
+    public static List<Rec> readAllAsRec(final ResultSet rs) throws SQLException {
+        return readLimitedAsRec(rs, Integer.MAX_VALUE);
     }
 
-    @Override
-    public ResultSet writeBool(final Bool dool) {
-        throw new UnsupportedOperationException("SQL serializer does not support writing to ResultSet");
+    public static Rec readCurrentAsRec(final ResultSet rs) throws SQLException {
+        final ResultSetMetaData metaData = rs.getMetaData();
+        final int columnCount = metaData.getColumnCount();
+        final Map<Obj, Obj> rowData = new LinkedHashMap<>();
+        for (int i = 1; i <= columnCount; i++) {
+            final String columnName = metaData.getColumnName(i);
+            final int sqlType = metaData.getColumnType(i);
+            final Obj value = readColumnStatic(rs, i, sqlType);
+            rowData.put(uri(columnName), value);
+        }
+        return rec(rowData, REC_TID, null);
     }
 
-    @Override
-    public ResultSet writeFail(final Fail fail) {
-        throw new UnsupportedOperationException("SQL serializer does not support writing to ResultSet");
+    public static Objs readAllAsRecObjs(final ResultSet rs) throws SQLException {
+        Obj result = objs0();
+        for (final Rec row : readLimitedAsRec(rs, Integer.MAX_VALUE)) {
+            result = result.append(row);
+        }
+        return result.asObjs();
     }
 
-    @Override
-    public ResultSet writeStr(final Str str) {
-        throw new UnsupportedOperationException("SQL serializer does not support writing to ResultSet");
+    public static List<Lst> readAllAsLst(final ResultSet rs) throws SQLException {
+        return readLimitedAsLst(rs, Integer.MAX_VALUE);
     }
 
-    @Override
-    public ResultSet writeInt(final Int jnt) {
-        throw new UnsupportedOperationException("SQL serializer does not support writing to ResultSet");
+    public static List<Rec> readLimitedAsRec(final ResultSet rs, final int limit) throws SQLException {
+        final List<Rec> rows = new ArrayList<>();
+        final ResultSetMetaData metaData = rs.getMetaData();
+        final int columnCount = metaData.getColumnCount();
+        int count = 0;
+
+        while (rs.next() && count < limit) {
+            final Map<Obj, Obj> rowData = new LinkedHashMap<>();
+            for (int i = 1; i <= columnCount; i++) {
+                final String columnName = metaData.getColumnName(i);
+                final int sqlType = metaData.getColumnType(i);
+                final Obj value = readColumnStatic(rs, i, sqlType);
+                rowData.put(uri(columnName), value);
+            }
+            rows.add(rec(rowData, REC_TID, null));
+            count++;
+        }
+        return rows;
     }
 
-    @Override
-    public ResultSet writeReal(final Real real) {
-        throw new UnsupportedOperationException("SQL serializer does not support writing to ResultSet");
+    public static Obj readLimitedAsRecObjs(final ResultSet rs, final int limit) throws SQLException {
+        Obj result = objs0();
+        for (final Rec row : readLimitedAsRec(rs, limit)) {
+            result = result.append(row);
+        }
+        return result;
     }
 
-    @Override
-    public ResultSet writeUri(final Uri uri) {
-        throw new UnsupportedOperationException("SQL serializer does not support writing to ResultSet");
+    public static List<Lst> readLimitedAsLst(final ResultSet rs, final int limit) throws SQLException {
+        final List<Lst> rows = new ArrayList<>();
+        final ResultSetMetaData metaData = rs.getMetaData();
+        final int columnCount = metaData.getColumnCount();
+        int count = 0;
+
+        while (rs.next() && count < limit) {
+            final List<Obj> rowData = new ArrayList<>();
+            for (int i = 1; i <= columnCount; i++) {
+                final int sqlType = metaData.getColumnType(i);
+                rowData.add(readColumnStatic(rs, i, sqlType));
+            }
+            rows.add(lst(rowData, LST_ROW_TID, null));
+            count++;
+        }
+        return rows;
     }
 
-    @Override
-    public ResultSet writeLst(final Lst lst) {
-        throw new UnsupportedOperationException("SQL serializer does not support writing to ResultSet");
-    }
+    private static Obj readColumnStatic(final ResultSet rs, final int columnIndex, final int sqlType) throws SQLException {
+        final Object value = rs.getObject(columnIndex);
+        if (value == null || rs.wasNull()) {
+            return noobj();
+        }
 
-    @Override
-    public ResultSet writeRel(final Rel rel) {
-        throw new UnsupportedOperationException("SQL serializer does not support writing to ResultSet");
-    }
-
-    @Override
-    public ResultSet writeRec(final Rec rec) {
-        throw new UnsupportedOperationException("SQL serializer does not support writing to ResultSet");
-    }
-
-    @Override
-    public ResultSet writeInst(final Inst inst) {
-        throw new UnsupportedOperationException("SQL serializer does not support writing to ResultSet");
-    }
-
-    @Override
-    public ResultSet writeCode(final Code code) {
-        throw new UnsupportedOperationException("SQL serializer does not support writing to ResultSet");
-    }
-
-    @Override
-    public ResultSet writeObjs(final Objs objs) {
-        throw new UnsupportedOperationException("SQL serializer does not support writing to ResultSet");
-    }
-
-    @Override
-    public ResultSet writeType(final Type type) {
-        throw new UnsupportedOperationException("SQL serializer does not support writing to ResultSet");
-    }
-
-    @Override
-    public ResultSet writeBytes(final Bytes bytes) {
-        throw new UnsupportedOperationException("SQL serializer does not support writing to ResultSet");
+        return switch (sqlType) {
+            case Types.BOOLEAN, Types.BIT -> bool(rs.getBoolean(columnIndex));
+            case Types.TINYINT, Types.SMALLINT, Types.INTEGER, Types.BIGINT -> jnt(rs.getLong(columnIndex));
+            case Types.REAL, Types.FLOAT, Types.DOUBLE, Types.DECIMAL, Types.NUMERIC -> real(rs.getDouble(columnIndex));
+            case Types.CHAR, Types.VARCHAR, Types.LONGVARCHAR, Types.NCHAR, Types.NVARCHAR, Types.LONGNVARCHAR ->
+                    readMaybeJSON(rs.getString(columnIndex));
+            case Types.DATE, Types.TIME, Types.TIMESTAMP -> str(rs.getString(columnIndex));
+            case Types.BINARY, Types.VARBINARY, Types.LONGVARBINARY -> str(rs.getString(columnIndex));
+            default -> readMaybeJSON(value.toString());
+        };
     }
 }

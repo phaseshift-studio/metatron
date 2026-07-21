@@ -25,7 +25,6 @@ import studio.phaseshift.metatron.furi.QProc;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.util.CommonUtil;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -59,12 +58,12 @@ public interface SubQTest {
             space.addQ(QCollection.subq());
         }
         final Obj sub = ObjmtronSerializer.parse(make(subscription)).apply();
-        assertEquals(SUBSCRIPTION_TID, sub.tid());
+        assertEquals(SUBQ_SUB_TID, sub.tid());
         final Obj writeObj = ObjmtronSerializer.parse(make(writing)).apply();
         assertNotEquals(sub, writeObj);
         CommonUtil.sleepThread(500);
         final Obj result = ObjmtronSerializer.parse(make(expecting)).apply();
-        assertFalse(result.isNoObj(), "subscription on_recv didn't fire (or didn't fire in time)");
+        assertFalse(result.isNoObj(), "subscription code didn't fire (or didn't fire in time)");
         assertTrue(result.isBool(), "expected a boolean value from checking message result");
         assertTrue(result.boolValue());
     }

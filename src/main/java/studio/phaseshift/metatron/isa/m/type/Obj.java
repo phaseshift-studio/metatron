@@ -19,7 +19,6 @@
 package studio.phaseshift.metatron.isa.m.type;
 
 import org.zeroturnaround.exec.ProcessExecutor;
-import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.TypeCheck;
 import studio.phaseshift.metatron.algebra.MultMonoid;
 import studio.phaseshift.metatron.algebra.PlusMonoid;
@@ -47,10 +46,10 @@ import static java.lang.System.lineSeparator;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.furi.q.QCollection.MIMEQ_PATTERN;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.type.Bool.*;
 import static studio.phaseshift.metatron.isa.m.type.Bytes.BYTES_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Code.CODE_TYPE;
@@ -77,7 +76,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer.OBJ_SERIAL_TID;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_MONAD_TYPE;
 import static studio.phaseshift.metatron.isa.mach.type.monad.BasicPCMonad.pcmonad;
-import static studio.phaseshift.metatron.isa.web.webInstSet.MIME_OBJ_TYPE;
 import static studio.phaseshift.metatron.util.CommonUtil.indent;
 import static studio.phaseshift.metatron.util.CommonUtil.nullOrElse;
 import static studio.phaseshift.metatron.util.Tuple.Pair;
@@ -774,7 +772,11 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                 return rhs.tid().c().isZeroable() || rhs.tid().equals(NOOBJ_TID);
             if (rhs.isNoObj())
                 return lhs.c().isZeroable();
-
+            //if (!lhs.baseType().test(rhs.baseType()))
+            //   return false;
+            // if (!lhs.isObjCall() && rhs.isType() && rhs.asType().isNominal() &&
+            //         ((lhs.isType() && lhs.asType().isRefinementOf(rhs.asType())) || (lhs.type().isRefinementOf(rhs.asType()))))
+            //    return false;
             // ── same-VID fast-path (coefficient + predicate guard) ──
             if (null != lhs.vid() && Objects.equals(lhs.vid(), rhs.vid()))
                 return lhs.c().within(rhs.c()) &&
@@ -790,9 +792,9 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                 return rhs.asType().isRootType()
                         ? lhs.c().within(rhs.c())
                         : (!rhs.asType().hasPredicate() ||
-                           (lhs.isType()
-                            ? Objects.equals(lhs.asType().predicate(), rhs.asType().predicate())
-                            : !rhs.asType().predicate().apply(lhs).isNothing()));
+                        (lhs.isType()
+                                ? Objects.equals(lhs.asType().predicate(), rhs.asType().predicate())
+                                : !rhs.asType().predicate().apply(lhs).isNothing()));
 
             // ── URI structural match ──
             if (rhs.isUri() && lhs.isUri() && !lhs.uriValue().test(rhs.uriValue()))
@@ -1015,6 +1017,20 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                     instC(RANGE_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(INT_TYPE, isa_(INT_TYPE).else_(jnt(0)).tryToInst()), (lhs, inst) -> lhs.take(cInt.of(inst.arg(0).intValue())).get1().take(cInt.of(inst.arg(1).intValue())).get0()),
                     docWrap(instC(ORDER_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()).q(BLOCK, null), lst(ALL_TYPE), (lhs, inst) -> lhs.isNoObj() ? noobj() : objs(lhs.stream().sorted(new ObjSelectComparator(inst.arg(0))))),
                             "any objs", "the objs sorted by the arg obj", Map.of(jnt(0), "the obj to sort by"), "a sorting function \\(f(X)\\to X'\\)"),
+                  /*  instC(M_ISA_INST_TID.extend("via").dom(A).rng(B), lst(REL_TYPE), (lhs, inst) -> {
+                        Rel currentTransform = inst.arg(0).asRel();
+                        Obj currentObj = lhs;
+                        while (!currentTransform.isNoObj()) {
+                            currentObj = as_(currentTransform.first().asType()).apply(currentObj);
+                            final Obj nextTransform = currentTransform.second();
+                            if (nextTransform.isRel())
+                                currentTransform = nextTransform.asRel();
+                            else {
+                                return as_(nextTransform.asType()).apply(currentObj);
+                            }
+                        }
+                        throw MTronException.of("transformation path must be a chain rel of types: %s", inst.arg(0));
+                    }),*/
                     instC(AS_INST_TID.dom(A).rng(NOOBJ_TID.zero()), lst(), (lhs, inst) -> noobj()),
                     docWrap(instC(AS_INST_TID.dom(A).rng(B), lst(ALL_TYPE), (lhs, inst) -> inst.arg(0).isType() ? lhs.as(inst.arg(0).asType()) : fail(MTronException.of("%s is not a %s", lhs, inst.arg(0)))),
                             "any obj", "the lhs obj as the arg type", Map.of(jnt(0), "the type to cast to"), "a type casting function \\(f(x)\\to x\\)"),
@@ -1043,7 +1059,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             final Obj repeatedApply = inst.arg(0);
                             return monad.updateLoop(1).obj(repeatedApply.apply(monad.obj()));
                         } catch (final Exception e) {
-                            e.printStackTrace();
+                            //e.printStackTrace();
                             throw e;
                         }
                     }),
@@ -1167,7 +1183,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                     // compute in-memory (IMMUTABLE), then atomically write the result.
                     instC(UPDATE_INST_TID.dom(A).rng(B.maybeSome()), lst(T(B.maybeSome())), (lhs, inst) -> {
                         final Obj detached = lhs.clone().selfVID(null);
-                        final Obj result = Poly.Helper.updateRecursion(detached, inst.arg(0).as(), IMMUTABLE);
+                        final Obj result = Poly.Helper.updateRecursion(detached, inst.arg(0), IMMUTABLE);
                         return null != lhs.vid() ? Router.writeToSpace(lhs.vid(), result) : result;
                     }),
                     instC(REIFY_INST_TID.dom(A).rng(REC_TID), lst(), (lhs, inst) -> rec(

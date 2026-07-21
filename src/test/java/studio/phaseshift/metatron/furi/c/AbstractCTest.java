@@ -22,8 +22,8 @@ import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.furi.C;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -58,7 +58,7 @@ public abstract class AbstractCTest<T extends Comparable<T>, D extends C<T, D>> 
         this.distributive = distributive;
         for (int i = 0; i < 3; i++) {
             if (this.additiveInverses[i])
-                assertTrue("if there is an additive inverse, then its distributive", this.distributive[i]);
+                assertTrue(this.distributive[i], "if there is an additive inverse, then its distributive");
         }
         LOG.debug("[positive] a0: %s, b0: %s, c0: %s", a0, b0, c0);
         LOG.debug("[exact]    aX: %s, bX: %s, cX: %s", aX, bX, cX);
@@ -66,71 +66,71 @@ public abstract class AbstractCTest<T extends Comparable<T>, D extends C<T, D>> 
     }
 
     public void checkMultGroup(D aa, D cc) {
-        assertEquals("1 * 1         = 1", cc.one(), cc.one().mult(cc.one()));
-        assertEquals("1 * a         = a", aa, cc.one().mult(aa));
-        assertEquals("a * 1         = a", aa, aa.mult(cc.one()));
-        assertEquals("(1*a) * (a*1) = a^2", aa.mult(aa), (cc.one().mult(aa)).mult((aa.mult(cc.one()))));
-        assertEquals("a * (1/a)     = 1", cc.one(), aa.mult(aa.inv()));
-        assertEquals("(1/a) * a     = 1", cc.one(), aa.inv().mult(aa));
-        assertEquals("1 / a         = (1/a)", cc.one().div(aa), aa.inv());
-        assertEquals("a / 1         = a", aa.div(cc.one()), aa);
+        assertEquals(cc.one(), cc.one().mult(cc.one()), "1 * 1         = 1");
+        assertEquals(aa, cc.one().mult(aa), "1 * a         = a");
+        assertEquals(aa, aa.mult(cc.one()), "a * 1         = a");
+        assertEquals(aa.mult(aa), (cc.one().mult(aa)).mult((aa.mult(cc.one()))), "(1*a) * (a*1) = a^2");
+        assertEquals(cc.one(), aa.mult(aa.inv()), "a * (1/a)     = 1");
+        assertEquals(cc.one(), aa.inv().mult(aa), "(1/a) * a     = 1");
+        assertEquals(cc.one().div(aa), aa.inv(), "1 / a         = (1/a)");
+        assertEquals(aa.div(cc.one()), aa, "a / 1         = a");
     }
 
     public void checkMultMonoid(D aa, D cc) {
-        assertEquals("1 * 1         = 1", cc.one(), cc.one().mult(cc.one()));
-        assertEquals("1 * a         = a", aa, cc.one().mult(aa));
-        assertEquals("a * 1         = a", aa, aa.mult(cc.one()));
-        assertEquals("(1*a) * (a*1) = a^2", aa.mult(aa), (cc.one().mult(aa)).mult((aa.mult(cc.one()))));
+        assertEquals(cc.one(), cc.one().mult(cc.one()), "1 * 1         = 1");
+        assertEquals(aa, cc.one().mult(aa), "1 * a         = a");
+        assertEquals(aa, aa.mult(cc.one()), "a * 1         = a");
+        assertEquals(aa.mult(aa), (cc.one().mult(aa)).mult((aa.mult(cc.one()))), "(1*a) * (a*1) = a^2");
     }
 
     public void checkPlusMonoid(D aa, D cc) {
-        assertEquals("0 + 0         = 0", cc.zero(), cc.zero().plus(cc.zero()));
-        assertEquals("0 + a         = a", aa, cc.zero().plus(aa));
-        assertEquals("a + 0         = a", aa, aa.plus(cc.zero()));
-        assertEquals("(0+a) + (a+0) = 2a", aa.plus(aa), (cc.zero().plus(aa)).plus((aa.plus(cc.zero()))));
-        assertEquals("a + a         = 2a", aa.plus(aa), aa.plus(aa));
+        assertEquals(cc.zero(), cc.zero().plus(cc.zero()), "0 + 0         = 0");
+        assertEquals(aa, cc.zero().plus(aa), "0 + a         = a");
+        assertEquals(aa, aa.plus(cc.zero()), "a + 0         = a");
+        assertEquals(aa.plus(aa), (cc.zero().plus(aa)).plus((aa.plus(cc.zero()))), "(0+a) + (a+0) = 2a");
+        assertEquals(aa.plus(aa), aa.plus(aa), "a + a         = 2a");
     }
 
     public void checkPlusGroup(D aa, D cc) {
-        assertEquals("0 + 0         = 0", cc.zero(), cc.zero().plus(cc.zero()));
-        assertEquals("0 + a         = a", aa, cc.zero().plus(aa));
-        assertEquals("a + 0         = a", aa, aa.plus(cc.zero()));
-        assertEquals("(0+a) + (a+0) = 2a", aa.plus(aa), (cc.zero().plus(aa)).plus((aa.plus(cc.zero()))));
-        assertEquals("a + a         = 2a", aa.plus(aa), aa.plus(aa));
-        assertEquals("0 + -a        = -a", aa.neg(), cc.zero().plus(aa.neg()));
-        assertEquals("-a + 0        = -a", aa.neg().plus(cc.zero()), aa.neg());
-        assertEquals("a + -a        = 0", cc.zero(), aa.plus(aa.neg()));
-        assertEquals("-a + a        = 0", cc.zero(), aa.neg().plus(aa));
+        assertEquals(cc.zero(), cc.zero().plus(cc.zero()), "0 + 0         = 0");
+        assertEquals(aa, cc.zero().plus(aa), "0 + a         = a");
+        assertEquals(aa, aa.plus(cc.zero()), "a + 0         = a");
+        assertEquals(aa.plus(aa), (cc.zero().plus(aa)).plus((aa.plus(cc.zero()))), "(0+a) + (a+0) = 2a");
+        assertEquals(aa.plus(aa), aa.plus(aa), "a + a         = 2a");
+        assertEquals(aa.neg(), cc.zero().plus(aa.neg()), "0 + -a        = -a");
+        assertEquals(aa.neg().plus(cc.zero()), aa.neg(), "-a + 0        = -a");
+        assertEquals(cc.zero(), aa.plus(aa.neg()), "a + -a        = 0");
+        assertEquals(cc.zero(), aa.neg().plus(aa), "-a + a        = 0");
     }
 
     public void checkPlusMultRing(D aa, D bb, D cc, boolean additiveInverse, boolean distributive) {
-        assertEquals("a + a         = 2a", aa.plus(aa), aa.plus(aa));
-        assertEquals("0 + -a        = -a", aa.neg(), cc.zero().plus(aa.neg()));
-        assertEquals("-a + 0        = -a", aa.neg().plus(cc.zero()), aa.neg());
-        assertEquals("a * a         = a^2", aa.mult(aa), aa.mult(aa));
-        assertEquals("a * -a        = -a^2", aa.neg().mult(aa), aa.neg().mult(aa));
-        assertEquals("-a * a        = -a^2", aa.neg().mult(aa), aa.neg().mult(aa));
-        assertEquals("0 * a         = 0", cc.zero(), cc.zero().mult(aa));
-        assertEquals("a * 0         = 0", cc.zero(), aa.mult(cc.zero()));
-        assertEquals("a * a         = a^2", aa.mult(aa), aa.mult(aa));
-        assertEquals("a * -a        = -a^2", aa.neg().mult(aa), aa.neg().mult(aa));
-        assertEquals("-a * a        = -a^2", aa.neg().mult(aa), aa.neg().mult(aa));
-        assertEquals("0 * a         = 0", cc.zero(), cc.zero().mult(aa));
-        assertEquals("a * 0         = 0", cc.zero(), aa.mult(cc.zero()));
-        assertEquals("a * -1        = -a", aa.neg(), aa.mult(cc.one().neg()));
-        assertEquals("-1 * a        = -a", aa.neg(), cc.one().neg().mult(aa));
-        assertEquals("-(a+b)        = -a - b", aa.plus(bb).neg(), aa.neg().minus(bb));
+        assertEquals(aa.plus(aa), aa.plus(aa), "a + a         = 2a");
+        assertEquals(aa.neg(), cc.zero().plus(aa.neg()), "0 + -a        = -a");
+        assertEquals(aa.neg().plus(cc.zero()), aa.neg(), "-a + 0        = -a");
+        assertEquals(aa.mult(aa), aa.mult(aa), "a * a         = a^2");
+        assertEquals(aa.neg().mult(aa), aa.neg().mult(aa), "a * -a        = -a^2");
+        assertEquals(aa.neg().mult(aa), aa.neg().mult(aa), "-a * a        = -a^2");
+        assertEquals(cc.zero(), cc.zero().mult(aa), "0 * a         = 0");
+        assertEquals(cc.zero(), aa.mult(cc.zero()), "a * 0         = 0");
+        assertEquals(aa.mult(aa), aa.mult(aa), "a * a         = a^2");
+        assertEquals(aa.neg().mult(aa), aa.neg().mult(aa), "a * -a        = -a^2");
+        assertEquals(aa.neg().mult(aa), aa.neg().mult(aa), "-a * a        = -a^2");
+        assertEquals(cc.zero(), cc.zero().mult(aa), "0 * a         = 0");
+        assertEquals(cc.zero(), aa.mult(cc.zero()), "a * 0         = 0");
+        assertEquals(aa.neg(), aa.mult(cc.one().neg()), "a * -1        = -a");
+        assertEquals(aa.neg(), cc.one().neg().mult(aa), "-1 * a        = -a");
+        assertEquals(aa.plus(bb).neg(), aa.neg().minus(bb), "-(a+b)        = -a - b");
         if (distributive || additiveInverse) {
-            assertEquals("(a+b)*(a+b)   = a^2 + 2ab + b^2", aa.plus(bb).mult(aa.plus(bb)), aa.mult(aa).plus(aa.mult(bb).plus(aa.mult(bb))).plus(bb.mult(bb)));
-            assertEquals("a * (b+c)     = ab + ac", aa.mult(bb.plus(cc)), (aa.mult(bb)).plus(aa.mult(cc)));
-            assertEquals("(b+c) * a     = ab + ac", bb.plus(cc).mult(aa), (bb.mult(aa)).plus(cc.mult(aa)));
+            assertEquals(aa.plus(bb).mult(aa.plus(bb)), aa.mult(aa).plus(aa.mult(bb).plus(aa.mult(bb))).plus(bb.mult(bb)), "(a+b)*(a+b)   = a^2 + 2ab + b^2");
+            assertEquals(aa.mult(bb.plus(cc)), (aa.mult(bb)).plus(aa.mult(cc)), "a * (b+c)     = ab + ac");
+            assertEquals(bb.plus(cc).mult(aa), (bb.mult(aa)).plus(cc.mult(aa)), "(b+c) * a     = ab + ac");
         }
         if (additiveInverse) {
-            assertEquals("(a+b)*(a-b)   = a^2 - b^2", aa.plus(bb).mult(aa.minus(bb)), (aa.mult(aa)).minus(bb.mult(bb)));
-            assertEquals("(a-b)*(a+b)   = a^2 - b^2", aa.minus(bb).mult(aa.plus(bb)), (aa.mult(aa)).minus(bb.mult(bb)));
-            assertEquals("(a+b)*(a+b)   = a^2 + 2ab + b^2", aa.plus(bb).mult(aa.plus(bb)), aa.mult(aa).plus(aa.mult(bb).plus(aa.mult(bb))).plus(bb.mult(bb)));
-            assertEquals("a * (b+c)     = ab + ac", aa.mult(bb.plus(cc)), (aa.mult(bb)).plus(aa.mult(cc)));
-            assertEquals("(b+c) * a     = ab + ac", bb.plus(cc).mult(aa), (bb.mult(aa)).plus(cc.mult(aa)));
+            assertEquals(aa.plus(bb).mult(aa.minus(bb)), (aa.mult(aa)).minus(bb.mult(bb)), "(a+b)*(a-b)   = a^2 - b^2");
+            assertEquals(aa.minus(bb).mult(aa.plus(bb)), (aa.mult(aa)).minus(bb.mult(bb)), "(a-b)*(a+b)   = a^2 - b^2");
+            assertEquals(aa.plus(bb).mult(aa.plus(bb)), aa.mult(aa).plus(aa.mult(bb).plus(aa.mult(bb))).plus(bb.mult(bb)), "(a+b)*(a+b)   = a^2 + 2ab + b^2");
+            assertEquals(aa.mult(bb.plus(cc)), (aa.mult(bb)).plus(aa.mult(cc)), "a * (b+c)     = ab + ac");
+            assertEquals(bb.plus(cc).mult(aa), (bb.mult(aa)).plus(cc.mult(aa)), "(b+c) * a     = ab + ac");
         }
     }
 

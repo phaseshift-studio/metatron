@@ -1,14 +1,31 @@
 package studio.phaseshift.metatron.isa.llm.type.feature;
 
+import dev.langchain4j.agent.tool.ToolSpecification;
+import dev.langchain4j.mcp.McpToolProvider;
+import dev.langchain4j.mcp.client.McpClient;
+import dev.langchain4j.service.AiServices;
+import dev.langchain4j.service.tool.ToolExecutor;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
+import studio.phaseshift.metatron.isa.llm.type.AgentServices;
+import studio.phaseshift.metatron.isa.llm.type.mTool;
+import studio.phaseshift.metatron.isa.llm.type.mcpClient;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.util.Tuple;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.furi.q.QCollection.DOCQ;
+import static studio.phaseshift.metatron.isa.llm.type.mTool.LLM_TOOL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.web.webInstSet.MCP_CLIENT_TYPE;
 
 public class ToolFeature extends Feature {
 
@@ -16,8 +33,38 @@ public class ToolFeature extends Feature {
         super(jvm, tid, vid);
     }
 
-    // ToolFeature is pure config — the chest lives in its JVM.
-    // AgentUtility.buildTools reads it via agent.feature(TOOL).at(uri(TOOL))
+    public static void buildTools(final Agent agent, final AiServices<AgentServices> service) {
+        agent.features().elements().map(Obj::asRec).filter(f -> f.has(TOOL)).forEach(feature -> {
+            final Obj tool = feature.at(TOOL);
+            final Map<ToolSpecification, ToolExecutor> tools = new HashMap<>();
+            final List<McpClient> mcpClients = new ArrayList<>();
+            tool.elements().forEach(t -> {
+                try {
+                    if (t.isRec() && t.test(MCP_CLIENT_TYPE)) {
+                        mcpClients.add(Rec.wrap(t.as(), mcpClient.class).client());
+                    } else if (t.isObjInst()) {
+                       // if (!QCollection.isNoDocs(Router.readFromSpace(t.tid().addQ(DOCQ)))) {
+                            final Tuple.Pair<ToolSpecification, ToolExecutor> pair =
+                                    mTool.mtronInstToolSpecification(mTool.mtronInstToTool(t.asInst()));
+                            tools.put(pair.get0(), pair.get1());
+                     //   } else {
+                            // TODO: handle when a tool doesn't have docs
+                     //   }
+                    } /*else if (t.isRec() && t.test(LLM_TOOL_TYPE)) {
+                        final Tuple.Pair<ToolSpecification, ToolExecutor> pair =
+                                mTool.mtronInstToolSpecification(t.asRec());
+                        tools.put(pair.get0(), pair.get1());
+                    }*/
+                } catch (final Exception e) {
+                    feature.logger().warn("unable to build tool from %s (ignoring): %s", t, e.getMessage());
+                }
+            });
+            if (!tools.isEmpty())
+                service.tools(tools);
+            if (!mcpClients.isEmpty())
+                service.toolProvider(McpToolProvider.builder().mcpClients(mcpClients).build());
+        });
+    }
 
     @Override
     public void onToolExecuted(final Agent agent, final Obj result) {

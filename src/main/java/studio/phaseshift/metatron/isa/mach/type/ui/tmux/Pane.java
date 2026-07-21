@@ -43,7 +43,7 @@ import java.util.function.Consumer;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.furi.q.QCollection.SUBSCRIPTION_TID;
+import static studio.phaseshift.metatron.furi.q.QCollection.SUBQ_SUB_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.NOOBJ_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
@@ -163,14 +163,14 @@ public class Pane extends JRec<Pane> implements PaneNode, Stylable<Pane> {
                     this.appendInput(lhs.asLst().at(1));
                     this.console.renderPanes();
                     return noobj();
-                })), SUBSCRIPTION_TID, null));
+                })), SUBQ_SUB_TID, null));
         Router.global().write(this.vid().extend(OUT).addQ(SUBQ), rec(mutableMap(
                 uri(TARGET), uri(this.vid().extend(OUT)),
                 uri(CODE), instC(f("out_pane").dom(ALL).rng(NOOBJ_TID.zero()), lst(), (lhs, inst) -> {
                     this.appendResult(lhs.asLst().at(1));
                     this.console.renderPanes();
                     return noobj();
-                })), SUBSCRIPTION_TID, null));
+                })), SUBQ_SUB_TID, null));
     }
 
     public int id() {

@@ -680,7 +680,7 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
                         "(\\?" +
                         "((?<rng>[^<&]+)<=(?<dom>[^&?]+))?" +
                         "&?" +
-                        "(?<query>(([^&=]+(=[^&=]+)?&?)+))?)?");
+                        "(?<query>[^&=]+(=[^&=]+)?(&[^&=]+(=[^&=]+)?)*)?)?");
         // Template-aware pattern: allows ${...} in scheme, host, port, path, query components
         // Key differences from FURI_PATTERN:
         // - scheme: allows ${...} via alternation

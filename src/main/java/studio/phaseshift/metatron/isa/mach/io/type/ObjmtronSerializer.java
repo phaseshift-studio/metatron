@@ -71,10 +71,16 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
     // ── Singletons ───────────────────────────────────────────────
     private static final ObjmtronSerializer INSTANCE = new ObjmtronSerializer((Void) null);
     private static final ObjmtronSerializer NO_CLIP_INSTANCE;
+    private static final ObjmtronSerializer COMPACT_INSTANCE;
 
     static {
         NO_CLIP_INSTANCE = new ObjmtronSerializer((Void) null);
         NO_CLIP_INSTANCE.noClip = true;
+
+        COMPACT_INSTANCE = new ObjmtronSerializer((Void) null);
+        COMPACT_INSTANCE.noClip = true;
+        COMPACT_INSTANCE.needsInit = false;
+        COMPACT_INSTANCE.at(KEY_JUSTIFY, bool(false), MUTABLE);
     }
 
     public static ObjmtronSerializer single() {
@@ -89,6 +95,15 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
     public static ObjmtronSerializer singleNoClip() {
         // Must NOT call ensureInit() — called during class init from Obj.Helper
         return NO_CLIP_INSTANCE;
+    }
+
+    /**
+     * Compact serializer: no clipping, no justification/padding,
+     * no nesting/indentation.  Produces the densest possible string
+     * representation for database storage and wire transmission.
+     */
+    public static ObjmtronSerializer compact() {
+        return COMPACT_INSTANCE;
     }
 
     public static ObjmtronSerializer of(final Rec rec, final fURI vid) {
@@ -533,10 +548,10 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
                         if (nested) {
                             sb.append(" ".repeat((depth + 1) * INDENT_SIZE));
                         }
-                        sb.append(write(kv.first())).append("=>");
-                        if (kv.second() == rec)
-                            throw MTronException.of("prevented infinite recursion on nested rec: key %s", kv.first());
-                        renderValue(sb, nested ? depth + 1 : 0, kv.second());
+                        sb.append(write(kv.jvm().get0())).append("=>");
+                        if (kv.jvm().get1() == rec)
+                            throw MTronException.of("prevented infinite recursion on nested rec: key %s", kv.jvm().get0());
+                        renderValue(sb, nested ? depth + 1 : 0, kv.jvm().get1());
                         sb.append(",");
                         if (nested) sb.append("\n");
                     }

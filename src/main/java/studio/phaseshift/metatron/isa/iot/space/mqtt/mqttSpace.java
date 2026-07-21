@@ -139,7 +139,7 @@ public class mqttSpace extends AbstractSpace<Mqtt5Client> {
                         try {
                             final fURI topic = this.redirect(f(p.getTopic().toString()), false);
                             LOG.debug("received %s => %s", p.getTopic(), topic);
-                            StatusLine.message(str("received %s => %s".formatted(p.getTopic(), topic)));
+                            StatusLine.message(str("%s => %s".formatted(topic, new String(p.getPayloadAsBytes()))));
                             Router.global().stats().ioStats().incrBytesRecv(p.getPayload().isPresent() ? p.getPayloadAsBytes().length : 0);
                             final Obj obj;
                             if (p.getPayload().isPresent()) {

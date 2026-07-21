@@ -275,8 +275,8 @@ public class tbleSpace extends AbstractSpace<Connection> implements SchemaSpace 
         final fURI schemaVid = this.vid().extend(INSTSET);
         this.schemaGenerator = new SQLSchemaGenerator(
                 this.existingTableSchema.getTableMetadata(), schemaVid,
-                this.databaseName,
-                this.existingTableSchema.getLogicalTypes());
+                this.existingTableSchema.getLogicalTypes(),
+                this.existingTableSchema.getTableTids());
 
         // Wire schema generator into existingTableSchema so that table
         // dereferences return instset-encoded Types (single source of truth)

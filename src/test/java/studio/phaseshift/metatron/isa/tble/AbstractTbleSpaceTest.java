@@ -28,11 +28,7 @@ import studio.phaseshift.metatron.algebra.rewrite.CommonRewritesTestContract;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.IncrQTest;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
-import studio.phaseshift.metatron.isa.m.type.Code;
-import studio.phaseshift.metatron.isa.m.type.InstSet;
-import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.Rec;
-import studio.phaseshift.metatron.isa.m.type.Type;
+import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
@@ -50,15 +46,13 @@ import java.util.stream.Stream;
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.m.mInstSet.ALL_TYPE;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.AI_MESSAGE_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.INT_TID;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.gt_;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.is_;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Poly.MUTABLE;
+import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -66,9 +60,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.tble.tbleInstSet.TBLE_ISA_TID;
-import static studio.phaseshift.metatron.isa.llm.llmInstSet.AI_MESSAGE_TID;
 
 /**
  * Abstract base test suite for tbleSpace with database-agnostic tests.
@@ -836,6 +828,12 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathTest impleme
      */
     @Test
     public void testMtronMetaTableTracksAutoFromColumns() throws Exception {
+        // Ensure _mtron_meta is recreated with current schema (old table may
+        // lack base_vid/obj_tid columns from a prior run).
+        try (final Connection c = staticDbConfig.getConnection();
+             final Statement s = c.createStatement()) {
+            s.executeUpdate("DROP TABLE IF EXISTS _mtron_meta");
+        }
         final fURI spaceVid = f("/sys/space/tble/metacheck_test");
         final tbleSpace testSpace = tbleSpace.of(
                 rec(
@@ -854,12 +852,13 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathTest impleme
                     uri("title"), str("Dune"),
                     uri("category"), auto_from_(f("pmk:category/10")).tryToInst()));
 
-            // _mtron_meta should have one row for item.category → category
+            // _mtron_meta should have one FK row for item.category → category
+            // (filter ref_table IS NOT NULL — non-FK columns also have rows now)
             final Obj metaRows = testSpace.sql(
-                    "SELECT column_name, ref_table FROM _mtron_meta WHERE table_name = 'item'");
+                    "SELECT column_name, ref_table FROM _mtron_meta WHERE table_name = 'item' AND ref_table IS NOT NULL");
             final List<Obj> metaList = metaRows.stream().toList();
             assertEquals(1, metaList.size(),
-                    "_mtron_meta should have exactly one row for item");
+                    "_mtron_meta should have exactly one FK row for item");
             assertEquals(str("category"), metaList.get(0).asRec().at(uri("column_name")));
             assertEquals(str("category"), metaList.get(0).asRec().at(uri("ref_table")));
 
@@ -912,6 +911,11 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathTest impleme
      */
     @Test
     public void testCrossSpaceAutoFromReference() throws Exception {
+        // Ensure _mtron_meta is recreated with current schema
+        try (final Connection c = staticDbConfig.getConnection();
+             final Statement s = c.createStatement()) {
+            s.executeUpdate("DROP TABLE IF EXISTS _mtron_meta");
+        }
         final fURI spaceVid = f("/sys/space/tble/xspace_test");
         final tbleSpace testSpace = tbleSpace.of(
                 rec(
@@ -931,7 +935,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathTest impleme
 
             // Verify _mtron_meta stores scheme:segment for cross-space ref
             final Obj placeMetaRows = testSpace.sql(
-                    "SELECT column_name, ref_table FROM _mtron_meta WHERE table_name = 'place'");
+                    "SELECT column_name, ref_table FROM _mtron_meta WHERE table_name = 'place' AND ref_table IS NOT NULL");
             final List<Obj> placeMetaList = placeMetaRows.stream().toList();
             assertEquals(1, placeMetaList.size(),
                     "_mtron_meta should have exactly one row for place");
@@ -946,14 +950,13 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathTest impleme
             final fURI targetURI = addr.asInst().arg(0).uriValue();
             assertEquals(f("g:V/1"), targetURI,
                     "cross-space auto_from should point at original URI, not space-pattern URI");
-
             // --- internal FK: venue.parent → play:place/1 (separate table, single create) ---
             Router.writeToSpace(f("play:venue/1"), rec(
                     uri("name"), str("indoor_zone"),
                     uri("parent"), auto_from_(f("play:place/1")).tryToInst()));
 
             final Obj venueMetaRows = testSpace.sql(
-                    "SELECT column_name, ref_table FROM _mtron_meta WHERE table_name = 'venue'");
+                    "SELECT column_name, ref_table FROM _mtron_meta WHERE table_name = 'venue' AND ref_table IS NOT NULL");
             final List<Obj> venueMetaList = venueMetaRows.stream().toList();
             assertEquals(1, venueMetaList.size(),
                     "_mtron_meta should have exactly one row for venue");
@@ -989,6 +992,11 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathTest impleme
      */
     @Test
     public void testCrossSpaceAutoFromResolution() throws Exception {
+        // Ensure _mtron_meta is recreated with current schema
+        try (final Connection c = staticDbConfig.getConnection();
+             final Statement s = c.createStatement()) {
+            s.executeUpdate("DROP TABLE IF EXISTS _mtron_meta");
+        }
         final fURI memSpaceVid = f("/sys/space/mem/xspace_target");
         final fURI tbleSpaceVid = f("/sys/space/tble/xspace_source");
 
@@ -1017,9 +1025,9 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathTest impleme
                     uri("name"), str("main_stage"),
                     uri("location"), auto_from_(f("grph:vertices/42")).tryToInst()));
 
-            // Verify storage: _mtron_meta records scheme:segment
+            // Verify storage: _mtron_meta records scheme:segment for FK
             final Obj arenaMetaRows = sourceSpace.sql(
-                    "SELECT ref_table FROM _mtron_meta WHERE table_name = 'arena' AND column_name = 'location'");
+                    "SELECT ref_table FROM _mtron_meta WHERE table_name = 'arena' AND column_name = 'location' AND ref_table IS NOT NULL");
             final List<Obj> arenaMetaList = arenaMetaRows.stream().toList();
             assertEquals(1, arenaMetaList.size(),
                     "_mtron_meta should have exactly one row for arena.location");
@@ -1063,6 +1071,11 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathTest impleme
      */
     @Test
     public void testIntraSpaceCrossTableAutoFromResolution() throws Exception {
+        // Ensure _mtron_meta is recreated with current schema
+        try (final Connection c = staticDbConfig.getConnection();
+             final Statement s = c.createStatement()) {
+            s.executeUpdate("DROP TABLE IF EXISTS _mtron_meta");
+        }
         final fURI spaceVid = f("/sys/space/tble/intraspace_test");
         final tbleSpace testSpace = tbleSpace.of(
                 rec(
@@ -1087,9 +1100,9 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathTest impleme
                     uri("org_id"), auto_from_(f("net:org/1")).tryToInst(),
                     uri("manager_id"), auto_from_(f("net:employee/1")).tryToInst()));
 
-            // _mtron_meta has rows for both FK columns
+            // _mtron_meta has FK rows for both FK columns (filter: only FK rows)
             final Obj empMetaRows = testSpace.sql(
-                    "SELECT column_name, ref_table FROM _mtron_meta WHERE table_name = 'employee' ORDER BY column_name");
+                    "SELECT column_name, ref_table FROM _mtron_meta WHERE table_name = 'employee' AND ref_table IS NOT NULL ORDER BY column_name");
             final List<Obj> empMetaList = empMetaRows.stream().toList();
             assertEquals(2, empMetaList.size(),
                     "_mtron_meta should have two rows for employee");
@@ -1914,8 +1927,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathTest impleme
 
     /**
      * Verifies that the {@code _tid} column is created with every rec table,
-     * stored as a {@code <uri>} wrapped string, and restored as the rec's TID
-     * on read.
+     * stored as a plain URI string, and restored as the rec's TID on read.
      */
     @Test
     public void testTidColumnRoundTrip() throws Exception {
@@ -1939,14 +1951,14 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathTest impleme
             }
             assertTrue(hasTidCol, "_tid column should exist in the table");
 
-            // -- Verify raw value: < > wrapped URI --
+            // -- Verify raw value: plain URI string (no <> wrapper needed) --
             final Obj raw = space.sql("SELECT _tid FROM " + tableName + " WHERE id = 1");
             final List<Obj> rawRows = raw.stream().toList();
             assertEquals(1, rawRows.size(), "should have one row");
             final Obj tidField = rawRows.get(0).asRec().at(uri("_tid"));
-            assertTrue(tidField.isUri(),
-                    "_tid should be parsed as a uri, got: " + tidField);
-            assertEquals(knownTid, tidField.uriValue(),
+            assertTrue(tidField.isStr(),
+                    "_tid should be stored as a plain string, got: " + tidField);
+            assertEquals(knownTid, f(tidField.strValue()),
                     "_tid value should be " + knownTid);
 
             // -- Read back via space: rec.tid() restored from _tid --
@@ -1967,6 +1979,435 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathTest impleme
         } finally {
             try {
                 space.sql("DROP TABLE IF EXISTS " + tableName);
+            } catch (final Exception ex) {
+                LOG.warn("[ignored] %s", ex);
+            }
+            Router.global().removeSpace(space.vid());
+            space.close();
+        }
+    }
+
+    // =========================================================================
+    //  _mtron_meta column-type persistence — on-first-write
+    // =========================================================================
+
+    /**
+     * Verifies that {@code _mtron_meta} records column types on first write:
+     * <ul>
+     *   <li>A {@code $table} sentinel row captures the table-level TID</li>
+     *   <li>Every column gets a row with {@code base_vid} and {@code obj_tid}</li>
+     *   <li>FK columns also record {@code ref_table}</li>
+     * </ul>
+     */
+    @Test
+    public void testMtronMetaPersistsColumnTypesOnFirstWrite() throws Exception {
+        final tbleSpace space = createTestSpace();
+        final String tableName = "meta_firstwrite";
+        try {
+            // Write a rec with diverse types to trigger table creation
+            Router.writeToSpace(f("db:" + tableName + "/1"), rec(
+                    uri("name"), str("Alice"),
+                    uri("age"), jnt(30),
+                    uri("salary"), real(75000.0),
+                    uri("active"), bool(true),
+                    uri("homepage"), uri("https://alice.example.com")
+            ));
+
+            // -- Verify _mtron_meta rows exist --------------------------------
+            final Obj metaRows = space.sql(
+                    "SELECT column_name, base_vid, obj_tid, ref_table FROM " +
+                            "_mtron_meta WHERE table_name = '" + tableName +
+                            "' ORDER BY column_name");
+            final List<Obj> rows = metaRows.stream().toList();
+            assertFalse(rows.isEmpty(), "_mtron_meta should have rows for the new table");
+
+            // -- Verify $table sentinel ---------------------------------------
+            final Obj sentinelRow = rows.stream()
+                    .filter(r -> r.asRec().at(uri("column_name")).strValue().equals("$table"))
+                    .findFirst().orElse(null);
+            assertNotNull(sentinelRow, "$table sentinel row should exist");
+            // base_vid for a rec is REC_TID (e.g. /m/rec)
+            assertTrue(sentinelRow.asRec().at(uri("base_vid")).isStr(),
+                    "$table base_vid should be a string");
+            // obj_tid should be the rec's TID
+            assertFalse(sentinelRow.asRec().at(uri("obj_tid")).isNoObj(),
+                    "$table obj_tid should not be null");
+
+            // -- Verify column rows have base_vid -----------------------------
+            for (final Obj row : rows) {
+                final String colName = row.asRec().at(uri("column_name")).strValue();
+                if ("$table".equals(colName)) continue;
+                final Obj baseVid = row.asRec().at(uri("base_vid"));
+                assertFalse(baseVid.isNoObj(),
+                        "column " + colName + " should have base_vid");
+                assertTrue(baseVid.isStr(),
+                        "base_vid for " + colName + " should be a string, got: " + baseVid);
+            }
+
+            // -- Verify specific types -----------------------------------------
+            // name → str base
+            final Obj nameRow = rows.stream()
+                    .filter(r -> r.asRec().at(uri("column_name")).strValue().equals("name"))
+                    .findFirst().orElseThrow();
+            assertTrue(nameRow.asRec().at(uri("base_vid")).strValue().contains("str"),
+                    "name base_vid should contain 'str', got: " +
+                            nameRow.asRec().at(uri("base_vid")));
+            // homepage → uri base
+            final Obj hpRow = rows.stream()
+                    .filter(r -> r.asRec().at(uri("column_name")).strValue().equals("homepage"))
+                    .findFirst().orElseThrow();
+            assertTrue(hpRow.asRec().at(uri("base_vid")).strValue().contains("uri"),
+                    "homepage base_vid should contain 'uri', got: " +
+                            hpRow.asRec().at(uri("base_vid")));
+            // age → int base
+            final Obj ageRow = rows.stream()
+                    .filter(r -> r.asRec().at(uri("column_name")).strValue().equals("age"))
+                    .findFirst().orElseThrow();
+            assertTrue(ageRow.asRec().at(uri("base_vid")).strValue().contains("int"),
+                    "age base_vid should contain 'int', got: " +
+                            ageRow.asRec().at(uri("base_vid")));
+
+            // -- Verify ref_table is NULL for non-FK columns ------------------
+            for (final Obj row : rows) {
+                final String colName = row.asRec().at(uri("column_name")).strValue();
+                if ("$table".equals(colName)) continue;
+                final Obj ref = row.asRec().at(uri("ref_table"));
+                assertTrue(ref.isNoObj() || ref.isNone(),
+                        "non-FK column " + colName + " should have NULL ref_table, got: " + ref);
+            }
+
+            LOG.info("_mtron_meta first-write persistence test passed on {}",
+                    staticDbConfig.getDatabaseName());
+        } finally {
+            try {
+                space.sql("DROP TABLE IF EXISTS " + tableName);
+            } catch (final Exception ex) {
+                LOG.warn("[ignored] %s", ex);
+            }
+            Router.global().removeSpace(space.vid());
+            space.close();
+        }
+    }
+
+    // =========================================================================
+    //  _mtron_meta column-type persistence — on-the-fly ALTER
+    // =========================================================================
+
+    /**
+     * Verifies that when a new column is added via {@code ALTER TABLE} (on-the-fly),
+     * its type metadata is persisted to {@code _mtron_meta}.
+     */
+    @Test
+    public void testMtronMetaPersistsOnAlterTable() throws Exception {
+        final tbleSpace space = createTestSpace();
+        final String tableName = "meta_alter";
+        try {
+            // -- First write: creates table with name + age --------------------
+            Router.writeToSpace(f("db:" + tableName + "/1"), rec(
+                    uri("name"), str("Alice"),
+                    uri("age"), jnt(30)
+            ));
+
+            // Verify initial _mtron_meta state
+            final int initialCount = space.sql(
+                    "SELECT COUNT(*) AS cnt FROM _mtron_meta WHERE table_name = '" +
+                            tableName + "'").stream().toList().get(0)
+                    .asRec().at(uri("cnt")).asInt().jvm().intValue();
+            // $table sentinel + name + age = 3 rows
+            assertEquals(3, initialCount,
+                    "should have $table + name + age rows in _mtron_meta");
+
+            // -- Second write: adds email column (triggers addColumnOnTheFly) --
+            Router.writeToSpace(f("db:" + tableName + "/2"), rec(
+                    uri("name"), str("Bob"),
+                    uri("age"), jnt(25),
+                    uri("email"), uri("mailto:bob@example.com")
+            ));
+
+            // -- Verify _mtron_meta has the new column -------------------------
+            final Obj metaRows = space.sql(
+                    "SELECT column_name, base_vid FROM _mtron_meta WHERE table_name = '" +
+                            tableName + "' AND column_name = 'email'");
+            final List<Obj> emailRows = metaRows.stream().toList();
+            assertEquals(1, emailRows.size(),
+                    "_mtron_meta should have one row for email column");
+            final Obj emailRow = emailRows.get(0);
+            assertTrue(emailRow.asRec().at(uri("base_vid")).strValue().contains("uri"),
+                    "email base_vid should contain 'uri', got: " +
+                            emailRow.asRec().at(uri("base_vid")));
+
+            // -- Verify total count increased ----------------------------------
+            final int finalCount = space.sql(
+                    "SELECT COUNT(*) AS cnt FROM _mtron_meta WHERE table_name = '" +
+                            tableName + "'").stream().toList().get(0)
+                    .asRec().at(uri("cnt")).asInt().jvm().intValue();
+            assertEquals(4, finalCount,
+                    "should have $table + name + age + email = 4 rows after ALTER");
+
+            // -- Verify column actually exists in DB schema --------------------
+            final java.sql.DatabaseMetaData md = space.sjvm().getMetaData();
+            try (final java.sql.ResultSet cols = md.getColumns(
+                    space.sjvm().getCatalog(), null, tableName, "email")) {
+                assertTrue(cols.next(), "email column should exist in the database");
+            }
+
+            LOG.info("_mtron_meta ALTER TABLE persistence test passed on {}",
+                    staticDbConfig.getDatabaseName());
+        } finally {
+            try {
+                space.sql("DROP TABLE IF EXISTS " + tableName);
+            } catch (final Exception ex) {
+                LOG.warn("[ignored] %s", ex);
+            }
+            Router.global().removeSpace(space.vid());
+            space.close();
+        }
+    }
+
+    // =========================================================================
+    //  _mtron_meta — type metadata survives restart
+    // =========================================================================
+
+    /**
+     * Verifies that column type metadata in {@code _mtron_meta} survives a
+     * space close/reopen cycle, and that the schema instset correctly renders
+     * persisted types (e.g. {@code uri::T} not {@code str::T} for URI columns).
+     */
+    @Test
+    public void testMtronMetaSurvivesRestart() throws Exception {
+        final String tableName = "meta_restart";
+        final fURI spaceVid = f("/sys/space/tble/metarestart_test");
+
+        final tbleSpace space1 = tbleSpace.of(
+                rec(
+                        uri(PATTERN), uri("mr:#"),
+                        uri(HOST), uri(staticDbConfig.getJdbcHost()),
+                        uri(DRIVER), uri(staticDbConfig.getDriverClass()),
+                        uri(TABLE), lst(uri(tableName)),
+                        uri(ROUTE), rec(uri("mr:"), uri(""))
+                ).jvm(),
+                spaceVid
+        );
+        try {
+            // Write data that creates the table with typed columns
+            Router.writeToSpace(f("mr:" + tableName + "/1"), rec(
+                    uri("name"), str("Alice"),
+                    uri("website"), uri("https://alice.example.com"),
+                    uri("score"), jnt(100)
+            ));
+
+            // Verify types are in _mtron_meta before restart
+            final int beforeCount = space1.sql(
+                    "SELECT COUNT(*) AS cnt FROM _mtron_meta WHERE table_name = '" +
+                            tableName + "'").stream().toList().get(0)
+                    .asRec().at(uri("cnt")).asInt().jvm().intValue();
+            assertTrue(beforeCount >= 3,
+                    "should have at least $table + 2 columns before restart, got: " + beforeCount);
+
+        } finally {
+            Router.global().removeSpace(space1.vid());
+            space1.close();
+        }
+
+        // -- Restart: re-open the same database -------------------------------
+        final tbleSpace space2 = tbleSpace.of(
+                rec(
+                        uri(PATTERN), uri("mr:#"),
+                        uri(HOST), uri(staticDbConfig.getJdbcHost()),
+                        uri(DRIVER), uri(staticDbConfig.getDriverClass()),
+                        uri(TABLE), lst(uri(tableName)),
+                        uri(ROUTE), rec(uri("mr:"), uri(""))
+                ).jvm(),
+                spaceVid
+        );
+        try {
+            // -- Verify _mtron_meta rows survived restart ---------------------
+            final Obj metaRows = space2.sql(
+                    "SELECT column_name, base_vid, obj_tid FROM _mtron_meta WHERE table_name = '" +
+                            tableName + "' ORDER BY column_name");
+            final List<Obj> rows = metaRows.stream().toList();
+            assertFalse(rows.isEmpty(),
+                    "_mtron_meta rows should survive restart");
+
+            // -- Verify $table sentinel survived -------------------------------
+            final boolean hasSentinel = rows.stream()
+                    .anyMatch(r -> "$table".equals(
+                            r.asRec().at(uri("column_name")).strValue()));
+            assertTrue(hasSentinel, "$table sentinel should survive restart");
+
+            // -- Verify website column is still recorded as uri base ----------
+            final Obj websiteRow = rows.stream()
+                    .filter(r -> "website".equals(
+                            r.asRec().at(uri("column_name")).strValue()))
+                    .findFirst().orElse(null);
+            assertNotNull(websiteRow, "website column row should survive restart");
+            assertTrue(websiteRow.asRec().at(uri("base_vid")).strValue().contains("uri"),
+                    "website should still be uri base type after restart, got: " +
+                            websiteRow.asRec().at(uri("base_vid")));
+
+            // -- Verify schema instset renders website as uri::T --------------
+            final Type tableType = space2.schemaInstset().types().stream()
+                    .filter(t -> t.vid().name().equalsIgnoreCase(tableName))
+                    .findFirst().orElse(null);
+            assertNotNull(tableType,
+                    "table type should exist in schema instset after restart");
+            final Obj wsField = tableType.isPredicateObj().asRec().at(uri("website"));
+            assertFalse(wsField.isNoObj(), "website field should exist in schema");
+            assertTrue(wsField.isType(), "website should be a Type in schema");
+            assertEquals("uri", wsField.asType().vid().name(),
+                    "website should be uri::T in schema after restart, got: " + wsField);
+
+            LOG.info("_mtron_meta restart survival test passed on {}",
+                    staticDbConfig.getDatabaseName());
+        } finally {
+            try {
+                space2.sql("DROP TABLE IF EXISTS " + tableName);
+            } catch (final Exception ex) {
+                LOG.warn("[ignored] %s", ex);
+            }
+            Router.global().removeSpace(space2.vid());
+            space2.close();
+        }
+    }
+
+    // =========================================================================
+    //  Schema instset — table-level TID from $table sentinel
+    // =========================================================================
+
+    /**
+     * Verifies that the schema instset's table Type uses the TID from the
+     * {@code $table} sentinel row (the rec's TID at write time) rather than
+     * a generic fallback.
+     */
+    @Test
+    public void testTableTidInSchemaInstset() throws Exception {
+        final tbleSpace space = createTestSpace();
+        final String tableName = "tid_instset_test";
+        try {
+            // Write a rec with a specific TID
+            final fURI customTid = f("/m/test/person");  // non-standard TID
+            final Rec rec = rec(
+                    uri("name"), str("Marko"),
+                    uri("role"), str("engineer")
+            ).tid(customTid).asRec();
+            Router.writeToSpace(f("db:" + tableName + "/1"), rec);
+
+            // -- Verify $table sentinel stores the custom TID ------------------
+            final Obj sentinelRow = space.sql(
+                    "SELECT obj_tid FROM _mtron_meta WHERE table_name = '" +
+                            tableName + "' AND column_name = '$table'")
+                    .stream().toList().get(0);
+            final String storedTid = sentinelRow.asRec().at(uri("obj_tid")).strValue();
+            assertEquals(customTid.toString(), storedTid,
+                    "$table sentinel should store the rec's TID");
+
+            // -- Verify schema instset Type uses the custom TID ----------------
+            final Type tableType = space.schemaInstset().types().stream()
+                    .filter(t -> t.vid().name().equalsIgnoreCase(tableName))
+                    .findFirst().orElse(null);
+            assertNotNull(tableType, "table type should exist in schema instset");
+            assertEquals(customTid, tableType.tid(),
+                    "schema instset type TID should match the rec's TID, got: " +
+                            tableType.tid());
+
+            LOG.info("table TID in schema instset test passed on {}",
+                    staticDbConfig.getDatabaseName());
+        } finally {
+            try {
+                space.sql("DROP TABLE IF EXISTS " + tableName);
+            } catch (final Exception ex) {
+                LOG.warn("[ignored] %s", ex);
+            }
+            Router.global().removeSpace(space.vid());
+            space.close();
+        }
+    }
+
+    // =========================================================================
+    //  auto_from non-resolution — tbleSpace must not eagerly resolve
+    // =========================================================================
+
+    /**
+     * Verifies that tbleSpace never eagerly resolves {@code auto_from} values
+     * during reads or writes.  auto_from should round-trip as an instruction,
+     * and {@code !*} references stored inside strings must NOT be parsed into
+     * auto_from by the table read path.
+     *
+     * <p>Scenarios:
+     * <ol>
+     *   <li>Explicit auto_from FK → stored/read as auto_from inst (not resolved)</li>
+     *   <li>String containing {@code [!*...]} → stored/read as plain string</li>
+     *   <li>Rec fields accessed via {@code recValue().get()} → no resolution</li>
+     * </ol>
+     */
+    @Test
+    public void testAutoFromNotEagerlyResolved() throws Exception {
+        final tbleSpace space = createTestSpace();
+        final String parentTable = "af_parent";
+        final String childTable = "af_child";
+        try {
+            // -- S1: Write parent rows ------------------------------------------
+            Router.writeToSpace(f("db:" + parentTable + "/1"),
+                    rec(uri("label"), str("alpha")));
+            Router.writeToSpace(f("db:" + parentTable + "/2"),
+                    rec(uri("label"), str("beta")));
+
+            // -- S2: Write child with explicit auto_from FK ---------------------
+            Router.writeToSpace(f("db:" + childTable + "/1"), rec(
+                    uri("name"), str("first"),
+                    uri("parent_ref"), auto_from_(f("db:" + parentTable + "/1")).tryToInst()));
+
+            // -- S3: Read back: auto_from FK must be an inst, not resolved ------
+            final Obj childRow = Router.readFromSpace(f("db:" + childTable + "/1"));
+            assertTrue(childRow.isRec(), "child row should be a Rec");
+
+            // Access via recValue().get() — must NOT trigger resolution
+            final Obj parentRef = childRow.asRec().recValue().get(uri("parent_ref"));
+            assertNotNull(parentRef, "parent_ref should exist in the rec");
+            assertTrue(parentRef.isInst(), "parent_ref should be an Inst (auto_from), got: " + parentRef);
+            assertTrue(parentRef.isAutoFrom(),
+                    "parent_ref should be auto_from, not resolved, got: " + parentRef);
+
+            // -- S4: Write a row with a string that looks like mtron [!*...] ---
+            final String embeddedRef = "[!*db:" + parentTable + "/2]";
+            Router.writeToSpace(f("db:" + childTable + "/2"), rec(
+                    uri("name"), str("second"),
+                    uri("tags"), str(embeddedRef)));
+
+            // -- S5: Read back: _mtron_meta says str::T → stays a string --------
+            // No heuristic JSON/mtron parsing.  The column was written as a
+            // string, so it comes back as a string.
+            final Obj childRow2 = Router.readFromSpace(f("db:" + childTable + "/2"));
+            assertTrue(childRow2.isRec(), "child row 2 should be a Rec");
+            final Obj tagsField = childRow2.asRec().recValue().get(uri("tags"));
+            assertTrue(tagsField.isStr(),
+                    "tags should stay a string (column typed str::T by _mtron_meta), got: " + tagsField);
+            assertEquals(embeddedRef, tagsField.strValue(),
+                    "tags string should round-trip verbatim");
+
+            // -- S6: Write a row with a string mimicking auto_from lst storage --
+            // (ConceptFeature stores links as serialized strings like
+            //  [!*/usr/dr/concept/x, !*/usr/dr/concept/y] in TEXT columns.)
+            final String serializedLinks = "[!*db:" + parentTable + "/1,!*db:" + parentTable + "/2]";
+            Router.writeToSpace(f("db:" + childTable + "/3"), rec(
+                    uri("name"), str("third"),
+                    uri("links"), str(serializedLinks)));
+
+            // -- S7: Read back: _mtron_meta says str::T → stays a string --------
+            final Obj childRow3 = Router.readFromSpace(f("db:" + childTable + "/3"));
+            assertTrue(childRow3.isRec(), "child row 3 should be a Rec");
+            final Obj linksField = childRow3.asRec().recValue().get(uri("links"));
+            assertTrue(linksField.isStr(),
+                    "links should stay a string (str::T from _mtron_meta), got: " + linksField);
+            assertEquals(serializedLinks, linksField.strValue(),
+                    "links string should round-trip verbatim");
+
+            LOG.info("auto_from non-resolution test passed on {}",
+                    staticDbConfig.getDatabaseName());
+        } finally {
+            try {
+                space.sql("DROP TABLE IF EXISTS " + childTable);
+                space.sql("DROP TABLE IF EXISTS " + parentTable);
             } catch (final Exception ex) {
                 LOG.warn("[ignored] %s", ex);
             }

@@ -20,12 +20,17 @@ package studio.phaseshift.metatron.isa.llm.type;
 
 import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.data.segment.TextSegment;
+import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.output.Response;
 import dev.langchain4j.service.AiServices;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.CostCalculator;
 import studio.phaseshift.metatron.isa.llm.LLMFactory;
+import studio.phaseshift.metatron.isa.llm.type.feature.SessionFeature;
+import studio.phaseshift.metatron.isa.llm.type.feature.SkillFeature;
+import studio.phaseshift.metatron.isa.llm.type.feature.SystemFeature;
+import studio.phaseshift.metatron.isa.llm.type.feature.ToolFeature;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.web.type.MIME;
 import studio.phaseshift.metatron.isa.m.math.mathInstSet;
@@ -112,8 +117,8 @@ public class Agent extends MRec {
 
     // ── Feature query (generic, no feature is privileged) ──────────
 
-    public boolean hasFeature(final fURI feature) {
-        return this.at(FEATURE).orElse(lst0()).stream().anyMatch(f -> f.typeId().test(feature));
+    public boolean hasFeature(final String feature) {
+        return this.features().elements().anyMatch(f -> f.typeId().name().toLowerCase().contains(feature));
     }
 
     public Obj feature(final String feature) {
@@ -228,13 +233,30 @@ public class Agent extends MRec {
             this.feature(CHAT).ifPresent(chat -> chat.asRec().at(FORMAT, (responseFormat.isNoObj() || responseFormat.asRec().isEmpty()) ? noobj() : responseFormat, MUTABLE));
             // ── Phase 2: Build LC4j service from Agent's own JVM state ──
             final AiServices<AgentServices> service = AiServices.builder(AgentServices.class);
-            AgentUtility.buildService(this, service);
+            // AgentUtility.buildService(this, service);
+            //////////////////////////////////////////////////////////////////////////////////
+            // ADD ANOTHER FEATURE HOOK -- onSetup
+            final Obj chatFeat = this.feature(CHAT);
+            if (chatFeat.isNoObj())
+                throw MTronException.of("agent has no chat feature: %s", this.vidOrTid());
+            final Rec chat = chatFeat.asRec();
+            if (this.hasFeature(TOOL))
+                ToolFeature.buildTools(this, service);
+            if (this.hasFeature(SESSION))
+                SessionFeature.buildSession(this, service);
+            if (this.hasFeature(SKILL))
+                SkillFeature.buildSkills(this, service);
+            if (this.hasFeature(SYSTEM))
+                SystemFeature.buildSystemMessage(this, service);
+            //////////////////////////////////////////////////////////////////////////////////
             final AgentServices agent = (this.has(DESC) && !this.at(DESC).strValue().isBlank() ?
                     service.systemMessageTransformer((current, content) ->
                             (this.at(DESC).orElse(str0()).strValue() + "\n\n" +
-                             (current != null ? current : "")).trim()) :
-                    service).streamingChatModel(AgentUtility.createChatModel(this)).build();
-
+                                    (current != null ? current : "")).trim()) : service)
+                    .streamingChatModel(LLMFactory.createChatInteraction(this,
+                            chat.at(uri(MODEL)),
+                            chat.at(uri(RESPONSE)),
+                            chat.at(uri(FORMAT)))).build();
             // ── Phase 3: Stream — write events to result blackboard, dispatch hooks ──
             LOG.info("processed message: %s %s", this.userMessage, this.feature(CHAT).asRec().at(FORMAT).orElse(rec(uri(FORMAT), uri("none"))));
             agent.chat(this.userMessage)
@@ -245,7 +267,7 @@ public class Agent extends MRec {
                                 uri(TOOL_ARGUMENTS), str(tool.request().arguments()),
                                 uri(RESULT), str(tool.result()));
                         this.at(res("tool_executed"), toolRec, MUTABLE);
-                        features.stream().map(Obj::asRec).forEach(f -> dispatchHook(f.asRec(), ON_TOOL_EXECUTED, toolRec));
+                        features.stream().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_TOOL_EXECUTED, toolRec));
                     })
                     .onPartialToolCall(partialToolCall -> {
                         if (!isTooling.getAndSet(true)) {

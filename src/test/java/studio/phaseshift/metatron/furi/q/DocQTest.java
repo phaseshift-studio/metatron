@@ -33,8 +33,8 @@ import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.*;
@@ -64,7 +64,7 @@ public class DocQTest extends AbstractMetatronTest {
         final Inst inst = Router.readFromSpace(AND_INST_TID).asInst();
         final Docs doc = new Docs(Router.readFromSpace(AND_INST_TID.addQ(DOCQ)).asRec());
         assertTrue(doc.test(DOCQ_TYPE));
-        assertTrue("and() documentation has latex formatting in its description", doc.description().contains("\\("));
+        assertTrue(doc.description().contains("\\("),"and() documentation has latex formatting in its description");
         assertEquals(doc.at(DESC).strValue(), doc.description());
         assertEquals(inst, doc.at(OBJ));
     }

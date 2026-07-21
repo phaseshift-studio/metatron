@@ -36,6 +36,7 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.DOCQ;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
+import static studio.phaseshift.metatron.isa.m.type.Inst.INST_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
@@ -59,6 +60,12 @@ public interface QProc extends Rec {
     Type QPROC_TYPE = Type.Builder.build()
             .tid(REC_TID)
             .vid(QPROC_TID)
+            .isaPredicate(rec(uri(PATTERN), T(URI_TID),
+                    uri(PRE_WRITE.maybe()), INST_TYPE,
+                    uri(POST_WRITE.maybe()), T(M_ISA_INST_TID),
+                    uri(QLESS_WRITE.maybe()), T(M_ISA_INST_TID),
+                    uri(PRE_READ.maybe()), ALL_TYPE,
+                    uri(POST_READ.maybe()), T(M_ISA_INST_TID)))
             .constructor(instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(QPROC_TID),
                     lst(rec(uri(PATTERN), T(URI_TID),
                             uri(PRE_WRITE.maybe()), T(M_ISA_INST_TID),

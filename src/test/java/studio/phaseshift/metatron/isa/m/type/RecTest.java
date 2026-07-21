@@ -818,8 +818,8 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
             // filter: non-matching → noobj
             "[a=>1] =?= [a=>2]                                  % noobj",
             // filter with instruction
-            "[a=>1] =?= [a=>?=1]                                % [a=>1]",
-            "[a=>2] =?= [a=>?=1]                                % noobj",
+            "[a=>1] =?= [a=>?1]                                % [a=>1]",
+            "[a=>2] =?= [a=>?1]                                % noobj",
     }, delimiter = '%')
     public void testWhere(final String expression, final String expected) {
         final Obj result = ObjmtronSerializer.parse(expression).apply();

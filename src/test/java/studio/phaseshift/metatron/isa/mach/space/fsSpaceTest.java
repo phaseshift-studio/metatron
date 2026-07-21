@@ -40,7 +40,7 @@ import studio.phaseshift.metatron.util.MTronException;
 import java.io.File;
 import java.nio.file.FileSystems;
 
-import static junit.framework.TestCase.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
