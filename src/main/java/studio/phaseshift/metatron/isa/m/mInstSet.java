@@ -28,11 +28,9 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.Sugar;
-import studio.phaseshift.metatron.isa.m.space.estoreSpace;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MCode;
-import studio.phaseshift.metatron.isa.mach.type.Router;
 
 import java.util.*;
 import java.util.stream.Stream;
@@ -409,7 +407,7 @@ public class mInstSet extends AbstractInstSet {
                                                         (lhs, inst) -> memSpace.of(inst.arg(0).asRec(), inst.arg(0).vid()))).create(), "", "",
                                 Map.of(uri(DATA).maybe(), "a file location to save space state (reads on creation and writes on close)"),
                                 "an in-memory space with objs indexed by a topic trie"),
-                        docWrap(ESTORE_SPACE_TYPE = Type.Builder.build()
+                        /*docWrap(ESTORE_SPACE_TYPE = Type.Builder.build()
                                         .tid(SPACE_TID)
                                         .vid(ESTORE_SPACE_TID)
                                         // .isaPredicate(rec(uri(DATA).maybe().asUri(), URI_TYPE).maybe())
@@ -418,7 +416,7 @@ public class mInstSet extends AbstractInstSet {
                                                         lst(isa_(REC_TYPE).tryToInst()),
                                                         (lhs, inst) -> estoreSpace.of(inst.arg(0).asRec(), inst.arg(0).vid()))).create(), "", "",
                                 Map.of(uri(DATA).maybe(), "a file location to save space state (reads on creation and writes on close)"),
-                                "an in-memory space with objs indexed by a topic trie"),
+                                "an in-memory space with objs indexed by a topic trie"),*/
                         docWrap(STACK_SPACE_TYPE, "a thread local stack used for global variables and machine inst frames",
                                 "2.to(a).plus(from(a))     [-- 4 via writing/reading a         --]",
                                 "a->2+*a                   [-- 4 via sugar'd writing/reading a --]"),
