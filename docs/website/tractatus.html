@@ -202,13 +202,10 @@ bin/metatron</code></pre>
                 <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark" aria-labelledby="articles-dropdown">
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
                            onclick="location.href='./articles/stream-ring-theory.pdf';"><i class="bi bi-gem icon-color me-2 isa-row"></i>stream ring theory</a></li>
-                    <li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
                            onclick="location.href='./articles/parametric-identities-in-ring-theory.html';"><i class="bi bi-arrow-repeat icon-color me-2 isa-row"></i>parametric identities</a></li>
-                    <li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='./articles/mm-adt.pdf';"><i class="bi bi-layout-wtf icon-color me-2 isa-row"></i>mm-adt (metatron precursor)</a></li>
-                    <li>
+                           onclick="location.href='./articles/mm-adt.mhtml';"><i class="bi bi-layout-wtf icon-color me-2 isa-row"></i>mm-adt (metatron precursor)</a></li>
                 </ul>
             </li>
             <!----------------------------------------------------------------------------------------------------------
@@ -2527,7 +2524,7 @@ The predicate component of the type definition tests an <code>int</code> to dete
 <div class="paragraph">
 <p>While every <code>type</code> is an <code>obj</code>, not every <code>obj</code> is a <code>type</code>.
 Those <code>objs</code> that are not <code>types</code> are <em>instances</em> of some <code>type</code>.
-This is the foundation for all other <code>objs</code> in {{m}}M{{c}}e{{c}}T{{y}}A{{c}}t{{r}}R{{g}}o{{m}}N{{X}}.</p>
+This is the foundation for all other <code>objs</code> in {{m}}M{{g}}e{{g}}t{{b}}A{{r}}t{{m}}R{{c}}o{{g}}N{{X}}.</p>
 </div>
 <h4 id="sec-cascading-type-constructions" class="discrete">cascading type constructions</h4>
 <h3 id="sec-mono-types" class="discrete">mono types</h3>
@@ -5041,10 +5038,10 @@ mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T).as(str::T)     ​5​
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; bin:bash('-c',df)
 ==&gt;'Filesystem             1K-blocks      Used  Available Use% Mounted on'
-==&gt;'tmpfs                    6356184      6112    6350072   1% /run'
+==&gt;'tmpfs                    6356184      6268    6349916   1% /run'
 ==&gt;'efivarfs                     128        42         82  34% /sys/firmware/efi/efivars'
-==&gt;'/dev/nvme0n1p2         959786032 538444596  372513228  60% /'
-==&gt;'tmpfs                   31780908    632816   31148092   2% /dev/shm'
+==&gt;'/dev/nvme0n1p2         959786032 538472316  372485508  60% /'
+==&gt;'tmpfs                   31780908    660264   31120644   3% /dev/shm'
 ==&gt;'tmpfs                       5120        20       5100   1% /run/lock'
 ==&gt;'tmpfs                   31780908         0   31780908   0% /run/qemu'
 ==&gt;'/dev/nvme0n1p1            523248      6288     516960   2% /boot/efi'
@@ -5673,7 +5670,7 @@ mtron&gt; *g:V/+.=?=[address=&gt;[_ =&gt; [state=&gt;NM]]]     ​4​
 ==&gt;fail{2}::[lhs range does not match inst domain: vrtx::T[?[name=&gt;str::T,lang=&gt;str::T]]@software =&gt; vrtx::T[?[&lt;&gt;=&gt;rel{2}::T]] [where?dom=vrtx([address=&gt;[id()=&gt;[state=&gt;NM]]])@&lt;1&gt;]]@/sys/fail/14
 ==&gt;fail{5}::[lhs range does not match inst domain: vrtx::T[?[age=&gt;int::T,name=&gt;str::T,city=&gt;str::T]]@person =&gt; vrtx::T[?[&lt;&gt;=&gt;rel{2}::T]] [where?dom=vrtx([address=&gt;[id()=&gt;[state=&gt;NM]]])@&lt;1&gt;]]@/sys/fail/18
 mtron&gt; *g:V/+.=?=[address=&gt;[_ =&gt; [state=&gt;NM]]].&gt;&gt;address/+/city     ​5​
-==&gt;fail::[mAChinE fAiLed]@/sys/fail/46[...]</code></pre>
+==&gt;fail::[mAChINE FAILEd]@/sys/fail/46[...]</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -8216,7 +8213,7 @@ mtron&gt; *lite:venue/2/parent/location     ​3​
 <div class="content">
 <h4 id="_foreign_key_internals" class="discrete">foreign key internals</h4>
 <div class="paragraph">
-<p>A <code>tblespace</code> has two storage layers for foreign key pointers. The cell value itself is a plain <code>INTEGER</code> column — no <code>REFERENCES</code> clause, no proprietary SQL type. Routing metadata lives in a single companion table.</p>
+<p>A <code>tblespace</code> has two storage layers for foreign key pointers. The cell value itself is a plain <code>INTEGER</code> column — no <code>REFERENCES</code> clause, no proprietary SQL type. Routing metadata, column types, and table-level type identity live in a single companion table.</p>
 </div>
 <h5 id="sec-mtronmeta-table" class="discrete">_mtron_meta table</h5>
 <div class="listingblock center-code">
@@ -8224,43 +8221,72 @@ mtron&gt; *lite:venue/2/parent/location     ​3​
 <pre class="highlight"><code class="language-sql" data-lang="sql">CREATE TABLE _mtron_meta (
     table_name  VARCHAR(255) NOT NULL,
     column_name VARCHAR(255) NOT NULL,
-    ref_table   VARCHAR(512) NOT NULL,
+    base_vid    VARCHAR(128) NOT NULL,
+    obj_tid     VARCHAR(512),
+    ref_table   VARCHAR(512),
     PRIMARY KEY (table_name, column_name)
 );</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>Each <code>auto_from</code> column gets a row in <code>_mtron_meta</code>:</p>
+<p>Every column touched by metatron gets a row. <code>base_vid</code> stores the root type (<code>/m/uri</code>, <code>/m/int</code>, <code>/m/str</code>, &#8230;&#8203;) and drives SQL DDL. <code>obj_tid</code> stores the full mtron type refinement (<code>/m/math/nat</code>, <code>/m/lst[uri]</code>, &#8230;&#8203;) and is used at read time to reconstruct typed values without heuristic guessing. <code>ref_table</code> is <code>NULL</code> unless the column is a foreign key.</p>
 </div>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
-<col style="width: 33.3333%;">
-<col style="width: 33.3333%;">
-<col style="width: 33.3334%;">
+<col style="width: 20%;">
+<col style="width: 20%;">
+<col style="width: 20%;">
+<col style="width: 20%;">
+<col style="width: 20%;">
 </colgroup>
 <tbody>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>table_name</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>column_name</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>base_vid</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>obj_tid</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>ref_table</code></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>award</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>$table</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/m/rec</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/m/rec</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>NULL</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>award</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>trophy</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/m/str</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/m/str</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>NULL</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>award</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>recipient</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/m/int</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/m/inst/auto_from</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>person</code></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>venue</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>location</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/m/int</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/m/inst/auto_from</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>area:V</code></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>venue</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>parent</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/m/int</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/m/inst/auto_from</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>venue</code></p></td>
 </tr>
 </tbody>
 </table>
+<div class="paragraph">
+<p>The <code>$table</code> sentinel row (<code>column_name = '$table'</code>) records the table-level <code>tid</code>, captured from the <code>rec</code> written on first-insert. This lets the schema <code>instset</code> infer e.g. <code>person::T</code> instead of a generic <code>rec::T</code>, without requiring an explicit type declaration.</p>
+</div>
 <h5 id="sec-intra-vs-inter-space-discrimination" class="discrete">intra- vs. inter-space discrimination</h5>
 <div class="paragraph">
 <p>On <strong>write</strong>, the cell uri is tested against the space&#8217;s pattern:</p>
@@ -8304,8 +8330,8 @@ mtron&gt; *lite:venue/2/parent/location     ​3​
 <div class="paragraph">
 <p>The foreign key column is a bare <code>INTEGER</code> (or <code>TEXT</code> for string keys). There are no SQL <code>FOREIGN KEY</code>
 constraints and the <code>_mtron_meta</code> table is the only metatron-specific schema artifact.
-If the database is queried by external SQL tooling, FK columns appear as ordinary integers
-and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or encoded.</p>
+If the database is queried by external SQL tooling, FK columns appear as ordinary integers,
+<code>_mtron_meta</code> is a readable lookup table, and column types are self-documenting via <code>base_vid</code>/<code>obj_tid</code> — nothing is opaque or encoded.</p>
 </div>
 </div>
 </div>
@@ -8428,12 +8454,12 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
 ==&gt;/sys/env/BUN_INSTALL=&gt;'/home/killswitch/.bun'
 ==&gt;/sys/env/JAVA_HOME=&gt;'/home/killswitch/.sdkman/candidates/java/current'
 ==&gt;/sys/env/QT_IM_MODULE=&gt;'ibus'
-==&gt;/sys/env/GNOME_TERMINAL_SCREEN=&gt;'/org/gnome/Terminal/screen/c649f7f5_f490_4420_81d7_a1f62a4e2408'
 ==&gt;/sys/env/GNOME_DESKTOP_SESSION_ID=&gt;'this-is-deprecated'
 ==&gt;/sys/env/PATH=&gt;'/home/killswitch/.local/bin:/home/killswitch/.bun/bin:/home/killswitch/.npm-global/bin:/usr:/opt/rocm-6.4.0/bin:/opt/rocm/bin:/home/killswitch/.opencode/bin:/home/killswitch/.sdkman/candidates/tornadovm/current/bin:/home/killswitch/software/miniconda3/bin:/home/killswitch/.sdkman/candidates/tornadovm/current/bin:/home/killswitch/.sdkman/candidates/maven/current/bin:/home/killswitch/.sdkman/candidates/jbang/current/bin:/home/killswitch/.sdkman/candidates/java/current/bin:/home/killswitch/.local/bin:/home/killswitch/.elan/bin:/home/killswitch/.cargo/bin:/home/killswitch/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/home/killswitch/.lmstudio/bin:/home/killswitch/software/ijhttp:/home/killswitch/.surrealdb:/home/killswitch/.lmstudio/bin:/home/killswitch/go/bin'
 ==&gt;/sys/env/JBANG_HOME=&gt;'/home/killswitch/.sdkman/candidates/jbang/current'
 ==&gt;/sys/env/USER=&gt;'killswitch'
-==&gt;/sys/env/LIBVIRT_DEFAULT_URI=&gt;'qemu:///system'</code></pre>
+==&gt;/sys/env/LIBVIRT_DEFAULT_URI=&gt;'qemu:///system'
+==&gt;/sys/env/XDG_SEAT=&gt;'seat0'</code></pre>
 </div>
 </div>
 <h3 id="sec-boot-loader" class="discrete">Boot Loader</h3>
