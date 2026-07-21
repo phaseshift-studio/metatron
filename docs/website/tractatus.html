@@ -2524,7 +2524,7 @@ The predicate component of the type definition tests an <code>int</code> to dete
 <div class="paragraph">
 <p>While every <code>type</code> is an <code>obj</code>, not every <code>obj</code> is a <code>type</code>.
 Those <code>objs</code> that are not <code>types</code> are <em>instances</em> of some <code>type</code>.
-This is the foundation for all other <code>objs</code> in {{m}}M{{r}}E{{g}}T{{b}}a{{b}}T{{c}}r{{b}}o{{g}}n{{X}}.</p>
+This is the foundation for all other <code>objs</code> in {{m}}m{{m}}e{{b}}T{{g}}a{{c}}t{{m}}r{{m}}o{{y}}n{{X}}.</p>
 </div>
 <h4 id="sec-cascading-type-constructions" class="discrete">cascading type constructions</h4>
 <h3 id="sec-mono-types" class="discrete">mono types</h3>
@@ -5038,14 +5038,14 @@ mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T).as(str::T)     ​5​
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; bin:bash('-c',df)
 ==&gt;'Filesystem             1K-blocks      Used  Available Use% Mounted on'
-==&gt;'tmpfs                    6356184      6164    6350020   1% /run'
+==&gt;'tmpfs                    6356184      6168    6350016   1% /run'
 ==&gt;'efivarfs                     128        42         82  34% /sys/firmware/efi/efivars'
-==&gt;'/dev/nvme0n1p2         959786032 538577672  372380152  60% /'
-==&gt;'tmpfs                   31780908    702412   31078496   3% /dev/shm'
+==&gt;'/dev/nvme0n1p2         959786032 538581424  372376400  60% /'
+==&gt;'tmpfs                   31780908    695004   31085904   3% /dev/shm'
 ==&gt;'tmpfs                       5120        20       5100   1% /run/lock'
 ==&gt;'tmpfs                   31780908         0   31780908   0% /run/qemu'
 ==&gt;'/dev/nvme0n1p1            523248      6288     516960   2% /boot/efi'
-==&gt;'tmpfs                    6356180       392    6355788   1% /run/user/1000'
+==&gt;'tmpfs                    6356180       404    6355776   1% /run/user/1000'
 ==&gt;'/dev/nvme1n1p2         976744444 252064724  724679720  26% /media/hdd0'
 ==&gt;'//192.168.1.72/beast1 2112645040 713954028 1398691012  34% /srv/beast/hdd1'
 mtron&gt; bin:bash('-c',ls)
@@ -5670,7 +5670,7 @@ mtron&gt; *g:V/+.=?=[address=&gt;[_ =&gt; [state=&gt;NM]]]     ​4​
 ==&gt;fail{2}::[lhs range does not match inst domain: vrtx::T[?[name=&gt;str::T,lang=&gt;str::T]]@software =&gt; vrtx::T[?[&lt;&gt;=&gt;rel{2}::T]] [where?dom=vrtx([address=&gt;[id()=&gt;[state=&gt;NM]]])@&lt;1&gt;]]@/sys/fail/14
 ==&gt;fail{5}::[lhs range does not match inst domain: vrtx::T[?[age=&gt;int::T,name=&gt;str::T,city=&gt;str::T]]@person =&gt; vrtx::T[?[&lt;&gt;=&gt;rel{2}::T]] [where?dom=vrtx([address=&gt;[id()=&gt;[state=&gt;NM]]])@&lt;1&gt;]]@/sys/fail/18
 mtron&gt; *g:V/+.=?=[address=&gt;[_ =&gt; [state=&gt;NM]]].&gt;&gt;address/+/city     ​5​
-==&gt;fail::[MACHINe fAileD]@/sys/fail/46[...]</code></pre>
+==&gt;fail::[machINe fAilED]@/sys/fail/46[...]</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -8458,12 +8458,12 @@ If the database is queried by external SQL tooling, FK columns appear as ordinar
 ==&gt;/sys/env/BUN_INSTALL=&gt;'/home/killswitch/.bun'
 ==&gt;/sys/env/JAVA_HOME=&gt;'/home/killswitch/.sdkman/candidates/java/current'
 ==&gt;/sys/env/QT_IM_MODULE=&gt;'ibus'
-==&gt;/sys/env/GNOME_TERMINAL_SCREEN=&gt;'/org/gnome/Terminal/screen/c649f7f5_f490_4420_81d7_a1f62a4e2408'
 ==&gt;/sys/env/GNOME_DESKTOP_SESSION_ID=&gt;'this-is-deprecated'
 ==&gt;/sys/env/PATH=&gt;'/home/killswitch/.local/bin:/home/killswitch/.bun/bin:/home/killswitch/.npm-global/bin:/usr:/opt/rocm-6.4.0/bin:/opt/rocm/bin:/home/killswitch/.opencode/bin:/home/killswitch/.sdkman/candidates/tornadovm/current/bin:/home/killswitch/software/miniconda3/bin:/home/killswitch/.sdkman/candidates/tornadovm/current/bin:/home/killswitch/.sdkman/candidates/maven/current/bin:/home/killswitch/.sdkman/candidates/jbang/current/bin:/home/killswitch/.sdkman/candidates/java/current/bin:/home/killswitch/.local/bin:/home/killswitch/.elan/bin:/home/killswitch/.cargo/bin:/home/killswitch/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/home/killswitch/.lmstudio/bin:/home/killswitch/software/ijhttp:/home/killswitch/.surrealdb:/home/killswitch/.lmstudio/bin:/home/killswitch/go/bin'
 ==&gt;/sys/env/JBANG_HOME=&gt;'/home/killswitch/.sdkman/candidates/jbang/current'
 ==&gt;/sys/env/USER=&gt;'killswitch'
-==&gt;/sys/env/LIBVIRT_DEFAULT_URI=&gt;'qemu:///system'</code></pre>
+==&gt;/sys/env/LIBVIRT_DEFAULT_URI=&gt;'qemu:///system'
+==&gt;/sys/env/XDG_SEAT=&gt;'seat0'</code></pre>
 </div>
 </div>
 <h3 id="sec-boot-loader" class="discrete">Boot Loader</h3>

@@ -36,7 +36,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs0;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.tble.tbleInstSet.LST_ROW_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.LST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
 
 /**
@@ -509,7 +509,7 @@ public class ObjSQLSerializer extends AbstractObjSerializer<Object> {
                 final int sqlType = metaData.getColumnType(i);
                 rowData.add(readColumnStatic(rs, i, sqlType));
             }
-            rows.add(lst(rowData, LST_ROW_TID, null));
+            rows.add(lst(rowData, LST_TID, null));
             count++;
         }
         return rows;

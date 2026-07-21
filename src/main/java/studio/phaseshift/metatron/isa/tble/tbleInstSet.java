@@ -26,8 +26,8 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.*;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSQLSerializer;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.tble.schema.SQLRewriteUtils;
 import studio.phaseshift.metatron.util.MTronException;
@@ -43,10 +43,8 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -68,26 +66,12 @@ public class tbleInstSet extends AbstractInstSet {
     public static final fURI TBLE_ISA_TID = M_ISA_TID.extend("tble");
     public static final fURI TBLE_ISA_INST_TID = TBLE_ISA_TID.extend("inst");
     public static final fURI TBLE_ISA_REWRITE_TID = TBLE_ISA_INST_TID.extend("rewrite");
-    public static final fURI LST_ROW_TID = TBLE_ISA_TID.extend("lrow");
-    public static final fURI REC_ROW_TID = TBLE_ISA_TID.extend("rrow");
     public static final fURI TABLE_TID = TBLE_ISA_TID.extend("table");
-
-
-    public static final Type LST_ROW_TYPE = Type.Builder.build()
-            .tid(LST_TID)
-            .vid(LST_ROW_TID)
-            .create();
-
-    public static final Type REC_ROW_TYPE = Type.Builder.build()
-            .tid(REC_TID)
-            .vid(REC_ROW_TID)
-            .isaPredicate(rec(URI_TYPE, T(ALL)))
-            .create();
 
     public static final Type TABLE_TYPE = Type.Builder.build()
             .tid(URI_TID)
             .vid(TABLE_TID)
-            .predicate(isa_(T(LST_ROW_TID.maybeSome())).tryToInst())
+            .isaPredicate(T(REC_TID.maybeSome()))
             .create();
 
 
@@ -132,21 +116,9 @@ public class tbleInstSet extends AbstractInstSet {
                                         REC_TID, TBLE_ISA_TID.extend("helper")),
                                 "a collection of tble related utilities")),
                 uri(TYPE), lst(
-                        docWrap(LST_ROW_TYPE, "a table row indexed by column number"),
-                        docWrap(REC_ROW_TYPE, "a table row indexed by column name"),
                         docWrap(TABLE_TYPE, "a stream of equally wide rows"),
                         docWrap(TBLE_SPACE_TYPE, "a metatron realization of a relational database")),
                 uri(INST), lst(Stream.of(
-                        docWrap(instC(AS_INST_TID.dom(LST_ROW_TID).rng(REC_ROW_TID), lst(REC_ROW_TYPE), (lhs, inst) -> lhs.asRec().at(uri(TABLE))),
-                                "a table row indexed by column number",
-                                "a table row indexed by column name",
-                                Map.of(),
-                                "maps a lst row to a rec row"),
-                        docWrap(instC(AS_INST_TID.dom(REC_ROW_TID).rng(LST_ROW_TID), lst(LST_ROW_TYPE), (lhs, inst) -> lst(lhs.asRec().elements().map(Rel::second).toList(), LST_ROW_TID, null)),
-                                "a table row indexed by column name",
-                                "a table row indexed by column number",
-                                Map.of(),
-                                "maps a rec row to a lst row"),
                         docWrap(instC(SQL_INST_TID.dom(TBLE_SPACE_TID).rng(REC_TID.maybeSome()), lst(STR_TYPE), (lhs, inst) ->
                                     MTronException.wrap(() -> lhs.<tbleSpace>as().sql(inst.arg(0).strValue()))
                                 ), "a table space typically backed by an sql-compliant relational database",
