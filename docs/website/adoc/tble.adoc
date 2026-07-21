@@ -262,7 +262,7 @@ lite:venue/2 -> [name=>'side_hall',location=>!*g:V/1,parent=>!*lite:venue/1]    
 --
 [discrete,.center]
 ==== foreign key internals
-A `tblespace` has two storage layers for foreign key pointers. The cell value itself is a plain `INTEGER` column — no `REFERENCES` clause, no proprietary SQL type. Routing metadata lives in a single companion table.
+A `tblespace` has two storage layers for foreign key pointers. The cell value itself is a plain `INTEGER` column — no `REFERENCES` clause, no proprietary SQL type. Routing metadata, column types, and table-level type identity live in a single companion table.
 
 [discrete]
 ===== _mtron_meta table
@@ -272,19 +272,25 @@ A `tblespace` has two storage layers for foreign key pointers. The cell value it
 CREATE TABLE _mtron_meta (
     table_name  VARCHAR(255) NOT NULL,
     column_name VARCHAR(255) NOT NULL,
-    ref_table   VARCHAR(512) NOT NULL,
+    base_vid    VARCHAR(128) NOT NULL,
+    obj_tid     VARCHAR(512),
+    ref_table   VARCHAR(512),
     PRIMARY KEY (table_name, column_name)
 );
 ----
 
-Each `auto_from` column gets a row in `_mtron_meta`:
+Every column touched by metatron gets a row. `base_vid` stores the root type (`/m/uri`, `/m/int`, `/m/str`, ...) and drives SQL DDL. `obj_tid` stores the full mtron type refinement (`/m/math/nat`, `/m/lst[uri]`, ...) and is used at read time to reconstruct typed values without heuristic guessing. `ref_table` is `NULL` unless the column is a foreign key.
 
 |===
-| `table_name` | `column_name` | `ref_table`
-| `award`      | `recipient`   | `person`
-| `venue`      | `location`    | `area:V`
-| `venue`      | `parent`      | `venue`
+| `table_name` | `column_name` | `base_vid` | `obj_tid`      | `ref_table`
+| `award`      | `$table`      | `/m/rec`   | `/m/rec`       | `NULL`
+| `award`      | `trophy`      | `/m/str`   | `/m/str`       | `NULL`
+| `award`      | `recipient`   | `/m/int`   | `/m/inst/auto_from` | `person`
+| `venue`      | `location`    | `/m/int`   | `/m/inst/auto_from` | `area:V`
+| `venue`      | `parent`      | `/m/int`   | `/m/inst/auto_from` | `venue`
 |===
+
+The `$table` sentinel row (`column_name = '$table'`) records the table-level `tid`, captured from the `rec` written on first-insert. This lets the schema `instset` infer e.g. `person::T` instead of a generic `rec::T`, without requiring an explicit type declaration.
 
 [discrete]
 ===== intra- vs. inter-space discrimination
@@ -316,6 +322,6 @@ On **read**, the `ref_table` value is checked for a colon:
 
 The foreign key column is a bare `INTEGER` (or `TEXT` for string keys). There are no SQL `FOREIGN KEY`
 constraints and the `_mtron_meta` table is the only metatron-specific schema artifact.
-If the database is queried by external SQL tooling, FK columns appear as ordinary integers
-and `_mtron_meta` is a readable lookup table — nothing is opaque or encoded.
+If the database is queried by external SQL tooling, FK columns appear as ordinary integers,
+`_mtron_meta` is a readable lookup table, and column types are self-documenting via `base_vid`/`obj_tid` — nothing is opaque or encoded.
 --

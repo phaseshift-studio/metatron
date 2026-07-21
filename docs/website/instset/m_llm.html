@@ -203,13 +203,10 @@ bin/metatron</code></pre>
                 <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark" aria-labelledby="articles-dropdown">
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
                            onclick="location.href='../articles/stream-ring-theory.pdf';"><i class="bi bi-gem icon-color me-2 isa-row"></i>stream ring theory</a></li>
-                    <li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
                            onclick="location.href='../articles/parametric-identities-in-ring-theory.html';"><i class="bi bi-arrow-repeat icon-color me-2 isa-row"></i>parametric identities</a></li>
-                    <li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='../articles/mm-adt.pdf';"><i class="bi bi-layout-wtf icon-color me-2 isa-row"></i>mm-adt (metatron precursor)</a></li>
-                    <li>
+                           onclick="location.href='../articles/mm-adt.mhtml';"><i class="bi bi-layout-wtf icon-color me-2 isa-row"></i>mm-adt (metatron precursor)</a></li>
                 </ul>
             </li>
             <!----------------------------------------------------------------------------------------------------------
@@ -409,9 +406,9 @@ bin/metatron</code></pre>
     <p class="mb-0 text-light">an agent is an llm enriched with embodied capabilities</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#feature" class="text-light">feature</a> <span class="text-light">=&gt;</span> <a href="#'the ordered lst of capabilities attached to the agent'" class="text-info">&#39;the ordered lst of capabilities attached to the agent&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#desc" class="text-light">desc</a> <span class="text-light">=&gt;</span> <a href="#'a description of the agent given to the agent in their system prompt'" class="text-info">&#39;a description of the agent given to the agent in their system prompt&#39;</a>
   <a href="#name" class="text-light">name</a> <span class="text-light">=&gt;</span> <a href="#'a convenient name for the agent'" class="text-info">&#39;a convenient name for the agent&#39;</a>
-  <a href="#desc" class="text-light">desc</a> <span class="text-light">=&gt;</span> <a href="#'a description of the agent given to the agent in their system prompt'" class="text-info">&#39;a description of the agent given to the agent in their system prompt&#39;</a>
+  <a href="#feature" class="text-light">feature</a> <span class="text-light">=&gt;</span> <a href="#'the ordered lst of capabilities attached to the agent'" class="text-info">&#39;the ordered lst of capabilities attached to the agent&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__llm__message__ai">
@@ -648,13 +645,13 @@ bin/metatron</code></pre>
     <p class="mb-0 text-light">populate a model reference rec using data from the ai provider&#39;s http-endpoint</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#host" class="text-light">host</a> <span class="text-light">=&gt;</span> <a href="#"the ai model provider's http rest endpoint"" class="text-info">&quot;the ai model provider&#39;s http rest endpoint&quot;</a>
-  <a href="#llm" class="text-light">llm</a> <span class="text-light">=&gt;</span> <a href="#'the name of a model offered by the ai provider'" class="text-info">&#39;the name of a model offered by the ai provider&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}provider" class="text-light">{?}provider</a> <span class="text-light">=&gt;</span> <a href="#'optional name of ai model provider'" class="text-info">&#39;optional name of ai model provider&#39;</a>
   <a href="#{?}quant" class="text-light">{?}quant</a> <span class="text-light">=&gt;</span> <a href="#'the level of quantization of the model'" class="text-info">&#39;the level of quantization of the model&#39;</a>
-  <a href="#{?}provider" class="text-light">{?}provider</a> <span class="text-light">=&gt;</span> <a href="#'optional name of ai model provider'" class="text-info">&#39;optional name of ai model provider&#39;</a>
-  <a href="#{?}cost" class="text-light">{?}cost</a> <span class="text-light">=&gt;</span> <a href="#'the cost per million tokens to use this llm (in__out costs)'" class="text-info">out costs)&#39;</a>
-  <a href="#{?}size" class="text-light">{?}size</a> <span class="text-light">=&gt;</span> <a href="#'the size of the model'" class="text-info">&#39;the size of the model&#39;</a>
+  <a href="#llm" class="text-light">llm</a> <span class="text-light">=&gt;</span> <a href="#'the name of a model offered by the ai provider'" class="text-info">&#39;the name of a model offered by the ai provider&#39;</a>
+  <a href="#host" class="text-light">host</a> <span class="text-light">=&gt;</span> <a href="#"the ai model provider's http rest endpoint"" class="text-info">&quot;the ai model provider&#39;s http rest endpoint&quot;</a>
   <a href="#protocol" class="text-light">protocol</a> <span class="text-light">=&gt;</span> <a href="#'the http rest endpoint protocol (ollama, openai, anthropic)'" class="text-info">&#39;the http rest endpoint protocol (ollama, openai, anthropic)&#39;</a>
+  <a href="#{?}size" class="text-light">{?}size</a> <span class="text-light">=&gt;</span> <a href="#'the size of the model'" class="text-info">&#39;the size of the model&#39;</a>
+  <a href="#{?}cost" class="text-light">{?}cost</a> <span class="text-light">=&gt;</span> <a href="#'the cost per million tokens to use this llm (in__out costs)'" class="text-info">out costs)&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
