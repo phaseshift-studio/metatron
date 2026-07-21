@@ -70,7 +70,7 @@
         <jlama.version>0.8.4</jlama.version>
         <gson.version>2.14.0</gson.version>
         <petitparser.version>2.4.0</petitparser.version>
-        <jline.version>3.30.15</jline.version>
+        <jline.version>3.30.16</jline.version>
         <rdf4j.version>6.0.0</rdf4j.version>
         <logback.version>1.5.38</logback.version>
         <slf4j.version>2.0.18</slf4j.version>
@@ -89,7 +89,7 @@
         <jserialcomm.version>2.11.4</jserialcomm.version>
         <rhino.version>1.9.1</rhino.version>
         <rhino.j2r223.version>1.7.14</rhino.j2r223.version>
-        <sqlite.version>3.53.2.0</sqlite.version>
+        <sqlite.version>3.53.2.1</sqlite.version>
         <mcp.version>2.0.0</mcp.version>
         <zt.version>1.13.0</zt.version>
         <treesitter.version>1.12.0</treesitter.version>
