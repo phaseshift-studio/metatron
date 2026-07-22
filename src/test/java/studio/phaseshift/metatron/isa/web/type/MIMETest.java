@@ -22,7 +22,7 @@ import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.isa.dcmnt.schema.storage.ObjBSONSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjJavaSerializer;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
+import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.web.parser.ObjHTMLSerializer;
 
@@ -101,7 +101,7 @@ class MIMETest extends AbstractMetatronTest {
     @Test
     void testSerializer() {
         assertInstanceOf(ObjmtronSerializer.class, MIME.MIMEType.APPLICATION_MTRON.serializer());
-        assertInstanceOf(ObjSimpleJSONSerializer.class, MIME.MIMEType.APPLICATION_JSON.serializer());
+        assertInstanceOf(ObjJSONSerializer.class, MIME.MIMEType.APPLICATION_JSON.serializer());
         assertInstanceOf(ObjHTMLSerializer.class, MIME.MIMEType.TEXT_HTML.serializer());
         assertInstanceOf(ObjBSONSerializer.class, MIME.MIMEType.APPLICATION_BSON.serializer());
         assertInstanceOf(ObjJavaSerializer.class, MIME.MIMEType.TEXT_JAVA.serializer());

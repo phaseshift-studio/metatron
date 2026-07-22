@@ -31,7 +31,7 @@ import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
+import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.util.IteratorUtil;
 
@@ -95,7 +95,7 @@ public class dcmntInstSet extends AbstractInstSet {
     public void setup() {
         this.jvm().putAll(mutableMap(
                 uri(PATTERN), uri(DCMNT_ISA_TID.extend(ALL)),
-                uri(CONSTQ), lst(ObjSimpleJSONSerializer.single(), uri(ID_FIELD, URI_TID, DCMNT_ISA_TID.extend(ID_FIELD))),
+                uri(CONSTQ), lst(ObjJSONSerializer.single(), uri(ID_FIELD, URI_TID, DCMNT_ISA_TID.extend(ID_FIELD))),
                 uri(TYPE), lst(
                         COLLECTION_TYPE,
                         DCMNT_SPACE_TYPE = docWrap(Type.Builder.build()

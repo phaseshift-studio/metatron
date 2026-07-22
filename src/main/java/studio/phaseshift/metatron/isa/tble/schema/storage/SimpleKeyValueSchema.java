@@ -20,7 +20,7 @@ package studio.phaseshift.metatron.isa.tble.schema.storage;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
+import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -106,7 +106,7 @@ public class SimpleKeyValueSchema implements TableSchema {
         final List<Space.IdObj> results = new ArrayList<>();
 
         while (rs.next()) {
-            results.add(Space.IdObj.of(f(rs.getString("furi")), ObjSimpleJSONSerializer.parse(rs.getString("obj"))));
+            results.add(Space.IdObj.of(f(rs.getString("furi")), ObjJSONSerializer.simple().inputBytes(rs.getString("obj"))));
         }
 
         rs.close();

@@ -35,7 +35,7 @@ import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.web.type.MIME;
 import studio.phaseshift.metatron.isa.m.math.mathInstSet;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
+import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
@@ -300,7 +300,7 @@ public class Agent extends MRec {
                         final boolean formatted = !responseFormat.isNoObj();
                         final Obj chatResult;
                         if (formatted) {
-                            chatResult = ObjSimpleJSONSerializer.single().inputBytes(fullText);
+                            chatResult = ObjJSONSerializer.simple().inputBytes(fullText);
                         } else {
                             // Parse <<TYPE:KEY>>...<</TYPE:KEY>> blocks into res(KEY), strip from chat
                             final Matcher blockMatcher = MTRON_BLOCK.matcher(fullText);

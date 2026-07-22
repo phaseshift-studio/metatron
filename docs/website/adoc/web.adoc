@@ -86,7 +86,7 @@ When the REST resource is manipulated to fit the structural specification of `mo
 *<http://localhost:11434/api/tags/0>.>>data/1.          /
   -<[provider=> ollama,                                 /
      protocol=> ollama,                                 /
-     host    => <http://localhost:11434>                /
+     host    => <http://localhost:11434>,               /
      name    => >>id.as(uri::T)].as(model::T)           /
   .chat('are you there?') 
 ----

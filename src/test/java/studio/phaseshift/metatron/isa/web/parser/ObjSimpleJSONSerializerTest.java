@@ -22,7 +22,7 @@ import com.google.gson.JsonElement;
 import studio.phaseshift.metatron.AbstractSerializerTest;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
+import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 
 /*
@@ -30,7 +30,7 @@ import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
  */
 public class ObjSimpleJSONSerializerTest  extends AbstractSerializerTest<JsonElement> {
     public ObjSimpleJSONSerializerTest() {
-        super(new ObjSimpleJSONSerializer());
+        super(ObjJSONSerializer.simple());
     }
 
     public boolean ignoreFail(final String toSerialize) {

@@ -85,7 +85,7 @@ public class httpSpace extends AbstractSpace<HttpServer> {
                     lst(T(REC_TID, isa_(CONFIG))), (lhs, inst) -> httpSpace.of(inst.arg(0).asRec(), inst.arg(0).vid()))).create();
 
     private final memSpace cache;
-    private static final ObjJSONSerializer JSON_TRANSLATOR = new ObjJSONSerializer();
+    private static final ObjJSONSerializer JSON_TRANSLATOR = ObjJSONSerializer.simple();
 
     public static final Type HTTP_HANDLER_TYPE = Type.Builder.build()
             .tid(HTTP_SOCKET_TID)

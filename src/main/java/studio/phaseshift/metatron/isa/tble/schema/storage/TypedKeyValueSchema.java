@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -23,6 +23,7 @@ import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.tble.tbleSpace;
+import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -39,10 +40,10 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 /**
  * Typed key-value schema that stores primitive types (Bool, Int, Real, Str) natively
  * and complex types (Inst, Code, Rec, Lst, etc.) as strings using ObjmtronSerializer.
- *
+ * <p>
  * This provides an isomorphic, error-free mapping between Metatron objects and SQL,
  * avoiding JSON conversion peculiarities.
- *
+ * <p>
  * Table structure:
  * - furi: VARCHAR(512) PRIMARY KEY - the object's URI
  * - type: VARCHAR(32) NOT NULL - the Metatron type (bool, int, real, str, complex)
@@ -63,21 +64,21 @@ public class TypedKeyValueSchema implements TableSchema {
     public void initialize(final Connection conn) throws SQLException {
         // Create table with typed columns for isomorphic mapping
         final String createTable = """
-                CREATE TABLE IF NOT EXISTS kv_store (
-                    furi VARCHAR(512) NOT NULL PRIMARY KEY,
-                    type VARCHAR(32) NOT NULL,
-                    bool_val BOOLEAN,
-                    int_val BIGINT,
-                    real_val DOUBLE PRECISION,
-                    str_val TEXT,
-                    complex_val TEXT
-                );
-                """;
+                                   CREATE TABLE IF NOT EXISTS kv_store (
+                                       furi VARCHAR(512) NOT NULL PRIMARY KEY,
+                                       type VARCHAR(32) NOT NULL,
+                                       bool_val BOOLEAN,
+                                       int_val BIGINT,
+                                       real_val DOUBLE PRECISION,
+                                       str_val TEXT,
+                                       complex_val TEXT
+                                   );
+                                   """;
 
         // Create index on furi for fast lookups
         final String createIndex = """
-                CREATE INDEX IF NOT EXISTS idx_furi ON kv_store(furi);
-                """;
+                                   CREATE INDEX IF NOT EXISTS idx_furi ON kv_store(furi);
+                                   """;
 
         try (final Statement stmt = conn.createStatement()) {
             stmt.executeUpdate(createTable);
@@ -88,8 +89,7 @@ public class TypedKeyValueSchema implements TableSchema {
     @Override
     public int write(final Connection conn, final fURI furi, final String objJson) throws SQLException {
         // Parse the JSON string back to Obj (this is a temporary bridge until we refactor the interface)
-        final Obj obj = objJson == null || objJson.isEmpty() ? noobj() :
-                studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer.parse(objJson);
+        final Obj obj = objJson == null || objJson.isEmpty() ? noobj() : ObjJSONSerializer.simple().inputBytes(objJson);
 
         return write(conn, furi, obj);
     }
@@ -114,7 +114,7 @@ public class TypedKeyValueSchema implements TableSchema {
             type = "bool";
             if (isPostgreSQL) {
                 sql = "INSERT INTO " + TABLE_NAME + " (furi, type, bool_val) VALUES (?, ?, ?) " +
-                      "ON CONFLICT (furi) DO UPDATE SET type = EXCLUDED.type, bool_val = EXCLUDED.bool_val;";
+                        "ON CONFLICT (furi) DO UPDATE SET type = EXCLUDED.type, bool_val = EXCLUDED.bool_val;";
             } else {
                 sql = "REPLACE INTO " + TABLE_NAME + " (furi, type, bool_val) VALUES (?, ?, ?);";
             }
@@ -122,7 +122,7 @@ public class TypedKeyValueSchema implements TableSchema {
             type = "int";
             if (isPostgreSQL) {
                 sql = "INSERT INTO " + TABLE_NAME + " (furi, type, int_val) VALUES (?, ?, ?) " +
-                      "ON CONFLICT (furi) DO UPDATE SET type = EXCLUDED.type, int_val = EXCLUDED.int_val;";
+                        "ON CONFLICT (furi) DO UPDATE SET type = EXCLUDED.type, int_val = EXCLUDED.int_val;";
             } else {
                 sql = "REPLACE INTO " + TABLE_NAME + " (furi, type, int_val) VALUES (?, ?, ?);";
             }
@@ -130,7 +130,7 @@ public class TypedKeyValueSchema implements TableSchema {
             type = "real";
             if (isPostgreSQL) {
                 sql = "INSERT INTO " + TABLE_NAME + " (furi, type, real_val) VALUES (?, ?, ?) " +
-                      "ON CONFLICT (furi) DO UPDATE SET type = EXCLUDED.type, real_val = EXCLUDED.real_val;";
+                        "ON CONFLICT (furi) DO UPDATE SET type = EXCLUDED.type, real_val = EXCLUDED.real_val;";
             } else {
                 sql = "REPLACE INTO " + TABLE_NAME + " (furi, type, real_val) VALUES (?, ?, ?);";
             }
@@ -138,7 +138,7 @@ public class TypedKeyValueSchema implements TableSchema {
             type = "str";
             if (isPostgreSQL) {
                 sql = "INSERT INTO " + TABLE_NAME + " (furi, type, str_val) VALUES (?, ?, ?) " +
-                      "ON CONFLICT (furi) DO UPDATE SET type = EXCLUDED.type, str_val = EXCLUDED.str_val;";
+                        "ON CONFLICT (furi) DO UPDATE SET type = EXCLUDED.type, str_val = EXCLUDED.str_val;";
             } else {
                 sql = "REPLACE INTO " + TABLE_NAME + " (furi, type, str_val) VALUES (?, ?, ?);";
             }
@@ -147,7 +147,7 @@ public class TypedKeyValueSchema implements TableSchema {
             type = "complex";
             if (isPostgreSQL) {
                 sql = "INSERT INTO " + TABLE_NAME + " (furi, type, complex_val) VALUES (?, ?, ?) " +
-                      "ON CONFLICT (furi) DO UPDATE SET type = EXCLUDED.type, complex_val = EXCLUDED.complex_val;";
+                        "ON CONFLICT (furi) DO UPDATE SET type = EXCLUDED.type, complex_val = EXCLUDED.complex_val;";
             } else {
                 sql = "REPLACE INTO " + TABLE_NAME + " (furi, type, complex_val) VALUES (?, ?, ?);";
             }

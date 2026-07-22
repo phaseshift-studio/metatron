@@ -20,7 +20,7 @@ package studio.phaseshift.metatron.isa.web.type;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.*;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
+import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
@@ -93,7 +93,7 @@ public class mcpEmulatorBuilder {
                                     rec(uri(USER), URI_TYPE, uri("mcpServers"), STR_TYPE),
                                     (lhs, inst) -> {
                                         final fURI userDirectory = getUserDirectory(inst.arg(f(USER), 0).uriValue());
-                                        final Rec mcpServers = ObjSimpleJSONSerializer.parse(inst.arg(f("mcpServers"), 1).strValue()).asRec();
+                                        final Rec mcpServers = ObjJSONSerializer.parse(inst.arg(f("mcpServers"), 1).strValue()).asRec();
                                         mcpServers.at("mcpServers").orElse(rec0()).elements().forEach(server -> {
                                             final String serverName = Str.Helper.cleanString(server.first());
                                             final Rec serverConfig = server.second().asRec();
