@@ -23,7 +23,7 @@ import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.dcmnt.schema.storage.ObjBSONSerializer;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjByteBufferSerializer;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
+import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 
 import java.util.LinkedHashMap;
@@ -58,7 +58,7 @@ public class ioInstSet extends AbstractInstSet {
                 uri(CONST), lst(
                         new ObjmtronSerializer(),
                         new ObjByteBufferSerializer(),
-                        new ObjSimpleJSONSerializer(),
+                        new ObjJSONSerializer(),
                         new ObjBSONSerializer())
         )));
         super.setup();

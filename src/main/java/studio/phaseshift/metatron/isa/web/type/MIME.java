@@ -24,7 +24,7 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Str;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjJavaSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
+import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.web.parser.ObjHTMLSerializer;
 import studio.phaseshift.metatron.isa.web.parser.ObjMarkdownSerializer;
@@ -203,7 +203,7 @@ public class MIME {
 
         public ObjSerializer<?> serializer() {
             if (this.isMtron()) return ObjmtronSerializer.singleNoClip();
-            if (this.isJson()) return ObjSimpleJSONSerializer.single();
+            if (this.isJson()) return ObjJSONSerializer.simple();
             if (this.isHtml()) return ObjHTMLSerializer.single();
             if (this.isXml()) return ObjXMLSerializer.single();
             if (this.isMarkdown()) return ObjMarkdownSerializer.single();

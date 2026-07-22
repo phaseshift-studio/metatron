@@ -33,7 +33,7 @@ import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
+import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Console;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.StatusLine;
@@ -126,7 +126,7 @@ public class mqttSpace extends AbstractSpace<Mqtt5Client> {
         LOG.info("{{y}}mtron{{g}}<=>{{y}}mqtt{{X}} route established: %s {{g}}<=> ({{b}}%s {{g}}<=>{{X}} %s{{g}}){{X}}", this.pattern().toUri(), config.getOrDefault(uri(ROUTE), rec()), uri(this.redirect(this.pattern(), false)));
         this.cache = memSpace.of(this.pattern(), null);
         if (this.at(SERIALIZER).isNoObj())
-            this.at(uri(SERIALIZER), new ObjSimpleJSONSerializer(), MUTABLE);
+            this.at(uri(SERIALIZER), ObjJSONSerializer.simple(), MUTABLE);
         LOG.info("%s serializer loaded: %s", this.tid(), this.at(SERIALIZER));
         this.broker = this.at(uri(HOST)).orThrow(new IllegalArgumentException("config must have a host key")).uriValue();
         try {

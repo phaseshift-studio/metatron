@@ -31,7 +31,7 @@ import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
 import studio.phaseshift.metatron.isa.m.math.mathInstSet;
 import studio.phaseshift.metatron.isa.m.type.*;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
+import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
@@ -664,7 +664,7 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
             if (val != null) saved.put(key, val);
         }
         try {
-            final byte[] jsonBytes = ObjSimpleJSONSerializer.single().outputBytes(msgRec).array();
+            final byte[] jsonBytes = ObjJSONSerializer.simple().outputBytes(msgRec).array();
             final MessageDigest md = MessageDigest.getInstance("SHA-256");
             final byte[] digest = md.digest(jsonBytes);
             final StringBuilder sb = new StringBuilder();

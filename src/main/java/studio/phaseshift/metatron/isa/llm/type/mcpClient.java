@@ -37,7 +37,7 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Str;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
+import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
@@ -121,10 +121,10 @@ public class mcpClient extends MRec {
                                             .arguments(inst2.args().isEmpty() ?
                                                     null :
                                                     inst2.args().isRec() ?
-                                                    new String(ObjSimpleJSONSerializer.single()
+                                                    new String(ObjJSONSerializer.simple()
                                                             .outputBytes(inst2.args())
                                                             .array()) :
-                                                    new String(ObjSimpleJSONSerializer.single()
+                                                    new String(ObjJSONSerializer.simple()
                                                             .outputBytes(Inst.Helper.rectifyLstArgs(inst2.args().asLst(), evaluationArgs))
                                                             .array()))
                                             .build());
@@ -133,7 +133,7 @@ public class mcpClient extends MRec {
                             else {
                                 try {
                                     final JsonElement element = JsonParser.parseString(result.resultText());
-                                    return ObjSimpleJSONSerializer.single().read(element);
+                                    return ObjJSONSerializer.simple().read(element);
                                 } catch (final Exception e1) {
                                     return ObjPlainTextSerializer.single().read(result.resultText());
                                 }

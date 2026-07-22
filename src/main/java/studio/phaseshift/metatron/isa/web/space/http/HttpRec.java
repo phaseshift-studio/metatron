@@ -66,7 +66,7 @@ public class HttpRec extends MRec {
 
     public static final fURI HTTP_REC_TID = HTTP_SPACE_TID.extend("httprec");
     protected final GraphittyLogger LOG = Graphitty.log(this);
-    protected final ObjJSONSerializer JSON = new ObjJSONSerializer();
+    protected final ObjJSONSerializer JSON = ObjJSONSerializer.simple();
 
     protected HttpExchange exchange;
 

@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.isa.mach.io.type;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.nio.ByteBuffer;
@@ -289,7 +290,7 @@ public class ObjSQLSerializer extends AbstractObjSerializer<Object> {
         }
         if (first == '[' || first == '{') {
             try {
-                return ObjSimpleJSONSerializer.parse(value);
+                return ObjJSONSerializer.simple().inputBytes(value);
             } catch (final Exception jsonEx) {
                 try {
                     return ObjmtronSerializer.compact().inputBytes(value.getBytes());

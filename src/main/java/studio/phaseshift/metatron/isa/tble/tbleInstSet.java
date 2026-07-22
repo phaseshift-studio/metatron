@@ -27,7 +27,7 @@ import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSQLSerializer;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
+import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.tble.schema.SQLRewriteUtils;
 import studio.phaseshift.metatron.util.MTronException;
@@ -512,7 +512,7 @@ public class tbleInstSet extends AbstractInstSet {
                                 final Objs rows = objs0();
                                 while (rs.next()) {
                                     final fURI rowFuri = f(rs.getString("furi"));
-                                    final Obj deserialized = ObjSimpleJSONSerializer.parse(rs.getString("obj"));
+                                    final Obj deserialized = ObjJSONSerializer.parse(rs.getString("obj"));
                                     final fURI rowVID = Space.Helper.routeToSpace(rowFuri, typedSpace.routes());
                                     rows.append(deserialized.selfVID(rowVID));
                                 }

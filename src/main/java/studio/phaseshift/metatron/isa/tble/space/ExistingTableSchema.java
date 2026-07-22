@@ -24,7 +24,7 @@ import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSQLSerializer;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
+import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.tble.schema.storage.TableSchema;
 import studio.phaseshift.metatron.isa.tble.tbleSpace;
@@ -608,7 +608,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
 
     @Override
     public int write(final Connection conn, final fURI furi, final String objJson) throws SQLException {
-        final Obj obj = objJson == null ? noobj() : ObjSimpleJSONSerializer.parse(objJson);
+        final Obj obj = objJson == null ? noobj() : ObjJSONSerializer.parse(objJson);
         return write(conn, furi, obj);
     }
 
