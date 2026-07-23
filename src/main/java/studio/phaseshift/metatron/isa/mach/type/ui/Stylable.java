@@ -23,6 +23,7 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
+import studio.phaseshift.metatron.isa.mach.type.ui.widget.FloatingSurface;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.LinkedHashMap;
@@ -30,6 +31,7 @@ import java.util.Map;
 
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.ui.uiInstSet.UI_STYLE_TID;
 
@@ -49,6 +51,8 @@ public interface Stylable<T extends Stylable<T>> {
     class Style<T extends Stylable<T>> extends MRec {
         public T stylable;
         public Border border = null;
+        public FloatingSurface.Anchor floatAnchor = null;
+        public int floatWidth = 0;
 
         protected Style(final T stylable) {
             super(new LinkedHashMap<>(), UI_STYLE_TID, null);
@@ -222,6 +226,40 @@ public interface Stylable<T extends Stylable<T>> {
             final Style<T> s = new Style<>(null);
             s.jvm().putAll(styleRec.jvm());
             return s;
+        }
+
+        public Style<T> floatAt(final FloatingSurface.Anchor anchor, final int width) {
+            this.jvm().put(uri("floatAnchor"), uri(anchor.name().toLowerCase()));
+            this.jvm().put(uri("floatWidth"), jnt(width));
+            this.floatAnchor = anchor;
+            this.floatWidth = width;
+            return this;
+        }
+
+        public Style<T> unfloat() {
+            this.jvm().remove(uri("floatAnchor"));
+            this.jvm().remove(uri("floatWidth"));
+            this.floatAnchor = null;
+            this.floatWidth = 0;
+            return this;
+        }
+
+        public boolean hasFloat() {
+            return this.floatAnchor != null || this.at("floatAnchor").isUri();
+        }
+
+        public FloatingSurface.Anchor floatAnchor() {
+            if (this.floatAnchor != null) return this.floatAnchor;
+            if (this.at("floatAnchor").isUri())
+                return FloatingSurface.Anchor.parse(this.at("floatAnchor").uriValue().toString());
+            return null;
+        }
+
+        public int floatWidth() {
+            if (this.floatWidth > 0) return this.floatWidth;
+            if (this.at("floatWidth").isInt())
+                return this.at("floatWidth").asInt().intValue().intValue();
+            return 0; // 0 = "use widget's natural width"
         }
 
         public T applyStyle() {

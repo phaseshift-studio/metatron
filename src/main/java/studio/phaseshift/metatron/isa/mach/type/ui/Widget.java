@@ -22,6 +22,7 @@ import org.jline.terminal.Cursor;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Console;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Highlighter;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.mach.type.ui.widget.FloatingSurface;
 import studio.phaseshift.metatron.isa.mach.type.ui.widget.TableWidget;
 
 import java.util.List;
@@ -40,8 +41,28 @@ public interface Widget<W extends Widget<W>> extends Stylable<W>, AutoCloseable,
 
     W cursor(final Cursor cursor);
 
-    default void display() {
-        Graphitty.out(Console.getTerminal().output(), this.format() + "\n");
+    /**
+     * Present this widget on the terminal.  Display-only widgets render
+     * once and return; interactive widgets (selectors, explain tools)
+     * override this to enter a modal input loop.
+     *
+     * <p>If the widget's {@link Stylable.Style} carries a
+     * {@link Stylable.Style#floatAt(FloatingSurface.Anchor, int) float anchor},
+     * the widget is pinned to the console's {@link FloatingSurface} instead
+     * of being rendered in-place.
+     */
+    @Override
+    default void run() {
+        final var style = this.getStyle();
+        if (Console.LOCAL_INSTANCE != null && style.hasFloat()) {
+            final int w = style.floatWidth();
+            final int width = w > 0 ? w : this.width();
+            this.floatAt(Console.LOCAL_INSTANCE.getFloatingSurface(),
+                    style.floatAnchor(), width);
+            Console.LOCAL_INSTANCE.getFloatingSurface().render();
+        } else {
+            Graphitty.out(Console.getTerminal().output(), this.format() + "\n");
+        }
     }
 
     /**
@@ -82,5 +103,53 @@ public interface Widget<W extends Widget<W>> extends Stylable<W>, AutoCloseable,
 
     default List<String> rowStrings() {
         return List.of(this.format().split("\n"));
+    }
+
+    /**
+     * Pin this widget to a {@link FloatingSurface} at the given terminal
+     * coordinates.  The widget will be drawn at {@code (row, col)} on every
+     * {@link FloatingSurface#render()} call, appearing to float over the
+     * terminal content beneath it.
+     *
+     * @param surface the floating surface to pin to
+     * @param row     1-based terminal row
+     * @param col     1-based terminal column
+     * @return this widget (fluent)
+     */
+    @SuppressWarnings("unchecked")
+    default W floatAt(final FloatingSurface surface, final int row, final int col) {
+        surface.add(this, row, col);
+        return (W) this;
+    }
+
+    /**
+     * Pin this widget to a terminal corner with a target display width.
+     * The actual position is recalculated on every
+     * {@link FloatingSurface#render()} call from the current terminal
+     * dimensions and the widget's height, so the widget stays pinned to
+     * its corner across terminal resizes.
+     *
+     * @param surface the floating surface to pin to
+     * @param anchor  which corner of the terminal to pin to
+     * @param width   the column width for positioning and content clipping
+     * @return this widget (fluent)
+     */
+    @SuppressWarnings("unchecked")
+    default W floatAt(final FloatingSurface surface, final FloatingSurface.Anchor anchor, final int width) {
+        surface.add(this, anchor, width);
+        return (W) this;
+    }
+
+    /**
+     * Remove this widget from a {@link FloatingSurface}.  The area the
+     * widget previously occupied is cleared.
+     *
+     * @param surface the floating surface to unpin from
+     * @return this widget (fluent)
+     */
+    @SuppressWarnings("unchecked")
+    default W unfloat(final FloatingSurface surface) {
+        surface.remove(this);
+        return (W) this;
     }
 }

@@ -73,10 +73,23 @@ public class TreeWidget extends JRec<TreeWidget> implements Widget<TreeWidget> {
 
     public TreeWidget(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
-        this.max = jvm.get(uri(MAX)).asInt().intValue().intValue();
-        this.root = jvm.get(uri(ROOT)).uriValue();
-        this.code = jvm.getOrDefault(uri(CODE), id_().tryToInst()).as();
         if (this.style.border() == Border.none) this.style.border(Border.continuous);
+    }
+
+    private void sync() {
+        if (this.style == null) return; // construction guard
+        final Map<Obj, Obj> jvm = jvmRead();
+
+        final Obj r = jvm.get(uri(ROOT));
+        this.root = (r != null && r.isUri()) ? r.uriValue() : null;
+
+        final Obj m = jvm.get(uri(MAX));
+        this.max = (m != null && m.isInt()) ? m.asInt().intValue().intValue() : 0;
+
+        final Obj c = jvm.get(uri(CODE));
+        this.code = (c != null && c.isInst()) ? c.as() : id_().tryToInst();
+
+        this.built = false;
     }
 
     /* ================================================================
@@ -86,6 +99,7 @@ public class TreeWidget extends JRec<TreeWidget> implements Widget<TreeWidget> {
     private boolean built = false;
 
     private void ensureBuilt() {
+        this.sync();
         if (!built) {
             buildRows();
             built = true;
@@ -148,15 +162,7 @@ public class TreeWidget extends JRec<TreeWidget> implements Widget<TreeWidget> {
     }
 
     @Override
-    public void run() {
-    }
-
-    @Override
     public void close() {
-    }
-
-    @Override
-    public void display() {
     }
 
     @Override

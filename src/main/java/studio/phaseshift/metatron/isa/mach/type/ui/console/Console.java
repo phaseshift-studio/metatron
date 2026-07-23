@@ -143,6 +143,18 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
     private final AtomicBoolean needsRedraw = new AtomicBoolean(false);
     private boolean splitMode = false;  // True when we have more than one pane
     private boolean traceEnabled = false; // True when :trace toggled on — dumps Java stack on fail
+    private FloatingSurface floatingSurface;
+
+    /**
+     * The shared {@link FloatingSurface} for this console session.
+     * Widgets pinned here are redrawn automatically at every prompt cycle.
+     */
+    public FloatingSurface getFloatingSurface() {
+        if (this.floatingSurface == null) {
+            this.floatingSurface = new FloatingSurface(terminal);
+        }
+        return this.floatingSurface;
+    }
 
     /**
      * Minimum ms between content-only live redraws triggered by pane output.
@@ -387,6 +399,10 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                             ? Graphitty.string("{{-X-}}{{v1&^1&m}}")
                             : Graphitty.string("{{-X&v1&^1&m}}     {{g}}| {{X}}"));
         }
+
+        // Redraw floating widgets before every prompt so they stay pinned
+        // as console output scrolls underneath them.
+        getFloatingSurface().render();
     }
 
     public Language getCurrentLanguage() {
@@ -808,6 +824,9 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
         terminal.writer().print("\u001b[" + promptRow + ";" + promptCol + "H");
 
         terminal.writer().flush();
+
+        // Redraw floating widgets on top of pane content
+        getFloatingSurface().render();
 
         this.needsRedraw.set(false);
     }

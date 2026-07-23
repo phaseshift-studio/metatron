@@ -189,13 +189,6 @@ public abstract class AbstractWidget<W extends AbstractWidget<W>> extends JRec<W
     }
 
     @Override
-    public void display() {
-        this.display.resize(this.height(), this.width());
-        this.display.updateAnsi(Arrays.stream(this.format().split("\n")).map(s -> s + "\n").map(Graphitty::string).toList(), -1);
-        this.terminal.writer().flush();
-    }
-
-    @Override
     public void run() {
         this.attributes = this.terminal.enterRawMode();
         this.terminal.puts(InfoCmp.Capability.keypad_xmit);

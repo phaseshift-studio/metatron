@@ -132,7 +132,7 @@ public class AuditFeature extends Feature {
         agent.at(res("audit", "widget"), table, MUTABLE);
         final Selector selector = new Selector().style().attachment(table, true).pointer("{{r}}>").applyStyle()
                 .onSelect((s, r, c) -> {
-                    new PanelWidget(table.entry(r, c).toString(), table.row(r).toString()).display();
+                    new PanelWidget(table.entry(r, c).toString(), table.row(r).toString()).run();
                 });
         agent.at(res("audit", "widget"), selector, MUTABLE);
     }
