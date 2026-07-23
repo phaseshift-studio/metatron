@@ -27,7 +27,6 @@ import studio.phaseshift.metatron.util.Tuple;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
@@ -278,7 +277,7 @@ public interface Rel extends Poly<Rel, Tuple.Pair<Obj, Obj>>, MultMonoid.O<Rel>,
                     // instC(RSHIFT_INST_TID.dom(REL_TID).rng(ALL_STAR), lst(), (lhs, inst) -> lhs.<Rel>as().second()),
                     // instC(RSHIFT_INST_TID.dom(REL_TID).rng(ALL_STAR), lst(T(ALL)), (lhs, inst) -> lhs.asRel().at(inst.arg(0))),
                     instC(GET_INST_TID.dom(REL_TID).rng(A.maybe()), lst(T(ALL)), (lhs, inst) -> lhs.<Rel>as().at(inst.arg(0))),
-                    instC(SELECT_INST_TID.dom(REL_TID).rng(REL_TID.maybe()), lst(T(REL_TID)), (lhs, inst) -> selectRelRecursion(lhs.asRel(), inst.arg(0).asRel())),
+                    instC(SELECT_INST_TID.dom(REL_TID).rng(REL_TID.maybe()), lst(T(REL_TID)), (lhs, inst) -> selectRelRecursion(lhs.asRel(), inst.arg(0).asRel(),false)),
                     // Ring operations
                     instC(PLUS_INST_TID.dom(REL_TID).rng(REL_TID.maybeSome()), lst(T(REL_TID.maybeSome())), (lhs, inst) -> {
                         if (inst.arg(0).isObjs()) {

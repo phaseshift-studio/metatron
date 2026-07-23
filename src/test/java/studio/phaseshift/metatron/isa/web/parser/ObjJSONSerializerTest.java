@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -20,21 +20,34 @@ package studio.phaseshift.metatron.isa.web.parser;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractSerializerTest;
-import studio.phaseshift.metatron.isa.m.type.Call;
-import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.gt_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.is_;
 import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.web.webInstSet.JSON_TID;
 
 public class ObjJSONSerializerTest extends AbstractSerializerTest<JsonElement> {
+
+
+    public ObjJSONSerializerTest() {
+        super(new ObjJSONSerializer());
+    }
+
     //{"_tid":"/m/rel", "_value":[1,2]}          | 1=>2
     @ParameterizedTest
     @CsvSource(delimiter = '|', textBlock = """
@@ -74,12 +87,22 @@ public class ObjJSONSerializerTest extends AbstractSerializerTest<JsonElement> {
         assertEquals(m_obj.isObjCall() ? ((Call) m_obj).tryToInst() : m_obj, j_obj);
     }
 
-    public ObjJSONSerializerTest() {
-        super(new ObjJSONSerializer());
-    }
-
     public boolean ignoreFail(final String toSerialize) {
         return (toSerialize.equals("< >") || toSerialize.contains("{24}") || toSerialize.startsWith("[a,[b,12,'abc']"));
+    }
+
+    @Test
+    public void testAsInst() {
+        InstSet.importInstSet(f("/m/web"));
+        final Str jsonStr = ObjmtronSerializer.singleNoClip().parse("""
+                                                                    '{"a":[1,2,3],"b":true}'.as(json::T)
+                                                                    """).apply().as();
+        assertEquals(JSON_TID, jsonStr.tid());
+        final Rec jsonRec = ObjmtronSerializer.singleNoClip().parse("""
+                                                                    %s.as(rec::T)
+                                                                    """.formatted(jsonStr)).apply().as();
+        assertEquals(REC_TID, jsonRec.tid());
+        assertEquals(rec(uri("a"), lst(jnt(1), jnt(2), jnt(3)), uri("b"), bool(true)), jsonRec);
     }
 
 }

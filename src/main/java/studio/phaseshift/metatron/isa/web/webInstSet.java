@@ -18,17 +18,18 @@
 
 package studio.phaseshift.metatron.isa.web;
 
+import com.google.gson.JsonParser;
+import com.google.gson.JsonSyntaxException;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.dcmnt.schema.storage.ObjBSONSerializer;
 import studio.phaseshift.metatron.isa.llm.type.mcpClient;
-import studio.phaseshift.metatron.isa.m.type.impl.MObj;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjJavaSerializer;
+import studio.phaseshift.metatron.isa.m.type.impl.MObj;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjByteBufferSerializer;
-import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjJavaSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.web.parser.*;
 import studio.phaseshift.metatron.isa.web.type.MIME;
@@ -37,6 +38,7 @@ import studio.phaseshift.metatron.util.CommonUtil;
 
 import java.net.InetSocketAddress;
 import java.nio.channels.SocketChannel;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -53,16 +55,14 @@ import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_MILLIS_TID;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_TIME_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.inside_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
-import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_FALSE;
-import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TRUE;
-import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.Bool.*;
 import static studio.phaseshift.metatron.isa.m.type.Inst.INST_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.NoObj.NOOBJ_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInst.*;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
@@ -113,7 +113,7 @@ public class webInstSet extends AbstractInstSet {
     public static final fURI OBJ_JAVA_SERIALIZER_TID = OBJ_SERIALIZER_TID.extend("ojb_java");
     public static final fURI OBJ_RDF_SERIALIZER_TID = OBJ_SERIALIZER_TID.extend("obj_rdf");
     public static final fURI OBJ_PLAINTEXT_SERIALIZER_TID = OBJ_SERIALIZER_TID.extend("obj_text");
-    
+
     public static Type MIME_OBJ_TYPE = Type.Builder.build()
             .tid(URI_TID)
             .vid(MIME_TYPE_TID)
@@ -127,24 +127,22 @@ public class webInstSet extends AbstractInstSet {
             .tid(XML_TID)
             .vid(HTML_TID)
             .isaPredicate(rec(uri(HTML), rec(uri(HEAD), rec(uri(TITLE).maybe().asUri(), STR_TYPE), uri(BODY), REC_TYPE))).create();
-    public static final Type JSON_STR_TYPE = Type.Builder.build()
-            .tid(STR_TID)
-            .vid(JSON_STR_TID).create();
     public static final Type JAVA_TYPE = Type.Builder.build()
             .tid(REC_TID)
             .vid(JAVA_TID)
             .create();
     public static final Type JSON_TYPE = Type.Builder.build()
-            .tid(REC_TID)
+            .tid(STR_TID)
             .vid(JSON_TID)
-            .isaPredicate(rec(URI_TYPE, inside_(lst(
-                    isa_(NOOBJ_TYPE),
-                    isa_(BOOL_TYPE),
-                    isa_(INT_TYPE),
-                    isa_(STR_TYPE),
-                    isa_(URI_TYPE),
-                    isa_(LST_TYPE),
-                    isa_(REC_TYPE))))).create();
+            .predicate((lhs, inst) -> {
+                try {
+                    JsonParser.parseString(inst.arg(0).strValue());
+                    return lhs;
+                } catch (final JsonSyntaxException e) {
+                    return noobj();
+                }
+            }).create();
+
     public static final Type CSS_TYPE = Type.Builder.build()
             .tid(REC_TID)
             .vid(CSS_TID).create();
@@ -186,8 +184,8 @@ public class webInstSet extends AbstractInstSet {
                         ObjPlainTextSerializer.single(),
                         ObjmtronSerializer.single(),
                         ObjByteBufferSerializer.singleton(),
-                       ObjJSONSerializer.simple(),
-                       ObjBSONSerializer.single()),
+                        ObjJSONSerializer.simple(),
+                        ObjBSONSerializer.single()),
                 uri(TYPE), lst(
                         docWrap(MIME_OBJ_TYPE, "indicates the media type of the data as specified by RFC-9110"),
                         docWrap(XML_TYPE, "a rec encoding of an xml document"),
@@ -201,7 +199,7 @@ public class webInstSet extends AbstractInstSet {
                                          [out=>[
                                           [tag=>a,href=>...],
                                           [tag...]]]]"""),
-                        docWrap(JSON_TYPE, "a rec encoding of a json document"),
+                        docWrap(JSON_TYPE, "a json document"),
                         docWrap(CSS_TYPE, "a rec encoding of a css document"),
                         docWrap(MARKDOWN_TYPE, "a rec encoding of a markdown document"),
                         docWrap(JAVA_TYPE, "a rec encoding of a java source file"),
@@ -349,7 +347,9 @@ public class webInstSet extends AbstractInstSet {
                                 "ping(localhost:8777)",
                                 "virtual::[code=>ping(localhost:8777)-<{@x+*0,@y+1},loop=>second::2.0]"),
                         instC(WEB_ISA_TID.extend("inst/format").dom(MARKDOWN_TID).rng(STR_TID), lst(), (lhs, inst) -> str(ObjMarkdownSerializer.format(ObjMarkdownSerializer.single().write(lhs).getChars().toString()))),
-                        instC(AS_INST_TID.dom(STR_TID).rng(JSON_TID), lst(JSON_TYPE), (lhs, inst) -> ObjJSONSerializer.parse(lhs.asStr().strValue())),
+                        instC(AS_INST_TID.dom(STR_TID).rng(JSON_TID), lst(JSON_TYPE), (lhs, inst) -> lhs.tid(JSON_TID)),
+                        instC(AS_INST_TID.dom(JSON_TID).rng(REC_TID), lst(REC_TYPE), (lhs, inst) -> ObjJSONSerializer.simple().inputBytes(lhs.strValue())),
+                        instC(AS_INST_TID.dom(REC_TID).rng(JSON_TID), lst(JSON_TYPE), (lhs, inst) -> str(new String(ObjJSONSerializer.simple().outputBytes(lhs).array(), StandardCharsets.UTF_8), JSON_TID, null)),
                         instC(AS_INST_TID.dom(STR_TID).rng(XML_TID), lst(T(XML_TID)), (lhs, inst) -> ObjXMLSerializer.parse(lhs.asStr().strValue())),
                         instC(AS_INST_TID.dom(STR_TID).rng(HTML_TID), lst(HTML_TYPE), (lhs, inst) -> ObjHTMLSerializer.parse(lhs.asStr().strValue())),
                         instC(AS_INST_TID.dom(STR_TID).rng(MARKDOWN_TID), lst(MARKDOWN_TYPE), (lhs, inst) -> ObjMarkdownSerializer.parse(lhs.asStr().strValue())),
@@ -359,7 +359,7 @@ public class webInstSet extends AbstractInstSet {
                         instC(AS_INST_TID.dom(MARKDOWN_TID).rng(STR_TID), lst(STR_TYPE), (lhs, inst) -> str(ObjMarkdownSerializer.single().write(lhs).getChars().toString())),
                         instC(AS_INST_TID.dom(MARKDOWN_TID).rng(HTML_TID), lst(HTML_TYPE), (lhs, inst) -> ObjMarkdownSerializer.single().toHTML(ObjMarkdownSerializer.single().write(lhs))),
                         instC(AS_INST_TID.dom(JSON_TID).rng(MCP_CLIENT_TID), lst(MCP_CLIENT_TYPE), (lhs, inst) -> {
-                            final Rec next = lhs.clone().asRec();
+                            final Rec next = ObjJSONSerializer.simple().inputBytes(lhs.strValue()).asRec();
                             // ── command (str or list) + args (list) → command list ──
                             final List<Obj> merged = new ArrayList<>();
                             if (next.has(COMMAND)) {
@@ -385,9 +385,8 @@ public class webInstSet extends AbstractInstSet {
                             }
                             final mcpClient client = new mcpClient(next.asRec().jvm(), MCP_CLIENT_TID, lhs.vid());
                             return client;
-                        }),
-                        instC(AS_INST_TID.dom(ALL).rng(STR_TID), lst(JSON_STR_TYPE), (lhs, inst) -> str(ObjJSONSerializer.simple().write(lhs).toString())))))
-        ;
+                        }))));
+        //  instC(AS_INST_TID.dom(ALL).rng(STR_TID), lst(JSON_STRING_TYPE), (lhs, inst) -> str(ObjJSONSerializer.simple().write(lhs).toString())))))
         docWrap(this,
                 "the world of the web within the metatron",
                 "/usr/idea -> *<http://metatron.phaseshift.studio/html/head/title>");

@@ -805,6 +805,7 @@ public class mInstSet extends AbstractInstSet {
                 Sugar.prefix("+", List.of(PLUS_INST_TID), 1),
                 Sugar.prefix("-", List.of(MINUS_INST_TID), 1),
                 Sugar.prefix(";", List.of(END_INST_TID), 0),
+                //Sugar.prefix("=", List.of(EQ_INST_TID), 1),
                 //  Sugar.wrap("(", ")", List.of(GET_INST_TID), 1),
                 //Sugar.prefix("./", List.of(GET_INST_TID), 1),
                 Sugar.prefix("^*", List.of(M_ISA_INST_TID.extend("auto_to")), 0),

@@ -90,9 +90,9 @@ public interface Lst extends Poly<Lst, List<Obj>>, PlusMonoid.O<Lst> {
     default boolean has(final Obj key) {
         return key.isInt() ? this.jvm().size() > key.intValue().intValue() :
                 key.isUri() &&
-                !key.uriValue().isEmpty() &&
+                        !key.uriValue().isEmpty() &&
                         CommonUtil.isInt(key.uriValue().path().getFirst()) &&
-                this.jvm().size() > Integer.valueOf(key.uriValue().path().getFirst());
+                        this.jvm().size() > Integer.valueOf(key.uriValue().path().getFirst());
     }
 
     default <OBJ extends Obj> Stream<OBJ> elements() {
@@ -248,10 +248,11 @@ public interface Lst extends Poly<Lst, List<Obj>>, PlusMonoid.O<Lst> {
                     instC(WITHIN_INST_TID.dom(LST_TID).rng(LST_TID), lst(T(ALL_STAR)), (lhs, inst) -> lst(inst.arg(0).apply(objs(lhs.stream().flatMap(Obj::elements))).stream().toList())),
                     instC(SUM_INST_TID.dom(LST_TID.maybeSome()).rng(LST_TID), lst(), (lhs, inst) -> inst.seed().jvm(lhs.stream().reduce(inst.seed(), (a, b) -> ((Lst) a).plus((Lst) b)).lstValue()), lst()),
                     instC(SELECT_INST_TID.dom(LST_TID).rng(B.maybeSome()), lst(T(A.some())), (lhs, inst) -> objs(inst.arg(0).stream().map(s -> lhs.asLst().at(s)))),
-                    instC(SELECT_INST_TID.dom(LST_TID).rng(LST_TID.maybe()), lst(T(LST_TID)), (lhs, inst) -> Poly.Helper.selectLstRecursion(lhs.asLst(), inst.arg(0).asLst())),
-                    instC(SELECT_INST_TID.dom(LST_TID).rng(LST_TID), lst(REC_TYPE), (lhs, inst) -> lst(Lst.Helper.project(lhs.asLst(), inst.arg(0).orElse(rec0()), false), lhs.tid(), lhs.vid())),
-                    instC(WHERE_INST_TID.dom(LST_TID).rng(LST_TID.maybe()), lst(REC_TYPE), (lhs, inst) -> ProjectionFailureException.predicateThrow(lhs, a -> Lst.Helper.project(lhs.asLst(), inst.arg(0).asRec(), true))),
-                    //instC(UPDATE_INST_TID.dom(LST_TID).rng(LST_TID), lst(LST_TYPE), (lhs, inst) -> Poly.Helper.updateLstRecursion(lhs.asLst(), inst.arg(0).asLst(), MUTABLE)),
+                    instC(SELECT_INST_TID.dom(LST_TID).rng(LST_TID.maybe()), lst(LST_TYPE), (lhs, inst) -> Poly.Helper.selectLstLstRecursion(lhs.asLst(), inst.arg(0).asLst(), false)),
+                    instC(SELECT_INST_TID.dom(LST_TID).rng(LST_TID), lst(REC_TYPE), (lhs, inst) -> Poly.Helper.selectLstRecRecursion(lhs.asLst(), inst.arg(0).asRec(), false)),
+                    instC(WHERE_INST_TID.dom(LST_TID).rng(LST_TID.maybe()), lst(LST_TYPE), (lhs, inst) -> ProjectionFailureException.predicateThrow(lhs, a -> Poly.Helper.selectLstLstRecursion(lhs.asLst(), inst.arg(0).asLst(), true))),
+                    instC(WHERE_INST_TID.dom(LST_TID).rng(LST_TID.maybe()), lst(REC_TYPE), (lhs, inst) -> ProjectionFailureException.predicateThrow(lhs, a -> Poly.Helper.selectLstRecRecursion(lhs.asLst(), inst.arg(0).asRec(), true))),
+                    // instC(UPDATE_INST_TID.dom(LST_TID).rng(LST_TID), lst(LST_TYPE), (lhs, inst) -> Poly.Helper.updateLstRecursion(lhs.asLst(), inst.arg(0).asLst(), MUTABLE)),
 
                     instC(REMOVE_INST_TID.dom(LST_TID).rng(A.maybeSome()), lst(INT_TYPE), (lhs, inst) -> {
                         if (lhs.isLst() && inst.arg(0).intValue() < lhs.lstValue().size()) {
