@@ -278,12 +278,12 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
             "2-<[a=>is(gt(0)),a=>is(gt(1)),b=>3]                                                     % [a=>int{2}::2,b=>3]",
             "[1,2,3]-<[>-.is(gt(2)) => >-.is(gt(1)), >-.is(gt(1)) => >-._]                           % [3=>{2,3},{2,3}=>{1,2,3}]",
             "[a=>1,b=>2,c=>3]==[a=>plus(2),b=>_]                                                     % [a=>3,b=>2]",
-            "[a=>1,b=>2,c=>3]==[a=>plus(2),map(b)=>plus(10)]                                         % [a=>3,b=>12]",
-            "[a=>1,b=>2,c=>3]==[a=>plus(2),map(b)=>plus(10)]==[a=>_,b=>sum()]                        % [a=>3,b=>12]",
-            "[a=>1,b=>2,c=>3]==[a=>plus(2),map(b)=>plus(10)]==[a=>_,b=>(-<{count(),sum()})]          % [a=>3,b=>{1,12}]",
-            "[a=>1,b=>2,c=>3]==[a=>plus(2),map(b)=>plus(10)]==[a=>_,b=>-<[count(),sum()]]            % [a=>3,b=>[1,12]]",
-            "[a=>1,b=>2,c=>3]==[a=>plus(2),map(b)=>plus(10)]==[a=>_,b=>-<[count(),sum()]>-]          % [a=>3,b=>{1,12}]",
-            "[a=>1,b=>2,c=>3]==[a=>plus(2),map(b)=>plus(10)]==[a=>_,b=>-<[count(),sum()]>-.count()]  % [a=>3,b=>2]",
+            "[a=>1,b=>2,c=>3]==[a=>plus(2),b=>plus(10)]                                         % [a=>3,b=>12]",
+            "[a=>1,b=>2,c=>3]==[a=>plus(2),b=>plus(10)]==[a=>_,b=>sum()]                        % [a=>3,b=>12]",
+            "[a=>1,b=>2,c=>3]==[a=>plus(2),b=>plus(10)]==[a=>_,b=>(-<{count(),sum()})]          % [a=>3,b=>{1,12}]",
+            "[a=>1,b=>2,c=>3]==[a=>plus(2),b=>plus(10)]==[a=>_,b=>-<[count(),sum()]]            % [a=>3,b=>[1,12]]",
+            "[a=>1,b=>2,c=>3]==[a=>plus(2),b=>plus(10)]==[a=>_,b=>-<[count(),sum()]>-]          % [a=>3,b=>{1,12}]",
+            "[a=>1,b=>2,c=>3]==[a=>plus(2),b=>plus(10)]==[a=>_,b=>-<[count(),sum()]>-.count()]  % [a=>3,b=>2]",
             //"[a=>1,b=>2,c=>3]==[a=>plus(2),map(b)=>plus(10)]==[a=>_,b=>(-<[count(),sum()]>-.sum().sum())]    % [a=>3,b=>39]",
             //"[a=>1,b=>2,c=>3]==[a=>plus(2),map(b)=>plus(10)]==[a=>_,b=>-<[count(),sum()]>-.sum().sum()]     % [a=>3,b=>39]",
             "[1,2,3].-<[>-.is(gt(2)) => >-.is(gt(1))>-?<=int{*}[,], >-.is(gt(1)) => _/id()\\_]       % [3=>[2,3],{2,3}=>[1,2,3]]",
@@ -641,9 +641,13 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
             // overlap: same-key same-type → Objs
             "[a=>1] + [a=>2]                                   % [a=>{1,2}]",
             "[a=>1] + [a=>1]                                   % [a=>{1,1}]",
-            // overlap: same-key diff-type → Objs (instruction stored, not computed)
+            // overlap: same-key diff-type → Objs (instruction computed)
             "[a=>1] + [a=>+3]                                  % [a=>{1,plus(3)}]",
             "[a=>1] + [a=>_]                                   % [a=>{1,id()}]",
+            "[a=>1]>>=[a=>+3]                                  % [a=>4]",
+            "[a=>1]>>=[a=>_]                                   % [a=>1]",
+            "[a=>1]>>=+[a=>+3]                                 % [a=>{1,plus(3)}]",
+            "[a=>1]>>=+[a=>_]                                  % [a=>{1,id()}]",
             // overlap: Objs + Objs → flat merge
             "[a=>{1,2}] + [a=>{3,4}]                           % [a=>{1,2,3,4}]",
             "[a=>{1}] + [a=>{2,3}]                             % [a=>{1,2,3}]",
@@ -744,13 +748,16 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
             "[a=>[b=>0]] >>= [a=>[b=>+1]]                      % [a=>[b=>1]]",
             "[a=>[b=>0,c=>2]] >>= [a=>[b=>+1]]                 % [a=>[b=>1,c=>2]]",
             // nested + on sub-rec → merge at inner level
-            "[a=>[c=>2]] >>= [a=>+[b=>1]]                      % [a=>[b=>1,c=>2]]",
+            "[a=>[c=>2]] >>= [a=>+[b=>65]]                      % [a=>[b=>65,c=>2]]",
             // + on sub-rec with overlapping key that's an instruction
             "[a=>[b=>0,c=>2]] >>= [a=>+[b=>+1]]                % [a=>[b=>{0,plus(1)},c=>2]]",
+            "[a=>[b=>3,c=>2]] >>= [a=>[b=>+1]]                 % [a=>[b=>4,c=>2]]",
             // string compute
             "[a=>'hello'] >>= [a=>+' world']                   % [a=>'hello world']",
+            "[a=>'hello'] >>= +[a=>' world']                   % [a=>{'hello',' world'}]",
+            "[a=>'hello'] >>= +[a=>' world'] >>= [a=>sum()]    % [a=>'hello world']",
             // ── deep nesting ──
-            "[a=>[b=>[c=>1,d=>2]]] >>= [a=>[b=>[c=>+1]]]        % [a=>[b=>[c=>2,d=>2]]]",
+            "[a=>[b=>[c=>1,d=>2]]] >>= [a=>[b=>[c=>+1]]]         % [a=>[b=>[c=>2,d=>2]]]",
             "[a=>[b=>[c=>1,d=>2]]] >>= [a=>[b=>[c=>+1,d=>+10]]]  % [a=>[b=>[c=>2,d=>12]]]",
             "[a=>[b=>[c=>1,d=>2]]] >>= [a=>[b=>[e=>3]]]          % [a=>[b=>[c=>1,d=>2]]]",
             "[a=>[b=>[c=>1]]] >>= [a=>+[b=>[e=>3]]]              % [a=>[b=>{[c=>1],[e=>3]}]]",

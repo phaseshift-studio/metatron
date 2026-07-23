@@ -19,14 +19,10 @@
 package studio.phaseshift.metatron.isa.m.type;
 
 
-import studio.phaseshift.metatron.util.ProjectionFailureException;
 import studio.phaseshift.metatron.algebra.PlusMonoid;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.util.CommonUtil;
-import studio.phaseshift.metatron.util.IteratorUtil;
-import studio.phaseshift.metatron.util.MTronException;
-import studio.phaseshift.metatron.util.Tuple;
+import studio.phaseshift.metatron.util.*;
 
 import java.util.*;
 import java.util.function.BiFunction;
@@ -36,10 +32,10 @@ import java.util.stream.Stream;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.map_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.ObjFactory.LOG;
-import static studio.phaseshift.metatron.isa.m.type.Poly.Helper.selectRecRecursion;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -49,6 +45,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.immutableMap;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
 
@@ -284,7 +281,7 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
          * The Universal Structural Projection logic for Records.
          *
          * @param lhs      The target record to be projected.
-         * @param rulesObj The la-palette projector (a Record of Predicate -> Transformation/Constraint).
+         * @param rulesRec The la-palette projector (a rec of predicate -> transformation/constraint).
          * @param verify   If true, operates in 'where' mode (strict validation).
          *                 If false, operates in 'select' mode (structural mutation).
          * @return A map containing the results of the projection. In verify mode,
@@ -292,95 +289,60 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
          * success or a ProjectionFailureException.
          * @throws ProjectionFailureException if verification fails or a transformation errors.
          */
-        public static Map<Obj, Obj> project(final Rec lhs, final Obj rulesObj, boolean verify) {
-            // If no projector is provided, the projection is an identity mapping of the original record.
-            if (rulesObj == null || rulesObj.isNoObj()) {
-                return lhs.recValue();
-            }
-
-            // Ensure we are working with a Record as our la-palette profile
-            Rec rulesRec;
-            try {
-                rulesRec = rulesObj.asRec();
-            } catch (Exception e) {
+        public static Map<Obj, Obj> project(final Rec lhs, final Rec rulesRec, boolean verify) {
+            if (rulesRec.isNoObj()) {
                 if (verify) throw ProjectionFailureException.instance();
-                return lhs.recValue();
+                return mutableMap();
             }
-
-            Map<Obj, Obj> result = new LinkedHashMap<>();
-
-            // We iterate over the la-palette RULES first to treat them as requirements/instructions
-            for (Map.Entry<Obj, Obj> entry : rulesRec.recValue().entrySet()) {
-                Obj predicate = entry.getKey();
-                Obj transformationC = entry.getValue();
-
-                // Identify all components in the target that match this specific predicate
-                List<Rel> matches = lhs.elements()
-                        .filter(rel -> rel.first().test(predicate))
-                        .toList();
-
-                if (verify) {
-                    /* --- VERIFY MODE: Structural Validation Contract --- */
-
-                    // 1. MANDATORY EXISTENCE
-                    // If the projector requires a predicate but no components match it, the structure is invalid.
-                    if (matches.isEmpty()) {
-                        throw ProjectionFailureException.instance();
-                    }
-
-                    // 2. CONSTRAINT SATISFACTION
-                    // Every component that matched must satisfy the constraint (the rule's value).
-                    for (Rel rel : matches) {
-                        Obj val = rel.second();
-                        if (!val.test(transformationC)) {
+            if (verify) {
+                for (final Map.Entry<Obj, Obj> entry : rulesRec.recValue().entrySet()) {
+                    if (entry.getKey().isUri()) {
+                        final Obj foundValue = lhs.at(entry.getKey());
+                        if (foundValue.isNoObj() || !foundValue.test(entry.getValue()))
                             throw ProjectionFailureException.instance();
-                        }
                     }
-                } else {
-                    /* --- TRANSFORM MODE: Surgical Mutation --- */
-                    for (Rel rel : matches) {
-                        Obj val = rel.second();
-
-                        if (transformationC.isNone()) {
-                            // 'none' is a signal to remove this component from the la-palette result.
-                            // We handle this by skipping the add operation.
+                }
+            }
+            final Map<Obj, Obj> result = mutableMap();
+            for (final Rel rel : lhs.elements().toList()) {
+                for (final Map.Entry<Obj, Obj> entry : rulesRec.recValue().entrySet()) {
+                    final Obj predicate = entry.getKey();
+                    final Obj transformOrConstrain = entry.getValue();
+                    if (predicate.test(rel.first())) {
+                        if (verify) {
+                            if (transformOrConstrain.isRec() && rel.second().isRec()) {
+                                project(rel.second().asRec(), transformOrConstrain.asRec(), true);
+                            } else if (!rel.second().test(transformOrConstrain))
+                                throw ProjectionFailureException.instance();
                         } else {
-                            // Execute the transformation instruction on the slice
-                            Obj resVal = transformationC.apply(val);
-
-                            if (resVal == null || resVal.isNothing()) {
-                                // An a-priori rule should not return noobj unless it is explicitly 'none'
-                                if (!transformationC.isNone()) {
-                                    throw ProjectionFailureException.instance();
-                                }
+                            if (transformOrConstrain.isRec() && rel.second().isRec()) {
+                                result.put(rel.first(), rec(project(rel.second().asRec(), transformOrConstrain.asRec(), false)));
                             } else {
-                                // Map the original key to the new transformed value
-                                result.put(rel.first(), resVal);
+                                final Obj transformedValue = transformOrConstrain.apply(rel.second());
+                                if (!transformedValue.isNothing())
+                                    result.put(rel.first(), transformedValue);
+                            }
+                        }
+                        break;
+                    } else if (predicate.isUri()) {
+                        final Obj newValue = lhs.at(predicate);
+                        if (!newValue.isNoObj()) {
+                            if (verify) {
+                                if (!newValue.test(transformOrConstrain))
+                                    throw ProjectionFailureException.instance();
+                            } else {
+                                if (transformOrConstrain.isRec() && rel.second().isRec()) {
+                                    result.put(rel.first(), rec(project(rel.second().asRec(), transformOrConstrain.asRec(), false)));
+                                } else {
+                                    final Obj transformedValue = transformOrConstrain.apply(newValue);
+                                    if (!transformedValue.isNothing())
+                                        result.put(predicate, transformedValue);
+                                }
                             }
                         }
                     }
                 }
             }
-
-            if (!verify) {
-                /* --- REASSEMBLY: Finalize the la-palette mutation --- */
-                // Start with a copy of the original record's state (Identity Preservation)
-                Map<Obj, Obj> finalResult = new LinkedHashMap<>(lhs.recValue());
-
-                // Overwrite/Add transformed values from our project loop
-                finalResult.putAll(result);
-
-                // Explicitly process 'none' removals: remove any key that matched a rule mapped to none
-                rulesRec.recValue().forEach((k, v) -> {
-                    if (v.isNone()) {
-                        lhs.elements().forEach(rel -> {
-                            if (rel.first().test(k)) finalResult.remove(rel.first());
-                        });
-                    }
-                });
-                return finalResult;
-            }
-
             // In verify mode, if we reached this point without throwing an exception, the profile is satisfied.
             return result;
         }
@@ -420,7 +382,7 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
                             (lhs.<Rec>as().elements().anyMatch(r -> r.test(inst.arg(0))) ? lhs : noobj()) :
                             (lhs.<Rec>as().elements().map(Rel::first).anyMatch(r -> r.test(inst.arg(0))) ? lhs : noobj())),
                     instC(GET_INST_TID.dom(REC_TID).rng(A.maybeSome()), lst(URI_TYPE), (lhs, inst) -> objs(lhs.stream().map(r -> r.<Rec>as().at(inst.arg(0))))),
-                    instC(SPLIT_INST_TID.dom(A).rng(REC_TID), lst(REC_TYPE), (lhs, inst) -> inst.arg(0).asRec().elements().map(e -> rel(e.first().apply(lhs), e.second().apply(lhs))).collect(new CommonUtil.RecCollector(inst.arg(0).tid(),inst.arg(0).vid()))),
+                    instC(SPLIT_INST_TID.dom(A).rng(REC_TID), lst(REC_TYPE), (lhs, inst) -> inst.arg(0).asRec().elements().map(e -> rel(e.first().apply(lhs), e.second().apply(lhs))).collect(new CommonUtil.RecCollector(inst.arg(0).tid(), inst.arg(0).vid()))),
                     instC(MERGE_INST_TID.dom(REC_TID).rng(REL_TID.maybeSome()), lst(), (lhs, inst) -> objs(lhs.elements())),
                     //instC(MERGE_INST_TID.dom(REC_TID).rng(REC_TID), lst(REC_TYPE), (lhs, inst) -> inst.arg(0).<Rec>as().plus(lhs.as())),//objs(lhs.elementStream())),
                     instC(DOM_INST_TID.dom(REC_TID).rng(A.maybeSome()), lst(), (lhs, inst) -> objs(lhs.asRec().elements().map(Rel::first))),
@@ -429,16 +391,17 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
                     instC(LSHIFT_INST_TID.dom(REC_TID).rng(A.maybeSome()), lst(), (lhs, inst) -> lhs.parent()),
                     instC(PLUS_INST_TID.dom(REC_TID).rng(REC_TID), lst(T(REC_TID.maybeMaybe())), (lhs, inst) -> lhs.jvm(lhs.asRec().plus(inst.arg(0).asRec()).recValue())),
                     instC(MPLUS_INST_TID.dom(REC_TID).rng(REC_TID), lst(REC_TYPE), (lhs, inst) -> inst.arg(0).<Rec>as().elements().map(Obj::<Obj>as).reduce(lhs.<Rec>as(), (a, b) -> a.<Rec>as().at(((Rel) b).first(), ((Rel) b).second(), MUTABLE))),
-                    instC(SELECT_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(REC_TYPE), (lhs, inst) -> selectRecRecursion(lhs.asRec(), inst.arg(0).asRec()).clone(null, lhs.tid(), lhs.vid())),
+                    //instC(SELECT_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(REC_TYPE), (lhs, inst) -> rec(Rec.Helper.project(lhs.asRec(), inst.arg(0).asRec(), false), inst.arg(0).tid(), inst.arg(0).vid())),
                     //instC(SELECT_INST_TID.dom(REC_TID).rng(ALL.maybe()), lst(URI_TYPE), (lhs, inst) -> lhs.asRec().at(inst.arg(0))),
                     //  instC(SELECT_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(URI_TYPE.c(cInt.of(2,null)).asType()), (lhs, inst) -> inst.args().elements().map(u -> rel(u,lhs.asRec().at(u))).collect(new CommonUtil.RecCollector())),
                     //instC(SELECT_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(T(URI_TID.c(cInt.of(2, null)))), (lhs, inst) -> inst.arg(0).stream().map(u -> rel(u, lhs.asRec().at(u))).collect(new CommonUtil.RecCollector())),
                     //instC(UPDATE_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(REC_TYPE), (lhs, inst) -> Poly.Helper.updateRecRecursion(lhs.asRec(), inst.arg(0).asRec(), MUTABLE)),// inst.arg(0).asRec().elements().map(r -> lhs.asRec().at(r.first(), r.second(), MUTABLE)).filter(o -> false).findFirst().orElse(lhs.as())),
                     //instC(UPDATE_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(REL_TYPE), (lhs, inst) -> Poly.Helper.updateRecRecursion(lhs.asRec(), rec(inst.arg(0).asRel().jvm().get0(), inst.arg(1).asRel().jvm().get1()), MUTABLE)),// inst.arg(0).asRec().elements().map(r -> lhs.asRec().at(r.first(), r.second(), MUTABLE)).filter(o -> false).findFirst().orElse(lhs.as())),
                     instC(SELECT_INST_TID.dom(REC_TID).rng(B.maybeSome()), lst(T(A.some())), (lhs, inst) -> objs(inst.arg(0).stream().map(s -> lhs.asRec().at(s)))),
-                    instC(SELECT_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(REC_TYPE), (lhs, inst) -> rec(Rec.Helper.project(lhs.asRec(), inst.arg(0).asRec(), false), lhs.tid(), lhs.vid())),
-                    //instC(WHERE_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(REC_TYPE), (lhs, inst) -> ProjectionFailureException.predicateThrow(lhs, a -> Rec.Helper.project(lhs.asRec(), inst.arg(0).asRec(), true))),
-                  
+                    instC(SELECT_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(REC_TYPE), (lhs, inst) -> Poly.Helper.selectPolyRecursion(lhs.asRec(), inst.arg(0).asRec(), false)),
+                    instC(WHERE_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(T(A)), (lhs, inst) -> inst.arg(0).isNothing() ? noobj() : lhs),
+                    instC(WHERE_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(REC_TYPE), (lhs, inst) -> ProjectionFailureException.predicateThrow(lhs, a -> Poly.Helper.selectRecRecursion(lhs.asRec(), inst.arg(0).asRec(), true))),
+                 
                     /*instC(WHERE_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(REC_TYPE), (lhs, inst) -> {
                        ProjectionFailureException.predicateThrow(lhs, a -> (Obj) Lst.Helper.project(lhs.asLst(), inst.arg(0).orElse(rec0()), true))),
                         try {

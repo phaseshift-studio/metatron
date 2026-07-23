@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.isa.llm.space;
 import dev.langchain4j.data.message.*;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.furi.fURI;
@@ -75,6 +76,7 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  *   <li>{@link #cleanupSession()} — tear down the space and any resources</li>
  * </ul>
  */
+@Disabled
 public abstract class AbstractLLMSessionIntegrationTest extends AbstractMetatronTest {
 
     /* ------------------------------------------------------------

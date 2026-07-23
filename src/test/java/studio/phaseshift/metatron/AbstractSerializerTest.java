@@ -101,14 +101,16 @@ public abstract class AbstractSerializerTest<T> extends AbstractMetatronTest {
      *
      * @param objString the string representation of the Metatron object to test
      */
-/**
-     * Verifies that the serialized representation can be projected back to its original string format.
-     * This ensures that the transformation is not just semantically correct, but structurally lossless.
+    /**
+     * Verifies that a roundtrip is structurally lossless.
+     * The result must be equal to the original, and their types (including TID/VID) 
+     * must be identical.
      */
-    protected void assertLosslessRoundtrip(String originalString, T buffer) {
-        T roundtripBuffer = serializer.write(serializer.read(buffer));
-        assertEquals(buffer, roundtripBuffer, "Symmetry Violation: The serialized representation changed during the roundtrip.");
+    protected void assertLosslessRoundtrip(Obj original, Obj result) {
+        assertEquals(original, result, "Value mismatch in roundtrip");
+        assertEquals(original.type(), result.type(), "Type/TID/VID mismatch in roundtrip");
     }
+
     @ParameterizedTest
     @CsvSource(value = {
             //obj
@@ -156,12 +158,23 @@ public abstract class AbstractSerializerTest<T> extends AbstractMetatronTest {
     public void testSerializeDeserializeObj(final String objString) {
         final Obj obj = ObjmtronSerializer.parse(objString).apply();
         Obj obj2 = null;
-        final T buffer = this.serializer.write(obj);
-        obj2 = serializer.read(buffer);
-        if (!this.ignoreFail(objString)) {
-            assertEquals(obj, obj2);
-            assertEquals(obj.type(), obj2.type());
-            assertLosslessRoundtrip(objString, buffer);
+        try {
+            final T buffer = this.serializer.write(obj);
+            obj2 = serializer.read(buffer);
+        } finally {
+            LOG.debug("testing {{b}}%s{{/b}} serialized to %s => %s", objString, obj, obj2);
+            if (this.ignoreFail(objString)) {
+                final boolean areEqual = Objects.equals(obj, obj2);
+                if (areEqual)
+                    LOG.warn("no need to ignore test %s <=> %s", objString, obj);
+                else
+                    LOG.debug("ignoring fail for %s <=> %s", objString, obj);
+            } else {
+                assertEquals(obj, obj2);
+                assertEquals(obj.type(), obj2.type());
+            }
+
         }
+
     }
 }

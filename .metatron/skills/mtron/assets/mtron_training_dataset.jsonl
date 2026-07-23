@@ -15,6 +15,21 @@
 {"instruction": "Evaluate this mtron expression involving datapath operations", "input": "mydb/users", "output": "null"}
 {"instruction": "Evaluate this mtron expression involving datapath operations", "input": "mydb", "output": "null"}
 {"instruction": "Evaluate this mtron expression involving datapath operations", "input": "", "output": "null"}
+{"instruction": "Evaluate this mtron expression involving datapath operations", "input": "users/abc/name/extra", "output": "extra"}
+{"instruction": "Evaluate this mtron expression involving datapath operations", "input": "users/abc/name", "output": "null"}
+{"instruction": "Evaluate this mtron expression involving datapath operations", "input": "users/abc", "output": "null"}
+{"instruction": "Evaluate this mtron expression involving datapath operations", "input": "users", "output": "null"}
+{"instruction": "Evaluate this mtron expression involving datapath operations", "input": "", "output": "null"}
+{"instruction": "Evaluate this mtron expression involving datapath operations", "input": "users/abc/name/extra", "output": "extra"}
+{"instruction": "Evaluate this mtron expression involving datapath operations", "input": "users/abc/name", "output": "null"}
+{"instruction": "Evaluate this mtron expression involving datapath operations", "input": "users/abc", "output": "null"}
+{"instruction": "Evaluate this mtron expression involving datapath operations", "input": "users", "output": "null"}
+{"instruction": "Evaluate this mtron expression involving datapath operations", "input": "", "output": "null"}
+{"instruction": "Evaluate this mtron expression involving datapath operations", "input": "mydb/users/abc/name", "output": "mydb/users/abc/name"}
+{"instruction": "Evaluate this mtron expression involving datapath operations", "input": "mydb/users/abc", "output": "mydb/users/abc"}
+{"instruction": "Evaluate this mtron expression involving datapath operations", "input": "mydb/users", "output": "mydb/users"}
+{"instruction": "Evaluate this mtron expression involving datapath operations", "input": "mydb", "output": "mydb"}
+{"instruction": "Evaluate this mtron expression involving datapath operations", "input": "", "output": ""}
 {"instruction": "Evaluate this mtron expression involving datapath operations", "input": "mydb/users/abc/name", "output": "false"}
 {"instruction": "Evaluate this mtron expression involving datapath operations", "input": "mydb/users/abc", "output": "false"}
 {"instruction": "Evaluate this mtron expression involving datapath operations", "input": "mydb/users", "output": "false"}
@@ -40,21 +55,6 @@
 {"instruction": "Evaluate this mtron expression involving datapath operations", "input": "a/b/c/d/e/f/g/h", "output": "true"}
 {"instruction": "Evaluate this mtron expression involving datapath operations", "input": "a/b/c/d/e", "output": "true"}
 {"instruction": "Evaluate this mtron expression involving datapath operations", "input": "a/b/c/d", "output": "false"}
-{"instruction": "Evaluate this mtron expression involving datapath operations", "input": "users/abc/name/extra", "output": "extra"}
-{"instruction": "Evaluate this mtron expression involving datapath operations", "input": "users/abc/name", "output": "null"}
-{"instruction": "Evaluate this mtron expression involving datapath operations", "input": "users/abc", "output": "null"}
-{"instruction": "Evaluate this mtron expression involving datapath operations", "input": "users", "output": "null"}
-{"instruction": "Evaluate this mtron expression involving datapath operations", "input": "", "output": "null"}
-{"instruction": "Evaluate this mtron expression involving datapath operations", "input": "users/abc/name/extra", "output": "extra"}
-{"instruction": "Evaluate this mtron expression involving datapath operations", "input": "users/abc/name", "output": "null"}
-{"instruction": "Evaluate this mtron expression involving datapath operations", "input": "users/abc", "output": "null"}
-{"instruction": "Evaluate this mtron expression involving datapath operations", "input": "users", "output": "null"}
-{"instruction": "Evaluate this mtron expression involving datapath operations", "input": "", "output": "null"}
-{"instruction": "Evaluate this mtron expression involving datapath operations", "input": "mydb/users/abc/name", "output": "mydb/users/abc/name"}
-{"instruction": "Evaluate this mtron expression involving datapath operations", "input": "mydb/users/abc", "output": "mydb/users/abc"}
-{"instruction": "Evaluate this mtron expression involving datapath operations", "input": "mydb/users", "output": "mydb/users"}
-{"instruction": "Evaluate this mtron expression involving datapath operations", "input": "mydb", "output": "mydb"}
-{"instruction": "Evaluate this mtron expression involving datapath operations", "input": "", "output": ""}
 {"instruction": "Evaluate this mtron expression involving cint operations", "input": "{1}true", "output": "true"}
 {"instruction": "Evaluate this mtron expression involving cint operations", "input": "{1,23}true", "output": "true"}
 {"instruction": "Evaluate this mtron expression involving cint operations", "input": "{+}true", "output": "true"}
@@ -95,6 +95,18 @@
 {"instruction": "Evaluate this mtron expression involving furi operations", "input": "/a/b/c/?a=b&c=d", "output": "/c/?a=b&c=d"}
 {"instruction": "Evaluate this mtron expression involving furi operations", "input": "/a/b/c{*}?a=b&c=d", "output": "/b/c{*}?a=b&c=d"}
 {"instruction": "Evaluate this mtron expression involving furi operations", "input": "/a/b/c{2,3}?a=b&c=d", "output": "/c{2,3}?a=b&c=d"}
+{"instruction": "Evaluate this mtron expression involving furi operations", "input": "temp{32}?a<=b", "output": "32"}
+{"instruction": "Evaluate this mtron expression involving furi operations", "input": "temp{32}?a<=b", "output": "32"}
+{"instruction": "Evaluate this mtron expression involving furi operations", "input": "temp{2,32}?/m/int<=/m/str", "output": "2,32"}
+{"instruction": "Evaluate this mtron expression involving furi operations", "input": "temp{2,32}?int{?}<=str{*}", "output": "2,32"}
+{"instruction": "Evaluate this mtron expression involving furi operations", "input": "http://test.com:56/temp{?}?int{2,35}<=str{**}", "output": "0,1"}
+{"instruction": "Evaluate this mtron expression involving furi operations", "input": "abc{*}?int{2,35}<=str{**}", "output": "0,"}
+{"instruction": "Evaluate this mtron expression involving furi operations", "input": "temp{*}?int{2,35}<=str{**}&a=b&c=d", "output": "a=b&c=d"}
+{"instruction": "Evaluate this mtron expression involving furi operations", "input": "/temp{*}?int{2,35}<=str{**}&a=2&c&g=/m/int", "output": "a=2&c&g=/m/int"}
+{"instruction": "Evaluate this mtron expression involving furi operations", "input": "/temp{*}?rng=int{2,35}&dom=str{**}&a=2&c&g=/m/int", "output": "a=2&c&g=/m/int"}
+{"instruction": "Evaluate this mtron expression involving furi operations", "input": "/temp{*}?rng=+&dom=#&a=2&c&g=/m/int", "output": "a=2&c&g=/m/int"}
+{"instruction": "Evaluate this mtron expression involving furi operations", "input": "temp_abc{2,3}?rng=+&dom=#&a=2&c&g=/m/int", "output": "a=2&c&g=/m/int"}
+{"instruction": "Evaluate this mtron expression involving furi operations", "input": "temp_abc{,3}?rng=+/#&dom=abc/#&a=2&c&d", "output": "a=2&c&d"}
 {"instruction": "Evaluate this mtron expression involving furi operations", "input": "a", "output": "true"}
 {"instruction": "Evaluate this mtron expression involving furi operations", "input": "a", "output": "true"}
 {"instruction": "Evaluate this mtron expression involving furi operations", "input": "a", "output": "false"}
@@ -328,18 +340,6 @@
 {"instruction": "Evaluate this mtron expression involving furi operations", "input": "a/b/c?a=2", "output": "true"}
 {"instruction": "Evaluate this mtron expression involving furi operations", "input": "#", "output": "true"}
 {"instruction": "Evaluate this mtron expression involving furi operations", "input": "+:y", "output": "true"}
-{"instruction": "Evaluate this mtron expression involving furi operations", "input": "temp{32}?a<=b", "output": "32"}
-{"instruction": "Evaluate this mtron expression involving furi operations", "input": "temp{32}?a<=b", "output": "32"}
-{"instruction": "Evaluate this mtron expression involving furi operations", "input": "temp{2,32}?/m/int<=/m/str", "output": "2,32"}
-{"instruction": "Evaluate this mtron expression involving furi operations", "input": "temp{2,32}?int{?}<=str{*}", "output": "2,32"}
-{"instruction": "Evaluate this mtron expression involving furi operations", "input": "http://test.com:56/temp{?}?int{2,35}<=str{**}", "output": "0,1"}
-{"instruction": "Evaluate this mtron expression involving furi operations", "input": "abc{*}?int{2,35}<=str{**}", "output": "0,"}
-{"instruction": "Evaluate this mtron expression involving furi operations", "input": "temp{*}?int{2,35}<=str{**}&a=b&c=d", "output": "a=b&c=d"}
-{"instruction": "Evaluate this mtron expression involving furi operations", "input": "/temp{*}?int{2,35}<=str{**}&a=2&c&g=/m/int", "output": "a=2&c&g=/m/int"}
-{"instruction": "Evaluate this mtron expression involving furi operations", "input": "/temp{*}?rng=int{2,35}&dom=str{**}&a=2&c&g=/m/int", "output": "a=2&c&g=/m/int"}
-{"instruction": "Evaluate this mtron expression involving furi operations", "input": "/temp{*}?rng=+&dom=#&a=2&c&g=/m/int", "output": "a=2&c&g=/m/int"}
-{"instruction": "Evaluate this mtron expression involving furi operations", "input": "temp_abc{2,3}?rng=+&dom=#&a=2&c&g=/m/int", "output": "a=2&c&g=/m/int"}
-{"instruction": "Evaluate this mtron expression involving furi operations", "input": "temp_abc{,3}?rng=+/#&dom=abc/#&a=2&c&d", "output": "a=2&c&d"}
 {"instruction": "Evaluate this mtron expression involving furi operations", "input": "http://a/b/c{1}", "output": "1"}
 {"instruction": "Evaluate this mtron expression involving furi operations", "input": "/mtron/int{1,5}", "output": "1,5"}
 {"instruction": "Evaluate this mtron expression involving furi operations", "input": "http://a/b/c{*}", "output": "*"}
@@ -399,6 +399,10 @@
 {"instruction": "Evaluate this mtron expression involving furi operations", "input": "mtron:/b/c?a=b&c=d", "output": "a=b&c=d"}
 {"instruction": "Evaluate this mtron expression involving furi operations", "input": "mtron:/b/c?xyz<=abc&a=b&c=d", "output": "rng=xyz&dom=abc&a=b&c=d"}
 {"instruction": "Evaluate this mtron expression involving furi operations", "input": "mtron:/b/c?xyz{+}<=abc{2}&a=b&c=d", "output": "rng=xyz{+}&dom=abc{2}&a=b&c=d"}
+{"instruction": "Evaluate this mtron expression involving furi operations", "input": "http://abc.xyz.com", "output": "abc"}
+{"instruction": "Evaluate this mtron expression involving furi operations", "input": "http://xyz.com", "output": "null"}
+{"instruction": "Evaluate this mtron expression involving furi operations", "input": "xyz://abc.xyz.com:90/x/y/z", "output": "abc"}
+{"instruction": "Evaluate this mtron expression involving furi operations", "input": "abc/xyz/com", "output": "null"}
 {"instruction": "Evaluate this mtron expression involving furi operations", "input": "a", "output": "true"}
 {"instruction": "Evaluate this mtron expression involving furi operations", "input": "aa", "output": "true"}
 {"instruction": "Evaluate this mtron expression involving furi operations", "input": "aaa", "output": "true"}
@@ -409,14 +413,6 @@
 {"instruction": "Evaluate this mtron expression involving furi operations", "input": "a/b/c", "output": "true"}
 {"instruction": "Evaluate this mtron expression involving furi operations", "input": "a/b/c/d", "output": "true"}
 {"instruction": "Evaluate this mtron expression involving furi operations", "input": "a/b/c", "output": "true"}
-{"instruction": "Evaluate this mtron expression involving furi operations", "input": "test:/a/b/c", "output": "test:/a/b"}
-{"instruction": "Evaluate this mtron expression involving furi operations", "input": "test:/a/b", "output": "test:/a"}
-{"instruction": "Evaluate this mtron expression involving furi operations", "input": "test:/a", "output": "test:"}
-{"instruction": "Evaluate this mtron expression involving furi operations", "input": "test:", "output": "test:"}
-{"instruction": "Evaluate this mtron expression involving furi operations", "input": "mem:/x/y", "output": "mem:/x"}
-{"instruction": "Evaluate this mtron expression involving furi operations", "input": "mem:/x", "output": "mem:"}
-{"instruction": "Evaluate this mtron expression involving furi operations", "input": "mem:", "output": "mem:"}
-{"instruction": "Evaluate this mtron expression involving furi operations", "input": "/a/b/c", "output": "/a/b"}
 {"instruction": "Evaluate this mtron expression involving furi operations", "input": "/g/S/+", "output": "/g/S"}
 {"instruction": "Evaluate this mtron expression involving furi operations", "input": "/g/S/+/", "output": "/g/S/"}
 {"instruction": "Evaluate this mtron expression involving furi operations", "input": "/g/S/+", "output": "/g"}
@@ -449,6 +445,14 @@
 {"instruction": "Evaluate this mtron expression involving furi operations", "input": "/a/b/c/[0]?a=b&c=d", "output": "/a/[0]?a=b&c=d"}
 {"instruction": "Evaluate this mtron expression involving furi operations", "input": "/a/b/c/{?}?a=b&c=d", "output": "/a/{?}?a=b&c=d"}
 {"instruction": "Evaluate this mtron expression involving furi operations", "input": "/a/b?a=b&c=d", "output": "?a=b&c=d"}
+{"instruction": "Evaluate this mtron expression involving furi operations", "input": "test:/a/b/c", "output": "test:/a/b"}
+{"instruction": "Evaluate this mtron expression involving furi operations", "input": "test:/a/b", "output": "test:/a"}
+{"instruction": "Evaluate this mtron expression involving furi operations", "input": "test:/a", "output": "test:"}
+{"instruction": "Evaluate this mtron expression involving furi operations", "input": "test:", "output": "test:"}
+{"instruction": "Evaluate this mtron expression involving furi operations", "input": "mem:/x/y", "output": "mem:/x"}
+{"instruction": "Evaluate this mtron expression involving furi operations", "input": "mem:/x", "output": "mem:"}
+{"instruction": "Evaluate this mtron expression involving furi operations", "input": "mem:", "output": "mem:"}
+{"instruction": "Evaluate this mtron expression involving furi operations", "input": "/a/b/c", "output": "/a/b"}
 {"instruction": "Evaluate this mtron expression involving furi operations", "input": "<http://example.com:${>>port}/api>", "output": "http://example.com:8080/api"}
 {"instruction": "Evaluate this mtron expression involving furi operations", "input": "<http://example.com/${>>user}/profile>", "output": "http://example.com/john/profile"}
 {"instruction": "Evaluate this mtron expression involving furi operations", "input": "</api/${>>version}/users>", "output": "/api/v2/users"}
@@ -511,10 +515,6 @@
 {"instruction": "Evaluate this mtron expression involving furi operations", "input": "http://#:29/a/b/c", "output": "4"}
 {"instruction": "Evaluate this mtron expression involving furi operations", "input": "http://#:29/a/b/c/", "output": "5"}
 {"instruction": "Evaluate this mtron expression involving furi operations", "input": "/a/b/c/", "output": "5"}
-{"instruction": "Evaluate this mtron expression involving furi operations", "input": "http://abc.xyz.com", "output": "abc"}
-{"instruction": "Evaluate this mtron expression involving furi operations", "input": "http://xyz.com", "output": "null"}
-{"instruction": "Evaluate this mtron expression involving furi operations", "input": "xyz://abc.xyz.com:90/x/y/z", "output": "abc"}
-{"instruction": "Evaluate this mtron expression involving furi operations", "input": "abc/xyz/com", "output": "null"}
 {"instruction": "Evaluate this mtron expression involving furi operations", "input": "/a/b/c", "output": "null"}
 {"instruction": "Evaluate this mtron expression involving furi operations", "input": "a/b/c", "output": "null"}
 {"instruction": "Evaluate this mtron expression involving furi operations", "input": "http://x.com/a/b/c", "output": "http"}
@@ -919,6 +919,7 @@
 {"instruction": "Evaluate this mtron expression involving dcmntspace operations", "input": "dtUpdate5", "output": "1000"}
 {"instruction": "Evaluate this mtron expression involving dcmntspace operations", "input": "507f1f77bcf86cd799439021", "output": "John Doe"}
 {"instruction": "Evaluate this mtron expression involving dcmntspace operations", "input": "507f1f77bcf86cd799439022", "output": "Jane Smith"}
+{"instruction": "Evaluate this mtron expression involving grphspace operations", "input": "*/g/V/1.addE(likes,*/g/V/2)", "output": "*/g/V/2"}
 {"instruction": "Evaluate this mtron expression involving grphspace operations", "input": "*/g/V/1/OUT/+.count()", "output": "3"}
 {"instruction": "Evaluate this mtron expression involving grphspace operations", "input": "*/g/V/+.?[name=>'marko'].outE(knows).count()", "output": "2"}
 {"instruction": "Evaluate this mtron expression involving grphspace operations", "input": "*/g/V/1/OUT/created.count()", "output": "1"}
@@ -961,7 +962,6 @@
 {"instruction": "Evaluate this mtron expression involving grphspace operations", "input": "@/g/V/1>>=[age=>'hello']", "output": "<ERROR>"}
 {"instruction": "Evaluate this mtron expression involving grphspace operations", "input": "@/g/V/1>>=+[likes=>food]", "output": "food"}
 {"instruction": "Evaluate this mtron expression involving grphspace operations", "input": "@/g/V/1>>=+[likes=>[!(*/g/V/+.?[name=>'vadas']),!*/g/V/3]]", "output": "1-<[*/g/V/2,*/g/V/3]>-"}
-{"instruction": "Evaluate this mtron expression involving grphspace operations", "input": "*/g/V/1.addE(likes,*/g/V/2)", "output": "*/g/V/2"}
 {"instruction": "Evaluate this mtron expression using the /m/llm instruction set", "input": "*<local:skills/mtron>.as(skill::T)", "output": "true"}
 {"instruction": "Evaluate this mtron expression using the /m instruction set", "input": "2.plus?dom=int(1)", "output": "3"}
 {"instruction": "Evaluate this mtron expression using the /m instruction set", "input": "math('1+2')", "output": "3.0"}
@@ -1012,11 +1012,30 @@
 {"instruction": "Evaluate this mtron expression using the /m instruction set", "input": "[a,b].as(rec::T)", "output": "[0=>a,1=>b]"}
 {"instruction": "Evaluate this mtron expression using the /m instruction set", "input": "[a,b].as(reck::T)", "output": "reck::[0=>a,1=>b]"}
 {"instruction": "Evaluate this mtron expression using the /m instruction set", "input": "[a,b].as(rec::T).as(lst::T)", "output": "[(0=>(0=>a)),(1=>(1=>b))]"}
+{"instruction": "Evaluate this mtron expression using the /m instruction set", "input": "@xyz>>=[a=>+2,b=>none,c=>none]", "output": "[a=>3]"}
+{"instruction": "Evaluate this mtron expression using the /m instruction set", "input": "@xyz>>=[a=>+2]", "output": "[a=>3,b=>2,c=>[d=>3,e=>[4,5,6,7]]]"}
+{"instruction": "Evaluate this mtron expression using the /m instruction set", "input": "@xyz>>=+[a=>+2]", "output": "[a=>{1,plus(2)},b=>2,c=>[d=>3,e=>[4,5,6,7]]]"}
+{"instruction": "Evaluate this mtron expression using the /m instruction set", "input": "@xyz>>=[c=>[e=>[0=>+1,_=>_]]]", "output": "[a=>1,b=>2,c=>[d=>3,e=>[5,5,6,7]]]"}
+{"instruction": "Evaluate this mtron expression using the /m instruction set", "input": "@xyz>>=[c=>[e=>1]]", "output": "[a=>1,b=>2,c=>[d=>3,e=>1]]"}
+{"instruction": "Evaluate this mtron expression using the /m instruction set", "input": "@xyz>>=[a=>-<[_,+1,+2],c=>[e=>|1,d=>none]]", "output": "[a=>[1,2,3],b=>2,c=>[e=>1]]"}
+{"instruction": "Evaluate this mtron expression using the /m instruction set", "input": "@xyz>>=[a=>-<[_,+1,+2],c=>+[e=>|1]]", "output": "[a=>[1,2,3],b=>2,c=>[d=>3,e=>{[4,5,6,7],block(1)}]]"}
+{"instruction": "Evaluate this mtron expression using the /m instruction set", "input": "@xyz>>=[a=>-<[_,+1,+2],c=>[e=>|1,d=>_]]", "output": "[a=>[1,2,3],b=>2,c=>[d=>3,e=>1]]"}
+{"instruction": "Evaluate this mtron expression using the /m instruction set", "input": "@xyz>>=[a=>-<[_,+1,+2]>-.sum(),c=>[e=>1]]", "output": "[a=>6,b=>2,c=>[d=>3,e=>1]]"}
+{"instruction": "Evaluate this mtron expression using the /m instruction set", "input": "@xyz>>=[a=>-<[_,+1,+2]>-.sum(),c=>[e=>1,d=>+1]]", "output": "[a=>6,b=>2,c=>[e=>1,d=>4]]"}
+{"instruction": "Evaluate this mtron expression using the /m instruction set", "input": "@xyz/c>>=[d=>+10]", "output": "[d=>13,e=>[4,5,6,7]]"}
+{"instruction": "Evaluate this mtron expression using the /m instruction set", "input": "@xyz/c/d>>=10.from(xyz)", "output": "[a=>1,b=>2,c=>[d=>10,e=>[4,5,6,7]]]"}
+{"instruction": "Evaluate this mtron expression using the /m instruction set", "input": "@xyz/c/d>>=_.from(xyz)", "output": "[a=>1,b=>2,c=>[d=>3,e=>[4,5,6,7]]]"}
+{"instruction": "Evaluate this mtron expression using the /m instruction set", "input": "@xyz/c/d>>= +10", "output": "13"}
+{"instruction": "Evaluate this mtron expression using the /m instruction set", "input": "@xyz/c/d>>=(+10).from(xyz)", "output": "[a=>1,b=>2,c=>[d=>13,e=>[4,5,6,7]]]"}
+{"instruction": "Evaluate this mtron expression using the /m instruction set", "input": "@xyz/c/d>>= -<[_]", "output": "[3]"}
+{"instruction": "Evaluate this mtron expression using the /m instruction set", "input": "@xyz/c/d>>= -<[_].from(xyz)", "output": "[a=>1,b=>2,c=>[d=>[3],e=>[4,5,6,7]]]"}
+{"instruction": "Evaluate this mtron expression using the /m instruction set", "input": "@xyz/c/d>>= -<[+20]", "output": "[23]"}
+{"instruction": "Evaluate this mtron expression using the /m instruction set", "input": "@xyz/c/d>>= -<[+20].from(xyz)", "output": "[a=>1,b=>2,c=>[d=>[23],e=>[4,5,6,7]]]"}
 {"instruction": "Evaluate this mtron expression using the /m instruction set", "input": "[1,2]@a >>= [_,+4]", "output": "[1,6]"}
 {"instruction": "Evaluate this mtron expression using the /m instruction set", "input": "[1,[2,[3]]]@a >>= [_,[+4,[+5]]]", "output": "[1,[6,[8]]]"}
 {"instruction": "Evaluate this mtron expression using the /m instruction set", "input": "[1,[2,[3]]] >>= [_,[+4,[+5]]]", "output": "[1,[6,[8]]]"}
 {"instruction": "Evaluate this mtron expression using the /m instruction set", "input": "[1,2] >>=(-<[>-]>-.>-[,])", "output": "[1,2]"}
-{"instruction": "Evaluate this mtron expression using the /m instruction set", "input": "[1,2] >>= [a,_,c]", "output": "[a,2,c]"}
+{"instruction": "Evaluate this mtron expression using the /m instruction set", "input": "[1,2] >>= [a,_,c]", "output": "[a,2]"}
 {"instruction": "Evaluate this mtron expression using the /m instruction set", "input": "[1,2] >>= +[a,_,c]", "output": "[1,2,a,_,c]"}
 {"instruction": "Evaluate this mtron expression using the /m instruction set", "input": "[1,2] >>= +(-<[a,_,c])", "output": "[1,2,a,[1,2],c]"}
 {"instruction": "Evaluate this mtron expression using the /m instruction set", "input": "[1,2] >>= +[a,c]", "output": "[1,2,a,c]"}
@@ -1031,7 +1050,7 @@
 {"instruction": "Evaluate this mtron expression using the /m instruction set", "input": "[a=>1,b=>[c=>[1,2,3]]]     >>= [a=>+2,b=>[c=>none]]", "output": "[a=>3,b=>[c=>[1,2,3]]]"}
 {"instruction": "Evaluate this mtron expression using the /m instruction set", "input": "[a=>1,b=>[c=>[1,2,3]]]     >>= [b=>[c=>[_,_,_]]]", "output": "[a=>1,b=>[c=>[1,2,3]]]"}
 {"instruction": "Evaluate this mtron expression using the /m instruction set", "input": "[a=>1,b=>[c=>[1,2,3]]]     >>= [b=>[c=>[_,none,_]]]", "output": "[a=>1,b=>[c=>[1,3]]]"}
-{"instruction": "Evaluate this mtron expression using the /m instruction set", "input": "[a=>1,b=>[c=>[1,2,3]]]     >>= [b=>[c=>[_,parent().(_,_){*0 + *1}]]]", "output": "[a=>1,b=>[c=>[1,[1,2,3,1,2,3],3]]]"}
+{"instruction": "Evaluate this mtron expression using the /m instruction set", "input": "[a=>1,b=>[c=>[1,2,3]]]     >>= [b=>[c=>[_,parent().(_,_){*0 + *1}]]]", "output": "[a=>1,b=>[c=>[1,[1,2,3,1,2,3]]]]"}
 {"instruction": "Evaluate this mtron expression using the /m instruction set", "input": "[1,[2,[!*xyz]]] >>= [_,[+4,[_]]]", "output": "[1,[6,[[a=>1,b=>2,c=>[d=>3,e=>[4,5,6,7]]]]]]"}
 {"instruction": "Evaluate this mtron expression using the /m instruction set", "input": "[1,[2,[!*xyz]]] >>= [_,[+4,[-<[_,_]]]]", "output": "[1,[6,[[[a=>1,b=>2,c=>[d=>3,e=>[4,5,6,7]]],[a=>1,b=>2,c=>[d=>3,e=>[4,5,6,7]]]]]]]"}
 {"instruction": "Evaluate this mtron expression using the /m instruction set", "input": "[1,[2,[!*xyz]]] >>= [_,[+4,[-<[_,_]>-]]]", "output": "[1,[6,[{2}[a=>1,b=>2,c=>[d=>3,e=>[4,5,6,7]]]]]]"}
@@ -1378,6 +1397,8 @@
 {"instruction": "Evaluate this mtron expression using the /m instruction set", "input": "a -> [b=>[c=>[1,2,3]]]", "output": "[b=>[c=>[1,2,3]]]"}
 {"instruction": "Evaluate this mtron expression using the /m instruction set", "input": "a -> [b=>[c=>[1,2,3]]]", "output": "[b=>[c=>{1,2,3,4,5,6}]]"}
 {"instruction": "Evaluate this mtron expression using the /m instruction set", "input": "a -> [b=>[c=>[1,2,3]]]", "output": "[b=>[c=>{1,2,3,4,5,6}]]"}
+{"instruction": "Evaluate this mtron expression using the /m instruction set", "input": "a -> [b=>[c=>[1=>2]]]", "output": "[b=>[c=>{[1=>2],[2=>3]}]]"}
+{"instruction": "Evaluate this mtron expression using the /m instruction set", "input": "a -> [b=>[c=>[1=>2]]]", "output": "[b=>[c=>[1=>2,2=>3]]]"}
 {"instruction": "Evaluate this mtron expression using the /m instruction set", "input": "a -> [b=>[c=>[1=>2]]]", "output": "[b=>[c=>[1=>4]]]"}
 {"instruction": "Evaluate this mtron expression using the /m instruction set", "input": "a -> [b=>[c=>[1=>2]]]", "output": "[b=>[c=>[1=>4]]]"}
 {"instruction": "Evaluate this mtron expression using the /m instruction set", "input": "a -> [b=>[c=>[1=>2]]]", "output": "[b=>[c=>[1=>4]]]"}
@@ -1388,11 +1409,16 @@
 {"instruction": "Evaluate this mtron expression using the /m instruction set", "input": "a -> noobj", "output": "noobj"}
 {"instruction": "Evaluate this mtron expression using the /m instruction set", "input": "a -> {1,2,3,4}", "output": "{5,6,7}"}
 {"instruction": "Evaluate this mtron expression using the /m instruction set", "input": "a -> [1,2,3,4]", "output": "{5,6,7}"}
+{"instruction": "Evaluate this mtron expression using the /m instruction set", "input": "a -> [1,2,3,4]", "output": "[5,6,7]"}
 {"instruction": "Evaluate this mtron expression using the /m instruction set", "input": "a -> [1,2,3,4]", "output": "[5,6,7,4]"}
+{"instruction": "Evaluate this mtron expression using the /m instruction set", "input": "a -> [1,2,3,4]", "output": "[3,4,13,14]"}
 {"instruction": "Evaluate this mtron expression using the /m instruction set", "input": "a -> [1,2,3,4]", "output": "[5,6,7]"}
 {"instruction": "Evaluate this mtron expression using the /m instruction set", "input": "a -> [1,2,3,4]", "output": "[1,2,3,4]"}
 {"instruction": "Evaluate this mtron expression using the /m instruction set", "input": "a -> [1,2,3,4]", "output": "[1,2,3,4]"}
 {"instruction": "Evaluate this mtron expression using the /m instruction set", "input": "a -> [1,2,3,4]", "output": "[1,2,3,4,5,6,7]"}
+{"instruction": "Evaluate this mtron expression using the /m instruction set", "input": "a -> [1,2,3,4]", "output": "[1,7,3,4]"}
+{"instruction": "Evaluate this mtron expression using the /m instruction set", "input": "a -> [1,2,3,4]", "output": "[1,7,3,4]"}
+{"instruction": "Evaluate this mtron expression using the /m instruction set", "input": "a -> [1,2,3,4]", "output": "[,]"}
 {"instruction": "Evaluate this mtron expression using the /m instruction set", "input": "a -> noobj", "output": "noobj"}
 {"instruction": "Evaluate this mtron expression using the /m instruction set", "input": "a -> [1]", "output": "[1,2,3,4]"}
 {"instruction": "Evaluate this mtron expression using the /m instruction set", "input": "a -> noobj", "output": "noobj"}
@@ -1575,6 +1601,7 @@
 {"instruction": "Evaluate this mtron expression using the /m instruction set", "input": "|(plus(30)).map(20)", "output": "20"}
 {"instruction": "Evaluate this mtron expression using the /m instruction set", "input": "|(plus(30)).swap(20)", "output": "50"}
 {"instruction": "Evaluate this mtron expression using the /m instruction set", "input": "1.and(gt(2),lt(5))", "output": "false"}
+{"instruction": "Evaluate this mtron expression using the /m instruction set", "input": "1.gt(2) | lt(5)", "output": "true"}
 {"instruction": "Evaluate this mtron expression using the /m instruction set", "input": "{1,2,3,4,5}.and(gt(2))", "output": "{false,true,true,true,false}"}
 {"instruction": "Evaluate this mtron expression using the /m instruction set", "input": "{1,2,3,4,5}.and(gt(2),lt(5))", "output": "{false,false,true,true,false}"}
 {"instruction": "Evaluate this mtron expression using the /m instruction set", "input": "{1,2,3,4,5}.and(gt(2),eq(3),lt(5))", "output": "{false,false,true,false,false}"}
@@ -1790,8 +1817,6 @@
 {"instruction": "Evaluate this mtron expression involving code operations", "input": "1.to(a).plus(from(a))", "output": "false"}
 {"instruction": "Evaluate this mtron expression involving code operations", "input": "*abc._", "output": "true"}
 {"instruction": "Evaluate this mtron expression involving code operations", "input": "1.*abc._", "output": "true"}
-{"instruction": "Evaluate this mtron expression involving fail operations", "input": "*/sys/fail/+.count().to(xyzabc).gt(0)", "output": "true"}
-{"instruction": "Evaluate this mtron expression involving fail operations", "input": "*/sys/fail/+.count()", "output": "*xyzabc"}
 {"instruction": "Evaluate this mtron expression involving fail operations", "input": "fail::[a][b][c][d].catch()", "output": "noobj"}
 {"instruction": "Evaluate this mtron expression involving fail operations", "input": "fail::[a][b][c][d].catch(_)", "output": "fail::[a][b][c][d].catch(_)"}
 {"instruction": "Evaluate this mtron expression involving fail operations", "input": "fail::[a][b][c][d].catch(34)", "output": "34"}
@@ -1803,6 +1828,11 @@
 {"instruction": "Evaluate this mtron expression involving fail operations", "input": "fail::[a][b][c][d].catch(-<[_,_]>-).map?int<=#{?}(34)", "output": "{2}34"}
 {"instruction": "Evaluate this mtron expression involving fail operations", "input": "fail::[a][b][c][d].catch(cause().cause().cause().cause())", "output": "noobj"}
 {"instruction": "Evaluate this mtron expression involving fail operations", "input": "fail::[a][b][c][d].catch(cause().cause().cause()).cause()", "output": "noobj"}
+{"instruction": "Evaluate this mtron expression involving fail operations", "input": "*/sys/fail/+.count().to(xyzabc).gt(0)", "output": "true"}
+{"instruction": "Evaluate this mtron expression involving fail operations", "input": "*/sys/fail/+.count()", "output": "*xyzabc"}
+{"instruction": "Evaluate this mtron expression involving inst operations", "input": "/m/plus?dom=/m/int&rng=/m/int", "output": "34"}
+{"instruction": "Evaluate this mtron expression involving inst operations", "input": "/m/mult/a?dom=+&rng=+", "output": "x::a"}
+{"instruction": "Evaluate this mtron expression involving inst operations", "input": "/m/mult/y?dom=real{*}&rng=uri{*}", "output": "{ab,bc,de}"}
 {"instruction": "Evaluate this mtron expression involving inst operations", "input": "1", "output": "test?str<=int()"}
 {"instruction": "Evaluate this mtron expression involving inst operations", "input": "1", "output": "test?str<=int()"}
 {"instruction": "Evaluate this mtron expression involving inst operations", "input": "1", "output": "test?int<=int()"}
@@ -1831,9 +1861,6 @@
 {"instruction": "Evaluate this mtron expression involving inst operations", "input": "noobj", "output": "test?int<=noobj(int::T)"}
 {"instruction": "Evaluate this mtron expression involving inst operations", "input": "noobj", "output": "test?int<=int{0}(int::T)"}
 {"instruction": "Evaluate this mtron expression involving inst operations", "input": "noobj", "output": "test?int{3}<=int{0}(int{3}::T)"}
-{"instruction": "Evaluate this mtron expression involving inst operations", "input": "/m/plus?dom=/m/int&rng=/m/int", "output": "34"}
-{"instruction": "Evaluate this mtron expression involving inst operations", "input": "/m/mult/a?dom=+&rng=+", "output": "x::a"}
-{"instruction": "Evaluate this mtron expression involving inst operations", "input": "/m/mult/y?dom=real{*}&rng=uri{*}", "output": "{ab,bc,de}"}
 {"instruction": "Evaluate this mtron expression involving inst operations", "input": "1", "output": "int"}
 {"instruction": "Evaluate this mtron expression involving inst operations", "input": "1", "output": "int"}
 {"instruction": "Evaluate this mtron expression involving inst operations", "input": "1", "output": "int"}
@@ -1915,24 +1942,6 @@
 {"instruction": "Evaluate this mtron expression involving inst operations", "input": "5.band(max=>4)", "output": "noobj"}
 {"instruction": "Evaluate this mtron expression involving inst operations", "input": "{2,3,4,5,6,7,8,9}.band(max=>4)", "output": "{3,4}"}
 {"instruction": "Evaluate this mtron expression involving inst operations", "input": "1.band(max=>3)", "output": "noobj"}
-{"instruction": "Evaluate this mtron expression involving int operations", "input": "1.as(str::T)", "output": "\"1\""}
-{"instruction": "Evaluate this mtron expression involving int operations", "input": "2.as(str::T)", "output": "\"2\""}
-{"instruction": "Evaluate this mtron expression involving int operations", "input": "1.as(real::T)", "output": "1.0"}
-{"instruction": "Evaluate this mtron expression involving int operations", "input": "2.as(real::T)", "output": "2.0"}
-{"instruction": "Evaluate this mtron expression involving int operations", "input": "{3}2.as(int::T)", "output": "{3}2"}
-{"instruction": "Evaluate this mtron expression involving int operations", "input": "{2}2.as(real::T)", "output": "{2}2.0"}
-{"instruction": "Evaluate this mtron expression involving int operations", "input": "{54,200}2.as(str::T)", "output": "{54,200}\"2\""}
-{"instruction": "Evaluate this mtron expression involving int operations", "input": "{54,200}2.as(uri::T)", "output": "{54,200}<2>"}
-{"instruction": "Evaluate this mtron expression involving int operations", "input": "1", "output": "3"}
-{"instruction": "Evaluate this mtron expression involving int operations", "input": "1", "output": "11"}
-{"instruction": "Evaluate this mtron expression involving int operations", "input": "1", "output": "true"}
-{"instruction": "Evaluate this mtron expression involving int operations", "input": "1", "output": "1"}
-{"instruction": "Evaluate this mtron expression involving int operations", "input": "1", "output": "true"}
-{"instruction": "Evaluate this mtron expression involving int operations", "input": "1", "output": "1"}
-{"instruction": "Evaluate this mtron expression involving int operations", "input": "1", "output": "false"}
-{"instruction": "Evaluate this mtron expression involving int operations", "input": "1", "output": "noobj"}
-{"instruction": "Evaluate this mtron expression involving int operations", "input": "int{-1}::1", "output": "int{-1}::1"}
-{"instruction": "Evaluate this mtron expression involving int operations", "input": "int{-1}::1", "output": "int{-1}::1"}
 {"instruction": "Evaluate this mtron expression involving int operations", "input": "int{10}::1", "output": "int{5}::1"}
 {"instruction": "Evaluate this mtron expression involving int operations", "input": "int{10}::1", "output": "int{7}::1"}
 {"instruction": "Evaluate this mtron expression involving int operations", "input": "int{4,10}::1", "output": "int{1,7}::1"}
@@ -1985,32 +1994,14 @@
 {"instruction": "Evaluate this mtron expression involving int operations", "input": "{-5,5}.sum()", "output": "0"}
 {"instruction": "Evaluate this mtron expression involving int operations", "input": "{1}.sum()", "output": "1"}
 {"instruction": "Evaluate this mtron expression involving int operations", "input": "{}.sum?int<=int{*}(0)", "output": "0"}
-{"instruction": "Evaluate this mtron expression involving int operations", "input": "1", "output": "true"}
-{"instruction": "Evaluate this mtron expression involving int operations", "input": "1", "output": "true"}
-{"instruction": "Evaluate this mtron expression involving int operations", "input": "1", "output": "false"}
-{"instruction": "Evaluate this mtron expression involving int operations", "input": "1", "output": "true"}
-{"instruction": "Evaluate this mtron expression involving int operations", "input": "int{5}::1", "output": "false"}
-{"instruction": "Evaluate this mtron expression involving int operations", "input": "int{5}::1", "output": "true"}
-{"instruction": "Evaluate this mtron expression involving int operations", "input": "int{0}::1", "output": "true"}
-{"instruction": "Evaluate this mtron expression involving int operations", "input": "int{**}::1", "output": "true"}
-{"instruction": "Evaluate this mtron expression involving int operations", "input": "int{-1}::1", "output": "true"}
-{"instruction": "Evaluate this mtron expression involving int operations", "input": "int{-1}::1", "output": "false"}
-{"instruction": "Evaluate this mtron expression involving int operations", "input": "int{-1}::1", "output": "true"}
-{"instruction": "Evaluate this mtron expression involving int operations", "input": "bool::1", "output": "<ERROR>"}
-{"instruction": "Evaluate this mtron expression involving int operations", "input": "real::1", "output": "<ERROR>"}
-{"instruction": "Evaluate this mtron expression involving int operations", "input": "str::1", "output": "<ERROR>"}
-{"instruction": "Evaluate this mtron expression involving int operations", "input": "uri::1", "output": "<ERROR>"}
-{"instruction": "Evaluate this mtron expression involving int operations", "input": "lst::1", "output": "<ERROR>"}
-{"instruction": "Evaluate this mtron expression involving int operations", "input": "rec::1", "output": "<ERROR>"}
-{"instruction": "Evaluate this mtron expression involving int operations", "input": "inst::1", "output": "<ERROR>"}
-{"instruction": "Evaluate this mtron expression involving int operations", "input": "3.plus(mult(2))", "output": "9"}
-{"instruction": "Evaluate this mtron expression involving int operations", "input": "{2,3}>-.plus(mult(2))", "output": "{6,9}"}
-{"instruction": "Evaluate this mtron expression involving int operations", "input": "{2,3}.plus(mult(2))", "output": "{6,9}"}
-{"instruction": "Evaluate this mtron expression involving int operations", "input": "{1,2,3}.plus(1).plus(2)", "output": "{4,5,6}"}
-{"instruction": "Evaluate this mtron expression involving int operations", "input": "{1,2,3}.plus(1).plus(2).mult(2)", "output": "{8,10,12}"}
-{"instruction": "Evaluate this mtron expression involving int operations", "input": "{1,2,3}.plus(1).plus(2).mult(2).isa(int::T)", "output": "{8,10,12}"}
-{"instruction": "Evaluate this mtron expression involving int operations", "input": "{1,2,3}.plus(1).plus(2).mult(2).?=~str::T", "output": "noobj"}
-{"instruction": "Evaluate this mtron expression involving int operations", "input": "{int{-1}::1,int::1}", "output": "noobj"}
+{"instruction": "Evaluate this mtron expression involving int operations", "input": "1.as(str::T)", "output": "\"1\""}
+{"instruction": "Evaluate this mtron expression involving int operations", "input": "2.as(str::T)", "output": "\"2\""}
+{"instruction": "Evaluate this mtron expression involving int operations", "input": "1.as(real::T)", "output": "1.0"}
+{"instruction": "Evaluate this mtron expression involving int operations", "input": "2.as(real::T)", "output": "2.0"}
+{"instruction": "Evaluate this mtron expression involving int operations", "input": "{3}2.as(int::T)", "output": "{3}2"}
+{"instruction": "Evaluate this mtron expression involving int operations", "input": "{2}2.as(real::T)", "output": "{2}2.0"}
+{"instruction": "Evaluate this mtron expression involving int operations", "input": "{54,200}2.as(str::T)", "output": "{54,200}\"2\""}
+{"instruction": "Evaluate this mtron expression involving int operations", "input": "{54,200}2.as(uri::T)", "output": "{54,200}<2>"}
 {"instruction": "Evaluate this mtron expression involving int operations", "input": "5.gt(3)", "output": "true"}
 {"instruction": "Evaluate this mtron expression involving int operations", "input": "5.gt(5)", "output": "false"}
 {"instruction": "Evaluate this mtron expression involving int operations", "input": "5.gt(7)", "output": "false"}
@@ -2028,22 +2019,46 @@
 {"instruction": "Evaluate this mtron expression involving int operations", "input": "0.eq(0)", "output": "true"}
 {"instruction": "Evaluate this mtron expression involving int operations", "input": "-5.lt(0)", "output": "true"}
 {"instruction": "Evaluate this mtron expression involving int operations", "input": "-5.gt(-10)", "output": "true"}
+{"instruction": "Evaluate this mtron expression involving int operations", "input": "1", "output": "true"}
+{"instruction": "Evaluate this mtron expression involving int operations", "input": "1", "output": "true"}
+{"instruction": "Evaluate this mtron expression involving int operations", "input": "1", "output": "false"}
+{"instruction": "Evaluate this mtron expression involving int operations", "input": "1", "output": "true"}
+{"instruction": "Evaluate this mtron expression involving int operations", "input": "int{5}::1", "output": "false"}
+{"instruction": "Evaluate this mtron expression involving int operations", "input": "int{5}::1", "output": "true"}
+{"instruction": "Evaluate this mtron expression involving int operations", "input": "int{0}::1", "output": "true"}
+{"instruction": "Evaluate this mtron expression involving int operations", "input": "int{**}::1", "output": "true"}
+{"instruction": "Evaluate this mtron expression involving int operations", "input": "int{-1}::1", "output": "true"}
+{"instruction": "Evaluate this mtron expression involving int operations", "input": "int{-1}::1", "output": "false"}
+{"instruction": "Evaluate this mtron expression involving int operations", "input": "int{-1}::1", "output": "true"}
+{"instruction": "Evaluate this mtron expression involving int operations", "input": "1", "output": "3"}
+{"instruction": "Evaluate this mtron expression involving int operations", "input": "1", "output": "11"}
+{"instruction": "Evaluate this mtron expression involving int operations", "input": "1", "output": "true"}
+{"instruction": "Evaluate this mtron expression involving int operations", "input": "1", "output": "1"}
+{"instruction": "Evaluate this mtron expression involving int operations", "input": "1", "output": "true"}
+{"instruction": "Evaluate this mtron expression involving int operations", "input": "1", "output": "1"}
+{"instruction": "Evaluate this mtron expression involving int operations", "input": "1", "output": "false"}
+{"instruction": "Evaluate this mtron expression involving int operations", "input": "1", "output": "noobj"}
+{"instruction": "Evaluate this mtron expression involving int operations", "input": "int{-1}::1", "output": "int{-1}::1"}
+{"instruction": "Evaluate this mtron expression involving int operations", "input": "int{-1}::1", "output": "int{-1}::1"}
+{"instruction": "Evaluate this mtron expression involving int operations", "input": "bool::1", "output": "<ERROR>"}
+{"instruction": "Evaluate this mtron expression involving int operations", "input": "real::1", "output": "<ERROR>"}
+{"instruction": "Evaluate this mtron expression involving int operations", "input": "str::1", "output": "<ERROR>"}
+{"instruction": "Evaluate this mtron expression involving int operations", "input": "uri::1", "output": "<ERROR>"}
+{"instruction": "Evaluate this mtron expression involving int operations", "input": "lst::1", "output": "<ERROR>"}
+{"instruction": "Evaluate this mtron expression involving int operations", "input": "rec::1", "output": "<ERROR>"}
+{"instruction": "Evaluate this mtron expression involving int operations", "input": "inst::1", "output": "<ERROR>"}
+{"instruction": "Evaluate this mtron expression involving int operations", "input": "3.plus(mult(2))", "output": "9"}
+{"instruction": "Evaluate this mtron expression involving int operations", "input": "{2,3}>-.plus(mult(2))", "output": "{6,9}"}
+{"instruction": "Evaluate this mtron expression involving int operations", "input": "{2,3}.plus(mult(2))", "output": "{6,9}"}
+{"instruction": "Evaluate this mtron expression involving int operations", "input": "{1,2,3}.plus(1).plus(2)", "output": "{4,5,6}"}
+{"instruction": "Evaluate this mtron expression involving int operations", "input": "{1,2,3}.plus(1).plus(2).mult(2)", "output": "{8,10,12}"}
+{"instruction": "Evaluate this mtron expression involving int operations", "input": "{1,2,3}.plus(1).plus(2).mult(2).isa(int::T)", "output": "{8,10,12}"}
+{"instruction": "Evaluate this mtron expression involving int operations", "input": "{1,2,3}.plus(1).plus(2).mult(2).?=~str::T", "output": "noobj"}
+{"instruction": "Evaluate this mtron expression involving int operations", "input": "{int{-1}::1,int::1}", "output": "noobj"}
 {"instruction": "Evaluate this mtron expression involving lst operations", "input": "[1,2,3]", "output": "true"}
 {"instruction": "Evaluate this mtron expression involving lst operations", "input": "[1,2,3]", "output": "true"}
 {"instruction": "Evaluate this mtron expression involving lst operations", "input": "[1,2,3]", "output": "true"}
 {"instruction": "Evaluate this mtron expression involving lst operations", "input": "[10,20]", "output": "true"}
-{"instruction": "Evaluate this mtron expression involving lst operations", "input": "[a,[b,[c,d],e],f]", "output": "[a,[b,[c,d],e],f]"}
-{"instruction": "Evaluate this mtron expression involving lst operations", "input": "[a,[b,[c,d],e],f]>>0", "output": "a"}
-{"instruction": "Evaluate this mtron expression involving lst operations", "input": "[a,[b,[c,d],e],f]>><1/0>", "output": "b"}
-{"instruction": "Evaluate this mtron expression involving lst operations", "input": "[a,[b,[c,d],e],f]>><1/1/0>", "output": "c"}
-{"instruction": "Evaluate this mtron expression involving lst operations", "input": "[a,[b,[c,d],e],f]>><1/1/1>", "output": "d"}
-{"instruction": "Evaluate this mtron expression involving lst operations", "input": "[a,[b,[c,d],e],f]>><1/1/+>", "output": "{c,d}"}
-{"instruction": "Evaluate this mtron expression involving lst operations", "input": "[a,[b,[c,d],e],f]>><1/+/+>", "output": "{c,d}"}
-{"instruction": "Evaluate this mtron expression involving lst operations", "input": "[a,[b,[c,d],[e,f]],g]>><1/+/+>", "output": "{c,d,e,f}"}
-{"instruction": "Evaluate this mtron expression involving lst operations", "input": "[a,[b,[c,d],[e,[f,g]]],h]>><1/+/+>", "output": "{c,d,e,[f,g]}"}
-{"instruction": "Evaluate this mtron expression involving lst operations", "input": "[a,[b,[c,d],e],f]>><1/+>", "output": "{b,[c,d],e}"}
-{"instruction": "Evaluate this mtron expression involving lst operations", "input": "[a,[b,[c,d],e],f]>><1/+>", "output": "{b,[c,d],e}"}
-{"instruction": "Evaluate this mtron expression involving lst operations", "input": "[a,[b,[c,d],e],f]>><#>", "output": "{a,[b,[c,d],e],f}"}
 {"instruction": "Evaluate this mtron expression involving lst operations", "input": "[1,2,3].as(rec::T)", "output": "[0=>1,1=>2,2=>3]"}
 {"instruction": "Evaluate this mtron expression involving lst operations", "input": "lst{10}::[1,2,3].as(rec::T)", "output": "rec{10}::[0=>1,1=>2,2=>3]"}
 {"instruction": "Evaluate this mtron expression involving lst operations", "input": "lst{10}::[1,2,3].as(rec::T).merge?rel{*}<=rec()", "output": "{rel{10}::(0=>1),rel{10}::(1=>2),rel{10}::(2=>3)}"}
@@ -2058,6 +2073,18 @@
 {"instruction": "Evaluate this mtron expression involving lst operations", "input": "{35}[1,{2}2,3].as(rec::T).as(lst::T)", "output": "{35}[(0=>(0=>1)),(1=>(1=>{2}2)),(2=>(2=>3))]"}
 {"instruction": "Evaluate this mtron expression involving lst operations", "input": "[1,2,3].as(rec::T).as(rec::T)", "output": "[0=>1,1=>2,2=>3]"}
 {"instruction": "Evaluate this mtron expression involving lst operations", "input": "[1,2,3].as(rec::T).as(lst::T).as(rec::T)", "output": "[0=>(0=>(0=>1)),1=>(1=>(1=>2)),2=>(2=>(2=>3))]"}
+{"instruction": "Evaluate this mtron expression involving lst operations", "input": "[a,[b,[c,d],e],f]", "output": "[a,[b,[c,d],e],f]"}
+{"instruction": "Evaluate this mtron expression involving lst operations", "input": "[a,[b,[c,d],e],f]>>0", "output": "a"}
+{"instruction": "Evaluate this mtron expression involving lst operations", "input": "[a,[b,[c,d],e],f]>><1/0>", "output": "b"}
+{"instruction": "Evaluate this mtron expression involving lst operations", "input": "[a,[b,[c,d],e],f]>><1/1/0>", "output": "c"}
+{"instruction": "Evaluate this mtron expression involving lst operations", "input": "[a,[b,[c,d],e],f]>><1/1/1>", "output": "d"}
+{"instruction": "Evaluate this mtron expression involving lst operations", "input": "[a,[b,[c,d],e],f]>><1/1/+>", "output": "{c,d}"}
+{"instruction": "Evaluate this mtron expression involving lst operations", "input": "[a,[b,[c,d],e],f]>><1/+/+>", "output": "{c,d}"}
+{"instruction": "Evaluate this mtron expression involving lst operations", "input": "[a,[b,[c,d],[e,f]],g]>><1/+/+>", "output": "{c,d,e,f}"}
+{"instruction": "Evaluate this mtron expression involving lst operations", "input": "[a,[b,[c,d],[e,[f,g]]],h]>><1/+/+>", "output": "{c,d,e,[f,g]}"}
+{"instruction": "Evaluate this mtron expression involving lst operations", "input": "[a,[b,[c,d],e],f]>><1/+>", "output": "{b,[c,d],e}"}
+{"instruction": "Evaluate this mtron expression involving lst operations", "input": "[a,[b,[c,d],e],f]>><1/+>", "output": "{b,[c,d],e}"}
+{"instruction": "Evaluate this mtron expression involving lst operations", "input": "[a,[b,[c,d],e],f]>><#>", "output": "{a,[b,[c,d],e],f}"}
 {"instruction": "Evaluate this mtron expression involving lst operations", "input": "lst{10}::[1,2,3]", "output": "lst{10}::[1,2,3]"}
 {"instruction": "Evaluate this mtron expression involving lst operations", "input": "lst{10}::[1,2,3]>-", "output": "{int{10}::1,int{10}::2,int{10}::3}"}
 {"instruction": "Evaluate this mtron expression involving lst operations", "input": "lst{10}::[1,2,3]._/sum()\\_", "output": "lst{10}::[6]"}
@@ -2389,6 +2416,10 @@
 {"instruction": "Evaluate this mtron expression involving rec operations", "input": "[a=>1] + [a=>1]", "output": "[a=>{1,1}]"}
 {"instruction": "Evaluate this mtron expression involving rec operations", "input": "[a=>1] + [a=>+3]", "output": "[a=>{1,plus(3)}]"}
 {"instruction": "Evaluate this mtron expression involving rec operations", "input": "[a=>1] + [a=>_]", "output": "[a=>{1,id()}]"}
+{"instruction": "Evaluate this mtron expression involving rec operations", "input": "[a=>1]>>=[a=>+3]", "output": "[a=>4]"}
+{"instruction": "Evaluate this mtron expression involving rec operations", "input": "[a=>1]>>=[a=>_]", "output": "[a=>1]"}
+{"instruction": "Evaluate this mtron expression involving rec operations", "input": "[a=>1]>>=+[a=>+3]", "output": "[a=>{1,plus(3)}]"}
+{"instruction": "Evaluate this mtron expression involving rec operations", "input": "[a=>1]>>=+[a=>_]", "output": "[a=>{1,id()}]"}
 {"instruction": "Evaluate this mtron expression involving rec operations", "input": "[a=>{1,2}] + [a=>{3,4}]", "output": "[a=>{1,2,3,4}]"}
 {"instruction": "Evaluate this mtron expression involving rec operations", "input": "[a=>{1}] + [a=>{2,3}]", "output": "[a=>{1,2,3}]"}
 {"instruction": "Evaluate this mtron expression involving rec operations", "input": "[a=>1] + [b=>2]", "output": "[a=>1,b=>2]"}
@@ -2407,43 +2438,21 @@
 {"instruction": "Evaluate this mtron expression involving rec operations", "input": "[a=>[b=>[c=>1]]] + [a=>[b=>[c=>2]]]", "output": "[a=>{[b=>[c=>1]],[b=>[c=>2]]}]"}
 {"instruction": "Evaluate this mtron expression involving rec operations", "input": "[a=>[b=>1,c=>2]] + [a=>[b=>3,d=>4]]", "output": "[a=>{[b=>1,c=>2],[b=>3,d=>4]}]"}
 {"instruction": "Evaluate this mtron expression involving rec operations", "input": "[a=>[b=>1]] + [a=>[b=>+2]]", "output": "[a=>{[b=>1],[b=>plus(2)]}]"}
-{"instruction": "Evaluate this mtron expression involving rec operations", "input": "[noobj=>noobj]", "output": "[=>]"}
-{"instruction": "Evaluate this mtron expression involving rec operations", "input": "[7=>noobj]", "output": "[=>]"}
-{"instruction": "Evaluate this mtron expression involving rec operations", "input": "[noobj=>7]", "output": "[=>]"}
-{"instruction": "Evaluate this mtron expression involving rec operations", "input": "[a=>1,a=>1,b=>2,a=>1,b=>2]", "output": "[a=>int{3}::1,b=>int{2}::2]"}
-{"instruction": "Evaluate this mtron expression involving rec operations", "input": "[a=>1,a=>1,b=>2,a=>1,b=>2,b=>3]", "output": "[a=>int{3}::1,b=>{int{2}::2,3}]"}
-{"instruction": "Evaluate this mtron expression involving rec operations", "input": "[a=>1,a=>1,b=>[1=>2],a=>1,b=>[1=>2],b=>[2=>3]]", "output": "[a=>int{3}::1,b=>{rec{2}::[1=>2],[2=>3]}]"}
-{"instruction": "Evaluate this mtron expression involving rec operations", "input": "[a=>1,a=>1,b=>[1=>2],a=>1,b=>[1=>2],b=>[2=>3]]", "output": "[a=>int{3}::1,b=>{rec{2}::[1=>2],[2=>3]}]"}
-{"instruction": "Evaluate this mtron expression involving rec operations", "input": "[a=>1,a=>1,b=>[1=>2],a=>1,b=>[1=>2],b=>[2=>3],b=>[1=>'a']]", "output": "[a=>int{3}::1,b=>{rec{2}::[1=>2],[2=>3],[1=>'a']}]"}
-{"instruction": "Evaluate this mtron expression involving rec operations", "input": "[a=>int{3}::1,b=>[1=>2],b=>[1=>2],b=>[2=>3],b=>[1=>'a']]", "output": "[a=>int{3}::1,b=>{rec{2}::[1=>2],[2=>3],[1=>'a']}]"}
-{"instruction": "Evaluate this mtron expression involving rec operations", "input": "[a=>is(gt(0)),a=>is(gt(2)),b=>3]", "output": "[a=>-<{is(gt(0)),is(gt(2))},b=>3]"}
-{"instruction": "Evaluate this mtron expression involving rec operations", "input": "2-<[a=>is(gt(0)),a=>is(gt(2)),b=>3]", "output": "[a=>2,b=>3]"}
-{"instruction": "Evaluate this mtron expression involving rec operations", "input": "[a=>2,b=>5]==[a=>is(gt(0)),a=>is(gt(2)),b=>3]", "output": "[a=>2,b=>3]"}
-{"instruction": "Evaluate this mtron expression involving rec operations", "input": "2-<[a=>is(gt(0)),b=>3]", "output": "[a=>2,b=>3]"}
-{"instruction": "Evaluate this mtron expression involving rec operations", "input": "2-<[a=>is{2}(gt(0)),b=>3]", "output": "[a=>int{2}::2,b=>3]"}
-{"instruction": "Evaluate this mtron expression involving rec operations", "input": "[a=>is{2}(gt(0)),a=>noobj]", "output": "[a=>is{2}(gt(0))]"}
-{"instruction": "Evaluate this mtron expression involving rec operations", "input": "[a=>is{3}(gt(0)),a=>is{2}(gt(0)),a=>noobj]", "output": "[a=>is{5}(gt(0))]"}
-{"instruction": "Evaluate this mtron expression involving rec operations", "input": "2-<[a=>is{3}(gt(0)),a=>is{2}(gt(0)),a=>noobj]", "output": "[a=>int{5}::2]"}
-{"instruction": "Evaluate this mtron expression involving rec operations", "input": "2-<[a=>is{3}(gt(0)),a=>is{2}(gt(0)),a=>noobj].rng()", "output": "int{5}::2"}
-{"instruction": "Evaluate this mtron expression involving rec operations", "input": "{2,0}.-<[a=>is{3}(gt(0)),a=>is{2}(gt(0)),a=>noobj].rng()", "output": "int{5}::2"}
-{"instruction": "Evaluate this mtron expression involving rec operations", "input": "{2,5}.-<[a=>is{3}(gt(0)),a=>is{2}(gt(0)),a=>noobj].rng()", "output": "{int{5}::5, int{5}::2}"}
-{"instruction": "Evaluate this mtron expression involving rec operations", "input": "{2,5,0,0}-<[a=>is{3}(gt(0)),a=>is{2}(gt(0)),a=>noobj].rng()", "output": "{int{5}::5, int{5}::2}"}
-{"instruction": "Evaluate this mtron expression involving rec operations", "input": "2-<[a=>is(gt(0)),a=>is(gt(0)),b=>3]", "output": "[a=>int{2}::2,b=>3]"}
-{"instruction": "Evaluate this mtron expression involving rec operations", "input": "2-<[a=>is(gt(0)),a=>is(gt(1)),b=>3]", "output": "[a=>int{2}::2,b=>3]"}
-{"instruction": "Evaluate this mtron expression involving rec operations", "input": "[1,2,3]-<[>-.is(gt(2)) => >-.is(gt(1)), >-.is(gt(1)) => >-._]", "output": "[3=>{2,3},{2,3}=>{1,2,3}]"}
-{"instruction": "Evaluate this mtron expression involving rec operations", "input": "[a=>1,b=>2,c=>3]==[a=>plus(2),b=>_]", "output": "[a=>3,b=>2]"}
-{"instruction": "Evaluate this mtron expression involving rec operations", "input": "[a=>1,b=>2,c=>3]==[a=>plus(2),map(b)=>plus(10)]", "output": "[a=>3,b=>12]"}
-{"instruction": "Evaluate this mtron expression involving rec operations", "input": "[a=>1,b=>2,c=>3]==[a=>plus(2),map(b)=>plus(10)]==[a=>_,b=>sum()]", "output": "[a=>3,b=>12]"}
-{"instruction": "Evaluate this mtron expression involving rec operations", "input": "[a=>1,b=>2,c=>3]==[a=>plus(2),map(b)=>plus(10)]==[a=>_,b=>(-<{count(),sum()})]", "output": "[a=>3,b=>{1,12}]"}
-{"instruction": "Evaluate this mtron expression involving rec operations", "input": "[a=>1,b=>2,c=>3]==[a=>plus(2),map(b)=>plus(10)]==[a=>_,b=>-<[count(),sum()]]", "output": "[a=>3,b=>[1,12]]"}
-{"instruction": "Evaluate this mtron expression involving rec operations", "input": "[a=>1,b=>2,c=>3]==[a=>plus(2),map(b)=>plus(10)]==[a=>_,b=>-<[count(),sum()]>-]", "output": "[a=>3,b=>{1,12}]"}
-{"instruction": "Evaluate this mtron expression involving rec operations", "input": "[a=>1,b=>2,c=>3]==[a=>plus(2),map(b)=>plus(10)]==[a=>_,b=>-<[count(),sum()]>-.count()]", "output": "[a=>3,b=>2]"}
-{"instruction": "Evaluate this mtron expression involving rec operations", "input": "[1,2,3].-<[>-.is(gt(2)) => >-.is(gt(1))>-?<=int{*}[,], >-.is(gt(1)) => _/id()\\_]", "output": "[3=>[2,3],{2,3}=>[1,2,3]]"}
 {"instruction": "Evaluate this mtron expression involving rec operations", "input": "[a=>1,b=>2,c=>3].sum()", "output": "[a=>1,b=>2,c=>3]"}
 {"instruction": "Evaluate this mtron expression involving rec operations", "input": "{[a=>1],[b=>2]}.sum()", "output": "[a=>1,b=>2]"}
 {"instruction": "Evaluate this mtron expression involving rec operations", "input": "{[a=>1],[a=>2]}.sum()", "output": "[a=>{1,2}]"}
 {"instruction": "Evaluate this mtron expression involving rec operations", "input": "{[a=>1],[a=>2],[a=>3,b=>4]}.sum()", "output": "[a=>{1,2,3},b=>4]"}
 {"instruction": "Evaluate this mtron expression involving rec operations", "input": "{[a=>1,b=>2],[c=>3,d=>4]}.sum()", "output": "[a=>1,b=>2,c=>3,d=>4]"}
+{"instruction": "Evaluate this mtron expression involving rec operations", "input": "[a=>1,b=>2,c=>3].as(lst::T)", "output": "[(0=>a=>1),(1=>b=>2),(2=>c=>3)]"}
+{"instruction": "Evaluate this mtron expression involving rec operations", "input": "[a=>1,b=>2,c=>3].as(lst::T).>-.isa(rel::T).count()", "output": "3"}
+{"instruction": "Evaluate this mtron expression involving rec operations", "input": "[a=>1,b=>2,c=>3].as(lst::T).>-.>>.isa(rel::T).count()", "output": "3"}
+{"instruction": "Evaluate this mtron expression involving rec operations", "input": "[a=>1,b=>2,c=>3].as(lst::T).>-.>>.rng().isa(int::T).count()", "output": "3"}
+{"instruction": "Evaluate this mtron expression involving rec operations", "input": "[a=>1,b=>2,c=>3].as(lst::T).>-.>>.rng().sum()", "output": "6"}
+{"instruction": "Evaluate this mtron expression involving rec operations", "input": "[a=>1,b=>2,c=>3].as(rec::T)", "output": "[a=>1,b=>2,c=>3]"}
+{"instruction": "Evaluate this mtron expression involving rec operations", "input": "[a=>1,b=>2,c=>3].as(rec::T).as(lst::T)", "output": "[(0=>(a=>1)),(1=>(b=>2)),(2=>(c=>3))]"}
+{"instruction": "Evaluate this mtron expression involving rec operations", "input": "[a=>1,b=>2,c=>3].as(lst::T).as(rec::T)", "output": "[0=>(0=>(a=>1)),1=>(1=>(b=>2)),2=>(2=>(c=>3))]"}
+{"instruction": "Evaluate this mtron expression involving rec operations", "input": "[=>].as(lst::T)", "output": "[,]"}
+{"instruction": "Evaluate this mtron expression involving rec operations", "input": "[=>].as(rec::T)", "output": "[=>]"}
 {"instruction": "Evaluate this mtron expression involving rec operations", "input": "[=>]", "output": "false"}
 {"instruction": "Evaluate this mtron expression involving rec operations", "input": "[a=>b]", "output": "true"}
 {"instruction": "Evaluate this mtron expression involving rec operations", "input": "[a=>b]", "output": "true"}
@@ -2476,16 +2485,38 @@
 {"instruction": "Evaluate this mtron expression involving rec operations", "input": "[=>]", "output": "true"}
 {"instruction": "Evaluate this mtron expression involving rec operations", "input": "[a=>'bad']", "output": "false"}
 {"instruction": "Evaluate this mtron expression involving rec operations", "input": "[a=>2,b=>0]", "output": "false"}
-{"instruction": "Evaluate this mtron expression involving rec operations", "input": "[a=>1,b=>2,c=>3].as(lst::T)", "output": "[(0=>a=>1),(1=>b=>2),(2=>c=>3)]"}
-{"instruction": "Evaluate this mtron expression involving rec operations", "input": "[a=>1,b=>2,c=>3].as(lst::T).>-.isa(rel::T).count()", "output": "3"}
-{"instruction": "Evaluate this mtron expression involving rec operations", "input": "[a=>1,b=>2,c=>3].as(lst::T).>-.>>.isa(rel::T).count()", "output": "3"}
-{"instruction": "Evaluate this mtron expression involving rec operations", "input": "[a=>1,b=>2,c=>3].as(lst::T).>-.>>.rng().isa(int::T).count()", "output": "3"}
-{"instruction": "Evaluate this mtron expression involving rec operations", "input": "[a=>1,b=>2,c=>3].as(lst::T).>-.>>.rng().sum()", "output": "6"}
-{"instruction": "Evaluate this mtron expression involving rec operations", "input": "[a=>1,b=>2,c=>3].as(rec::T)", "output": "[a=>1,b=>2,c=>3]"}
-{"instruction": "Evaluate this mtron expression involving rec operations", "input": "[a=>1,b=>2,c=>3].as(rec::T).as(lst::T)", "output": "[(0=>(a=>1)),(1=>(b=>2)),(2=>(c=>3))]"}
-{"instruction": "Evaluate this mtron expression involving rec operations", "input": "[a=>1,b=>2,c=>3].as(lst::T).as(rec::T)", "output": "[0=>(0=>(a=>1)),1=>(1=>(b=>2)),2=>(2=>(c=>3))]"}
-{"instruction": "Evaluate this mtron expression involving rec operations", "input": "[=>].as(lst::T)", "output": "[,]"}
-{"instruction": "Evaluate this mtron expression involving rec operations", "input": "[=>].as(rec::T)", "output": "[=>]"}
+{"instruction": "Evaluate this mtron expression involving rec operations", "input": "[noobj=>noobj]", "output": "[=>]"}
+{"instruction": "Evaluate this mtron expression involving rec operations", "input": "[7=>noobj]", "output": "[=>]"}
+{"instruction": "Evaluate this mtron expression involving rec operations", "input": "[noobj=>7]", "output": "[=>]"}
+{"instruction": "Evaluate this mtron expression involving rec operations", "input": "[a=>1,a=>1,b=>2,a=>1,b=>2]", "output": "[a=>int{3}::1,b=>int{2}::2]"}
+{"instruction": "Evaluate this mtron expression involving rec operations", "input": "[a=>1,a=>1,b=>2,a=>1,b=>2,b=>3]", "output": "[a=>int{3}::1,b=>{int{2}::2,3}]"}
+{"instruction": "Evaluate this mtron expression involving rec operations", "input": "[a=>1,a=>1,b=>[1=>2],a=>1,b=>[1=>2],b=>[2=>3]]", "output": "[a=>int{3}::1,b=>{rec{2}::[1=>2],[2=>3]}]"}
+{"instruction": "Evaluate this mtron expression involving rec operations", "input": "[a=>1,a=>1,b=>[1=>2],a=>1,b=>[1=>2],b=>[2=>3]]", "output": "[a=>int{3}::1,b=>{rec{2}::[1=>2],[2=>3]}]"}
+{"instruction": "Evaluate this mtron expression involving rec operations", "input": "[a=>1,a=>1,b=>[1=>2],a=>1,b=>[1=>2],b=>[2=>3],b=>[1=>'a']]", "output": "[a=>int{3}::1,b=>{rec{2}::[1=>2],[2=>3],[1=>'a']}]"}
+{"instruction": "Evaluate this mtron expression involving rec operations", "input": "[a=>int{3}::1,b=>[1=>2],b=>[1=>2],b=>[2=>3],b=>[1=>'a']]", "output": "[a=>int{3}::1,b=>{rec{2}::[1=>2],[2=>3],[1=>'a']}]"}
+{"instruction": "Evaluate this mtron expression involving rec operations", "input": "[a=>is(gt(0)),a=>is(gt(2)),b=>3]", "output": "[a=>-<{is(gt(0)),is(gt(2))},b=>3]"}
+{"instruction": "Evaluate this mtron expression involving rec operations", "input": "2-<[a=>is(gt(0)),a=>is(gt(2)),b=>3]", "output": "[a=>2,b=>3]"}
+{"instruction": "Evaluate this mtron expression involving rec operations", "input": "[a=>2,b=>5]==[a=>is(gt(0)),a=>is(gt(2)),b=>3]", "output": "[a=>2,b=>3]"}
+{"instruction": "Evaluate this mtron expression involving rec operations", "input": "2-<[a=>is(gt(0)),b=>3]", "output": "[a=>2,b=>3]"}
+{"instruction": "Evaluate this mtron expression involving rec operations", "input": "2-<[a=>is{2}(gt(0)),b=>3]", "output": "[a=>int{2}::2,b=>3]"}
+{"instruction": "Evaluate this mtron expression involving rec operations", "input": "[a=>is{2}(gt(0)),a=>noobj]", "output": "[a=>is{2}(gt(0))]"}
+{"instruction": "Evaluate this mtron expression involving rec operations", "input": "[a=>is{3}(gt(0)),a=>is{2}(gt(0)),a=>noobj]", "output": "[a=>is{5}(gt(0))]"}
+{"instruction": "Evaluate this mtron expression involving rec operations", "input": "2-<[a=>is{3}(gt(0)),a=>is{2}(gt(0)),a=>noobj]", "output": "[a=>int{5}::2]"}
+{"instruction": "Evaluate this mtron expression involving rec operations", "input": "2-<[a=>is{3}(gt(0)),a=>is{2}(gt(0)),a=>noobj].rng()", "output": "int{5}::2"}
+{"instruction": "Evaluate this mtron expression involving rec operations", "input": "{2,0}.-<[a=>is{3}(gt(0)),a=>is{2}(gt(0)),a=>noobj].rng()", "output": "int{5}::2"}
+{"instruction": "Evaluate this mtron expression involving rec operations", "input": "{2,5}.-<[a=>is{3}(gt(0)),a=>is{2}(gt(0)),a=>noobj].rng()", "output": "{int{5}::5, int{5}::2}"}
+{"instruction": "Evaluate this mtron expression involving rec operations", "input": "{2,5,0,0}-<[a=>is{3}(gt(0)),a=>is{2}(gt(0)),a=>noobj].rng()", "output": "{int{5}::5, int{5}::2}"}
+{"instruction": "Evaluate this mtron expression involving rec operations", "input": "2-<[a=>is(gt(0)),a=>is(gt(0)),b=>3]", "output": "[a=>int{2}::2,b=>3]"}
+{"instruction": "Evaluate this mtron expression involving rec operations", "input": "2-<[a=>is(gt(0)),a=>is(gt(1)),b=>3]", "output": "[a=>int{2}::2,b=>3]"}
+{"instruction": "Evaluate this mtron expression involving rec operations", "input": "[1,2,3]-<[>-.is(gt(2)) => >-.is(gt(1)), >-.is(gt(1)) => >-._]", "output": "[3=>{2,3},{2,3}=>{1,2,3}]"}
+{"instruction": "Evaluate this mtron expression involving rec operations", "input": "[a=>1,b=>2,c=>3]==[a=>plus(2),b=>_]", "output": "[a=>3,b=>2]"}
+{"instruction": "Evaluate this mtron expression involving rec operations", "input": "[a=>1,b=>2,c=>3]==[a=>plus(2),b=>plus(10)]", "output": "[a=>3,b=>12]"}
+{"instruction": "Evaluate this mtron expression involving rec operations", "input": "[a=>1,b=>2,c=>3]==[a=>plus(2),b=>plus(10)]==[a=>_,b=>sum()]", "output": "[a=>3,b=>12]"}
+{"instruction": "Evaluate this mtron expression involving rec operations", "input": "[a=>1,b=>2,c=>3]==[a=>plus(2),b=>plus(10)]==[a=>_,b=>(-<{count(),sum()})]", "output": "[a=>3,b=>{1,12}]"}
+{"instruction": "Evaluate this mtron expression involving rec operations", "input": "[a=>1,b=>2,c=>3]==[a=>plus(2),b=>plus(10)]==[a=>_,b=>-<[count(),sum()]]", "output": "[a=>3,b=>[1,12]]"}
+{"instruction": "Evaluate this mtron expression involving rec operations", "input": "[a=>1,b=>2,c=>3]==[a=>plus(2),b=>plus(10)]==[a=>_,b=>-<[count(),sum()]>-]", "output": "[a=>3,b=>{1,12}]"}
+{"instruction": "Evaluate this mtron expression involving rec operations", "input": "[a=>1,b=>2,c=>3]==[a=>plus(2),b=>plus(10)]==[a=>_,b=>-<[count(),sum()]>-.count()]", "output": "[a=>3,b=>2]"}
+{"instruction": "Evaluate this mtron expression involving rec operations", "input": "[1,2,3].-<[>-.is(gt(2)) => >-.is(gt(1))>-?<=int{*}[,], >-.is(gt(1)) => _/id()\\_]", "output": "[3=>[2,3],{2,3}=>[1,2,3]]"}
 {"instruction": "Evaluate this mtron expression involving rec operations", "input": "[a=>1,b=>2,c=>3].reverse()", "output": "[c=>3,b=>2,a=>1]"}
 {"instruction": "Evaluate this mtron expression involving rec operations", "input": "[x=>12,y=>bac,z=>25].reverse()", "output": "[z=>25,y=>bac,x=>12]"}
 {"instruction": "Evaluate this mtron expression involving rec operations", "input": "[first=>abc,second=>def,third=>ghi].reverse()", "output": "[third=>ghi,second=>def,first=>abc]"}
@@ -2704,9 +2735,12 @@
 {"instruction": "Evaluate this mtron expression involving rec operations", "input": "[a=>1] >>= [=>]", "output": "[a=>1]"}
 {"instruction": "Evaluate this mtron expression involving rec operations", "input": "[a=>[b=>0]] >>= [a=>[b=>+1]]", "output": "[a=>[b=>1]]"}
 {"instruction": "Evaluate this mtron expression involving rec operations", "input": "[a=>[b=>0,c=>2]] >>= [a=>[b=>+1]]", "output": "[a=>[b=>1,c=>2]]"}
-{"instruction": "Evaluate this mtron expression involving rec operations", "input": "[a=>[c=>2]] >>= [a=>+[b=>1]]", "output": "[a=>[b=>1,c=>2]]"}
+{"instruction": "Evaluate this mtron expression involving rec operations", "input": "[a=>[c=>2]] >>= [a=>+[b=>65]]", "output": "[a=>[b=>65,c=>2]]"}
 {"instruction": "Evaluate this mtron expression involving rec operations", "input": "[a=>[b=>0,c=>2]] >>= [a=>+[b=>+1]]", "output": "[a=>[b=>{0,plus(1)},c=>2]]"}
+{"instruction": "Evaluate this mtron expression involving rec operations", "input": "[a=>[b=>3,c=>2]] >>= [a=>[b=>+1]]", "output": "[a=>[b=>4,c=>2]]"}
 {"instruction": "Evaluate this mtron expression involving rec operations", "input": "[a=>'hello'] >>= [a=>+' world']", "output": "[a=>'hello world']"}
+{"instruction": "Evaluate this mtron expression involving rec operations", "input": "[a=>'hello'] >>= +[a=>' world']", "output": "[a=>{'hello',' world'}]"}
+{"instruction": "Evaluate this mtron expression involving rec operations", "input": "[a=>'hello'] >>= +[a=>' world'] >>= [a=>sum()]", "output": "[a=>'hello world']"}
 {"instruction": "Evaluate this mtron expression involving rec operations", "input": "[a=>[b=>[c=>1,d=>2]]] >>= [a=>[b=>[c=>+1]]]", "output": "[a=>[b=>[c=>2,d=>2]]]"}
 {"instruction": "Evaluate this mtron expression involving rec operations", "input": "[a=>[b=>[c=>1,d=>2]]] >>= [a=>[b=>[c=>+1,d=>+10]]]", "output": "[a=>[b=>[c=>2,d=>12]]]"}
 {"instruction": "Evaluate this mtron expression involving rec operations", "input": "[a=>[b=>[c=>1,d=>2]]] >>= [a=>[b=>[e=>3]]]", "output": "[a=>[b=>[c=>1,d=>2]]]"}
@@ -2738,6 +2772,38 @@
 {"instruction": "Evaluate this mtron expression involving rec operations", "input": "[a=>1,b=>2] =?= [a=>1] -<[>>a,>>b]", "output": "[1,2]"}
 {"instruction": "Evaluate this mtron expression involving rel operations", "input": "(a=>b)", "output": "true"}
 {"instruction": "Evaluate this mtron expression involving rel operations", "input": "(1=>2)", "output": "true"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(a=>b).select((_=>_))", "output": "(a=>b)"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(1=>2).select((_=>_))", "output": "(1=>2)"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(a=>b).select((a=>_))", "output": "(a=>b)"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(a=>b).select((_=>b))", "output": "(a=>b)"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(x=>y).select((a=>_))", "output": "noobj"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(x=>y).select((_=>b))", "output": "noobj"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(a=>b).select((dom().as(str::T)=>rng()))", "output": "(\"a\"=>b)"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(1=>2).select((dom().plus(10)=>rng()))", "output": "(11=>2)"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(1=>2).select((dom()=>-<(rng().mult(5))))", "output": "(1=>10)"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(1=>2).select((dom().plus(10)=>-<(rng().mult(5))))", "output": "(11=>10)"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(a=>1).select((dom()=>-<(rng().plus(100))))", "output": "(a=>101)"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(noobj=>b).dom()", "output": "noobj"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(a=>noobj).rng()", "output": "noobj"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(0=>0).dom()", "output": "0"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(0=>0).rng()", "output": "0"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "\"\"=>(\"\")", "output": "(\"\"=>\"\")"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "[]=>[]", "output": "([]=>[])"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(a=>b).cc()", "output": "2"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "((a=>b)=>(c=>d)).cc()", "output": "2"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(1=>(2=>3)).cc()", "output": "2"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(marko=>knows).dom()", "output": "marko"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(marko=>knows).rng()", "output": "knows"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(marko=>(knows=>claude)).rng()", "output": "(knows=>claude)"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(marko=>(knows=>[claude,ollama])).rng().rng()", "output": "[claude,ollama]"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(a=>b)>>+", "output": "{a,b}"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(1=>2)>>+", "output": "3"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "((a=>b)=>(c=>d))>>+", "output": "{(a=>b),(c=>d)}"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(a=>b).one()", "output": "(id()=>id())"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(1=>2).one()", "output": "(id()=>id())"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(a=>b).one().?=(one())", "output": "true"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(a=>b).?=(one())", "output": "false"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(id()=>id()).?=(one())", "output": "true"}
 {"instruction": "Evaluate this mtron expression involving rel operations", "input": "(a=>b).zero()", "output": "(noobj=>noobj)"}
 {"instruction": "Evaluate this mtron expression involving rel operations", "input": "(1=>2).zero()", "output": "(noobj=>noobj)"}
 {"instruction": "Evaluate this mtron expression involving rel operations", "input": "(a=>b).zero().?=(zero())", "output": "true"}
@@ -2753,69 +2819,8 @@
 {"instruction": "Evaluate this mtron expression involving rel operations", "input": "(1=>2).mult((3=>4))", "output": "(noobj=>noobj)"}
 {"instruction": "Evaluate this mtron expression involving rel operations", "input": "(a=>b).mult((noobj=>noobj))", "output": "(noobj=>noobj)"}
 {"instruction": "Evaluate this mtron expression involving rel operations", "input": "(noobj=>noobj).mult((a=>b))", "output": "(noobj=>noobj)"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(a=>b).neg()", "output": "(b=>a)"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(1=>2).neg()", "output": "(2=>1)"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "((a=>b)=>(c=>d)).neg()", "output": "((c=>d)=>(a=>b))"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(noobj=>noobj).neg()", "output": "(noobj=>noobj)"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(id()=>id()).neg()", "output": "(id()=>id())"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(a=>b).plus((c=>d))", "output": "{(a=>b),(c=>d)}"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(1=>2).plus((3=>4))", "output": "{(1=>2),(3=>4)}"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(a=>b).plus((c=>d)).plus((e=>f))", "output": "{(a=>b),(c=>d),(e=>f)}"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(a=>b).plus((noobj=>noobj))", "output": "{(a=>b),(noobj=>noobj)}"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(a=>b).minus((c=>d))", "output": "{(a=>b),(d=>c)}"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(1=>2).minus((3=>4))", "output": "{(1=>2),(4=>3)}"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(a=>b).minus((a=>b))", "output": "{(a=>b),(b=>a)}"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(a=>b).mult((b=>c)).mult((c=>d))", "output": "(a=>d)"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(a=>b).mult((b=>c).mult((c=>d)))", "output": "(a=>d)"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(1=>2).mult((2=>3)).mult((3=>4))", "output": "(1=>4)"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(1=>2).mult((2=>3).mult((3=>4)))", "output": "(1=>4)"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(a=>b).mult((a=>b).one())", "output": "(a=>b)"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(1=>2).mult((1=>2).one())", "output": "(1=>2)"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(a=>b).one().mult((a=>b))", "output": "(a=>b)"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(1=>2).one().mult((1=>2))", "output": "(1=>2)"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(a=>b).mult((a=>b).zero())", "output": "(noobj=>noobj)"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(1=>2).mult((1=>2).zero())", "output": "(noobj=>noobj)"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(a=>b).zero().mult((a=>b))", "output": "(noobj=>noobj)"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(1=>2).zero().mult((1=>2))", "output": "(noobj=>noobj)"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(a=>b).mult((b=>c)).mult((c=>d)).mult((d=>e))", "output": "(a=>e)"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(1=>2).mult((2=>3)).mult((3=>4)).mult((4=>5))", "output": "(1=>5)"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(a=>b).mult((id()=>id())).mult((b=>c))", "output": "(a=>c)"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(a=>b).mult((b=>c)).mult((x=>y))", "output": "(noobj=>noobj)"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(a=>b).mult((b=>c)).neg()", "output": "(c=>a)"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(a=>b).neg().mult((c=>a).neg())", "output": "(b=>c)"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(a=>(b=>c)).mult(((b=>c)=>d))", "output": "(a=>d)"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "((x=>y)=>z).neg()", "output": "(z=>(x=>y))"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(x=>y=>z).neg()", "output": "(z=>(x=>y))"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(1=>(2=>3)).mult(((2=>3)=>4))", "output": "(1=>4)"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "{2}(a=>b).mult((b=>c))", "output": "{2}(a=>c)"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "{3}(1=>2).mult((2=>3))", "output": "{3}(1=>3)"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "rel{3}::(1=>2).mult(rel{4}::(2=>3))", "output": "rel{12}::(1=>3)"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "{3}(1=>2).mult({4}(2=>3))", "output": "{12}(1=>3)"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(1=>2).mult({(2=>3),{4}(2=>4)})", "output": "{{3}(1=>3),{4}(1=>4)}"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "{3}(1=>2).mult({(2=>3),{4}(2=>4)})", "output": "{{3}(1=>3),{12}(1=>4)}"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "{2}(a=>b).neg()", "output": "{2}(b=>a)"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "{5}(a=>b).plus((c=>d))", "output": "{{5}(a=>b),(c=>d)}"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "{5}(a=>b).plus({3}(c=>d))", "output": "{{5}(a=>b),{3}(c=>d)}"}
 {"instruction": "Evaluate this mtron expression involving rel operations", "input": "(a=>b)", "output": "d"}
 {"instruction": "Evaluate this mtron expression involving rel operations", "input": "(1=>2)", "output": "4"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(a=>b).dom()", "output": "a"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(a=>b).rng()", "output": "b"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "((a=>b)=>(c=>d)).dom()", "output": "(a=>b)"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "((a=>b)=>(c=>d)).rng()", "output": "(c=>d)"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(1=>(2=>3)).dom()", "output": "1"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(1=>(2=>3)).rng()", "output": "(2=>3)"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(a=>b).as(rec::T)", "output": "[a=>b]"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(a=>b).as(rec::T).as(lst::T).>>", "output": "[(a=>b)]"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(a=>b).as(lst::T)", "output": "[a,b]"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(1=>2).as(lst::T)", "output": "[1,2]"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "((a=>b)=>(c=>d)).as(lst::T)", "output": "[(a=>b),(c=>d)]"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(a=>b).eq((a=>b))", "output": "true"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(a=>b).eq((b=>a))", "output": "false"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(a=>b).eq((a=>c))", "output": "false"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(1=>2).eq((1=>2))", "output": "true"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(1=>2).eq((2=>1))", "output": "false"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "((a=>b)=>(c=>d)).eq(((a=>b)=>(c=>d)))", "output": "true"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "((a=>b)=>(c=>d)).eq(((c=>d)=>(a=>b)))", "output": "false"}
 {"instruction": "Evaluate this mtron expression involving rel operations", "input": "(a=>b)-<(_=>_)", "output": "((a=>b)=>(a=>b))"}
 {"instruction": "Evaluate this mtron expression involving rel operations", "input": "(a=>b)-<(_=>_)>-", "output": "{rel{2}::(a=>b)}"}
 {"instruction": "Evaluate this mtron expression involving rel operations", "input": "(a=>b)-<(_=>_)>-.>-", "output": "{uri{2}::a,uri{2}::b}"}
@@ -2865,38 +2870,71 @@
 {"instruction": "Evaluate this mtron expression involving rel operations", "input": "a=>b=>c", "output": "(a=>(b=>c))"}
 {"instruction": "Evaluate this mtron expression involving rel operations", "input": "a=>b=>c=>d", "output": "(a=>(b=>(c=>d)))"}
 {"instruction": "Evaluate this mtron expression involving rel operations", "input": "1=>2=>3=>4", "output": "(1=>(2=>(3=>4)))"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(a=>b).select((_=>_))", "output": "(a=>b)"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(1=>2).select((_=>_))", "output": "(1=>2)"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(a=>b).select((a=>_))", "output": "(a=>b)"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(a=>b).select((_=>b))", "output": "(a=>b)"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(x=>y).select((a=>_))", "output": "noobj"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(x=>y).select((_=>b))", "output": "noobj"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(a=>b).select((dom().as(str::T)=>rng()))", "output": "(\"a\"=>b)"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(1=>2).select((dom().plus(10)=>rng()))", "output": "(11=>2)"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(1=>2).select((dom()=>-<(rng().mult(5))))", "output": "(1=>10)"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(1=>2).select((dom().plus(10)=>-<(rng().mult(5))))", "output": "(11=>10)"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(a=>1).select((dom()=>-<(rng().plus(100))))", "output": "(a=>101)"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(noobj=>b).dom()", "output": "noobj"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(a=>noobj).rng()", "output": "noobj"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(0=>0).dom()", "output": "0"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(0=>0).rng()", "output": "0"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "\"\"=>(\"\")", "output": "(\"\"=>\"\")"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "[]=>[]", "output": "([]=>[])"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(a=>b).cc()", "output": "2"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "((a=>b)=>(c=>d)).cc()", "output": "2"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(1=>(2=>3)).cc()", "output": "2"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(marko=>knows).dom()", "output": "marko"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(marko=>knows).rng()", "output": "knows"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(marko=>(knows=>claude)).rng()", "output": "(knows=>claude)"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(marko=>(knows=>[claude,ollama])).rng().rng()", "output": "[claude,ollama]"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(a=>b)>>+", "output": "{a,b}"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(1=>2)>>+", "output": "3"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "((a=>b)=>(c=>d))>>+", "output": "{(a=>b),(c=>d)}"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(a=>b).one()", "output": "(id()=>id())"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(1=>2).one()", "output": "(id()=>id())"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(a=>b).one().?=(one())", "output": "true"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(a=>b).?=(one())", "output": "false"}
-{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(id()=>id()).?=(one())", "output": "true"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(a=>b).dom()", "output": "a"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(a=>b).rng()", "output": "b"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "((a=>b)=>(c=>d)).dom()", "output": "(a=>b)"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "((a=>b)=>(c=>d)).rng()", "output": "(c=>d)"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(1=>(2=>3)).dom()", "output": "1"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(1=>(2=>3)).rng()", "output": "(2=>3)"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(a=>b).as(rec::T)", "output": "[a=>b]"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(a=>b).as(rec::T).as(lst::T).>>", "output": "[(a=>b)]"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(a=>b).as(lst::T)", "output": "[a,b]"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(1=>2).as(lst::T)", "output": "[1,2]"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "((a=>b)=>(c=>d)).as(lst::T)", "output": "[(a=>b),(c=>d)]"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(a=>b).eq((a=>b))", "output": "true"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(a=>b).eq((b=>a))", "output": "false"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(a=>b).eq((a=>c))", "output": "false"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(1=>2).eq((1=>2))", "output": "true"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(1=>2).eq((2=>1))", "output": "false"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "((a=>b)=>(c=>d)).eq(((a=>b)=>(c=>d)))", "output": "true"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "((a=>b)=>(c=>d)).eq(((c=>d)=>(a=>b)))", "output": "false"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(a=>b).neg()", "output": "(b=>a)"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(1=>2).neg()", "output": "(2=>1)"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "((a=>b)=>(c=>d)).neg()", "output": "((c=>d)=>(a=>b))"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(noobj=>noobj).neg()", "output": "(noobj=>noobj)"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(id()=>id()).neg()", "output": "(id()=>id())"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(a=>b).plus((c=>d))", "output": "{(a=>b),(c=>d)}"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(1=>2).plus((3=>4))", "output": "{(1=>2),(3=>4)}"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(a=>b).plus((c=>d)).plus((e=>f))", "output": "{(a=>b),(c=>d),(e=>f)}"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(a=>b).plus((noobj=>noobj))", "output": "{(a=>b),(noobj=>noobj)}"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(a=>b).minus((c=>d))", "output": "{(a=>b),(d=>c)}"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(1=>2).minus((3=>4))", "output": "{(1=>2),(4=>3)}"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(a=>b).minus((a=>b))", "output": "{(a=>b),(b=>a)}"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(a=>b).mult((b=>c)).mult((c=>d))", "output": "(a=>d)"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(a=>b).mult((b=>c).mult((c=>d)))", "output": "(a=>d)"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(1=>2).mult((2=>3)).mult((3=>4))", "output": "(1=>4)"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(1=>2).mult((2=>3).mult((3=>4)))", "output": "(1=>4)"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(a=>b).mult((a=>b).one())", "output": "(a=>b)"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(1=>2).mult((1=>2).one())", "output": "(1=>2)"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(a=>b).one().mult((a=>b))", "output": "(a=>b)"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(1=>2).one().mult((1=>2))", "output": "(1=>2)"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(a=>b).mult((a=>b).zero())", "output": "(noobj=>noobj)"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(1=>2).mult((1=>2).zero())", "output": "(noobj=>noobj)"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(a=>b).zero().mult((a=>b))", "output": "(noobj=>noobj)"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(1=>2).zero().mult((1=>2))", "output": "(noobj=>noobj)"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(a=>b).mult((b=>c)).mult((c=>d)).mult((d=>e))", "output": "(a=>e)"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(1=>2).mult((2=>3)).mult((3=>4)).mult((4=>5))", "output": "(1=>5)"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(a=>b).mult((id()=>id())).mult((b=>c))", "output": "(a=>c)"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(a=>b).mult((b=>c)).mult((x=>y))", "output": "(noobj=>noobj)"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(a=>b).mult((b=>c)).neg()", "output": "(c=>a)"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(a=>b).neg().mult((c=>a).neg())", "output": "(b=>c)"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(a=>(b=>c)).mult(((b=>c)=>d))", "output": "(a=>d)"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "((x=>y)=>z).neg()", "output": "(z=>(x=>y))"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(x=>y=>z).neg()", "output": "(z=>(x=>y))"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(1=>(2=>3)).mult(((2=>3)=>4))", "output": "(1=>4)"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "{2}(a=>b).mult((b=>c))", "output": "{2}(a=>c)"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "{3}(1=>2).mult((2=>3))", "output": "{3}(1=>3)"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "rel{3}::(1=>2).mult(rel{4}::(2=>3))", "output": "rel{12}::(1=>3)"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "{3}(1=>2).mult({4}(2=>3))", "output": "{12}(1=>3)"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "(1=>2).mult({(2=>3),{4}(2=>4)})", "output": "{{3}(1=>3),{4}(1=>4)}"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "{3}(1=>2).mult({(2=>3),{4}(2=>4)})", "output": "{{3}(1=>3),{12}(1=>4)}"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "{2}(a=>b).neg()", "output": "{2}(b=>a)"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "{5}(a=>b).plus((c=>d))", "output": "{{5}(a=>b),(c=>d)}"}
+{"instruction": "Evaluate this mtron expression involving rel operations", "input": "{5}(a=>b).plus({3}(c=>d))", "output": "{{5}(a=>b),{3}(c=>d)}"}
+{"instruction": "Evaluate this mtron expression involving str operations", "input": "{'a','b','c','123'}.sum()", "output": "\"abc123\""}
+{"instruction": "Evaluate this mtron expression involving str operations", "input": "{'a','b','c','123'}.sum('22')", "output": "\"22abc123\""}
+{"instruction": "Evaluate this mtron expression involving str operations", "input": "{}.sum('22')", "output": "\"22\""}
+{"instruction": "Evaluate this mtron expression involving str operations", "input": "{}.sum?str<=str{*}('')", "output": "\"\""}
 {"instruction": "Evaluate this mtron expression involving str operations", "input": "'true'.as(bool::T)", "output": "true"}
 {"instruction": "Evaluate this mtron expression involving str operations", "input": "'false'.as(bool::T)", "output": "false"}
 {"instruction": "Evaluate this mtron expression involving str operations", "input": "'true'.as(bool::T).as(str::T)", "output": "\"true\""}
@@ -2905,10 +2943,6 @@
 {"instruction": "Evaluate this mtron expression involving str operations", "input": "'123.122'.as(real::T)", "output": "123.122"}
 {"instruction": "Evaluate this mtron expression involving str operations", "input": "'abcd'.as(uri::T)", "output": "abcd"}
 {"instruction": "Evaluate this mtron expression involving str operations", "input": "'abc'.as(bytes::T)", "output": "0x616263"}
-{"instruction": "Evaluate this mtron expression involving str operations", "input": "{'a','b','c','123'}.sum()", "output": "\"abc123\""}
-{"instruction": "Evaluate this mtron expression involving str operations", "input": "{'a','b','c','123'}.sum('22')", "output": "\"22abc123\""}
-{"instruction": "Evaluate this mtron expression involving str operations", "input": "{}.sum('22')", "output": "\"22\""}
-{"instruction": "Evaluate this mtron expression involving str operations", "input": "{}.sum?str<=str{*}('')", "output": "\"\""}
 {"instruction": "Evaluate this mtron expression involving str operations", "input": "\"abc\".gt(\"aaa\")", "output": "true"}
 {"instruction": "Evaluate this mtron expression involving str operations", "input": "\"abc\".gt(\"abc\")", "output": "false"}
 {"instruction": "Evaluate this mtron expression involving str operations", "input": "\"abc\".gt(\"def\")", "output": "false"}
@@ -3090,52 +3124,6 @@
 {"instruction": "Evaluate this mtron expression involving type operations", "input": "5", "output": "[h,g,f,e,int]"}
 {"instruction": "Evaluate this mtron expression involving type operations", "input": "6", "output": "[h,g,f,e,int]"}
 {"instruction": "Evaluate this mtron expression involving type operations", "input": "7", "output": "[h,g,f,e,int]"}
-{"instruction": "Evaluate this mtron expression involving type operations", "input": "noobj", "output": "true"}
-{"instruction": "Evaluate this mtron expression involving type operations", "input": "noobj{0}", "output": "true"}
-{"instruction": "Evaluate this mtron expression involving type operations", "input": "noobj", "output": "true"}
-{"instruction": "Evaluate this mtron expression involving type operations", "input": "noobj", "output": "true"}
-{"instruction": "Evaluate this mtron expression involving type operations", "input": "1", "output": "false"}
-{"instruction": "Evaluate this mtron expression involving type operations", "input": "1", "output": "false"}
-{"instruction": "Evaluate this mtron expression involving type operations", "input": "1", "output": "false"}
-{"instruction": "Evaluate this mtron expression involving type operations", "input": "1", "output": "true"}
-{"instruction": "Evaluate this mtron expression involving type operations", "input": "{0}1", "output": "false"}
-{"instruction": "Evaluate this mtron expression involving type operations", "input": "{0}1", "output": "true"}
-{"instruction": "Evaluate this mtron expression involving type operations", "input": "{0}1", "output": "true"}
-{"instruction": "Evaluate this mtron expression involving type operations", "input": "{0}1", "output": "false"}
-{"instruction": "Evaluate this mtron expression involving type operations", "input": "{1}1", "output": "false"}
-{"instruction": "Evaluate this mtron expression involving type operations", "input": "'a_string'", "output": "false"}
-{"instruction": "Evaluate this mtron expression involving type operations", "input": "213.0", "output": "false"}
-{"instruction": "Evaluate this mtron expression involving type operations", "input": "1", "output": "true"}
-{"instruction": "Evaluate this mtron expression involving type operations", "input": "1", "output": "false"}
-{"instruction": "Evaluate this mtron expression involving type operations", "input": "1", "output": "true"}
-{"instruction": "Evaluate this mtron expression involving type operations", "input": "1", "output": "false"}
-{"instruction": "Evaluate this mtron expression involving type operations", "input": "{1,1}", "output": "false"}
-{"instruction": "Evaluate this mtron expression involving type operations", "input": "{,}", "output": "true"}
-{"instruction": "Evaluate this mtron expression involving type operations", "input": "{1,1}", "output": "false"}
-{"instruction": "Evaluate this mtron expression involving type operations", "input": "{'a','b'}", "output": "true"}
-{"instruction": "Evaluate this mtron expression involving type operations", "input": "{'a','b'}", "output": "true"}
-{"instruction": "Evaluate this mtron expression involving type operations", "input": "{'a','b','c'}", "output": "true"}
-{"instruction": "Evaluate this mtron expression involving type operations", "input": "{'a','b','c','d'}", "output": "false"}
-{"instruction": "Evaluate this mtron expression involving type operations", "input": "{}", "output": "false"}
-{"instruction": "Evaluate this mtron expression involving type operations", "input": "{}", "output": "true"}
-{"instruction": "Evaluate this mtron expression involving type operations", "input": "{'b'}", "output": "false"}
-{"instruction": "Evaluate this mtron expression involving type operations", "input": "{'b'}", "output": "true"}
-{"instruction": "Evaluate this mtron expression involving type operations", "input": "{1,2}", "output": "true"}
-{"instruction": "Evaluate this mtron expression involving type operations", "input": "{1,2,3}", "output": "true"}
-{"instruction": "Evaluate this mtron expression involving type operations", "input": "{1,2,3}", "output": "false"}
-{"instruction": "Evaluate this mtron expression involving type operations", "input": "{1,1}", "output": "true"}
-{"instruction": "Evaluate this mtron expression involving type operations", "input": "{1,1}", "output": "false"}
-{"instruction": "Evaluate this mtron expression involving type operations", "input": "{1,1}", "output": "true"}
-{"instruction": "Evaluate this mtron expression involving type operations", "input": "1", "output": "false"}
-{"instruction": "Evaluate this mtron expression involving type operations", "input": "{0,0}", "output": "false"}
-{"instruction": "Evaluate this mtron expression involving type operations", "input": "{2,3}", "output": "true"}
-{"instruction": "Evaluate this mtron expression involving type operations", "input": "{2,3}", "output": "false"}
-{"instruction": "Evaluate this mtron expression involving type operations", "input": "{5,6}", "output": "true"}
-{"instruction": "Evaluate this mtron expression involving type operations", "input": "{2,2}", "output": "true"}
-{"instruction": "Evaluate this mtron expression involving type operations", "input": "{3,3}", "output": "true"}
-{"instruction": "Evaluate this mtron expression involving type operations", "input": "{0,1}", "output": "false"}
-{"instruction": "Evaluate this mtron expression involving type operations", "input": "{0,0}", "output": "false"}
-{"instruction": "Evaluate this mtron expression involving type operations", "input": "{0,-1}", "output": "false"}
 {"instruction": "Evaluate this mtron expression involving type operations", "input": "A::T", "output": "true"}
 {"instruction": "Evaluate this mtron expression involving type operations", "input": "A{1}::T", "output": "true"}
 {"instruction": "Evaluate this mtron expression involving type operations", "input": "A{2}::T", "output": "false"}
@@ -3187,6 +3175,52 @@
 {"instruction": "Evaluate this mtron expression involving type operations", "input": "/m/int::T", "output": "false"}
 {"instruction": "Evaluate this mtron expression involving type operations", "input": "nat::T", "output": "false"}
 {"instruction": "Evaluate this mtron expression involving type operations", "input": "bignat::T", "output": "true"}
+{"instruction": "Evaluate this mtron expression involving type operations", "input": "noobj", "output": "true"}
+{"instruction": "Evaluate this mtron expression involving type operations", "input": "noobj{0}", "output": "true"}
+{"instruction": "Evaluate this mtron expression involving type operations", "input": "noobj", "output": "true"}
+{"instruction": "Evaluate this mtron expression involving type operations", "input": "noobj", "output": "true"}
+{"instruction": "Evaluate this mtron expression involving type operations", "input": "1", "output": "false"}
+{"instruction": "Evaluate this mtron expression involving type operations", "input": "1", "output": "false"}
+{"instruction": "Evaluate this mtron expression involving type operations", "input": "1", "output": "false"}
+{"instruction": "Evaluate this mtron expression involving type operations", "input": "1", "output": "true"}
+{"instruction": "Evaluate this mtron expression involving type operations", "input": "{0}1", "output": "false"}
+{"instruction": "Evaluate this mtron expression involving type operations", "input": "{0}1", "output": "true"}
+{"instruction": "Evaluate this mtron expression involving type operations", "input": "{0}1", "output": "true"}
+{"instruction": "Evaluate this mtron expression involving type operations", "input": "{0}1", "output": "false"}
+{"instruction": "Evaluate this mtron expression involving type operations", "input": "{1}1", "output": "false"}
+{"instruction": "Evaluate this mtron expression involving type operations", "input": "'a_string'", "output": "false"}
+{"instruction": "Evaluate this mtron expression involving type operations", "input": "213.0", "output": "false"}
+{"instruction": "Evaluate this mtron expression involving type operations", "input": "1", "output": "true"}
+{"instruction": "Evaluate this mtron expression involving type operations", "input": "1", "output": "false"}
+{"instruction": "Evaluate this mtron expression involving type operations", "input": "1", "output": "true"}
+{"instruction": "Evaluate this mtron expression involving type operations", "input": "1", "output": "false"}
+{"instruction": "Evaluate this mtron expression involving type operations", "input": "{1,1}", "output": "false"}
+{"instruction": "Evaluate this mtron expression involving type operations", "input": "{,}", "output": "true"}
+{"instruction": "Evaluate this mtron expression involving type operations", "input": "{1,1}", "output": "false"}
+{"instruction": "Evaluate this mtron expression involving type operations", "input": "{'a','b'}", "output": "true"}
+{"instruction": "Evaluate this mtron expression involving type operations", "input": "{'a','b'}", "output": "true"}
+{"instruction": "Evaluate this mtron expression involving type operations", "input": "{'a','b','c'}", "output": "true"}
+{"instruction": "Evaluate this mtron expression involving type operations", "input": "{'a','b','c','d'}", "output": "false"}
+{"instruction": "Evaluate this mtron expression involving type operations", "input": "{}", "output": "false"}
+{"instruction": "Evaluate this mtron expression involving type operations", "input": "{}", "output": "true"}
+{"instruction": "Evaluate this mtron expression involving type operations", "input": "{'b'}", "output": "false"}
+{"instruction": "Evaluate this mtron expression involving type operations", "input": "{'b'}", "output": "true"}
+{"instruction": "Evaluate this mtron expression involving type operations", "input": "{1,2}", "output": "true"}
+{"instruction": "Evaluate this mtron expression involving type operations", "input": "{1,2,3}", "output": "true"}
+{"instruction": "Evaluate this mtron expression involving type operations", "input": "{1,2,3}", "output": "false"}
+{"instruction": "Evaluate this mtron expression involving type operations", "input": "{1,1}", "output": "true"}
+{"instruction": "Evaluate this mtron expression involving type operations", "input": "{1,1}", "output": "false"}
+{"instruction": "Evaluate this mtron expression involving type operations", "input": "{1,1}", "output": "true"}
+{"instruction": "Evaluate this mtron expression involving type operations", "input": "1", "output": "false"}
+{"instruction": "Evaluate this mtron expression involving type operations", "input": "{0,0}", "output": "false"}
+{"instruction": "Evaluate this mtron expression involving type operations", "input": "{2,3}", "output": "true"}
+{"instruction": "Evaluate this mtron expression involving type operations", "input": "{2,3}", "output": "false"}
+{"instruction": "Evaluate this mtron expression involving type operations", "input": "{5,6}", "output": "true"}
+{"instruction": "Evaluate this mtron expression involving type operations", "input": "{2,2}", "output": "true"}
+{"instruction": "Evaluate this mtron expression involving type operations", "input": "{3,3}", "output": "true"}
+{"instruction": "Evaluate this mtron expression involving type operations", "input": "{0,1}", "output": "false"}
+{"instruction": "Evaluate this mtron expression involving type operations", "input": "{0,0}", "output": "false"}
+{"instruction": "Evaluate this mtron expression involving type operations", "input": "{0,-1}", "output": "false"}
 {"instruction": "Evaluate this mtron expression involving type operations", "input": "person", "output": "true"}
 {"instruction": "Evaluate this mtron expression involving type operations", "input": "person", "output": "false"}
 {"instruction": "Evaluate this mtron expression involving type operations", "input": "person", "output": "false"}
@@ -3367,6 +3401,22 @@
 {"instruction": "Evaluate this mtron expression involving type operations", "input": "[flag=>'us',member=>{being::[age=>29],[blah=>'stuff']}]", "output": "false"}
 {"instruction": "Evaluate this mtron expression involving type operations", "input": "[flag=>'mex',member=>{[age=>12]}]", "output": "false"}
 {"instruction": "Evaluate this mtron expression involving type operations", "input": "[flag=>'mex',member=>{[age=>12],[age=>13]}]", "output": "false"}
+{"instruction": "Evaluate this mtron expression involving uri operations", "input": "a.pow(0)", "output": "<.>"}
+{"instruction": "Evaluate this mtron expression involving uri operations", "input": "/a.pow(1)", "output": "/a"}
+{"instruction": "Evaluate this mtron expression involving uri operations", "input": "/a/.pow(1)", "output": "/a/"}
+{"instruction": "Evaluate this mtron expression involving uri operations", "input": "/a/.pow(2)", "output": "/a/a/"}
+{"instruction": "Evaluate this mtron expression involving uri operations", "input": "a.pow(2)", "output": "a/a"}
+{"instruction": "Evaluate this mtron expression involving uri operations", "input": "a.pow(3)", "output": "a/a/a"}
+{"instruction": "Evaluate this mtron expression involving uri operations", "input": "a/b.pow(2)", "output": "a/b/a/b"}
+{"instruction": "Evaluate this mtron expression involving uri operations", "input": "a/b.pow(3)", "output": "a/b/a/b/a/b"}
+{"instruction": "Evaluate this mtron expression involving uri operations", "input": "a/b.pow(3)", "output": "a/b/a/b/a/b"}
+{"instruction": "Evaluate this mtron expression involving uri operations", "input": "a/b/c.pow(2)", "output": "a/b/c/a/b/c"}
+{"instruction": "Evaluate this mtron expression involving uri operations", "input": "a/b/c.pow(3)", "output": "a/b/c/a/b/c/a/b/c"}
+{"instruction": "Evaluate this mtron expression involving uri operations", "input": "a/b/c/.pow(3)", "output": "a/b/c/a/b/c/a/b/c/"}
+{"instruction": "Evaluate this mtron expression involving uri operations", "input": "/a/b/c/.pow(3)", "output": "/a/b/c/a/b/c/a/b/c/"}
+{"instruction": "Evaluate this mtron expression involving uri operations", "input": "a/b/c/d.pow(2)", "output": "a/b/c/d/a/b/c/d"}
+{"instruction": "Evaluate this mtron expression involving uri operations", "input": "a/b/c/d.pow(3)", "output": "a/b/c/d/a/b/c/d/a/b/c/d"}
+{"instruction": "Evaluate this mtron expression involving uri operations", "input": "<a/b/../c/d>.pow(3)", "output": "a/c/d/a/c/d/a/c/d"}
 {"instruction": "Evaluate this mtron expression involving uri operations", "input": "bool::abc/def", "output": "<ERROR>"}
 {"instruction": "Evaluate this mtron expression involving uri operations", "input": "/m/bool::abc/def", "output": "<ERROR>"}
 {"instruction": "Evaluate this mtron expression involving uri operations", "input": "bytes::<abc/def>", "output": "<ERROR>"}
@@ -3393,22 +3443,6 @@
 {"instruction": "Evaluate this mtron expression involving uri operations", "input": "a.mult(<../b>)", "output": "b"}
 {"instruction": "Evaluate this mtron expression involving uri operations", "input": "a.mult(<../b/c>)", "output": "b/c"}
 {"instruction": "Evaluate this mtron expression involving uri operations", "input": "a.mult(<../../b>)", "output": "<../b>"}
-{"instruction": "Evaluate this mtron expression involving uri operations", "input": "a.pow(0)", "output": "<.>"}
-{"instruction": "Evaluate this mtron expression involving uri operations", "input": "/a.pow(1)", "output": "/a"}
-{"instruction": "Evaluate this mtron expression involving uri operations", "input": "/a/.pow(1)", "output": "/a/"}
-{"instruction": "Evaluate this mtron expression involving uri operations", "input": "/a/.pow(2)", "output": "/a/a/"}
-{"instruction": "Evaluate this mtron expression involving uri operations", "input": "a.pow(2)", "output": "a/a"}
-{"instruction": "Evaluate this mtron expression involving uri operations", "input": "a.pow(3)", "output": "a/a/a"}
-{"instruction": "Evaluate this mtron expression involving uri operations", "input": "a/b.pow(2)", "output": "a/b/a/b"}
-{"instruction": "Evaluate this mtron expression involving uri operations", "input": "a/b.pow(3)", "output": "a/b/a/b/a/b"}
-{"instruction": "Evaluate this mtron expression involving uri operations", "input": "a/b.pow(3)", "output": "a/b/a/b/a/b"}
-{"instruction": "Evaluate this mtron expression involving uri operations", "input": "a/b/c.pow(2)", "output": "a/b/c/a/b/c"}
-{"instruction": "Evaluate this mtron expression involving uri operations", "input": "a/b/c.pow(3)", "output": "a/b/c/a/b/c/a/b/c"}
-{"instruction": "Evaluate this mtron expression involving uri operations", "input": "a/b/c/.pow(3)", "output": "a/b/c/a/b/c/a/b/c/"}
-{"instruction": "Evaluate this mtron expression involving uri operations", "input": "/a/b/c/.pow(3)", "output": "/a/b/c/a/b/c/a/b/c/"}
-{"instruction": "Evaluate this mtron expression involving uri operations", "input": "a/b/c/d.pow(2)", "output": "a/b/c/d/a/b/c/d"}
-{"instruction": "Evaluate this mtron expression involving uri operations", "input": "a/b/c/d.pow(3)", "output": "a/b/c/d/a/b/c/d/a/b/c/d"}
-{"instruction": "Evaluate this mtron expression involving uri operations", "input": "<a/b/../c/d>.pow(3)", "output": "a/c/d/a/c/d/a/c/d"}
 {"instruction": "Evaluate this mtron expression involving uri operations", "input": "/a/b/c.reverse()", "output": "c/b/a/"}
 {"instruction": "Evaluate this mtron expression involving uri operations", "input": "aaa/bbb/ccc.reverse()", "output": "ccc/bbb/aaa"}
 {"instruction": "Evaluate this mtron expression involving uri operations", "input": "<http://m.com/a/b/c>.reverse()", "output": "<http://m.com/c/b/a/>"}
@@ -3501,8 +3535,6 @@
 {"instruction": "Evaluate this mtron expression involving lazyobjs operations", "input": "{int{0}::1,int::2,int{2}::2}", "output": "3"}
 {"instruction": "Evaluate this mtron expression involving lazyobjs operations", "input": "{1,2,int{10}::3,4,4}", "output": "14"}
 {"instruction": "Evaluate this mtron expression involving lazyobjs operations", "input": "{1,'a',int{10}::3,4,4}", "output": "14"}
-{"instruction": "Evaluate this mtron expression involving inst operations", "input": "1.as(real::T)", "output": "1.0"}
-{"instruction": "Evaluate this mtron expression involving inst operations", "input": "1.5.as(int::T)", "output": "1"}
 {"instruction": "Evaluate this mtron expression involving inst operations", "input": "1.plus(2)", "output": "3"}
 {"instruction": "Evaluate this mtron expression involving inst operations", "input": "10.mult(5)", "output": "50"}
 {"instruction": "Evaluate this mtron expression involving inst operations", "input": "7.minus(3)", "output": "4"}
@@ -3518,6 +3550,8 @@
 {"instruction": "Evaluate this mtron expression involving inst operations", "input": "'hello'.plus(' world')", "output": "\"hello world\""}
 {"instruction": "Evaluate this mtron expression involving inst operations", "input": "'ABC'.lcase()", "output": "\"abc\""}
 {"instruction": "Evaluate this mtron expression involving inst operations", "input": "'abc'.ucase()", "output": "\"ABC\""}
+{"instruction": "Evaluate this mtron expression involving inst operations", "input": "1.as(real::T)", "output": "1.0"}
+{"instruction": "Evaluate this mtron expression involving inst operations", "input": "1.5.as(int::T)", "output": "1"}
 {"instruction": "Evaluate this mtron expression involving inst operations", "input": "1.as(str::T)", "output": "\"1\""}
 {"instruction": "Evaluate this mtron expression involving inst operations", "input": "1.as(real::T)", "output": "1.0"}
 {"instruction": "Evaluate this mtron expression involving inst operations", "input": "1.5.as(int::T)", "output": "1"}
@@ -3617,6 +3651,21 @@
 {"instruction": "Evaluate this mtron expression using the /m/math instruction set", "input": "gB::1.0.as(mB::T)", "output": "true"}
 {"instruction": "Evaluate this mtron expression using the /m/math instruction set", "input": "tB::1.0.as(gB::T)", "output": "true"}
 {"instruction": "Evaluate this mtron expression using the /m/math instruction set", "input": "pB::1.0.as(tB::T)", "output": "true"}
+{"instruction": "Evaluate this mtron expression using the /m/math instruction set", "input": "kB::1024.0.eq(mB::1.0)", "output": "true"}
+{"instruction": "Evaluate this mtron expression using the /m/math instruction set", "input": "mB::1024.0.eq(gB::1.0)", "output": "true"}
+{"instruction": "Evaluate this mtron expression using the /m/math instruction set", "input": "gB::1024.0.eq(tB::1.0)", "output": "true"}
+{"instruction": "Evaluate this mtron expression using the /m/math instruction set", "input": "tB::1024.0.eq(pB::1.0)", "output": "true"}
+{"instruction": "Evaluate this mtron expression using the /m/math instruction set", "input": "bB::1024.0.eq(kB::1.0)", "output": "true"}
+{"instruction": "Evaluate this mtron expression using the /m/math instruction set", "input": "bB::1048576.0.eq(mB::1.0)", "output": "true"}
+{"instruction": "Evaluate this mtron expression using the /m/math instruction set", "input": "bB::1073741824.0.eq(gB::1.0)", "output": "true"}
+{"instruction": "Evaluate this mtron expression using the /m/math instruction set", "input": "kB::1048576.0.eq(gB::1.0)", "output": "true"}
+{"instruction": "Evaluate this mtron expression using the /m/math instruction set", "input": "mB::1048576.0.eq(tB::1.0)", "output": "true"}
+{"instruction": "Evaluate this mtron expression using the /m/math instruction set", "input": "kB::1024.0.neq(mB::1.0)", "output": "false"}
+{"instruction": "Evaluate this mtron expression using the /m/math instruction set", "input": "mB::1024.0.neq(gB::1.0)", "output": "false"}
+{"instruction": "Evaluate this mtron expression using the /m/math instruction set", "input": "kB::1024.0.lt(mB::1.0)", "output": "false"}
+{"instruction": "Evaluate this mtron expression using the /m/math instruction set", "input": "kB::1024.0.gt(mB::1.0)", "output": "false"}
+{"instruction": "Evaluate this mtron expression using the /m/math instruction set", "input": "kB::1024.0.lte(mB::1.0)", "output": "true"}
+{"instruction": "Evaluate this mtron expression using the /m/math instruction set", "input": "kB::1024.0.gte(mB::1.0)", "output": "true"}
 {"instruction": "Evaluate this mtron expression using the /m/math instruction set", "input": "1024.0.as(kB::T)", "output": "kB::1024.0"}
 {"instruction": "Evaluate this mtron expression using the /m/math instruction set", "input": "bB::1024.0.as(bB::T)", "output": "bB::1024.0"}
 {"instruction": "Evaluate this mtron expression using the /m/math instruction set", "input": "bB::1024.0.as(kB::T)", "output": "kB::1.0"}
@@ -3663,21 +3712,6 @@
 {"instruction": "Evaluate this mtron expression using the /m/math instruction set", "input": "gB::2.0.as(mB::T)", "output": "mB::2048.0"}
 {"instruction": "Evaluate this mtron expression using the /m/math instruction set", "input": "mB::2.0.as(kB::T)", "output": "kB::2048.0"}
 {"instruction": "Evaluate this mtron expression using the /m/math instruction set", "input": "kB::2.0.as(bB::T)", "output": "bB::2048.0"}
-{"instruction": "Evaluate this mtron expression using the /m/math instruction set", "input": "kB::1024.0.eq(mB::1.0)", "output": "true"}
-{"instruction": "Evaluate this mtron expression using the /m/math instruction set", "input": "mB::1024.0.eq(gB::1.0)", "output": "true"}
-{"instruction": "Evaluate this mtron expression using the /m/math instruction set", "input": "gB::1024.0.eq(tB::1.0)", "output": "true"}
-{"instruction": "Evaluate this mtron expression using the /m/math instruction set", "input": "tB::1024.0.eq(pB::1.0)", "output": "true"}
-{"instruction": "Evaluate this mtron expression using the /m/math instruction set", "input": "bB::1024.0.eq(kB::1.0)", "output": "true"}
-{"instruction": "Evaluate this mtron expression using the /m/math instruction set", "input": "bB::1048576.0.eq(mB::1.0)", "output": "true"}
-{"instruction": "Evaluate this mtron expression using the /m/math instruction set", "input": "bB::1073741824.0.eq(gB::1.0)", "output": "true"}
-{"instruction": "Evaluate this mtron expression using the /m/math instruction set", "input": "kB::1048576.0.eq(gB::1.0)", "output": "true"}
-{"instruction": "Evaluate this mtron expression using the /m/math instruction set", "input": "mB::1048576.0.eq(tB::1.0)", "output": "true"}
-{"instruction": "Evaluate this mtron expression using the /m/math instruction set", "input": "kB::1024.0.neq(mB::1.0)", "output": "false"}
-{"instruction": "Evaluate this mtron expression using the /m/math instruction set", "input": "mB::1024.0.neq(gB::1.0)", "output": "false"}
-{"instruction": "Evaluate this mtron expression using the /m/math instruction set", "input": "kB::1024.0.lt(mB::1.0)", "output": "false"}
-{"instruction": "Evaluate this mtron expression using the /m/math instruction set", "input": "kB::1024.0.gt(mB::1.0)", "output": "false"}
-{"instruction": "Evaluate this mtron expression using the /m/math instruction set", "input": "kB::1024.0.lte(mB::1.0)", "output": "true"}
-{"instruction": "Evaluate this mtron expression using the /m/math instruction set", "input": "kB::1024.0.gte(mB::1.0)", "output": "true"}
 {"instruction": "Evaluate this mtron expression using the /m/math instruction set", "input": "30000.0.as(minute::T)", "output": "minute::30000.0"}
 {"instruction": "Evaluate this mtron expression using the /m/math instruction set", "input": "millis::1000.0.as(millis::T)", "output": "millis::1000.0"}
 {"instruction": "Evaluate this mtron expression using the /m/math instruction set", "input": "millis::1000.0.as(second::T)", "output": "second::1.0"}

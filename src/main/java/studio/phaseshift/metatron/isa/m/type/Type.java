@@ -375,7 +375,9 @@ public interface Type extends Obj {
         public Builder predicate(final BiFunction<Obj, Inst, Obj> predicate) {
             if (null == this.vid)
                 throw MTronException.of("vid must be set prior to specifying predicate");
-            return this.predicate(instC(INST_PRED_TID.dom(ALL.maybe()).rng(this.vid), lst(URI_TYPE), predicate));
+            if (null == this.tid)
+                throw MTronException.of("tid must be set prior to specifying predicate");
+            return this.predicate(instC(INST_PRED_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(this.tid)), predicate));
         }
 
         public Builder isaPredicate(final Obj predicate) {

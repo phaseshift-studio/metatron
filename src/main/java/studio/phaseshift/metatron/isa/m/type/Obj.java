@@ -905,8 +905,10 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                                 indent(obj.tid(obj.baseType()).toString(), 2),
                                 indent("X=>", 6),
                                 indent(obj.type().toString(), 2), indent("-".repeat(width), 2), indent(matchDiffString, 2));
-                    } else
-                        throw MTronException.of("%s is not a %s".formatted(obj, obj.type()));
+                    } else {
+                        final Type attemptedType = obj.type();
+                        throw MTronException.of("%s is not a %s".formatted(obj.selfTID(obj.baseType()), attemptedType));
+                    }
                 }
             }
         }
