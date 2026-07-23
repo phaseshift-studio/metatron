@@ -69,8 +69,26 @@ public class TableWidget extends JRec<TableWidget> implements Widget<TableWidget
 
     public TableWidget(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
-        this.at(uri("header")).ifPresent(h -> h.lstValue().forEach(o -> this.headers.add(o.strValue())));
-        this.at(uri("row")).ifPresent(r -> r.lstValue().forEach(o -> this.addRow((List) o)));
+    }
+
+    private void sync() {
+        if (this.style == null) return; // construction guard
+        final Map<Obj, Obj> jvm = jvmRead();
+
+        this.headers.clear();
+        final Obj h = jvm.get(uri("headers"));
+        if (h != null && !h.isNoObj())
+            h.stream().filter(Obj::isStr).forEach(o -> this.headers.add(o.strValue()));
+
+        this.table.clear();
+        final Obj r = jvm.get(uri("rows"));
+        if (r != null && !r.isNoObj())
+            r.stream().forEach(row -> this.addRow(row.stream().map(cell -> (Object) (cell.isStr() ? cell.strValue() : cell)).toList()));
+
+        this.metadata.clear();
+        final Obj m = jvm.get(uri("metadata"));
+        if (m != null && !m.isNoObj())
+            m.stream().forEach(row -> this.addMetadata(row.stream().map(cell -> (Object) (cell.isStr() ? cell.strValue() : cell)).toList()));
     }
 
     // ── convenience constructors ───────────────────────────────────
@@ -192,6 +210,7 @@ public class TableWidget extends JRec<TableWidget> implements Widget<TableWidget
 
     @Override
     public String format() {
+        this.sync();
         final StringBuilder sb = new StringBuilder();
         if (!this.headers.isEmpty()) {
             if (this.style.headerDivider().isEmpty() && !this.style.divider().isEmpty())
@@ -240,15 +259,7 @@ public class TableWidget extends JRec<TableWidget> implements Widget<TableWidget
     }
 
     @Override
-    public void run() {
-    }
-
-    @Override
     public void close() {
-    }
-
-    @Override
-    public void display() {
     }
 
     @Override

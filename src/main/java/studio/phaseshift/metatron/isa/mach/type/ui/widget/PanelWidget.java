@@ -60,10 +60,12 @@ public class PanelWidget extends JRec<PanelWidget> implements Widget<PanelWidget
                     new PanelWidget(inst.arg(0).as().jvm(), UI_PANEL_TID, inst.arg(0).vid())))
             .create();
 
+    // @JRecElement fields are metadata for mtron introspection.
+    // Java code reads from sync() which pulls from jvmRead().
     @JRecElement(key = "title", rng = "/m/str")
-    public String title;
+    private String title;
     @JRecElement(key = "body", rng = "/m/str")
-    public String body;
+    private String body;
     private Style<PanelWidget> style = Style.empty();
     private Cursor cursor;
 
@@ -71,10 +73,13 @@ public class PanelWidget extends JRec<PanelWidget> implements Widget<PanelWidget
 
     public PanelWidget(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
-        final Obj t = jvm.get(str("title"));
-        if (t != null && t.isStr()) this.title = t.strValue();
-        final Obj b = jvm.get(str("body"));
-        if (b != null && b.isStr()) this.body = b.strValue();
+    }
+
+    private void sync() {
+        if (this.style == null) return; // construction guard
+        final Map<Obj, Obj> jvm = jvmRead();
+        this.title = jvmStr(jvm, "title");
+        this.body = jvmStr(jvm, "body");
     }
 
     // ── convenience constructors ───────────────────────────────────
@@ -124,13 +129,11 @@ public class PanelWidget extends JRec<PanelWidget> implements Widget<PanelWidget
     @Override
     public PanelWidget style(final Style<PanelWidget> style) {
         this.style = style;
-        if (this.style.border() == Border.none) this.style.border(Border.simple);
+        if (this.style.border() == Border.none) this.style.border(Border.continuous);
         return this;
     }
 
-    @Override public void run()    {}
     @Override public void close()  {}
-    @Override public void display() {}
     @Override public String renderInPlace() { return this.format() + "\n"; }
     @Override public String renderFresh()   { return this.format() + "\n"; }
 
@@ -138,6 +141,7 @@ public class PanelWidget extends JRec<PanelWidget> implements Widget<PanelWidget
 
     @Override
     public String format() {
+        this.sync();
         final List<String> lines = Arrays.asList(
                 (null != this.body ? this.body : "").replace("\\n", "\n").split("\\r?\\n", -1));
         final int maxLen = Stream.concat(Stream.of(this.title).filter(Objects::nonNull), lines.stream())

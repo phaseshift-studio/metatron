@@ -20,8 +20,10 @@ package studio.phaseshift.metatron.isa.mach.type.ui.widget;
 
 import org.jline.terminal.Cursor;
 import studio.phaseshift.metatron.isa.mach.type.ui.Widget;
+import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /*
@@ -76,7 +78,9 @@ public class GridWidget extends AbstractWidget<GridWidget> {
     public void run() {
         super.run();
         this.widgets.forEach(Widget::run);
-        this.display();
+        this.display.resize(this.height(), this.width());
+        this.display.updateAnsi(Arrays.stream(this.format().split("\n")).map(s -> s + "\n").map(Graphitty::string).toList(), -1);
+        this.terminal.writer().flush();
     }
 
     @Override

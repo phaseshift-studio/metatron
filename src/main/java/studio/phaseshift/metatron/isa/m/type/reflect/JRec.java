@@ -23,6 +23,7 @@ import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.impl.MObj;
+import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.MTronException;
@@ -42,6 +43,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
@@ -77,6 +79,7 @@ public class JRec<OBJECT> extends MObj implements Rec {
     @Override
     public <O extends Obj> O at(final Obj key) {
         final Obj o = objs(Stream.concat(Stream.concat(this.findField(key).stream().map(f -> {
+            f.field().setAccessible(true);
             final O temp = (O) JObjFactory.single().toObj(MTronException.wrap(() -> f.field().get(this.sjvm)), f(f.annotation().rng()), null);
             this.jvm().put(key, temp);
             return temp;
@@ -102,6 +105,7 @@ public class JRec<OBJECT> extends MObj implements Rec {
         try {
             this.jvm().put(key, value);
             this.findField(key).forEach(f -> MTronException.wrap(() -> {
+                f.field().setAccessible(true);
                 f.field().set(this.sjvm, Obj.class.isAssignableFrom(f.field().getType()) ? value : value.jvm());
             }));
             return this;
@@ -116,9 +120,11 @@ public class JRec<OBJECT> extends MObj implements Rec {
         if (null == this.sjvm)
             return base;
         final Map<Obj, Obj> temp = new LinkedHashMap<>();
-        this.findField(uri("#")).forEach(f ->
+        this.findField(uri("#")).forEach(f -> {
+                f.field().setAccessible(true);
                 temp.put(uri(f.annotation().key()),
-                        JObjFactory.single().toObj(MTronException.wrap(() -> f.field().get(this.sjvm)), JRecElement.Helper.getRng(f.annotation()), null)));
+                        JObjFactory.single().toObj(MTronException.wrap(() -> f.field().get(this.sjvm)), JRecElement.Helper.getRng(f.annotation()), null));
+        });
         this.findMethod(uri("#")).forEach(m -> {
             if (m.annotation().mimic() == JRecElement.Mimic.FIELD) {
                 if (m.method.getParameterCount() != 0)
@@ -134,6 +140,99 @@ public class JRec<OBJECT> extends MObj implements Rec {
         });
         temp.putAll(base);
         return temp;
+    }
+
+    /**
+     * Read the source-of-truth JVM for this object.  If the object has a
+     * persistent address ({@link #vid()}), the latest state is fetched from
+     * the space via {@link Router#global() Router.global().read(vid())}.
+     * Otherwise the local construction-time JVM is returned.
+     *
+     * <p>Subclasses should call this before every rendering pass so that
+     * {@code >>=} mutations from mtron are always visible.
+     */
+    protected final Map<Obj, Obj> jvmRead() {
+        if (this.vid() == null) return this.jvm();
+        try {
+            final Obj fresh = Router.global().read(this.vid());
+            return fresh.isRec() ? fresh.jvm() : this.jvm();
+        } catch (final Exception e) {
+            return this.jvm(); // fallback: space unavailable
+        }
+    }
+
+    /**
+     * Write a single field to the persistent store with {@code >>=}-style
+     * merge semantics: the current state is read from the space, the field
+     * is merged in, and the whole rec is written back.  Other fields are
+     * never clobbered.
+     *
+     * <p>If the object has no {@link #vid()}, writes to the local JVM via
+     * {@link #at(Obj, Obj)} so that {@link #jvmRead()} still picks it up.
+     */
+    protected final void jvmWrite(final Obj key, final Obj value) {
+        if (this.vid() == null) {
+            // Ephemeral object — write directly to the base map so
+            // jvmRead() (which returns the merged jvm()) picks it up.
+            ((Map<Obj, Obj>) this.jvm).put(key, value);
+            this.findField(key).forEach(f -> MTronException.wrap(() -> {
+                f.field().setAccessible(true);
+                f.field().set(this.sjvm, Obj.class.isAssignableFrom(f.field().getType()) ? value : value.jvm());
+            }));
+            return;
+        }
+        try {
+            final Obj current = Router.global().read(this.vid());
+            final Map<Obj, Obj> merged = new LinkedHashMap<>(current.isRec() ? current.jvm() : this.jvm());
+            merged.put(key, value);
+            Router.global().write(this.vid(), rec(merged, current.tid(), this.vid()));
+        } catch (final Exception e) {
+            // Fallback: direct sub-path write
+            Router.global().write(this.vid().extend(key.uriValue()), value);
+        }
+    }
+
+    // ── typed value extractors for jvmRead() ──────────────────────
+
+    /** Extract a {@code str::T} value from a JVM map. */
+    protected static String jvmStr(final Map<Obj, Obj> jvm, final String key) {
+        return jvmStr(jvm, uri(key));
+    }
+    protected static String jvmStr(final Map<Obj, Obj> jvm, final Obj key) {
+        final Obj o = jvm.get(key);
+        return (o != null && o.isStr()) ? o.strValue() : "";
+    }
+
+    /** Extract a {@code bool::T} value from a JVM map (defaults to {@code true} if absent). */
+    protected static boolean jvmBool(final Map<Obj, Obj> jvm, final String key) {
+        return jvmBool(jvm, uri(key));
+    }
+    protected static boolean jvmBool(final Map<Obj, Obj> jvm, final Obj key) {
+        final Obj o = jvm.get(key);
+        return o == null || !o.isBool() || o.boolValue();
+    }
+
+    /** Extract an {@code int::T} value from a JVM map. */
+    protected static int jvmInt(final Map<Obj, Obj> jvm, final String key, final int fallback) {
+        return jvmInt(jvm, uri(key), fallback);
+    }
+    protected static int jvmInt(final Map<Obj, Obj> jvm, final Obj key, final int fallback) {
+        final Obj o = jvm.get(key);
+        return (o != null && o.isInt()) ? o.asInt().intValue().intValue() : fallback;
+    }
+
+    /** Extract a body (str or lst-of-str) from a JVM map into a list of lines. */
+    protected static List<String> jvmBody(final Map<Obj, Obj> jvm, final String key) {
+        return jvmBody(jvm, uri(key));
+    }
+    protected static List<String> jvmBody(final Map<Obj, Obj> jvm, final Obj key) {
+        final List<String> lines = new java.util.ArrayList<>();
+        final Obj b = jvm.get(key);
+        if (b != null && !b.isNoObj()) {
+            if (b.isStr()) java.util.Arrays.asList(b.strValue().replace("\\n", "\n").split("\n", -1)).forEach(lines::add);
+            else b.stream().filter(Obj::isStr).forEach(o -> lines.add(o.strValue()));
+        }
+        return lines;
     }
 
     @Override

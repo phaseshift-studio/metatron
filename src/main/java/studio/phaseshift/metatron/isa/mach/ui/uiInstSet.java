@@ -20,19 +20,14 @@ package studio.phaseshift.metatron.isa.mach.ui;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
-import studio.phaseshift.metatron.isa.dcmnt.schema.storage.ObjBSONSerializer;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Type;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjByteBufferSerializer;
-import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.mach.type.ui.Border;
 import studio.phaseshift.metatron.isa.mach.type.ui.Stylable;
 import studio.phaseshift.metatron.isa.mach.type.ui.Widget;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Console;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Editor;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.menu.ColonMenu;
-import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.widget.*;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -47,11 +42,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
-import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
-import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.id_;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.inside_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
@@ -67,7 +61,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_ISA_TID;
 import static studio.phaseshift.metatron.isa.mach.type.thread.VirtualThread.virtual;
-
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /*
@@ -93,6 +86,8 @@ public class uiInstSet extends AbstractInstSet {
     public static Type UI_SELECTOR_TYPE;
     public static final fURI UI_PANEL_TID = UI_WIDGET_TID.extend("panel");
     public static Type UI_PANEL_TYPE;
+    public static final fURI UI_ANCHOR_TID = UI_ISA_TID.extend("anchor");
+    public static Type UI_ANCHOR_TYPE;
     public static final fURI UI_CONSOLE_TID = UI_ISA_TID.extend("console");
     public static Type UI_CONSOLE_TYPE;
 
@@ -118,6 +113,11 @@ public class uiInstSet extends AbstractInstSet {
                                     })), "console repl").applyAsync();
                                     return docWrap(console, "a user terminal repl", ":help");
                                 })).create(), "a terminal user interface"),
+                        docWrap(UI_ANCHOR_TYPE = Type.Builder.build()
+                                .tid(URI_TID)
+                                .vid(UI_ANCHOR_TID)
+                                .isaPredicate(inside_(lst(uri("top_left"), uri("top_right"), uri("bottom_left"), uri("bottom_right"))))
+                                .create(), "a float anchor position"),
                         docWrap(UI_STYLE_TYPE = Type.Builder.build()
                                         .tid(REC_TID)
                                         .vid(UI_STYLE_TID)
@@ -128,12 +128,14 @@ public class uiInstSet extends AbstractInstSet {
                                                 uri("divider").maybe(), STR_TYPE,
                                                 uri("headerDivider").maybe(), STR_TYPE,
                                                 uri("pointer").maybe(), STR_TYPE,
-                                                uri("leftMargin").maybe(), STR_TYPE,
-                                                uri("rightMargin").maybe(), STR_TYPE,
-                                                uri("topMargin").maybe(), STR_TYPE,
-                                                uri("bottomMargin").maybe(), STR_TYPE))
+                                                uri("leftMargin").maybe(), INT_TYPE,
+                                                uri("rightMargin").maybe(), INT_TYPE,
+                                                uri("topMargin").maybe(), INT_TYPE,
+                                                uri("bottomMargin").maybe(), INT_TYPE,
+                                                uri("floatAnchor").maybe(), UI_ANCHOR_TYPE,
+                                                uri("floatWidth").maybe(), INT_TYPE))
                                         .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(UI_STYLE_TID), lst(T(REC_TID)), (lhs, inst) -> Stylable.Style.from(inst.arg(0).asRec())))
-                                        .create(), "maybe an obj", "a style obj", Map.of(
+                                        .create(), "maybe an obj", "a style obj", mutableMap(
                                         uri("border").maybe().asUri(), "the border style of the widget (e.g. border::none, border::simple, etc.)",
                                         uri("background").maybe(), "the background color of the widget",
                                         uri("foreground").maybe(), "the foreground color of the widget",
@@ -143,7 +145,9 @@ public class uiInstSet extends AbstractInstSet {
                                         uri("leftMargin").maybe(), "the left margin of the widget",
                                         uri("rightMargin").maybe(), "the right margin of the widget",
                                         uri("topMargin").maybe(), "the top margin of the widget",
-                                        uri("bottomMargin").maybe(), "the bottom margin of the widget"),
+                                        uri("bottomMargin").maybe(), "the bottom margin of the widget",
+                                        uri("floatAnchor").maybe(), "float anchor: top_right, top_left, bottom_right, bottom_left",
+                                        uri("floatWidth").maybe(), "float column width (default 36)"),
                                 "a widget style specification"),
                         docWrap(UI_WIDGET_TYPE = Type.Builder.build()
                                         .tid(REC_TID)
@@ -219,14 +223,12 @@ public class uiInstSet extends AbstractInstSet {
                                 "a simple bordered UI panel widget")),
                 uri(INST), lst(
                         instC(AS_INST_TID.dom(UI_TREE_TID).rng(STR_TID), lst(STR_TYPE), (lhs, inst) -> str(((Widget<?>) lhs).format())),
-                        docWrap(instC(UI_INST_TID.extend("display").dom(UI_WIDGET_TID).rng(UI_WIDGET_TID), lst(), (lhs, inst) -> {
-                            final Widget widget = ((Widget) lhs);
-                            if (widget instanceof Selector)
-                                Utilities.runCursorLessWidget(widget, true);
-                            else
-                                Graphitty.out(null == Console.LOCAL_INSTANCE ? System.out : Console.getTerminal().output(), widget.format() + "\n");
-                            return lhs;
-                        }), "display the widget on the terminal"),
+                        docWrap(instC(UI_INST_TID.extend("display").dom(UI_WIDGET_TID).rng(NOOBJ_TID.zero()), lst(), (lhs, inst) -> {
+                            final Widget<?> widget = (Widget<?>) lhs;
+                            widget.run();
+                            widget.close();
+                            return noobj();
+                        }), "run the widget (display-only render once; interactive enter modal loop; floats if the style has a float anchor set)"),
                         docWrap(instC(UI_INST_TID.extend("nano").dom(ALL.maybe()).rng(ALL.maybe()), lst(), (lhs, inst) -> {
                             try {
                                 final File file = Editor.createObjFile(lhs);

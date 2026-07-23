@@ -18,6 +18,12 @@
 
 package studio.phaseshift.metatron.isa.llm.type.feature;
 
+import org.apache.lucene.analysis.standard.StandardAnalyzer;
+import org.apache.lucene.document.*;
+import org.apache.lucene.index.*;
+import org.apache.lucene.store.ByteBuffersDirectory;
+import org.apache.lucene.store.Directory;
+import org.apache.lucene.util.BytesRef;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
 import studio.phaseshift.metatron.isa.m.type.Lst;
@@ -27,13 +33,18 @@ import studio.phaseshift.metatron.isa.m.type.Str;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.thread.VirtualThread;
+import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.CommonUtil;
+import studio.phaseshift.metatron.util.MTronException;
 
+import java.io.IOException;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_CHAT_FEATURE_TID;
 import static studio.phaseshift.metatron.isa.llm.type.Agent.agent;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
@@ -54,36 +65,77 @@ public class ConceptFeature extends Feature {
 
     private static final String CONCEPT = "concept";
     private static final String LINK = "link";
+    private static final String MESSAGE = "message";
     private static final Pattern CONCEPT_PATTERN = Pattern.compile("<<concept:([^>]+)>>");
-    private Agent translatorAgent = null;
 
-    private static final
-    String CONCEPT_FEATURE_AGENT_TEMPLATE = """
-                                            In any of your responses, you can tag important concepts using a <<concept:>>-block:
-                                            For instance, an agent may write:
-                                            
-                                            "Increasing the size of the <<concept:context windows>> is one way to increase an agent's
-                                            <<concept:intelligence>>. However, another way is to provide better <<concept:indexing>> and
-                                            <<concept:searching>> capabilities for existing <<concept:memory systems>>."
-                                            
-                                            Behind the scenes, these tags will form a growing co-location graph that will allow
-                                            for the automatic insertion of relevant historic memories the agent can choose
-                                            to review. For instance, given the above, the next system message may write:
-                                            """;
-    String CONCEPT_FEATURE_SYSTEM_TEMPLATE = """
-                                             use the mtron eval tool for related historic content:
-                                             
-                                                 %s
-                                             
-                                             For related concepts use:
-                                             
-                                                %s
-                                             """;
+    // ── Config keys ─────────────────────────────────────────────────
+    private static final fURI EXTRACTOR = f("extractor");
+    private static final fURI EXTRACTOR_TAG = f("tag");
+    private static final fURI EXTRACTOR_AGENT = f("agent");
+    private static final fURI EXTRACTOR_LUCENE = f("lucene");
+
+    // ── Extractor instances ─────────────────────────────────────────
+    private final Extractor extractor;
+    private final MessageIndexer indexer; // shared across extractor types for read-side queries
+
+    // ── Templates ───────────────────────────────────────────────────
+    private static final String CONCEPT_FEATURE_AGENT_TEMPLATE = """
+                                                                 In any of your responses, you can tag important concepts using a <<concept:>>-block:
+                                                                 For instance, an agent may write:
+                                                                 
+                                                                 "Increasing the size of the <<concept:context windows>> is one way to increase an agent's
+                                                                 <<concept:intelligence>>. However, another way is to provide better <<concept:indexing>> and
+                                                                 <<concept:searching>> capabilities for existing <<concept:memory systems>>."
+                                                                 
+                                                                 Behind the scenes, these tags will form a growing co-location graph that will allow
+                                                                 for the automatic insertion of relevant historic memories the agent can choose
+                                                                 to review. For instance, given the above, the next system message may write:
+                                                                 """;
+    private String CONCEPT_FEATURE_SYSTEM_TEMPLATE = """
+                                                     use the mtron eval tool for related historic content:
+                                                     
+                                                         %s
+                                                     
+                                                     For related concepts use:
+                                                     
+                                                        %s
+                                                     """;
+
+    // =========================================================================
+    // Constructor
+    // =========================================================================
 
     public ConceptFeature(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
+        this.indexer = new MessageIndexer();
+        this.extractor = resolveExtractor();
     }
 
+    /**
+     * Resolve the extractor from configuration.
+     * <pre>
+     *   extractor => "lucene"  →  LuceneExtractor  (TF-IDF)
+     *   extractor => "agent"   →  AgentExtractor   (LLM post-analysis, needs model field)
+     *   extractor => "tag"     →  TaggingExtractor (inline {@literal <<concept:>>} tags, default)
+     *   (absent) + model set   →  AgentExtractor   (backward compat)
+     *   (absent)               →  TaggingExtractor
+     * </pre>
+     */
+    private Extractor resolveExtractor() {
+        final fURI mode = this.at(uri(EXTRACTOR)).isNoObj()
+                ? (this.has(MODEL) ? EXTRACTOR_AGENT : EXTRACTOR_TAG)
+                : this.at(uri(EXTRACTOR)).uriValue();
+        if (mode.equals(EXTRACTOR_LUCENE))
+            return new LuceneExtractor(this.indexer);
+        else if (mode.equals(EXTRACTOR_AGENT))
+            return new AgentExtractor();
+        else
+            return new TaggingExtractor();
+    }
+
+    // =========================================================================
+    // Skill
+    // =========================================================================
 
     public Obj skill() {
         if (!this.has(MODEL)) {
@@ -94,10 +146,18 @@ public class ConceptFeature extends Feature {
             return noobj();
     }
 
+    // =========================================================================
+    // Shared concept storage
+    // =========================================================================
+
     private fURI getBaseURI() {
         return this.at(BASE).uriValue();
     }
 
+    /**
+     * Persist concepts into the space graph with co-location links and
+     * message back-references.  Shared by all extractor implementations.
+     */
     private List<fURI> insertConcepts(final Agent agent, final Set<String> conceptStrings) {
         final List<fURI> concepts = new ArrayList<>();
         try {
@@ -140,10 +200,141 @@ public class ConceptFeature extends Feature {
         return concepts;
     }
 
-    private void addConcepts(final Agent agent, final Str text, final boolean blocking) {
-        if (null != this.translatorAgent) {
+    /**
+     * After concepts are stored, optionally inject a system message
+     * with mtron eval snippets pointing at relevant historic content.
+     */
+    private void injectConceptRecommendations(final Agent agent, final List<fURI> concepts) {
+        final StringBuilder sb = new StringBuilder();
+        new HashSet<>(concepts).stream()
+                .map(i -> "\t" + "messages" + "(<" + i + ">)")
+                .filter(i -> ObjmtronSerializer.singleNoClip().inputBytes(i + ".take(1).count().gt(0)").apply().boolValue())
+                .peek(i -> LOG.info("adding memory recommendation: %s", i))
+                .forEach(i -> sb.append(i).append("\n"));
+        if (!sb.toString().trim().isEmpty())
+            agent.addSystemMessage(CONCEPT_FEATURE_SYSTEM_TEMPLATE.formatted(
+                    sb.toString(),
+                    "concepts(uri::T)"));
+    }
+
+    /**
+     * Extract concept strings from text, persist them, and inject recommendations.
+     * Called by onCompleteResponse and (if agent-mode) onBeforeChat.
+     */
+    private void processConcepts(final Agent agent, final String text, final boolean blocking) {
+        if (text == null || text.isBlank()) return;
+        final Set<String> conceptStrings = this.extractor.extract(agent, text, blocking);
+        if (conceptStrings.isEmpty()) return;
+        final List<fURI> conceptURIs = this.insertConcepts(agent, conceptStrings);
+        this.injectConceptRecommendations(agent, conceptURIs);
+    }
+
+    // =========================================================================
+    // Streaming lifecycle
+    // =========================================================================
+
+    @Override
+    public Obj onBeforeChat(final Agent agent) {
+        // Agent extractor: prime translator agent on startup, pre-process user message
+        if (this.extractor instanceof AgentExtractor ae) {
+            ae.init(agent, this); // reads MODEL field, creates translator
+            this.processConcepts(agent, agent.userMessage(), true);
+        }
+        return noobj();
+    }
+
+    @Override
+    public void onPartialThinking(final Agent agent, final Str text) {
+        if (this.extractor instanceof LuceneExtractor && text != null && !text.strValue().isBlank())
+            this.indexer.indexText(text.strValue());
+    }
+
+    @Override
+    public void onPartialResponse(final Agent agent, final Str text) {
+        if (this.extractor instanceof LuceneExtractor && text != null && !text.strValue().isBlank())
+            this.indexer.indexText(text.strValue());
+    }
+
+    @Override
+    public void onCompleteResponse(final Agent agent, final Str text) {
+        if (this.extractor instanceof LuceneExtractor) {
+            // Index final chunk, then extract concepts from the full response
+            if (text != null && !text.strValue().isBlank())
+                this.indexer.indexText(text.strValue());
+            this.processConcepts(agent, text != null ? text.strValue() : "", false);
+        } else {
+            this.processConcepts(agent, text != null ? text.strValue() : "", false);
+        }
+    }
+
+    // =========================================================================
+    // Extractor interface
+    // =========================================================================
+
+    /**
+     * Pluggable concept extraction strategy.
+     */
+    public interface Extractor {
+        /**
+         * Extract concept strings from the given text.
+         *
+         * @param agent    the current agent (provides session/feature access)
+         * @param text     the raw text to analyze
+         * @param blocking if true and the implementation is async, block until done
+         * @return set of normalized concept strings
+         */
+        Set<String> extract(Agent agent, String text, boolean blocking);
+
+        /**
+         * Human-readable name for logging / debugging.
+         */
+        default String name() {
+            return getClass().getSimpleName();
+        }
+    }
+
+    // =========================================================================
+    // Extractor: Inline {@literal <<concept:>>} tag parsing
+    // =========================================================================
+
+    private class TaggingExtractor implements Extractor {
+        @Override
+        public Set<String> extract(final Agent agent, final String text, final boolean blocking) {
+            final Set<String> conceptStrings = new LinkedHashSet<>();
+            final Matcher matcher = CONCEPT_PATTERN.matcher(text);
+            while (matcher.find()) {
+                final String concept = CommonUtil.normalize(matcher.group(1));
+                if (!concept.isEmpty() && conceptStrings.add(concept))
+                    LOG.info("%s extracted", concept);
+            }
+            return conceptStrings;
+        }
+    }
+
+    // =========================================================================
+    // Extractor: LLM post-analysis (agent-based)
+    // =========================================================================
+
+    private class AgentExtractor implements Extractor {
+        private Agent translatorAgent;
+
+        void init(final Agent parent, final ConceptFeature self) {
+            if (self.has(MODEL) && this.translatorAgent == null) {
+                this.translatorAgent = agent(rec(
+                        uri(FEATURE), lst(new ChatFeature(mutableMap(
+                                uri(MODEL), self.at(MODEL),
+                                uri(RESPONSE), rec(uri(TO), id_().tryToInst())),
+                                LLM_CHAT_FEATURE_TID, null))));
+                LOG.debug("created translator agent: %s", this.translatorAgent);
+            }
+        }
+
+        @Override
+        public Set<String> extract(final Agent agent, final String text, final boolean blocking) {
+            if (this.translatorAgent == null) return Set.of();
+            final Set<String> conceptStrings = new LinkedHashSet<>();
             try {
-                LOG.info("using agent to extract concepts from text: %s", this.translatorAgent);
+                LOG.info("using agent to extract concepts from text length=%d", text.length());
                 final VirtualThread thread = virtual(instLambda((lhs, inst) -> {
                     final Obj result = this.translatorAgent.chat("""
                                                                  Rewrite the following text where key concepts are wrapped in <<concept:a key concept>> tags.
@@ -156,97 +347,224 @@ public class ConceptFeature extends Feature {
                                                                    1. Do not wrap common words nor stop words.
                                                                    2. Do not remove spaces (e.g. context window should not be mapped to contextwindow).
                                                                  Finally, it's better to have fewer, highly specific concepts then many general concepts.
-                                                                 Thus, if the text has no significant concepts, then simply return the text as is, no changes needed. 
+                                                                 Thus, if the text has no significant concepts, then simply return the text as is, no changes needed.
                                                                  
                                                                  The text to rewrite is:
                                                                  
-                                                                 """ + text.strValue());
+                                                                 """ + text);
                     LOG.debug("agent translation: %s", result);
-                    final Set<String> conceptStrings = new LinkedHashSet<>();
                     final Matcher matcher = CONCEPT_PATTERN.matcher(Str.Helper.cleanString(result));
                     while (matcher.find()) {
                         final String concept = CommonUtil.stripStopwords(CommonUtil.normalize(matcher.group(1)));
-                        if (!concept.isEmpty()) {
-                            if (conceptStrings.add(concept))
-                                LOG.info("%s extracted", concept);
-                        }
+                        if (!concept.isEmpty() && conceptStrings.add(concept))
+                            LOG.info("%s extracted", concept);
                     }
-                    final List<fURI> concepts = this.insertConcepts(agent, conceptStrings);
-                    final StringBuilder sb = new StringBuilder();
-                    new HashSet<>(concepts).stream()
-                            .map(i -> "\t" + "messages" + "(<" + i + ">)")
-                            .filter(i -> ObjmtronSerializer.singleNoClip().inputBytes(i + ".take(1).count().gt(0)").apply().boolValue())
-                            .peek(i -> LOG.info("adding memory recommendation: %s", i))
-                            .forEach(i -> sb.append(i).append("\n"));
-                    if (!sb.toString().trim().isEmpty())
-                        agent.addSystemMessage(CONCEPT_FEATURE_SYSTEM_TEMPLATE.formatted(
-                                sb.toString(),
-                                "concepts(uri::T)"));
                     return noobj();
                 }));
-                if (blocking) {
-                    thread.applyAsync().get();
-                } else {
-                    thread.applyAsync();
-                }
+                if (blocking) thread.applyAsync().get();
+                else thread.applyAsync();
             } catch (final Exception e) {
                 LOG.error(e);
             }
-        } else {
-            final Set<String> conceptStrings = new LinkedHashSet<>();
-            final Matcher matcher = CONCEPT_PATTERN.matcher(text.strValue());
-            while (matcher.find()) {
-                final String concept = CommonUtil.normalize(matcher.group(1));
-                if (conceptStrings.add(concept))
-                    LOG.info("%s extracted", concept);
+            return conceptStrings;
+        }
+    }
+
+    // =========================================================================
+    // Extractor: Lucene TF-IDF
+    // =========================================================================
+
+    private class LuceneExtractor implements Extractor {
+
+        private final MessageIndexer indexer;
+
+        LuceneExtractor(final MessageIndexer indexer) {
+            this.indexer = indexer;
+        }
+
+        @Override
+        public Set<String> extract(final Agent agent, final String text, final boolean blocking) {
+            // Return top-10 concepts from the index (must exceed min doc freq of 1)
+            final List<MessageIndexer.Concept> topConcepts = this.indexer.getImportantConcepts(10, 1);
+            final Set<String> result = new LinkedHashSet<>();
+            for (final MessageIndexer.Concept c : topConcepts) {
+                final String term = c.term().toLowerCase();
+                // Filter stop words and fragments — Lucene tokenization
+                // still passes short stems through the index.
+                if (term.length() < 3 || STOP_WORDS.contains(term)) continue;
+                final String normalized = CommonUtil.normalize(term);
+                if (!normalized.isEmpty())
+                    result.add(normalized);
             }
-            this.insertConcepts(agent, conceptStrings);
+            LOG.debug("lucene extracted %d concepts from %d docs: %s", result.size(), this.indexer.documentCount(), result);
+            return result;
+        }
+
+        private static final Set<String> STOP_WORDS = Set.of(
+                "the", "and", "for", "are", "but", "not", "you", "all", "can",
+                "had", "her", "was", "one", "our", "out", "has", "have", "been",
+                "some", "than", "that", "this", "with", "from", "they", "will",
+                "just", "like", "into", "over", "them", "then", "also", "very",
+                "what", "when", "where", "which", "about", "each", "more", "how",
+                "its", "get", "got", "did", "does", "any", "who", "why", "well",
+                "much", "such", "here", "there", "their", "these", "those",
+                "would", "could", "should", "after", "before", "between", "through"
+        );
+    }
+
+    // =========================================================================
+    // Lucene Message Indexer (in-memory)
+    // =========================================================================
+
+    /**
+     * In-memory Lucene index keyed by message VID for selective retrieval
+     * and TF-IDF concept extraction.
+     * <p>
+     * Text is fed via {@link #indexText(String)} from the streaming callbacks
+     * ({@code onPartialThinking}, {@code onPartialResponse}, {@code onCompleteResponse}).
+     * Concepts are extracted via {@link #getImportantConcepts(int, int)}.
+     */
+    public static class MessageIndexer implements AutoCloseable {
+
+        private static final GraphittyLogger LOG = Graphitty.log(MessageIndexer.class);
+
+        private static final String FIELD_TEXT = "text";
+        private static final String FIELD_TIME = "time";
+
+        private final Directory directory;
+        private final StandardAnalyzer analyzer;
+        private final IndexWriter writer;
+
+        public MessageIndexer() {
+            try {
+                this.directory = new ByteBuffersDirectory();
+                this.analyzer = new StandardAnalyzer();
+                final IndexWriterConfig config = new IndexWriterConfig(this.analyzer);
+                config.setOpenMode(IndexWriterConfig.OpenMode.CREATE_OR_APPEND);
+                this.writer = new IndexWriter(this.directory, config);
+                this.writer.commit();
+            } catch (final IOException e) {
+                throw MTronException.of("failed to create message index: %s", e);
+            }
+        }
+
+        /**
+         * Index a chunk of text.  Called incrementally during streaming.
+         */
+        public void indexText(final String text) {
+            try {
+                final Document doc = new Document();
+                doc.add(new TextField(FIELD_TEXT, text, Field.Store.NO));
+                doc.add(new LongPoint(FIELD_TIME, System.currentTimeMillis()));
+                doc.add(new StoredField(FIELD_TIME, System.currentTimeMillis()));
+                this.writer.addDocument(doc);
+                this.writer.commit();
+                LOG.debug("indexed text chunk length=%d, total-docs=%d", text.length(), documentCount());
+            } catch (final IOException e) {
+                LOG.warn("failed to index text: %s", e.getMessage());
+            }
+        }
+
+        /**
+         * Returns the top-N highest-TF-IDF terms in the index.
+         *
+         * @param topN       max concepts to return
+         * @param minDocFreq minimum number of documents a term must appear in
+         */
+        public List<Concept> getImportantConcepts(final int topN, final int minDocFreq) {
+            final List<Concept> concepts = new ArrayList<>();
+            try (final DirectoryReader reader = DirectoryReader.open(this.writer)) {
+                final int numDocs = reader.numDocs();
+                if (numDocs == 0) return concepts;
+
+                final Map<String, Concept> termMap = new LinkedHashMap<>();
+                for (final org.apache.lucene.index.LeafReaderContext ctx : reader.leaves()) {
+                    final Terms terms = ctx.reader().terms(FIELD_TEXT);
+                    if (terms == null) continue;
+                    final TermsEnum termsEnum = terms.iterator();
+                    BytesRef term;
+                    while ((term = termsEnum.next()) != null) {
+                        final String termStr = term.utf8ToString();
+                        final long docFreq = termsEnum.docFreq();
+                        final long totalTermFreq = termsEnum.totalTermFreq();
+                        final Concept existing = termMap.get(termStr);
+                        if (existing != null) {
+                            existing.tf += totalTermFreq;
+                            existing.docFreq += docFreq;
+                        } else {
+                            final Concept c = new Concept(termStr, totalTermFreq);
+                            c.docFreq = docFreq;
+                            termMap.put(termStr, c);
+                        }
+                    }
+                }
+
+                for (final Concept concept : termMap.values()) {
+                    if (concept.docFreq < minDocFreq) continue;
+                    final double idf = Math.log(1.0 + (numDocs + 1.0) / (concept.docFreq + 1.0));
+                    concept.score = concept.tf * idf;
+                }
+
+                concepts.addAll(termMap.values().stream()
+                        .filter(c -> c.docFreq >= minDocFreq)
+                        .sorted(Comparator.comparingDouble(Concept::score).reversed())
+                        .limit(topN)
+                        .toList());
+            } catch (final IOException e) {
+                LOG.warn("failed to extract concepts: %s", e.getMessage());
+            }
+            return concepts;
+        }
+
+        public int documentCount() {
+            return this.writer.getDocStats().numDocs;
+        }
+
+        @Override
+        public void close() {
+            try {
+                this.writer.close();
+                this.analyzer.close();
+                this.directory.close();
+            } catch (final IOException e) {
+                LOG.warn("error closing message index: %s", e.getMessage());
+            }
+        }
+
+        /**
+         * A scored concept extracted from the message index.
+         */
+        public static class Concept {
+            public final String term;
+            public double score;
+            public long tf;
+            public long docFreq;
+
+            Concept(final String term, final long tf) {
+                this.term = term;
+                this.tf = tf;
+            }
+
+            public String term() {
+                return term;
+            }
+
+            public double score() {
+                return score;
+            }
+
+            public long termFrequency() {
+                return tf;
+            }
+
+            public long documentFrequency() {
+                return docFreq;
+            }
+
+            @Override
+            public String toString() {
+                return String.format("%s (score=%.2f, tf=%d, docs=%d)", term, score, tf, docFreq);
+            }
         }
     }
-
-    // ── Streaming (observation) ──────────────────────────────────
-
-    @Override
-    public Obj onBeforeChat(final Agent agent) {
-        if (this.has(MODEL)) {
-            this.translatorAgent = agent(rec(uri(FEATURE), lst(new ChatFeature(mutableMap(uri(MODEL), this.at(MODEL), uri(RESPONSE), rec(uri(TO), id_().tryToInst())), LLM_CHAT_FEATURE_TID, null))));
-            LOG.debug("created translator agent: %s", this.translatorAgent);
-            this.addConcepts(agent, str(agent.userMessage()), true);
-        }
-        /*final Inst fetchMemoriesInst = instC(getBaseURI().extend("fetch_memories").dom(ALL.maybe()).rng(ALL.maybeSome()),
-                rec(uri(CONCEPT), URI_TYPE,
-                        uri("max_messages"), isa_(INT_TYPE).else_(jnt(10))),
-                (lhs, inst) -> objs(from_(inst.arg(0)).rshift_(uri(MESSAGE)).rshift_(uri("+")).rshift_(uri(TEXT)).take_(inst.arg(1)).apply()));
-        final Inst relatedConceptsInst = instC(getBaseURI().extend("related_concepts").dom(ALL.maybe()).rng(ALL.maybeSome()),
-                rec(uri(CONCEPT), URI_TYPE),
-                (lhs, inst) -> objs(from_(inst.arg(0)).rshift_(uri(LINK)).apply()));
-        LOG.info("writing concept instructions:\n\t%s\n\t%s", fetchMemoriesInst, relatedConceptsInst);
-        Router.writeToSpace(this.getBaseURI().extend("fetch_memories"), fetchMemoriesInst);
-        Router.writeToSpace(this.getBaseURI().extend("related_concepts"), relatedConceptsInst);*/
-        return noobj();
-    }
-
-    @Override
-    public void onPartialThinking(final Agent agent, final Str text) {
-        //this.addConcepts(text);
-    }
-
-
-    @Override
-    public void onPartialResponse(final Agent agent, final Str text) {
-        //   this.addConcepts(text);
-    }
-
-    @Override
-    public void onCompleteResponse(final Agent agent, final Str text) {
-        this.addConcepts(agent, text, false);
-    }
-
-    /*
-dog -> [concept   => dog,
-        message   => {},
-        colocated => {!*cat,!*bird,!*food}]
- */
-
-
 }

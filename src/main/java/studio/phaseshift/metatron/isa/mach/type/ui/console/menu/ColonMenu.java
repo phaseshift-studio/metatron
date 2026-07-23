@@ -69,6 +69,7 @@ public final class ColonMenu extends MRec {
     private final GraphittyLogger LOG = Graphitty.log(this);
     private final Console console;
     private AccordionWidget accordian;
+    private AccordionWidget floatingAccordion;
 
     public Rec attach(final Rec menuRec, final String... menuItemsToAdd) {
         for (final String item : menuItemsToAdd.length == 0 ? this.getMenuItems() : menuItemsToAdd) {
@@ -154,7 +155,7 @@ public final class ColonMenu extends MRec {
                 this.accordian.style()
                         .border(Border.continuous.foreground("{{y}}"))
                         .foreground("{{y}}")
-                        .apply();
+                        .applyStyle();
             }
 
             if (this.accordian != null) {
@@ -167,6 +168,51 @@ public final class ColonMenu extends MRec {
             }
             return noobj();
         }), MUTABLE);
+
+        // ===== float =====
+        this.at("float", instLambda((lhs, inst) -> {
+            final String input = lhs.isStr() ? lhs.strValue().trim() : "";
+
+            if ("close".equalsIgnoreCase(input)) {
+                if (this.floatingAccordion != null) {
+                    this.floatingAccordion.unfloat(this.console.getFloatingSurface());
+                    this.floatingAccordion = null;
+                    LOG.none("{{*}}floating accordion dismissed{{X}}\n");
+                }
+                return noobj();
+            }
+
+            // Remove previous floating accordion if present
+            if (this.floatingAccordion != null) {
+                this.floatingAccordion.unfloat(this.console.getFloatingSurface());
+            }
+
+            // Parse anchor from input, default to TOP_RIGHT
+            final FloatingSurface.Anchor anchor = FloatingSurface.Anchor.parse(input);
+
+            // Jibberish demo content
+            final String title = "{{c}}⚡ Tachyon Matrix{{X}}";
+            final String body = "Flux variance   : 0.042 μΔ\n"
+                    + "Resonance freq  : 1.21 GW\n"
+                    + "Entropy cascade : ACTIVE\n"
+                    + "Phase alignment : 97.3%\n"
+                    + "Buffer integrity: NOMINAL";
+
+            this.floatingAccordion = new AccordionWidget(title, body);
+            this.floatingAccordion.style()
+                    .border(Border.continuous.foreground("{{c}}"))
+                    .foreground("{{c}}")
+                    .applyStyle();
+
+            // Float anchored, 36 columns wide
+            this.floatingAccordion.floatAt(this.console.getFloatingSurface(), anchor, 36);
+            this.console.getFloatingSurface().render();
+
+            LOG.none("{{*}}{{c}}floating accordion pinned %s (36 cols) — :float close to dismiss{{X}}\n",
+                    anchor.name().toLowerCase().replace('_', ' '));
+            return noobj();
+        }), MUTABLE);
+
         // ===== connect =====
         this.at("connect", instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(NOOBJ_TID), lst(), (lhs, inst) -> {
             Router.writeToSpace("abc", block_(instLambda((lhs2, inst2) -> {
