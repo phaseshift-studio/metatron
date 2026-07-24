@@ -76,8 +76,8 @@ public class uiInstSet extends AbstractInstSet {
     public static Type UI_WIDGET_TYPE;
     public static final fURI UI_STYLE_TID = UI_ISA_TID.extend("style");
     public static Type UI_STYLE_TYPE;
-    public static final fURI UI_ACCORDIAN_TID = UI_ISA_TID.extend("accordian");
-    public static Type UI_ACCORDIAN_TYPE;
+    public static final fURI UI_ACCORDION_TID = UI_ISA_TID.extend("accordion");
+    public static Type UI_ACCORDION_TYPE;
     public static final fURI UI_TABLE_TID = UI_WIDGET_TID.extend("table");
     public static Type UI_TABLE_TYPE;
     public static final fURI UI_TREE_TID = UI_WIDGET_TID.extend("tree");
@@ -132,8 +132,10 @@ public class uiInstSet extends AbstractInstSet {
                                                 uri("rightMargin").maybe(), INT_TYPE,
                                                 uri("topMargin").maybe(), INT_TYPE,
                                                 uri("bottomMargin").maybe(), INT_TYPE,
-                                                uri("floatAnchor").maybe(), UI_ANCHOR_TYPE,
-                                                uri("floatWidth").maybe(), INT_TYPE))
+                                                uri("anchor").maybe(), UI_ANCHOR_TYPE,
+                                                uri("width").maybe(), INT_TYPE,
+                                                uri("top").maybe(), INT_TYPE,
+                                                uri("left").maybe(), INT_TYPE))
                                         .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(UI_STYLE_TID), lst(T(REC_TID)), (lhs, inst) -> Stylable.Style.from(inst.arg(0).asRec())))
                                         .create(), "maybe an obj", "a style obj", mutableMap(
                                         uri("border").maybe().asUri(), "the border style of the widget (e.g. border::none, border::simple, etc.)",
@@ -146,8 +148,10 @@ public class uiInstSet extends AbstractInstSet {
                                         uri("rightMargin").maybe(), "the right margin of the widget",
                                         uri("topMargin").maybe(), "the top margin of the widget",
                                         uri("bottomMargin").maybe(), "the bottom margin of the widget",
-                                        uri("floatAnchor").maybe(), "float anchor: top_right, top_left, bottom_right, bottom_left",
-                                        uri("floatWidth").maybe(), "float column width (default 36)"),
+                                        uri("anchor").maybe(), "float anchor: top_right, top_left, bottom_right, bottom_left",
+                                        uri("width").maybe(), "display width override in columns (0 = natural)",
+                                        uri("top").maybe(), "row offset from anchor edge (CSS top)",
+                                        uri("left").maybe(), "col offset from anchor edge (CSS left)"),
                                 "a widget style specification"),
                         docWrap(UI_WIDGET_TYPE = Type.Builder.build()
                                         .tid(REC_TID)
@@ -156,18 +160,18 @@ public class uiInstSet extends AbstractInstSet {
                                         .create(), "", "",
                                 Map.of(uri(STYLE), "the style specification for the widget"),
                                 "the base widget type"),
-                        docWrap(UI_ACCORDIAN_TYPE = Type.Builder.build()
+                        docWrap(UI_ACCORDION_TYPE = Type.Builder.build()
                                         .tid(UI_WIDGET_TID)
-                                        .vid(UI_ACCORDIAN_TID)
+                                        .vid(UI_ACCORDION_TID)
                                         .isaPredicate(rec(
                                                 uri(TITLE).maybe().asUri(), STR_TYPE,
                                                 uri(BODY).maybe(), T(STR_TID.maybeSome())))
-                                        .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(UI_ACCORDIAN_TID),
+                                        .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(UI_ACCORDION_TID),
                                                 lst(T(REC_TID)), (lhs, inst) -> {
-                                                    final AccordionWidget a = new AccordionWidget(inst.arg(0).asRec().jvm(), UI_ACCORDIAN_TID, inst.arg(0).vid());
+                                                    final AccordionWidget a = new AccordionWidget(inst.arg(0).asRec().jvm(), UI_ACCORDION_TID, inst.arg(0).vid());
                                                     //Graphitty.out(Console.getTerminal().output(), a.format() + "\n");
                                                     return a;
-                                                })).create(), "maybe an obj", "an accordian obj", Map.of(
+                                                })).create(), "maybe an obj", "an accordion obj", Map.of(
                                         uri(TITLE).maybe().asUri(), "the title of the accordion",
                                         uri(BODY).maybe(), "the body content of the accordion"),
                                 "an expandable/collapsible accordion widget"),

@@ -257,7 +257,7 @@ bin/metatron</code></pre>
     </div>
     <div class="text-light"></div>
     <div class="instset-accordion-wrapper">
-        <div class="accordion accordion-flush" id="accordianInstSet">
+        <div class="accordion accordion-flush" id="accordionInstSet">
             <div class="accordion-item">
                 <h2 class="accordion-header" id="headingOne">
                     <button class="accordion-button collapsed" type="button"
@@ -267,7 +267,7 @@ bin/metatron</code></pre>
                     </button>
                 </h2>
                 <div id="flush-collapseOne" class="accordion-collapse collapse"
-                    aria-labelledby="flush-headingOne" data-bs-parent="#accordianInstSet">
+                    aria-labelledby="flush-headingOne" data-bs-parent="#accordionInstSet">
                     <div class="accordion-body">
                         <pre><code>instset::[
  pattern=&gt;/m/dcmnt/#,
@@ -278,7 +278,9 @@ bin/metatron</code></pre>
  obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
  inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
  space=&gt;[super=&gt;!*/m],
- constq=&gt;[/m/mach/io/serializer/json/simple::[wrap_uri=&gt;true]@/m/mach/io/serializer/json/simple,_id@/m/dcmnt/_id],
+ constq=&gt;[
+  obj_json::[density=&gt;&#39;OPAQUE&#39;,wrap_uri=&gt;true,bias_towards_uri=&gt;true,bias_towards_objs=&gt;false]@obj_json,
+  _id@/m/dcmnt/_id],
  type=&gt;[
   collection::T,
   dcmntspace::T],
@@ -405,12 +407,12 @@ bin/metatron</code></pre>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a rec describing a document database connection" class="text-info">a rec describing a document database connection</a> <span class="text-light">=&gt;</span> <a href="#a rec with fields for configuring a document database connection" class="text-success">a rec with fields for configuring a document database connection</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#route" class="text-light">route</a> <span class="text-light">=&gt;</span> <a href="#'the route for accessing documents'" class="text-info">&#39;the route for accessing documents&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}root" class="text-light">{?}root</a> <span class="text-light">=&gt;</span> <a href="#'the root type constraint — writes at document root must satisfy this type; defaults to rec::T'" class="text-info">&#39;the root type constraint — writes at document root must satisfy this type; defaults to rec::T&#39;</a>
+  <a href="#route" class="text-light">route</a> <span class="text-light">=&gt;</span> <a href="#'the route for accessing documents'" class="text-info">&#39;the route for accessing documents&#39;</a>
   <a href="#{?}serializer" class="text-light">{?}serializer</a> <span class="text-light">=&gt;</span> <a href="#'the serializer for BSON documents'" class="text-info">&#39;the serializer for BSON documents&#39;</a>
   <a href="#pattern" class="text-light">pattern</a> <span class="text-light">=&gt;</span> <a href="#'the pattern for accessing documents'" class="text-info">&#39;the pattern for accessing documents&#39;</a>
   <a href="#host" class="text-light">host</a> <span class="text-light">=&gt;</span> <a href="#'connection uri (mongodb:____host:port__database?options)'" class="text-info">database?options)&#39;</a>
   <a href="#{?}schema" class="text-light">{?}schema</a> <span class="text-light">=&gt;</span> <a href="#'an instset of collection types auto-discovered from the live database'" class="text-info">&#39;an instset of collection types auto-discovered from the live database&#39;</a>
-  <a href="#{?}root" class="text-light">{?}root</a> <span class="text-light">=&gt;</span> <a href="#'the root type constraint — writes at document root must satisfy this type; defaults to rec::T'" class="text-info">&#39;the root type constraint — writes at document root must satisfy this type; defaults to rec::T&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -561,9 +563,19 @@ bin/metatron</code></pre>
 <a href="#" class="btn btn-primary btn-square back-to-top"><i class="bi bi-caret-up-fill"></i></a>
 
 <script>
+    import mtron from './highlight/languages/mtron.min.js';
+    import java from './highlight/languages/java.min.js';
+    import bash from './highlight/languages/bash.min.js';
+    import sql from './highlight/languages/sql.min.js';
+    import json from './highlight/languages/json.min.js';
+    hljs.registerLanguage('mtron', mtron);
+    hljs.registerLanguage('java', java);
+    hljs.registerLanguage('bash', bash);
+    hljs.registerLanguage('sql', sql);
+    hljs.registerLanguage('json', json);
     hljs.configure({
-        defaultLanguage: 'mtron', // Set your preferred default language
-        ignoreUnescapedHTML: true
+        ignoreUnescapedHTML: true,
+        languages: ['mtron','java','bash','sql','json']
     });
     hljs.addPlugin(new CopyButtonPlugin({
         callback: function(text, el) {
@@ -605,9 +617,10 @@ bin/metatron</code></pre>
             button.classList.toggle("active")
         });
     });
-    document.querySelectorAll('code').forEach(block => {
+    hljs.highlightAll();
+    /*document.querySelectorAll('code').forEach(block => {
         hljs.highlightBlock(block);
-    });
+    });*/
 
     // ── Vanilla JS tab switching (replaces Zepto) ─────────────────
     function initTabs() {

@@ -188,26 +188,22 @@ grphspace::[pattern  => h:#,
 
 agent::[name     => 'dr.stynx',
         desc     => 'the agent dr.stynx is here to be of use in the metatron',
-        feature  => [chat_feature::[model    => model::[provider => ollama,
-                                                        protocol => ollama,
-                                                        host     => <http://ginger.local:11434>,
-                                                        llm      => <batiai/gemma4-31b:q6>],
-                                    hardware  => <http://ginger.local:11434/api/show>->[name=><batiai/gemma4-31b:q6>,verbose=>true],
-                                    response  => [to => print(_)]],
-                     session_feature::[session=>drdb:llm_session/1],
-                     think_feature::[think    =>[to => inst(a=>str::T){ @think_widget>>=([body=>+"\n${*a}"]).display() }]],
-                     loop_feature::[max_loop  =>100],                         
-                     skill_feature::[skill    =>[<metatronfs:skills/mtron>]],
-                     system_feature::[=>],
-                     audit_feature::[=>],
+        feature  => [chat_feature:::::[model    => model::[provider => ollama,
+                                                           protocol => ollama,
+                                                           host     => <http://ginger.local:11434>,
+                                                           llm      => <batiai/gemma4-31b:q6>],
+                                       response  => [to => print(_)]],
+                     session_feature::[session   => <drdb:llm_session/1>],
+                     think_feature::::[think     => [to => inst(a=>str::T){ @<think_widget>>>=([body=>+*a]).display() }]],
+                     loop_feature:::::[max_loop  => 100],                         
+                     skill_feature::::[skill     => [<metatronfs:skills/mtron>]],
+                     system_feature:::[          => ],
+                     audit_feature::::[          => ],
                      concept_feature::[base      => /usr/dr/concept,
                                        extractor => lucene,
                                        tool      => [messages?str{*}<=#{?}(uri::T){ **0==message==<+>==text }@messages,
                                                      concepts?lst{?}<=#{?}(uri::T){ **0==link }@concepts]],
-                     tool_feature::[tool=>[
-                                      !*eval,
-                                      !*sql,
-                                      !*codegraph ]]]]@<dr>; 
+                     tool_feature:::::[tool      =>[!*eval,!*sql,!*codegraph]]]]@<dr>; 
 
                                 [== model => model::[provider => ollama,
                                                         protocol => ollama,
@@ -216,9 +212,9 @@ agent::[name     => 'dr.stynx',
 
 [== user console ==]
 console::[agent=>dr,header=>!*boot/args/header]@/usr/marko/console;
-accordian::[title => "{{g}}a{{r}}ge{{b}}n{{m}}t {{c}}th{{y}}ink{{r}}ing.{{g}}..{{X}}", 
+accordion::[title => "{{g}}a{{r}}ge{{b}}n{{m}}t {{c}}th{{y}}ink{{r}}ing.{{g}}..{{X}}", 
             body  => "",
-            style => style::[floatAnchor=>top_right]]@think_widget.display()
+            style => style::[anchor=>top_right,width=>50]]@<think_widget>
 [==
 on_prompt => inst(chat=>user::T) {          
 

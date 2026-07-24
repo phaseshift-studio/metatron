@@ -68,7 +68,7 @@ public final class ColonMenu extends MRec {
     public static final fURI COLON_MENU_TID = UI_CONSOLE_TID.extend("colon_menu");
     private final GraphittyLogger LOG = Graphitty.log(this);
     private final Console console;
-    private AccordionWidget accordian;
+    private AccordionWidget accordion;
     private AccordionWidget floatingAccordion;
 
     public Rec attach(final Rec menuRec, final String... menuItemsToAdd) {
@@ -136,30 +136,30 @@ public final class ColonMenu extends MRec {
             return noobj();
         }), MUTABLE);
         
-        this.at("accordian", instLambda((lhs, inst) -> {
+        this.at("accordion", instLambda((lhs, inst) -> {
             final String input = lhs.isStr() ? lhs.strValue().trim() : "";
 
             if ("close".equalsIgnoreCase(input) || "collapse".equalsIgnoreCase(input)) {
-                if (this.accordian != null) this.accordian.at(str("collapse")).apply();
+                if (this.accordion != null) this.accordion.at(str("collapse")).apply();
             } else if ("open".equalsIgnoreCase(input) || "expand".equalsIgnoreCase(input)) {
-                if (this.accordian != null) this.accordian.at(str("expand")).apply();
+                if (this.accordion != null) this.accordion.at(str("expand")).apply();
             } else if ("toggle".equalsIgnoreCase(input)) {
-                if (this.accordian != null) this.accordian.at(str("toggle")).apply();
+                if (this.accordion != null) this.accordion.at(str("toggle")).apply();
             } else if (input.startsWith("append ")) {
-                if (this.accordian != null) this.accordian.at(str("append")).apply(str(input.substring(7)));
+                if (this.accordion != null) this.accordion.at(str("append")).apply(str(input.substring(7)));
             } else if (!input.isEmpty()) {
                 final String[] parts = input.split(" ", 2);
                 final String title = parts.length > 0 ? parts[0] : "";
                 final String body  = parts.length > 1 ? parts[1] : "";
-                this.accordian = new AccordionWidget(title, body);
-                this.accordian.style()
+                this.accordion = new AccordionWidget(title, body);
+                this.accordion.style()
                         .border(Border.continuous.foreground("{{y}}"))
                         .foreground("{{y}}")
                         .applyStyle();
             }
 
-            if (this.accordian != null) {
-                final String output = this.accordian.renderInPlace();
+            if (this.accordion != null) {
+                final String output = this.accordion.renderInPlace();
                 if (console.isSplitMode() && console.getActivePane() != null) {
                     console.getActivePane().appendOutput(output);
                 } else {

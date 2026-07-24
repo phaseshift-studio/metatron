@@ -257,7 +257,7 @@ bin/metatron</code></pre>
     </div>
     <div class="text-light"></div>
     <div class="instset-accordion-wrapper">
-        <div class="accordion accordion-flush" id="accordianInstSet">
+        <div class="accordion accordion-flush" id="accordionInstSet">
             <div class="accordion-item">
                 <h2 class="accordion-header" id="headingOne">
                     <button class="accordion-button collapsed" type="button"
@@ -267,7 +267,7 @@ bin/metatron</code></pre>
                     </button>
                 </h2>
                 <div id="flush-collapseOne" class="accordion-collapse collapse"
-                    aria-labelledby="flush-headingOne" data-bs-parent="#accordianInstSet">
+                    aria-labelledby="flush-headingOne" data-bs-parent="#accordionInstSet">
                     <div class="accordion-body">
                         <pre><code>instset::[
  pattern=&gt;/m/grph/#,
@@ -782,9 +782,19 @@ bin/metatron</code></pre>
 <a href="#" class="btn btn-primary btn-square back-to-top"><i class="bi bi-caret-up-fill"></i></a>
 
 <script>
+    import mtron from './highlight/languages/mtron.min.js';
+    import java from './highlight/languages/java.min.js';
+    import bash from './highlight/languages/bash.min.js';
+    import sql from './highlight/languages/sql.min.js';
+    import json from './highlight/languages/json.min.js';
+    hljs.registerLanguage('mtron', mtron);
+    hljs.registerLanguage('java', java);
+    hljs.registerLanguage('bash', bash);
+    hljs.registerLanguage('sql', sql);
+    hljs.registerLanguage('json', json);
     hljs.configure({
-        defaultLanguage: 'mtron', // Set your preferred default language
-        ignoreUnescapedHTML: true
+        ignoreUnescapedHTML: true,
+        languages: ['mtron','java','bash','sql','json']
     });
     hljs.addPlugin(new CopyButtonPlugin({
         callback: function(text, el) {
@@ -826,9 +836,10 @@ bin/metatron</code></pre>
             button.classList.toggle("active")
         });
     });
-    document.querySelectorAll('code').forEach(block => {
+    hljs.highlightAll();
+    /*document.querySelectorAll('code').forEach(block => {
         hljs.highlightBlock(block);
-    });
+    });*/
 
     // ── Vanilla JS tab switching (replaces Zepto) ─────────────────
     function initTabs() {

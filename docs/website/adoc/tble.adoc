@@ -2,7 +2,7 @@
 == Relational Databases
 
 [%collapsible]
-./m/tble instset import
+.documentation setup
 ====
 [mtron]
 ----
@@ -19,10 +19,12 @@ https://mariadb.org/[MariaDB], and https://www.mysql.com/[MySQL].
 🧱 
 creating a `tblespace` requires a JDBC `host` URI, a `driver`, and a `route`. Finally, the `pattern` determines which subset of the URI address space that this space is responsible for.
 🧱
+
 [mtron]
 ----
 *tblespace
 ----
+
 |===
 
 [mtron]
@@ -61,7 +63,7 @@ When the first row is added to a table a **schema** is inferred from the row's r
 
 When a new row is inserted that has more fields than the first row, the `tblespace` will perform an `ALTER TABLE` to accommodate the extending data. This, in turn, updates the collection's type.
 
-[source,mtron]
+[mtron]
 ----
 lite:person/3 -> [name=>'alex', age=>25, skill=>graph]
 *lite:+
@@ -82,6 +84,7 @@ On connection, `tblespace` introspects the live database and generates an `insts
 ----
 *lite:*
 ----
+
 🧱
 
 [source,mtron]
@@ -176,7 +179,7 @@ The example above demonstrates how one can move between languages within the sam
 is that of objs in a unified URI address space.
 
 [discrete]
-=== auto_from and foreign keys
+=== auto_from as Foreign Keys
 
 In a relational database, rows can be linked in one of two ways:
 
@@ -265,7 +268,7 @@ lite:venue/2 -> [name=>'side_hall',location=>!*g:V/1,parent=>!*lite:venue/1]    
 A `tblespace` has two storage layers for foreign key pointers. The cell value itself is a plain `INTEGER` column — no `REFERENCES` clause, no proprietary SQL type. Routing metadata, column types, and table-level type identity live in a single companion table.
 
 [discrete]
-===== _mtron_meta table
+===== The _mtron_meta Table
 
 [source,sql,role="center-code"]
 ----
@@ -279,8 +282,10 @@ CREATE TABLE _mtron_meta (
 );
 ----
 
-Every column touched by metatron gets a row. `base_vid` stores the root type (`/m/uri`, `/m/int`, `/m/str`, ...) and drives SQL DDL. `obj_tid` stores the full mtron type refinement (`/m/math/nat`, `/m/lst[uri]`, ...) and is used at read time to reconstruct typed values without heuristic guessing. `ref_table` is `NULL` unless the column is a foreign key.
+Every column touched by metatron gets a row. `base_vid` stores the base type (`/m/uri`, `/m/int`, `/m/str`, ...) and drives SQL DDL. `obj_tid` stores the full mtron type refinement (`/m/math/nat`, `/m/lst[uri]`, ...) and is used at read time to faithfully reconstruct value types without having to rely on heuristic guessing. `ref_table` is `NULL` unless the column is a foreign key.
 
+[.center]
+[cols="a,a,a,a,a",options="header",grid="cols"]
 |===
 | `table_name` | `column_name` | `base_vid` | `obj_tid`      | `ref_table`
 | `award`      | `$table`      | `/m/rec`   | `/m/rec`       | `NULL`
@@ -290,10 +295,10 @@ Every column touched by metatron gets a row. `base_vid` stores the root type (`/
 | `venue`      | `parent`      | `/m/int`   | `/m/inst/auto_from` | `venue`
 |===
 
-The `$table` sentinel row (`column_name = '$table'`) records the table-level `tid`, captured from the `rec` written on first-insert. This lets the schema `instset` infer e.g. `person::T` instead of a generic `rec::T`, without requiring an explicit type declaration.
+The `$table` sentinel row (`column_name = '$table'`) records the table/collection-level `tid`, captured from the `rec` written on first-insert. This lets the schema `instset` infer e.g. `person::T` instead of a generic `rec::T`, without requiring an explicit type declaration.
 
 [discrete]
-===== intra- vs. inter-space discrimination
+===== Intra- and Inter-Space Discrimination
 
 On **write**, the cell uri is tested against the space's pattern:
 

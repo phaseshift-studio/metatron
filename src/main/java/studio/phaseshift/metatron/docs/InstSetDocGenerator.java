@@ -425,7 +425,7 @@ public class InstSetDocGenerator {
                    </div>
                    <div class="text-light">%3$s</div>
                    <div class="instset-accordion-wrapper">
-                       <div class="accordion accordion-flush" id="accordianInstSet">
+                       <div class="accordion accordion-flush" id="accordionInstSet">
                            <div class="accordion-item">
                                <h2 class="accordion-header" id="headingOne">
                                    <button class="accordion-button collapsed" type="button"
@@ -435,7 +435,7 @@ public class InstSetDocGenerator {
                                    </button>
                                </h2>
                                <div id="flush-collapseOne" class="accordion-collapse collapse"
-                                   aria-labelledby="flush-headingOne" data-bs-parent="#accordianInstSet">
+                                   aria-labelledby="flush-headingOne" data-bs-parent="#accordionInstSet">
                                    <div class="accordion-body">
                                        <pre><code>%4$s</code></pre>
                                    </div>

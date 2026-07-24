@@ -26,7 +26,9 @@ import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.mach.type.ui.widget.FloatingSurface;
 import studio.phaseshift.metatron.util.MTronException;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
@@ -51,8 +53,10 @@ public interface Stylable<T extends Stylable<T>> {
     class Style<T extends Stylable<T>> extends MRec {
         public T stylable;
         public Border border = null;
-        public FloatingSurface.Anchor floatAnchor = null;
-        public int floatWidth = 0;
+        public FloatingSurface.Anchor anchor = null;
+        public int width = 0;
+        public int top = 0;
+        public int left = 0;
 
         protected Style(final T stylable) {
             super(new LinkedHashMap<>(), UI_STYLE_TID, null);
@@ -228,38 +232,95 @@ public interface Stylable<T extends Stylable<T>> {
             return s;
         }
 
-        public Style<T> floatAt(final FloatingSurface.Anchor anchor, final int width) {
-            this.jvm().put(uri("floatAnchor"), uri(anchor.name().toLowerCase()));
-            this.jvm().put(uri("floatWidth"), jnt(width));
-            this.floatAnchor = anchor;
-            this.floatWidth = width;
+        public Style<T> floatAt(final FloatingSurface.Anchor anchor, final int width,
+                                 final int top, final int left) {
+            this.jvm().put(uri("anchor"), uri(anchor.name().toLowerCase()));
+            this.jvm().put(uri("width"), jnt(width));
+            this.jvm().put(uri("top"), jnt(top));
+            this.jvm().put(uri("left"), jnt(left));
+            this.anchor = anchor;
+            this.width = width;
+            this.top = top;
+            this.left = left;
             return this;
         }
 
         public Style<T> unfloat() {
-            this.jvm().remove(uri("floatAnchor"));
-            this.jvm().remove(uri("floatWidth"));
-            this.floatAnchor = null;
-            this.floatWidth = 0;
+            this.jvm().remove(uri("anchor"));
+            this.jvm().remove(uri("width"));
+            this.jvm().remove(uri("top"));
+            this.jvm().remove(uri("left"));
+            this.anchor = null;
+            this.width = 0;
+            this.top = 0;
+            this.left = 0;
             return this;
         }
 
         public boolean hasFloat() {
-            return this.floatAnchor != null || this.at("floatAnchor").isUri();
+            return this.anchor != null || this.at("anchor").isUri();
         }
 
-        public FloatingSurface.Anchor floatAnchor() {
-            if (this.floatAnchor != null) return this.floatAnchor;
-            if (this.at("floatAnchor").isUri())
-                return FloatingSurface.Anchor.parse(this.at("floatAnchor").uriValue().toString());
+        public FloatingSurface.Anchor anchor() {
+            if (this.anchor != null) return this.anchor;
+            if (this.at("anchor").isUri())
+                return FloatingSurface.Anchor.parse(this.at("anchor").uriValue().toString());
             return null;
         }
 
-        public int floatWidth() {
-            if (this.floatWidth > 0) return this.floatWidth;
-            if (this.at("floatWidth").isInt())
-                return this.at("floatWidth").asInt().intValue().intValue();
-            return 0; // 0 = "use widget's natural width"
+        /** Display width override.  0 = use the widget's natural width. */
+        public int width() {
+            if (this.width > 0) return this.width;
+            if (this.at("width").isInt())
+                return this.at("width").asInt().intValue().intValue();
+            return 0;
+        }
+
+        /** Row offset from the anchor edge (CSS {@code top}). */
+        public int top() {
+            if (this.top > 0) return this.top;
+            if (this.at("top").isInt())
+                return this.at("top").asInt().intValue().intValue();
+            return 0;
+        }
+
+        /** Column offset from the anchor edge (CSS {@code left}). */
+        public int left() {
+            if (this.left > 0) return this.left;
+            if (this.at("left").isInt())
+                return this.at("left").asInt().intValue().intValue();
+            return 0;
+        }
+
+        /**
+         * Word-wrap a list of text lines to fit within {@code maxWidth}
+         * visual characters, breaking at word boundaries.  Lines that fit
+         * are passed through unchanged; overlong lines are split.
+         */
+        public static List<String> wrapLines(final List<String> lines, final int maxWidth) {
+            if (maxWidth <= 0 || lines == null) return List.of();
+            final List<String> out = new ArrayList<>();
+            for (final String line : lines) {
+                if (line.length() <= maxWidth) {
+                    out.add(line);
+                } else {
+                    wrapLine(line, maxWidth, out);
+                }
+            }
+            return out;
+        }
+
+        private static void wrapLine(final String text, final int maxWidth, final List<String> out) {
+            String remaining = text;
+            while (remaining.length() > maxWidth) {
+                int breakAt = maxWidth;
+                for (int i = Math.min(maxWidth, remaining.length() - 1); i > 0; i--) {
+                    if (remaining.charAt(i) == ' ') { breakAt = i; break; }
+                }
+                out.add(remaining.substring(0, breakAt).stripTrailing());
+                remaining = remaining.substring(breakAt).stripLeading();
+            }
+            if (!remaining.isEmpty()) out.add(remaining);
         }
 
         public T applyStyle() {

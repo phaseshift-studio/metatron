@@ -245,14 +245,12 @@ public class ConceptFeature extends Feature {
 
     @Override
     public void onPartialThinking(final Agent agent, final Str text) {
-        if (this.extractor instanceof LuceneExtractor && text != null && !text.strValue().isBlank())
-            this.indexer.indexText(text.strValue());
+        // No-op: index only on complete response to keep virtual-thread stack shallow
     }
 
     @Override
     public void onPartialResponse(final Agent agent, final Str text) {
-        if (this.extractor instanceof LuceneExtractor && text != null && !text.strValue().isBlank())
-            this.indexer.indexText(text.strValue());
+        // No-op: index only on complete response to keep virtual-thread stack shallow
     }
 
     @Override

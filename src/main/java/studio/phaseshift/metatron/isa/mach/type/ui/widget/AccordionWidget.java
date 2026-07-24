@@ -24,20 +24,23 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.reflect.JRec;
 import studio.phaseshift.metatron.isa.m.type.reflect.JRecElement;
 import studio.phaseshift.metatron.isa.mach.type.ui.Border;
+import studio.phaseshift.metatron.isa.mach.type.ui.Stylable;
 import studio.phaseshift.metatron.isa.mach.type.ui.Widget;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Console;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Highlighter;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.mach.ui.uiInstSet.UI_ACCORDIAN_TID;
+import static studio.phaseshift.metatron.isa.mach.ui.uiInstSet.UI_ACCORDION_TID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -65,7 +68,7 @@ public class AccordionWidget extends JRec<AccordionWidget> implements Widget<Acc
     // ── JRec constructor ───────────────────────────────────────────
 
     public AccordionWidget(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
-        super(new java.util.HashMap<>(jvm), tid, vid);
+        super(new ConcurrentHashMap<>(jvm), tid, vid);
         if (this.style.border() == Border.none) this.style.border(Border.continuous);
         if (this.style.foreground().isEmpty()) this.style.foreground("{{g}}");
         // Pull style config (incl. float) from the JVM so run() sees it
@@ -75,33 +78,25 @@ public class AccordionWidget extends JRec<AccordionWidget> implements Widget<Acc
     // ── convenience constructors ───────────────────────────────────
 
     public AccordionWidget() {
-        this(Map.of(), UI_ACCORDIAN_TID, null);
+        this(Map.of(), UI_ACCORDION_TID, null);
     }
 
     public AccordionWidget(final String title) {
         this();
-        title(title);
+        this.title(title);
     }
 
     public AccordionWidget(final String title, final String body) {
         this();
-        title(title);
-        body(body);
+        this.title(title);
+        this.body(body);
     }
 
     // ── state mutators (write through to persistent store) ─────────
 
-    public void expand() {
-        jvmWrite(K_EXP, bool(true));
-    }
-
-    public void collapse() {
-        jvmWrite(K_EXP, bool(false));
-    }
-
-    public void toggle() {
-        jvmWrite(K_EXP, bool(!jvmBool(jvmRead(), K_EXP)));
-    }
+    public void expand()   { jvmWrite(K_EXP, bool(true)); }
+    public void collapse() { jvmWrite(K_EXP, bool(false)); }
+    public void toggle()   { jvmWrite(K_EXP, bool(!jvmBool(jvmRead(), K_EXP))); }
 
     public AccordionWidget title(final String t) {
         jvmWrite(K_TITLE, str(t));
@@ -172,9 +167,17 @@ public class AccordionWidget extends JRec<AccordionWidget> implements Widget<Acc
     @Override
     public int height() {
         final Map<Obj, Obj> jvm = jvmRead();
-        final boolean expanded = jvmBool(jvm, K_EXP);
+        if (!jvmBool(jvm, K_EXP)) return 2;
+        final List<String> lines = displayLines(jvm);
+        return lines.isEmpty() ? 2 : lines.size() + 2;
+    }
+
+    /** Body lines after word-wrap (if floatWidth is set on the style). */
+    private List<String> displayLines(final Map<Obj, Obj> jvm) {
         final List<String> body = jvmBody(jvm, K_BODY);
-        return (expanded && !body.isEmpty()) ? body.size() + 2 : 2;
+        final int floatW = this.style.width();
+        if (floatW <= 0) return body;
+        return Stylable.Style.wrapLines(body, floatW - 3);
     }
 
     private String indicator(final Map<Obj, Obj> jvm) {
@@ -203,38 +206,27 @@ public class AccordionWidget extends JRec<AccordionWidget> implements Widget<Acc
         // Latch instructions and style from JVM on first render
         if (!jvm.containsKey(K_TOGGLE)) {
             readStyle(jvm);
-            this.at(K_TOGGLE, instLambda((l, i) -> {
-                this.toggle();
-                Graphitty.out(Console.getTerminal().output(), this.format() + "\n");
-                return noobj();
-            }), MUTABLE);
-            this.at(uri("expand"), instLambda((l, i) -> {
-                this.expand();
-                Graphitty.out(Console.getTerminal().output(), this.format() + "\n");
-                return noobj();
-            }), MUTABLE);
-            this.at(uri("collapse"), instLambda((l, i) -> {
-                this.collapse();
-                Graphitty.out(Console.getTerminal().output(), this.format() + "\n");
-                return noobj();
-            }), MUTABLE);
-            this.at(uri("append"), instLambda((l, i) -> {
-                this.appendLine(l.isStr() ? l.strValue() : "");
-                Graphitty.out(Console.getTerminal().output(), this.format() + "\n");
-                return this;
-            }), MUTABLE);
+            this.at(K_TOGGLE, instLambda((l, i) -> { this.toggle(); return noobj(); }), MUTABLE);
+            this.at(uri("expand"), instLambda((l, i) -> { this.expand();  return noobj(); }), MUTABLE);
+            this.at(uri("collapse"), instLambda((l, i) -> { this.collapse(); return noobj(); }), MUTABLE);
+            this.at(uri("append"), instLambda((l, i) -> { this.appendLine(l.isStr() ? l.strValue() : ""); Graphitty.out(Console.getTerminal().output(), this.format() + "\n"); return this; }), MUTABLE);
         }
 
-        final int bodyWidth = body.stream().map(Highlighter::visualLength).max(Integer::compareTo).orElse(0);
+        // Width: use floatWidth from style if set, else compute from content
+        final int floatW = this.style.width();
+        final List<String> displayLines = floatW > 0 ? displayLines(jvm) : new ArrayList<>(body);
+        final int bodyWidth = displayLines.stream().map(Highlighter::visualLength).max(Integer::compareTo).orElse(0);
         final int titleW = Highlighter.visualLength(title) + Highlighter.visualLength(ind) + 3;
-        final int width = Math.max(titleW, bodyWidth + 2);
+        final int width = floatW > 0 ? Math.max(titleW, Math.min(floatW, bodyWidth + 3))
+                                     : Math.max(titleW, bodyWidth + 3);
+
         final Border border = this.style.border() == Border.none ? Border.continuous : this.style.border();
         final StringBuilder sb = new StringBuilder();
 
-        if (expanded && !body.isEmpty()) {
+        if (expanded && !displayLines.isEmpty()) {
             buildTitleBar(sb, border, title, ind, width);
             sb.append("\n");
-            for (final String line : body) {
+            for (final String line : displayLines) {
                 sb.append(Widget.X).append(border.leftSide()).append(Widget.X)
                         .append(this.style.foreground()).append(" ").append(line)
                         .append(" ".repeat(Math.max(0, width - Highlighter.visualLength(line) - 1)))

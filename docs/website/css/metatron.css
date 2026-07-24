@@ -543,6 +543,10 @@ code.hljs {
     font-size: 1.5rem;
 }
 
+code {
+    color: var(--mblue);
+}
+
 em {
     color: var(--primary)
 }

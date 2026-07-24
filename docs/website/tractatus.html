@@ -586,7 +586,7 @@ mtron&gt; 12 + &lt;1&gt;()                [-- 4 --]
 </div>
 <h3 id="sec-stacks-and-frames" class="discrete">stacks and frames</h3>
 <div class="paragraph">
-<p>Every logical thread of execution has a <code>/m/space/stack</code> patterned <code>&lt;+/#&gt;</code>. This pattern captures the breadth of common variable names found in most programming languages (<code>a</code>,<code>x</code>,<code>a_var</code>,<code>b3</code>,etc.) as well as hierarchical variables like <code>a/b/c</code>, etc. In short, the stack is always responsible for <em>schemaless relative</em> uris. To ground the discussion, the current stack of the mtron code processing this documentation is shown in the collapsed accordian below. The state of this stack is the result of all the processing thus far up to this point in the documentation. Declared variables from other parts of the documentation will be noticed as they were written at the root of the stack and thus, are <em>global variables</em>. Furthermore, note the <code>boot/</code> branch. This stores the data provided by the user and/or derived by the bootloader at startup (e.g. environmental variables).</p>
+<p>Every logical thread of execution has a <code>/m/space/stack</code> patterned <code>&lt;+/#&gt;</code>. This pattern captures the breadth of common variable names found in most programming languages (<code>a</code>,<code>x</code>,<code>a_var</code>,<code>b3</code>,etc.) as well as hierarchical variables like <code>a/b/c</code>, etc. In short, the stack is always responsible for <em>schemaless relative</em> uris. To ground the discussion, the current stack of the mtron code processing this documentation is shown in the collapsed accordion below. The state of this stack is the result of all the processing thus far up to this point in the documentation. Declared variables from other parts of the documentation will be noticed as they were written at the root of the stack and thus, are <em>global variables</em>. Furthermore, note the <code>boot/</code> branch. This stores the data provided by the user and/or derived by the bootloader at startup (e.g. environmental variables).</p>
 </div>
 <details>
 <summary class="title">the objs of the doc processors stack</summary>
@@ -2497,7 +2497,7 @@ mtron&gt;  nat::2 * -1     ​7​
    	  \_pred | [is(gt(0))]
    	[inst]   | mult?rng=int&amp;dom=int(-1){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
    	 \_dom   | int::T
-   	 \_args  | [-1][Obj$Helper&lt;909&gt;:nat::-2 is not a int::T[is(gt(0))][choose([is(lt(0))=&gt;mult(-1),id()=&gt;id()]).rshift()]]]@/sys/fail/10[...]</code></pre>
+   	 \_args  | [-1][Obj$Helper&lt;910&gt;:-2 is not a int::T[is(gt(0))][choose([is(lt(0))=&gt;mult(-1),id()=&gt;id()]).rshift()]]]@/sys/fail/10[...]</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -2524,7 +2524,7 @@ The predicate component of the type definition tests an <code>int</code> to dete
 <div class="paragraph">
 <p>While every <code>type</code> is an <code>obj</code>, not every <code>obj</code> is a <code>type</code>.
 Those <code>objs</code> that are not <code>types</code> are <em>instances</em> of some <code>type</code>.
-This is the foundation for all other <code>objs</code> in {{m}}m{{m}}e{{b}}T{{g}}a{{c}}t{{m}}r{{m}}o{{y}}n{{X}}.</p>
+This is the foundation for all other <code>objs</code> in {{g}}m{{b}}E{{y}}T{{c}}a{{b}}T{{b}}R{{y}}O{{b}}n{{X}}.</p>
 </div>
 <h4 id="sec-cascading-type-constructions" class="discrete">cascading type constructions</h4>
 <h3 id="sec-mono-types" class="discrete">mono types</h3>
@@ -3220,7 +3220,7 @@ mtron&gt; even -&gt; int::T[is(mod(2).eq(0))]     ​4​</code></pre>
 mtron&gt; nat::10
 ==&gt;nat::10
 mtron&gt;  nat::-10
-==&gt;fail::[nat::-10 is not a int::T[is(gt(0))]]@/sys/fail/96
+==&gt;fail::[-10 is not a int::T[is(gt(0))]]@/sys/fail/96
 mtron&gt;  int::-10.as(nat::T)
 ==&gt;fail::[apply failure:
    	[lhs]    | -10
@@ -3323,7 +3323,7 @@ mtron&gt;  int::-10.as(nat::T)
 mtron&gt; nat::10
 ==&gt;nat::10
 mtron&gt;  nat::-10
-==&gt;fail::[nat::-10 is not a int::T[is(gt(0))]]@/sys/fail/100
+==&gt;fail::[-10 is not a int::T[is(gt(0))]]@/sys/fail/100
 mtron&gt;  int::-10.as(nat::T)
 ==&gt;fail::[apply failure:
    	[lhs]    | -10
@@ -3350,7 +3350,7 @@ mtron&gt; int::T</code></pre>
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; nat::125
 ==&gt;nat::125
 mtron&gt; age::125
-==&gt;fail::[age::125 is not a int::T[is(lt(120))]]@/sys/fail/104
+==&gt;fail::[125 is not a int::T[is(lt(120))]]@/sys/fail/104
 mtron&gt;  nat::125.as(age::T)
 ==&gt;fail::[apply failure:
    	[lhs]    | nat::125
@@ -5037,23 +5037,22 @@ mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T).as(str::T)     ​5​
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; bin:bash('-c',df)
-==&gt;'Filesystem             1K-blocks      Used  Available Use% Mounted on'
-==&gt;'tmpfs                    6356184      6168    6350016   1% /run'
-==&gt;'efivarfs                     128        42         82  34% /sys/firmware/efi/efivars'
-==&gt;'/dev/nvme0n1p2         959786032 538581424  372376400  60% /'
-==&gt;'tmpfs                   31780908    695004   31085904   3% /dev/shm'
-==&gt;'tmpfs                       5120        20       5100   1% /run/lock'
-==&gt;'tmpfs                   31780908         0   31780908   0% /run/qemu'
-==&gt;'/dev/nvme0n1p1            523248      6288     516960   2% /boot/efi'
-==&gt;'tmpfs                    6356180       404    6355776   1% /run/user/1000'
-==&gt;'/dev/nvme1n1p2         976744444 252064724  724679720  26% /media/hdd0'
-==&gt;'//192.168.1.72/beast1 2112645040 713954028 1398691012  34% /srv/beast/hdd1'
+==&gt;'df: /srv/beast/hdd1: Host is down'
+==&gt;'Filesystem     1K-blocks      Used Available Use% Mounted on'
+==&gt;'tmpfs            6356184      6120   6350064   1% /run'
+==&gt;'efivarfs             128        42        82  34% /sys/firmware/efi/efivars'
+==&gt;'/dev/nvme1n1p2 959786032 542677792 368280032  60% /'
+==&gt;'tmpfs           31780908    400564  31380344   2% /dev/shm'
+==&gt;'tmpfs               5120        20      5100   1% /run/lock'
+==&gt;'tmpfs           31780908         0  31780908   0% /run/qemu'
+==&gt;'/dev/nvme1n1p1    523248      6288    516960   2% /boot/efi'
+==&gt;'tmpfs            6356180       240   6355940   1% /run/user/1000'
+==&gt;'/dev/nvme0n1p2 976744444 252064724 724679720  26% /media/hdd0'
 mtron&gt; bin:bash('-c',ls)
 ==&gt;'0.2.0'
 ==&gt;'AGENTS.md'
 ==&gt;bin
 ==&gt;boot
-==&gt;'codeql-analysis.txt'
 ==&gt;conf
 ==&gt;'CONTRIBUTING.md'
 ==&gt;dist
@@ -5075,7 +5074,7 @@ mtron&gt; bin:bash('-c',ls)
 ==&gt;test
 ==&gt;worktrees
 mtron&gt; bin:bash('-c','ls -all').regex('\b*\w+')._/count()\_&gt;-.sum()
-==&gt;677</code></pre>
+==&gt;663</code></pre>
 </div>
 </div>
 <h3 id="sec-shell-scripts" class="discrete">Shell Scripts</h3>
@@ -5597,24 +5596,12 @@ The following examples demonstrate selection and filtering using multi-segment u
 mtron&gt; *g:V/1/address/home/city     ​2​
 mtron&gt; *g:V/+.=?=[address/+/city =&gt; 'santa fe']     ​3​
 mtron&gt; *g:V/+.==[address/+/city/ =&gt; _]     ​4​
-==&gt;fail::[apply failure:
-   	[lhs]    | person::[
-    address/+/city/=&gt;"{address/work/city=&gt;'nomansland',address/home/city=&gt;'santa fe'}",
-    address/work/city=&gt;'nomansland',
-    age=&gt;29,
-    name=&gt;'marko',
-    address/home/city=&gt;'santa fe']@g:V/12
-   	 \_type  | person
-   	  \_pred | [isa([age=&gt;int::T,name=&gt;str::T,city=&gt;str::T]), isa([&lt;&gt;=&gt;rel{2}::T])]
-   	[inst]   | select?rng=rec{?}&amp;dom=rec([address/+/city/=&gt;id()]){&lt;j&gt;}
-   	 \_dom   | rec::T
-   	 \_args  | [[address/+/city/=&gt;id()]][Obj$Helper&lt;907&gt;:obj does not match person::T...]]@/sys/fail/4[...]
+==&gt;[address/+/city/=&gt;{address/work/city=&gt;'nomansland',address/home/city=&gt;'santa fe'}]
 mtron&gt; *g:V/+.&gt;&gt;address/+/city
        *g:V/+.&gt;&gt;address/+/city     ​6​
 ==&gt;{8}'nomansland'
 ==&gt;{8}'santa fe'
 mtron&gt; *g:V/+.&gt;&gt;address/#     ​7​
-==&gt;"{address/work/city=&gt;'nomansland',address/home/city=&gt;'santa fe'}"
 ==&gt;'nomansland'
 ==&gt;'santa fe'</code></pre>
 </div>
@@ -5659,18 +5646,15 @@ mtron&gt; *g:V/+.&gt;&gt;address/#     ​7​
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; @g:V/1==[_=&gt;_]     ​1​
-==&gt;fail::[unable to locate inst-f of select?dom=vrtx([id()=&gt;id()])@&lt;1&gt;]@/sys/fail/10
+==&gt;[age=&gt;29,name=&gt;'marko']
 mtron&gt; @g:V/1&gt;&gt;=+[address=&gt;[
                     home =&gt; [city =&gt;'santa fe',
                              state=&gt;NM],
                     work =&gt; !*&lt;../home&gt;]]     ​2​
-==&gt;fail::[lhs range does not match inst domain: vrtx::T[?[age=&gt;int::T,name=&gt;str::T,city=&gt;str::T]]@person =&gt; vrtx::T[?[&lt;&gt;=&gt;rel{2}::T]] [update?rng=#{*}&amp;dom=vrtx(plus([address=&gt;[home=&gt;[city=&gt;'santa fe',state=&gt;NM],work=&gt;!*&lt;../home&gt;]])){&lt;j&gt;}@&lt;1&gt;]]@/sys/fail/12
+==&gt;person::[age=&gt;29,name=&gt;'marko']
 mtron&gt; *g:V/1/address/home/city     ​3​
 mtron&gt; *g:V/+.=?=[address=&gt;[_ =&gt; [state=&gt;NM]]]     ​4​
-==&gt;fail{2}::[lhs range does not match inst domain: vrtx::T[?[name=&gt;str::T,lang=&gt;str::T]]@software =&gt; vrtx::T[?[&lt;&gt;=&gt;rel{2}::T]] [where?dom=vrtx([address=&gt;[id()=&gt;[state=&gt;NM]]])@&lt;1&gt;]]@/sys/fail/14
-==&gt;fail{5}::[lhs range does not match inst domain: vrtx::T[?[age=&gt;int::T,name=&gt;str::T,city=&gt;str::T]]@person =&gt; vrtx::T[?[&lt;&gt;=&gt;rel{2}::T]] [where?dom=vrtx([address=&gt;[id()=&gt;[state=&gt;NM]]])@&lt;1&gt;]]@/sys/fail/18
-mtron&gt; *g:V/+.=?=[address=&gt;[_ =&gt; [state=&gt;NM]]].&gt;&gt;address/+/city     ​5​
-==&gt;fail::[machINe fAilED]@/sys/fail/46[...]</code></pre>
+mtron&gt; *g:V/+.=?=[address=&gt;[_ =&gt; [state=&gt;NM]]].&gt;&gt;address/+/city     ​5​</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -5777,11 +5761,10 @@ To unify these two contrasting perspectives, metatron capitalizes on each&#8217;
 ==&gt;person::[age=&gt;29,name=&gt;'marko']
 mtron&gt; *acme:customers/357     ​2​
 mtron&gt; @g:V/1.addE(consulted,|*acme:customers/357)     ​3​
-==&gt;fail::[lhs range does not match inst domain: vrtx::T[?[age=&gt;int::T,name=&gt;str::T,city=&gt;str::T]]@person =&gt; vrtx::T[?[&lt;&gt;=&gt;rel{2}::T]] [addE?rng=#{*}&amp;dom=vrtx(consulted,block(*acme:customers/357)){&lt;j&gt;}@&lt;1&gt;]]@/sys/fail/48
+==&gt;consulted::[=&gt;]@g:E/28
 mtron&gt; *g:V/1.out(consulted)     ​4​
-==&gt;fail::[lhs range does not match inst domain: vrtx::T[?[age=&gt;int::T,name=&gt;str::T,city=&gt;str::T]]@person =&gt; vrtx::T[?[&lt;&gt;=&gt;rel{2}::T]] [out?rng=#{*}&amp;dom=vrtx(consulted){&lt;j&gt;}@&lt;1&gt;]]@/sys/fail/50
 mtron&gt; *g:V/1.out(consulted).matches(vrtx::T)     ​5​
-==&gt;fail::[lhs range does not match inst domain: vrtx::T[?[age=&gt;int::T,name=&gt;str::T,city=&gt;str::T]]@person =&gt; vrtx::T[?[&lt;&gt;=&gt;rel{2}::T]] [out?rng=#{*}&amp;dom=vrtx(consulted){&lt;j&gt;}@&lt;1&gt;]]@/sys/fail/52</code></pre>
+==&gt;false</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -5826,13 +5809,11 @@ These expressions highlight the nested structural pattern matching and data mani
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *g:V/1.out(consulted)-&lt;[
          name    =&gt;"${&gt;&gt;contactFirstName} ${&gt;&gt;contactLastName}",
          address =&gt;==[city=&gt;_,country=&gt;_]]
-==&gt;fail::[lhs range does not match inst domain: vrtx::T[?[age=&gt;int::T,name=&gt;str::T,city=&gt;str::T]]@person =&gt; vrtx::T[?[&lt;&gt;=&gt;rel{2}::T]] [out?rng=#{*}&amp;dom=vrtx(consulted){&lt;j&gt;}@&lt;1&gt;]]@/sys/fail/54
 mtron&gt; *g:V/1.out(consulted)
          &gt;&gt;salesRepEmployeeNumber
          &gt;&gt;reportsTo.-&lt;[
            name  =&gt;"${&gt;&gt;firstName} ${&gt;&gt;lastName}",
-           job   =&gt;-&lt;[title=&gt;&gt;&gt;jobTitle,email=&gt;&gt;&gt;email]]
-==&gt;fail::[lhs range does not match inst domain: vrtx::T[?[age=&gt;int::T,name=&gt;str::T,city=&gt;str::T]]@person =&gt; vrtx::T[?[&lt;&gt;=&gt;rel{2}::T]] [out?rng=#{*}&amp;dom=vrtx(consulted){&lt;j&gt;}@&lt;1&gt;]]@/sys/fail/56</code></pre>
+           job   =&gt;-&lt;[title=&gt;&gt;&gt;jobTitle,email=&gt;&gt;&gt;email]]</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -5984,7 +5965,7 @@ mtron&gt; *g:V/1/OUT/te:hot/a/owner/name     ​3​
    	  \_pred | []
    	[inst]   | *g:V/1/OUT/te:hot/a/owner/name
    	 \_dom   | #{?}::T
-   	 \_args  | [g:V/1/OUT/te:hot/a/owner/name][Inst&lt;319&gt;:unable to convert mfail to rec::T[Obj&lt;555&gt;:class studio.phaseshift.metatron.isa.m.type.impl.MFail cannot be cast to class studio.phaseshift.metatron.isa.m.type.Rec (studio.phaseshift.metatron.isa.m.type.impl.MFail and studio.phaseshift.metatron.isa.m.type.Rec are in unnamed module of loader 'app')]]]@/sys/fail/78[...]
+   	 \_args  | [g:V/1/OUT/te:hot/a/owner/name][Inst&lt;319&gt;:unable to convert mfail to rec::T[Obj&lt;555&gt;:class studio.phaseshift.metatron.isa.m.type.impl.MFail cannot be cast to class studio.phaseshift.metatron.isa.m.type.Rec (studio.phaseshift.metatron.isa.m.type.impl.MFail and studio.phaseshift.metatron.isa.m.type.Rec are in unnamed module of loader 'app')]]]@/sys/fail/30[...]
 mtron&gt; *g:V/1/OUT/te:cold/x/total     ​4​
 ==&gt;15.0000
 mtron&gt; *g:V/1/OUT/knows.count()     ​5​
@@ -5995,15 +5976,21 @@ mtron&gt; *g:V/1/OUT/knows.count()     ​5​
 <div class="title">traversing a distributed edge set (instruction-call syntax)</div>
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *g:V/1.outE(te:hot).count()     ​1​
-==&gt;1
+==&gt;2
 mtron&gt; *g:V/1.outE(te:hot/a)&gt;&gt;item     ​2​
-==&gt;fail::[lhs range does not match inst domain: vrtx::T[?[age=&gt;int::T,name=&gt;str::T,city=&gt;str::T]]@person =&gt; vrtx::T[?[&lt;&gt;=&gt;rel{2}::T]] [outE?rng=#{*}&amp;dom=vrtx(te:hot/a){&lt;j&gt;}@&lt;1&gt;]]@/sys/fail/82
+==&gt;'laptop'
 mtron&gt; *g:V/1.outE(te:hot/a)&gt;&gt;owner&gt;&gt;name     ​3​
-==&gt;fail::[lhs range does not match inst domain: vrtx::T[?[age=&gt;int::T,name=&gt;str::T,city=&gt;str::T]]@person =&gt; vrtx::T[?[&lt;&gt;=&gt;rel{2}::T]] [outE?rng=#{*}&amp;dom=vrtx(te:hot/a){&lt;j&gt;}@&lt;1&gt;]]@/sys/fail/84
+==&gt;fail::[apply failure:
+   	[lhs]    | [item=&gt;'laptop',total=&gt;1200.0000,owner=&gt;!*g:V/2]
+   	 \_type  | /m/rec
+   	  \_pred | []
+   	[inst]   | !*g:V/2
+   	 \_dom   | #{?}::T
+   	 \_args  | [g:V/2,noobj][Obj$Helper&lt;907&gt;:obj does not match person::T...]]@/sys/fail/34[...]
 mtron&gt; *g:V/1.outE(te:cold/x)&gt;&gt;total     ​4​
-==&gt;fail::[lhs range does not match inst domain: vrtx::T[?[age=&gt;int::T,name=&gt;str::T,city=&gt;str::T]]@person =&gt; vrtx::T[?[&lt;&gt;=&gt;rel{2}::T]] [outE?rng=#{*}&amp;dom=vrtx(te:cold/x){&lt;j&gt;}@&lt;1&gt;]]@/sys/fail/86
+==&gt;15.0000
 mtron&gt; *g:V/1.outE(knows).count()     ​5​
-==&gt;1</code></pre>
+==&gt;2</code></pre>
 </div>
 </div></div></td>
 </tr>
@@ -6297,11 +6284,8 @@ mtron&gt; v1     ​1​
 mtron&gt; *v1     ​2​
 ==&gt;[name=&gt;'marko',age=&gt;29,out_=&gt;[knows=&gt;{!*v2,!*v3},created=&gt;!*v4]]
 mtron&gt; *v1.outE(knows)     ​3​
-==&gt;fail::[lhs range does not match inst domain: rec::T =&gt; vrtx::T[?[&lt;&gt;=&gt;rel{2}::T]] [outE?rng=edge{*}&amp;dom=vrtx(knows){&lt;j&gt;}@&lt;1&gt;]]@/sys/fail/90
 mtron&gt; *v1.outE(knows).outE(created)     ​4​
-==&gt;fail::[lhs range does not match inst domain: rec::T =&gt; vrtx::T[?[&lt;&gt;=&gt;rel{2}::T]] [outE?rng=edge{*}&amp;dom=vrtx(knows){&lt;j&gt;}@&lt;1&gt;]]@/sys/fail/92
-mtron&gt; *v1.outE(knows).outE(created).&gt;&gt;name     ​5​
-==&gt;fail::[lhs range does not match inst domain: rec::T =&gt; vrtx::T[?[&lt;&gt;=&gt;rel{2}::T]] [outE?rng=edge{*}&amp;dom=vrtx(knows){&lt;j&gt;}@&lt;1&gt;]]@/sys/fail/94</code></pre>
+mtron&gt; *v1.outE(knows).outE(created).&gt;&gt;name     ​5​</code></pre>
 </div>
 </div>
 </div>
@@ -6417,11 +6401,8 @@ mtron&gt; *v1     ​2​
      inV_=&gt;!*v3,
      outV_=&gt;!*v1]]
 mtron&gt; *v1.out(knows)     ​3​
-==&gt;fail::[lhs range does not match inst domain: rec::T =&gt; vrtx::T[?[&lt;&gt;=&gt;rel{2}::T]] [out?rng=vrtx{*}&amp;dom=vrtx(knows){&lt;j&gt;}@&lt;1&gt;]]@/sys/fail/96
 mtron&gt; *v1.out(knows).out(created)     ​4​
-==&gt;fail::[lhs range does not match inst domain: rec::T =&gt; vrtx::T[?[&lt;&gt;=&gt;rel{2}::T]] [out?rng=vrtx{*}&amp;dom=vrtx(knows){&lt;j&gt;}@&lt;1&gt;]]@/sys/fail/98
-mtron&gt; *v1.out(knows).out(created).&gt;&gt;name     ​5​
-==&gt;fail::[lhs range does not match inst domain: rec::T =&gt; vrtx::T[?[&lt;&gt;=&gt;rel{2}::T]] [out?rng=vrtx{*}&amp;dom=vrtx(knows){&lt;j&gt;}@&lt;1&gt;]]@/sys/fail/100</code></pre>
+mtron&gt; *v1.out(knows).out(created).&gt;&gt;name     ​5​</code></pre>
 </div>
 </div>
 </div>
@@ -7119,7 +7100,14 @@ mtron&gt; *&lt;http://phaseshift.studio/splash.html&gt;     ​2​
       tag=&gt;img,
       style=&gt;'padding-left:100px',
       src=&gt;&lt;http://metatron.phaseshift.studio/images/metatron-character.png&gt;,
-      width=&gt;'500px']],
+      width=&gt;'500px'],
+     [
+      tag=&gt;script,
+      type=&gt;'module',
+      src=&gt;&lt;https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496&gt;,
+      integrity=&gt;'sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2A...',
+      data-cf-beacon=&gt;'{"version":"2024.11.0","token":"2ed4d310d5f64c4a9118e02b0e0...',
+      crossorigin=&gt;'anonymous']],
     style=&gt;'background-color: black;']]]
 mtron&gt; *&lt;http://phaseshift.studio/splash.html/html/head/title&gt;     ​3​
 ==&gt;'PhaseShift Studio'
@@ -7134,6 +7122,7 @@ mtron&gt; *&lt;http://phaseshift.studio/splash.html&gt;.as(str::T)     ​4​
      &lt;p&gt;&lt;/p&gt;
      &lt;h1 style="padding-left:125px;color:var(--primary)"&gt;PhaseShift Studio&lt;/h1&gt;
      &lt;img style="padding-left:100px" src="http://metatron.phaseshift.studio/images/metatron-character.png" width="500px"&gt;
+     &lt;script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon="{&amp;quot;version&amp;quot;:&amp;quot;2024.11.0&amp;quot;,&amp;quot;token&amp;quot;:&amp;quot;2ed4d310d5f64c4a9118e02b0e07c623&amp;quot;,&amp;quot;r&amp;quot;:1}" crossorigin="anonymous"&gt;&lt;/script&gt;
     &lt;/body&gt;
    &lt;/html&gt;"""</code></pre>
 </div>
@@ -7173,105 +7162,105 @@ mtron&gt; *&lt;http://phaseshift.studio/splash.html&gt;.as(str::T)     ​4​
    ]
 mtron&gt; *&lt;http://localhost:11434/api/tags&gt;     ​2​
 ==&gt;[models=&gt;[[
-    name=&gt;'qwen3.5:4b',
-    model=&gt;'qwen3.5:4b',
-    modified_at=&gt;'2026-06-28T00:25:31.583735-06:00',
+    name=&gt;&lt;qwen3.5:4b&gt;,
+    model=&gt;&lt;qwen3.5:4b&gt;,
+    modified_at=&gt;&lt;2026-06-28T00:25:31.583735-06:00&gt;,
     size=&gt;3389983735,
-    digest=&gt;'2a654d98e6fba55d452b7043684e9b57a947e393bbffa62485a7aac05ee...',
+    digest=&gt;&lt;2a654d98e6fba55d452b7043684e9b57a947e393bbffa62485a7aac05ee4eefd&gt;,
     details=&gt;[
+     parent_model=&gt;&lt;&gt;,
      format=&gt;gguf,
      family=&gt;qwen35,
      families=&gt;[qwen35],
-     parameter_size=&gt;'4.7B',
+     parameter_size=&gt;&lt;4.7B&gt;,
      quantization_level=&gt;Q4_K_M]],[
-    name=&gt;'dr.stynx:latest',
-    model=&gt;'dr.stynx:latest',
-    modified_at=&gt;'2026-06-13T12:19:21.4935225-06:00',
+    name=&gt;&lt;dr.stynx:latest&gt;,
+    model=&gt;&lt;dr.stynx:latest&gt;,
+    modified_at=&gt;&lt;2026-06-13T12:19:21.4935225-06:00&gt;,
     size=&gt;17690513930,
-    digest=&gt;'8b8560aa375897345cc5213cc8b953ce0e77758527421aa087afa374d4f...',
+    digest=&gt;&lt;8b8560aa375897345cc5213cc8b953ce0e77758527421aa087afa374d4f4b36d&gt;,
     details=&gt;[
+     parent_model=&gt;&lt;&gt;,
      format=&gt;gguf,
      family=&gt;qwen3moe,
      families=&gt;[qwen3moe],
-     parameter_size=&gt;'30.5B',
+     parameter_size=&gt;&lt;30.5B&gt;,
      quantization_level=&gt;Q4_K_M]],[
     name=&gt;hengwen/DeepSeek-R1-Distill-Qwen-14B:q8_0,
     model=&gt;hengwen/DeepSeek-R1-Distill-Qwen-14B:q8_0,
-    modified_at=&gt;'2026-05-20T03:50:17.3003242-06:00',
+    modified_at=&gt;&lt;2026-05-20T03:50:17.3003242-06:00&gt;,
     size=&gt;15701597480,
     digest=&gt;ed6b8c52bf980271969bffe42db30569937922207469ffa9bb0c30513a5ca8d2,
     details=&gt;[
+     parent_model=&gt;&lt;&gt;,
      format=&gt;gguf,
      family=&gt;qwen2,
      families=&gt;[qwen2],
-     parameter_size=&gt;'14.8B',
+     parameter_size=&gt;&lt;14.8B&gt;,
      quantization_level=&gt;Q8_0]],[
-    name=&gt;'qwen2.5-coder:32b',
-    model=&gt;'qwen2.5-coder:32b',
-    modified_at=&gt;'2026-05-20T03:48:28.2625806-06:00',
+    name=&gt;&lt;qwen2.5-coder:32b&gt;,
+    model=&gt;&lt;qwen2.5-coder:32b&gt;,
+    modified_at=&gt;&lt;2026-05-20T03:48:28.2625806-06:00&gt;,
     size=&gt;19851349898,
     digest=&gt;b92d6a0bd47ee79114298de0177bf920c05a706d12633950b3936778492bef41,
     details=&gt;[
+     parent_model=&gt;&lt;&gt;,
      format=&gt;gguf,
      family=&gt;qwen2,
      families=&gt;[qwen2],
-     parameter_size=&gt;'32.8B',
+     parameter_size=&gt;&lt;32.8B&gt;,
      quantization_level=&gt;Q4_K_M]],[
     name=&gt;deepseek-r1:14b,
     model=&gt;deepseek-r1:14b,
-    modified_at=&gt;'2026-05-14T00:23:01.4598875-06:00',
+    modified_at=&gt;&lt;2026-05-14T00:23:01.4598875-06:00&gt;,
     size=&gt;8988112209,
     digest=&gt;c333b7232bdb521236694ffbb5f5a6b11cc45d98e9142c73123b670fca400b09,
     details=&gt;[
+     parent_model=&gt;&lt;&gt;,
      format=&gt;gguf,
      family=&gt;qwen2,
      families=&gt;[qwen2],
-     parameter_size=&gt;'14.8B',
+     parameter_size=&gt;&lt;14.8B&gt;,
      quantization_level=&gt;Q4_K_M]],[
-    name=&gt;'qwen2.5-coder:7b',
-    model=&gt;'qwen2.5-coder:7b',
-    modified_at=&gt;'2026-05-12T21:08:02.3143859-06:00',
+    name=&gt;&lt;qwen2.5-coder:7b&gt;,
+    model=&gt;&lt;qwen2.5-coder:7b&gt;,
+    modified_at=&gt;&lt;2026-05-12T21:08:02.3143859-06:00&gt;,
     size=&gt;4683087561,
     digest=&gt;dae161e27b0e90dd1856c8bb3209201fd6736d8eb66298e75ed87571486f4364,
     details=&gt;[
+     parent_model=&gt;&lt;&gt;,
      format=&gt;gguf,
      family=&gt;qwen2,
      families=&gt;[qwen2],
-     parameter_size=&gt;'7.6B',
+     parameter_size=&gt;&lt;7.6B&gt;,
      quantization_level=&gt;Q4_K_M]],[
     name=&gt;qwen3-embedding:8b,
     model=&gt;qwen3-embedding:8b,
-    modified_at=&gt;'2026-05-10T15:16:25.3309793-06:00',
+    modified_at=&gt;&lt;2026-05-10T15:16:25.3309793-06:00&gt;,
     size=&gt;4676805193,
-    digest=&gt;'64b933495768fbd3b87c20583d379728a07471e0c66733a9df87cd1901b...',
+    digest=&gt;&lt;64b933495768fbd3b87c20583d379728a07471e0c66733a9df87cd1901b3c44b&gt;,
     details=&gt;[
+     parent_model=&gt;&lt;&gt;,
      format=&gt;gguf,
      family=&gt;qwen3,
      families=&gt;[qwen3],
-     parameter_size=&gt;'7.6B',
+     parameter_size=&gt;&lt;7.6B&gt;,
      quantization_level=&gt;Q4_K_M]],[
-    name=&gt;'batiai/qwen3.6-27b:iq3',
-    model=&gt;'batiai/qwen3.6-27b:iq3',
-    modified_at=&gt;'2026-05-10T01:44:06.5919578-06:00',
+    name=&gt;&lt;batiai/qwen3.6-27b:iq3&gt;,
+    model=&gt;&lt;batiai/qwen3.6-27b:iq3&gt;,
+    modified_at=&gt;&lt;2026-05-10T01:44:06.5919578-06:00&gt;,
     size=&gt;11186372790,
     digest=&gt;a785b19cc583791ed62e5ed102a047056083bde4f9870a2d8ea6d3250f84638b,
     details=&gt;[
+     parent_model=&gt;&lt;&gt;,
      format=&gt;gguf,
      family=&gt;qwen35,
      families=&gt;[qwen35],
-     parameter_size=&gt;'26.9B',
+     parameter_size=&gt;&lt;26.9B&gt;,
      quantization_level=&gt;unknown]],[
-    name=&gt;'qwen3.6:27b',
-    model=&gt;'qwen3.6:27b',
-    modified_at=&gt;'2026-05-09T21:07:13.4279469-06:00',
-    size=&gt;17420432739,
-    digest=&gt;a50eda8ed977ab48a12431878896b27ffd5cef552c17af3317d9623b939a7f1e,
-    details=&gt;[
-     format=&gt;gguf,
-     family=&gt;qwen35,
-     families=&gt;[qwen35],
-     parameter_size=&gt;'27.8B',
-     quantization_level=&gt;Q4_K_M]],[
+    name=&gt;&lt;qwen3.6:27b&gt;,
+    model=&gt;&lt;qwen3.6:27b&gt;,
+    modified_at=&gt;&lt;2026-05-09T21:07:13.4279469-06:00&gt;,
    ...</code></pre>
 </div>
 </div>
@@ -7316,17 +7305,9 @@ mtron&gt; */m/llm/inst/+?dom=model</code></pre>
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *&lt;http://localhost:11434/api/tags/0&gt;.&gt;&gt;data/1.
          -&lt;[provider=&gt; ollama,
             protocol=&gt; ollama,
-            host    =&gt; &lt;http://localhost:11434&gt;
+            host    =&gt; &lt;http://localhost:11434&gt;,
             name    =&gt; &gt;&gt;id.as(uri::T)].as(model::T)
-         .chat('are you there?')
-==&gt;fail::[*&lt;http://localhost:11434/api/tags/0&gt;.&gt;&gt;data/1.
-            -&lt;[provider=&gt; ollama,
-               protocol=&gt; ollama,
-               host    =&gt; &lt;http://localhost:11434&gt;
-               name    =&gt; &gt;&gt;id.as(uri::T)].as(model::T)
-            .chat('are you there?')
-                                                ^ end of input expected
-   ]@/sys/fail/8</code></pre>
+         .chat('are you there?')</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -7761,14 +7742,14 @@ if one is found, the reference is routed to the named scheme&#8217;s space.</p>
 <ul>
 <li class="legend-lvl-3"><a href="#sec-schema-discovery" onclick="var t=document.getElementById('sec-schema-discovery');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Schema Discovery</a></li>
 <li class="legend-lvl-3"><a href="#sec-relational-database-rewrites" onclick="var t=document.getElementById('sec-relational-database-rewrites');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Relational Database Rewrites</a></li>
-<li class="legend-lvl-3"><a href="#sec-autofrom-and-foreign-keys" onclick="var t=document.getElementById('sec-autofrom-and-foreign-keys');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">auto_from and foreign keys</a></li>
-<li class="legend-lvl-5"><a href="#sec-mtronmeta-table" onclick="var t=document.getElementById('sec-mtronmeta-table');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">_mtron_meta table</a></li>
-<li class="legend-lvl-5"><a href="#sec-intra-vs-inter-space-discrimination" onclick="var t=document.getElementById('sec-intra-vs-inter-space-discrimination');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">intra- vs. inter-space discrimination</a></li>
+<li class="legend-lvl-3"><a href="#sec-autofrom-as-foreign-keys" onclick="var t=document.getElementById('sec-autofrom-as-foreign-keys');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">auto_from as Foreign Keys</a></li>
+<li class="legend-lvl-5"><a href="#sec-the-mtronmeta-table" onclick="var t=document.getElementById('sec-the-mtronmeta-table');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">The _mtron_meta Table</a></li>
+<li class="legend-lvl-5"><a href="#sec-intra-and-inter-space-discrimination" onclick="var t=document.getElementById('sec-intra-and-inter-space-discrimination');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Intra- and Inter-Space Discrimination</a></li>
 <li class="legend-lvl-5"><a href="#sec-sql-footprint" onclick="var t=document.getElementById('sec-sql-footprint');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">sql footprint</a></li>
 </ul>
 </div>
 <details>
-<summary class="title">/m/tble instset import</summary>
+<summary class="title">documentation setup</summary>
 <div class="content">
 <div class="listingblock">
 <div class="content">
@@ -7872,8 +7853,13 @@ mtron&gt; *lite:person/+/id     ​6​
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">lite:person/3 -&gt; [name=&gt;'alex', age=&gt;25, skill=&gt;graph]
-*lite:+</code></pre>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; lite:person/3 -&gt; [name=&gt;'alex', age=&gt;25, skill=&gt;graph]
+==&gt;[name=&gt;'alex',age=&gt;25,skill=&gt;graph]
+mtron&gt; *lite:+
+==&gt;rec::T[?[name=&gt;str::T,location=&gt;isa(area:V/+/id).!*id(),parent=&gt;auto_from::T]]@venue
+==&gt;rec::T[?[trophy=&gt;str::T,recipient=&gt;isa(person/+/id).!*id()]]@award
+==&gt;rec::T[?[name=&gt;str::T,age=&gt;int::T]]@person
+==&gt;rec::T[?[player=&gt;str::T,points=&gt;int::T]]@score</code></pre>
 </div>
 </div>
 </div>
@@ -7978,9 +7964,16 @@ code''' └────────────────┘ └────�
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *lite:person/+.=?=[age=&gt;?&lt;30]     ​1​
 ==&gt;[id=&gt;1,_tid=&gt;'/m/rec',name=&gt;'marko',age=&gt;29]@lite:/sys/space/lite/person/1
 ==&gt;[id=&gt;2,_tid=&gt;'/m/rec',name=&gt;'grant',age=&gt;25]@lite:/sys/space/lite/person/2
+==&gt;[
+    id=&gt;3,
+    _tid=&gt;'/m/rec',
+    name=&gt;'alex',
+    age=&gt;25,
+    skill=&gt;'graph']@lite:/sys/space/lite/person/3
 mtron&gt; *lite:person/+/name.count()     ​2​
-==&gt;2
+==&gt;3
 mtron&gt; *lite:person/+.==[name=&gt;_]     ​3​
+==&gt;[name=&gt;'alex']
 ==&gt;[name=&gt;'grant']
 ==&gt;[name=&gt;'marko']</code></pre>
 </div>
@@ -8009,8 +8002,9 @@ mtron&gt; *lite:person/+.==[name=&gt;_]     ​3​
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys/space/lite.sql("SELECT name,age FROM person WHERE age &lt; 30")     ​1​
 ==&gt;[name=&gt;'marko',age=&gt;29]
 ==&gt;[name=&gt;'grant',age=&gt;25]
+==&gt;[name=&gt;'alex',age=&gt;25]
 mtron&gt; */sys/space/lite.sql("SELECT name,age FROM person WHERE age &lt; 30")&gt;&gt;age.sum()     ​2​
-==&gt;54</code></pre>
+==&gt;79</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -8029,7 +8023,7 @@ mtron&gt; */sys/space/lite.sql("SELECT name,age FROM person WHERE age &lt; 30")&
 <p>The example above demonstrates how one can move between languages within the same expression as the universal encoding
 is that of objs in a unified URI address space.</p>
 </div>
-<h3 id="sec-autofrom-and-foreign-keys" class="discrete">auto_from and foreign keys</h3>
+<h3 id="sec-autofrom-as-foreign-keys" class="discrete">auto_from as Foreign Keys</h3>
 <div class="paragraph">
 <p>In a relational database, rows can be linked in one of two ways:</p>
 </div>
@@ -8219,7 +8213,7 @@ mtron&gt; *lite:venue/2/parent/location     ​3​
 <div class="paragraph">
 <p>A <code>tblespace</code> has two storage layers for foreign key pointers. The cell value itself is a plain <code>INTEGER</code> column — no <code>REFERENCES</code> clause, no proprietary SQL type. Routing metadata, column types, and table-level type identity live in a single companion table.</p>
 </div>
-<h5 id="sec-mtronmeta-table" class="discrete">_mtron_meta table</h5>
+<h5 id="sec-the-mtronmeta-table" class="discrete">The _mtron_meta Table</h5>
 <div class="listingblock center-code">
 <div class="content">
 <pre class="highlight"><code class="language-sql" data-lang="sql">CREATE TABLE _mtron_meta (
@@ -8233,9 +8227,9 @@ mtron&gt; *lite:venue/2/parent/location     ​3​
 </div>
 </div>
 <div class="paragraph">
-<p>Every column touched by metatron gets a row. <code>base_vid</code> stores the root type (<code>/m/uri</code>, <code>/m/int</code>, <code>/m/str</code>, &#8230;&#8203;) and drives SQL DDL. <code>obj_tid</code> stores the full mtron type refinement (<code>/m/math/nat</code>, <code>/m/lst[uri]</code>, &#8230;&#8203;) and is used at read time to reconstruct typed values without heuristic guessing. <code>ref_table</code> is <code>NULL</code> unless the column is a foreign key.</p>
+<p>Every column touched by metatron gets a row. <code>base_vid</code> stores the base type (<code>/m/uri</code>, <code>/m/int</code>, <code>/m/str</code>, &#8230;&#8203;) and drives SQL DDL. <code>obj_tid</code> stores the full mtron type refinement (<code>/m/math/nat</code>, <code>/m/lst[uri]</code>, &#8230;&#8203;) and is used at read time to faithfully reconstruct value types without having to rely on heuristic guessing. <code>ref_table</code> is <code>NULL</code> unless the column is a foreign key.</p>
 </div>
-<table class="tableblock frame-all grid-all stretch">
+<table class="tableblock frame-all grid-cols stretch center">
 <colgroup>
 <col style="width: 20%;">
 <col style="width: 20%;">
@@ -8243,55 +8237,107 @@ mtron&gt; *lite:venue/2/parent/location     ​3​
 <col style="width: 20%;">
 <col style="width: 20%;">
 </colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top"><code>table_name</code></th>
+<th class="tableblock halign-left valign-top"><code>column_name</code></th>
+<th class="tableblock halign-left valign-top"><code>base_vid</code></th>
+<th class="tableblock halign-left valign-top"><code>obj_tid</code></th>
+<th class="tableblock halign-left valign-top"><code>ref_table</code></th>
+</tr>
+</thead>
 <tbody>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>table_name</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>column_name</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>base_vid</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>obj_tid</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>ref_table</code></p></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><code>award</code></p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><code>$table</code></p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><code>/m/rec</code></p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><code>/m/rec</code></p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><code>NULL</code></p>
+</div></div></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>award</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>$table</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/m/rec</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/m/rec</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>NULL</code></p></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><code>award</code></p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><code>trophy</code></p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><code>/m/str</code></p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><code>/m/str</code></p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><code>NULL</code></p>
+</div></div></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>award</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>trophy</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/m/str</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/m/str</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>NULL</code></p></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><code>award</code></p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><code>recipient</code></p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><code>/m/int</code></p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><code>/m/inst/auto_from</code></p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><code>person</code></p>
+</div></div></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>award</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>recipient</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/m/int</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/m/inst/auto_from</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>person</code></p></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><code>venue</code></p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><code>location</code></p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><code>/m/int</code></p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><code>/m/inst/auto_from</code></p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><code>area:V</code></p>
+</div></div></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>venue</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>location</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/m/int</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/m/inst/auto_from</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>area:V</code></p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>venue</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>parent</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/m/int</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/m/inst/auto_from</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>venue</code></p></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><code>venue</code></p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><code>parent</code></p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><code>/m/int</code></p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><code>/m/inst/auto_from</code></p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><code>venue</code></p>
+</div></div></td>
 </tr>
 </tbody>
 </table>
 <div class="paragraph">
-<p>The <code>$table</code> sentinel row (<code>column_name = '$table'</code>) records the table-level <code>tid</code>, captured from the <code>rec</code> written on first-insert. This lets the schema <code>instset</code> infer e.g. <code>person::T</code> instead of a generic <code>rec::T</code>, without requiring an explicit type declaration.</p>
+<p>The <code>$table</code> sentinel row (<code>column_name = '$table'</code>) records the table/collection-level <code>tid</code>, captured from the <code>rec</code> written on first-insert. This lets the schema <code>instset</code> infer e.g. <code>person::T</code> instead of a generic <code>rec::T</code>, without requiring an explicit type declaration.</p>
 </div>
-<h5 id="sec-intra-vs-inter-space-discrimination" class="discrete">intra- vs. inter-space discrimination</h5>
+<h5 id="sec-intra-and-inter-space-discrimination" class="discrete">Intra- and Inter-Space Discrimination</h5>
 <div class="paragraph">
 <p>On <strong>write</strong>, the cell uri is tested against the space&#8217;s pattern:</p>
 </div>
@@ -8616,9 +8662,19 @@ console::[        =&gt; ]@/sys/console;
 <a href="#" class="btn btn-primary btn-square back-to-top"><i class="bi bi-caret-up-fill"></i></a>
 
 <script>
+    import mtron from './highlight/languages/mtron.min.js';
+    import java from './highlight/languages/java.min.js';
+    import bash from './highlight/languages/bash.min.js';
+    import sql from './highlight/languages/sql.min.js';
+    import json from './highlight/languages/json.min.js';
+    hljs.registerLanguage('mtron', mtron);
+    hljs.registerLanguage('java', java);
+    hljs.registerLanguage('bash', bash);
+    hljs.registerLanguage('sql', sql);
+    hljs.registerLanguage('json', json);
     hljs.configure({
-        defaultLanguage: 'mtron', // Set your preferred default language
-        ignoreUnescapedHTML: true
+        ignoreUnescapedHTML: true,
+        languages: ['mtron','java','bash','sql','json']
     });
     hljs.addPlugin(new CopyButtonPlugin({
         callback: function(text, el) {
@@ -8660,9 +8716,10 @@ console::[        =&gt; ]@/sys/console;
             button.classList.toggle("active")
         });
     });
-    document.querySelectorAll('code').forEach(block => {
+    hljs.highlightAll();
+    /*document.querySelectorAll('code').forEach(block => {
         hljs.highlightBlock(block);
-    });
+    });*/
 
     // ── Vanilla JS tab switching (replaces Zepto) ─────────────────
     function initTabs() {

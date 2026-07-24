@@ -22,7 +22,6 @@ import org.jline.terminal.Terminal;
 import studio.phaseshift.metatron.isa.mach.type.ui.Widget;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 
-import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -81,7 +80,13 @@ public class FloatingSurface {
     }
 
     private final Terminal terminal;
-    private final Map<Widget<?>, Slot> slots = new LinkedHashMap<>();
+    private final Map<Widget<?>, Slot> slots = new java.util.concurrent.ConcurrentHashMap<>();
+    private final java.util.concurrent.Executor renderExecutor =
+            java.util.concurrent.Executors.newSingleThreadExecutor(r -> {
+                final Thread t = new Thread(r, "floating-surface-render");
+                t.setDaemon(true);
+                return t;
+            });
 
     /**
      * Create a floating surface that renders to the given terminal.
@@ -109,7 +114,9 @@ public class FloatingSurface {
             existing.lastRow = row;
             existing.lastCol = col;
         } else {
-            this.slots.put(widget, Slot.fixed(row, col));
+            final Slot slot = Slot.fixed(row, col);
+            if (existing != null) slot.prevHeight = existing.prevHeight;
+            this.slots.put(widget, slot);
         }
     }
 
@@ -129,7 +136,15 @@ public class FloatingSurface {
      *               (used for horizontal positioning and content clipping)
      */
     public void add(final Widget<?> widget, final Anchor anchor, final int width) {
-        this.slots.put(widget, Slot.anchored(anchor, width));
+        add(widget, anchor, width, 0, 0);
+    }
+
+    public void add(final Widget<?> widget, final Anchor anchor, final int width,
+                    final int top, final int left) {
+        final Slot existing = this.slots.get(widget);
+        final Slot slot = Slot.anchored(anchor, width, top, left);
+        if (existing != null) slot.prevHeight = existing.prevHeight;
+        this.slots.put(widget, slot);
     }
 
     // -----------------------------------------------------------------
@@ -159,7 +174,11 @@ public class FloatingSurface {
      */
     public void render() {
         if (this.slots.isEmpty()) return;
+        this.renderExecutor.execute(this::renderInternal);
+    }
 
+    private void renderInternal() {
+        if (this.slots.isEmpty()) return;
         final int termWidth = this.terminal.getWidth();
         final int termHeight = this.terminal.getHeight();
         final var sb = new StringBuilder(512);
@@ -210,8 +229,6 @@ public class FloatingSurface {
 
         final int maxWidth = Math.max(1, termWidth - slot.lastCol + 1);
 
-        // Clear the row just above the widget to catch terminal-scroll ghosting
-        // (when the terminal scrolls between renders, old content shifts up one row).
         if (slot.lastRow > 1) {
             sb.append("\033[").append(slot.lastRow - 1).append(";").append(slot.lastCol).append("H");
             sb.append("\033[K");
@@ -220,34 +237,22 @@ public class FloatingSurface {
         int i;
         for (i = 0; i < lines.length; i++) {
             sb.append("\033[").append(slot.lastRow + i).append(";").append(slot.lastCol).append("H");
-            sb.append("\033[K"); // clear to end of line
-            appendClipped(sb, lines[i], maxWidth);
+            sb.append("\033[K");
+            final String line = lines[i];
+            if (Graphitty.viewLength(line) <= maxWidth) {
+                sb.append(line);
+            } else {
+                sb.append(Graphitty.strip(line), 0, Math.max(0, maxWidth - 2));
+                //sb.append("...");
+            }
         }
 
-        // Clear leftover lines from a previous taller render
         for (; i < slot.prevHeight; i++) {
             sb.append("\033[").append(slot.lastRow + i).append(";").append(slot.lastCol).append("H");
             sb.append("\033[K");
         }
 
         slot.prevHeight = lines.length;
-    }
-
-    /**
-     * Append a line to the buffer, clipping it to {@code maxWidth} visual
-     * characters if necessary.  Graphitty formatting is stripped before
-     * measuring so that escape sequences don't inflate the length.
-     */
-    private static void appendClipped(final StringBuilder sb, final String line, final int maxWidth) {
-        final int visualLen = Graphitty.viewLength(line);
-        if (visualLen <= maxWidth) {
-            sb.append(line);
-        } else {
-            // Strip formatting, clip, and append truncation marker
-            final String stripped = Graphitty.strip(line);
-            sb.append(stripped, 0, Math.max(0, maxWidth - 3));
-            sb.append("...");
-        }
     }
 
     /**
@@ -276,6 +281,8 @@ public class FloatingSurface {
         // ---- anchored mode ----
         final Anchor anchor;
         final int targetWidth;
+        final int offsetRow;
+        final int offsetCol;
 
         // ---- computed each render ----
         int lastRow;
@@ -283,22 +290,26 @@ public class FloatingSurface {
         int prevHeight;
 
         private Slot(final Integer fixedRow, final Integer fixedCol,
-                     final Anchor anchor, final int targetWidth) {
+                     final Anchor anchor, final int targetWidth,
+                     final int offsetRow, final int offsetCol) {
             this.fixedRow = fixedRow;
             this.fixedCol = fixedCol;
             this.anchor = anchor;
             this.targetWidth = targetWidth;
+            this.offsetRow = offsetRow;
+            this.offsetCol = offsetCol;
         }
 
         static Slot fixed(final int row, final int col) {
-            final Slot s = new Slot(row, col, null, 0);
+            final Slot s = new Slot(row, col, null, 0, 0, 0);
             s.lastRow = row;
             s.lastCol = col;
             return s;
         }
 
-        static Slot anchored(final Anchor anchor, final int targetWidth) {
-            return new Slot(null, null, anchor, targetWidth);
+        static Slot anchored(final Anchor anchor, final int targetWidth,
+                             final int offsetRow, final int offsetCol) {
+            return new Slot(null, null, anchor, targetWidth, offsetRow, offsetCol);
         }
 
         boolean isAnchored() {
@@ -314,12 +325,12 @@ public class FloatingSurface {
             if (this.anchor == null) return;
 
             this.lastRow = switch (this.anchor) {
-                case TOP_LEFT, TOP_RIGHT -> 2;
-                case BOTTOM_LEFT, BOTTOM_RIGHT -> Math.max(1, termHeight - widgetHeight + 1);
+                case TOP_LEFT, TOP_RIGHT -> 2 + this.offsetRow;
+                case BOTTOM_LEFT, BOTTOM_RIGHT -> Math.max(1, termHeight - widgetHeight + 1 - this.offsetRow);
             };
             this.lastCol = switch (this.anchor) {
-                case TOP_LEFT, BOTTOM_LEFT -> 1;
-                case TOP_RIGHT, BOTTOM_RIGHT -> Math.max(1, termWidth - this.targetWidth + 1);
+                case TOP_LEFT, BOTTOM_LEFT -> 1 + this.offsetCol;
+                case TOP_RIGHT, BOTTOM_RIGHT -> Math.max(1, termWidth - this.targetWidth + 1 - this.offsetCol);
             };
         }
     }

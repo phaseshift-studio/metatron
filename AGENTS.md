@@ -6,6 +6,10 @@ A distributed data-oriented computing language and virtual machine built in Java
 
 ---
 
+## Strict Rules
+
+* Under no circumstance should you perform any git operations. Do not check out, do not stash, do not merge, do not commit, and do not push. Git is off limits.
+
 ## Build & Test
 
 ### Commands
@@ -40,7 +44,7 @@ A distributed data-oriented computing language and virtual machine built in Java
 
 ### Test Styles — `@ParameterizedTest` Preferred
 - **Use `@ParameterizedTest` + `@CsvSource`** as the default pattern for new tests. Each CSV row is a self-contained scenario using mtron string expressions. This keeps tests data-extensible — corner cases are one CSV line, not new Java methods.
-- Use standalone `@Test` methods only for multi-step orchestration (e.g., concurrency tests, complex setup/teardown) or non-tabular scenarios.
+- Use standalone `@Test` methods only for multistep orchestration (e.g., concurrency tests, complex setup/teardown) or non-tabular scenarios.
 - The `%` delimiter avoids collision with mtron syntax (commas, pipes, semicolons).
 - The `@TestData` test method annotation enables preloading data (or configuring metatron state) prior to test evaluation.
 
@@ -142,11 +146,11 @@ src/main/java/studio/phaseshift/metatron/
   - call types: `inst`, `code`
 IMPORTANT NOTE CONCERNING `tid` vs `vid`: 
   - for a type: `vid` is the type's name and `tid` is the type's refinement. e.g. `int::T[?>0]@nat`. `vid = nat`, `tid = int`.
-  - for a value: `vid` is the value's location in space and `tid` is the type the constrains it. e.g. `nat::29@/usr/marko/age`. The `int` is a `nat::T` (tid) and it's located at `/usr/marko/age` (vid).
+  - for a value: `vid` is the value's location in space and `tid` is the type the constraints it. e.g. `nat::29@/usr/marko/age`. The `int` is a `nat::T` (tid) and it's located at `/usr/marko/age` (vid).
 
 **URI components**: 
  - wildcards: `+` = single segment, `#` = multi-segment (MQTT-style)
- - qprocs: `?incq` (auto-increment), `?subq` (pubsub), `?docq` (documentation associated with uri), etc.
+ - process: `?incq` (auto-increment), `?subq` (pubsub), `?docq` (documentation associated with uri), etc.
  - dom/rng: `inst?a<=b()` is an instruction that maps objs of type `b` to objs of type `a` (note reverse arrow `<=`). ultimately compiles to the URI `inst?dom=b&rng=a`
 
 ### Boot Loader Lifecycle

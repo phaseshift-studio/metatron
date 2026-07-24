@@ -163,6 +163,7 @@ public class TreeWidget extends JRec<TreeWidget> implements Widget<TreeWidget> {
 
     @Override
     public void close() {
+        Widget.super.close();
     }
 
     @Override

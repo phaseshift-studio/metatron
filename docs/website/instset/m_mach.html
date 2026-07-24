@@ -257,7 +257,7 @@ bin/metatron</code></pre>
     </div>
     <div class="text-light"></div>
     <div class="instset-accordion-wrapper">
-        <div class="accordion accordion-flush" id="accordianInstSet">
+        <div class="accordion accordion-flush" id="accordionInstSet">
             <div class="accordion-item">
                 <h2 class="accordion-header" id="headingOne">
                     <button class="accordion-button collapsed" type="button"
@@ -267,7 +267,7 @@ bin/metatron</code></pre>
                     </button>
                 </h2>
                 <div id="flush-collapseOne" class="accordion-collapse collapse"
-                    aria-labelledby="flush-headingOne" data-bs-parent="#accordianInstSet">
+                    aria-labelledby="flush-headingOne" data-bs-parent="#accordionInstSet">
                     <div class="accordion-body">
                         <pre><code>instset::[
  pattern=&gt;/m/mach/#,
@@ -421,7 +421,7 @@ bin/metatron</code></pre>
         <a href="m_mach_clstrspace.html" class="code text-primary fw-bold text-decoration-none">clstrspace</a>
         <small class="text-muted code">/m/mach/clstrspace</small>
     </div>
-    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[?[{?}peer=&gt;{?}[uri::T[/m/inst/pred?rng=authority&amp;dom=#{?}(uri::T){&lt;j&gt;}]@/m/uri/authority=&gt;#::T]]][ctor?clstrspace&lt;=#{?}(space::T)]@/m/mach/clstrspace</code></pre></div>
+    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[?[{?}peer=&gt;{?}[uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(uri::T){&lt;j&gt;}]@/m/uri/authority=&gt;#::T]]][ctor?clstrspace&lt;=#{?}(space::T)]@/m/mach/clstrspace</code></pre></div>
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m.html#__m__space" class="code inherited-link">space::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[pattern=&gt;uri::T,{?}q=&gt;[qproc::T],{?}route=&gt;[uri::T=&gt;uri::T],{?}schema=&gt;instset::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a peer is a wsclient to a mtron_ws handler.
@@ -449,10 +449,10 @@ bin/metatron</code></pre>
     <p class="mb-0 text-light">run a concurrent core thread</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}state" class="text-light">{?}state</a> <span class="text-light">=&gt;</span> <a href="#'current state of the thread'" class="text-info">&#39;current state of the thread&#39;</a>
-  <a href="#{?}loop" class="text-light">{?}loop</a> <span class="text-light">=&gt;</span> <a href="#'delay to repeat code evaluation (default is evaluate once)'" class="text-info">&#39;delay to repeat code evaluation (default is evaluate once)&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}loop" class="text-light">{?}loop</a> <span class="text-light">=&gt;</span> <a href="#'delay to repeat code evaluation (default is evaluate once)'" class="text-info">&#39;delay to repeat code evaluation (default is evaluate once)&#39;</a>
   <a href="#code" class="text-light">code</a> <span class="text-light">=&gt;</span> <a href="#'the code the thread will execute'" class="text-info">&#39;the code the thread will execute&#39;</a>
   <a href="#{?}result" class="text-light">{?}result</a> <span class="text-light">=&gt;</span> <a href="#'the last result produced by the thread'" class="text-info">&#39;the last result produced by the thread&#39;</a>
+  <a href="#{?}state" class="text-light">{?}state</a> <span class="text-light">=&gt;</span> <a href="#'current state of the thread'" class="text-info">&#39;current state of the thread&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -576,10 +576,10 @@ the objs referenced by the monads that halt are the result of the machine execut
     <p class="mb-0 text-light">run a concurrent virtual thread</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}state" class="text-light">{?}state</a> <span class="text-light">=&gt;</span> <a href="#'current state of the thread'" class="text-info">&#39;current state of the thread&#39;</a>
-  <a href="#{?}loop" class="text-light">{?}loop</a> <span class="text-light">=&gt;</span> <a href="#'delay to repeat code evaluation (default is evaluate once)'" class="text-info">&#39;delay to repeat code evaluation (default is evaluate once)&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}loop" class="text-light">{?}loop</a> <span class="text-light">=&gt;</span> <a href="#'delay to repeat code evaluation (default is evaluate once)'" class="text-info">&#39;delay to repeat code evaluation (default is evaluate once)&#39;</a>
   <a href="#code" class="text-light">code</a> <span class="text-light">=&gt;</span> <a href="#'the code the thread will execute'" class="text-info">&#39;the code the thread will execute&#39;</a>
   <a href="#{?}result" class="text-light">{?}result</a> <span class="text-light">=&gt;</span> <a href="#'the last result produced by the thread'" class="text-info">&#39;the last result produced by the thread&#39;</a>
+  <a href="#{?}state" class="text-light">{?}state</a> <span class="text-light">=&gt;</span> <a href="#'current state of the thread'" class="text-info">&#39;current state of the thread&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -717,9 +717,19 @@ the objs referenced by the monads that halt are the result of the machine execut
 <a href="#" class="btn btn-primary btn-square back-to-top"><i class="bi bi-caret-up-fill"></i></a>
 
 <script>
+    import mtron from './highlight/languages/mtron.min.js';
+    import java from './highlight/languages/java.min.js';
+    import bash from './highlight/languages/bash.min.js';
+    import sql from './highlight/languages/sql.min.js';
+    import json from './highlight/languages/json.min.js';
+    hljs.registerLanguage('mtron', mtron);
+    hljs.registerLanguage('java', java);
+    hljs.registerLanguage('bash', bash);
+    hljs.registerLanguage('sql', sql);
+    hljs.registerLanguage('json', json);
     hljs.configure({
-        defaultLanguage: 'mtron', // Set your preferred default language
-        ignoreUnescapedHTML: true
+        ignoreUnescapedHTML: true,
+        languages: ['mtron','java','bash','sql','json']
     });
     hljs.addPlugin(new CopyButtonPlugin({
         callback: function(text, el) {
@@ -761,9 +771,10 @@ the objs referenced by the monads that halt are the result of the machine execut
             button.classList.toggle("active")
         });
     });
-    document.querySelectorAll('code').forEach(block => {
+    hljs.highlightAll();
+    /*document.querySelectorAll('code').forEach(block => {
         hljs.highlightBlock(block);
-    });
+    });*/
 
     // ── Vanilla JS tab switching (replaces Zepto) ─────────────────
     function initTabs() {

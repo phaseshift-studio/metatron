@@ -570,9 +570,19 @@ mtron&gt; */sys/space/+.-&lt;[&gt;&gt;pattern=&gt;&gt;&gt;route]
 <a href="#" class="btn btn-primary btn-square back-to-top"><i class="bi bi-caret-up-fill"></i></a>
 
 <script>
+    import mtron from './highlight/languages/mtron.min.js';
+    import java from './highlight/languages/java.min.js';
+    import bash from './highlight/languages/bash.min.js';
+    import sql from './highlight/languages/sql.min.js';
+    import json from './highlight/languages/json.min.js';
+    hljs.registerLanguage('mtron', mtron);
+    hljs.registerLanguage('java', java);
+    hljs.registerLanguage('bash', bash);
+    hljs.registerLanguage('sql', sql);
+    hljs.registerLanguage('json', json);
     hljs.configure({
-        defaultLanguage: 'mtron', // Set your preferred default language
-        ignoreUnescapedHTML: true
+        ignoreUnescapedHTML: true,
+        languages: ['mtron','java','bash','sql','json']
     });
     hljs.addPlugin(new CopyButtonPlugin({
         callback: function(text, el) {
@@ -614,9 +624,10 @@ mtron&gt; */sys/space/+.-&lt;[&gt;&gt;pattern=&gt;&gt;&gt;route]
             button.classList.toggle("active")
         });
     });
-    document.querySelectorAll('code').forEach(block => {
+    hljs.highlightAll();
+    /*document.querySelectorAll('code').forEach(block => {
         hljs.highlightBlock(block);
-    });
+    });*/
 
     // ── Vanilla JS tab switching (replaces Zepto) ─────────────────
     function initTabs() {
