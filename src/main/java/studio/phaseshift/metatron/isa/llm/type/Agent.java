@@ -196,7 +196,7 @@ public class Agent extends MRec {
     }
 
     public Obj chat(final String message, final Rec responseFormat) {
-        final StringBuilder response = new StringBuilder();
+       // final StringBuilder response = new StringBuilder();
         Router.global().stats().ioStats().incrBytesSent(message.getBytes().length);
         final CountDownLatch latch = new CountDownLatch(1);
         final AtomicBoolean isTooling = new AtomicBoolean(false);
@@ -274,7 +274,7 @@ public class Agent extends MRec {
                     })
                     .onPartialResponse(s -> {
                         Router.global().stats().ioStats().incrBytesRecv(s.getBytes().length);
-                        response.append(s);
+                        //response.append(s);
                         features.stream().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_PARTIAL_RESPONSE, str(s)));
                     })
                     .onPartialThinking(t -> {
@@ -345,7 +345,7 @@ public class Agent extends MRec {
         // ── Phase 4: Assemble result Rec from blackboard ──
         final Map<Obj, Obj> resultMap = new LinkedHashMap<>();
         final Obj chatResult = this.at(res(CHAT));
-        resultMap.put(uri(CHAT), chatResult.isNoObj() ? str(response.toString()) : chatResult);
+        resultMap.put(uri(CHAT), chatResult);
         resultMap.put(uri(TIME), this.at(res(TIME)));
         // if (!this.at(res(COST)).isNoObj()) resultMap.put(uri(COST), this.at(res(COST)));
         if (!this.at(res("stages")).isNoObj()) resultMap.put(uri("stages"), this.at(res("stages")));

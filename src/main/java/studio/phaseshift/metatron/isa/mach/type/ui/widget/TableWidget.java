@@ -260,6 +260,7 @@ public class TableWidget extends JRec<TableWidget> implements Widget<TableWidget
 
     @Override
     public void close() {
+        Widget.super.close();
     }
 
     @Override

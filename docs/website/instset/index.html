@@ -267,7 +267,7 @@ bin/metatron</code></pre>
                     <div><span class="stat-label">consts</span><span class="stat-val">1</span></div>
                     <div><span class="stat-label">types</span><span class="stat-val">16</span></div>
                     <div><span class="stat-label">spaces</span><span class="stat-val">18</span></div>
-                    <div><span class="stat-label">insts</span><span class="stat-val">251</span></div>
+                    <div><span class="stat-label">insts</span><span class="stat-val">254</span></div>
                     <div><span class="stat-label">rewrites</span><span class="stat-val">8</span></div>
                 </div>
             </div>
@@ -345,8 +345,8 @@ bin/metatron</code></pre>
                 <p class="text-muted splash-desc">web server, mime-types, http handlers, web socket sessions, and mcp gateway</p>
                 <div class="splash-stats">
                     <div><span class="stat-label">consts</span><span class="stat-val">7</span></div>
-                    <div><span class="stat-label">types</span><span class="stat-val">9</span></div>
-                    <div><span class="stat-label">spaces</span><span class="stat-val">24</span></div>
+                    <div><span class="stat-label">types</span><span class="stat-val">10</span></div>
+                    <div><span class="stat-label">spaces</span><span class="stat-val">23</span></div>
                     <div><span class="stat-label">insts</span><span class="stat-val">2</span></div>
                     <div><span class="stat-label">rewrites</span><span class="stat-val">0</span></div>
                 </div>
@@ -485,7 +485,7 @@ bin/metatron</code></pre>
                 <p class="text-muted splash-desc">the ui instruction set</p>
                 <div class="splash-stats">
                     <div><span class="stat-label">consts</span><span class="stat-val">0</span></div>
-                    <div><span class="stat-label">types</span><span class="stat-val">0</span></div>
+                    <div><span class="stat-label">types</span><span class="stat-val">1</span></div>
                     <div><span class="stat-label">spaces</span><span class="stat-val">8</span></div>
                     <div><span class="stat-label">insts</span><span class="stat-val">3</span></div>
                     <div><span class="stat-label">rewrites</span><span class="stat-val">0</span></div>
@@ -513,9 +513,19 @@ bin/metatron</code></pre>
 <a href="#" class="btn btn-primary btn-square back-to-top"><i class="bi bi-caret-up-fill"></i></a>
 
 <script>
+    import mtron from './highlight/languages/mtron.min.js';
+    import java from './highlight/languages/java.min.js';
+    import bash from './highlight/languages/bash.min.js';
+    import sql from './highlight/languages/sql.min.js';
+    import json from './highlight/languages/json.min.js';
+    hljs.registerLanguage('mtron', mtron);
+    hljs.registerLanguage('java', java);
+    hljs.registerLanguage('bash', bash);
+    hljs.registerLanguage('sql', sql);
+    hljs.registerLanguage('json', json);
     hljs.configure({
-        defaultLanguage: 'mtron', // Set your preferred default language
-        ignoreUnescapedHTML: true
+        ignoreUnescapedHTML: true,
+        languages: ['mtron','java','bash','sql','json']
     });
     hljs.addPlugin(new CopyButtonPlugin({
         callback: function(text, el) {
@@ -557,9 +567,10 @@ bin/metatron</code></pre>
             button.classList.toggle("active")
         });
     });
-    document.querySelectorAll('code').forEach(block => {
+    hljs.highlightAll();
+    /*document.querySelectorAll('code').forEach(block => {
         hljs.highlightBlock(block);
-    });
+    });*/
 
     // ── Vanilla JS tab switching (replaces Zepto) ─────────────────
     function initTabs() {

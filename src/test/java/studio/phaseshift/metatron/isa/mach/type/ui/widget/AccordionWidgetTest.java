@@ -13,7 +13,7 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.mach.ui.uiInstSet.UI_ACCORDIAN_TID;
+import static studio.phaseshift.metatron.isa.mach.ui.uiInstSet.UI_ACCORDION_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -48,7 +48,7 @@ public class AccordionWidgetTest extends AbstractMetatronTest {
                 uri("title"), str("T"),
                 uri("body"), objs(str("line1"), str("line2"))
         );
-        final AccordionWidget a = new AccordionWidget(jvm, UI_ACCORDIAN_TID, null);
+        final AccordionWidget a = new AccordionWidget(jvm, UI_ACCORDION_TID, null);
         final String r = a.format();
         assertTrue(r.contains("line1"), "body should contain line1 in: " + r);
         assertTrue(r.contains("line2"), "body should contain line2 in: " + r);

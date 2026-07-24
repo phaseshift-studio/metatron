@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -52,6 +52,7 @@ import java.util.function.Function;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.furi.q.QCollection.MIMEQ_PATTERN;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.type.Inst.INST_TYPE;
@@ -203,7 +204,8 @@ public class httpSpace extends AbstractSpace<HttpServer> {
                 try {
                     exchange.sendResponseHeaders(500, 0);
                     exchange.close();
-                } catch (final IOException ignored) {}
+                } catch (final IOException ignored) {
+                }
             }
         });
     }
@@ -270,7 +272,8 @@ public class httpSpace extends AbstractSpace<HttpServer> {
                     if (local.hasNext())
                         return local;
                 }
-            } catch (final Exception ignored) {}
+            } catch (final Exception ignored) {
+            }
 
             // 2 — Remote web fetch via Jsoup
             try {
@@ -310,21 +313,25 @@ public class httpSpace extends AbstractSpace<HttpServer> {
         };
     }
 
+    @Override
+    public Obj write(final fURI vid, final Obj obj) {
+        return this.directWriter().apply(vid, obj);
+    }
+
     /**
      * Write to the http:// address space.
-     * If the URI matches this space's pattern, routes to a local space.
-     * Otherwise POSTs to the remote server via HttpClient.
+     * POSTs to the remote server via HttpClient.
      */
     @Override
     public BiFunction<fURI, Obj, Obj> directWriter() {
         return (pattern, obj) -> {
             // 1 — Try local route
-            if (pattern.test(this.pattern)) {
+           /* if (pattern.test(this.pattern)) {
                 final fURI location = Space.Helper.routeFromSpace(pattern.scheme(null).host(null), this.routes());
                 if (location != null && !location.toString().isEmpty()) {
                     return Router.global().write(location, obj);
                 }
-            }
+            }*/
 
             // 2 — Remote POST via HttpClient
             try {
@@ -336,11 +343,12 @@ public class httpSpace extends AbstractSpace<HttpServer> {
                         .build();
                 final HttpResponse<byte[]> response;
                 try (final HttpClient client = HttpClient.newHttpClient()) {
+                    LOG.info(request);
                     response = client.send(request, HttpResponse.BodyHandlers.ofByteArray());
                 }
-                final Optional<String> contentType = response.headers().firstValue(MIME.MIMEType.VALUE);
+                final Optional<String> contentType = pattern.hasQ(MIMEQ_PATTERN) ? Optional.of(pattern.q(MIMEQ_PATTERN)) : response.headers().firstValue(MIME.MIMEType.VALUE);
                 if (contentType.isPresent())
-                    return MIME.MIMEType.of(contentType.get()).fromBytes(response.body());
+                    return MIME.MIMEType.of(contentType.get(), MIME.MIMEType.TEXT_PLAIN).serializer().inputBytes(response.body());
                 return jnt(response.statusCode());
             } catch (final Exception e) {
                 throw MTronException.of(e);

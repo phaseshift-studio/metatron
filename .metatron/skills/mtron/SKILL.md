@@ -64,6 +64,7 @@ URIs form a tree. Use this to climb and descend through the environment:
 Do not guess at instruction signatures. Every instruction has documentation attached to it via `?docq`. **Read the documentation of the la-palette you are about to use.**
 
 *   **Full Language Ref**: `references/mtron-language-reference.md`
+*   **UI Architecture (Java)**: `references/metatron-ui-architecture.md` — Widget lifecycle, JRec state bridge, Style system, FloatingSurface, uiInstSet registration.  How to create/modify widgets.
 *   **Casting/Types**: Use `.as(type::T)` for structural validation during projection.
 *   **Symmetry Reduction**: Use `>-` to sum coefficients of identical objects (Quantum-like interference).
 

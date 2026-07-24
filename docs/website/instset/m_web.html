@@ -257,7 +257,7 @@ bin/metatron</code></pre>
     </div>
     <div class="text-light"></div>
     <div class="instset-accordion-wrapper">
-        <div class="accordion accordion-flush" id="accordianInstSet">
+        <div class="accordion accordion-flush" id="accordionInstSet">
             <div class="accordion-item">
                 <h2 class="accordion-header" id="headingOne">
                     <button class="accordion-button collapsed" type="button"
@@ -267,7 +267,7 @@ bin/metatron</code></pre>
                     </button>
                 </h2>
                 <div id="flush-collapseOne" class="accordion-collapse collapse"
-                    aria-labelledby="flush-headingOne" data-bs-parent="#accordianInstSet">
+                    aria-labelledby="flush-headingOne" data-bs-parent="#accordionInstSet">
                     <div class="accordion-body">
                         <pre><code>instset::[
  pattern=&gt;/m/web/#,
@@ -282,7 +282,7 @@ bin/metatron</code></pre>
   [remote_console=&gt;inst()]@helper,
   obj_xml::[=&gt;]@obj_xml,
   obj_html::[=&gt;]@obj_html,
-  obj_json::[=&gt;]@obj_json,
+  obj_json::[density=&gt;&#39;OPAQUE&#39;,wrap_uri=&gt;true,bias_towards_uri=&gt;true,bias_towards_objs=&gt;false]@obj_json,
   obj_markdown::[=&gt;]@obj_markdown,
   obj_text::[=&gt;]@obj_text,
   /m/mach/io/serializer/mtron::[
@@ -295,11 +295,11 @@ bin/metatron</code></pre>
     bytes=&gt;60,
     fail=&gt;60],
    justify=&gt;true]@/m/mach/io/serializer/string/clean,
-  /m/mach/io/serializer/bytebuffer::[=&gt;]@/m/mach/io/serializer/bytebuffer,
-  /m/mach/io/serializer/json/simple::[wrap_uri=&gt;true]@/m/mach/io/serializer/json/simple,
+  bytebuffer::[=&gt;]@bytebuffer,
+  obj_json::[density=&gt;&#39;OPAQUE&#39;,wrap_uri=&gt;true,bias_towards_uri=&gt;true,bias_towards_objs=&gt;false]@obj_json,
   obj_bson::[=&gt;]@obj_bson],
  type=&gt;[mime::T,xml::T,html::T,json::T,css::T,markdown::T,java::T,serializer::T,obj_mtron::T,obj_simple_json::T,...(23 more)],
- inst=&gt;[ping?/m/math/time&lt;=#{?}(uri::T),format?str&lt;=markdown(),as?json&lt;=str(json::T),as?xml&lt;=str(xml::T),as?html&lt;=str(html::T),as?markdown&lt;=str(markdown::T),as?java&lt;=str(java::T),as?str&lt;=java(str::T),as?str&lt;=html(str::T),as?str&lt;=markdown(str::T),...(3 more)]]@/m/web</code></pre>
+ inst=&gt;[ping?/m/math/time&lt;=#{?}(uri::T),format?str&lt;=markdown(),as?json&lt;=str(json::T),as?rec&lt;=json(rec::T),as?json&lt;=rec(json::T),as?xml&lt;=str(xml::T),as?html&lt;=str(html::T),as?markdown&lt;=str(markdown::T),as?java&lt;=str(java::T),as?str&lt;=java(str::T),...(4 more)]]@/m/web</code></pre>
                     </div>
                 </div>
             </div>
@@ -307,7 +307,7 @@ bin/metatron</code></pre>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <a href="#consts" class="btn btn-outline-primary">Consts <span class="pill-label badge bg-secondary">7</span></a><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">9</span></a><a href="#spaces" class="btn btn-outline-primary">Spaces <span class="pill-label badge bg-info">24</span></a><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">2</span></a><button class="btn btn-outline-secondary" disabled>Rewrites <span class="pill-label badge bg-dark">0</span></button>
+        <a href="#consts" class="btn btn-outline-primary">Consts <span class="pill-label badge bg-secondary">7</span></a><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">10</span></a><a href="#spaces" class="btn btn-outline-primary">Spaces <span class="pill-label badge bg-info">23</span></a><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">2</span></a><button class="btn btn-outline-secondary" disabled>Rewrites <span class="pill-label badge bg-dark">0</span></button>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="card">
@@ -343,6 +343,9 @@ bin/metatron</code></pre>
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a><a href="#__m__web__serializer" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">serializer</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">mime</small></div><div class="d-flex flex-wrap"><a href="#__m__web__mime__json" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">json</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">serializer</small></div><div class="d-flex flex-wrap"><a href="#__m__web__serializer__obj_bson" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">obj_bson</span>
@@ -388,9 +391,6 @@ bin/metatron</code></pre>
     <span class="pill-label badge bg-info text-dark ms-2">S</span>
 </a><a href="#__m__web__mime__java" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">java</span>
-    <span class="pill-label badge bg-info text-dark ms-2">S</span>
-</a><a href="#__m__web__mime__json" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">json</span>
     <span class="pill-label badge bg-info text-dark ms-2">S</span>
 </a><a href="#__m__web__mime__markdown" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">markdown</span>
@@ -484,7 +484,7 @@ bin/metatron</code></pre>
         <span class="code text-secondary fw-bold">obj_json</span>
         <small class="text-muted code">/m/web/serializer/obj_json</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">obj_json::[=&gt;]@obj_json</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">obj_json::[density=&gt;&#39;OPAQUE&#39;,wrap_uri=&gt;true,bias_towards_uri=&gt;true,bias_towards_objs=&gt;false]@obj_json</code></pre></div>
     
 </div><div class="card mb-3" id="__m__web__serializer__obj_markdown">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -509,8 +509,21 @@ bin/metatron</code></pre>
     
 </div>
 </div><div class="container-xxl mb-4" id="types">
-    <h3 class="text-primary mb-3">Types <span class="pill-label badge bg-primary">9</span></h3>
-    <div class="card mb-3" id="__m__web__space__httpspace__mcp__mcp_emulator_http">
+    <h3 class="text-primary mb-3">Types <span class="pill-label badge bg-primary">10</span></h3>
+    <div class="card mb-3" id="__m__web__mime__json">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">json::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__str" class="instset-doc-small-code text-info code">/m/str::T</a></span>
+        </span>
+        <small class="text-muted code">/m/web/mime/json</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(str::T){&lt;j&gt;}]@/m/web/mime/json</code></pre></div>
+    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">a json document</p>
+</div>
+</div><div class="card mb-3" id="__m__web__space__httpspace__mcp__mcp_emulator_http">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">mcp_emulator_http::T</span>
@@ -689,7 +702,7 @@ obj_bytebuffer::[=&gt;]</code></pre>
 </div>
 </div>
 </div><div class="container-xxl mb-4" id="spaces">
-    <h3 class="text-primary mb-3">Spaces <span class="pill-label badge bg-info">24</span></h3>
+    <h3 class="text-primary mb-3">Spaces <span class="pill-label badge bg-info">23</span></h3>
     <div class="card mb-3" id="__m__web__client">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <a href="m_web_client.html" class="code text-primary fw-bold text-decoration-none">client</a>
@@ -798,23 +811,6 @@ httpspace webserver is furi aware and will perform server-side extraction of nes
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a rec encoding of a java source file</p>
-</div>
-</div><div class="card mb-3" id="__m__web__mime__json">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <a href="m_web_mime_json.html" class="code text-primary fw-bold text-decoration-none">json</a>
-        <small class="text-muted code">/m/web/mime/json</small>
-    </div>
-    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[uri::T=&gt;inside([
-  isa(noobj{0}::T),
-  isa(bool::T),
-  isa(int::T),
-  isa(str::T),
-  isa(uri::T),
-  isa(lst::T),
-  isa(rec::T)])]]@/m/web/mime/json</code></pre></div>
-    
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">a rec encoding of a json document</p>
 </div>
 </div><div class="card mb-3" id="__m__web__mime__markdown">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1155,9 +1151,19 @@ virtual::[code=&gt;ping(localhost:8777)-&lt;{@x+*0,@y+1},loop=&gt;second::2.0]</
 <a href="#" class="btn btn-primary btn-square back-to-top"><i class="bi bi-caret-up-fill"></i></a>
 
 <script>
+    import mtron from './highlight/languages/mtron.min.js';
+    import java from './highlight/languages/java.min.js';
+    import bash from './highlight/languages/bash.min.js';
+    import sql from './highlight/languages/sql.min.js';
+    import json from './highlight/languages/json.min.js';
+    hljs.registerLanguage('mtron', mtron);
+    hljs.registerLanguage('java', java);
+    hljs.registerLanguage('bash', bash);
+    hljs.registerLanguage('sql', sql);
+    hljs.registerLanguage('json', json);
     hljs.configure({
-        defaultLanguage: 'mtron', // Set your preferred default language
-        ignoreUnescapedHTML: true
+        ignoreUnescapedHTML: true,
+        languages: ['mtron','java','bash','sql','json']
     });
     hljs.addPlugin(new CopyButtonPlugin({
         callback: function(text, el) {
@@ -1199,9 +1205,10 @@ virtual::[code=&gt;ping(localhost:8777)-&lt;{@x+*0,@y+1},loop=&gt;second::2.0]</
             button.classList.toggle("active")
         });
     });
-    document.querySelectorAll('code').forEach(block => {
+    hljs.highlightAll();
+    /*document.querySelectorAll('code').forEach(block => {
         hljs.highlightBlock(block);
-    });
+    });*/
 
     // ── Vanilla JS tab switching (replaces Zepto) ─────────────────
     function initTabs() {

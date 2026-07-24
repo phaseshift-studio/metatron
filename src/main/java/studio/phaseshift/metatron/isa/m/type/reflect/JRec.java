@@ -132,7 +132,7 @@ public class JRec<OBJECT> extends MObj implements Rec {
                 temp.put(uri(m.annotation().key()), this.invokeMethod(this.sjvm, this.createArgs(m), m));
             } else {
                 final fURI jrecKey = f(m.annotation().key());
-                final fURI jinstTID = this.vid() == null ? jrecKey : this.vid().extend(jrecKey);
+                //final fURI jinstTID = this.vid() == null ? jrecKey : this.vid().extend(jrecKey);
                 temp.put(uri(m.annotation().key()),
                         instLambda(f(m.annotation.dom()), f(m.annotation.rng()),
                                 (lhs, inst) -> this.invokeMethod(this.sjvm, this.createArgs(m), m)));

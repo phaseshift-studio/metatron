@@ -36,7 +36,6 @@ public interface Widget<W extends Widget<W>> extends Stylable<W>, AutoCloseable,
 
     @Override
     default void close() {
-
     }
 
     W cursor(final Cursor cursor);
@@ -47,7 +46,7 @@ public interface Widget<W extends Widget<W>> extends Stylable<W>, AutoCloseable,
      * override this to enter a modal input loop.
      *
      * <p>If the widget's {@link Stylable.Style} carries a
-     * {@link Stylable.Style#floatAt(FloatingSurface.Anchor, int) float anchor},
+     * {@link Stylable.Style#floatAt(FloatingSurface.Anchor, int, int, int) float anchor},
      * the widget is pinned to the console's {@link FloatingSurface} instead
      * of being rendered in-place.
      */
@@ -55,10 +54,9 @@ public interface Widget<W extends Widget<W>> extends Stylable<W>, AutoCloseable,
     default void run() {
         final var style = this.getStyle();
         if (Console.LOCAL_INSTANCE != null && style.hasFloat()) {
-            final int w = style.floatWidth();
-            final int width = w > 0 ? w : this.width();
+            final int floatW = style.width() > 0 ? style.width() : this.width();
             this.floatAt(Console.LOCAL_INSTANCE.getFloatingSurface(),
-                    style.floatAnchor(), width);
+                    style.anchor(), floatW, style.top(), style.left());
             Console.LOCAL_INSTANCE.getFloatingSurface().render();
         } else {
             Graphitty.out(Console.getTerminal().output(), this.format() + "\n");
@@ -137,6 +135,17 @@ public interface Widget<W extends Widget<W>> extends Stylable<W>, AutoCloseable,
     @SuppressWarnings("unchecked")
     default W floatAt(final FloatingSurface surface, final FloatingSurface.Anchor anchor, final int width) {
         surface.add(this, anchor, width);
+        return (W) this;
+    }
+
+    /**
+     * Pin this widget to a terminal corner with offsets (CSS-style
+     * {@code top} and {@code left} from the anchor edge).
+     */
+    @SuppressWarnings("unchecked")
+    default W floatAt(final FloatingSurface surface, final FloatingSurface.Anchor anchor,
+                      final int width, final int top, final int left) {
+        surface.add(this, anchor, width, top, left);
         return (W) this;
     }
 

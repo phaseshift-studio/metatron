@@ -7,7 +7,7 @@
 :favicon: ./favicon.ico
 :highlightjsdir: highlight
 :source-highlighter: ./highlight.js
-:highlightjs-languages: mtron,sql
+:highlightjs-languages: mtron, sql, json, bash, java
 :highlightjs-theme: monokai
 :source-language: mtron
 :icons: font
