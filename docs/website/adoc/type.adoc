@@ -1,58 +1,163 @@
 [discrete]
-[[sec-type-system]]
-== Structural Type System
+== A Hybrid Structural/Nominal Type System
 
-Every obj in mtron has a **type**. A https://en.wikipedia.org/wiki/Data_type[type] is either a base type or some constraint on a base type. For instance, `int::5` is a https://en.wikipedia.org/wiki/Value_(computer_science)[value] with type `int::T` (a https://en.wikipedia.org/wiki/Primitive_data_type[base type]). However, it is also an `int::T[?<10]` (a https://en.wikipedia.org/wiki/Refinement_type[refinement] of `int::T`). In this case, the refinement states that a value of this type is any `int::T` less than 10. A similar, though more consequential example is the set of natural numbers latexmath:[\mathbb{N}] being a subset of the set of integers latexmath:[\mathbb{Z}]. That is, latexmath:[\mathbb{N} \subset \mathbb{Z}]. The set of natural numbers is defined in mtron by specifying a https://en.wikipedia.org/wiki/Predicate_(logic)[predicate] (or constraint) on the set of integers.
+[discrete]
+[%collapsible]
+.documentation setup
+====
+[mtron]
+----
+int::T[?>0]@nat
+----
+====
 
+Every obj in mtron has a **type**. A https://en.wikipedia.org/wiki/Data_type[type] is either a base type or a https://en.wikipedia.org/wiki/Refinement_type[refinement] on a base type. For instance, `int::5` is a https://en.wikipedia.org/wiki/Value_(computer_science)[value] with type `int::T` (a https://en.wikipedia.org/wiki/Primitive_data_type[base type]). An example refinement of `int::T` is the type `int::T[?<10]`. The refinement type states that a value of this type is any `int::T` less than 10. A similar, though more consequential example is the set of natural numbers latexmath:[\mathbb{N}] being a subset of the set of integers latexmath:[\mathbb{Z}]. That is, latexmath:[\mathbb{N} \subset \mathbb{Z}]. The set of natural numbers is defined in mtron as:
+
+.a structural type
 [source,mtron,role="center"]
 ----
           int::T[?>0]@nat
           │    │ │    │
-          │    │ │    └──────────── type vid
+          │    │ │    └──────────── type vid (type being defined)
           │    │ └───────────────── predicate inst pred?int{?}<=int(int::T)
           │    └─────────────────── type token
-          └──────────────────────── refined type tid
+          └──────────────────────── type tid (type being refined)
 ----
 
-Non-base types will be notated `B::T < A::T`: " `B::T` shares the same, though fewer of the values of `A::T`." When notated
-`B::T == A::T`: " `B::T` has the same values as `A::T` ". There exists only a nominal difference between `A::T` and `B::T` in the latter relation. `A::T` and `B::T` can be used interchangeably.
+Non-base types will be notated `B::T < A::T`: " `B::T` captures a subset of the values captured by `A::T`." When notated
+`B::T == A::T`: " `B::T` has the same values as `A::T` ". When two types have the same values but different names (vids) There exists only a https://en.wikipedia.org/wiki/Nominal_type_system[nominal] difference between `A::T` and `B::T`. In such situation, values of `A::T` and values of `B::T` are different in that they are being type/classified as being distinct through label (through name). As an example, the type `int::T@age` is not the same as `int::T@zipcode`. The structure of a nominal type is specified as:
+
+.a nominal type
+[source,mtron,role="center"]
+----
+          int::T@nat
+          │    |  │
+          │    │  └──────────────── type vid (type being named)
+          │    └─────────────────── type token
+          └──────────────────────── type tid (type being renamed)
+----
+
+IMPORTANT: The distinction between structural and nominal types depends solely on the existence of a predicate which specifies the structural requirements a value must satisfy to be considered that type. With no constraint on structure, then the implied constraint is on vid, i.e. name.
 
 [discrete]
-[[sec-type-predicates]]
-=== type predicates (pred)
+=== Sturctural Types
 
-A type predicate is any `inst` of the form
+[discrete]
+==== Type Predicates
+
+A https://en.wikipedia.org/wiki/First-order_logic[predicate] is any `inst` of the form
 
 \[
 \tt pred?A\{?\} \Leftarrow A()\{ code \},
 \]
 
-such that the lhs `A` is inspected by the `code` of `pred` and emits either an `A::T` (pass) or `A{0}::T` (fail) as the rhs obj. The most overloaded instruction in mtron is `as()`. This instruction alters the https://en.wikipedia.org/wiki/Nominal_type_system[nominal type] of an obj. This doesn't change it's existential type as an obj has an infinite amount of types and such naming is practical as the "working type" of the obj. Examples of `pred()` and `as()` in action are presented below.
+such that a lhs value of type `A` is mapped by `code` to a rhs value of either type `A::T` (*true*) or `A{0}::T` (*false*). Hence, `A{?}` which is sugar for `A{0,1}`.
+
+IMPORTANT: A structural type is any type defined with a predicate.
 
 [mtron]
 ----
-[-- refining int::T --]
-4.as(int::T[?>0]@nat)
-[ERROR] -4.as(nat::T)
-[-- refining rec::T  --]
-[name=>'snowbutt',age=>7].as(rec::T[?[name=>str::T,age=>int::T]@chicken)
-[name=>'punky',age=>'four'].as(chicken::T)
+int::4                                         [-- <1> --]
+nat::4                                         [-- <2> --]
+int::-4                                        [-- <3> --]
+[ERROR] nat::-4                                [-- <4> --]
+rec::T[?[name=>str::T,age=>int::T]]@chicken    [-- <5> --]
+chicken::[name=>'snowbutt',age=>7]             [-- <6> --]
+[ERROR] chicken::[name=>'punky',age=>'four']   [-- <7> --]
 ----
+<1> The value 4 is an integer.
+<2> The value 4 is a natural number.
+<3> The value -4 is an integer.
+<4> The value -4 is *not* a natural number.
+<5> A chicken is defined as a `rec::T` with a name and an age.
+<6> Snowbutt is a 7 year old chicken.
+<7> Punky's age is an string, not an integer and thus, not a chicken by definition.
 
 [discrete]
-==== hierarchical type checking
+==== Structural Type Hierarchy
 
-`C::T < B::T < A::T`.
+A structural type can be refined with further structural requirements. An example is the concept of age. No human being in modern recorded history has been reported to be over the age of 120 years old. Furthermore, no person has a negative age as at birth, the age is 0. Together, age can be defined as any natural number less than 120 (`0 > age < 120`).
+
+NOTE: The examples below make use of mtron's `as?B\<=A(B::T)` instruction. For the purpose of these examples, `as()` is being used to determine whether a value meets the structural requirements of the respective type. The `as()` instruction also handles type constructors, and this aspect of a type is discussed later.
 
 [mtron]
 ----
-int::T[?>0]@nat
-nat::T[?<120]@age
+int::T[?>0]@nat                                 [-- <1> --]
+nat::T[?<120]@age                               [-- <2> --]
+21.as(int::T).as(nat::T).as(age::T)             [-- <3> --]
+[ERROR] -21.as(int::T).as(nat::T).as(age::T)    [-- <4> --]
+[ERROR] 121.as(int::T).as(nat::T).as(age::T)    [-- <5> --]
+rec::T[?[name=>str::T,age=>age::T]]@chicken     [-- <6> --]
+chicken::[name=>'snowbutt',age=>7]              [-- <7> --]
+[ERROR] chicken::[name=>'punky',age=>444]       [-- <8> --]
+----
+<1> A natural number is any integer greater than 0.
+<2> An age is any natural number less than 120.
+<4> 21 is an int, nat, and age.
+<5> -21 is an int, but not a nat and thus, not an age.
+<6> 121 is an int, nat, but not an age.
+<7> A chicken's age has been redefined to be an `age::T`.
+<8> Snowbutt is still, according to the new definition, a chicken.
+<9> Punky's specified age places him outside the definition of a chicken. 
+
+=== Nominal Types
+
+As stated in at the beginning of this document, mtron supports both structural and nominal type specifications. A nominal type is any type with no specified predicate. This means that all the base types (e.g. `int::T`, `bool::T`, `rec::T`, etc.) are nominal types. A base type is any type whose tid is equal to its vid. For example, and analogously for the other base types, `int::T` is defined as:
+
+[mtron]
+----
+int::T@int
 ----
 
+From mtron's vantage point at it's level of abstraction in computing, there is nothing in the definition of a base type that distinguishes it from another base type save the vid/name.
+
+IMPORTANT: An `int` is an `int` because it is named `int`.
+
+[mtron]
+----
+str::T@re                    [-- <1> --]
+*regex                       [-- <2> --]
+'marko'.regex('m.{3}o')      [-- <3> --]
+'marko'.regex(re::'m.{3}o')  [-- <4> --]
+----
+<1> `re::T` is a regular expression string.
+<2> `regex` is an instruction that takes a `re::T` as an argument.
+<3> a `str::T` is not an `re::T` nominally.
+<4> `regex` with with a particular type of nominally defined string.
+
+
+==== Integrating Nominal Types with Structural Types
+
+With structural types, any `rec::T` can be a `chicken::T` as long as it meets the structural requirements of `chicken::T`. This means, that if a `rec::T` denotes (in the mind of the engineer) a  human (who has a name and age), that human is also a chicken. This can be problematic. For those situations when the value has no other discriminating qualities for a predicate to leverage, then an assigned type label becomes a useful taxonomical criteria.
+
+[mtron]
+----
+rec::T[?[name=>str::T,age=>age::T]]@being               [-- <1> --]
+being::T@human                                          [-- <2> --]
+being::T@chicken                                        [-- <3> --]
+[ERROR] human::[name=>'marko',age=>29].as(chicken::T)   [-- <4> --]
+[ERROR] chicken::[name=>'snowbutt',age=>7].as(human::T) [-- <5> --]
+[name=>'fuzzy feet',age=>2].as(chicken::T)              [-- <6> --]
+'punky'.as(chicken::T)                                  [-- <7> --]
+----
+<1> A being is a `rec::T` with a name and age.
+<2> A person is a type of being.
+<3> A chicken is a type of being.
+<4> The person named marko is not a chicken.
+<5> The chicken name snowbutt is not a person.
+<6> A base type value can be nominalized...
+<7> ...as long as the base type of the nominal type matches.
+
+Structurally speaking, there is nothing that prevents the person named marko from also being a chicken. However, nominally, that is not the case. The person named marko has been nominally relegated to the taxonomical classification of a person. In this way, nominal and structural types co-exist in mtron in order to satisfy two different understandings of type (type by name and type by strufcture).
+
+IMPORTANT: Realize the distinction between structural and nominal types is one of convenience. It is true that there exists structural features of marko that make this  person not a chicken (e.g. DNA, weight and size, etc.). However, if the system operating with such types can not make that distinction (perhaps no sensors to do so), then an explicit statement of the fact that marko is not a chicken allows such unrefined systems (literally) to operate effectively using said classification. This is the difference between **experiential knowledge** (structural) and **authoratative knowledge** (nominal).
+
+
+
 [discrete]
-[[sec-type-constructors]]
-=== type constructors (ctor)
+=== Type Constructors
+
+
 
 [source,mtron,role="center"]
 ----

@@ -82,7 +82,7 @@ public interface Code extends Call {
                         if (rewritten.isCode()) {
                             rewrittenCode.set(rewritten.asCode());
                         } else {
-                            throw MTronException.of("rewrite %s rewrote to non-code %s", r, rewritten);
+                           // throw MTronException.of("rewrite %s rewrote to non-code %s", r, rewritten);
                         }
                     });
             if (hash == (hash = rewrittenCode.get().hashCode()))

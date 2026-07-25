@@ -509,10 +509,15 @@ public class mInstSet extends AbstractInstSet {
                         docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("map_nest"),
                                 code -> code.selfJVM(
                                         Rewriter.search(code.insts())
-                                                .match(instB(MAP_INST_TID, lst(instA(MAP_INST_TID))).insts())
+                                                .match(instB(MAP_INST_TID.dom(ALL.maybeSome()).rng(ALL.maybeSome()), lst(instB(MAP_INST_TID.dom(ALL.maybeSome()).rng(ALL.maybeSome()),lst(ALL_TYPE)))).insts())
                                                 .repeat()
                                                 .rewrite(map -> map.values().stream().map(objs -> objs.arg(0).asInst()).toList())).asCode()), "flattens nested map instructions"),
-
+                       docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("map_inst"),
+                                code -> code.selfJVM(
+                                        Rewriter.search(code.insts())
+                                                .match(instB(MAP_INST_TID.dom(ALL.maybeSome()).rng(ALL.maybeSome()), lst(instB(M_ISA_INST_TID.extend("#"),lst(T(ALL.maybeSome()))))).insts())
+                                                .repeat()
+                                                .rewrite(map -> map.values().stream().map(objs -> objs.arg(0).asInst()).toList())).asCode()), "flattens a mapping of an inst to the inst"),
                         // Eliminate else() after non-maybe instruction (dead code)
                         // Pattern: .count().else(x) → .count() (count always returns a value)
                         InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("else_after_count"),
@@ -771,9 +776,7 @@ public class mInstSet extends AbstractInstSet {
                 Sugar.prefix("=?=", List.of(WHERE_INST_TID), 1),
                 Sugar.prefix("%==", List.of(GROUP_INST_TID), 1),
                 Sugar.prefix("==", List.of(SELECT_INST_TID), 1),
-                Sugar.wrap("=", "=>", List.of(UPDATE_INST_TID), 2), // TODO: gut
-                Sugar.prefix("=~", List.of(MATCHES_INST_TID), 1), // TODO: gut
-                Sugar.prefix("?=~", List.of(IS_INST_TID, MATCHES_INST_TID), 1), // TODO: gut
+                Sugar.prefix("?~", List.of(IS_INST_TID, MATCHES_INST_TID), 1),
                 Sugar.prefix("?=", List.of(IS_INST_TID, EQ_INST_TID), 1),
                 Sugar.prefix("?>=", List.of(IS_INST_TID, GTE_INST_TID), 1),
                 Sugar.prefix("?>", List.of(IS_INST_TID, GT_INST_TID), 1),
@@ -790,7 +793,6 @@ public class mInstSet extends AbstractInstSet {
                 Sugar.prefix("*", List.of(FROM_INST_TID), 1),
                 Sugar.prefix(">|", List.of(BARRIER_INST_TID), 1),
                 Sugar.prefix(">|", List.of(BARRIER_INST_TID), 0),
-                Sugar.prefix(">>-", List.of(RNG_INST_TID), 0), // TODO: gut
                 Sugar.prefix(">-", List.of(MERGE_INST_TID), 1),
                 Sugar.prefix(">-", List.of(MERGE_INST_TID), 0),
                 Sugar.prefix("-<|", List.of(CHOOSE_INST_TID), 1),

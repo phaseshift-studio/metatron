@@ -426,7 +426,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
         return this.activePane;
     }
 
-    @JRecElement(key = "pane", rng = "/m/lst[/m/mach/console/pane{*}]", mimic = JRecElement.Mimic.FIELD)
+    @JRecElement(key = "pane", rng = "/m/lst[rec{*}]", mimic = JRecElement.Mimic.FIELD)
     //@JInst(tid = "pane", dom = "#{?}", rng = "/m/lst", attach = JInst.Attach.OBJ)
     public List<Pane> getAllPanes() {
         return null == this.paneRoot ? new ArrayList<>() : this.paneRoot.getAllPanes();

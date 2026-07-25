@@ -133,7 +133,7 @@ public interface Inst extends Call {
     }
 
     default Poly<?, ?> args() {
-        return this.jvm().get0();
+        return null == this.jvm().get0() ? lst() : this.jvm().get0();
     }
 
     default Inst args(final Poly<?, ?> args) {
@@ -266,6 +266,35 @@ public interface Inst extends Call {
             LOG.debug("resolved %s from global router", resolved2);
             final Inst resolve2 = resolved2.<Inst>as().args(domainInst.args()).c(domainInst.c()); //.resolve(lhs);
             return resolve2.hasRng() ? resolve2 : resolve2.rng(T(ALL_STAR));
+        }
+    }
+
+    @Override
+    default boolean test(final Obj other) {
+        if (!other.isInst())
+            return Obj.Helper.testObjs(this, other);
+        else {
+            if (!this.tid().basePath().test(other.tid().basePath()))
+                return false;
+            if (!this.tid().dom().isGeneric() && !other.tid().dom().isGeneric()) {
+                if (!this.dom().test(other.dom()))
+                    return false;
+            }
+            if (!this.tid().rng().isGeneric() && !other.rng().dom().isGeneric()) {
+                if (!this.rng().test(other.rng()))
+                    return false;
+            }
+            final Inst otherInst = other.asInst();
+            final int maxArgs = (int) Math.max(this.args().count(), otherInst.args().count());
+            for (int i = 0; i < maxArgs; i++) {
+                final Obj aArg = this.arg(i);
+                final Obj bArg = otherInst.arg(i);
+                if (!aArg.test(bArg))
+                    return false;
+            }
+            if (this.hasf() && otherInst.hasf())
+                return Objects.equals(this.f(), otherInst.f());
+            return true;
         }
     }
 
@@ -686,6 +715,16 @@ public interface Inst extends Call {
 
         public static f of(final Function<Obj, Obj> func) {
             return null == func ? null : new f(func);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(this.bi, this.func);
+        }
+
+        @Override
+        public boolean equals(final Object other) {
+            return other != null && (other.hashCode() == this.hashCode());
         }
 
         public Obj apply(final Obj lhs, final Inst cinst) {

@@ -209,7 +209,7 @@ public final class MtronDocPreprocessor {
             // ── Evaluate ──
             try {
                 TypeCheck.disable(TypeCheck.code_resolve, TypeCheck.inst_rng);
-                final Obj input = ObjmtronSerializer.singleNoClip().inputBytes(expr);
+                final Obj input = ObjmtronSerializer.singleNoClip().read(expr);
                 final Obj result = input.apply();
                 if (result.isFail() && !error) {
                     LOG.error("no [ERROR] modifier in code block (docs are buggy): %s\n\t[{{r}}bad expression{{X}}]: %s\n", result, expr);

@@ -35,8 +35,9 @@ The l_palette is your instrument for surgical structural manipulation. It uses t
 | :--- | :--- | :--- |
 | `*uri` | Dereference / From | Access the node in the Cayley Graph. |
 | `uri -> obj` | Reference / To | Write a value to a node. |
-| `== [rules]` | SELECT | Surgical projection/mutation (Multiplicative $\\cdot$). |
+| `== [rules]` | SELECT | Surgical projection/transformation (Multiplicative $\\cdot$). |
 | `=?=[rules]` | WHERE | Structural verification/filtering (Additive $+$). |
+| `>>=[rules]` | UPDATE | Structural alteration/mutation (Anchored $@$). |
 | `>> n` | Index/Slice | Traversal into poly-structures (`lst`, `rec`). |
 
 ### The "Symmetry" Workflow

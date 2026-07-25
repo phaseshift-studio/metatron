@@ -103,7 +103,7 @@ public class uiInstSet extends AbstractInstSet {
                         docWrap(UI_CONSOLE_TYPE = Type.Builder.build()
                                 .tid(REC_TID)
                                 .vid(UI_CONSOLE_TID)
-                                .isaPredicate(rec())
+                                //.isaPredicate(rec())
                                 .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(UI_CONSOLE_TID), lst(T(REC_TID)), (lhs, inst) -> {
                                     final Console console = new Console(inst.arg(0).as(), inst.arg(0).vid());
                                     new ColonMenu(console).attach(rec());

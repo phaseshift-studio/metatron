@@ -122,22 +122,22 @@ private void sync() {
 
 Style is a JVM-backed rec.  Fields:
 
-| Field | Type | Description |
-|---|---|---|
-| `border` | URI | simple, continuous, rounded, none, thick, hash, asterisk, period |
-| `background` | str | Graphitty color macro e.g. `{{[R]}}` |
-| `foreground` | str | Graphitty color macro e.g. `{{g}}` |
-| `divider` | str | Column/row divider char |
-| `headerDivider` | str | Header divider char |
-| `pointer` | str | Selection pointer e.g. `{{r}}>` |
-| `anchor` | URI (coproduct) | top_left, top_right, bottom_left, bottom_right |
-| `width` | int | Display width in columns; 0 = natural |
-| `top` | int | Row offset from anchor edge (CSS top) |
-| `left` | int | Column offset from anchor edge (CSS left) |
-| `leftMargin` | int | Left margin |
-| `rightMargin` | int | Right margin |
-| `topMargin` | int | Top margin |
-| `bottomMargin` | int | Bottom margin |
+| Field | Type            | Description |
+|---|-----------------|---|
+| `border` | uri             | simple, continuous, rounded, none, thick, hash, asterisk, period |
+| `background` | str             | Graphitty color macro e.g. `{{[R]}}` |
+| `foreground` | str             | Graphitty color macro e.g. `{{g}}` |
+| `divider` | str             | Column/row divider char |
+| `headerDivider` | str             | Header divider char |
+| `pointer` | str             | Selection pointer e.g. `{{r}}>` |
+| `anchor` | uri (coproduct) | top_left, top_right, bottom_left, bottom_right |
+| `width` | int             | Display width in columns; 0 = natural |
+| `top` | int             | Row offset from anchor edge (CSS top) |
+| `left` | int             | Column offset from anchor edge (CSS left) |
+| `leftMargin` | int             | Left margin |
+| `rightMargin` | int             | Right margin |
+| `topMargin` | int             | Top margin |
+| `bottomMargin` | int             | Bottom margin |
 
 Float-related:
 ```java

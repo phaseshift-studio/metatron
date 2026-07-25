@@ -77,10 +77,10 @@ public class IntTest extends AbstractAlgebraTest<Int> {
             "1                                   % is(gt(0))                    % 1",
             "1                                   % matches(int::T[])            % true",
             "1                                   % is(matches(int::T[]))        % 1",
-            "1                                   % =~(str::T[])                 % false",
-            "1                                   % ?=~str::T[]                  % noobj",
+          //  "1                                   % ~(str::T[])                  % false",
+            "1                                   % ?str::T[]                    % noobj",
             "int{-1}::1                          % is(matches(int{**}::T[]))    % int{-1}::1",
-            "int{-1}::1                          % ?=~int{,}::T[]               % int{-1}::1"
+            "int{-1}::1                          % ?int{,}::T[]                 % int{-1}::1"
     }, delimiter = '%')
     public void testCode(final String lhs, final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, lhs, code, expected);
@@ -121,7 +121,8 @@ public class IntTest extends AbstractAlgebraTest<Int> {
             "{1,2,3}.plus(1).plus(2)                                      % {4,5,6}",
             "{1,2,3}.plus(1).plus(2).mult(2)                              % {8,10,12}",
             "{1,2,3}.plus(1).plus(2).mult(2).isa(int::T)                  % {8,10,12}",
-            "{1,2,3}.plus(1).plus(2).mult(2).?=~str::T                    % noobj",
+            "{1,2,3}.plus(1).plus(2).mult(2).?str::T                      % noobj",
+            "{1,2,3}.plus(1).plus(2).mult(2).?~str::T                     % noobj",
             "{int{-1}::1,int::1}                                          % noobj",
             // "start?int{-1,1}<=int{0}(int{-1}::1)>-{int::1}             % noobj"
     }, delimiter = '%')

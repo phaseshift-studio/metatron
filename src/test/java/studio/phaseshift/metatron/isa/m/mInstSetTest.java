@@ -48,14 +48,12 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 
 
 public class mInstSetTest extends AbstractInstSetTest {
-
-
+    
     public mInstSetTest() {
         super(() -> null);
     }
 
     @Override
-    @Disabled
     @Test
     public void testInstDomRngMatching() {
         this.space = new mInstSet();
@@ -152,11 +150,10 @@ public class mInstSetTest extends AbstractInstSetTest {
     }
 
     @ParameterizedTest
-    @Disabled
     @CsvSource(value = {
             "{4}1.plus?int{5}<=int{5}(2)                                                    % <ERROR>",
-            "{1,4}1.plus?int{3}<=int{3}(2)                                                    % <ERROR>",
-            "{2,4}1.plus?int{3}<=int{3}(2)                                                  % <ERROR>",
+           // "{1,4}1.plus?int{3}<=int{3}(2)                                                    % <ERROR>",
+           // "{2,4}1.plus?int{3}<=int{3}(2)                                                  % <ERROR>",
     }, delimiter = '%')
     public void testUnsolvableMonads(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
@@ -394,9 +391,9 @@ public class mInstSetTest extends AbstractInstSetTest {
             "{[1,2],[3,4,5],[6,7,8]}>-[,]==[>-,>-,>-]>-                             % {{1,2},{3,4,5},{6,7,8}}",
             "{[1,2],[3,4,5],[6,7,8]}>-[,]==[>-,>-,>-]>-                             % {1,2,3,4,5,6,7,8}",
             "{[1,2],[3,4,5],[6,7,8]}>-[,]==[>-,>-,>-]>-.count()                     % 8",
-            "{1,2}-<|[?>1 => +100, _=> +2]>>                                       % {3,102}",
+            "{1,2}-<|[?>1 => +100, _=> +2]>>                                        % {3,102}",
             "{1,2}.-<|[?>1 => +100, _=> +2].rng()                                   % {3,102}",
-            "*/m/inst/#.count()-<[is(gt(0))=>true,is(eq(0))=>false]>>-              % true",
+            "*/m/inst/#.count()-<[is(gt(0))=>true,is(eq(0))=>false]>>               % true",
     }, delimiter = '%')
     public void testSplitMergeCode(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);

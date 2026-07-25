@@ -18,7 +18,6 @@
 
 package studio.phaseshift.metatron.isa.m.type;
 
-import studio.phaseshift.metatron.util.ProjectionFailureException;
 import studio.phaseshift.metatron.algebra.Ring;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
@@ -26,6 +25,7 @@ import studio.phaseshift.metatron.isa.m.type.impl.MStr;
 import studio.phaseshift.metatron.isa.m.type.impl.MUri;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
+import studio.phaseshift.metatron.util.ProjectionFailureException;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.*;
@@ -133,7 +133,7 @@ public interface Uri extends Mono, Ring.O<Uri>, Comparable<Uri> {
     @Override
     default boolean test(final Obj obj) {
         if (obj.isUri())
-            return this.uriValue().test(obj.uriValue());
+            return this.uriValue().test(obj.uriValue()) || this.uriValue().big().test(obj.uriValue().big());
         return Mono.super.test(obj);
     }
 
@@ -403,7 +403,7 @@ public interface Uri extends Mono, Ring.O<Uri>, Comparable<Uri> {
                                 lhs.uriValue().poly(),
                                 projected.query(),
                                 List.of()
-                        ),lhs.tid(),lhs.vid());
+                        ), lhs.tid(), lhs.vid());
                     }),
                     instC(WHERE_INST_TID.dom(URI_TID).rng(URI_TID.maybe()), lst(REC_TYPE), (lhs, inst) -> {
                         try {
@@ -463,12 +463,12 @@ public interface Uri extends Mono, Ring.O<Uri>, Comparable<Uri> {
                     };
                     return result instanceof Obj ? (Obj) result :
                             (null == result || Integer.valueOf(-1) == result ? noobj() :
-                             (result instanceof Integer ? jnt((Integer) result) :
-                                     uri(result.toString())));
+                                    (result instanceof Integer ? jnt((Integer) result) :
+                                            uri(result.toString())));
                 }
             }));
         }
-        
+
         // Use the same singleton exception from StrProjectionHelper or a shared one
         private static final Map<String, Pattern> REGEX_CACHE = new ConcurrentHashMap<>();
 
