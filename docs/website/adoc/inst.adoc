@@ -371,7 +371,7 @@ If an argument's type is dependent on the value of another argument, then the ar
 
 [mtron]
 ----
-band -> |band?int{?}<=int(min=>_,max=>is(gt(*min)).else(*min.plus(1)))[is(gte(*min)).is(lte(*max))]
+band -> |band?int{?}<=int(min=>_,max=>?>*min.else(*min+1)){ is(gte(*min)).is(lte(*max)) }
 2.band(min=>1,max=>1)                 [-- <1> --]
 ----
 
@@ -384,7 +384,7 @@ band -> |band?int{?}<=int(min=>_,max=>is(gt(*min)).else(*min.plus(1)))[is(gte(*m
 
 [mtron]
 ----
-is_divisible -> |is_divisble?bool<=int(by?int=>is(neq(0)).else(print('error').map(1)))[mod(*by).eq(0)]
+is_divisible -> |is_divisble?bool<=int(by=>is(neq(0)).else(print('error').map(1))) { mod(*by).eq(0) }
 [ERROR] 10.is_divisible(2)
 [ERROR] 10.is_divisible('abc')
 ----

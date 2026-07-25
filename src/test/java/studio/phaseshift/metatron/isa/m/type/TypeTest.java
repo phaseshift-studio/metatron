@@ -564,6 +564,30 @@ public class TypeTest extends AbstractMetatronTest {
 
     @ParameterizedTest
     @TestData(value = {
+            "rec::T[?[name=>str::T,age=>int::T]]@being",
+            "being::T@person",
+            "being::T@chicken",
+            "person::[name=>'marko',age=>29]@marko",
+            "chicken::[name=>'snowbutt',age=>7]@snowbutt"})
+    @CsvSource(value = {
+            "[name=>'bill',age=>10].as(person::T)       | person::[name=>'bill',age=>10]",
+            "*marko.?rec::T                             | person::[name=>'marko',age=>29]",
+            "*marko.?being::T                           | person::[name=>'marko',age=>29]",
+            "*marko.?person::T                          | person::[name=>'marko',age=>29]",
+            "*marko.?chicken::T                         | noobj",
+            "*snowbutt.?rec::T                          | chicken::[name=>'snowbutt',age=>7]",
+            "*snowbutt.?being::T                        | chicken::[name=>'snowbutt',age=>7]",
+            "*snowbutt.?being::T                        | chicken::[name=>'snowbutt',age=>7]",
+            "*snowbutt.?person::T                       | noobj",
+            "*snowbutt.as(person::T)                    | <ERROR>",
+    }, delimiter = '|')
+    public void testNominalTyping(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+
+    @ParameterizedTest
+    @TestData(value = {
             "a -> int::T[?>0]",
             "b -> int::T[?>1]",
             "c -> int::T[?=2]",
@@ -606,7 +630,7 @@ public class TypeTest extends AbstractMetatronTest {
     @ParameterizedTest
     @TestData(value = {
             "entity -> rec::T@entity",
-            "thing -> entity::T[]@thing",
+            "thing -> entity::T@thing",
             "thing::T[?[name=>?str::T,age=>?int::T]]@person"
     })
     @CsvSource(value = {
@@ -615,13 +639,13 @@ public class TypeTest extends AbstractMetatronTest {
             "1                         %  2                              % false",
             "1                         % '1'                             % false",
             "1                         % int::T                          % true",
-      //      "1                         % entity::T                       % false",
+            //      "1                         % entity::T                       % false",
             "entity::T                 % entity::T                       % true",
             "thing::T                  % entity::T                       % true",
             "thing::T                  % thing::T                        % true",
             "person::T                 % person::T                       % true",
-           // "entity::T                 % thing::T                        % false",
-           // "[a=>1]                    % entity::T                       % false",
+            // "entity::T                 % thing::T                        % false",
+            // "[a=>1]                    % entity::T                       % false",
             "entity::[a=>1]            % entity::T                       % true",
             "[a=>1]                    % person::T                       % false",
             "entity::[a=>1]            % person::T                       % false",

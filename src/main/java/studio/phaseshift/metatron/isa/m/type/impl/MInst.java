@@ -22,7 +22,6 @@ import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.*;
 
-import java.util.List;
 import java.util.Objects;
 import java.util.function.BiFunction;
 
@@ -54,7 +53,7 @@ public class MInst extends MObj implements Inst {
     }
 
     public static Inst instA(final fURI tid) {
-        return new MInst(Triplet.with(lst(List.of()), null, NoObj.noobj()), tid, null);
+        return new MInst(Triplet.with(null, null, NoObj.noobj()), tid, null);
     }
 
     public static Inst instB(final fURI tid, final Poly args) {
@@ -114,11 +113,11 @@ public class MInst extends MObj implements Inst {
 
     @Override
     public boolean equals(final Object other) {
-        return (other instanceof Inst) &&
-                Objects.equals(this.tid, ((Obj) other).tid()) &&
-                Objects.equals(this.args(), ((Inst) other).args()) &&
-                Objects.equals(this.f(), ((Inst) other).f()) &&
-                Objects.equals(this.vid, ((Obj) other).vid());
+        return (other instanceof Inst otherInst) &&
+                Objects.equals(this.tid, otherInst.tid()) &&
+                Objects.equals(this.args(), otherInst.args()) &&
+                Objects.equals(this.f(), otherInst.f()) &&
+                Objects.equals(this.vid, otherInst.vid());
         /*Objects.equals(this.value,((Obj) other).value())*/
     }
 }

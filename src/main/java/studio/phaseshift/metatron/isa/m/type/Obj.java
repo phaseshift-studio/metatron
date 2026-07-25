@@ -511,6 +511,10 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
     }
 
     default Obj as(final Type type) {
+        if (type.isNominal()) {
+            if (!Type.Helper.nominalTypeChecker(this, type))
+                throw MTronException.of("%s is not a %s\n[nominal type]", this, type);
+        }
         if (!type.hasPredicate() && !type.hasConstructor() && this.tid().equals(type.vid()))
             return this;
         if (type.hasPredicate()) {
@@ -788,16 +792,23 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                 return true;
 
             // ── non-base type with TID→VID match: predicate-aware early exit ──
-            if (rhs.isType() && !rhs.asType().isBaseType() && lhs.tid().test(rhs.vid()))
-                return rhs.asType().isRootType()
-                        ? lhs.c().within(rhs.c())
-                        : (!rhs.asType().hasPredicate() ||
-                        (lhs.isType()
-                                ? Objects.equals(lhs.asType().predicate(), rhs.asType().predicate())
-                                : !rhs.asType().predicate().apply(lhs).isNothing()));
+            if (rhs.isType()) {
+                final Type rhsType = rhs.asType();
+                if (!lhs.isCall() && rhsType.isNominal()) {
+                    return Type.Helper.nominalTypeChecker(lhs, rhsType);
+                } else if (!rhs.asType().isBaseType() && lhs.tid().test(rhs.vid())) {
+                    return rhs.asType().isRootType()
+                            ? lhs.c().within(rhs.c())
+                            : (!rhs.asType().hasPredicate() ||
+                            (lhs.isType()
+                                    ? Objects.equals(lhs.asType().predicate(), rhs.asType().predicate())
+                                    : !rhs.asType().predicate().apply(lhs).isNothing()));
+                }
+            }
 
             // ── URI structural match ──
-            if (rhs.isUri() && lhs.isUri() && !lhs.uriValue().test(rhs.uriValue()))
+            if (rhs.isUri() && lhs.isUri() &&
+                    !lhs.uriValue().test(rhs.uriValue()) && !lhs.uriValue().big().test(rhs.uriValue().big()))
                 return false;
 
             // ── lhs is ObjCall ──
@@ -822,8 +833,11 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                 return Type.Helper.typeCheck(lhs, rhs);
 
             // ── fallback: TID + JVM equality ──
-            return lhs.tid().test(rhs.tid()) &&
-                    Objects.equals(lhs.jvm(), rhs.jvm());
+            if (!lhs.tid().test(rhs.tid()))
+                return false;
+            if (lhs.isUri() && rhs.isUri())
+                return lhs.uriValue().big().test(rhs.uriValue().big());
+            return Objects.equals(lhs.jvm(), rhs.jvm());
         }
 
         public static boolean isAutoPointer(final Obj obj) {

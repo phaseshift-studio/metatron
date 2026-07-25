@@ -38,7 +38,6 @@ import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
@@ -81,7 +80,7 @@ public interface Type extends Obj {
     }
 
     default boolean isBaseType() {
-        return this.vid() != null && (this.isRootType() || mInstSet.BASE_TYPES.contains(this.vid().basePath()));
+        return this.hasVID() && (this.isRootType() || mInstSet.BASE_TYPES.contains(this.vid().basePath()));
     }
 
     default boolean isGeneric() {
@@ -92,18 +91,18 @@ public interface Type extends Obj {
         return (null != this.vid() && this.vid().hasPattern()) || this.tid().hasPattern();
     }
 
-    default boolean isNominal()  {
-        return !this.hasPredicate() && this.hasVID() && !this.vid().hasPattern() && !this.vid().isGeneric();
+    default boolean isNominal() {
+        return !this.hasPredicate() && !this.hasConstructor() && this.hasVID() && !this.isBaseType() && !this.vid().hasPattern() && !this.vid().isGeneric();
     }
-    
+
     default boolean isStructural() {
         return this.hasPredicate();
     }
-    
+
     default boolean isRefinementOf(final Type other) {
         if (this == other)
             return true;
-        if(other.isRootType())
+        if (other.isRootType())
             return this.c().within(other.c());
         Type current = this;
         while (!current.isRootType()) {
@@ -235,6 +234,26 @@ public interface Type extends Obj {
             return ALL_TYPE.c(lcdC).as();
         }
 
+        public static boolean nominalTypeChecker(final Obj obj, final Type type) {
+            Type objType = Obj.Helper.specificType(obj);
+            final fURI nominalVID = type.vid();
+            if (!obj.baseType().test(type.baseType()))
+                return false;
+            if (objType.isBaseType() && objType.vid().test(type.baseType()))
+                return true;
+            while (true) {
+                // LOG.warn("checking %s is a %s",objType, type);
+                if (objType.vid().test(nominalVID))
+                    return true;
+                if (objType.isBaseType())
+                    return false;
+                // final Type temp = objType.parentType();
+                //if (temp.equals(objType.parentType()))
+                //       return false;
+                objType = objType.parentType();
+            }
+        }
+
         public static Obj typePredicateObj(final Type type) {
             if (type.hasPredicate() && type.predicate().insts().size() == 1 && type.predicate().insts().getFirst().tid().basePath().equals(ISA_INST_TID))
                 return type.predicate().insts().getFirst().arg(0);
@@ -266,9 +285,9 @@ public interface Type extends Obj {
                     return false;
                 if (!lhs.c().within(rhs.c()))
                     return false;
-                if(rhs.asType().isNominal() && !lhs.vid().equals(rhs.vid()))
-                    return false;
-                if (rhs.isType() && lhs.tid().hasPoly() && rhs.tid().hasPoly()) {
+                if (rhs.asType().isNominal())
+                    return Type.Helper.nominalTypeChecker(lhs, rhs.asType());
+                if (lhs.tid().hasPoly() && rhs.tid().hasPoly()) {
                     if (!lhs.tid().polyParsed().orElse(lst()).test(rhs.tid().polyParsed().orElse(lst())))
                         return false;
                 }

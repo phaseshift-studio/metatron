@@ -2,7 +2,7 @@
 == The File System
 
 [%collapsible]
-./m/mach instset import and space constructions
+.documentation setup
 ====
 [mtron]
 ----
@@ -92,6 +92,6 @@ fsspace::[                                          /
               zsh    => /bin/zsh,                   /
               python => /usr/bin/python3,           /
               perl   => /usr/bin/perl,              /
-              mtron  => /bin/metatron]              /                 
+              mtron  => /bin/metatron],             /
     route => [local: => <~>]]@</sys/space/fs/local>
 ----
