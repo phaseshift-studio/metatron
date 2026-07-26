@@ -59,7 +59,7 @@ public class ThinkFeature extends Feature {
         }
         // Apply the thought to whatever handler is configured at /feature/think
         this.buffer.append(text.strValue());
-        if (this.buffer.length() > 10) {
+        if (this.buffer.length() > 20) {
             agent.feature(THINK).asRec().at(f(THINK).extend(TO)).apply(str(buffer.toString()));
             this.buffer = new StringBuilder();
 
