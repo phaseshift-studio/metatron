@@ -39,6 +39,13 @@ isa.mach.type.ui.tmux
   PaneNode.java             ← pane tree interface
   SplitContainer.java       ← pane split container
   SplitLayout.java          ← HORIZONTAL/VERTICAL split direction
+isa.mach.type.ui.tool
+  ExplainTool.java         ← drill-down code inspector (Tab on code in REPL)
+  TraceTool.java           ← fail cause-chain explorer (:trace toggle)
+  ProfileTool.java         ← instruction profiler (ExplainTool delegate)
+  InstSelectorTool.java    ← instruction selector for dot-completion
+  fURISelectorTool.java    ← URI/folder selector for wildcard completion
+  TypeDiffTool.java        ← type diff visualizer
 isa.mach.ui
   uiInstSet.java            ← mtron type/instruction registration for all UI types
 isa.m.type.reflect
@@ -68,17 +75,36 @@ default W unfloat(FloatingSurface surface)
 
 **Consolidation note:** `display()` was removed — `run()` is the single presentation method.
 
+**`chromeLines()`** — defaults to 1 if a border is configured, 0 otherwise. Widgets with column headers or status bars override to add their own.  Used by `FloatingSurface` to preserve structural chrome when the `height` cap clips body lines.
+
+**`rowCount()` / `rowString(int)` / `rowStrings()`** — defaults that split `format()` output by `\n`.  Selectors iterate over these for cursor navigation; a widget that wants column-aware selection should either override them or attach a `TableWidget`.
+
 ## 2. JRec state bridge (`JRec.java`)
 
-State lives in the **persistent store** (memSpace, tbleSpace, etc.), NOT in Java fields.
-Java fields annotated with `@JRecElement` are **metadata for mtron introspection only**.
+There are **two** state models in the widget tree, depending on when the widget was
+written:
+
+### Model A: JVM-as-source-of-truth (AccordionWidget — preferred for new widgets)
+
+State lives in the **persistent store** (memSpace, tbleSpace, etc.).  Java fields
+annotated with `@JRecElement` are **metadata for mtron introspection only** —
+never read by Java code.  Mutators call `jvmWrite()`.  `format()` calls `jvmRead()`
+and extracts values fresh on every render.
+
+### Model B: Java-fields-as-storage (legacy — TableWidget, PanelWidget, TreeWidget)
+
+Java fields ARE the data store.  A private `sync()` method pulls initial state from
+JVM when the widget was constructed from mtron, but once Java fields are populated
+(by Java API or prior sync), JVM is never consulted again.  Mutators use direct
+field assignment or builders (`addRow()`, `addMetadata()`).
+
+**Shared primitives** (both models):
 
 ```java
 // Read latest state from persistent store (if vid is set) or local JVM merge.
 jvmRead() → Router.global().read(vid) → freshObj.jvm()
 
 // Write a single field with >>=-style merge: read fresh, merge, write back.
-// Automatically invalidates format cache.
 jvmWrite(key, value)
 
 // Static typed extractors — use with Map<Obj,Obj> from jvmRead():
@@ -88,7 +114,7 @@ jvmInt(jvm, key, fb) → int      (with fallback)
 jvmBody(jvm, key)    → List<String>  (splits \\n and \n)
 ```
 
-**Pattern for widgets** (see AccordionWidget, PanelWidget, TableWidget, TreeWidget):
+**Model A — JVM-as-source-of-truth** (AccordionWidget; preferred for new widgets):
 
 ```java
 // Constructor — reads style from JVM so run() sees it
@@ -101,7 +127,6 @@ public MyWidget(Map<Obj, Obj> jvm, fURI tid, fURI vid) {
 @Override public String format() {
     Map<Obj, Obj> jvm = jvmRead();
     String title = jvmStr(jvm, keyTitle);
-    boolean flag = jvmBool(jvm, keyFlag);
     // ... render ...
 }
 
@@ -109,14 +134,47 @@ public MyWidget(Map<Obj, Obj> jvm, fURI tid, fURI vid) {
 public void setTitle(String t) { jvmWrite(kTitle, str(t)); }
 ```
 
-**Legacy sync pattern** (PanelWidget, TableWidget, TreeWidget):
+**Model B — Java-fields-as-storage** (TableWidget, PanelWidget, TreeWidget; legacy):
+
 ```java
+// The fool-proof version — tracking flag prevents JVM from overwriting Java data.
+private boolean javaPopulated = false;
+
+// Every Java API mutation sets the flag.
+public TableWidget addRow(final List<Object> entries) {
+    this.javaPopulated = true;
+    this.table.add(entries);
+    return this;
+}
+
 private void sync() {
-    if (this.style == null) return;
-    Map<Obj, Obj> jvm = jvmRead();
-    this.title = jvmStr(jvm, "title");  // populate Java fields for format()
+    if (this.style == null) return;    // construction guard
+    if (this.javaPopulated) return;    // Java API owns the data — skip
+    Map<Obj, Obj> jvm = jvmRead();     // snapshot JVM
+    // Populate Java fields FROM JVM (mtron-constructed tables only):
+    Obj h = jvm.get(uri("headers"));
+    if (h != null && !h.isNoObj())
+        h.stream().filter(Obj::isStr).forEach(o -> this.headers.add(o.strValue()));
+    // ... rows, metadata ...
 }
 ```
+
+**⚠️ History:** Before 2026-07-26, `TableWidget.sync()` unconditionally `clear()`ed
+Java fields and repopulated from the JVM snapshot.  This destroyed Java-constructed
+tables (ProfileTool, ExplainTool, TraceTool) because the JVM serialization round-trip
+through `MObjFactory.toObj()` changes container types (`Objs` vs `Lst`, `ListN` vs
+`ArrayList`).  The `javaPopulated` flag (shown above) fixes this.  It's safer than
+per-field `isEmpty()` guards because a Java-constructed table may legitimately have
+an empty field (e.g. headers-only table with no rows) — without the flag, sync would
+pull stale rows from a prior mtron construction.
+
+**Also: avoid `Stream.toList()` in sync().**  `Stream.toList()` (Java 16+) returns
+immutable `ImmutableCollections$ListN`.  Use `Collectors.toCollection(ArrayList::new)`
+instead — it keeps rows on the mutable-`ArrayList` path the rest of the codebase expects.
+
+**When to use the legacy sync pattern vs. direct `jvmRead()`:**
+- **New widgets** (AccordionWidget): read from `jvmRead()` directly in `format()`.  Java fields are metadata only.  Mutators use `jvmWrite()`.
+- **Legacy widgets** (TableWidget, PanelWidget, TreeWidget): Java fields are the storage.  `sync()` populates them from JVM.  Mutators use direct field assignment or `addRow()`/`addMetadata()` builders.  The sync guard protects these from being overwritten.
 
 ## 3. Style system (`Stylable.Style`)
 
@@ -138,6 +196,7 @@ Style is a JVM-backed rec.  Fields:
 | `rightMargin` | int             | Right margin |
 | `topMargin` | int             | Top margin |
 | `bottomMargin` | int             | Bottom margin |
+| `height` | int             | Display height cap in rows; 0 = unbounded. Content exceeding this cap keeps header/chrome lines and discards top body lines (scroll-up behavior) |
 
 Float-related:
 ```java
@@ -312,6 +371,14 @@ UI_ANCHOR_TYPE = Type.Builder.build()
 
 5. **For interactive widgets** (keyboard input): extend `AbstractWidget`, override `run()` with a modal loop using `BindingReader`
 
+6. **Choose the right state model**:
+
+   | If your widget… | Use |
+   |---|---|
+   | Has simple key/value fields, built from mtron or Java | **Model A** (JVM-as-source-of-truth).  Mutators call `jvmWrite()`, `format()` calls `jvmRead()`.  See AccordionWidget. |
+   | Has list/table data populated via Java builders (`addRow()`, etc.) | **Model B** (Java-fields-as-storage) with the `javaPopulated` tracking flag.  See TableWidget. |
+   | Is a pure display widget with no mutable state | Either — Model A is simpler. |
+
 ## 7. Key patterns
 
 ### Read style from JVM before run()
@@ -349,11 +416,88 @@ if (this.style.border() == Border.none)
     this.style.border(Border.continuous);  // Unicode box-drawing characters
 ```
 
-### applyStyle() vs apply()
+## 8. Tool package (`isa.mach.type.ui.tool`)
+
+Tools are higher-level compositions of widgets for specific REPL interactions.
+They extend `AbstractWidget` and override `run()` with a modal input loop.  Unlike
+display-only widgets (which use `Widget.run()` default → float or inline `format()`),
+tools own their entire render cycle via `beginRedraw()` → `WidgetCanvas`.
+
+### Lifecycle
+
 ```java
-// WRONG — .apply() calls MRec.apply() (function application, not style wiring):
+// In Console.java — triggered by Tab, Enter on code, colon commands, etc.
+ExplainTool explain = new ExplainTool(code.as());
+Utilities.runCursorLessWidget(explain, true);
+```
+
+`Utilities.runCursorLessWidget()` hides the cursor, calls `widget.run()`, then calls
+`widget.close()`:
+
+```java
+public static void runCursorLessWidget(Widget<?> widget, boolean close) {
+    int height = widget.height();
+    Graphitty.log(Widget.class).none("{{.}}");   // hide cursor
+    widget.run();
+    Graphitty.log(Widget.class).none("{{*}}{{^%d}}", height); // show cursor, move up
+    if (close) widget.close();
+}
+```
+
+### Rendering pattern
+
+Tools use `beginRedraw()` → `WidgetCanvas` (relative mode when no pane bounds are set):
+
+```java
+private void redrawStack() {
+    WidgetCanvas canvas = beginRedraw(totalHeightUsed);
+    for (String line : table.rowStrings()) {
+        canvas.line(line);
+    }
+    canvas.statusLine("{{w}}ctrl-d{{g}}:close {{X}}");
+    totalHeightUsed = canvas.finish();
+}
+```
+
+`WidgetCanvas` handles two modes transparently:
+- **Absolute** (pane bounds set): ANSI cursor-positioning inside the pane's content area. Lines exceeding `contentMaxLines` are silently dropped.
+- **Relative** (no pane bounds): cursor-up to previous height → clear line → print → `\r\n`.  `previousHeight` is used to clear leftover lines from taller prior renders.
+
+### Tool → Widget dependencies
+
+| Tool | Widgets used |
+|---|---|
+| `ExplainTool` | `ProfileTool` → `TableWidget` (instruction table) |
+| `TraceTool` | `TableWidget` (cause chain + stack frames) |
+| `InstSelectorTool` | `SelectorWidget` → `TableWidget` (instruction pairs) |
+| `fURISelectorTool` | `SelectorWidget` → `TableWidget` (URI pairs) |
+
+**Important:** These tools populate their `TableWidget`s via Java API (`addRow()`,
+`addMetadata()`).  They rely on the `sync()` guard pattern (section 2) to prevent
+data corruption — without it, `TableWidget.format()` → `sync()` would clear
+Java-populated rows and replace them with JVM-serialized representations that
+don't preserve the exact column structure.
+
+### Selector vs SelectorWidget
+
+Two selection widgets exist with different rendering approaches:
+
+- **`Selector`** (older): Uses JLine's `Display.updateAnsi()` for rendering.  Navigates an attached widget's `rowString()` output.
+- **`SelectorWidget`** (newer): Uses `beginRedraw()` → `WidgetCanvas` for rendering.  Manages its own `TableWidget` with item pairs.  Preferred for new tool development.
+
+### applyStyle() vs apply() — real-world footgun
+
+```java
+// WRONG — .apply() calls Obj.apply() (identity function — returns the Style, not the widget):
 widget.style().border(...).apply();
+// ^^ compiles, runs without error, but does NOT wire the style to the widget.
+//    ProfileTool.java line 63 still uses this pattern (as of 2026-07-26).
 
 // RIGHT — .applyStyle() calls stylable.style(this):
 widget.style().border(...).applyStyle();
 ```
+
+The default `Obj.apply()` (no-arg) returns `this` — the `Style` object.  The return
+value is discarded, so the chain silently no-ops.  The compiler can't catch this
+because `Style extends MRec extends MObj implements Obj`, and `Obj` has
+`default Obj apply() { return this.apply(noobj()); }`.

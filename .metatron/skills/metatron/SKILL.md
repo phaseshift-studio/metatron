@@ -21,4 +21,6 @@ feature=>[
 ## References
 
 *   **MCP Client and Servers (mtron)**: `references/metatron-mcp.md` — Using existing MCP server tools, dynamically creating MCP servers, HTTP/STDIO/WebSocket transports.
+*   **Type System (mtron)**: `references/type-system-mtron.md` — vid/tid concepts, base types, coefficients, isa vs non-isa predicates, nominal vs structural types, type definition syntax, pattern/generic types, LCD.
+*   **Type System (Java)**: `references/type-system-java.md` — Type interface, MType/T() factory, Fluent/StartLess API, predicates, isRefinementOf vs test, generateLCD, coefficients (cInt/C), Call/Inst/Code, common gotchas.
 *   **UI Architecture (Java)**: `references/metatron-ui-architecture.md` — Widget lifecycle, JRec state bridge, Style system, FloatingSurface, Anchor positioning, uiInstSet type registration.  How to create, modify, and float widgets.

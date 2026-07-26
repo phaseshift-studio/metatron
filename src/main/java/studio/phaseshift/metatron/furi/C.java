@@ -55,6 +55,28 @@ public interface C<T extends Comparable<T>, D extends C<T, D>> extends Comparabl
 
     boolean contains(final D rhs);
 
+    /**
+     * Returns the narrowest coefficient interval that contains both this and rhs.
+     * If either side is unbounded in a direction (null min/max),
+     * the result is also unbounded in that direction.
+     * Otherwise, takes the min of the mins and the max of the maxes.
+     */
+    default D span(final D rhs) {
+        final T newMin;
+        if (null == this.min() || null == rhs.min()) {
+            newMin = null;
+        } else {
+            newMin = this.min().compareTo(rhs.min()) <= 0 ? this.min() : rhs.min();
+        }
+        final T newMax;
+        if (null == this.max() || null == rhs.max()) {
+            newMax = null;
+        } else {
+            newMax = this.max().compareTo(rhs.max()) >= 0 ? this.max() : rhs.max();
+        }
+        return this.clone(newMin, newMax);
+    }
+
     default boolean lt(final D rhs) {
         return this.compareTo(rhs) < 0;
     }

@@ -66,6 +66,18 @@ public class TableWidget extends JRec<TableWidget> implements Widget<TableWidget
     private Cursor cursor;
     private int lastRenderHeight;
 
+    /**
+     * Set to true by any Java API mutation ({@link #addRow}, {@link #addMetadata},
+     * convenience constructors that supply data).  Once true, {@link #sync()} is
+     * a no-op — Java fields are the source of truth and must not be overwritten
+     * by a JVM round-trip.
+     * <p>
+     * Tables constructed from mtron via {@link #TableWidget(Map, fURI, fURI)}
+     * leave this {@code false}, so {@code sync()} populates Java fields from the
+     * JVM on first render.
+     */
+    private boolean javaPopulated = false;
+
     // ── JRec constructor ───────────────────────────────────────────
 
     public TableWidget(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
@@ -73,46 +85,39 @@ public class TableWidget extends JRec<TableWidget> implements Widget<TableWidget
     }
 
     /**
-     * Populate Java fields from the JVM store, but only when they are empty.
+     * Populate Java fields from the JVM store on first render.
      * <p>
-     * Tables built via the Java API ({@link #addRow}, {@link #addMetadata}, etc.)
-     * already have their fields populated and must not be cleared — their data
-     * is the source of truth.  Tables constructed from mtron via
-     * {@link #TableWidget(Map, fURI, fURI)} have empty Java fields that need
-     * initial population from the JVM.
+     * Tables constructed from mtron via {@link #TableWidget(Map, fURI, fURI)}
+     * arrive with empty Java fields — {@code sync()} pulls data from the JVM.
+     * Tables built via the Java API ({@link #addRow}, {@link #addMetadata},
+     * convenience constructors) set the {@link #javaPopulated} flag, which
+     * makes this method a no-op so Java field data is never overwritten.
      * <p>
      * Uses {@link Collectors#toCollection(ArrayList::new)} rather than
-     * {@link Stream#toList()} so that rows are mutable {@link ArrayList}s
-     * rather than {@code ImmutableCollections.ListN}, avoiding
-     * {@code ClassCastException} when rows later flow through the JVM
+     * {@link Stream#toList()} so rows are mutable {@link ArrayList}s,
+     * avoiding {@code ClassCastException} when rows flow through the JVM
      * serialization pipeline.
      */
     private void sync() {
-        if (this.style == null) return; // construction guard
+        if (this.style == null) return;   // construction guard
+        if (this.javaPopulated) return;   // Java API owns the data
         final Map<Obj, Obj> jvm = jvmRead();
 
-        // Only populate from JVM if fields haven't been set via Java API.
-        if (this.headers.isEmpty()) {
-            final Obj h = jvm.get(uri("headers"));
-            if (h != null && !h.isNoObj())
-                h.stream().filter(Obj::isStr).forEach(o -> this.headers.add(o.strValue()));
-        }
+        final Obj h = jvm.get(uri("headers"));
+        if (h != null && !h.isNoObj())
+            h.stream().filter(Obj::isStr).forEach(o -> this.headers.add(o.strValue()));
 
-        if (this.table.isEmpty()) {
-            final Obj r = jvm.get(uri("rows"));
-            if (r != null && !r.isNoObj())
-                r.stream().forEach(row -> this.addRow(row.stream()
-                        .map(cell -> (Object) (cell.isStr() ? cell.strValue() : cell))
-                        .collect(Collectors.toCollection(ArrayList::new))));
-        }
+        final Obj r = jvm.get(uri("rows"));
+        if (r != null && !r.isNoObj())
+            r.stream().forEach(row -> this.addRow(row.stream()
+                    .map(cell -> (Object) (cell.isStr() ? cell.strValue() : cell))
+                    .collect(Collectors.toCollection(ArrayList::new))));
 
-        if (this.metadata.isEmpty()) {
-            final Obj m = jvm.get(uri("metadata"));
-            if (m != null && !m.isNoObj())
-                m.stream().forEach(row -> this.addMetadata(row.stream()
-                        .map(cell -> (Object) (cell.isStr() ? cell.strValue() : cell))
-                        .collect(Collectors.toCollection(ArrayList::new))));
-        }
+        final Obj m = jvm.get(uri("metadata"));
+        if (m != null && !m.isNoObj())
+            m.stream().forEach(row -> this.addMetadata(row.stream()
+                    .map(cell -> (Object) (cell.isStr() ? cell.strValue() : cell))
+                    .collect(Collectors.toCollection(ArrayList::new))));
     }
 
     // ── convenience constructors ───────────────────────────────────
@@ -124,6 +129,7 @@ public class TableWidget extends JRec<TableWidget> implements Widget<TableWidget
     public TableWidget(final List<String> headers) {
         this(Map.of(), UI_TABLE_TID, null);
         this.headers.addAll(headers);
+        this.javaPopulated = true;
     }
 
 
@@ -131,17 +137,21 @@ public class TableWidget extends JRec<TableWidget> implements Widget<TableWidget
         this(Map.of(), UI_TABLE_TID, null);
         this.headers.addAll(headers);
         rows.forEach(this::addRow);
+        // addRow already sets javaPopulated, but be explicit:
+        this.javaPopulated = true;
     }
 
 
     // ── builders ───────────────────────────────────────────────────
 
     public TableWidget addRow(final List<Object> entries) {
+        this.javaPopulated = true;
         this.table.add(entries);
         return this;
     }
 
     public TableWidget addMetadata(final List<Object> metadata) {
+        this.javaPopulated = true;
         this.metadata.add(metadata);
         return this;
     }
