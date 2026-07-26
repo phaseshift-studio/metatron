@@ -532,71 +532,139 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
     }
 
     default Bool asBool() {
-        return (Bool) this;
+        try {
+            return (Bool) this;
+        } catch (final Exception e) {
+            throw MTronException.of(e);
+        }
     }
 
     default Bytes asBytes() {
-        return (Bytes) this;
+        try {
+            return (Bytes) this;
+        } catch (final Exception e) {
+            throw MTronException.of(e);
+        }
     }
 
     default Int asInt() {
-        return (Int) this;
+        try {
+            return (Int) this;
+        } catch (final Exception e) {
+            throw MTronException.of(e);
+        }
     }
 
     default Real asReal() {
-        return (Real) this;
+        try {
+            return (Real) this;
+        } catch (final Exception e) {
+            throw MTronException.of(e);
+        }
     }
 
     default Str asStr() {
-        return (Str) this;
+        try {
+            return (Str) this;
+        } catch (final Exception e) {
+            throw MTronException.of(e);
+        }
     }
 
     default Uri asUri() {
-        return (Uri) this;
+        try {
+            return (Uri) this;
+        } catch (final Exception e) {
+            throw MTronException.of(e);
+        }
     }
 
     default Rec asRec() {
-        return (Rec) this;
+        try {
+            return (Rec) this;
+        } catch (final Exception e) {
+            throw MTronException.of(e);
+        }
     }
 
     default Lst asLst() {
-        return (Lst) this;
+        try {
+            return (Lst) this;
+        } catch (final Exception e) {
+            throw MTronException.of(e);
+        }
     }
 
     default Rel asRel() {
-        return (Rel) this;
+        try {
+            return (Rel) this;
+        } catch (final Exception e) {
+            throw MTronException.of(e);
+        }
     }
 
     default Poly<?, ?> asPoly() {
-        return (Poly<?, ?>) this;
+        try {
+            return (Poly<?,?>) this;
+        } catch (final Exception e) {
+            throw MTronException.of(e);
+        }
     }
 
     default Inst asInst() {
-        return (Inst) this;
+        try {
+            return (Inst) this;
+        } catch (final Exception e) {
+            throw MTronException.of(e);
+        }
     }
 
     default Code asCode() {
-        return (Code) this;
+        try {
+            return (Code) this;
+        } catch (final Exception e) {
+            throw MTronException.of(e);
+        }
     }
 
     default Call asCall() {
-        return (Call) this;
+        try {
+            return (Call) this;
+        } catch (final Exception e) {
+            throw MTronException.of(e);
+        }
     }
 
     default PCMonad asMonad() {
-        return (PCMonad) this;
+        try {
+            return (PCMonad) this;
+        } catch (final Exception e) {
+            throw MTronException.of(e);
+        }
     }
 
     default Type asType() {
-        return (Type) this;
+        try {
+            return (Type) this;
+        } catch (final Exception e) {
+            throw MTronException.of(e);
+        }
     }
 
     default Objs asObjs() {
-        return (Objs) this;
+        try {
+            return (Objs) this;
+        } catch (final Exception e) {
+            throw MTronException.of(e);
+        }
     }
 
     default Fail asFail() {
-        return (Fail) this;
+        try {
+            return (Fail) this;
+        } catch (final Exception e) {
+            throw MTronException.of(e);
+        }
     }
 
     String xxxValue = "%s [%s] unable to convert %s";

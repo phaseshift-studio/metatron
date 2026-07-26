@@ -29,13 +29,12 @@ import studio.phaseshift.metatron.TokenMapper;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
-import studio.phaseshift.metatron.isa.m.math.mathInstSet;
 import studio.phaseshift.metatron.isa.m.type.*;
-import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.nio.ByteBuffer;
@@ -46,19 +45,12 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
 import static studio.phaseshift.metatron.isa.llm.type.Agent.res;
-import static studio.phaseshift.metatron.isa.m.mInstSet.LST_TID;
-import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_BYTE_TID;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.from_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBytes.bytes;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
@@ -209,19 +201,21 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
         final fURI msgBase = sesVID.retract(2).extend(LLM_MESSAGE_TABLE);
         final List<Rec> allMessages = new ArrayList<>();
         final AtomicInteger found = new AtomicInteger(0);
-        from_(msgBase.extend("+").toUri()).where_(rec(uri(SESSION), sesVID.toUri())).apply(jnt(1)).stream().forEach(msg -> {
-            if (!msg.isRec()) {
-                LOG.warn("non-message obj in llm messages: %s", msg);
-            } else {
-                final Rec msgRec = msg.asRec();
-                if (msgRec.tid().equals(THINKING_MESSAGE_TID)) return;
-                final Obj sessionField = msgRec.at(uri(SESSION));
-                if (!sessionField.isNoObj() && sessionField.isUri() && sessionField.uriValue().equals(sesVID)) {
-                    allMessages.add(msgRec);
-                    found.incrementAndGet();
-                }
-            }
-        });
+        // from_(msgBase.extend("+").toUri()).where_(rec(uri(SESSION), sesVID.toUri())).apply()
+        Router.readFromSpace(msgBase.extend("+"))
+                .stream().forEach(msg -> {
+                    if (!msg.isRec()) {
+                        LOG.warn("non-message obj in llm messages: %s", msg);
+                    } else {
+                        final Rec msgRec = msg.asRec();
+                        if (msgRec.tid().equals(THINKING_MESSAGE_TID)) return;
+                        final Obj sessionField = msgRec.at(uri(SESSION));
+                        if (!sessionField.isNoObj() && sessionField.isUri() && sessionField.uriValue().equals(sesVID)) {
+                            allMessages.add(msgRec);
+                            found.incrementAndGet();
+                        }
+                    }
+                });
         LOG.info("messages found for context window: " + found.get());
         // ChatMemory handles its own windowing (token-based or message-based)
         // after hydrating from the store; we return all messages and let it prune
@@ -329,8 +323,7 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
                 if (!msgObj.isRec()) continue;
                 final Rec msgRec = msgObj.asRec();
                 final Obj sessionField = msgRec.at(uri(SESSION));
-                if (sessionField.isNoObj() || !sessionField.isUri()
-                        || !sessionField.uriValue().equals(sesVID))
+                if (sessionField.isNoObj() || !sessionField.isUri() || !sessionField.uriValue().equals(sesVID))
                     continue;
                 Router.writeToSpace(msgBase.extend(String.valueOf(id)), noobj());
             } catch (final Exception e) {
@@ -466,6 +459,7 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
         map.put(uri(TEXT), str(ObjmtronSerializer.singleNoClip().write(str(rawText))));
         if (msg.id() != null && !msg.id().isBlank())
             map.put(uri(CONTENTS), str(msg.id()));
+        // map.put(uri(TOOL_REQUESTS), lst(instA(f(msg.toolName()))));
         msg.attributes().forEach((k, v) -> map.putIfAbsent(uri(k), str(String.valueOf(v))));
         return rec(map, TOOL_RESULT_MESSAGE_TID, null);
     }
@@ -488,15 +482,6 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
         if (tid.equals(TOOL_REQUEST_MESSAGE_TID) || tid.equals(TOOL_RESULT_MESSAGE_TID))
             return recToToolResultMessage(rec);
         // Fallback: check legacy "type" field for compatibility with old data
-        final String type = Str.Helper.cleanString(rec.at(uri(TYPE)).orElse(str("")));
-        if (type.equals(ChatMessageType.SYSTEM.name()))
-            return recToSystemMessage(rec);
-        if (type.equals(ChatMessageType.USER.name()))
-            return recToUserMessage(rec);
-        if (type.equals(ChatMessageType.AI.name()))
-            return recToAiMessage(rec);
-        if (type.equals(ChatMessageType.TOOL_EXECUTION_RESULT.name()))
-            return recToToolResultMessage(rec);
         LOG.warn("unknown message type (tid=%s): %s", tid, rec);
         return recToSystemMessage(rec);
     }
@@ -509,8 +494,8 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
         final String name = Str.Helper.cleanString(rec.at(uri(NAME)).orElse(str("")));
         final String nameOrNull = "none".equals(name) || name.isBlank() ? null : name;
         final Map<String, Object> attrs = extractAttributes(rec, USER_KNOWN_KEYS);
-        final Obj contents = rec.at(uri(CONTENTS));
-
+        final Obj rawContents = rec.at(uri(CONTENTS));
+        final Obj contents = false && rawContents.isStr() ? ObjJSONSerializer.simple().inputBytes(rawContents.strValue()) : rawContents;
         final UserMessage.Builder builder = UserMessage.builder()
                 .name(nameOrNull)
                 .attributes(attrs);
@@ -539,7 +524,13 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
                     builder.addContent(TextContent.from(""));
             }
         } else {
-            builder.addContent(TextContent.from(""));
+            try {
+                final Obj mtron = ObjmtronSerializer.compact().inputBytes(Str.Helper.cleanString(contents));
+                builder.addContent(TextContent.from(mtron.asRec().at(TEXT).strValue()));
+            } catch (final Exception e) {
+                LOG.warn("unable to parse as json: %s", contents);
+                builder.addContent(TextContent.from(Str.Helper.cleanString(contents)));
+            }
         }
 
         return builder.build();
@@ -612,13 +603,25 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
             final List<ToolExecutionRequest> requests = toolReqs.elements()
                     .filter(Obj::isRec)
                     .map(tr -> {
-                        final Rec trRec = tr.asRec();
-                        final String argsToken = VOCAB.from(LLM_TOOL_TID, "arguments");
-                        return ToolExecutionRequest.builder()
-                                .name(Str.Helper.cleanString(trRec.at(uri(NAME)).orElse(str(""))))
-                                .arguments(Str.Helper.cleanString(trRec.at(uri(argsToken)).orElse(str(""))))
-                                .id(Str.Helper.cleanString(trRec.at(uri(CONTENTS)).orElse(str(""))))
-                                .build();
+                        if (tr.isRec()) {
+                            final Rec trRec = tr.asRec();
+                            final String argsToken = VOCAB.from(LLM_TOOL_TID, "arguments");
+                            return ToolExecutionRequest.builder()
+                                    .name(Str.Helper.cleanString(trRec.at(uri(NAME)).orElse(str(""))))
+                                    .arguments(trRec.at(uri(argsToken)).orElse(str("")).strValue())
+                                    .id(Str.Helper.cleanString(trRec.at(uri(CONTENTS)).orElse(str(""))))
+                                    .build();
+                        } else if (tr.isInst()) {
+                            final Inst trInst = tr.asInst();
+                            //final String argsToken = VOCAB.from(LLM_TOOL_TID, "arguments");
+                            return ToolExecutionRequest.builder()
+                                    .name(trInst.tid().name())
+                                    .arguments(trInst.args().toString())
+                                    .id(trInst.vid().toString())
+                                    .build();
+                        } else {
+                            throw MTronException.of("tool request type unknown: %s", tr);
+                        }
                     })
                     .toList();
             builder.toolExecutionRequests(requests);
@@ -664,7 +667,7 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
             if (val != null) saved.put(key, val);
         }
         try {
-            final byte[] jsonBytes = ObjJSONSerializer.simple().outputBytes(msgRec).array();
+            final byte[] jsonBytes = msgRec.toString().getBytes();
             final MessageDigest md = MessageDigest.getInstance("SHA-256");
             final byte[] digest = md.digest(jsonBytes);
             final StringBuilder sb = new StringBuilder();
@@ -673,6 +676,8 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
             return sb.toString();
         } catch (final NoSuchAlgorithmException e) {
             throw MTronException.of("SHA-256 not available: %s", e);
+        } catch (final Exception e) {
+            throw MTronException.of(e);
         } finally {
             msgRec.recValue().putAll(saved);
         }

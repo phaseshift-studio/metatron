@@ -27,16 +27,18 @@ import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.Tokens.THINK;
+import static studio.phaseshift.metatron.Tokens.TO;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.llm.type.Agent.feat;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class ThinkFeature extends Feature {
     final AtomicBoolean isThinking = new AtomicBoolean(false);
+    private StringBuilder buffer = new StringBuilder();
 
     public ThinkFeature(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
@@ -45,14 +47,30 @@ public class ThinkFeature extends Feature {
     @Override
     public Obj onBeforeChat(final Agent agent) {
         this.isThinking.set(false);
+        this.buffer = new StringBuilder();
         return noobj();
     }
 
     @Override
     public void onPartialThinking(final Agent agent, final Str text) {
-        if (!this.isThinking.getAndSet(true))
+        if (!this.isThinking.getAndSet(true)) {
             this.logger().none(Graphitty.sillyPrint("\nthinking...", true, true));
+            agent.feature(THINK).asRec().at(f(THINK).extend(TO)).apply(str("\n"));
+        }
         // Apply the thought to whatever handler is configured at /feature/think
-        agent.feature(THINK).asRec().at(f(THINK).extend(TO)).apply(text);
+        this.buffer.append(text.strValue());
+        if (this.buffer.length() > 10) {
+            agent.feature(THINK).asRec().at(f(THINK).extend(TO)).apply(str(buffer.toString()));
+            this.buffer = new StringBuilder();
+
+        }
+    }
+
+    @Override
+    public void onPartialResponse(final Agent agent, final Str text) {
+        if (!this.buffer.isEmpty()) {
+            agent.feature(THINK).asRec().at(f(THINK).extend(TO)).apply(str(buffer.toString()));
+            this.buffer = new StringBuilder();
+        }
     }
 }

@@ -75,10 +75,10 @@ public class StatusLine implements Runnable {
         this.addWidget(f("type_check_"), () -> "{{w&[%s]}} T {{X}}".formatted(TypeCheck.colorLevel()));
         //this.addWidget(f("spaces"), () -> "{{w}}spaces:{{y}}%d".formatted(Router.global().spaces().count()));
         //this.addWidget(f("nodes"), () -> "{{w}}nodes:{{y}}%d".formatted(Router.global().server().nodes().size()));
-        this.addWidget(f("in_bytes"), () -> "{{w}}in:{{y}}%s".formatted(bytesFormat(Router.global().stats().ioStats().bytesRecv())));
-        this.addWidget(f("out_bytes"), () -> "{{w}}out:{{y}}%s".formatted(bytesFormat(Router.global().stats().ioStats().bytesSent())));
-        this.addWidget(f("time"), () -> "{{w}}time:{{y}}%s".formatted(timeFormat(this.runningTime())));
-        this.addWidget(f("message"), () -> "{{w}}message:{{y}}%s".formatted(StatusLine.lastMessage));
+        this.addWidget(f("in_bytes"), () -> "{{w}}↓ {{y}}%s".formatted(bytesFormat(Router.global().stats().ioStats().bytesRecv())));
+        this.addWidget(f("out_bytes"), () -> "{{w}}↑ {{y}}%s".formatted(bytesFormat(Router.global().stats().ioStats().bytesSent())));
+        this.addWidget(f("time"), () -> "{{w}}⏱ {{y}}%s".formatted(timeFormat(this.runningTime())));
+        this.addWidget(f("message"), () -> "{{w}}✉ {{y}}%s".formatted(StatusLine.lastMessage));
         /*this.addWidget(f("run"), () -> "{{w}}run:{{y}}%d".formatted(Router.global().stats().monadicStats().runningMonads()));
         this.addWidget(f("halt"), () -> "{{w}}halt:{{y}}%d".formatted(Router.global().stats().monadicStats().haltedMonads()));
         this.addWidget(f("kill"), () -> "{{w}}kill:{{y}}%d".formatted(Router.global().stats().monadicStats().killedMonads()));
@@ -122,7 +122,7 @@ public class StatusLine implements Runnable {
                 cap = "";
                 capped = true;
             } else {
-                cap = "| ";
+                cap = "▎ ";
             }
             if (!ws.getKey().uriValue().toString().endsWith("_"))
                 capped = false;

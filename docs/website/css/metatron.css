@@ -531,7 +531,7 @@ table {
 
 code.hljs {
     font-size: 1.0rem;
-    line-height: 1.1rem;
+    line-height: 1.3rem;
     display: inline;
     /*width: 90%;*/
     overflow: hidden;
@@ -1092,9 +1092,9 @@ footer {
     display: inline-flex !important;
     align-items: center;
     justify-content: center;
-    width: 26px !important;
+    width: 20px !important;
     height: 20px !important;
-    font-size: 12px !important;
+    font-size: 13px !important;
     line-height: 20px !important;
     text-align: center !important;
     background: var(--mred) !important;
@@ -1629,9 +1629,9 @@ th {
 
 .hljs-mtron-doc-callout {
     float: right !important;
-    width: 26px !important;
+    width: 20px !important;
     height: 20px !important;
-    font-size: 12px !important;
+    font-size: 13px !important;
     line-height: 20px !important;
     text-align: center !important;
     background: var(--mred) !important;

@@ -14,6 +14,7 @@ import studio.phaseshift.metatron.isa.llm.type.mcpClient;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.ArrayList;
@@ -72,8 +73,10 @@ public class ToolFeature extends Feature {
             final Rec r = result.asRec();
             this.logger().info("tool executed: %s(%s) => %s",
                     r.at(uri(NAME)).strValue(),
-                    r.at(uri(TOOL_ARGUMENTS)).strValue(),
+                    ObjJSONSerializer.simple().inputBytes(r.at(uri(TOOL_ARGUMENTS)).strValue()),
                     r.at(uri(RESULT)).strValue());
+        } else {
+            this.logger().info("tool executed: %s",result);
         }
     }
 }

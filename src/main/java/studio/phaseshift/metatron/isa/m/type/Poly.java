@@ -277,7 +277,7 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
 
         public static Obj updateRecursion(final Obj lhs, final Obj rhs, final BiFunction<Poly<?, ?>, Object, Poly<?, ?>> operation) {
             final Obj result;
-           if (lhs.isObjs() && rhs.isPoly())
+            if (lhs.isObjs() && rhs.isPoly())
                 result = objs(lhs.asObjs().elements()
                         .map(e -> updateRecursion(e, rhs, operation).vid(e.vid()))
                         .filter(e -> !e.isNoObj()));
@@ -389,7 +389,11 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
             Type temp = rhs;
             final Rec result = rec();
             while (!temp.isRootType() && !temp.isNoObj() && !temp.isNone() && temp.asType().hasPredicate()) {
-                result.jvm().putAll(Poly.Helper.diffRecRecursion(lhs.asRec(), Type.Helper.typePredicateObj(temp).asRec()).jvm());
+                final Obj typePredObj = Type.Helper.typePredicateObj(temp);
+                if (typePredObj.isRec())
+                    result.jvm().putAll(Poly.Helper.diffRecRecursion(lhs.asRec(), typePredObj.asRec()).jvm());
+                else 
+                    result.jvm().put(lhs, Poly.Helper.diffObjRecursion(lhs,typePredObj));
                 temp = temp.parentType();
             }
             return result;

@@ -29,6 +29,8 @@ import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
 import studio.phaseshift.metatron.isa.vec.type.MVec;
 
+import java.lang.reflect.Method;
+import java.util.List;
 import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.*;
@@ -39,22 +41,20 @@ import static studio.phaseshift.metatron.isa.llm.type.Agent.agent;
 import static studio.phaseshift.metatron.isa.llm.type.Model.model;
 import static studio.phaseshift.metatron.isa.llm.type.mTool.LLM_TOOL_TYPE;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.*;
-import static studio.phaseshift.metatron.isa.m.type.Code.CODE_TYPE;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.or_;
 import static studio.phaseshift.metatron.isa.m.type.Fail.FAIL_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.Inst.INST_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
-import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.io.space.fs.fsSpace.staticObjToFile;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.DIR_TID;
@@ -192,7 +192,8 @@ public class llmInstSet extends AbstractInstSet {
                                         .vid(USER_MESSAGE_TID)
                                         .isaPredicate(rec(
                                                 uri(NAME).maybe().asUri(), STR_TYPE,
-                                                uri(CONTENTS), rec(uri(TEXT), STR_TYPE)))
+                                                uri(TEXT).maybe(), STR_TYPE,
+                                                uri(CONTENTS).maybe(), ALL_TYPE))
                                         //uri(SIZE).maybe(), DATA_SIZE_TYPE))
                                         .create(),
                                 null, null, mutableMap(
@@ -322,7 +323,7 @@ public class llmInstSet extends AbstractInstSet {
                                 .constructor(instC(INST_CTOR_TID.rng(LLM_CHAT_FEATURE_TID),
                                         lst(REC_TYPE), (lhs, inst) ->
                                                 createStageLambdas(new ChatFeature(inst.arg(0).asRec().jvm(),
-                                                        LLM_CHAT_FEATURE_TID, inst.arg(0).vid()), ON_BEFORE_CHAT, ON_PARTIAL_RESPONSE, ON_COMPLETE_RESPONSE)))
+                                                        LLM_CHAT_FEATURE_TID, inst.arg(0).vid()))))
                                 .create(),
                         Type.Builder.build()
                                 .tid(LLM_FEATURE_TID)
@@ -331,7 +332,7 @@ public class llmInstSet extends AbstractInstSet {
                                 .constructor(instC(INST_CTOR_TID.rng(LLM_SESSION_FEATURE_TID),
                                         lst(REC_TYPE), (lhs, inst) ->
                                                 createStageLambdas(new SessionFeature(inst.arg(0).asRec().jvm(),
-                                                        LLM_SESSION_FEATURE_TID, inst.arg(0).vid()), ON_BEFORE_CHAT)))
+                                                        LLM_SESSION_FEATURE_TID, inst.arg(0).vid()))))
                                 .create(),
                         Type.Builder.build()
                                 .tid(LLM_FEATURE_TID)
@@ -340,7 +341,7 @@ public class llmInstSet extends AbstractInstSet {
                                 .constructor(instC(INST_CTOR_TID.rng(LLM_TOOL_FEATURE_TID),
                                         lst(REC_TYPE), (lhs, inst) ->
                                                 createStageLambdas(new ToolFeature(inst.arg(0).asRec().jvm(),
-                                                        LLM_TOOL_FEATURE_TID, inst.arg(0).vid()), ON_BEFORE_CHAT, ON_TOOL_EXECUTED)))
+                                                        LLM_TOOL_FEATURE_TID, inst.arg(0).vid()))))
                                 .create(),
                         Type.Builder.build()
                                 .tid(LLM_FEATURE_TID)
@@ -348,7 +349,7 @@ public class llmInstSet extends AbstractInstSet {
                                 .constructor(instC(INST_CTOR_TID.rng(LLM_SKILL_FEATURE_TID),
                                         lst(REC_TYPE), (lhs, inst) ->
                                                 createStageLambdas(new SkillFeature(inst.arg(0).asRec().jvm(),
-                                                        LLM_SKILL_FEATURE_TID, inst.arg(0).vid()), ON_BEFORE_CHAT)))
+                                                        LLM_SKILL_FEATURE_TID, inst.arg(0).vid()))))
                                 .create(),
                         Type.Builder.build()
                                 .tid(LLM_FEATURE_TID)
@@ -356,7 +357,7 @@ public class llmInstSet extends AbstractInstSet {
                                 .constructor(instC(INST_CTOR_TID.rng(LLM_SYSTEM_FEATURE_TID),
                                         lst(REC_TYPE), (lhs, inst) ->
                                                 createStageLambdas(new SystemFeature(inst.arg(0).asRec().jvm(),
-                                                        LLM_SYSTEM_FEATURE_TID, inst.arg(0).vid()), ON_BEFORE_CHAT)))
+                                                        LLM_SYSTEM_FEATURE_TID, inst.arg(0).vid()))))
                                 .create(),
                         Type.Builder.build()
                                 .tid(LLM_FEATURE_TID)
@@ -364,7 +365,7 @@ public class llmInstSet extends AbstractInstSet {
                                 .constructor(instC(INST_CTOR_TID.rng(LLM_RECALL_FEATURE_TID),
                                         lst(REC_TYPE), (lhs, inst) ->
                                                 createStageLambdas(new SimilarityRecallFeature(inst.arg(0).asRec().jvm(),
-                                                        LLM_RECALL_FEATURE_TID, inst.arg(0).vid()), ON_BEFORE_CHAT)))
+                                                        LLM_RECALL_FEATURE_TID, inst.arg(0).vid()))))
                                 .create(),
                         Type.Builder.build()
                                 .tid(LLM_FEATURE_TID)
@@ -380,7 +381,7 @@ public class llmInstSet extends AbstractInstSet {
                                         .constructor(instC(INST_CTOR_TID.rng(LLM_THINK_FEATURE_TID),
                                                 lst(REC_TYPE), (lhs, inst) ->
                                                         createStageLambdas(new ThinkFeature(inst.arg(0).asRec().jvm(),
-                                                                LLM_THINK_FEATURE_TID, inst.arg(0).vid()), ON_BEFORE_CHAT, ON_PARTIAL_THINKING, ON_COMPLETE_RESPONSE)))
+                                                                LLM_THINK_FEATURE_TID, inst.arg(0).vid()))))
                                         .create(),
                                 "",
                                 "",
@@ -392,8 +393,7 @@ public class llmInstSet extends AbstractInstSet {
                                         .constructor(instC(INST_CTOR_TID.rng(LLM_STAGE_FEATURE_TID),
                                                 lst(REC_TYPE), (lhs, inst) ->
                                                         createStageLambdas(new StageFeature(inst.arg(0).asRec().jvm(),
-                                                                        LLM_STAGE_FEATURE_TID, inst.arg(0).vid()), ON_BEFORE_CHAT, ON_PARTIAL_RESPONSE, ON_PARTIAL_THINKING,
-                                                                ON_PARTIAL_TOOL_CALL, ON_TOOL_EXECUTED, ON_COMPLETE_RESPONSE, "onError")))
+                                                                LLM_STAGE_FEATURE_TID, inst.arg(0).vid()))))
                                         .create(),
                                 "",
                                 "",
@@ -404,7 +404,7 @@ public class llmInstSet extends AbstractInstSet {
                                         .vid(LLM_CONCEPT_FEATURE_TID)
                                         .constructor(instC(INST_CTOR_TID.rng(LLM_CONCEPT_FEATURE_TID),
                                                 lst(REC_TYPE), (lhs, inst) ->
-                                                        createStageLambdas(new ConceptFeature(inst.arg(0).asRec().jvm(), LLM_CONCEPT_FEATURE_TID, inst.arg(0).vid()), ON_BEFORE_CHAT, ON_PARTIAL_THINKING, ON_PARTIAL_RESPONSE, ON_COMPLETE_RESPONSE)))
+                                                        createStageLambdas(new ConceptFeature(inst.arg(0).asRec().jvm(), LLM_CONCEPT_FEATURE_TID, inst.arg(0).vid()))))
                                         .create(),
                                 "",
                                 "",
@@ -416,7 +416,7 @@ public class llmInstSet extends AbstractInstSet {
                                         .constructor(instC(INST_CTOR_TID.rng(LLM_COST_FEATURE_TID),
                                                 lst(REC_TYPE), (lhs, inst) ->
                                                         createStageLambdas(new CostFeature(inst.arg(0).asRec().jvm(),
-                                                                LLM_COST_FEATURE_TID, inst.arg(0).vid()), ON_BEFORE_CHAT, ON_TOOL_EXECUTED, ON_COMPLETE_RESPONSE, "onError")))
+                                                                LLM_COST_FEATURE_TID, inst.arg(0).vid()))))
                                         .create(),
                                 "",
                                 "", mutableMap(),
@@ -427,8 +427,7 @@ public class llmInstSet extends AbstractInstSet {
                                         .constructor(instC(INST_CTOR_TID.rng(LLM_AUDIT_FEATURE_TID),
                                                 lst(REC_TYPE), (lhs, inst) ->
                                                         createStageLambdas(new AuditFeature(inst.arg(0).asRec().jvm(),
-                                                                        LLM_AUDIT_FEATURE_TID, inst.arg(0).vid()), ON_BEFORE_CHAT, ON_PARTIAL_TOOL_CALL, ON_TOOL_EXECUTED,
-                                                                ON_COMPLETE_RESPONSE, "onError")))
+                                                                LLM_AUDIT_FEATURE_TID, inst.arg(0).vid()))))
                                         .create(),
                                 "",
                                 "", mutableMap(),
@@ -444,7 +443,7 @@ public class llmInstSet extends AbstractInstSet {
                                         .constructor(instC(INST_CTOR_TID.rng(LLM_LOOP_FEATURE_TID),
                                                 lst(REC_TYPE), (lhs, inst) ->
                                                         createStageLambdas(new LoopFeature(inst.arg(0).asRec().jvm(),
-                                                                LLM_LOOP_FEATURE_TID, inst.arg(0).vid()), ON_BEFORE_CHAT, ON_COMPLETE_RESPONSE, "onError")))
+                                                                LLM_LOOP_FEATURE_TID, inst.arg(0).vid()))))
                                         .create(),
                                 "",
                                 "", mutableMap(
@@ -461,7 +460,7 @@ public class llmInstSet extends AbstractInstSet {
                                         .constructor(instC(INST_CTOR_TID.rng(LLM_LEDGER_FEATURE_TID),
                                                 lst(REC_TYPE), (lhs, inst) ->
                                                         createStageLambdas(new LedgerFeature(inst.arg(0).asRec().jvm(),
-                                                                LLM_LEDGER_FEATURE_TID, inst.arg(0).vid()), ON_BEFORE_CHAT)))
+                                                                LLM_LEDGER_FEATURE_TID, inst.arg(0).vid()))))
                                         .create(),
                                 "ledger feature — persistent agent-owned scratchpad for cross-turn task tracking",
                                 "", mutableMap(
@@ -540,53 +539,78 @@ public class llmInstSet extends AbstractInstSet {
     }
 
     /**
-     * Registers lifecycle hook lambdas on a feature for the given stages.
-     * Each stage name maps to a corresponding {@code onXxx} method on the
-     * feature, with the correct argument extraction and return semantics.
+     * Registers lifecycle hook lambdas on a feature by reflectively detecting
+     * which stage methods the feature's concrete class overrides.
+     * Only methods that are directly implemented (not inherited from the
+     * no-op defaults in {@link studio.phaseshift.metatron.isa.llm.type.feature.Feature})
+     * get wired up — no manual stage lists needed.
      *
-     * @param f      the feature to register hooks on
-     * @param stages varargs of stage names (e.g. {@code ON_BEFORE_CHAT},
-     *               {@code ON_PARTIAL_RESPONSE}, {@code "onError"})
+     * @param f the feature to register hooks on
      */
     @SuppressWarnings("unchecked")
-    private static <F extends studio.phaseshift.metatron.isa.llm.type.feature.Feature> F createStageLambdas(final F f, final String... stages) {
-        for (final String stage : stages) {
-            switch (stage) {
-                case ON_BEFORE_CHAT -> f.at(uri(ON_BEFORE_CHAT), instLambda((agent, ignored) ->
-                        f.onBeforeChat((Agent) agent)), MUTABLE);
-                case ON_PARTIAL_RESPONSE -> f.at(uri(ON_PARTIAL_RESPONSE), instLambda((agent, i) -> {
-                    f.onPartialResponse((Agent) agent, i.arg(0).asStr());
-                    return noobj();
-                }), MUTABLE);
-                case ON_PARTIAL_THINKING -> f.at(uri(ON_PARTIAL_THINKING), instLambda((agent, i) -> {
-                    f.onPartialThinking((Agent) agent, i.arg(0).asStr());
-                    return noobj();
-                }), MUTABLE);
-                case ON_PARTIAL_TOOL_CALL -> f.at(uri(ON_PARTIAL_TOOL_CALL), instLambda((agent, i) -> {
-                    f.onPartialToolCall((Agent) agent, (Inst) i.arg(0));
-                    return noobj();
-                }), MUTABLE);
-                case BEFORE_TOOL_EXECUTION -> f.at(uri(BEFORE_TOOL_EXECUTION), instLambda((agent, i) -> {
-                    f.beforeToolExecution((Agent) agent, (Inst) i.arg(0));
-                    return noobj();
-                }), MUTABLE);
-                case ON_TOOL_EXECUTED -> f.at(uri(ON_TOOL_EXECUTED), instLambda((agent, i) -> {
-                    f.onToolExecuted((Agent) agent, i.arg(0));
-                    return noobj();
-                }), MUTABLE);
-                case ON_COMPLETE_RESPONSE -> f.at(uri(ON_COMPLETE_RESPONSE), instLambda((agent, i) -> {
-                    f.onCompleteResponse((Agent) agent, i.arg(0).asStr());
-                    return noobj();
-                }), MUTABLE);
-                case "onError" -> f.at(uri("onError"), instLambda((agent, ignored) -> {
-                    f.onError((Agent) agent, null);
-                    return noobj();
-                }), MUTABLE);
-                default -> throw new IllegalArgumentException("unknown stage: " + stage);
+    private static <F extends studio.phaseshift.metatron.isa.llm.type.feature.Feature> F createStageLambdas(final F f) {
+        for (final StageDef def : STAGE_DEFS) {
+            try {
+                final Method method = f.getClass().getMethod(def.methodName, def.paramTypes);
+                if (method.getDeclaringClass() != studio.phaseshift.metatron.isa.llm.type.feature.Feature.class) {
+                    f.at(uri(def.stageName), def.lambdaFactory.apply(f), MUTABLE);
+                }
+            } catch (final NoSuchMethodException e) {
+                // All methods are declared on Feature — this should never happen
             }
         }
         return f;
     }
+
+    // ---- stage hook definitions -----------------------------------------
+
+    private record StageDef(
+            String stageName,
+            String methodName,
+            Class<?>[] paramTypes,
+            java.util.function.Function<studio.phaseshift.metatron.isa.llm.type.feature.Feature, Inst> lambdaFactory
+    ) {
+    }
+
+    private static final List<StageDef> STAGE_DEFS = List.of(
+            new StageDef(ON_BEFORE_CHAT, "onBeforeChat", new Class<?>[]{Agent.class},
+                    f -> instLambda((agent, ignored) -> f.onBeforeChat((Agent) agent))),
+            new StageDef(ON_PARTIAL_RESPONSE, "onPartialResponse", new Class<?>[]{Agent.class, Str.class},
+                    f -> instLambda((agent, i) -> {
+                        f.onPartialResponse((Agent) agent, i.arg(0).asStr());
+                        return noobj();
+                    })),
+            new StageDef(ON_PARTIAL_THINKING, "onPartialThinking", new Class<?>[]{Agent.class, Str.class},
+                    f -> instLambda((agent, i) -> {
+                        f.onPartialThinking((Agent) agent, i.arg(0).asStr());
+                        return noobj();
+                    })),
+            new StageDef(ON_PARTIAL_TOOL_CALL, "onPartialToolCall", new Class<?>[]{Agent.class, Inst.class},
+                    f -> instLambda((agent, i) -> {
+                        f.onPartialToolCall((Agent) agent, (Inst) i.arg(0));
+                        return noobj();
+                    })),
+            new StageDef(BEFORE_TOOL_EXECUTION, "beforeToolExecution", new Class<?>[]{Agent.class, Inst.class},
+                    f -> instLambda((agent, i) -> {
+                        f.beforeToolExecution((Agent) agent, (Inst) i.arg(0));
+                        return noobj();
+                    })),
+            new StageDef(ON_TOOL_EXECUTED, "onToolExecuted", new Class<?>[]{Agent.class, Obj.class},
+                    f -> instLambda((agent, i) -> {
+                        f.onToolExecuted((Agent) agent, i.arg(0));
+                        return noobj();
+                    })),
+            new StageDef(ON_COMPLETE_RESPONSE, "onCompleteResponse", new Class<?>[]{Agent.class, Str.class},
+                    f -> instLambda((agent, i) -> {
+                        f.onCompleteResponse((Agent) agent, i.arg(0).asStr());
+                        return noobj();
+                    })),
+            new StageDef("onError", "onError", new Class<?>[]{Agent.class, Fail.class},
+                    f -> instLambda((agent, ignored) -> {
+                        f.onError((Agent) agent, null);
+                        return noobj();
+                    }))
+    );
 
     /*
        return new LinkedHashMap<>() {{
