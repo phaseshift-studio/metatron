@@ -155,8 +155,8 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
         final List<Rec> allMessages = new ArrayList<>();
         final AtomicInteger found = new AtomicInteger(0);
         // from_(msgBase.extend("+").toUri()).where_(rec(uri(SESSION), sesVID.toUri())).apply()
-        Router.readFromSpace(msgBase.extend("+"))
-                .stream().forEach(msg -> {
+        Router.readFromSpace(msgBase.extend("+")).stream()
+                .forEach(msg -> {
                     if (!msg.isRec()) {
                         LOG.warn("non-message obj in llm messages: %s", msg);
                     } else {
@@ -169,13 +169,13 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
                         }
                     }
                 });
-        allMessages.sort(Comparator.comparing(a -> Integer.parseInt(a.vid().name())));
+        // allMessages.sort(Comparator.comparing(a -> Integer.parseInt(a.vid().name())));
         LOG.info("messages found for context window: " + found.get());
         // ChatMemory handles its own windowing (token-based or message-based)
         // after hydrating from the store; we return all messages and let it prune
         return allMessages.stream().map(m -> {
             try {
-                return SERIALIZER.write(m);
+                return SERIALIZER.write(m.vid(null));
             } catch (final Exception e) {
                 LOG.warn("error converting stored message to ChatMessage (ignoring): %s", e);
                 return null;
