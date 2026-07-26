@@ -43,6 +43,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -78,8 +79,13 @@ public class PanelWidget extends JRec<PanelWidget> implements Widget<PanelWidget
     private void sync() {
         if (this.style == null) return; // construction guard
         final Map<Obj, Obj> jvm = jvmRead();
-        this.title = jvmStr(jvm, "title");
-        this.body = jvmStr(jvm, "body");
+        // Only overwrite from JVM when the key is present, so that
+        // Java-populated fields (set via convenience constructors or
+        // direct assignment) are not silently cleared.
+        if (jvm.containsKey(uri("title")))
+            this.title = jvmStr(jvm, "title");
+        if (jvm.containsKey(uri("body")))
+            this.body = jvmStr(jvm, "body");
     }
 
     // ── convenience constructors ───────────────────────────────────
