@@ -111,6 +111,7 @@ public class llmInstSet extends AbstractInstSet {
     public static Type LLM_SESSION_TYPE;
     public static Type LLM_MESSAGE_TYPE;
     public static Type LLM_TOOL_RESULT_MESSAGE_TYPE;
+    public static Type LLM_TOOL_REQUEST_MESSAGE_TYPE;
     public static Type LLM_THINKING_MESSAGE_TYPE;
     public static Type LLM_NOTES_TYPE;
     public static ObjFactory LLM_OBJ_FACTORY = MObjFactory.of().addExtension(MVec.class, x -> lst(x.jvm().stream().toList()));
@@ -200,24 +201,33 @@ public class llmInstSet extends AbstractInstSet {
                                         uri(NAME).maybe(), "sender identity for multi-user conversations",
                                         uri(CONTENTS), "the message contents"
                                         /*  uri(SIZE), "the data size of the message content"*/), "a user message"),
+                        docWrap(LLM_TOOL_REQUEST_MESSAGE_TYPE = Type.Builder.build()
+                                        .tid(MESSAGE_TID)
+                                        .vid(TOOL_REQUEST_MESSAGE_TID)
+                                        .isaPredicate(rec(
+                                                uri(NAME), URI_TYPE,
+                                                uri(ARGS).maybe(), STR_TYPE,
+                                                uri(TEXT), STR_TYPE,
+                                                uri(CONTENTS).maybe(), STR_TYPE))
+                                        .create(),
+                                null, null, mutableMap(
+                                        uri(NAME), "the tool name",
+                                        uri(ARGS), "the tool arguments (mapped from LC4j 'arguments' via VOCAB)",
+                                        uri(TEXT), "formatted name(args) summary",
+                                        uri(CONTENTS).maybe(), "the tool execution request id"),
+                                "a tool execution request — nested inside an ai message's tool_requests list"),
                         docWrap(LLM_AI_MESSAGE_TYPE = Type.Builder.build()
                                         .tid(MESSAGE_TID)
                                         .vid(AI_MESSAGE_TID)
                                         .isaPredicate(rec(
-                                                uri(NAME).maybe().asUri(), STR_TYPE,
                                                 uri(TEXT).maybe().asUri(), STR_TYPE,
-                                                uri(THINKING).maybe(), INT_TYPE,
-                                                //       uri(SIZE).maybe().asUri(), DATA_SIZE_TYPE,
-                                                uri(TOOL_REQUESTS).maybe(), LST_TYPE,
-                                                uri(ATTRIBUTES).maybe(), REC_TYPE))
+                                                uri(TOOL_REQUESTS).maybe(), lst(LLM_TOOL_REQUEST_MESSAGE_TYPE)))
                                         .create(),
                                 null, null, mutableMap(
-                                        uri(NAME), "the assistant identity",
                                         uri(TEXT), "the response text",
-                                        uri(THINKING), "the internal reasoning and token count of the model",
-                                        uri(SIZE), "the data size of the message text",
                                         uri(TOOL_REQUESTS), "the tool execution requests made by the model",
-                                        uri(ATTRIBUTES), "extra metadata from the provider"), "an ai/assistant message"),
+                                        uri("+attributes"), "extra provider metadata is stored as top-level fields on the rec"),
+                                "an ai/assistant message"),
                         docWrap(LLM_TOOL_RESULT_MESSAGE_TYPE = Type.Builder.build()
                                         .tid(MESSAGE_TID)
                                         .vid(TOOL_RESULT_MESSAGE_TID)

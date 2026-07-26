@@ -62,6 +62,7 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 public class SpaceChatSessionStore implements ChatMemoryStore {
 
     private static final GraphittyLogger LOG = Graphitty.log(SpaceChatSessionStore.class);
+    private static final ObjChatMessageSerializer SERIALIZER = ObjChatMessageSerializer.instance();
 
     private final Agent agent;
     private final Space space;
@@ -126,44 +127,6 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
         }
     }
 
-    // -- content-part type discrimination tokens --
-    private static final String IMG = "image";
-    private static final String AUD = "audio";
-    private static final String VID = "video";
-    private static final String PF = "pdf";
-
-    // -- Known structural field sets per message type -------------------------
-    // Fields NOT in these sets are treated as attributes during Rec→ChatMessage
-    // conversion.  System fields (_tid, session, time, hash) are stripped by
-    // the read path and never reach extractAttributes.
-
-    private static final Set<String> SYSTEM_KNOWN_KEYS = Set.of(TEXT);
-    private static final Set<String> USER_KNOWN_KEYS = Set.of(NAME, CONTENTS);
-    private static final Set<String> AI_KNOWN_KEYS = Set.of(TEXT, THINKING, TOOL_REQUESTS);
-    private static final Set<String> TOOL_RESULT_KNOWN_KEYS = Set.of(TEXT, ID, NAME);
-
-    /**
-     * Collect extra rec fields as a string-keyed attribute map for placement
-     * into {@code ChatMessage.attributes()}.
-     */
-    private static Map<String, Object> extractAttributes(final Rec rec, final Set<String> knownKeys) {
-        final Map<String, Object> attrs = new LinkedHashMap<>();
-        for (final Map.Entry<Obj, Obj> e : rec.recValue().entrySet()) {
-            if (!e.getKey().isUri()) continue;
-            final String keyName = e.getKey().uriValue().name();
-            if (knownKeys.contains(keyName)) continue;
-            // Internal infrastructure — never expose to LC4j
-            if (HASH.equals(keyName) || TIME.equals(keyName) || SESSION.equals(keyName)) continue;
-            attrs.put(keyName, Str.Helper.cleanString(e.getValue()));
-        }
-        return attrs;
-    }
-
-    // -- Token vocabulary ----------------------------------------------------
-    static final TokenMapper VOCAB = new TokenMapper()
-            .add(TOOL_RESULT_MESSAGE_TID, NAME, "toolName")
-            .add(LLM_TOOL_TID, ARGS, "arguments");
-
     // -- HASH key ------------------------------------------------------------
     private static final String HASH = "hash";
 
@@ -221,7 +184,7 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
         // after hydrating from the store; we return all messages and let it prune
         return allMessages.stream().map(m -> {
             try {
-                return recToChatMessage(m);
+                return SERIALIZER.write(m);
             } catch (final Exception e) {
                 LOG.warn("error converting stored message to ChatMessage (ignoring): %s", e);
                 return null;
@@ -243,7 +206,7 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
         final List<Rec> incomingRecs = new ArrayList<>();
         for (final ChatMessage msg : messages) {
             try {
-                final Rec msgRec = chatMessageToRec(msg);
+                final Rec msgRec = SERIALIZER.read(msg).asRec();
                 final String hash = contentHash(msgRec);
                 msgRec.recValue().put(uri(HASH), str(hash));
                 msgRec.recValue().put(uri(TIME), str(Date.from(Instant.now()).toString()));
@@ -338,326 +301,14 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
     }
 
     ///////////////////////////////////////////////////////////////////////////
-    // ChatMessage -> typed Rec  (boundary: LC4j field -> metatron token)
-
-    /// ////////////////////////////////////////////////////////////////////////
-
-    public static Rec chatMessageToRec(final ChatMessage message) {
-        if (SystemMessage.class.isAssignableFrom(message.type().messageClass()))
-            return systemMessageToRec((SystemMessage) message);
-        if (UserMessage.class.isAssignableFrom(message.type().messageClass()))
-            return userMessageToRec((UserMessage) message);
-        if (AiMessage.class.isAssignableFrom(message.type().messageClass()))
-            return aiMessageToRec((AiMessage) message);
-        if (ToolExecutionResultMessage.class.isAssignableFrom(message.type().messageClass()))
-            return toolResultMessageToRec((ToolExecutionResultMessage) message);
-        else
-            throw MTronException.of("unsupported message type: %s [%s]", message.type(), message.getClass().getSimpleName());
-    }
-
-    private static Rec systemMessageToRec(final SystemMessage msg) {
-        return rec(mutableMap(uri(TEXT), str(msg.text())), SYSTEM_MESSAGE_TID, null);
-    }
-
-    private static Rec userMessageToRec(final UserMessage msg) {
-        final Map<Obj, Obj> map = new LinkedHashMap<>();
-        if (msg.name() != null && !msg.name().isBlank())
-            map.put(uri(NAME), str(msg.name()));
-        if (msg.hasSingleText()) {
-            map.put(uri(CONTENTS), rec(uri(TEXT), str(msg.singleText())));
-            map.put(uri(TEXT), str(msg.singleText()));
-        } else {
-            final List<Obj> parts = new ArrayList<>();
-            for (final Content content : msg.contents())
-                parts.add(contentToRec(content));
-            map.put(uri(CONTENTS), lst(parts));
-            map.put(uri(TEXT), str(parts.stream().map(x -> x.jvm() + "").reduce("", (a, b) -> a + ";" + b)));
-        }
-        msg.attributes().forEach((k, v) -> map.putIfAbsent(uri(k), str(String.valueOf(v))));
-        return rec(map, USER_MESSAGE_TID, null);
-    }
-
-    private static Rec contentToRec(final Content content) {
-        return switch (content.type()) {
-            case TEXT -> rec(uri(TEXT), str(((TextContent) content).text()));
-            case IMAGE -> {
-                final Image img = ((ImageContent) content).image();
-                yield rec(uri(IMG), mediaToRec(img.url(), img.base64Data(), img.mimeType()));
-            }
-            case AUDIO -> {
-                final Audio audio = ((AudioContent) content).audio();
-                final Map<Obj, Obj> audMap = new LinkedHashMap<>();
-                if (audio.binaryData() != null && audio.binaryData().length > 0)
-                    audMap.put(uri(DATA), bytes(ByteBuffer.wrap(audio.binaryData())));
-                else if (audio.base64Data() != null && !audio.base64Data().isBlank())
-                    audMap.put(uri(DATA), bytes(ByteBuffer.wrap(Base64.getDecoder().decode(audio.base64Data()))));
-                if (audio.url() != null)
-                    audMap.put(uri(URL), uri(audio.url().toString()));
-                if (audio.mimeType() != null && !audio.mimeType().isBlank())
-                    audMap.put(uri(MIME_TYPE), str(audio.mimeType()));
-                yield rec(uri(AUD), rec(audMap));
-            }
-            case VIDEO -> {
-                final Video video = ((VideoContent) content).video();
-                yield rec(uri(VID), mediaToRec(video.url(), video.base64Data(), video.mimeType()));
-            }
-            case PDF -> {
-                final PdfFile pdf = ((PdfFileContent) content).pdfFile();
-                yield rec(uri(PF), mediaToRec(pdf.url(), pdf.base64Data(), pdf.mimeType()));
-            }
-            default -> rec(uri(TEXT), str(content.toString()));
-        };
-    }
-
-    private static Rec mediaToRec(final java.net.URI url, final String base64Data, final String mimeType) {
-        final Map<Obj, Obj> map = new LinkedHashMap<>();
-        if (url != null) map.put(uri(URL), uri(url.toString()));
-        if (base64Data != null && !base64Data.isBlank())
-            map.put(uri(DATA), bytes(ByteBuffer.wrap(Base64.getDecoder().decode(base64Data))));
-        if (mimeType != null && !mimeType.isBlank())
-            map.put(uri(MIME_TYPE), str(mimeType));
-        if (map.isEmpty()) return rec(uri(TEXT), str("none"));
-        return rec(map);
-    }
-
-    private static Rec aiMessageToRec(final AiMessage msg) {
-        final Map<Obj, Obj> map = new LinkedHashMap<>();
-        if (msg.text() != null && !msg.text().isBlank())
-            map.put(uri(TEXT), str(msg.text()));
-        if (msg.hasToolExecutionRequests()) {
-            final List<Obj> toolReqs = new ArrayList<>();
-            for (final ToolExecutionRequest req : msg.toolExecutionRequests())
-                toolReqs.add(toolRequestToRec(req));
-            map.put(uri(TOOL_REQUESTS), lst(toolReqs));
-            if (!map.containsKey(uri(CONTENTS)))
-                map.put(uri(CONTENTS), str(toolReqs.toString()));
-        }
-        msg.attributes().forEach((k, v) -> map.putIfAbsent(uri(k), str(String.valueOf(v))));
-        return rec(map, AI_MESSAGE_TID, null);
-    }
-
-    private static Rec toolRequestToRec(final ToolExecutionRequest toolRequest) {
-        final Map<Obj, Obj> map = new LinkedHashMap<>();
-        if (toolRequest.name() != null && !toolRequest.name().isBlank())
-            map.put(uri(NAME), uri(toolRequest.name()));
-        if (toolRequest.arguments() != null && !toolRequest.arguments().isBlank())
-            map.put(uri(VOCAB.from(LLM_TOOL_TID, "arguments")), str(toolRequest.arguments()));
-        if (toolRequest.id() != null && !toolRequest.id().isBlank())
-            map.put(uri(CONTENTS), str(toolRequest.id()));
-        map.put(uri(TEXT), str(toolRequest.name() + "(" + toolRequest.arguments() + ")"));
-        return rec(map, TOOL_REQUEST_MESSAGE_TID, null);
-    }
-
-    private static Rec toolResultMessageToRec(final ToolExecutionResultMessage msg) {
-        final Map<Obj, Obj> map = new LinkedHashMap<>();
-        map.put(uri(VOCAB.from(TOOL_RESULT_MESSAGE_TID, "toolName")), uri(msg.toolName()));
-        // Serialize the text through ObjmtronSerializer.writeStr() so the stored
-        // value is mtron-escaped (e.g. 'text' or """text""").  This prevents
-        // tbleSpace's {/[ heuristic in readColumnWithMetadata from mis-parsing
-        // tool-result text that happens to look like structured mtron data.
-        final String rawText = msg.hasSingleText() && msg.text() != null && !msg.text().isBlank() ? msg.text() : msg.toString();
-        map.put(uri(TEXT), str(ObjmtronSerializer.singleNoClip().write(str(rawText))));
-        if (msg.id() != null && !msg.id().isBlank())
-            map.put(uri(CONTENTS), str(msg.id()));
-        // map.put(uri(TOOL_REQUESTS), lst(instA(f(msg.toolName()))));
-        msg.attributes().forEach((k, v) -> map.putIfAbsent(uri(k), str(String.valueOf(v))));
-        return rec(map, TOOL_RESULT_MESSAGE_TID, null);
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-    // typed Rec -> ChatMessage (boundary: metatron token -> LC4j field)
-    // Message type is determined by rec.tid() (populated from _tid column
-    // on read), not by a redundant "type" field.
-
-    /// ////////////////////////////////////////////////////////////////////////
-
-    public static ChatMessage recToChatMessage(final Rec rec) {
-        final fURI tid = rec.tid();
-        if (tid.equals(SYSTEM_MESSAGE_TID))
-            return recToSystemMessage(rec);
-        if (tid.equals(USER_MESSAGE_TID))
-            return recToUserMessage(rec);
-        if (tid.equals(AI_MESSAGE_TID))
-            return recToAiMessage(rec);
-        if (tid.equals(TOOL_REQUEST_MESSAGE_TID) || tid.equals(TOOL_RESULT_MESSAGE_TID))
-            return recToToolResultMessage(rec);
-        // Fallback: check legacy "type" field for compatibility with old data
-        LOG.warn("unknown message type (tid=%s): %s", tid, rec);
-        return recToSystemMessage(rec);
-    }
-
-    private static SystemMessage recToSystemMessage(final Rec rec) {
-        return SystemMessage.from(Str.Helper.cleanString(rec.at(uri(TEXT)).orElse(str("none"))));
-    }
-
-    private static UserMessage recToUserMessage(final Rec rec) {
-        final String name = Str.Helper.cleanString(rec.at(uri(NAME)).orElse(str("")));
-        final String nameOrNull = "none".equals(name) || name.isBlank() ? null : name;
-        final Map<String, Object> attrs = extractAttributes(rec, USER_KNOWN_KEYS);
-        final Obj rawContents = rec.at(uri(CONTENTS));
-        final Obj contents = false && rawContents.isStr() ? ObjJSONSerializer.simple().inputBytes(rawContents.strValue()) : rawContents;
-        final UserMessage.Builder builder = UserMessage.builder()
-                .name(nameOrNull)
-                .attributes(attrs);
-
-        if (contents.isNoObj()) {
-            builder.addContent(TextContent.from(""));
-        } else if (contents.isLst()) {
-            final List<Content> contentList = contents.asLst().elements()
-                    .filter(Obj::isRec)
-                    .map(c -> recToContent(c.asRec()))
-                    .filter(Objects::nonNull)
-                    .toList();
-            if (contentList.isEmpty())
-                builder.addContent(TextContent.from("none"));
-            else
-                builder.contents(contentList);
-        } else if (contents.isRec()) {
-            final Rec contentRec = contents.asRec();
-            if (contentRec.has(uri(TEXT)))
-                builder.addContent(TextContent.from(Str.Helper.cleanString(contentRec.at(uri(TEXT)))));
-            else {
-                final Content content = recToContent(contentRec);
-                if (content != null)
-                    builder.addContent(content);
-                else
-                    builder.addContent(TextContent.from(""));
-            }
-        } else {
-            try {
-                final Obj mtron = ObjmtronSerializer.compact().inputBytes(Str.Helper.cleanString(contents));
-                builder.addContent(TextContent.from(mtron.asRec().at(TEXT).strValue()));
-            } catch (final Exception e) {
-                LOG.warn("unable to parse as json: %s", contents);
-                builder.addContent(TextContent.from(Str.Helper.cleanString(contents)));
-            }
-        }
-
-        return builder.build();
-    }
-
-    private static Content recToContent(final Rec part) {
-        if (part.has(uri(TEXT)))
-            return TextContent.from(Str.Helper.cleanString(part.at(uri(TEXT))));
-        if (part.has(uri(IMG)))
-            return ImageContent.from(recToImage(part.at(uri(IMG)).asRec()));
-        if (part.has(uri(AUD)))
-            return AudioContent.from(recToAudio(part.at(uri(AUD)).asRec()));
-        if (part.has(uri(VID)))
-            return VideoContent.from(recToVideo(part.at(uri(VID)).asRec()));
-        if (part.has(uri(PF)))
-            return PdfFileContent.from(recToPdf(part.at(uri(PF)).asRec()));
-        return null;
-    }
-
-    private static Image recToImage(final Rec rec) {
-        final Image.Builder b = Image.builder();
-        if (rec.has(uri(MIME_TYPE)))
-            b.mimeType(rec.at(uri(MIME_TYPE)).strValue());
-        if (rec.has(uri(URL)))
-            b.url(rec.at(uri(URL)).strValue());
-        if (rec.has(uri(DATA)))
-            b.base64Data(Base64.getEncoder().encodeToString(rec.at(uri(DATA)).bytesValue().array()));
-        return b.build();
-    }
-
-    private static Audio recToAudio(final Rec rec) {
-        final Audio.Builder b = Audio.builder();
-        if (rec.has(uri(MIME_TYPE)))
-            b.mimeType(rec.at(uri(MIME_TYPE)).strValue());
-        if (rec.has(uri(URL)))
-            b.url(rec.at(uri(URL)).strValue());
-        if (rec.has(uri(DATA)))
-            b.base64Data(Base64.getEncoder().encodeToString(rec.at(uri(DATA)).bytesValue().array()));
-        return b.build();
-    }
-
-    private static Video recToVideo(final Rec rec) {
-        final Video.Builder b = Video.builder();
-        if (rec.has(uri(MIME_TYPE)))
-            b.mimeType(rec.at(uri(MIME_TYPE)).strValue());
-        if (rec.has(uri(URL)))
-            b.url(Str.Helper.cleanString(rec.at(uri(URL)).orElse(str(""))));
-        if (rec.has(uri(DATA)))
-            b.base64Data(Base64.getEncoder().encodeToString(rec.at(uri(DATA)).bytesValue().array()));
-        return b.build();
-    }
-
-    private static PdfFile recToPdf(final Rec rec) {
-        final PdfFile.Builder b = PdfFile.builder();
-        if (rec.has(uri(URL)))
-            b.url(rec.at(uri(URL)).strValue());
-        if (rec.has(uri(DATA)))
-            b.base64Data(Base64.getEncoder().encodeToString(rec.at(uri(DATA)).bytesValue().array()));
-        return b.build();
-    }
-
-    private static AiMessage recToAiMessage(final Rec rec) {
-        final String text = Str.Helper.cleanString(rec.at(uri(TEXT)).orElse(str("none")));
-        final Map<String, Object> attrs = extractAttributes(rec, AI_KNOWN_KEYS);
-        final AiMessage.Builder builder = AiMessage.builder()
-                .text(text)
-                .attributes(attrs);
-        if (rec.has(uri(TOOL_REQUESTS))) {
-            final Lst toolReqs = rec.at(uri(TOOL_REQUESTS)).asLst();
-            final List<ToolExecutionRequest> requests = toolReqs.elements()
-                    .filter(Obj::isRec)
-                    .map(tr -> {
-                        if (tr.isRec()) {
-                            final Rec trRec = tr.asRec();
-                            final String argsToken = VOCAB.from(LLM_TOOL_TID, "arguments");
-                            return ToolExecutionRequest.builder()
-                                    .name(Str.Helper.cleanString(trRec.at(uri(NAME)).orElse(str(""))))
-                                    .arguments(trRec.at(uri(argsToken)).orElse(str("")).strValue())
-                                    .id(Str.Helper.cleanString(trRec.at(uri(CONTENTS)).orElse(str(""))))
-                                    .build();
-                        } else if (tr.isInst()) {
-                            final Inst trInst = tr.asInst();
-                            //final String argsToken = VOCAB.from(LLM_TOOL_TID, "arguments");
-                            return ToolExecutionRequest.builder()
-                                    .name(trInst.tid().name())
-                                    .arguments(trInst.args().toString())
-                                    .id(trInst.vid().toString())
-                                    .build();
-                        } else {
-                            throw MTronException.of("tool request type unknown: %s", tr);
-                        }
-                    })
-                    .toList();
-            builder.toolExecutionRequests(requests);
-        }
-        return builder.build();
-    }
-
-    private static ToolExecutionResultMessage recToToolResultMessage(final Rec rec) {
-        final String nameToken = VOCAB.from(TOOL_RESULT_MESSAGE_TID, "toolName");
-        final Map<String, Object> attrs = extractAttributes(rec, TOOL_RESULT_KNOWN_KEYS);
-        // If the text was serialized through ObjmtronSerializer.writeStr()
-        // (starts with a quote), deserialize it back.  Otherwise use as-is.
-        final String rawText = Str.Helper.cleanString(rec.at(uri(TEXT)).orElse(str("none")));
-        final String text;
-        if (!rawText.isEmpty() && (rawText.charAt(0) == '\'' || rawText.charAt(0) == '"')) {
-            final Obj parsed = ObjmtronSerializer.singleNoClip().inputBytes(rawText);
-            text = parsed.isFail() ? rawText : Str.Helper.cleanString(parsed);
-        } else {
-            text = rawText;
-        }
-        return ToolExecutionResultMessage.builder()
-                .id(Str.Helper.cleanString(rec.at(uri(CONTENTS)).orElse(str(""))))
-                .toolName(Str.Helper.cleanString(rec.at(uri(nameToken)).orElse(str(""))))
-                .text(text)
-                .attributes(attrs)
-                .build();
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
     // Content hashing
     ///////////////////////////////////////////////////////////////////////////
 
     /**
      * Computes a SHA-256 content hash of the given message Rec.
-     * Strips volatile metadata fields so the same logical message produces
-     * the same hash across calls.
+     * Strips volatile metadata fields and uses sorted-key serialization
+     * so the same logical message produces the same hash regardless of
+     * map implementation (LinkedHashMap vs HashMap on tbleSpace read-back).
      */
     static String contentHash(final Rec msgRec) {
         final Map<Obj, Obj> saved = new LinkedHashMap<>();
@@ -667,9 +318,16 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
             if (val != null) saved.put(key, val);
         }
         try {
-            final byte[] jsonBytes = msgRec.toString().getBytes();
+            // Deterministic: sort entries by key, emit key:value
+            final List<String> entries = new ArrayList<>();
+            for (final Map.Entry<Obj, Obj> e : msgRec.recValue().entrySet()) {
+                entries.add(e.getKey() + ":" + e.getValue());
+            }
+            entries.sort(String::compareTo);
+            final String payload = msgRec.tid() + "|" + String.join("|", entries);
+            final byte[] bytes = payload.getBytes();
             final MessageDigest md = MessageDigest.getInstance("SHA-256");
-            final byte[] digest = md.digest(jsonBytes);
+            final byte[] digest = md.digest(bytes);
             final StringBuilder sb = new StringBuilder();
             for (final byte b : digest)
                 sb.append(String.format("%02x", b));
