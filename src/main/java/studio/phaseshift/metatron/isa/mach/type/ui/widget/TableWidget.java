@@ -35,6 +35,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
@@ -71,24 +72,47 @@ public class TableWidget extends JRec<TableWidget> implements Widget<TableWidget
         super(jvm, tid, vid);
     }
 
+    /**
+     * Populate Java fields from the JVM store, but only when they are empty.
+     * <p>
+     * Tables built via the Java API ({@link #addRow}, {@link #addMetadata}, etc.)
+     * already have their fields populated and must not be cleared — their data
+     * is the source of truth.  Tables constructed from mtron via
+     * {@link #TableWidget(Map, fURI, fURI)} have empty Java fields that need
+     * initial population from the JVM.
+     * <p>
+     * Uses {@link Collectors#toCollection(ArrayList::new)} rather than
+     * {@link Stream#toList()} so that rows are mutable {@link ArrayList}s
+     * rather than {@code ImmutableCollections.ListN}, avoiding
+     * {@code ClassCastException} when rows later flow through the JVM
+     * serialization pipeline.
+     */
     private void sync() {
         if (this.style == null) return; // construction guard
         final Map<Obj, Obj> jvm = jvmRead();
 
-        this.headers.clear();
-        final Obj h = jvm.get(uri("headers"));
-        if (h != null && !h.isNoObj())
-            h.stream().filter(Obj::isStr).forEach(o -> this.headers.add(o.strValue()));
+        // Only populate from JVM if fields haven't been set via Java API.
+        if (this.headers.isEmpty()) {
+            final Obj h = jvm.get(uri("headers"));
+            if (h != null && !h.isNoObj())
+                h.stream().filter(Obj::isStr).forEach(o -> this.headers.add(o.strValue()));
+        }
 
-        this.table.clear();
-        final Obj r = jvm.get(uri("rows"));
-        if (r != null && !r.isNoObj())
-            r.stream().forEach(row -> this.addRow(row.stream().map(cell -> (Object) (cell.isStr() ? cell.strValue() : cell)).toList()));
+        if (this.table.isEmpty()) {
+            final Obj r = jvm.get(uri("rows"));
+            if (r != null && !r.isNoObj())
+                r.stream().forEach(row -> this.addRow(row.stream()
+                        .map(cell -> (Object) (cell.isStr() ? cell.strValue() : cell))
+                        .collect(Collectors.toCollection(ArrayList::new))));
+        }
 
-        this.metadata.clear();
-        final Obj m = jvm.get(uri("metadata"));
-        if (m != null && !m.isNoObj())
-            m.stream().forEach(row -> this.addMetadata(row.stream().map(cell -> (Object) (cell.isStr() ? cell.strValue() : cell)).toList()));
+        if (this.metadata.isEmpty()) {
+            final Obj m = jvm.get(uri("metadata"));
+            if (m != null && !m.isNoObj())
+                m.stream().forEach(row -> this.addMetadata(row.stream()
+                        .map(cell -> (Object) (cell.isStr() ? cell.strValue() : cell))
+                        .collect(Collectors.toCollection(ArrayList::new))));
+        }
     }
 
     // ── convenience constructors ───────────────────────────────────
