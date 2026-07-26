@@ -33,7 +33,7 @@ If the snippet provided has an `mcpServer` outer wrapping, then do:
     "IJ_MCP_SERVER_PROJECT_PATH": "~/software/metatron"
    }
  }}}
-""".as(json::T).>>mcpServers/intellij.as(mcp_client::T).to(/usr/marko/mcp/intellij)
+""".as(json::T).as(rec::T)>>mcpServers/intellij.as(json::T).as(mcp_client::T)
 ```
 
 Moreover, if the `mcpServer` snippet has multiple inner servers endpoints defined, to load all of them, do:
