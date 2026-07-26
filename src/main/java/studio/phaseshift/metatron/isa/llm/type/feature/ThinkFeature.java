@@ -54,23 +54,23 @@ public class ThinkFeature extends Feature {
     @Override
     public void onPartialThinking(final Agent agent, final Str text) {
         if (!this.isThinking.getAndSet(true)) {
-            this.logger().none(Graphitty.sillyPrint("\nthinking...", true, true));
-            agent.feature(THINK).asRec().at(f(THINK).extend(TO)).apply(str("\n"));
+            //this.logger().none(Graphitty.sillyPrint("\nthinking...", true, true));
+            agent.feature(THINK).asRec().at(f(THINK).extend(TO)).apply(str("\n\n"));
         }
         // Apply the thought to whatever handler is configured at /feature/think
         this.buffer.append(text.strValue());
-        if (this.buffer.length() > 20) {
+        if (this.buffer.length() > 1) {
             agent.feature(THINK).asRec().at(f(THINK).extend(TO)).apply(str(buffer.toString()));
             this.buffer = new StringBuilder();
 
         }
     }
 
-    @Override
+    /* @Override
     public void onPartialResponse(final Agent agent, final Str text) {
         if (!this.buffer.isEmpty()) {
             agent.feature(THINK).asRec().at(f(THINK).extend(TO)).apply(str(buffer.toString()));
             this.buffer = new StringBuilder();
         }
-    }
+    }*/
 }

@@ -184,7 +184,7 @@ grphspace::[pattern  => h:#,
   else(session::[agent     => !*boot/args/internal/agent_home,
                  user      => !*boot/args/internal/user_home,
                  name      => 'general chat',
-                 algorithm => [name=><token_window>, max=>200000]]==[_=>_].to(drdb:llm_session/1));
+                 algorithm => [name=><token_window>, max=>100000]]==[_=>_].to(drdb:llm_session/1));
 
 agent::[name     => 'dr.stynx',
         desc     => 'the agent dr.stynx is here to be of use in the metatron',
@@ -202,8 +202,8 @@ agent::[name     => 'dr.stynx',
                      audit_feature::::[          => ],
                      concept_feature::[base      => /usr/dr/concept,
                                        extractor => lucene,
-                                       tool      => [messages?str{*}<=#{?}(uri::T){ **0==message==<+>==text }@messages,
-                                                     concepts?lst{?}<=#{?}(uri::T){ **0==link }@concepts]],
+                                       tool      => [messages?str{*}<=#{?}(uri::T){ *(</usr/dr/concept/${*0}>)==message==<+>==text }@messages,
+                                                     concepts?lst{?}<=#{?}(uri::T){ *(</usr/dr/concept/${*0}>)==link }@concepts]],
                      tool_feature:::::[tool      =>[!*eval,!*sql,!*codegraph]]]]@<dr>; 
 
                                 [== model => model::[provider => ollama,

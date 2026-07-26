@@ -163,15 +163,15 @@ public class ConceptFeature extends Feature {
             for (final String concept : conceptStrings) {
                 final fURI conceptURI = this.getBaseURI().extend(concept);
                 final Rec conceptRec = Router.readFromSpace(conceptURI).orElse(rec());
-                if (!conceptRec.has(CONCEPT)) conceptRec.at(CONCEPT, uri(concept), MUTABLE);
-                final Lst conceptLink = conceptRec.at(LINK).orElse(Router.readFromSpace(conceptURI.extend(LINK)).orElse(lst()));
+                //if (!conceptRec.has(CONCEPT)) conceptRec.at(CONCEPT, uri(concept), MUTABLE);
+                final Lst conceptLink = conceptRec.at(CONCEPT).orElse(lst());
                 final Set<Obj> conceptLinkList = new LinkedHashSet<>(conceptLink.jvm());
                 final int conceptLinkListSize = conceptLinkList.size();
                 conceptLinkList.addAll(conceptStrings.stream()
                         .filter(c -> !c.equals(concept))
                         .map(c -> auto_from_(this.getBaseURI().extend(c)).tryToInst()).toList());
                 if (conceptLinkList.size() > conceptLinkListSize) {
-                    conceptRec.at(LINK, lst(new ArrayList<>(conceptLinkList)), MUTABLE);
+                    conceptRec.jvm().put(uri(CONCEPT), lst(new ArrayList<>(conceptLinkList)));
                     if (agent.hasFeature(SESSION)) {
                         final SessionFeature sessionFeature = (SessionFeature) agent.feature(SESSION);
                         LOG.debug("concept feature has located session feature");
@@ -183,12 +183,12 @@ public class ConceptFeature extends Feature {
                                 final Lst messages = conceptRec.at(MESSAGE).orElse(lst());
                                 final Set<Obj> messageList = new LinkedHashSet<>(messages.lstValue());
                                 messageList.addAll(messagesIDs.stream().filter(i -> !Objects.isNull(i)).map(id -> auto_from_(id).tryToInst()).toList());
-                                conceptRec.at(MESSAGE, lst(new ArrayList<>(messageList)), MUTABLE);
+                                conceptRec.jvm().put(uri(MESSAGE), lst(new ArrayList<>(messageList)));
                             }
                         }
                     }
                 }
-                Router.writeToSpace(conceptURI, conceptRec);
+                Router.writeToSpace(conceptURI, conceptRec.vid(this.getBaseURI().extend(concept)));
                 concepts.add(conceptURI);
                 LOG.debug("extracted concept: %s", conceptURI);
             }
