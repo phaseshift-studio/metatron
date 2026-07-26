@@ -30,9 +30,8 @@ import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Str;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
-import studio.phaseshift.metatron.isa.mach.type.thread.VirtualThread;
+import studio.phaseshift.metatron.isa.mach.type.thread.CoreThread;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.CommonUtil;
@@ -54,7 +53,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.mach.type.thread.VirtualThread.virtual;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /*
@@ -206,11 +204,29 @@ public class ConceptFeature extends Feature {
      */
     private void injectConceptRecommendations(final Agent agent, final List<fURI> concepts) {
         final StringBuilder sb = new StringBuilder();
-        new HashSet<>(concepts).stream()
-                .map(i -> "\t" + "messages" + "(<" + i + ">)")
-                .filter(i -> ObjmtronSerializer.singleNoClip().inputBytes(i + ".take(1).count().gt(0)").apply().boolValue())
-                .peek(i -> LOG.info("adding memory recommendation: %s", i))
-                .forEach(i -> sb.append(i).append("\n"));
+        for (final fURI conceptURI : new HashSet<>(concepts)) {
+            try {
+                // Check directly whether the concept has associated messages
+                // rather than evaluating mtron (messages(<uri>).take(1).count().gt(0))
+                // which would pull the full parser→resolver→evaluator chain into
+                // the LangChain4j streaming callback and risks recursive re-entry
+                // through instruction resolution.
+                final Obj conceptObj = Router.readFromSpace(conceptURI);
+                if (conceptObj.isRec()) {
+                    final Rec conceptRec = conceptObj.asRec();
+                    if (conceptRec.has(MESSAGE)) {
+                        final Lst messages = conceptRec.at(MESSAGE).asLst();
+                        if (!messages.lstValue().isEmpty()) {
+                            final String entry = "\t" + "messages" + "(<" + conceptURI + ">)";
+                            LOG.info("adding memory recommendation: %s", entry);
+                            sb.append(entry).append("\n");
+                        }
+                    }
+                }
+            } catch (final Exception e) {
+                LOG.warn("failed to check concept messages for %s: %s", conceptURI, e.getMessage());
+            }
+        }
         if (!sb.toString().trim().isEmpty())
             agent.addSystemMessage(CONCEPT_FEATURE_SYSTEM_TEMPLATE.formatted(
                     sb.toString(),
@@ -241,16 +257,6 @@ public class ConceptFeature extends Feature {
             this.processConcepts(agent, agent.userMessage(), true);
         }
         return noobj();
-    }
-
-    @Override
-    public void onPartialThinking(final Agent agent, final Str text) {
-        // No-op: index only on complete response to keep virtual-thread stack shallow
-    }
-
-    @Override
-    public void onPartialResponse(final Agent agent, final Str text) {
-        // No-op: index only on complete response to keep virtual-thread stack shallow
     }
 
     @Override
@@ -333,7 +339,7 @@ public class ConceptFeature extends Feature {
             final Set<String> conceptStrings = new LinkedHashSet<>();
             try {
                 LOG.info("using agent to extract concepts from text length=%d", text.length());
-                final VirtualThread thread = virtual(instLambda((lhs, inst) -> {
+                final CoreThread thread = CoreThread.core(instLambda((lhs, inst) -> {
                     final Obj result = this.translatorAgent.chat("""
                                                                  Rewrite the following text where key concepts are wrapped in <<concept:a key concept>> tags.
                                                                  For instance, if the text is:
@@ -471,7 +477,15 @@ public class ConceptFeature extends Feature {
          */
         public List<Concept> getImportantConcepts(final int topN, final int minDocFreq) {
             final List<Concept> concepts = new ArrayList<>();
-            try (final DirectoryReader reader = DirectoryReader.open(this.writer)) {
+            // Open on the directory directly rather than on the IndexWriter.
+            // DirectoryReader.open(IndexWriter) internally calls flushAllThreads(),
+            // applyAllDeletesAndUpdates(), and acquires the writer lock — all
+            // synchronized operations that pin a virtual thread to its carrier.
+            // When called from deep LangChain4j streaming callback chains, the
+            // pinned stack cannot grow and StackOverflowError results.
+            // Since indexText() already calls writer.commit() before we are
+            // invoked, the directory has the latest committed state.
+            try (final DirectoryReader reader = DirectoryReader.open(this.directory)) {
                 final int numDocs = reader.numDocs();
                 if (numDocs == 0) return concepts;
 
@@ -508,6 +522,8 @@ public class ConceptFeature extends Feature {
                         .sorted(Comparator.comparingDouble(Concept::score).reversed())
                         .limit(topN)
                         .toList());
+            } catch (final IndexNotFoundException e) {
+                // No documents indexed yet — return empty list
             } catch (final IOException e) {
                 LOG.warn("failed to extract concepts: %s", e.getMessage());
             }

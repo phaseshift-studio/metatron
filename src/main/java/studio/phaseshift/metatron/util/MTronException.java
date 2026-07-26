@@ -21,7 +21,6 @@ package studio.phaseshift.metatron.util;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Fail;
 import studio.phaseshift.metatron.isa.m.type.impl.MFail;
-import studio.phaseshift.metatron.isa.mach.type.ui.console.Highlighter;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 
 import java.util.Arrays;
@@ -47,22 +46,48 @@ public class MTronException extends RuntimeException {
     }
 
     /**
-     * Find the first stack frame outside of MTronException itself — the actual throw site.
+     * Find the most useful stack frame: walk to the deepest cause first
+     * (its origin is usually closer to the actual problem), then skip
+     * MTronException frames to find the real throw site.
      */
     public static StackTraceElement originOf(final Throwable t) {
-        for (final StackTraceElement frame : t.getStackTrace()) {
+        Throwable target = t;
+        while (target.getCause() != null
+                && target.getCause().getStackTrace().length > 0
+                && !(target.getCause() instanceof StackOverflowError))
+            target = target.getCause();
+        for (final StackTraceElement frame : target.getStackTrace()) {
             if (!frame.getClassName().equals(MTronException.class.getName()))
                 return frame;
         }
-        return t.getStackTrace()[0]; // fallback: shouldn't happen
+        return target.getStackTrace().length > 0
+                ? target.getStackTrace()[0]
+                : t.getStackTrace()[0];
     }
 
-    /** First line of the cause message, truncated if multi-line. */
+    /**
+     * Compact summary of the throwable and its cause chain.  Multi-line
+     * messages are truncated at the first newline; nested causes are
+     * separated by {@code ←}.
+     */
     private static String causeSummary(final Throwable cause) {
-        final String msg = cause.getMessage();
-        if (msg == null) return "(null)";
-        final int nl = msg.indexOf('\n');
-        return nl < 0 ? msg : msg.substring(0, nl) + "...";
+        final StringBuilder sb = new StringBuilder();
+        Throwable c = cause;
+        int depth = 0;
+        while (c != null && depth < 4) {
+            if (depth > 0) sb.append(" ← ");
+            final String msg = c.getMessage();
+            if (msg != null) {
+                final int nl = msg.indexOf('\n');
+                sb.append(nl < 0 ? msg : msg.substring(0, nl) + "...");
+            } else {
+                sb.append('(').append(c.getClass().getSimpleName()).append(')');
+            }
+            c = c.getCause();
+            depth++;
+        }
+        if (c != null) sb.append(" ← ...");
+        return sb.toString();
     }
 
     private MTronException(final String message, final Throwable cause) {
@@ -124,17 +149,12 @@ public class MTronException extends RuntimeException {
             final String rightClass = message[1].trim().split("\\(")[0].trim();
             return new MTronException("unable to convert " + convertName(leftClass.substring(leftClass.lastIndexOf('.') + 1)) + " to " + convertName(rightClass.substring(rightClass.lastIndexOf('.') + 1)), throwable);
         } else {
-            final StringBuilder stack = new StringBuilder();
-            for (int i = 0; i < throwable.getStackTrace().length; i++)
-                stack.append("\t")
-                        .append(throwable.getStackTrace()[i].getClassName())
-                        .append(" [line ").append(throwable.getStackTrace()[i].getLineNumber()).append("]\n");
-            return new MTronException(Highlighter.unformat("%s: %s\n%s".formatted(
-                    null == throwable.getCause() ?
-                            throwable.getClass().getSimpleName().toLowerCase() :
-                            throwable.getCause().toString(),
-                    throwable.getMessage(),
-                    CommonUtil.indent(stack.toString(), 2))));
+            // Preserve the original throwable as the Java cause — do NOT
+            // embed the full stack trace in the message string.  The cause
+            // chain is available through getCause() and the stack trace
+            // through getStackTrace().  Embedding them in the message
+            // buries the signal and discards structured cause data.
+            return new MTronException(throwable.getMessage(), throwable);
         }
     }
 

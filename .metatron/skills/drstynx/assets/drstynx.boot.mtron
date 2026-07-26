@@ -209,13 +209,17 @@ agent::[name     => 'dr.stynx',
                                 [== model => model::[provider => ollama,
                                                         protocol => ollama,
                                                         host     => <http://ginger.local:11434>,
-                                                        llm      => <qwen3:latest>] ==]        
+                                                        llm      => <qwen3:latest>] 
+                                                        
+                                                       
+                                                        
+                                                        ==]        
 
 [== user console ==]
 console::[agent=>dr,header=>!*boot/args/header]@/usr/marko/console;
 accordion::[title => "{{g}}a{{r}}ge{{b}}n{{m}}t {{c}}th{{y}}ink{{r}}ing.{{g}}..{{X}}", 
             body  => "",
-            style => style::[anchor=>top_right,width=>50]]@<think_widget>
+            style => style::[anchor=>top_right,width=>65,height=>15,left=>-2]]@<think_widget>
 [==
 on_prompt => inst(chat=>user::T) {          
 

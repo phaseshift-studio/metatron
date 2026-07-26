@@ -50,11 +50,29 @@ public interface Stylable<T extends Stylable<T>> {
 
     Style<T> getStyle();
 
+    /**
+     * Number of structural chrome lines at the top of the widget that
+     * should be preserved when a {@link Style#height height cap} is
+     * applied.  Computed from the style's border — if a border is
+     * configured, the top border row counts as chrome.  Widgets with
+     * additional structural elements (column headers, status bars)
+     * override this to add their own.
+     */
+    default int chromeLines() {
+        final Style<T> s = this.getStyle();
+        if (s != null) {
+            final Border b = s.border();
+            if (b != null && b != Border.none) return 1;
+        }
+        return 0;
+    }
+
     class Style<T extends Stylable<T>> extends MRec {
         public T stylable;
         public Border border = null;
         public FloatingSurface.Anchor anchor = null;
         public int width = 0;
+        public int height = 0;
         public int top = 0;
         public int left = 0;
 
@@ -274,6 +292,23 @@ public interface Stylable<T extends Stylable<T>> {
             if (this.at("width").isInt())
                 return this.at("width").asInt().intValue().intValue();
             return 0;
+        }
+
+        /** Display height override.  0 = use the widget's natural height
+         *  (grow unbounded).  When set and content exceeds this many rows,
+         *  the top lines are discarded so the newest content stays visible
+         *  at the bottom. */
+        public int height() {
+            if (this.height > 0) return this.height;
+            if (this.at("height").isInt())
+                return this.at("height").asInt().intValue().intValue();
+            return 0;
+        }
+
+        public Style<T> height(final int h) {
+            this.jvm().put(uri("height"), studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt(h));
+            this.height = h;
+            return this;
         }
 
         /** Row offset from the anchor edge (CSS {@code top}). */

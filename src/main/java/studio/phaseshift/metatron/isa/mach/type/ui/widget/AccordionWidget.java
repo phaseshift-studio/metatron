@@ -217,7 +217,7 @@ public class AccordionWidget extends JRec<AccordionWidget> implements Widget<Acc
         final List<String> displayLines = floatW > 0 ? displayLines(jvm) : new ArrayList<>(body);
         final int bodyWidth = displayLines.stream().map(Highlighter::visualLength).max(Integer::compareTo).orElse(0);
         final int titleW = Highlighter.visualLength(title) + Highlighter.visualLength(ind) + 3;
-        final int width = floatW > 0 ? Math.max(titleW, Math.min(floatW, bodyWidth + 3))
+        final int width = floatW > 0 ? Math.max(titleW, Math.min(Math.max(1, floatW - 2), bodyWidth + 3))
                                      : Math.max(titleW, bodyWidth + 3);
 
         final Border border = this.style.border() == Border.none ? Border.continuous : this.style.border();

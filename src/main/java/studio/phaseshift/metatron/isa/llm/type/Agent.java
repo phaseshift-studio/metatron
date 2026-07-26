@@ -39,6 +39,7 @@ import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
 import studio.phaseshift.metatron.isa.web.type.MIME;
 import studio.phaseshift.metatron.util.MTronException;
+import studio.phaseshift.metatron.util.Tuple;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -73,6 +74,7 @@ import static studio.phaseshift.metatron.isa.vec.type.MVec.vec;
 public class Agent extends MRec {
 
     private final List<String> systemMessages = new ArrayList<>();
+    private final AtomicReference<Tuple.Pair<fURI, fURI>> currentHook = new AtomicReference<>(null);
 
     /**
      * The current user message — single source of truth, mutable by features.
@@ -178,6 +180,8 @@ public class Agent extends MRec {
      */
     private void dispatchHook(final Rec feature, final String hookKey, final Obj... args) {
         try {
+            if (!hookKey.equals("onError"))
+                this.currentHook.set(Tuple.Pair.with(feature.tid(), f(hookKey)));
             feature.at(uri(hookKey)).asInst().args(lst(args)).apply(this);
         } catch (final Exception e) {
             LOG.error(e);
@@ -196,7 +200,7 @@ public class Agent extends MRec {
     }
 
     public Obj chat(final String message, final Rec responseFormat) {
-       // final StringBuilder response = new StringBuilder();
+        // final StringBuilder response = new StringBuilder();
         Router.global().stats().ioStats().incrBytesSent(message.getBytes().length);
         final CountDownLatch latch = new CountDownLatch(1);
         final AtomicBoolean isTooling = new AtomicBoolean(false);
@@ -216,10 +220,10 @@ public class Agent extends MRec {
             this.at(res("stages"), noobj(), MUTABLE);
             this.at(res(ERROR), noobj(), MUTABLE);
 
-            for (final Obj f : features) {
-                final Obj result = f instanceof studio.phaseshift.metatron.isa.llm.type.feature.Feature ?
-                        ((studio.phaseshift.metatron.isa.llm.type.feature.Feature) f).onBeforeChat(this) :
-                        ((Poly) f).at(uri(ON_BEFORE_CHAT)).apply(this);
+            for (final Obj feat : features) {
+                final Obj result = feat instanceof studio.phaseshift.metatron.isa.llm.type.feature.Feature ?
+                        ((studio.phaseshift.metatron.isa.llm.type.feature.Feature) feat).onBeforeChat(this) :
+                        feat.asPoly().at(uri(ON_BEFORE_CHAT)).apply(this);
                 if (!result.isNoObj()) {
                     LOG.info("feature short-circuited: %s", result);
                     return result;
@@ -231,10 +235,10 @@ public class Agent extends MRec {
             // AgentUtility.buildService(this, service);
             //////////////////////////////////////////////////////////////////////////////////
             // ADD ANOTHER FEATURE HOOK -- onSetup
-            final Obj chatFeat = this.feature(CHAT);
-            if (chatFeat.isNoObj())
+            final Obj chatFeature = this.feature(CHAT);
+            if (chatFeature.isNoObj())
                 throw MTronException.of("agent has no chat feature: %s", this.vidOrTid());
-            final Rec chat = chatFeat.asRec();
+            final Rec chat = chatFeature.asRec();
             if (this.hasFeature(TOOL))
                 ToolFeature.buildTools(this, service);
             if (this.hasFeature(SESSION))
@@ -282,8 +286,11 @@ public class Agent extends MRec {
                         features.stream().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_PARTIAL_THINKING, str(t.text())));
                     })
                     .onError(e -> {
-                        LOG.error(e);
-                        isError.set(MTronException.of("error during chat: %s", e));
+                        final fURI currentFeature = this.currentHook.get().get0();
+                        final fURI currentStage = this.currentHook.get().get1();
+                        final String errorMessage = "[" + currentFeature + "][" + currentStage + "]";
+                        LOG.error("%s: %s", errorMessage, e);
+                        isError.set(MTronException.of("%s: %s", errorMessage, e));
                         this.at(res(ERROR), str(e.getMessage()), MUTABLE);
                         features.stream().map(Obj::asRec).forEach(f -> dispatchHook(f, "onError"));
                         latch.countDown();
@@ -352,6 +359,7 @@ public class Agent extends MRec {
         resultMap.put(uri(ERROR), this.at(res(ERROR)));
         if (!this.at(res(AUDIT)).isNoObj()) resultMap.put(uri(AUDIT), this.at(res(AUDIT)));
         if (!this.at(res("loop_results")).isNoObj()) resultMap.put(uri("loop_results"), this.at(res("loop_results")));
+        this.currentHook.set(null);
         return rec(resultMap, LLM_CHAT_RESULT_TID, null);
     }
 

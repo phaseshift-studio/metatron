@@ -222,10 +222,31 @@ public class FloatingSurface {
     private void renderWidget(final StringBuilder sb, final Widget<?> widget,
                               final Slot slot, final int termWidth, final int termHeight) {
         final String formatted = widget.format();
-        final String[] lines = formatted.split("\n", -1);
+        String[] lines = formatted.split("\n", -1);
 
-        // Resolve anchored position before rendering
-        slot.resolve(termHeight, termWidth, lines.length);
+        // Apply height cap — keep header lines + last N body lines (scroll-up)
+        final int heightCap = widget.getStyle().height();
+        final int effectiveHeight;
+        if (heightCap > 0 && lines.length > heightCap) {
+            final int header = widget.chromeLines();
+            if (header > 0 && header < heightCap && header < lines.length) {
+                // Preserve header: keep first `header` lines + last (heightCap - header) of the rest
+                final int bodyKeep = heightCap - header;
+                final String[] clipped = new String[heightCap];
+                System.arraycopy(lines, 0, clipped, 0, header);
+                System.arraycopy(lines, lines.length - bodyKeep, clipped, header, bodyKeep);
+                lines = clipped;
+                effectiveHeight = heightCap;
+            } else {
+                lines = java.util.Arrays.copyOfRange(lines, lines.length - heightCap, lines.length);
+                effectiveHeight = heightCap;
+            }
+        } else {
+            effectiveHeight = lines.length;
+        }
+
+        // Resolve anchored position using capped height
+        slot.resolve(termHeight, termWidth, effectiveHeight);
 
         final int maxWidth = Math.max(1, termWidth - slot.lastCol + 1);
 
@@ -247,12 +268,13 @@ public class FloatingSurface {
             }
         }
 
+        // Clear leftover lines from a previous taller render
         for (; i < slot.prevHeight; i++) {
             sb.append("\033[").append(slot.lastRow + i).append(";").append(slot.lastCol).append("H");
             sb.append("\033[K");
         }
 
-        slot.prevHeight = lines.length;
+        slot.prevHeight = effectiveHeight;
     }
 
     /**
@@ -330,7 +352,7 @@ public class FloatingSurface {
             };
             this.lastCol = switch (this.anchor) {
                 case TOP_LEFT, BOTTOM_LEFT -> 1 + this.offsetCol;
-                case TOP_RIGHT, BOTTOM_RIGHT -> Math.max(1, termWidth - this.targetWidth + 1 - this.offsetCol);
+                case TOP_RIGHT, BOTTOM_RIGHT -> Math.max(1, termWidth - this.targetWidth + 1 + this.offsetCol);
             };
         }
     }
