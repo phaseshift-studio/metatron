@@ -328,9 +328,6 @@ public class Agent extends MRec {
                             final String cleanText = cleaned.toString().stripTrailing();
                             chatResult = str(cleanText);
                         }
-                        //if (!cleanText.equals(fullText))
-                        this.at(res(CHAT), chatResult, MUTABLE);
-                        //this.at(res(CHAT), cleanText.isBlank() ? chatResult : str(cleanText), MUTABLE);
                         // Elapsed time — written before hook dispatch so features can read it
                         final long elapsed = (System.nanoTime() - startNanos) / 1_000_000;
                         this.at(res(TIME), mathInstSet.normalizeTime(real((double) elapsed, MATH_MILLIS_TID, null)), MUTABLE);

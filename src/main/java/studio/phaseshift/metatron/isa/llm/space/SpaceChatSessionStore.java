@@ -318,10 +318,14 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
             if (val != null) saved.put(key, val);
         }
         try {
-            // Deterministic: sort entries by key, emit key:value
+            // Deterministic: sort entries by key, emit key:value.
+            // Decode text values so the hash is based on logical content,
+            // not mtron encoding (which can vary on whitespace differences).
             final List<String> entries = new ArrayList<>();
             for (final Map.Entry<Obj, Obj> e : msgRec.recValue().entrySet()) {
-                entries.add(e.getKey() + ":" + e.getValue());
+                final String key = e.getKey().toString();
+                final String val = ObjChatMessageSerializer.decodeRawValue(e.getValue());
+                entries.add(key + ":" + val);
             }
             entries.sort(String::compareTo);
             final String payload = msgRec.tid() + "|" + String.join("|", entries);
