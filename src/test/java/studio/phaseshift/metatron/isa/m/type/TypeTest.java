@@ -30,7 +30,9 @@ import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
@@ -734,6 +736,166 @@ public class TypeTest extends AbstractMetatronTest {
             temp = temp.asType().parentType();
         }
         return stack;
+    }
+
+    @ParameterizedTest(name = "[{index}] {3}")
+    @TestData(value = {
+            "pos       -> int::T[is(gt(0))]@pos",
+            "small     -> int::T[is(lt(120))]@small",
+            "mid       -> int::T[is(gt(50))]@mid",
+            "human     -> rec::T[?[age=>int::T,name=>str::T]]@human",
+            "artifact  -> rec::T[?[age=>int::T]]@artifact",
+            "company   -> rec::T[?[name=>str::T,employees=>int::T]]@company",
+            "addrCity  -> rec::T[?[address=>rec::T[?[city=>str::T]]]]@addrCity",
+            "addrZip   -> rec::T[?[address=>rec::T[?[zip=>int::T]]]]@addrZip",
+            "pairInt   -> int{2}::T@pairInt",
+            "tripleInt -> int{3}::T@tripleInt",
+            "many      -> int{*}::T@many",
+            "mortal    -> human::T[is(lt(120))]@mortal",
+            "ageInt    -> rec::T[?[age=>int::T]]@ageInt",
+            "ageStr    -> rec::T[?[age=>str::T]]@ageStr",
+    })
+    @CsvSource(value = {
+            // types                          | lcdVID | expectedBase | description
+            "[pos::T, small::T]               | lcd1   | /m/int        | non-isa OR via split/merge",
+            "[human::T, artifact::T]         | lcd2   | /m/rec        | isa structural field merge",
+            "[int::T, int::T]                 | lcd3   | /m/int        | predicate-less (same base type)",
+            "[int::T, str::T]                 | lcd4   | #             | disjoint hierarchies fall back to ALL",
+            "[pos::T]                         | lcd5   | /m/int        | single type preserves structure",
+            "[pairInt::T, tripleInt::T]       | lcd6   | /m/int        | coefficient span (2,3 → 2,3)",
+            "[pairInt::T, many::T]            | lcd7   | /m/int        | coefficient span with unbounded (2,*→*)",
+            "[addrCity::T, addrZip::T]        | lcd8   | /m/rec        | nested isa structural merge",
+            "[pos::T, small::T, int::T]       | lcd9   | /m/int        | mixed predicate + predicate-less",
+            "[pos::T, small::T, mid::T]       | lcd10  | /m/int        | three-way non-isa OR",
+            "[human::T, artifact::T, company::T] | lcd11 | /m/rec     | three isa records (shared+unique fields)",
+            "[human::T, mortal::T]           | lcd12  | human         | multi-level stack (isa + non-isa from child)",
+            "[ageInt::T, ageStr::T]           | lcd13  | /m/rec        | conflicting field types (age→ALL)",
+    }, delimiter = '|')
+    public void testGenerateLCD(final String typeList, final String lcdVID, final String expectedBase,
+                                final String description) {
+        final Lst typesLst = ObjmtronSerializer.parse(typeList);
+        final Set<Type> types = new LinkedHashSet<>();
+        for (int i = 0; i < typesLst.count(); i++) {
+            final Obj t = typesLst.at(i);
+            assertTrue(t.isType(), "element should be a type: " + t);
+            types.add(t.asType());
+        }
+
+        final Type lcd = Type.Helper.generateLCD(types, f(lcdVID));
+
+        assertNotNull(lcd, "LCD should not be null");
+        assertEquals(f(expectedBase), lcd.tid().basePath(),
+                "LCD TID mismatch for: " + description);
+
+        // Each input type must be a refinement of the LCD
+        for (final Type type : types) {
+            assertTrue(type.isRefinementOf(lcd),
+                    () -> type.namedType() + " should be a refinement of LCD " + lcd.namedType()
+                            + " (" + description + ")");
+        }
+    }
+
+    @ParameterizedTest(name = "[{index}] {2}")
+    @TestData(value = {
+            "pos       -> int::T[is(gt(0))]@pos",
+            "human     -> rec::T[?[age=>int::T,name=>str::T]]@human",
+            "mortal    -> human::T[is(lt(120))]@mortal",
+            "namedNoPred -> int::T@namedNoPred",
+    })
+    @CsvSource(value = {
+            // type                | isNominal | description
+            "int::T                | false     | base types excluded (isBaseType=true)",
+            "namedNoPred::T        | true      | named, no predicate, hasVID, not base, no pattern",
+            "pos::T                | false     | structural: has non-isa predicate",
+            "human::T              | false     | structural: has isa predicate",
+            "mortal::T             | false     | structural: inherits isa + adds non-isa",
+            "#::T                  | false     | ALL_TYPE excluded (isBaseType via isRootType)",
+    }, delimiter = '|')
+    public void testIsNominal(final String typeStr, final boolean expectedNominal, final String description) {
+        final Type type = ObjmtronSerializer.<Type>parse(typeStr);
+        assertEquals(expectedNominal, type.isNominal(), description);
+    }
+
+    @ParameterizedTest(name = "[{index}] {3}")
+    @TestData(value = {
+            "pos       -> int::T[is(gt(0))]@pos",
+            "small     -> int::T[is(lt(120))]@small",
+            "human     -> rec::T[?[age=>int::T,name=>str::T]]@human",
+            "artifact  -> rec::T[?[age=>int::T]]@artifact",
+            "mortal    -> human::T[is(lt(120))]@mortal",
+    })
+    @CsvSource(value = {
+            // typeA               | typeB         | isStructuralRefinement? | description
+            "pos::T                | int::T        | true                    | struct refines bare base (B has no predicate)",
+            "pos::T                | pos::T        | true                    | same predicate = structural refinement",
+            "pos::T                | small::T      | false                   | different non-isa predicates",
+            "human::T              | rec::T        | true                    | isa type refines its own base (rec has no pred)",
+            "human::T              | int::T        | false                   | different base branches (human→rec, int)",
+            "human::T              | artifact::T   | false                   | different isa records (human has name field)",
+            "mortal::T             | human::T      | true                    | child stack includes parent's isa predicate",
+            "mortal::T             | int::T        | false                   | different base branches (mortal→rec, int)",
+    }, delimiter = '|')
+    public void testIsStructuralRefinementOf(final String typeAStr, final String typeBStr,
+                                              final boolean expected, final String description) {
+        final Type typeA = ObjmtronSerializer.<Type>parse(typeAStr);
+        final Type typeB = ObjmtronSerializer.<Type>parse(typeBStr);
+        assertEquals(expected, typeA.isStructuralRefinementOf(typeB), description);
+    }
+
+    @ParameterizedTest(name = "[{index}] {1}")
+    @TestData(value = {
+            "pos       -> int::T[is(gt(0))]@pos",
+            "human     -> rec::T[?[age=>int::T,name=>str::T]]@human",
+            "mortal    -> human::T[is(lt(120))]@mortal",
+    })
+    @CsvSource(value = {
+            // type         | description
+            "int::T         | base type has no predicate stack",
+            "pos::T         | single non-isa predicate",
+            "human::T       | single isa predicate",
+            "mortal::T      | two-level stack: non-isa + inherited isa",
+    }, delimiter = '|')
+    public void testCombinedPredicate(final String typeStr, final String description) {
+        final Type type = ObjmtronSerializer.<Type>parse(typeStr);
+        final Call combined = type.combinedPredicate();
+        final List<Call> stack = type.predicateStack();
+
+        if (stack.isEmpty()) {
+            assertNull(combined, description + ": combinedPredicate should be null");
+        } else {
+            assertNotNull(combined, description + ": combinedPredicate should not be null");
+            // Combined should have at least as many insts as the first stack entry
+            final int combinedInstCount = combined.insts().size();
+            final int firstStackInstCount = stack.get(0).insts().size();
+            assertTrue(combinedInstCount >= firstStackInstCount,
+                    description + ": combined should have >= insts than first stack entry");
+        }
+    }
+
+    @ParameterizedTest(name = "[{index}] {2}")
+    @TestData(value = {
+            "pairInt   -> int{2}::T@pairInt",
+            "tripleInt -> int{3}::T@tripleInt",
+            "many      -> int{*}::T@many",
+    })
+    @CsvSource(value = {
+            // typeA               | typeB         | description
+            "pairInt::T            | tripleInt::T  | coefficient span: {2,2} span {3,3} = {2,3} not {5,5}",
+            "pairInt::T            | many::T       | coefficient span: {2,2} span {0,*} = {0,*}",
+            "int::T                | int::T        | coefficient span: {1,1} span {1,1} = {1,1}",
+    }, delimiter = '|')
+    public void testFindLCDCoefficientSpan(final String typeAStr, final String typeBStr,
+                                            final String description) {
+        final Type typeA = ObjmtronSerializer.<Type>parse(typeAStr);
+        final Type typeB = ObjmtronSerializer.<Type>parse(typeBStr);
+        final Type lcd = Type.Helper.findLCD(List.of(typeA, typeB));
+
+        assertNotNull(lcd, description);
+        // LCD coefficient must contain both input coefficients
+        assertTrue(typeA.c().within(lcd.c()),
+                description + ": typeA coeff " + typeA.c() + " within LCD coeff " + lcd.c());
+        assertTrue(typeB.c().within(lcd.c()),
+                description + ": typeB coeff " + typeB.c() + " within LCD coeff " + lcd.c());
     }
 
 }

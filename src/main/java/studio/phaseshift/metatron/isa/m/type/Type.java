@@ -38,8 +38,10 @@ import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 
 public interface Type extends Obj {
@@ -99,6 +101,32 @@ public interface Type extends Obj {
         return this.hasPredicate();
     }
 
+    /**
+     * Returns true if this type is a structural refinement of other:
+     * nominal refinement AND this's predicate stack includes all of other's predicates.
+     * More restrictive than {@link #isRefinementOf(Type)} (predicate-blind),
+     * less restrictive than {@link #test(Obj)} (exact predicate equality).
+     */
+    default boolean isStructuralRefinementOf(final Type other) {
+        if (!this.isRefinementOf(other))
+            return false;
+        if (!other.hasPredicate())
+            return true;
+        final List<Call> thisStack = this.predicateStack();
+        final List<Call> otherStack = other.predicateStack();
+        for (final Call otherPred : otherStack) {
+            boolean found = false;
+            for (final Call thisPred : thisStack) {
+                if (Objects.equals(thisPred, otherPred)) {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) return false;
+        }
+        return true;
+    }
+
     default boolean isRefinementOf(final Type other) {
         if (this == other)
             return true;
@@ -121,6 +149,21 @@ public interface Type extends Obj {
 
     default Obj isPredicateObj() {
         return this.isIsaPredicate() ? this.predicate().asCall().insts().getFirst().arg(0) : null;
+    }
+
+    /**
+     * Returns the full combined predicate for this type by chaining all
+     * levels of the predicate stack via {@link Call#mult(Call)}.
+     * Returns null if this type has no predicates at any level.
+     */
+    default Call combinedPredicate() {
+        final List<Call> stack = this.predicateStack();
+        if (stack.isEmpty()) return null;
+        Call result = stack.get(0);
+        for (int i = 1; i < stack.size(); i++) {
+            result = result.mult(stack.get(i));
+        }
+        return result;
     }
 
     default List<Call> predicateStack() {
@@ -224,7 +267,7 @@ public interface Type extends Obj {
                 if (t.isBaseType()) break;
                 t = t.parentType();
             }
-            final cInt lcdC = types.stream().map(Type::c).reduce(cInt::plus).orElse(cInt.ONE());
+            final cInt lcdC = types.stream().map(Type::c).reduce(cInt::span).orElse(cInt.ONE());
             // Walk the chain outward; the first ancestor that ALL types share is the LCD
             for (final Type candidate : chain) {
                 if (types.stream().allMatch(type -> type.isRefinementOf(candidate)))
@@ -232,6 +275,201 @@ public interface Type extends Obj {
             }
             // No common ancestor — types are from disjoint hierarchies; fall back to the universal type
             return ALL_TYPE.c(lcdC).as();
+        }
+
+        /**
+         * Generates the Lowest Common Denominator type for a set of types.
+         * Finds the common nominal ancestor, structurally merges isa predicates,
+         * and concatenates non-isa predicates via map() chaining.
+         *
+         * @param types  the set of types to compute the LCD for
+         * @param lcdVID the VID to assign to the generated LCD type
+         * @return the most specific type that subsumes all input types
+         */
+        public static Type generateLCD(final Set<Type> types, final fURI lcdVID) {
+            if (types == null || types.isEmpty())
+                return null;
+            if (types.size() == 1)
+                return types.iterator().next().vid(lcdVID).asType();
+
+            // 1. Find the common nominal ancestor TID via VID-chain intersection
+            final fURI commonTID = commonTID(types);
+
+            // Disjoint hierarchies: return ALL_TYPE directly so isRefinementOf works
+            if (ALL.equals(commonTID.basePath())) {
+                return ALL_TYPE.c(types.stream()
+                        .map(Type::c)
+                        .reduce(cInt::span)
+                        .orElse(cInt.ONE())).asType();
+            }
+
+            // 2. Separate isa records and non-isa calls from all predicate stacks
+            final List<Obj> allIsaRecords = new ArrayList<>();
+            final List<Call> allNonIsaCalls = new ArrayList<>();
+            for (final Type type : types) {
+                final Tuple.Pair<List<Obj>, List<Call>> separated = separatePredicates(type);
+                allIsaRecords.addAll(separated.get0());
+                allNonIsaCalls.addAll(separated.get1());
+            }
+
+            // 3. Merge isa record constraints structurally (recursive on field types)
+            final Obj mergedIsaRec = mergeIsaRecords(allIsaRecords, lcdVID);
+
+            // 4. Build the combined predicate via split/merge (OR semantics)
+            //    -<[isa(mergedRec), nonIsaPred1, nonIsaPred2, ...]>-
+            final Call combinedPred;
+            final List<Obj> predicateBranches = new ArrayList<>();
+            if (null != mergedIsaRec) {
+                predicateBranches.add(instB(ISA_INST_TID, lst(mergedIsaRec)));
+            }
+            for (final Call call : allNonIsaCalls) {
+                predicateBranches.add(call.tryToInst());
+            }
+
+            if (predicateBranches.isEmpty()) {
+                combinedPred = null;
+            } else if (predicateBranches.size() == 1) {
+                combinedPred = (Call) predicateBranches.get(0);
+            } else {
+                // OR all branches: split_([...]).merge_()
+                final List<Inst> insts = new ArrayList<>();
+                insts.add(instB(SPLIT_INST_TID, lst(lst(predicateBranches.toArray(new Obj[0])))));
+                insts.add(instB(MERGE_INST_TID, lst()));
+                combinedPred = Call.from(insts);
+            }
+
+            // 6. Compute span coefficient (not sum)
+            final cInt lcdC = types.stream()
+                    .map(Type::c)
+                    .reduce(cInt::span)
+                    .orElse(cInt.ONE());
+
+            // 7. Assemble the LCD type (clear any prior registration to avoid stale cache)
+            if (Router.loaded()) {
+                Router.writeToSpace(lcdVID, noobj());
+            }
+            return T(Tuple.Pair.with(combinedPred, null), commonTID.big(), lcdVID.big()).c(lcdC).asType();
+        }
+
+        /**
+         * Collects the VID ancestry chain from this type up to (but excluding) root.
+         */
+        private static List<fURI> vidAncestryChain(final Type type) {
+            final List<fURI> chain = new ArrayList<>();
+            Type current = type;
+            while (!current.isRootType()) {
+                if (current.hasVID())
+                    chain.add(current.vid().basePath());
+                if (current.isBaseType()) break;
+                current = current.parentType();
+            }
+            return chain;
+        }
+
+        /**
+         * Finds the deepest VID shared by all types' ancestry chains (the LCD's TID).
+         */
+        private static fURI commonTID(final Set<Type> types) {
+            final List<List<fURI>> chains = types.stream()
+                    .map(Helper::vidAncestryChain)
+                    .toList();
+
+            // Use string comparison for intersection to avoid fURI hashCode inconsistencies
+            final Set<String> intersection = new LinkedHashSet<>();
+            for (final fURI vid : chains.get(0)) {
+                intersection.add(vid.toString());
+            }
+            for (int i = 1; i < chains.size(); i++) {
+                final Set<String> other = new HashSet<>();
+                for (final fURI vid : chains.get(i)) {
+                    other.add(vid.toString());
+                }
+                intersection.retainAll(other);
+            }
+
+            if (intersection.isEmpty())
+                return ALL;
+
+            // First VID in the first chain whose string is in the intersection = deepest common
+            for (final fURI vid : chains.get(0)) {
+                if (intersection.contains(vid.toString()))
+                    return vid;
+            }
+
+            return ALL;
+        }
+
+        /**
+         * Separates a type's predicate stack into isa-predicate records
+         * and non-isa predicate calls.
+         */
+        private static Tuple.Pair<List<Obj>, List<Call>> separatePredicates(final Type type) {
+            final List<Obj> isaRecords = new ArrayList<>();
+            final List<Call> nonIsaCalls = new ArrayList<>();
+
+            for (final Call predCall : type.predicateStack()) {
+                if (predCall.isNoObj()) continue;
+                final List<Inst> insts = predCall.insts();
+                if (insts.size() == 1 &&
+                        insts.get(0).tid().basePath().equals(ISA_INST_TID)) {
+                    isaRecords.add(insts.get(0).arg(0));
+                } else if (!insts.isEmpty()) {
+                    nonIsaCalls.add(predCall);
+                }
+            }
+
+            return Tuple.Pair.with(isaRecords, nonIsaCalls);
+        }
+
+        /**
+         * Merges a list of isa-predicate record constraints into a single
+         * structural constraint. Fields present in all records are recursively
+         * LCD'd; fields present in only some are LCD'd then relaxed to optional.
+         */
+        private static Obj mergeIsaRecords(final List<Obj> records, final fURI parentVID) {
+            if (records.isEmpty()) return null;
+
+            final Set<Obj> allKeys = new LinkedHashSet<>();
+            for (final Obj rec : records) {
+                if (rec.isRec()) {
+                    rec.asRec().keys().forEach(allKeys::add);
+                }
+            }
+
+            if (allKeys.isEmpty()) return null;
+
+            final Map<Obj, Obj> mergedFields = new LinkedHashMap<>();
+            for (final Obj key : allKeys) {
+                final List<Type> fieldTypes = new ArrayList<>();
+                for (final Obj rec : records) {
+                    if (rec.isRec()) {
+                        final Obj fieldType = rec.asRec().at(key);
+                        if (!fieldType.isNoObj() && fieldType.isType()) {
+                            fieldTypes.add(fieldType.asType());
+                        }
+                    }
+                }
+
+                if (fieldTypes.isEmpty()) continue;
+
+                final Type mergedType;
+                final String keyName = key.isUri() ? key.uriValue().name() : key.toString();
+                final fURI nestedVID = parentVID.extend("_" + keyName);
+
+                if (fieldTypes.size() == records.size()) {
+                    // Present in all records: recursive LCD
+                    mergedType = generateLCD(new LinkedHashSet<>(fieldTypes), nestedVID);
+                } else {
+                    // Present in some records: LCD then relax coefficient to include 0
+                    final Type lcd = generateLCD(new LinkedHashSet<>(fieldTypes), nestedVID);
+                    mergedType = lcd.c(cInt.of(0L, lcd.c().max())).asType();
+                }
+
+                mergedFields.put(key, mergedType);
+            }
+
+            if (mergedFields.isEmpty()) return null;
+            return rec(mergedFields);
         }
 
         public static boolean nominalTypeChecker(final Obj obj, final Type type) {

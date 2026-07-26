@@ -226,14 +226,16 @@ public final class QCollection {
     public static QProc typeQ() {
         final memSpace TYPE_SPACE = memSpace.of(rec(uri(PATTERN), uri("#")), null);
         return QProc.Helper.build(TYPEQ_TID, TYPEQ_PATTERN)
+                .obj(f(SPACE),TYPE_SPACE)
                 .preWrite((vid, obj) -> {
                     TYPE_SPACE.write(vid.qLess(), obj);
                     return obj;
                 })
                 .preRead(vid -> {
                     final Obj type = TYPE_SPACE.read(vid.qLess());
-                    if (type.isNoObj())
+                    if (type.isNoObj()) {
                         return T(ALL.maybeSome());
+                    }
                     return type;
                 })
                 .qlessWrite((vid, obj) -> {

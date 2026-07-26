@@ -135,7 +135,7 @@ public class BasicRouter extends AbstractSpace<Map<Obj, Obj>> implements Router 
             return;
         this.smallToBigRoutes.computeRaw(small, (k, v) -> {
             if (null == v) {
-                final Set<fURI> set = new TreeSet<>(Comparator.comparingInt(fURI::pathLength));
+                final Set<fURI> set = Collections.synchronizedSet(new TreeSet<>(Comparator.comparingInt(fURI::pathLength)));
                 set.add(big.basePath());
                 return set;
             } else {
