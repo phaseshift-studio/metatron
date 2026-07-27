@@ -89,7 +89,7 @@ public interface InstSet extends Space {
 
     Set<Inst> rewrites();
 
-    public static class Helper {
+    class Helper {
 
         public static Inst rewriter(final fURI tid, Function<Code, Code> rewrite) {
             return instC(tid.dom(CODE_TID).rng(CODE_TID.maybe()), lst(), (lhs, inst) -> rewrite.apply(lhs.asCode()));

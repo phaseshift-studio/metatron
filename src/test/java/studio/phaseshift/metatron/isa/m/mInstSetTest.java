@@ -36,6 +36,7 @@ import studio.phaseshift.metatron.isa.m.type.Call;
 import studio.phaseshift.metatron.isa.m.type.NoObj;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
+import studio.phaseshift.metatron.isa.mach.type.ui.console.Console;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
@@ -45,6 +46,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 
 
 public class mInstSetTest extends AbstractInstSetTest {
@@ -1178,17 +1180,29 @@ public class mInstSetTest extends AbstractInstSetTest {
             "1-<[plus(1).mult(2).plus(10), plus(1).mult(3).plus(10)]>-  % start(1).plus(1).-<[mult(2),mult(3)]>-.plus(10)    % {14,16}",
     }, delimiter = '%')
     public void testRewrites(final String code, final String expected, final String expectedResult) throws Exception {
-        AbstractMetatronTest.checkCodeRewrite(LOG, code, expected, expectedResult, false);
+            AbstractMetatronTest.checkCodeRewrite(LOG, code, expected, expectedResult, false);
+        }
+    
+        @ParameterizedTest
+        @CsvSource(value = {
+                "map(1.plus(2).explain()).type()                     % str::T      % explain returns str type",
+                "1.plus(2).explain().plus(2)                         % 5           % explain is no-op mid-chain",
+                "map(1.plus(2).explain()).has('op').count().gt(0)    % true        % explain table has op column",
+                "explain()                                           % noobj       % bare explain returns noobj (no lhs)",
+        }, delimiter = '%')
+        public void testExplain(final String code, final String expected, final String desc) {
+            AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+        }
+    
+        @ParameterizedTest
+        @CsvSource(value = {
+                "parse(application/json::'{\"a\":12}')          % [a=>12]",
+                "application/json::'{\"b\":[1,2,3]}'.parse(_)   % [b=>[1,2,3]]",
+                "application/mtron::'[c=>[4,5]]'.parse(_)       % [c=>[4,5]]",
+                "text/plain::'[d=>1]'.parse(_)                  % \"[d=>1]\"",
+        }, delimiter = '%')
+        public void testParse(final String code, final String expected) {
+            AbstractMetatronTest.checkCodeEvaluate(LOG, code, expected);
+        }
     }
-
-    @ParameterizedTest
-    @CsvSource(value = {
-            "parse(application/json::'{\"a\":12}')          % [a=>12]",
-            "application/json::'{\"b\":[1,2,3]}'.parse(_)   % [b=>[1,2,3]]",
-            "application/mtron::'[c=>[4,5]]'.parse(_)       % [c=>[4,5]]",
-            "text/plain::'[d=>1]'.parse(_)                  % \"[d=>1]\"",
-    }, delimiter = '%')
-    public void testParse(final String code, final String expected) {
-        AbstractMetatronTest.checkCodeEvaluate(LOG, code, expected);
-    }
-}
+    

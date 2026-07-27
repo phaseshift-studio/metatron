@@ -34,6 +34,7 @@ public class MCode extends MObj implements Code {
 
     public MCode(final List<Inst> jvm, final fURI tid, final fURI vid) {
         super(jvm, null == tid ? CODE_TID : tid, vid);
+        wireParents();
     }
 
     public static Code of(final List<Inst> insts) {
@@ -46,7 +47,21 @@ public class MCode extends MObj implements Code {
 
     @Override
     public Code clone(final Object jvm, final fURI tid, final fURI vid) {
-        return super.clone(new ArrayList<>((List<Inst>) jvm), tid, vid);
+        final Code clone = super.clone(new ArrayList<>((List<Inst>) jvm), tid, vid);
+        ((MCode) clone).wireParents();
+        return clone;
+    }
+
+    /**
+     * Set each instruction in this code's instruction list to point back to
+     * this code as its parent, so that {@code inst.parent()} returns the
+     * containing expression during evaluation.
+     */
+    private void wireParents() {
+        final Code self = this;
+        for (final Inst inst : this.jvm()) {
+            inst.parent(self);
+        }
     }
 
     @Override

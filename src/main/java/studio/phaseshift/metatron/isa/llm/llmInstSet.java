@@ -96,6 +96,7 @@ public class llmInstSet extends AbstractInstSet {
     public static final fURI LLM_THINK_FEATURE_TID = LLM_FEATURE_TID.extend("think_feature");
     public static final fURI LLM_STAGE_FEATURE_TID = LLM_FEATURE_TID.extend("stage_feature");
     public static final fURI LLM_CONCEPT_FEATURE_TID = LLM_FEATURE_TID.extend("concept_feature");
+    public static final fURI LLM_COMMENT_FEATURE_TID = LLM_FEATURE_TID.extend("comment_feature");
     public static final fURI LLM_COST_FEATURE_TID = LLM_FEATURE_TID.extend("cost_feature");
     public static final fURI LLM_AUDIT_FEATURE_TID = LLM_FEATURE_TID.extend("audit_feature");
     public static final fURI LLM_LOOP_FEATURE_TID = LLM_FEATURE_TID.extend("loop_feature");
@@ -422,6 +423,17 @@ public class llmInstSet extends AbstractInstSet {
                                 "extracts and normalizes concepts from the agent response and thinking stream"),
                         docWrap(Type.Builder.build()
                                         .tid(LLM_FEATURE_TID)
+                                        .vid(LLM_COMMENT_FEATURE_TID)
+                                        .constructor(instC(INST_CTOR_TID.rng(LLM_COMMENT_FEATURE_TID),
+                                                lst(REC_TYPE), (lhs, inst) ->
+                                                        createStageLambdas(new CommentFeature(inst.arg(0).asRec().jvm(), LLM_COMMENT_FEATURE_TID, inst.arg(0).vid()))))
+                                        .create(),
+                                "",
+                                "",
+                                mutableMap(),
+                                "allows user to interject with a comment in the current chat lifecycle of the agent"),
+                        docWrap(Type.Builder.build()
+                                        .tid(LLM_FEATURE_TID)
                                         .vid(LLM_COST_FEATURE_TID)
                                         .constructor(instC(INST_CTOR_TID.rng(LLM_COST_FEATURE_TID),
                                                 lst(REC_TYPE), (lhs, inst) ->
@@ -533,6 +545,10 @@ public class llmInstSet extends AbstractInstSet {
                                 mutableMap(jnt(0), "the object to embed"), // args
                                 "embed an object with an llm", // desc
                                 "*<ollama:qwen3:latest>.embed('what is a database?')"),
+                        docWrap(instC(LLM_INST_TID.extend("interrupt").dom(LLM_AGENT_TID).rng(NOOBJ_TID.zero()), lst(), (lhs, inst) -> {
+                            lhs.<Agent>as().interrupt();
+                            return noobj();
+                        }), "interrupt the agent mid-process"),
                         /*instC(LLM_INST_TID.extend("chat").dom(MODEL_TID).rng(A.maybe()),
                                 lst(STR_TYPE),
                                 (lhs, inst) -> model(lhs.asRec()).chat(inst.arg(0).strValue())),*/

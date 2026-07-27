@@ -31,7 +31,10 @@ import studio.phaseshift.metatron.isa.llm.type.feature.SkillFeature;
 import studio.phaseshift.metatron.isa.llm.type.feature.SystemFeature;
 import studio.phaseshift.metatron.isa.llm.type.feature.ToolFeature;
 import studio.phaseshift.metatron.isa.m.math.mathInstSet;
-import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.m.type.Lst;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.m.type.Str;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
@@ -58,6 +61,7 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_AGENT_TID;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_CHAT_RESULT_TID;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_MILLIS_TID;
+import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TRUE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Str.str0;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
@@ -67,6 +71,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.vec.type.MVec.vec;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -75,7 +80,7 @@ public class Agent extends MRec {
 
     private final List<String> systemMessages = new ArrayList<>();
     private final AtomicReference<Tuple.Pair<fURI, fURI>> currentHook = new AtomicReference<>(null);
-
+    final AtomicBoolean interrupt = new AtomicBoolean(false);
     /**
      * The current user message — single source of truth, mutable by features.
      */
@@ -193,6 +198,10 @@ public class Agent extends MRec {
         }
     }
 
+    public void interrupt() {
+        this.interrupt.set(true);
+    }
+
     // ── Chat ───────────────────────────────────────────────────────
 
     public Obj chat(final String message) {
@@ -201,12 +210,12 @@ public class Agent extends MRec {
 
     public Obj chat(final String message, final Rec responseFormat) {
         // final StringBuilder response = new StringBuilder();
+        this.interrupt.set(false);
         Router.global().stats().ioStats().incrBytesSent(message.getBytes().length);
         final CountDownLatch latch = new CountDownLatch(1);
         final AtomicBoolean isTooling = new AtomicBoolean(false);
         final AtomicReference<MTronException> isError = new AtomicReference<>();
         final long startNanos = System.nanoTime();
-
         try {
             final List<Obj> features = this.features().lstValue();
             if (message.isBlank())
@@ -260,6 +269,7 @@ public class Agent extends MRec {
             LOG.info("processed message: %s %s", this.userMessage, this.feature(CHAT).asRec().at(FORMAT).orElse(rec(uri(FORMAT), uri("none"))));
             agent.chat(this.userMessage)
                     .onToolExecuted(tool -> {
+                        if (this.interrupt.get()) latch.countDown();
                         isTooling.set(false);
                         final Rec toolRec = rec(
                                 uri(NAME), str(tool.request().name()),
@@ -269,6 +279,10 @@ public class Agent extends MRec {
                         features.stream().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_TOOL_EXECUTED, toolRec));
                     })
                     .onPartialToolCall(partialToolCall -> {
+                        if (this.interrupt.get()) {
+                            latch.countDown();
+                            return;
+                        }
                         if (!isTooling.getAndSet(true)) {
                             this.logger().none(Graphitty.sillyPrint("tooling...\n", true, true));
                             this.logger().none("\t{{y}}partial{{X}}: {{b}}%s{{g}}({{b}}%s{{g}}){{X}}\n",
@@ -277,11 +291,19 @@ public class Agent extends MRec {
                         features.stream().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_PARTIAL_TOOL_CALL));
                     })
                     .onPartialResponse(s -> {
+                        if (this.interrupt.get()) {
+                            latch.countDown();
+                            return;
+                        }
                         Router.global().stats().ioStats().incrBytesRecv(s.getBytes().length);
                         //response.append(s);
                         features.stream().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_PARTIAL_RESPONSE, str(s)));
                     })
                     .onPartialThinking(t -> {
+                        if (this.interrupt.get()) {
+                            latch.countDown();
+                            return;
+                        }
                         Router.global().stats().ioStats().incrBytesRecv(t.text().getBytes().length);
                         features.stream().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_PARTIAL_THINKING, str(t.text())));
                     })
@@ -295,6 +317,10 @@ public class Agent extends MRec {
                         features.stream().map(Obj::asRec).forEach(f -> dispatchHook(f, "onError"));
                         latch.countDown();
                     }).onCompleteResponse(c -> {
+                        if (this.interrupt.get()) {
+                            latch.countDown();
+                            return;
+                        }
                         final String fullText = null == c.aiMessage().text() ? "" : c.aiMessage().text();
                         Router.global().stats().ioStats().incrBytesRecv(fullText.getBytes().length);
 
@@ -337,11 +363,18 @@ public class Agent extends MRec {
                         latch.countDown();
                     }).start();
             latch.await();
+            if (this.interrupt.get()) {
+                final fURI currentFeature = this.currentHook.get().get0();
+                final fURI currentStage = this.currentHook.get().get1();
+                final String warnMessage = "[" + currentFeature + "][" + currentStage + "]";
+                LOG.warn("%s: agent interrupted", warnMessage);
+                throw new InterruptedException();
+            }
             if (null != isError.get())
                 throw isError.get();
         } catch (final InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw MTronException.of(e);
+            return rec(mutableMap(uri(STOP), BOOL_TRUE), LLM_CHAT_RESULT_TID, null);
         } catch (final Exception e) {
             throw MTronException.of(e);
         }

@@ -65,6 +65,10 @@ public class AccordionWidget extends JRec<AccordionWidget> implements Widget<Acc
     private int lastRenderHeight;
     private Cursor cursor;
 
+    /** Buffered appends — coalesced to avoid O(n²) string joining and per-line Router reads. */
+    private final StringBuilder pendingBuffer = new StringBuilder();
+    private static final int BUFFER_FLUSH_THRESHOLD = 4096;
+
     // ── JRec constructor ───────────────────────────────────────────
 
     public AccordionWidget(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
@@ -104,15 +108,52 @@ public class AccordionWidget extends JRec<AccordionWidget> implements Widget<Acc
     }
 
     public AccordionWidget body(final String text) {
+        synchronized (this.pendingBuffer) {
+            this.pendingBuffer.setLength(0);
+        }
         jvmWrite(K_BODY, str(text != null ? text : ""));
         return this;
     }
 
+    /**
+     * Append a line to the body. Lines are buffered in memory and flushed to the
+     * backing JVM when the buffer exceeds {@link #BUFFER_FLUSH_THRESHOLD} chars,
+     * or when {@link #flush()}, {@link #format()}, {@link #bodyLines()}, or
+     * {@link #height()} is called.
+     */
     public AccordionWidget appendLine(final String line) {
         if (line == null || line.isEmpty()) return this;
-        final List<String> cur = jvmBody(jvmRead(), K_BODY);
-        cur.add(line);
-        jvmWrite(K_BODY, str(String.join("\n", cur)));
+        boolean shouldFlush = false;
+        synchronized (this.pendingBuffer) {
+            if (this.pendingBuffer.length() > 0) {
+                this.pendingBuffer.append('\n');
+            }
+            this.pendingBuffer.append(line);
+            shouldFlush = this.pendingBuffer.length() >= BUFFER_FLUSH_THRESHOLD;
+        }
+        if (shouldFlush) {
+            flush();
+        }
+        return this;
+    }
+
+    /**
+     * Flush the pending append buffer to the JVM backing store.
+     * Idempotent — safe to call from render loops.
+     */
+    public AccordionWidget flush() {
+        final String pending;
+        synchronized (this.pendingBuffer) {
+            if (this.pendingBuffer.length() == 0) return this;
+            pending = this.pendingBuffer.toString();
+            this.pendingBuffer.setLength(0);
+        }
+        // I/O outside the lock — Router read + merge + write
+        final Map<Obj, Obj> jvm = jvmRead();
+        final Obj existing = jvm.get(K_BODY);
+        final String existingStr = (existing != null && existing.isStr()) ? existing.strValue() : "";
+        final String newBody = existingStr.isEmpty() ? pending : existingStr + "\n" + pending;
+        jvmWrite(K_BODY, str(newBody));
         return this;
     }
 
@@ -127,10 +168,14 @@ public class AccordionWidget extends JRec<AccordionWidget> implements Widget<Acc
     }
 
     public List<String> bodyLines() {
+        flush();
         return jvmBody(jvmRead(), K_BODY);
     }
 
     public AccordionWidget clearBody() {
+        synchronized (this.pendingBuffer) {
+            this.pendingBuffer.setLength(0);
+        }
         jvmWrite(K_BODY, str(""));
         return this;
     }
@@ -166,6 +211,7 @@ public class AccordionWidget extends JRec<AccordionWidget> implements Widget<Acc
 
     @Override
     public int height() {
+        flush();
         final Map<Obj, Obj> jvm = jvmRead();
         if (!jvmBool(jvm, K_EXP)) return 2;
         final List<String> lines = displayLines(jvm);
@@ -197,6 +243,7 @@ public class AccordionWidget extends JRec<AccordionWidget> implements Widget<Acc
 
     @Override
     public String format() {
+        flush();  // persist buffered appends before rendering
         final Map<Obj, Obj> jvm = jvmRead();          // single source read
         final String title = jvmStr(jvm, K_TITLE);
         final boolean expanded = jvmBool(jvm, K_EXP);

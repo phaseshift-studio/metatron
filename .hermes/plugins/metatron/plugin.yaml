@@ -1,0 +1,3 @@
+name: metatron
+version: "0.1"
+description: Metatron connectivity — evaluate mtron expressions on a running instance via WebSocket
