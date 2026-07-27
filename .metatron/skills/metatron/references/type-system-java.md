@@ -368,14 +368,10 @@ TypeCheck.getEnabled();                // returns Set<TypeCheck>
 
 1. **`T()` caches by VID**: Two calls to `T(..., "foo", ...)` in the same JVM return the same type. Call `Router.writeToSpace(f("foo"), noobj())` first to clear.
 
-2. **`.test()` requires exact predicate equality**: `typeWithPredA.test(typeWithPredB)` returns false unless predicates are object-equal. Use `isRefinementOf()` for nominal checks on generated types.
+2. **`.test()` requires exact predicate equality**: `typeWithPredA.test(typeWithPredB)` returns false unless predicates are object-equal. Use `isRefinementOf()` for purely nominal checks, or `isStructuralRefinementOf()` when you need predicate-stack inclusion (this's stack must contain all of other's predicates).
 
-3. **`isRefinementOf` can't reach ALL**: The while loop exits on root types before matching. For disjoint hierarchies, return `ALL_TYPE` directly.
+3. **`isRefinementOf` can't reach ALL**: The while loop exits on root types before matching types whose only common ancestor is the universal type. For disjoint hierarchies, return `ALL_TYPE` directly (as `generateLCD` does). A fix was attempted but reverted — advancing past the `isBaseType()` break subtly changed nominal typing behavior in existing tests.
 
-4. **Raw `mFluent` erases to `Fluent`**: `mFluent<?>` method chaining returns `Fluent`, not `Call`. Build predicates directly with `instB()` + `Call.from()` in programmatic code.
+4. **Raw `mFluent` erases to `Fluent`**: `mFluent<?>` method chaining returns `Fluent`, not `Call`. Build predicates directly with `instB()` + `Call.from()`, or use `.tryToInst()` to exit the Fluent chain as `generateLCD` does with the `isa_` branch.
 
-5. **Predicate stack order**: `predicateStack()` returns predicates from most-specific (current type) to most-general (ancestor). The topmost predicate is at index 0.
-
-6. **Coefficient `plus` vs `span`**: `plus` sums cardinalities (ring addition). `span` computes the narrowest containing interval (LCD-appropriate). Don't use `plus` for LCD coefficients.
-
-7. **fURI equality**: Two fURIs representing the same path but created via different code paths may not be `equals()`. Always compare `basePath()` values and be aware that `HashSet`/`LinkedHashSet` operations depend on both `hashCode()` and `equals()`.
+5. **Predicate stack order**: `predicateStack()` returns predicates from most-specific (current type) to most-general (ancestor). The topmost predicate is at index 0. Use `combinedPredicate()` to get a single chained `Call` instead of iterating manually.

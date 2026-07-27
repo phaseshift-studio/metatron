@@ -24,3 +24,4 @@ feature=>[
 *   **Type System (mtron)**: `references/type-system-mtron.md` — vid/tid concepts, base types, coefficients, isa vs non-isa predicates, nominal vs structural types, type definition syntax, pattern/generic types, LCD.
 *   **Type System (Java)**: `references/type-system-java.md` — Type interface, MType/T() factory, Fluent/StartLess API, predicates, isRefinementOf vs test, generateLCD, coefficients (cInt/C), Call/Inst/Code, common gotchas.
 *   **UI Architecture (Java)**: `references/metatron-ui-architecture.md` — Widget lifecycle, JRec state bridge, Style system, FloatingSurface, Anchor positioning, uiInstSet type registration.  How to create, modify, and float widgets.
+*   **Rewrite System (Java)**: `references/rewrite-system-java.md` — Rewriter fixed-window matching, RewriteBuilder space-aware native pushdown, custom Function<Code,Code> rewrites, Code.rewrite() loop, registration via InstSet.setup(), and concrete examples from all instset spaces.
