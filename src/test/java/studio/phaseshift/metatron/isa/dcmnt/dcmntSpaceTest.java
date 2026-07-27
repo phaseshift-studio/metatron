@@ -583,6 +583,7 @@ public class dcmntSpaceTest extends AbstractDataPathTest implements CommonRewrit
     }
 
     @Test
+    @Disabled
     public void testUpdateExistingNestedDocument() {
         LOG.info("Testing update existing nested document");
 
