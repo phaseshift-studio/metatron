@@ -86,9 +86,11 @@ public class mTool extends MRec {
         final Inst inst = doc.at(OBJ);
         JsonObjectSchema.Builder parameters = new JsonObjectSchema.Builder();
         List<String> required = new ArrayList<>();
-        parameters.addProperty(LHS, objToSchema(inst.dom(), Type.Helper.polyTypePredicateObj(inst.dom()), doc.at(DOM).orElse(str("<no description>")).strValue()));
-        if (!inst.tid().dom().c().isZeroable())
-            required.add(LHS);
+        if (!inst.tid().dom().isZero()) {
+            parameters.addProperty(LHS, objToSchema(inst.dom(), Type.Helper.polyTypePredicateObj(inst.dom()), doc.at(DOM).orElse(str("<no description>")).strValue()));
+            if (!inst.tid().dom().c().isZeroable())
+                required.add(LHS);
+        }
         final boolean recArgs = doc.args().isRec();
         final AtomicInteger counter = new AtomicInteger(0);
         doc.args().elements().forEach(e -> {
@@ -129,13 +131,13 @@ public class mTool extends MRec {
     public static QCollection.Docs mtronInstToTool(final Inst inst) {
         final QCollection.Docs doc = Router.readFromSpace(inst.tid().addQ(DOCQ))
                 .orSupply(() -> doc(inst,
-                            inst.dom().tid().toString(),
-                            inst.rng().tid().toString(),
-                            instB(AS_INST_TID, lst(REC_TYPE)).apply(inst.args().orElse(rec0())).asRec().elements().collect(Collectors.toMap(
-                                    Rel::first,
-                                    e -> e.second().tid().toString()
-                            )),
-                            "<no description>"));
+                        inst.dom().tid().toString(),
+                        inst.rng().tid().toString(),
+                        instB(AS_INST_TID, lst(REC_TYPE)).apply(inst.args().orElse(rec0())).asRec().elements().collect(Collectors.toMap(
+                                Rel::first,
+                                e -> e.second().tid().toString()
+                        )),
+                        "<no description>"));
         inst.logger().info("building ai compliant tool from mtron inst: %s", inst.tid());
         return doc;//rec(mutableMap(uri(INST), inst, uri(NAME), uri(inst.tid()), uri(DESC), str(doc.description()), uri(ARG), doc.args()), LLM_TOOL_TID, null);
     }

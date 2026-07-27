@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.isa.mach.type.ui.widget;
 
 import org.jline.terminal.Terminal;
+import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.isa.mach.type.ui.Widget;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 
@@ -81,12 +82,12 @@ public class FloatingSurface {
 
     private final Terminal terminal;
     private final Map<Widget<?>, Slot> slots = new java.util.concurrent.ConcurrentHashMap<>();
-    private final java.util.concurrent.Executor renderExecutor =
-            java.util.concurrent.Executors.newSingleThreadExecutor(r -> {
+    private final java.util.concurrent.Executor renderExecutor = BootLoader.getExecutor();
+            /*java.util.concurrent.Executors.newSingleThreadExecutor(r -> {
                 final Thread t = new Thread(r, "floating-surface-render");
                 t.setDaemon(true);
                 return t;
-            });
+            });*/
 
     /**
      * Create a floating surface that renders to the given terminal.

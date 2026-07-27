@@ -47,7 +47,7 @@ public abstract class MObj implements Obj, Cloneable {
     }
 
     @Override
-    public <O extends Obj> O parent(final Poly<?, ?> parent) {
+    public <O extends Obj> O parent(final Obj parent) {
         this.parent = parent;
         return (O) this;
     }

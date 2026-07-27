@@ -34,6 +34,7 @@ import dev.langchain4j.model.openai.OpenAiEmbeddingModel;
 import dev.langchain4j.model.openai.OpenAiModelCatalog;
 import dev.langchain4j.model.openai.OpenAiStreamingChatModel;
 import org.slf4j.event.Level;
+import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 
 import studio.phaseshift.metatron.isa.llm.type.Agent;
@@ -208,11 +209,10 @@ public final class LLMFactory {
 
     public static StreamingChatModel createChatInteraction(final Agent agent, final Obj modelObj, final Obj responseObj, final Obj fmt) {
         final Rec model = modelObj.isNoObj() ? noobjRec() : modelObj.asRec();
-        final Rec response = responseObj.isNoObj() ? noobjRec() : responseObj.asRec();
-        final Rec responseFormat = fmt.isNoObj() ? rec0().c(c -> c.zero()).as() : fmt.asRec();
+        final Rec responseFormat = fmt.isNoObj() ? rec0().c(cInt::zero).as() : fmt.asRec();
         final fURI provider = model.at(f(PROTOCOL)).uriValue();
         final String host = model.at(HOST).uriValue().toString();
-        final boolean thinking = true; //!agent.feature(THINK).isNoObj();
+        final boolean thinking = agent.hasFeature(THINK);
         final String modelName = Str.Helper.cleanString(model.at(NAME));
         final Str api_key = model.at(API_KEY).orElse(str0());//model.at(f(PROVIDER)).asRec().at(API_KEY).orElse(str0());
         // final Str organization = model.at(f(PROVIDER)).asRec().at(ORG).orElse(str0());

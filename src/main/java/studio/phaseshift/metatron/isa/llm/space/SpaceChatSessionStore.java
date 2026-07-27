@@ -40,7 +40,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
 import static studio.phaseshift.metatron.isa.llm.type.Agent.res;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.at_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -155,7 +157,7 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
         final List<Rec> allMessages = new ArrayList<>();
         final AtomicInteger found = new AtomicInteger(0);
         // from_(msgBase.extend("+").toUri()).where_(rec(uri(SESSION), sesVID.toUri())).apply()
-        Router.readFromSpace(msgBase.extend("+")).stream()
+        at_(uri(msgBase.extend("+"))).tryToInst().apply(jnt(1)).stream()
                 .forEach(msg -> {
                     if (!msg.isRec()) {
                         LOG.warn("non-message obj in llm messages: %s", msg);
@@ -169,7 +171,7 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
                         }
                     }
                 });
-        // allMessages.sort(Comparator.comparing(a -> Integer.parseInt(a.vid().name())));
+        allMessages.sort(Comparator.comparing(a -> Integer.parseInt(a.vid().name())));
         LOG.info("messages found for context window: " + found.get());
         // ChatMemory handles its own windowing (token-based or message-based)
         // after hydrating from the store; we return all messages and let it prune

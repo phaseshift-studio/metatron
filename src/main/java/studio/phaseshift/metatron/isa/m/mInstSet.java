@@ -58,6 +58,7 @@ import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
@@ -509,13 +510,13 @@ public class mInstSet extends AbstractInstSet {
                         docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("map_nest"),
                                 code -> code.selfJVM(
                                         Rewriter.search(code.insts())
-                                                .match(instB(MAP_INST_TID.dom(ALL.maybeSome()).rng(ALL.maybeSome()), lst(instB(MAP_INST_TID.dom(ALL.maybeSome()).rng(ALL.maybeSome()),lst(ALL_TYPE)))).insts())
+                                                .match(instB(MAP_INST_TID.dom(ALL.maybeSome()).rng(ALL.maybeSome()), lst(instB(MAP_INST_TID.dom(ALL.maybeSome()).rng(ALL.maybeSome()), lst(ALL_TYPE)))).insts())
                                                 .repeat()
                                                 .rewrite(map -> map.values().stream().map(objs -> objs.arg(0).asInst()).toList())).asCode()), "flattens nested map instructions"),
-                       docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("map_inst"),
+                        docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("map_inst"),
                                 code -> code.selfJVM(
                                         Rewriter.search(code.insts())
-                                                .match(instB(MAP_INST_TID.dom(ALL.maybeSome()).rng(ALL.maybeSome()), lst(instB(M_ISA_INST_TID.extend("#"),lst(T(ALL.maybeSome()))))).insts())
+                                                .match(instB(MAP_INST_TID.dom(ALL.maybeSome()).rng(ALL.maybeSome()), lst(instB(M_ISA_INST_TID.extend("#"), lst(T(ALL.maybeSome()))))).insts())
                                                 .repeat()
                                                 .rewrite(map -> map.values().stream().map(objs -> objs.arg(0).asInst()).toList())).asCode()), "flattens a mapping of an inst to the inst"),
                         // Eliminate else() after non-maybe instruction (dead code)
@@ -759,11 +760,67 @@ public class mInstSet extends AbstractInstSet {
                                                     }
                                                     // No optimization possible, return original
                                                     return matched;
-                                                })).asCode()), "leverages distributive ring law to pull common monoidally bound components to the left")))));
+                                                })).asCode()), "leverages distributive ring law to pull common monoidally bound components to the left"),
+                        docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("explain_profile"),
+                                code -> {
+                                    final List<Inst> insts = code.insts();
+                                    if (insts.isEmpty() || insts.size() < 2) return code;
+                                    final Inst last = insts.getLast();
+                                    if (!last.tid().basePath().equals(EXPLAIN_INST_TID)) return code;
+                                    final List<Inst> preceding = new ArrayList<>(insts.subList(0, insts.size() - 1));
+                                    final Code precedingCode = MCode.of(preceding).resolve(noobj());
+                                    return code.selfJVM(List.of(
+                                            instC(M_ISA_INST_TID.extend("explain_compute").dom(NOOBJ_TID.zero()).rng(STR_TID),
+                                                    lst(block_(precedingCode).tryToInst()),
+                                                    (lhs, inst) -> str(explainTable(inst.arg(0).asCode()))))).asCode();
+                                }), "rewrites a().b().c().explain() to explain_rewrite(a().b().c())")))));
         docWrap(this, "the core instruction set of metatron containing the base types and useful instructions to manipulate them");
         super.setup();
     }
 
+
+    /**
+     * Build a column-justified text table of the instructions in {@code code}.
+     * Terminal-free — suitable for use in rewrites and non-interactive contexts.
+     */
+    private static String explainTable(final Code code) {
+        final java.util.List<String> headers = java.util.List.of(
+                "op", "dom", "rng", "args", "f", "desc", "c_dom", "c_rng");
+        final java.util.List<java.util.List<String>> rows = new java.util.ArrayList<>();
+        rows.add(headers);
+        for (final Inst i : code.insts()) {
+            rows.add(java.util.List.of(
+                    i.tid().name(),
+                    i.dom().vid().small() + "::T",
+                    i.rng().vid().small() + "::T",
+                    i.args().elements()
+                            .map(o -> o.isCall() ? o.asCall().insts().stream()
+                                    .map(x -> x.tid().name())
+                                    .reduce((a, b) -> a + "." + b).orElse("") : o.toShortString())
+                            .reduce((a, b) -> a + "," + b).orElse(""),
+                    i.hasf() ? (i.f().isLambda() ? "<j>" : "<m>") : "<?>",
+                    studio.phaseshift.metatron.isa.m.type.Inst.Form.of(i).toString(),
+                    "{" + i.dom().c() + "}",
+                    "{" + i.rng().c() + "}"));
+        }
+        final int cols = headers.size();
+        final int[] widths = new int[cols];
+        for (final java.util.List<String> row : rows) {
+            for (int c = 0; c < cols; c++) {
+                widths[c] = Math.max(widths[c], row.get(c).length());
+            }
+        }
+        final StringBuilder sb = new StringBuilder("\n");
+        for (int r = 0; r < rows.size(); r++) {
+            final java.util.List<String> row = rows.get(r);
+            for (int c = 0; c < cols; c++) {
+                final String cell = row.get(c);
+                sb.append(String.format(" %-" + widths[c] + "s ", cell));
+            }
+            sb.append('\n');
+        }
+        return sb.toString();
+    }
 
     @Override
     public void close() {

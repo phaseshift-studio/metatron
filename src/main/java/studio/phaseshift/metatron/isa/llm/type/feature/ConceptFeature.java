@@ -188,7 +188,7 @@ public class ConceptFeature extends Feature {
                         }
                     }
                 }
-                Router.writeToSpace(conceptURI, conceptRec.vid(this.getBaseURI().extend(concept)));
+                Router.writeToSpace(conceptURI, conceptRec);
                 concepts.add(conceptURI);
                 LOG.debug("extracted concept: %s", conceptURI);
             }

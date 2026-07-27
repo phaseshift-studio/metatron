@@ -31,6 +31,7 @@ import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.PCMonad;
 import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.ui.tool.ProfileTool;
 import studio.phaseshift.metatron.isa.web.type.MIME;
 import studio.phaseshift.metatron.util.*;
 
@@ -110,7 +111,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
         return (O) this.c(cInt::antiSome);
     }
 
-    default <O extends Obj> O parent(final Poly<?, ?> parent) {
+    default <O extends Obj> O parent(final Obj parent) {
         return (O) this;
     }
 
@@ -605,7 +606,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
 
     default Poly<?, ?> asPoly() {
         try {
-            return (Poly<?,?>) this;
+            return (Poly<?, ?>) this;
         } catch (final Exception e) {
             throw MTronException.of(e);
         }
@@ -1269,6 +1270,10 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                         final Obj detached = lhs.clone().selfVID(null);
                         final Obj result = Poly.Helper.updateRecursion(detached, inst.arg(0), IMMUTABLE);
                         return null != lhs.vid() ? Router.writeToSpace(lhs.vid(), result) : result;
+                    }),
+                    instC(EXPLAIN_INST_TID.dom(A.maybe()).rng(ALL_STAR), lst(), (lhs, inst) -> {
+                        // explain_rewrite handles normal case; bare explain() is a no-op
+                        return lhs;
                     }),
                     instC(REIFY_INST_TID.dom(A).rng(REC_TID), lst(), (lhs, inst) -> rec(
                             "type", rec(
