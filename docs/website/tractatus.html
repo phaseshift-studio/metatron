@@ -976,7 +976,7 @@ mtron&gt;  10.is_divisible('abc')
    	  \_pred | []
    	[inst]   | mod?rng=int&amp;dom=int('abc'){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
    	 \_dom   | int::T
-   	 \_args  | ['abc'][Obj&lt;625&gt;:'abc' [value] unable to convert str::T]]@/sys/fail/12[...]</code></pre>
+   	 \_args  | ['abc'][Obj&lt;694&gt;:'abc' [value] unable to convert str::T]]@/sys/fail/12[...]</code></pre>
 </div>
 </div>
 </div>
@@ -1383,7 +1383,7 @@ mtron&gt; httpspace::[host     =&gt; &lt;http://localhost:8777&gt;,
    	  \_pred | []
    	[inst]   | /m/web/space/httpspace/ctor?rng=httpspace&amp;dom=#{?}(rec::T){&lt;j&gt;}
    	 \_dom   | #{?}::T
-   	 \_args  | [rec::T][Inst&lt;348&gt;:unable to convert type to rec::T[Obj&lt;559&gt;:class studio.phaseshift.metatron.isa.m.type.impl.MType cannot be cast to class studio.phaseshift.metatron.isa.m.type.Rec (studio.phaseshift.metatron.isa.m.type.impl.MType and studio.phaseshift.metatron.isa.m.type.Rec are in unnamed module of loader 'app')]]]@/sys/fail/6[...]]@/sys/fail/8
+   	 \_args  | [rec::T][Obj&lt;585&gt;:unable to convert type to rec::T[Obj&lt;585&gt;:class studio.phaseshift.metatron.isa.m.type.impl.MType cannot be cast to class studio.phaseshift.metatron.isa.m.type.Rec (studio.phaseshift.metatron.isa.m.type.impl.MType and studio.phaseshift.metatron.isa.m.type.Rec are in unnamed module of loader 'app')] ← class studio.phaseshift.metatron.isa.m.type.impl.MType cannot be cast to class studio.phaseshift.metatron.isa.m.type.Rec (studio.phaseshift.metatron.isa.m.type.impl.MType and studio.phaseshift.metatron.isa.m.type.Rec are in unnamed module of loader 'app')]]@/sys/fail/6[...]]@/sys/fail/8
 mtron&gt; fsspace::[pattern  =&gt; fs:#,
                  route    =&gt; [fs:=&gt;&lt;.metatron&gt;]]@/sys/space/fs</code></pre>
 </div>
@@ -1535,7 +1535,7 @@ mtron&gt; *&lt;fs:agent.mtron/feature&gt;     ​2​</code></pre>
    	  \_pred | []
    	[inst]   | *ollama:+
    	 \_dom   | #{?}::T
-   	 \_args  | [ollama:+][BasicRouter&lt;254&gt;:no active space supports pattern ollama:+]]@/sys/fail/162[...]</code></pre>
+   	 \_args  | [ollama:+][BasicRouter&lt;254&gt;:no active space supports pattern ollama:+]]@/sys/fail/66[...]</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -1593,7 +1593,7 @@ else(throw('no model fits the spec'))            /
    	  \_pred | []
    	[inst]   | *ollama:+
    	 \_dom   | #{?}::T
-   	 \_args  | [ollama:+][BasicRouter&lt;254&gt;:no active space supports pattern ollama:+]]@/sys/fail/188[...]</code></pre>
+   	 \_args  | [ollama:+][BasicRouter&lt;254&gt;:no active space supports pattern ollama:+]]@/sys/fail/92[...]</code></pre>
 </div>
 </div>
 <div class="listingblock">
@@ -1627,7 +1627,7 @@ else(throw('no model fits the spec'))            /
    	  \_pred | []
    	[inst]   | ctor?rng=mcp_client&amp;dom=#{?}([host=&gt;ws://localhost:8555/mcp]@/usr/ai/mcp/mtron){&lt;j&gt;}
    	 \_dom   | #{?}::T
-   	 \_args  | [[host=&gt;ws://localhost:8555/mcp]@/usr/ai/mcp/mtron][Inst&lt;348&gt;:java.util.concurrent.ExecutionException: java.lang.RuntimeException: java.util.concurrent.ExecutionException: java.net.ConnectException: java.util.concurrent.ExecutionException: java.lang.RuntimeException: java.util.concurrent.ExecutionException: java.net.ConnectException...]]@/sys/fail/192[...]]@/sys/fail/194
+   	 \_args  | [[host=&gt;ws://localhost:8555/mcp]@/usr/ai/mcp/mtron][SocketChannelImpl&lt;204&gt;:java.util.concurrent.ExecutionException: java.lang.RuntimeException: java.util.concurrent.ExecutionException: java.net.ConnectException[SocketChannelImpl&lt;204&gt;:java.util.concurrent.ExecutionException: java.lang.RuntimeException: java.util.concurrent.ExecutionException: java.net.ConnectException ← java.lang.RuntimeException: java.util.concurrent.ExecutionException: java.net.ConnectException ← java.util.concurrent.ExecutionException: java.net.ConnectException ← java.net.ConnectException ← ...] ← java.util.concurrent.ExecutionException: java.lang.RuntimeException: java.util.concurrent.ExecutionException: java.net.ConnectException ← java.lang.RuntimeException: java.util.concurrent.ExecutionException: java.net.ConnectException ← java.util.concurrent.ExecutionException: java.net.ConnectException ← ...]]@/sys/fail/96[...]]@/sys/fail/98
 mtron&gt; doc_model(aix).&gt;&gt;=+
         [feature =&gt;[
           tool      =&gt; [!*/usr/ai/mcp/mtron],
@@ -1638,7 +1638,7 @@ mtron&gt; doc_model(aix).&gt;&gt;=+
    	  \_pred | []
    	[inst]   | *ollama:+
    	 \_dom   | #{?}::T
-   	 \_args  | [ollama:+][BasicRouter&lt;254&gt;:no active space supports pattern ollama:+]]@/sys/fail/220[...]</code></pre>
+   	 \_args  | [ollama:+][BasicRouter&lt;254&gt;:no active space supports pattern ollama:+]]@/sys/fail/124[...]</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1708,7 +1708,7 @@ mtron&gt; *ollama:+.
    	  \_pred | []
    	[inst]   | *ollama:+
    	 \_dom   | #{?}::T
-   	 \_args  | [ollama:+][BasicRouter&lt;254&gt;:no active space supports pattern ollama:+]]@/sys/fail/246[...]</code></pre>
+   	 \_args  | [ollama:+][BasicRouter&lt;254&gt;:no active space supports pattern ollama:+]]@/sys/fail/150[...]</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -1855,12 +1855,7 @@ mtron&gt; tB::1.0.as(mB::T)     ​3​
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; @ai.chat("It's been many years since we last talked. For I am a tired, old man. Before I let my last breathe flutter into this world, I must know one last thing. Please tell me, what was the result of the mtron expression I provided you all those years ago?")
 ==&gt;fail::[apply failure:
-   	[lhs]    | message::T[?[
-     {?}name=&gt;str::T,
-     {?}text=&gt;str::T,
-     {?}thinking=&gt;int::T,
-     {?}tool_requests=&gt;lst::T,
-     {?}attributes=&gt;rec::T]]@ai
+   	[lhs]    | message::T[?[{?}text=&gt;str::T,{?}tool_requests=&gt;[tool_request::T]]]@ai
    	 \_type  | /m/llm/message
    	  \_pred | [isa(or([
     isa(system::T),
@@ -1870,7 +1865,7 @@ mtron&gt; tB::1.0.as(mB::T)     ​3​
     isa(thinking::T)]))]
    	[inst]   | chat?rng=chat_result&amp;dom=rec("It's been many years since we last talked. For I am a tired, old man. Before I let my last breathe flutter into this world, I must know one last thing. Please tell me, what was the result of the mtron expression I provided you all those years ago?"){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
    	 \_dom   | rec::T
-   	 \_args  | ["It's been many years since we last talked. For I am a tired, old man. Before I let my last breathe flutter into this world, I must know one last thing. Please tell me, what was the result of the mtron expression I provided you all those years ago?"][Inst&lt;348&gt;:classcastexception: null...]]@/sys/fail/248[...]
+   	 \_args  | ["It's been many years since we last talked. For I am a tired, old man. Before I let my last breathe flutter into this world, I must know one last thing. Please tell me, what was the result of the mtron expression I provided you all those years ago?"][Obj&lt;587&gt;:Cannot invoke "String.replace(java.lang.CharSequence, java.lang.CharSequence)" because "message" is null[Obj&lt;587&gt;:Cannot invoke "String.replace(java.lang.CharSequence, java.lang.CharSequence)" because "message" is null] ← Cannot invoke "String.replace(java.lang.CharSequence, java.lang.CharSequence)" because "message" is null]]@/sys/fail/152[...]
 mtron&gt; */usr/ai/session/+
 ==&gt;/usr/ai
 ==&gt;[max=&gt;15]
@@ -2301,7 +2296,7 @@ can access it accordingly and naturally.</p>
    	  \_pred | []
    	[inst]   | plus?rng=uri{?}&amp;dom=int(b){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
    	 \_dom   | int::T
-   	 \_args  | [b][Obj&lt;643&gt;:1 [int::T] unable to convert uri::T]]@/sys/fail/22[...]
+   	 \_args  | [b][Obj&lt;712&gt;:1 [int::T] unable to convert uri::T]]@/sys/fail/22[...]
 mtron&gt; */sys/fail/+     ​2​
 mtron&gt; */sys/fail/+.catch(_)     ​3​
 mtron&gt; */sys/fail     ​4​</code></pre>
@@ -2538,7 +2533,7 @@ mtron&gt;  -21.as(int::T).as(nat::T).as(age::T)     ​4​
    	  \_pred | []
    	[inst]   | as?rng=nat&amp;dom=int(nat::T){&lt;j&gt;}@<i class="conum" data-value="2"></i><b>(2)</b>
    	 \_dom   | int::T
-   	 \_args  | [nat::T][Obj&lt;528&gt;:-21 is not a is(gt(0))...]]@/sys/fail/8[...]
+   	 \_args  | [nat::T][Obj&lt;529&gt;:-21 is not a is(gt(0))...]]@/sys/fail/8[...]
 mtron&gt;  121.as(int::T).as(nat::T).as(age::T)     ​5​
 ==&gt;fail::[apply failure:
    	[lhs]    | nat::121
@@ -2546,7 +2541,7 @@ mtron&gt;  121.as(int::T).as(nat::T).as(age::T)     ​5​
    	  \_pred | [is(gt(0))]
    	[inst]   | as?rng=age&amp;dom=int(age::T){&lt;j&gt;}@<i class="conum" data-value="3"></i><b>(3)</b>
    	 \_dom   | int::T
-   	 \_args  | [age::T][Obj&lt;528&gt;:nat::121 is not a is(lt(120))...]]@/sys/fail/10[...]
+   	 \_args  | [age::T][Obj&lt;529&gt;:nat::121 is not a is(lt(120))...]]@/sys/fail/10[...]
 mtron&gt; rec::T[?[name=&gt;str::T,age=&gt;age::T]]@chicken     ​6​
 mtron&gt; chicken::[name=&gt;'snowbutt',age=&gt;7]     ​7​
 ==&gt;chicken::[name=&gt;'snowbutt',age=&gt;7]
@@ -2673,7 +2668,7 @@ mtron&gt;  chicken::[name=&gt;'snowbutt',age=&gt;7].as(human::T)     ​5​
      age=&gt;age::T])]
    	[inst]   | as?rng=human&amp;dom=rec(human::T){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
    	 \_dom   | rec::T
-   	 \_args  | [human::T][Obj&lt;516&gt;:chicken::[name=&gt;'snowbutt',age=&gt;7] is not a human::T...]]@/sys/fail/14[...]
+   	 \_args  | [human::T][Obj&lt;517&gt;:chicken::[name=&gt;'snowbutt',age=&gt;7] is not a human::T...]]@/sys/fail/14[...]
 mtron&gt; [name=&gt;'fuzzy feet',age=&gt;2].as(chicken::T)     ​6​
 ==&gt;chicken::[name=&gt;'fuzzy feet',age=&gt;2]
 mtron&gt; 'punky'.as(chicken::T)     ​7​
@@ -2683,7 +2678,7 @@ mtron&gt; 'punky'.as(chicken::T)     ​7​
    	  \_pred | []
    	[inst]   | as?rng=chicken&amp;dom=str(chicken::T){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
    	 \_dom   | str::T
-   	 \_args  | [chicken::T][ObjXMLSerializer&lt;151&gt;:unable to parse xml: java.lang.NullPointerException: Cannot invoke "org.w3c.dom.Element.getNodeName()" because the return value of "org.w3c.dom.Document.getDocumentElement()" is null[ObjXMLSerializer&lt;151&gt;:nullpointerexception: Cannot invoke "org.w3c.dom.Element.getNodeName()" because the return value of "org.w3c.dom.Document.getDocumentElement()" is null...]]]@/sys/fail/16[...]</code></pre>
+   	 \_args  | [chicken::T][ObjXMLSerializer&lt;109&gt;:unable to parse xml: java.lang.NullPointerException: Cannot invoke "org.w3c.dom.Element.getNodeName()" because the return value of "org.w3c.dom.Document.getDocumentElement()" is null[ObjXMLSerializer&lt;109&gt;:Cannot invoke "org.w3c.dom.Element.getNodeName()" because the return value of "org.w3c.dom.Document.getDocumentElement()" is null[ObjXMLSerializer&lt;109&gt;:Cannot invoke "org.w3c.dom.Element.getNodeName()" because the return value of "org.w3c.dom.Document.getDocumentElement()" is null] ← Cannot invoke "org.w3c.dom.Element.getNodeName()" because the return value of "org.w3c.dom.Document.getDocumentElement()" is null] ← Cannot invoke "org.w3c.dom.Element.getNodeName()" because the return value of "org.w3c.dom.Document.getDocumentElement()" is null[ObjXMLSerializer&lt;109&gt;:Cannot invoke "org.w3c.dom.Element.getNodeName()" because the return value of "org.w3c.dom.Document.getDocumentElement()" is null] ← Cannot invoke "org.w3c.dom.Element.getNodeName()" because the return value of "org.w3c.dom.Document.getDocumentElement()" is null]]@/sys/fail/16[...]</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -2778,7 +2773,7 @@ mtron&gt;  -2.as(nat::T)     ​6​
    	  \_pred | []
    	[inst]   | as?rng=int&amp;dom=int(int::T){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
    	 \_dom   | int::T
-   	 \_args  | [int::T][Obj&lt;528&gt;:-2 is not a is(gt(0))...]]@/sys/fail/18[...]
+   	 \_args  | [int::T][Obj&lt;529&gt;:-2 is not a is(gt(0))...]]@/sys/fail/18[...]
 mtron&gt;  nat::2 * -1     ​7​
 ==&gt;fail::[apply failure:
    	[lhs]    | nat::2
@@ -2786,7 +2781,7 @@ mtron&gt;  nat::2 * -1     ​7​
    	  \_pred | [is(gt(0))]
    	[inst]   | mult?rng=int&amp;dom=int(-1){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
    	 \_dom   | int::T
-   	 \_args  | [-1][Obj$Helper&lt;924&gt;:-2 is not a int::T[is(gt(0))][choose([is(lt(0))=&gt;mult(-1),id()=&gt;id()]).rshift()]]]@/sys/fail/20[...]</code></pre>
+   	 \_args  | [-1][Obj$Helper&lt;993&gt;:-2 is not a int::T[is(gt(0))][choose([is(lt(0))=&gt;mult(-1),id()=&gt;id()]).rshift()]]]@/sys/fail/20[...]</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -2813,7 +2808,7 @@ The predicate component of the type definition tests an <code>int</code> to dete
 <div class="paragraph">
 <p>While every <code>type</code> is an <code>obj</code>, not every <code>obj</code> is a <code>type</code>.
 Those <code>objs</code> that are not <code>types</code> are <em>instances</em> of some <code>type</code>.
-This is the foundation for all other <code>objs</code> in {{c}}M{{m}}e{{y}}t{{g}}a{{y}}t{{y}}R{{b}}o{{y}}n{{X}}.</p>
+This is the foundation for all other <code>objs</code> in {{c}}m{{c}}e{{m}}t{{c}}a{{g}}T{{g}}R{{r}}O{{r}}n{{X}}.</p>
 </div>
 <h4 id="sec-cascading-type-constructions" class="discrete">cascading type constructions</h4>
 <h3 id="sec-mono-types" class="discrete">mono types</h3>
@@ -2937,7 +2932,7 @@ mtron&gt; bytes::'48656c6c6f'     ​2​
    	  \_pred | []
    	[inst]   | ctor?rng=kB&amp;dom=#{?}(1024){&lt;j&gt;}
    	 \_dom   | #{?}::T
-   	 \_args  | [1024][Inst&lt;348&gt;:unable to convert int::T to real::T[Obj&lt;547&gt;:class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Real (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Real are in unnamed module of loader 'app')]]]@/sys/fail/42[...]]@/sys/fail/44
+   	 \_args  | [1024][Obj&lt;561&gt;:unable to convert int::T to real::T[Obj&lt;561&gt;:class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Real (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Real are in unnamed module of loader 'app')] ← class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Real (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Real are in unnamed module of loader 'app')]]@/sys/fail/42[...]]@/sys/fail/44
 mtron&gt; mB::1.as(kB::T)     ​2​
 ==&gt;fail::[unable to construct mB::T: fail::[apply failure:
    	[lhs]    | 1
@@ -2945,7 +2940,7 @@ mtron&gt; mB::1.as(kB::T)     ​2​
    	  \_pred | []
    	[inst]   | ctor?rng=mB&amp;dom=#{?}(1){&lt;j&gt;}
    	 \_dom   | #{?}::T
-   	 \_args  | [1][Inst&lt;348&gt;:unable to convert int::T to real::T[Obj&lt;547&gt;:class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Real (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Real are in unnamed module of loader 'app')]]]@/sys/fail/48[...]]@/sys/fail/50
+   	 \_args  | [1][Obj&lt;561&gt;:unable to convert int::T to real::T[Obj&lt;561&gt;:class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Real (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Real are in unnamed module of loader 'app')] ← class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Real (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Real are in unnamed module of loader 'app')]]@/sys/fail/48[...]]@/sys/fail/50
 mtron&gt; gB::5.as(mB::T)     ​3​
 ==&gt;fail::[unable to construct gB::T: fail::[apply failure:
    	[lhs]    | 5
@@ -2953,7 +2948,7 @@ mtron&gt; gB::5.as(mB::T)     ​3​
    	  \_pred | []
    	[inst]   | ctor?rng=gB&amp;dom=#{?}(5){&lt;j&gt;}
    	 \_dom   | #{?}::T
-   	 \_args  | [5][Inst&lt;348&gt;:unable to convert int::T to real::T[Obj&lt;547&gt;:class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Real (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Real are in unnamed module of loader 'app')]]]@/sys/fail/54[...]]@/sys/fail/56
+   	 \_args  | [5][Obj&lt;561&gt;:unable to convert int::T to real::T[Obj&lt;561&gt;:class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Real (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Real are in unnamed module of loader 'app')] ← class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Real (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Real are in unnamed module of loader 'app')]]@/sys/fail/54[...]]@/sys/fail/56
 mtron&gt; pB::1.as(tB::T)     ​4​
 ==&gt;fail::[unable to construct pB::T: fail::[apply failure:
    	[lhs]    | 1
@@ -2961,7 +2956,7 @@ mtron&gt; pB::1.as(tB::T)     ​4​
    	  \_pred | []
    	[inst]   | ctor?rng=pB&amp;dom=#{?}(1){&lt;j&gt;}
    	 \_dom   | #{?}::T
-   	 \_args  | [1][Inst&lt;348&gt;:unable to convert int::T to real::T[Obj&lt;547&gt;:class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Real (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Real are in unnamed module of loader 'app')]]]@/sys/fail/60[...]]@/sys/fail/62</code></pre>
+   	 \_args  | [1][Obj&lt;561&gt;:unable to convert int::T to real::T[Obj&lt;561&gt;:class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Real (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Real are in unnamed module of loader 'app')] ← class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Real (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Real are in unnamed module of loader 'app')]]@/sys/fail/60[...]]@/sys/fail/62</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -2999,7 +2994,7 @@ mtron&gt; pB::1.as(tB::T)     ​4​
    	  \_pred | []
    	[inst]   | ctor?rng=mB&amp;dom=#{?}(1024){&lt;j&gt;}
    	 \_dom   | #{?}::T
-   	 \_args  | [1024][Inst&lt;348&gt;:unable to convert int::T to real::T[Obj&lt;547&gt;:class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Real (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Real are in unnamed module of loader 'app')]]]@/sys/fail/66[...]]@/sys/fail/68
+   	 \_args  | [1024][Obj&lt;561&gt;:unable to convert int::T to real::T[Obj&lt;561&gt;:class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Real (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Real are in unnamed module of loader 'app')] ← class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Real (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Real are in unnamed module of loader 'app')]]@/sys/fail/66[...]]@/sys/fail/68
 mtron&gt; kB::1024.eq(mB::1)     ​2​
 ==&gt;fail::[unable to construct kB::T: fail::[apply failure:
    	[lhs]    | 1024
@@ -3007,7 +3002,7 @@ mtron&gt; kB::1024.eq(mB::1)     ​2​
    	  \_pred | []
    	[inst]   | ctor?rng=kB&amp;dom=#{?}(1024){&lt;j&gt;}
    	 \_dom   | #{?}::T
-   	 \_args  | [1024][Inst&lt;348&gt;:unable to convert int::T to real::T[Obj&lt;547&gt;:class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Real (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Real are in unnamed module of loader 'app')]]]@/sys/fail/72[...]]@/sys/fail/74
+   	 \_args  | [1024][Obj&lt;561&gt;:unable to convert int::T to real::T[Obj&lt;561&gt;:class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Real (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Real are in unnamed module of loader 'app')] ← class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Real (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Real are in unnamed module of loader 'app')]]@/sys/fail/72[...]]@/sys/fail/74
 mtron&gt; gB::2.eq(mB::2048)     ​3​
 ==&gt;fail::[unable to construct gB::T: fail::[apply failure:
    	[lhs]    | 2
@@ -3015,7 +3010,7 @@ mtron&gt; gB::2.eq(mB::2048)     ​3​
    	  \_pred | []
    	[inst]   | ctor?rng=gB&amp;dom=#{?}(2){&lt;j&gt;}
    	 \_dom   | #{?}::T
-   	 \_args  | [2][Inst&lt;348&gt;:unable to convert int::T to real::T[Obj&lt;547&gt;:class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Real (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Real are in unnamed module of loader 'app')]]]@/sys/fail/78[...]]@/sys/fail/80
+   	 \_args  | [2][Obj&lt;561&gt;:unable to convert int::T to real::T[Obj&lt;561&gt;:class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Real (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Real are in unnamed module of loader 'app')] ← class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Real (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Real are in unnamed module of loader 'app')]]@/sys/fail/78[...]]@/sys/fail/80
 mtron&gt; tB::1.eq(gB::1024)     ​4​
 ==&gt;fail::[unable to construct tB::T: fail::[apply failure:
    	[lhs]    | 1
@@ -3023,7 +3018,7 @@ mtron&gt; tB::1.eq(gB::1024)     ​4​
    	  \_pred | []
    	[inst]   | ctor?rng=tB&amp;dom=#{?}(1){&lt;j&gt;}
    	 \_dom   | #{?}::T
-   	 \_args  | [1][Inst&lt;348&gt;:unable to convert int::T to real::T[Obj&lt;547&gt;:class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Real (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Real are in unnamed module of loader 'app')]]]@/sys/fail/84[...]]@/sys/fail/86</code></pre>
+   	 \_args  | [1][Obj&lt;561&gt;:unable to convert int::T to real::T[Obj&lt;561&gt;:class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Real (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Real are in unnamed module of loader 'app')] ← class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Real (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Real are in unnamed module of loader 'app')]]@/sys/fail/84[...]]@/sys/fail/86</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -3517,7 +3512,7 @@ mtron&gt;  int::-10.as(nat::T)
    	  \_pred | []
    	[inst]   | as?rng=int&amp;dom=int(int::T){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
    	 \_dom   | int::T
-   	 \_args  | [int::T][Obj&lt;528&gt;:-10 is not a is(gt(0))...]]@/sys/fail/108[...]</code></pre>
+   	 \_args  | [int::T][Obj&lt;529&gt;:-10 is not a is(gt(0))...]]@/sys/fail/108[...]</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -3620,7 +3615,7 @@ mtron&gt;  int::-10.as(nat::T)
    	  \_pred | []
    	[inst]   | as?rng=int&amp;dom=int(int::T){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
    	 \_dom   | int::T
-   	 \_args  | [int::T][Obj&lt;528&gt;:-10 is not a is(gt(0))...]]@/sys/fail/112[...]</code></pre>
+   	 \_args  | [int::T][Obj&lt;529&gt;:-10 is not a is(gt(0))...]]@/sys/fail/112[...]</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -3647,7 +3642,7 @@ mtron&gt;  nat::125.as(age::T)
    	  \_pred | [is(gt(0))]
    	[inst]   | as?rng=int&amp;dom=int(int::T){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
    	 \_dom   | int::T
-   	 \_args  | [int::T][Obj&lt;528&gt;:nat::125 is not a is(lt(120))...]]@/sys/fail/116[...]
+   	 \_args  | [int::T][Obj&lt;529&gt;:nat::125 is not a is(lt(120))...]]@/sys/fail/116[...]
 mtron&gt;  125.as(nat::T).as(age::T)
 ==&gt;fail::[apply failure:
    	[lhs]    | 125
@@ -3655,7 +3650,7 @@ mtron&gt;  125.as(nat::T).as(age::T)
    	  \_pred | []
    	[inst]   | as?rng=int&amp;dom=int(int::T){&lt;j&gt;}@<i class="conum" data-value="2"></i><b>(2)</b>
    	 \_dom   | int::T
-   	 \_args  | [int::T][Obj&lt;528&gt;:125 is not a is(lt(120))...]]@/sys/fail/118[...]</code></pre>
+   	 \_args  | [int::T][Obj&lt;529&gt;:125 is not a is(lt(120))...]]@/sys/fail/118[...]</code></pre>
 </div>
 </div>
 <div class="listingblock">
@@ -3667,19 +3662,13 @@ mtron&gt; personx -&gt; rec::T[?[name  =&gt; str::T,
 mtron&gt; marko -&gt; personx::[name=&gt;'marko',age=&gt;29,knows=&gt;!*grant]
 ==&gt;personx::[name=&gt;'marko',age=&gt;29,knows=&gt;!*grant]
 mtron&gt; grant -&gt; personx::[name=&gt;'grant',age=&gt;23,knows=&gt;!*marko]
-==&gt;personx::[
-    name=&gt;'grant',
-    age=&gt;23,
-    knows=&gt;!*marko]
+==&gt;personx::[name=&gt;'grant',age=&gt;23,knows=&gt;!*marko]
 mtron&gt; *marko&gt;&gt;knows&gt;&gt;name
 ==&gt;'grant'
 mtron&gt; *marko&gt;&gt;knows&gt;&gt;knows&gt;&gt;name
 ==&gt;'marko'
 mtron&gt; *marko&gt;&gt;knows&gt;&gt;knows
-==&gt;personx::[
-    name=&gt;'marko',
-    age=&gt;29,
-    knows=&gt;!*grant]</code></pre>
+==&gt;personx::[name=&gt;'marko',age=&gt;29,knows=&gt;!*grant]</code></pre>
 </div>
 </div>
 <h3 id="sec-isa-types" class="discrete">instruction set architecture types</h3>
@@ -5273,8 +5262,7 @@ mtron&gt; *fs:m     ​3​
 mtron&gt; */sys/space/localfs/script     ​2​
 mtron&gt; *&lt;fs:m/bin/metatron&gt;     ​3​
 ==&gt;'WARNING: Using incubator modules: jdk.incubator.vector'
-==&gt;'Error: Could not find or load main class studio.phaseshift.metatron.BootLoader'
-==&gt;'Caused by: java.lang.ClassNotFoundException: studio.phaseshift.metatron.BootLoader'
+==&gt;null
 mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T)     ​4​
 mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T).as(str::T)     ​5​
 ==&gt;fail::[apply failure:
@@ -5283,7 +5271,7 @@ mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T).as(str::T)     ​5​
    	  \_pred | []
    	[inst]   | as?rng=str&amp;dom=bytes(str::T){&lt;j&gt;}
    	 \_dom   | bytes::T
-   	 \_args  | [str::T][Obj&lt;619&gt;:bytes(#{*}::T){&lt;j&gt;} [bytes::T] unable to convert bytes::T]]@/sys/fail/4[...]</code></pre>
+   	 \_args  | [str::T][Obj&lt;688&gt;:bytes(#{*}::T){&lt;j&gt;} [bytes::T] unable to convert bytes::T]]@/sys/fail/4[...]</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -5328,16 +5316,16 @@ mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T).as(str::T)     ​5​
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; bin:bash('-c',df)
 ==&gt;'Filesystem             1K-blocks       Used Available Use% Mounted on'
-==&gt;'tmpfs                    6356184       6168   6350016   1% /run'
+==&gt;'tmpfs                    6356184       6164   6350020   1% /run'
 ==&gt;'efivarfs                     128         42        82  34% /sys/firmware/efi/efivars'
-==&gt;'/dev/nvme1n1p2         959786032  543323296 367634528  60% /'
-==&gt;'tmpfs                   31780908     315372  31465536   1% /dev/shm'
+==&gt;'/dev/nvme1n1p2         959786032  544345564 366612260  60% /'
+==&gt;'tmpfs                   31780908     234576  31546332   1% /dev/shm'
 ==&gt;'tmpfs                       5120         20      5100   1% /run/lock'
 ==&gt;'tmpfs                   31780908          0  31780908   0% /run/qemu'
 ==&gt;'/dev/nvme1n1p1            523248       6288    516960   2% /boot/efi'
-==&gt;'tmpfs                    6356180        248   6355932   1% /run/user/1000'
+==&gt;'tmpfs                    6356180        244   6355936   1% /run/user/1000'
 ==&gt;'/dev/nvme0n1p2         976744444  252064724 724679720  26% /media/hdd0'
-==&gt;'//192.168.1.72/beast1 1921208544 1327869944 593338600  70% /srv/beast/hdd1'
+==&gt;'//192.168.1.72/beast1 1921208544 1336418324 584790220  70% /srv/beast/hdd1'
 mtron&gt; bin:bash('-c',ls)
 ==&gt;'0.2.0'
 ==&gt;'AGENTS.md'
@@ -5364,7 +5352,7 @@ mtron&gt; bin:bash('-c',ls)
 ==&gt;test
 ==&gt;worktrees
 mtron&gt; bin:bash('-c','ls -all').regex('\b*\w+')._/count()\_&gt;-.sum()
-==&gt;663</code></pre>
+==&gt;674</code></pre>
 </div>
 </div>
 <h3 id="sec-shell-scripts" class="discrete">Shell Scripts</h3>
@@ -6243,7 +6231,7 @@ mtron&gt; *g:V/1/OUT/te:hot/a/owner/name     ​3​
    	  \_pred | []
    	[inst]   | *g:V/1/OUT/te:hot/a/owner/name
    	 \_dom   | #{?}::T
-   	 \_args  | [g:V/1/OUT/te:hot/a/owner/name][Inst&lt;348&gt;:unable to convert mfail to rec::T[Obj&lt;559&gt;:class studio.phaseshift.metatron.isa.m.type.impl.MFail cannot be cast to class studio.phaseshift.metatron.isa.m.type.Rec (studio.phaseshift.metatron.isa.m.type.impl.MFail and studio.phaseshift.metatron.isa.m.type.Rec are in unnamed module of loader 'app')]]]@/sys/fail/30[...]
+   	 \_args  | [g:V/1/OUT/te:hot/a/owner/name][Obj&lt;585&gt;:unable to convert mfail to rec::T[Obj&lt;585&gt;:class studio.phaseshift.metatron.isa.m.type.impl.MFail cannot be cast to class studio.phaseshift.metatron.isa.m.type.Rec (studio.phaseshift.metatron.isa.m.type.impl.MFail and studio.phaseshift.metatron.isa.m.type.Rec are in unnamed module of loader 'app')] ← class studio.phaseshift.metatron.isa.m.type.impl.MFail cannot be cast to class studio.phaseshift.metatron.isa.m.type.Rec (studio.phaseshift.metatron.isa.m.type.impl.MFail and studio.phaseshift.metatron.isa.m.type.Rec are in unnamed module of loader 'app')]]@/sys/fail/14[...]
 mtron&gt; *g:V/1/OUT/te:cold/x/total     ​4​
 ==&gt;15.0000
 mtron&gt; *g:V/1/OUT/knows.count()     ​5​
@@ -6264,7 +6252,7 @@ mtron&gt; *g:V/1.outE(te:hot/a)&gt;&gt;owner&gt;&gt;name     ​3​
    	  \_pred | []
    	[inst]   | !*g:V/2
    	 \_dom   | #{?}::T
-   	 \_args  | [g:V/2,noobj][Obj$Helper&lt;921&gt;:obj does not match person::T...]]@/sys/fail/34[...]
+   	 \_args  | [g:V/2,noobj][Obj$Helper&lt;990&gt;:obj does not match person::T...]]@/sys/fail/16[...]
 mtron&gt; *g:V/1.outE(te:cold/x)&gt;&gt;total     ​4​
 ==&gt;15.0000
 mtron&gt; *g:V/1.outE(knows).count()     ​5​
@@ -6593,17 +6581,8 @@ For the sake of brevity, only vertex 1 and its incident edges will be developed 
 ==&gt;[
     name=&gt;'marko',
     age=&gt;29,
-    outE_=&gt;[knows=&gt;{[
-    weight=&gt;0.5000,
-    inV_=&gt;!*v2,
-    outV_=&gt;!*v1],[
-    weight=&gt;0.5000,
-    inV_=&gt;!*v4,
-    outV_=&gt;!*v1]}],
-    created=&gt;[
-     weight=&gt;0.2000,
-     inV_=&gt;!*v3,
-     outV_=&gt;!*v1]]
+    outE_=&gt;[knows=&gt;{[weight=&gt;0.5000,inV_=&gt;!*v2,outV_=&gt;!*v1],[weight=&gt;0.5000,inV_=&gt;!*v4,outV_=&gt;!*v1]}],
+    created=&gt;[weight=&gt;0.2000,inV_=&gt;!*v3,outV_=&gt;!*v1]]
 mtron&gt; v2 -&gt; [name=&gt;'vadas']
 ==&gt;[name=&gt;'vadas']
 mtron&gt; v3 -&gt; [name=&gt;'josh']
@@ -6616,17 +6595,8 @@ mtron&gt; *v1     ​2​
 ==&gt;[
     name=&gt;'marko',
     age=&gt;29,
-    outE_=&gt;[knows=&gt;{[
-    weight=&gt;0.5000,
-    inV_=&gt;!*v2,
-    outV_=&gt;!*v1],[
-    weight=&gt;0.5000,
-    inV_=&gt;!*v4,
-    outV_=&gt;!*v1]}],
-    created=&gt;[
-     weight=&gt;0.2000,
-     inV_=&gt;!*v3,
-     outV_=&gt;!*v1]]
+    outE_=&gt;[knows=&gt;{[weight=&gt;0.5000,inV_=&gt;!*v2,outV_=&gt;!*v1],[weight=&gt;0.5000,inV_=&gt;!*v4,outV_=&gt;!*v1]}],
+    created=&gt;[weight=&gt;0.2000,inV_=&gt;!*v3,outV_=&gt;!*v1]]
 mtron&gt; *v1.&gt;&gt;outE_.&gt;&gt;knows.&gt;&gt;inV_     ​3​
 ==&gt;[name=&gt;'vadas']
 ==&gt;[name=&gt;'lop']
@@ -6667,17 +6637,8 @@ mtron&gt; *v1     ​2​
 ==&gt;[
     name=&gt;'marko',
     age=&gt;29,
-    outE_=&gt;[knows=&gt;{[
-    weight=&gt;0.5000,
-    inV_=&gt;!*v2,
-    outV_=&gt;!*v1],[
-    weight=&gt;0.5000,
-    inV_=&gt;!*v4,
-    outV_=&gt;!*v1]}],
-    created=&gt;[
-     weight=&gt;0.2000,
-     inV_=&gt;!*v3,
-     outV_=&gt;!*v1]]
+    outE_=&gt;[knows=&gt;{[weight=&gt;0.5000,inV_=&gt;!*v2,outV_=&gt;!*v1],[weight=&gt;0.5000,inV_=&gt;!*v4,outV_=&gt;!*v1]}],
+    created=&gt;[weight=&gt;0.2000,inV_=&gt;!*v3,outV_=&gt;!*v1]]
 mtron&gt; *v1.out(knows)     ​3​
 mtron&gt; *v1.out(knows).out(created)     ​4​
 mtron&gt; *v1.out(knows).out(created).&gt;&gt;name     ​5​</code></pre>
@@ -7074,10 +7035,7 @@ mtron&gt; *core</code></pre>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys/thread/executor/run/0     ​1​
-==&gt;core::[
-    code=&gt;inst?#{*}&lt;=#{?}(#{*}::T),
-    source=&gt;!*/sys/thread/main,
-    state=&gt;run]
+==&gt;core::[code=&gt;inst?#{*}&lt;=#{?}(#{*}::T),source=&gt;!*/sys/thread/main,state=&gt;run]
 mtron&gt; */sys/thread==&lt;+&gt;==run==&lt;+&gt;.vid() * &lt;.?docq&gt;.*_     ​2​</code></pre>
 </div>
 </div>
@@ -7174,10 +7132,7 @@ mtron&gt; virtual::[code  =&gt; @ab + 'A',
     code=&gt;at(ab).plus('A'),
     loop=&gt;second::1.0000,
     yield=&gt;!*/sys/thread/b,
-    start=&gt;[
-     code=&gt;at(ab).plus('A'),
-     loop=&gt;second::1.0000,
-     yield=&gt;!*/sys/thread/b]@/sys/thread/a,
+    start=&gt;[code=&gt;at(ab).plus('A'),loop=&gt;second::1.0000,yield=&gt;!*/sys/thread/b]@/sys/thread/a,
     state=&gt;run]@/sys/thread/a
 mtron&gt; @/sys/thread/b &gt;&gt;= +[yield =&gt; !*/sys/thread/a]     ​5​
 ==&gt;virtual::[
@@ -7199,12 +7154,9 @@ mtron&gt; */sys/thread/a.stop()
     code=&gt;at(ab).plus('A'),
     loop=&gt;second::1.0000,
     yield=&gt;!*/sys/thread/b,
-    start=&gt;[
-     code=&gt;at(ab).plus('A'),
-     loop=&gt;second::1.0000,
-     yield=&gt;!*/sys/thread/b]@/sys/thread/a,
+    start=&gt;[code=&gt;at(ab).plus('A'),loop=&gt;second::1.0000,yield=&gt;!*/sys/thread/b]@/sys/thread/a,
     state=&gt;stop,
-    result=&gt;'BABABABABA'@ab]@/sys/thread/a
+    result=&gt;fail::[Cannot invoke "String.replace(java.lang.CharSequence, java....]@/sys/fail/16[...]]@/sys/thread/a
 mtron&gt; *ab
 ==&gt;'BABABABABA'</code></pre>
 </div>
@@ -7290,16 +7242,10 @@ mtron&gt; */sys/thread/example/state     ​5​
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys/thread/main
-==&gt;[
-    code=&gt;inst?#{*}&lt;=#{?}(#{*}::T),
-    source=&gt;!*/sys/thread/main,
-    state=&gt;run]
+==&gt;[code=&gt;inst?#{*}&lt;=#{?}(#{*}::T),source=&gt;!*/sys/thread/main,state=&gt;run]
 mtron&gt; */sys/thread/main?docq
 ==&gt;docs::[
-    obj=&gt;[
-     code=&gt;inst?#{*}&lt;=#{?}(#{*}::T),
-     source=&gt;!*/sys/thread/main,
-     state=&gt;run],
+    obj=&gt;[code=&gt;inst?#{*}&lt;=#{?}(#{*}::T),source=&gt;!*/sys/thread/main,state=&gt;run],
     desc=&gt;'this root thread waits till all child threads are complete ...']</code></pre>
 </div>
 </div>
@@ -8073,11 +8019,9 @@ mtron&gt; lite:person/2 -&gt; [name=&gt;'grant', age=&gt;25]     ​3​
 mtron&gt; *lite:person     ​4​
 mtron&gt; *lite:person/+/name     ​5​
 ==&gt;'grant'
-==&gt;'alex'
 ==&gt;'marko'
 mtron&gt; *lite:person/+/id     ​6​
 ==&gt;1
-==&gt;3
 ==&gt;2</code></pre>
 </div>
 </div>
@@ -8122,12 +8066,7 @@ mtron&gt; *lite:person/+/id     ​6​
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *lite:+
-==&gt;rec::T[?[name=&gt;str::T,location=&gt;isa(area:V/+/id).!*id(),parent=&gt;auto_from::T]]@venue
-==&gt;rec::T[?[trophy=&gt;str::T,recipient=&gt;isa(person/+/id).!*id()]]@award
-==&gt;rec::T[?[name=&gt;str::T,age=&gt;int::T,skill=&gt;uri::T]]@person
-==&gt;rec::T[?[player=&gt;str::T,points=&gt;int::T]]@score
-==&gt;rec::T[?[player=&gt;str::T,points=&gt;int::T]]@sys</code></pre>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *lite:+</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -8137,12 +8076,7 @@ mtron&gt; *lite:person/+/id     ​6​
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; lite:person/3 -&gt; [name=&gt;'alex', age=&gt;25, skill=&gt;graph]
 ==&gt;[name=&gt;'alex',age=&gt;25,skill=&gt;graph]
-mtron&gt; *lite:+
-==&gt;rec::T[?[name=&gt;str::T,location=&gt;isa(area:V/+/id).!*id(),parent=&gt;auto_from::T]]@venue
-==&gt;rec::T[?[trophy=&gt;str::T,recipient=&gt;isa(person/+/id).!*id()]]@award
-==&gt;rec::T[?[name=&gt;str::T,age=&gt;int::T,skill=&gt;uri::T]]@person
-==&gt;rec::T[?[player=&gt;str::T,points=&gt;int::T]]@score
-==&gt;rec::T[?[player=&gt;str::T,points=&gt;int::T]]@sys</code></pre>
+mtron&gt; *lite:+</code></pre>
 </div>
 </div>
 </div>
@@ -8719,7 +8653,7 @@ If the database is queried by external SQL tooling, FK columns appear as ordinar
    	  \_pred | []
    	[inst]   | */sys/+
    	 \_dom   | #{?}::T
-   	 \_args  | [/sys/+][Inst&lt;348&gt;:nullpointerexception: Cannot invoke "studio.phaseshift.metatron.isa.m.type.Obj.isPoly()" because the return value of "studio.phaseshift.metatron.util.Tuple$Pair.get1()" is null...]]@/sys/fail/4[...]</code></pre>
+   	 \_args  | [/sys/+][Space$Helper&lt;253&gt;:Cannot invoke "studio.phaseshift.metatron.isa.m.type.Obj.isPoly()" because the return value of "studio.phaseshift.metatron.util.Tuple$Pair.get1()" is null[Space$Helper&lt;253&gt;:Cannot invoke "studio.phaseshift.metatron.isa.m.type.Obj.isPoly()" because the return value of "studio.phaseshift.metatron.util.Tuple$Pair.get1()" is null] ← Cannot invoke "studio.phaseshift.metatron.isa.m.type.Obj.isPoly()" because the return value of "studio.phaseshift.metatron.util.Tuple$Pair.get1()" is null]]@/sys/fail/4[...]</code></pre>
 </div>
 </div></div></td>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
