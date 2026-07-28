@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -50,7 +50,7 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  */
 public class BaseQ extends MRec implements QProc {
 
-    protected final GraphittyLogger LOG;
+    protected final GraphittyLogger LOG = Graphitty.log(this);
     protected OnRead onRead;
     protected OnWrite onWrite;
     protected final fURI queryPattern;
@@ -59,10 +59,8 @@ public class BaseQ extends MRec implements QProc {
         super(jvm, tid, null);
         this.jvm().put(uri(Tokens.PATTERN), uri(queryPattern));
         this.queryPattern = queryPattern;
-        LOG = Graphitty.log(this);
         this.onRead = new BaseOnRead(this.at(PRE_READ).as(), this.at(POST_READ).as());
         this.onWrite = new BaseOnWrite(this.at(PRE_WRITE).as(), this.at(POST_WRITE).as(), this.at(QLESS_WRITE).as());
-
     }
 
     @Override
@@ -116,7 +114,7 @@ public class BaseQ extends MRec implements QProc {
         }
 
         public Optional<Obj> preRead(final fURI vid) {
-            final Inst i = this.at(PRE_READ).as();
+            final Inst i = this.at(PRE_READ);
             if (i.isNoObj()) return Optional.empty();
             final Inst withArgs = i.args(lst(uri(vid)));
             final Obj result = withArgs.f().apply(noobj(), withArgs);
@@ -124,7 +122,7 @@ public class BaseQ extends MRec implements QProc {
         }
 
         public Optional<Obj> postRead(final fURI vid, final Obj obj) {
-            final Inst i = this.at(POST_READ).as();
+            final Inst i = this.at(POST_READ);
             if (i.isNoObj()) return Optional.empty();
             final Inst withArgs = i.args(lst(uri(vid), obj));
             final Obj result = withArgs.f().apply(noobj(), withArgs);
@@ -138,7 +136,7 @@ public class BaseQ extends MRec implements QProc {
         }
 
         public Optional<Obj> preWrite(final fURI vid, final Obj obj) {
-            final Inst i = this.at(PRE_WRITE).as();
+            final Inst i = this.at(PRE_WRITE);
             if (i.isNoObj()) return Optional.empty();
             final Inst withArgs = i.args(lst(uri(vid), obj));
             final Obj result = withArgs.f().apply(noobj(), withArgs);
@@ -146,7 +144,7 @@ public class BaseQ extends MRec implements QProc {
         }
 
         public Optional<Obj> postWrite(final fURI vid, final Obj oldObj, final Obj newObj) {
-            final Inst i = this.at(POST_WRITE).as();
+            final Inst i = this.at(POST_WRITE);
             if (i.isNoObj()) return Optional.empty();
             final Inst withArgs = i.args(lst(uri(vid), oldObj, newObj));
             final Obj result = withArgs.f().apply(noobj(), withArgs);
@@ -154,7 +152,7 @@ public class BaseQ extends MRec implements QProc {
         }
 
         public Optional<Obj> qlessWrite(final fURI vid, final Obj obj) {
-            final Inst i = this.at(QLESS_WRITE).as();
+            final Inst i = this.at(QLESS_WRITE);
             if (i.isNoObj()) return Optional.empty();
             final Inst withArgs = i.args(lst(uri(vid), obj));
             final Obj result = withArgs.f().apply(noobj(), withArgs);
@@ -175,7 +173,7 @@ public class BaseQ extends MRec implements QProc {
                                final BiFunction<fURI, Obj, Obj> qlessWrite) {
         return new BaseQ(mutableMap(
                 uri(PRE_READ), null == preRead ? noobj() : instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(URI_TYPE), (lhs, inst) -> preRead.apply(inst.arg(0).uriValue())),
-                uri(POST_READ), null == postRead ? noobj() : instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(URI_TYPE,T(ALL)), (lhs, inst) -> postRead.apply(inst.arg(0).uriValue(), inst.arg(1))),
+                uri(POST_READ), null == postRead ? noobj() : instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(URI_TYPE, T(ALL)), (lhs, inst) -> postRead.apply(inst.arg(0).uriValue(), inst.arg(1))),
                 uri(PRE_WRITE), null == preWrite ? noobj() : instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(URI_TYPE, T(ALL)), (lhs, inst) -> preWrite.apply(inst.arg(0).uriValue(), inst.arg(1))),
                 uri(POST_WRITE), null == postWrite ? noobj() : instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(URI_TYPE, T(ALL), T(ALL)), (lhs, inst) -> postWrite.apply(inst.arg(0).uriValue(), inst.arg(1), inst.arg(2))),
                 uri(QLESS_WRITE), null == qlessWrite ? noobj() : instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(URI_TYPE, T(ALL)), (lhs, inst) -> qlessWrite.apply(inst.arg(0).uriValue(), inst.arg(1)))), pattern, tid);

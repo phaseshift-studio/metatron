@@ -259,9 +259,18 @@ public class ObjChatMessageSerializer extends AbstractObjSerializer<ChatMessage>
         map.put(uri(VOCAB.from(TOOL_RESULT_MESSAGE_TID, "toolName")), uri(msg.toolName()));
         final String rawText = msg.hasSingleText() && msg.text() != null && !msg.text().isBlank()
                 ? msg.text() : msg.toString();
-        // mtron-encode text so tbleSpace's {/[ heuristic never mis-parses it
-        // as a structured obj.  decodeRawValue strips the encoding on read.
-        map.put(uri(TEXT), str(ObjmtronSerializer.singleNoClip().write(str(rawText))));
+        // If the tool returned mtron-encoded text, decode it so we store
+        // the plain form.  This avoids strings-within-strings that break
+        // content-hash dedup.  The TEXT field is explicitly typed as Str —
+        // tbleSpace must respect that regardless of whether the value
+        // happens to start with { or [.
+        final String textValue;
+        if (!rawText.isEmpty() && (rawText.charAt(0) == '\'' || rawText.charAt(0) == '"')) {
+            textValue = decodeRawValue(str(rawText));
+        } else {
+            textValue = rawText;
+        }
+        map.put(uri(TEXT), str(textValue));
         if (msg.id() != null && !msg.id().isBlank())
             map.put(uri(CONTENTS), str(msg.id()));
         msg.attributes().forEach((k, v) -> map.putIfAbsent(uri(k), str(String.valueOf(v))));
@@ -408,21 +417,34 @@ public class ObjChatMessageSerializer extends AbstractObjSerializer<ChatMessage>
 
     /**
      * Decode a single Obj value to its plain string representation.
+     * Loops until no more mtron quote wrapping is detected so that
+     * nested encoding (strings within strings) is fully unwound.
+     * This is critical for content-hash stability: if different
+     * layers of mtron encoding use different quote styles
+     * ({@code '}, {@code "}, {@code """}, {@code '''}), the same
+     * logical text must still produce the same decoded form.
      */
     static String decodeRawValue(final Obj val) {
         if (val.isNoObj()) return "";
-        final String raw = Str.Helper.cleanString(val);
+        String raw = Str.Helper.cleanString(val);
         if (raw.isEmpty()) return raw;
 
-        // If it looks like mtron-encoded text, try to decode it
-        final char first = raw.charAt(0);
-        if (first == '\'' || first == '"') {
+        // Loop to handle arbitrarily nested mtron encoding.
+        // cleanString() strips leading/trailing quotes from the raw
+        // string value; if what remains still looks mtron-encoded,
+        // parse it and repeat until stable.
+        while (true) {
+            final char first = raw.charAt(0);
+            if (first != '\'' && first != '"') break;
             try {
                 final Obj parsed = ObjmtronSerializer.singleNoClip().inputBytes(raw);
-                if (!parsed.isFail())
-                    return Str.Helper.cleanString(parsed);
+                if (parsed.isFail()) break;
+                final String decoded = Str.Helper.cleanString(parsed);
+                if (decoded.equals(raw)) break; // stable — prevent infinite loop
+                raw = decoded;
             } catch (final Exception ignored) {
                 // Not valid mtron — use as-is
+                break;
             }
         }
         return raw;

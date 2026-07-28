@@ -91,7 +91,7 @@ public class MTronException extends RuntimeException {
     }
 
     private MTronException(final String message, final Throwable cause) {
-        super(null == cause ? Graphitty.string(message) : Graphitty.string(message.replace("%", "%%") + "[%s<%d>:%s]",
+        super(null == cause ? Graphitty.string(message) : Graphitty.string((message != null ? message : "(null)").replace("%", "%%") + "[%s<%d>:%s]",
                 originOf(cause).getClassName().substring(originOf(cause).getClassName().lastIndexOf('.') + 1),
                 originOf(cause).getLineNumber(),
                 causeSummary(cause)), cause);
@@ -102,7 +102,7 @@ public class MTronException extends RuntimeException {
     }
 
     protected MTronException(final String message, final Throwable cause, final boolean dummy) {
-        super(null == cause ? Graphitty.string(message) : Graphitty.string(message.replace("%", "%%") + "[%s<%d>:%s]",
+        super(null == cause ? Graphitty.string(message) : Graphitty.string((message != null ? message : "(null)").replace("%", "%%") + "[%s<%d>:%s]",
                 originOf(cause).getClassName().substring(originOf(cause).getClassName().lastIndexOf('.') + 1),
                 originOf(cause).getLineNumber(),
                 causeSummary(cause)), cause);

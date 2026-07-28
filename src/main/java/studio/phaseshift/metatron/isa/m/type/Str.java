@@ -18,12 +18,12 @@
 
 package studio.phaseshift.metatron.isa.m.type;
 
-import studio.phaseshift.metatron.util.ProjectionFailureException;
 import studio.phaseshift.metatron.algebra.PlusMonoid;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.impl.MStr;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.util.MTronException;
+import studio.phaseshift.metatron.util.ProjectionFailureException;
 
 import java.nio.ByteBuffer;
 import java.util.*;
@@ -119,12 +119,23 @@ public interface Str extends Mono, PlusMonoid.O<Str> {
         public final static Map<String, Pattern> REGEX_CACHE = new ConcurrentHashMap<>();
 
         public static String cleanString(final Obj obj) {
-            if (obj.isStr()) return obj.strValue();
-            if (obj.isUri()) {
-                final String uriString = obj.uriValue().toString();
-                return uriString.startsWith("<") && uriString.endsWith(">") ? uriString.substring(1, uriString.length() - 1) : uriString;
+            String temp;
+            if (obj.isStr()) {
+                temp = obj.strValue();
+                while (temp.startsWith("'") || temp.startsWith("\"")) {
+                    temp = temp.substring(1);
+                }
+                while (temp.endsWith("'") || temp.endsWith("\"")) {
+                    temp = temp.substring(0, temp.length() - 1);
+                }
+            } else if (obj.isUri()) {
+                temp = obj.uriValue().toString();
+                if (temp.startsWith("<") && temp.endsWith(">"))
+                    temp = temp.substring(1, temp.length() - 1);
+            } else {
+                temp = "" + obj.jvm();
             }
-            return "" + obj.jvm();
+            return temp;
         }
 
         public static String project(final String input, final Obj rulesObj) {

@@ -123,8 +123,9 @@ public class LoopFeature extends Feature {
         final Rec signal = loopSignal.asRec();
         if (signal.isNoObj()) return;
 
-        final String nextPrompt = signal.at(uri(PROMPT)).strValue();
+        String nextPrompt = signal.at(uri(PROMPT)).strValue();
         if (nextPrompt.isBlank()) return;
+        nextPrompt = "[previous iteration agent prompt] " + nextPrompt;
 
         // Safety valves
         this.loopCount++;

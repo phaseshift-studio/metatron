@@ -18,7 +18,13 @@
 
 package studio.phaseshift.metatron.isa.llm.type.feature;
 
-import org.apache.lucene.analysis.standard.StandardAnalyzer;
+import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.CharArraySet;
+import org.apache.lucene.analysis.TokenStream;
+import org.apache.lucene.analysis.core.LowerCaseFilter;
+import org.apache.lucene.analysis.core.StopFilter;
+import org.apache.lucene.analysis.standard.StandardTokenizer;
+import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.document.*;
 import org.apache.lucene.index.*;
 import org.apache.lucene.store.ByteBuffersDirectory;
@@ -49,6 +55,7 @@ import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_CHAT_FEATURE_TID;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_CONCEPT_FEATURE_TID;
 import static studio.phaseshift.metatron.isa.llm.type.Agent.agent;
+import static studio.phaseshift.metatron.isa.llm.type.Agent.res;
 import static studio.phaseshift.metatron.isa.m.mInstSet.LST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.STR_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
@@ -70,6 +77,8 @@ public class ConceptFeature extends Feature {
 
     private static final String CONCEPT = "concept";
     private static final String MESSAGE = "message";
+    private static final fURI MESSAGES_INST_TID = LLM_CONCEPT_FEATURE_TID.extend(INST).extend("messages");
+    private static final fURI CONCEPTS_INST_TID = LLM_CONCEPT_FEATURE_TID.extend(INST).extend("concepts");
     private static final Pattern CONCEPT_PATTERN = Pattern.compile("<<concept:([^>]+)>>");
     // ── Config keys ─────────────────────────────────────────────────
     private static final fURI EXTRACTOR = f("extractor");
@@ -80,7 +89,8 @@ public class ConceptFeature extends Feature {
     // ── Extractor instances ─────────────────────────────────────────
     private final Extractor extractor;
     private final MessageIndexer indexer; // shared across extractor types for read-side queries
-
+    private final List<String> messagesBuilder = new ArrayList<>();
+    private final List<String> conceptsBuilder = new ArrayList<>();
     // ── Templates ───────────────────────────────────────────────────
 
     /**
@@ -135,17 +145,27 @@ public class ConceptFeature extends Feature {
                                                                           eval tool so you can review them before continuing.
                                                                           
                                                                           You do not need to tag concepts manually — the extraction happens automatically.
-                                                                          Respond naturally and the concept graph will build itself.
+                                                                          Respond naturally and the concept graph will build itself. However, if you want to emphasize
+                                                                          that a particular concept should be extracted (and not leave it to chance), then tag
+                                                                          the concept in your response as such:
+                                                                          
+                                                                          "Increasing the size of the <<concept:context window>> is one way to increase an agent's
+                                                                           <<concept:intelligence>>. However, another way is to provide better <<concept:indexing>> and
+                                                                           <<concept:searching>> capabilities for existing <<concept:memory systems>>."
+                                                                          
+                                                                          Finally, your thoughts can be indexed in the concept graph only through manual tagging on your part.
+                                                                          No automatic extraction techniques are used when you think.
                                                                           """;
 
     private static final String CONCEPT_FEATURE_SYSTEM_TEMPLATE = """
-                                                                  use the mtron eval tool for related historic content:
+                                                                  the following tool calls provided related historic content:
                                                                   
-                                                                      %s
+                                                                  %s
                                                                   
-                                                                  For related concepts use:
+                                                                  For exploring concepts adjacent to the concepts extracted, use
+                                                                  the following tool calls:
                                                                   
-                                                                     %s
+                                                                  %s
                                                                   """;
 
     // =========================================================================
@@ -154,7 +174,7 @@ public class ConceptFeature extends Feature {
 
     public ConceptFeature(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
-        this.indexer = new MessageIndexer();
+        this.indexer = new MessageIndexer(LuceneExtractor.STOP_WORDS);
         this.extractor = resolveExtractor();
     }
 
@@ -211,6 +231,25 @@ public class ConceptFeature extends Feature {
                                 "a lst of related concepts",
                                 Map.of(jnt(0), "a concept uri"),
                                 "fetches concepts associated with the provided concept"))));
+        
+            /*
+          docWrap(instC(LLM_CONCEPT_FEATURE_TID.extend(INST).extend("messages").dom(ALL.maybe()).rng(STR_TID.maybeSome()),
+                                        lst(MType.T(URI_TID.some())),
+                                        from_(uri("0")).swap_(block_(mult_(uri(this.getBaseURI())))).from_(id_()).select_(uri(f("message").extend("+").extend("text"))).split_(lst(id_().tryToInst())).sum_().tryToInst()),
+                                "maybe an obj",
+                                "a stream of message texts",
+                                Map.of(jnt(0), "a concept uri"),
+                                "fetches past messages associated with the concept",
+                                "messages(metatron) [-- returns messages discussing metatron --]"),
+                        docWrap(instC(LLM_CONCEPT_FEATURE_TID.extend(INST).extend("concepts").dom(ALL.maybe()).rng(LST_TID.maybeSome()),
+                                        lst(MType.T(URI_TID.some())),
+                                        from_(uri("0")).swap_(block_(mult_(uri(this.getBaseURI())))).from_(id_()).select_(uri("concept")).sum_().tryToInst()),
+                                "maybe an obj",
+                                "a lst of related concepts",
+                                Map.of(jnt(0), "a concept uri"),
+                                "fetches concepts associated with the provided concept"))));
+         */
+
     }
 
     // =========================================================================
@@ -272,7 +311,7 @@ public class ConceptFeature extends Feature {
      * with mtron eval snippets pointing at relevant historic content.
      */
     private void injectConceptRecommendations(final Agent agent, final Set<fURI> concepts) {
-        final StringBuilder sb = new StringBuilder();
+
         for (final fURI conceptURI : new HashSet<>(concepts)) {
             try {
                 // Check directly whether the concept has associated messages
@@ -286,9 +325,11 @@ public class ConceptFeature extends Feature {
                     if (conceptRec.has(MESSAGE)) {
                         final Lst messages = conceptRec.at(MESSAGE).asLst();
                         if (!messages.lstValue().isEmpty()) {
-                            final String entry = "\t" + "messages" + "(" + conceptURI.name() + ")";
-                            LOG.info("adding memory recommendation: %s", entry);
-                            sb.append(entry).append("\n");
+                            final String entryMessages = "\t" + MESSAGES_INST_TID + "(" + conceptURI.name() + ")";
+                            final String entryConcepts = "\t" + CONCEPTS_INST_TID + "(" + conceptURI.name() + ")";
+                            this.messagesBuilder.add(entryMessages);
+                            this.conceptsBuilder.add(entryConcepts);
+                            LOG.info("adding memory recommendation: %s", entryMessages);
                         }
                     }
                 }
@@ -296,10 +337,16 @@ public class ConceptFeature extends Feature {
                 LOG.warn("failed to check concept messages for %s: %s", conceptURI, e.getMessage());
             }
         }
-        if (!sb.toString().trim().isEmpty())
-            agent.addSystemMessage(CONCEPT_FEATURE_SYSTEM_TEMPLATE.formatted(
-                    sb.toString(),
-                    "concepts(uri::T)"));
+        if (this.messagesBuilder.size() > 10) {
+            final List<String> temp = new ArrayList<>(this.messagesBuilder.subList(0, 9));
+            this.messagesBuilder.clear();
+            this.messagesBuilder.addAll(temp);
+        }
+        if (this.conceptsBuilder.size() > 10) {
+            final List<String> temp = new ArrayList<>(this.conceptsBuilder.subList(0, 9));
+            this.conceptsBuilder.clear();
+            this.conceptsBuilder.addAll(temp);
+        }
     }
 
     /**
@@ -323,34 +370,50 @@ public class ConceptFeature extends Feature {
         if (this.extractor instanceof AgentExtractor ae) {
             ae.init(agent, this); // reads MODEL field, creates translator
         }
+        // Index the user message so the Lucene corpus includes both sides
+        // of the conversation for TF-IDF analysis.
+        if (this.extractor instanceof LuceneExtractor) {
+            final String userMsg = agent.userMessage();
+            if (userMsg != null && !userMsg.isBlank())
+                this.indexer.indexText(userMsg);
+        }
         final Set<fURI> concepts = this.processConcepts(agent, agent.userMessage(), true);
         this.injectConceptRecommendations(agent, concepts);
+        if (!this.messagesBuilder.isEmpty()) {
+            agent.addSystemMessage(CONCEPT_FEATURE_SYSTEM_TEMPLATE.formatted(
+                    this.messagesBuilder.stream().reduce("", (a, b) -> a + b + "\n"),
+                    this.conceptsBuilder.stream().reduce("", (a, b) -> a + b + "\n")));
+        }
+        this.messagesBuilder.clear();
+        this.conceptsBuilder.clear();
         return noobj();
     }
 
     @Override
     public void onCompleteResponse(final Agent agent, final Str text) {
-        if (this.extractor instanceof LuceneExtractor) {
-            // Offload Lucene work to a platform thread.  Lucene's internal
-            // synchronization (IndexWriter.addDocument/commit,
-            // ByteBuffersDirectory.listAll/openInput/fileLength) pins virtual
-            // threads to their carrier.  When called from deep LangChain4j
-            // streaming callback chains, the pinned carrier stack cannot grow,
-            // causing StackOverflowError.  Running on a fresh platform thread
-            // gives us a full stack, and joining from the virtual thread causes
-            // unmounting (not pinning), so the carrier is free for other work.
-            try {
-                Thread.ofPlatform().daemon().start(() -> {
-                    if (text != null && !text.strValue().isBlank())
-                        this.indexer.indexText(text.strValue());
-                    this.processConcepts(agent, text != null ? text.strValue() : "", false);
-                }).join();
-            } catch (final InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-        } else {
-            this.processConcepts(agent, text != null ? text.strValue() : "", false);
+        // Index the response text so Lucene TF-IDF has documents to analyze.
+        // getImportantConcepts() reads from the directory directly (not the
+        // IndexWriter) to avoid virtual-thread carrier pinning.
+        if (this.extractor instanceof LuceneExtractor && text != null && !text.strValue().isBlank()) {
+            this.indexer.indexText(text.strValue());
         }
+        final Set<fURI> newConcepts = this.processConcepts(agent, text != null ? text.strValue() : "", false);
+
+        // Extract <<concept:>> tags from the agent's thinking text.
+        // Thoughts are never run through automatic TF-IDF extraction — only
+        // explicit annotations count.  This lets the agent bookmark semantic
+        // insights discovered during reasoning without surfacing them in the
+        // final response.
+        final Obj thinking = agent.at(res(THINKING));
+        if (!thinking.isNoObj() && !thinking.strValue().isBlank()) {
+            final Set<String> thoughtConcepts = new TaggingExtractor().extract(agent, thinking.strValue(), false);
+            if (!thoughtConcepts.isEmpty()) {
+                this.addConceptsToSpace(agent, thoughtConcepts);
+            }
+            // newConcepts.addAll(thoughtConcepts);
+        }
+        if (!newConcepts.isEmpty())
+            this.injectConceptRecommendations(agent, newConcepts);
     }
 
     // =========================================================================
@@ -461,6 +524,7 @@ public class ConceptFeature extends Feature {
     // =========================================================================
 
     private class LuceneExtractor implements Extractor {
+        private static final Set<String> STOP_WORDS = Set.of("able", "about", "above", "abroad", "according", "accordingly", "across", "actually", "adj", "after", "afterwards", "again", "against", "ago", "ahead", "ain't", "all", "allow", "allows", "almost", "alone", "along", "alongside", "already", "also", "although", "always", "am", "amid", "amidst", "among", "amongst", "an", "and", "another", "any", "anybody", "anyhow", "anyone", "anything", "anyway", "anyways", "anywhere", "apart", "appear", "appreciate", "appropriate", "are", "aren't", "around", "as", "a's", "aside", "ask", "asking", "associated", "at", "available", "away", "awfully", "back", "backward", "backwards", "be", "became", "because", "become", "becomes", "becoming", "been", "before", "beforehand", "begin", "behind", "being", "believe", "below", "beside", "besides", "best", "better", "between", "beyond", "both", "brief", "but", "by", "came", "can", "cannot", "cant", "can't", "caption", "cause", "causes", "certain", "certainly", "changes", "clearly", "c'mon", "co", "co.", "com", "come", "comes", "concerning", "consequently", "consider", "considering", "contain", "containing", "contains", "corresponding", "could", "couldn't", "course", "c's", "currently", "dare", "daren't", "definitely", "described", "despite", "did", "didn't", "different", "directly", "do", "does", "doesn't", "doing", "done", "don't", "down", "downwards", "during", "each", "edu", "eg", "eight", "eighty", "either", "else", "elsewhere", "end", "ending", "enough", "entirely", "especially", "et", "etc", "even", "ever", "evermore", "every", "everybody", "everyone", "everything", "everywhere", "ex", "exactly", "example", "except", "fairly", "far", "farther", "few", "fewer", "fifth", "first", "five", "followed", "following", "follows", "for", "forever", "former", "formerly", "forth", "forward", "found", "four", "from", "further", "furthermore", "get", "gets", "getting", "given", "gives", "go", "goes", "going", "gone", "got", "gotten", "greetings", "had", "hadn't", "half", "happens", "hardly", "has", "hasn't", "have", "haven't", "having", "he", "he'd", "he'll", "hello", "help", "hence", "her", "here", "hereafter", "hereby", "herein", "here's", "hereupon", "hers", "herself", "he's", "hi", "him", "himself", "his", "hither", "hopefully", "how", "howbeit", "however", "hundred", "i'd", "ie", "if", "ignored", "i'll", "i'm", "immediate", "in", "inasmuch", "inc", "inc.", "indeed", "indicate", "indicated", "indicates", "inner", "inside", "insofar", "instead", "into", "inward", "is", "isn't", "it", "it'd", "it'll", "its", "it's", "itself", "i've", "just", "k", "keep", "keeps", "kept", "know", "known", "knows", "last", "lately", "later", "latter", "latterly", "least", "less", "lest", "let", "let's", "like", "liked", "likely", "likewise", "little", "look", "looking", "looks", "low", "lower", "ltd", "made", "mainly", "make", "makes", "many", "may", "maybe", "mayn't", "me", "mean", "meantime", "meanwhile", "merely", "might", "mightn't", "mine", "minus", "miss", "more", "moreover", "most", "mostly", "mr", "mrs", "much", "must", "mustn't", "my", "myself", "name", "namely", "nd", "near", "nearly", "necessary", "need", "needn't", "needs", "neither", "never", "neverf", "neverless", "nevertheless", "new", "next", "nine", "ninety", "no", "nobody", "non", "none", "nonetheless", "noone", "no-one", "nor", "normally", "not", "nothing", "notwithstanding", "novel", "now", "nowhere", "obviously", "of", "off", "often", "oh", "ok", "okay", "old", "on", "once", "one", "ones", "one's", "only", "onto", "opposite", "or", "other", "others", "otherwise", "ought", "oughtn't", "our", "ours", "ourselves", "out", "outside", "over", "overall", "own", "particular", "particularly", "past", "per", "perhaps", "placed", "please", "plus", "possible", "presumably", "probably", "provided", "provides", "que", "quite", "qv", "rather", "rd", "re", "really", "reasonably", "recent", "recently", "regarding", "regardless", "regards", "relatively", "respectively", "right", "round", "said", "same", "saw", "say", "saying", "says", "second", "secondly", "see", "seeing", "seem", "seemed", "seeming", "seems", "seen", "self", "selves", "sensible", "sent", "serious", "seriously", "seven", "several", "shall", "shan't", "she", "she'd", "she'll", "she's", "should", "shouldn't", "since", "six", "so", "some", "somebody", "someday", "somehow", "someone", "something", "sometime", "sometimes", "somewhat", "somewhere", "soon", "sorry", "specified", "specify", "specifying", "still", "sub", "such", "sup", "sure", "take", "taken", "taking", "tell", "tends", "th", "than", "thank", "thanks", "thanx", "that", "that'll", "thats", "that's", "that've", "the", "their", "theirs", "them", "themselves", "then", "thence", "there", "thereafter", "thereby", "there'd", "therefore", "therein", "there'll", "there're", "theres", "there's", "thereupon", "there've", "these", "they", "they'd", "they'll", "they're", "they've", "thing", "things", "think", "third", "thirty", "this", "thorough", "thoroughly", "those", "though", "three", "through", "throughout", "thru", "thus", "till", "to", "together", "too", "took", "toward", "towards", "tried", "tries", "truly", "try", "trying", "t's", "twice", "two", "un", "under", "underneath", "undoing", "unfortunately", "unless", "unlike", "unlikely", "until", "unto", "up", "upon", "upwards", "us", "use", "used", "useful", "uses", "using", "usually", "v", "value", "various", "versus", "very", "via", "viz", "vs", "want", "wants", "was", "wasn't", "way", "we", "we'd", "welcome", "well", "we'll", "went", "were", "we're", "weren't", "we've", "what", "whatever", "what'll", "what's", "what've", "when", "whence", "whenever", "where", "whereafter", "whereas", "whereby", "wherein", "where's", "whereupon", "wherever", "whether", "which", "whichever", "while", "whilst", "whither", "who", "who'd", "whoever", "whole", "who'll", "whom", "whomever", "who's", "whose", "why", "will", "willing", "wish", "with", "within", "without", "wonder", "won't", "would", "wouldn't", "yes", "yet", "you", "you'd", "you'll", "your", "you're", "yours", "yourself", "yourselves", "you've", "zero", "a", "how's", "i", "when's", "why's", "b", "c", "d", "e", "f", "g", "h", "j", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "uucp", "w", "x", "y", "z", "I", "www", "amount", "bill", "bottom", "call", "computer", "con", "couldnt", "cry", "de", "describe", "detail", "due", "eleven", "empty", "fifteen", "fifty", "fill", "find", "fire", "forty", "front", "full", "give", "hasnt", "herse", "himse", "interest", "itse”", "mill", "move", "myse”", "part", "put", "show", "side", "sincere", "sixty", "system", "ten", "thick", "thin", "top", "twelve", "twenty", "abst", "accordance", "act", "added", "adopted", "affected", "affecting", "affects", "ah", "announce", "anymore", "apparently", "approximately", "aren", "arent", "arise", "auth", "beginning", "beginnings", "begins", "biol", "briefly", "ca", "date", "ed", "effect", "et-al", "ff", "fix", "gave", "giving", "heres", "hes", "hid", "home", "id", "im", "immediately", "importance", "important", "index", "information", "invention", "itd", "keys", "kg", "km", "largely", "lets", "line", "'ll", "means", "mg", "million", "ml", "mug", "na", "nay", "necessarily", "nos", "noted", "obtain", "obtained", "omitted", "ord", "owing", "page", "pages", "poorly", "possibly", "potentially", "pp", "predominantly", "present", "previously", "primarily", "promptly", "proud", "quickly", "ran", "readily", "ref", "refs", "related", "research", "resulted", "resulting", "results", "run", "sec", "section", "shed", "shes", "showed", "shown", "showns", "shows", "significant", "significantly", "similar", "similarly", "slightly", "somethan", "specifically", "state", "states", "stop", "strongly", "substantially", "successfully", "sufficiently", "suggest", "thered", "thereof", "therere", "thereto", "theyd", "theyre", "thou", "thoughh", "thousand", "throug", "til", "tip", "ts", "ups", "usefully", "usefulness", "'ve", "vol", "vols", "wed", "whats", "wheres", "whim", "whod", "whos", "widely", "words", "world", "youd", "youre");
 
         private final MessageIndexer indexer;
 
@@ -470,23 +534,25 @@ public class ConceptFeature extends Feature {
 
         @Override
         public Set<String> extract(final Agent agent, final String text, final boolean blocking) {
-            // Return top-10 concepts from the index (must exceed min doc freq of 1)
-            final List<MessageIndexer.Concept> topConcepts = this.indexer.getImportantConcepts(10, 1);
+            // Per-document extraction: score terms by their frequency
+            // in *this* text, weighted by corpus-wide IDF for distinctiveness.
+            // This gives concepts relevant to the current message rather
+            // than the same global top-10 for every message.
+            final List<MessageIndexer.Concept> topConcepts =
+                    this.indexer.getImportantConcepts(text, 10);
             final Set<String> result = new LinkedHashSet<>();
             for (final MessageIndexer.Concept c : topConcepts) {
                 final String term = c.term().toLowerCase();
-                // Filter stop words and fragments — Lucene tokenization
-                // still passes short stems through the index.
-                if (term.length() < 3 || STOP_WORDS.contains(term)) continue;
+                if (term.length() < 3 || STOP_WORDS.contains(term) || term.contains(":")) continue;
                 final String normalized = CommonUtil.normalize(term);
                 if (!normalized.isEmpty())
                     result.add(normalized);
             }
-            LOG.debug("lucene extracted %d concepts from %d docs: %s", result.size(), this.indexer.documentCount(), result);
+            LOG.info("lucene extracted %d concepts from %d docs: %s",
+                    result.size(), this.indexer.documentCount(), result);
+            result.addAll(new TaggingExtractor().extract(agent, text, blocking));
             return result;
         }
-
-        private static final Set<String> STOP_WORDS = Set.of("able", "about", "above", "abroad", "according", "accordingly", "across", "actually", "adj", "after", "afterwards", "again", "against", "ago", "ahead", "ain't", "all", "allow", "allows", "almost", "alone", "along", "alongside", "already", "also", "although", "always", "am", "amid", "amidst", "among", "amongst", "an", "and", "another", "any", "anybody", "anyhow", "anyone", "anything", "anyway", "anyways", "anywhere", "apart", "appear", "appreciate", "appropriate", "are", "aren't", "around", "as", "a's", "aside", "ask", "asking", "associated", "at", "available", "away", "awfully", "back", "backward", "backwards", "be", "became", "because", "become", "becomes", "becoming", "been", "before", "beforehand", "begin", "behind", "being", "believe", "below", "beside", "besides", "best", "better", "between", "beyond", "both", "brief", "but", "by", "came", "can", "cannot", "cant", "can't", "caption", "cause", "causes", "certain", "certainly", "changes", "clearly", "c'mon", "co", "co.", "com", "come", "comes", "concerning", "consequently", "consider", "considering", "contain", "containing", "contains", "corresponding", "could", "couldn't", "course", "c's", "currently", "dare", "daren't", "definitely", "described", "despite", "did", "didn't", "different", "directly", "do", "does", "doesn't", "doing", "done", "don't", "down", "downwards", "during", "each", "edu", "eg", "eight", "eighty", "either", "else", "elsewhere", "end", "ending", "enough", "entirely", "especially", "et", "etc", "even", "ever", "evermore", "every", "everybody", "everyone", "everything", "everywhere", "ex", "exactly", "example", "except", "fairly", "far", "farther", "few", "fewer", "fifth", "first", "five", "followed", "following", "follows", "for", "forever", "former", "formerly", "forth", "forward", "found", "four", "from", "further", "furthermore", "get", "gets", "getting", "given", "gives", "go", "goes", "going", "gone", "got", "gotten", "greetings", "had", "hadn't", "half", "happens", "hardly", "has", "hasn't", "have", "haven't", "having", "he", "he'd", "he'll", "hello", "help", "hence", "her", "here", "hereafter", "hereby", "herein", "here's", "hereupon", "hers", "herself", "he's", "hi", "him", "himself", "his", "hither", "hopefully", "how", "howbeit", "however", "hundred", "i'd", "ie", "if", "ignored", "i'll", "i'm", "immediate", "in", "inasmuch", "inc", "inc.", "indeed", "indicate", "indicated", "indicates", "inner", "inside", "insofar", "instead", "into", "inward", "is", "isn't", "it", "it'd", "it'll", "its", "it's", "itself", "i've", "just", "k", "keep", "keeps", "kept", "know", "known", "knows", "last", "lately", "later", "latter", "latterly", "least", "less", "lest", "let", "let's", "like", "liked", "likely", "likewise", "little", "look", "looking", "looks", "low", "lower", "ltd", "made", "mainly", "make", "makes", "many", "may", "maybe", "mayn't", "me", "mean", "meantime", "meanwhile", "merely", "might", "mightn't", "mine", "minus", "miss", "more", "moreover", "most", "mostly", "mr", "mrs", "much", "must", "mustn't", "my", "myself", "name", "namely", "nd", "near", "nearly", "necessary", "need", "needn't", "needs", "neither", "never", "neverf", "neverless", "nevertheless", "new", "next", "nine", "ninety", "no", "nobody", "non", "none", "nonetheless", "noone", "no-one", "nor", "normally", "not", "nothing", "notwithstanding", "novel", "now", "nowhere", "obviously", "of", "off", "often", "oh", "ok", "okay", "old", "on", "once", "one", "ones", "one's", "only", "onto", "opposite", "or", "other", "others", "otherwise", "ought", "oughtn't", "our", "ours", "ourselves", "out", "outside", "over", "overall", "own", "particular", "particularly", "past", "per", "perhaps", "placed", "please", "plus", "possible", "presumably", "probably", "provided", "provides", "que", "quite", "qv", "rather", "rd", "re", "really", "reasonably", "recent", "recently", "regarding", "regardless", "regards", "relatively", "respectively", "right", "round", "said", "same", "saw", "say", "saying", "says", "second", "secondly", "see", "seeing", "seem", "seemed", "seeming", "seems", "seen", "self", "selves", "sensible", "sent", "serious", "seriously", "seven", "several", "shall", "shan't", "she", "she'd", "she'll", "she's", "should", "shouldn't", "since", "six", "so", "some", "somebody", "someday", "somehow", "someone", "something", "sometime", "sometimes", "somewhat", "somewhere", "soon", "sorry", "specified", "specify", "specifying", "still", "sub", "such", "sup", "sure", "take", "taken", "taking", "tell", "tends", "th", "than", "thank", "thanks", "thanx", "that", "that'll", "thats", "that's", "that've", "the", "their", "theirs", "them", "themselves", "then", "thence", "there", "thereafter", "thereby", "there'd", "therefore", "therein", "there'll", "there're", "theres", "there's", "thereupon", "there've", "these", "they", "they'd", "they'll", "they're", "they've", "thing", "things", "think", "third", "thirty", "this", "thorough", "thoroughly", "those", "though", "three", "through", "throughout", "thru", "thus", "till", "to", "together", "too", "took", "toward", "towards", "tried", "tries", "truly", "try", "trying", "t's", "twice", "two", "un", "under", "underneath", "undoing", "unfortunately", "unless", "unlike", "unlikely", "until", "unto", "up", "upon", "upwards", "us", "use", "used", "useful", "uses", "using", "usually", "v", "value", "various", "versus", "very", "via", "viz", "vs", "want", "wants", "was", "wasn't", "way", "we", "we'd", "welcome", "well", "we'll", "went", "were", "we're", "weren't", "we've", "what", "whatever", "what'll", "what's", "what've", "when", "whence", "whenever", "where", "whereafter", "whereas", "whereby", "wherein", "where's", "whereupon", "wherever", "whether", "which", "whichever", "while", "whilst", "whither", "who", "who'd", "whoever", "whole", "who'll", "whom", "whomever", "who's", "whose", "why", "will", "willing", "wish", "with", "within", "without", "wonder", "won't", "would", "wouldn't", "yes", "yet", "you", "you'd", "you'll", "your", "you're", "yours", "yourself", "yourselves", "you've", "zero", "a", "how's", "i", "when's", "why's", "b", "c", "d", "e", "f", "g", "h", "j", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "uucp", "w", "x", "y", "z", "I", "www", "amount", "bill", "bottom", "call", "computer", "con", "couldnt", "cry", "de", "describe", "detail", "due", "eleven", "empty", "fifteen", "fifty", "fill", "find", "fire", "forty", "front", "full", "give", "hasnt", "herse", "himse", "interest", "itse”", "mill", "move", "myse”", "part", "put", "show", "side", "sincere", "sixty", "system", "ten", "thick", "thin", "top", "twelve", "twenty", "abst", "accordance", "act", "added", "adopted", "affected", "affecting", "affects", "ah", "announce", "anymore", "apparently", "approximately", "aren", "arent", "arise", "auth", "beginning", "beginnings", "begins", "biol", "briefly", "ca", "date", "ed", "effect", "et-al", "ff", "fix", "gave", "giving", "heres", "hes", "hid", "home", "id", "im", "immediately", "importance", "important", "index", "information", "invention", "itd", "keys", "kg", "km", "largely", "lets", "line", "'ll", "means", "mg", "million", "ml", "mug", "na", "nay", "necessarily", "nos", "noted", "obtain", "obtained", "omitted", "ord", "owing", "page", "pages", "poorly", "possibly", "potentially", "pp", "predominantly", "present", "previously", "primarily", "promptly", "proud", "quickly", "ran", "readily", "ref", "refs", "related", "research", "resulted", "resulting", "results", "run", "sec", "section", "shed", "shes", "showed", "shown", "showns", "shows", "significant", "significantly", "similar", "similarly", "slightly", "somethan", "specifically", "state", "states", "stop", "strongly", "substantially", "successfully", "sufficiently", "suggest", "thered", "thereof", "therere", "thereto", "theyd", "theyre", "thou", "thoughh", "thousand", "throug", "til", "tip", "ts", "ups", "usefully", "usefulness", "'ve", "vol", "vols", "wed", "whats", "wheres", "whim", "whod", "whos", "widely", "words", "world", "youd", "youre");
     }
     // =========================================================================
     // Lucene Message Indexer (in-memory)
@@ -508,13 +574,26 @@ public class ConceptFeature extends Feature {
         private static final String FIELD_TIME = "time";
 
         private final Directory directory;
-        private final StandardAnalyzer analyzer;
+        private final Analyzer analyzer;
         private final IndexWriter writer;
 
-        public MessageIndexer() {
+        public MessageIndexer(final Set<String> stopWords) {
             try {
                 this.directory = new ByteBuffersDirectory();
-                this.analyzer = new StandardAnalyzer();
+                // Convert to CharArraySet for StopFilter.  Use the same
+                // curated stop-word list that LuceneExtractor applies as a
+                // secondary quality gate — no PorterStemFilter here so terms
+                // stay in their natural form for predictable concept lookup.
+                final CharArraySet stops = new CharArraySet(stopWords, true);
+                this.analyzer = new Analyzer() {
+                    @Override
+                    protected TokenStreamComponents createComponents(final String fieldName) {
+                        final StandardTokenizer src = new StandardTokenizer();
+                        TokenStream result = new LowerCaseFilter(src);
+                        result = new StopFilter(result, stops);
+                        return new TokenStreamComponents(src, result);
+                    }
+                };
                 final IndexWriterConfig config = new IndexWriterConfig(this.analyzer);
                 config.setOpenMode(IndexWriterConfig.OpenMode.CREATE_OR_APPEND);
                 this.writer = new IndexWriter(this.directory, config);
@@ -600,6 +679,94 @@ public class ConceptFeature extends Feature {
                 LOG.warn("failed to extract concepts: %s", e.getMessage());
             }
             return concepts;
+        }
+
+        /**
+         * Tokenize text with the analyzer and return a term→frequency map.
+         * Uses the same analyzer as indexing so stemming and stop-word
+         * removal are consistent.
+         */
+        private Map<String, Long> tokenize(final String text) {
+            final Map<String, Long> tf = new LinkedHashMap<>();
+            try (final TokenStream ts = this.analyzer.tokenStream(FIELD_TEXT, text)) {
+                final CharTermAttribute charTerm = ts.addAttribute(CharTermAttribute.class);
+                ts.reset();
+                while (ts.incrementToken()) {
+                    tf.merge(charTerm.toString(), 1L, Long::sum);
+                }
+                ts.end();
+            } catch (final IOException e) {
+                // non-empty text that fails tokenization is pathological
+            }
+            return tf;
+        }
+
+        /**
+         * Extract top-N concepts from a specific text by scoring local
+         * term frequency against global inverse document frequency.
+         * <p>
+         * This is per-document extraction — terms that are frequent
+         * <em>in this text</em> and rare <em>across the corpus</em>
+         * rank highest.  The global IDF is computed from the committed
+         * index, so the corpus must contain at least one prior document
+         * for IDF weighting to work; with zero docs, falls back to
+         * local TF-only scoring.
+         */
+        public List<Concept> getImportantConcepts(final String text, final int topN) {
+            if (text == null || text.isBlank()) return List.of();
+
+            // 1. Local term frequency from the input text
+            final Map<String, Long> localTF = tokenize(text);
+            if (localTF.isEmpty()) return List.of();
+
+            // 2. Global document frequency from the committed index (for IDF)
+            final Map<String, Long> globalDF = new LinkedHashMap<>();
+            int numDocs = 0;
+            try (final DirectoryReader reader = DirectoryReader.open(this.directory)) {
+                numDocs = reader.numDocs();
+                for (final LeafReaderContext ctx : reader.leaves()) {
+                    final Terms terms = ctx.reader().terms(FIELD_TEXT);
+                    if (terms == null) continue;
+                    final TermsEnum termsEnum = terms.iterator();
+                    BytesRef term;
+                    while ((term = termsEnum.next()) != null) {
+                        final String termStr = term.utf8ToString();
+                        if (localTF.containsKey(termStr)) {
+                            globalDF.merge(termStr, (long) termsEnum.docFreq(), Long::sum);
+                        }
+                    }
+                }
+            } catch (final IndexNotFoundException e) {
+                // No prior docs — fall through to TF-only scoring
+            } catch (final IOException e) {
+                LOG.warn("failed to compute IDF: %s", e.getMessage());
+                return List.of();
+            }
+
+            // 3. Score: local TF × IDF, with a floor IDF so terms
+            //    with no prior document frequency still get a score.
+            final List<Concept> results = new ArrayList<>();
+            final double floorIDF = numDocs > 0
+                    ? Math.log(1.0 + (numDocs + 1.0) / 2.0)   // treat unseen as df=1
+                    : 1.0;
+            for (final Map.Entry<String, Long> e : localTF.entrySet()) {
+                final String term = e.getKey();
+                final long tf = e.getValue();
+                final long df = globalDF.getOrDefault(term, 0L);
+                final double idf;
+                if (df > 0) {
+                    idf = Math.log(1.0 + (numDocs + 1.0) / (df + 1.0));
+                } else {
+                    idf = floorIDF; // term not in corpus yet → treat as rare
+                }
+                final Concept c = new Concept(term, tf);
+                c.docFreq = df;
+                c.score = tf * idf;
+                results.add(c);
+            }
+
+            results.sort(Comparator.comparingDouble(Concept::score).reversed());
+            return results.stream().limit(topN).toList();
         }
 
         public int documentCount() {

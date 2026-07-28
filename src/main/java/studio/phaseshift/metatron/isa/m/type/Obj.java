@@ -31,7 +31,6 @@ import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.PCMonad;
 import studio.phaseshift.metatron.isa.mach.type.Router;
-import studio.phaseshift.metatron.isa.mach.type.ui.tool.ProfileTool;
 import studio.phaseshift.metatron.isa.web.type.MIME;
 import studio.phaseshift.metatron.util.*;
 
@@ -1333,7 +1332,10 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             """
                             parse('[a=>[b=>c]]')                     [-- [a=>[b=>c]]  --]
                             """),
-                    instC(SWAP_TID.dom(A).rng(A), lst(T(B)), (lhs, inst) -> lhs.apply(inst.arg(0))),
+                    instC(SWAP_INST_TID.dom(A).rng(A), lst(T(B)), (lhs, inst) -> {
+                        final Obj newLHS = inst.arg(0).isInst() ? inst.arg(0).asInst().arg(0) : inst.arg(0);
+                        return inst.arg(0).isInst() ? inst.arg(0).asInst().args(lst(lhs)).apply(newLHS) : lhs.apply(newLHS);
+                    }),
                     //instC(RSHIFT_INST_TID.dom(ALL).rng(URI_TID.maybe()), lst(uri("vid")), (lhs, inst) -> null == lhs.vid() ? noobj() : lhs.vid().toUri()),
                     instC(RSHIFT_INST_TID.dom(A).rng(B.maybeSome()), lst(T(C.maybeSome())), (lhs, inst) -> {
                         if (lhs.isRec())
