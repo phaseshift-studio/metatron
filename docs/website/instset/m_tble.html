@@ -283,7 +283,7 @@ bin/metatron</code></pre>
   table::T,
   tblespace::T],
  inst=&gt;[sql?rec{*}&lt;=tblespace(str::T)],
- rewrite=&gt;[/m/tble/inst/rewrite/sql_count?code{?}&lt;=code(),/m/tble/inst/rewrite/sql_sum?code{?}&lt;=code(),/m/tble/inst/rewrite/sql_mean?code{?}&lt;=code(),/m/tble/inst/rewrite/sql_limit?code{?}&lt;=code(),/m/tble/inst/rewrite/sql_has?code{?}&lt;=code(),/m/tble/inst/rewrite/sql_where?code{?}&lt;=code(),/m/tble/inst/rewrite/sql_where_count?code{?}&lt;=code(),/m/tble/inst/rewrite/sql_where_limit?code{?}&lt;=code(),/m/tble/inst/rewrite/sql_select?code{?}&lt;=code(),/m/tble/inst/rewrite/kv_count?code{?}&lt;=code(),...(1 more)]]@/m/tble</code></pre>
+ rewrite=&gt;[/m/tble/inst/rewrite/sql_count?code{?}&lt;=code(),/m/tble/inst/rewrite/sql_sum?code{?}&lt;=code(),/m/tble/inst/rewrite/sql_mean?code{?}&lt;=code(),/m/tble/inst/rewrite/sql_limit?code{?}&lt;=code(),/m/tble/inst/rewrite/sql_offset?code{?}&lt;=code(),/m/tble/inst/rewrite/sql_offset_limit?code{?}&lt;=code(),/m/tble/inst/rewrite/sql_has?code{?}&lt;=code(),/m/tble/inst/rewrite/sql_where?code{?}&lt;=code(),/m/tble/inst/rewrite/sql_where_count?code{?}&lt;=code(),/m/tble/inst/rewrite/sql_where_limit?code{?}&lt;=code(),...(7 more)]]@/m/tble</code></pre>
                     </div>
                 </div>
             </div>
@@ -291,7 +291,7 @@ bin/metatron</code></pre>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <a href="#consts" class="btn btn-outline-primary">Consts <span class="pill-label badge bg-secondary">1</span></a><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">1</span></a><a href="#spaces" class="btn btn-outline-primary">Spaces <span class="pill-label badge bg-info">1</span></a><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">1</span></a><a href="#rewrites" class="btn btn-outline-primary">Rewrites <span class="pill-label badge bg-warning">11</span></a>
+        <a href="#consts" class="btn btn-outline-primary">Consts <span class="pill-label badge bg-secondary">1</span></a><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">1</span></a><a href="#spaces" class="btn btn-outline-primary">Spaces <span class="pill-label badge bg-info">1</span></a><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">1</span></a><a href="#rewrites" class="btn btn-outline-primary">Rewrites <span class="pill-label badge bg-warning">17</span></a>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="card">
@@ -331,6 +331,9 @@ bin/metatron</code></pre>
 </a><a href="#__m__tble__inst__rewrite__sql_count?rng=__m__code{?}&dom=__m__code" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">sql_count</span>
     <span class="pill-label badge bg-warning text-dark ms-2">R</span>
+</a><a href="#__m__tble__inst__rewrite__sql_distinct?rng=__m__code{?}&dom=__m__code" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">sql_distinct</span>
+    <span class="pill-label badge bg-warning text-dark ms-2">R</span>
 </a><a href="#__m__tble__inst__rewrite__sql_has?rng=__m__code{?}&dom=__m__code" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">sql_has</span>
     <span class="pill-label badge bg-warning text-dark ms-2">R</span>
@@ -339,6 +342,15 @@ bin/metatron</code></pre>
     <span class="pill-label badge bg-warning text-dark ms-2">R</span>
 </a><a href="#__m__tble__inst__rewrite__sql_mean?rng=__m__code{?}&dom=__m__code" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">sql_mean</span>
+    <span class="pill-label badge bg-warning text-dark ms-2">R</span>
+</a><a href="#__m__tble__inst__rewrite__sql_offset?rng=__m__code{?}&dom=__m__code" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">sql_offset</span>
+    <span class="pill-label badge bg-warning text-dark ms-2">R</span>
+</a><a href="#__m__tble__inst__rewrite__sql_offset_limit?rng=__m__code{?}&dom=__m__code" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">sql_offset_limit</span>
+    <span class="pill-label badge bg-warning text-dark ms-2">R</span>
+</a><a href="#__m__tble__inst__rewrite__sql_order?rng=__m__code{?}&dom=__m__code" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">sql_order</span>
     <span class="pill-label badge bg-warning text-dark ms-2">R</span>
 </a><a href="#__m__tble__inst__rewrite__sql_select?rng=__m__code{?}&dom=__m__code" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">sql_select</span>
@@ -354,6 +366,12 @@ bin/metatron</code></pre>
     <span class="pill-label badge bg-warning text-dark ms-2">R</span>
 </a><a href="#__m__tble__inst__rewrite__sql_where_limit?rng=__m__code{?}&dom=__m__code" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">sql_where_limit</span>
+    <span class="pill-label badge bg-warning text-dark ms-2">R</span>
+</a><a href="#__m__tble__inst__rewrite__sql_where_offset?rng=__m__code{?}&dom=__m__code" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">sql_where_offset</span>
+    <span class="pill-label badge bg-warning text-dark ms-2">R</span>
+</a><a href="#__m__tble__inst__rewrite__sql_where_offset_limit?rng=__m__code{?}&dom=__m__code" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">sql_where_offset_limit</span>
     <span class="pill-label badge bg-warning text-dark ms-2">R</span>
 </a></div>
 </div></div>
@@ -424,7 +442,7 @@ bin/metatron</code></pre>
 </div>
 </div>
 </div><div class="container-xxl mb-4" id="rewrites">
-    <h3 class="text-primary mb-3">Rewrites <span class="pill-label badge bg-warning text-dark">11</span></h3>
+    <h3 class="text-primary mb-3">Rewrites <span class="pill-label badge bg-warning text-dark">17</span></h3>
     <div class="card mb-3" id="__m__tble__inst__rewrite__kv_count?rng=__m__code{?}&dom=__m__code">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -467,6 +485,20 @@ bin/metatron</code></pre>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#pre-rewrite code" class="text-info">pre-rewrite code</a> <span class="text-light">=&gt;</span> <a href="#post-rewrite code" class="text-success">post-rewrite code</a></pre>
 </div>
+</div><div class="card mb-3" id="__m__tble__inst__rewrite__sql_distinct?rng=__m__code{?}&dom=__m__code">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-warning fw-bold">sql_distinct</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#__m__code" data-bs-toggle="tooltip" title="domain" class="code text-info">code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__code{?}" data-bs-toggle="tooltip" title="maybe range" class="code text-success">code{?}</a></span></span>
+        </span>
+        <small class="text-muted code">/m/tble/inst/rewrite/sql_distinct?rng=/m/code{?}&amp;dom=/m/code</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/tble/inst/rewrite/sql_distinct?rng=code{?}&dom=code(){<j>}</code></pre></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">leverages native SELECT DISTINCT to deduplicate rows in the database</p>
+</div><div class="card-body py-2">
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#*table__+.dedup(select(name))" class="text-info">+.dedup(select(name))</a> <span class="text-light">=&gt;</span> <a href="#sql_distinct(table, [name])" class="text-success">sql_distinct(table, [name])</a></pre>
+</div>
 </div><div class="card mb-3" id="__m__tble__inst__rewrite__sql_has?rng=__m__code{?}&dom=__m__code">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -508,6 +540,48 @@ bin/metatron</code></pre>
     <p class="mb-0 text-light">leverages native SELECT AVG(column) to average entries in a table column</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#pre-rewrite code" class="text-info">pre-rewrite code</a> <span class="text-light">=&gt;</span> <a href="#post-rewrite code" class="text-success">post-rewrite code</a></pre>
+</div>
+</div><div class="card mb-3" id="__m__tble__inst__rewrite__sql_offset?rng=__m__code{?}&dom=__m__code">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-warning fw-bold">sql_offset</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#__m__code" data-bs-toggle="tooltip" title="domain" class="code text-info">code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__code{?}" data-bs-toggle="tooltip" title="maybe range" class="code text-success">code{?}</a></span></span>
+        </span>
+        <small class="text-muted code">/m/tble/inst/rewrite/sql_offset?rng=/m/code{?}&amp;dom=/m/code</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/tble/inst/rewrite/sql_offset?rng=code{?}&dom=code(){<j>}</code></pre></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">leverages native SELECT ... OFFSET to skip first n rows from a table</p>
+</div><div class="card-body py-2">
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#*table__+.skip(800)" class="text-info">+.skip(800)</a> <span class="text-light">=&gt;</span> <a href="#sql_offset(table, 800)" class="text-success">sql_offset(table, 800)</a></pre>
+</div>
+</div><div class="card mb-3" id="__m__tble__inst__rewrite__sql_offset_limit?rng=__m__code{?}&dom=__m__code">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-warning fw-bold">sql_offset_limit</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#__m__code" data-bs-toggle="tooltip" title="domain" class="code text-info">code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__code{?}" data-bs-toggle="tooltip" title="maybe range" class="code text-success">code{?}</a></span></span>
+        </span>
+        <small class="text-muted code">/m/tble/inst/rewrite/sql_offset_limit?rng=/m/code{?}&amp;dom=/m/code</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/tble/inst/rewrite/sql_offset_limit?rng=code{?}&dom=code(){<j>}</code></pre></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">fuses offset and limit into a single native SELECT ... LIMIT n OFFSET m</p>
+</div><div class="card-body py-2">
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#sql_offset(table,800).take(10)" class="text-info">sql_offset(table,800).take(10)</a> <span class="text-light">=&gt;</span> <a href="#sql_offset_limit(table, 800, 10)" class="text-success">sql_offset_limit(table, 800, 10)</a></pre>
+</div>
+</div><div class="card mb-3" id="__m__tble__inst__rewrite__sql_order?rng=__m__code{?}&dom=__m__code">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-warning fw-bold">sql_order</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#__m__code" data-bs-toggle="tooltip" title="domain" class="code text-info">code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__code{?}" data-bs-toggle="tooltip" title="maybe range" class="code text-success">code{?}</a></span></span>
+        </span>
+        <small class="text-muted code">/m/tble/inst/rewrite/sql_order?rng=/m/code{?}&amp;dom=/m/code</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/tble/inst/rewrite/sql_order?rng=code{?}&dom=code(){<j>}</code></pre></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">leverages native SELECT ... ORDER BY to sort rows in the database</p>
+</div><div class="card-body py-2">
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#*table__+.order(select(name))" class="text-info">+.order(select(name))</a> <span class="text-light">=&gt;</span> <a href="#sql_order(table, [name])" class="text-success">sql_order(table, [name])</a></pre>
 </div>
 </div><div class="card mb-3" id="__m__tble__inst__rewrite__sql_select?rng=__m__code{?}&dom=__m__code">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -578,6 +652,34 @@ bin/metatron</code></pre>
     <p class="mb-0 text-light">leverages native SELECT ... WHERE ... LIMIT to filter and limit rows in a table</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#pre-rewrite code" class="text-info">pre-rewrite code</a> <span class="text-light">=&gt;</span> <a href="#post-rewrite code" class="text-success">post-rewrite code</a></pre>
+</div>
+</div><div class="card mb-3" id="__m__tble__inst__rewrite__sql_where_offset?rng=__m__code{?}&dom=__m__code">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-warning fw-bold">sql_where_offset</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#__m__code" data-bs-toggle="tooltip" title="domain" class="code text-info">code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__code{?}" data-bs-toggle="tooltip" title="maybe range" class="code text-success">code{?}</a></span></span>
+        </span>
+        <small class="text-muted code">/m/tble/inst/rewrite/sql_where_offset?rng=/m/code{?}&amp;dom=/m/code</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/tble/inst/rewrite/sql_where_offset?rng=code{?}&dom=code(){<j>}</code></pre></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">fuses where and offset into a single native SELECT ... WHERE ... OFFSET n</p>
+</div><div class="card-body py-2">
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#sql_where(table,cond).skip(800)" class="text-info">sql_where(table,cond).skip(800)</a> <span class="text-light">=&gt;</span> <a href="#sql_where_offset(table, cond, 800)" class="text-success">sql_where_offset(table, cond, 800)</a></pre>
+</div>
+</div><div class="card mb-3" id="__m__tble__inst__rewrite__sql_where_offset_limit?rng=__m__code{?}&dom=__m__code">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-warning fw-bold">sql_where_offset_limit</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#__m__code" data-bs-toggle="tooltip" title="domain" class="code text-info">code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__code{?}" data-bs-toggle="tooltip" title="maybe range" class="code text-success">code{?}</a></span></span>
+        </span>
+        <small class="text-muted code">/m/tble/inst/rewrite/sql_where_offset_limit?rng=/m/code{?}&amp;dom=/m/code</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/tble/inst/rewrite/sql_where_offset_limit?rng=code{?}&dom=code(){<j>}</code></pre></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">fuses where, offset, and limit into a single native SELECT ... WHERE ... LIMIT n OFFSET m</p>
+</div><div class="card-body py-2">
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#sql_where_offset(table,cond,800).take(10)" class="text-info">sql_where_offset(table,cond,800).take(10)</a> <span class="text-light">=&gt;</span> <a href="#sql_where_offset_limit(table, cond, 800, 10)" class="text-success">sql_where_offset_limit(table, cond, 800, 10)</a></pre>
 </div>
 </div>
 </div><div class="container-xxl py-3 text-center">
