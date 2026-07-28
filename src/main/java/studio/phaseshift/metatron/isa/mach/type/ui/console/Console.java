@@ -18,8 +18,6 @@
 
 package studio.phaseshift.metatron.isa.mach.type.ui.console;
 
-import java.util.function.Consumer;
-
 import org.jline.builtins.ConfigurationPath;
 import org.jline.console.SystemRegistry;
 import org.jline.console.impl.Builtins;
@@ -37,29 +35,26 @@ import studio.phaseshift.metatron.Tracer;
 import studio.phaseshift.metatron.TypeCheck;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.m.type.impl.MCode;
 import studio.phaseshift.metatron.isa.m.type.reflect.JInst;
-import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.reflect.JRec;
 import studio.phaseshift.metatron.isa.m.type.reflect.JRecElement;
-import studio.phaseshift.metatron.isa.m.type.impl.MCode;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
+import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.machine.SwarmMachine;
 import studio.phaseshift.metatron.isa.mach.type.thread.FutureObj;
-import studio.phaseshift.metatron.isa.mach.type.ui.console.menu.ColonMenu;
+import studio.phaseshift.metatron.isa.mach.type.thread.mThread;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.mach.type.ui.tmux.Pane;
 import studio.phaseshift.metatron.isa.mach.type.ui.tmux.PaneNode;
 import studio.phaseshift.metatron.isa.mach.type.ui.tmux.SplitContainer;
 import studio.phaseshift.metatron.isa.mach.type.ui.tmux.SplitLayout;
-import studio.phaseshift.metatron.isa.mach.type.ui.tool.ExplainTool;
-import studio.phaseshift.metatron.isa.mach.type.ui.tool.InstSelectorTool;
-import studio.phaseshift.metatron.isa.mach.type.ui.tool.TraceTool;
-import studio.phaseshift.metatron.isa.mach.type.ui.tool.TypeDiffTool;
-import studio.phaseshift.metatron.isa.mach.type.ui.tool.fURISelectorTool;
-import studio.phaseshift.metatron.isa.mach.type.ui.widget.*;
+import studio.phaseshift.metatron.isa.mach.type.ui.tool.*;
+import studio.phaseshift.metatron.isa.mach.type.ui.widget.FloatingSurface;
+import studio.phaseshift.metatron.isa.mach.type.ui.widget.Utilities;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
@@ -75,6 +70,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import static org.jline.keymap.KeyMap.*;
@@ -82,16 +78,13 @@ import static studio.phaseshift.metatron.BootLoader.BOOTING;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.furi.q.QCollection.DOCQ_PATTERN;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
-import static studio.phaseshift.metatron.isa.m.mInstSet.INST_CTOR_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.START_INST_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
-
-import studio.phaseshift.metatron.isa.m.type.Fail;
-
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -100,7 +93,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_ISA_TID;
 import static studio.phaseshift.metatron.isa.mach.type.thread.VirtualThread.virtual;
 import static studio.phaseshift.metatron.isa.mach.ui.uiInstSet.UI_CONSOLE_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.HEADER_FILE;
@@ -260,6 +252,9 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                     }
                 }
             }).encoding(StandardCharsets.UTF_8).system(true).build();
+            // Register terminal with Graphitty so widgets can write without
+            // depending on Console/Terminal directly.
+            Graphitty.init(terminal.output());
             // Request extended key reporting so terminals that support it (kitty, ghostty,
             // xterm with modifyOtherKeys, iTerm2, etc.) will send distinguishable
             // sequences for Shift+Backspace and other modified keys.
@@ -326,7 +321,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
     }
 
     public void write(final Object object) {
-        terminal.writer().write(object instanceof Obj ? this.serializer.write((Obj) object) : ((Highlighter) this.reader.getHighlighter()).write(object));
+        Graphitty.writeToTerminal(object instanceof Obj ? this.serializer.write((Obj) object) : ((Highlighter) this.reader.getHighlighter()).write(object));
     }
 
     public static Terminal getTerminal() {
@@ -445,11 +440,17 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
     }
 
     /**
-     * Request a redraw of the pane layout. Thread-safe.
-     * Called by panes when their output buffer changes.
+     * Request a redraw of pane layout and floating widgets. Thread-safe.
+     * Called by panes when their output buffer changes and by floating
+     * widgets when their content updates.  The actual render is submitted
+     * to the FloatingSurface render thread and returns immediately.
      */
     public void requestRedraw() {
         this.needsRedraw.set(true);
+        final FloatingSurface surface = getFloatingSurface();
+        if (!surface.isEmpty()) {
+            surface.render();
+        }
     }
 
     /**
@@ -1245,6 +1246,10 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
         private CustomWidgets(final LineReader reader) {
             super(reader);
             getKeyMap().bind((Widget) () -> {
+                BootLoader.getExecutor().elements().filter(r -> Router.readFromSpace(r.first().uriValue().q(DOCQ_PATTERN)).toString().contains("agent")).forEach(r -> ((mThread) r.second()).stop());
+                return true;
+            }, ctrl('d'));
+            getKeyMap().bind((Widget) () -> {
                 final String current = this.reader.getBuffer().toString();
                 try {
                     final String formatted = ObjmtronSerializer.parse(current).toString();
@@ -1552,4 +1557,5 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
             buffer.delete(cursorPos - targetPos);
         }
     }
+
 }

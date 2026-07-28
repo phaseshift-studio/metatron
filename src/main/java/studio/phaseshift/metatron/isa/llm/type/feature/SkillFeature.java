@@ -18,30 +18,29 @@ import java.util.List;
 import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.SKILL;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 
 public class SkillFeature extends Feature {
 
     public SkillFeature(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
     }
-    
+
     public static void buildSkills(final Agent agent, final AiServices<AgentServices> service) {
         final List<Skill> allSkills = new ArrayList<>();
 
         // Collect skills from features that have the skill() method
         for (final Obj entry : agent.features().asLst().elements().toList()) {
-            if (!(entry instanceof Feature f)) {
-                agent.logger().warn("non-feature obj in agent features: %s", Obj.Helper.specificTypeId(entry));
-                continue;
-            }
-            final Obj skillObj = f.skill();
-            if (skillObj.isNoObj()) continue;
+            final Lst skillObj = entry instanceof Feature ? ((Feature) entry).skill() : entry.isRec() ? entry.asRec().at(SKILL).orElse(lst()) : lst();
+            if (skillObj.isNoObj() || skillObj.asLst().isEmpty()) continue;
             try {
-                final var skill = mSkill.of(skillObj.asRec()).toSkill();
-                allSkills.add(skill);
-                agent.logger().info("adding %s skill from feature %s", skill.name(), f.tid());
+                skillObj.asLst().elements().forEach(s -> {
+                    final Skill skill = mSkill.of(s.asRec()).toSkill();
+                    allSkills.add(skill);
+                    agent.logger().info("adding %s skill from feature %s", skill.name(), entry.tid());
+                });
             } catch (final Exception e) {
-                agent.logger().warn("failed to build skill from feature %s: %s", f.tid(), e.getMessage());
+                agent.logger().warn("failed to build skill from feature %s: %s", entry.tid(), e.getMessage());
             }
         }
 

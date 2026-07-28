@@ -126,7 +126,7 @@ public final class CommonRewrites {
                     // only apply when the path ends at collection level (no field/extensions)
                     // URIs with extensions (e.g., /V/1/OUT/+) represent traversals, not simple counts
                     if (!ref.isUri()) return true;
-                    final DataPath dp = DataPath.of(ref.uriValue());
+                    final DataPath dp = DataPath.withoutDB(ref.uriValue());
                     return !dp.collectionIsWildcard() && !dp.hasField() && !dp.hasExtension();
                 })
                 .matchSpacePredicate(matchSpacePredicate)
@@ -1223,5 +1223,695 @@ public final class CommonRewrites {
         }
     }
 
+    /**
+     * Functional interface for skip/offset operations that need access to the skip value.
+     *
+     * @param <S> The space type
+     */
+    @FunctionalInterface
+    public interface SkipOperation<S extends Space> {
+        /**
+         * Execute the native skip/offset operation.
+         *
+         * @param space The database space
+         * @param dp    The decomposed DataPath for the table/collection
+         * @param skip  The skip value from skip(n)
+         * @return The result (typically an Objs of rows)
+         * @throws Exception if the operation fails
+         */
+        Obj execute(S space, DataPath dp, long skip) throws Exception;
+    }
+
+    /**
+     * Create a skip (offset) optimization rewrite.
+     *
+     * <p>Optimizes {@code from(furi).skip(n)} to use native database OFFSET
+     * instead of loading all records and skipping in memory.
+     *
+     * @param spaceType    The database space type
+     * @param rewriteTID   The type ID for this specific rewrite
+     * @param skipFunction Function that executes the native skip operation (receives space, dp, and skip value)
+     * @param <S>          The space type
+     * @return The rewrite instruction
+     */
+    public static <S extends Space> Inst skipRewrite(
+            final Class<S> spaceType,
+            final fURI rewriteTID,
+            final SkipOperation<S> skipFunction) {
+        return skipRewrite(spaceType, rewriteTID, skipFunction, null);
+    }
+
+    public static <S extends Space> Inst skipRewrite(
+            final Class<S> spaceType,
+            final fURI rewriteTID,
+            final SkipOperation<S> skipFunction,
+            final BiPredicate<S, List<Inst>> matchSpacePredicate) {
+
+        return new SkipRewriteBuilder<>(spaceType, skipFunction, matchSpacePredicate)
+                .tid(rewriteTID)
+                .rng(ALL_STAR)
+                .match(FROM_INST_TID, SKIP_INST_TID)
+                .build();
+    }
+
+    /**
+     * Specialized RewriteBuilder for skip/offset operations that extracts the skip value
+     * from the skip() instruction and passes it to the optimization function.
+     */
+    private static class SkipRewriteBuilder<S extends Space> extends RewriteBuilder<S> {
+        private final SkipOperation<S> skipOperation;
+
+        SkipRewriteBuilder(final Class<S> spaceType, final SkipOperation<S> skipOperation) {
+            this(spaceType, skipOperation, null);
+        }
+
+        SkipRewriteBuilder(final Class<S> spaceType, final SkipOperation<S> skipOperation,
+                           final BiPredicate<S, List<Inst>> matchSpacePredicate) {
+            super(spaceType);
+            this.skipOperation = skipOperation;
+            this.matchSpacePredicate = matchSpacePredicate;
+            this.rewriteName = "from_skip";
+            this.optimization = (space, furi, coeff) -> null;
+        }
+
+        @Override
+        protected Function<Map<Inst, Inst>, List<Inst>> createRewriteFunction() {
+            return map -> {
+                final List<Inst> matchedInsts = new ArrayList<>(map.values());
+                final Inst fromInst = matchedInsts.get(0);
+                final Inst skipInst = matchedInsts.get(1);
+
+                final fURI oldfURI = fromInst.arg(0).asUri().uriValue();
+                final Space space = studio.phaseshift.metatron.isa.mach.type.Router.global().getSpaceFor(oldfURI);
+
+                if (!this.spaceType.isInstance(space)) {
+                    return matchedInsts.stream().map(Obj::asInst).toList();
+                }
+
+                final S typedSpace = this.spaceType.cast(space);
+
+                if (this.matchSpacePredicate != null && !this.matchSpacePredicate.test(typedSpace, matchedInsts)) {
+                    LOG.debug("matchSpacePredicate rejected skip rewrite for URI %s", oldfURI);
+                    return matchedInsts.stream().map(Obj::asInst).toList();
+                }
+
+                final fURI expandedfURI = space.redirect(oldfURI, true);
+                final DataPath dp = DataPath.withoutDB(expandedfURI);
+                final long skipValue = skipInst.arg(0).asInt().jvm();
+
+                LOG.debug("evaluating native skip operation on %s with skip %d in space %s",
+                        expandedfURI, skipValue, space);
+
+                return List.of(instC(
+                        this.rewriteTid.dom(ALL_STAR).rng(this.resultTid),
+                        lst(uri(expandedfURI), jnt(skipValue)),
+                        (lhs, inst) -> {
+                            try {
+                                return this.skipOperation.execute(typedSpace, dp, skipValue);
+                            } catch (final Exception e) {
+                                throw MTronException.of(e);
+                            }
+                        }
+                ));
+            };
+        }
+    }
+
+    /**
+     * Functional interface for offset+limit operations.
+     *
+     * @param <S> The space type
+     */
+    @FunctionalInterface
+    public interface OffsetLimitOperation<S extends Space> {
+        /**
+         * Execute the native offset+limit (pagination) operation.
+         *
+         * @param space The database space
+         * @param dp    The decomposed DataPath for the table/collection
+         * @param skip  The skip/offset value
+         * @param limit The limit value
+         * @return The result (paged rows)
+         * @throws Exception if the operation fails
+         */
+        Obj execute(S space, DataPath dp, long skip, long limit) throws Exception;
+    }
+
+    /**
+     * Create an offset+limit (pagination) optimization rewrite.
+     *
+     * <p>Optimizes {@code sql_offset.take(n)} to use native database
+     * {@code SELECT * FROM table LIMIT n OFFSET m} instead of separate
+     * offset and limit operations.
+     *
+     * <p>This rewrite composes with offsetRewrite (skipRewrite): the first
+     * rewrite turns {@code from().skip()} into {@code sql_offset}, then this
+     * rewrite fuses {@code sql_offset.take()} into a single paginated query.
+     *
+     * @param spaceType          The database space type
+     * @param offsetRewriteTID   The TID of the native offset/skip instruction to match
+     * @param rewriteTID         The TID for this rewrite's output instruction
+     * @param offsetLimitFunction Function that executes the native offset+limit operation
+     * @param <S>                The space type
+     * @return The rewrite instruction
+     */
+    public static <S extends Space> Inst offsetLimitRewrite(
+            final Class<S> spaceType,
+            final fURI offsetRewriteTID,
+            final fURI rewriteTID,
+            final OffsetLimitOperation<S> offsetLimitFunction) {
+        return offsetLimitRewrite(spaceType, offsetRewriteTID, rewriteTID, offsetLimitFunction, null);
+    }
+
+    public static <S extends Space> Inst offsetLimitRewrite(
+            final Class<S> spaceType,
+            final fURI offsetRewriteTID,
+            final fURI rewriteTID,
+            final OffsetLimitOperation<S> offsetLimitFunction,
+            final BiPredicate<S, List<Inst>> matchSpacePredicate) {
+
+        return new OffsetLimitRewriteBuilder<>(spaceType, offsetRewriteTID, offsetLimitFunction, matchSpacePredicate)
+                .tid(rewriteTID)
+                .rng(ALL_STAR)
+                .match(offsetRewriteTID, TAKE_INST_TID)
+                .build();
+    }
+
+    /**
+     * Specialized RewriteBuilder for offset+limit operations that extracts
+     * skip and limit values and fuses them into a single paginated query.
+     */
+    private static class OffsetLimitRewriteBuilder<S extends Space> extends RewriteBuilder<S> {
+        private final fURI offsetRewriteTID;
+        private final OffsetLimitOperation<S> offsetLimitOperation;
+
+        OffsetLimitRewriteBuilder(final Class<S> spaceType, final fURI offsetRewriteTID,
+                                  final OffsetLimitOperation<S> offsetLimitOperation) {
+            this(spaceType, offsetRewriteTID, offsetLimitOperation, null);
+        }
+
+        OffsetLimitRewriteBuilder(final Class<S> spaceType, final fURI offsetRewriteTID,
+                                  final OffsetLimitOperation<S> offsetLimitOperation,
+                                  final BiPredicate<S, List<Inst>> matchSpacePredicate) {
+            super(spaceType);
+            this.offsetRewriteTID = offsetRewriteTID;
+            this.offsetLimitOperation = offsetLimitOperation;
+            this.matchSpacePredicate = matchSpacePredicate;
+            this.rewriteName = "from_skip_take";
+            this.optimization = (space, furi, coeff) -> null;
+        }
+
+        @Override
+        protected Function<Map<Inst, Inst>, List<Inst>> createRewriteFunction() {
+            return map -> {
+                final List<Inst> matchedInsts = new ArrayList<>(map.values());
+                final Inst offsetInst = matchedInsts.get(0);  // native sql_offset instruction
+                final Inst takeInst = matchedInsts.get(1);    // take(n) instruction
+
+                // Extract fURI and skip value from sql_offset instruction's args: [furi, skip]
+                final Obj args = offsetInst.args();
+                if (!args.isLst() || args.asLst().count() < 2) {
+                    return matchedInsts.stream().map(Obj::asInst).toList();
+                }
+
+                final fURI furi = args.asLst().at(0).asUri().uriValue();
+                final long skipValue = args.asLst().at(1).asInt().jvm();
+                final long limitValue = takeInst.arg(0).asInt().jvm();
+
+                final Space space = studio.phaseshift.metatron.isa.mach.type.Router.global().getSpaceFor(furi);
+
+                if (!this.spaceType.isInstance(space)) {
+                    return matchedInsts.stream().map(Obj::asInst).toList();
+                }
+
+                final S typedSpace = this.spaceType.cast(space);
+
+                if (this.matchSpacePredicate != null && !this.matchSpacePredicate.test(typedSpace, matchedInsts)) {
+                    LOG.debug("matchSpacePredicate rejected offset+limit rewrite for URI %s", furi);
+                    return matchedInsts.stream().map(Obj::asInst).toList();
+                }
+
+                final DataPath dp = DataPath.withoutDB(furi);
+
+                LOG.debug("evaluating native offset+limit on %s with skip %d, limit %d in space %s",
+                        furi, skipValue, limitValue, space);
+
+                return List.of(instC(
+                        this.rewriteTid.dom(ALL_STAR).rng(this.resultTid),
+                        lst(uri(furi), jnt(skipValue), jnt(limitValue)),
+                        (lhs, inst) -> {
+                            try {
+                                return this.offsetLimitOperation.execute(typedSpace, dp, skipValue, limitValue);
+                            } catch (final Exception e) {
+                                throw MTronException.of(e, "failed to execute native offset+limit operation");
+                            }
+                        }
+                ));
+            };
+        }
+    }
+
     // Planned rewrite implementations: see docs/ai/rewrite-roadmap.md
+
+    // =========================================================================
+    //  Shared helpers
+    // =========================================================================
+
+    /**
+     * Extract column names from a select/rshift argument.
+     * Handles rec syntax {name, age}, list syntax [name, age],
+     * single URI, and single Str.
+     */
+    static List<String> extractColumnNames(final Obj fieldsArg) {
+        if (fieldsArg == null || fieldsArg.isNoObj()) {
+            return null;
+        }
+        final List<String> fields = new ArrayList<>();
+        if (fieldsArg.isRec()) {
+            for (final var rel : (Iterable<studio.phaseshift.metatron.isa.m.type.Rel>) fieldsArg.asRec().elements()::iterator) {
+                final Obj key = rel.first();
+                if (key.isUri()) fields.add(key.uriValue().name());
+                else if (key.isStr()) fields.add(key.strValue());
+                else return null;
+            }
+        } else if (fieldsArg.isLst()) {
+            for (final Obj item : fieldsArg.asLst().lstValue()) {
+                if (item.isUri()) fields.add(item.uriValue().name());
+                else if (item.isStr()) fields.add(item.strValue());
+                else return null;
+            }
+        } else if (fieldsArg.isUri()) {
+            fields.add(fieldsArg.uriValue().name());
+        } else if (fieldsArg.isStr()) {
+            fields.add(fieldsArg.strValue());
+        } else {
+            return null;
+        }
+        return fields;
+    }
+
+    // =========================================================================
+    //  WHERE + OFFSET (skip) composed rewrite
+    // =========================================================================
+
+    @FunctionalInterface
+    public interface WhereOffsetOperation<S extends Space> {
+        Obj execute(S space, DataPath dp, String filterClause, long skip) throws Exception;
+    }
+
+    public static <S extends Space> Inst whereOffsetRewrite(
+            final Class<S> spaceType,
+            final fURI whereRewriteTID,
+            final fURI rewriteTID,
+            final WhereOffsetOperation<S> whereOffsetFunction) {
+        return whereOffsetRewrite(spaceType, whereRewriteTID, rewriteTID, whereOffsetFunction, null);
+    }
+
+    public static <S extends Space> Inst whereOffsetRewrite(
+            final Class<S> spaceType,
+            final fURI whereRewriteTID,
+            final fURI rewriteTID,
+            final WhereOffsetOperation<S> whereOffsetFunction,
+            final BiPredicate<S, List<Inst>> matchSpacePredicate) {
+
+        return new WhereOffsetRewriteBuilder<>(spaceType, whereRewriteTID, whereOffsetFunction, matchSpacePredicate)
+                .tid(rewriteTID)
+                .rng(ALL_STAR)
+                .match(whereRewriteTID, SKIP_INST_TID)
+                .build();
+    }
+
+    private static class WhereOffsetRewriteBuilder<S extends Space> extends RewriteBuilder<S> {
+        private final fURI whereRewriteTID;
+        private final WhereOffsetOperation<S> whereOffsetOperation;
+
+        WhereOffsetRewriteBuilder(final Class<S> spaceType, final fURI whereRewriteTID,
+                                  final WhereOffsetOperation<S> whereOffsetOperation) {
+            this(spaceType, whereRewriteTID, whereOffsetOperation, null);
+        }
+
+        WhereOffsetRewriteBuilder(final Class<S> spaceType, final fURI whereRewriteTID,
+                                  final WhereOffsetOperation<S> whereOffsetOperation,
+                                  final BiPredicate<S, List<Inst>> matchSpacePredicate) {
+            super(spaceType);
+            this.whereRewriteTID = whereRewriteTID;
+            this.whereOffsetOperation = whereOffsetOperation;
+            this.matchSpacePredicate = matchSpacePredicate;
+            this.rewriteName = "from_where_skip";
+            this.optimization = (space, furi, coeff) -> null;
+        }
+
+        @Override
+        protected Function<Map<Inst, Inst>, List<Inst>> createRewriteFunction() {
+            return map -> {
+                final List<Inst> matchedInsts = new ArrayList<>(map.values());
+                final Inst whereInst = matchedInsts.get(0);
+                final Inst skipInst = matchedInsts.get(1);
+
+                final Obj args = whereInst.args();
+                if (!args.isLst() || args.asLst().count() < 2) {
+                    return matchedInsts.stream().map(Obj::asInst).toList();
+                }
+
+                final fURI furi = args.asLst().at(0).asUri().uriValue();
+                final String filterClause = args.asLst().at(1).asStr().jvm();
+                final long skipValue = skipInst.arg(0).asInt().jvm();
+
+                final Space space = studio.phaseshift.metatron.isa.mach.type.Router.global().getSpaceFor(furi);
+
+                if (!this.spaceType.isInstance(space)) {
+                    return matchedInsts.stream().map(Obj::asInst).toList();
+                }
+
+                final S typedSpace = this.spaceType.cast(space);
+
+                if (this.matchSpacePredicate != null && !this.matchSpacePredicate.test(typedSpace, matchedInsts)) {
+                    LOG.debug("matchSpacePredicate rejected where+offset rewrite for URI %s", furi);
+                    return matchedInsts.stream().map(Obj::asInst).toList();
+                }
+
+                final DataPath dp = DataPath.withoutDB(furi);
+
+                LOG.debug("evaluating native where+offset on %s with clause '%s' and skip %d in space %s",
+                        furi, filterClause, skipValue, space);
+
+                return List.of(instC(
+                        this.rewriteTid.dom(ALL_STAR).rng(this.resultTid),
+                        lst(uri(furi), str(filterClause), jnt(skipValue)),
+                        (lhs, inst) -> {
+                            try {
+                                return this.whereOffsetOperation.execute(typedSpace, dp, filterClause, skipValue);
+                            } catch (final Exception e) {
+                                throw MTronException.of(e, "failed to execute native where+offset operation");
+                            }
+                        }
+                ));
+            };
+        }
+    }
+
+    // =========================================================================
+    //  WHERE + OFFSET + LIMIT composed rewrite
+    // =========================================================================
+
+    @FunctionalInterface
+    public interface WhereOffsetLimitOperation<S extends Space> {
+        Obj execute(S space, DataPath dp, String filterClause, long skip, long limit) throws Exception;
+    }
+
+    public static <S extends Space> Inst whereOffsetLimitRewrite(
+            final Class<S> spaceType,
+            final fURI whereOffsetRewriteTID,
+            final fURI rewriteTID,
+            final WhereOffsetLimitOperation<S> whereOffsetLimitFunction) {
+        return whereOffsetLimitRewrite(spaceType, whereOffsetRewriteTID, rewriteTID, whereOffsetLimitFunction, null);
+    }
+
+    public static <S extends Space> Inst whereOffsetLimitRewrite(
+            final Class<S> spaceType,
+            final fURI whereOffsetRewriteTID,
+            final fURI rewriteTID,
+            final WhereOffsetLimitOperation<S> whereOffsetLimitFunction,
+            final BiPredicate<S, List<Inst>> matchSpacePredicate) {
+
+        return new WhereOffsetLimitRewriteBuilder<>(spaceType, whereOffsetRewriteTID, whereOffsetLimitFunction, matchSpacePredicate)
+                .tid(rewriteTID)
+                .rng(ALL_STAR)
+                .match(whereOffsetRewriteTID, TAKE_INST_TID)
+                .build();
+    }
+
+    private static class WhereOffsetLimitRewriteBuilder<S extends Space> extends RewriteBuilder<S> {
+        private final fURI whereOffsetRewriteTID;
+        private final WhereOffsetLimitOperation<S> whereOffsetLimitOperation;
+
+        WhereOffsetLimitRewriteBuilder(final Class<S> spaceType, final fURI whereOffsetRewriteTID,
+                                       final WhereOffsetLimitOperation<S> whereOffsetLimitOperation) {
+            this(spaceType, whereOffsetRewriteTID, whereOffsetLimitOperation, null);
+        }
+
+        WhereOffsetLimitRewriteBuilder(final Class<S> spaceType, final fURI whereOffsetRewriteTID,
+                                       final WhereOffsetLimitOperation<S> whereOffsetLimitOperation,
+                                       final BiPredicate<S, List<Inst>> matchSpacePredicate) {
+            super(spaceType);
+            this.whereOffsetRewriteTID = whereOffsetRewriteTID;
+            this.whereOffsetLimitOperation = whereOffsetLimitOperation;
+            this.matchSpacePredicate = matchSpacePredicate;
+            this.rewriteName = "from_where_skip_take";
+            this.optimization = (space, furi, coeff) -> null;
+        }
+
+        @Override
+        protected Function<Map<Inst, Inst>, List<Inst>> createRewriteFunction() {
+            return map -> {
+                final List<Inst> matchedInsts = new ArrayList<>(map.values());
+                final Inst whereOffsetInst = matchedInsts.get(0);
+                final Inst takeInst = matchedInsts.get(1);
+
+                final Obj args = whereOffsetInst.args();
+                if (!args.isLst() || args.asLst().count() < 3) {
+                    return matchedInsts.stream().map(Obj::asInst).toList();
+                }
+
+                final fURI furi = args.asLst().at(0).asUri().uriValue();
+                final String filterClause = args.asLst().at(1).asStr().jvm();
+                final long skipValue = args.asLst().at(2).asInt().jvm();
+                final long limitValue = takeInst.arg(0).asInt().jvm();
+
+                final Space space = studio.phaseshift.metatron.isa.mach.type.Router.global().getSpaceFor(furi);
+
+                if (!this.spaceType.isInstance(space)) {
+                    return matchedInsts.stream().map(Obj::asInst).toList();
+                }
+
+                final S typedSpace = this.spaceType.cast(space);
+
+                if (this.matchSpacePredicate != null && !this.matchSpacePredicate.test(typedSpace, matchedInsts)) {
+                    LOG.debug("matchSpacePredicate rejected where+offset+limit rewrite for URI %s", furi);
+                    return matchedInsts.stream().map(Obj::asInst).toList();
+                }
+
+                final DataPath dp = DataPath.withoutDB(furi);
+
+                LOG.debug("evaluating native where+offset+limit on %s with clause '%s', skip %d, limit %d in space %s",
+                        furi, filterClause, skipValue, limitValue, space);
+
+                return List.of(instC(
+                        this.rewriteTid.dom(ALL_STAR).rng(this.resultTid),
+                        lst(uri(furi), str(filterClause), jnt(skipValue), jnt(limitValue)),
+                        (lhs, inst) -> {
+                            try {
+                                return this.whereOffsetLimitOperation.execute(typedSpace, dp, filterClause, skipValue, limitValue);
+                            } catch (final Exception e) {
+                                throw MTronException.of(e, "failed to execute native where+offset+limit operation");
+                            }
+                        }
+                ));
+            };
+        }
+    }
+
+    // =========================================================================
+    //  ORDER BY rewrite
+    // =========================================================================
+
+    @FunctionalInterface
+    public interface OrderOperation<S extends Space> {
+        Obj execute(S space, DataPath dp, List<String> columns) throws Exception;
+    }
+
+    public static <S extends Space> Inst orderRewrite(
+            final Class<S> spaceType,
+            final fURI rewriteTID,
+            final OrderOperation<S> orderFunction) {
+        return orderRewrite(spaceType, rewriteTID, orderFunction, null);
+    }
+
+    public static <S extends Space> Inst orderRewrite(
+            final Class<S> spaceType,
+            final fURI rewriteTID,
+            final OrderOperation<S> orderFunction,
+            final BiPredicate<S, List<Inst>> matchSpacePredicate) {
+
+        return new OrderRewriteBuilder<>(spaceType, orderFunction, matchSpacePredicate)
+                .tid(rewriteTID)
+                .rng(ALL_STAR)
+                .match(FROM_INST_TID, ORDER_INST_TID)
+                .build();
+    }
+
+    private static class OrderRewriteBuilder<S extends Space> extends RewriteBuilder<S> {
+        private final OrderOperation<S> orderOperation;
+
+        OrderRewriteBuilder(final Class<S> spaceType, final OrderOperation<S> orderOperation) {
+            this(spaceType, orderOperation, null);
+        }
+
+        OrderRewriteBuilder(final Class<S> spaceType, final OrderOperation<S> orderOperation,
+                            final BiPredicate<S, List<Inst>> matchSpacePredicate) {
+            super(spaceType);
+            this.orderOperation = orderOperation;
+            this.matchSpacePredicate = matchSpacePredicate;
+            this.rewriteName = "from_order";
+            this.optimization = (space, furi, coeff) -> null;
+        }
+
+        @Override
+        protected Function<Map<Inst, Inst>, List<Inst>> createRewriteFunction() {
+            return map -> {
+                final List<Inst> matchedInsts = new ArrayList<>(map.values());
+                final Inst fromInst = matchedInsts.get(0);
+                final Inst orderInst = matchedInsts.get(1);
+
+                // Extract columns from order's arg — unwrap select()/rshift() wrapper
+                final Obj columnSpecArg = orderInst.arg(0);
+                final Obj columnSpec;
+                if (columnSpecArg.isInst()) {
+                    // order(select(name)) or order(rshift(name))
+                    // → columnSpec is select/rshift's arg(0)
+                    columnSpec = columnSpecArg.asInst().arg(0);
+                } else {
+                    columnSpec = columnSpecArg;
+                }
+                final List<String> columns = extractColumnNames(columnSpec);
+
+                if (columns == null || columns.isEmpty()) {
+                    LOG.debug("order columns too complex for native translation: %s", columnSpecArg);
+                    return matchedInsts.stream().map(Obj::asInst).toList();
+                }
+
+                final fURI oldfURI = fromInst.arg(0).asUri().uriValue();
+                final Space space = studio.phaseshift.metatron.isa.mach.type.Router.global().getSpaceFor(oldfURI);
+
+                if (!this.spaceType.isInstance(space)) {
+                    return matchedInsts.stream().map(Obj::asInst).toList();
+                }
+
+                final S typedSpace = this.spaceType.cast(space);
+
+                if (this.matchSpacePredicate != null && !this.matchSpacePredicate.test(typedSpace, matchedInsts)) {
+                    LOG.debug("matchSpacePredicate rejected order rewrite for URI %s", oldfURI);
+                    return matchedInsts.stream().map(Obj::asInst).toList();
+                }
+
+                final fURI expandedfURI = space.redirect(oldfURI, true);
+                final DataPath dp = DataPath.withoutDB(expandedfURI);
+
+                LOG.debug("evaluating native order on %s by %s in space %s", expandedfURI, columns, space);
+
+                return List.of(instC(
+                        this.rewriteTid.dom(ALL_STAR).rng(this.resultTid),
+                        lst(uri(expandedfURI), lst(columns.stream().map(c -> (Obj) str(c)).toList())),
+                        (lhs, inst) -> {
+                            try {
+                                return this.orderOperation.execute(typedSpace, dp, columns);
+                            } catch (final Exception e) {
+                                throw MTronException.of(e, "failed to execute native order operation");
+                            }
+                        }
+                ));
+            };
+        }
+    }
+
+    // =========================================================================
+    //  DISTINCT / DEDUP rewrite
+    // =========================================================================
+
+    @FunctionalInterface
+    public interface DedupOperation<S extends Space> {
+        Obj execute(S space, DataPath dp, List<String> columns) throws Exception;
+    }
+
+    public static <S extends Space> Inst dedupRewrite(
+            final Class<S> spaceType,
+            final fURI rewriteTID,
+            final DedupOperation<S> dedupFunction) {
+        return dedupRewrite(spaceType, rewriteTID, dedupFunction, null);
+    }
+
+    public static <S extends Space> Inst dedupRewrite(
+            final Class<S> spaceType,
+            final fURI rewriteTID,
+            final DedupOperation<S> dedupFunction,
+            final BiPredicate<S, List<Inst>> matchSpacePredicate) {
+
+        return new DedupRewriteBuilder<>(spaceType, dedupFunction, matchSpacePredicate)
+                .tid(rewriteTID)
+                .rng(ALL_STAR)
+                .match(FROM_INST_TID, DEDUP_INST_TID)
+                .build();
+    }
+
+    private static class DedupRewriteBuilder<S extends Space> extends RewriteBuilder<S> {
+        private final DedupOperation<S> dedupOperation;
+
+        DedupRewriteBuilder(final Class<S> spaceType, final DedupOperation<S> dedupOperation) {
+            this(spaceType, dedupOperation, null);
+        }
+
+        DedupRewriteBuilder(final Class<S> spaceType, final DedupOperation<S> dedupOperation,
+                            final BiPredicate<S, List<Inst>> matchSpacePredicate) {
+            super(spaceType);
+            this.dedupOperation = dedupOperation;
+            this.matchSpacePredicate = matchSpacePredicate;
+            this.rewriteName = "from_dedup";
+            this.optimization = (space, furi, coeff) -> null;
+        }
+
+        @Override
+        protected Function<Map<Inst, Inst>, List<Inst>> createRewriteFunction() {
+            return map -> {
+                final List<Inst> matchedInsts = new ArrayList<>(map.values());
+                final Inst fromInst = matchedInsts.get(0);
+                final Inst dedupInst = matchedInsts.get(1);
+
+                // Extract columns from dedup's arg — unwrap select()/rshift() wrapper
+                final Obj columnSpecArg = dedupInst.arg(0);
+                final Obj columnSpec;
+                if (columnSpecArg.isInst()) {
+                    columnSpec = columnSpecArg.asInst().arg(0);
+                } else {
+                    columnSpec = columnSpecArg;
+                }
+                final List<String> columns = extractColumnNames(columnSpec);
+
+                if (columns == null || columns.isEmpty()) {
+                    LOG.debug("dedup columns too complex for native translation: %s", columnSpecArg);
+                    return matchedInsts.stream().map(Obj::asInst).toList();
+                }
+
+                final fURI oldfURI = fromInst.arg(0).asUri().uriValue();
+                final Space space = studio.phaseshift.metatron.isa.mach.type.Router.global().getSpaceFor(oldfURI);
+
+                if (!this.spaceType.isInstance(space)) {
+                    return matchedInsts.stream().map(Obj::asInst).toList();
+                }
+
+                final S typedSpace = this.spaceType.cast(space);
+
+                if (this.matchSpacePredicate != null && !this.matchSpacePredicate.test(typedSpace, matchedInsts)) {
+                    LOG.debug("matchSpacePredicate rejected dedup rewrite for URI %s", oldfURI);
+                    return matchedInsts.stream().map(Obj::asInst).toList();
+                }
+
+                final fURI expandedfURI = space.redirect(oldfURI, true);
+                final DataPath dp = DataPath.withoutDB(expandedfURI);
+
+                LOG.debug("evaluating native dedup on %s by %s in space %s", expandedfURI, columns, space);
+
+                return List.of(instC(
+                        this.rewriteTid.dom(ALL_STAR).rng(this.resultTid),
+                        lst(uri(expandedfURI), lst(columns.stream().map(c -> (Obj) str(c)).toList())),
+                        (lhs, inst) -> {
+                            try {
+                                return this.dedupOperation.execute(typedSpace, dp, columns);
+                            } catch (final Exception e) {
+                                throw MTronException.of(e, "failed to execute native dedup operation");
+                            }
+                        }
+                ));
+            };
+        }
+    }
 }

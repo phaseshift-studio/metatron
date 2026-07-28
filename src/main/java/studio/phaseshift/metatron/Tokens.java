@@ -94,13 +94,14 @@ public final class Tokens {
     public static final String TOOLS = "tools";
     public static final String TOOL_ARGUMENTS = "arguments";
     // -- Feature hook tokens ---------------------------------------------------
-    public static final String ON_BEFORE_CHAT = "onBeforeChat";
-    public static final String ON_PARTIAL_RESPONSE = "onPartialResponse";
-    public static final String ON_PARTIAL_THINKING = "onPartialThinking";
-    public static final String ON_PARTIAL_TOOL_CALL = "onPartialToolCall";
-    public static final String BEFORE_TOOL_EXECUTION = "beforeToolExecution";
-    public static final String ON_TOOL_EXECUTED = "onToolExecuted";
-    public static final String ON_COMPLETE_RESPONSE = "onCompleteResponse";
+    public static final String ON_AGENT_CTOR = "on_agent_ctor";
+    public static final String ON_BEFORE_CHAT = "on_before_chat";
+    public static final String ON_PARTIAL_RESPONSE = "on_partial_response";
+    public static final String ON_PARTIAL_THINKING = "on_partial_thinking";
+    public static final String ON_PARTIAL_TOOL_CALL = "on_partial_tool_call";
+    public static final String BEFORE_TOOL_EXECUTION = "before_tool_execution";
+    public static final String ON_TOOL_EXECUTED = "on_tool_executed";
+    public static final String ON_COMPLETE_RESPONSE = "on_complete_response";
     public static final String PROMPT = "prompt";
     public static final String RESOURCE = "resource";
     public static final String RESPONSE = "response";

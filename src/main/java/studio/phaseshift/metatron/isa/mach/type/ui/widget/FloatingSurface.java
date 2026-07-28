@@ -19,7 +19,6 @@
 package studio.phaseshift.metatron.isa.mach.type.ui.widget;
 
 import org.jline.terminal.Terminal;
-import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.isa.mach.type.ui.Widget;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 
@@ -82,18 +81,102 @@ public class FloatingSurface {
 
     private final Terminal terminal;
     private final Map<Widget<?>, Slot> slots = new java.util.concurrent.ConcurrentHashMap<>();
-    private final java.util.concurrent.Executor renderExecutor = BootLoader.getExecutor();
-            /*java.util.concurrent.Executors.newSingleThreadExecutor(r -> {
-                final Thread t = new Thread(r, "floating-surface-render");
-                t.setDaemon(true);
-                return t;
-            });*/
+
+    // ── Render thread + queue ──────────────────────────────────────
+    // ALL terminal writes are serialized through this single daemon.
+    // Console output:  submitAndWait  (blocks caller until written)
+    // Widget renders:  submit         (fire-and-forget, coalesced)
+
+    private final java.util.concurrent.BlockingQueue<Runnable> renderQueue =
+            new java.util.concurrent.LinkedBlockingQueue<>();
+    private final Thread renderThread;
+    private volatile boolean running = true;
+
+    /** Coalesce rapid-fire render() calls: only one render task can be
+     *  queued at a time.  After it completes, the next render() call
+     *  will queue a fresh task with the latest widget state. */
+    private final java.util.concurrent.atomic.AtomicBoolean renderQueued =
+            new java.util.concurrent.atomic.AtomicBoolean(false);
+
+    {
+        renderThread = new Thread(() -> {
+            while (running) {
+                try {
+                    renderQueue.take().run();
+                } catch (final InterruptedException e) {
+                    if (!running) break;
+                } catch (final Throwable t) {
+                    // Never let the render thread die — an uncaught exception
+                    // would silently kill the daemon and stall every caller
+                    // blocked in submitAndWait.
+                    System.err.println("[terminal-writer] task threw: " + t.getMessage());
+                }
+            }
+            Runnable tail;
+            while ((tail = renderQueue.poll()) != null) {
+                try { tail.run(); } catch (final Throwable t) { /* drain quietly */ }
+            }
+        }, "terminal-writer");
+        renderThread.setDaemon(true);
+        renderThread.start();
+    }
+
+    /** Fire-and-forget: enqueue a task for the render thread. */
+    private void submit(final Runnable task) {
+        this.renderQueue.offer(task);
+    }
+
+    /** Maximum seconds to wait for the render thread before falling back
+     *  to a direct terminal write.  Kept short because the calling thread
+     *  (often the console REPL) freezes while waiting. */
+    private static final long SUBMIT_TIMEOUT_SECONDS = 3;
+
+    /** Enqueue a task and block until it completes.  If the render thread
+     *  is stalled (e.g. blocked on a slow Router write inside format()),
+     *  falls back to a direct write after the timeout. */
+    private void submitAndWait(final Runnable task) {
+        if (Thread.currentThread() == this.renderThread) {
+            task.run();
+            return;
+        }
+        final var latch = new java.util.concurrent.CountDownLatch(1);
+        this.renderQueue.offer(() -> {
+            try { task.run(); } finally { latch.countDown(); }
+        });
+        try {
+            if (!latch.await(SUBMIT_TIMEOUT_SECONDS, java.util.concurrent.TimeUnit.SECONDS)) {
+                System.err.println("[terminal-writer] timed out — direct write");
+                synchronized (this.terminal) { task.run(); }
+            }
+        } catch (final InterruptedException e) {
+            Thread.currentThread().interrupt();
+            synchronized (this.terminal) { task.run(); }
+        }
+    }
+
+    /**
+     * Write text at the current cursor position and block until complete.
+     * This is the single entry point for console output — log messages,
+     * prompts, agent responses — all serialized on the render thread.
+     *
+     * <p>The text arrives already Graphitty-processed by the bridge, so
+     * we write it directly without a second expansion pass.
+     */
+    public void writeToTerminal(final String text) {
+        submitAndWait(() -> {
+            this.terminal.writer().print(text);
+            this.terminal.writer().flush();
+        });
+    }
 
     /**
      * Create a floating surface that renders to the given terminal.
      */
     public FloatingSurface(final Terminal terminal) {
         this.terminal = terminal;
+        // Route ALL terminal writes through our render thread so widget
+        // push/pop cursor sequences are never interleaved with console output.
+        Graphitty.setTerminalWriter(this::writeToTerminal);
     }
 
     // -----------------------------------------------------------------
@@ -166,18 +249,24 @@ public class FloatingSurface {
     }
 
     /**
-     * Render all floating widgets at their pinned positions.
-     *
-     * <p>Uses ANSI save/restore cursor ({@code \033[s} / {@code \033[u}) so the
-     * caller's cursor position is preserved.  Each widget's content is drawn
-     * with absolute cursor positioning and clipped to the terminal width.
-     * Leftover lines from a previous taller render are cleared automatically.
+     * Render all floating widgets at their pinned positions.  Submits
+     * asynchronously; coalesces rapid calls so the queue never fills
+     * with redundant render tasks that would starve console writes.
      */
     public void render() {
         if (this.slots.isEmpty()) return;
-        this.renderExecutor.execute(this::renderInternal);
+        if (!this.renderQueued.compareAndSet(false, true)) return;
+        submit(() -> {
+            try {
+                renderInternal();
+            } finally {
+                this.renderQueued.set(false);
+            }
+        });
     }
 
+    /** Runs on the render thread.  Builds save-cursor + widgets + restore-cursor
+     *  in one StringBuilder, expands {{X}} codes, and writes atomically. */
     private void renderInternal() {
         if (this.slots.isEmpty()) return;
         final int termWidth = this.terminal.getWidth();
@@ -192,7 +281,28 @@ public class FloatingSurface {
 
         sb.append("\033[u"); // restore cursor
 
-        Graphitty.out(this.terminal.output(), sb.toString());
+        // Process {{X}} codes → ANSI, then write directly (bypass bridge)
+        final String processed = Graphitty.string(sb.toString());
+        synchronized (this.terminal) {
+            this.terminal.writer().print(processed);
+            this.terminal.writer().flush();
+        }
+    }
+
+    /**
+     * Shut down the render thread.  After this, no more terminal writes
+     * will be processed.
+     */
+    public void shutdown() {
+        this.running = false;
+        this.renderThread.interrupt();
+    }
+
+    /**
+     * @return true if the given widget is currently pinned to this surface
+     */
+    public boolean contains(final Widget<?> widget) {
+        return this.slots.containsKey(widget);
     }
 
     /**
@@ -210,7 +320,6 @@ public class FloatingSurface {
             clearSlot(slot);
         }
         this.slots.clear();
-        this.terminal.writer().flush();
     }
 
     // -----------------------------------------------------------------
@@ -246,18 +355,35 @@ public class FloatingSurface {
             effectiveHeight = lines.length;
         }
 
-        // Resolve anchored position using capped height
+        // Snapshot the old render region before resolve() mutates the slot.
+        // Bottom-anchored widgets shift lastRow when height changes, so we
+        // must use the pre-resolve coordinates for erasure.
+        final int oldLastRow = slot.lastRow;
+        final int oldLastCol = slot.lastCol;
+        final int oldPrevHeight = slot.prevHeight;
+
         slot.resolve(termHeight, termWidth, effectiveHeight);
 
         final int maxWidth = Math.max(1, termWidth - slot.lastCol + 1);
 
+        // Erase the old render region.  Clearing and rendering share one
+        // StringBuilder (single atomic terminal write) so there is no flicker.
+        if (oldPrevHeight > 0 && oldLastRow > 0) {
+            final int clearCol = oldLastCol > 0 ? oldLastCol : slot.lastCol;
+            for (int r = 0; r < oldPrevHeight; r++) {
+                sb.append("\033[").append(oldLastRow + r)
+                  .append(";").append(clearCol).append("H");
+                sb.append("\033[K");
+            }
+        }
+
+        // Buffer zone: keep the row directly above the widget clean.
         if (slot.lastRow > 1) {
             sb.append("\033[").append(slot.lastRow - 1).append(";").append(slot.lastCol).append("H");
             sb.append("\033[K");
         }
 
-        int i;
-        for (i = 0; i < lines.length; i++) {
+        for (int i = 0; i < lines.length; i++) {
             sb.append("\033[").append(slot.lastRow + i).append(";").append(slot.lastCol).append("H");
             sb.append("\033[K");
             final String line = lines[i];
@@ -269,12 +395,6 @@ public class FloatingSurface {
             }
         }
 
-        // Clear leftover lines from a previous taller render
-        for (; i < slot.prevHeight; i++) {
-            sb.append("\033[").append(slot.lastRow + i).append(";").append(slot.lastCol).append("H");
-            sb.append("\033[K");
-        }
-
         slot.prevHeight = effectiveHeight;
     }
 
@@ -283,20 +403,24 @@ public class FloatingSurface {
      */
     private void clearSlot(final Slot slot) {
         if (slot.prevHeight <= 0) return;
-        final var sb = new StringBuilder(64);
-        for (int i = 0; i < slot.prevHeight; i++) {
-            sb.append("\033[").append(slot.lastRow + i).append(";").append(slot.lastCol).append("H");
-            sb.append("\033[K");
-        }
-        Graphitty.out(this.terminal.output(), sb.toString());
-        this.terminal.writer().flush();
+        submitAndWait(() -> {
+            final var sb = new StringBuilder(64);
+            for (int i = 0; i < slot.prevHeight; i++) {
+                sb.append("\033[").append(slot.lastRow + i).append(";").append(slot.lastCol).append("H");
+                sb.append("\033[K");
+            }
+            synchronized (this.terminal) {
+                this.terminal.writer().print(sb.toString());
+                this.terminal.writer().flush();
+            }
+        });
     }
 
     // -----------------------------------------------------------------
     // Slot: position mode + render-time resolution + height tracking
     // -----------------------------------------------------------------
 
-    private static final class Slot {
+    static final class Slot {
         // ---- fixed mode ----
         final Integer fixedRow;
         final Integer fixedCol;

@@ -362,7 +362,7 @@ public class Pane extends JRec<Pane> implements PaneNode, Stylable<Pane> {
         sb.append(border.bottomRightCorner());
         sb.append("{{X}}");
 
-        terminal.writer().print(Graphitty.string(sb.toString()));
+        Graphitty.out(terminal.output(), sb.toString());
         this.needsRedraw = false;
     }
 
@@ -418,7 +418,7 @@ public class Pane extends JRec<Pane> implements PaneNode, Stylable<Pane> {
             row++;
         }
 
-        terminal.writer().print(Graphitty.string(sb.toString()));
+        Graphitty.out(terminal.output(), sb.toString());
         terminal.writer().flush();
         this.needsRedraw = false;
     }

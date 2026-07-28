@@ -870,6 +870,7 @@ public class mInstSet extends AbstractInstSet {
                 Sugar.prefix("^*", List.of(M_ISA_INST_TID.extend("auto_to")), 0),
                 Sugar.prefix("!*", List.of(AUTO_FROM_INST_TID), 1),
                 Sugar.prefix("!", List.of(AUTO_INST_TID), 1),
+                Sugar.prefix("~", List.of(THREAD_INST_TID), 1),
                 Sugar.infix(" & ", List.of(AND_INST_TID)),
                 Sugar.infix(" | ", List.of(OR_INST_TID))));
     }

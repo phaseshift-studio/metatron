@@ -2,11 +2,7 @@ package studio.phaseshift.metatron.isa.llm.type.feature;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
-import studio.phaseshift.metatron.isa.m.type.Fail;
-import studio.phaseshift.metatron.isa.m.type.Lst;
-import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.Rec;
-import studio.phaseshift.metatron.isa.m.type.Str;
+import studio.phaseshift.metatron.isa.m.type.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,7 +13,6 @@ import static studio.phaseshift.metatron.isa.llm.type.Agent.res;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
@@ -87,13 +82,13 @@ public class LoopFeature extends Feature {
     }
 
     @Override
-    public Obj skill() {
+    public Lst skill() {
         final String instructions = LOOP_FEATURE_INSTRUCTIONS
                 .replace("%%%1", this.maxLoops > 0 ? this.maxLoops + "" : "<no limit>")
                 .replace("%%%2", this.maxTimeMillis > 0 ? this.maxTimeMillis + "" : "<no limit>");
-        return rec(uri(NAME), uri("loop"),
+        return lst(rec(uri(NAME), uri("loop"),
                 uri(DESC), str("Multi-pass reasoning loop with iteration control and polling support"),
-                uri(CONTENT), str(instructions));
+                uri(CONTENT), str(instructions)));
     }
 
     @Override

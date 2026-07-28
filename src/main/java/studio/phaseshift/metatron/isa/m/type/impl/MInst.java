@@ -24,6 +24,7 @@ import studio.phaseshift.metatron.isa.m.type.*;
 
 import java.util.Objects;
 import java.util.function.BiFunction;
+import java.util.function.Function;
 
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
@@ -61,6 +62,10 @@ public class MInst extends MObj implements Inst {
     }
 
     public static Inst instC(final fURI tid, final Poly args, final BiFunction<Obj, Inst, Obj> f) {
+        return new MInst(Triplet.with(args, Inst.f.of(f), NoObj.noobj()), tid, null);
+    }
+
+    public static Inst instC(final fURI tid, final Poly args, final Function<Obj, Obj> f) {
         return new MInst(Triplet.with(args, Inst.f.of(f), NoObj.noobj()), tid, null);
     }
 
