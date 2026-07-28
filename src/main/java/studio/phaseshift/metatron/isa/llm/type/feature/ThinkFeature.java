@@ -22,22 +22,18 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Str;
-import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import static studio.phaseshift.metatron.Tokens.THINK;
 import static studio.phaseshift.metatron.Tokens.TO;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class ThinkFeature extends Feature {
-    final AtomicBoolean isThinking = new AtomicBoolean(false);
     private StringBuilder buffer = new StringBuilder();
 
     public ThinkFeature(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
@@ -45,32 +41,19 @@ public class ThinkFeature extends Feature {
     }
 
     @Override
-    public Obj onBeforeChat(final Agent agent) {
-        this.isThinking.set(false);
-        this.buffer = new StringBuilder();
-        return noobj();
+    public void onPartialThinking(final Agent agent, final Str text) {
+        this.buffer.append(text.strValue());
+        if (this.buffer.length() > 25) {
+            agent.feature(THINK).asRec().at(f(THINK).extend(TO)).apply(str(buffer.toString()));
+            this.buffer = new StringBuilder();
+
+        }
     }
 
     @Override
-    public void onPartialThinking(final Agent agent, final Str text) {
-        if (!this.isThinking.getAndSet(true)) {
-            //this.logger().none(Graphitty.sillyPrint("\nthinking...", true, true));
-            agent.feature(THINK).asRec().at(f(THINK).extend(TO)).apply(str("\n\n"));
-        }
-        // Apply the thought to whatever handler is configured at /feature/think
-        this.buffer.append(text.strValue());
-        if (this.buffer.length() > 1) {
-            agent.feature(THINK).asRec().at(f(THINK).extend(TO)).apply(str(buffer.toString()));
-            this.buffer = new StringBuilder();
-
-        }
-    }
-
-    /* @Override
     public void onPartialResponse(final Agent agent, final Str text) {
-        if (!this.buffer.isEmpty()) {
-            agent.feature(THINK).asRec().at(f(THINK).extend(TO)).apply(str(buffer.toString()));
-            this.buffer = new StringBuilder();
-        }
-    }*/
+        this.buffer.append("\n\n");
+        agent.feature(THINK).asRec().at(f(THINK).extend(TO)).apply(str(buffer.toString()));
+        this.buffer = new StringBuilder();
+    }
 }

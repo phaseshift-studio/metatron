@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -101,7 +101,7 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
     }
 
     public F repeat_(final Obj obj) {
-        return this.addInst(instB(mInstSet.REPEAT_INST_TID, obj.<Poly<?,?>>as()));
+        return this.addInst(instB(mInstSet.REPEAT_INST_TID, obj.<Poly<?, ?>>as()));
     }
 
     public F end_() {
@@ -394,7 +394,7 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
     }
 
     public F swap_(final Obj obj) {
-        return this.addInst(instB(mInstSet.SWAP_TID, lst(obj)));
+        return this.addInst(instB(mInstSet.SWAP_INST_TID, lst(obj)));
     }
 
     public F print_(final Obj... obj) {
@@ -727,7 +727,7 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
         }
 
         public static <F extends mFluent<F>> F auto_from_(final Uri uri, final Obj defaultObj) {
-            if(null == uri)
+            if (null == uri)
                 throw MTronException.of("uri can not be null");
             return new mFluent<F>().auto_from_(uri, defaultObj);
         }
@@ -737,7 +737,7 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
         }
 
         public static <F extends mFluent<F>> F auto_from_(final fURI uri) {
-            if(null == uri)
+            if (null == uri)
                 throw MTronException.of("uri can not be null");
             return auto_from_(uri.toUri());
         }

@@ -277,7 +277,7 @@ public class Graphitty {
                     this.out.write(Character.toString(buffer.charAt(i)).getBytes(StandardCharsets.UTF_8));
                     continue;
                 }
-                if (buffer.charAt(i) == '\\') {
+                if (buffer.charAt(i) == '\\' && i + 1 < bufferLength) {
                     final char j = buffer.charAt(i + 1);
                     if ('n' == j) {
                         this.newLine();
@@ -297,7 +297,7 @@ public class Graphitty {
                     // final boolean end = buffer.charAt(i) == '/';
                     // if (end) i++;
                     for (int m = i; m < bufferLength; m++) {
-                        if (buffer.charAt(m) == '}' && buffer.charAt(m + 1) == '}') {
+                        if (m + 1 < bufferLength && buffer.charAt(m) == '}' && buffer.charAt(m + 1) == '}') {
                             i += 2;
                             break;
                         }
@@ -305,7 +305,9 @@ public class Graphitty {
                         i = m;
                     }
                     if (this.ansiOn) {
-                        Stream.of(rule.toString().split(RULE_SEPARATOR)).forEach(rulePiece -> {
+                        Stream.of(rule.toString().split(RULE_SEPARATOR))
+                                .filter(p -> !p.isEmpty())
+                                .forEach(rulePiece -> {
                             if (rulePiece.charAt(0) == '/') {
                                 final String closeRule = rulePiece.substring(1);
                                 final String openRule = this.rewriteStack.pop();

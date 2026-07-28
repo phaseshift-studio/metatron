@@ -187,7 +187,7 @@ agent::[name     => 'dr.stynx',
                      audit_feature::::[on_agent_ctor => inst(a=>agent::T) {  
                                                           accordion::[title => "audit", 
                                                                       body  => "",
-                                                                      style => style::[anchor=>bottom_right,width=>65,height=>20,left=>-2,top=>10,foreground =>"{{y}}"]]@<audit_widget> },
+                                                                      style => style::[anchor=>bottom_right,width=>65,height=>30,left=>-2,top=>10,foreground =>"{{y}}"]]@<audit_widget> },
                                        to            => inst(a=>str::T){ @<audit_widget>>>=[body=>+*a].display() }],
                      system_feature:::[              => ]]]@<dr>; 
 
