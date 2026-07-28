@@ -81,11 +81,13 @@ public class Agent extends MRec {
     private final List<String> systemMessages = new ArrayList<>();
     private final AtomicReference<Tuple.Pair<fURI, fURI>> currentHook = new AtomicReference<>(null);
     final AtomicBoolean interrupt = new AtomicBoolean(false);
+    final AtomicBoolean first = new AtomicBoolean(true);
     /**
      * The current user message — single source of truth, mutable by features.
      */
     private String userMessage;
     protected final GraphittyLogger LOG = Graphitty.log(this);
+
 
     public Agent(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(new ConcurrentHashMap<>(jvm), tid, vid);
@@ -185,15 +187,15 @@ public class Agent extends MRec {
      */
     private void dispatchHook(final Rec feature, final String hookKey, final Obj... args) {
         try {
-            if (!hookKey.equals("onError"))
+            if (!hookKey.equals(ON_ERROR))
                 this.currentHook.set(Tuple.Pair.with(feature.tid(), f(hookKey)));
             feature.at(uri(hookKey)).asInst().args(lst(args)).apply(this);
         } catch (final Exception e) {
             LOG.error(e);
             if (feature instanceof studio.phaseshift.metatron.isa.llm.type.feature.Feature) {
                 ((studio.phaseshift.metatron.isa.llm.type.feature.Feature) feature).onError(this, fail(e));
-            } else if (feature.has("onError")) {
-                feature.at("onError").apply(fail(e).caught());
+            } else if (feature.has(ON_ERROR)) {
+                feature.at(ON_ERROR).apply(fail(e).caught());
             }
         }
     }
@@ -211,6 +213,8 @@ public class Agent extends MRec {
     public Obj chat(final String message, final Rec responseFormat) {
         // final StringBuilder response = new StringBuilder();
         this.interrupt.set(false);
+        if (this.first.getAndSet(false))
+            this.features().elements().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_AGENT_CTOR, this));
         Router.global().stats().ioStats().incrBytesSent(message.getBytes().length);
         final CountDownLatch latch = new CountDownLatch(1);
         final AtomicBoolean isTooling = new AtomicBoolean(false);
@@ -314,7 +318,7 @@ public class Agent extends MRec {
                         LOG.error("%s: %s", errorMessage, e);
                         isError.set(MTronException.of("%s: %s", errorMessage, e));
                         this.at(res(ERROR), str(e.getMessage()), MUTABLE);
-                        features.stream().map(Obj::asRec).forEach(f -> dispatchHook(f, "onError"));
+                        features.stream().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_ERROR));
                         latch.countDown();
                     }).onCompleteResponse(c -> {
                         if (this.interrupt.get()) {
@@ -396,6 +400,8 @@ public class Agent extends MRec {
     // ── Embed ──────────────────────────────────────────────────────
 
     public Lst embed(final Obj toEmbed) {
+        if (this.first.getAndSet(false))
+            this.features().elements().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_AGENT_CTOR, this));
         final EmbeddingModel agent = LLMFactory.createEmbeddingInteraction(Model.model(this.at(MODEL).asRec()));
         final Obj costObj = this.at(feat(COST));
         if (!costObj.isNoObj())

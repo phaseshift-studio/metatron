@@ -43,13 +43,20 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_CHAT_FEATURE_TID;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_CONCEPT_FEATURE_TID;
 import static studio.phaseshift.metatron.isa.llm.type.Agent.agent;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.id_;
+import static studio.phaseshift.metatron.isa.m.mInstSet.LST_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.STR_TID;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -62,10 +69,8 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 public class ConceptFeature extends Feature {
 
     private static final String CONCEPT = "concept";
-    private static final String LINK = "link";
     private static final String MESSAGE = "message";
     private static final Pattern CONCEPT_PATTERN = Pattern.compile("<<concept:([^>]+)>>");
-
     // ── Config keys ─────────────────────────────────────────────────
     private static final fURI EXTRACTOR = f("extractor");
     private static final fURI EXTRACTOR_TAG = f("tag");
@@ -77,27 +82,71 @@ public class ConceptFeature extends Feature {
     private final MessageIndexer indexer; // shared across extractor types for read-side queries
 
     // ── Templates ───────────────────────────────────────────────────
-    private static final String CONCEPT_FEATURE_AGENT_TEMPLATE = """
-                                                                 In any of your responses, you can tag important concepts using a <<concept:>>-block:
-                                                                 For instance, an agent may write:
-                                                                 
-                                                                 "Increasing the size of the <<concept:context windows>> is one way to increase an agent's
-                                                                 <<concept:intelligence>>. However, another way is to provide better <<concept:indexing>> and
-                                                                 <<concept:searching>> capabilities for existing <<concept:memory systems>>."
-                                                                 
-                                                                 Behind the scenes, these tags will form a growing co-location graph that will allow
-                                                                 for the automatic insertion of relevant historic memories the agent can choose
-                                                                 to review. For instance, given the above, the next system message may write:
-                                                                 """;
-    private String CONCEPT_FEATURE_SYSTEM_TEMPLATE = """
-                                                     use the mtron eval tool for related historic content:
-                                                     
-                                                         %s
-                                                     
-                                                     For related concepts use:
-                                                     
-                                                        %s
-                                                     """;
+
+    /**
+     * System message injected when using {@link TaggingExtractor}.
+     * The agent is instructed to manually wrap key concepts in
+     * {@code <<concept:...>>} inline tags, which are parsed via regex
+     * to build a co-location graph.
+     */
+    private static final String CONCEPT_EXTRACTOR_TAG_SYSTEM_MESSAGE = """
+                                                                       In any of your responses, you can tag important concepts using a <<concept:>>-block:
+                                                                       For instance, an agent may write:
+                                                                       
+                                                                       "Increasing the size of the <<concept:context windows>> is one way to increase an agent's
+                                                                       <<concept:intelligence>>. However, another way is to provide better <<concept:indexing>> and
+                                                                       <<concept:searching>> capabilities for existing <<concept:memory systems>>."
+                                                                       
+                                                                       Behind the scenes, these tags will form a growing co-location graph that will allow
+                                                                       for the automatic insertion of relevant historic memories the agent can choose
+                                                                       to review. For instance, given the above, the next system message may write:
+                                                                       """;
+
+    /**
+     * System message injected when using {@link AgentExtractor}.
+     * A separate translator agent (LLM) post-processes the main agent's
+     * responses to extract concepts automatically.  The main agent does
+     * not need to tag concepts manually.
+     */
+    private static final String CONCEPT_EXTRACTOR_AGENT_SYSTEM_MESSAGE = """
+                                                                         As you respond, a separate analysis agent running behind the scenes automatically
+                                                                         extracts key concepts from your output using a language model.  These concepts are
+                                                                         organized into a co-location graph that connects related ideas across the conversation.
+                                                                         
+                                                                         When relevant historic memories are identified, they will be surfaced via the mtron
+                                                                         eval tool so you can review them before continuing.
+                                                                         
+                                                                         You do not need to tag concepts manually — the extraction happens automatically.
+                                                                         Respond naturally and the concept graph will build itself.
+                                                                         """;
+
+    /**
+     * System message injected when using {@link LuceneExtractor}.
+     * TF-IDF statistical analysis over the accumulated message corpus
+     * automatically identifies important terms.  The agent does not need
+     * to tag concepts manually.
+     */
+    private static final String CONCEPT_EXTRACTOR_LUCENE_SYSTEM_MESSAGE = """
+                                                                          As you respond, your messages are indexed and analyzed using statistical (TF-IDF)
+                                                                          analysis to automatically identify key concepts.  These concepts are organized into
+                                                                          a co-location graph that connects related ideas across the conversation.
+                                                                          
+                                                                          When relevant historic memories are identified, they will be surfaced via the mtron
+                                                                          eval tool so you can review them before continuing.
+                                                                          
+                                                                          You do not need to tag concepts manually — the extraction happens automatically.
+                                                                          Respond naturally and the concept graph will build itself.
+                                                                          """;
+
+    private static final String CONCEPT_FEATURE_SYSTEM_TEMPLATE = """
+                                                                  use the mtron eval tool for related historic content:
+                                                                  
+                                                                      %s
+                                                                  
+                                                                  For related concepts use:
+                                                                  
+                                                                     %s
+                                                                  """;
 
     // =========================================================================
     // Constructor
@@ -135,13 +184,33 @@ public class ConceptFeature extends Feature {
     // Skill
     // =========================================================================
 
-    public Obj skill() {
-        if (!this.has(MODEL)) {
-            return rec(uri(NAME), uri(CONCEPT),
-                    uri(DESC), str("In situ concept graph construction w/ spreading activation recommendation"),
-                    uri(CONTENT), str(CONCEPT_FEATURE_AGENT_TEMPLATE));
-        } else
-            return noobj();
+    public Lst skill() {
+        final String content = switch (this.extractor) {
+            case TaggingExtractor t -> CONCEPT_EXTRACTOR_TAG_SYSTEM_MESSAGE;
+            case AgentExtractor a -> CONCEPT_EXTRACTOR_AGENT_SYSTEM_MESSAGE;
+            case LuceneExtractor l -> CONCEPT_EXTRACTOR_LUCENE_SYSTEM_MESSAGE;
+            case null, default -> null;
+        };
+        if (content == null) return lst();
+        return lst(rec(uri(NAME), uri(CONCEPT),
+                uri(DESC), str("In situ concept graph construction w/ spreading activation recommendation"),
+                uri(CONTENT), str(content),
+                uri(TOOL), lst(
+                        docWrap(instC(LLM_CONCEPT_FEATURE_TID.extend(INST).extend("messages").dom(ALL.maybe()).rng(STR_TID.maybeSome()),
+                                        lst(URI_TYPE),
+                                        start_(uri(this.getBaseURI())).mult_(from_(uri("0"))).from_(id_()).select_(uri(f("message").extend("+").extend("text"))).tryToInst()),
+                                "maybe an obj",
+                                "a stream of message texts",
+                                Map.of(jnt(0), "a concept uri"),
+                                "fetches past messages associated with the concept",
+                                "messages(metatron) [-- returns messages discussing metatron --]"),
+                        docWrap(instC(LLM_CONCEPT_FEATURE_TID.extend(INST).extend("concepts").dom(ALL.maybe()).rng(LST_TID.maybeSome()),
+                                        lst(URI_TYPE),
+                                        start_(uri(this.getBaseURI())).mult_(from_(uri("0"))).from_(id_()).select_(uri("concept")).tryToInst()),
+                                "maybe an obj",
+                                "a lst of related concepts",
+                                Map.of(jnt(0), "a concept uri"),
+                                "fetches concepts associated with the provided concept"))));
     }
 
     // =========================================================================
@@ -156,8 +225,8 @@ public class ConceptFeature extends Feature {
      * Persist concepts into the space graph with co-location links and
      * message back-references.  Shared by all extractor implementations.
      */
-    private List<fURI> insertConcepts(final Agent agent, final Set<String> conceptStrings) {
-        final List<fURI> concepts = new ArrayList<>();
+    private Set<fURI> addConceptsToSpace(final Agent agent, final Set<String> conceptStrings) {
+        final Set<fURI> concepts = new HashSet<>();
         try {
             LOG.debug("concepts to process: %s", conceptStrings);
             for (final String concept : conceptStrings) {
@@ -202,7 +271,7 @@ public class ConceptFeature extends Feature {
      * After concepts are stored, optionally inject a system message
      * with mtron eval snippets pointing at relevant historic content.
      */
-    private void injectConceptRecommendations(final Agent agent, final List<fURI> concepts) {
+    private void injectConceptRecommendations(final Agent agent, final Set<fURI> concepts) {
         final StringBuilder sb = new StringBuilder();
         for (final fURI conceptURI : new HashSet<>(concepts)) {
             try {
@@ -217,7 +286,7 @@ public class ConceptFeature extends Feature {
                     if (conceptRec.has(MESSAGE)) {
                         final Lst messages = conceptRec.at(MESSAGE).asLst();
                         if (!messages.lstValue().isEmpty()) {
-                            final String entry = "\t" + "messages" + "(<" + conceptURI + ">)";
+                            final String entry = "\t" + "messages" + "(" + conceptURI.name() + ")";
                             LOG.info("adding memory recommendation: %s", entry);
                             sb.append(entry).append("\n");
                         }
@@ -237,12 +306,11 @@ public class ConceptFeature extends Feature {
      * Extract concept strings from text, persist them, and inject recommendations.
      * Called by onCompleteResponse and (if agent-mode) onBeforeChat.
      */
-    private void processConcepts(final Agent agent, final String text, final boolean blocking) {
-        if (text == null || text.isBlank()) return;
+    private Set<fURI> processConcepts(final Agent agent, final String text, final boolean blocking) {
+        if (text == null || text.isBlank()) return Set.of();
         final Set<String> conceptStrings = this.extractor.extract(agent, text, blocking);
-        if (conceptStrings.isEmpty()) return;
-        final List<fURI> conceptURIs = this.insertConcepts(agent, conceptStrings);
-        this.injectConceptRecommendations(agent, conceptURIs);
+        if (conceptStrings.isEmpty()) return Set.of();
+        return this.addConceptsToSpace(agent, conceptStrings);
     }
 
     // =========================================================================
@@ -254,18 +322,32 @@ public class ConceptFeature extends Feature {
         // Agent extractor: prime translator agent on startup, pre-process user message
         if (this.extractor instanceof AgentExtractor ae) {
             ae.init(agent, this); // reads MODEL field, creates translator
-            this.processConcepts(agent, agent.userMessage(), true);
         }
+        final Set<fURI> concepts = this.processConcepts(agent, agent.userMessage(), true);
+        this.injectConceptRecommendations(agent, concepts);
         return noobj();
     }
 
     @Override
     public void onCompleteResponse(final Agent agent, final Str text) {
         if (this.extractor instanceof LuceneExtractor) {
-            // Index final chunk, then extract concepts from the full response
-            if (text != null && !text.strValue().isBlank())
-                this.indexer.indexText(text.strValue());
-            this.processConcepts(agent, text != null ? text.strValue() : "", false);
+            // Offload Lucene work to a platform thread.  Lucene's internal
+            // synchronization (IndexWriter.addDocument/commit,
+            // ByteBuffersDirectory.listAll/openInput/fileLength) pins virtual
+            // threads to their carrier.  When called from deep LangChain4j
+            // streaming callback chains, the pinned carrier stack cannot grow,
+            // causing StackOverflowError.  Running on a fresh platform thread
+            // gives us a full stack, and joining from the virtual thread causes
+            // unmounting (not pinning), so the carrier is free for other work.
+            try {
+                Thread.ofPlatform().daemon().start(() -> {
+                    if (text != null && !text.strValue().isBlank())
+                        this.indexer.indexText(text.strValue());
+                    this.processConcepts(agent, text != null ? text.strValue() : "", false);
+                }).join();
+            } catch (final InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
         } else {
             this.processConcepts(agent, text != null ? text.strValue() : "", false);
         }
@@ -404,18 +486,8 @@ public class ConceptFeature extends Feature {
             return result;
         }
 
-        private static final Set<String> STOP_WORDS = Set.of(
-                "the", "and", "for", "are", "but", "not", "you", "all", "can",
-                "had", "her", "was", "one", "our", "out", "has", "have", "been",
-                "some", "than", "that", "this", "with", "from", "they", "will",
-                "just", "like", "into", "over", "them", "then", "also", "very",
-                "what", "when", "where", "which", "about", "each", "more", "how",
-                "its", "get", "got", "did", "does", "any", "who", "why", "well",
-                "much", "such", "here", "there", "their", "these", "those",
-                "would", "could", "should", "after", "before", "between", "through"
-        );
+        private static final Set<String> STOP_WORDS = Set.of("able", "about", "above", "abroad", "according", "accordingly", "across", "actually", "adj", "after", "afterwards", "again", "against", "ago", "ahead", "ain't", "all", "allow", "allows", "almost", "alone", "along", "alongside", "already", "also", "although", "always", "am", "amid", "amidst", "among", "amongst", "an", "and", "another", "any", "anybody", "anyhow", "anyone", "anything", "anyway", "anyways", "anywhere", "apart", "appear", "appreciate", "appropriate", "are", "aren't", "around", "as", "a's", "aside", "ask", "asking", "associated", "at", "available", "away", "awfully", "back", "backward", "backwards", "be", "became", "because", "become", "becomes", "becoming", "been", "before", "beforehand", "begin", "behind", "being", "believe", "below", "beside", "besides", "best", "better", "between", "beyond", "both", "brief", "but", "by", "came", "can", "cannot", "cant", "can't", "caption", "cause", "causes", "certain", "certainly", "changes", "clearly", "c'mon", "co", "co.", "com", "come", "comes", "concerning", "consequently", "consider", "considering", "contain", "containing", "contains", "corresponding", "could", "couldn't", "course", "c's", "currently", "dare", "daren't", "definitely", "described", "despite", "did", "didn't", "different", "directly", "do", "does", "doesn't", "doing", "done", "don't", "down", "downwards", "during", "each", "edu", "eg", "eight", "eighty", "either", "else", "elsewhere", "end", "ending", "enough", "entirely", "especially", "et", "etc", "even", "ever", "evermore", "every", "everybody", "everyone", "everything", "everywhere", "ex", "exactly", "example", "except", "fairly", "far", "farther", "few", "fewer", "fifth", "first", "five", "followed", "following", "follows", "for", "forever", "former", "formerly", "forth", "forward", "found", "four", "from", "further", "furthermore", "get", "gets", "getting", "given", "gives", "go", "goes", "going", "gone", "got", "gotten", "greetings", "had", "hadn't", "half", "happens", "hardly", "has", "hasn't", "have", "haven't", "having", "he", "he'd", "he'll", "hello", "help", "hence", "her", "here", "hereafter", "hereby", "herein", "here's", "hereupon", "hers", "herself", "he's", "hi", "him", "himself", "his", "hither", "hopefully", "how", "howbeit", "however", "hundred", "i'd", "ie", "if", "ignored", "i'll", "i'm", "immediate", "in", "inasmuch", "inc", "inc.", "indeed", "indicate", "indicated", "indicates", "inner", "inside", "insofar", "instead", "into", "inward", "is", "isn't", "it", "it'd", "it'll", "its", "it's", "itself", "i've", "just", "k", "keep", "keeps", "kept", "know", "known", "knows", "last", "lately", "later", "latter", "latterly", "least", "less", "lest", "let", "let's", "like", "liked", "likely", "likewise", "little", "look", "looking", "looks", "low", "lower", "ltd", "made", "mainly", "make", "makes", "many", "may", "maybe", "mayn't", "me", "mean", "meantime", "meanwhile", "merely", "might", "mightn't", "mine", "minus", "miss", "more", "moreover", "most", "mostly", "mr", "mrs", "much", "must", "mustn't", "my", "myself", "name", "namely", "nd", "near", "nearly", "necessary", "need", "needn't", "needs", "neither", "never", "neverf", "neverless", "nevertheless", "new", "next", "nine", "ninety", "no", "nobody", "non", "none", "nonetheless", "noone", "no-one", "nor", "normally", "not", "nothing", "notwithstanding", "novel", "now", "nowhere", "obviously", "of", "off", "often", "oh", "ok", "okay", "old", "on", "once", "one", "ones", "one's", "only", "onto", "opposite", "or", "other", "others", "otherwise", "ought", "oughtn't", "our", "ours", "ourselves", "out", "outside", "over", "overall", "own", "particular", "particularly", "past", "per", "perhaps", "placed", "please", "plus", "possible", "presumably", "probably", "provided", "provides", "que", "quite", "qv", "rather", "rd", "re", "really", "reasonably", "recent", "recently", "regarding", "regardless", "regards", "relatively", "respectively", "right", "round", "said", "same", "saw", "say", "saying", "says", "second", "secondly", "see", "seeing", "seem", "seemed", "seeming", "seems", "seen", "self", "selves", "sensible", "sent", "serious", "seriously", "seven", "several", "shall", "shan't", "she", "she'd", "she'll", "she's", "should", "shouldn't", "since", "six", "so", "some", "somebody", "someday", "somehow", "someone", "something", "sometime", "sometimes", "somewhat", "somewhere", "soon", "sorry", "specified", "specify", "specifying", "still", "sub", "such", "sup", "sure", "take", "taken", "taking", "tell", "tends", "th", "than", "thank", "thanks", "thanx", "that", "that'll", "thats", "that's", "that've", "the", "their", "theirs", "them", "themselves", "then", "thence", "there", "thereafter", "thereby", "there'd", "therefore", "therein", "there'll", "there're", "theres", "there's", "thereupon", "there've", "these", "they", "they'd", "they'll", "they're", "they've", "thing", "things", "think", "third", "thirty", "this", "thorough", "thoroughly", "those", "though", "three", "through", "throughout", "thru", "thus", "till", "to", "together", "too", "took", "toward", "towards", "tried", "tries", "truly", "try", "trying", "t's", "twice", "two", "un", "under", "underneath", "undoing", "unfortunately", "unless", "unlike", "unlikely", "until", "unto", "up", "upon", "upwards", "us", "use", "used", "useful", "uses", "using", "usually", "v", "value", "various", "versus", "very", "via", "viz", "vs", "want", "wants", "was", "wasn't", "way", "we", "we'd", "welcome", "well", "we'll", "went", "were", "we're", "weren't", "we've", "what", "whatever", "what'll", "what's", "what've", "when", "whence", "whenever", "where", "whereafter", "whereas", "whereby", "wherein", "where's", "whereupon", "wherever", "whether", "which", "whichever", "while", "whilst", "whither", "who", "who'd", "whoever", "whole", "who'll", "whom", "whomever", "who's", "whose", "why", "will", "willing", "wish", "with", "within", "without", "wonder", "won't", "would", "wouldn't", "yes", "yet", "you", "you'd", "you'll", "your", "you're", "yours", "yourself", "yourselves", "you've", "zero", "a", "how's", "i", "when's", "why's", "b", "c", "d", "e", "f", "g", "h", "j", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "uucp", "w", "x", "y", "z", "I", "www", "amount", "bill", "bottom", "call", "computer", "con", "couldnt", "cry", "de", "describe", "detail", "due", "eleven", "empty", "fifteen", "fifty", "fill", "find", "fire", "forty", "front", "full", "give", "hasnt", "herse", "himse", "interest", "itse”", "mill", "move", "myse”", "part", "put", "show", "side", "sincere", "sixty", "system", "ten", "thick", "thin", "top", "twelve", "twenty", "abst", "accordance", "act", "added", "adopted", "affected", "affecting", "affects", "ah", "announce", "anymore", "apparently", "approximately", "aren", "arent", "arise", "auth", "beginning", "beginnings", "begins", "biol", "briefly", "ca", "date", "ed", "effect", "et-al", "ff", "fix", "gave", "giving", "heres", "hes", "hid", "home", "id", "im", "immediately", "importance", "important", "index", "information", "invention", "itd", "keys", "kg", "km", "largely", "lets", "line", "'ll", "means", "mg", "million", "ml", "mug", "na", "nay", "necessarily", "nos", "noted", "obtain", "obtained", "omitted", "ord", "owing", "page", "pages", "poorly", "possibly", "potentially", "pp", "predominantly", "present", "previously", "primarily", "promptly", "proud", "quickly", "ran", "readily", "ref", "refs", "related", "research", "resulted", "resulting", "results", "run", "sec", "section", "shed", "shes", "showed", "shown", "showns", "shows", "significant", "significantly", "similar", "similarly", "slightly", "somethan", "specifically", "state", "states", "stop", "strongly", "substantially", "successfully", "sufficiently", "suggest", "thered", "thereof", "therere", "thereto", "theyd", "theyre", "thou", "thoughh", "thousand", "throug", "til", "tip", "ts", "ups", "usefully", "usefulness", "'ve", "vol", "vols", "wed", "whats", "wheres", "whim", "whod", "whos", "widely", "words", "world", "youd", "youre");
     }
-
     // =========================================================================
     // Lucene Message Indexer (in-memory)
     // =========================================================================

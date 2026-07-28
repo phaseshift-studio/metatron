@@ -204,7 +204,7 @@ public class AccordionWidget extends JRec<AccordionWidget> implements Widget<Acc
     @Override
     public void close() {
         if (this.lastRenderHeight > 0) {
-            Graphitty.out(Console.getTerminal().output(), "\033[" + this.lastRenderHeight + "A\033[J");
+            Graphitty.writeToTerminal("\033[" + this.lastRenderHeight + "A\033[J");
             this.lastRenderHeight = 0;
         }
     }
@@ -256,7 +256,15 @@ public class AccordionWidget extends JRec<AccordionWidget> implements Widget<Acc
             this.at(K_TOGGLE, instLambda((l, i) -> { this.toggle(); return noobj(); }), MUTABLE);
             this.at(uri("expand"), instLambda((l, i) -> { this.expand();  return noobj(); }), MUTABLE);
             this.at(uri("collapse"), instLambda((l, i) -> { this.collapse(); return noobj(); }), MUTABLE);
-            this.at(uri("append"), instLambda((l, i) -> { this.appendLine(l.isStr() ? l.strValue() : ""); Graphitty.out(Console.getTerminal().output(), this.format() + "\n"); return this; }), MUTABLE);
+            this.at(uri("append"), instLambda((l, i) -> {
+                this.appendLine(l.isStr() ? l.strValue() : "");
+                // Defer rendering to the Console prompt cycle — rendering
+                // mid-stream fights with the console cursor.
+                if (Console.LOCAL_INSTANCE != null) {
+                    Console.LOCAL_INSTANCE.requestRedraw();
+                }
+                return this;
+            }), MUTABLE);
         }
 
         // Width: use floatWidth from style if set, else compute from content

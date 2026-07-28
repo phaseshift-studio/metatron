@@ -18,21 +18,19 @@
 
 package studio.phaseshift.metatron.isa.llm.type.feature;
 
-import dev.langchain4j.service.AiServices;
+import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
-import studio.phaseshift.metatron.isa.llm.type.AgentServices;
-import studio.phaseshift.metatron.isa.m.type.Fail;
-import studio.phaseshift.metatron.isa.m.type.Inst;
-import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.Str;
+import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 
 import java.util.Map;
 
+import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TRUE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -77,11 +75,19 @@ public abstract class Feature extends MRec {
      * skill so the agent can learn usage details on demand rather than
      * carrying them in every system prompt.
      */
-    public Obj skill() {
-        return noobj();
+    public Lst skill() {
+        return lst().c(cInt::zero);
+    }
+
+    public boolean active() {
+        return this.at("active").orElse(BOOL_TRUE).boolValue();
     }
 
     // ── Pre-chat ─────────────────────────────────────────────────
+
+
+    public void onAgentCtor(final Agent agent) {
+    }
 
     /**
      * Called after the raw user message is stored on the Agent but before the

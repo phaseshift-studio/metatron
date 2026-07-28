@@ -18,7 +18,7 @@
     knowgraph => <ws://ginger.local:8182/gremlin>,
     session   => <mariadb://ginger.local:3306/drdb?createDatabaseIfNotExist=true&user=mtron&password=mtron>,
     localfs   => </home/killswitch/.hermes_clone>],
- tracer/stage => [stack=>true],
+ tracer/stage => [stack=>false],
 
  header       => """
    ______          _______ __   {{r}}PhaseShift Studio                    
@@ -52,8 +52,6 @@ space_root -> <${*boot/args/internal/sys}/space/dr>;
         [=====================]  
         [======== HOME =======]
         [=====================]   
-
-
 [==
 memspace::[
   pattern => </usr/dr/#>,              
@@ -61,15 +59,11 @@ memspace::[
                subq::[=>],
               incrq::[=>]]]@</sys/space/usr/dr>
 ==]
-
-
 tblespace::[pattern    => </usr/dr/#>,
             host       => !*<boot/args/external/session>,
             driver     => <org.mariadb.jdbc.Driver>,
             q          => [incrq::[=>],subq::[=>]],
             route      => [/usr/dr/ => <>]]@</sys/space/usr/dr>;
-
-
 memspace::[
   pattern => </usr/marko/#>,                                 
         q => [mintq::[=>],
@@ -77,38 +71,30 @@ memspace::[
                subq::[=>],
                mimeq::[=>],
               incrq::[=>]]]@</sys/space/usr/marko>;                 
-    
         [=====================]  
         [====== FILE SYS =====]
-        [=====================]   
-    
+        [=====================]    
 fsspace::[
   pattern => root:#,
         q => [mimeq::[=>]],
     route => [root: => /usr/bin]]@</sys/space/fs/root>;
-
-
 fsspace::[
   pattern => localfs:#,
         q => [subq::[=>],
               mimeq::[=>],
               safeq::[=>]],
-    route => [localfs: => <~/.hermes_clone>]]@</sys/space/fs/dr>;
-    
+    route => [localfs: => <~/.hermes_clone>]]@</sys/space/fs/dr>; 
 fsspace::[
   pattern => metatronfs:#,
-    route => [metatronfs: => <~/software/metatron/.metatron/>]]@</sys/space/fs/metatron>;
-    
+    route => [metatronfs: => <~/software/metatron/.metatron/>]]@</sys/space/fs/metatron>;  
         [=====================]  
         [======== WEB ========]
-        [=====================]   
-            
+        [=====================]              
 httpspace::[host     => !*<boot/args/external/web/http>,
             q        => [mimeq::[=>]],
             pattern  => <http://#>,
             route    => [/mcp     => mcp_mtron_http,
                          /       => <>]]@/sys/space/web/http;   
- 
 [==  
 *boot/args/external/ollama.mult(api/tags/models).*(_).>-.
   =?=[capabilities=>[embedding]].
@@ -118,22 +104,18 @@ httpspace::[host     => !*<boot/args/external/web/http>,
     host     => *boot/args/external/ollama].
   as(model::T).
   to(/usr/dr/model/embedding/_?incrq)
-==]
-            
+==]        
 wsspace::[host     => !*<boot/args/external/web/ws>,
          pattern  => <ws://#>,
          route    => [/mcp   => mcp_mtron_ws,
-                      /mtron => mtron_ws]]@/sys/space/web/ws;    
-    
+                      /mtron => mtron_ws]]@/sys/space/web/ws;       
 mqttspace::[host    => <mqtt://ginger.local:1883>,
             pattern => z2m:#,
             q       => [subq::[=>]],
-            route   => [z2m: => z2m/]]@/sys/space/iot/z2m;
-            
+            route   => [z2m: => z2m/]]@/sys/space/iot/z2m;          
         [=====================]  
         [======== LLM ========]
-        [=====================]       
-          
+        [=====================]                
 tblespace::[pattern    => drdb:#,
             host       => !*<boot/args/external/session>,
             driver     => <org.mariadb.jdbc.Driver>,
@@ -152,8 +134,6 @@ vecspace::[pattern     => v:#,
  [------------------------------------^--]                                  
                           ]]]@/sys/space/vec/embed
 ==]
-
-
 grphspace::[pattern  => h:#,
              host     => !*<boot/args/external/knowgraph>,
              q        => [incrq::[=>],subq::[=>]],
@@ -173,57 +153,43 @@ grphspace::[pattern  => h:#,
                dataset         => <org.apache.tinkerpop.gremlin.LoadGraphWith.GraphData.MODERN>,
                <gremlin.graph> => <org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerGraph>],
              route    => [g:   => <>]]@</sys/space/grph/local>;
+             
         [======================]
         [======== AGENT =======]
         [======================]
-
 [== if the llm session already exists, continue, else create it ==]    
 [== <drdb:llm_session>.mult(print('\n what session number?: ').stdin().as(uri::T)).to(session_vid) ==]
-
-*drdb:llm_session/1.
-  else(session::[agent     => !*boot/args/internal/agent_home,
-                 user      => !*boot/args/internal/user_home,
-                 name      => 'general chat',
-                 algorithm => [name=><token_window>, max=>100000]]==[_=>_].to(drdb:llm_session/1));
-
 agent::[name     => 'dr.stynx',
         desc     => 'the agent dr.stynx is here to be of use in the metatron',
-        feature  => [chat_feature:::::[model    => model::[provider => ollama,
-                                                           protocol => ollama,
-                                                           host     => <http://ginger.local:11434>,
-                                                           llm      => batiai/gemma4-31b:q6],
-                                       response  => [to => print(_)]],
-                     session_feature::[session   =>  drdb:llm_session/1,
-                                       tool      => [forget?noobj{0}<=noobj{0}(){ drdb:llm_message/+ -> noobj }]],
-                     think_feature::::[think     => [to => inst(a=>str::T){ @<think_widget>>>=[body=>+*a].display() }]],
-                     loop_feature:::::[max_loop  => 100],                         
-                     comment_feature::[          => ],
-                     skill_feature::::[skill     => [metatronfs:skills/metatron,
-                                                     metatronfs:skills/mtron]],
-                     system_feature:::[          => ],
-                     audit_feature::::[          => ],
-                     concept_feature::[base      => /usr/dr/concept,
-                                       extractor => lucene,
-                                       tool      => [messages?str{*}<=#{?}(uri::T){ *(</usr/dr/concept/${*0}>)==message==<+>==text }@messages,
-                                                     concepts?lst{?}<=#{?}(uri::T){ *(</usr/dr/concept/${*0}>)==link }@concepts]],
-                     tool_feature:::::[tool      =>[!*eval,!*sql,!*codegraph]]]]@<dr>; 
+        feature  => [session_feature::[on_agent_ctor => inst(a=>agent::T){ *drdb:llm_session/1.else(
+                                         session::[agent     => !*boot/args/internal/agent_home,
+                                                   user      => !*boot/args/internal/user_home,
+                                                   name      => 'general chat',
+                                                   algorithm => [name=><message_window>, max=>50]]==[_=>_].to(drdb:llm_session/1)) },
+                                       session       =>  drdb:llm_session/1,
+                                       tool          => [forget?noobj{0}<=noobj{0}(){ drdb:llm_message/+ -> noobj }]],
+                     chat_feature:::::[model         => model::[provider => ollama,
+                                                                protocol => ollama,
+                                                                host     => <http://ginger.local:11434>,
+                                                                llm      => batiai/gemma4-31b:q6],
+                                       response      => [to => print(_)]],
+                     think_feature::::[on_agent_ctor => inst(a=>agent::T){
+                                                           accordion::[title => "thoughts", 
+                                                                       body  => "",
+                                                                       style => style::[anchor=>top_right,width=>65,height=>15,left=>-2]]@<think_widget> },
+                                      think          => [to => inst(a=>str::T){ @<think_widget>>>=[body=>+*a].display() }]],
+                     loop_feature:::::[max_loop      => 100],                         
+                     comment_feature::[              => ],
+                     skill_feature::::[skill         => [metatronfs:skills/metatron, metatronfs:skills/mtron]],
+                     concept_feature::[base          => /usr/dr/concept,
+                                       extractor     => lucene],
+                     tool_feature:::::[tool          =>[!*eval,!*sql,!*codegraph]],
+                     audit_feature::::[on_agent_ctor => inst(a=>agent::T) {  
+                                                          accordion::[title => "audit", 
+                                                                      body  => "",
+                                                                      style => style::[anchor=>bottom_right,width=>65,height=>20,left=>-2,top=>10,foreground =>"{{y}}"]]@<audit_widget> },
+                                       to            => inst(a=>str::T){ @<audit_widget>>>=[body=>+*a].display() }],
+                     system_feature:::[              => ]]]@<dr>; 
 
-                                [== model => model::[provider => ollama,
-                                                        protocol => ollama,
-                                                        host     => <http://ginger.local:11434>,
-                                                        llm      => <qwen3:latest>] 
-                                                        
-                                                       
-                                                        
-                                                        ==]        
-
-[== user console ==]
+[== user console ==] 
 console::[agent=>dr,header=>!*boot/args/header]@/usr/marko/console;
-accordion::[title => "{{g}}a{{r}}ge{{b}}n{{m}}t {{c}}th{{y}}ink{{r}}ing.{{g}}..{{X}}", 
-            body  => "",
-            style => style::[anchor=>top_right,width=>65,height=>15,left=>-2]]@<think_widget>
-[==
-on_prompt => inst(chat=>user::T) {          
-
-}
-==]

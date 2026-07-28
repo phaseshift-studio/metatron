@@ -38,16 +38,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.Poly.MUTABLE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBytes.bytes;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer.OBJ_MTRON_SERIALIZER_TID;
-import static studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer.OBJ_MTRON_STRING_SERIALIZER_VID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -441,7 +437,10 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
         if (!poly.isLst() && !poly.isRec())
             return false;
         final long count = poly.count();
-        return count != 1 && (count > 4 || poly.values().anyMatch(o ->
+        return count != 1 && (count > 4 || (poly.isLst() ?
+                poly.lstValue().stream() : (poly.isRel() ?
+                poly.relValue().get1().stream() :
+                poly.recValue().values().stream())).anyMatch(o ->
                 (null != o.vid() && o.vid().toString().length() > NESTED_STRING_THRESHOLD) ||
                         (o.isPoly() && o.<Poly<?, ?>>as().count() > 2) ||
                         (o.isObjCall() && o.asCall().insts().size() > 2) ||

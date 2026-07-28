@@ -238,6 +238,108 @@ public class tbleInstSet extends AbstractInstSet {
                                 tableGuard
                         ), "pre-rewrite code", "post-rewrite code", Map.of(), "leverages native SELECT ... LIMIT to take first n rows from a table"),
 
+                        // Optimize: *table.skip(n) → SELECT * FROM table OFFSET n
+                        docWrap(CommonRewrites.skipRewrite(
+                                tbleSpace.class,
+                                TBLE_ISA_REWRITE_TID.extend("sql_offset"),
+                                (space, dp, skip) -> {
+                                    final String tableName = dp.collection();
+                                    final String sql;
+                                    if (space.isSqlite()) {
+                                        sql = "SELECT * FROM " + tableName + " LIMIT -1 OFFSET " + skip;
+                                    } else {
+                                        final String backend = space.backend();
+                                        if (backend != null && (backend.contains("mysql") || backend.contains("mariadb"))) {
+                                            sql = "SELECT * FROM " + tableName + " LIMIT 18446744073709551615 OFFSET " + skip;
+                                        } else {
+                                            sql = "SELECT * FROM " + tableName + " OFFSET " + skip;
+                                        }
+                                    }
+                                    try (final Statement stmt = space.sjvm().createStatement();
+                                         final ResultSet rs = stmt.executeQuery(sql)) {
+
+                                        // Discover primary key columns for VID construction
+                                        final DatabaseMetaData dbMeta = space.sjvm().getMetaData();
+                                        final List<String> pkColumns = new ArrayList<>();
+                                        try (final ResultSet pkRs = dbMeta.getPrimaryKeys(null, null, tableName)) {
+                                            while (pkRs.next()) {
+                                                pkColumns.add(pkRs.getString("COLUMN_NAME"));
+                                            }
+                                        }
+
+                                        // Read rows and stamp routable VIDs for space routing
+                                        final Objs rows = objs0();
+                                        while (rs.next()) {
+                                            final Rec rawRow = ObjSQLSerializer.readCurrentAsRec(rs);
+                                            final fURI rowVID = Space.Helper.routeToSpace(
+                                                    pkColumns.isEmpty()
+                                                            ? space.vid().extend(tableName).extend(rawRow.at(uri("id")).toString())
+                                                            : pkColumns.stream()
+                                                            .map(col -> rawRow.at(uri(col)).toString())
+                                                            .reduce(space.vid().extend(tableName),
+                                                                    (vid, seg) -> vid.extend(seg),
+                                                                    (a, b) -> b),
+                                                    space.routes());
+                                            rows.append(rawRow.selfVID(rowVID));
+                                        }
+                                        return rows.asObjs();
+                                    } catch (SQLException e) {
+                                        if (e.getErrorCode() == 1054)
+                                            return noobj();
+                                        throw MTronException.of(e, "%s", sql);
+                                    } catch (final Exception e) {
+                                        throw MTronException.of(e, "%s", sql);
+                                    }
+                                },
+                                tableGuard
+                        ), "*table/+.skip(800)", "sql_offset(table, 800)", Map.of(), "leverages native SELECT ... OFFSET to skip first n rows from a table"),
+
+                        // Optimize: sql_offset.take(n) → SELECT * FROM table LIMIT n OFFSET m
+                        docWrap(CommonRewrites.offsetLimitRewrite(
+                                tbleSpace.class,
+                                TBLE_ISA_REWRITE_TID.extend("sql_offset"),
+                                TBLE_ISA_REWRITE_TID.extend("sql_offset_limit"),
+                                (space, dp, skip, limit) -> {
+                                    final String tableName = dp.collection();
+                                    // Standard SQL: LIMIT + OFFSET works across all backends
+                                    final String sql = "SELECT * FROM " + tableName + " LIMIT " + limit + " OFFSET " + skip;
+                                    try (final Statement stmt = space.sjvm().createStatement();
+                                         final ResultSet rs = stmt.executeQuery(sql)) {
+
+                                        final DatabaseMetaData dbMeta = space.sjvm().getMetaData();
+                                        final List<String> pkColumns = new ArrayList<>();
+                                        try (final ResultSet pkRs = dbMeta.getPrimaryKeys(null, null, tableName)) {
+                                            while (pkRs.next()) {
+                                                pkColumns.add(pkRs.getString("COLUMN_NAME"));
+                                            }
+                                        }
+
+                                        final Objs rows = objs0();
+                                        while (rs.next()) {
+                                            final Rec rawRow = ObjSQLSerializer.readCurrentAsRec(rs);
+                                            final fURI rowVID = Space.Helper.routeToSpace(
+                                                    pkColumns.isEmpty()
+                                                            ? space.vid().extend(tableName).extend(rawRow.at(uri("id")).toString())
+                                                            : pkColumns.stream()
+                                                            .map(col -> rawRow.at(uri(col)).toString())
+                                                            .reduce(space.vid().extend(tableName),
+                                                                    (vid, seg) -> vid.extend(seg),
+                                                                    (a, b) -> b),
+                                                    space.routes());
+                                            rows.append(rawRow.selfVID(rowVID));
+                                        }
+                                        return rows.asObjs();
+                                    } catch (SQLException e) {
+                                        if (e.getErrorCode() == 1054)
+                                            return noobj();
+                                        throw MTronException.of(e, "%s", sql);
+                                    } catch (final Exception e) {
+                                        throw MTronException.of(e, "%s", sql);
+                                    }
+                                },
+                                tableGuard
+                        ), "sql_offset(table,800).take(10)", "sql_offset_limit(table, 800, 10)", Map.of(), "fuses offset and limit into a single native SELECT ... LIMIT n OFFSET m"),
+
                         // Optimize: *table.has() → SELECT EXISTS(SELECT 1 FROM table LIMIT 1)
                         docWrap(CommonRewrites.hasRewrite(
                                 tbleSpace.class,
@@ -377,6 +479,96 @@ public class tbleInstSet extends AbstractInstSet {
                                 tableGuard
                         ), "pre-rewrite code", "post-rewrite code", Map.of(), "leverages native SELECT ... WHERE ... LIMIT to filter and limit rows in a table"),
 
+                        // Optimize: sql_where.skip(n) → SELECT * FROM table WHERE ... OFFSET n
+                        docWrap(CommonRewrites.whereOffsetRewrite(
+                                tbleSpace.class,
+                                TBLE_ISA_REWRITE_TID.extend("sql_where"),
+                                TBLE_ISA_REWRITE_TID.extend("sql_where_offset"),
+                                (space, dp, filterClause, skip) -> {
+                                    final String tableName = dp.collection();
+                                    final String sql;
+                                    if (space.isSqlite()) {
+                                        sql = "SELECT * FROM " + tableName + " WHERE " + filterClause + " LIMIT -1 OFFSET " + skip;
+                                    } else {
+                                        final String backend = space.backend();
+                                        if (backend != null && (backend.contains("mysql") || backend.contains("mariadb"))) {
+                                            sql = "SELECT * FROM " + tableName + " WHERE " + filterClause + " LIMIT 18446744073709551615 OFFSET " + skip;
+                                        } else {
+                                            sql = "SELECT * FROM " + tableName + " WHERE " + filterClause + " OFFSET " + skip;
+                                        }
+                                    }
+                                    try (final Statement stmt = space.sjvm().createStatement();
+                                         final ResultSet rs = stmt.executeQuery(sql)) {
+                                        final DatabaseMetaData dbMeta = space.sjvm().getMetaData();
+                                        final List<String> pkColumns = new ArrayList<>();
+                                        try (final ResultSet pkRs = dbMeta.getPrimaryKeys(null, null, tableName)) {
+                                            while (pkRs.next()) pkColumns.add(pkRs.getString("COLUMN_NAME"));
+                                        }
+                                        final Objs rows = objs0();
+                                        while (rs.next()) {
+                                            final Rec rawRow = ObjSQLSerializer.readCurrentAsRec(rs);
+                                            final fURI rowVID = Space.Helper.routeToSpace(
+                                                    pkColumns.isEmpty()
+                                                            ? space.vid().extend(tableName).extend(rawRow.at(uri("id")).toString())
+                                                            : pkColumns.stream()
+                                                            .map(col -> rawRow.at(uri(col)).toString())
+                                                            .reduce(space.vid().extend(tableName),
+                                                                    (vid, seg) -> vid.extend(seg),
+                                                                    (a, b) -> b),
+                                                    space.routes());
+                                            rows.append(rawRow.selfVID(rowVID));
+                                        }
+                                        return rows.asObjs();
+                                    } catch (SQLException e) {
+                                        if (e.getErrorCode() == 1054) return noobj();
+                                        throw MTronException.of(e, "%s", sql);
+                                    } catch (final Exception e) {
+                                        throw MTronException.of(e, "%s", sql);
+                                    }
+                                },
+                                tableGuard
+                        ), "sql_where(table,cond).skip(800)", "sql_where_offset(table, cond, 800)", Map.of(), "fuses where and offset into a single native SELECT ... WHERE ... OFFSET n"),
+
+                        // Optimize: sql_where_offset.take(n) → SELECT * FROM table WHERE ... LIMIT n OFFSET m
+                        docWrap(CommonRewrites.whereOffsetLimitRewrite(
+                                tbleSpace.class,
+                                TBLE_ISA_REWRITE_TID.extend("sql_where_offset"),
+                                TBLE_ISA_REWRITE_TID.extend("sql_where_offset_limit"),
+                                (space, dp, filterClause, skip, limit) -> {
+                                    final String tableName = dp.collection();
+                                    final String sql = "SELECT * FROM " + tableName + " WHERE " + filterClause + " LIMIT " + limit + " OFFSET " + skip;
+                                    try (final Statement stmt = space.sjvm().createStatement();
+                                         final ResultSet rs = stmt.executeQuery(sql)) {
+                                        final DatabaseMetaData dbMeta = space.sjvm().getMetaData();
+                                        final List<String> pkColumns = new ArrayList<>();
+                                        try (final ResultSet pkRs = dbMeta.getPrimaryKeys(null, null, tableName)) {
+                                            while (pkRs.next()) pkColumns.add(pkRs.getString("COLUMN_NAME"));
+                                        }
+                                        final Objs rows = objs0();
+                                        while (rs.next()) {
+                                            final Rec rawRow = ObjSQLSerializer.readCurrentAsRec(rs);
+                                            final fURI rowVID = Space.Helper.routeToSpace(
+                                                    pkColumns.isEmpty()
+                                                            ? space.vid().extend(tableName).extend(rawRow.at(uri("id")).toString())
+                                                            : pkColumns.stream()
+                                                            .map(col -> rawRow.at(uri(col)).toString())
+                                                            .reduce(space.vid().extend(tableName),
+                                                                    (vid, seg) -> vid.extend(seg),
+                                                                    (a, b) -> b),
+                                                    space.routes());
+                                            rows.append(rawRow.selfVID(rowVID));
+                                        }
+                                        return rows.asObjs();
+                                    } catch (SQLException e) {
+                                        if (e.getErrorCode() == 1054) return noobj();
+                                        throw MTronException.of(e, "%s", sql);
+                                    } catch (final Exception e) {
+                                        throw MTronException.of(e, "%s", sql);
+                                    }
+                                },
+                                tableGuard
+                        ), "sql_where_offset(table,cond,800).take(10)", "sql_where_offset_limit(table, cond, 800, 10)", Map.of(), "fuses where, offset, and limit into a single native SELECT ... WHERE ... LIMIT n OFFSET m"),
+
                         // Optimize: from(table/+).>>{col1,col2} → SELECT col1, col2 FROM table
                         docWrap(CommonRewrites.selectRewrite(
                                 tbleSpace.class,
@@ -418,6 +610,96 @@ public class tbleInstSet extends AbstractInstSet {
                                 },
                                 tableGuard
                         ), "*table/+>>{name,age}", "sql_select(table, [name,age])", Map.of(), "leverages native SELECT col1, col2 FROM table for projections"),
+
+                        // Optimize: from(table/+).order(select(col)) → SELECT * FROM table ORDER BY col
+                        docWrap(CommonRewrites.orderRewrite(
+                                tbleSpace.class,
+                                TBLE_ISA_REWRITE_TID.extend("sql_order"),
+                                (space, dp, columns) -> {
+                                    final String tableName = dp.collection();
+                                    final String orderClause = String.join(", ", columns);
+                                    final String sql = "SELECT * FROM " + tableName + " ORDER BY " + orderClause;
+                                    try (final Statement stmt = space.sjvm().createStatement();
+                                         final ResultSet rs = stmt.executeQuery(sql)) {
+                                        final DatabaseMetaData dbMeta = space.sjvm().getMetaData();
+                                        final List<String> pkColumns = new ArrayList<>();
+                                        try (final ResultSet pkRs = dbMeta.getPrimaryKeys(null, null, tableName)) {
+                                            while (pkRs.next()) pkColumns.add(pkRs.getString("COLUMN_NAME"));
+                                        }
+                                        final Objs rows = objs0();
+                                        while (rs.next()) {
+                                            final Rec rawRow = ObjSQLSerializer.readCurrentAsRec(rs);
+                                            final fURI rowVID = Space.Helper.routeToSpace(
+                                                    pkColumns.isEmpty()
+                                                            ? space.vid().extend(tableName).extend(rawRow.at(uri("id")).toString())
+                                                            : pkColumns.stream()
+                                                            .map(col -> rawRow.at(uri(col)).toString())
+                                                            .reduce(space.vid().extend(tableName),
+                                                                    (vid, seg) -> vid.extend(seg),
+                                                                    (a, b) -> b),
+                                                    space.routes());
+                                            rows.append(rawRow.selfVID(rowVID));
+                                        }
+                                        return rows.asObjs();
+                                    } catch (SQLException e) {
+                                        if (e.getErrorCode() == 1054) return noobj();
+                                        throw MTronException.of(e, "%s", sql);
+                                    } catch (final Exception e) {
+                                        throw MTronException.of(e, "%s", sql);
+                                    }
+                                },
+                                tableGuard
+                        ), "*table/+.order(select(name))", "sql_order(table, [name])", Map.of(), "leverages native SELECT ... ORDER BY to sort rows in the database"),
+
+                        // Optimize: from(table/+).dedup(select(col)) → SELECT DISTINCT col FROM table
+                        docWrap(CommonRewrites.dedupRewrite(
+                                tbleSpace.class,
+                                TBLE_ISA_REWRITE_TID.extend("sql_distinct"),
+                                (space, dp, columns) -> {
+                                    final String tableName = dp.collection();
+                                    final String colList = String.join(", ", columns);
+                                    final String sql = "SELECT DISTINCT " + colList + " FROM " + tableName;
+                                    try (final Statement stmt = space.sjvm().createStatement();
+                                         final ResultSet rs = stmt.executeQuery(sql)) {
+                                        final Objs rows = objs0();
+                                        final int colCount = columns.size();
+                                        while (rs.next()) {
+                                            if (colCount == 1) {
+                                                // Single column: return scalar values
+                                                final Object val = rs.getObject(1);
+                                                if (val instanceof Number n) {
+                                                    rows.append(n instanceof Double || n instanceof Float
+                                                            ? real(n.doubleValue()) : jnt(n.longValue()));
+                                                } else {
+                                                    rows.append(str(val != null ? val.toString() : ""));
+                                                }
+                                            } else {
+                                                // Multi-column: return rec with column-name keys
+                                                final Map<Obj, Obj> rowMap = new LinkedHashMap<>();
+                                                for (int i = 0; i < colCount; i++) {
+                                                    final Object val = rs.getObject(i + 1);
+                                                    if (val instanceof Number n) {
+                                                        rowMap.put(uri(columns.get(i)),
+                                                                n instanceof Double || n instanceof Float
+                                                                        ? real(n.doubleValue()) : jnt(n.longValue()));
+                                                    } else {
+                                                        rowMap.put(uri(columns.get(i)),
+                                                                str(val != null ? val.toString() : ""));
+                                                    }
+                                                }
+                                                rows.append(rec(rowMap));
+                                            }
+                                        }
+                                        return rows.asObjs();
+                                    } catch (SQLException e) {
+                                        if (e.getErrorCode() == 1054) return noobj();
+                                        throw MTronException.of(e, "%s", sql);
+                                    } catch (final Exception e) {
+                                        throw MTronException.of(e, "%s", sql);
+                                    }
+                                },
+                                tableGuard
+                        ), "*table/+.dedup(select(name))", "sql_distinct(table, [name])", Map.of(), "leverages native SELECT DISTINCT to deduplicate rows in the database"),
 
                         // Optimize: *kvPath/+.count() → SELECT COUNT(*) FROM kv_store WHERE furi LIKE ...
                         docWrap(RewriteBuilder.forDatabase(tbleSpace.class)

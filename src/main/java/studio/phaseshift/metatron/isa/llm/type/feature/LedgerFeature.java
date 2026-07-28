@@ -2,6 +2,7 @@ package studio.phaseshift.metatron.isa.llm.type.feature;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
+import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
@@ -9,14 +10,10 @@ import studio.phaseshift.metatron.isa.mach.type.Router;
 import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.isa.llm.type.Agent.feat;
-import static studio.phaseshift.metatron.isa.llm.type.Agent.res;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.m.type.Poly.MUTABLE;
 
 /**
  * A persistent scratchpad the agent owns across the entire session.
@@ -61,11 +58,11 @@ public class LedgerFeature extends Feature {
     }
 
     @Override
-    public Obj skill() {
+    public Lst skill() {
         final fURI ledgerVID = this.at(LEDGER).uriValue();
-        return rec(uri(NAME), uri(LEDGER),
+        return lst(rec(uri(NAME), uri(LEDGER),
                 uri(DESC), str("persistent agent-owned scratchpad for cross-turn task tracking"),
-                uri(CONTENT), str(INSTRUCTIONS.replaceAll("%%%", ledgerVID.toString())));
+                uri(CONTENT), str(INSTRUCTIONS.replaceAll("%%%", ledgerVID.toString()))));
     }
 
     @Override

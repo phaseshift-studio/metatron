@@ -124,8 +124,55 @@ public class Graphitty {
     }*/
 
     public static void out(final OutputStream out, final String f, final Object... args) {
-        final Graphitty g = new Graphitty(out);
-        g.print(Graphitty.string(f, args));
+        // Route terminal writes through the FloatingSurface render thread
+        // so widget push/pop cursor sequences are never interleaved with
+        // console output.
+        final java.util.function.Consumer<String> writer = terminalWriter;
+        if (writer != null && out == terminalOutput) {
+            writer.accept(Graphitty.string(f, args));
+            return;
+        }
+        synchronized (out) {
+            final Graphitty g = new Graphitty(out);
+            g.print(Graphitty.string(f, args));
+        }
+    }
+
+    /** The terminal OutputStream registered by Console at startup. */
+    private static volatile OutputStream terminalOutput;
+
+    /**
+     * Optional bridge: when set, ALL terminal-bound writes are routed
+     * through this consumer, serializing them on the FloatingSurface
+     * render thread so widget cursor save/restore is never interleaved
+     * with console output.
+     */
+    private static volatile java.util.function.Consumer<String> terminalWriter;
+
+    /** Register the terminal output stream. Called once by Console at startup. */
+    public static void init(final OutputStream terminalOutput) {
+        Graphitty.terminalOutput = terminalOutput;
+    }
+
+    /** Register a terminal-writer bridge for serialized rendering. */
+    public static void setTerminalWriter(final java.util.function.Consumer<String> writer) {
+        Graphitty.terminalWriter = writer;
+    }
+
+    /**
+     * Write to the terminal. Routes through the bridge when available,
+     * otherwise writes directly to the registered terminal stream.
+     */
+    public static void writeToTerminal(final String f, final Object... args) {
+        final java.util.function.Consumer<String> writer = terminalWriter;
+        if (writer != null) {
+            writer.accept(Graphitty.string(f, args));
+            return;
+        }
+        final OutputStream out = terminalOutput;
+        if (out != null) {
+            out(out, f, args);
+        }
     }
 
     public static Graphitty stdout() {

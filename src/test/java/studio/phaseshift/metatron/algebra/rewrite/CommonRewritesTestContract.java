@@ -225,10 +225,16 @@ public interface CommonRewritesTestContract {
         return Stream.of(
                 generateCountTestCases(),
                 generateLimitTestCases(),
+                generateSkipTestCases(),
+                generateSkipLimitTestCases(),
                 // generateHasTestCases(),  // TODO: has() rewrite pattern needs adjustment
                 generateWhereTestCases(),
                 generateWhereCountTestCases(),
                 generateWhereLimitTestCases(),
+                generateWhereOffsetTestCases(),
+                generateWhereOffsetLimitTestCases(),
+                generateOrderTestCases(),
+                generateDedupTestCases(),
                 generateAggregationTestCases(),
                 generateCompositionTestCases()
         ).flatMap(s -> s);
@@ -267,6 +273,50 @@ public interface CommonRewritesTestContract {
                 Arguments.of("limit: take(10) all", "*" + p + "/+.take(10).count()", jnt(10)),
                 Arguments.of("limit: take(100) > data", "*" + p + "/+.take(100).count()", jnt(10)),
                 Arguments.of("limit: take(0)", "*" + p + "/+.take(0).count()", jnt(0))
+        );
+    }
+
+    // ========================================================================
+    // SKIP/OFFSET REWRITE TEST CASES
+    // ========================================================================
+
+    /**
+     * Test cases for skip(n)/offset rewrite optimization.
+     */
+    default Stream<Arguments> generateSkipTestCases() {
+        final String p = getTestDataUriPrefix().toString();
+        return Stream.of(
+                // Basic skip/offset — chain .count() to verify remaining row count
+                Arguments.of("skip: skip(0)", "*" + p + "/+.skip(0).count()", jnt(10)),
+                Arguments.of("skip: skip(1)", "*" + p + "/+.skip(1).count()", jnt(9)),
+                Arguments.of("skip: skip(3)", "*" + p + "/+.skip(3).count()", jnt(7)),
+                Arguments.of("skip: skip(5)", "*" + p + "/+.skip(5).count()", jnt(5)),
+                Arguments.of("skip: skip(9)", "*" + p + "/+.skip(9).count()", jnt(1)),
+                Arguments.of("skip: skip(10) all", "*" + p + "/+.skip(10).count()", jnt(0)),
+                Arguments.of("skip: skip(100) past end", "*" + p + "/+.skip(100).count()", jnt(0))
+        );
+    }
+
+    // ========================================================================
+    // SKIP + LIMIT COMBINED REWRITE TEST CASES
+    // ========================================================================
+
+    /**
+     * Test cases for combined skip(n).take(m) rewrite optimization.
+     * These test the optimization that fuses offset and limit into a single
+     * native {@code SELECT ... LIMIT m OFFSET n} operation.
+     */
+    default Stream<Arguments> generateSkipLimitTestCases() {
+        final String p = getTestDataUriPrefix().toString();
+        return Stream.of(
+                // skip + take combined → LIMIT + OFFSET pagination
+                Arguments.of("skip+limit: skip(0).take(5)", "*" + p + "/+.skip(0).take(5).count()", jnt(5)),
+                Arguments.of("skip+limit: skip(2).take(3)", "*" + p + "/+.skip(2).take(3).count()", jnt(3)),
+                Arguments.of("skip+limit: skip(5).take(5)", "*" + p + "/+.skip(5).take(5).count()", jnt(5)),
+                Arguments.of("skip+limit: skip(8).take(5)", "*" + p + "/+.skip(8).take(5).count()", jnt(2)),
+                Arguments.of("skip+limit: skip(10).take(3)", "*" + p + "/+.skip(10).take(3).count()", jnt(0)),
+                Arguments.of("skip+limit: skip(100).take(10)", "*" + p + "/+.skip(100).take(10).count()", jnt(0)),
+                Arguments.of("skip+limit: skip(3).take(0)", "*" + p + "/+.skip(3).take(0).count()", jnt(0))
         );
     }
 
@@ -399,6 +449,80 @@ public interface CommonRewritesTestContract {
                 Arguments.of("where+limit: <=5 take(3)", "*" + p + "/+.where([value=>?<=5]).take(3).count()", jnt(3))
                 // Boolean predicates commented out: SQLite stores booleans as 0/1 integers
                 // Arguments.of("where+limit: active=true take(2)", "*" + p + "/+.where([active=>true]).take(2).count()", jnt(2))
+        );
+    }
+
+    // ========================================================================
+    // WHERE + OFFSET COMBINED REWRITE TEST CASES
+    // ========================================================================
+
+    default Stream<Arguments> generateWhereOffsetTestCases() {
+        final String p = getTestDataUriPrefix().toString();
+        return Stream.of(
+                // where filters to 7 rows (values 4-10), skip slices from there
+                Arguments.of("where+offset: >3 skip(0)", "*" + p + "/+.where([value=>?>3]).skip(0).count()", jnt(7)),
+                Arguments.of("where+offset: >3 skip(2)", "*" + p + "/+.where([value=>?>3]).skip(2).count()", jnt(5)),
+                Arguments.of("where+offset: >3 skip(6)", "*" + p + "/+.where([value=>?>3]).skip(6).count()", jnt(1)),
+                Arguments.of("where+offset: >3 skip(10)", "*" + p + "/+.where([value=>?>3]).skip(10).count()", jnt(0)),
+                // where filters to 5 rows (values 6-10)
+                Arguments.of("where+offset: >5 skip(2)", "*" + p + "/+.where([value=>?>5]).skip(2).count()", jnt(3)),
+                // where filters to 2 rows (values 1-2)
+                Arguments.of("where+offset: <3 skip(1)", "*" + p + "/+.where([value=>?<3]).skip(1).count()", jnt(1)),
+                // where matches 0 rows
+                Arguments.of("where+offset: >10 skip(0)", "*" + p + "/+.where([value=>?>10]).skip(0).count()", jnt(0))
+        );
+    }
+
+    // ========================================================================
+    // WHERE + OFFSET + LIMIT COMBINED REWRITE TEST CASES
+    // ========================================================================
+
+    default Stream<Arguments> generateWhereOffsetLimitTestCases() {
+        final String p = getTestDataUriPrefix().toString();
+        return Stream.of(
+                // where filters to 7 rows (values 4-10), skip 2, take 3 → rows 6,7,8 (values 6,7,8)
+                Arguments.of("where+offset+limit: >3 skip(2).take(3)", "*" + p + "/+.where([value=>?>3]).skip(2).take(3).count()", jnt(3)),
+                // where filters to 7 rows, skip 5, take 4 → only 2 available
+                Arguments.of("where+offset+limit: >3 skip(5).take(4)", "*" + p + "/+.where([value=>?>3]).skip(5).take(4).count()", jnt(2)),
+                // where filters to 7 rows, skip 10, take 3 → none
+                Arguments.of("where+offset+limit: >3 skip(10).take(3)", "*" + p + "/+.where([value=>?>3]).skip(10).take(3).count()", jnt(0)),
+                // take 0 always yields 0
+                Arguments.of("where+offset+limit: >3 skip(2).take(0)", "*" + p + "/+.where([value=>?>3]).skip(2).take(0).count()", jnt(0)),
+                // where+offset+limit: values < 5 (4 rows), skip 1, take 2
+                Arguments.of("where+offset+limit: <5 skip(1).take(2)", "*" + p + "/+.where([value=>?<5]).skip(1).take(2).count()", jnt(2))
+        );
+    }
+
+    // ========================================================================
+    // ORDER BY REWRITE TEST CASES
+    // ========================================================================
+
+    default Stream<Arguments> generateOrderTestCases() {
+        final String p = getTestDataUriPrefix().toString();
+        return Stream.of(
+                // order + count verifies the rewrite fires (ordering doesn't change count)
+                Arguments.of("order: by name count", "*" + p + "/+.order(select(name)).count()", jnt(10)),
+                // order + take
+                Arguments.of("order: by name take(3)", "*" + p + "/+.order(select(name)).take(3).count()", jnt(3)),
+                Arguments.of("order: by value take(5)", "*" + p + "/+.order(select(value)).take(5).count()", jnt(5)),
+                // order + where + take (order before where)
+                Arguments.of("order: by name take(1)", "*" + p + "/+.order(select(name)).take(1).count()", jnt(1))
+        );
+    }
+
+    // ========================================================================
+    // DISTINCT / DEDUP REWRITE TEST CASES
+    // ========================================================================
+
+    default Stream<Arguments> generateDedupTestCases() {
+        final String p = getTestDataUriPrefix().toString();
+        return Stream.of(
+                // names are all unique (item1..item10) → all 10 remain
+                Arguments.of("dedup: name count", "*" + p + "/+.dedup(select(name)).count()", jnt(10)),
+                // values are all unique (1..10) → all 10 remain
+                Arguments.of("dedup: value count", "*" + p + "/+.dedup(select(value)).count()", jnt(10)),
+                // multi-column dedup (all unique combos → 10)
+                Arguments.of("dedup: multi-column", "*" + p + "/+.dedup(select([name=>_,value=>_])).count()", jnt(10))
         );
     }
 
@@ -559,7 +683,19 @@ public interface CommonRewritesTestContract {
                 // where+count composed rewrite
                 Arguments.of("verify: where+count rewrite fires", "*" + p + "/+.where([value=>?>5]).count()", pre + "where_count"),
                 // where+limit composed rewrite
-                Arguments.of("verify: where+limit rewrite fires", "*" + p + "/+.where([value=>?>3]).take(2)", pre + "where_limit")
+                Arguments.of("verify: where+limit rewrite fires", "*" + p + "/+.where([value=>?>3]).take(2)", pre + "where_limit"),
+                // skip/offset rewrite
+                Arguments.of("verify: skip rewrite fires", "*" + p + "/+.skip(3)", pre + "offset"),
+                // skip+limit composed rewrite
+                Arguments.of("verify: skip+limit rewrite fires", "*" + p + "/+.skip(3).take(2)", pre + "offset_limit"),
+                // where+offset composed rewrite
+                Arguments.of("verify: where+offset rewrite fires", "*" + p + "/+.where([value=>?>3]).skip(2)", pre + "where_offset"),
+                // where+offset+limit composed rewrite
+                Arguments.of("verify: where+offset+limit rewrite fires", "*" + p + "/+.where([value=>?>3]).skip(2).take(1)", pre + "where_offset_limit"),
+                // order rewrite
+                Arguments.of("verify: order rewrite fires", "*" + p + "/+.order(select(name))", pre + "order"),
+                // dedup/distinct rewrite
+                Arguments.of("verify: dedup rewrite fires", "*" + p + "/+.dedup(select(name))", pre + "distinct")
         );
     }
 
@@ -662,7 +798,13 @@ public interface CommonRewritesTestContract {
                 Arguments.of("firing: from().where() should rewrite", "*$$/+.where([value=>?>5])", pre + "where", true),
                 Arguments.of("firing: from().where().count() should rewrite", "*$$/+.where([value=>?>5]).count()", pre + "where_count", true),
                 Arguments.of("firing: from().where().take() should rewrite", "*$$/+.where([value=>?>3]).take(2)", pre + "where_limit",
-                        true)
+                        true),
+                Arguments.of("firing: from().skip() should rewrite", "*$$/+.skip(3)", pre + "offset", true),
+                Arguments.of("firing: from().skip().take() should rewrite", "*$$/+.skip(3).take(2)", pre + "offset_limit", true),
+                Arguments.of("firing: from().where().skip() should rewrite", "*$$/+.where([value=>?>3]).skip(2)", pre + "where_offset", true),
+                Arguments.of("firing: from().where().skip().take() should rewrite", "*$$/+.where([value=>?>3]).skip(2).take(1)", pre + "where_offset_limit", true),
+                Arguments.of("firing: from().order() should rewrite", "*$$/+.order(select(name))", pre + "order", true),
+                Arguments.of("firing: from().dedup() should rewrite", "*$$/+.dedup(select(name))", pre + "distinct", true)
         );
     }
 

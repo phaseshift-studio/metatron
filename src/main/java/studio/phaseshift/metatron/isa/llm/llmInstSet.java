@@ -23,6 +23,7 @@ import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
 import studio.phaseshift.metatron.isa.llm.type.feature.*;
+import studio.phaseshift.metatron.isa.llm.type.feature.Feature;
 import studio.phaseshift.metatron.isa.llm.type.mSkill;
 import studio.phaseshift.metatron.isa.llm.type.mTool;
 import studio.phaseshift.metatron.isa.m.type.*;
@@ -289,17 +290,21 @@ public class llmInstSet extends AbstractInstSet {
                                         .vid(LLM_FEATURE_TID)
                                         .isaPredicate(rec(
                                                 // hook fields — each is an optional inst a feature can override
-                                                uri(ON_BEFORE_CHAT).maybe().asUri(), ALL_TYPE,
+                                                uri(SKILL).maybe().asUri(), lst(LLM_SKILL_TYPE),
+                                                uri(ON_AGENT_CTOR).maybe(), ALL_TYPE,
+                                                uri(ON_BEFORE_CHAT).maybe(), ALL_TYPE,
                                                 uri(ON_PARTIAL_RESPONSE).maybe(), ALL_TYPE,
                                                 uri(ON_PARTIAL_THINKING).maybe(), ALL_TYPE,
                                                 uri(ON_PARTIAL_TOOL_CALL).maybe(), ALL_TYPE,
                                                 uri(BEFORE_TOOL_EXECUTION).maybe(), ALL_TYPE,
                                                 uri(ON_TOOL_EXECUTED).maybe(), ALL_TYPE,
                                                 uri(ON_COMPLETE_RESPONSE).maybe(), ALL_TYPE,
-                                                uri("onError").maybe(), ALL_TYPE))
+                                                uri(ON_ERROR).maybe(), ALL_TYPE))
                                         .create(),
                                 "",
                                 "", mutableMap(
+                                        uri(SKILL).maybe(), "a skill associated with the feature",
+                                        uri(ON_AGENT_CTOR).maybe(), "inst?noobj<=agent(){ [-- one time setup --] }",
                                         uri(ON_BEFORE_CHAT).maybe(), "inst?#{?}<=agent(){ [-- non-noobj to short-circuit --] }",
                                         uri(ON_PARTIAL_RESPONSE).maybe(), "inst?noobj<=agent(text=>str::T)",
                                         uri(ON_PARTIAL_THINKING).maybe(), "inst?noobj<=agent(text=>str::T)",
@@ -574,12 +579,16 @@ public class llmInstSet extends AbstractInstSet {
      * @param f the feature to register hooks on
      */
     @SuppressWarnings("unchecked")
-    private static <F extends studio.phaseshift.metatron.isa.llm.type.feature.Feature> F createStageLambdas(final F f) {
+    private static Obj createStageLambdas(final Obj f) {
         for (final StageDef def : STAGE_DEFS) {
             try {
-                final Method method = f.getClass().getMethod(def.methodName, def.paramTypes);
-                if (method.getDeclaringClass() != studio.phaseshift.metatron.isa.llm.type.feature.Feature.class) {
-                    f.at(uri(def.stageName), def.lambdaFactory.apply(f), MUTABLE);
+                if (f instanceof Feature featureObj) {
+                    final Method method = featureObj.getClass().getMethod(def.methodName, def.paramTypes);
+                    if (method.getDeclaringClass() != studio.phaseshift.metatron.isa.llm.type.feature.Feature.class) {
+                        featureObj.at(uri(def.stageName), def.lambdaFactory.apply(featureObj), MUTABLE);
+                    }
+                } else if (f instanceof Rec) {
+                    f.logger().warn("mtron native feature loaded: %s", f.tid());
                 }
             } catch (final NoSuchMethodException e) {
                 // All methods are declared on Feature — this should never happen
@@ -599,6 +608,11 @@ public class llmInstSet extends AbstractInstSet {
     }
 
     private static final List<StageDef> STAGE_DEFS = List.of(
+            new StageDef(ON_AGENT_CTOR, "onAgentCtor", new Class<?>[]{Agent.class},
+                    f -> instLambda((agent, ignored) -> {
+                        f.onAgentCtor((Agent) agent);
+                        return noobj();
+                    })),
             new StageDef(ON_BEFORE_CHAT, "onBeforeChat", new Class<?>[]{Agent.class},
                     f -> instLambda((agent, ignored) -> f.onBeforeChat((Agent) agent))),
             new StageDef(ON_PARTIAL_RESPONSE, "onPartialResponse", new Class<?>[]{Agent.class, Str.class},
@@ -631,7 +645,7 @@ public class llmInstSet extends AbstractInstSet {
                         f.onCompleteResponse((Agent) agent, i.arg(0).asStr());
                         return noobj();
                     })),
-            new StageDef("onError", "onError", new Class<?>[]{Agent.class, Fail.class},
+            new StageDef(ON_ERROR, "onError", new Class<?>[]{Agent.class, Fail.class},
                     f -> instLambda((agent, ignored) -> {
                         f.onError((Agent) agent, null);
                         return noobj();

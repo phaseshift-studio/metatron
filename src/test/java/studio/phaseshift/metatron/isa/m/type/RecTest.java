@@ -70,7 +70,7 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
             "[a=>b]                                | a                    | /m/uri::b",
             "[a=>b]                                | a/                   | a=>b",
             "[a=>{b,c}]                            | a/                   | a=>{b,c}",
-            // "[a=>noobj]                            | a/                   | noobj",
+            "[a=>noobj]                            | a/                   | noobj",
             "[a=>noobj]                            | a                    | noobj",
             "[=>]                                  | a                    | noobj",
             "[1=>[2=>3]]                           | 1                    | [2=>3]",
@@ -285,8 +285,8 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
             "[a=>1,b=>2,c=>3]==[a=>plus(2),b=>plus(10)]==[a=>_,b=>-<[count(),sum()]>-]          % [a=>3,b=>{1,12}]",
             "[a=>1,b=>2,c=>3]==[a=>plus(2),b=>plus(10)]==[a=>_,b=>-<[count(),sum()]>-.count()]  % [a=>3,b=>2]",
             //"[a=>1,b=>2,c=>3]==[a=>plus(2),map(b)=>plus(10)]==[a=>_,b=>(-<[count(),sum()]>-.sum().sum())]    % [a=>3,b=>39]",
-            //"[a=>1,b=>2,c=>3]==[a=>plus(2),map(b)=>plus(10)]==[a=>_,b=>-<[count(),sum()]>-.sum().sum()]     % [a=>3,b=>39]",
-            "[1,2,3].-<[>-.is(gt(2)) => >-.is(gt(1))>-?<=int{*}[,], >-.is(gt(1)) => _/id()\\_]       % [3=>[2,3],{2,3}=>[1,2,3]]",
+            "[a=>1,b=>2,c=>3]==[a=>plus(2),b=>+10]==[a=>_,b=>-<[count(),sum()]>-.sum?int<=int{*}().sum()]     % [a=>3,b=>13]",
+            "[1,2,3]-<[>-.?>2=>>-.?>1>-?<=int{*}[,],>-.?>1=>_/id()\\_]                          % [3=>[2,3],{2,3}=>[1,2,3]]",
     }, delimiter = '%')
     public void testCode(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);

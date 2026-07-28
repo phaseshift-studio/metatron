@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -18,6 +18,8 @@
 
 package studio.phaseshift.metatron.isa.llm.type;
 
+import dev.langchain4j.agent.tool.ToolSpecification;
+import dev.langchain4j.service.tool.ToolExecutor;
 import dev.langchain4j.skills.DefaultSkill;
 import dev.langchain4j.skills.DefaultSkillResource;
 import dev.langchain4j.skills.FileSystemSkillLoader;
@@ -26,9 +28,12 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
+import studio.phaseshift.metatron.util.Tuple;
 
 import java.io.File;
 import java.nio.file.Path;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SKILL_TID;
@@ -43,16 +48,20 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  */
 public class mSkill extends MRec {
 
+    private final Skill skill;
+
     public mSkill(final Skill skill, final fURI tid, final fURI vid) {
         super(mutableMap(
                 uri(NAME), uri(skill.name()),
                 uri(DESC), str(skill.description()),
                 uri(CONTENT), str(skill.content()),
                 uri(ENTRY), skill.resources().isEmpty() ? noobj() : lst(skill.resources().stream().map(r -> rec(uri(DIR), uri(r.relativePath()), uri(CONTENT), str(r.content())).<Obj>as()).toList())), tid, vid);
+        this.skill = skill;
     }
 
     public mSkill(final Rec skillRec, final fURI tid, final fURI vid) {
         super(skillRec.jvm(), tid, vid);
+        this.skill = null;
     }
 
     public Skill toSkill() {
@@ -71,13 +80,19 @@ public class mSkill extends MRec {
                             .content(e.at(CONTENT).strValue())
                             .build())
                     .toList());
+        if (this.has(TOOL)) {
+            final Map<ToolSpecification, ToolExecutor> tools = this.at(TOOL).asLst().elements().map(i -> mTool.mtronInstToTool(i.asInst())).map(mTool::mtronInstToolSpecification).collect(Collectors.toMap(Tuple.Pair::get0, Tuple.Pair::get1));
+            skill = skill.tools(tools);
+        }
+        if (null != this.skill && !this.skill.toolProviders().isEmpty())
+            skill = skill.toolProviders();
         return skill.build();
     }
 
     public static mSkill of(final File skillDir) {
         return new mSkill(FileSystemSkillLoader.loadSkill(Path.of(skillDir.getAbsolutePath())), LLM_SKILL_TID, null);
     }
-    
+
     public static mSkill of(final Rec skillRec) {
         return new mSkill(skillRec, LLM_SKILL_TID, skillRec.vid());
     }

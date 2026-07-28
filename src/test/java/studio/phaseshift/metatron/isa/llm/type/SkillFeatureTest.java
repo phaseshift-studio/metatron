@@ -2,23 +2,16 @@ package studio.phaseshift.metatron.isa.llm.type;
 
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.isa.llm.type.feature.*;
-import studio.phaseshift.metatron.isa.llm.type.mSkill;
-import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.m.type.Lst;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Rec;
 
 import java.util.LinkedHashMap;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.llm.type.Agent.feat;
-import static studio.phaseshift.metatron.isa.llm.type.Agent.res;
-import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.Poly.MUTABLE;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
-import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
-import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
@@ -36,8 +29,8 @@ public class SkillFeatureTest extends FeatureTest {
         };
         final Obj skill = loop.skill();
         assertFalse(skill.isNoObj(), "LoopFeature should have a skill");
-        assertTrue(skill.isRec(), "skill should be a Rec");
-        final Rec skillRec = skill.asRec();
+        assertTrue(skill.asLst().at(0).isRec(), "skill should be a Rec");
+        final Rec skillRec = skill.asLst().at(0).asRec();
         assertEquals("loop", skillRec.at(uri(NAME)).uriValue().toString(), "skill name should be a URI: 'loop'");
         assertFalse(skillRec.at(uri(DESC)).strValue().isBlank(), "skill should have description");
         assertFalse(skillRec.at(uri(CONTENT)).strValue().isBlank(), "skill should have content");
@@ -49,7 +42,7 @@ public class SkillFeatureTest extends FeatureTest {
         };
         final Obj skill = ledger.skill();
         assertFalse(skill.isNoObj(), "LedgerFeature should have a skill");
-        assertEquals("ledger", skill.asRec().at(uri(NAME)).uriValue().toString());
+        assertEquals("ledger", skill.asLst().at(0).asRec().at(uri(NAME)).uriValue().toString());
     }
 
     @Test
@@ -57,16 +50,16 @@ public class SkillFeatureTest extends FeatureTest {
         // skill() Rec must match LLM_SKILL_TYPE so mSkill.of(rec).toSkill() succeeds
         final LoopFeature loop = new LoopFeature(new LinkedHashMap<>(), feat("loop"), null) {
         };
-        final Obj skillRec = loop.skill();
-        assertFalse(skillRec.isNoObj());
-
-        final var lc4jSkill = mSkill.of(skillRec.asRec()).toSkill();
+        final Lst skillLst = loop.skill();
+        assertFalse(skillLst.isNoObj());
+        final Rec skillRec = skillLst.at(0);
+        final var lc4jSkill = mSkill.of(skillRec).toSkill();
         assertNotNull(lc4jSkill, "should build LC4j Skill from skill() Rec");
         assertEquals("loop", lc4jSkill.name());
 
         final LedgerFeature ledger = new LedgerFeature(new LinkedHashMap<>(), feat("ledger"), null) {
         };
-        final var ledgerSkill = mSkill.of(ledger.skill().asRec()).toSkill();
+        final var ledgerSkill = mSkill.of(ledger.skill().asLst().at(0).asRec()).toSkill();
         assertEquals("ledger", ledgerSkill.name());
     }
 
@@ -119,7 +112,7 @@ public class SkillFeatureTest extends FeatureTest {
     public void testLoopSkillContainsBlockSyntax() {
         final LoopFeature loop = new LoopFeature(new LinkedHashMap<>(), feat("loop"), null) {
         };
-        final String content = loop.skill().asRec().at(uri(CONTENT)).strValue();
+        final String content = loop.skill().asLst().at(0).asRec().at(uri(CONTENT)).strValue();
         assertTrue(content.contains("<<mtron:loop>>"),
                 "skill content should explain the mtron:loop block syntax");
         assertTrue(content.contains("prompt"),
@@ -133,7 +126,7 @@ public class SkillFeatureTest extends FeatureTest {
         final LoopFeature loopWithDelay = new LoopFeature(
                 mutableMap(uri("delay"), real(2.0d)), feat("loop"), null) {
         };
-        final String content = loopWithDelay.skill().asRec().at(uri(CONTENT)).strValue();
+        final String content = loopWithDelay.skill().asLst().at(0).asRec().at(uri(CONTENT)).strValue();
         LOG.warn("loop skill content: %s", content);
         assertTrue(content.contains("delay"),
                 "skill content should mention configured delay");
