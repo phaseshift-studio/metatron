@@ -59,11 +59,11 @@
         <flexmark.version>0.64.8</flexmark.version>
         <testcontainers.version>2.0.5</testcontainers.version>
         <java-websocket.version>1.6.0</java-websocket.version>
-        <mariadb.version>3.5.9</mariadb.version>
+        <mariadb.version>3.5.10</mariadb.version>
         <mongodb.version>5.9.1</mongodb.version>
-        <langchain4j.version>1.18.0</langchain4j.version>
+        <langchain4j.version>1.18.1</langchain4j.version>
         <jlama.version>0.8.4</jlama.version>
-        <langchain4j.beta.version>1.18.0-beta28</langchain4j.beta.version>
+        <langchain4j.beta.version>1.18.1-beta28</langchain4j.beta.version>
         <langgraph4j.version>1.8.11</langgraph4j.version>
         <junit.version>6.1.2</junit.version>
         <tinkerpop.version>3.8.1</tinkerpop.version>
@@ -72,7 +72,7 @@
         <petitparser.version>2.4.0</petitparser.version>
         <jline.version>3.30.16</jline.version>
         <rdf4j.version>6.0.0</rdf4j.version>
-        <logback.version>1.6.0</logback.version>
+        <logback.version>1.6.1</logback.version>
         <slf4j.version>2.0.18</slf4j.version>
         <hive.version>1.3.17</hive.version>
         <jakarta.version>2.2.0</jakarta.version>
@@ -94,7 +94,7 @@
         <zt.version>1.13.0</zt.version>
         <lucene.version>10.5.0</lucene.version>
         <treesitter.version>1.12.0</treesitter.version>
-        <eclipsestore.version>4.1.0</eclipsestore.version>
+        <eclipsestore.version>4.2.0</eclipsestore.version>
         <janusgraph.version>1.1.0</janusgraph.version>
         <!-- LOGBACK PROPERTIES -->
     </properties>
@@ -211,7 +211,7 @@
         <dependency>
             <groupId>com.mysql</groupId>
             <artifactId>mysql-connector-j</artifactId>
-            <version>9.7.0</version>
+            <version>26.7.0</version>
         </dependency>
         <!-- MONGODB -->
         <dependency>
