@@ -40,12 +40,13 @@
     <link href="css/termynal.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.0/styles/night-owl.min.css" rel="stylesheet">
     <!-- JAVASCRIPT PACKAGES -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" type="text/javascript"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+            type="text/javascript"></script>
     <script src="./highlight/highlight.min.js" type="text/javascript"></script>
     <script src="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.js" type="text/javascript"></script>
     <script src="./highlight/languages/mtron.min.js" type="text/javascript"></script>
     <script src="./highlight/languages/json.min.js" type="text/javascript"></script>
-   <!-- <script src="./highlight/languages/bash.min.js" type="text/javascript"></script>-->
+    <!-- <script src="./highlight/languages/bash.min.js" type="text/javascript"></script>-->
     <script src="https://code.jquery.com/jquery-3.4.1.min.js" type="text/javascript"></script>
     <script async src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js" type="text/javascript"></script>
     <script src="lib/wow/wow.min.js" type="text/javascript"></script>
@@ -56,12 +57,39 @@
     <!-- CUSTOM CSS/JAVASCRIPT -->
     <link href="css/metatron.css" rel="stylesheet">
     <style>
-    .hidden { display: none; }
-    .switch { border-width: 1px 1px 0 1px; border-style: solid; border-color: #7a2518; display: inline-block; border-radius: 4px 4px 0 0; }
-    .switch--item { padding: 4px 14px; font-size: 0.85rem; background-color: #ffffff; color: #7a2518; display: inline-block; cursor: pointer; }
-    .switch--item:first-child { border-radius: 3px 0 0 0; }
-    .switch--item:last-child  { border-radius: 0 3px 0 0; }
-    .switch--item.selected { background-color: #7a2519; color: #ffffff; }
+        .hidden {
+            display: none;
+        }
+
+        .switch {
+            border-width: 1px 1px 0 1px;
+            border-style: solid;
+            border-color: #7a2518;
+            display: inline-block;
+            border-radius: 4px 4px 0 0;
+        }
+
+        .switch--item {
+            padding: 4px 14px;
+            font-size: 0.85rem;
+            background-color: #ffffff;
+            color: #7a2518;
+            display: inline-block;
+            cursor: pointer;
+        }
+
+        .switch--item:first-child {
+            border-radius: 3px 0 0 0;
+        }
+
+        .switch--item:last-child {
+            border-radius: 0 3px 0 0;
+        }
+
+        .switch--item.selected {
+            background-color: #7a2519;
+            color: #ffffff;
+        }
     </style>
     <script src="js/metatron.js" type="text/javascript"></script>
 </head>
@@ -122,7 +150,8 @@ bin/metatron</code></pre>
             --------------------------------------- QUICK START LINK ----------------------------------------------------
             ----------------------------------------------------------------------------------------------------------->
             <li class="nav-item">
-                <a class="nav-link quickstart-link" href="start.html" onclick="location.href=location.href.replace(/(\/instset)?(\/[^/]*)?(\.html)?$/,'/start.html');return false;">
+                <a class="nav-link quickstart-link" href="start.html"
+                   onclick="location.href=location.href.replace(/(\/instset)?(\/[^/]*)?(\.html)?$/,'/start.html');return false;">
                     <i class="bi bi-book me-1"></i> quick start
                 </a>
             </li>
@@ -138,7 +167,9 @@ bin/metatron</code></pre>
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
                            onclick="location.href='./instset/index.html';">
                         <i class="bi bi-grid-3x3-gap-fill me-2"></i>overview</a></li>
-                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                        <hr class="dropdown-divider">
+                    </li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
                            onclick="location.href='./instset/m.html';"><img
                             src="./images/icons/space/mtron-icon.svg" class="isa-row icon-color me-2"
@@ -191,7 +222,9 @@ bin/metatron</code></pre>
              ----------------------------------- TRACTATUS LINK --------------------------------------------------------
              ---------------------------------------------------------------------------------------------------------->
             <li class="nav-item">
-                <a class="nav-link" href="tractatus.html" onclick="location.href=location.href.replace(/(\/instset)?(\/[^/]*)?(\.html)?$/,'/tractatus.html');return false;">the tractatus</a>
+                <a class="nav-link" href="tractatus.html"
+                   onclick="location.href=location.href.replace(/(\/instset)?(\/[^/]*)?(\.html)?$/,'/tractatus.html');return false;">the
+                    tractatus</a>
             </li>
             <!----------------------------------------------------------------------------------------------------------
             ----------------------------------- ARTICLES DROPDOWN ------------------------------------------------------
@@ -201,11 +234,14 @@ bin/metatron</code></pre>
                    data-bs-toggle="dropdown" aria-expanded="false">articles</a>
                 <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark" aria-labelledby="articles-dropdown">
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='./articles/stream-ring-theory.pdf';"><i class="bi bi-gem icon-color me-2 isa-row"></i>stream ring theory</a></li>
+                           onclick="location.href='./articles/stream-ring-theory.pdf';"><i
+                            class="bi bi-gem icon-color me-2 isa-row"></i>stream ring theory</a></li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='./articles/parametric-identities-in-ring-theory.html';"><i class="bi bi-arrow-repeat icon-color me-2 isa-row"></i>parametric identities</a></li>
+                           onclick="location.href='./articles/parametric-identities-in-ring-theory.html';"><i
+                            class="bi bi-arrow-repeat icon-color me-2 isa-row"></i>parametric identities</a></li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='./articles/mm-adt.pdf';"><i class="bi bi-layout-wtf icon-color me-2 isa-row"></i>mm-adt (metatron precursor)</a></li>
+                           onclick="location.href='./articles/mm-adt.pdf';"><i
+                            class="bi bi-layout-wtf icon-color me-2 isa-row"></i>mm-adt (metatron precursor)</a></li>
                 </ul>
             </li>
             <!----------------------------------------------------------------------------------------------------------
@@ -223,7 +259,11 @@ bin/metatron</code></pre>
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
                            onclick="location.href='https://github.com/phaseshift-studio/metatron';">
                         <i class="bi bi-github icon-color me-2 isa-row"></i>github</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="#" onclick="location.href='https://groups.google.com/u/1/g/metatron-phaseshift';">
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='https://huggingface.co/phaseshift-studio';">
+                        <i class="bi bi-emoji-laughing icon-color me-2 isa-row"></i>hugging face</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='https://groups.google.com/u/1/g/metatron-phaseshift';">
                         <i class="bi bi-envelope-at icon-color me-2 isa-row"></i>mailing list</a></li>
                     <!--<li><a class="code dropdown-item d-flex align-items-center" href="#" onclick="location.href='index.html';">live coding</a></li>-->
                     <!--<li><a class="code dropdown-item d-flex align-items-center" href="#" onclick="location.href='index.html';">artifacts</a></li>-->
@@ -976,7 +1016,7 @@ mtron&gt;  10.is_divisible('abc')
    	  \_pred | []
    	[inst]   | mod?rng=int&amp;dom=int('abc'){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
    	 \_dom   | int::T
-   	 \_args  | ['abc'][Obj&lt;694&gt;:'abc' [value] unable to convert str::T]]@/sys/fail/12[...]</code></pre>
+   	 \_args  | ['abc'][Obj&lt;693&gt;:'abc' [value] unable to convert str::T]]@/sys/fail/12[...]</code></pre>
 </div>
 </div>
 </div>
@@ -1349,9 +1389,9 @@ ultimately dependent on the incoming lhs <code>obj</code>, where</p>
 <h2 id="sec-large-language-models" class="discrete">Large Language Models</h2>
 <div class="legend-index">
 <ul>
-<li class="legend-lvl-3"><a href="#sec-catalogs" onclick="var t=document.getElementById('sec-catalogs');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Catalogs</a></li>
-<li class="legend-lvl-3"><a href="#sec-llm-space-encoding" onclick="var t=document.getElementById('sec-llm-space-encoding');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">LLM Space Encoding</a></li>
-<li class="legend-lvl-3"><a href="#sec-features" onclick="var t=document.getElementById('sec-features');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Features</a></li>
+<li class="legend-lvl-3"><a href="#sec-models" onclick="var t=document.getElementById('sec-models');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Models</a></li>
+<li class="legend-lvl-3"><a href="#sec-agents" onclick="var t=document.getElementById('sec-agents');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Agents</a></li>
+<li class="legend-lvl-4"><a href="#sec-features" onclick="var t=document.getElementById('sec-features');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Features</a></li>
 <li class="legend-lvl-4"><a href="#sec-tools" onclick="var t=document.getElementById('sec-tools');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Tools</a></li>
 <li class="legend-lvl-5"><a href="#sec-inst-as-tool" onclick="var t=document.getElementById('sec-inst-as-tool');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Inst as Tool</a></li>
 <li class="legend-lvl-5"><a href="#sec-mcp-tool-as-inst" onclick="var t=document.getElementById('sec-mcp-tool-as-inst');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">MCP Tool as Inst</a></li>
@@ -1362,28 +1402,27 @@ ultimately dependent on the incoming lhs <code>obj</code>, where</p>
 <li class="legend-lvl-3"><a href="#sec-agent-based-programming-language" onclick="var t=document.getElementById('sec-agent-based-programming-language');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">agent-based programming language</a></li>
 </ul>
 </div>
-<details class="accordion-small">
-<summary class="title">/m/llm instset import and space constructions</summary>
+<details>
+<summary class="title">documentation setup</summary>
 <div class="content">
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;  import(/m/web)
 ...
-mtron&gt; import(/m/llm)
-mtron&gt; wsspace::[host     =&gt; &lt;ws://localhost:8555&gt;,
+mtron&gt;  import(/m/llm)
+...
+mtron&gt;  import(/m/math)
+...
+mtron&gt; httpspace::[host     =&gt; http://localhost:8777,
+                   q        =&gt; [mimeq::[=&gt;]],
+                   pattern  =&gt; &lt;http://#&gt;,
+                   route    =&gt; [/mcp     =&gt; mcp_mtron_http,
+                                /       =&gt; &lt;&gt;]]@/sys/space/web/http
+mtron&gt; wsspace::[host     =&gt; ws://localhost:8555,
                  pattern  =&gt; &lt;ws://#&gt;,
                  q        =&gt; [docq::[=&gt;],subq::[=&gt;]],
                  route    =&gt; [/mtron  =&gt; mtron_ws,
                               /mcp    =&gt; mcp_mtron_ws]]@/sys/space/web/ws
-mtron&gt; httpspace::[host     =&gt; &lt;http://localhost:8777&gt;,
-                   pattern  =&gt; &lt;http://localhost:11434/#&gt;]@/sys/space/web/http
-==&gt;fail::[unable to construct httpspace::T: fail::[apply failure:
-   	[lhs]    | [host=&gt;http://localhost:8777,pattern=&gt;http://localhost:11434/#]@/sys/space/web/http
-   	 \_type  | /m/rec
-   	  \_pred | []
-   	[inst]   | /m/web/space/httpspace/ctor?rng=httpspace&amp;dom=#{?}(rec::T){&lt;j&gt;}
-   	 \_dom   | #{?}::T
-   	 \_args  | [rec::T][Obj&lt;585&gt;:unable to convert type to rec::T[Obj&lt;585&gt;:class studio.phaseshift.metatron.isa.m.type.impl.MType cannot be cast to class studio.phaseshift.metatron.isa.m.type.Rec (studio.phaseshift.metatron.isa.m.type.impl.MType and studio.phaseshift.metatron.isa.m.type.Rec are in unnamed module of loader 'app')] ← class studio.phaseshift.metatron.isa.m.type.impl.MType cannot be cast to class studio.phaseshift.metatron.isa.m.type.Rec (studio.phaseshift.metatron.isa.m.type.impl.MType and studio.phaseshift.metatron.isa.m.type.Rec are in unnamed module of loader 'app')]]@/sys/fail/6[...]]@/sys/fail/8
 mtron&gt; fsspace::[pattern  =&gt; fs:#,
                  route    =&gt; [fs:=&gt;&lt;.metatron&gt;]]@/sys/space/fs</code></pre>
 </div>
@@ -1396,14 +1435,17 @@ mtron&gt; fsspace::[pattern  =&gt; fs:#,
 <div class="olist arabic">
 <ol class="arabic">
 <li>
-<p><strong>Pair Programmer</strong>: LLMs can connect to a console session, be provided a terminal split screen, and evaluate mtron expressions alongside the user. This is especially useful when developing strategies for interlinking spaces via schema alignment and entity resolution as well as quickly creating domain-specific rewrite rules to optimize mtron compilation (using mtron).</p>
+<p><strong>Pair Programmer</strong>: LLMs can connect to a console session, be provided a terminal split screen, and evaluate mtron expressions alongside the user.
+This is especially useful when developing strategies for interlinking spaces via schema alignment and entity resolution as well as quickly creating domain-specific rewrite rules to optimize mtron compilation (using mtron).</p>
 </li>
 <li>
-<p><strong>Agent Development</strong>: A large portion of an LLM&#8217;s functional elements are embedded in the URI address space and made accessible to mtron via respective spaces. Such components include:</p>
+<p><strong>Agent Development</strong>: A large portion of an LLM&#8217;s functional elements are embedded in the URI address space and made accessible to mtron via respective spaces.
+These components are called <strong>features</strong> and metatron offers a rich set of features that can can be composed to yield custom agent behaviors:</p>
 <div class="ulist">
 <ul>
 <li>
-<p><strong>tools</strong>: every mtron <code>inst</code> has an <code>as()</code>-mapping to <code>tool</code>, where the <code>docq</code> q processor of the <code>inst</code> provides the name, description, and argument notes necessary for LLM tool selection. While most mtron instructions are low-level and not necessarily "tool-oriented," user-defined custom instructions can be defined and offered as tools/services to llms as needed.</p>
+<p><strong>tools</strong>: every mtron <code>inst</code> has an <code>as()</code>-mapping to <code>tool</code>, where the <code>docq</code> processor of the <code>inst</code> provides the name, description, and argument notes necessary for LLM tool selection.
+While most mtron instructions are low-level and not necessarily "tool-oriented," user-defined custom instructions can be defined and offered as tools/services to llms as needed.</p>
 </li>
 <li>
 <p><strong>thoughts</strong>: when enabling internal reasoning with a supporting LLM, the stream of thought is published streamed and can be directed to system output, to a memory structure, to another LLM for review, etc.</p>
@@ -1412,10 +1454,13 @@ mtron&gt; fsspace::[pattern  =&gt; fs:#,
 <p><strong>sessions</strong>: an LLMs interactions and thoughts can be stored and retrieved at a later time to enable long-term memory and context awareness.</p>
 </li>
 <li>
-<p><strong>skills</strong>: an LLM can be trained on a wide range of skills and domains, allowing them to perform complex tasks and solve domain-specific problems. Skills can be pulled from the Anthropic-specified <code>.agent</code> directory that has a corresponding <code>SKILL.md</code> file and associated resources. Or, can be created programmatically in metaron.</p>
+<p><strong>skills</strong>: an LLM can be trained on a wide range of skills and domains, allowing them to perform complex tasks and solve domain-specific problems.
+Skills can be pulled from the Anthropic-specified <code>.agent</code> directory that has a corresponding <code>SKILL.md</code> file and associated resources.
+Or, can be created programmatically in metaron.</p>
 </li>
 <li>
-<p><strong>notes</strong>: pass information to an LLM during a chat iteration without interrupting them. LLMs will periodically check their note stack for any advice/information from the user about their task at hand.</p>
+<p><strong>notes</strong>: pass information to an LLM during a chat iteration without interrupting them.
+LLMs will periodically check their note stack for any advice/information from the user about their task at hand.</p>
 </li>
 <li>
 <p><strong>prompts</strong>: specific prompts or instructions can be stored and retrieved to help guide an LLM&#8217;s response.</p>
@@ -1424,56 +1469,23 @@ mtron&gt; fsspace::[pattern  =&gt; fs:#,
 <p><strong>response formats</strong>: a mtron <code>rec</code> can serve as a schema object instructing the LLM to populate the <code>rec</code> with their answer to avoid arbitrary string responses in favor of structured responses.</p>
 </li>
 <li>
-<p><strong>gguff vector files</strong>: &#8230;&#8203;</p>
+<p><strong>concepts</strong>: generative memory structures that extract ideas from agent chat histories in order to provide semantic indices into the agents verbatim memory structures.</p>
+</li>
+<li>
+<p><strong>gguff vector files</strong>: a training feature&#8230;&#8203;</p>
 </li>
 </ul>
 </div>
 </li>
 <li>
-<p><strong>MCP Servers</strong>: Developing and deploying MCP servers in mtron as well as interacting with remote MCP servers as a client is straightforward. MCP servers and their tools offer numerous ways by which LLMs can interact with their environment.</p>
+<p><strong>MCP Servers</strong>: Developing and deploying MCP servers in mtron as well as interacting with remote MCP servers as a client is straightforward.
+MCP servers and their tools offer numerous ways by which LLMs can interact with their environment.</p>
 </li>
 </ol>
 </div>
-<h3 id="sec-catalogs" class="discrete">Catalogs</h3>
+<h3 id="sec-models" class="discrete">Models</h3>
 <div class="paragraph">
-<p>Collections of LLMs are typically host by some provider and offered for use. These can be either cloud-based AI catalogs or local catalogs. An example of loading various popular catalogs into metatron are provided below.</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; catalog::[host         =&gt; &lt;http://localhost:11434&gt;,
-                  pattern     =&gt; &lt;ollama:#&gt;,
-                  name        =&gt; &lt;ollama&gt;,
-                  route       =&gt; [ollama:=&gt;&lt;&gt;]]@/sys/space/ollama
-==&gt;catalog::[host=&gt;http://localhost:11434,pattern=&gt;ollama:#,name=&gt;ollama,route=&gt;[ollama:=&gt;&lt;&gt;]]@/sys/space/ollama
-mtron&gt; catalog::[host         =&gt; &lt;https://api.openai.com/v1&gt;,
-                 organization =&gt; !*&lt;/sys/env/OPENAI_ORG_ID&gt;,
-                 api_key      =&gt; !*&lt;/sys/env/OPENAI_API_KEY&gt;,
-                 pattern      =&gt; &lt;openai:#&gt;,
-                 name         =&gt; &lt;openai&gt;,
-                 route        =&gt; [&lt;openai:&gt;=&gt;&lt;&gt;]]@/sys/space/openai
-==&gt;catalog::[
-    host=&gt;&lt;https://api.openai.com/v1&gt;,
-    organization=&gt;!*/sys/env/OPENAI_ORG_ID,
-    api_key=&gt;!*/sys/env/OPENAI_API_KEY,
-    pattern=&gt;openai:#,
-    name=&gt;openai,
-    route=&gt;[openai:=&gt;&lt;&gt;]]@/sys/space/openai
-mtron&gt; catalog::[host         =&gt; &lt;https://api.deepseek.com/&gt;,
-                 api_key      =&gt; !*&lt;/sys/env/DEEPSEEK_API_KEY&gt;,
-                 pattern      =&gt; &lt;deep:#&gt;,
-                 name         =&gt; &lt;openai&gt;,
-                 route        =&gt; [&lt;deep:&gt;=&gt;&lt;&gt;]]@/sys/space/deepseek
-==&gt;catalog::[
-    host=&gt;&lt;https://api.deepseek.com&gt;,
-    api_key=&gt;!*/sys/env/DEEPSEEK_API_KEY,
-    pattern=&gt;deep:#,
-    name=&gt;openai,
-    route=&gt;[deep:=&gt;&lt;&gt;]]@/sys/space/deepseek</code></pre>
-</div>
-</div>
-<h3 id="sec-llm-space-encoding" class="discrete">LLM Space Encoding</h3>
-<div class="paragraph">
-<p>An LLM is a <code>model::T &lt; rec::T</code> with the following type definition:</p>
+<p>A <code>model::T</code> references a LLM endpoint.</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -1481,317 +1493,182 @@ mtron&gt; catalog::[host         =&gt; &lt;https://api.deepseek.com/&gt;,
 </div>
 </div>
 <div class="paragraph">
-<p>The design makes a distinction between the <strong>LLM</strong> (general-purpose reasoning engine) and its <strong>features</strong> (accessories that can be attached to the LLM). Example features include <a href="https://en.wikipedia.org/wiki/Large_language_model#Tool_use">tools</a>, <a href="https://agentskills.io/home">skills</a>, <a href="https://learn.microsoft.com/en-us/semantic-kernel/concepts/ai-services/chat-completion/chat-history?pivots=programming-language-csharp">sessions</a>, <a href="https://arxiv.org/abs/2410.10630">thinking</a>, <a href="https://fvivas.com/en/response-formats-in-llms-guide-chatgpt-claude-more/">response formats</a>, and other similar enrichments. While models do vary in their capacity to leverage certain features, features are agnostic to the underlying LLM and can be shared between LLMs making it easy to assemble new LLMs from pre-defined features. In <code>.metatron</code>, there exists an <code>agent.mtron</code> file that provides a sample library.</p>
+<p>Models can be either cloud-based AI LLMs or local LLMs.
+Two example models are provided below.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *&lt;fs:agent.mtron&gt;     ​1​
-==&gt;fail::[memory::[max=&gt;20,mem=&gt;[,],agent_id=&gt;'testy']@&lt;/usr/agent/memory&gt;;
-   [,]@&lt;/usr/agent/notes&gt;;
-   mcp_mtron_ws::[host =&gt; &lt;ws://localhost:8555/mcp&gt;]@/usr/ai/mcp/mtron;
-   mcp_ws::[host =&gt; &lt;http://127.0.0.1:29170/index-mcp/streamable-http&gt;]@/usr/ai/mcp/index-mcp;
-   mcp_http::[host =&gt; &lt;http://127.0.0.1:64342/stream&gt;]@/usr/ai/mcp/intellij;
-   model::[ desc     =&gt; "testy the agent",
-            provider =&gt; !*&lt;ollama:maxwell1500/ornith-35b:Q6_K/provider&gt;,
-            name     =&gt; !*&lt;ollama:maxwell1500/ornith-35b:Q6_K/name&gt;,
-            feature  =&gt; [think    =&gt; |/usr/ui/console/pane/0/stream(_),
-                         session   =&gt; !@&lt;/usr/agent/session&gt;,
-                         tool     =&gt; [!*eval],
-                         note     =&gt; !@&lt;/usr/agent/notes&gt;,
-                         response =&gt; [to=&gt;print(_)]]]@&lt;testy&gt;;
-                                                                     ^ end of input expected
-   ]
-mtron&gt; *&lt;fs:agent.mtron/feature&gt;     ​2​</code></pre>
-</div>
-</div>
-<div class="colist arabic">
-<table>
-<tr>
-<td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>if a file contains mtron source, the mtron source is the obj referred to by the file uri.</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="2"></i><b>2</b></td>
-<td>the previous callout entails that a file path can be extended beyond the file boundary.</td>
-</tr>
-</table>
-</div>
-<h3 id="sec-features" class="discrete">Features</h3>
-<div class="paragraph">
-<p>The following subsections will focus on a particular feature that is provided by the <code>/m/llm</code> instruction set. To ensure a speedy build time for metatron&#8217;s documentation, the following <code>doc_model?model&lt;=#{?}</code> instruction is defined and will be used repeatedly. This <code>inst</code> searches Ollama for small model that supports both tool use and thinking.</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; |inst?model{?}&lt;=#{?}(a=&gt;uri::T){
-         *ollama:+.
-          where(&gt;&gt;skill.has(thinking).has(tools)).
-          where(&gt;&gt;size.?&gt;gB::1.0.?&lt;gB::5.0).
-          order(&gt;&gt;size * -1.0).
-          take(1).
-          to(*a) }@doc_model
-==&gt;fail::[apply failure:
-   	[lhs]    | noobj
-   	 \_type  | noobj{0}
-   	  \_pred | []
-   	[inst]   | *ollama:+
-   	 \_dom   | #{?}::T
-   	 \_args  | [ollama:+][BasicRouter&lt;254&gt;:no active space supports pattern ollama:+]]@/sys/fail/66[...]</code></pre>
-</div>
-</div>
-<div class="colist arabic">
-<table>
-<tr>
-<td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>stream all the models currently available on the local ollama server.</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="2"></i><b>2</b></td>
-<td>filter out those models that don&#8217;t support thinking and tool use.</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="3"></i><b>3</b></td>
-<td>filter out models too small (for ollama, the cloud models) and models too big.</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="4"></i><b>4</b></td>
-<td>if all models have been filtered out, <code>fail::T</code>.</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="5"></i><b>5</b></td>
-<td>reverse sort the models by their size.</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="6"></i><b>6</b></td>
-<td>select the smallest model of those remaining.</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="7"></i><b>7</b></td>
-<td>store model at the <code>uri::T</code> <code>inst</code> argument.</td>
-</tr>
-</table>
-</div>
-<!--
-else(throw('no model fits the spec'))            /
--->
-<h4 id="sec-tools" class="discrete">Tools</h4>
-<div class="paragraph">
-<p>Tools are functions that models can use for problem solving. In metatron, every <code>inst</code> is a tool. Moreover, from the agent&#8217;s perspective, every MCP server tool is an <code>inst</code>. Thus, adding an <code>inst</code> from an <code>instset</code> and adding an <code>inst</code> from a <code>http</code> or <code>ws</code> MCP server endpoint, ultimately boils down to pointing the model towards <code>insts</code> it can use to solve the problem at hand.</p>
-</div>
-<h5 id="sec-inst-as-tool" class="discrete">Inst as Tool</h5>
-<div class="paragraph">
-<p>A model is loaded using <code>doc_model</code>. The loaded model is handed a <code>!*</code>-reference to the mtron <code>eval</code> instruction. This is the most general instruction in mtron enabling any mtron expression to be passed in as a <code>str</code>, parsed, compiled, evaluated, and <code>rhs</code> results returned.</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; doc_model(aix).&gt;&gt;=+
-        [feature =&gt;[
-          tool      =&gt; [!*eval],
-          response  =&gt; [to=&gt;_]]]
-==&gt;fail::[apply failure:
-   	[lhs]    | noobj
-   	 \_type  | noobj{0}
-   	  \_pred | []
-   	[inst]   | *ollama:+
-   	 \_dom   | #{?}::T
-   	 \_args  | [ollama:+][BasicRouter&lt;254&gt;:no active space supports pattern ollama:+]]@/sys/fail/92[...]</code></pre>
-</div>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; @aix.chat('evaluate the following expression using your mtron eval tool: [1,2]==[+2,-&lt;[+3,+4]]==[_,&gt;-]')</code></pre>
-</div>
-</div>
-<h5 id="sec-mcp-tool-as-inst" class="discrete">MCP Tool as Inst</h5>
-<div class="paragraph">
-<p>metatron is capable of both hosting MCP tools (<strong>servers</strong>) and using MCP tools (<strong>clients</strong>). In the following example, an mtron MCP server is managed by a <code>wsspace</code> (web socket space).</p>
-</div>
-<div class="listingblock">
-<div class="title">metatron hosted mcp server</div>
-<div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; wsspace::[host     =&gt; ws://localhost:8555,
-                 pattern  =&gt; ws://#,
-                 q        =&gt; [docq::[=&gt;],subq::[=&gt;]],
-                 route    =&gt; [/mcp =&gt; mcp_mtron_ws]]@/sys/space/web/ws</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The <code>/m/web</code> instruction set realizes an MCP tool as a refinement of <code>inst</code>. As such, an MCP client has an natural mapping to an LLM tool feature.</p>
-</div>
-<div class="listingblock">
-<div class="title">metatron hosted mcp clients</div>
-<div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; mcp_client::[host =&gt; ws://localhost:8555/mcp]@/usr/ai/mcp/mtron
-==&gt;fail::[unable to construct mcp_client::T: fail::[apply failure:
-   	[lhs]    | [host=&gt;ws://localhost:8555/mcp]@/usr/ai/mcp/mtron
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; model::[provider =&gt; ollama,
+               protocol =&gt; ollama,
+               host     =&gt; http://localhost:11434,
+               llm      =&gt; &lt;qwen3.5:4b&gt;]
+==&gt;model::[
+    skill=&gt;[completion,vision,tools,thinking],
+    size=&gt;gB::3.1572,
+    provider=&gt;ollama,
+    protocol=&gt;ollama,
+    host=&gt;http://localhost:11434,
+    llm=&gt;&lt;qwen3.5:4b&gt;]
+mtron&gt; model::[host     =&gt; &lt;https://api.deepseek.com/v1&gt;,
+               api_key  =&gt; !*&lt;/sys/env/DEEPSEEK_API_KEY&gt;,
+               provider =&gt; deepseek,
+               protocol =&gt; openai,
+               llm      =&gt; &lt;deepseek-v4-pro&gt;]
+==&gt;fail::[unable to construct model::T: fail::[apply failure:
+   	[lhs]    | [
+    host=&gt;&lt;https://api.deepseek.com/v1&gt;,
+    api_key=&gt;!*/sys/env/DEEPSEEK_API_KEY,
+    provider=&gt;deepseek,
+    protocol=&gt;openai,
+    llm=&gt;deepseek-v4-pro]
    	 \_type  | /m/rec
    	  \_pred | []
-   	[inst]   | ctor?rng=mcp_client&amp;dom=#{?}([host=&gt;ws://localhost:8555/mcp]@/usr/ai/mcp/mtron){&lt;j&gt;}
+   	[inst]   | ctor?rng=model&amp;dom=#{?}([
+     host=&gt;&lt;https://api.deepseek.com/v1&gt;,
+     api_key=&gt;!*/sys/env/DEEPSEEK_API_KEY,
+     provider=&gt;deepseek,
+     protocol=&gt;openai,
+     llm=&gt;deepseek-v4-pro]){&lt;j&gt;}
    	 \_dom   | #{?}::T
-   	 \_args  | [[host=&gt;ws://localhost:8555/mcp]@/usr/ai/mcp/mtron][SocketChannelImpl&lt;204&gt;:java.util.concurrent.ExecutionException: java.lang.RuntimeException: java.util.concurrent.ExecutionException: java.net.ConnectException[SocketChannelImpl&lt;204&gt;:java.util.concurrent.ExecutionException: java.lang.RuntimeException: java.util.concurrent.ExecutionException: java.net.ConnectException ← java.lang.RuntimeException: java.util.concurrent.ExecutionException: java.net.ConnectException ← java.util.concurrent.ExecutionException: java.net.ConnectException ← java.net.ConnectException ← ...] ← java.util.concurrent.ExecutionException: java.lang.RuntimeException: java.util.concurrent.ExecutionException: java.net.ConnectException ← java.lang.RuntimeException: java.util.concurrent.ExecutionException: java.net.ConnectException ← java.util.concurrent.ExecutionException: java.net.ConnectException ← ...]]@/sys/fail/96[...]]@/sys/fail/98
-mtron&gt; doc_model(aix).&gt;&gt;=+
-        [feature =&gt;[
-          tool      =&gt; [!*/usr/ai/mcp/mtron],
-          response  =&gt; [to=&gt;_]]]
-==&gt;fail::[apply failure:
-   	[lhs]    | noobj
-   	 \_type  | noobj{0}
-   	  \_pred | []
-   	[inst]   | *ollama:+
-   	 \_dom   | #{?}::T
-   	 \_args  | [ollama:+][BasicRouter&lt;254&gt;:no active space supports pattern ollama:+]]@/sys/fail/124[...]</code></pre>
+   	 \_args  | [[
+    host=&gt;&lt;https://api.deepseek.com/v1&gt;,
+    api_key=&gt;!*/sys/env/DEEPSEEK_API_KEY,
+    provider=&gt;deepseek,
+    protocol=&gt;openai,
+    llm=&gt;deepseek-v4-pro]][Obj$Helper&lt;1034&gt;:unable to construct /m/llm/model::T: fail::[apply failure:...]]@/sys/fail/10[...]]@/sys/fail/12</code></pre>
 </div>
+</div>
+<!--
+catalog::[host         => <http://localhost:11434>,            /
+pattern     => <ollama:#>,                          /
+name        => <ollama>,                            /
+route       => [ollama:=><>]]@/sys/space/ollama
+catalog::[host         => <https://api.openai.com/v1>,          /
+organization => !*</sys/env/OPENAI_ORG_ID>,           /
+api_key      => !*</sys/env/OPENAI_API_KEY>,          /
+pattern      => <openai:#>,                           /
+name         => <openai>,                             /
+route        => [<openai:>=><>]]@/sys/space/openai
+-->
+<div class="paragraph">
+<p>The majority of cloud and local LLM providers expose HTTP/REST endpoints.
+These endpoints can be programmatically inspected using mtron in order to locate a model that meets a particular use case requirement.
+For example, the expression belows is used to find a suitable model for the examples in this documentation.
+This expression makes two Ollama API calls:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>get all models that are larger than 1 gig and smaller than 5 gigs.</p>
+</li>
+<li>
+<p>filter down to those models that have <code>thinking</code> and <code>tool</code> capabilities.</p>
+</li>
+</ul>
 </div>
 <div class="paragraph">
-<p>Given that an <code>mcp_client::T</code> is an index of <code>insts</code>. Nothing prevents their <code>insts</code> being used by other processes such as a human user. And since, metatron is able to map common data formats to <code>obj</code>, its possible to take the result of the mcp tool and post process it to derive further more refined statistics not offered by the tool.</p>
+<p>The resultant Ollama <code>rec::T</code> is then morphed into a <code>model::T</code>.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+There are two expressions in the example below that are bound by an intermediate
+<code>ollama_model</code> stack reference.
+The purpose of breaking up the example into two expression is to highlight the Ollama representation of a model before morphing it into a <code>model::T</code> ready for use in the <code>/m/llm</code> instruction set.
+</td>
+</tr>
+</table>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">/usr/ai/mcp/intellij/tool/ide_type_hierarchy(className=&gt;'studio.phaseshift.metatron.isa.m.type.Obj'). /
-  -&lt;[supers =&gt; -&lt;[count =&gt; &gt;&gt;supertypes.count(),                                                      /
-                  kinds =&gt; &gt;&gt;supertypes&gt;&gt;kind&gt;-[,]],                                                  /
-     subs   =&gt; -&lt;[count =&gt; &gt;&gt;subtypes.count(),                                                        /
-                  kinds =&gt; &gt;&gt;subtypes&gt;&gt;kind&gt;-[,]]]</code></pre>
-</div>
-</div>
-<h4 id="sec-skills" class="discrete">Skills</h4>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;  *&lt;fs:skills/mtron/SKILL.md&gt;
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *http://localhost:11434/api/tags/+.&gt;&gt;.
+         =?=[size=&gt;as(real::T).as(bB::T).
+                   ?&gt;gB::1.0.
+                   ?&lt;gB::5.0].
+         -&lt;[_=&gt;-&lt;[name=&gt;&gt;&gt;name.as(str::T)].
+               to(http://localhost:11434/api/show).
+               =?=[capabilities=&gt;has(thinking).has(tools)]].dom().
+         order(&gt;&gt;size * -1).
+         take(1).to(ollama_model)
 ==&gt;[
-    type=&gt;doc,
-    out=&gt;[[type=&gt;horizontal_rule],[
-     type=&gt;head,
-     level=&gt;2,
-     text=&gt;"""name: mtron
-   description: Guide to operating and evolving th...""",
-     out=&gt;[[type=&gt;text,content=&gt;'name: mtron'],[type=&gt;soft_break],[
-    type=&gt;text,
-    content=&gt;'description: Guide to operating and evolving the metatron s...']]],[
-     type=&gt;head,
-     level=&gt;1,
-     text=&gt;'Metatron: The Structural Reflection Engine',
-     out=&gt;[[
-    type=&gt;text,
-    content=&gt;'Metatron: The Structural Reflection Engine']]],[
-     type=&gt;p,
-     text=&gt;'Metatron is not just a database or a language; it is a **di...',
-     out=&gt;[
-      [
-   ...</code></pre>
-</div>
-</div>
-<h4 id="sec-sessions" class="discrete">Sessions</h4>
-<div class="paragraph">
-<p>The following example demonstrates how to search for an appropriate LLM for a given task, then query it, and finally, have its session of the interaction stored in space for future use (to provide the agent context over longer interactions). This example relies on an agent <code>SKILL.md</code> file stored on the local file system (<code>fs:</code>).</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; [,]@/usr/ai/session     ​1​
-==&gt;[,]@/usr/ai/session
-mtron&gt; *ollama:+.
-        where(&gt;&gt;skill.has(thinking).has(tools)).
-        where(&gt;&gt;size.?&gt;gB::1.0.?&lt;gB::5.0).
-        order(&gt;&gt;size * -1.0).
-        take(1).
-        &gt;&gt;=+[feature=&gt;[
-              session  =&gt; [agent     =&gt; /usr/ai,
-                           user      =&gt; /usr/marko,
-                           name      =&gt; 'general chat',
-                           algorithm =&gt; [max=&gt;15]]@/usr/ai/session/1,
-              tool     =&gt; [!*eval],
-              think    =&gt; print(_),
-              response =&gt; [to=&gt;to(/usr/ai/response)]]].
-        to(aix)
-==&gt;fail::[apply failure:
-   	[lhs]    | noobj
-   	 \_type  | noobj{0}
-   	  \_pred | []
-   	[inst]   | *ollama:+
-   	 \_dom   | #{?}::T
-   	 \_args  | [ollama:+][BasicRouter&lt;254&gt;:no active space supports pattern ollama:+]]@/sys/fail/150[...]</code></pre>
+    name=&gt;qwen3:8b,
+    model=&gt;qwen3:8b,
+    modified_at=&gt;&lt;2026-03-03T15:06:29.9259633-07:00&gt;,
+    size=&gt;5225388164,
+    digest=&gt;&lt;500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41&gt;,
+    details=&gt;[
+     parent_model=&gt;&lt;&gt;,
+     format=&gt;gguf,
+     family=&gt;qwen3,
+     families=&gt;[qwen3],
+     parameter_size=&gt;&lt;8.2B&gt;,
+     quantization_level=&gt;Q4_K_M]]</code></pre>
 </div>
 </div>
 <div class="colist arabic">
 <table>
 <tr>
 <td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>create a <code>lst</code> to server as the an ordered sequence of chat interactions.</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="2"></i><b>2</b></td>
 <td>stream all the models currently available on the local ollama server.</td>
 </tr>
 <tr>
-<td><i class="conum" data-value="3"></i><b>3</b></td>
-<td>filter out those models that don&#8217;t support thinking and tool use.</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
 <td>filter out models too small (for ollama, the cloud models) and models too big.</td>
 </tr>
 <tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>create <code>rec::T</code> with domain the ollama model and range further details about the model.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>an <code>http</code> POST is made and only those details that have <code>thinking</code> and <code>tools</code> capabilites remain.</td>
+</tr>
+<tr>
 <td><i class="conum" data-value="5"></i><b>5</b></td>
-<td>reverse sort the models by their size.</td>
+<td>the domain of the intermediate <code>rec::T</code> is projected out.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="6"></i><b>6</b></td>
-<td>select the smallest model of those remaining.</td>
+<td>reverse sort the ollama models by their size.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="7"></i><b>7</b></td>
-<td>attach features/enrichements to the model.</td>
+<td>select the smallest ollama model of those remaining.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="8"></i><b>8</b></td>
-<td>give the model a session structure for extended context.</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="9"></i><b>9</b></td>
-<td>give the model access to mtron&#8217;s eval instruction.</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="10"></i><b>10</b></td>
-<td>have the model print its thoughts to the console terminal</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="11"></i><b>11</b></td>
-<td>have the model store its responses to the <code>/usr/ai</code> space.</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="12"></i><b>12</b></td>
-<td>write the model to <code>aix</code>.</td>
+<td>store the result in an intermediate stack variable called <code>ollama_model</code>.</td>
 </tr>
 </table>
 </div>
-<div class="paragraph">
-<p>The first part of the stream above was about widdling down the set of available models to those that meet the requirements for this documentation&#8201;&#8212;&#8201;namely, a model that is not too big (as building the docs would take too long) and has some useful capabilities for demonstrating model features.</p>
-</div>
-<div class="paragraph">
-<p>Once a model was selected, then the second phase served to enrich the model with a session structure (embedded in space), some tools to use if need be (embedded in space), a place for its thought (ephemeral to the console&#8217;s stdout), and a location to place its response (embedded in space).</p>
-</div>
-<div class="paragraph">
-<p>With the model loaded and equipped, it&#8217;s possible to communicate with it.</p>
-</div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; @aix.chat("I need you evaluate the mtron expresion `-&lt;[_=&gt;_]&gt;&gt;.&gt;-[,]-&lt;[_,-&lt;[_=&gt;_]&gt;&gt;]&gt;&gt;.&gt;-` with a lhs of `1`. Please don't tell me the result of the evaluation until I ask for it sometime in the near future.")</code></pre>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *ollama_model.&gt;&gt;name.
+         -&lt;[host     =&gt; http://localhost:11434,
+            provider =&gt; ollama,
+            protocol =&gt; ollama,
+            llm      =&gt; as(uri::T)].as(model::T).
+         to(metatron_model)
+==&gt;model::[
+    skill=&gt;[completion,tools,thinking],
+    size=&gt;gB::4.8665,
+    host=&gt;http://localhost:11434,
+    provider=&gt;ollama,
+    protocol=&gt;ollama,
+    llm=&gt;qwen3:8b]</code></pre>
 </div>
 </div>
 <div class="openblock card">
 <div class="content">
 <h4 id="_a_note_on_unit_conversions" class="discrete">a note on unit conversions</h4>
-<details class="accordion-small">
-<summary class="title">/m/math instset import</summary>
-<div class="content">
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; import(/m/math)</code></pre>
-</div>
-</div>
-</div>
-</details>
 <div class="paragraph">
-<p>The <code>size</code> relation maps to a <code>gB::T</code> (gigabytes) while the <code>where()</code> clause filtered on <code>mB::T</code> (megabytes). The conversion between the different data size units is handled automatically by the type constructors of those data size types. These types are distributed in the <code>/m/math</code> instruction set and imported via <code>import(/m/math)</code> (or <code>import(/m/math,math:)</code> if naming conflicts may emerge).</p>
+<p>The <code>size</code> relation maps to a <code>bB::T</code> (bytes) while the <code>where()</code> clause filtered on <code>gB::T</code> (gigabytes).
+The conversion between the different data size units is handled automatically by the type constructors of those data size types.
+These types are distributed in the <code>/m/math</code> instruction set and imported via <code>import(/m/math)</code> (or <code>import(/m/math,math:)</code> if naming conflicts may emerge).</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -1848,268 +1725,429 @@ mtron&gt; tB::1.0.as(mB::T)     ​3​
 </div>
 </div>
 </div>
+<!--
+|inst?model{?}<=#{?}(a=>uri::T){
+  *<http://localhost:11434/api/tags/+>.
+   where(>>skill.has(thinking).has(tools)).
+   where(>>size.?>gB::1.0.?<gB::5.0).
+   order(>>size * -1.0).
+   take(1).
+   to(*a) }@doc_model
+[source,mtron]
+----
+mtron> *<fs:agent.mtron>     ​1​
+==>fail::[memory::[max=>20,mem=>[,],agent_id=>'testy']@</usr/agent/memory>;
+   [,]@</usr/agent/notes>;
+   mcp_mtron_ws::[host => <ws://localhost:8555/mcp>]@/usr/ai/mcp/mtron;
+   mcp_ws::[host => <http://127.0.0.1:29170/index-mcp/streamable-http>]@/usr/ai/mcp/index-mcp;
+   mcp_http::[host => <http://127.0.0.1:64342/stream>]@/usr/ai/mcp/intellij;
+   model::[ desc     => "testy the agent",
+            provider => !*<ollama:maxwell1500/ornith-35b:Q6_K/provider>,
+            name     => !*<ollama:maxwell1500/ornith-35b:Q6_K/name>,
+            feature  => [think    => |/usr/ui/console/pane/0/stream(_),
+                         session   => !@</usr/agent/session>,
+                         tool     => [!*eval],
+                         note     => !@</usr/agent/notes>,
+                         response => [to=>print(_)]]]@<testy>;
+                                                                     ^ end of input expected
+   ]
+mtron> *<fs:agent.mtron/feature>     ​2​
+----
+
+<1> if a file contains mtron source, the mtron source is the obj referred to by the file uri.
+<2> the previous callout entails that a file path can be extended beyond the file boundary.
+-->
+<h3 id="sec-agents" class="discrete">Agents</h3>
 <div class="paragraph">
-<p>The content and metadata associated with the chat interaction are stored at the specified location, where it is both read (the previous interaction) and written to (the current interaction).</p>
+<p>The most important type in <code>/m/llm</code> is <code>agent::T</code>.
+While a <code>model::T</code> represents the gateway to a particular data structure and inferencing engine, an <code>agent::T</code> subsumes one or more <code>model::T</code> in its functioning.
+Along with models, and agent can be equipped with other data structures and processes that provide a richer, more intelligent entity within metatron.
+These supplemental structures and processes are collectively known as <strong>features</strong>.
+The metatron encoding of an example agent distributed with metatron named Dr.Stynx is provided below.
+Over the remainder of this documentation, each of the components of Dr.Stynx&#8217;s representation will be made clear.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; @ai.chat("It's been many years since we last talked. For I am a tired, old man. Before I let my last breathe flutter into this world, I must know one last thing. Please tell me, what was the result of the mtron expression I provided you all those years ago?")
-==&gt;fail::[apply failure:
-   	[lhs]    | message::T[?[{?}text=&gt;str::T,{?}tool_requests=&gt;[tool_request::T]]]@ai
-   	 \_type  | /m/llm/message
-   	  \_pred | [isa(or([
-    isa(system::T),
-    isa(user::T),
-    isa(ai{*}::T),
-    isa(tool_result::T),
-    isa(thinking::T)]))]
-   	[inst]   | chat?rng=chat_result&amp;dom=rec("It's been many years since we last talked. For I am a tired, old man. Before I let my last breathe flutter into this world, I must know one last thing. Please tell me, what was the result of the mtron expression I provided you all those years ago?"){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
-   	 \_dom   | rec::T
-   	 \_args  | ["It's been many years since we last talked. For I am a tired, old man. Before I let my last breathe flutter into this world, I must know one last thing. Please tell me, what was the result of the mtron expression I provided you all those years ago?"][Obj&lt;587&gt;:Cannot invoke "String.replace(java.lang.CharSequence, java.lang.CharSequence)" because "message" is null[Obj&lt;587&gt;:Cannot invoke "String.replace(java.lang.CharSequence, java.lang.CharSequence)" because "message" is null] ← Cannot invoke "String.replace(java.lang.CharSequence, java.lang.CharSequence)" because "message" is null]]@/sys/fail/152[...]
-mtron&gt; */usr/ai/session/+
-==&gt;/usr/ai
-==&gt;[max=&gt;15]
-==&gt;/usr/marko
-==&gt;'general chat'</code></pre>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">agent::[
+  name     =&gt; 'dr.stynx',
+  desc     =&gt; 'the agent dr.stynx is here to be of use in the metatron',
+  feature  =&gt; [
+    session_feature::::[on_agent_ctor =&gt; inst(a=&gt;agent::T){ *&lt;/usr/dr/session/1&gt;.else(
+                                           session::[agent    =&gt; !*boot/args/internal/agent_home,
+                                                     user     =&gt; !*boot/args/internal/user_home,
+                                                     name     =&gt; 'general chat',
+                                                     algorithm=&gt; [name=&gt;&lt;message_window&gt;, max=&gt;50]]
+                                                          ==[_=&gt;_].to(/usr/dr/session/1)) },
+                        session       =&gt; /usr/dr/session/1,
+                        tool          =&gt; [forget?noobj{0}&lt;=noobj{0}(){ /usr/dr/message/+ -&gt; noobj }]],
+    chat_feature:::::::[model         =&gt; model::[provider     =&gt; ollama,
+                                                 protocol     =&gt; ollama,
+                                                 host         =&gt; &lt;http://ginger.local:11434&gt;,
+                                                 llm          =&gt; batiai/gemma4-31b:q6],
+                        response      =&gt; [to =&gt; print(_)]],
+    think_feature::::::[on_agent_ctor =&gt; inst(a=&gt;agent::T){
+                                            accordion::[title =&gt; "thoughts", 
+                                                        body  =&gt; "",
+                                                        style =&gt; style::[anchor=&gt;top_right,width=&gt;65,
+                                                                         height=&gt;15,left=&gt;-2]]@&lt;think_widget&gt; },
+                       think          =&gt; [to =&gt; inst(a=&gt;str::T){ @&lt;think_widget&gt;&gt;&gt;=[body=&gt;+*a].display() }]],
+    loop_feature:::::::[max_loop      =&gt; 100],                         
+    comment_feature::::[              =&gt; ],
+    skill_feature::::::[skill         =&gt; [metatronfs:skills/metatron, metatronfs:skills/mtron]],
+    concept_feature::::[base          =&gt; /usr/dr/concept,
+                        extractor     =&gt; lucene],
+    tool_feature:::::::[tool          =&gt;[!*eval,!*sql,!*codegraph]],
+    audit_feature::::::[on_agent_ctor =&gt; inst(a=&gt;agent::T) {  
+                                           accordion::[title  =&gt; "audit", 
+                                                       body   =&gt; "",
+                                                       style  =&gt; style::[anchor=&gt;bottom_right,width=&gt;65,height=&gt;30,
+                                                                        left=&gt;-2,top=&gt;8,foreground =&gt;"{{y}}"]]@&lt;audit_widget&gt; },
+                        to            =&gt; inst(a=&gt;str::T){ @&lt;audit_widget&gt;&gt;&gt;=[body=&gt;+*a].display() }],
+    system_feature:::::[              =&gt; ]]]@&lt;dr&gt;; </code></pre>
 </div>
 </div>
+<h4 id="sec-features" class="discrete">Features</h4>
 <div class="paragraph">
-<p>Or, using structured responses, the unstructured text result can be turned into a mtron obj.</p>
+<p>The following subsections focus on a particular <code>/m/llm</code> <strong>feature</strong>.</p>
 </div>
-<div class="paragraph">
-<p>@ai.chat("what was the answer again?", [answer&#8658;?int::T])</p>
-</div>
-<h3 id="sec-notes" class="discrete">Notes</h3>
-<div class="paragraph">
-<p>metatron introduces the concept of <em>notes</em> to the agent toolkit. Notes are a message board written to and read from (potentially many times) by an LLM during the execution of a task&#8201;&#8212;&#8201;that is, within a single chat iteration. Notes are useful in the following situations:</p>
-</div>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
-<p><strong>real-time feedback</strong>: if the agent has made a mistake in their <em>thinking</em>, there is no need to wait for the agent&#8217;s response to complete nor halt the agent mid-thought. Instead, a note can be pushed on the agent&#8217;s note stack and the agent will pop off the note, read it, and adjust itself accordingly.</p>
-</li>
-<li>
-<p><strong>real-time system message</strong>: the agent&#8217;s system message is written at the start of chat and remains static for the duration of the interaction. Notes serve as dynamic system messages allowing programmatic alterations in the agent&#8217;s behavior within a single interaction.</p>
-</li>
-</ol>
-</div>
-<div class="paragraph">
-<p>Notes are enabled by adding <code>note=&gt;[,]</code> to the agent&#8217;s configuration. The <code>eval</code> tool must also be present — the agent uses it to poll and pop notes from the note stack.</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">@&lt;openai:gpt-4o&gt;.at(robotron).
- &gt;&gt;=[feature=&gt;[tool =&gt; [!*eval],           <i class="conum" data-value="1"></i><b>(1)</b>
-     note =&gt; [,]]]                         <i class="conum" data-value="2"></i><b>(2)</b></code></pre>
-</div>
-</div>
-<div class="colist arabic">
-<table>
-<tr>
-<td><i class="conum" data-value="1"></i><b>1</b></td>
-<td><code>eval</code> is required — the agent calls it internally to read and consume notes.</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="2"></i><b>2</b></td>
-<td><code>[,]</code> initializes an empty note list and activates the note-checking instruction in the agent&#8217;s system message.</td>
-</tr>
-</table>
-</div>
-<div class="paragraph">
-<p>While <code>robotron</code> is executing a task, a note can be pushed at any time from any other mtron context:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">@robotron/note &gt;&gt;= +['actually, can you provide the result in euros, not dollars']   <i class="conum" data-value="1"></i><b>(1)</b></code></pre>
-</div>
-</div>
-<div class="colist arabic">
-<table>
-<tr>
-<td><i class="conum" data-value="1"></i><b>1</b></td>
-<td><code>+</code> concatenates to the note <code>lst</code>. Because the list carries an anchored reference (<code>@vid</code>), the mutation is automatically persisted to space.</td>
-</tr>
-</table>
-</div>
-<div class="openblock card">
-<div class="content">
-<h4 id="_vid_auto_persistence" class="discrete">@vid auto-persistence</h4>
-<div class="paragraph">
-<p>Any <code>obj</code> that carries an <code>@vid</code> is <em>anchored</em> to its spatial location. Mutations to such objs are automatically reflected in the space at that address — no explicit re-assignment required.</p>
-</div>
-<div class="paragraph">
-<p>The difference between <code>.to()</code> and <code>.at()</code> is critical here:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; 1.to(a) + 2 + 3
-==&gt;6
-mtron&gt; *a
-==&gt;1
-mtron&gt; 1.at(a) + 2 + 3
-==&gt;6@a
-mtron&gt; *a
-==&gt;6</code></pre>
-</div>
-</div>
-<div class="colist arabic">
-<table>
-<tr>
-<td><i class="conum" data-value="1"></i><b>1</b></td>
-<td><code>.to()</code> saves a snapshot at <code>a</code> but the <code>@vid</code> is <strong>not</strong> carried through the chain.</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="2"></i><b>2</b></td>
-<td><code>a</code> still holds the original snapshot.</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="3"></i><b>3</b></td>
-<td><code>.at()</code> binds <code>@vid</code> to the result, so every subsequent operation in the chain auto-persists.</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="4"></i><b>4</b></td>
-<td><code>a</code> reflects the final value of the entire chain.</td>
-</tr>
-</table>
-</div>
-<div class="paragraph">
-<p>The note list uses <code>at()</code> semantics: <code>[,]@/usr/ai/notes</code> initialises the list with its <code>@vid</code> already bound, so <code>@/usr/ai/notes + ['note']</code> persists automatically without re-assignment.</p>
-</div>
-</div>
-</div>
-<div class="paragraph">
-<p>The agent receives the following standing instruction embedded in its system message at <code>chat()</code> time:</p>
-</div>
-<div class="openblock card">
-<div class="content">
-<h4 id="_note_checking_protocol" class="discrete">note-checking protocol</h4>
-<div class="paragraph">
-<p>Always check for notes using the <code>eval</code> tool before, during, and after your task:<br>
-<code>*&lt;robotron/note&gt;.remove(0)</code><br>
-<code>noobj</code> means <em>no note right now</em> — check again later.<br>
-Notes are of <strong>crucial importance</strong> and must be acted on immediately.</p>
-</div>
-</div>
-</div>
-<div class="paragraph">
-<p>Notes form a <strong>FIFO queue</strong> — <code>remove(0)</code> pops the oldest note, leaving newer ones untouched for subsequent polls. An agent working through a long multi-step task will naturally poll multiple times, consuming notes one at a time as they arrive.</p>
-</div>
-<h4 id="sec-mcp-server-client-notifications-in-mtron" class="discrete">mcp server&#8594;client notifications in mtron</h4>
-<div class="paragraph">
-<p>Typically, a client will request services from an MCP server&#8201;&#8212;&#8201;tool listing, tool evaluations, etc. It&#8217;s important to note that the <a href="https://modelcontextprotocol.io/docs/learn/architecture#notifications">MCP specification</a> has a little known feature that allows the server to initiate communication with the client. This feature is called <strong>notifications</strong> and it can be implemented in pure mtron.</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">&lt;ws://localhost:8555/mcp/+/notifications/#?subq&gt; -&gt; sub::[                /
- on_recv =&gt; inst?#&lt;=lst(message=&gt;?lst::T){                                /
-  -&lt;json::[                                                               /
-   jsonrpc =&gt; '2.0',                                                      /
-   method  =&gt; &gt;&gt;0 - &lt;ws://localhost:8555/mcp/${*message&gt;&gt;0&gt;&gt;1}${/}&gt;,      /
-   params  =&gt; *message&gt;&gt;1](payload=&gt;_){                                   /
-    *&lt;ws://localhost:8555/mcp/${*message&gt;&gt;0&gt;&gt;1}&gt;&gt;&gt;send.apply(*payload)}}]</code></pre>
-</div>
-</div>
-<div class="colist arabic">
-<table>
-<tr>
-<td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>Add the <code>subq</code> query processor to the websocket space. This extends the space with pub/sub sematics.</td>
-</tr>
-</table>
-</div>
-<div class="listingblock center-code">
-<div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">                     wsspace::[=&gt;]@/sys/space/web/ws
+<!--
+
+The design makes a distinction between the **LLM** (general-purpose reasoning engine) and its **features** (accessories that can be attached to the LLM).
+Example features include https://en.wikipedia.org/wiki/Large_language_model#Tool_use[tools], https://agentskills.io/home[skills], https://learn.microsoft.com/en-us/semantic-kernel/concepts/ai-services/chat-completion/chat-history?pivots=programming-language-csharp[sessions], https://arxiv.org/abs/2410.10630[thinking], https://fvivas.com/en/response-formats-in-llms-guide-chatgpt-claude-more/[response formats], and other similar enrichments.
+While models do vary in their capacity to leverage certain features, features are agnostic to the underlying LLM and can be shared between LLMs making it easy to assemble new LLMs from pre-defined features.
+In `.metatron`, there exists an `agent.mtron` file that provides a sample library.
+
+[discrete]
+[[sec-tools]]
+==== Tools
+
+Tools are functions that models can use for problem solving.
+In metatron, every `inst` is a tool.
+Moreover, from the agent's perspective, every MCP server tool is an `inst`.
+Thus, adding an `inst` from an `instset` and adding an `inst` from a `http` or `ws` MCP server endpoint, ultimately boils down to pointing the model towards `insts` it can use to solve the problem at hand.
+
+[discrete]
+[[sec-inst-as-tool]]
+===== Inst as Tool
+
+A model is loaded using `doc_model`.
+The loaded model is handed a `!*`-reference to the mtron `eval` instruction.
+This is the most general instruction in mtron enabling any mtron expression to be passed in as a `str`, parsed, compiled, evaluated, and `rhs` results returned.
+
+[source,mtron]
+----
+mtron> doc_model(aix).>>=+
+        [feature =>[
+          tool      => [!*eval],
+          response  => [to=>_]]]
+==>fail::[unable to locate inst-f of doc_model(aix)@<0>]@/sys/fail/46
+----
+
+[source,mtron]
+----
+mtron> @aix.chat('evaluate the following expression using your mtron eval tool: [1,2]==[+2,-<[+3,+4]]==[_,>-]')
+----
+
+[discrete]
+[[sec-mcp-tool-as-inst]]
+===== MCP Tool as Inst
+
+metatron is capable of both hosting MCP tools (**servers**) and using MCP tools (**clients**).
+In the following example, an mtron MCP server is managed by a `wsspace` (web socket space).
+
+.metatron hosted mcp server
+[source,mtron]
+----
+mtron> wsspace::[host     => ws://localhost:8555,
+                 pattern  => ws://#,
+                 q        => [docq::[=>],subq::[=>]],
+                 route    => [/mcp => mcp_mtron_ws]]@/sys/space/web/ws
+----
+
+The `/m/web` instruction set realizes an MCP tool as a refinement of `inst`.
+As such, an MCP client has an natural mapping to an LLM tool feature.
+
+.metatron hosted mcp clients
+[source,mtron]
+----
+mtron> mcp_client::[host => ws://localhost:8555/mcp]@/usr/ai/mcp/mtron
+==>fail::[unable to construct mcp_client::T: fail::[apply failure:
+   	[lhs]    | [host=>ws://localhost:8555/mcp]@/usr/ai/mcp/mtron
+   	 \_type  | /m/rec
+   	  \_pred | []
+   	[inst]   | ctor?rng=mcp_client&dom=#{?}([host=>ws://localhost:8555/mcp]@/usr/ai/mcp/mtron){<j>}
+   	 \_dom   | #{?}::T
+   	 \_args  | [[host=>ws://localhost:8555/mcp]@/usr/ai/mcp/mtron][SocketChannelImpl<204>:java.util.concurrent.ExecutionException: java.lang.RuntimeException: java.util.concurrent.ExecutionException: java.net.ConnectException[SocketChannelImpl<204>:java.util.concurrent.ExecutionException: java.lang.RuntimeException: java.util.concurrent.ExecutionException: java.net.ConnectException ← java.lang.RuntimeException: java.util.concurrent.ExecutionException: java.net.ConnectException ← java.util.concurrent.ExecutionException: java.net.ConnectException ← java.net.ConnectException ← ...] ← java.util.concurrent.ExecutionException: java.lang.RuntimeException: java.util.concurrent.ExecutionException: java.net.ConnectException ← java.lang.RuntimeException: java.util.concurrent.ExecutionException: java.net.ConnectException ← java.util.concurrent.ExecutionException: java.net.ConnectException ← ...]]@/sys/fail/50[...]]@/sys/fail/52
+mtron> doc_model(aix).>>=+
+        [feature =>[
+          tool      => [!*/usr/ai/mcp/mtron],
+          response  => [to=>_]]]
+==>fail::[unable to locate inst-f of doc_model(aix)@<0>]@/sys/fail/54
+----
+
+Given that an `mcp_client::T` is an index of `insts`.
+Nothing prevents their `insts` being used by other processes such as a human user.
+And since, metatron is able to map common data formats to `obj`, its possible to take the result of the mcp tool and post process it to derive further more refined statistics not offered by the tool.
+
+[source,mtron]
+----
+/usr/ai/mcp/intellij/tool/ide_type_hierarchy(className=>'studio.phaseshift.metatron.isa.m.type.Obj'). /
+  -<[supers => -<[count => >>supertypes.count(),                                                      /
+                  kinds => >>supertypes>>kind>-[,]],                                                  /
+     subs   => -<[count => >>subtypes.count(),                                                        /
+                  kinds => >>subtypes>>kind>-[,]]]
+----
+
+[discrete]
+[[sec-skills]]
+==== Skills
+
+[source,mtron]
+----
+mtron>  *<fs:skills/mtron/SKILL.md>
+==>[
+    type=>doc,
+    out=>[[type=>horizontal_rule],[
+     type=>head,
+     level=>2,
+     text=>"""name: mtron
+   description: Guide to operating and evolving th...""",
+     out=>[[type=>text,content=>'name: mtron'],[type=>soft_break],[
+    type=>text,
+    content=>'description: Guide to operating and evolving the metatron s...']]],[
+     type=>head,
+     level=>1,
+     text=>'Metatron: The Structural Reflection Engine',
+     out=>[[
+    type=>text,
+    content=>'Metatron: The Structural Reflection Engine']]],[
+     type=>p,
+     text=>'Metatron is not just a database or a language; it is a **di...',
+     out=>[
+      [
+   ...
+----
+
+[discrete]
+[[sec-sessions]]
+==== Sessions
+
+The following example demonstrates how to search for an appropriate LLM for a given task, then query it, and finally, have its session of the interaction stored in space for future use (to provide the agent context over longer interactions).
+This example relies on an agent `SKILL.md` file stored on the local file system (`fs:`).
+
+[source,mtron]
+----
+mtron> [,]@/usr/ai/session     ​1​
+==>[,]@/usr/ai/session
+mtron> *ollama:+.
+        where(>>skill.has(thinking).has(tools)).
+        where(>>size.?>gB::1.0.?<gB::5.0).
+        order(>>size * -1.0).
+        take(1).
+        >>=+[feature=>[
+              session  => [agent     => /usr/ai,
+                           user      => /usr/marko,
+                           name      => 'general chat',
+                           algorithm => [max=>15]]@/usr/ai/session/1,
+              tool     => [!*eval],
+              think    => print(_),
+              response => [to=>to(/usr/ai/response)]]].
+        to(aix)
+==>fail::[apply failure:
+   	[lhs]    | noobj
+   	 \_type  | noobj{0}
+   	  \_pred | []
+   	[inst]   | *ollama:+
+   	 \_dom   | #{?}::T
+   	 \_args  | [ollama:+][BasicRouter<254>:no active space supports pattern ollama:+]]@/sys/fail/80[...]
+----
+
+<1> create a `lst` to server as the an ordered sequence of chat interactions.
+<2> stream all the models currently available on the local ollama server.
+<3> filter out those models that don't support thinking and tool use.
+<4> filter out models too small (for ollama, the cloud models) and models too big.
+<5> reverse sort the models by their size.
+<6> select the smallest model of those remaining.
+<7> attach features/enrichements to the model.
+<8> give the model a session structure for extended context.
+<9> give the model access to mtron's eval instruction.
+<10> have the model print its thoughts to the console terminal
+<11> have the model store its responses to the `/usr/ai` space.
+<12> write the model to `aix`.
+
+The first part of the stream above was about widdling down the set of available models to those that meet the requirements for this documentation -- namely, a model that is not too big (as building the docs would take too long) and has some useful capabilities for demonstrating model features.
+
+Once a model was selected, then the second phase served to enrich the model with a session structure (embedded in space), some tools to use if need be (embedded in space), a place for its thought (ephemeral to the console's stdout), and a location to place its response (embedded in space).
+
+With the model loaded and equipped, it's possible to communicate with it.
+
+
+----
+@aix.chat("I need you evaluate the mtron expresion `-<[_=>_]>>.>-[,]-<[_,-<[_=>_]>>]>>.>-` with a lhs of `1`. Please don't tell me the result of the evaluation until I ask for it sometime in the near future.")
+----
+
+[.card]
+--
+[discrete,.center]
+==== a note on unit conversions
+
+[.accordion-small]
+[%collapsible]
+./m/math instset import
+====
+
+----
+import(/m/math)
+----
+
+Or, using structured responses, the unstructured text result can be turned into a mtron obj.
+
+@ai.chat("what was the answer again?", [answer=>?int::T])
+
+[discrete]
+[[sec-notes]]
+=== Notes
+
+metatron introduces the concept of _notes_ to the agent toolkit.
+Notes are a message board written to and read from (potentially many times) by an LLM during the execution of a task -- that is, within a single chat iteration.
+Notes are useful in the following situations:
+
+. **real-time feedback**: if the agent has made a mistake in their _thinking_, there is no need to wait for the agent's response to complete nor halt the agent mid-thought.
+Instead, a note can be pushed on the agent's note stack and the agent will pop off the note, read it, and adjust itself accordingly.
+. **real-time system message**: the agent's system message is written at the start of chat and remains static for the duration of the interaction.
+Notes serve as dynamic system messages allowing programmatic alterations in the agent's behavior within a single interaction.
+
+Notes are enabled by adding `note\=>[,]` to the agent's configuration.
+The `eval` tool must also be present — the agent uses it to poll and pop notes from the note stack.
+
+[source,mtron]
+----
+@<openai:gpt-4o>.at(robotron).
+ >>=[feature=>[tool => [!*eval],           <1>
+     note => [,]]]                         <2>
+----
+
+<1> `eval` is required — the agent calls it internally to read and consume notes.
+<2> `[,]` initializes an empty note list and activates the note-checking instruction in the agent's system message.
+
+While `robotron` is executing a task, a note can be pushed at any time from any other mtron context:
+
+[source,mtron]
+----
+@robotron/note >>= +['actually, can you provide the result in euros, not dollars']   <1>
+----
+
+<1> `+` concatenates to the note `lst`.
+Because the list carries an anchored reference (`@vid`), the mutation is automatically persisted to space.
+
+[.card]
+--
+[discrete,.center]
+==== @vid auto-persistence Any `obj` that carries an `@vid` is __anchored__ to its spatial location.
+Mutations to such objs are automatically reflected in the space at that address — no explicit re-assignment required.
+
+The difference between `.to()` and `.at()` is critical here:
+
+[source,mtron]
+----
+mtron> 1.to(a) + 2 + 3
+==>6
+mtron> *a
+==>1
+mtron> 1.at(a) + 2 + 3
+==>6@a
+mtron> *a
+==>6
+----
+
+<1> `.to()` saves a snapshot at `a` but the `@vid` is **not** carried through the chain.
+<2> `a` still holds the original snapshot.
+<3> `.at()` binds `@vid` to the result, so every subsequent operation in the chain auto-persists.
+<4> `a` reflects the final value of the entire chain.
+
+The note list uses `at()` semantics: `[,]@/usr/ai/notes` initialises the list with its `@vid` already bound, so `@/usr/ai/notes + ['note']` persists automatically without re-assignment.
+--
+
+The agent receives the following standing instruction embedded in its system message at `chat()` time:
+
+[.card]
+--
+[discrete,.center]
+==== note-checking protocol Always check for notes using the `eval` tool before, during, and after your task: +
+`*<robotron/note>.remove(0)` +
+`noobj` means _no note right now_ — check again later. +
+Notes are of **crucial importance** and must be acted on immediately.
+--
+
+Notes form a **FIFO queue** — `remove(0)` pops the oldest note, leaving newer ones untouched for subsequent polls.
+An agent working through a long multi-step task will naturally poll multiple times, consuming notes one at a time as they arrive.
+
+[discrete]
+[[sec-mcp-server-client-notifications-in-mtron]]
+==== mcp server->client notifications in mtron
+
+Typically, a client will request services from an MCP server -- tool listing, tool evaluations, etc.
+It's important to note that the https://modelcontextprotocol.io/docs/learn/architecture#notifications[MCP specification] has a little known feature that allows the server to initiate communication with the client.
+This feature is called **notifications** and it can be implemented in pure mtron.
+
+[source,mtron]
+----
+<ws://localhost:8555/mcp/+/notifications/#?subq> -> sub::[                /
+ on_recv => inst?#<=lst(message=>?lst::T){                                /
+  -<json::[                                                               /
+   jsonrpc => '2.0',                                                      /
+   method  => >>0 - <ws://localhost:8555/mcp/${*message>>0>>1}${/}>,      /
+   params  => *message>>1](payload=>_){                                   /
+    *<ws://localhost:8555/mcp/${*message>>0>>1}>>>send.apply(*payload)}}]
+----
+
+<1> Add the `subq` query processor to the websocket space.
+This extends the space with pub/sub sematics.
+
+[source,mtron,role="center-code"]
+----
+                     wsspace::[=>]@/sys/space/web/ws
   anywhere            ┌──────────────────────────┐                mcp client
 ┌─────────┐  write    │ ?subq:            ws://# │  send()      ┌────────────┐
 │ payload ├──────────►│ +/notifications/#        ├─────────────►│ intellij/  │
 └─────────┘           │                          │ JSON-RPC 2.0 │ claude/... │
                       │ on_recv:                 │              └────────────┘
- /mcp/0/notifications.│..-&lt;json::[jsonrpc=&gt;...]  │
-                      │    *srv&gt;&gt;&gt;send(*payload) │
-                      └──────────────────────────┘</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The MCP notifications specification notes the following method specs:</p>
-</div>
-<table class="tableblock frame-all grid-all stretch table-bordered small center">
-<colgroup>
-<col style="width: 25%;">
-<col style="width: 75%;">
-</colgroup>
-<thead>
-<tr>
-<th class="tableblock halign-center valign-middle">method</th>
-<th class="tableblock halign-center valign-middle">description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td class="tableblock halign-left valign-middle"><div class="content"><div class="paragraph">
-<p><code>resources/updated</code></p>
-</div></div></td>
-<td class="tableblock halign-left valign-middle"><p class="tableblock">Sent when the content of a specific subscribed resource changes; the params include the resource uri, and the client should perform a resources/read to get the new data.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-middle"><div class="content"><div class="paragraph">
-<p><code>resources/list_changed</code></p>
-</div></div></td>
-<td class="tableblock halign-left valign-middle"><p class="tableblock">Sent when the list of available resources has changed, prompting the client to refresh its resource list.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-middle"><div class="content"><div class="paragraph">
-<p><code>prompts/list_changed</code></p>
-</div></div></td>
-<td class="tableblock halign-left valign-middle"><p class="tableblock">Sent when the list of available prompt templates has changed.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-middle"><div class="content"><div class="paragraph">
-<p><code>tools/list_changed</code></p>
-</div></div></td>
-<td class="tableblock halign-left valign-middle"><p class="tableblock">Sent when the list of available tools has changed (typically when the server declares the listChanged capability).</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-middle"><div class="content"><div class="paragraph">
-<p><code>logging/message</code></p>
-</div></div></td>
-<td class="tableblock halign-left valign-middle"><p class="tableblock">Sent by the server to provide log output to the client, triggered when the client has configured logging via logging/setLevel.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-middle"><div class="content"><div class="paragraph">
-<p><code>roots/list_changed</code></p>
-</div></div></td>
-<td class="tableblock halign-left valign-middle"><p class="tableblock">Sent when the list of filesystem roots accessible to the server has changed.</p></td>
-</tr>
-</tbody>
-</table>
-<div class="paragraph">
-<p>If an MCP session is spawned at <code>ws://localhost:8555/mcp/0</code>, then writing an obj to <code>ws://localhost:8555/mcp/0/notification/x/y</code> will automatically be routed to the MCP client in a proper <a href="https://www.jsonrpc.org/">JSON-RPC 2.0</a> transport object.</p>
-</div>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-note" title="Note"></i>
-</td>
-<td class="content">
-A <a href="../../.claude/skills/mtron/references/mcp-server-notifications.md">mini-SKILL</a> is available for this pattern — it captures the development session learnings, pitfalls, and mechanics for agents and users working with MCP server→client notifications.
-</td>
-</tr>
-</table>
-</div>
-<h3 id="sec-agent-based-programming-language" class="discrete">agent-based programming language</h3>
-<div class="paragraph">
-<p>The LLM, its sessions, tools, skills, thoughts, and response formats are all first-class entities in the metatron. Interacting
-with an LLM is equivalent to evaluating an instruction. Moreover, an LLM&#8217;s response is simply the <code>rhs</code> of
-the instruction. As such, in mtron, function composition applies to LLM interactions.
+ /mcp/0/notifications.│..-<json::[jsonrpc=>...]  │
+                      │    *srv>>>send(*payload) │
+                      └──────────────────────────┘
+----
+
+The MCP notifications specification notes the following method specs:
+
+[cols=".^2a,.^6",separator=🧱,options=header,role="table-bordered small center"]
+|===
+^🧱 method ^🧱 description
+🧱 `resources/updated`      🧱 Sent when the content of a specific subscribed resource changes; the params include the resource uri, and the client should perform a resources/read to get the new data.
+🧱 `resources/list_changed` 🧱 Sent when the list of available resources has changed, prompting the client to refresh its resource list.
+🧱 `prompts/list_changed`   🧱 Sent when the list of available prompt templates has changed.
+🧱 `tools/list_changed`     🧱 Sent when the list of available tools has changed (typically when the server declares the listChanged capability).
+🧱 `logging/message`        🧱 Sent by the server to provide log output to the client, triggered when the client has configured logging via logging/setLevel.
+🧱 `roots/list_changed`     🧱 Sent when the list of filesystem roots accessible to the server has changed.
+|===
+
+If an MCP session is spawned at `ws://localhost:8555/mcp/0`, then writing an obj to `ws://localhost:8555/mcp/0/notification/x/y` will automatically be routed to the MCP client in a proper https://www.jsonrpc.org/[JSON-RPC 2.0] transport object.
+
+NOTE: A link:../../.claude/skills/mtron/references/mcp-server-notifications.md[mini-SKILL] is available for this pattern — it captures the development session learnings, pitfalls, and mechanics for agents and users working with MCP server→client notifications.
+
+[discrete]
+[[sec-agent-based-programming-language]]
+=== agent-based programming language
+
+The LLM, its sessions, tools, skills, thoughts, and response formats are all first-class entities in the metatron.
+Interacting with an LLM is equivalent to evaluating an instruction.
+Moreover, an LLM's response is simply the `rhs` of the instruction.
+As such, in mtron, function composition applies to LLM interactions.
 Agent-oriented computations can be defined and executed in a "workflow" type manner.
-Conceptually, the LLM&#8217;s state exists in (side effect/monadic) space, where instructions along the code&#8217;s execution path
-can access it accordingly and naturally.</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">    enriched llm
+Conceptually, the LLM's state exists in (side effect/monadic) space, where instructions along the code's execution path can access it accordingly and naturally.
+
+[source,mtron]
+----
+    enriched llm
    ┌──────────────────────────────────────────────────┐
    │       session                      thoughts      │
    │       tools                        skills        │
@@ -2127,40 +2165,28 @@ can access it accordingly and naturally.</p>
                               │                  ▲
                               │  ┌────┐          │
                               └─►│    ├──────────┘
-                                 └────┘</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The mtron example below contains two structured response calls to the agent used in the running examples thus far. Note the use of the tools provided to the agent.</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">*robotron
-*robotron.chat('what is 6 + 23?',[answer=&gt;int::T])                                 /
-       .where([answer =&gt; ?&gt;20])                                                    /
-       .*robotron.chat('what was the last answer you gave me?',[answer=&gt;int::T])   /
-       .&gt;&gt;answer                                                                   /
-       .-&lt;|[?&gt;23 =&gt; print('a big answer'),                                         /
-               _ =&gt; print('a small answer')].&gt;&gt;.mult(1000)
-*&lt;local:.agent/robotron/session&gt;</code></pre>
-</div>
-</div>
-<div class="colist arabic">
-<table>
-<tr>
-<td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>The agent used in the previous examples.</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="2"></i><b>2</b></td>
-<td>Treat <code>chat()</code> like any other instruction within a larger mtron composition.</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="3"></i><b>3</b></td>
-<td>The llm&#8217;s chat sessions with requests and responses accessible.</td>
-</tr>
-</table>
-</div>
+                                 └────┘
+----
+
+The mtron example below contains two structured response calls to the agent used in the running examples thus far.
+Note the use of the tools provided to the agent.
+
+[source,mtron]
+----
+*robotron
+*robotron.chat('what is 6 + 23?',[answer=>int::T])                                 /
+       .where([answer => ?>20])                                                    /
+       .*robotron.chat('what was the last answer you gave me?',[answer=>int::T])   /
+       .>>answer                                                                   /
+       .-<|[?>23 => print('a big answer'),                                         /
+               _ => print('a small answer')].>>.mult(1000)
+*<local:.agent/robotron/session>
+----
+
+<1> The agent used in the previous examples.
+<2> Treat `chat()` like any other instruction within a larger mtron composition.
+<3> The llm's chat sessions with requests and responses accessible.
+-->
 </div>
 <div class="collapse position-relative" id="card-4">
 <button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-4" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
@@ -2296,7 +2322,7 @@ can access it accordingly and naturally.</p>
    	  \_pred | []
    	[inst]   | plus?rng=uri{?}&amp;dom=int(b){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
    	 \_dom   | int::T
-   	 \_args  | [b][Obj&lt;712&gt;:1 [int::T] unable to convert uri::T]]@/sys/fail/22[...]
+   	 \_args  | [b][Obj&lt;711&gt;:1 [int::T] unable to convert uri::T]]@/sys/fail/22[...]
 mtron&gt; */sys/fail/+     ​2​
 mtron&gt; */sys/fail/+.catch(_)     ​3​
 mtron&gt; */sys/fail     ​4​</code></pre>
@@ -2380,13 +2406,20 @@ mtron&gt; throw('bad').catch(cause())     ​3​</code></pre>
 <div class="content">
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; int::T[?&gt;0]@nat</code></pre>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; import(/m/math)
+mtron&gt; int::T[?&gt;0]@nat</code></pre>
 </div>
 </div>
 </div>
 </details>
 <div class="paragraph">
-<p>Every obj in mtron has a <strong>type</strong>. A <a href="https://en.wikipedia.org/wiki/Data_type">type</a> is either a base type or a <a href="https://en.wikipedia.org/wiki/Refinement_type">refinement</a> on a base type. For instance, <code>int::5</code> is a <a href="https://en.wikipedia.org/wiki/Value_(computer_science)">value</a> with type <code>int::T</code> (a <a href="https://en.wikipedia.org/wiki/Primitive_data_type">base type</a>). An example refinement of <code>int::T</code> is the type <code>int::T[?&lt;10]</code>. The refinement type states that a value of this type is any <code>int::T</code> less than 10. A similar, though more consequential example is the set of natural numbers \(\mathbb{N}\) being a subset of the set of integers \(\mathbb{Z}\). That is, \(\mathbb{N} \subset \mathbb{Z}\). The set of natural numbers is defined in mtron as:</p>
+<p>Every obj in mtron has a <strong>type</strong>.
+A <a href="https://en.wikipedia.org/wiki/Data_type">type</a> is either a base type or a <a href="https://en.wikipedia.org/wiki/Refinement_type">refinement</a> on a base type.
+For instance, <code>int::5</code> is a <a href="https://en.wikipedia.org/wiki/Value_(computer_science)">value</a> with type <code>int::T</code> (a <a href="https://en.wikipedia.org/wiki/Primitive_data_type">base type</a>).
+An example refinement of <code>int::T</code> is the type <code>int::T[?&lt;10]</code>.
+The refinement type states that a value of this type is any <code>int::T</code> less than 10. A similar, though more consequential example is the set of natural numbers \(\mathbb{N}\) being a subset of the set of integers \(\mathbb{Z}\).
+That is, \(\mathbb{N} \subset \mathbb{Z}\).
+The set of natural numbers is defined in mtron as:</p>
 </div>
 <div class="listingblock center">
 <div class="title">a structural type</div>
@@ -2401,7 +2434,11 @@ mtron&gt; throw('bad').catch(cause())     ​3​</code></pre>
 </div>
 <div class="paragraph">
 <p>Non-base types will be notated <code>B::T &lt; A::T</code>: " <code>B::T</code> captures a subset of the values captured by <code>A::T</code>." When notated
-<code>B::T == A::T</code>: " <code>B::T</code> has the same values as <code>A::T</code> ". When two types have the same values but different names (vids) There exists only a <a href="https://en.wikipedia.org/wiki/Nominal_type_system">nominal</a> difference between <code>A::T</code> and <code>B::T</code>. In such situation, values of <code>A::T</code> and values of <code>B::T</code> are different in that they are being type/classified as being distinct through label (through name). As an example, the type <code>int::T@age</code> is not the same as <code>int::T@zipcode</code>. The structure of a nominal type is specified as:</p>
+<code>B::T == A::T</code>: " <code>B::T</code> has the same values as <code>A::T</code> ".
+When two types have the same values but different names (vids) There exists only a <a href="https://en.wikipedia.org/wiki/Nominal_type_system">nominal</a> difference between <code>A::T</code> and <code>B::T</code>.
+In such situation, values of <code>A::T</code> and values of <code>B::T</code> are different in that they are being type/classified as being distinct through label (through name).
+As an example, the type <code>int::T@age</code> is not the same as <code>int::T@zipcode</code>.
+The structure of a nominal type is specified as:</p>
 </div>
 <div class="listingblock center">
 <div class="title">a nominal type</div>
@@ -2420,7 +2457,8 @@ mtron&gt; throw('bad').catch(cause())     ​3​</code></pre>
 <i class="fa icon-important" title="Important"></i>
 </td>
 <td class="content">
-The distinction between structural and nominal types depends solely on the existence of a predicate which specifies the structural requirements a value must satisfy to be considered that type. With no constraint on structure, then the implied constraint is on vid, i.e. name.
+The distinction between structural and nominal types depends solely on the existence of a predicate which specifies the structural requirements a value must satisfy to be considered that type.
+With no constraint on structure, then the implied constraint is on vid, i.e. name.
 </td>
 </tr>
 </table>
@@ -2432,11 +2470,11 @@ The distinction between structural and nominal types depends solely on the exist
 </div>
 <div class="paragraph">
 <p>\[
-\tt pred?A\{?\} \Leftarrow A()\{ code \},
-\]</p>
+\tt pred?A\{?\} \Leftarrow A()\{ code \}, \]</p>
 </div>
 <div class="paragraph">
-<p>such that a lhs value of type <code>A</code> is mapped by <code>code</code> to a rhs value of either type <code>A::T</code> (<strong>true</strong>) or <code>A{0}::T</code> (<strong>false</strong>). Hence, <code>A{?}</code> which is sugar for <code>A{0,1}</code>.</p>
+<p>such that a lhs value of type <code>A</code> is mapped by <code>code</code> to a rhs value of either type <code>A::T</code> (<strong>true</strong>) or <code>A{0}::T</code> (<strong>false</strong>).
+Hence, <code>A{?}</code> which is sugar for <code>A{0,1}</code>.</p>
 </div>
 <div class="admonitionblock important">
 <table>
@@ -2506,7 +2544,10 @@ mtron&gt;  chicken::[name=&gt;'punky',age=&gt;'four']     ​7​
 </div>
 <h4 id="sec-structural-type-hierarchy" class="discrete">Structural Type Hierarchy</h4>
 <div class="paragraph">
-<p>A structural type can be refined with further structural requirements. An example is the concept of age. No human being in modern recorded history has been reported to be over the age of 120 years old. Furthermore, no person has a negative age as at birth, the age is 0. Together, age can be defined as any natural number less than 120 (<code>0 &gt; age &lt; 120</code>).</p>
+<p>A structural type can be refined with further structural requirements.
+An example is the concept of age.
+No human being in modern recorded history has been reported to be over the age of 120 years old.
+Furthermore, no person has a negative age as at birth, the age is 0. Together, age can be defined as any natural number less than 120 (<code>0 &gt; age &lt; 120</code>).</p>
 </div>
 <div class="admonitionblock note">
 <table>
@@ -2515,7 +2556,9 @@ mtron&gt;  chicken::[name=&gt;'punky',age=&gt;'four']     ​7​
 <i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-The examples below make use of mtron&#8217;s <code>as?B&lt;=A(B::T)</code> instruction. For the purpose of these examples, <code>as()</code> is being used to determine whether a value meets the structural requirements of the respective type. The <code>as()</code> instruction also handles type constructors, and this aspect of a type is discussed later.
+The examples below make use of mtron&#8217;s <code>as?B&lt;=A(B::T)</code> instruction.
+For the purpose of these examples, <code>as()</code> is being used to determine whether a value meets the structural requirements of the respective type.
+The <code>as()</code> instruction also handles type constructors, and this aspect of a type is discussed later.
 </td>
 </tr>
 </table>
@@ -2533,7 +2576,7 @@ mtron&gt;  -21.as(int::T).as(nat::T).as(age::T)     ​4​
    	  \_pred | []
    	[inst]   | as?rng=nat&amp;dom=int(nat::T){&lt;j&gt;}@<i class="conum" data-value="2"></i><b>(2)</b>
    	 \_dom   | int::T
-   	 \_args  | [nat::T][Obj&lt;529&gt;:-21 is not a is(gt(0))...]]@/sys/fail/8[...]
+   	 \_args  | [nat::T][Obj&lt;528&gt;:-21 is not a is(gt(0))...]]@/sys/fail/8[...]
 mtron&gt;  121.as(int::T).as(nat::T).as(age::T)     ​5​
 ==&gt;fail::[apply failure:
    	[lhs]    | nat::121
@@ -2541,7 +2584,7 @@ mtron&gt;  121.as(int::T).as(nat::T).as(age::T)     ​5​
    	  \_pred | [is(gt(0))]
    	[inst]   | as?rng=age&amp;dom=int(age::T){&lt;j&gt;}@<i class="conum" data-value="3"></i><b>(3)</b>
    	 \_dom   | int::T
-   	 \_args  | [age::T][Obj&lt;529&gt;:nat::121 is not a is(lt(120))...]]@/sys/fail/10[...]
+   	 \_args  | [age::T][Obj&lt;528&gt;:nat::121 is not a is(lt(120))...]]@/sys/fail/10[...]
 mtron&gt; rec::T[?[name=&gt;str::T,age=&gt;age::T]]@chicken     ​6​
 mtron&gt; chicken::[name=&gt;'snowbutt',age=&gt;7]     ​7​
 ==&gt;chicken::[name=&gt;'snowbutt',age=&gt;7]
@@ -2595,7 +2638,11 @@ mtron&gt;  chicken::[name=&gt;'punky',age=&gt;444]     ​8​
 <div class="sect2">
 <h3 id="_nominal_types">Nominal Types</h3>
 <div class="paragraph">
-<p>As stated in at the beginning of this document, mtron supports both structural and nominal type specifications. A nominal type is any type with no specified predicate. This means that all the base types (e.g. <code>int::T</code>, <code>bool::T</code>, <code>rec::T</code>, etc.) are nominal types. A base type is any type whose tid is equal to its vid. For example, and analogously for the other base types, <code>int::T</code> is defined as:</p>
+<p>As stated in at the beginning of this document, mtron supports both structural and nominal type specifications.
+A nominal type is any type with no specified predicate.
+This means that all the base types (e.g. <code>int::T</code>, <code>bool::T</code>, <code>rec::T</code>, etc.) are nominal types.
+A base type is any type whose tid is equal to its vid.
+For example, and analogously for the other base types, <code>int::T</code> is defined as:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -2650,7 +2697,10 @@ mtron&gt; 'marko'.regex(re::'m.{3}o')     ​4​
 <div class="sect3">
 <h4 id="_integrating_nominal_types_with_structural_types">Integrating Nominal Types with Structural Types</h4>
 <div class="paragraph">
-<p>With structural types, any <code>rec::T</code> can be a <code>chicken::T</code> as long as it meets the structural requirements of <code>chicken::T</code>. This means, that if a <code>rec::T</code> denotes (in the mind of the engineer) a  human (who has a name and age), that human is also a chicken. This can be problematic. For those situations when the value has no other discriminating qualities for a predicate to leverage, then an assigned type label becomes a useful taxonomical criteria.</p>
+<p>With structural types, any <code>rec::T</code> can be a <code>chicken::T</code> as long as it meets the structural requirements of <code>chicken::T</code>.
+This means, that if a <code>rec::T</code> denotes (in the mind of the engineer) a human (who has a name and age), that human is also a chicken.
+This can be problematic.
+For those situations when the value has no other discriminating qualities for a predicate to leverage, then an assigned type label becomes a useful taxonomical criteria.</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -2668,7 +2718,7 @@ mtron&gt;  chicken::[name=&gt;'snowbutt',age=&gt;7].as(human::T)     ​5​
      age=&gt;age::T])]
    	[inst]   | as?rng=human&amp;dom=rec(human::T){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
    	 \_dom   | rec::T
-   	 \_args  | [human::T][Obj&lt;517&gt;:chicken::[name=&gt;'snowbutt',age=&gt;7] is not a human::T...]]@/sys/fail/14[...]
+   	 \_args  | [human::T][Obj&lt;516&gt;:chicken::[name=&gt;'snowbutt',age=&gt;7] is not a human::T...]]@/sys/fail/14[...]
 mtron&gt; [name=&gt;'fuzzy feet',age=&gt;2].as(chicken::T)     ​6​
 ==&gt;chicken::[name=&gt;'fuzzy feet',age=&gt;2]
 mtron&gt; 'punky'.as(chicken::T)     ​7​
@@ -2714,7 +2764,10 @@ mtron&gt; 'punky'.as(chicken::T)     ​7​
 </table>
 </div>
 <div class="paragraph">
-<p>Structurally speaking, there is nothing that prevents the person named marko from also being a chicken. However, nominally, that is not the case. The person named marko has been nominally relegated to the taxonomical classification of a person. In this way, nominal and structural types co-exist in mtron in order to satisfy two different understandings of type (type by name and type by strufcture).</p>
+<p>Structurally speaking, there is nothing that prevents the person named marko from also being a chicken.
+However, nominally, that is not the case.
+The person named marko has been nominally relegated to the taxonomical classification of a person.
+In this way, nominal and structural types co-exist in mtron in order to satisfy two different understandings of type (type by name and type by strufcture).</p>
 </div>
 <div class="admonitionblock important">
 <table>
@@ -2723,7 +2776,10 @@ mtron&gt; 'punky'.as(chicken::T)     ​7​
 <i class="fa icon-important" title="Important"></i>
 </td>
 <td class="content">
-Realize the distinction between structural and nominal types is one of convenience. It is true that there exists structural features of marko that make this  person not a chicken (e.g. DNA, weight and size, etc.). However, if the system operating with such types can not make that distinction (perhaps no sensors to do so), then an explicit statement of the fact that marko is not a chicken allows such unrefined systems (literally) to operate effectively using said classification. This is the difference between <strong>experiential knowledge</strong> (structural) and <strong>authoratative knowledge</strong> (nominal).
+Realize the distinction between structural and nominal types is one of convenience.
+It is true that there exists structural features of marko that make this person not a chicken (e.g. DNA, weight and size, etc.).
+However, if the system operating with such types can not make that distinction (perhaps no sensors to do so), then an explicit statement of the fact that marko is not a chicken allows such unrefined systems (literally) to operate effectively using said classification.
+This is the difference between <strong>experiential knowledge</strong> (structural) and <strong>authoratative knowledge</strong> (nominal).
 </td>
 </tr>
 </table>
@@ -2773,7 +2829,7 @@ mtron&gt;  -2.as(nat::T)     ​6​
    	  \_pred | []
    	[inst]   | as?rng=int&amp;dom=int(int::T){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
    	 \_dom   | int::T
-   	 \_args  | [int::T][Obj&lt;529&gt;:-2 is not a is(gt(0))...]]@/sys/fail/18[...]
+   	 \_args  | [int::T][Obj&lt;528&gt;:-2 is not a is(gt(0))...]]@/sys/fail/18[...]
 mtron&gt;  nat::2 * -1     ​7​
 ==&gt;fail::[apply failure:
    	[lhs]    | nat::2
@@ -2781,7 +2837,7 @@ mtron&gt;  nat::2 * -1     ​7​
    	  \_pred | [is(gt(0))]
    	[inst]   | mult?rng=int&amp;dom=int(-1){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
    	 \_dom   | int::T
-   	 \_args  | [-1][Obj$Helper&lt;993&gt;:-2 is not a int::T[is(gt(0))][choose([is(lt(0))=&gt;mult(-1),id()=&gt;id()]).rshift()]]]@/sys/fail/20[...]</code></pre>
+   	 \_args  | [-1][Obj$Helper&lt;992&gt;:-2 is not a int::T[is(gt(0))][choose([is(lt(0))=&gt;mult(-1),id()=&gt;id()]).rshift()]]]@/sys/fail/20[...]</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -2808,7 +2864,7 @@ The predicate component of the type definition tests an <code>int</code> to dete
 <div class="paragraph">
 <p>While every <code>type</code> is an <code>obj</code>, not every <code>obj</code> is a <code>type</code>.
 Those <code>objs</code> that are not <code>types</code> are <em>instances</em> of some <code>type</code>.
-This is the foundation for all other <code>objs</code> in {{c}}m{{c}}e{{m}}t{{c}}a{{g}}T{{g}}R{{r}}O{{r}}n{{X}}.</p>
+This is the foundation for all other <code>objs</code> in {{r}}M{{c}}E{{g}}T{{y}}A{{b}}t{{g}}R{{r}}o{{r}}N{{X}}.</p>
 </div>
 <h4 id="sec-cascading-type-constructions" class="discrete">cascading type constructions</h4>
 <h3 id="sec-mono-types" class="discrete">mono types</h3>
@@ -2925,38 +2981,14 @@ mtron&gt; bytes::'48656c6c6f'     ​2​
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; kB::1024.as(mB::T)     ​1​
-==&gt;fail::[unable to construct kB::T: fail::[apply failure:
-   	[lhs]    | 1024
-   	 \_type  | /m/int
-   	  \_pred | []
-   	[inst]   | ctor?rng=kB&amp;dom=#{?}(1024){&lt;j&gt;}
-   	 \_dom   | #{?}::T
-   	 \_args  | [1024][Obj&lt;561&gt;:unable to convert int::T to real::T[Obj&lt;561&gt;:class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Real (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Real are in unnamed module of loader 'app')] ← class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Real (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Real are in unnamed module of loader 'app')]]@/sys/fail/42[...]]@/sys/fail/44
-mtron&gt; mB::1.as(kB::T)     ​2​
-==&gt;fail::[unable to construct mB::T: fail::[apply failure:
-   	[lhs]    | 1
-   	 \_type  | /m/int
-   	  \_pred | []
-   	[inst]   | ctor?rng=mB&amp;dom=#{?}(1){&lt;j&gt;}
-   	 \_dom   | #{?}::T
-   	 \_args  | [1][Obj&lt;561&gt;:unable to convert int::T to real::T[Obj&lt;561&gt;:class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Real (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Real are in unnamed module of loader 'app')] ← class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Real (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Real are in unnamed module of loader 'app')]]@/sys/fail/48[...]]@/sys/fail/50
-mtron&gt; gB::5.as(mB::T)     ​3​
-==&gt;fail::[unable to construct gB::T: fail::[apply failure:
-   	[lhs]    | 5
-   	 \_type  | /m/int
-   	  \_pred | []
-   	[inst]   | ctor?rng=gB&amp;dom=#{?}(5){&lt;j&gt;}
-   	 \_dom   | #{?}::T
-   	 \_args  | [5][Obj&lt;561&gt;:unable to convert int::T to real::T[Obj&lt;561&gt;:class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Real (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Real are in unnamed module of loader 'app')] ← class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Real (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Real are in unnamed module of loader 'app')]]@/sys/fail/54[...]]@/sys/fail/56
-mtron&gt; pB::1.as(tB::T)     ​4​
-==&gt;fail::[unable to construct pB::T: fail::[apply failure:
-   	[lhs]    | 1
-   	 \_type  | /m/int
-   	  \_pred | []
-   	[inst]   | ctor?rng=pB&amp;dom=#{?}(1){&lt;j&gt;}
-   	 \_dom   | #{?}::T
-   	 \_args  | [1][Obj&lt;561&gt;:unable to convert int::T to real::T[Obj&lt;561&gt;:class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Real (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Real are in unnamed module of loader 'app')] ← class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Real (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Real are in unnamed module of loader 'app')]]@/sys/fail/60[...]]@/sys/fail/62</code></pre>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; kB::1024.0.as(mB::T)     ​1​
+==&gt;mB::1.0000
+mtron&gt; mB::1.0.as(kB::T)     ​2​
+==&gt;kB::1024.0000
+mtron&gt; gB::5.0.as(mB::T)     ​3​
+==&gt;mB::5120.0000
+mtron&gt; pB::1.0.as(tB::T)     ​4​
+==&gt;tB::1024.0000</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -2987,38 +3019,14 @@ mtron&gt; pB::1.as(tB::T)     ​4​
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; mB::1024.eq(gB::1)     ​1​
-==&gt;fail::[unable to construct mB::T: fail::[apply failure:
-   	[lhs]    | 1024
-   	 \_type  | /m/int
-   	  \_pred | []
-   	[inst]   | ctor?rng=mB&amp;dom=#{?}(1024){&lt;j&gt;}
-   	 \_dom   | #{?}::T
-   	 \_args  | [1024][Obj&lt;561&gt;:unable to convert int::T to real::T[Obj&lt;561&gt;:class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Real (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Real are in unnamed module of loader 'app')] ← class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Real (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Real are in unnamed module of loader 'app')]]@/sys/fail/66[...]]@/sys/fail/68
-mtron&gt; kB::1024.eq(mB::1)     ​2​
-==&gt;fail::[unable to construct kB::T: fail::[apply failure:
-   	[lhs]    | 1024
-   	 \_type  | /m/int
-   	  \_pred | []
-   	[inst]   | ctor?rng=kB&amp;dom=#{?}(1024){&lt;j&gt;}
-   	 \_dom   | #{?}::T
-   	 \_args  | [1024][Obj&lt;561&gt;:unable to convert int::T to real::T[Obj&lt;561&gt;:class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Real (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Real are in unnamed module of loader 'app')] ← class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Real (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Real are in unnamed module of loader 'app')]]@/sys/fail/72[...]]@/sys/fail/74
-mtron&gt; gB::2.eq(mB::2048)     ​3​
-==&gt;fail::[unable to construct gB::T: fail::[apply failure:
-   	[lhs]    | 2
-   	 \_type  | /m/int
-   	  \_pred | []
-   	[inst]   | ctor?rng=gB&amp;dom=#{?}(2){&lt;j&gt;}
-   	 \_dom   | #{?}::T
-   	 \_args  | [2][Obj&lt;561&gt;:unable to convert int::T to real::T[Obj&lt;561&gt;:class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Real (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Real are in unnamed module of loader 'app')] ← class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Real (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Real are in unnamed module of loader 'app')]]@/sys/fail/78[...]]@/sys/fail/80
-mtron&gt; tB::1.eq(gB::1024)     ​4​
-==&gt;fail::[unable to construct tB::T: fail::[apply failure:
-   	[lhs]    | 1
-   	 \_type  | /m/int
-   	  \_pred | []
-   	[inst]   | ctor?rng=tB&amp;dom=#{?}(1){&lt;j&gt;}
-   	 \_dom   | #{?}::T
-   	 \_args  | [1][Obj&lt;561&gt;:unable to convert int::T to real::T[Obj&lt;561&gt;:class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Real (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Real are in unnamed module of loader 'app')] ← class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Real (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Real are in unnamed module of loader 'app')]]@/sys/fail/84[...]]@/sys/fail/86</code></pre>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; mB::1024.0.eq(gB::1.0)     ​1​
+==&gt;true
+mtron&gt; kB::1024.0.eq(mB::1.0)     ​2​
+==&gt;true
+mtron&gt; gB::2.0.eq(mB::2048.0)     ​3​
+==&gt;true
+mtron&gt; tB::1.0.eq(gB::1024.0)     ​4​
+==&gt;true</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -3412,7 +3420,7 @@ mtron&gt; *result     ​3​
 mtron&gt; filtered -&gt; *nums-&lt;[?&gt;3 =&gt; _, _ =&gt; noobj]&gt;&gt;     ​2​
 ==&gt;fail::[filtered -&gt; *nums-&lt;[?&gt;3 =&gt; _, _ =&gt; noobj]&gt;&gt;
                      ^ end of input expected
-   ]@/sys/fail/88
+   ]@/sys/fail/40
 mtron&gt; *filtered     ​3​</code></pre>
 </div>
 </div>
@@ -3488,7 +3496,8 @@ mtron&gt; even -&gt; int::T[is(mod(2).eq(0))]     ​4​</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>For instance, it is possible to define the type <code>nat</code> which represents the set of natural numbers&#8201;&#8212;&#8201;integers greater than zero. In mtron, this is written:</p>
+<p>For instance, it is possible to define the type <code>nat</code> which represents the set of natural numbers&#8201;&#8212;&#8201;integers greater than zero.
+In mtron, this is written:</p>
 </div>
 <div class="stemblock">
 <div class="content">
@@ -3496,7 +3505,8 @@ mtron&gt; even -&gt; int::T[is(mod(2).eq(0))]     ​4​</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>The <code>int::T</code> (<code>int</code> type) is being constrained by the predicate <code>?&gt;0</code> (or <code>is(gt(0))</code>). This constraint is a refinement of <code>int</code> (a well defined subset).</p>
+<p>The <code>int::T</code> (<code>int</code> type) is being constrained by the predicate <code>?&gt;0</code> (or <code>is(gt(0))</code>).
+This constraint is a refinement of <code>int</code> (a well defined subset).</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -3504,7 +3514,7 @@ mtron&gt; even -&gt; int::T[is(mod(2).eq(0))]     ​4​</code></pre>
 mtron&gt; nat::10
 ==&gt;nat::10
 mtron&gt;  nat::-10
-==&gt;fail::[-10 is not a int::T[is(gt(0))]]@/sys/fail/106
+==&gt;fail::[-10 is not a int::T[is(gt(0))]]@/sys/fail/58
 mtron&gt;  int::-10.as(nat::T)
 ==&gt;fail::[apply failure:
    	[lhs]    | -10
@@ -3512,7 +3522,7 @@ mtron&gt;  int::-10.as(nat::T)
    	  \_pred | []
    	[inst]   | as?rng=int&amp;dom=int(int::T){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
    	 \_dom   | int::T
-   	 \_args  | [int::T][Obj&lt;529&gt;:-10 is not a is(gt(0))...]]@/sys/fail/108[...]</code></pre>
+   	 \_args  | [int::T][Obj&lt;528&gt;:-10 is not a is(gt(0))...]]@/sys/fail/60[...]</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -3522,7 +3532,9 @@ mtron&gt;  int::-10.as(nat::T)
 <p>Every mtron <code>obj</code> has a type.</p>
 </div>
 <div class="paragraph">
-<p>metatron <code>objs</code> are typed. Types are organized into instruction sets that encapsulate the structures and processes necessary to effect domain-specific views of the underlying data space. The type system supports refinement types, optional/maybe types, generic/polymorphic types, recursive/self-referential types, dependent types, type cardinality, and more.</p>
+<p>metatron <code>objs</code> are typed.
+Types are organized into instruction sets that encapsulate the structures and processes necessary to effect domain-specific views of the underlying data space.
+The type system supports refinement types, optional/maybe types, generic/polymorphic types, recursive/self-referential types, dependent types, type cardinality, and more.</p>
 </div>
 <h3 id="sec-core-types" class="discrete">mtron core types</h3>
 <div class="paragraph">
@@ -3599,7 +3611,8 @@ mtron&gt;  int::-10.as(nat::T)
 </tbody>
 </table>
 <div class="paragraph">
-<p>A natural number is a positive integer greater than zero. In order to constrain an <code>int</code> to this definition, a <strong>refinement type</strong> can be constructed.</p>
+<p>A natural number is a positive integer greater than zero.
+In order to constrain an <code>int</code> to this definition, a <strong>refinement type</strong> can be constructed.</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -3607,7 +3620,7 @@ mtron&gt;  int::-10.as(nat::T)
 mtron&gt; nat::10
 ==&gt;nat::10
 mtron&gt;  nat::-10
-==&gt;fail::[-10 is not a int::T[is(gt(0))]]@/sys/fail/110
+==&gt;fail::[-10 is not a int::T[is(gt(0))]]@/sys/fail/62
 mtron&gt;  int::-10.as(nat::T)
 ==&gt;fail::[apply failure:
    	[lhs]    | -10
@@ -3615,11 +3628,14 @@ mtron&gt;  int::-10.as(nat::T)
    	  \_pred | []
    	[inst]   | as?rng=int&amp;dom=int(int::T){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
    	 \_dom   | int::T
-   	 \_args  | [int::T][Obj&lt;529&gt;:-10 is not a is(gt(0))...]]@/sys/fail/112[...]</code></pre>
+   	 \_args  | [int::T][Obj&lt;528&gt;:-10 is not a is(gt(0))...]]@/sys/fail/64[...]</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>Type inheritance is possible through type chaining. In the example below, the <code>age</code> type has a value id of <code>age</code>, but a type id of <code>nat</code>. Moreover, <code>nat</code> has a value id of <code>nat</code> and a type id of <code>int</code>. In this way, when <code>age</code> is resolved, its associated predicate (<code>?&lt;120</code>) and inherited predicates (<code>?&gt;0</code>) must hold for the respective value to be considered an <code>age</code>.</p>
+<p>Type inheritance is possible through type chaining.
+In the example below, the <code>age</code> type has a value id of <code>age</code>, but a type id of <code>nat</code>.
+Moreover, <code>nat</code> has a value id of <code>nat</code> and a type id of <code>int</code>.
+In this way, when <code>age</code> is resolved, its associated predicate (<code>?&lt;120</code>) and inherited predicates (<code>?&gt;0</code>) must hold for the respective value to be considered an <code>age</code>.</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -3634,7 +3650,7 @@ mtron&gt; int::T</code></pre>
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; nat::125
 ==&gt;nat::125
 mtron&gt; age::125
-==&gt;fail::[125 is not a int::T[is(lt(120))]]@/sys/fail/114
+==&gt;fail::[125 is not a int::T[is(lt(120))]]@/sys/fail/66
 mtron&gt;  nat::125.as(age::T)
 ==&gt;fail::[apply failure:
    	[lhs]    | nat::125
@@ -3642,7 +3658,7 @@ mtron&gt;  nat::125.as(age::T)
    	  \_pred | [is(gt(0))]
    	[inst]   | as?rng=int&amp;dom=int(int::T){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
    	 \_dom   | int::T
-   	 \_args  | [int::T][Obj&lt;529&gt;:nat::125 is not a is(lt(120))...]]@/sys/fail/116[...]
+   	 \_args  | [int::T][Obj&lt;528&gt;:nat::125 is not a is(lt(120))...]]@/sys/fail/68[...]
 mtron&gt;  125.as(nat::T).as(age::T)
 ==&gt;fail::[apply failure:
    	[lhs]    | 125
@@ -3650,7 +3666,7 @@ mtron&gt;  125.as(nat::T).as(age::T)
    	  \_pred | []
    	[inst]   | as?rng=int&amp;dom=int(int::T){&lt;j&gt;}@<i class="conum" data-value="2"></i><b>(2)</b>
    	 \_dom   | int::T
-   	 \_args  | [int::T][Obj&lt;529&gt;:125 is not a is(lt(120))...]]@/sys/fail/118[...]</code></pre>
+   	 \_args  | [int::T][Obj&lt;528&gt;:125 is not a is(lt(120))...]]@/sys/fail/70[...]</code></pre>
 </div>
 </div>
 <div class="listingblock">
@@ -5261,7 +5277,19 @@ mtron&gt; *fs:m     ​3​
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys/space/localfs     ​1​
 mtron&gt; */sys/space/localfs/script     ​2​
 mtron&gt; *&lt;fs:m/bin/metatron&gt;     ​3​
-==&gt;'WARNING: Using incubator modules: jdk.incubator.vector'
+==&gt;'[?25l'
+==&gt;{2}'⠙ compiling'
+==&gt;{2}'⠹ compiling'
+==&gt;{2}'⠸ compiling'
+==&gt;{2}'⠼ compiling'
+==&gt;{2}'⠴ compiling'
+==&gt;{2}'⠦ compiling'
+==&gt;'⠧ compiling'
+==&gt;'⠇ compiling'
+==&gt;'⠏ compiling'
+==&gt;'⠋ compiling'
+==&gt;'⠧ compiling[?12l[?25h'
+==&gt;'[K[0;32m✓[0m compiling'
 ==&gt;null
 mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T)     ​4​
 mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T).as(str::T)     ​5​
@@ -5271,7 +5299,7 @@ mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T).as(str::T)     ​5​
    	  \_pred | []
    	[inst]   | as?rng=str&amp;dom=bytes(str::T){&lt;j&gt;}
    	 \_dom   | bytes::T
-   	 \_args  | [str::T][Obj&lt;688&gt;:bytes(#{*}::T){&lt;j&gt;} [bytes::T] unable to convert bytes::T]]@/sys/fail/4[...]</code></pre>
+   	 \_args  | [str::T][Obj&lt;687&gt;:bytes(#{*}::T){&lt;j&gt;} [bytes::T] unable to convert bytes::T]]@/sys/fail/4[...]</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -5316,18 +5344,17 @@ mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T).as(str::T)     ​5​
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; bin:bash('-c',df)
 ==&gt;'Filesystem             1K-blocks       Used Available Use% Mounted on'
-==&gt;'tmpfs                    6356184       6164   6350020   1% /run'
+==&gt;'tmpfs                    6356184       6240   6349944   1% /run'
 ==&gt;'efivarfs                     128         42        82  34% /sys/firmware/efi/efivars'
-==&gt;'/dev/nvme1n1p2         959786032  544345564 366612260  60% /'
-==&gt;'tmpfs                   31780908     234576  31546332   1% /dev/shm'
+==&gt;'/dev/nvme1n1p2         959786032  546216804 364741020  60% /'
+==&gt;'tmpfs                   31780908     529328  31251580   2% /dev/shm'
 ==&gt;'tmpfs                       5120         20      5100   1% /run/lock'
 ==&gt;'tmpfs                   31780908          0  31780908   0% /run/qemu'
 ==&gt;'/dev/nvme1n1p1            523248       6288    516960   2% /boot/efi'
-==&gt;'tmpfs                    6356180        244   6355936   1% /run/user/1000'
-==&gt;'/dev/nvme0n1p2         976744444  252064724 724679720  26% /media/hdd0'
-==&gt;'//192.168.1.72/beast1 1921208544 1336418324 584790220  70% /srv/beast/hdd1'
+==&gt;'tmpfs                    6356180        268   6355912   1% /run/user/1000'
+==&gt;'/dev/nvme0n1p2         976744444  251306824 725437620  26% /media/hdd0'
+==&gt;'//192.168.1.72/beast1 1921208544 1600970968 320237576  84% /srv/beast/hdd1'
 mtron&gt; bin:bash('-c',ls)
-==&gt;'0.2.0'
 ==&gt;'AGENTS.md'
 ==&gt;bin
 ==&gt;boot
@@ -5352,7 +5379,7 @@ mtron&gt; bin:bash('-c',ls)
 ==&gt;test
 ==&gt;worktrees
 mtron&gt; bin:bash('-c','ls -all').regex('\b*\w+')._/count()\_&gt;-.sum()
-==&gt;674</code></pre>
+==&gt;625</code></pre>
 </div>
 </div>
 <h3 id="sec-shell-scripts" class="discrete">Shell Scripts</h3>
@@ -6231,7 +6258,7 @@ mtron&gt; *g:V/1/OUT/te:hot/a/owner/name     ​3​
    	  \_pred | []
    	[inst]   | *g:V/1/OUT/te:hot/a/owner/name
    	 \_dom   | #{?}::T
-   	 \_args  | [g:V/1/OUT/te:hot/a/owner/name][Obj&lt;585&gt;:unable to convert mfail to rec::T[Obj&lt;585&gt;:class studio.phaseshift.metatron.isa.m.type.impl.MFail cannot be cast to class studio.phaseshift.metatron.isa.m.type.Rec (studio.phaseshift.metatron.isa.m.type.impl.MFail and studio.phaseshift.metatron.isa.m.type.Rec are in unnamed module of loader 'app')] ← class studio.phaseshift.metatron.isa.m.type.impl.MFail cannot be cast to class studio.phaseshift.metatron.isa.m.type.Rec (studio.phaseshift.metatron.isa.m.type.impl.MFail and studio.phaseshift.metatron.isa.m.type.Rec are in unnamed module of loader 'app')]]@/sys/fail/14[...]
+   	 \_args  | [g:V/1/OUT/te:hot/a/owner/name][Obj&lt;584&gt;:unable to convert mfail to rec::T[Obj&lt;584&gt;:class studio.phaseshift.metatron.isa.m.type.impl.MFail cannot be cast to class studio.phaseshift.metatron.isa.m.type.Rec (studio.phaseshift.metatron.isa.m.type.impl.MFail and studio.phaseshift.metatron.isa.m.type.Rec are in unnamed module of loader 'app')] ← class studio.phaseshift.metatron.isa.m.type.impl.MFail cannot be cast to class studio.phaseshift.metatron.isa.m.type.Rec (studio.phaseshift.metatron.isa.m.type.impl.MFail and studio.phaseshift.metatron.isa.m.type.Rec are in unnamed module of loader 'app')]]@/sys/fail/14[...]
 mtron&gt; *g:V/1/OUT/te:cold/x/total     ​4​
 ==&gt;15.0000
 mtron&gt; *g:V/1/OUT/knows.count()     ​5​
@@ -6252,7 +6279,7 @@ mtron&gt; *g:V/1.outE(te:hot/a)&gt;&gt;owner&gt;&gt;name     ​3​
    	  \_pred | []
    	[inst]   | !*g:V/2
    	 \_dom   | #{?}::T
-   	 \_args  | [g:V/2,noobj][Obj$Helper&lt;990&gt;:obj does not match person::T...]]@/sys/fail/16[...]
+   	 \_args  | [g:V/2,noobj][Obj$Helper&lt;989&gt;:obj does not match person::T...]]@/sys/fail/16[...]
 mtron&gt; *g:V/1.outE(te:cold/x)&gt;&gt;total     ​4​
 ==&gt;15.0000
 mtron&gt; *g:V/1.outE(knows).count()     ​5​
@@ -7156,7 +7183,7 @@ mtron&gt; */sys/thread/a.stop()
     yield=&gt;!*/sys/thread/b,
     start=&gt;[code=&gt;at(ab).plus('A'),loop=&gt;second::1.0000,yield=&gt;!*/sys/thread/b]@/sys/thread/a,
     state=&gt;stop,
-    result=&gt;fail::[Cannot invoke "String.replace(java.lang.CharSequence, java....]@/sys/fail/16[...]]@/sys/thread/a
+    result=&gt;'BABABABABA'@ab]@/sys/thread/a
 mtron&gt; *ab
 ==&gt;'BABABABABA'</code></pre>
 </div>
@@ -7298,7 +7325,23 @@ mtron&gt; catalog::[host         =&gt; &lt;http://localhost:1234/v1&gt;,
                      /mcp     =&gt; mcp_mtron_http,
                      /docs    =&gt; target/docs,
                      /console =&gt; src/main/resources/web/console]
-       ]@/sys/space/web/http</code></pre>
+       ]@/sys/space/web/http
+==&gt;fail::[unable to construct httpspace::T: fail::[apply failure:
+   	[lhs]    | [
+    host=&gt;http://localhost:8777,
+    pattern=&gt;http://#,
+    route=&gt;[/=&gt;&lt;&gt;,/mcp=&gt;mcp_mtron_http,/docs=&gt;target/docs,/console=&gt;src/main/resources/web/console]]@/sys/space/web/http
+   	 \_type  | /m/rec
+   	  \_pred | []
+   	[inst]   | /m/web/space/httpspace/ctor?rng=httpspace&amp;dom=#{?}([
+     host=&gt;http://localhost:8777,
+     pattern=&gt;http://#,
+     route=&gt;[/=&gt;&lt;&gt;,/mcp=&gt;mcp_mtron_http,/docs=&gt;target/docs,/console=&gt;src/main/resources/web/console]]@/sys/space/web/http){&lt;j&gt;}
+   	 \_dom   | #{?}::T
+   	 \_args  | [[
+    host=&gt;http://localhost:8777,
+    pattern=&gt;http://#,
+    route=&gt;[/=&gt;&lt;&gt;,/mcp=&gt;mcp_mtron_http,/docs=&gt;target/docs,/console=&gt;src/main/resources/web/console]]@/sys/space/web/http][Net&lt;-2&gt;:Address already in use[Net&lt;-2&gt;:Address already in use] ← Address already in use]]@/sys/fail/6[...]]@/sys/fail/8</code></pre>
 </div>
 </div>
 <h3 id="sec-html-type" class="discrete">HTML Type</h3>
@@ -7309,47 +7352,29 @@ mtron&gt; catalog::[host         =&gt; &lt;http://localhost:1234/v1&gt;,
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; html::T     ​1​
 mtron&gt; *&lt;http://phaseshift.studio/splash.html&gt;     ​2​
-==&gt;html::[html=&gt;[head=&gt;[title=&gt;'PhaseShift Studio',out=&gt;[
-    [
-     tag=&gt;link,
-     href=&gt;&lt;https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css&gt;,
-     rel=&gt;'stylesheet'],
-    [tag=&gt;link,href=&gt;&lt;css/metatron.css&gt;,rel=&gt;'stylesheet']]],body=&gt;[
-    out=&gt;[
-     [tag=&gt;p],
-     [
-      tag=&gt;h1,
-      style=&gt;'padding-left:125px;color:var(--primary)',
-      text=&gt;'PhaseShift Studio'],
-     [
-      tag=&gt;img,
-      style=&gt;'padding-left:100px',
-      src=&gt;&lt;http://metatron.phaseshift.studio/images/metatron-character.png&gt;,
-      width=&gt;'500px'],
-     [
-      tag=&gt;script,
-      type=&gt;'module',
-      src=&gt;&lt;https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496&gt;,
-      integrity=&gt;'sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2A...',
-      data-cf-beacon=&gt;'{"version":"2024.11.0","token":"2ed4d310d5f64c4a9118e02b0e0...',
-      crossorigin=&gt;'anonymous']],
-    style=&gt;'background-color: black;']]]
+==&gt;fail::[apply failure:
+   	[lhs]    | noobj
+   	 \_type  | noobj{0}
+   	  \_pred | []
+   	[inst]   | *&lt;http://phaseshift.studio/splash.html&gt;
+   	 \_dom   | #{?}::T
+   	 \_args  | [&lt;http://phaseshift.studio/splash.html&gt;][BasicRouter&lt;254&gt;:no active space supports pattern &lt;http://phaseshift.studio/splash.html&gt;]]@/sys/fail/10[...]
 mtron&gt; *&lt;http://phaseshift.studio/splash.html/html/head/title&gt;     ​3​
-==&gt;'PhaseShift Studio'
+==&gt;fail::[apply failure:
+   	[lhs]    | noobj
+   	 \_type  | noobj{0}
+   	  \_pred | []
+   	[inst]   | *&lt;http://phaseshift.studio/splash.html/html/head/title&gt;
+   	 \_dom   | #{?}::T
+   	 \_args  | [&lt;http://phaseshift.studio/splash.html/html/head/title&gt;][BasicRouter&lt;254&gt;:no active space supports pattern &lt;http://phaseshift.studio/splash.html/html/head/title&gt;]]@/sys/fail/12[...]
 mtron&gt; *&lt;http://phaseshift.studio/splash.html&gt;.as(str::T)     ​4​
-==&gt;"""&lt;html&gt;
-    &lt;head&gt;
-     &lt;title&gt;PhaseShift Studio&lt;/title&gt;
-     &lt;link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet"&gt;
-     &lt;link href="css/metatron.css" rel="stylesheet"&gt;
-    &lt;/head&gt;
-    &lt;body style="background-color: black;"&gt;
-     &lt;p&gt;&lt;/p&gt;
-     &lt;h1 style="padding-left:125px;color:var(--primary)"&gt;PhaseShift Studio&lt;/h1&gt;
-     &lt;img style="padding-left:100px" src="http://metatron.phaseshift.studio/images/metatron-character.png" width="500px"&gt;
-     &lt;script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon="{&amp;quot;version&amp;quot;:&amp;quot;2024.11.0&amp;quot;,&amp;quot;token&amp;quot;:&amp;quot;2ed4d310d5f64c4a9118e02b0e07c623&amp;quot;,&amp;quot;r&amp;quot;:1}" crossorigin="anonymous"&gt;&lt;/script&gt;
-    &lt;/body&gt;
-   &lt;/html&gt;"""</code></pre>
+==&gt;fail::[apply failure:
+   	[lhs]    | noobj
+   	 \_type  | noobj{0}
+   	  \_pred | []
+   	[inst]   | *&lt;http://phaseshift.studio/splash.html&gt;
+   	 \_dom   | #{?}::T
+   	 \_args  | [&lt;http://phaseshift.studio/splash.html&gt;][BasicRouter&lt;254&gt;:no active space supports pattern &lt;http://phaseshift.studio/splash.html&gt;]]@/sys/fail/14[...]</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -7382,111 +7407,21 @@ mtron&gt; *&lt;http://phaseshift.studio/splash.html&gt;.as(str::T)     ​4​
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *&lt;http://localhost:11434&gt;     ​1​
-==&gt;fail::[Ollama is running
-         ^ end of input expected
-   ]
+==&gt;fail::[apply failure:
+   	[lhs]    | noobj
+   	 \_type  | noobj{0}
+   	  \_pred | []
+   	[inst]   | *http://localhost:11434
+   	 \_dom   | #{?}::T
+   	 \_args  | [http://localhost:11434][BasicRouter&lt;254&gt;:no active space supports pattern http://localhost:11434]]@/sys/fail/16[...]
 mtron&gt; *&lt;http://localhost:11434/api/tags&gt;     ​2​
-==&gt;[models=&gt;[[
-    name=&gt;&lt;qwen3.5:4b&gt;,
-    model=&gt;&lt;qwen3.5:4b&gt;,
-    modified_at=&gt;&lt;2026-06-28T00:25:31.583735-06:00&gt;,
-    size=&gt;3389983735,
-    digest=&gt;&lt;2a654d98e6fba55d452b7043684e9b57a947e393bbffa62485a7aac05ee4eefd&gt;,
-    details=&gt;[
-     parent_model=&gt;&lt;&gt;,
-     format=&gt;gguf,
-     family=&gt;qwen35,
-     families=&gt;[qwen35],
-     parameter_size=&gt;&lt;4.7B&gt;,
-     quantization_level=&gt;Q4_K_M]],[
-    name=&gt;&lt;dr.stynx:latest&gt;,
-    model=&gt;&lt;dr.stynx:latest&gt;,
-    modified_at=&gt;&lt;2026-06-13T12:19:21.4935225-06:00&gt;,
-    size=&gt;17690513930,
-    digest=&gt;&lt;8b8560aa375897345cc5213cc8b953ce0e77758527421aa087afa374d4f4b36d&gt;,
-    details=&gt;[
-     parent_model=&gt;&lt;&gt;,
-     format=&gt;gguf,
-     family=&gt;qwen3moe,
-     families=&gt;[qwen3moe],
-     parameter_size=&gt;&lt;30.5B&gt;,
-     quantization_level=&gt;Q4_K_M]],[
-    name=&gt;hengwen/DeepSeek-R1-Distill-Qwen-14B:q8_0,
-    model=&gt;hengwen/DeepSeek-R1-Distill-Qwen-14B:q8_0,
-    modified_at=&gt;&lt;2026-05-20T03:50:17.3003242-06:00&gt;,
-    size=&gt;15701597480,
-    digest=&gt;ed6b8c52bf980271969bffe42db30569937922207469ffa9bb0c30513a5ca8d2,
-    details=&gt;[
-     parent_model=&gt;&lt;&gt;,
-     format=&gt;gguf,
-     family=&gt;qwen2,
-     families=&gt;[qwen2],
-     parameter_size=&gt;&lt;14.8B&gt;,
-     quantization_level=&gt;Q8_0]],[
-    name=&gt;&lt;qwen2.5-coder:32b&gt;,
-    model=&gt;&lt;qwen2.5-coder:32b&gt;,
-    modified_at=&gt;&lt;2026-05-20T03:48:28.2625806-06:00&gt;,
-    size=&gt;19851349898,
-    digest=&gt;b92d6a0bd47ee79114298de0177bf920c05a706d12633950b3936778492bef41,
-    details=&gt;[
-     parent_model=&gt;&lt;&gt;,
-     format=&gt;gguf,
-     family=&gt;qwen2,
-     families=&gt;[qwen2],
-     parameter_size=&gt;&lt;32.8B&gt;,
-     quantization_level=&gt;Q4_K_M]],[
-    name=&gt;deepseek-r1:14b,
-    model=&gt;deepseek-r1:14b,
-    modified_at=&gt;&lt;2026-05-14T00:23:01.4598875-06:00&gt;,
-    size=&gt;8988112209,
-    digest=&gt;c333b7232bdb521236694ffbb5f5a6b11cc45d98e9142c73123b670fca400b09,
-    details=&gt;[
-     parent_model=&gt;&lt;&gt;,
-     format=&gt;gguf,
-     family=&gt;qwen2,
-     families=&gt;[qwen2],
-     parameter_size=&gt;&lt;14.8B&gt;,
-     quantization_level=&gt;Q4_K_M]],[
-    name=&gt;&lt;qwen2.5-coder:7b&gt;,
-    model=&gt;&lt;qwen2.5-coder:7b&gt;,
-    modified_at=&gt;&lt;2026-05-12T21:08:02.3143859-06:00&gt;,
-    size=&gt;4683087561,
-    digest=&gt;dae161e27b0e90dd1856c8bb3209201fd6736d8eb66298e75ed87571486f4364,
-    details=&gt;[
-     parent_model=&gt;&lt;&gt;,
-     format=&gt;gguf,
-     family=&gt;qwen2,
-     families=&gt;[qwen2],
-     parameter_size=&gt;&lt;7.6B&gt;,
-     quantization_level=&gt;Q4_K_M]],[
-    name=&gt;qwen3-embedding:8b,
-    model=&gt;qwen3-embedding:8b,
-    modified_at=&gt;&lt;2026-05-10T15:16:25.3309793-06:00&gt;,
-    size=&gt;4676805193,
-    digest=&gt;&lt;64b933495768fbd3b87c20583d379728a07471e0c66733a9df87cd1901b3c44b&gt;,
-    details=&gt;[
-     parent_model=&gt;&lt;&gt;,
-     format=&gt;gguf,
-     family=&gt;qwen3,
-     families=&gt;[qwen3],
-     parameter_size=&gt;&lt;7.6B&gt;,
-     quantization_level=&gt;Q4_K_M]],[
-    name=&gt;&lt;batiai/qwen3.6-27b:iq3&gt;,
-    model=&gt;&lt;batiai/qwen3.6-27b:iq3&gt;,
-    modified_at=&gt;&lt;2026-05-10T01:44:06.5919578-06:00&gt;,
-    size=&gt;11186372790,
-    digest=&gt;a785b19cc583791ed62e5ed102a047056083bde4f9870a2d8ea6d3250f84638b,
-    details=&gt;[
-     parent_model=&gt;&lt;&gt;,
-     format=&gt;gguf,
-     family=&gt;qwen35,
-     families=&gt;[qwen35],
-     parameter_size=&gt;&lt;26.9B&gt;,
-     quantization_level=&gt;unknown]],[
-    name=&gt;&lt;qwen3.6:27b&gt;,
-    model=&gt;&lt;qwen3.6:27b&gt;,
-    modified_at=&gt;&lt;2026-05-09T21:07:13.4279469-06:00&gt;,
-   ...</code></pre>
+==&gt;fail::[apply failure:
+   	[lhs]    | noobj
+   	 \_type  | noobj{0}
+   	  \_pred | []
+   	[inst]   | *http://localhost:11434/api/tags
+   	 \_dom   | #{?}::T
+   	 \_args  | [http://localhost:11434/api/tags][BasicRouter&lt;254&gt;:no active space supports pattern http://localhost:11434/api/tags]]@/sys/fail/18[...]</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -7532,7 +7467,14 @@ mtron&gt; */m/llm/inst/+?dom=model</code></pre>
             protocol=&gt; ollama,
             host    =&gt; &lt;http://localhost:11434&gt;,
             name    =&gt; &gt;&gt;id.as(uri::T)].as(model::T)
-         .chat('are you there?')</code></pre>
+         .chat('are you there?')
+==&gt;fail::[apply failure:
+   	[lhs]    | noobj
+   	 \_type  | noobj{0}
+   	  \_pred | []
+   	[inst]   | *http://localhost:11434/api/tags/0
+   	 \_dom   | #{?}::T
+   	 \_args  | [http://localhost:11434/api/tags/0][BasicRouter&lt;254&gt;:no active space supports pattern http://localhost:11434/api/tags/0]]@/sys/fail/36[...]</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -8019,9 +7961,11 @@ mtron&gt; lite:person/2 -&gt; [name=&gt;'grant', age=&gt;25]     ​3​
 mtron&gt; *lite:person     ​4​
 mtron&gt; *lite:person/+/name     ​5​
 ==&gt;'grant'
+==&gt;'alex'
 ==&gt;'marko'
 mtron&gt; *lite:person/+/id     ​6​
 ==&gt;1
+==&gt;3
 ==&gt;2</code></pre>
 </div>
 </div>
@@ -8066,7 +8010,11 @@ mtron&gt; *lite:person/+/id     ​6​
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *lite:+</code></pre>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *lite:+
+==&gt;rec::T[?[name=&gt;str::T,location=&gt;isa(area:V/+/id).!*id(),parent=&gt;auto_from::T]]@venue
+==&gt;rec::T[?[trophy=&gt;str::T,recipient=&gt;isa(person/+/id).!*id()]]@award
+==&gt;rec::T[?[name=&gt;str::T,age=&gt;int::T,skill=&gt;uri::T]]@person
+==&gt;rec::T[?[player=&gt;str::T,points=&gt;int::T]]@score</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -8076,7 +8024,11 @@ mtron&gt; *lite:person/+/id     ​6​
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; lite:person/3 -&gt; [name=&gt;'alex', age=&gt;25, skill=&gt;graph]
 ==&gt;[name=&gt;'alex',age=&gt;25,skill=&gt;graph]
-mtron&gt; *lite:+</code></pre>
+mtron&gt; *lite:+
+==&gt;rec::T[?[name=&gt;str::T,location=&gt;isa(area:V/+/id).!*id(),parent=&gt;auto_from::T]]@venue
+==&gt;rec::T[?[trophy=&gt;str::T,recipient=&gt;isa(person/+/id).!*id()]]@award
+==&gt;rec::T[?[name=&gt;str::T,age=&gt;int::T,skill=&gt;uri::T]]@person
+==&gt;rec::T[?[player=&gt;str::T,points=&gt;int::T]]@score</code></pre>
 </div>
 </div>
 </div>

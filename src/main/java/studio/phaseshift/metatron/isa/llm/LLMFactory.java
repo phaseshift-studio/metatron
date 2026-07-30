@@ -102,6 +102,14 @@ public final class LLMFactory {
                 final OllamaModels models = OllamaModels.builder().baseUrl(preModel.at(HOST).uriValue().toString()).build();
                 preModel.logger().debug("connected to ollama server at %s", preModel.at(HOST));
                 yield models.availableModels().content().stream()
+                        .filter(m -> {
+                            try {
+                                models.modelCard(m.getName()).content();
+                                return true;
+                            } catch (final Exception e) {
+                                return false; // ollama models that are no longer supported, but still on local machine throw an exception
+                            }
+                        })
                         .map(m -> Tuple.Pair.with(m, models.modelCard(m.getName()).content()))
                         .peek(m -> preModel.logger().debug("checking ollama server model %s", m.get0().getName()))
                         .filter(m -> m.get0().getModel().equals(preModel.at(LLM).uriValue().toString()))
