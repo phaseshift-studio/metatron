@@ -19,16 +19,9 @@
 package studio.phaseshift.metatron.isa.llm.type.feature;
 
 import studio.phaseshift.metatron.furi.c.cInt;
-import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
 import studio.phaseshift.metatron.isa.m.type.*;
-import studio.phaseshift.metatron.isa.m.type.impl.MRec;
-import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
-import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 
-import java.util.Map;
-
-import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TRUE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 
@@ -37,7 +30,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
  */
 
 /**
- * A capability attached to an {@link Agent}.  Features are metatron Recs —
+ * A capability attached to an {@link Agent}. Features are metatron Recs —
  * their fields are the feature's parameters, their VID is their TID.  The
  * Type system constructs them directly; no manual registry needed.
  *
@@ -56,13 +49,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
  *   <li>{@link #onError(Agent, Fail)} — chat failed.</li>
  * </ol>
  */
-public abstract class Feature extends MRec {
-
-    protected final GraphittyLogger LOG = Graphitty.log(this);
-
-    public Feature(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
-        super(jvm, tid, vid);
-    }
+public interface Feature {
 
     // ── Skill ─────────────────────────────────────────────────────
 
@@ -75,18 +62,19 @@ public abstract class Feature extends MRec {
      * skill so the agent can learn usage details on demand rather than
      * carrying them in every system prompt.
      */
-    public Lst skill() {
+    default Lst skill() {
         return lst().c(cInt::zero);
     }
 
-    public boolean active() {
-        return this.at("active").orElse(BOOL_TRUE).boolValue();
-    }
+    /**
+     * Whether this feature is active.  Defaults to checking the
+     * {@code active} field on the backing Rec, falling back to {@code true}.
+     */
+    boolean active();
 
     // ── Pre-chat ─────────────────────────────────────────────────
 
-
-    public void onAgentCtor(final Agent agent) {
+    default void onAgentCtor(final Agent agent) {
     }
 
     /**
@@ -98,36 +86,44 @@ public abstract class Feature extends MRec {
      * Same contract as {@code QProc}: noobj means "I don't have an answer,
      * keep going."  Non-noobj means "use this, stop processing."
      */
-    public Obj onBeforeChat(final Agent agent) {
+    default Obj onBeforeChat(final Agent agent) {
         return noobj();
     }
 
     // ── Streaming (observation) ──────────────────────────────────
 
-    public void onPartialResponse(final Agent agent, final Str text) {
+    default void onPartialResponse(final Agent agent, final Str text) {
     }
 
-    public void onPartialThinking(final Agent agent, final Str text) {
+    default void onPartialThinking(final Agent agent, final Str text) {
     }
 
-    public void onPartialToolCall(final Agent agent, final Inst request) {
+    default void onPartialToolCall(final Agent agent, final Inst request) {
     }
 
     // ── Tool execution ───────────────────────────────────────────
 
-    public void beforeToolExecution(final Agent agent, final Inst request) {
+    default void beforeToolExecution(final Agent agent, final Inst request) {
     }
 
-    public void onToolExecuted(final Agent agent, final Obj result) {
+    default void onToolExecuted(final Agent agent, final Obj result) {
     }
 
     // ── Completion ───────────────────────────────────────────────
 
-    public void onCompleteResponse(final Agent agent, final Str response) {
+    default void onCompleteResponse(final Agent agent, final Str response) {
     }
 
     // ── Error ────────────────────────────────────────────────────
 
-    public void onError(final Agent agent, final Fail fail) {
+    default void onError(final Agent agent, final Fail fail) {
+    }
+
+    /*
+    A lst of feature tids required to also be active with this feature
+     */
+    default Lst requires() {
+        return lst();
     }
 }
+    

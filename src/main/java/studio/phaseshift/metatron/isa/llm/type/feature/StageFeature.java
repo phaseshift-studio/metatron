@@ -2,20 +2,14 @@ package studio.phaseshift.metatron.isa.llm.type.feature;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
-import studio.phaseshift.metatron.isa.m.type.Fail;
-import studio.phaseshift.metatron.isa.m.type.Inst;
-import studio.phaseshift.metatron.isa.m.type.Lst;
-import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.Rec;
-import studio.phaseshift.metatron.isa.m.type.Str;
+import studio.phaseshift.metatron.isa.m.type.*;
 
 import java.util.Map;
 
-import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.Tokens.TEXT;
 import static studio.phaseshift.metatron.isa.llm.type.Agent.res;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
@@ -24,7 +18,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * result blackboard ({@code /result/stages}).  Each lifecycle hook
  * appends a new stage record carrying the event data in flight.
  */
-public class StageFeature extends Feature {
+public class StageFeature extends AbstractFeature {
 
     public StageFeature(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);

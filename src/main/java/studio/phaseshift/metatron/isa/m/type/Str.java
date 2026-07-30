@@ -119,14 +119,20 @@ public interface Str extends Mono, PlusMonoid.O<Str> {
         public final static Map<String, Pattern> REGEX_CACHE = new ConcurrentHashMap<>();
 
         public static String cleanString(final Obj obj) {
+            return cleanString(obj, false);
+        }
+
+        public static String cleanString(final Obj obj, boolean stripQuotes) {
             String temp;
             if (obj.isStr()) {
                 temp = obj.strValue();
-                while (temp.startsWith("'") || temp.startsWith("\"")) {
-                    temp = temp.substring(1);
-                }
-                while (temp.endsWith("'") || temp.endsWith("\"")) {
-                    temp = temp.substring(0, temp.length() - 1);
+                if (stripQuotes) {
+                    while (temp.startsWith("'") || temp.startsWith("\"")) {
+                        temp = temp.substring(1);
+                    }
+                    while (temp.endsWith("'") || temp.endsWith("\"")) {
+                        temp = temp.substring(0, temp.length() - 1);
+                    }
                 }
             } else if (obj.isUri()) {
                 temp = obj.uriValue().toString();

@@ -27,7 +27,6 @@ import studio.phaseshift.metatron.isa.mach.type.ui.console.Highlighter;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 
 import java.io.*;
-import java.net.InetAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -316,6 +315,12 @@ public final class CommonUtil {
             }
         }
         return filteredText.toString().trim();
+    }
+
+    public static String clipString(final String string, final int maxLength, final boolean ellipses) {
+        if (string.length() < maxLength)
+            return string;
+        return string.substring(0, maxLength) + (ellipses ? "..." : "");
     }
 
     public static String replaceGroups(String s, final String leftDelim, final String rightDelim,

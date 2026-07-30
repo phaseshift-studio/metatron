@@ -23,7 +23,6 @@ import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
 import studio.phaseshift.metatron.isa.llm.type.feature.*;
-import studio.phaseshift.metatron.isa.llm.type.feature.Feature;
 import studio.phaseshift.metatron.isa.llm.type.mSkill;
 import studio.phaseshift.metatron.isa.llm.type.mTool;
 import studio.phaseshift.metatron.isa.m.type.*;
@@ -76,6 +75,7 @@ public class llmInstSet extends AbstractInstSet {
     public static final fURI LLM_SPACE_TID = LLM_ISA_TID.extend(SPACE);
     public static final fURI LLM_TOOL_TID = LLM_FEATURE_TID.extend(TOOL);
     public static final fURI LLM_SESSION_TID = LLM_FEATURE_TID.extend(SESSION);
+    public static final fURI LLM_ITERATION_TID = LLM_ISA_TID.extend(ITERATION);
     public static final fURI LLM_SKILL_TID = LLM_FEATURE_TID.extend(SKILL);
     public static final fURI MESSAGE_TID = LLM_ISA_TID.extend(MESSAGE);
     public static final fURI AI_MESSAGE_TID = MESSAGE_TID.extend(AI);
@@ -102,6 +102,7 @@ public class llmInstSet extends AbstractInstSet {
     public static final fURI LLM_AUDIT_FEATURE_TID = LLM_FEATURE_TID.extend("audit_feature");
     public static final fURI LLM_LOOP_FEATURE_TID = LLM_FEATURE_TID.extend("loop_feature");
     public static final fURI LLM_LEDGER_FEATURE_TID = LLM_FEATURE_TID.extend("ledger_feature");
+    public static final fURI LLM_ITERATION_FEATURE_TID = LLM_FEATURE_TID.extend("iteration_feature");
     //public static final fURI LLM_SKILL_FEATU
 
     public static Type LLM_MODEL_TYPE;
@@ -111,6 +112,7 @@ public class llmInstSet extends AbstractInstSet {
     public static Type LLM_SYSTEM_MESSAGE_TYPE;
     public static Type LLM_SKILL_TYPE;
     public static Type LLM_SESSION_TYPE;
+    public static Type LLM_ITERATION_TYPE;
     public static Type LLM_MESSAGE_TYPE;
     public static Type LLM_TOOL_RESULT_MESSAGE_TYPE;
     public static Type LLM_TOOL_REQUEST_MESSAGE_TYPE;
@@ -165,6 +167,25 @@ public class llmInstSet extends AbstractInstSet {
                                         uri(USER), "the user(s) involved in the chat session",
                                         uri(ALGORITHM), "the algorithm used to manage the chat session (compaction, windowing, summarizing, etc.)"),
                                 "llm session session policy with algorithm config and a resolved lst of messages from sub-path */msg/*"),
+                        docWrap(LLM_ITERATION_TYPE = Type.Builder.build()
+                                        .tid(REC_TID)
+                                        .vid(LLM_ITERATION_TID)
+                                        .isaPredicate(rec(
+                                                uri(SESSION), URI_TYPE,
+                                                uri(INDEX), INT_TYPE,
+                                                uri(PREV).maybe(), URI_TYPE,
+                                                uri(NEXT).maybe(), URI_TYPE,
+                                                uri(MESSAGE).maybe(), LST_TYPE,
+                                                uri(TIME), STR_TYPE))
+                                        .create(),
+                                null, null, mutableMap(
+                                        uri(SESSION), "the parent session",
+                                        uri(INDEX), "1-based ordinal within the session",
+                                        uri(PREV).maybe(), "previous iteration VID in the linked list",
+                                        uri(NEXT).maybe(), "next iteration VID in the linked list",
+                                        uri(MESSAGE).maybe(), "auto_from references to message VIDs in this iteration",
+                                        uri(TIME), "creation timestamp"),
+                                "an iteration groups the messages of a single chat turn within a session and links to prev/next iterations"),
                         // LLM_MESSAGE_TYPE defined below after all message sub-types
                         docWrap(LLM_SYSTEM_MESSAGE_TYPE = Type.Builder.build()
                                         .tid(MESSAGE_TID)
@@ -493,7 +514,19 @@ public class llmInstSet extends AbstractInstSet {
                                 "", mutableMap(
                                         uri("init").maybe(), "optional pre-populated task list"),
                                 "Never cleared between chat calls. Agent reads via system message injection, writes via <<mtron:ledger>> blocks. Survives the entire session.",
-                                "ledger_feature::[init=>['task 1','task 2']]")),
+                                "ledger_feature::[init=>['task 1','task 2']]"),
+                        docWrap(Type.Builder.build()
+                                        .tid(LLM_FEATURE_TID)
+                                        .vid(LLM_ITERATION_FEATURE_TID)
+                                        .constructor(instC(INST_CTOR_TID.rng(LLM_ITERATION_FEATURE_TID),
+                                                lst(REC_TYPE), (lhs, inst) ->
+                                                        createStageLambdas(new IterationFeature(inst.arg(0).asRec().jvm(),
+                                                                LLM_ITERATION_FEATURE_TID, inst.arg(0).vid()))))
+                                        .create(),
+                                "",
+                                "", mutableMap(),
+                                "overlays an iteration graph on the message ledger — each chat turn creates a linked iteration node with prev/next pointers and message back-references",
+                                "iteration_feature::[]")),
                        /* Type.Builder.build()
                                 .tid(LLM_FEATURE_TID)
                                 .vid(LLM_FEATURE_TID.extend("mail"))
@@ -573,7 +606,7 @@ public class llmInstSet extends AbstractInstSet {
      * Registers lifecycle hook lambdas on a feature by reflectively detecting
      * which stage methods the feature's concrete class overrides.
      * Only methods that are directly implemented (not inherited from the
-     * no-op defaults in {@link studio.phaseshift.metatron.isa.llm.type.feature.Feature})
+     * no-op defaults in {@link AbstractFeature})
      * get wired up — no manual stage lists needed.
      *
      * @param f the feature to register hooks on
@@ -582,10 +615,12 @@ public class llmInstSet extends AbstractInstSet {
     private static Obj createStageLambdas(final Obj f) {
         for (final StageDef def : STAGE_DEFS) {
             try {
-                if (f instanceof Feature featureObj) {
-                    final Method method = featureObj.getClass().getMethod(def.methodName, def.paramTypes);
-                    if (method.getDeclaringClass() != studio.phaseshift.metatron.isa.llm.type.feature.Feature.class) {
-                        featureObj.at(uri(def.stageName), def.lambdaFactory.apply(featureObj), MUTABLE);
+                if (f instanceof AbstractFeature featureObj) {
+                    if (featureObj.at(uri(def.stageName)).isNoObj()) {
+                        final Method method = featureObj.getClass().getMethod(def.methodName, def.paramTypes);
+                        if (method.getDeclaringClass() != AbstractFeature.class) {
+                            featureObj.at(uri(def.stageName), def.lambdaFactory.apply(featureObj), MUTABLE);
+                        }
                     }
                 } else if (f instanceof Rec) {
                     f.logger().warn("mtron native feature loaded: %s", f.tid());
@@ -594,6 +629,18 @@ public class llmInstSet extends AbstractInstSet {
                 // All methods are declared on Feature — this should never happen
             }
         }
+       /* try {
+            if (f instanceof AbstractFeature featureObj) {
+                if (featureObj.at(uri(SKILL)).isNoObj()) {
+                    final Method skillMethod = featureObj.getClass().getMethod(SKILL);
+                    if (skillMethod.getDeclaringClass() != AbstractFeature.class) {
+                        featureObj.at(uri(SKILL), featureObj.skill(), MUTABLE);
+                    }
+                }
+            }
+        } catch (final NoSuchMethodException e) {
+            // All methods are declared on Feature — this should never happen
+        }*/
         return f;
     }
 
@@ -603,7 +650,7 @@ public class llmInstSet extends AbstractInstSet {
             String stageName,
             String methodName,
             Class<?>[] paramTypes,
-            java.util.function.Function<studio.phaseshift.metatron.isa.llm.type.feature.Feature, Inst> lambdaFactory
+            java.util.function.Function<AbstractFeature, Inst> lambdaFactory
     ) {
     }
 

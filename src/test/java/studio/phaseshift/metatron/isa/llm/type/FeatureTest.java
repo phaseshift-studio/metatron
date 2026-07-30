@@ -1,8 +1,11 @@
 package studio.phaseshift.metatron.isa.llm.type;
 
 import studio.phaseshift.metatron.AbstractMetatronTest;
-import studio.phaseshift.metatron.isa.llm.type.feature.Feature;
-import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.llm.type.feature.AbstractFeature;
+import studio.phaseshift.metatron.isa.m.type.Inst;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Poly;
+import studio.phaseshift.metatron.isa.m.type.Rec;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -14,20 +17,18 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_AGENT_TID;
 import static studio.phaseshift.metatron.isa.llm.type.Agent.res;
 import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
-import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.Rec.REC_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.Poly.MUTABLE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.m.type.Poly.MUTABLE;
 
 /**
  * Base class for feature tests. Provides lifecycle simulation helpers
  * plus structural assertions every feature must satisfy.
  * <p>
- * Subclasses call {@link #assertFeatureStructure(Feature)} to validate
+ * Subclasses call {@link #assertFeatureStructure(AbstractFeature)} to validate
  * that the feature: is a Rec, has a non-default TID, has a non-null JVM,
  * and round-trips through the agent's feature list.
  */
@@ -38,11 +39,11 @@ public abstract class FeatureTest extends AbstractMetatronTest {
     /**
      * Create an Agent with the given features in its feature list.
      */
-    protected static Agent agentWithFeatures(final Feature... features) {
+    protected static Agent agentWithFeatures(final AbstractFeature... features) {
         final Map<Obj, Obj> map = new LinkedHashMap<>();
         map.put(uri(NAME), uri("test-agent"));
         final List<Obj> featureObjs = new ArrayList<>();
-        for (final Feature f : features) featureObjs.add(f);
+        for (final AbstractFeature f : features) featureObjs.add(f);
         map.put(uri(FEATURE), lst(featureObjs));
         return Agent.agent(rec(map, LLM_AGENT_TID, null));
     }
@@ -86,7 +87,7 @@ public abstract class FeatureTest extends AbstractMetatronTest {
      * is a Rec, has a non-default TID, has a non-null JVM,
      * round-trips through the agent's feature list.
      */
-    protected static void assertFeatureStructure(final Feature feature) {
+    protected static void assertFeatureStructure(final AbstractFeature feature) {
         assertNotNull(feature, "feature must not be null");
         assertTrue(feature.isRec(), "feature must be a rec");
         assertFalse(feature.isNoObj(), "feature must not be noobj");

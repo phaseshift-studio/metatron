@@ -82,8 +82,8 @@ public class SkillFeatureTest extends FeatureTest {
     @Test
     public void testDefaultFeatureHasNoSkill() {
         // Base Feature returns noobj by default
-        final studio.phaseshift.metatron.isa.llm.type.feature.Feature plain =
-                new studio.phaseshift.metatron.isa.llm.type.feature.Feature(new LinkedHashMap<>(), feat("plain"), null) {
+        final AbstractFeature plain =
+                new AbstractFeature(new LinkedHashMap<>(), feat("plain"), null) {
                 };
         assertTrue(plain.skill().isNoObj(), "bare Feature should have no skill");
     }
@@ -100,7 +100,7 @@ public class SkillFeatureTest extends FeatureTest {
 
         // Verify both skills are non-noobj
         for (final Obj entry : a.features().lstValue()) {
-            if (entry instanceof studio.phaseshift.metatron.isa.llm.type.feature.Feature f) {
+            if (entry instanceof AbstractFeature f) {
                 final Obj skill = f.skill();
                 if (entry instanceof LoopFeature || entry instanceof LedgerFeature)
                     assertFalse(skill.isNoObj(), "%s should have a skill".formatted(entry.getClass().getSimpleName()));

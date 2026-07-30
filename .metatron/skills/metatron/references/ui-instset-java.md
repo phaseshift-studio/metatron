@@ -188,7 +188,7 @@ Style is a JVM-backed rec.  Fields:
 | `divider` | str             | Column/row divider char |
 | `headerDivider` | str             | Header divider char |
 | `pointer` | str             | Selection pointer e.g. `{{r}}>` |
-| `anchor` | uri (coproduct) | top_left, top_right, bottom_left, bottom_right |
+| `anchor` | uri (coproduct) | top_left, top_middle, top_right, bottom_left, bottom_middle, bottom_right |
 | `width` | int             | Display width in columns; 0 = natural |
 | `top` | int             | Row offset from anchor edge (CSS top) |
 | `left` | int             | Column offset from anchor edge (CSS left) |
@@ -226,8 +226,8 @@ surface.add(widget, row, col);                       // absolute
 surface.add(widget, anchor, width);                  // anchored
 surface.add(widget, anchor, width, top, left);       // anchored + offsets
 
-// Anchor enum: TOP_LEFT, TOP_RIGHT, BOTTOM_LEFT, BOTTOM_RIGHT
-// Anchor.parse("top_right")  →  TOP_RIGHT  (also "tr", "tl", "bl", "br")
+// Anchor enum: TOP_LEFT, TOP_MIDDLE, TOP_RIGHT, BOTTOM_LEFT, BOTTOM_MIDDLE, BOTTOM_RIGHT
+// Anchor.parse("top_middle") → TOP_MIDDLE  (also "tm", "tl", "tr", "bl", "bm", "br")
 
 // Render cycle (automatic):
 surface.render();  // \033[s → draw all → \033[u (preserves cursor)
@@ -291,13 +291,13 @@ if (!jvm.containsKey(uri("toggle"))) {
 ### Coproduct types
 
 ```java
-// For closed-set URI values (like Anchor):
+// For closed-set URI values (like Anchor) — derived from the enum so they stay in sync:
 UI_ANCHOR_TYPE = Type.Builder.build()
     .tid(URI_TID)
     .vid(UI_ANCHOR_TID)
-    .isaPredicate(inside_(lst(
-        uri("top_left"), uri("top_right"),
-        uri("bottom_left"), uri("bottom_right"))))
+    .isaPredicate(inside_(lst(Arrays.stream(FloatingSurface.Anchor.values())
+        .map(a -> uri(a.name().toLowerCase()))
+        .toArray(Obj[]::new))))
     .create();
 ```
 
@@ -405,9 +405,10 @@ List<String> c = jvmBody(jvm, "c");
 
 ### Anchor naming
 ```java
-// mtron: anchor=>top_right  (URI, not string)
-// Java:  FloatingSurface.Anchor.TOP_RIGHT
-// Short: top_right, top_left, bottom_right, bottom_left (tr, tl, br, bl)
+// mtron: anchor=>top_middle  (URI, not string)
+// Java:  FloatingSurface.Anchor.TOP_MIDDLE
+// Full:  top_left, top_middle, top_right, bottom_left, bottom_middle, bottom_right
+// Short: tl, tm, tr, bl, bm, br
 ```
 
 ### Border defaults

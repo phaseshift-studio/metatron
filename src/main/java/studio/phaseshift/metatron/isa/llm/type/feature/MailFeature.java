@@ -5,7 +5,7 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 
 import java.util.Map;
 
-public class MailFeature extends Feature {
+public class MailFeature extends AbstractFeature {
     public MailFeature(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
     }

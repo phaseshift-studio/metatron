@@ -86,6 +86,10 @@ public final class Tokens {
     public static final String THOUGHT = "thought";
     public static final String MEMORY = "memory";
     public static final String SESSION = "session";
+    public static final String ITERATION = "iteration";
+    public static final String PREV = "prev";
+    public static final String NEXT = "next";
+    public static final String INDEX = "index";
     public static final String NOTE = "note";
     public static final String CHAT = "chat";
     public static final String HISTORY = "history";
@@ -277,6 +281,7 @@ public final class Tokens {
     public static final String ARGS = "args";
     public static final String ENV = "env";
     public static final String MCP_SERVERS = "mcpServers";
+    public static final String ACTIVE = "active";
    /* public static final String INACTIVE = "inactive";
     public static final String ACTIVE = "active";
     public static final String DESKTOP = "desktop";

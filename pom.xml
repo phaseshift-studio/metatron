@@ -368,6 +368,11 @@
             <artifactId>logback-classic</artifactId>
             <version>${logback.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>jul-to-slf4j</artifactId>
+            <version>2.0.17</version>
+        </dependency>
         <!-- PARSING -->
         <dependency>
             <groupId>com.github.petitparser</groupId>
@@ -485,6 +490,7 @@
                     <include>ansi_headers.txt</include>
                 </includes>
             </resource>
+            <!-- META-INF/services handled via bin/metatron classpath (src/main/resources) -->
         </resources>
         <!--
         ####################################################################################################

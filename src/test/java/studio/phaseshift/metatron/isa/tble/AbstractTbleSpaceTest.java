@@ -2415,4 +2415,166 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathTest impleme
             space.close();
         }
     }
+
+
+    // =========================================================================
+    // FK inference: column-value guards
+    // =========================================================================
+    // The URI prefix is arbitrary — SpaceHelper routeFromSpace/routeToSpace
+    // strips it before FK code sees the collection/entry/field.  What matters
+    // is the VALUE stored in the FK-named column.  Three cases:
+    //
+    //  1. Absolute URI  → plain Uri, no auto_from wrapping
+    //  2. Bare PK       → auto_from_ with correct path, no doubling
+    //  3. JSON list     → Lst, not a single FK reference
+
+    /**
+     * Absolute URI stored in an FK-named column is returned as plain Uri,
+     * not wrapped in auto_from and not path-doubled.
+     *
+     * Regression: store /x/session/1 in message.session — naming convention
+     * matches table "session".  Without the '/' guard, the value gets wrapped
+     * in auto_from_() and the space pattern is prepended, doubling the path.
+     */
+    @Test
+    public void testFKAbsoluteURIStoredAsPlainUri() throws Exception {
+        final fURI spaceVid = f("/sys/space/tble/fk_abs_uri_test");
+        final tbleSpace testSpace = tbleSpace.of(
+                rec(
+                        uri(PATTERN), uri("x:#"),
+                        uri(HOST), uri(staticDbConfig.getJdbcHost()),
+                        uri(DRIVER), uri(staticDbConfig.getDriverClass()),
+                        uri(ROUTE), rec(uri("x:"), uri(""))
+                ).jvm(),
+                spaceVid
+        );
+        try {
+            // Create target table so FK naming convention fires
+            Router.writeToSpace(f("x:session/1"),
+                    rec(uri("label"), str("test-session")));
+            // Write row with absolute URI in FK column
+            // (simulating SpaceChatSessionStore.updateMessages())
+            Router.writeToSpace(f("x:message/1"), rec(
+                    uri("text"), str("hello"),
+                    uri("session"), uri("x:session/1")));
+
+            final Obj msg = Router.readFromSpace(f("x:message/1"));
+            assertTrue(msg.isRec());
+            final Obj sessionField = msg.asRec().at(uri("session"));
+            assertTrue(sessionField.isUri(),
+                    "absolute URI must come back as Uri, got: " + sessionField);
+            assertFalse(sessionField.isInst(),
+                    "absolute URI must NOT be wrapped in auto_from");
+            assertEquals(f("x:session/1"), sessionField.uriValue());
+
+            LOG.info("FK absolute-URI test passed on {}",
+                    staticDbConfig.getDatabaseName());
+        } finally {
+            try { testSpace.sql("DROP TABLE IF EXISTS message; DROP TABLE IF EXISTS session"); }
+            catch (final Exception ex) { LOG.warn("[ignored] %s", ex); }
+            Router.global().removeSpace(testSpace.vid());
+            testSpace.close();
+        }
+    }
+
+    /**
+     * Bare PK stored in an FK-named column is wrapped in auto_from with
+     * the correct target path and resolves correctly via at().
+     */
+    @Test
+    public void testFKBarePKProducesAutoFrom() throws Exception {
+        final fURI spaceVid = f("/sys/space/tble/fk_bare_pk_test");
+        final tbleSpace testSpace = tbleSpace.of(
+                rec(
+                        uri(PATTERN), uri("x:#"),
+                        uri(HOST), uri(staticDbConfig.getJdbcHost()),
+                        uri(DRIVER), uri(staticDbConfig.getDriverClass()),
+                        uri(ROUTE), rec(uri("x:"), uri(""))
+                ).jvm(),
+                spaceVid
+        );
+        try {
+            Router.writeToSpace(f("x:user/1"),
+                    rec(uri("name"), str("Alice")));
+            Router.writeToSpace(f("x:note/1"), rec(
+                    uri("text"), str("hi"),
+                    uri("user"), jnt(1)));
+
+            final Obj note = Router.readFromSpace(f("x:note/1"));
+            assertTrue(note.isRec());
+            // recValue().get() returns the raw stored value — at() eagerly
+            // resolves auto_from to the target record
+            final Obj userField = note.asRec().recValue().get(uri("user"));
+            assertTrue(userField.isAutoFrom(),
+                    "bare PK should produce auto_from, got: " + userField);
+            assertEquals(f("x:user/1"), userField.asInst().arg(0).uriValue(),
+                    "FK target path must not be doubled");
+
+            // at() resolves the auto_from to the target record
+            final Obj resolved = note.asRec().at(uri("user"));
+            assertTrue(resolved.isRec());
+            assertEquals(str("Alice"), resolved.asRec().at(uri("name")));
+
+            LOG.info("FK bare-PK test passed on {}",
+                    staticDbConfig.getDatabaseName());
+        } finally {
+            try { testSpace.sql("DROP TABLE IF EXISTS note; DROP TABLE IF EXISTS user"); }
+            catch (final Exception ex) { LOG.warn("[ignored] %s", ex); }
+            Router.global().removeSpace(testSpace.vid());
+            testSpace.close();
+        }
+    }
+
+    /**
+     * JSON list stored in an FK-named column is NOT treated as a FK.
+     *
+     * Regression: column "message" storing [auto_from(...), auto_from(...)]
+     * matched table "message" by naming convention.  Without the '[' guard,
+     * the entire JSON string was treated as a single FK path segment,
+     * producing x:message/[...].
+     */
+    @Test
+    public void testFKColumnWithJSONListNotWrapped() throws Exception {
+        final fURI spaceVid = f("/sys/space/tble/fk_json_list_test");
+        final tbleSpace testSpace = tbleSpace.of(
+                rec(
+                        uri(PATTERN), uri("x:#"),
+                        uri(HOST), uri(staticDbConfig.getJdbcHost()),
+                        uri(DRIVER), uri(staticDbConfig.getDriverClass()),
+                        uri(ROUTE), rec(uri("x:"), uri(""))
+                ).jvm(),
+                spaceVid
+        );
+        try {
+            // Create target table so FK naming convention fires
+            Router.writeToSpace(f("x:message/1"),
+                    rec(uri("text"), str("hello")));
+
+            // Write a row with a MESSAGE field containing a JSON list
+            // (simulating ConceptFeature.addConceptsToSpace)
+            final Obj msgLinks = lst(
+                    auto_from_(f("x:message/4")).tryToInst(),
+                    auto_from_(f("x:message/5")).tryToInst());
+            Router.writeToSpace(f("x:concept/test"), rec(
+                    uri("label"), str("test-concept"),
+                    uri("message"), msgLinks));
+
+            final Obj concept = Router.readFromSpace(f("x:concept/test"));
+            assertTrue(concept.isRec());
+            final Obj messageField = concept.asRec().at(uri("message"));
+            assertTrue(messageField.isLst(),
+                    "JSON-list must come back as Lst, got: " + messageField);
+            assertFalse(messageField.isInst(),
+                    "JSON-list must NOT be wrapped as auto_from Inst");
+            assertEquals(2, messageField.asLst().lstValue().size());
+
+            LOG.info("FK JSON-list guard test passed on {}",
+                    staticDbConfig.getDatabaseName());
+        } finally {
+            try { testSpace.sql("DROP TABLE IF EXISTS concept; DROP TABLE IF EXISTS message"); }
+            catch (final Exception ex) { LOG.warn("[ignored] %s", ex); }
+            Router.global().removeSpace(testSpace.vid());
+            testSpace.close();
+        }
+    }
 }

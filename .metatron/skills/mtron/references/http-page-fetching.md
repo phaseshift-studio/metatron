@@ -10,12 +10,13 @@ description: >
 
 ## Architecture
 
-`httpSpace` uses Jsoup to fetch URLs and `ObjHTMLSerializer` to convert HTML into mtron's nested rec structure. The space pattern is `<http://#>`, so any `http://` URI routes through it.
+`httpSpace` uses Jsoup to fetch URLs and `ObjHTMLSerializer` to convert HTML into mtron's nested rec structure. The
+space pattern is `<http://#>`, so any `http://` URI routes through it.
 
 ## Basic Dereference
 
 ```mtron
-*<http://example.com>               # fetches and parses entire page
+*<http://example.com>                  # fetches and parses entire page
 *<http://example.com/html/head/title>  # direct element access
 ```
 
@@ -48,6 +49,7 @@ html::[html => [
 ```
 
 **Key fields per element:**
+
 - `tag` — HTML tag name (div, p, a, h1, meta, etc.)
 - `text` — inner text content (for leaf elements)
 - `data` — for style/script elements
@@ -67,6 +69,7 @@ html::[html => [
 ### With `+` wildcards
 
 The `+` wildcard enters each list element, producing a stream/set:
+
 ```
 *page/html/body/out/+/out        # all children of all body elements
 *page/html/body/out/+/out/+/out  # all grandchildren
@@ -95,5 +98,6 @@ The `^` lifts computation into the traversal monad to inspect traversal state (e
 ## Important Notes
 
 - Only `http://` currently works (not `https://`). Strip the 's' from https URLs.
-- The `+` wildcard can cause "rhs does not match inst range" errors when the result type doesn't match — the data is present in the error output.
+- The `+` wildcard can cause "rhs does not match inst range" errors when the result type doesn't match — the data is
+  present in the error output.
 - httpSpace host is configured in boot.mtron: `host => <http://localhost:8777>`, `pattern => <http://#>`

@@ -12,29 +12,22 @@ import studio.phaseshift.metatron.isa.llm.space.SpaceChatSessionStore;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
 import studio.phaseshift.metatron.isa.llm.type.AgentServices;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.Poly;
 import studio.phaseshift.metatron.isa.m.type.Rec;
-import studio.phaseshift.metatron.isa.m.type.Str;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.Map;
-import java.util.Set;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SESSION_FEATURE_TID;
-import static studio.phaseshift.metatron.isa.llm.type.Agent.res;
-import static studio.phaseshift.metatron.isa.llm.type.Agent.feat;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
-public class SessionFeature extends Feature {
+public class SessionFeature extends AbstractFeature {
 
     private SpaceChatSessionStore store = null;
     private ChatMemory memory = null;
@@ -62,7 +55,7 @@ public class SessionFeature extends Feature {
      * that need to pre-seed a session before the first chat.
      */
     public static Rec createSession(final String agentName, final String userName,
-                                     final String algorithmName, final int max) {
+                                    final String algorithmName, final int max) {
         return rec(mutableMap(
                 uri(AGENT), str(agentName),
                 uri(USER), str(userName),
@@ -72,7 +65,7 @@ public class SessionFeature extends Feature {
                 ))
         ));
     }
-    
+
     @Override
     public Obj onBeforeChat(final Agent agent) {
         final fURI sessionID = this.at(SESSION).uriValue();

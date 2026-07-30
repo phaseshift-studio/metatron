@@ -2,20 +2,14 @@ package studio.phaseshift.metatron.isa.llm.type.feature;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
-import studio.phaseshift.metatron.isa.m.type.Fail;
-import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.Poly;
-import studio.phaseshift.metatron.isa.m.type.Rec;
-import studio.phaseshift.metatron.isa.m.type.Str;
+import studio.phaseshift.metatron.isa.m.type.*;
 
 import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.isa.llm.type.Agent.feat;
 import static studio.phaseshift.metatron.isa.llm.type.Agent.res;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
@@ -24,7 +18,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * Streaming hooks accumulate cost deltas, and {@code onCompleteResponse}
  * writes the final cost rec to the Agent's result blackboard.
  */
-public class CostFeature extends Feature {
+public class CostFeature extends AbstractFeature {
 
     private double inboundCostPerToken = 0.0;
     private double outboundCostPerToken = 0.0;

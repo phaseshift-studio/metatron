@@ -65,6 +65,7 @@ import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
@@ -358,33 +359,40 @@ public class webInstSet extends AbstractInstSet {
                         instC(AS_INST_TID.dom(HTML_TID).rng(STR_TID), lst(STR_TYPE), (lhs, inst) -> str(ObjHTMLSerializer.single().write(lhs).outerHtml())),
                         instC(AS_INST_TID.dom(MARKDOWN_TID).rng(STR_TID), lst(STR_TYPE), (lhs, inst) -> str(ObjMarkdownSerializer.single().write(lhs).getChars().toString())),
                         instC(AS_INST_TID.dom(MARKDOWN_TID).rng(HTML_TID), lst(HTML_TYPE), (lhs, inst) -> ObjMarkdownSerializer.single().toHTML(ObjMarkdownSerializer.single().write(lhs))),
-                        instC(AS_INST_TID.dom(JSON_TID).rng(MCP_CLIENT_TID), lst(MCP_CLIENT_TYPE), (lhs, inst) -> {
-                            final Rec next = ObjJSONSerializer.simple().inputBytes(lhs.strValue()).asRec();
-                            // ── command (str or list) + args (list) → command list ──
-                            final List<Obj> merged = new ArrayList<>();
-                            if (next.has(COMMAND)) {
-                                final Obj cmd = next.at(COMMAND);
-                                if (cmd.isStr() || cmd.isUri()) merged.add(cmd);
-                                else if (cmd.isLst()) merged.addAll(cmd.lstValue());
-                                next.jvm().remove(uri(COMMAND));
+                        instC(AS_INST_TID.dom(JSON_TID).rng(MCP_CLIENT_TID.some()), lst(MCP_CLIENT_TYPE), (lhs, inst) -> {
+                            final Rec parse = ObjJSONSerializer.simple().inputBytes(lhs.strValue()).asRec();
+                            List<Rec> servers = new ArrayList<>();
+                            if (parse.has(MCP_SERVERS)) {
+                                parse.at(MCP_SERVERS).asRec().values().forEach(v -> servers.add(v.asRec()));
+                            } else {
+                                servers.add(parse);
                             }
-                            if (next.has(ARGS)) {
-                                next.at(ARGS).elements().forEach(merged::add);
-                                next.jvm().remove(uri(ARGS));
-                            }
-                            if (!merged.isEmpty())
-                                next.at(COMMAND, lst(merged), MUTABLE);
-                            // ── env → headers merge (for stdio) ─────────────
-                            if (next.has(ENV) && !next.has(HEADERS)) {
-                                next.jvm().put(uri(HEADERS), next.jvm().remove(uri(ENV)));
-                            } else if (next.has(ENV) && next.has(HEADERS)) {
-                                next.at(HEADERS).asRec().jvm().putAll(next.jvm().remove(uri(ENV)).asRec().jvm());
-                            }
-                            if (next.has(URL)) {
-                                next.jvm().put(uri(HOST), next.at(URL));
-                            }
-                            final mcpClient client = new mcpClient(next.asRec().jvm(), MCP_CLIENT_TID, lhs.vid());
-                            return client;
+                            return objs(servers.stream().map(next -> {
+                                // ── command (str or list) + args (list) → command list ──
+                                final List<Obj> merged = new ArrayList<>();
+                                if (next.has(COMMAND)) {
+                                    final Obj cmd = next.at(COMMAND);
+                                    if (cmd.isStr() || cmd.isUri()) merged.add(cmd);
+                                    else if (cmd.isLst()) merged.addAll(cmd.lstValue());
+                                    next.jvm().remove(uri(COMMAND));
+                                }
+                                if (next.has(ARGS)) {
+                                    next.at(ARGS).elements().forEach(merged::add);
+                                    next.jvm().remove(uri(ARGS));
+                                }
+                                if (!merged.isEmpty())
+                                    next.at(COMMAND, lst(merged), MUTABLE);
+                                // ── env → headers merge (for stdio) ─────────────
+                                if (next.has(ENV) && !next.has(HEADERS)) {
+                                    next.jvm().put(uri(HEADERS), next.jvm().remove(uri(ENV)));
+                                } else if (next.has(ENV) && next.has(HEADERS)) {
+                                    next.at(HEADERS).asRec().jvm().putAll(next.jvm().remove(uri(ENV)).asRec().jvm());
+                                }
+                                if (next.has(URL)) {
+                                    next.jvm().put(uri(HOST), next.at(URL));
+                                }
+                                return new mcpClient(next.asRec().jvm(), MCP_CLIENT_TID, lhs.vid());
+                            }));
                         }))));
         //  instC(AS_INST_TID.dom(ALL).rng(STR_TID), lst(JSON_STRING_TYPE), (lhs, inst) -> str(ObjJSONSerializer.simple().write(lhs).toString())))))
         docWrap(this,

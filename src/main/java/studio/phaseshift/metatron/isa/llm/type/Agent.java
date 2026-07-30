@@ -26,10 +26,7 @@ import dev.langchain4j.service.AiServices;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.CostCalculator;
 import studio.phaseshift.metatron.isa.llm.LLMFactory;
-import studio.phaseshift.metatron.isa.llm.type.feature.SessionFeature;
-import studio.phaseshift.metatron.isa.llm.type.feature.SkillFeature;
-import studio.phaseshift.metatron.isa.llm.type.feature.SystemFeature;
-import studio.phaseshift.metatron.isa.llm.type.feature.ToolFeature;
+import studio.phaseshift.metatron.isa.llm.type.feature.*;
 import studio.phaseshift.metatron.isa.m.math.mathInstSet;
 import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -187,16 +184,17 @@ public class Agent extends MRec {
      */
     private void dispatchHook(final Rec feature, final String hookKey, final Obj... args) {
         try {
-            if (!hookKey.equals(ON_ERROR))
-                this.currentHook.set(Tuple.Pair.with(feature.tid(), f(hookKey)));
-            feature.at(uri(hookKey)).asInst().args(lst(args)).apply(this);
+            if (hookKey.equals(ON_AGENT_CTOR) || feature.at(ACTIVE).orElse(BOOL_TRUE).boolValue()) {
+                if (!hookKey.equals(ON_ERROR))
+                    this.currentHook.set(Tuple.Pair.with(feature.tid(), f(hookKey)));
+                feature.at(uri(hookKey)).asInst().args(lst(args)).apply(this);
+            } else {
+                LOG.debug("skipping inactive feature: [%s][%s]", feature.tid(), hookKey);
+            }
         } catch (final Exception e) {
             LOG.error(e);
-            if (feature instanceof studio.phaseshift.metatron.isa.llm.type.feature.Feature) {
-                ((studio.phaseshift.metatron.isa.llm.type.feature.Feature) feature).onError(this, fail(e));
-            } else if (feature.has(ON_ERROR)) {
+            if (feature.has(ON_ERROR))
                 feature.at(ON_ERROR).apply(fail(e).caught());
-            }
         }
     }
 
@@ -234,8 +232,8 @@ public class Agent extends MRec {
             this.at(res(ERROR), noobj(), MUTABLE);
 
             for (final Obj feat : features) {
-                final Obj result = feat instanceof studio.phaseshift.metatron.isa.llm.type.feature.Feature ?
-                        ((studio.phaseshift.metatron.isa.llm.type.feature.Feature) feat).onBeforeChat(this) :
+                final Obj result = feat instanceof Feature ?
+                        ((Feature) feat).onBeforeChat(this) :
                         feat.asPoly().at(uri(ON_BEFORE_CHAT)).apply(this);
                 if (!result.isNoObj()) {
                     LOG.info("feature short-circuited: %s", result);
@@ -252,12 +250,12 @@ public class Agent extends MRec {
             if (chatFeature.isNoObj())
                 throw MTronException.of("agent has no chat feature: %s", this.vidOrTid());
             final Rec chat = chatFeature.asRec();
-            if (this.hasFeature(TOOL))
-                ToolFeature.buildTools(this, service);
             if (this.hasFeature(SESSION))
                 SessionFeature.buildSession(this, service);
             if (this.hasFeature(SKILL))
                 SkillFeature.buildSkills(this, service);
+            if (this.hasFeature(TOOL))
+                ToolFeature.buildTools(this, service);
             if (this.hasFeature(SYSTEM))
                 SystemFeature.buildSystemMessage(this, service);
             //////////////////////////////////////////////////////////////////////////////////

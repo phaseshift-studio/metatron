@@ -1,23 +1,70 @@
-#!/bin/sh
-# bin/metatron — distribution entry point for the metatron runtime.
-# The uber-jar must already exist (built via `mvn package` or jDeploy).
-# Run from the project root; all arguments are forwarded to BootLoader.main().
+#!/bin/bash
+# bin/metatron — dev entry point for the metatron runtime.
+#
+# Compiles (if needed), resolves dependencies, and launches BootLoader
+# directly from target/classes/ + cached dependency JARs — no uber-jar,
+# no Maven JVM at runtime.
 #
 # Usage:
-#   bin/metatron "[boot=><boot/boot.mtron>,log=>info]"
+#   bin/metatron                                    # boots from boot/boot.mtron
+#   bin/metatron -b .metatron/skills/drstynx/assets/drstynx.boot.mtron "[log=>info]"
 #   bin/metatron --headless "[boot=><boot/boot.mtron>,log=>info]"
+#
+# For thin app wrappers (bin/myapp), just set your boot file:
+#   exec "$(dirname "$0")/metatron" -b <boot-file> "[log=>info]"
+# -------------------------------------------------------------------
+set -euo pipefail
 
-set -e
+# ── resolve project root ───────────────────────────────────────────
+cd "$(dirname "$(readlink -f "$0")")/.."
 
-if [ -z "${METATRON_HOME}" ]; then
-    echo "METATRON_HOME not defined. [default=.]"
-    METATRON_HOME="."
-fi   
+# Source utility functions (spinner, etc.)
+. "$(dirname "$(readlink -f "$0")")/utility.sh"
 
-# JVM flags required for native access (Panama Vector API) and reflective operations
-java -Dlogback.configurationFile=conf/logback.xml \
+# ── dependency classpath cache ──────────────────────────────────────
+# Only rebuild when pom.xml changes.  After that, mvn compile is all
+# we need for source changes — the uber-jar is for distribution, not dev.
+CP_FILE=".mtron-classpath"
+STEP_RAN=0
+if [ ! -f "$CP_FILE" ] || [ pom.xml -nt "$CP_FILE" ]; then
+    MVN_LOG=$(mktemp)
+    set +e
+    mvn dependency:build-classpath -DincludeScope=runtime -Dmdep.outputFile="$CP_FILE" -q > "$MVN_LOG" 2>&1 &
+    spinner $! "resolving dependencies"
+    wait $!
+    MVN_EXIT=$?
+    set -e
+    grep -v "^WARNING:" "$MVN_LOG" 2>/dev/null || true
+    rm -f "$MVN_LOG"
+    if [ "$MVN_EXIT" -ne 0 ]; then exit "$MVN_EXIT"; fi
+    STEP_RAN=1
+fi
+CLASSPATH="target/classes:src/main/resources:$(tr -d '\n' < "$CP_FILE")"
+
+# ── compile (only if needed) ────────────────────────────────────────
+if [ ! -d target/classes ] || \
+   [ -n "$(find src -name '*.java' -newer target/classes -print -quit 2>/dev/null)" ]; then
+    MVN_LOG=$(mktemp)
+    set +e
+    mvn compile -q > "$MVN_LOG" 2>&1 &
+    spinner $! "compiling"
+    wait $!
+    MVN_EXIT=$?
+    set -e
+    grep -v "^WARNING:" "$MVN_LOG" 2>/dev/null || true
+    rm -f "$MVN_LOG"
+    if [ "$MVN_EXIT" -ne 0 ]; then exit "$MVN_EXIT"; fi
+    STEP_RAN=1
+fi
+# Spinner already emits \n when done.  Only need this when nothing ran.
+if [ "$STEP_RAN" -eq 0 ]; then echo; fi
+
+# ── launch ──────────────────────────────────────────────────────────
+exec java \
+    -Dlogback.configurationFile=conf/logback.xml \
+    -Djava.util.logging.config.file=conf/logging.properties \
     --add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED \
     --enable-native-access=ALL-UNNAMED \
-    --add-modules jdk.incubator.vector \
-    -cp "$METATRON_HOME/target/metatron-0.1-SNAPSHOT-jar-with-dependencies.jar" \
-        studio.phaseshift.metatron.BootLoader "$@"
+    --sun-misc-unsafe-memory-access=allow \
+    -cp "$CLASSPATH" \
+    studio.phaseshift.metatron.BootLoader "$@"

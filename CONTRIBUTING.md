@@ -21,13 +21,14 @@ This document defines PR expectations, coding standards, and contribution guidel
 ## Testing Requirements
 
 - **New code MUST have test cases** — no exceptions
-- **`@ParameterizedTest` + `@CsvSource` is the default pattern** — each CSV row is a self-contained scenario using mtron string expressions. This keeps tests data-extensible: corner cases are one CSV line, not new Java methods
+- **`@ParameterizedTest` + `@CsvSource` is the default pattern** — each CSV row is a self-contained scenario using mtron
+  string expressions. This keeps tests data-extensible: corner cases are one CSV line, not new Java methods
 - Use `%` as CSV delimiter (avoids collision with mtron syntax: commas, pipes, semicolons)
 - Leverage static helpers from `AbstractMetatronTest`:
-  - `checkCodeParseApply(LOG, code, expected)` — parse + apply mtron, assert result
-  - `checkCodeEvaluate(LOG, evaluate, fetch, expected)` — evaluate, fetch read-back, assert
-  - `checkEquality(LOG, a, b, equals)` — compare two objs with log output
-  - Use `<ERROR>` as expected value to trigger the fail-expected assertion path
+    - `checkCodeParseApply(LOG, code, expected)` — parse + apply mtron, assert result
+    - `checkCodeEvaluate(LOG, evaluate, fetch, expected)` — evaluate, fetch read-back, assert
+    - `checkEquality(LOG, a, b, equals)` — compare two objs with log output
+    - Use `<ERROR>` as expected value to trigger the fail-expected assertion path
 - **Avoid `assertTrue/false`** — they provide no useful info on failure
 - Standalone `@Test` only for multi-step orchestration (concurrency, complex setup/teardown)
 
@@ -48,8 +49,10 @@ void testConstQ(String uri, String initial, String mutate, String desc) { ... }
 
 New code should leverage existing utility/Helper classes instead of re-implementing algorithms:
 
-- **`XXX.Helper`** — every major type class has a nested `Helper` with static utilities (e.g., `Type.Helper`, `Rec.Helper`, `Obj.Helper`, `Code.Helper`, `InstSet.Helper`, `Uri.Helper`, `Inst.Helper`)
-- **`fURI`** — rich in methods for URI manipulation, path extension, segment access, wildcard matching; use these instead of string concatenation
+- **`XXX.Helper`** — every major type class has a nested `Helper` with static utilities (e.g., `Type.Helper`,
+  `Rec.Helper`, `Obj.Helper`, `Code.Helper`, `InstSet.Helper`, `Uri.Helper`, `Inst.Helper`)
+- **`fURI`** — rich in methods for URI manipulation, path extension, segment access, wildcard matching; use these
+  instead of string concatenation
 - **`CommonUtils`** — shared utilities for common operations
 - **`AbstractMetatronTest`** — test infrastructure (bootstrap, assertions, skip extensions)
 
@@ -59,18 +62,19 @@ New code should leverage existing utility/Helper classes instead of re-implement
 
 - Use **`MTronException.of()`** — never throw raw `RuntimeException` or `IllegalArgumentException`
 - Overloads available:
-  - `MTronException.of("message")` — simple message
-  - `MTronException.of("format %s", arg)` — formatted message
-  - `MTronException.of(cause)` — wrap existing exception
-  - `MTronException.of(cause, "format %s", arg)` — wrap with context
-  - `MTronException.of(fURI source, "format %s", arg)` — include source URI
+    - `MTronException.of("message")` — simple message
+    - `MTronException.of("format %s", arg)` — formatted message
+    - `MTronException.of(cause)` — wrap existing exception
+    - `MTronException.of(cause, "format %s", arg)` — wrap with context
+    - `MTronException.of(fURI source, "format %s", arg)` — include source URI
 - `MTronException` auto-annotates messages with ANSI color codes via `Graphitty.string()`
 
 ---
 
 ## Logging
 
-Every `Obj` extending class has a `logger()` method (defined in `Feature` interface) that returns a `GraphittyLogger`. Use it so logging can be routed based on the Obj publishing the log:
+Every `Obj` extending class has a `logger()` method (defined in `AbstractFeature` interface) that returns a
+`GraphittyLogger`. Use it so logging can be routed based on the Obj publishing the log:
 
 ```java
 // Instance logging — log is associated with this specific obj
@@ -117,7 +121,8 @@ Log levels: `trace()`, `debug()`, `info()`, `warn()`, `error()`, `none()`
 
 ### Space Registration
 
-Spaces should extend `AbstractSpace`. Doing so automatically adds the space to the router at construction time (via `Router.global().addSpace(this)` in the `AbstractSpace` constructor).
+Spaces should extend `AbstractSpace`. Doing so automatically adds the space to the router at construction time (via
+`Router.global().addSpace(this)` in the `AbstractSpace` constructor).
 
 ### The Three Pillars: `SPACE_TYPE`, `Space.class`, `SPACE_TID`
 
@@ -171,8 +176,10 @@ public static final Type MEM_SPACE_TYPE = Type.Builder.build()
 - **InstSets** — discovered via `META-INF/services/` SPI
 - **Obj** — universal type system (`Int`, `Str`, `Rec`, `Lst`, `Type`, `Code`, etc.)
 - **URI wildcards**: `+` = single segment, `#` = multi-segment (MQTT-style)
-- **DataPath** — understand how graph, relational, and document DBs structure their URI paths (same pattern across all three)
-- **Types** — the `Type` class is the single source of truth for schema; column types, FK references, and other metadata live in the Type's `isaPredicate`
+- **DataPath** — understand how graph, relational, and document DBs structure their URI paths (same pattern across all
+  three)
+- **Types** — the `Type` class is the single source of truth for schema; column types, FK references, and other metadata
+  live in the Type's `isaPredicate`
 
 ---
 

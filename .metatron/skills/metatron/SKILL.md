@@ -1,7 +1,6 @@
 ---
 name: metatron
 description: common patterns in metatron
-allowed-tools: Read, Grep
 ---
 
 # Effective Metatron Patterns

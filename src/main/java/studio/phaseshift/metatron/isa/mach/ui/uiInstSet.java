@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.isa.mach.ui;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
+import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.ui.Stylable;
@@ -44,9 +45,7 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.id_;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.inside_;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -116,7 +115,9 @@ public class uiInstSet extends AbstractInstSet {
                         docWrap(UI_ANCHOR_TYPE = Type.Builder.build()
                                 .tid(URI_TID)
                                 .vid(UI_ANCHOR_TID)
-                                .isaPredicate(inside_(lst(uri("top_left"), uri("top_right"), uri("bottom_left"), uri("bottom_right"))))
+                                .isaPredicate(inside_(lst(Arrays.stream(FloatingSurface.Anchor.values())
+                                        .map(a -> uri(a.name().toLowerCase()))
+                                        .toArray(Obj[]::new))))
                                 .create(), "a float anchor position"),
                         docWrap(UI_STYLE_TYPE = Type.Builder.build()
                                         .tid(REC_TID)
@@ -148,7 +149,7 @@ public class uiInstSet extends AbstractInstSet {
                                         uri("rightMargin").maybe(), "the right margin of the widget",
                                         uri("topMargin").maybe(), "the top margin of the widget",
                                         uri("bottomMargin").maybe(), "the bottom margin of the widget",
-                                        uri("anchor").maybe(), "float anchor: top_right, top_left, bottom_right, bottom_left",
+                                        uri("anchor").maybe(), "float anchor: top_left, top_middle, top_right, bottom_left, bottom_middle, bottom_right",
                                         uri("width").maybe(), "display width override in columns (0 = natural)",
                                         uri("top").maybe(), "row offset from anchor edge (CSS top)",
                                         uri("left").maybe(), "col offset from anchor edge (CSS left)"),

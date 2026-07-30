@@ -25,6 +25,7 @@ import studio.phaseshift.metatron.algebra.AbstractAlgebraTest;
 
 import java.util.Set;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static studio.phaseshift.metatron.algebra.Form.PLUS_MONOID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 
@@ -86,7 +87,7 @@ public class StrTest extends AbstractAlgebraTest<Str> {
     @ParameterizedTest
     @CsvSource(value = {
             "'abc de fgh'==['bc' => 'xx', 'f[a-z]{2}' => +'XYZ', '\\s.{2}\\s' => -<''>-.count().as(str::T)]        % 'axx4fghXYZ'"
-    }, delimiter = '%', quoteCharacter='~')
+    }, delimiter = '%', quoteCharacter = '~')
     public void testSelectInst(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
@@ -95,7 +96,7 @@ public class StrTest extends AbstractAlgebraTest<Str> {
     @CsvSource(value = {
             "'abc de fgh'=?=['bc' => 'xx', 'f[a-z]{2}' => +'XYZ', '\\s.{2}\\s' => -<''>-.count().as(str::T)]        % 'abc de fgh'",
             "'abc de fgh'=?=['bc' => 'xx', 'f[a-z]{2}' => +'XYZ', '\\s.{2}\\s' => -<''>-.count()?>5]                % noobj"
-    }, delimiter = '%', quoteCharacter='~')
+    }, delimiter = '%', quoteCharacter = '~')
     public void testWhereInst(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
@@ -236,6 +237,19 @@ public class StrTest extends AbstractAlgebraTest<Str> {
     }, delimiter = '%')
     public void testConcat(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "'''hello'''                   % true            % hello",
+            "'''hello'''                   % false           % '''hello'''",
+            "\"\"\"hello\"\"\"             % true            % hello",
+            "\"\"\"hello\"\"\"             % false           % \"\"\"hello\"\"\"",
+            "\"\"\"hello m'asdf\"\"\"      % true            % hello m'asdf",
+            "\"\"\"hello m'asdf\"\"\"      % false           % \"\"\"hello m'asdf\"\"\"",
+    }, delimiter = '%')
+    public void testCleanString(final String code, final boolean strip, final String expected) {
+        assertEquals(expected, Str.Helper.cleanString(str(code), strip));
     }
 
 }

@@ -62,19 +62,23 @@ public class FloatingSurface {
      */
     public enum Anchor {
         TOP_LEFT,
+        TOP_MIDDLE,
         TOP_RIGHT,
         BOTTOM_LEFT,
+        BOTTOM_MIDDLE,
         BOTTOM_RIGHT;
 
-        /** Parse a short name (e.g. "top_right", "tr", "bottom_left", "bl"). */
+        /** Parse a short name (e.g. "top_right", "tr", "bottom_middle", "bm"). */
         public static Anchor parse(final String name) {
             if (name == null || name.isEmpty()) return TOP_RIGHT;
             return switch (name.toLowerCase()) {
-                case "top_left", "tl"       -> TOP_LEFT;
-                case "top_right", "tr"      -> TOP_RIGHT;
-                case "bottom_left", "bl"    -> BOTTOM_LEFT;
-                case "bottom_right", "br"   -> BOTTOM_RIGHT;
-                default                     -> TOP_RIGHT;
+                case "top_left", "tl"        -> TOP_LEFT;
+                case "top_middle", "tm"      -> TOP_MIDDLE;
+                case "top_right", "tr"       -> TOP_RIGHT;
+                case "bottom_left", "bl"     -> BOTTOM_LEFT;
+                case "bottom_middle", "bm"   -> BOTTOM_MIDDLE;
+                case "bottom_right", "br"    -> BOTTOM_RIGHT;
+                default                      -> TOP_RIGHT;
             };
         }
     }
@@ -472,11 +476,12 @@ public class FloatingSurface {
             if (this.anchor == null) return;
 
             this.lastRow = switch (this.anchor) {
-                case TOP_LEFT, TOP_RIGHT -> 2 + this.offsetRow;
-                case BOTTOM_LEFT, BOTTOM_RIGHT -> Math.max(1, termHeight - widgetHeight + 1 - this.offsetRow);
+                case TOP_LEFT, TOP_MIDDLE, TOP_RIGHT -> 2 + this.offsetRow;
+                case BOTTOM_LEFT, BOTTOM_MIDDLE, BOTTOM_RIGHT -> Math.max(1, termHeight - widgetHeight + 1 - this.offsetRow);
             };
             this.lastCol = switch (this.anchor) {
                 case TOP_LEFT, BOTTOM_LEFT -> 1 + this.offsetCol;
+                case TOP_MIDDLE, BOTTOM_MIDDLE -> Math.max(1, (termWidth - this.targetWidth) / 2 + this.offsetCol);
                 case TOP_RIGHT, BOTTOM_RIGHT -> Math.max(1, termWidth - this.targetWidth + 1 + this.offsetCol);
             };
         }

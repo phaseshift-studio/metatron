@@ -50,6 +50,7 @@ import studio.phaseshift.metatron.isa.web.space.ws.WebSocketRecClient;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
+import org.slf4j.bridge.SLF4JBridgeHandler;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -126,6 +127,9 @@ public class BootLoader implements Rec, Feature.SelfClone {
     }
 
     public static void main(final String[] args) throws IOException {
+        // Route java.util.logging through SLF4J/logback so all logging is unified
+        SLF4JBridgeHandler.removeHandlersForRootLogger();
+        SLF4JBridgeHandler.install();
         // --- CLI flag parsing ------------------------------------------------
         String bootFile = null;
         String evalExpr = null;

@@ -9,7 +9,7 @@ import java.util.Map;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 
-public class SimilarityRecallFeature extends Feature {
+public class SimilarityRecallFeature extends AbstractFeature {
     public SimilarityRecallFeature(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
     }

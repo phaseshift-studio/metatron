@@ -62,6 +62,37 @@ A distributed data-oriented computing language and virtual machine built in Java
 void testConstQ(String uri, String initial, String mutate, String desc) { ... }
 ```
 
+### `@Training` — Multi-Map CSV Mappings
+
+The `@Training` annotation enables a single `@CsvSource` row to produce multiple training
+data entries by mapping different column pairs as lhs→rhs (expression→result). This is used
+by `UnslothTrainingDatasetExtractor` to generate LLM fine-tuning data.
+
+**When to use:** a test method that evaluates the same expression under different
+mappings (e.g., parsed vs rendered, code vs value, mtron vs JSON).
+
+```java
+@Training(
+    value = "Evaluate this mtron expression",      // description prefix
+    mapDesc = {"lhs evaluates to rhs", "mtron evaluates to JSON"}, // per-map descriptions
+    map1 = {0, 1},   // columns 0→lhs, 1→rhs  (first mapping)
+    map2 = {2, 3}    // columns 2→lhs, 3→rhs  (second mapping)
+)
+```
+
+Each CSV row with `delimiter='%'` produces one entry per active map (`map1`, `map2`, `map3`).
+A map is active when its first element is not `-1` (the default). With `map1={0,1}` and
+`map2={2,3}`, a row like `a%1%b%2%comment` generates:
+
+```json
+{"instruction": "Evaluate this mtron expression: lhs evaluates to rhs", "input": "a", "output": "1"}
+{"instruction": "Evaluate this mtron expression: mtron evaluates to JSON", "input": "b", "output": "2"}
+```
+
+Up to three maps (`map1`, `map2`, `map3`) are supported. See `UnslothTrainingDatasetExtractor`
+for the extraction logic and `.metatron/skills/mtron/references/unsloth-training-mtron.md`
+for the full training pipeline.
+
 - **Leverage static helpers** from `AbstractMetatronTest` for assertion logic:
   - `checkCodeParseApply(LOG, code, expected)` — parse + apply mtron, assert result
   - `checkCodeEvaluate(LOG, evaluate, fetch, expected)` — evaluate, fetch read-back, assert
@@ -186,8 +217,10 @@ Docker build is **disabled by default** (`skipDocker=true` in pom). Enable with 
 - Test client: `.metatron/skills/mtron/scripts/mtron_ws_client.py`
 
 ## References
-- mtron language skills: `.metatron/skills/mtron/`
-- Agent memory: `.claude/memory/`
+- **mtron language skill**: `.metatron/skills/mtron/` — language reference, examples, scripts (including `unsloth_studio.py` for LLM fine-tuning)
+- **Metatron operations skill**: `.metatron/skills/metatron/` — VM architecture, type system, boot process, MCP integration
+- **Unsloth training guide**: `.metatron/skills/mtron/references/unsloth-training-mtron.md` — end-to-end LLM fine-tuning pipeline for mtron
+- **Agent memory**: `.claude/memory/`
 
 ---
 

@@ -68,7 +68,7 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
     /**
      * Name of the unified polymorphic message table stored under the session path.
      */
-    private static final String LLM_MESSAGE_TABLE = "llm_message";
+    private static final String LLM_MESSAGE_TABLE = "message";
 
     /**
      * Per-session dedup: set of content hashes already written, keyed by session VID.
@@ -157,7 +157,10 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
         final List<Rec> allMessages = new ArrayList<>();
         final AtomicInteger found = new AtomicInteger(0);
         // from_(msgBase.extend("+").toUri()).where_(rec(uri(SESSION), sesVID.toUri())).apply()
-        at_(uri(msgBase.extend("+"))).tryToInst().apply(jnt(1)).stream()
+        at_(uri(msgBase.extend("+")))
+                //.where_(rec(SESSION, uri(sesVID)))
+                .tryToInst().apply(jnt(1))
+                .stream()
                 .forEach(msg -> {
                     if (!msg.isRec()) {
                         LOG.warn("non-message obj in llm messages: %s", msg);
@@ -165,7 +168,10 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
                         final Rec msgRec = msg.asRec();
                         if (msgRec.tid().equals(THINKING_MESSAGE_TID)) return;
                         final Obj sessionField = msgRec.at(uri(SESSION));
-                        if (!sessionField.isNoObj() && sessionField.isUri() && sessionField.uriValue().equals(sesVID)) {
+                        final fURI sessionURI = sessionField.isUri() ? sessionField.uriValue()
+                                : sessionField.isInst() ? sessionField.asInst().vid()
+                                : null;
+                        if (sessionURI != null && sessionURI.equals(sesVID)) {
                             allMessages.add(msgRec);
                             found.incrementAndGet();
                         }
@@ -234,7 +240,7 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
                     this.currentMessages.add(writtenObj.vid());
                 written++;
             } catch (final Exception e) {
-                LOG.warn("error writing message to llm_message (non-blocking): %s", e.getMessage());
+                LOG.warn("error writing message to message (non-blocking): %s", e.getMessage());
             }
         }
 
@@ -253,7 +259,7 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
                     try {
                         Router.writeToSpace(llmMessagePath(sesVID), thinkingRec);
                     } catch (final Exception e) {
-                        LOG.warn("error writing thinking to llm_message (non-blocking): %s", e.getMessage());
+                        LOG.warn("error writing thinking to message (non-blocking): %s", e.getMessage());
                     }
                 }
             }

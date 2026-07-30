@@ -26,9 +26,9 @@ import java.util.Map;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class EmbedFeature extends AbstractFeature {
+public class NarrativeFeature extends AbstractFeature {
 
-    public EmbedFeature(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
+    public NarrativeFeature(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
     }
 }

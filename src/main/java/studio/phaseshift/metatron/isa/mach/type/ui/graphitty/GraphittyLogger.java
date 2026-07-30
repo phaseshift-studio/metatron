@@ -177,6 +177,14 @@ public class GraphittyLogger extends LayoutBase<ILoggingEvent> {
     private static String toStringOrNull(final Object o) {
         if (o instanceof Obj)
             return Highlighter.format(o);
+        if (o instanceof Throwable t) {
+            final StackTraceElement[] trace = t.getStackTrace();
+            if (trace != null && trace.length > 0) {
+                final StackTraceElement top = trace[0];
+                return t + " at " + top.getClassName() + "." + top.getMethodName()
+                        + "(" + top.getFileName() + ":" + top.getLineNumber() + ")";
+            }
+        }
         return null == o ? "null" : o.toString();
     }
 

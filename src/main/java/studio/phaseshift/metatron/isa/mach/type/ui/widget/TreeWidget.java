@@ -74,6 +74,16 @@ public class TreeWidget extends JRec<TreeWidget> implements Widget<TreeWidget> {
     public TreeWidget(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
         if (this.style.border() == Border.none) this.style.border(Border.continuous);
+        readStyle(this.jvm());
+    }
+
+    private void readStyle(final Map<Obj, Obj> jvm) {
+        final Obj s = jvm.get(uri("style"));
+        if (s != null && s.isRec()) {
+            final Style<TreeWidget> st = Style.from(s.as());
+            st.stylable = this;
+            this.style(st);
+        }
     }
 
     private void sync() {

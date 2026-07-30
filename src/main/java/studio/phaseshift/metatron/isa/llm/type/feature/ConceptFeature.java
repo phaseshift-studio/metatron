@@ -52,9 +52,7 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
-import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_CHAT_FEATURE_TID;
-import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_CONCEPT_FEATURE_TID;
-import static studio.phaseshift.metatron.isa.llm.type.Agent.agent;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
 import static studio.phaseshift.metatron.isa.llm.type.Agent.res;
 import static studio.phaseshift.metatron.isa.m.mInstSet.LST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.STR_TID;
@@ -73,7 +71,7 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 
-public class ConceptFeature extends Feature {
+public class ConceptFeature extends AbstractFeature {
 
     private static final String CONCEPT = "concept";
     private static final String MESSAGE = "message";
@@ -89,8 +87,7 @@ public class ConceptFeature extends Feature {
     // ── Extractor instances ─────────────────────────────────────────
     private final Extractor extractor;
     private final MessageIndexer indexer; // shared across extractor types for read-side queries
-    private final List<String> messagesBuilder = new ArrayList<>();
-    private final List<String> conceptsBuilder = new ArrayList<>();
+    private final List<String> conceptRecommendations = new ArrayList<>();
     // ── Templates ───────────────────────────────────────────────────
 
     /**
@@ -158,14 +155,15 @@ public class ConceptFeature extends Feature {
                                                                           """;
 
     private static final String CONCEPT_FEATURE_SYSTEM_TEMPLATE = """
-                                                                  the following tool calls provided related historic content:
+                                                                  The following concepts have recently been extracted.
                                                                   
                                                                   %s
                                                                   
-                                                                  For exploring concepts adjacent to the concepts extracted, use
-                                                                  the following tool calls:
-                                                                  
-                                                                  %s
+                                                                  To review messages associated with concepts, use tool:
+                                                                    %s(c1,c2,...)
+                                                                  To see related adjacent concepts, use tool:
+                                                                    %s(c1,c2,...)
+                                                                  Both tools can take 1 or more concept arguments.
                                                                   """;
 
     // =========================================================================
@@ -212,25 +210,25 @@ public class ConceptFeature extends Feature {
             case null, default -> null;
         };
         if (content == null) return lst();
-        return lst(rec(uri(NAME), uri(CONCEPT),
+        return lst(rec(mutableMap(uri(NAME), uri(CONCEPT),
                 uri(DESC), str("In situ concept graph construction w/ spreading activation recommendation"),
                 uri(CONTENT), str(content),
                 uri(TOOL), lst(
-                        docWrap(instC(LLM_CONCEPT_FEATURE_TID.extend(INST).extend("messages").dom(ALL.maybe()).rng(STR_TID.maybeSome()),
+                        docWrap(instC(MESSAGES_INST_TID.dom(ALL.maybe()).rng(STR_TID.maybeSome()),
                                         lst(URI_TYPE),
-                                        start_(uri(this.getBaseURI())).mult_(from_(uri("0"))).from_(id_()).select_(uri(f("message").extend("+").extend("text"))).tryToInst()),
+                                        start_(jnt(0)).from_(uri("0")).swap_(block_(mult_(uri(this.getBaseURI())))).from_(id_()).select_(uri(f("message").extend("+").extend("text"))).tryToInst()),
                                 "maybe an obj",
                                 "a stream of message texts",
                                 Map.of(jnt(0), "a concept uri"),
                                 "fetches past messages associated with the concept",
-                                "messages(metatron) [-- returns messages discussing metatron --]"),
-                        docWrap(instC(LLM_CONCEPT_FEATURE_TID.extend(INST).extend("concepts").dom(ALL.maybe()).rng(LST_TID.maybeSome()),
+                                MESSAGES_INST_TID + "(metatron) [-- returns messages discussing metatron --]"),
+                        docWrap(instC(CONCEPTS_INST_TID.dom(ALL.maybe()).rng(LST_TID.maybeSome()),
                                         lst(URI_TYPE),
-                                        start_(uri(this.getBaseURI())).mult_(from_(uri("0"))).from_(id_()).select_(uri("concept")).tryToInst()),
+                                        start_(jnt(0)).from_(uri("0")).swap_(block_(mult_(uri(this.getBaseURI())))).from_(id_()).select_(uri("concept")).tryToInst()),
                                 "maybe an obj",
-                                "a lst of related concepts",
+                                "a lst of related concept auto_froms",
                                 Map.of(jnt(0), "a concept uri"),
-                                "fetches concepts associated with the provided concept"))));
+                                "fetches concepts associated with the provided concept"))), LLM_SKILL_TID, null));
         
             /*
           docWrap(instC(LLM_CONCEPT_FEATURE_TID.extend(INST).extend("messages").dom(ALL.maybe()).rng(STR_TID.maybeSome()),
@@ -314,38 +312,26 @@ public class ConceptFeature extends Feature {
 
         for (final fURI conceptURI : new HashSet<>(concepts)) {
             try {
-                // Check directly whether the concept has associated messages
-                // rather than evaluating mtron (messages(<uri>).take(1).count().gt(0))
-                // which would pull the full parser→resolver→evaluator chain into
-                // the LangChain4j streaming callback and risks recursive re-entry
-                // through instruction resolution.
+                // check if concept has associated messages
                 final Obj conceptObj = Router.readFromSpace(conceptURI);
                 if (conceptObj.isRec()) {
                     final Rec conceptRec = conceptObj.asRec();
                     if (conceptRec.has(MESSAGE)) {
-                        final Lst messages = conceptRec.at(MESSAGE).asLst();
+                        final Obj msgObj = conceptRec.at(MESSAGE);
+                        if (!msgObj.isLst()) {
+                            LOG.warn("concept messages are not structured correctly: %s", msgObj);
+                            continue;
+                        }
+                        final Lst messages = msgObj.asLst();
                         if (!messages.lstValue().isEmpty()) {
-                            final String entryMessages = "\t" + MESSAGES_INST_TID + "(" + conceptURI.name() + ")";
-                            final String entryConcepts = "\t" + CONCEPTS_INST_TID + "(" + conceptURI.name() + ")";
-                            this.messagesBuilder.add(entryMessages);
-                            this.conceptsBuilder.add(entryConcepts);
-                            LOG.info("adding memory recommendation: %s", entryMessages);
+                            this.conceptRecommendations.add(conceptURI.name());
+                            LOG.info("adding recommendation: %s", conceptURI.name());
                         }
                     }
                 }
             } catch (final Exception e) {
                 LOG.warn("failed to check concept messages for %s: %s", conceptURI, e.getMessage());
             }
-        }
-        if (this.messagesBuilder.size() > 10) {
-            final List<String> temp = new ArrayList<>(this.messagesBuilder.subList(0, 9));
-            this.messagesBuilder.clear();
-            this.messagesBuilder.addAll(temp);
-        }
-        if (this.conceptsBuilder.size() > 10) {
-            final List<String> temp = new ArrayList<>(this.conceptsBuilder.subList(0, 9));
-            this.conceptsBuilder.clear();
-            this.conceptsBuilder.addAll(temp);
         }
     }
 
@@ -366,37 +352,20 @@ public class ConceptFeature extends Feature {
 
     @Override
     public Obj onBeforeChat(final Agent agent) {
-        // Agent extractor: prime translator agent on startup, pre-process user message
-        if (this.extractor instanceof AgentExtractor ae) {
-            ae.init(agent, this); // reads MODEL field, creates translator
-        }
-        // Index the user message so the Lucene corpus includes both sides
-        // of the conversation for TF-IDF analysis.
-        if (this.extractor instanceof LuceneExtractor) {
-            final String userMsg = agent.userMessage();
-            if (userMsg != null && !userMsg.isBlank())
-                this.indexer.indexText(userMsg);
-        }
         final Set<fURI> concepts = this.processConcepts(agent, agent.userMessage(), true);
         this.injectConceptRecommendations(agent, concepts);
-        if (!this.messagesBuilder.isEmpty()) {
-            agent.addSystemMessage(CONCEPT_FEATURE_SYSTEM_TEMPLATE.formatted(
-                    this.messagesBuilder.stream().reduce("", (a, b) -> a + b + "\n"),
-                    this.conceptsBuilder.stream().reduce("", (a, b) -> a + b + "\n")));
+        if (!this.conceptRecommendations.isEmpty()) {
+            agent.addSystemMessage(CONCEPT_FEATURE_SYSTEM_TEMPLATE
+                    .formatted(this.conceptRecommendations.stream().reduce("", (a, b) -> a + b + "\n"),
+                            MESSAGES_INST_TID,
+                            CONCEPTS_INST_TID));
         }
-        this.messagesBuilder.clear();
-        this.conceptsBuilder.clear();
+        this.conceptRecommendations.clear();
         return noobj();
     }
 
     @Override
     public void onCompleteResponse(final Agent agent, final Str text) {
-        // Index the response text so Lucene TF-IDF has documents to analyze.
-        // getImportantConcepts() reads from the directory directly (not the
-        // IndexWriter) to avoid virtual-thread carrier pinning.
-        if (this.extractor instanceof LuceneExtractor && text != null && !text.strValue().isBlank()) {
-            this.indexer.indexText(text.strValue());
-        }
         final Set<fURI> newConcepts = this.processConcepts(agent, text != null ? text.strValue() : "", false);
 
         // Extract <<concept:>> tags from the agent's thinking text.
@@ -467,20 +436,18 @@ public class ConceptFeature extends Feature {
     private class AgentExtractor implements Extractor {
         private Agent translatorAgent;
 
-        void init(final Agent parent, final ConceptFeature self) {
-            if (self.has(MODEL) && this.translatorAgent == null) {
-                this.translatorAgent = agent(rec(
-                        uri(FEATURE), lst(new ChatFeature(mutableMap(
-                                uri(MODEL), self.at(MODEL),
-                                uri(RESPONSE), rec(uri(TO), id_().tryToInst())),
-                                LLM_CHAT_FEATURE_TID, null))));
-                LOG.debug("created translator agent: %s", this.translatorAgent);
-            }
-        }
-
         @Override
         public Set<String> extract(final Agent agent, final String text, final boolean blocking) {
-            if (this.translatorAgent == null) return Set.of();
+            if (this.translatorAgent == null && agent.feature(CONCEPT).asRec().has(MODEL)) {
+                this.translatorAgent = new Agent(mutableMap(
+                        uri(FEATURE), lst(new ChatFeature(mutableMap(
+                                uri(MODEL), agent.feature(CONCEPT).asRec().at(MODEL),
+                                uri(RESPONSE), rec(uri(TO), id_().tryToInst())),
+                                LLM_CHAT_FEATURE_TID, null))), LLM_AGENT_TID, null);
+                LOG.debug("created translator agent: %s", this.translatorAgent);
+            }
+            if (null == this.translatorAgent)
+                return Set.of();
             final Set<String> conceptStrings = new LinkedHashSet<>();
             try {
                 LOG.info("using agent to extract concepts from text length=%d", text.length());
@@ -534,6 +501,8 @@ public class ConceptFeature extends Feature {
 
         @Override
         public Set<String> extract(final Agent agent, final String text, final boolean blocking) {
+            if (text != null && !text.isBlank())
+                this.indexer.indexText(text);
             // Per-document extraction: score terms by their frequency
             // in *this* text, weighted by corpus-wide IDF for distinctiveness.
             // This gives concepts relevant to the current message rather
