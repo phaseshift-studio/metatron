@@ -154,40 +154,43 @@ grphspace::[pattern  => h:#,
         [======================]
 [== if the llm session already exists, continue, else create it ==]    
 [== <drdb:llm_session>.mult(print('\n what session number?: ').stdin().as(uri::T)).to(session_vid) ==]
-agent::[name     => 'dr.stynx',
-        desc     => 'the agent dr.stynx is here to be of use in the metatron',
-        feature  => [
-          session_feature::::[on_agent_ctor => inst(a=>agent::T){ *</usr/dr/session/1>.else(
-                                session::[agent     => !*boot/args/internal/agent_home,
-                                          user      => !*boot/args/internal/user_home,
-                                          name      => 'general chat',
-                                          algorithm => [name=><message_window>, max=>50]]==[_=>_].to(/usr/dr/session/1)) },
-                              session       => /usr/dr/session/1,
-                              tool          => [forget?noobj{0}<=noobj{0}(){ /usr/dr/message/+ -> noobj }]],
-          chat_feature:::::::[model         => model::[provider => ollama,
-                                                       protocol => ollama,
-                                                       host     => <http://ginger.local:11434>,
-                                                       llm      => batiai/gemma4-31b:q6],
-                              response      => [to => print(_)]],
-          think_feature::::::[on_agent_ctor => inst(a=>agent::T){
-                                                  accordion::[title => "thoughts", 
-                                                              body  => "",
-                                                              style => style::[anchor=>top_right,width=>65,
-                                                                               height=>15,left=>-2]]@<think_widget> },
-                             think          => [to => inst(a=>str::T){ @<think_widget>>>=[body=>+*a].display() }]],
-          loop_feature:::::::[max_loop      => 100],                         
-          comment_feature::::[              => ],
-          skill_feature::::::[skill         => [metatronfs:skills/metatron, metatronfs:skills/mtron]],
-          concept_feature::::[base          => /usr/dr/concept,
-                              extractor     => lucene],
-          tool_feature:::::::[tool          =>[!*eval,!*sql,!*codegraph]],
-          audit_feature::::::[on_agent_ctor => inst(a=>agent::T) {  
-                                                 accordion::[title => "audit", 
-                                                             body  => "",
-                                                             style => style::[anchor=>bottom_right,width=>65,height=>30,
-                                                                              left=>-2,top=>8,foreground =>"{{y}}"]]@<audit_widget> },
-                              to            => inst(a=>str::T){ @<audit_widget>>>=[body=>+*a].display() }],
-          system_feature:::::[              => ]]]@<dr>; 
-
+[-- tag::asciidoc_tag[] --]
+agent::[
+  name     => 'dr.stynx',
+  desc     => 'the agent dr.stynx is here to be of use in the metatron',
+  feature  => [
+    session_feature::::[on_agent_ctor => inst(a=>agent::T){ *</usr/dr/session/1>.else(
+                                           session::[agent    => !*boot/args/internal/agent_home,
+                                                     user     => !*boot/args/internal/user_home,
+                                                     name     => 'general chat',
+                                                     algorithm=> [name=><message_window>, max=>50]]
+                                                          ==[_=>_].to(/usr/dr/session/1)) },
+                        session       => /usr/dr/session/1,
+                        tool          => [forget?noobj{0}<=noobj{0}(){ /usr/dr/message/+ -> noobj }]],
+    chat_feature:::::::[model         => model::[provider     => ollama,
+                                                 protocol     => ollama,
+                                                 host         => <http://ginger.local:11434>,
+                                                 llm          => batiai/gemma4-31b:q6],
+                        response      => [to => print(_)]],
+    think_feature::::::[on_agent_ctor => inst(a=>agent::T){
+                                            accordion::[title => "thoughts", 
+                                                        body  => "",
+                                                        style => style::[anchor=>top_right,width=>65,
+                                                                         height=>15,left=>-2]]@<think_widget> },
+                       think          => [to => inst(a=>str::T){ @<think_widget>>>=[body=>+*a].display() }]],
+    loop_feature:::::::[max_loop      => 100],                         
+    comment_feature::::[              => ],
+    skill_feature::::::[skill         => [metatronfs:skills/metatron, metatronfs:skills/mtron]],
+    concept_feature::::[base          => /usr/dr/concept,
+                        extractor     => lucene],
+    tool_feature:::::::[tool          =>[!*eval,!*sql,!*codegraph]],
+    audit_feature::::::[on_agent_ctor => inst(a=>agent::T) {  
+                                           accordion::[title  => "audit", 
+                                                       body   => "",
+                                                       style  => style::[anchor=>bottom_right,width=>65,height=>30,
+                                                                        left=>-2,top=>8,foreground =>"{{y}}"]]@<audit_widget> },
+                        to            => inst(a=>str::T){ @<audit_widget>>>=[body=>+*a].display() }],
+    system_feature:::::[              => ]]]@<dr>; 
+[-- end::asciidoc_tag[] --]
 [== user console ==] 
 console::[agent=>dr,header=>!*boot/args/header]@/usr/marko/console;

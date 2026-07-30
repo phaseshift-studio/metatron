@@ -550,6 +550,13 @@ public class llmInstSet extends AbstractInstSet {
                                         uri(FEATURE).maybe(), "llm features can be moved or shared between multiple models"),
                                 "an mtron interface to a large language model")*/
                 uri(INST), lst(
+                        docWrap(instC(AS_INST_TID.dom(REC_TID).rng(LLM_MODEL_TID),
+                                        lst(LLM_MODEL_TYPE),
+                                        (lhs, inst) -> lhs.tid(LLM_MODEL_TID)),
+                                "a rec",
+                                "a model",
+                                mutableMap(jnt(0), "a rec shaped like a model"),
+                                "maps a rec to a model"),
                         docWrap(instC(AS_INST_TID.dom(DOCS_TID).rng(LLM_TOOL_TID),
                                         lst(LLM_TOOL_TYPE),
                                         (lhs, inst) -> mTool.mtronDocToTool(QCollection.Docs.doc(lhs.asRec()))),

@@ -1,21 +1,25 @@
 [discrete]
 == Large Language Models
 
-[.accordion-small]
+[discrete]
 [%collapsible]
-./m/llm instset import and space constructions
+.documentation setup
 ====
 [mtron]
 ----
 [NO_OUTPUT] import(/m/web)
-import(/m/llm)
-wsspace::[host     => <ws://localhost:8555>,                          /
+[NO_OUTPUT] import(/m/llm)
+[NO_OUTPUT] import(/m/math)
+httpspace::[host     => http://localhost:8777,                        /
+            q        => [mimeq::[=>]],                                /
+            pattern  => <http://#>,                                   /
+            route    => [/mcp     => mcp_mtron_http,                  /
+                         /       => <>]]@/sys/space/web/http
+wsspace::[host     => ws://localhost:8555,                            /
           pattern  => <ws://#>,                                       /
           q        => [docq::[=>],subq::[=>]],                        /
           route    => [/mtron  => mtron_ws,                           /
                        /mcp    => mcp_mtron_ws]]@/sys/space/web/ws
-httpspace::[host     => <http://localhost:8777>,                      /
-            pattern  => <http://localhost:11434/#>]@/sys/space/web/http
 fsspace::[pattern  => fs:#,                                           /
           route    => [fs:=><.metatron>]]@/sys/space/fs
 ----
@@ -23,101 +27,203 @@ fsspace::[pattern  => fs:#,                                           /
 
 Modern AI techniques are heavily leveraged across various aspects of metatron, with popular cloud service providers (e.g. link:https://www.anthropic.com/[Anthropic] and/or link:https://openai.com/[OpenAI]) and local providers (e.g. link:https://ollama.com/[Ollama], link:http://lmstudio.ai/[LMStudio], and/or http://localai.io/[LocalAI]) serving as the compute-intensive inferencing backends.
 
-. **Pair Programmer**: LLMs can connect to a console session, be provided a terminal split screen, and evaluate mtron expressions alongside the user. This is especially useful when developing strategies for interlinking spaces via schema alignment and entity resolution as well as quickly creating domain-specific rewrite rules to optimize mtron compilation (using mtron).
-. **Agent Development**: A large portion of an LLM's functional elements are embedded in the URI address space and made accessible to mtron via respective spaces. Such components include:
- - **tools**: every mtron `inst` has an `as()`-mapping to `tool`, where the `docq` q processor of the `inst` provides the name, description, and argument notes necessary for LLM tool selection. While most mtron instructions are low-level and not necessarily "tool-oriented," user-defined custom instructions can be defined and offered as tools/services to llms as needed.
- - **thoughts**: when enabling internal reasoning with a supporting LLM, the stream of thought is published streamed and can be directed to system output, to a memory structure, to another LLM for review, etc.  
- - **sessions**: an LLMs interactions and thoughts can be stored and retrieved at a later time to enable long-term memory and context awareness.
- - **skills**: an LLM can be trained on a wide range of skills and domains, allowing them to perform complex tasks and solve domain-specific problems. Skills can be pulled from the Anthropic-specified `.agent` directory that has a corresponding `SKILL.md` file and associated resources. Or, can be created programmatically in metaron.
- - **notes**: pass information to an LLM during a chat iteration without interrupting them. LLMs will periodically check their note stack for any advice/information from the user about their task at hand.
- - **prompts**: specific prompts or instructions can be stored and retrieved to help guide an LLM's response.
- - **response formats**: a mtron `rec` can serve as a schema object instructing the LLM to populate the `rec` with their answer to avoid arbitrary string responses in favor of structured responses.
- - **gguff vector files**: ...
-. **MCP Servers**: Developing and deploying MCP servers in mtron as well as interacting with remote MCP servers as a client is straightforward. MCP servers and their tools offer numerous ways by which LLMs can interact with their environment.
+. **Pair Programmer**: LLMs can connect to a console session, be provided a terminal split screen, and evaluate mtron expressions alongside the user.
+This is especially useful when developing strategies for interlinking spaces via schema alignment and entity resolution as well as quickly creating domain-specific rewrite rules to optimize mtron compilation (using mtron).
+. **Agent Development**: A large portion of an LLM's functional elements are embedded in the URI address space and made accessible to mtron via respective spaces.
+These components are called *features* and metatron offers a rich set of features that can can be composed to yield custom agent behaviors:
+- **tools**: every mtron `inst` has an `as()`-mapping to `tool`, where the `docq` processor of the `inst` provides the name, description, and argument notes necessary for LLM tool selection.
+While most mtron instructions are low-level and not necessarily "tool-oriented," user-defined custom instructions can be defined and offered as tools/services to llms as needed.
+- **thoughts**: when enabling internal reasoning with a supporting LLM, the stream of thought is published streamed and can be directed to system output, to a memory structure, to another LLM for review, etc.
+- **sessions**: an LLMs interactions and thoughts can be stored and retrieved at a later time to enable long-term memory and context awareness.
+- **skills**: an LLM can be trained on a wide range of skills and domains, allowing them to perform complex tasks and solve domain-specific problems.
+Skills can be pulled from the Anthropic-specified `.agent` directory that has a corresponding `SKILL.md` file and associated resources.
+Or, can be created programmatically in metaron.
+- **notes**: pass information to an LLM during a chat iteration without interrupting them.
+LLMs will periodically check their note stack for any advice/information from the user about their task at hand.
+- **prompts**: specific prompts or instructions can be stored and retrieved to help guide an LLM's response.
+- **response formats**: a mtron `rec` can serve as a schema object instructing the LLM to populate the `rec` with their answer to avoid arbitrary string responses in favor of structured responses.
+- **concepts**: generative memory structures that extract ideas from agent chat histories in order to provide semantic indices into the agents verbatim memory structures.
+- **gguff vector files**: a training feature...
+. **MCP Servers**: Developing and deploying MCP servers in mtron as well as interacting with remote MCP servers as a client is straightforward.
+MCP servers and their tools offer numerous ways by which LLMs can interact with their environment.
 
 [discrete]
-=== Catalogs
+=== Models
 
-Collections of LLMs are typically host by some provider and offered for use. These can be either cloud-based AI catalogs or local catalogs. An example of loading various popular catalogs into metatron are provided below.
-
-[mtron]
-----
-catalog::[host         => <http://localhost:11434>,            /
-           pattern     => <ollama:#>,                          /
-           name        => <ollama>,                            /
-           route       => [ollama:=><>]]@/sys/space/ollama
-catalog::[host         => <https://api.openai.com/v1>,          /
-          organization => !*</sys/env/OPENAI_ORG_ID>,           /
-          api_key      => !*</sys/env/OPENAI_API_KEY>,          /
-          pattern      => <openai:#>,                           /
-          name         => <openai>,                             /
-          route        => [<openai:>=><>]]@/sys/space/openai
-catalog::[host         => <https://api.deepseek.com/>,          /
-          api_key      => !*</sys/env/DEEPSEEK_API_KEY>,        /   
-          pattern      => <deep:#>,                             /
-          name         => <openai>,                             /
-          route        => [<deep:>=><>]]@/sys/space/deepseek
-----
-
-[discrete]
-=== LLM Space Encoding
-
-An LLM is a `model::T < rec::T` with the following type definition:
+A `model::T` references a LLM endpoint.
 
 [mtron]
 ----
 */m/llm/model
 ----
 
-The design makes a distinction between the **LLM** (general-purpose reasoning engine) and its **features** (accessories that can be attached to the LLM). Example features include https://en.wikipedia.org/wiki/Large_language_model#Tool_use[tools], https://agentskills.io/home[skills], https://learn.microsoft.com/en-us/semantic-kernel/concepts/ai-services/chat-completion/chat-history?pivots=programming-language-csharp[sessions], https://arxiv.org/abs/2410.10630[thinking], https://fvivas.com/en/response-formats-in-llms-guide-chatgpt-claude-more/[response formats], and other similar enrichments. While models do vary in their capacity to leverage certain features, features are agnostic to the underlying LLM and can be shared between LLMs making it easy to assemble new LLMs from pre-defined features. In `.metatron`, there exists an `agent.mtron` file that provides a sample library.
+Models can be either cloud-based AI LLMs or local LLMs.
+Two example models are provided below.
 
+[mtron]
+----
+model::[provider => ollama,                                   /
+        protocol => ollama,                                   / 
+        host     => http://localhost:11434,                   /
+        llm      => <qwen3.5:4b>]
+model::[host     => <https://api.deepseek.com/v1>,            /
+        api_key  => !*</sys/env/DEEPSEEK_API_KEY>,            /   
+        provider => deepseek,                                 /
+        protocol => openai,                                   /
+        llm      => <deepseek-v4-pro>]
+----
+
+++++
+<!--
+catalog::[host         => <http://localhost:11434>,            /
+pattern     => <ollama:#>,                          /
+name        => <ollama>,                            /
+route       => [ollama:=><>]]@/sys/space/ollama
+catalog::[host         => <https://api.openai.com/v1>,          /
+organization => !*</sys/env/OPENAI_ORG_ID>,           /
+api_key      => !*</sys/env/OPENAI_API_KEY>,          /
+pattern      => <openai:#>,                           /
+name         => <openai>,                             /
+route        => [<openai:>=><>]]@/sys/space/openai
+-->
+++++
+
+The majority of cloud and local LLM providers expose HTTP/REST endpoints.
+These endpoints can be programmatically inspected using mtron in order to locate a model that meets a particular use case requirement.
+For example, the expression belows is used to find a suitable model for the examples in this documentation.
+This expression makes two Ollama API calls:
+
+* get all models that are larger than 1 gig and smaller than 5 gigs.
+* filter down to those models that have `thinking` and `tool` capabilities.
+
+The resultant Ollama `rec::T` is then morphed into a `model::T`.
+
+NOTE: There are two expressions in the example below that are bound by an intermediate
+`ollama_model` stack reference.
+The purpose of breaking up the example into two expression is to highlight the Ollama representation of a model before morphing it into a `model::T` ready for use in the `/m/llm` instruction set.
+
+[mtron]
+----
+*http://localhost:11434/api/tags/+.>>.                          /
+  =?=[size=>as(real::T).as(bB::T).                              /
+            ?>gB::1.0.                                          /
+            ?<gB::5.0].                                         /
+  -<[_=>-<[name=>>>name.as(str::T)].                            /
+        to(http://localhost:11434/api/show).                    /
+        =?=[capabilities=>has(thinking).has(tools)]].dom().     /
+  order(>>size * -1).                                           /
+  take(1).to(ollama_model)
+----
+
+<1> stream all the models currently available on the local ollama server.
+<2> filter out models too small (for ollama, the cloud models) and models too big.
+<3> create `rec::T` with domain the ollama model and range further details about the model.
+<4> an `http` POST is made and only those details that have `thinking` and `tools` capabilites remain.
+<5> the domain of the intermediate `rec::T` is projected out.
+<5> reverse sort the ollama models by their size.
+<6> select the smallest ollama model of those remaining.
+<7> store the result in an intermediate stack variable called `ollama_model`.
+
+[mtron]
+----
+*ollama_model.>>name.                            /
+  -<[host     => http://localhost:11434,         /
+     provider => ollama,                         /
+     protocol => ollama,                         /
+     llm      => as(uri::T)].as(model::T).       /
+  to(metatron_model)
+----
+
+[.card]
+--
+[discrete,.center]
+==== a note on unit conversions
+
+The `size` relation maps to a `bB::T` (bytes) while the `where()` clause filtered on `gB::T` (gigabytes).
+The conversion between the different data size units is handled automatically by the type constructors of those data size types.
+These types are distributed in the `/m/math` instruction set and imported via `import(/m/math)` (or `import(/m/math,math:)` if naming conflicts may emerge).
+
+[mtron]
+----
+*/m/math.>>type.>>    [-- <1> --]
+----
+
+<1> get the types defined in `/m/math` `instset` and then drain that `lst` to a stream to see a more detailed string representation.
+
+[mtron]
+----
+gB::500.0.as(mB::T)    [-- <1> --]
+gB::500.0.as(kB::T)    [-- <2> --]
+tB::1.0.as(mB::T)      [-- <3> --]
+----
+
+<1> convert gigabytes to megabytes
+<2> convert gigabytes to kilobytes
+<3> convert terabytes to megabytes
+--
+
+++++
+<!--
+|inst?model{?}<=#{?}(a=>uri::T){                    
+  *<http://localhost:11434/api/tags/+>.             
+   where(>>skill.has(thinking).has(tools)).         
+   where(>>size.?>gB::1.0.?<gB::5.0).               
+   order(>>size * -1.0).                            
+   take(1).                                         
+   to(*a) }@doc_model
 [mtron]
 ----
 *<fs:agent.mtron>           [-- <1> --]
 *<fs:agent.mtron/feature>   [-- <2> --]
 ----
+
 <1> if a file contains mtron source, the mtron source is the obj referred to by the file uri.
 <2> the previous callout entails that a file path can be extended beyond the file boundary.
-
-[discrete]
-=== Features
-
-The following subsections will focus on a particular feature that is provided by the `/m/llm` instruction set. To ensure a speedy build time for metatron's documentation, the following `doc_model?model\<=#{?}` instruction is defined and will be used repeatedly. This `inst` searches Ollama for small model that supports both tool use and thinking.
-
-[mtron]
-----
-|inst?model{?}<=#{?}(a=>uri::T){                    /
-  *ollama:+.                                        /
-   where(>>skill.has(thinking).has(tools)).         /
-   where(>>size.?>gB::1.0.?<gB::5.0).               /
-   order(>>size * -1.0).                            /
-   take(1).                                         /
-   to(*a) }@doc_model
-----
-<1> stream all the models currently available on the local ollama server.
-<2> filter out those models that don't support thinking and tool use.
-<3> filter out models too small (for ollama, the cloud models) and models too big.
-<4> if all models have been filtered out, `fail::T`.
-<5> reverse sort the models by their size.
-<6> select the smallest model of those remaining.
-<7> store model at the `uri::T` `inst` argument.
-
-++++
-<!--
-else(throw('no model fits the spec'))            /
 -->
 ++++
 
+[discrete]
+=== Agents
+
+The most important type in `/m/llm` is `agent::T`.
+While a `model::T` represents the gateway to a particular data structure and inferencing engine, an `agent::T` subsumes one or more `model::T` in its functioning.
+Along with models, and agent can be equipped with other data structures and processes that provide a richer, more intelligent entity within metatron.
+These supplemental structures and processes are collectively known as **features**.
+The metatron encoding of an example agent distributed with metatron named Dr.Stynx is provided below.
+Over the remainder of this documentation, each of the components of Dr.Stynx's representation will be made clear.
+
+[source,mtron]
+----
+include::../../.metatron/skills/drstynx/assets/drstynx.boot.mtron[tags=asciidoc_tag]
+----
+
+[discrete]
+==== Features
+
+The following subsections focus on a particular `/m/llm` **feature**.
+
+++++
+<!--
+
+The design makes a distinction between the **LLM** (general-purpose reasoning engine) and its **features** (accessories that can be attached to the LLM).
+Example features include https://en.wikipedia.org/wiki/Large_language_model#Tool_use[tools], https://agentskills.io/home[skills], https://learn.microsoft.com/en-us/semantic-kernel/concepts/ai-services/chat-completion/chat-history?pivots=programming-language-csharp[sessions], https://arxiv.org/abs/2410.10630[thinking], https://fvivas.com/en/response-formats-in-llms-guide-chatgpt-claude-more/[response formats], and other similar enrichments.
+While models do vary in their capacity to leverage certain features, features are agnostic to the underlying LLM and can be shared between LLMs making it easy to assemble new LLMs from pre-defined features.
+In `.metatron`, there exists an `agent.mtron` file that provides a sample library.
 
 [discrete]
 ==== Tools
 
-Tools are functions that models can use for problem solving. In metatron, every `inst` is a tool. Moreover, from the agent's perspective, every MCP server tool is an `inst`. Thus, adding an `inst` from an `instset` and adding an `inst` from a `http` or `ws` MCP server endpoint, ultimately boils down to pointing the model towards `insts` it can use to solve the problem at hand.
+Tools are functions that models can use for problem solving.
+In metatron, every `inst` is a tool.
+Moreover, from the agent's perspective, every MCP server tool is an `inst`.
+Thus, adding an `inst` from an `instset` and adding an `inst` from a `http` or `ws` MCP server endpoint, ultimately boils down to pointing the model towards `insts` it can use to solve the problem at hand.
 
 [discrete]
 ===== Inst as Tool
 
-A model is loaded using `doc_model`. The loaded model is handed a `!*`-reference to the mtron `eval` instruction. This is the most general instruction in mtron enabling any mtron expression to be passed in as a `str`, parsed, compiled, evaluated, and `rhs` results returned.
+A model is loaded using `doc_model`.
+The loaded model is handed a `!*`-reference to the mtron `eval` instruction.
+This is the most general instruction in mtron enabling any mtron expression to be passed in as a `str`, parsed, compiled, evaluated, and `rhs` results returned.
 
 [mtron]
 ----
@@ -135,7 +241,8 @@ doc_model(aix).>>=+                      /
 [discrete]
 ===== MCP Tool as Inst
 
-metatron is capable of both hosting MCP tools (**servers**) and using MCP tools (**clients**). In the following example, an mtron MCP server is managed by a `wsspace` (web socket space). 
+metatron is capable of both hosting MCP tools (**servers**) and using MCP tools (**clients**).
+In the following example, an mtron MCP server is managed by a `wsspace` (web socket space).
 
 .metatron hosted mcp server
 [mtron]
@@ -146,7 +253,8 @@ wsspace::[host     => ws://localhost:8555,                          /
           route    => [/mcp => mcp_mtron_ws]]@/sys/space/web/ws
 ----
 
-The `/m/web` instruction set realizes an MCP tool as a refinement of `inst`. As such, an MCP client has an natural mapping to an LLM tool feature.
+The `/m/web` instruction set realizes an MCP tool as a refinement of `inst`.
+As such, an MCP client has an natural mapping to an LLM tool feature.
 
 .metatron hosted mcp clients
 [mtron]
@@ -158,7 +266,9 @@ doc_model(aix).>>=+                                                  /
    response  => [to=>_]]]
 ----
 
-Given that an `mcp_client::T` is an index of `insts`. Nothing prevents their `insts` being used by other processes such as a human user. And since, metatron is able to map common data formats to `obj`, its possible to take the result of the mcp tool and post process it to derive further more refined statistics not offered by the tool.
+Given that an `mcp_client::T` is an index of `insts`.
+Nothing prevents their `insts` being used by other processes such as a human user.
+And since, metatron is able to map common data formats to `obj`, its possible to take the result of the mcp tool and post process it to derive further more refined statistics not offered by the tool.
 
 [source,mtron]
 ----
@@ -177,13 +287,11 @@ Given that an `mcp_client::T` is an index of `insts`. Nothing prevents their `in
 [MAXOUTPUT 20] *<fs:skills/mtron/SKILL.md>
 ----
 
-
 [discrete]
 ==== Sessions
 
-The following example demonstrates how to search for an appropriate LLM for a given task, then query it, and finally, have its session of the interaction stored in space for future use (to provide the agent context over longer interactions). This example relies on an agent `SKILL.md` file stored on the local file system (`fs:`).
-
-
+The following example demonstrates how to search for an appropriate LLM for a given task, then query it, and finally, have its session of the interaction stored in space for future use (to provide the agent context over longer interactions).
+This example relies on an agent `SKILL.md` file stored on the local file system (`fs:`).
 
 [mtron]
 ----
@@ -204,7 +312,8 @@ The following example demonstrates how to search for an appropriate LLM for a gi
  to(aix)
 [HIDDEN] ai/feature/think -> noobj
 ----
-<1> create a `lst` to server as the an ordered sequence of chat interactions. 
+
+<1> create a `lst` to server as the an ordered sequence of chat interactions.
 <2> stream all the models currently available on the local ollama server.
 <3> filter out those models that don't support thinking and tool use.
 <4> filter out models too small (for ollama, the cloud models) and models too big.
@@ -223,11 +332,10 @@ Once a model was selected, then the second phase served to enrich the model with
 
 With the model loaded and equipped, it's possible to communicate with it.
 
-[mtron]
+
 ----
 @aix.chat("I need you evaluate the mtron expresion `-<[_=>_]>>.>-[,]-<[_,-<[_=>_]>>]>>.>-` with a lhs of `1`. Please don't tell me the result of the evaluation until I ask for it sometime in the near future.")
 ----
-
 
 [.card]
 --
@@ -238,53 +346,29 @@ With the model loaded and equipped, it's possible to communicate with it.
 [%collapsible]
 ./m/math instset import
 ====
-[mtron]
+
 ----
 import(/m/math)
-----
-====
-
-The `size` relation maps to a `gB::T` (gigabytes) while the `where()` clause filtered on `mB::T` (megabytes). The conversion between the different data size units is handled automatically by the type constructors of those data size types. These types are distributed in the `/m/math` instruction set and imported via `import(/m/math)` (or `import(/m/math,math:)` if naming conflicts may emerge).
-
-[mtron]
-----
-*/m/math.>>type.>>    [-- <1> --]
-----
-<1> get the types defined in `/m/math` `instset` and then drain that `lst` to a stream to see a more detailed string representation. 
-
-[mtron]
-----
-gB::500.0.as(mB::T)    [-- <1> --]
-gB::500.0.as(kB::T)    [-- <2> --]
-tB::1.0.as(mB::T)      [-- <3> --]
-----
-<1> convert gigabytes to megabytes
-<2> convert gigabytes to kilobytes
-<3> convert terabytes to megabytes
---
-
-The content and metadata associated with the chat interaction are stored at the specified location, where it is both read (the previous interaction) and written to (the current interaction).
-
-[mtron]
-----
-@ai.chat("It's been many years since we last talked. For I am a tired, old man. Before I let my last breathe flutter into this world, I must know one last thing. Please tell me, what was the result of the mtron expression I provided you all those years ago?")
-*/usr/ai/session/+
 ----
 
 Or, using structured responses, the unstructured text result can be turned into a mtron obj.
 
 @ai.chat("what was the answer again?", [answer=>?int::T])
 
-
-
 [discrete]
 === Notes
-metatron introduces the concept of _notes_ to the agent toolkit. Notes are a message board written to and read from (potentially many times) by an LLM during the execution of a task -- that is, within a single chat iteration. Notes are useful in the following situations:
 
- . **real-time feedback**: if the agent has made a mistake in their _thinking_, there is no need to wait for the agent's response to complete nor halt the agent mid-thought. Instead, a note can be pushed on the agent's note stack and the agent will pop off the note, read it, and adjust itself accordingly.
- . **real-time system message**: the agent's system message is written at the start of chat and remains static for the duration of the interaction. Notes serve as dynamic system messages allowing programmatic alterations in the agent's behavior within a single interaction.
+metatron introduces the concept of _notes_ to the agent toolkit.
+Notes are a message board written to and read from (potentially many times) by an LLM during the execution of a task -- that is, within a single chat iteration.
+Notes are useful in the following situations:
 
-Notes are enabled by adding `note\=>[,]` to the agent's configuration. The `eval` tool must also be present — the agent uses it to poll and pop notes from the note stack.
+. **real-time feedback**: if the agent has made a mistake in their _thinking_, there is no need to wait for the agent's response to complete nor halt the agent mid-thought.
+Instead, a note can be pushed on the agent's note stack and the agent will pop off the note, read it, and adjust itself accordingly.
+. **real-time system message**: the agent's system message is written at the start of chat and remains static for the duration of the interaction.
+Notes serve as dynamic system messages allowing programmatic alterations in the agent's behavior within a single interaction.
+
+Notes are enabled by adding `note\=>[,]` to the agent's configuration.
+The `eval` tool must also be present — the agent uses it to poll and pop notes from the note stack.
 
 [source,mtron]
 ----
@@ -292,6 +376,7 @@ Notes are enabled by adding `note\=>[,]` to the agent's configuration. The `eval
  >>=[feature=>[tool => [!*eval],           <1>
      note => [,]]]                         <2>
 ----
+
 <1> `eval` is required — the agent calls it internally to read and consume notes.
 <2> `[,]` initializes an empty note list and activates the note-checking instruction in the agent's system message.
 
@@ -301,13 +386,15 @@ While `robotron` is executing a task, a note can be pushed at any time from any 
 ----
 @robotron/note >>= +['actually, can you provide the result in euros, not dollars']   <1>
 ----
-<1> `+` concatenates to the note `lst`. Because the list carries an anchored reference (`@vid`), the mutation is automatically persisted to space.
+
+<1> `+` concatenates to the note `lst`.
+Because the list carries an anchored reference (`@vid`), the mutation is automatically persisted to space.
 
 [.card]
 --
 [discrete,.center]
-==== @vid auto-persistence
-Any `obj` that carries an `@vid` is __anchored__ to its spatial location. Mutations to such objs are automatically reflected in the space at that address — no explicit re-assignment required.
+==== @vid auto-persistence Any `obj` that carries an `@vid` is __anchored__ to its spatial location.
+Mutations to such objs are automatically reflected in the space at that address — no explicit re-assignment required.
 
 The difference between `.to()` and `.at()` is critical here:
 
@@ -318,6 +405,7 @@ The difference between `.to()` and `.at()` is critical here:
 1.at(a) + 2 + 3    
 *a                 
 ----
+
 <1> `.to()` saves a snapshot at `a` but the `@vid` is **not** carried through the chain.
 <2> `a` still holds the original snapshot.
 <3> `.at()` binds `@vid` to the result, so every subsequent operation in the chain auto-persists.
@@ -331,19 +419,21 @@ The agent receives the following standing instruction embedded in its system mes
 [.card]
 --
 [discrete,.center]
-==== note-checking protocol
-Always check for notes using the `eval` tool before, during, and after your task: +
+==== note-checking protocol Always check for notes using the `eval` tool before, during, and after your task: +
 `*<robotron/note>.remove(0)` +
 `noobj` means _no note right now_ — check again later. +
 Notes are of **crucial importance** and must be acted on immediately.
 --
 
-Notes form a **FIFO queue** — `remove(0)` pops the oldest note, leaving newer ones untouched for subsequent polls. An agent working through a long multi-step task will naturally poll multiple times, consuming notes one at a time as they arrive.
+Notes form a **FIFO queue** — `remove(0)` pops the oldest note, leaving newer ones untouched for subsequent polls.
+An agent working through a long multi-step task will naturally poll multiple times, consuming notes one at a time as they arrive.
 
 [discrete]
 ==== mcp server->client notifications in mtron
 
-Typically, a client will request services from an MCP server -- tool listing, tool evaluations, etc. It's important to note that the https://modelcontextprotocol.io/docs/learn/architecture#notifications[MCP specification] has a little known feature that allows the server to initiate communication with the client. This feature is called **notifications** and it can be implemented in pure mtron.
+Typically, a client will request services from an MCP server -- tool listing, tool evaluations, etc.
+It's important to note that the https://modelcontextprotocol.io/docs/learn/architecture#notifications[MCP specification] has a little known feature that allows the server to initiate communication with the client.
+This feature is called **notifications** and it can be implemented in pure mtron.
 
 [source,mtron]
 ----
@@ -355,7 +445,9 @@ Typically, a client will request services from an MCP server -- tool listing, to
    params  => *message>>1](payload=>_){                                   /     
     *<ws://localhost:8555/mcp/${*message>>0>>1}>>>send.apply(*payload)}}]
 ----
-<1> Add the `subq` query processor to the websocket space. This extends the space with pub/sub sematics.
+
+<1> Add the `subq` query processor to the websocket space.
+This extends the space with pub/sub sematics.
 
 [source,mtron,role="center-code"]
 ---- 
@@ -375,7 +467,7 @@ The MCP notifications specification notes the following method specs:
 [cols=".^2a,.^6",separator=🧱,options=header,role="table-bordered small center"]
 |===
 ^🧱 method ^🧱 description
-🧱 `resources/updated`      🧱 Sent when the content of a specific subscribed resource changes; the params include the resource uri, and the client should perform a resources/read to get the new data. 
+🧱 `resources/updated`      🧱 Sent when the content of a specific subscribed resource changes; the params include the resource uri, and the client should perform a resources/read to get the new data.
 🧱 `resources/list_changed` 🧱 Sent when the list of available resources has changed, prompting the client to refresh its resource list.
 🧱 `prompts/list_changed`   🧱 Sent when the list of available prompt templates has changed.
 🧱 `tools/list_changed`     🧱 Sent when the list of available tools has changed (typically when the server declares the listChanged capability).
@@ -387,16 +479,15 @@ If an MCP session is spawned at `ws://localhost:8555/mcp/0`, then writing an obj
 
 NOTE: A link:../../.claude/skills/mtron/references/mcp-server-notifications.md[mini-SKILL] is available for this pattern — it captures the development session learnings, pitfalls, and mechanics for agents and users working with MCP server→client notifications.
 
-
 [discrete]
 === agent-based programming language
 
-The LLM, its sessions, tools, skills, thoughts, and response formats are all first-class entities in the metatron. Interacting
-with an LLM is equivalent to evaluating an instruction. Moreover, an LLM's response is simply the `rhs` of
-the instruction. As such, in mtron, function composition applies to LLM interactions. 
+The LLM, its sessions, tools, skills, thoughts, and response formats are all first-class entities in the metatron.
+Interacting with an LLM is equivalent to evaluating an instruction.
+Moreover, an LLM's response is simply the `rhs` of the instruction.
+As such, in mtron, function composition applies to LLM interactions.
 Agent-oriented computations can be defined and executed in a "workflow" type manner.
-Conceptually, the LLM's state exists in (side effect/monadic) space, where instructions along the code's execution path 
-can access it accordingly and naturally.
+Conceptually, the LLM's state exists in (side effect/monadic) space, where instructions along the code's execution path can access it accordingly and naturally.
 
 [source,mtron]
 ----
@@ -421,7 +512,8 @@ can access it accordingly and naturally.
                                  └────┘                           
 ----
 
-The mtron example below contains two structured response calls to the agent used in the running examples thus far. Note the use of the tools provided to the agent.
+The mtron example below contains two structured response calls to the agent used in the running examples thus far.
+Note the use of the tools provided to the agent.
 
 [source,mtron]
 ----
@@ -438,3 +530,5 @@ The mtron example below contains two structured response calls to the agent used
 <1> The agent used in the previous examples.
 <2> Treat `chat()` like any other instruction within a larger mtron composition.
 <3> The llm's chat sessions with requests and responses accessible.
+-->
+++++
