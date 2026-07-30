@@ -1,15 +1,27 @@
-#!/bin/sh
+#!/bin/bash
+# bin/drstynx — Dr. Stynx metatron agent.
+#
+# Template: to create your own app, copy this file and change:
+#   1. The banner (or remove the cat<<'EOF' block)
+#   2. BOOT_FILE and BOOT_ARGS below
+#
+# All build logic (compile, classpath, JVM flags) lives in bin/metatron.
+# -------------------------------------------------------------------
+set -euo pipefail
 
+# ── banner (app-specific — remove or replace) ──────────────────────
 cat <<'EOF'
-  ______          _______ __  PhaseShift Studio                    
+  ______          _______ __  PhaseShift Studio
  |   _  \ .----. |   _   |  |_.--.--.-----.--.--.
  |.  |   \|   ___|   1___|   _|  |  |     |_   _|
  |.  |    |__||__|____   |____|___  |__|__|__.__|
- |:  1    /      |:  1   |    |_____|            
- |::.. . /       |::.. . |presents a metatron bomb                       
- `------'        `-------'                                          
+ |:  1    /      |:  1   |    |_____|
+ |::.. . /       |::.. . |presents a metatron bomb
+ `------'        `-------'
 EOF
 
-# $METATRON_HOME/bin/metatron 
+# ── launch (app-specific: change these) ─────────────────────────────
+BOOT_FILE=".metatron/skills/drstynx/assets/drstynx.boot.mtron"
+BOOT_ARGS="[log=>info]"
 
-metatron -b .metatron/skills/drstynx/assets/drstynx.boot.mtron "[log=>info]"
+exec "$(dirname "$(readlink -f "$0")")/metatron" -b "$BOOT_FILE" "$BOOT_ARGS"

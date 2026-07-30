@@ -1211,6 +1211,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                     docWrap(instC(BLOCK_INST_TID.dom(A.maybe()).rng(B.some()), lst(T(B.some())), (lhs, inst) -> inst.arg(0)),
                             "maybe an obj", "the arg without an applied lhs", Map.of(jnt(0), "the unapplied rhs"), "the lhs obj is halted and the arg is the rhs obj"),
                     instC(SPLIT_INST_TID.dom(ALL).rng(ALL.maybeSome()), lst(T(ALL.some())), (lhs, inst) -> objs(inst.arg(0).stream().map(o -> o.apply(lhs)))),
+                    //instC(SPLIT_INST_TID.dom(ALL.dom(ALL).rng(ALL)).rng(LST_TID), lst(LST_TYPE), (lhs, inst) -> lst(inst.arg(0).stream().map(o -> o.apply(lhs)).collect(new CommonUtil.LstCollector()))),
                     docWrap(instC(CHOOSE_INST_TID.dom(ALL).rng(REL_TID.maybe()), lst(T(REC_TID)), (lhs, inst) -> inst.arg(0).<Rec>as().elements().map(Obj::<Rel>as).map(e -> e.<Rel>jvm(Tuple.Pair.with(e.first().apply(lhs), e.second()))).filter(e -> !e.first().isNoObj()).findFirst().map(e -> e.<Obj>jvm(Tuple.Pair.with(e.first(), e.second().apply(lhs)))).orElse(noobj())),
                             "any obj", "the split as an objs", Map.of(jnt(0), "the branches"), "a branching function f(x):g(a)->a',g(b)->b',..."),
                     instC(MERGE_INST_TID.dom(A.maybeSome()).rng(LST_TID), lst(T(LST_TID)), (lhs, inst) -> inst.arg(0).jvm(Stream.concat(lhs.stream(), inst.arg(0).elements()).toList())),
@@ -1332,10 +1333,22 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             """
                             parse('[a=>[b=>c]]')                     [-- [a=>[b=>c]]  --]
                             """),
-                    instC(SWAP_INST_TID.dom(A).rng(A), lst(T(B)), (lhs, inst) -> {
-                        final Obj newLHS = inst.arg(0).isInst() ? inst.arg(0).asInst().arg(0) : inst.arg(0);
-                        return inst.arg(0).isInst() ? inst.arg(0).asInst().args(lst(lhs)).apply(newLHS) : lhs.apply(newLHS);
-                    }),
+                    docWrap(instC(SWAP_INST_TID.dom(A).rng(A), lst(T(B)), (lhs, inst) -> {
+                                final boolean swapInstArg = inst.arg(0).isCall() && !inst.arg(0).asCall().insts().getFirst().tid().equals(BLOCK_INST_TID);
+                                final Obj newLHS = swapInstArg ? inst.arg(0).asCall().insts().getFirst().arg(0) : inst.arg(0);
+                                return swapInstArg ? inst.arg(0).asCall().insts().getFirst().args(lst(lhs)).apply(newLHS) : lhs.apply(newLHS);
+                            }), "the lhs to swap for the swap arg",
+                            "the result of applying the swap arg to the lhs",
+                            Map.of(jnt(0), "a obj to make the lhs"),
+                            """
+                            takes the swap argument and makes it the lhs obj.
+                            if the argument is an inst, then the original lhs becomes the inst arg and the inst arg becomes the lhs.
+                            if an inst arg is wanted for the swap application, then it must be blocked (|) so as to delay its evaluation.""",
+                            // if an inst arg is double blocked, then the inst arg is treated as a value and applied to the original lhs obj.
+                            "abc.mult(xyz)             [-- abc/xyz --]",
+                            "abc.swap(|mult(xyz))      [-- xyz/abc --]",
+                            "|-<[_,_].swap(6)          [-- [6,6]   --]"),
+                    //  "|-<[_,_].swap(||mult(_))  [-- [mult(_),mult(_)] --]"
                     //instC(RSHIFT_INST_TID.dom(ALL).rng(URI_TID.maybe()), lst(uri("vid")), (lhs, inst) -> null == lhs.vid() ? noobj() : lhs.vid().toUri()),
                     instC(RSHIFT_INST_TID.dom(A).rng(B.maybeSome()), lst(T(C.maybeSome())), (lhs, inst) -> {
                         if (lhs.isRec())

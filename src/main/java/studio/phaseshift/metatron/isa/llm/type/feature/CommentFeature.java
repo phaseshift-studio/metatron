@@ -43,7 +43,7 @@ import static studio.phaseshift.metatron.isa.mach.type.thread.VirtualThread.virt
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class CommentFeature extends Feature {
+public class CommentFeature extends AbstractFeature {
 
     public CommentFeature(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);

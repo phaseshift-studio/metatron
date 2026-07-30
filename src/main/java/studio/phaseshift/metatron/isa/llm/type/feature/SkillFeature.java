@@ -19,8 +19,9 @@ import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.SKILL;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst0;
 
-public class SkillFeature extends Feature {
+public class SkillFeature extends AbstractFeature {
 
     public SkillFeature(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
@@ -31,25 +32,31 @@ public class SkillFeature extends Feature {
 
         // Collect skills from features that have the skill() method
         for (final Obj entry : agent.features().asLst().elements().toList()) {
-            final Lst skillObj = entry instanceof Feature ? ((Feature) entry).skill() : entry.isRec() ? entry.asRec().at(SKILL).orElse(lst()) : lst();
-            if (skillObj.isNoObj() || skillObj.asLst().isEmpty()) continue;
-            try {
-                skillObj.asLst().elements().forEach(s -> {
-                    final Skill skill = mSkill.of(s.asRec()).toSkill();
-                    allSkills.add(skill);
-                    agent.logger().info("adding %s skill from feature %s", skill.name(), entry.tid());
-                });
-            } catch (final Exception e) {
-                agent.logger().warn("failed to build skill from feature %s: %s", entry.tid(), e.getMessage());
+            if (entry != agent.feature(SKILL)) {
+                Lst skillObj = lst0().zero();
+                if (entry instanceof Feature feat)
+                    skillObj = feat.skill();
+                if (skillObj.isNoObj() || skillObj.asLst().isEmpty())
+                    skillObj = entry.asRec().at(SKILL).orElse(lst());
+                if (skillObj.isNoObj() || skillObj.asLst().isEmpty()) continue;
+                try {
+                    skillObj.asLst().elements().forEach(s -> {
+                        final Skill skill = mSkill.of(s.asRec()).toSkill();
+                        allSkills.add(skill);
+                        agent.logger().info("adding %s skill from feature %s", skill.name(), entry.tid());
+                    });
+                } catch (final Exception e) {
+                    agent.logger().warn("failed to build skill from feature %s: %s", entry.tid(), e.getMessage());
+                }
             }
         }
 
         // Also collect skills from the SkillFeature config
         final Obj skillFeat = agent.feature(SKILL);
         if (!skillFeat.isNoObj()) {
-            final Lst skillsObj = skillFeat.asRec().atLst(SKILL);
-            if (!skillsObj.isEmpty()) {
-                skillsObj.elements()
+            final Lst skillLst = skillFeat.asRec().at(SKILL).orElse(lst());
+            if (!skillLst.isEmpty()) {
+                skillLst.elements()
                         .map(s -> s.isUri() ?
                                 mSkill.of(fsSpace.staticObjToFile(s)).toSkill() :
                                 mSkill.of(s.apply().asRec()).toSkill())

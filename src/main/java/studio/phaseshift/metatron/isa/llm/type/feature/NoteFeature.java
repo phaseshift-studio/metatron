@@ -5,7 +5,7 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 
 import java.util.Map;
 
-public class NoteFeature extends Feature {
+public class NoteFeature extends AbstractFeature {
     public NoteFeature(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
     }

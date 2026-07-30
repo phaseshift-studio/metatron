@@ -13,16 +13,14 @@ import studio.phaseshift.metatron.isa.mach.type.Router;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SESSION_FEATURE_TID;
+import static studio.phaseshift.metatron.Tokens.SESSION;
+import static studio.phaseshift.metatron.Tokens.TEXT;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.SYSTEM_MESSAGE_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRec.noobjRec;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
-public class SystemFeature extends Feature {
+public class SystemFeature extends AbstractFeature {
 
     public SystemFeature(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
@@ -34,7 +32,7 @@ public class SystemFeature extends Feature {
         if (!systemMessage.isBlank())
             service.systemMessage(systemMessage);
     }
-    
+
     @Override
     public Obj onBeforeChat(final Agent agent) {
         // System messages are accumulated via agent.addSystemMessage() —

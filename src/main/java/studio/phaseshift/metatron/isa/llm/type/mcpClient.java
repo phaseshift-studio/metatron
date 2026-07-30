@@ -37,11 +37,10 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Str;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
-import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
 import studio.phaseshift.metatron.isa.web.parser.ObjPlainTextSerializer;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
@@ -121,12 +120,12 @@ public class mcpClient extends MRec {
                                             .arguments(inst2.args().isEmpty() ?
                                                     null :
                                                     inst2.args().isRec() ?
-                                                    new String(ObjJSONSerializer.simple()
-                                                            .outputBytes(inst2.args())
-                                                            .array()) :
-                                                    new String(ObjJSONSerializer.simple()
-                                                            .outputBytes(Inst.Helper.rectifyLstArgs(inst2.args().asLst(), evaluationArgs))
-                                                            .array()))
+                                                            new String(ObjJSONSerializer.simple()
+                                                                    .outputBytes(inst2.args())
+                                                                    .array()) :
+                                                            new String(ObjJSONSerializer.simple()
+                                                                    .outputBytes(Inst.Helper.rectifyLstArgs(inst2.args().asLst(), evaluationArgs))
+                                                                    .array()))
                                             .build());
                             if (result.isError())
                                 return fail(result.resultText());
@@ -213,7 +212,7 @@ public class mcpClient extends MRec {
 
             }
         }
-        throw MTronException.of("unsupported transport for %s: %s %s", host, transport, headers);
+        throw MTronException.of("unsupported transport for host:%s transport:%s headers:%s command:%s", host, transport, headers, command);
     }
 
 }

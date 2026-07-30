@@ -18,10 +18,7 @@
 
 package studio.phaseshift.metatron.isa.llm.type.feature;
 
-import dev.langchain4j.service.AiServices;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.llm.type.Agent;
-import studio.phaseshift.metatron.isa.llm.type.AgentServices;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 
 import java.util.Map;
@@ -29,7 +26,7 @@ import java.util.Map;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class EmbedFeature extends Feature {
+public class EmbedFeature extends AbstractFeature {
 
     public EmbedFeature(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);

@@ -18,7 +18,6 @@
 
 package studio.phaseshift.metatron.isa.llm.type;
 
-import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.model.chat.request.json.*;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -27,12 +26,11 @@ import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.JsonSchemaGenerator;
-import studio.phaseshift.metatron.isa.llm.space.SpaceChatSessionStore;
+import studio.phaseshift.metatron.isa.llm.type.feature.AbstractFeature;
 import studio.phaseshift.metatron.isa.llm.type.feature.Feature;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.tble.tbleSpace;
-import studio.phaseshift.metatron.util.MTronException;
 
 import java.io.File;
 import java.sql.Connection;
@@ -48,13 +46,10 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
 import static studio.phaseshift.metatron.isa.llm.type.Agent.feat;
 import static studio.phaseshift.metatron.isa.llm.type.Agent.res;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_at_;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
-import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.tble.tbleInstSet.TBLE_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Real.REAL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Rec.REC_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
@@ -67,6 +62,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MRec.noobjRec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.tble.tbleInstSet.TBLE_ISA_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /*
@@ -299,7 +295,9 @@ public class AgentTest extends AbstractMetatronTest {
     //  Lifecycle hook dispatch tests
     // ========================================================================
 
-    /** Fixture: agent with a single ObservedTestFeature — no LLM needed. */
+    /**
+     * Fixture: agent with a single ObservedTestFeature — no LLM needed.
+     */
     private Agent agentWithObserver() {
         final Map<Obj, Obj> map = new LinkedHashMap<>();
         map.put(uri(NAME), uri("observer-agent"));
@@ -315,10 +313,10 @@ public class AgentTest extends AbstractMetatronTest {
 
         // Manually dispatch onBeforeChat via JVM key — no chat() needed
         final Obj f = features.getFirst();
-        assertTrue(f instanceof Feature, "observed feature should be a Feature instance");
+        assertTrue(f instanceof Feature, "observed feature should be a Feature instance: %s".formatted(f));
 
         final Obj hook = ((Poly) f).at(uri(ON_BEFORE_CHAT));
-        assertFalse(hook.isNoObj(), "onBeforeChat hook should be registered");
+        assertFalse(hook.isNoObj(), "onBeforeChat hook should be registered: %s".formatted(f));
 
         final Obj result = hook.apply(a);
         assertTrue(result.isNoObj(), "observer onBeforeChat should return noobj (no short-circuit)");
@@ -375,7 +373,8 @@ public class AgentTest extends AbstractMetatronTest {
         map.put(uri(NAME), uri("short-circuit-agent"));
 
         // Feature that short-circuits on onBeforeChat
-        final Feature blocker = new Feature(new LinkedHashMap<>(), feat("blocker"), null) {};
+        final AbstractFeature blocker = new AbstractFeature(new LinkedHashMap<>(), feat("blocker"), null) {
+        };
         blocker.at(uri(ON_BEFORE_CHAT), instLambda((agent, ignored) ->
                 str("blocked-by-test")), MUTABLE);
         map.put(uri(FEATURE), lst(blocker));
@@ -398,7 +397,8 @@ public class AgentTest extends AbstractMetatronTest {
     @Test
     public void testMissingHookIsSilentNoop() {
         // A plain Feature with no hooks registered — dispatch should be a noop chain
-        final Feature empty = new Feature(new LinkedHashMap<>(), feat("empty"), null) {};
+        final AbstractFeature empty = new AbstractFeature(new LinkedHashMap<>(), feat("empty"), null) {
+        };
 
         // noobj chain: at(key) → noobj().args(lst(...)) → noobj().apply(agent) → noobj
         final Obj hook = ((Poly) empty).at(uri(ON_BEFORE_CHAT));

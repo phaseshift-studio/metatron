@@ -21,7 +21,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * message injection (no tool needed) and writes updates via
  * {@code <<mtron:ledger>>} blocks at end of response.
  */
-public class LedgerFeature extends Feature {
+public class LedgerFeature extends AbstractFeature {
 
     public static final String LEDGER = "ledger";
 

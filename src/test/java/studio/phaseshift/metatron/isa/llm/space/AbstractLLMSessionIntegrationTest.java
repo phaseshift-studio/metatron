@@ -121,7 +121,7 @@ public abstract class AbstractLLMSessionIntegrationTest extends AbstractMetatron
         // SessionFeature.onBeforeChat() persists the session policy row on first chat
         this.agent = buildAgent();
         this.sessionStore = new SpaceChatSessionStore(this.agent, this.space);
-        // Add a system message — gets mirrored to llm_message_system
+        // Add a system message — gets mirrored to the unified message table
         this.agent.addSystemMessage("You are a helpful test assistant.");
     }
 
@@ -270,12 +270,12 @@ public abstract class AbstractLLMSessionIntegrationTest extends AbstractMetatron
 
         final fURI basePath = sessionVID().retract(2);  // strip entry + collection → scheme/prefix root
 
-        // ── Verify unified llm_message table ──────────────────────
+        // ── Verify unified message table ──────────────────────
         // Messages are stored in a single polymorphic table with _tid column.
-        // Verify that system, user, and ai messages all land in llm_message.
-        assertCollectionHasType(basePath, "llm_message", SYSTEM_MESSAGE_TID, "system", 1, 1);
-        assertCollectionHasType(basePath, "llm_message", USER_MESSAGE_TID, "user", 3, 3);
-        assertCollectionHasType(basePath, "llm_message", AI_MESSAGE_TID, "ai", 3, 3);
+        // Verify that system, user, and ai messages all land in message.
+        assertCollectionHasType(basePath, "message", SYSTEM_MESSAGE_TID, "system", 1, 1);
+        assertCollectionHasType(basePath, "message", USER_MESSAGE_TID, "user", 3, 3);
+        assertCollectionHasType(basePath, "message", AI_MESSAGE_TID, "ai", 3, 3);
 
         // ── Store remains authoritative ───────────────────────────
         assertTrue(sessionStore.getMessages(sessionVID()).size() >= 6,
@@ -351,7 +351,7 @@ public abstract class AbstractLLMSessionIntegrationTest extends AbstractMetatron
 
 
     /**
-     * Validate that the unified llm_message table contains messages of a given TID.
+     * Validate that the unified message table contains messages of a given TID.
      * Reads all rows from the table and filters by rec.tid() (populated from _tid column).
      */
     private void assertCollectionHasType(final fURI basePath, final String tableName,

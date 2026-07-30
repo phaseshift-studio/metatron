@@ -29,7 +29,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * The Agent writes the parsed Rec to {@code res("loop")}.
  * LoopFeature reads it here and kicks off the next iteration.
  */
-public class LoopFeature extends Feature {
+public class LoopFeature extends AbstractFeature {
 
     private static final fURI LOOP = res("loop");
     private static final fURI LOOP_RESULTS = res("loop_results");

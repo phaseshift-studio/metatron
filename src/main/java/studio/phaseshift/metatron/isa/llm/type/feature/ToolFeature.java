@@ -6,15 +6,14 @@ import dev.langchain4j.mcp.client.McpClient;
 import dev.langchain4j.service.AiServices;
 import dev.langchain4j.service.tool.ToolExecutor;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
 import studio.phaseshift.metatron.isa.llm.type.AgentServices;
 import studio.phaseshift.metatron.isa.llm.type.mTool;
 import studio.phaseshift.metatron.isa.llm.type.mcpClient;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
-import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
+import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.ArrayList;
@@ -23,12 +22,10 @@ import java.util.List;
 import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.furi.q.QCollection.DOCQ;
-import static studio.phaseshift.metatron.isa.llm.type.mTool.LLM_TOOL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.web.webInstSet.MCP_CLIENT_TYPE;
 
-public class ToolFeature extends Feature {
+public class ToolFeature extends AbstractFeature {
 
     public ToolFeature(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
@@ -44,13 +41,13 @@ public class ToolFeature extends Feature {
                     if (t.isRec() && t.test(MCP_CLIENT_TYPE)) {
                         mcpClients.add(Rec.wrap(t.as(), mcpClient.class).client());
                     } else if (t.isObjInst()) {
-                       // if (!QCollection.isNoDocs(Router.readFromSpace(t.tid().addQ(DOCQ)))) {
-                            final Tuple.Pair<ToolSpecification, ToolExecutor> pair =
-                                    mTool.mtronInstToolSpecification(mTool.mtronInstToTool(t.asInst()));
-                            tools.put(pair.get0(), pair.get1());
-                     //   } else {
-                            // TODO: handle when a tool doesn't have docs
-                     //   }
+                        // if (!QCollection.isNoDocs(Router.readFromSpace(t.tid().addQ(DOCQ)))) {
+                        final Tuple.Pair<ToolSpecification, ToolExecutor> pair =
+                                mTool.mtronInstToolSpecification(mTool.mtronInstToTool(t.asInst()));
+                        tools.put(pair.get0(), pair.get1());
+                        //   } else {
+                        // TODO: handle when a tool doesn't have docs
+                        //   }
                     } /*else if (t.isRec() && t.test(LLM_TOOL_TYPE)) {
                         final Tuple.Pair<ToolSpecification, ToolExecutor> pair =
                                 mTool.mtronInstToolSpecification(t.asRec());
@@ -76,7 +73,7 @@ public class ToolFeature extends Feature {
                     ObjJSONSerializer.simple().inputBytes(r.at(uri(TOOL_ARGUMENTS)).strValue()),
                     r.at(uri(RESULT)).strValue());
         } else {
-            this.logger().info("tool executed: %s",result);
+            this.logger().info("tool executed: %s", CommonUtil.clipString(result.toString(), 50, true));
         }
     }
 }

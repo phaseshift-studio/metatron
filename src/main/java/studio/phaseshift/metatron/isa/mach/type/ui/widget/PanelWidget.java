@@ -74,6 +74,16 @@ public class PanelWidget extends JRec<PanelWidget> implements Widget<PanelWidget
 
     public PanelWidget(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
+        readStyle(this.jvm());
+    }
+
+    private void readStyle(final Map<Obj, Obj> jvm) {
+        final Obj s = jvm.get(uri("style"));
+        if (s != null && s.isRec()) {
+            final Style<PanelWidget> st = Style.from(s.as());
+            st.stylable = this;
+            this.style(st);
+        }
     }
 
     private void sync() {

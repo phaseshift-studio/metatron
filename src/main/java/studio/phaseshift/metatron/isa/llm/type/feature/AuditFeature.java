@@ -27,9 +27,9 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * plain text table string and an interactive {@link TableWidget}
  * for terminal rendering.
  */
-public class AuditFeature extends Feature {
+public class AuditFeature extends AbstractFeature {
 
-    private static final fURI AUDIT = res("audit");
+    private static final fURI AUDIT_RESULT = res("audit");
     private static final List<String> HEADERS = List.of("phase", "detail");
 
     public AuditFeature(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
@@ -41,14 +41,14 @@ public class AuditFeature extends Feature {
     @Override
     public Obj onBeforeChat(final Agent agent) {
         this.trail.clear();
-        agent.at(AUDIT, noobj(), MUTABLE);
+        agent.at(AUDIT_RESULT, noobj(), MUTABLE);
         snapshot(agent, "before_chat",
                 rec(uri("features"), jnt(agent.features().lstValue().size()),
                         uri("systemMsgs"), jnt(agent.getSystemMessages().size())));
-        agent.feature("audit").asRec().at(TO).apply(str("""
-                                                        sys message: %s
-                                                        prompt     : %s
-                                                        """.formatted(agent.getSystemMessages().stream().collect(Collectors.joining()), agent.userMessage())));
+        agent.feature(AUDIT).asRec().at(TO).apply(str("""
+                                                      {{_}}{{g}}system{{/g}}{{/_}}: %s
+                                                      {{_}}{{g}}prompt{{/g}}{{/_}}: %s
+                                                      """.formatted(agent.getSystemMessages().stream().collect(Collectors.joining()), agent.userMessage())));
         return noobj();
     }
 
@@ -92,7 +92,7 @@ public class AuditFeature extends Feature {
         final List<Rec> rows = this.trail;
 
         // Persist trail as Lst
-        agent.at(AUDIT, lst(rows.stream().map(r -> (Obj) r).toList()), MUTABLE);
+        agent.at(AUDIT_RESULT, lst(rows.stream().map(r -> (Obj) r).toList()), MUTABLE);
 
         // Build plain text table
         final StringBuilder sb = new StringBuilder();

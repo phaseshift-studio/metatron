@@ -1,6 +1,7 @@
 # Connecting Data Sources
 
 ## Workflow
+
 1. Understand source (type, format, location)
 2. Study schema
 3. Create `!*` reference
@@ -9,6 +10,7 @@
 ## Key Concept: Pattern & Route
 
 Every space has:
+
 - **pattern** — what URIs route to this space (e.g., `local:#`, `acme:#`)
 - **route** — how URIs transform for the space's internal schema
 
@@ -19,11 +21,13 @@ Every space has:
 */sys/space/${space}.route               # just the route
 ```
 
-It's best to first study the data sources by reviewing their schema. However, not all data sources have an associated schema. In such cases, limit the amount of data accessed via `*{pattern}/+.take(10)` (eg. get the first 10 results).
+It's best to first study the data sources by reviewing their schema. However, not all data sources have an associated
+schema. In such cases, limit the amount of data accessed via `*{pattern}/+.take(10)` (eg. get the first 10 results).
 
 **Don't hardcode prefixes!** Discover them from the space config.
 
 Example: If `fs` space has `pattern=>local:#` and `route=>[local:=>~/]`:
+
 - URIs starting with `local:` go to the fs space
 - `local:` is stripped and replaced with `~/` internally
 - Query: `*<local:path/to/file>` → reads `~/path/to/file`
@@ -31,7 +35,7 @@ Example: If `fs` space has `pattern=>local:#` and `route=>[local:=>~/]`:
 ## Universal (all environments)
 
 ```mtron
-*/sys/space/+/                           # List all spaces
+*/sys/space/+/+/                         # List all spaces
 */sys/space/${space}                     # View space config
 !*<uri>                                  # Create reference (lazy)
 *<uri>                                   # Dereference (evaluate)
@@ -40,6 +44,7 @@ Example: If `fs` space has `pattern=>local:#` and `route=>[local:=>~/]`:
 ## Connection Patterns (adapt to user's environment)
 
 ### SQL (tabledb)
+
 ```mtron
 tabledb::[
   pattern=>${prefix}:#,
@@ -50,6 +55,7 @@ tabledb::[
 ```
 
 ### MongoDB (docdb)
+
 ```mtron
 docdb::[
   pattern=>${prefix}:#,
@@ -60,6 +66,7 @@ docdb::[
 ```
 
 ### Graph (graphdb)
+
 ```mtron
 graphdb::[
   pattern=>${prefix}:#,
@@ -68,6 +75,7 @@ graphdb::[
 ```
 
 ### MQTT
+
 ```mtron
 mqtt::[
   pattern=>${prefix}:#,
@@ -96,6 +104,7 @@ mqtt::[
 ```
 
 ## Validation
+
 ```mtron
 # Use the pattern prefix discovered from the space
 *<${pattern_prefix}resource>.*(_).limit(5)
@@ -103,8 +112,8 @@ mqtt::[
 
 ## Common Issues
 
-| Issue | Solution |
-|-------|----------|
-| Timeout | Verify host/port |
+| Issue         | Solution                 |
+|---------------|--------------------------|
+| Timeout       | Verify host/port         |
 | Type mismatch | Specify types explicitly |
-| Auth error | Check credentials |
+| Auth error    | Check credentials        |

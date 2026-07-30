@@ -549,10 +549,23 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
         if (fk != null) {
             final Object fkValue = rs.getObject(col.name);
             if (fkValue != null && !rs.wasNull()) {
-                final fURI referencedPath = buildFKReferencePath(fk.targetPath(), fkValue.toString());
-                return auto_from_(referencedPath).tryToInst();
+                final String fkStr = fkValue.toString();
+                // If the stored value is a JSON list (e.g. "[!*/usr/dr/message/4,...]"),
+                // skip FK wrapping entirely — the column stores a list, not a single
+                // reference.  Fall through to the type-aware reader.
+                if (!fkStr.startsWith("[")) {
+                    // If the value is already an absolute path, return it as a plain URI
+                    // without auto_from wrapping (e.g. "/usr/dr/session/1" stored by caller).
+                    if (fkStr.startsWith("/") || fkStr.indexOf(':') >= 0) {
+                        return uri(fkStr);
+                    }
+                    final fURI referencedPath = buildFKReferencePath(fk.targetPath(), fkStr);
+                    return auto_from_(referencedPath).tryToInst();
+                }
+                // JSON list: fall through to type-aware reader below
+            } else {
+                return noobj();
             }
-            return noobj();
         }
 
         // BOOLEAN stored as INTEGER (SQLite): handle before delegating to the
@@ -577,6 +590,11 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
      * We extract the table part (before /+) and append the row ID.
      */
     private fURI buildFKReferencePath(final String targetPath, final String rowId) {
+        // If the rowId is already an absolute URI (e.g. "/usr/dr/session/1"),
+        // use it directly — don't prepend the space pattern and table name.
+        if (rowId.startsWith("/") || rowId.indexOf(':') >= 0) {
+            return f(rowId);
+        }
         final int sepIdx = targetPath.indexOf("/+");
         if (sepIdx > 0) {
             final String refTable = targetPath.substring(0, sepIdx);

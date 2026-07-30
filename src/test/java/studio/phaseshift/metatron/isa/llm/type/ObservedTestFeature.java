@@ -19,12 +19,11 @@
 package studio.phaseshift.metatron.isa.llm.type;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.llm.type.feature.Feature;
+import studio.phaseshift.metatron.isa.llm.type.feature.AbstractFeature;
 import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -34,7 +33,6 @@ import static studio.phaseshift.metatron.isa.llm.type.Agent.res;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
@@ -46,7 +44,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * Hooks are self-registered via {@code instLambda} wrappers in the
  * constructor — no ISA or Type registration needed.
  */
-public class ObservedTestFeature extends Feature {
+public class ObservedTestFeature extends AbstractFeature {
 
     private static final fURI AUDIT = res("_audit");
 
@@ -71,33 +69,33 @@ public class ObservedTestFeature extends Feature {
                 this.audit((Agent) agent, "onBeforeChat")), MUTABLE);
 
         this.at(uri(ON_PARTIAL_RESPONSE), instLambda((agent, i) -> {
-                this.audit((Agent) agent, "onPartialResponse", i.arg(0));
-                return noobj();
+            this.audit((Agent) agent, "onPartialResponse", i.arg(0));
+            return noobj();
         }), MUTABLE);
 
         this.at(uri(ON_PARTIAL_THINKING), instLambda((agent, i) -> {
-                this.audit((Agent) agent, "onPartialThinking", i.arg(0));
-                return noobj();
+            this.audit((Agent) agent, "onPartialThinking", i.arg(0));
+            return noobj();
         }), MUTABLE);
 
         this.at(uri(ON_PARTIAL_TOOL_CALL), instLambda((agent, i) -> {
-                this.audit((Agent) agent, "onPartialToolCall", i.arg(0));
-                return noobj();
+            this.audit((Agent) agent, "onPartialToolCall", i.arg(0));
+            return noobj();
         }), MUTABLE);
 
         this.at(uri(ON_TOOL_EXECUTED), instLambda((agent, i) -> {
-                this.audit((Agent) agent, "onToolExecuted", i.arg(0));
-                return noobj();
+            this.audit((Agent) agent, "onToolExecuted", i.arg(0));
+            return noobj();
         }), MUTABLE);
 
         this.at(uri(ON_COMPLETE_RESPONSE), instLambda((agent, i) -> {
-                this.audit((Agent) agent, "onCompleteResponse", i.arg(0));
-                return noobj();
+            this.audit((Agent) agent, "onCompleteResponse", i.arg(0));
+            return noobj();
         }), MUTABLE);
 
         this.at(uri("onError"), instLambda((agent, i) -> {
-                this.audit((Agent) agent, "onError", i.arg(0));
-                return noobj();
+            this.audit((Agent) agent, "onError", i.arg(0));
+            return noobj();
         }), MUTABLE);
     }
 
@@ -113,14 +111,18 @@ public class ObservedTestFeature extends Feature {
 
     // ── Audit accessor ─────────────────────────────────────────────
 
-    /** Read the full audit trail from the Agent's result blackboard. */
+    /**
+     * Read the full audit trail from the Agent's result blackboard.
+     */
     public static List<Rec> auditTrail(final Agent agent) {
         final Obj trail = agent.at(AUDIT);
         if (trail.isNoObj()) return List.of();
         return trail.asLst().lstValue().stream().map(Obj::asRec).toList();
     }
 
-    /** Read the audit trail from a chat result Rec. */
+    /**
+     * Read the audit trail from a chat result Rec.
+     */
     public static List<Rec> auditTrail(final Rec result) {
         final Obj trail = result.at(AUDIT);
         if (trail.isNoObj()) return List.of();

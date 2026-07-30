@@ -375,6 +375,81 @@ Each backend provides a `DatabaseConfig` with DDL templates, boolean literal rep
 use `@ParameterizedTest` with a static `@BeforeAll` that seeds 10 rows into `rewrite_test(id, value, name, active)` plus
 additional tables (`users`, `products`, `companies`, `people`).
 
+## Foreign key inference
+
+`ExistingTableSchema` infers foreign key relationships through three mechanisms and wraps FK column values
+in `auto_from_()` on read so they resolve lazily to the referenced row.
+
+### Discovery mechanisms
+
+1. **JDBC metadata** (`discoverReferencesAndRegister`): reads `DatabaseMetaData.getImportedKeys()` for SQL-level
+   `REFERENCES` constraints.
+2. **`_mtron_meta` persistence** (`loadMetaTable`): reads FK registrations persisted by `persistColumnType()`.
+   Survives restarts.
+3. **Naming convention** (`discoverFKByConvention` + `inferFKByConvention`): a column whose name matches another
+   table name (case-insensitive, with or without trailing "s") is treated as a FK.  Examples:
+   - `people.company` → table `companies`
+   - `message.session` → table `session`
+
+The lazy path (`inferFKByConvention`) fires at **read time** — if a column hasn't been registered as a FK yet,
+it checks naming convention on the first read and registers the FK permanently.
+
+### FK target path
+
+`FKTarget.targetPath` is `"tableName/+/columnName"` — e.g. `"session/+/id"`.  `buildFKReferencePath()` strips the
+`/+columnName` suffix to get the target table, then prepends the space's pattern to build the full reference path.
+
+### Path construction and the scheme-vs-path trap
+
+`buildFKReferencePath()` constructs the FK reference path by prepending `space.pattern().retractPattern()` (the
+space's base path) to the target table name and row ID:
+
+```java
+// For space pattern </usr/dr/#>:
+this.space.pattern().retractPattern()  // → /usr/dr/
+    .extend(refTable)                   // → /usr/dr/session
+    .extend(rowId);                     // → /usr/dr/session/1   ← correct when rowId is bare PK
+```
+
+**Critical distinction**: scheme-based patterns (`drdb:#`) vs path-based patterns (`/usr/dr/#`):
+
+| Pattern | Bare PK `1` → FK path | Absolute value `/usr/dr/session/1` in column | Problem |
+|---------|----------------------|---------------------------------------------|---------|
+| `drdb:#` | `drdb:session/1` | `drdb:session/1` (scheme prefix distinguishes) | None — easy to distinguish |
+| `/usr/dr/#` | `/usr/dr/session/1` | `/usr/dr/session//usr/dr/session/1` | **Path doubling** — can't tell bare PK from absolute path |
+
+When callers store full URIs (e.g. `uri(/usr/dr/session/1)`) in FK columns instead of bare primary keys (e.g. `1`),
+the path-based pattern can't distinguish them — both look like path segments.
+
+### `readColumnWithMetadata` guards
+
+Three guards prevent FK miswrapping in `readColumnWithMetadata()`:
+
+| Guard | Value example | Action | Why |
+|-------|-------------|--------|-----|
+| Starts with `/` | `/usr/dr/session/1` | Return plain `uri()` — no FK wrapping | Caller stored a full URI, not a bare PK |
+| Contains `:` | `drdb:session/1` | Return plain `uri()` — no FK wrapping | Scheme-based absolute path |
+| Starts with `[` | `[!*/usr/dr/msg/4,...]` | Skip FK, fall through to type reader | JSON list of references, not a single FK |
+
+Without these guards, three bugs occur:
+1. Absolute paths get doubled (`/usr/dr/session//usr/dr/session/1`)
+2. Plain URIs get wrapped in unnecessary `auto_from_` (`session=>!*/usr/dr/session/1` instead of `session=>/usr/dr/session/1`)
+3. JSON lists get treated as single FK path segments (`!*/usr/dr/message/[...]`)
+
+### FK persistence in `_mtron_meta`
+
+`persistColumnType()` writes FK info to `_mtron_meta.ref_table`. When reading rows, `processMetaRow()` calls
+`registerOrPendingFK()` which registers with `SQLSchemaGenerator.registerFK()`. The `ref_table` column stores
+only the target table name (e.g. `"session"`), not a full path — `buildFKReferencePath()` reconstructs the path
+at read time.
+
+### When to avoid FK columns
+
+If a column stores a **list** of references (e.g. `message => [!*/usr/dr/msg/1, !*/usr/dr/msg/2]`), the column
+should NOT have a FK inferred. The naming convention may still match (e.g. column `message` matches table `message`),
+but the `[` guard in `readColumnWithMetadata` prevents miswrapping. For new schemas, consider naming list-of-reference
+columns differently from their target tables to avoid the convention match entirely.
+
 ## See also
 
 - `rewrite-system-java.md` — RewriteBuilder, Rewriter, Code.rewrite () loop

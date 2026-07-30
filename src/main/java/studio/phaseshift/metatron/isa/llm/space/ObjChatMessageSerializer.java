@@ -26,7 +26,10 @@ import dev.langchain4j.data.pdf.PdfFile;
 import dev.langchain4j.data.video.Video;
 import studio.phaseshift.metatron.TokenMapper;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.m.type.Lst;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.m.type.Str;
 import studio.phaseshift.metatron.isa.mach.io.type.AbstractObjSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.util.MTronException;
@@ -36,10 +39,8 @@ import java.util.*;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
-import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBytes.bytes;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
@@ -62,7 +63,7 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  * All text is stored as <b>raw plain strings</b> in the Rec — no mtron
  * quoting.  Legacy data that was stored with mtron-encoded text
  * ({@code '...'}, {@code """..."""}) is decoded transparently during
- * {@link #write(Obj)} via {@link #decodeText(String)}.
+ * {@link #write(Obj)}.
  */
 public class ObjChatMessageSerializer extends AbstractObjSerializer<ChatMessage> {
 
@@ -75,16 +76,16 @@ public class ObjChatMessageSerializer extends AbstractObjSerializer<ChatMessage>
     private static final String IMG = "image";
     private static final String AUD = "audio";
     private static final String VID = "video";
-    private static final String PF  = "pdf";
+    private static final String PF = "pdf";
 
     // -- Known structural field sets per message type --
     // Fields NOT in these sets are treated as attributes during Rec→ChatMessage
     // conversion.  System fields (hash, time, session) are stripped by the
     // store and never reach extractAttributes.
 
-    private static final Set<String> SYSTEM_KNOWN_KEYS    = Set.of(TEXT);
-    private static final Set<String> USER_KNOWN_KEYS      = Set.of(NAME, CONTENTS);
-    private static final Set<String> AI_KNOWN_KEYS        = Set.of(TEXT, THINKING, TOOL_REQUESTS);
+    private static final Set<String> SYSTEM_KNOWN_KEYS = Set.of(TEXT);
+    private static final Set<String> USER_KNOWN_KEYS = Set.of(NAME, CONTENTS);
+    private static final Set<String> AI_KNOWN_KEYS = Set.of(TEXT, THINKING, TOOL_REQUESTS);
     private static final Set<String> TOOL_RESULT_KNOWN_KEYS = Set.of(TEXT, ID, NAME);
 
     // -- Token vocabulary ----------------------------------------------------
@@ -144,16 +145,15 @@ public class ObjChatMessageSerializer extends AbstractObjSerializer<ChatMessage>
      */
     @Override
     public Obj read(final ChatMessage message) {
-        if (message instanceof SystemMessage msg)
-            return fromSystemMessage(msg);
-        if (message instanceof UserMessage msg)
-            return fromUserMessage(msg);
-        if (message instanceof AiMessage msg)
-            return fromAiMessage(msg);
-        if (message instanceof ToolExecutionResultMessage msg)
-            return fromToolResultMessage(msg);
-        throw MTronException.of("unsupported chat message type: %s [%s]",
-                message.type(), message.getClass().getSimpleName());
+        final Obj messageRec = switch (message) {
+            case SystemMessage msg -> fromSystemMessage(msg);
+            case UserMessage msg -> fromUserMessage(msg);
+            case AiMessage msg -> fromAiMessage(msg);
+            case ToolExecutionResultMessage msg -> fromToolResultMessage(msg);
+            default -> throw MTronException.of("unsupported chat message type: %s [%s]",
+                    message.type(), message.getClass().getSimpleName());
+        };
+        return messageRec;
     }
 
     // =========================================================================
@@ -215,7 +215,7 @@ public class ObjChatMessageSerializer extends AbstractObjSerializer<ChatMessage>
     }
 
     private static Rec fromMedia(final java.net.URI url, final String base64Data,
-                                  final String mimeType) {
+                                 final String mimeType) {
         final Map<Obj, Obj> map = new LinkedHashMap<>();
         if (url != null) map.put(uri(URL), uri(url.toString()));
         if (base64Data != null && !base64Data.isBlank())
@@ -286,7 +286,7 @@ public class ObjChatMessageSerializer extends AbstractObjSerializer<ChatMessage>
     }
 
     private static UserMessage toUserMessage(final Rec rec) {
-        final String name = Str.Helper.cleanString(rec.at(uri(NAME)).orElse(str("")));
+        final String name = Str.Helper.cleanString(rec.at(uri(NAME)).orElse(str("")), true);
         final String nameOrNull = name.isBlank() || "none".equals(name) ? null : name;
         final Map<String, Object> attrs = extractAttributes(rec, USER_KNOWN_KEYS);
 
@@ -330,31 +330,35 @@ public class ObjChatMessageSerializer extends AbstractObjSerializer<ChatMessage>
     private static Image toImage(final Rec rec) {
         final Image.Builder b = Image.builder();
         if (rec.has(uri(MIME_TYPE))) b.mimeType(rec.at(uri(MIME_TYPE)).strValue());
-        if (rec.has(uri(URL)))       b.url(rec.at(uri(URL)).strValue());
-        if (rec.has(uri(DATA)))      b.base64Data(Base64.getEncoder().encodeToString(rec.at(uri(DATA)).bytesValue().array()));
+        if (rec.has(uri(URL))) b.url(rec.at(uri(URL)).strValue());
+        if (rec.has(uri(DATA)))
+            b.base64Data(Base64.getEncoder().encodeToString(rec.at(uri(DATA)).bytesValue().array()));
         return b.build();
     }
 
     private static Audio toAudio(final Rec rec) {
         final Audio.Builder b = Audio.builder();
         if (rec.has(uri(MIME_TYPE))) b.mimeType(rec.at(uri(MIME_TYPE)).strValue());
-        if (rec.has(uri(URL)))       b.url(rec.at(uri(URL)).strValue());
-        if (rec.has(uri(DATA)))      b.base64Data(Base64.getEncoder().encodeToString(rec.at(uri(DATA)).bytesValue().array()));
+        if (rec.has(uri(URL))) b.url(rec.at(uri(URL)).strValue());
+        if (rec.has(uri(DATA)))
+            b.base64Data(Base64.getEncoder().encodeToString(rec.at(uri(DATA)).bytesValue().array()));
         return b.build();
     }
 
     private static Video toVideo(final Rec rec) {
         final Video.Builder b = Video.builder();
         if (rec.has(uri(MIME_TYPE))) b.mimeType(rec.at(uri(MIME_TYPE)).strValue());
-        if (rec.has(uri(URL)))       b.url(Str.Helper.cleanString(rec.at(uri(URL)).orElse(str(""))));
-        if (rec.has(uri(DATA)))      b.base64Data(Base64.getEncoder().encodeToString(rec.at(uri(DATA)).bytesValue().array()));
+        if (rec.has(uri(URL))) b.url(Str.Helper.cleanString(rec.at(uri(URL)).orElse(str("")), true));
+        if (rec.has(uri(DATA)))
+            b.base64Data(Base64.getEncoder().encodeToString(rec.at(uri(DATA)).bytesValue().array()));
         return b.build();
     }
 
     private static PdfFile toPdf(final Rec rec) {
         final PdfFile.Builder b = PdfFile.builder();
-        if (rec.has(uri(URL)))  b.url(rec.at(uri(URL)).strValue());
-        if (rec.has(uri(DATA))) b.base64Data(Base64.getEncoder().encodeToString(rec.at(uri(DATA)).bytesValue().array()));
+        if (rec.has(uri(URL))) b.url(rec.at(uri(URL)).strValue());
+        if (rec.has(uri(DATA)))
+            b.base64Data(Base64.getEncoder().encodeToString(rec.at(uri(DATA)).bytesValue().array()));
         return b.build();
     }
 
@@ -373,9 +377,9 @@ public class ObjChatMessageSerializer extends AbstractObjSerializer<ChatMessage>
                         final Rec trRec = tr.asRec();
                         final String argsToken = VOCAB.from(LLM_TOOL_TID, "arguments");
                         return ToolExecutionRequest.builder()
-                                .name(Str.Helper.cleanString(trRec.at(uri(NAME)).orElse(str(""))))
+                                .name(Str.Helper.cleanString(trRec.at(uri(NAME)).orElse(str("")), true))
                                 .arguments(trRec.at(uri(argsToken)).orElse(str("")).strValue())
-                                .id(Str.Helper.cleanString(trRec.at(uri(CONTENTS)).orElse(str(""))))
+                                .id(Str.Helper.cleanString(trRec.at(uri(CONTENTS)).orElse(str("")), true))
                                 .build();
                     })
                     .toList();
@@ -389,8 +393,8 @@ public class ObjChatMessageSerializer extends AbstractObjSerializer<ChatMessage>
         final Map<String, Object> attrs = extractAttributes(rec, TOOL_RESULT_KNOWN_KEYS);
         final String text = decodeText(rec, TEXT);
         return ToolExecutionResultMessage.builder()
-                .id(Str.Helper.cleanString(rec.at(uri(CONTENTS)).orElse(str(""))))
-                .toolName(Str.Helper.cleanString(rec.at(uri(nameToken)).orElse(str(""))))
+                .id(Str.Helper.cleanString(rec.at(uri(CONTENTS)).orElse(str("")), true))
+                .toolName(Str.Helper.cleanString(rec.at(uri(nameToken)).orElse(str("")), true))
                 .text(text)
                 .attributes(attrs)
                 .build();
@@ -426,7 +430,7 @@ public class ObjChatMessageSerializer extends AbstractObjSerializer<ChatMessage>
      */
     static String decodeRawValue(final Obj val) {
         if (val.isNoObj()) return "";
-        String raw = Str.Helper.cleanString(val);
+        String raw = Str.Helper.cleanString(val, true);
         if (raw.isEmpty()) return raw;
 
         // Loop to handle arbitrarily nested mtron encoding.
@@ -439,7 +443,7 @@ public class ObjChatMessageSerializer extends AbstractObjSerializer<ChatMessage>
             try {
                 final Obj parsed = ObjmtronSerializer.singleNoClip().inputBytes(raw);
                 if (parsed.isFail()) break;
-                final String decoded = Str.Helper.cleanString(parsed);
+                final String decoded = Str.Helper.cleanString(parsed, true);
                 if (decoded.equals(raw)) break; // stable — prevent infinite loop
                 raw = decoded;
             } catch (final Exception ignored) {
@@ -466,7 +470,7 @@ public class ObjChatMessageSerializer extends AbstractObjSerializer<ChatMessage>
             if (knownKeys.contains(keyName)) continue;
             // Internal infrastructure — never expose to LC4j
             if ("hash".equals(keyName) || TIME.equals(keyName) || SESSION.equals(keyName)) continue;
-            attrs.put(keyName, Str.Helper.cleanString(e.getValue()));
+            attrs.put(keyName, Str.Helper.cleanString(e.getValue(), true));
         }
         return attrs;
     }
