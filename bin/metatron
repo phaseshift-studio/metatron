@@ -47,7 +47,7 @@ if [ ! -d target/classes ] || \
     MVN_LOG=$(mktemp)
     set +e
     mvn compile -q > "$MVN_LOG" 2>&1 &
-    spinner $! "compiling"
+    # spinner $! "compiling"
     wait $!
     MVN_EXIT=$?
     set -e
