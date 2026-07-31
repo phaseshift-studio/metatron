@@ -21,7 +21,6 @@ package studio.phaseshift.metatron.docs;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.TypeCheck;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.dcmnt.dcmntInstSet;
 import studio.phaseshift.metatron.isa.grph.grphInstSet;
 import studio.phaseshift.metatron.isa.iot.iotInstSet;
@@ -51,7 +50,6 @@ import java.util.stream.Collectors;
 import static studio.phaseshift.metatron.Tokens.BOOT;
 import static studio.phaseshift.metatron.Tokens.LOGG;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.m.mInstSet.SPACE_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.SPACE_TYPE;
 
 /**
@@ -77,7 +75,9 @@ public class InstSetDocGenerator {
     private static final Pattern SHORTHAND_PAT = Pattern.compile("\\?(?:rng=([^&]+))?(?:&?dom=([^&]+))?");
     private static final Pattern DOC_LINK_PAT = Pattern.compile("(href|src)=\"(?:\\./)?(images|css|lib|highlight|js)/");
 
-    /** Known instset VIDs, set before processing. Used by {@link #extractInstset(String)}. */
+    /**
+     * Known instset VIDs, set before processing. Used by {@link #extractInstset(String)}.
+     */
     private static Set<String> ALL_INSTSET_VIDS;
 
     // ========================================================================
@@ -164,9 +164,10 @@ public class InstSetDocGenerator {
                     // instset items when patterns overlap (e.g. /m/* matches
                     // /m/tble/rrow).  Filter to only items whose most-specific
                     // matching instset prefix is the current one.
+                    final fURI spacePattern = f(vid + "/space/#");
                     final Set<Type> types = is.types().stream()
                             .filter(t -> t.vid() != null && owns(t.vid().toString(), vid, instsetVids))
-                            .filter(s -> !s.isRefinementOf(SPACE_TYPE))
+                            .filter(t -> !t.vid().test(spacePattern))
                             .collect(Collectors.toSet());
                     final Set<Inst> insts = is.insts().stream()
                             .filter(inst -> owns(inst.tid().toString(), vid, instsetVids))
@@ -177,13 +178,27 @@ public class InstSetDocGenerator {
                     final Set<Obj> consts = is.consts().stream()
                             .filter(c -> c.vid() != null && owns(c.vid().toString(), vid, instsetVids))
                             .collect(Collectors.toSet());
-                    // Spaces are types that refine space::T
+                    // Spaces are types whose VID matches /{instSet}/space/#
                     final List<SpaceEntry> spaces = is.types().stream()
                             .filter(t -> t.vid() != null && owns(t.vid().toString(), vid, instsetVids))
-                            .filter(s -> s.isRefinementOf(SPACE_TYPE))
+                            .filter(t -> t.vid().test(spacePattern))
                             .map(s -> new SpaceEntry(s.vid().toString(), s.vid().name(), s, s.toString()))
                             .toList();
                     consts.removeIf(c -> c.vid().equals(f(vid)));
+
+                    // Move consts whose VIDs map to Type objects into types
+                    final List<Obj> constsToMove = new ArrayList<>();
+                    for (final Obj c : consts) {
+                        try {
+                            final Obj resolved = Router.readFromSpace(c.vid());
+                            if (resolved != null && !resolved.isNoObj() && resolved.isType()) {
+                                types.add(resolved.asType());
+                                constsToMove.add(c);
+                            }
+                        } catch (final Exception ignored) {
+                        }
+                    }
+                    consts.removeAll(constsToMove);
 
                     LOG.info("  " + vid + ": " + types.size() + " types, " + insts.size() + " insts, "
                             + rewrites.size() + " rewrites, " + spaces.size() + " spaces, " + consts.size() + " consts");
@@ -649,7 +664,7 @@ public class InstSetDocGenerator {
             final String defn = SER.write(c);
             final String defnBlock = !defn.isEmpty()
                     ? "<div class=\"card-body p-2\"><pre class=\"mb-0\"><code class=\"language-mtron\">"
-                      + esc(defn) + "</code></pre></div>" : "";
+                    + esc(defn) + "</code></pre></div>" : "";
             final Rec doc = fetchDocByVid(c);
             cards.append("""
                          <div class="card mb-3" id="%s">
@@ -684,7 +699,7 @@ public class InstSetDocGenerator {
             final String defn = SER.write(t);
             final String defnBlock = !defn.isEmpty()
                     ? "<div class=\"card-body p-2\"><pre class=\"mb-0\"><code class=\"language-mtron\">"
-                      + esc(defn) + "</code></pre></div>" : "";
+                    + esc(defn) + "</code></pre></div>" : "";
             final String inheritedFields = renderInheritedFields(t, instsetVid);
             final Rec doc = fetchDocByVid(t);
             cards.append("""
@@ -961,7 +976,7 @@ public class InstSetDocGenerator {
             }
             final String sigBlock = !sig.isEmpty()
                     ? "<div class=\"card-body p-2\"><pre class=\"mb-0\"><code class=\"language-mtron\">"
-                      + sig + "</code></pre></div>" : "";
+                    + sig + "</code></pre></div>" : "";
             final String typeSig = typeSignatureHtml(instsetVid, rw);
             final Rec doc = fetchDocByTid(rw);
             cards.append("""
@@ -993,7 +1008,7 @@ public class InstSetDocGenerator {
             final String gid = vidToAnchor(sp.vid());
             final String spec = sp.typeSpec() != null && !sp.typeSpec().isEmpty()
                     ? "<div class=\"mt-2\"><pre class=\"mb-0\"><code class=\"language-mtron\">"
-                      + esc(sp.typeSpec()) + "</code></pre></div>" : "";
+                    + esc(sp.typeSpec()) + "</code></pre></div>" : "";
             final Type spaceType = sp.obj() != null && sp.obj().isType()
                     ? sp.obj().asType()
                     : sp.obj() != null ? sp.obj().type().asType() : null;
@@ -1344,7 +1359,9 @@ public class InstSetDocGenerator {
                </html>""".formatted(depth, depth, content);
     }
 
-    /** Map leaf-name to icon filename (without extension). */
+    /**
+     * Map leaf-name to icon filename (without extension).
+     */
     private static String iconName(final String leafName) {
         return switch (leafName) {
             case "m" -> "mtron";

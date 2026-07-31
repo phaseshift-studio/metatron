@@ -216,7 +216,7 @@ public class ConceptFeature extends AbstractFeature {
                 uri(TOOL), lst(
                         docWrap(instC(MESSAGES_INST_TID.dom(ALL.maybe()).rng(STR_TID.maybeSome()),
                                         lst(URI_TYPE),
-                                        start_(jnt(0)).from_(uri("0")).swap_(block_(mult_(uri(this.getBaseURI())))).from_(id_()).select_(uri(f("message").extend("+").extend("text"))).tryToInst()),
+                                        start_(jnt(0)).from_(uri("0")).dedup_().swap_(block_(mult_(uri(this.getBaseURI())))).from_(id_()).select_(uri(f("message").extend("+").extend("text"))).tryToInst()),
                                 "maybe an obj",
                                 "a stream of message texts",
                                 Map.of(jnt(0), "a concept uri"),
@@ -224,7 +224,7 @@ public class ConceptFeature extends AbstractFeature {
                                 MESSAGES_INST_TID + "(metatron) [-- returns messages discussing metatron --]"),
                         docWrap(instC(CONCEPTS_INST_TID.dom(ALL.maybe()).rng(LST_TID.maybeSome()),
                                         lst(URI_TYPE),
-                                        start_(jnt(0)).from_(uri("0")).swap_(block_(mult_(uri(this.getBaseURI())))).from_(id_()).select_(uri("concept")).tryToInst()),
+                                        start_(jnt(0)).from_(uri("0")).dedup_().swap_(block_(mult_(uri(this.getBaseURI())))).from_(id_()).select_(uri("concept")).tryToInst()),
                                 "maybe an obj",
                                 "a lst of related concept auto_froms",
                                 Map.of(jnt(0), "a concept uri"),

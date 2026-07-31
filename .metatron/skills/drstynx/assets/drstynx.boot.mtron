@@ -170,7 +170,7 @@ agent::[
     chat_feature:::::::[model         => model::[provider     => ollama,
                                                  protocol     => ollama,
                                                  host         => <http://ginger.local:11434>,
-                                                 llm          => batiai/gemma4-31b:q6],
+                                                 llm          => mtron-qwen-8b:latest],
                         response      => [to => print(_)]],
     think_feature::::::[on_agent_ctor => inst(a=>agent::T){
                                             accordion::[title => "thoughts", 
