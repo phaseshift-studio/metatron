@@ -25,7 +25,6 @@ import java.lang.annotation.Target;
 import java.util.ArrayList;
 import java.util.List;
 
-/*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 @Target({ElementType.ANNOTATION_TYPE, ElementType.METHOD})
@@ -48,15 +47,10 @@ public @interface Training {
         }
     }
 
-    String value();
 
-    String[] mapDesc();
 
-    int[] map1() default {-1};
 
-    int[] map2() default {-1};
 
-    int[] map3() default {-1};
 
 
 }
