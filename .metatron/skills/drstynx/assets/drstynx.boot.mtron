@@ -121,6 +121,11 @@ mqttspace::[host    => <mqtt://ginger.local:1883>,
         [=====================]
 dckrspace::[host    => <unix:///var/run/docker.sock>,
             pattern => docker:#,
+            progress => progress_table::[style => style::[body          => "{{y}}={{g}}",
+                                                          pointer       => "{{g}}>{{X}}",
+                                                          border        => continuous,
+                                                          anchor        => bottom_left,
+                                                          width         => 70]],
             route   => [docker: => <>]]@</sys/space/docker>;
         [=====================]
         [======== LLM ========]

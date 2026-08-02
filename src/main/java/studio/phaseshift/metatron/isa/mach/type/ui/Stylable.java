@@ -18,22 +18,17 @@
 
 package studio.phaseshift.metatron.isa.mach.type.ui;
 
-import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
-import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.mach.type.ui.widget.FloatingSurface;
-import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
-import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.ui.uiInstSet.UI_STYLE_TID;
 
@@ -104,8 +99,8 @@ public interface Stylable<T extends Stylable<T>> {
         }
 
         public Style<T> rowRange(final int low, final int high) {
-            this.jvm().put(uri("lowRowRange"), studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt(low));
-            this.jvm().put(uri("highRowRange"), studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt(high));
+            this.jvm().put(uri("lowRowRange"), jnt(low));
+            this.jvm().put(uri("highRowRange"), jnt(high));
             return this;
         }
 
@@ -118,35 +113,35 @@ public interface Stylable<T extends Stylable<T>> {
         }
 
         public Style<T> colRange(final int low, final int high) {
-            this.jvm().put(uri("lowColRange"), studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt(low));
-            this.jvm().put(uri("highColRange"), studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt(high));
+            this.jvm().put(uri("lowColRange"), jnt(low));
+            this.jvm().put(uri("highColRange"), jnt(high));
             return this;
         }
 
         public String pointer() {
-            return this.at("pointer").orElse(studio.phaseshift.metatron.isa.m.type.impl.MStr.str("")).strValue();
+            return this.at("pointer").orElse(str("")).strValue();
         }
 
         public Style<T> pointer(final String pointer) {
-            this.jvm().put(uri("pointer"), studio.phaseshift.metatron.isa.m.type.impl.MStr.str(pointer));
+            this.jvm().put(uri("pointer"), str(pointer));
             return this;
         }
 
         public String background() {
-            return this.at("background").orElse(studio.phaseshift.metatron.isa.m.type.impl.MStr.str("")).strValue();
+            return this.at("background").orElse(str("")).strValue();
         }
 
         public Style<T> background(final String bg) {
-            this.jvm().put(uri("background"), studio.phaseshift.metatron.isa.m.type.impl.MStr.str(bg));
+            this.jvm().put(uri("background"), str(bg));
             return this;
         }
 
         public String foreground() {
-            return this.at("foreground").orElse(studio.phaseshift.metatron.isa.m.type.impl.MStr.str("")).strValue();
+            return this.at("foreground").orElse(str("")).strValue();
         }
 
         public Style<T> foreground(final String fg) {
-            this.jvm().put(uri("foreground"), studio.phaseshift.metatron.isa.m.type.impl.MStr.str(fg));
+            this.jvm().put(uri("foreground"), str(fg));
             return this;
         }
 
@@ -174,29 +169,29 @@ public interface Stylable<T extends Stylable<T>> {
         }
 
         public String headerDivider() {
-            return this.at("headerDivider").orElse(studio.phaseshift.metatron.isa.m.type.impl.MStr.str("")).strValue();
+            return this.at("headerDivider").orElse(str("")).strValue();
         }
 
         public Style<T> headerDivider(final String divider) {
-            this.jvm().put(uri("headerDivider"), studio.phaseshift.metatron.isa.m.type.impl.MStr.str(divider));
+            this.jvm().put(uri("headerDivider"), str(divider));
             return this;
         }
 
         public String divider() {
-            return this.at("divider").orElse(studio.phaseshift.metatron.isa.m.type.impl.MStr.str("")).strValue();
+            return this.at("divider").orElse(str("")).strValue();
         }
 
         public Style<T> divider(final String divider) {
-            this.jvm().put(uri("divider"), studio.phaseshift.metatron.isa.m.type.impl.MStr.str(divider));
+            this.jvm().put(uri("divider"), str(divider));
             return this;
         }
 
         public String textBody() {
-            return this.at("body").orElse(studio.phaseshift.metatron.isa.m.type.impl.MStr.str("")).strValue();
+            return this.at("body").orElse(str("")).strValue();
         }
 
         public Style<T> textBody(final String body) {
-            this.jvm().put(uri("body"), studio.phaseshift.metatron.isa.m.type.impl.MStr.str(body));
+            this.jvm().put(uri("body"), str(body));
             return this;
         }
 
@@ -217,25 +212,25 @@ public interface Stylable<T extends Stylable<T>> {
         }
 
         public Style<T> margin(final int left, final int right, final int top, final int bottom) {
-            this.jvm().put(uri("leftMargin"), studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt(left));
-            this.jvm().put(uri("rightMargin"), studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt(right));
-            this.jvm().put(uri("topMargin"), studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt(top));
-            this.jvm().put(uri("bottomMargin"), studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt(bottom));
+            this.jvm().put(uri("leftMargin"), jnt(left));
+            this.jvm().put(uri("rightMargin"), jnt(right));
+            this.jvm().put(uri("topMargin"), jnt(top));
+            this.jvm().put(uri("bottomMargin"), jnt(bottom));
             return this;
         }
 
         public Style<T> margin(final int left, final int right) {
-            this.jvm().put(uri("leftMargin"), studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt(left));
-            this.jvm().put(uri("rightMargin"), studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt(right));
+            this.jvm().put(uri("leftMargin"), jnt(left));
+            this.jvm().put(uri("rightMargin"), jnt(right));
             return this;
         }
 
         public String prefix() {
-            return this.at("prefix").orElse(studio.phaseshift.metatron.isa.m.type.impl.MStr.str("")).strValue();
+            return this.at("prefix").orElse(str("")).strValue();
         }
 
         public Style<T> freePrefix(final String prefix) {
-            this.jvm().put(uri("prefix"), studio.phaseshift.metatron.isa.m.type.impl.MStr.str(prefix));
+            this.jvm().put(uri("prefix"), str(prefix));
             return this;
         }
 
@@ -250,8 +245,17 @@ public interface Stylable<T extends Stylable<T>> {
             return s;
         }
 
+        /**
+         * Read style fields from a mtron style Rec.
+         */
+        public static <T extends Stylable<T>> T from(final Rec styleRec, final T stylable) {
+            final Style<T> s = new Style<>(stylable);
+            s.jvm().putAll(styleRec.jvm());
+            return s.applyStyle();
+        }
+
         public Style<T> floatAt(final FloatingSurface.Anchor anchor, final int width,
-                                 final int top, final int left) {
+                                final int top, final int left) {
             this.jvm().put(uri("anchor"), uri(anchor.name().toLowerCase()));
             this.jvm().put(uri("width"), jnt(width));
             this.jvm().put(uri("top"), jnt(top));
@@ -286,7 +290,9 @@ public interface Stylable<T extends Stylable<T>> {
             return null;
         }
 
-        /** Display width override.  0 = use the widget's natural width. */
+        /**
+         * Display width override.  0 = use the widget's natural width.
+         */
         public int width() {
             if (this.width > 0) return this.width;
             if (this.at("width").isInt())
@@ -294,10 +300,12 @@ public interface Stylable<T extends Stylable<T>> {
             return 0;
         }
 
-        /** Display height override.  0 = use the widget's natural height
-         *  (grow unbounded).  When set and content exceeds this many rows,
-         *  the top lines are discarded so the newest content stays visible
-         *  at the bottom. */
+        /**
+         * Display height override.  0 = use the widget's natural height
+         * (grow unbounded).  When set and content exceeds this many rows,
+         * the top lines are discarded so the newest content stays visible
+         * at the bottom.
+         */
         public int height() {
             if (this.height > 0) return this.height;
             if (this.at("height").isInt())
@@ -306,12 +314,14 @@ public interface Stylable<T extends Stylable<T>> {
         }
 
         public Style<T> height(final int h) {
-            this.jvm().put(uri("height"), studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt(h));
+            this.jvm().put(uri("height"), jnt(h));
             this.height = h;
             return this;
         }
 
-        /** Row offset from the anchor edge (CSS {@code top}). */
+        /**
+         * Row offset from the anchor edge (CSS {@code top}).
+         */
         public int top() {
             if (this.top > 0) return this.top;
             if (this.at("top").isInt())
@@ -319,7 +329,9 @@ public interface Stylable<T extends Stylable<T>> {
             return 0;
         }
 
-        /** Column offset from the anchor edge (CSS {@code left}). */
+        /**
+         * Column offset from the anchor edge (CSS {@code left}).
+         */
         public int left() {
             if (this.left > 0) return this.left;
             if (this.at("left").isInt())
@@ -350,7 +362,10 @@ public interface Stylable<T extends Stylable<T>> {
             while (remaining.length() > maxWidth) {
                 int breakAt = maxWidth;
                 for (int i = Math.min(maxWidth, remaining.length() - 1); i > 0; i--) {
-                    if (remaining.charAt(i) == ' ') { breakAt = i; break; }
+                    if (remaining.charAt(i) == ' ') {
+                        breakAt = i;
+                        break;
+                    }
                 }
                 out.add(remaining.substring(0, breakAt).stripTrailing());
                 remaining = remaining.substring(breakAt).stripLeading();

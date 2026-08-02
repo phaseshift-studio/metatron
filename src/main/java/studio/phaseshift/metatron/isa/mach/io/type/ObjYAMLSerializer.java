@@ -21,20 +21,28 @@ package studio.phaseshift.metatron.isa.mach.io.type;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.m.type.Bytes;
+import studio.phaseshift.metatron.isa.m.type.NoObj;
+import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.web.webInstSet;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
-import static studio.phaseshift.metatron.isa.m.mInstSet.*;
+import static studio.phaseshift.metatron.isa.m.mInstSet.LST_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
+import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TRUE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /**
  * Bidirectional YAML serializer using SnakeYAML.
@@ -59,12 +67,20 @@ public class ObjYAMLSerializer extends AbstractObjSerializer<String> {
         return INSTANCE;
     }
 
-    public ObjYAMLSerializer() {
-        super(OBJ_YAML_SERIALIZER_TID, OBJ_YAML_SERIALIZER_TID);
+    public ObjYAMLSerializer(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
+        super(jvm, tid, vid);
         this.dumperOptions = new DumperOptions();
         this.dumperOptions.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
-        this.dumperOptions.setIndent(2);
-        this.dumperOptions.setPrettyFlow(true);
+        this.dumperOptions.setIndent(jvm.getOrDefault(uri("indent"), jnt(2)).intValue().intValue());
+        this.dumperOptions.setPrettyFlow(jvm.getOrDefault(uri("pretty"), BOOL_TRUE).boolValue());
+    }
+
+    public ObjYAMLSerializer() {
+        this(mutableMap(uri("indent"), jnt(2), uri("pretty"), BOOL_TRUE), OBJ_YAML_SERIALIZER_TID, OBJ_YAML_SERIALIZER_TID);
+    }
+
+    public static ObjYAMLSerializer of(final Map<Obj, Obj> jvm) {
+        return new ObjYAMLSerializer(jvm, OBJ_YAML_SERIALIZER_TID, null);
     }
 
     // =======================================================================

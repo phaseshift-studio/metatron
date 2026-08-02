@@ -21,30 +21,15 @@ package studio.phaseshift.metatron.isa.mach.type.ui.widget;
 import org.jline.terminal.Cursor;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.reflect.JRec;
 import studio.phaseshift.metatron.isa.m.type.reflect.JRecElement;
-import studio.phaseshift.metatron.isa.mach.type.ui.Border;
-import studio.phaseshift.metatron.isa.mach.type.ui.Stylable;
 import studio.phaseshift.metatron.isa.mach.type.ui.Widget;
-import studio.phaseshift.metatron.isa.mach.type.ui.console.Console;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Highlighter;
-import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.util.IteratorUtil;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
-import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
-import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.m.mInstSet.INST_CTOR_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
-import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
-import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.ui.uiInstSet.UI_TABLE_TID;
 
@@ -150,6 +135,24 @@ public class TableWidget extends JRec<TableWidget> implements Widget<TableWidget
         return this;
     }
 
+    public TableWidget addRow(final List<Object> entries, final int primaryKey) {
+        this.javaPopulated = true;
+        final Optional<Integer> row = IteratorUtil.indexedStream(this.table.iterator()).map(r -> {
+            if (r.get1().size() <= primaryKey || entries.size() <= primaryKey)
+                return null;
+            if (r.get1().get(primaryKey).equals(entries.get(primaryKey)))
+                return r.get0();
+            else
+                return null;
+        }).filter(i -> !Objects.isNull(i)).findFirst();
+        if (row.isPresent()) {
+            this.table.set(row.get(), entries);
+        } else {
+            this.table.add(entries);
+        }
+        return this;
+    }
+
     public TableWidget addMetadata(final List<Object> metadata) {
         this.javaPopulated = true;
         this.metadata.add(metadata);
@@ -218,12 +221,15 @@ public class TableWidget extends JRec<TableWidget> implements Widget<TableWidget
     public String formattedRow(final int index) {
         final List<Integer> widths = null == this.headers || this.headers.isEmpty()
                 ? new ArrayList<>() : this.formattedWidths(this.headers);
-        if (widths.size() < this.row(0).size()) {
-            for (int i = 0; i < this.row(0).size() - widths.size(); i++) widths.add(1);
-        }
+        // Pad widths to accommodate the widest row in the table
+        final int maxCols = this.table.stream().filter(r -> r != null)
+                .mapToInt(List::size).max().orElse(widths.size());
+        for (int i = widths.size(); i < maxCols; i++) widths.add(1);
+        final List<Object> row = this.table.get(index);
+        if (row == null) return "";
         final StringBuilder sb = new StringBuilder();
         sb.append(this.style.divider());
-        for (int i = 0; i < this.table.get(index).size(); i++) {
+        for (int i = 0; i < row.size(); i++) {
             final String high = Highlighter.format(this.entry(index, i));
             final String low = Highlighter.unformat(this.entry(index, i).toString());
             sb.append(high).append(this.addSpace(widths, i, low)).append(this.style.divider());
@@ -243,7 +249,7 @@ public class TableWidget extends JRec<TableWidget> implements Widget<TableWidget
     }
 
     @Override
-    public String format() {
+    public synchronized String format() {
         this.sync();
         final StringBuilder sb = new StringBuilder();
         if (!this.headers.isEmpty()) {
@@ -261,7 +267,8 @@ public class TableWidget extends JRec<TableWidget> implements Widget<TableWidget
         }
         sb.append(formattedRows().stream().map(row -> row + "\n")
                 .reduce("", (a, b) -> a + b));
-        sb.deleteCharAt(sb.length() - 1);
+        if (sb.length() > 0) sb.deleteCharAt(sb.length() - 1);
+        if (sb.isEmpty()) return "";
         return this.style.border().wrap(sb).toString();
     }
 
@@ -288,7 +295,6 @@ public class TableWidget extends JRec<TableWidget> implements Widget<TableWidget
         this.style = style;
         if (this.style.foreground().isEmpty()) this.style.foreground("{{w}}");
         if (this.style.background().isEmpty()) this.style.background("{{[X]}}");
-        if (this.style.divider().isEmpty()) this.style.divider("{{g}}|");
         return this;
     }
 

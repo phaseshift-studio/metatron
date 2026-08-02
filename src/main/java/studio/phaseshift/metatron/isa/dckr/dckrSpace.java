@@ -26,9 +26,12 @@ import studio.phaseshift.metatron.isa.m.space.TopicTrie;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjYAMLSerializer;
+import studio.phaseshift.metatron.isa.mach.type.ui.widget.ProgressTableWidget;
 import studio.phaseshift.metatron.util.MTronException;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -49,9 +52,11 @@ import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_fro
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /**
  * A metatron space bridging to a Docker daemon.
@@ -73,7 +78,8 @@ public class dckrSpace extends AbstractMemorySpace {
             .vid(DCKR_SPACE_TID)
             .isaPredicate(rec(
                     uri(PATTERN), URI_TYPE,
-                    uri(HOST).maybe(), URI_TYPE))
+                    uri(HOST).maybe(), URI_TYPE,
+                    uri("progress").maybe(), rec()))
             .constructor(
                     instC(INST_CTOR_TID.dom(ALL.maybe()).rng(DCKR_SPACE_TID),
                             lst(T(DCKR_SPACE_TID)),
@@ -85,6 +91,8 @@ public class dckrSpace extends AbstractMemorySpace {
     private static final ObjDockerSerializer DOCKER_SERIALIZER = ObjDockerSerializer.single();
 
     private final memSpace store;
+    private volatile ProgressTableWidget pullWidget;
+    private final ProgressTableWidget progressWidget;
     private final String dockerHost;
 
     // ===================================================================
@@ -103,6 +111,9 @@ public class dckrSpace extends AbstractMemorySpace {
         if (this.dockerHost != null)
             LOG.info("docker host {{y}}%s", this.dockerHost);
         this.store = memSpace.of(this.pattern(), null);
+        final Obj pw = this.at(uri("progress"));
+        this.progressWidget = (!pw.isNoObj() && pw instanceof ProgressTableWidget)
+                ? (ProgressTableWidget) pw : null;
         checkDockerAvailable();
     }
 
@@ -297,14 +308,22 @@ public class dckrSpace extends AbstractMemorySpace {
 
     private void composeUp(final String name, final Rec config) {
         try {
+            this.pullWidget = this.progressWidget != null
+                    ? this.progressWidget : new ProgressTableWidget();
             final Path dir = COMPOSE_DIR.resolve(name);
             Files.createDirectories(dir);
             final Path yamlFile = dir.resolve("docker-compose.yml");
             Files.writeString(yamlFile, YAML_SERIALIZER.write(config), StandardCharsets.UTF_8);
             LOG.info("wrote compose file {{y}}%s", yamlFile);
-            exec(dockerCmd("compose", "-f", yamlFile.toString(), "-p", name, "up", "-d"));
+            exec(dockerCmd("compose", "--progress=plain", "-f", yamlFile.toString(), "-p", name, "up", "-d"));
             LOG.info("compose {{b}}%s{{X}} up", name);
+            this.pullWidget.close();
+            this.pullWidget = null;
         } catch (final Exception e) {
+            if (this.pullWidget != null) {
+                this.pullWidget.close();
+                this.pullWidget = null;
+            }
             throw MTronException.of(e);
         }
     }
@@ -324,6 +343,8 @@ public class dckrSpace extends AbstractMemorySpace {
     }
 
     private void containerRun(final String name, final Rec config) {
+        this.pullWidget = this.progressWidget != null
+                ? this.progressWidget : new ProgressTableWidget();
         final String image = objToString(config.at(uri("image"))
                 .orThrow(MTronException.of("container config must have an 'image' field")));
         final List<String> cmd = dockerCmdList("run", "-d", "--name", name);
@@ -358,6 +379,11 @@ public class dckrSpace extends AbstractMemorySpace {
             LOG.info("container {{b}}%s{{X}} started from {{y}}%s", name, image);
         } catch (final Exception e) {
             throw MTronException.of(e);
+        } finally {
+            if (this.pullWidget != null) {
+                this.pullWidget.close();
+                this.pullWidget = null;
+            }
         }
     }
 
@@ -446,25 +472,102 @@ public class dckrSpace extends AbstractMemorySpace {
         return cmd;
     }
 
+    /**
+     * Parse a Docker progress line into a structured Rec with percent and sizes.
+     */
+    private static Rec parseDockerProgress(final String layer, final String line) {
+        final String rest = line.substring(13).trim(); // strip layer prefix + space
+        final String status;
+        if (rest.startsWith("Downloading")) status = "Downloading";
+        else if (rest.startsWith("Extracting")) status = "Extracting";
+        else if (rest.startsWith("Pull complete")) status = "Complete";
+        else if (rest.startsWith("Already exists")) status = "Exists";
+        else if (rest.startsWith("Waiting")) status = "Waiting";
+        else status = rest.split(" ")[0];
+
+        // Extract percentage from progress bar: [====>     ] → count '=' / total width
+        int percent = -1;
+        final int barStart = rest.indexOf('[');
+        final int barEnd = rest.indexOf(']');
+        if (barStart >= 0 && barEnd > barStart) {
+            final String bar = rest.substring(barStart + 1, barEnd);
+            percent = (int) (100.0 * bar.replace(">", "=").chars().filter(c -> c == '=').count()
+                    / Math.max(1, bar.length()));
+        }
+        // Extract sizes: "93.31MB/160MB"
+        String downloaded = null, total = null;
+        final int slashIdx = rest.lastIndexOf('/');
+        if (slashIdx > 0) {
+            final int sizeStart = rest.lastIndexOf(' ', slashIdx);
+            if (sizeStart >= 0) {
+                final String[] parts = rest.substring(sizeStart + 1).split("/");
+                downloaded = parts[0].trim();
+                total = parts.length > 1 ? parts[1].trim() : null;
+            }
+        }
+        return rec(mutableMap(
+                uri("layer"), uri(layer),
+                uri("status"), uri(status),
+                uri("percent"), jnt(percent),
+                uri("downloaded").maybe(), downloaded != null ? uri(downloaded) : noobj(),
+                uri("total").maybe(), total != null ? uri(total) : noobj()));
+    }
+
     private record ProcessResult(String stdout, String stderr) {
     }
 
-    private static ProcessResult exec(final String... cmd) {
+    private ProcessResult exec(final String... cmd) {
+        return exec(300, cmd);  // default 5 min for long-running pulls
+    }
+
+    private ProcessResult exec(final int timeoutSecs, final String... cmd) {
         try {
             final ProcessBuilder pb = new ProcessBuilder(cmd).redirectErrorStream(false);
             final Process p = pb.start();
+            // Stream stderr (Docker progress) in real-time
+            // Progress lines update in-place via \r; non-progress lines log normally
+            final StringBuilder stderrBuf = new StringBuilder();
+            final Thread stderrThread = new Thread(() -> {
+                final Map<String, Obj> layerRows = new LinkedHashMap<>();
+                try (final BufferedReader reader = new java.io.BufferedReader(
+                        new InputStreamReader(p.getErrorStream(), StandardCharsets.UTF_8))) {
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        // stderrBuf.append(line).append('\n');
+                        final String trimmed = line.trim();
+                        if (trimmed.matches("^[0-9a-f]{12} .*")) {
+                            final String layer = trimmed.substring(0, 12);
+                            layerRows.put(layer, parseDockerProgress(layer, trimmed));
+                            if (pullWidget == null)
+                                pullWidget = this.progressWidget != null ? this.progressWidget : new ProgressTableWidget();
+                            layerRows.values().forEach(r ->
+                                    pullWidget.addProgressRow(r.asRec()));
+                            //pullWidget.close();
+                            pullWidget.run();
+                        } else {
+                            LOG.info("{{y}}%s", trimmed);
+                        }
+                    }
+                    if (null != pullWidget)
+                        this.pullWidget.close();
+                } catch (final IOException ignored) { /* stream closed */ }
+            }, "docker-stderr");
+            stderrThread.setDaemon(true);
+            stderrThread.start();
+            // Read stdout synchronously
             final String stdout = new String(p.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
-            final String stderr = new String(p.getErrorStream().readAllBytes(), StandardCharsets.UTF_8);
-            final boolean completed = p.waitFor(30, TimeUnit.SECONDS);
+            final boolean completed = p.waitFor(timeoutSecs, TimeUnit.SECONDS);
             if (!completed) {
                 p.destroyForcibly();
                 throw MTronException.of("command timed out: %s", String.join(" ", cmd));
             }
+            stderrThread.join(5000);
+            final String stderr = stderrBuf.toString();
             if (p.exitValue() != 0)
                 throw MTronException.of("exit %d: %s\n%s", p.exitValue(), String.join(" ", cmd), stderr);
             return new ProcessResult(stdout, stderr);
         } catch (final IOException e) {
-            throw MTronException.of("docker CLI not found: %s", e.getMessage());
+            throw MTronException.of("docker cli not found: %s", e.getMessage());
         } catch (final InterruptedException e) {
             Thread.currentThread().interrupt();
             throw MTronException.of(e);

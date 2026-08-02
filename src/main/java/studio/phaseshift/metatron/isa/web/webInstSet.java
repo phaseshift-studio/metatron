@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.isa.web;
 
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
+import org.yaml.snakeyaml.Yaml;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.dcmnt.schema.storage.ObjBSONSerializer;
@@ -30,6 +31,7 @@ import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.impl.MObj;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjByteBufferSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjJavaSerializer;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjYAMLSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.web.parser.*;
 import studio.phaseshift.metatron.isa.web.type.MIME;
@@ -99,6 +101,7 @@ public class webInstSet extends AbstractInstSet {
     public static final fURI CSS_TID = MIME_TYPE_TID.extend("css");
     public static final fURI MARKDOWN_TID = MIME_TYPE_TID.extend("markdown");
     public static final fURI JAVA_TID = MIME_TYPE_TID.extend("java");
+    public static final fURI YAML_TID = MIME_TYPE_TID.extend("yaml");
 
     // ── Serializer types ────────────────────────────────────────────
     public static final fURI OBJ_SERIALIZER_TID = WEB_ISA_TID.extend("serializer");
@@ -144,6 +147,17 @@ public class webInstSet extends AbstractInstSet {
                     return noobj();
                 }
             }).create();
+    public static final Type YAML_TYPE = Type.Builder.build()
+            .tid(STR_TID)
+            .vid(YAML_TID)
+            .predicate((lhs, inst) -> {
+                try {
+                    new Yaml().load(inst.arg(0).strValue());
+                    return lhs;
+                } catch (final JsonSyntaxException e) {
+                    return noobj();
+                }
+            }).create();
 
     public static final Type CSS_TYPE = Type.Builder.build()
             .tid(REC_TID)
@@ -155,6 +169,7 @@ public class webInstSet extends AbstractInstSet {
     public static Type OBJ_MTRON_SERIALIZER_TYPE;
     public static Type OBJ_SIMPLE_JSON_SERIALIZER_TYPE;
     public static Type OBJ_BSON_SERIALIZER_TYPE;
+    public static Type OBJ_YAML_SERIALIZER_TYPE;
     public static Type OBJ_BYTE_BUFFER_SERIALIZER_TYPE;
     public static final fURI MCP_SERVER_TID = WEB_ISA_TID.extend("mcp").extend("mcp_server");
     public static final fURI MCP_CLIENT_TID = WEB_ISA_TID.extend("mcp").extend("mcp_client");
@@ -202,6 +217,7 @@ public class webInstSet extends AbstractInstSet {
                                           [tag=>a,href=>...],
                                           [tag...]]]]"""),
                         docWrap(JSON_TYPE, "a json document"),
+                        docWrap(YAML_TYPE, "a yaml document"),
                         docWrap(CSS_TYPE, "a rec encoding of a css document"),
                         docWrap(MARKDOWN_TYPE, "a rec encoding of a markdown document"),
                         docWrap(JAVA_TYPE, "a rec encoding of a java source file"),
@@ -255,11 +271,19 @@ public class webInstSet extends AbstractInstSet {
                                         uri("embed_candq").maybe().asUri(), "whether to embed tid coefficient and quality metadata"),
                                 "obj_simple_json::[wrap_uri=>true]"),
                         docWrap(OBJ_BSON_SERIALIZER_TYPE = Type.Builder.build()
-                                        .tid(OBJ_BSON_SERIALIZER_TID).vid(OBJ_BSON_SERIALIZER_TID).create(),
+                                        .tid(OBJ_SERIALIZER_TID).vid(OBJ_BSON_SERIALIZER_TID).create(),
                                 "a serializer for converting objs to/from bson format"),
+                        docWrap(OBJ_YAML_SERIALIZER_TYPE = Type.Builder.build()
+                                        .tid(OBJ_SERIALIZER_TID).vid(OBJ_YAML_SERIALIZER_TID).
+                                        constructor(instC(INST_CTOR_TID.rng(OBJ_YAML_SERIALIZER_TID), lst(T(OBJ_YAML_SERIALIZER_TID)),
+                                                (lhs, inst) -> ObjYAMLSerializer.of(inst.arg(0).jvm()))).create(),
+                                "a serializer for converting objs to/from yaml format"),
                         docWrap(OBJ_BYTE_BUFFER_SERIALIZER_TYPE = Type.Builder.build()
                                         .tid(OBJ_SERIALIZER_TID)
                                         .vid(OBJ_BYTE_BUFFER_SERIALIZER_TID)
+                                        .isaPredicate(rec(
+                                                uri("pretty").maybe().asUri(), BOOL_TYPE,
+                                                uri("indent").maybe(), jnt(2)))
                                         .constructor(instC(INST_CTOR_TID.rng(OBJ_BYTE_BUFFER_SERIALIZER_TID), lst(T(OBJ_BYTE_BUFFER_SERIALIZER_TID)), (lhs, inst) -> ObjByteBufferSerializer.of(inst.arg(0).asRec(), inst.arg(0).vid())))
                                         .create(), "byte buffer serializer",
                                 "a serializer for converting objs to/from raw byte buffers",
@@ -285,7 +309,7 @@ public class webInstSet extends AbstractInstSet {
                         docWrap(WS_HANDLER_TYPE, "a websocket server which should be refined to implement protocol specs"),
                         docWrap(WS_CLIENT_TYPE, "an websocket client which should be refined to implement protocol specs"),
                         docWrap(WS_MCP_HANDLER_TYPE, "an abstract mcp websocket handler providing necessary json-rpc infrastructure for mcp servers to leverage"),
-                        docWrap(WS_MCP_EMULTATOR_TYPE, "a webLsocket mcp emulator server that provides an agent a stateful environment of mcp server access"),
+                        docWrap(WS_MCP_EMULTATOR_TYPE, "a websocket mcp emulator server that provides an agent a stateful environment of mcp server access"),
                         docWrap(WS_MCP_MTRON_HANDLER_TYPE, "an mcp handler server with built-in mtron eval, space listing, router info and instruction listing tools"),
                         docWrap(WS_MTRON_HANDLER_TYPE, "a simple websocket handler accepting mtron expressions and return mtron results", "mtron_ws::[=>]"),
                         /// //////////////////////////////
@@ -350,7 +374,9 @@ public class webInstSet extends AbstractInstSet {
                                 "virtual::[code=>ping(localhost:8777)-<{@x+*0,@y+1},loop=>second::2.0]"),
                         instC(WEB_ISA_TID.extend("inst/format").dom(MARKDOWN_TID).rng(STR_TID), lst(), (lhs, inst) -> str(ObjMarkdownSerializer.format(ObjMarkdownSerializer.single().write(lhs).getChars().toString()))),
                         instC(AS_INST_TID.dom(STR_TID).rng(JSON_TID), lst(JSON_TYPE), (lhs, inst) -> lhs.tid(JSON_TID)),
+                        instC(AS_INST_TID.dom(STR_TID).rng(YAML_TID), lst(YAML_TYPE), (lhs, inst) -> lhs.tid(YAML_TID)),
                         instC(AS_INST_TID.dom(JSON_TID).rng(REC_TID), lst(REC_TYPE), (lhs, inst) -> ObjJSONSerializer.simple().inputBytes(lhs.strValue())),
+                        instC(AS_INST_TID.dom(YAML_TID).rng(REC_TID), lst(REC_TYPE), (lhs, inst) -> ObjYAMLSerializer.single().inputBytes(lhs.strValue())),
                         instC(AS_INST_TID.dom(REC_TID).rng(JSON_TID), lst(JSON_TYPE), (lhs, inst) -> str(new String(ObjJSONSerializer.simple().outputBytes(lhs).array(), StandardCharsets.UTF_8), JSON_TID, null)),
                         instC(AS_INST_TID.dom(STR_TID).rng(XML_TID), lst(T(XML_TID)), (lhs, inst) -> ObjXMLSerializer.parse(lhs.asStr().strValue())),
                         instC(AS_INST_TID.dom(STR_TID).rng(HTML_TID), lst(HTML_TYPE), (lhs, inst) -> ObjHTMLSerializer.parse(lhs.asStr().strValue())),

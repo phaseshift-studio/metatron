@@ -24,12 +24,9 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Str;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjJavaSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
-import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjYAMLSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.web.parser.ObjHTMLSerializer;
-import studio.phaseshift.metatron.isa.web.parser.ObjMarkdownSerializer;
-import studio.phaseshift.metatron.isa.web.parser.ObjPlainTextSerializer;
-import studio.phaseshift.metatron.isa.web.parser.ObjXMLSerializer;
+import studio.phaseshift.metatron.isa.web.parser.*;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.io.File;
@@ -58,6 +55,7 @@ public class MIME {
         APPLICATION_ATOM_XML("application/atom+xml"),
         APPLICATION_XML("application/xml"),
         APPLICATION_MTRON("application/x-mtron"),
+        APPLICATION_YAML("application/yaml"),
         APPLICATION_JAVASCRIPT("application/javascript"),
         TEXT_HTML("text/html"),
         TEXT_PLAIN("text/plain"),
@@ -85,7 +83,7 @@ public class MIME {
          */
         private static final Set<MIMEType> TEXT_MIMES =
                 Set.of(APPLICATION_JSON, APPLICATION_LD_JSON, APPLICATION_MTRON,
-                        APPLICATION_JAVASCRIPT, APPLICATION_XML, APPLICATION_XHTML_XML, APPLICATION_ATOM_XML);
+                        APPLICATION_YAML, APPLICATION_JAVASCRIPT, APPLICATION_XML, APPLICATION_XHTML_XML, APPLICATION_ATOM_XML);
 
         public boolean isText() {
             return this.value.startsWith("text/") || TEXT_MIMES.contains(this);
@@ -144,6 +142,7 @@ public class MIME {
             if (extension.equals("json")) return APPLICATION_JSON;
             if (extension.equals("xml")) return APPLICATION_XML;
             if (extension.equals("png")) return IMAGE_PNG;
+            if (extension.equals("yaml") || extension.equals("yml")) return APPLICATION_YAML;
             if (extension.equals("jpg") || extension.equals("jpeg")) return IMAGE_JPEG;
             if (extension.equals("gif")) return IMAGE_GIF;
             if (extension.equals("svg")) return IMAGE_SVG;
@@ -199,11 +198,16 @@ public class MIME {
             return this.equals(TEXT_JAVA);
         }
 
+        public boolean isYaml() {
+            return this.equals(APPLICATION_YAML);
+        }
+
         public static final String VALUE = "Content-Type";
 
         public ObjSerializer<?> serializer() {
             if (this.isMtron()) return ObjmtronSerializer.singleNoClip();
             if (this.isJson()) return ObjJSONSerializer.simple();
+            if (this.isYaml()) return ObjYAMLSerializer.single();
             if (this.isHtml()) return ObjHTMLSerializer.single();
             if (this.isXml()) return ObjXMLSerializer.single();
             if (this.isMarkdown()) return ObjMarkdownSerializer.single();

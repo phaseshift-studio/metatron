@@ -77,6 +77,10 @@ public class uiInstSet extends AbstractInstSet {
     public static Type UI_STYLE_TYPE;
     public static final fURI UI_ACCORDION_TID = UI_ISA_TID.extend("accordion");
     public static Type UI_ACCORDION_TYPE;
+    public static final fURI UI_PROGRESS_TID = UI_ISA_TID.extend("progress");
+    public static Type UI_PROGRESS_TYPE;
+    public static final fURI UI_PROGRESS_TABLE_TID = UI_ISA_TID.extend("progress_table");
+    public static Type UI_PROGRESS_TABLE_TYPE;
     public static final fURI UI_TABLE_TID = UI_WIDGET_TID.extend("table");
     public static Type UI_TABLE_TYPE;
     public static final fURI UI_TREE_TID = UI_WIDGET_TID.extend("tree");
@@ -176,6 +180,17 @@ public class uiInstSet extends AbstractInstSet {
                                         uri(TITLE).maybe().asUri(), "the title of the accordion",
                                         uri(BODY).maybe(), "the body content of the accordion"),
                                 "an expandable/collapsible accordion widget"),
+                        docWrap(UI_PROGRESS_TABLE_TYPE = Type.Builder.build()
+                                        .tid(UI_WIDGET_TID)
+                                        .vid(UI_PROGRESS_TABLE_TID)
+                                        .isaPredicate(rec(
+                                                (Obj) uri("rows").maybe(), LST_TYPE))
+                                        .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(UI_PROGRESS_TABLE_TID),
+                                                lst(T(REC_TID)), (lhs, inst) ->
+                                                        new ProgressTableWidget(inst.arg(0).recValue(), UI_PROGRESS_TABLE_TID, inst.arg(0).vid())))
+                                        .create(),
+                                "a table of progress bars",
+                                "progress_table::[rows=>[[text=>'layer1',percent=>58.0],[text=>'layer2',percent=>23.0]]].run()"),
                         docWrap(UI_TABLE_TYPE = Type.Builder.build()
                                         .tid(UI_WIDGET_TID)
                                         .vid(UI_TABLE_TID)
