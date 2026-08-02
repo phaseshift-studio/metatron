@@ -100,6 +100,10 @@ public class BootLoader implements Rec, Feature.SelfClone {
     public static boolean BOOTING = true;
     public static boolean TESTING = false;
     public static boolean ONE_SHOT = false;
+    public static volatile boolean RESET = false;
+    /** Exit code returned to the shell when a restart is requested.
+     *  {@code bin/metatron} loops when it sees this code. */
+    public static final int EXIT_RESET = 100;
     public static java.util.function.IntConsumer EXIT_HANDLER = System::exit;
     private static final GraphittyLogger LOG;
     public static Router ROUTER;
@@ -352,9 +356,13 @@ public class BootLoader implements Rec, Feature.SelfClone {
                 exitCode = 1;
             } finally {
                 close();
-                EXIT_HANDLER.accept(exitCode);
+                EXIT_HANDLER.accept(RESET ? EXIT_RESET : exitCode);
             }
         }
+
+        // --- Headless mode: signal restart via exit code -----------------
+        if (RESET)
+            System.exit(EXIT_RESET);
     }
 
     private static void printHelp() {

@@ -60,11 +60,23 @@ fi
 if [ "$STEP_RAN" -eq 0 ]; then echo; fi
 
 # ── launch ──────────────────────────────────────────────────────────
-exec java \
-    -Dlogback.configurationFile=conf/logback.xml \
-    -Djava.util.logging.config.file=conf/logging.properties \
-    --add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED \
-    --enable-native-access=ALL-UNNAMED \
-    --sun-misc-unsafe-memory-access=allow \
-    -cp "$CLASSPATH" \
-    studio.phaseshift.metatron.BootLoader "$@"
+# Loop on EXIT_RESET (100) so the JVM can request a clean restart.
+# BootLoader.EXIT_RESET must match this number.
+EXIT_RESET=100
+while true; do
+    set +e
+    java \
+        -Dlogback.configurationFile=conf/logback.xml \
+        -Djava.util.logging.config.file=conf/logging.properties \
+        --add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED \
+        --enable-native-access=ALL-UNNAMED \
+        --sun-misc-unsafe-memory-access=allow \
+        -cp "$CLASSPATH" \
+        studio.phaseshift.metatron.BootLoader "$@"
+    exit_code=$?
+    set -e
+    if [ "$exit_code" -ne "$EXIT_RESET" ]; then
+        exit "$exit_code"
+    fi
+    printf '%b\n' "${GREEN}⟳ Restarting metatron...${NC}"
+done

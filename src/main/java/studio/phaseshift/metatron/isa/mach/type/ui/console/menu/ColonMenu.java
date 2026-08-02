@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.isa.mach.type.ui.console.menu;
 import org.jline.builtins.Commands;
 import org.jline.builtins.TTop;
 import org.slf4j.event.Level;
+import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.Tracer;
 import studio.phaseshift.metatron.TypeCheck;
 import studio.phaseshift.metatron.furi.fURI;
@@ -32,11 +33,10 @@ import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.Border;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Console;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Highlighter;
-import studio.phaseshift.metatron.isa.mach.type.ui.tmux.Pane;
-import studio.phaseshift.metatron.isa.mach.type.ui.tmux.SplitLayout;
-import studio.phaseshift.metatron.isa.mach.type.ui.widget.SubsWidget;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.isa.mach.type.ui.tmux.Pane;
+import studio.phaseshift.metatron.isa.mach.type.ui.tmux.SplitLayout;
 import studio.phaseshift.metatron.isa.mach.type.ui.widget.*;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -98,6 +98,7 @@ public final class ColonMenu extends MRec {
                     /// ///////////////////////////////////////////////////////////////////////////////////////
                     .addRow(List.of("{{[g]&w}}console", "{{[g]&w}}", "{{[g]&w}}"))
                     .addRow(List.of("quit", ":quit | <ctrl>+q", "exit the console"))
+                    .addRow(List.of("reset", ":reset", "reset the metatron vm (reboot with new instance)"))
                     .addRow(List.of("clear", ":clear", "clear the console"))
                     .addRow(List.of("header", ":header [ |<name>]", "print random or named metatron header"))
                     .addRow(List.of("log", ":log [ |trace|debug|info|warn|error] [ |int]", "show or set log level (and target a output to a pane)"))
@@ -135,7 +136,7 @@ public final class ColonMenu extends MRec {
             }
             return noobj();
         }), MUTABLE);
-        
+
         this.at("accordion", instLambda((lhs, inst) -> {
             final String input = lhs.isStr() ? lhs.strValue().trim() : "";
 
@@ -150,7 +151,7 @@ public final class ColonMenu extends MRec {
             } else if (!input.isEmpty()) {
                 final String[] parts = input.split(" ", 2);
                 final String title = parts.length > 0 ? parts[0] : "";
-                final String body  = parts.length > 1 ? parts[1] : "";
+                final String body = parts.length > 1 ? parts[1] : "";
                 this.accordion = new AccordionWidget(title, body);
                 this.accordion.style()
                         .border(Border.continuous.foreground("{{y}}"))
@@ -246,6 +247,14 @@ public final class ColonMenu extends MRec {
             return noobj();
         }), MUTABLE);
 
+        // ===== reset =====
+        this.at("reset", instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(NOOBJ_TID), lst(), (lhs, inst) -> {
+            BootLoader.RESET = true;
+            console.close();
+            System.exit(BootLoader.EXIT_RESET);
+            return noobj();
+        }), MUTABLE);
+
         // ===== clear =====
         this.at("clear", instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(NOOBJ_TID), lst(), (lhs, inst) -> {
             Graphitty.out(Console.getTerminal().output(), "{{XX}}");
@@ -327,7 +336,8 @@ public final class ColonMenu extends MRec {
             final boolean newState = lhs.isStr() && !lhs.strValue().isBlank()
                     ? lhs.strValue().trim().equalsIgnoreCase("on")
                     : !Tracer.stack.enabled();
-            if (newState) Tracer.enable(Tracer.stack); else Tracer.disable(Tracer.stack);
+            if (newState) Tracer.enable(Tracer.stack);
+            else Tracer.disable(Tracer.stack);
             LOG.info("trace {{%s}}%s{{X}}", newState ? "g" : "r", newState ? "ON" : "OFF");
             return noobj();
         }), MUTABLE);
