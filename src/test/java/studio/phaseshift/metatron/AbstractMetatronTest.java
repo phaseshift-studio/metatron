@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -81,7 +81,7 @@ public abstract class AbstractMetatronTest {
         final Obj a = ObjmtronSerializer.parse(lhs);
         final Obj b = ObjmtronSerializer.parse(rhs);
         final boolean m = a.test(b);
-        LOG.debug("testing %s matches %s: %s [expected:%s]", a, b, m, matches);
+        LOG.warn("testing %s matches %s: %s [expected:%s]", a, b, m, matches);
         assertEquals(matches, m);
     }
 
@@ -260,6 +260,7 @@ public abstract class AbstractMetatronTest {
             assertEquals(aex, aactual); */
         }
     }
+
     /**
      * Utility method for distributed testing - check if URI requires cross-host routing
      */

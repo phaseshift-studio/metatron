@@ -156,6 +156,20 @@ public class mcp_httpHandler extends HttpRec {
     }
 
     // ========================================
+    // Streamable HTTP: HEAD (endpoint probe)
+    // ========================================
+
+    @Override
+    protected void doHead(final HttpExchange exchange) throws IOException {
+        // MCP SDKs probe the endpoint with HEAD before POSTing. Answer with
+        // headers only — no body, no content-length — so the JDK server
+        // doesn't warn about a content length on a HEAD request.
+        exchange.getResponseHeaders().set(MIME.MIMEType.VALUE, APPLICATION_JSON.value);
+        exchange.sendResponseHeaders(204, -1);
+        exchange.close();
+    }
+
+    // ========================================
     // Streamable HTTP: DELETE (session teardown)
     // ========================================
 

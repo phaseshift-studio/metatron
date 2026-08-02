@@ -38,7 +38,6 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.Tokens.ARGS;
 import static studio.phaseshift.metatron.furi.QProc.QPROC_TID;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
@@ -60,7 +59,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.type.thread.VirtualThread.virtual;
-import static studio.phaseshift.metatron.util.CommonUtil.mutableList;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /*
@@ -88,6 +86,7 @@ public final class QCollection {
     public static final fURI SAFEQ_TID = QPROC_TID.extend(SAFEQ_PATTERN);
     public static final Type SAFEQ_TYPE = Type.Builder.build().tid(QPROC_TID).vid(SAFEQ_TID).constructor(QCollection::safeQ).create();
     //
+    public static final String INCRQ = "incrq";
     public static final fURI INCRQ_PATTERN = f("incrq");
     public static final fURI INCRQ_TID = QPROC_TID.extend(INCRQ_PATTERN);
     public static final Type INCRQ_TYPE = Type.Builder.build().tid(QPROC_TID).vid(INCRQ_TID).constructor(QCollection::incrQ).create();
@@ -226,7 +225,7 @@ public final class QCollection {
     public static QProc typeQ() {
         final memSpace TYPE_SPACE = memSpace.of(rec(uri(PATTERN), uri("#")), null);
         return QProc.Helper.build(TYPEQ_TID, TYPEQ_PATTERN)
-                .obj(f(SPACE),TYPE_SPACE)
+                .obj(f(SPACE), TYPE_SPACE)
                 .preWrite((vid, obj) -> {
                     TYPE_SPACE.write(vid.qLess(), obj);
                     return obj;
@@ -251,7 +250,7 @@ public final class QCollection {
     /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////
     /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////
     /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-    private static final String NO_DOCS_STRING = "no documentation available";
+    public static final String NO_DOCS_STRING = "no documentation available";
     public final static Rec NO_DOCS = rec(mutableMap(uri(DESC), str(NO_DOCS_STRING)), DOCS_TID, null);
 
     public static boolean isNoDocs(final Obj obj) {

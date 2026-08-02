@@ -331,9 +331,9 @@ public interface Inst extends Call {
                         cinst = cinst.f(Inst.f.of((x, y) -> x.tid(y.arg(0).vid())));
                     } else
                         throw MTronException.of("unable to determine inst function:" +
-                                "\n\t%-10s  => %-10s   | [inst]" +
-                                "\n\t%-10s  => %-10s   |  \\_dom" +
-                                "\n\t%-10s %s=> %-10s   |  \\_args", clhs, cinst, clhs.type(), cinst.dom(), clhs.type(), cinst.args().elements().allMatch(clhs::test) ? "=" : "X", cinst.args());
+                                "\n\t%-10s  => %s   | [inst]" +
+                                "\n\t%-10s  => %s   |  \\_dom" +
+                                "\n\t%-10s %s=> %s   |  \\_args", clhs, cinst, clhs.type(), cinst.dom(), clhs.type(), cinst.args().elements().allMatch(clhs::test) ? "=" : "X", cinst.args());
                 }
                 cinst = Helper.applyArgs(clhs, cinst);
                 Router.stack().push(cinst.args());

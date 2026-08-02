@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -30,11 +30,7 @@ import studio.phaseshift.metatron.isa.mach.type.ui.widget.TableWidget;
 import studio.phaseshift.metatron.isa.mach.type.ui.widget.Utilities;
 import studio.phaseshift.metatron.isa.mach.type.ui.widget.WidgetCanvas;
 
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Deque;
-import java.util.List;
+import java.util.*;
 
 import static org.jline.keymap.KeyMap.key;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -115,11 +111,11 @@ public class TypeDiffTool extends AbstractWidget<TypeDiffTool> {
     }
 
     private static TableWidget buildTable(final List<DiffRow> rows) {
-        final TableWidget table = (TableWidget) new TableWidget(List.of("path", "status", "actual", "expected"))
+        final TableWidget table = new TableWidget(List.of("path", "actual", "isa", "expected"))
                 .style()
-                .headerDivider("{{[y]}} ")
+                .headerDivider("{{[y]}}│")
                 .border(Border.continuous.foreground("{{y}}"))
-                .divider("{{y}}|")
+                .divider("{{y}}│")
                 .pointer("{{r}}>")
                 .applyStyle();
         for (final DiffRow row : rows) {

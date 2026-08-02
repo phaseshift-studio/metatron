@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -28,19 +28,16 @@ import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.m.type.Str;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.web.space.http.httpSpace;
 import studio.phaseshift.metatron.isa.web.type.mcpEmulatorBuilder;
 import studio.phaseshift.metatron.isa.web.type.mcpServer;
 
-import studio.phaseshift.metatron.isa.m.type.Str;
-import studio.phaseshift.metatron.isa.web.webInstSet;
-
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
-import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -60,25 +57,25 @@ public class mcpEmulatorTest extends AbstractMcpHandlerTest {
     @BeforeAll
     public static void setup() {
         InstSet.importInstSet(f("/m/web"));
-        httpSpace.of(rec(uri(PATTERN),uri("http://#"),uri(HOST),uri("http://localhost:8654"),uri(ROUTE),rec(uri("/metatron"),uri("mcp_mtron_http"))),f("/sys/space/web/http"));
+        httpSpace.of(rec(uri(PATTERN), uri("http://#"), uri(HOST), uri("http://localhost:8654"), uri(ROUTE), rec(uri("/metatron"), uri("mcp_mtron_http"))), f("/sys/space/web/http"));
     }
-    
+
     @Override
     protected mcpServer createMcpServer() {
         final fURI vid = createTestVid();
         return new mcpServer(
                 mcpEmulatorBuilder.build(rec().jvm(), vid),
-                MCP_SERVER_TID,null);
+                MCP_SERVER_TID, null);
     }
 
     @BeforeEach
     public void setupHomeSpace() {
         // Use the boot-time home space if registered; create a fresh one otherwise
-       // final Space existing = Router.global().getSpaceFor(f("home:test"));
-       // if (existing == null || existing.isNoObj()) {
-            this.homeSpace = memSpace.of(
-                    rec(uri(PATTERN), uri("home:#")),
-                    f("/sys/space/test-home"));
+        // final Space existing = Router.global().getSpaceFor(f("home:test"));
+        // if (existing == null || existing.isNoObj()) {
+        this.homeSpace = memSpace.of(
+                rec(uri(PATTERN), uri("home:#")),
+                f("/sys/space/test-home"));
         //}
     }
 
@@ -203,13 +200,13 @@ public class mcpEmulatorTest extends AbstractMcpHandlerTest {
 
         // mcpServers config — installs metatron's own MCP server (no external dependencies)
         final String config = """
-            {
-              "mcpServers": {
-                "metatron": {
-                  "url": "http://localhost:8999/mcp"
-                }
-              }
-            }""";
+                              {
+                                "mcpServers": {
+                                  "metatron": {
+                                    "url": "http://localhost:8999/mcp"
+                                  }
+                                }
+                              }""";
 
         final Obj response = this.mcp.handleMessage(toolsCall(13, "install",
                 rec(uri(USER), uri(installUser), uri("mcpServers"), str(config))));

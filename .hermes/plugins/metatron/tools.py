@@ -50,5 +50,8 @@ def handle_eval(params: dict, **kwargs) -> str:
         result = client.eval(expr)
         return json.dumps({"success": True, "result": result})
     except Exception as exc:
+        # Drop the cached client so the next call reconnects fresh —
+        # a stale socket (e.g. after VM restart) must not poison future evals.
+        shutdown_client()
         logger.exception("eval failed for expr=%r", expr)
         return json.dumps({"success": False, "error": str(exc)})

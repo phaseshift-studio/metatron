@@ -22,15 +22,14 @@ import studio.phaseshift.metatron.furi.DataPath;
 import studio.phaseshift.metatron.furi.QProc;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
-import studio.phaseshift.metatron.isa.m.type.Lst;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjSQLSerializer;
-import studio.phaseshift.metatron.isa.tble.space.tbleIncrQ;
 import studio.phaseshift.metatron.isa.AbstractSpace;
 import studio.phaseshift.metatron.isa.SchemaSpace;
 import studio.phaseshift.metatron.isa.Space;
+import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjSQLSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
@@ -40,13 +39,10 @@ import studio.phaseshift.metatron.isa.tble.schema.storage.fURIAwareIndexedSchema
 import studio.phaseshift.metatron.isa.tble.space.ExistingTableSchema;
 import studio.phaseshift.metatron.isa.tble.space.SQLSchemaGenerator;
 import studio.phaseshift.metatron.isa.tble.space.SQLSchemaInstSet;
+import studio.phaseshift.metatron.isa.tble.space.tbleIncrQ;
 import studio.phaseshift.metatron.util.MTronException;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -56,8 +52,6 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.INST_CTOR_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.SPACE_TID;
-import static studio.phaseshift.metatron.isa.m.type.InstSet.INSTSET_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
@@ -221,7 +215,8 @@ public class tbleSpace extends AbstractSpace<Connection> implements SchemaSpace 
     @Override
     public void close() {
         try {
-            this.sjvm().close();
+            if (null != this.sjvm() && !this.sjvm().isClosed())
+                this.sjvm().close();
             SchemaSpace.super.close();
         } catch (final Exception e) {
             LOG.error(e);

@@ -23,6 +23,12 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.m.type.Real;
 import studio.phaseshift.metatron.isa.m.type.Type;
+import studio.phaseshift.metatron.isa.m.type.Uri;
+
+import java.time.ZonedDateTime;
+import java.util.List;
+import java.util.Map;
+import java.util.regex.Pattern;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
@@ -30,12 +36,14 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.as_;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Real.REAL_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
-import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
@@ -86,6 +94,9 @@ public class mathInstSet extends AbstractInstSet {
     public static final String MATH_MINUTE_STRING = "/m/math/time/minute";
     public static final String MATH_HOUR_STRING = "/m/math/time/hour";
     /// ///////////////////////
+    public static final fURI MATH_DATETIME_TID = MATH_ISA_TID.extend("datetime");
+    public static final fURI MATH_DATETIME_NOW_INST_TID = MATH_INST_TID.extend("datetime_now");
+    /// ///////////////////////
     public static final fURI MATH_CURRENCY_TID = f("/m/math/currency");
     public static final fURI MATH_USD_TID = MATH_CURRENCY_TID.extend("usd");
     public static final fURI MATH_EURO_TID = MATH_CURRENCY_TID.extend("euro");
@@ -107,6 +118,14 @@ public class mathInstSet extends AbstractInstSet {
     public mathInstSet() {
         super(mutableMap(uri(PATTERN), uri(MATH_ISA_TID.extend(HASH_FURI))), INSTSET_TID, MATH_ISA_TID);
     }
+
+    // TODO: date::T
+    // //2006.01:23/01/32/34/999?tz=-0500
+    /*public static final Type DATE_TYPE = Type.Builder.build()
+            .tid(URI_TID)
+            .vid(MATH_DATE_TID)
+            .isaPredicate(uri("/${time}/${day}/${month}/${year}"))
+            .create();*/
 
     public static final Type TIME_TYPE = Type.Builder.build()
             .tid(REAL_TID)
@@ -170,6 +189,137 @@ public class mathInstSet extends AbstractInstSet {
             }).create();
 
     /**
+     * DateTime is a uri::T with the structure:
+     * <pre>//yyyy.MM:dd/HH/mm/ss/SSS?tz=±HHmm</pre>
+     * <ul>
+     *   <li>host = year.month</li>
+     *   <li>port = day (1–31)</li>
+     *   <li>path[0] = hour (0–23)</li>
+     *   <li>path[1] = minute (0–59)</li>
+     *   <li>path[2] = second (0–59)</li>
+     *   <li>path[3] = millisecond (0–999)</li>
+     *   <li>query tz = timezone offset (e.g., -0500)</li>
+     * </ul>
+     */
+    private static final Pattern DT_HOST_PATTERN = Pattern.compile("\\d{4}\\.\\d{2}");
+
+    public static final Type DATETIME_TYPE = Type.Builder.build()
+            .tid(URI_TID)
+            .vid(MATH_DATETIME_TID)
+            .predicate((lhs, inst) -> {
+                final fURI dt = lhs.asUri().uriValue();
+                if (dt.hasScheme() && dt.scheme() != null && !dt.scheme().isEmpty())
+                    return noobj();
+                if (!dt.hasHost() || !DT_HOST_PATTERN.matcher(dt.host()).matches())
+                    return noobj();
+                final int month = Integer.parseInt(dt.host().substring(5, 7));
+                if (month < 1 || month > 12) return noobj();
+                if (!dt.hasPort()) return noobj();
+                final int day = dt.port();
+                if (day < 1 || day > 31) return noobj();
+                final List<String> path = dt.path();
+                if (path.size() < 4) return noobj();
+                try {
+                    final int hour = Integer.parseInt(path.get(path.size() - 4));
+                    if (hour < 0 || hour > 23) return noobj();
+                    final int minute = Integer.parseInt(path.get(path.size() - 3));
+                    if (minute < 0 || minute > 59) return noobj();
+                    final int second = Integer.parseInt(path.get(path.size() - 2));
+                    if (second < 0 || second > 59) return noobj();
+                    Integer.parseInt(path.getLast()); // millis: any int OK
+                } catch (NumberFormatException e) {
+                    return noobj();
+                }
+                if (!dt.qMap().containsKey("tz")) return noobj();
+                return lhs;
+            })
+            .create();
+
+    /**
+     * Creates a {@link Uri} representing the current system datetime.
+     * Format: {@code //yyyy.MM:dd/HH/mm/ss/SSS?tz=±HHmm}
+     */
+    public static Uri nowDatetime() {
+        final ZonedDateTime now = ZonedDateTime.now();
+        final String year = String.format("%04d", now.getYear());
+        final String month = String.format("%02d", now.getMonthValue());
+        final String day = String.format("%02d", now.getDayOfMonth());
+        final String hour = String.format("%02d", now.getHour());
+        final String minute = String.format("%02d", now.getMinute());
+        final String second = String.format("%02d", now.getSecond());
+        final String millis = String.format("%03d", now.getNano() / 1_000_000);
+        final String tz = now.getOffset().getId(); // "+HH:MM" or "-HH:MM"
+        final String tzCompact = tz.replace(":", ""); // "+HHMM" or "-HHMM"
+        final String host = year + "." + month;
+        final fURI furi = fURI.of(
+                null,          // scheme
+                host,          // host = year.month
+                Integer.parseInt(day),  // port = day
+                List.of(hour, minute, second, millis),  // path
+                null, null,    // coefficient, poly
+                Map.of("tz", tzCompact),  // query
+                null           // fragment
+        );
+        return uri(furi, MATH_DATETIME_TID, null);
+    }
+
+    private static final java.util.regex.Pattern DT_PARSE =
+            java.util.regex.Pattern.compile(
+                    "(\\d{4})-(\\d{2})-(\\d{2})[ T](\\d{2}):(\\d{2}):(\\d{2})" +  // date + time
+                            "(?:\\.(\\d{1,3}))?" +                                            // optional .SSS
+                            "\\s*(?:Z|([+-])(\\d{2}):?(\\d{2}))?");                         // Z or ±HH:MM or ±HHMM
+
+    /**
+     * Parse an ISO-8601 or Docker-format datetime string into a datetime URI.
+     * Supports {@code "2026-08-01T23:37:33-06:00"}, {@code "2026-08-01 23:37:33 -0600 MDT"}, etc.
+     */
+    public static Uri parseDatetime(final String input) {
+        try {
+            final ZonedDateTime zdt = ZonedDateTime.parse(input);
+            return buildDatetimeUri(zdt);
+        } catch (final Exception e) { /* try other formats */ }
+        try {
+            // Date-only: "2024-12-25" → midnight UTC
+            final java.time.LocalDate ld = java.time.LocalDate.parse(input);
+            return buildDatetimeUri(ld.getYear(), ld.getMonthValue(), ld.getDayOfMonth(),
+                    0, 0, 0, 0, "+0000");
+        } catch (final Exception e) { /* try custom parse */ }
+        final var m = DT_PARSE.matcher(input.trim());
+        if (!m.find()) throw studio.phaseshift.metatron.util.MTronException.of("unable to parse datetime: %s", input);
+        final int year = Integer.parseInt(m.group(1));
+        final int month = Integer.parseInt(m.group(2));
+        final int day = Integer.parseInt(m.group(3));
+        final int hour = Integer.parseInt(m.group(4));
+        final int minute = Integer.parseInt(m.group(5));
+        final int second = Integer.parseInt(m.group(6));
+        final int millis = m.group(7) != null ? Integer.parseInt(m.group(7)) : 0;
+        final String tzSign = m.group(8) != null ? m.group(8) : "+";
+        final String tzHour = m.group(9) != null ? m.group(9) : "00";
+        final String tzMin = m.group(10) != null ? m.group(10) : "00";
+        return buildDatetimeUri(year, month, day, hour, minute, second, millis,
+                tzSign + String.format("%02d", Integer.parseInt(tzHour)) + String.format("%02d", Integer.parseInt(tzMin)));
+    }
+
+    /**
+     * Build a datetime URI from components.
+     */
+    private static Uri buildDatetimeUri(final ZonedDateTime zdt) {
+        String tz = zdt.getOffset().getId().replace(":", "");
+        if ("Z".equals(tz)) tz = "+0000";
+        return buildDatetimeUri(zdt.getYear(), zdt.getMonthValue(), zdt.getDayOfMonth(),
+                zdt.getHour(), zdt.getMinute(), zdt.getSecond(), zdt.getNano() / 1_000_000, tz);
+    }
+
+    private static Uri buildDatetimeUri(final int year, final int month, final int day,
+                                        final int hour, final int minute, final int second, final int millis, final String tz) {
+        return uri(fURI.of(null,
+                String.format("%04d.%02d", year, month), day,
+                List.of(String.format("%02d", hour), String.format("%02d", minute),
+                        String.format("%02d", second), String.format("%03d", millis)),
+                null, null, Map.of("tz", tz), null), MATH_DATETIME_TID, null);
+    }
+
+    /**
      * Normalizes a time {@link Real} to the most human-readable unit.
      * Cascades upward through the time hierarchy when the value crosses
      * a ~2× threshold of the next larger unit:
@@ -230,6 +380,7 @@ public class mathInstSet extends AbstractInstSet {
     public static final Type DATA_SIZE_TYPE = Type.Builder.build()
             .tid(REAL_TID)
             .vid(MATH_DATA_TID)
+            //.predicate(id_().tryToInst())
             .create();
 
     public static final Type BYTE_TYPE = Type.Builder.build()
@@ -346,8 +497,14 @@ public class mathInstSet extends AbstractInstSet {
                         docWrap(MILLIS_TYPE, "a millisecond of time"),
                         docWrap(SECOND_TYPE, "a second of time (1000 millis)"),
                         docWrap(MINUTE_TYPE, "a minute of time (60 seconds)"),
-                        docWrap(HOUR_TYPE, "an hour of time (60 minutes)")),
+                        docWrap(HOUR_TYPE, "an hour of time (60 minutes)"),
+                        docWrap(DATETIME_TYPE, "a datetime as uri: //yyyy.MM:dd/HH/mm/ss/SSS?tz=+-HHmm")),
                 uri(INST), lst(
+                        instC(MATH_DATETIME_NOW_INST_TID.dom(ALL.maybe()).rng(MATH_DATETIME_TID), lst(), (lhs, inst) -> nowDatetime()),
+                        // uri → datetime identity cast (predicate validates in Type.apply)
+                        instC(AS_INST_TID.dom(URI_TID).rng(MATH_DATETIME_TID), lst(URI_TYPE), (lhs, inst) -> lhs.asUri().tid(MATH_DATETIME_TID)),
+                        // str → datetime (parse ISO-8601 / Docker timestamps)
+                        instC(AS_INST_TID.dom(STR_TID).rng(MATH_DATETIME_TID), lst(STR_TYPE), (lhs, inst) -> parseDatetime(lhs.strValue())),
                         /*instC(MATH_NOW_INST_TID.dom(ALL.maybe()).rng(MATH_TIME_TID), lst(), (lhs, inst) -> real((double) System.currentTimeMillis(), MATH_TIME_TID, null)),
                         instC(AS_INST_TID.dom(MATH_TIME_TID).rng(STR_TID), lst(TIME_TYPE), (lhs, inst) -> {
                             Date date = new Date(lhs.realValue().intValue());

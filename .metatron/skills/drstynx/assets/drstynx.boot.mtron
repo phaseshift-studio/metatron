@@ -45,6 +45,7 @@ import(/m/llm);
 import(/m/grph);
 import(/m/vec);
 import(/m/iot);
+import(/m/dckr);
 import(/m/mach/ui);
 space_root -> <${*boot/args/internal/sys}/space/dr>;
 [===================================================================]
@@ -98,6 +99,15 @@ httpspace::[host     => !*<boot/args/external/web/http>,
   as(model::T).
   to(/usr/dr/model/embedding/_?incrq)
 ==]        
+"""
+{
+     "type": "sse",
+     "url": "http://127.0.0.1:64342/sse",
+     "headers": {
+       "IJ_MCP_SERVER_PROJECT_PATH": "/home/killswitch/software/metatron"
+     }
+   }
+""".as(json::T).as(mcp_client::T).at(abc);
 wsspace::[host     => !*<boot/args/external/web/ws>,
          pattern  => <ws://#>,
          route    => [/mcp   => mcp_mtron_ws,
@@ -105,8 +115,14 @@ wsspace::[host     => !*<boot/args/external/web/ws>,
 mqttspace::[host    => <mqtt://ginger.local:1883>,
             pattern => z2m:#,
             q       => [subq::[=>]],
-            route   => [z2m: => z2m/]]@/sys/space/iot/z2m;          
-        [=====================]  
+            route   => [z2m: => z2m/]]@/sys/space/iot/z2m;
+        [=====================]
+        [======= DOCKER ======]
+        [=====================]
+dckrspace::[host    => <unix:///var/run/docker.sock>,
+            pattern => docker:#,
+            route   => [docker: => <>]]@</sys/space/docker>;
+        [=====================]
         [======== LLM ========]
         [=====================]                
 [==
@@ -158,6 +174,7 @@ grphspace::[pattern  => h:#,
 agent::[
   name     => 'dr.stynx',
   desc     => 'the agent dr.stynx is here to be of use in the metatron',
+  root     => !*boot/args/internal/agent_home,
   feature  => [
     session_feature::::[on_agent_ctor => inst(a=>agent::T){ *</usr/dr/session/1>.else(
                                            session::[agent    => !*boot/args/internal/agent_home,
@@ -170,7 +187,7 @@ agent::[
     chat_feature:::::::[model         => model::[provider     => ollama,
                                                  protocol     => ollama,
                                                  host         => <http://ginger.local:11434>,
-                                                 llm          => mtron-qwen-8b:latest],
+                                                 llm          => mtron-qwen-14b:latest],
                         response      => [to => print(_)]],
     think_feature::::::[on_agent_ctor => inst(a=>agent::T){
                                             accordion::[title => "thoughts", 

@@ -155,6 +155,7 @@ public class BasicRouter extends AbstractSpace<Map<Obj, Obj>> implements Router 
             throw MTronException.of("%s prefix already bound: %s + %s", prefix, vid, existing);
         this.prefixToVID.putRaw(prefix, vid);
         this.at(uri(PREFIX), this.prefixToVID.toRec(), MUTABLE);
+        LOG.info("prefix %s => %s registered", prefix, vid);
     }
 
 

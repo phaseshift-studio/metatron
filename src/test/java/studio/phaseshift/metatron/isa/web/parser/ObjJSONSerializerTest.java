@@ -24,6 +24,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractSerializerTest;
+import studio.phaseshift.metatron.Training;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
@@ -103,6 +104,28 @@ public class ObjJSONSerializerTest extends AbstractSerializerTest<JsonElement> {
                                                                     """.formatted(jsonStr)).apply().as();
         assertEquals(REC_TID, jsonRec.tid());
         assertEquals(rec(uri("a"), lst(jnt(1), jnt(2), jnt(3)), uri("b"), bool(true)), jsonRec);
+    }
+
+    @Training(
+            value = "the simple JSON encoding of mtron objs is lossy",
+            map1 = {0, 1},
+            mapDesc = {"the mtron expression <<lhs>> serializes to the simple (lossy) JSON <<rhs>>"})
+    @ParameterizedTest
+    @CsvSource(quoteCharacter = '~', delimiter = '%', value = {
+            // mtron expression                  % expected simple JSON        % description
+            "[1,2,3]                            % [1,2,3]                     % lst serializes as a plain array",
+            "{9,0}                              % [9,0]                       % objs serializes as a plain array",
+            "[a=>1]                             % {\"a\":1}                    % rec serializes as a plain object",
+            "1                                  % 1                           % base int stays a plain scalar",
+            "1.plus(2)                          % 3                           % evaluated expression serializes to its value",
+            "'a/b'                              % \"a/b\"                       % str serializes plainly",
+            "<//2024.12:25/09/00/00/000?tz=-0500>.as(datetime::T)  % \"</2024.12:25/09/00/00/000?tz=-0500>\"  % datetime (a uri refinement) serializes as its wrapped uri",
+    })
+    public void testSimpleLossyEncoding(final String mtron, final String expectedJson, final String desc) {
+        InstSet.importInstSet(f("/m/math"));
+        LOG.info("%s => %s (%s)", mtron, expectedJson, desc);
+        final Obj obj = ObjmtronSerializer.parse(mtron).apply();
+        assertEquals(expectedJson, ObjJSONSerializer.simple().write(obj).toString());
     }
 
 }

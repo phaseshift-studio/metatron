@@ -2,13 +2,11 @@ package studio.phaseshift.metatron.isa.llm.type.feature;
 
 import dev.langchain4j.service.AiServices;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.llm.space.SpaceChatSessionStore;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
 import studio.phaseshift.metatron.isa.llm.type.AgentServices;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
-import studio.phaseshift.metatron.isa.mach.type.Router;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -45,8 +43,7 @@ public class SystemFeature extends AbstractFeature {
                     final Map<Obj, Obj> systemMap = new LinkedHashMap<>();
                     systemMap.put(uri(TEXT), str(systemMessage));
                     final Rec systemRec = rec(systemMap, SYSTEM_MESSAGE_TID, null);
-                    final Space space = Router.global().getSpaceFor(sess.vid());
-                    SpaceChatSessionStore.mirrorSystemMessage(space, sess.vid(), systemRec);
+                    SpaceChatSessionStore.mirrorSystemMessage(agent, sess.vid(), systemRec);
                 } catch (final Exception e) {
                     this.logger().warn("system message mirror failed: %s", e.getMessage());
                 }

@@ -76,6 +76,8 @@ color yellow start="\"\"\"" end="\"\"\""
 color gray "<[^>]>"
 ### fail
 color red "([a-z]|[0-9]|/)*fail::"
+color red "(=>)?X=>"
+color yellow "(=>)?/=>"
 ### sugars and structures
 color magenta "=>" ">-" "-<" "==" "_/" "\\_" "=?=" ">>="
 color green "\(" "\)" "\[" "\]" ","
