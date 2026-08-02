@@ -62,7 +62,9 @@ class mtronWebSocketClient:
         try:
             self._ws.send(code)
             raw = self._ws.recv()
-        except websocket.WebSocketException:
+        except (websocket.WebSocketException, OSError):
+            # BrokenPipeError (a dead socket after VM restart) is an OSError,
+            # not a WebSocketException — catch both so we always reconnect.
             logger.warning("connection lost, reconnecting…")
             self._connect()
             self._ws.send(code)

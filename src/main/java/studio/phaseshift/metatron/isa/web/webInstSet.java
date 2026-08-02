@@ -108,6 +108,7 @@ public class webInstSet extends AbstractInstSet {
     public static final fURI OBJ_BYTE_BUFFER_SERIALIZER_TID = OBJ_SERIALIZER_TID.extend("obj_bytebuffer");
     public static final fURI OBJ_TP3_SERIALIZER_TID = OBJ_SERIALIZER_TID.extend("obj_tp3");
     public static final fURI OBJ_JSON_SERIALIZER_TID = OBJ_SERIALIZER_TID.extend("obj_json");
+    public static final fURI OBJ_YAML_SERIALIZER_TID = OBJ_SERIALIZER_TID.extend("obj_yaml");
     public static final fURI OBJ_HTML_SERIALIZER_TID = OBJ_SERIALIZER_TID.extend("obj_html");
     public static final fURI OBJ_XML_SERIALIZER_TID = OBJ_SERIALIZER_TID.extend("obj_xml");
     public static final fURI OBJ_MARKDOWN_SERIALIZER_TID = OBJ_SERIALIZER_TID.extend("obj_markdown");

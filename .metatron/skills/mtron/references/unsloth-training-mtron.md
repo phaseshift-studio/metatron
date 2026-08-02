@@ -1,8 +1,7 @@
 # Unsloth Training for mtron — End-to-End Guide
 
-This file explains how to fine-tune an LLM on the mtron language -- from training data set extraction via test-suite
-reflection to Ollama deployment, using Unsloth Studio. This tutorial was run on a 64GB machine with 2x RTX 3090 at a
-total of 48 GB VRAM.
+This file explains how to fine-tune an LLM on the mtron language — from training data extraction via test-suite
+reflection to Ollama deployment, using Unsloth Studio. Tested on a 64GB machine with 2× RTX 3090 (48 GB VRAM).
 
 ---
 
@@ -12,8 +11,27 @@ total of 48 GB VRAM.
 
 `src/test/java/studio/phaseshift/metatron/util/UnslothTrainingDatasetExtractor.java`
 
-Scans JUnit 5 `@ParameterizedTest` + `@CsvSource` methods across 25 test classes in the metatron codebase. Each CSV row
-becomes one training entry.
+Scans JUnit 5 `@ParameterizedTest` + `@CsvSource` methods across ~20 test classes. Each CSV row becomes one
+or more training entries, depending on the `@Training` annotation's column mappings. Entry generation is
+delegated to `Training.Extractor.from()` which handles:
+
+- **Annotated methods** (`@Training` with `map1/map2/map3`): each CSV row produces multiple entries
+  (e.g. `code → result`, `code → desugared`, `desugared → result`).
+- **Fallback methods** (no `@Training`): classic two-column `expression → result` with 10 rotating
+  instruction templates.
+- **Operator context enrichment**: every instruction in the expression is resolved via `?docq>>desc`
+  from the metatron VM to weave semantic descriptions into the instruction field.
+
+### Instruction Templates
+
+The fallback rotates through 10 templates to prevent the model from pattern-matching on prefix:
+
+```
+"evaluate: %s"     "what does %s yield?"   "compute: %s"
+"%s = ?"           "the result of %s is:"   "solve: %s"
+"evaluate %s:"     "what is %s?"            "compute %s ="
+"%s evaluates to:"
+```
 
 ### Run
 
@@ -22,9 +40,11 @@ cd metatron
 ./mvnw test -Dtest=UnslothTrainingDatasetExtractorTest
 ```
 
+The test extends `AbstractMetatronTest` and boots the VM — required for `?docq` resolution.
+
 ### Output
 
-`.metatron/skills/mtron/assets/mtron_training_dataset.jsonl` (~1,957 entries)
+`.metatron/skills/mtron/assets/mtron_training_dataset.jsonl` (~2,600+ entries)
 
 ### Dataset Format
 
@@ -32,318 +52,243 @@ Alpaca-style JSONL:
 
 ```json
 {
-  "instruction": "Evaluate this mtron expression involving grphspace operations: lhs evaluates to rhs",
-  "input": "*/g/V/+.count()",
-  "output": "6"
+  "instruction": "evaluate: 1.plus(2) (plus: add the argument int to the lhs int)",
+  "input": "1.plus(2)",
+  "output": "3"
 }
 ```
 
-Three types of entries are generated:
+### Entry Types
 
-| Type                    | Count  | Source                                                                                                                         |
-|-------------------------|--------|--------------------------------------------------------------------------------------------------------------------------------|
-| Expression evaluation   | ~1,839 | `@CsvSource` rows from test classes                                                                                            |
-| Meta-knowledge          | ~8     | Hardcoded facts about mtron (what is mtron, types, tid/vid, spaces, etc.)                                                      |
-| Sugar reference + pairs | ~110   | Auto-generated from `mInstSet.sugars()` — one reference entry per sugar operator, plus training pairs (sugar ↔ desugared form) |
+| Type | Count | Source |
+|------|-------|--------|
+| Expression evaluation | ~2,300 | `@CsvSource` rows from test classes |
+| Meta-knowledge | ~50 | Hardcoded facts about mtron |
+| Sugar reference + pairs | ~75 | Auto-generated from `mInstSet.sugars()` |
 
-### Meta-Knowledge Entries
+### Key Architecture: `Training.java`
 
-Hardcoded in `addMetaKnowledge()` — covers:
+The `@Training` annotation lives at `src/test/java/studio/phaseshift/metatron/Training.java`. It contains:
 
-- What is mtron? What is the Metatron VM?
-- Type system (mono/poly/call, tid vs vid)
-- Expression evaluation, common operators
-- Spaces architecture
-- Capability confirmation ("Can you help me write mtron code?")
+- **`record Entry`** — the data carrier (instruction, input, output, sourceMethod) with `toJson()`.
+- **`record Run`** — column-pair mapping: `map1={0,1}` means `col0→lhs, col1→rhs`.
+- **`final class Extractor`** — `from(Method, CsvSource)` produces `List<Entry>` for both annotated
+  and fallback methods.
+- **`extractOperatorContext()`** — parses the expression, resolves instruction types via
+  `resolveCode()` (Code chains) or direct `insts()` (single Inst), then queries
+  `Router.readFromSpace(inst.tid().addQ("docq"))` for each instruction's `desc` field.
+- `map1` can carry 3 elements (`{lhs, rhs, context}`) for entries needing additional input
+  context with `<<lhs>>`/`<<rhs>>` templating.
 
-Format: `instruction` = "Answer this question about the mtron language…", `input` = question, `output` = answer.
+### Dataset Sanitization
 
-### Sugar Entries (Auto-Generated)
+The `?docq` descriptions may contain raw tabs or backslashes. These must be escaped for JSON:
 
-Generated programmatically from `new mInstSet().sugars()` using the Sugar object's metadata:
-
-| Sugar position                  | Example                     |
-|---------------------------------|-----------------------------|
-| PREFIX, argCount≥1              | `a + b` ↔ `a.plus(b)`       |
-| PREFIX, argCount=0 (standalone) | `_` ↔ `id()`                |
-| PREFIX, argCount=0 (postfix)    | `a ;` ↔ `a.end()`           |
-| PREFIX, true prefix (`*`, `\|`) | `* a` ↔ `mult(a)`           |
-| INFIX                           | `a & b` ↔ `a.and(b)`        |
-| WRAP                            | `a._/ b \_` ↔ `a.within(b)` |
-
-Multi-instruction chains (e.g., `?~` → `is`+`matches`) only get sugar→desugar pairs (ambiguous to reverse).
-
-The algorithm is in `addMetaKnowledge()` — modify there to add/change entries.
-
----
-
-## 2. Unsloth Studio
-
-### Server
-
-Running as a Docker container on `ginger.local`:
-
-```bash
-ssh ginger.local "docker ps | grep unsloth"
-# unsloth/unsloth — ports 8882→8000 (UI), 8881→8888 (API), 2222→22 (SSH)
-```
-
-### API Access
-
-Base URL: `http://ginger.local:8882`
-Auth: POST `/api/auth/login` with `{"username":"unsloth","password":"<password>"}` → returns JWT `access_token`.
-
-A Python helper is available at `.metatron/skills/mtron/scripts/unsloth_studio.py`:
-
-```python
-from unsloth_studio import Studio
-
-s = Studio('http://ginger.local:8882', 'unsloth', '<password>')
-# s.upload_dataset(...), s.train(...), s.status(), s.wait_for_training(), s.export_gguf(...)
-```
-
-### Key Endpoints
-
-| Method | Path                          | Use                                             |
-|--------|-------------------------------|-------------------------------------------------|
-| POST   | `/api/datasets/upload`        | Upload JSONL dataset (multipart file)           |
-| GET    | `/api/train/status`           | Check training phase/step/loss                  |
-| POST   | `/api/train/start`            | Start training job (see payload below)          |
-| POST   | `/api/train/stop`             | Graceful stop                                   |
-| POST   | `/api/train/reset`            | Clear state for new job                         |
-| GET    | `/api/train/hardware/visible` | Per-GPU VRAM/util/temp                          |
-| GET    | `/api/models/loras`           | List trained adapters                           |
-| POST   | `/api/export/load-checkpoint` | Load a checkpoint for export                    |
-| POST   | `/api/export/export/merged`   | Merge LoRA into base (16-bit FP16 or 4-bit FP4) |
-| POST   | `/api/export/export/gguf`     | Convert merged model to GGUF (Q4_K_M, etc.)     |
-
-### Training Payload
-
-```json
-{
-  "model_name": "unsloth/Qwen3-8B",
-  "training_type": "LoRA/QLoRA",
-  "load_in_4bit": false,
-  "max_seq_length": 2048,
-  "local_datasets": [
-    "/workspace/studio/assets/datasets/uploads/<uuid>_mtron.jsonl"
-  ],
-  "format_type": "alpaca",
-  "num_epochs": 10,
-  "learning_rate": "0.00005",
-  "batch_size": 2,
-  "gradient_accumulation_steps": 4,
-  "warmup_steps": 10,
-  "max_steps": 600,
-  "save_steps": 150,
-  "weight_decay": 0.001,
-  "random_seed": 3407,
-  "packing": false,
-  "train_on_completions": true,
-  "gradient_checkpointing": "unsloth",
-  "optim": "adamw_8bit",
-  "lr_scheduler_type": "cosine",
-  "lora_r": 32,
-  "lora_alpha": 8,
-  "lora_dropout": 0,
-  "target_modules": [
-    "q_proj",
-    "k_proj",
-    "v_proj",
-    "o_proj",
-    "gate_proj",
-    "up_proj",
-    "down_proj"
-  ],
-  "use_rslora": false,
-  "use_loftq": false,
-  "gpu_ids": [
-    0,
-    1
-  ]
+```java
+private static String escapeJson(String s) {
+    return "\"" + s.replace("\\", "\\\\")
+            .replace("\"", "\\\"")
+            .replace("\n", "\\n")
+            .replace("\r", "\\r")
+            .replace("\t", "\\t") + "\"";
 }
 ```
 
-Key hyperparameter notes:
-
-- `lr_scheduler_type`: `cosine` > `linear` for longer runs (avoids LR bottoming out early).
-- `batch_size=2` + `gradient_accumulation_steps=4` = effective batch size of 8.
-- `gpu_ids: [0, 1]` enables dual-GPU (only works with non-4bit models; bitsandbytes 4-bit is single-device).
-- `save_steps: 150` creates checkpoints at 150, 300, 450, 600 for resumption.
-
 ---
 
-## 3. Model Selection
+## 2. Model Selection
 
-### What Works
+### Text-Only Models (✅ Verified Working)
 
-| Model                                     | Params | Precision | Dual GPU | Notes                           |
-|-------------------------------------------|--------|-----------|----------|---------------------------------|
-| `unsloth/Qwen3-8B`                        | 8B     | BF16      | ✓       | ~15 GB VRAM per GPU with LoRA   |
-| `unsloth/Qwen3.5-2B`                      | 2B     | BF16      | ✓       | Fast, good for testing pipeline |
-| `unsloth/gemma-4-e2b-it-unsloth-bnb-4bit` | 2B     | 4-bit     | ✗       | Pre-quantized, single GPU only  |
+| Model | Params | Size (Q4_K_M) | Best Loss | Notes |
+|-------|--------|:---:|:---:|-------|
+| `Qwen/Qwen3-4B` | 4B | ~2.5 GB | 0.27 | Fast, good for testing |
+| `Qwen/Qwen3-8B` | 8B | ~5.0 GB | 0.22 | First successful model |
+| `Qwen/Qwen3-14B` | 14B | ~8.4 GB | 0.23 | Best reasoning quality |
 
-### What Doesn't
+### Multimodal Models (❌ Do Not Use)
 
-- **4-bit bitsandbytes models** (`-bnb-4bit` suffix) cannot train on multiple GPUs — the quantized weights are
-  device-locked.
-- **GGUF models** are inference-only, not trainable.
-- Full 20B+ models in BF16 need >48 GB VRAM without 4-bit quantization (use QLoRA with `load_in_4bit: true` instead).
+Models with vision components (`image-text-to-text` pipeline) fail entirely — template parsing
+errors, confabulated output, or near-random loss (~14). Only **text-only** Qwen variants work
+for pure DSL fine-tuning with the current dataset.
 
 ### Loss Interpretation
 
-Cross-entropy loss for next-token prediction:
+| Loss | Meaning |
+|------|---------|
+| 3.0–4.0 | Initial random guessing |
+| 1.0–2.0 | Learning syntax |
+| 0.3–0.5 | Decent fluency (~70% confidence) |
+| 0.2–0.3 | Strong recall (~85% confidence) |
+| <0.2 | Near-memorization |
 
-| Loss    | Meaning                                             |
-|---------|-----------------------------------------------------|
-| 3.0–8.0 | Random guessing (untrained model on novel language) |
-| 2.0–3.0 | Beginning to learn syntax                           |
-| 1.0–2.0 | Basic patterns emerging                             |
-| 0.3–0.5 | Decent fluency, ~60–75% token confidence            |
-| 0.1–0.2 | Strong recall, ~80–90% token confidence             |
-| <0.1    | Near-memorization of training set (may overfit)     |
+---
+
+## 3. Training
+
+### Hyperparameters (2× RTX 3090)
+
+```json
+{
+  "model_name": "Qwen/Qwen3-14B",
+  "training_type": "LoRA/QLoRA",
+  "load_in_4bit": true,
+  "gpu_ids": [0, 1],
+  "max_seq_length": 2048,
+  "learning_rate": "0.00005",
+  "lr_scheduler_type": "cosine",
+  "batch_size": 2,
+  "gradient_accumulation_steps": 4,
+  "max_steps": 600,
+  "save_steps": 150,
+  "warmup_steps": 10,
+  "lora_r": 32,
+  "lora_alpha": 8,
+  "target_modules": ["q_proj","k_proj","v_proj","o_proj","gate_proj","up_proj","down_proj"],
+  "gradient_checkpointing": "unsloth",
+  "optim": "adamw_8bit"
+}
+```
+
+Key notes:
+- `cosine` > `linear` for runs >200 steps — avoids LR bottoming out early.
+- `batch_size=2` + `gradient_accumulation_steps=4` = effective batch 8.
+- 4-bit models cannot do data-parallel multi-GPU (bitsandbytes limitation). Dual GPU with
+  `load_in_4bit: true` still helps by splitting the model across GPUs.
+- Last-step loss spike is normal — cosine LR approaches near-zero at step 600.
 
 ---
 
 ## 4. Export Pipeline
 
-### Merge LoRA into Base
+### From Checkpoint (Unsloth Python API)
 
-```python
-api('POST', '/api/export/load-checkpoint', {
-    'checkpoint_path': '/workspace/studio/outputs/<run_dir>/checkpoint-600'
-})
-api('POST', '/api/export/export/merged', {
-    'save_directory': 'mtron-qwen-8b',  # relative name
-    'format_type': '16-bit (FP16)',
-    'push_to_hub': False
-})
+The Studio API `export/merged` + `export/gguf` endpoints can be unreliable for large models.
+Use the Unsloth Python API directly from the checkpoint:
+
+```bash
+ssh ginger.local "docker exec unsloth python3 -c '
+from unsloth import FastLanguageModel
+m, t = FastLanguageModel.from_pretrained(
+    \"/workspace/studio/outputs/<run>/checkpoint-600\",
+    load_in_4bit=False
+)
+m.save_pretrained_gguf(\"mtron-qwen-XXb-gguf\", t, quantization_method=\"q4_k_m\")
+print(\"DONE\")
+'"
 ```
 
-Output lands in `/workspace/studio/exports/mtron-qwen-8b/`.
-
-### Convert to GGUF
-
-```python
-api('POST', '/api/export/export/gguf', {
-    'save_directory': 'mtron-qwen-8b-gguf',
-    'quantization_method': 'Q4_K_M',
-    'push_to_hub': False
-})
-```
-
-Output: `/workspace/studio/exports/mtron-qwen-8b-gguf/<ModelName>.Q4_K_M.gguf`
+Output: `/workspace/studio/exports/mtron-qwen-XXb-gguf/` containing `<ModelName>.Q4_K_M.gguf`
 
 ---
 
 ## 5. Ollama Deployment
 
-### Copy GGUF out of container
+### Copy GGUF Out
 
 ```bash
-ssh ginger.local "docker cp unsloth:/workspace/studio/exports/mtron-qwen-8b-gguf/<file>.gguf /tmp/mtron.gguf"
+ssh ginger.local "docker cp unsloth:/workspace/studio/exports/mtron-qwen-XXb_gguf/<file>.gguf /tmp/mtron-qwen-XXb.Q4_K_M.gguf"
 ```
 
-### Create Modelfile
+### Modelfile
 
 ```dockerfile
-FROM /tmp/mtron.gguf
-PARAMETER temperature 0.7
-PARAMETER top_p 0.9
-TEMPLATE """{{ if .System }}<|im_start|>system
+FROM /tmp/mtron-qwen-XXb.Q4_K_M.gguf
+TEMPLATE """<|im_start|>system
 {{ .System }}<|im_end|>
-{{ end }}{{ if .Prompt }}<|im_start|>user
+<|im_start|>user
 {{ .Prompt }}<|im_end|>
-{{ end }}<|im_start|>assistant
-"""
-SYSTEM """You are an expert mtron language assistant. You evaluate mtron expressions and return the correct result."""
+<|im_start|>assistant
+{{ .Response }}<|im_end|>"""
+PARAMETER temperature 0.7
+PARAMETER stop "<|im_end|>"
 ```
 
 ### Register
 
 ```bash
-ollama create mtron-qwen-8b -f /tmp/Modelfile.mtron
-ollama run mtron-qwen-8b "Evaluate: false.as(int::T)"
+sudo systemctl start ollama
+ollama create mtron-qwen-XXb -f /tmp/Modelfile
 ```
+
+### System Info
+
+Ollama runs via systemd on ginger.local as user `ollama`, models stored at
+`/usr/share/ollama/.ollama/models/`. Use `sudo systemctl restart ollama` after
+manually copying blob files. Kill rogue user-level instances with `pkill ollama`
+if port 11434 is conflicting.
 
 ---
 
-## 6. Ollama on ginger.local
+## 6. HuggingFace Deployment
 
-Ollama runs via systemd:
+Models are published under `phaseshift-studio/mtron-qwen`:
+
+| File | Size | Description |
+|------|------|-------------|
+| `mtron-qwen-4b.Q4_K_M.gguf` | ~2.5 GB | Qwen3-4B fine-tune |
+| `mtron-qwen-8b.Q4_K_M.gguf` | ~5.0 GB | Qwen3-8B fine-tune |
+| `mtron-qwen-14b.Q4_K_M.gguf` | ~8.4 GB | Qwen3-14B fine-tune |
+| `training-*.png` | ~70 KB | Training plots per variant |
+
+Upload with:
 
 ```bash
-sudo systemctl start ollama      # if stopped
-ollama list                       # show all models
-ollama rm <name>                  # delete a model
+HF_TOKEN=*** hf upload phaseshift-studio/mtron-qwen \
+  /tmp/mtron-qwen-XXb.Q4_K_M.gguf mtron-qwen-XXb.Q4_K_M.gguf \
+  /tmp/training-XXb.png training-XXb.png
 ```
+
+The `hf` CLI handles LFS >5GB transparently. Web UI uploads silently cap at 5GB.
 
 ---
 
 ## 7. Training History
 
-Previous runs for reference:
-
-| Run             | Model | Steps | GPUs | Best Loss | Notes                                 |
-|-----------------|-------|-------|------|-----------|---------------------------------------|
-| Gemma E2B 4-bit | 2B    | 30    | 1    | 1.52      | Old format (desc/input/output), poor  |
-| Gemma E2B 4-bit | 2B    | 300   | 1    | 0.12      | New format (instruction/input/output) |
-| Qwen3.5-2B      | 2B    | 300   | 2    | 0.23      | LR 2e-4 linear                        |
-| Qwen3.5-2B      | 2B    | 600   | 2    | 0.19      | LR 5e-5 cosine, best dual-GPU result  |
+| Variant | Base Model | Steps | Best Loss | Final Loss | Time | Verified |
+|---------|-----------|:---:|:---:|:---:|------|:---:|
+| 4B | Qwen3-4B (text-only) | 600 | 0.27 | 0.81 | ~15 min | 🆕 |
+| 8B | Qwen3-8B (text-only) | 600 | 0.22 | — | ~20 min | ✅ |
+| 14B | Qwen3-14B (text-only) | 600 | 0.23 | 0.69 | 31 min | ✅ |
+| 2B ❌ | Qwen3.5-2B (multimodal) | 600 | 0.19 | 0.23 | — | Confabulates |
+| 27B ❌ | Qwen3.6-27B (vision-language) | 600 | 0.25 | 0.50 | — | Template failures |
 
 ---
 
-## 8. Quick-Start Cheat Sheet
-
-Use the bundled helper script at `.metatron/skills/mtron/scripts/unsloth_studio.py`:
+## 8. Quick-Start
 
 ```bash
 # 1. Regenerate dataset
 cd metatron
 ./mvnw test -Dtest=UnslothTrainingDatasetExtractorTest
 
-# 2. Upload + train (one command)
-export UNSLOTH_PASSWORD="<password>"
-cd .metatron/skills/mtron/scripts
-python3 unsloth_studio.py train \
-  ../assets/mtron_training_dataset.jsonl \
-  unsloth/Qwen3-8B 600
+# 2. Authenticate to Studio
+curl -s -X POST http://ginger.local:8882/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"unsloth","password":"<pw>"}' \
+  | python3 -c "import json,sys; print(json.load(sys.stdin)['access_token'])" > /tmp/ustok.txt
 
-# 3. Monitor
-python3 unsloth_studio.py status
-python3 unsloth_studio.py hw
+# 3. Upload dataset
+TOKEN=$(cat /tmp/ustok.txt)
+curl -X POST http://ginger.local:8882/api/datasets/upload \
+  -H "Authorization: Bearer $TOKEN" \
+  -F "file=@.metatron/skills/mtron/assets/mtron_training_dataset.jsonl"
 
-# 4. Export to GGUF (use the Studio class programmatically)
-python3 -c "
-from unsloth_studio import Studio
-s = Studio('http://ginger.local:8882', 'unsloth', '<password>')
-s.load_checkpoint('/workspace/studio/outputs/<run>/checkpoint-600')
-s.export_merged('mtron-model')
-s.export_gguf('mtron-model-gguf')
-"
+# 4. Start training (adjust model_name)
+curl -X POST http://ginger.local:8882/api/train/start \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"model_name":"Qwen/Qwen3-14B","training_type":"LoRA/QLoRA","load_in_4bit":true,"gpu_ids":[0,1],...}'
 
-# 5. Deploy
-ssh ginger.local
-docker cp unsloth:/workspace/studio/exports/mtron-model-gguf/<file>.gguf /tmp/mtron.gguf
-ollama create mtron -f /tmp/Modelfile.mtron
-```
+# 5. Export GGUF (from checkpoint via Python)
+ssh ginger.local "docker exec unsloth python3 -c '
+from unsloth import FastLanguageModel
+m,t=FastLanguageModel.from_pretrained(\"/workspace/studio/outputs/<run>/checkpoint-600\",load_in_4bit=False)
+m.save_pretrained_gguf(\"mtron-gguf\",t,quantization_method=\"q4_k_m\")
+'"
 
-### Script API
-
-```python
-from unsloth_studio import Studio
-
-s = Studio('http://ginger.local:8882', 'unsloth', '<password>')
-
-# Dataset
-path = s.upload_dataset('dataset.jsonl')
-
-# Train
-job_id = s.train(model_name='unsloth/Qwen3-8B', dataset_path=path, steps=600, gpus=[0, 1])
-s.wait_for_training()  # blocks until done
-
-# Export
-s.load_checkpoint('/workspace/studio/outputs/<run>/checkpoint-600')
-s.export_merged('mtron-model')
-s.export_gguf('mtron-model-gguf')
+# 6. Deploy to Ollama
+ssh ginger.local "docker cp unsloth:/workspace/studio/exports/mtron-gguf/<file>.gguf /tmp/m.gguf"
+sudo systemctl start ollama
+ollama create mtron -f Modelfile
 ```

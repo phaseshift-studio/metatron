@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -268,6 +268,77 @@ public class mathInstSetTest extends AbstractInstSetTest {
         Obj expected = ObjmtronSerializer.parse(expectedType);
         LOG.debug("result [%s] expected [%s] [should match: %b]", result, expected, shouldMatch);
         assertEquals(shouldMatch, result.test(expected));
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            // datetime::T type checking
+            "datetime_now().matches(datetime::T)                                    % true",
+            "<http://example.com>.matches(datetime::T)                              % false",
+            "<//2024.12:25/09/00/00/000?tz=-0500>.matches(datetime::T)              % true",
+            // Structural projections (host/path/q → uri, port → int)
+            "<//2024.12:25/09/00/00/000?tz=-0500>>>host                            % <2024.12>",
+            "<//2024.12:25/09/00/00/000?tz=-0500>>>port                            % 25",
+            "<//2024.12:25/09/00/00/000?tz=-0500>>>path>>0                         % <09>",
+            "<//2024.12:25/09/00/00/000?tz=-0500>>>path>>3                         % <000>",
+            // Datetime vocabulary >> (named projections, only on typed datetimes)
+            "datetime::<//2024.12:25/09/00/00/000?tz=-0500>>>year                 % 2024",
+            "datetime::<//2024.12:25/09/00/00/000?tz=-0500>>>month                % 12",
+            "datetime::<//2024.12:25/09/00/00/000?tz=-0500>>>day                  % 25",
+            "datetime::<//2024.12:25/09/00/00/000?tz=-0500>>>hour                 % 9",
+            "datetime::<//2024.12:25/09/00/00/000?tz=-0500>>>minute               % 0",
+            "datetime::<//2024.12:25/09/00/00/000?tz=-0500>>>second               % 0",
+            "datetime::<//2024.12:25/09/00/00/000?tz=-0500>>>millis               % 0",
+            "datetime::<//2024.12:25/09/00/00/000?tz=-0500>>>tz                   % '-0500'",
+            // Poly projection and dt_now
+            "datetime::<//2024.12:25/09/00/00/000?tz=-0500>>>{year,month,day}     % {2024,12,25}",
+            // Select (==) mutation — host takes uri, not str
+            "<//2024.12:25/09/00/00/000?tz=-0500>==[port=>31]>>port                % 31",
+            "<//2024.12:25/09/00/00/000?tz=-0500>==[host=><2025.01>]>>host         % <2025.01>",
+            // q mutation via .as(rec::T) and >>=
+            "<//2024.12:25/09/00/00/000?tz=-0500>.as(rec::T)>>=[q=>[tz=>'+0000']]>>q>>tz    % '+0000'",
+            "<//2024.12:25/09/00/00/000?tz=-0500>.as(rec::T)>>=[q=>[tz=>'+0000']]>>q/tz     % '+0000'",
+            // TODO: bug in rec update: "<//2024.12:25/09/00/00/000?tz=-0500>.as(rec::T)>>=[q/tz=>'+0000']>>q>>tz       % '+0000'",
+            // Record → URI → datetime round-trip (fixed Rec→URI q field handling)
+            "[host=><2024.12>,port=>25,path=>[<>,<09>,<00>,<00>,<000>],c=>[min=>1,max=>1],q=>[tz=>'-0500']].as(uri::T).as(datetime::T).as(str::T)    % '//2024.12:25/09/00/00/000?tz=-0500'",
+            "[host=><2024.12>,port=>25,path=>[<>,<09>,<00>,<00>,<000>],c=>[min=>1,max=>1],q=>[tz=>'-0500']].as(datetime::T).as(str::T)    % '//2024.12:25/09/00/00/000?tz=-0500'",
+            // Where (=?=) filter
+            "<//2024.12:25/09/00/00/000?tz=-0500>=?=[port=>25]                     % <//2024.12:25/09/00/00/000?tz=-0500>",
+            "<//2024.12:25/09/00/00/000?tz=-0500>=?=[port=>26]                     % noobj",
+            // Predicate rejects invalid datetimes
+            "<//99.99:99/99/99/99/999?tz=X>.matches(datetime::T)                    % false",
+            "<//2024.13:25/09/00/00/000?tz=-0500>.matches(datetime::T)              % false",
+            "<//2024.12:25/25/00/00/000?tz=-0500>.matches(datetime::T)              % false",
+            "<//2024.12:25/09/60/00/000?tz=-0500>.matches(datetime::T)              % false",
+            "<//2024.12:25/09/00/00>?datetime::T                           % noobj",
+            "<//99.99:99/99/99/99/999?tz=X>?datetime::T                    % noobj",
+            "<//2024.13:25/09/00/00/000?tz=-0500>?datetime::T              % noobj",
+            "<//2024.12:25/25/00/00/000?tz=-0500>?datetime::T              % noobj",
+            "<//2024.12:25/09/60/00/000?tz=-0500>?datetime::T              % noobj",
+            "<//2024.12:25/09/00/00>?datetime::T                           % noobj",
+            // str → datetime parsing (ISO-8601 and Docker timestamp formats)
+            "'2026-08-01T23:37:33-06:00'.as(datetime::T).matches(datetime::T)         % true",
+            "'2026-08-01T23:37:33-06:00'.as(datetime::T)>>year                        % 2026",
+            "'2026-08-01T23:37:33-06:00'.as(datetime::T)>>month                       % 8",
+            "'2026-08-01T23:37:33-06:00'.as(datetime::T)>>day                         % 1",
+            "'2026-08-01T23:37:33-06:00'.as(datetime::T)>>hour                        % 23",
+            "'2026-08-01T23:37:33-06:00'.as(datetime::T)>>minute                      % 37",
+            "'2026-08-01T23:37:33-06:00'.as(datetime::T)>>second                      % 33",
+            "'2026-08-01T23:37:33-06:00'.as(datetime::T)>>tz                          % '-0600'",
+            // Docker timestamp format (space instead of T, space before tz, tz name)
+            "'2026-08-01 23:37:33 -0600 MDT'.as(datetime::T)>>year                    % 2026",
+            "'2026-08-01 23:37:33 -0600 MDT'.as(datetime::T)>>tz                      % '-0600'",
+            // UTC / Zulu
+            "'2024-12-25T09:00:00Z'.as(datetime::T)>>day                              % 25",
+            "'2024-12-25T09:00:00Z'.as(datetime::T)>>tz                               % '+0000'",
+            // Date only (defaults to midnight UTC)
+            "'2024-12-25'.as(datetime::T)>>month                                       % 12",
+            "'2024-12-25'.as(datetime::T).matches(datetime::T)                         % true",
+            // Invalid strings rejected
+            "'not-a-date'.as(datetime::T)                                              % <ERROR>",
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testDateTimeCode(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
     @Test

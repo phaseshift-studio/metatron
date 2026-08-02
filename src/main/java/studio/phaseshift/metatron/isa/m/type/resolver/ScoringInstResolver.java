@@ -33,7 +33,8 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
-import static studio.phaseshift.metatron.isa.m.mInstSet.*;
+import static studio.phaseshift.metatron.isa.m.mInstSet.AS_INST_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.NOOBJ_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -90,8 +91,8 @@ public class ScoringInstResolver implements InstResolver {
         }
         if (userInst.tid().big().test(AS_INST_TID)) {
             final List<Obj> result = Router.readFromSpace(AS_INST_TID.dom(lhs.tid()).rng(Obj.Helper.specificTypeId(userInst.arg(0)))).stream().toList();
-            if (result.size() == 1) {
-                userInst.logger().debug("fast as() resolution: %s", result);
+            if (!result.isEmpty()) {
+                userInst.logger().info("fast as() resolution: %s", result);
                 return result.getFirst().as();
             }
         }

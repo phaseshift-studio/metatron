@@ -87,10 +87,13 @@ public class ObjJSONSerializer extends AbstractObjSerializer<JsonElement> {
     }
 
     /**
-     * Returns a serializer configured with "Simple" defaults (URI-biased).
+     * Returns a serializer configured with "Simple" defaults (URI-biased, lossy).
+     * TRANSPARENT density means poly types (lst/objs/rec) are written as plain
+     * JSON arrays/objects — no `_bid`/`_tid`/`_value` envelope.
      */
     public static ObjJSONSerializer simple() {
         ObjJSONSerializer s = new ObjJSONSerializer();
+        s.at(KEY_DENSITY, str("TRANSPARENT"), Poly.MUTABLE);
         s.at(KEY_BIAS_URI, bool(true), Poly.MUTABLE);
         s.at(KEY_BIAS_OBJS, bool(false), Poly.MUTABLE);
         return s;

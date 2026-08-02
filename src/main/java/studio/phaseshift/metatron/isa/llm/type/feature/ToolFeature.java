@@ -12,7 +12,7 @@ import studio.phaseshift.metatron.isa.llm.type.mTool;
 import studio.phaseshift.metatron.isa.llm.type.mcpClient;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
-import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
+import studio.phaseshift.metatron.isa.m.type.Str;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.Tuple;
 
@@ -69,9 +69,9 @@ public class ToolFeature extends AbstractFeature {
         if (result.isRec()) {
             final Rec r = result.asRec();
             this.logger().info("tool executed: %s(%s) => %s",
-                    r.at(uri(NAME)).strValue(),
-                    ObjJSONSerializer.simple().inputBytes(r.at(uri(TOOL_ARGUMENTS)).strValue()),
-                    r.at(uri(RESULT)).strValue());
+                    Str.Helper.cleanString(r.at(uri(NAME))),
+                    Str.Helper.cleanString(r.at(uri(TOOL_ARGUMENTS))),
+                    Str.Helper.cleanString(r.at(uri(RESULT))));
         } else {
             this.logger().info("tool executed: %s", CommonUtil.clipString(result.toString(), 50, true));
         }

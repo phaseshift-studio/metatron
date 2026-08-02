@@ -38,6 +38,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.furi.q.QCollection.INCRQ;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
 import static studio.phaseshift.metatron.isa.llm.type.Agent.res;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.at_;
@@ -66,11 +67,6 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
     private final Set<fURI> currentMessages = new HashSet<>();
 
     /**
-     * Name of the unified polymorphic message table stored under the session path.
-     */
-    private static final String LLM_MESSAGE_TABLE = "message";
-
-    /**
      * Per-session dedup: set of content hashes already written, keyed by session VID.
      * Prevents duplicates across store instances (LC4j creates a new store per chat call)
      * without leaking state between different sessions.
@@ -88,22 +84,11 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
     }
 
     /**
-     * Build the write URI for the unified message table.
-     * <pre>
-     *   llm:llm_session/1  →  llm:llm_message/_?incrq
-     *   /db/llm_session/1  →  /db/llm_message/_?incrq
-     * </pre>
-     */
-    private static fURI llmMessagePath(final fURI sessionVID) {
-        return sessionVID.retract(2).extend(LLM_MESSAGE_TABLE).extend("_").addQ("incrq");
-    }
-
-    /**
      * Mirror a pre-built system message Rec to the unified message table.
      * System messages bypass {@code ChatMemoryStore.updateMessages()} — they're
      * injected via {@code AiServices.systemMessage()}.
      */
-    public static void mirrorSystemMessage(final Space space, final fURI sessionVID, final Rec systemRec) {
+    public static void mirrorSystemMessage(final Agent agent, final fURI sessionVID, final Rec systemRec) {
         final String hash = contentHash(systemRec);
         systemRec.recValue().put(uri(HASH), str(hash));
         systemRec.recValue().put(uri(TIME), str(Date.from(Instant.now()).toString()));
@@ -113,7 +98,7 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
             if (!seen.add(hash)) return;
         }
         try {
-            Router.writeToSpace(llmMessagePath(sessionVID), systemRec);
+            Router.writeToSpace(agent.at(ROOT).uriValue().extend(MESSAGE).extend("_").addQ(INCRQ), systemRec);
         } catch (final Exception e) {
             LOG.debug("mirror system message failed (non-blocking): %s", e.getMessage());
         }
@@ -153,12 +138,12 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
         if (!(sessionVID instanceof fURI sesVID))
             return new ArrayList<>();
         // Read all messages for this session, skip thinking rows
-        final fURI msgBase = sesVID.retract(2).extend(LLM_MESSAGE_TABLE);
+        final fURI msgBase = this.agent.at(ROOT).uriValue().extend(MESSAGE);
         final List<Rec> allMessages = new ArrayList<>();
         final AtomicInteger found = new AtomicInteger(0);
         // from_(msgBase.extend("+").toUri()).where_(rec(uri(SESSION), sesVID.toUri())).apply()
         at_(uri(msgBase.extend("+")))
-                //.where_(rec(SESSION, uri(sesVID)))
+                .where_(rec(SESSION, uri(sesVID)))
                 .tryToInst().apply(jnt(1))
                 .stream()
                 .forEach(msg -> {
@@ -180,7 +165,7 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
         allMessages.sort(Comparator.comparing(a -> Integer.parseInt(a.vid().name())));
         LOG.info("messages found for context window: " + found.get());
         // ChatMemory handles its own windowing (token-based or message-based)
-        // after hydrating from the store; we return all messages and let it prune
+        // after hydrating from the store; return all messages and let it prune
         return allMessages.stream().map(m -> {
             try {
                 return SERIALIZER.write(m.vid(null));
@@ -225,13 +210,13 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
             sessionHashes = WRITTEN_HASHES.computeIfAbsent(sesVID, k -> new LinkedHashSet<>());
         }
         int written = 0;
+        final fURI writePath = this.agent.at(ROOT).uriValue().extend(MESSAGE).extend("_").addQ(INCRQ);
         for (final Rec incomingRec : incomingRecs) {
             final String hash = incomingRec.recValue().get(uri(HASH)).strValue();
             synchronized (WRITTEN_HASHES) {
                 if (!sessionHashes.add(hash)) continue; // already written
             }
             try {
-                final fURI writePath = llmMessagePath(sesVID);
                 final Obj writtenObj = Router.writeToSpace(writePath, incomingRec);
                 LOG.debug("updating current messages [size:%d]", this.currentMessages.size());
                 if ((writtenObj.typeId().equals(USER_MESSAGE_TID) ||
@@ -257,7 +242,7 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
             synchronized (WRITTEN_HASHES) {
                 if (sessionHashes.add(thinkingHash)) {
                     try {
-                        Router.writeToSpace(llmMessagePath(sesVID), thinkingRec);
+                        Router.writeToSpace(writePath, thinkingRec);
                     } catch (final Exception e) {
                         LOG.warn("error writing thinking to message (non-blocking): %s", e.getMessage());
                     }
@@ -277,7 +262,7 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
             return;
 
         // Read and delete all messages for this session sequentially by id
-        final fURI msgBase = sesVID.retract(2).extend(LLM_MESSAGE_TABLE);
+        final fURI msgBase = this.agent.at(ROOT).uriValue().extend(MESSAGE);
         for (int id = 1; ; id++) {
             try {
                 final Obj msgObj = Router.readFromSpace(msgBase.extend(String.valueOf(id)));

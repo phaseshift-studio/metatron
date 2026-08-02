@@ -120,12 +120,27 @@ public class MFail extends MObj implements Fail {
     /**
      * Create a fail with a nested mtron cause. The cause fail's Throwable becomes
      * the Java {@link Throwable#getCause()} of the outer fail's Throwable.
-     * Uses RuntimeException with cause via constructor so the chain survives space writes.
+     * <p>
+     * When {@code t} has its own cause chain, that chain is preserved by threading
+     * it at the tail of {@code cause.jvm()}'s chain.  Without this, wrapping
+     * an exception that already carries causal information would silently drop
+     * the original cause chain — e.g. {@code IOException → FileNotFoundException}
+     * wrapped with a mtron cause would lose the {@code FileNotFoundException}.
      */
     public static Fail fail(final Throwable t, final Fail cause) {
         final Throwable jvm;
         if (null != cause) {
-            jvm = new RuntimeException(t.getMessage(), cause.jvm());
+            // Preserve t's original cause chain by threading it at the tail
+            // of the mtron cause's chain, so the full causal history survives.
+            // JDK 25+: Throwable(msg, null) sets this.cause = null which
+            // blocks initCause(), so we reconstruct the chain from
+            // constructors bottom-up rather than using initCause().
+            Throwable mtronCauseHead = cause.jvm();
+            final Throwable tCause = t.getCause();
+            if (tCause != null) {
+                mtronCauseHead = rebuildMtronChainWithCause(mtronCauseHead, tCause);
+            }
+            jvm = new RuntimeException(t.getMessage(), mtronCauseHead);
             jvm.setStackTrace(t.getStackTrace());
         } else {
             jvm = t instanceof MTronException ? t : MTronException.of(t.getMessage());
@@ -133,6 +148,32 @@ public class MFail extends MObj implements Fail {
                 ensureFailRefs(jvm);
         }
         return incrStackWrap(new MFail(jvm, FAIL_TID, null), FAIL_STACK_PATTERN);
+    }
+
+    /**
+     * Reconstructs {@code mtronCauseHead}'s chain so that {@code tCause}
+     * (which carries its own nested causes via the constructor) is threaded
+     * at the tail.  Uses only constructors — no {@link Throwable#initCause}
+     * which is blocked in JDK 25+ after null-cause construction.
+     */
+    private static Throwable rebuildMtronChainWithCause(final Throwable mtronCauseHead,
+                                                         final Throwable tCause) {
+        final java.util.List<Throwable> chain = new java.util.ArrayList<>();
+        Throwable c = mtronCauseHead;
+        while (c != null) {
+            chain.add(c);
+            c = c.getCause();
+        }
+        Throwable rebuilt = tCause;
+        for (int i = chain.size() - 1; i >= 0; i--) {
+            final Throwable original = chain.get(i);
+            final RuntimeException wrapper = new RuntimeException(
+                    original.getMessage() != null ? original.getMessage() : "",
+                    rebuilt);
+            wrapper.setStackTrace(original.getStackTrace());
+            rebuilt = wrapper;
+        }
+        return rebuilt;
     }
 
     /**
@@ -160,12 +201,10 @@ public class MFail extends MObj implements Fail {
 
     @Override
     public Fail plus(final Fail rhs) {
-        // Walk to the end of the lhs cause chain and attach rhs there
-        Throwable tail = this.jvm();
-        while (tail.getCause() != null)
-            tail = tail.getCause();
-        try { tail.initCause(rhs.jvm()); } catch (final IllegalStateException ignored) {}
-        return transientFail(this.jvm());
+        // Walk to the end of the lhs cause chain and attach rhs there.
+        // Uses rebuildMtronChainWithCause to avoid JDK 25 initCause rejection.
+        final Throwable merged = rebuildMtronChainWithCause(this.jvm(), rhs.jvm());
+        return transientFail(merged);
     }
 
     @Override

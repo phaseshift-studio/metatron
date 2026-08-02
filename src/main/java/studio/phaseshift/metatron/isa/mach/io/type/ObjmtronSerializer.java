@@ -263,10 +263,13 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
     @Override
     public String writeFail(final Fail fail) {
         final StringBuilder sb = new StringBuilder();
-        sb.append(handleIds(fail, "[" + fail.message() + "]"));
-        if (fail.jvm().getCause() != null)
-            sb.append("[...]");
-        return sb.toString();
+        // Walk the cause chain and serialize each level as [message]
+        Fail current = fail;
+        while (current != null) {
+            sb.append("[").append(current.message() != null ? current.message() : "").append("]");
+            current = current.cause().orElse(null);
+        }
+        return handleIds(fail, sb.toString());
     }
 
     @Override

@@ -23,6 +23,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.TestData;
+import studio.phaseshift.metatron.Training;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractObjTest;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
@@ -95,7 +96,7 @@ public class InstTest extends AbstractObjTest {
         final Inst defA = ObjmtronSerializer.parse(def);
         final Inst specA = ObjmtronSerializer.parse(spec);
         final Inst resolutionA = ObjmtronSerializer.parse(resolution);
-        final Inst resultA = Inst.Helper.bindGenerics(lhsA,defA,specA);
+        final Inst resultA = Inst.Helper.bindGenerics(lhsA, defA, specA);
         assertFalse(lhsA.test(INST_TYPE));
         assertTrue(defA.test(INST_TYPE));
         LOG.info("{{b}}%s{{/b}} resolution matches {{b}}%s{{/b}} specification", resultA.tid(), resolutionA.tid());
@@ -112,11 +113,11 @@ public class InstTest extends AbstractObjTest {
         assertTrue(resultA.tid().test(specA.tid()));
         assertTrue(resultA.test(defA));
         assertTrue(resultA.tid().test(defA.tid()));
-      //  assertTrue(specA.test(resolutionA));
+        //  assertTrue(specA.test(resolutionA));
         assertTrue(specA.tid().test(resolutionA.tid()));
-     //   assertTrue(defA.test(resolutionA));
+        //   assertTrue(defA.test(resolutionA));
         assertTrue(defA.tid().test(resolutionA.tid()));
-     //   assertTrue(specA.test(defA));
+        //   assertTrue(specA.test(defA));
         assertTrue(specA.tid().test(defA.tid()));
     }
 
@@ -187,6 +188,13 @@ public class InstTest extends AbstractObjTest {
      * Each case verifies both the computed value and the result's type (the chain's rng).
      * Interesting cases: chains that cross type boundaries (int→str, str→int, lst→int).
      */
+    @Training(
+            value = "when an obj is applied to a call, the call evaluates and outputs a result",
+            map1 = {0, 1, 2},
+            map2 = {0, 1, 3},
+            mapDesc = {
+                    "when the <<lhs>> obj is applied to the <<rhs>> call, what is the result?",
+                    "when the <<lhs>> obj is resolved against the <<rhs>> call, what is the rng of the resolved call?"})
     @ParameterizedTest
     @CsvSource(quoteCharacter = '"', delimiter = '%', value = {
             // lhs           % chain                          % expected result  % expected rng type
@@ -241,6 +249,10 @@ public class InstTest extends AbstractObjTest {
         LOG.info("%s .%s => {{b}}%s{{/b}} :: {{g}}%s{{/g}} (expected rng: %s)", lhsObj, chainObj, result, result.type().tid(), rngTid);
     }
 
+    @Training(
+            value = "inst A is a refinement of inst B if A's rng and dom are refinements of B's rng and dom and its tid path matches B's tid path",
+            map1 = {0, 1, 2},
+            mapDesc = {"is the <<lhs>> inst a refinement of the <<rhs>> inst?"})
     @ParameterizedTest
     @CsvSource(quoteCharacter = '"', delimiter = '%', value = {
             "plus?int<=int(int::T)                     %       plus?#<=#(#::T)                            % true",

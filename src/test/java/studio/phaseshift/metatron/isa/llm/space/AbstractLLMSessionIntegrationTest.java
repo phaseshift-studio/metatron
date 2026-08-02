@@ -18,7 +18,10 @@
 
 package studio.phaseshift.metatron.isa.llm.space;
 
-import dev.langchain4j.data.message.*;
+import dev.langchain4j.data.message.AiMessage;
+import dev.langchain4j.data.message.ChatMessage;
+import dev.langchain4j.data.message.TextContent;
+import dev.langchain4j.data.message.UserMessage;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -30,17 +33,20 @@ import studio.phaseshift.metatron.isa.llm.type.Agent;
 import studio.phaseshift.metatron.isa.llm.type.Model;
 import studio.phaseshift.metatron.isa.llm.type.feature.ChatFeature;
 import studio.phaseshift.metatron.isa.llm.type.feature.SessionFeature;
-import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.util.MTronException;
 
-import java.util.*;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
-import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_at_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -141,8 +147,8 @@ public abstract class AbstractLLMSessionIntegrationTest extends AbstractMetatron
      * ---------------------------------------------------------- */
 
     @Test
-    public void testSessionAcrossTurns() { 
-       // org.junit.jupiter.api.Assumptions.assumeFalse(isConnectionRefused());
+    public void testSessionAcrossTurns() {
+        // org.junit.jupiter.api.Assumptions.assumeFalse(isConnectionRefused());
         // ── Turn 1: "remember the word DOG" ──────────────────────────
         try {
             agent.chat("Remember the word DOG. Just say 'ok' and nothing else.");
@@ -268,7 +274,7 @@ public abstract class AbstractLLMSessionIntegrationTest extends AbstractMetatron
             throw e;
         }
 
-        final fURI basePath = sessionVID().retract(2);  // strip entry + collection → scheme/prefix root
+        final fURI basePath = this.agent.at(ROOT).uriValue();  // strip entry + collection → scheme/prefix root
 
         // ── Verify unified message table ──────────────────────
         // Messages are stored in a single polymorphic table with _tid column.
@@ -349,7 +355,6 @@ public abstract class AbstractLLMSessionIntegrationTest extends AbstractMetatron
     }
 
 
-
     /**
      * Validate that the unified message table contains messages of a given TID.
      * Reads all rows from the table and filters by rec.tid() (populated from _tid column).
@@ -403,9 +408,9 @@ public abstract class AbstractLLMSessionIntegrationTest extends AbstractMetatron
         assertTrue(algorithm.isRec(), "algorithm must be Rec, got: " + algorithm);
         final Rec algo = algorithm.asRec();
         assertFalse(algo.at(uri(MAX)).isNoObj(), "algorithm.max must exist");
-       // assertFalse(algo.at(uri("message_count")).isNoObj(), "algorithm.message_count must exist");
-       // assertTrue(algo.at(uri("message_count")).intValue() > 0,
-       //        "message_count should be > 0, got " + algo.at(uri("message_count")));
+        // assertFalse(algo.at(uri("message_count")).isNoObj(), "algorithm.message_count must exist");
+        // assertTrue(algo.at(uri("message_count")).intValue() > 0,
+        //        "message_count should be > 0, got " + algo.at(uri("message_count")));
     }
 
     /**
@@ -419,7 +424,6 @@ public abstract class AbstractLLMSessionIntegrationTest extends AbstractMetatron
      * Build an mModel with a specific window max.
      */
     private Agent buildAgentWithMax(final int max) {
-        final fURI memVID = sessionVID();
         // Build features directly as Feature instances — no ISA lookup needed
         final Model model = Model.model(rec(
                 NAME, uri(MODEL_NAME),
@@ -429,13 +433,14 @@ public abstract class AbstractLLMSessionIntegrationTest extends AbstractMetatron
                 LLM, uri(MODEL_NAME)));
         final ChatFeature chat = ChatFeature.chatFeature(model, rec(uri(TO), noobj()));
         final Rec sessionConfig = rec(
-                SESSION, uri(memVID),
-                uri("mem"), auto_at_(memVID).tryToInst(),
+                SESSION, uri(sessionVID()),
+                uri("mem"), auto_at_(sessionVID()).tryToInst(),
                 uri(ALGORITHM), rec(mutableMap(uri(NAME), uri("message_window"), uri(MAX), jnt(max))));
         final SessionFeature session = new SessionFeature(sessionConfig.jvm(), LLM_SESSION_FEATURE_TID, null);
         final Rec agentRec = rec(mutableMap(
                 uri(NAME), str("llm-session-test-agent"),
                 uri(DESC), str("testing llm-session implementation"),
+                uri(ROOT), sessionVID().retract(2).toUri(),
                 uri(FEATURE), lst(mutableList(chat, session))), LLM_AGENT_TID, null);
         return Agent.agent(agentRec);
     }

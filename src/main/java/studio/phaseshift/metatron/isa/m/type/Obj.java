@@ -1351,6 +1351,8 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                     //  "|-<[_,_].swap(||mult(_))  [-- [mult(_),mult(_)] --]"
                     //instC(RSHIFT_INST_TID.dom(ALL).rng(URI_TID.maybe()), lst(uri("vid")), (lhs, inst) -> null == lhs.vid() ? noobj() : lhs.vid().toUri()),
                     instC(RSHIFT_INST_TID.dom(A).rng(B.maybeSome()), lst(T(C.maybeSome())), (lhs, inst) -> {
+                        if (lhs.isUri() && lhs.asUri().tid().toString().equals("/m/math/datetime"))
+                            return datetimeRshift(lhs.asUri(), inst.arg(0));
                         if (lhs.isRec())
                             return Rec.Helper.rshiftRec(lhs.asRec(), inst.arg(0));
                         else if (lhs.isLst())
@@ -1373,6 +1375,32 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                         }
                     })));
         }
+    }
+
+    private static Obj datetimeRshift(final Uri lhs, final Obj arg) {
+        if (arg.isNoObj())
+            return objs(jnt(Integer.parseInt(lhs.uriValue().host().split("\\.")[0])), // year
+                    jnt(Integer.parseInt(lhs.uriValue().host().split("\\.")[1])),      // month
+                    jnt(lhs.uriValue().port()),                                        // day
+                    jnt(Integer.parseInt(lhs.uriValue().path().get(lhs.uriValue().path().size() - 4))),  // hour
+                    jnt(Integer.parseInt(lhs.uriValue().path().get(lhs.uriValue().path().size() - 3))),  // minute
+                    jnt(Integer.parseInt(lhs.uriValue().path().get(lhs.uriValue().path().size() - 2))),  // second
+                    jnt(Integer.parseInt(lhs.uriValue().path().get(lhs.uriValue().path().size() - 1))),  // millis
+                    str(lhs.uriValue().qMap().get("tz")));                              // tz
+        return objs(arg.stream().map(k -> {
+            final String key = k.asUri().uriValue().toString();
+            return switch (key) {
+                case "year"   -> jnt(Integer.parseInt(lhs.uriValue().host().split("\\.")[0]));
+                case "month"  -> jnt(Integer.parseInt(lhs.uriValue().host().split("\\.")[1]));
+                case "day"    -> jnt(lhs.uriValue().port());
+                case "hour"   -> jnt(Integer.parseInt(lhs.uriValue().path().get(lhs.uriValue().path().size() - 4)));
+                case "minute" -> jnt(Integer.parseInt(lhs.uriValue().path().get(lhs.uriValue().path().size() - 3)));
+                case "second" -> jnt(Integer.parseInt(lhs.uriValue().path().get(lhs.uriValue().path().size() - 2)));
+                case "millis" -> jnt(Integer.parseInt(lhs.uriValue().path().get(lhs.uriValue().path().size() - 1)));
+                case "tz"     -> str(lhs.uriValue().qMap().get("tz"));
+                default       -> Uri.Helper.rshiftUri(lhs, lst(k)).elements().findFirst().orElse(noobj());
+            };
+        }));
     }
 
     public static class ObjComparator implements Comparator<Obj> {

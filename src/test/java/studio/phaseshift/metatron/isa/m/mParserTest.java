@@ -502,4 +502,192 @@ public class mParserTest extends AbstractMetatronTest {
             field.set(null, original);
         }
     }
+
+    // ========================================
+    // Parse Error Messages
+    // ========================================
+
+    @ParameterizedTest(name = "[{index}] {1}")
+    @CsvSource(value = {
+            // ── End-of-input: incomplete expressions ─────────────────
+            "1+                                                   % could not parse",
+            "rec[name=>bob                                          % unclosed '['",
+            "lst[1,2,                                              % unclosed '['",
+            "str(                                                   % unclosed '('",
+            // ── Unclosed brackets ──────────────────────────────────
+            "plus([1,2                                             % unclosed",
+            "rec[name=>bob,                                        % unclosed '['",
+            "lst[1,2,3                                             % unclosed '['",
+            // ── Unclosed parens ───────────────────────────────────
+            "plus(1,2                                              % unclosed '('",
+            // ── Unclosed angle brackets (URI) ────────────────────
+            "<http://example.com                                   % unclosed '<'",
+            // ── Unexpected closers ───────────────────────────────
+            "1]                                                    % unexpected ']'",
+            "1)                                                    % unexpected ')'",
+            // ── Line:column is present ───────────────────────────
+            "1+2?rng=                                              % line 1",
+            "1+2?dom=abc                                           % line 1",
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testParseErrorMessage(final String code, final String expectedFragment) {
+        final MTronException ex = assertThrows(MTronException.class,
+                () -> mParser.parse(code));
+        assertTrue(ex.getMessage().contains(expectedFragment),
+                () -> "Expected message to contain '" + expectedFragment
+                        + "' but got: " + ex.getMessage());
+    }
+
+    @Test
+    public void testParseErrorIncludesLineAndColumn() {
+        // Single-line: column at failure point
+        final MTronException ex1 = assertThrows(MTronException.class,
+                () -> mParser.parse("1+"));
+        assertTrue(ex1.getMessage().contains("line 1"),
+                "Should include line number, got: " + ex1.getMessage());
+        assertTrue(ex1.getMessage().contains("col "),
+                "Should include column number, got: " + ex1.getMessage());
+    }
+
+    @Test
+    public void testParseErrorSnippetIsTrimmed() {
+        // Long expression should produce a snippet with context, not the full buffer
+        final String longExpr = "plus(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20";
+        final MTronException ex = assertThrows(MTronException.class,
+                () -> mParser.parse(longExpr));
+        final String msg = ex.getMessage();
+        // Snippet should be shorter than the full expression
+        assertTrue(msg.length() < longExpr.length() + 200,
+                "Error message should contain a trimmed snippet, got length: " + msg.length());
+    }
+
+    @Test
+    public void testParseErrorUsesNewFormat() {
+        // Verify the error message uses the new format, not the raw PetitParser dump
+        final MTronException ex = assertThrows(MTronException.class,
+                () -> mParser.parse("1+]"));
+        final String msg = ex.getMessage();
+        assertTrue(msg.contains("parse error at"),
+                "Should use 'parse error at' format, got: " + msg);
+        assertTrue(msg.contains("^"),
+                "Should include caret indicator, got: " + msg);
+        // Should NOT contain raw ChoiceParser verbosity
+        assertFalse(msg.contains("expected") && msg.indexOf("expected") != msg.lastIndexOf("expected"),
+                "Should not contain raw ChoiceParser alternatives, got: " + msg);
+    }
+
+    // ========================================
+    // ParseDiagnose — non-throwing parse
+    // ========================================
+
+    @ParameterizedTest(name = "[{index}] {2}")
+    @CsvSource(value = {
+            "1+2                                                         % ok                % valid addition",
+            "rec[name=>bob,age=>31]                                      % ok                % record literal",
+            "lst[1,2,3]                                                  % ok                % list literal",
+            "<http://example.com>                                        % ok                % angle-wrapped URI",
+            "plus(1,2)                                                   % ok                % instruction call",
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testParseDiagnoseSuccessCases(final String code,
+                                               final String expectedMsgFragment, final String desc) {
+        final mParser.ParseDiagnostic diag = mParser.parseDiagnose(code);
+        assertTrue(diag.success(),
+                () -> desc + ": should succeed, got: " + diag.message());
+        assertNotNull(diag.result(), () -> desc + ": result should not be null");
+        assertFalse(diag.result().isNoObj(),
+                () -> desc + ": valid expression should not return noobj");
+        assertNull(diag.formatted(),
+                () -> desc + ": formatted() should be null on success, got: " + diag.formatted());
+        assertEquals(0, diag.line());
+        assertEquals(0, diag.column());
+        assertEquals(-1, diag.position());
+    }
+
+    @ParameterizedTest(name = "[{index}] {3}")
+    @CsvSource(value = {
+            // ── Unclosed delimiters (end-of-input) ────────────────
+            "lst[1,2,3                                                   % unclosed '['      % unclosed list bracket",
+            "plus(1,2                                                    % unclosed '('      % unclosed paren",
+            "<http://example.com                                         % unclosed '<'      % unclosed angle bracket",
+            "rec[name=>bob                                               % unclosed '['      % unclosed record bracket",
+            // ── Unexpected closers (no matching opener) ───────────
+            "1]                                                          % unexpected ']'    % stray list closer",
+            "1)                                                          % unexpected ')'    % stray paren closer",
+            // ── Incomplete / generic ──────────────────────────────
+            "1+                                                          % could not parse   % incomplete binary op",
+            "str(                                                        % unclosed '('      % incomplete inst call",
+            // ── Operator chars confuse bracket detection ───────────
+            "1.-<[-<[?>0=>5,_=>_]>                                       % unclosed '['      % operator chars mask real unclosed bracket",
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testParseDiagnoseFailureCases(final String code,
+                                               final String expectedMsgFragment, final String desc) {
+        final mParser.ParseDiagnostic diag = mParser.parseDiagnose(code);
+        assertFalse(diag.success(),
+                () -> desc + ": should fail");
+        assertNotNull(diag.message(),
+                () -> desc + ": message should not be null");
+        assertTrue(diag.message().contains(expectedMsgFragment),
+                () -> desc + ": expected message to contain '" + expectedMsgFragment
+                        + "' but got: " + diag.message());
+        assertTrue(diag.line() >= 1,
+                () -> desc + ": line should be >= 1, got: " + diag.line());
+        assertTrue(diag.column() >= 1,
+                () -> desc + ": column should be >= 1, got: " + diag.column());
+        assertTrue(diag.position() >= 0,
+                () -> desc + ": position should be >= 0, got: " + diag.position());
+        assertEquals(code, diag.buffer(),
+                () -> desc + ": buffer should be the trimmed input");
+        // formatted() must be non-null and contain the line:col header + caret
+        final String formatted = diag.formatted();
+        assertNotNull(formatted, () -> desc + ": formatted() should be non-null on failure");
+        assertTrue(formatted.contains("parse error at"),
+                () -> desc + ": formatted should contain 'parse error at', got: " + formatted);
+        assertTrue(formatted.contains("^"),
+                () -> desc + ": formatted should contain caret, got: " + formatted);
+        assertTrue(formatted.contains(expectedMsgFragment),
+                () -> desc + ": formatted should contain message fragment, got: " + formatted);
+    }
+
+    @Test
+    public void testParseDiagnoseEmptyAndWhitespace() {
+        // Empty string
+        final mParser.ParseDiagnostic empty = mParser.parseDiagnose("");
+        assertTrue(empty.success(), "empty string should succeed");
+        assertTrue(empty.result().isNoObj(), "empty string should return noobj");
+        assertNull(empty.formatted());
+
+        // Whitespace only
+        final mParser.ParseDiagnostic ws = mParser.parseDiagnose("  \n\t ");
+        assertTrue(ws.success(), "whitespace only should succeed");
+        assertNull(ws.formatted());
+    }
+
+    @Test
+    public void testParseDiagnoseNoobjLiteral() {
+        // noobj is a valid expression that evaluates to noobj
+        final mParser.ParseDiagnostic diag = mParser.parseDiagnose("noobj");
+        assertTrue(diag.success(), "noobj literal should parse successfully");
+        assertTrue(diag.result().isNoObj(), "noobj should evaluate to noobj");
+        assertNull(diag.formatted());
+        assertEquals(0, diag.line());
+        assertEquals(0, diag.column());
+        assertEquals(-1, diag.position());
+    }
+
+    @Test
+    public void testParseDiagnoseBufferPreserved() {
+        final String input = "plus(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15";
+        final mParser.ParseDiagnostic diag = mParser.parseDiagnose(input);
+        assertFalse(diag.success());
+        assertEquals(input, diag.buffer(),
+                "buffer should be the full input, not trimmed or snipped");
+    }
+
+    @Test
+    public void testParseDiagnosePositionInBounds() {
+        final mParser.ParseDiagnostic diag = mParser.parseDiagnose("1]");
+        assertFalse(diag.success());
+        assertTrue(diag.position() >= 0 && diag.position() <= diag.buffer().length(),
+                "position " + diag.position() + " should be within buffer length "
+                        + diag.buffer().length());
+    }
 }

@@ -19,6 +19,7 @@ import studio.phaseshift.metatron.isa.mach.machInstSetTest;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.math.mathInstSetTest;
 import studio.phaseshift.metatron.isa.vec.vecInstSetTest;
+import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializerTest;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -93,7 +94,7 @@ public class UnslothTrainingDatasetExtractor {
                 //tbleInstSetTest.class.getCanonicalName(),
                 vecInstSetTest.class.getCanonicalName(),
                 //ObjHTMLSerializerTest.class.getCanonicalName(),
-                //ObjJSONSerializerTest.class.getCanonicalName(),
+                ObjJSONSerializerTest.class.getCanonicalName(),
                 //ObjMarkdownSerializerTest.class.getCanonicalName(),
                 //CommonUtilTest.class.getCanonicalName(),
                 //MTronExceptionTest.class.getCanonicalName(),

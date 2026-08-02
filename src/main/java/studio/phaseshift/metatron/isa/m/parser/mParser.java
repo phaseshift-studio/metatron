@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.isa.m.parser;
 
 import org.petitparser.context.Result;
+import org.petitparser.context.Token;
 import org.petitparser.parser.Parser;
 import org.petitparser.parser.combinators.ChoiceParser;
 import org.petitparser.parser.combinators.OptionalParser;
@@ -451,6 +452,179 @@ public class mParser {
         return (O) running.get();
     }
 
+    /**
+     * Formats a PetitParser parse failure into a human-readable error message
+     * with line:column, snippet context, and a simplified explanation of what
+     * went wrong.
+     */
+    private static String formatParseError(final Result failure) {
+        final String buffer = failure.getBuffer();
+        final int pos = failure.getPosition();
+        final int[] lc = Token.lineAndColumnOf(buffer, pos);
+        final String rawMsg = failure.getMessage() != null ? failure.getMessage() : "unknown parse failure";
+
+        // ── Build snippet context (~80 chars centered on failure) ──────
+        final int contextRadius = 40;
+        final int snippetStart = Math.max(0, pos - contextRadius);
+        final int snippetEnd = Math.min(buffer.length(), pos + contextRadius);
+        final String prefix = snippetStart > 0 ? "..." : "";
+        final String suffix = snippetEnd < buffer.length() ? "..." : "";
+        final String snippet = prefix
+                + buffer.substring(snippetStart, snippetEnd).replace("\n", "\\n").replace("\r", "\\r")
+                + suffix;
+
+        // Caret position within the displayed snippet (adjust for "..." prefix)
+        final int caretOffset = pos - snippetStart + (snippetStart > 0 ? 3 : 0);
+        final String caretLine = " ".repeat(caretOffset) + "^";
+
+        // ── Simplify the PetitParser message ───────────────────────────
+        final String simplified = simplifyParseMessage(rawMsg, buffer, pos, snippet);
+
+        return String.format("parse error at line %d, col %d:\n  %s\n  %s\n  %s",
+                lc[0], lc[1], snippet, caretLine, simplified);
+    }
+
+    /**
+     * Cleans up PetitParser's verbose ChoiceParser failure message into a
+     * single actionable explanation.
+     */
+    private static String simplifyParseMessage(final String rawMsg, final String buffer,
+                                               final int pos, final String snippet) {
+        final boolean atEnd = pos >= buffer.length();
+        final char atChar = atEnd ? '\0' : buffer.charAt(pos);
+        final char prevChar = pos > 0 ? buffer.charAt(pos - 1) : '\0';
+
+        // At end of input — scan backward for unclosed delimiters (reliable
+        // because the full expression is present, nothing comes after)
+        if (atEnd) {
+            final String unclosed = findUnclosedBefore(buffer, pos);
+            if (unclosed != null)
+                return "incomplete expression — " + unclosed;
+            return "incomplete expression — unexpected end of input";
+        }
+
+        // Position lands on an opener — look ahead for missing closer
+        if (atChar == '[' || atChar == '(' || atChar == '<' || atChar == '{') {
+            final char matchingCloser = switch (atChar) {
+                case '[' -> ']'; case '(' -> ')'; case '<' -> '>'; case '{' -> '}'; default -> '\0';
+            };
+            if (!hasMatchingCloser(buffer, pos, atChar, matchingCloser))
+                return "unclosed '" + atChar + "' — missing '" + matchingCloser + "'?";
+        }
+
+        // Position lands on a closer character without a matching opener
+        if (atChar == ']')
+            return "unexpected ']' — missing opening '[' or extra ']'?";
+        if (atChar == '>')
+            return "unexpected '>' — URI brackets don't match, or extra '>'?";
+        if (atChar == ')')
+            return "unexpected ')' — missing opening '(' or extra ')'?";
+        if (atChar == '}' && prevChar == '}')
+            return "unexpected '}}' — template expression missing '${{' or extra '}'?";
+        if (atChar == '}')
+            return "unexpected '}' — missing opening '{' or extra '}'?";
+
+        // Generic: show what character couldn't be parsed, but also check from
+        // the end of the full expression for unclosed delimiters — the real
+        // problem is often an unclosed bracket earlier, not this character.
+        final String unclosedFromEnd = findUnclosedBefore(buffer, buffer.length());
+        if (unclosedFromEnd != null)
+            return String.format("could not parse at '%s' — %s", atChar, unclosedFromEnd);
+        return String.format("could not parse at '%s'", atChar);
+    }
+
+    /**
+     * Characters that precede {@code <} or {@code >} in mtron operators
+     * ({@code => -> -< <= ?< ?> << >>}), meaning the angle bracket is
+     * part of an operator, not a standalone bracket.
+     */
+    private static boolean isOperatorChar(final char c) {
+        return c == '=' || c == '-' || c == '?' || c == '<' || c == '>';
+    }
+
+    /**
+     * Checks if {@code buffer} from position {@code from} has a matching closer
+     * for the opener at {@code from}.  Handles nesting: a closer at depth → 0
+     * resolves the opener.
+     */
+    private static boolean hasMatchingCloser(final String buffer, final int from,
+                                             final char open, final char close) {
+        int depth = 0;
+        for (int i = from; i < buffer.length(); i++) {
+            final char c = buffer.charAt(i);
+            if (c == open) depth++;
+            else if (c == close && depth > 0) depth--;
+            if (depth == 0 && i > from) return true;
+        }
+        return depth == 0;
+    }
+
+    /**
+     * Scans backward from {@code pos} looking for an unclosed delimiter.
+     * Returns a human-readable description, or null if nothing obvious.
+     */
+    private static String findUnclosedBefore(final String buffer, final int pos) {
+        int depth = 0;
+        int angleDepth = 0;
+        boolean inDoubleQuote = false;
+        boolean inSingleQuote = false;
+        boolean inTripleQuote = false;
+
+        for (int i = pos - 1; i >= 0; i--) {
+            final char c = buffer.charAt(i);
+
+            // Handle triple-quote
+            if (i >= 2 && buffer.substring(i - 2, i + 1).equals("\"\"\"")) {
+                inTripleQuote = !inTripleQuote;
+                i -= 2;
+                continue;
+            }
+
+            if (inTripleQuote) continue;
+
+            if (c == '"' && !inSingleQuote) {
+                inDoubleQuote = !inDoubleQuote;
+                continue;
+            }
+            if (c == '\'' && !inDoubleQuote) {
+                inSingleQuote = !inSingleQuote;
+                continue;
+            }
+            if (inDoubleQuote || inSingleQuote) continue;
+
+            // Track bracket depth.  Angle brackets (< >) and square/curved/curly
+            // brackets ([ ] ( ) { }) each get their own depth counter so that
+            // a dangling '>' from a mtron operator doesn't mask an unclosed '['.
+            if (c == ']') {
+                depth++;
+            } else if (c == '[') {
+                if (depth == 0) return "unclosed '[' — missing ']'?";
+                depth--;
+            } else if (c == '>' && !isOperatorChar(i > 0 ? buffer.charAt(i - 1) : '\0')) {
+                angleDepth++;
+            } else if (c == '<' && !isOperatorChar(i > 0 ? buffer.charAt(i - 1) : '\0')) {
+                if (angleDepth == 0) return "unclosed '<' — missing '>'?";
+                angleDepth--;
+            } else if (c == ')') {
+                depth++;
+            } else if (c == '(') {
+                if (depth == 0) return "unclosed '(' — missing ')'?";
+                depth--;
+            } else if (c == '}') depth++;
+            else if (c == '{') {
+                if (depth == 0) return "unclosed '{' — missing '}'?";
+                depth--;
+            }
+        }
+
+        // Quote check
+        if (inDoubleQuote) return "unclosed double-quote — missing closing '\"'?";
+        if (inSingleQuote) return "unclosed single-quote — missing closing '''?";
+        if (inTripleQuote) return "unclosed triple-quote — missing closing '\"\"\"'?";
+
+        return null;
+    }
+
     public static <O extends Obj> O parse(final String code) {
         final String trimmed = code.trim();
         if (trimmed.isEmpty())
@@ -466,7 +640,7 @@ public class mParser {
         long parseTime = System.nanoTime() - start;
 
         if (result.isFailure()) {
-            throw MTronException.of((Object) (result.getBuffer() + "\n" + " ".repeat(result.getPosition()) + "^ " + result.getMessage() + "\n"));
+            throw MTronException.of(formatParseError(result));
         }
 
         start = System.nanoTime();
@@ -480,6 +654,30 @@ public class mParser {
 
 
         return obj;
+    }
+
+    /**
+     * Non-throwing parse that returns a diagnostic record instead of throwing
+     * on failure.  Use this in REPLs, IDE integrations, and anywhere you want
+     * to probe validity without a try/catch.
+     */
+    public static ParseDiagnostic parseDiagnose(final String code) {
+        final String trimmed = code.trim();
+        if (trimmed.isEmpty())
+            return ParseDiagnostic.ok(noobj());
+        try {
+            final Result result = cachedMainParser.parse(trimmed);
+            if (result.isSuccess())
+                return ParseDiagnostic.ok(result.get());
+            final int[] lc = Token.lineAndColumnOf(result.getBuffer(), result.getPosition());
+            final String simplified = simplifyParseMessage(
+                    result.getMessage(), result.getBuffer(), result.getPosition(), "");
+            return new ParseDiagnostic(noobj(), lc[0], lc[1],
+                    result.getPosition(), result.getBuffer(), simplified, false);
+        } catch (final StackOverflowError e) {
+            return new ParseDiagnostic(noobj(), 1, 1, 0, trimmed,
+                    "infinite recursion detected — possible left recursion", false);
+        }
     }
 
     /**
@@ -526,8 +724,7 @@ public class mParser {
             }
             if (result.isFailure()) {
                 if (!allInsts.isEmpty()) break;   // partial parse, return what we have
-                throw MTronException.of((Object) (result.getBuffer() + "\n"
-                        + " ".repeat(result.getPosition()) + "^ " + result.getMessage() + "\n"));
+                throw MTronException.of(formatParseError(result));
             }
 
             final Obj parsed = result.get();
@@ -900,6 +1097,47 @@ public class mParser {
     }
 
     public record FileParseError(int lineNumber, String lineString, Exception parseException) {
+    }
+
+    /**
+     * Result of a non-throwing parse via {@link #parseDiagnose(String)}.
+     * On success, {@code result} holds the parsed object.  On failure,
+     * {@code line}/{@code column}/{@code position} locate the error,
+     * {@code buffer} contains the full input, and {@code message} is a
+     * simplified human-readable explanation.
+     */
+    public record ParseDiagnostic(Obj result, int line, int column, int position,
+                                   String buffer, String message, boolean success) {
+        public static ParseDiagnostic ok(final Obj result) {
+            return new ParseDiagnostic(result, 0, 0, -1, "", "", true);
+        }
+
+        /**
+         * Returns the formatted error string (same format as
+         * {@link #parse(String)} throws), or {@code null} on success.
+         */
+        public String formatted() {
+            return success ? null : formatParseError(this);
+        }
+    }
+
+    /**
+     * Formats a {@link ParseDiagnostic} failure the same way
+     * {@link #parse(String)} formats parse errors.
+     */
+    private static String formatParseError(final ParseDiagnostic diag) {
+        final int contextRadius = 40;
+        final int snippetStart = Math.max(0, diag.position - contextRadius);
+        final int snippetEnd = Math.min(diag.buffer.length(), diag.position + contextRadius);
+        final String prefix = snippetStart > 0 ? "..." : "";
+        final String suffix = snippetEnd < diag.buffer.length() ? "..." : "";
+        final String snippet = prefix
+                + diag.buffer.substring(snippetStart, snippetEnd).replace("\n", "\\n").replace("\r", "\\r")
+                + suffix;
+        final int caretOffset = diag.position - snippetStart + (snippetStart > 0 ? 3 : 0);
+        final String caretLine = " ".repeat(caretOffset) + "^";
+        return String.format("parse error at line %d, col %d:\n  %s\n  %s\n  %s",
+                diag.line, diag.column, snippet, caretLine, diag.message);
     }
 
     private static String aggregateTillBlock(final List<String> lines, final int start, final String prefix) {

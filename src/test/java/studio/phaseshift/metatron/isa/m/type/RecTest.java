@@ -24,6 +24,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.TestData;
+import studio.phaseshift.metatron.Training;
 import studio.phaseshift.metatron.algebra.AbstractAlgebraTest;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
@@ -61,7 +62,10 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
         assertEquals(Long.valueOf(2), r.at("b").jvm());
     }
 
-
+    @Training(
+            value = "a rec is a set of key/value pairs. the rshift (sugar'd >>) inst maps a rec to values based on the provided argument keys.",
+            map1 = {0, 1, 2},
+            mapDesc = {"when the <<lhs>> rec is rshifted by the <<rhs>> key, what is the result?"})
     @ParameterizedTest
     @CsvSource(value = {
             // rec                                 | key                  | value
@@ -100,7 +104,10 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
         assertEquals(v, actual);
     }
 
-
+    @Training(
+            value = "rec A isa (sugar'd ?) match to rec B, if rec B subsumes the key/values of rec A",
+            map1 = {0, 1, 2},
+            mapDesc = {"does the <<rhs>> rec match the <<lhs>> rec?"})
     @ParameterizedTest
     @CsvSource(value = {
             // rec                                 | key                                        | value
