@@ -77,19 +77,19 @@ public class ObjDockerSerializerTest extends AbstractMetatronTest {
 
     @ParameterizedTest(name = "[{index}] {4}")
     @CsvSource(value = {
-        "{\"v\":\"227MB\"}     % mB::T  % 227.0   % MB → mB",
-        "{\"v\":\"4.61GB\"}    % gB::T  % 4.61    % GB → gB",
-        "{\"v\":\"1kB\"}       % kB::T  % 1.0     % kB → kB",
-        "{\"v\":\"4096B\"}     % bB::T  % 4096.0  % plain bytes",
-        "{\"v\":\"0.5TB\"}     % tB::T  % 0.5     % TB → tB",
-        "{\"v\":\"0B\"}        % bB::T  % 0.0     % zero bytes",
+        "{\"v\":\"227MB\"}     % /m/math/data/mB % 227.0   % MB → mB",
+        "{\"v\":\"4.61GB\"}    % /m/math/data/gB % 4.61    % GB → gB",
+        "{\"v\":\"1kB\"}       % /m/math/data/kB % 1.0     % kB → kB",
+        "{\"v\":\"4096B\"}     % /m/math/data/bB % 4096.0  % plain bytes",
+        "{\"v\":\"0.5TB\"}     % /m/math/data/tB % 0.5     % TB → tB",
+        "{\"v\":\"0B\"}        % /m/math/data/bB % 0.0     % zero bytes",
     }, delimiter = '%')
-    void testSizes(final String json, final String typeExpr,
+    void testSizes(final String json, final String expectedVid,
                    final double expectedValue, final String description) {
         final Obj v = field(json, "v");
         assertTrue(v.isReal(), "should be real: " + v);
         assertEquals(expectedValue, v.realValue().doubleValue(), 0.001);
-        checkMatches(LOG, v.toString(), typeExpr, true);
+        assertEquals(expectedVid, v.tid().toString(), "TID mismatch: " + v);
     }
 
     // ===================================================================

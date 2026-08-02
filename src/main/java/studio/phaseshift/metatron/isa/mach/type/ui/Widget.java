@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -23,7 +23,6 @@ import studio.phaseshift.metatron.isa.mach.type.ui.console.Console;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Highlighter;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.widget.FloatingSurface;
-import studio.phaseshift.metatron.isa.mach.type.ui.widget.TableWidget;
 
 import java.util.List;
 
@@ -36,6 +35,8 @@ public interface Widget<W extends Widget<W>> extends Stylable<W>, AutoCloseable,
 
     @Override
     default void close() {
+        if (null != Console.LOCAL_INSTANCE)
+            this.unfloat(Console.LOCAL_INSTANCE.getFloatingSurface());
     }
 
     W cursor(final Cursor cursor);
