@@ -23,8 +23,6 @@ import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Poly;
 import studio.phaseshift.metatron.isa.mach.type.Router;
-import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
-import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 
 import java.util.Comparator;
 import java.util.List;
@@ -92,7 +90,7 @@ public class ScoringInstResolver implements InstResolver {
         if (userInst.tid().big().test(AS_INST_TID)) {
             final List<Obj> result = Router.readFromSpace(AS_INST_TID.dom(lhs.tid()).rng(Obj.Helper.specificTypeId(userInst.arg(0)))).stream().toList();
             if (!result.isEmpty()) {
-                userInst.logger().info("fast as() resolution: %s", result);
+                userInst.logger().debug("fast as() resolution: %s", result);
                 return result.getFirst().as();
             }
         }
@@ -110,7 +108,7 @@ public class ScoringInstResolver implements InstResolver {
 
     @Override
     public Inst resolve(final Obj lhs, final Inst userInst, final Stream<Obj> candidates) {
-        final GraphittyLogger LOG = Graphitty.log(lhs);
+        //final GraphittyLogger LOG = Graphitty.log(lhs);
         if (userInst.isNoObj())
             return null;
 
