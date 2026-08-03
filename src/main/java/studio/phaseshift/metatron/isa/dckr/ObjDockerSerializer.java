@@ -114,7 +114,7 @@ public class ObjDockerSerializer extends AbstractObjSerializer<String> {
                 if ("labels".equals(key) && value.isStr())
                     value = parseLabels(Str.Helper.cleanString(value, true));
                 else if ("labels".equals(key) && value.isUri())
-                    value = parseLabels(value.uriValue().name());
+                    value = parseLabels(value.uriValue().toString());
                 cleaned.put(uri(key), value);
             });
             return rec(cleaned);

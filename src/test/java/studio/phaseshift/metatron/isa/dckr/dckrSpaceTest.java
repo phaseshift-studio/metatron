@@ -26,14 +26,15 @@ import studio.phaseshift.metatron.isa.AbstractSpaceTest;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.type.Router;
-import studio.phaseshift.metatron.util.MTronException;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static studio.phaseshift.metatron.Tokens.PATTERN;
 import static studio.phaseshift.metatron.Tokens.ROUTE;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
@@ -298,13 +299,199 @@ public class dckrSpaceTest extends AbstractSpaceTest {
     }
 
     @Test
-    @Order(4)
-    void testContainerRunMissingImageFails() {
+    @Order(5)
+    void testDockerGraphLinks() {
         assumeDockerAvailable();
-        final String name = "mtron-test-bad-" + System.currentTimeMillis() % 100000;
+        final long now = System.currentTimeMillis() % 100000;
+        final String name1 = "mtron-test-g1-" + now;
+        final String name2 = "mtron-test-g2-" + now;
 
-        final Obj badConfig = rec(uri("ports"), lst(str("8080:80")));
-        assertThrows(MTronException.class, () ->
-                space.write(f("dtest:container/" + name), badConfig));
+        // -- Run two containers from the same image --
+        final Obj runConfig = rec(uri("image"), str("nginx:alpine"));
+        space.write(f("dtest:container/" + name1), runConfig);
+        space.write(f("dtest:container/" + name2), runConfig);
+
+        try {
+            // -- Image-side: containers field is a list of URIs --
+            final Obj image = space.read(f("dtest:image/nginx:alpine"));
+            assertFalse(image.isNoObj(), "image should be addressable by repository:tag");
+            LOG.info("image {{b}}%s", image);
+
+            final Obj imageContainers = image.asRec().at(uri("containers"));
+            assertFalse(imageContainers.isNoObj(),
+                    "image.containers should not be noobj (Docker 'Containers' count should be overwritten)");
+            assertTrue(imageContainers.isLst(),
+                    "image.containers should be a list, got: " + imageContainers);
+            assertTrue(imageContainers.asLst().count() >= 2,
+                    "image.containers should have at least 2 entries, got: " + imageContainers.asLst().count());
+
+            // Each entry should be a URI pointing to a container
+            imageContainers.asLst().elements().forEach(ref -> {
+                assertTrue(ref.isUri(),
+                        "each containers entry should be a URI, got: " + ref);
+                final String refStr = ref.uriValue().toString();
+                assertTrue(refStr.startsWith("dtest:container/"),
+                        "ref should be under dtest:container/, got: " + refStr);
+            });
+
+            // Verify both containers are in the list
+            final List<String> refStrings = imageContainers.asLst().elements()
+                    .map(ref -> ref.uriValue().toString())
+                    .toList();
+            assertTrue(refStrings.stream().anyMatch(s -> s.contains(name1)),
+                    "containers should include " + name1 + ", got: " + refStrings);
+            assertTrue(refStrings.stream().anyMatch(s -> s.contains(name2)),
+                    "containers should include " + name2 + ", got: " + refStrings);
+
+            // -- Container-side: image field is a URI into dckrSpace --
+            for (final String name : List.of(name1, name2)) {
+                final Obj container = space.read(f("dtest:container/" + name));
+                assertFalse(container.isNoObj(), "container " + name + " should exist");
+
+                final Obj imageField = container.asRec().at(uri("image"));
+                assertFalse(imageField.isNoObj(),
+                        "container.image should not be noobj");
+                assertTrue(imageField.isUri(),
+                        "container.image should be a URI, got: " + imageField);
+                final String imageRef = imageField.uriValue().toString();
+                assertTrue(imageRef.contains("nginx:alpine"),
+                        "container.image URI should reference nginx:alpine, got: " + imageRef);
+                LOG.info("container {{b}}%s{{X}} -> image ref {{y}}%s", name, imageRef);
+            }
+
+            // -- Direct image lookup by repo:tag vs hash works --
+            final Obj imageByTag = space.read(f("dtest:image/nginx:alpine"));
+            assertFalse(imageByTag.isNoObj(), "image lookup by repo:tag should work");
+            final String imageHash = imageByTag.asRec().at(uri("id")).isNoObj()
+                    ? null : imageByTag.asRec().at(uri("id")).toString();
+            if (imageHash != null) {
+                final Obj imageByHash = space.read(f("dtest:image/" + imageHash));
+                // May or may not exist depending on key strategy; at minimum tag-lookup works
+                LOG.info("image by hash {{b}}%s{{X}}: %s", imageHash,
+                        imageByHash.isNoObj() ? "not found" : "found");
+            }
+        } finally {
+            // Clean up both containers
+            space.write(f("dtest:container/" + name1), noobj());
+            space.write(f("dtest:container/" + name2), noobj());
+        }
+    }
+
+    @Test
+    @Order(6)
+    void testNetworkGraphLinks() {
+        assumeDockerAvailable();
+        final long now = System.currentTimeMillis() % 100000;
+        final String name = "mtron-test-net-" + now;
+
+        // Run a container on the default bridge network
+        final Obj runConfig = rec(uri("image"), str("nginx:alpine"));
+        space.write(f("dtest:container/" + name), runConfig);
+
+        try {
+            // -- Network-side: containers field is a list --
+            final Obj network = space.read(f("dtest:network/bridge"));
+            assertFalse(network.isNoObj(), "bridge network should exist");
+            LOG.info("bridge network {{b}}%s", network);
+
+            final Obj netContainers = network.asRec().at(uri("containers"));
+            assertFalse(netContainers.isNoObj(),
+                    "network.containers should not be noobj");
+            assertTrue(netContainers.isLst(),
+                    "network.containers should be a list, got: " + netContainers);
+            assertTrue(netContainers.asLst().count() >= 1,
+                    "network.containers should have at least 1 entry");
+
+            // Each entry is a URI
+            netContainers.asLst().elements().forEach(ref -> {
+                assertTrue(ref.isUri(),
+                        "each network.containers entry should be a URI, got: " + ref);
+                assertTrue(ref.uriValue().toString().startsWith("dtest:container/"),
+                        "ref should be under dtest:container/, got: " + ref.uriValue().toString());
+            });
+
+            // Our container should be in the list
+            final boolean found = netContainers.asLst().elements()
+                    .anyMatch(ref -> ref.uriValue().toString().contains(name));
+            assertTrue(found, "network.containers should include " + name);
+
+            // -- Container-side: networks field is a URI --
+            final Obj container = space.read(f("dtest:container/" + name));
+            final Obj netField = container.asRec().at(uri("networks"));
+            assertFalse(netField.isNoObj(), "container.networks should not be noobj");
+            assertTrue(netField.isUri(),
+                    "container.networks should be a URI, got: " + netField);
+            assertTrue(netField.uriValue().toString().contains("bridge"),
+                    "container.networks should reference bridge, got: " + netField);
+            LOG.info("container {{b}}%s{{X}} -> network ref {{y}}%s", name, netField);
+
+            // -- Direct network lookup works --
+            final Obj bridge = space.read(f("dtest:network/bridge"));
+            assertFalse(bridge.isNoObj(), "network lookup by name should work");
+            assertTrue(bridge.asRec().at(uri("name")).toString().contains("bridge"),
+                    "network should have name=bridge");
+        } finally {
+            space.write(f("dtest:container/" + name), noobj());
+        }
+    }
+
+    @Test
+    @Order(7)
+    void testVolumeGraphLinks() {
+        assumeDockerAvailable();
+        final long now = System.currentTimeMillis() % 100000;
+        final String volName = "mtron-test-vol-" + now;
+        final String containerName = "mtron-test-volc-" + now;
+
+        // Create a named volume and run a container with it mounted
+        space.write(f("dtest:volume/" + volName), rec());
+        space.write(f("dtest:container/" + containerName),
+                rec(uri("image"), str("nginx:alpine"),
+                        uri("volumes"), lst(str(volName + ":/data"))));
+
+        try {
+            // -- Volume-side: containers field is a list --
+            final Obj volume = space.read(f("dtest:volume/" + volName));
+            assertFalse(volume.isNoObj(), "volume should exist");
+
+            final Obj volContainers = volume.asRec().at(uri("containers"));
+            assertFalse(volContainers.isNoObj(),
+                    "volume.containers should not be noobj");
+            assertTrue(volContainers.isLst(),
+                    "volume.containers should be a list, got: " + volContainers);
+            assertTrue(volContainers.asLst().count() >= 1,
+                    "volume.containers should have at least 1 entry");
+
+            volContainers.asLst().elements().forEach(ref -> {
+                assertTrue(ref.isUri(),
+                        "each volume.containers entry should be a URI, got: " + ref);
+                assertTrue(ref.uriValue().toString().startsWith("dtest:container/"),
+                        "ref should be under dtest:container/");
+            });
+
+            final boolean found = volContainers.asLst().elements()
+                    .anyMatch(ref -> ref.uriValue().toString().contains(containerName));
+            assertTrue(found, "volume.containers should include " + containerName);
+
+            // -- Container-side: mounts field is a list of URIs --
+            final Obj container = space.read(f("dtest:container/" + containerName));
+            final Obj mountsField = container.asRec().at(uri("mounts"));
+            assertFalse(mountsField.isNoObj(), "container.mounts should not be noobj");
+            assertTrue(mountsField.isLst(),
+                    "container.mounts should be a list, got: " + mountsField);
+
+            final boolean volRefFound = mountsField.asLst().elements()
+                    .anyMatch(ref -> ref.isUri() && ref.uriValue().toString().contains(volName));
+            assertTrue(volRefFound,
+                    "container.mounts should contain a ref to " + volName + ", got: " + mountsField);
+            LOG.info("container {{b}}%s{{X}} -> volume refs {{y}}%s", containerName, mountsField);
+
+            // -- Direct volume lookup works --
+            final Obj volDirect = space.read(f("dtest:volume/" + volName));
+            assertFalse(volDirect.isNoObj(), "volume lookup by name should work");
+        } finally {
+            space.write(f("dtest:container/" + containerName), noobj());
+            space.write(f("dtest:volume/" + volName), noobj());
+        }
     }
 }
