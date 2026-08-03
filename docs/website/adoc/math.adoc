@@ -95,11 +95,9 @@ datetime::<//2024.12:25/09/00/00/000?tz=-0500>>>{hour,minute,second,millis}     
 <//2024.12:25/09/00/00/000?tz=-0500>==[port=>+1]>>port                               [-- <10> --]
 <//2024.12:25/09/00/00/000?tz=-0500>=?=[port=>25]                                    [-- <11> --]
 <//2024.12:25/09/00/00/000?tz=-0500>.as(rec::T)>>=[q=>[tz=>'+0000']].as(datetime::T) [-- <12> --]
-// str → datetime parsing (ISO-8601 and Docker timestamps)
-'2026-08-01T23:37:33-06:00'.as(datetime::T)>>year                                     [-- <13> --]
+'2026-08-01T23:37:33-06:00'.as(datetime::T)>>year                                    [-- <13> --]
 '2026-08-01 23:37:33 -0600 MDT'.as(datetime::T)>>tz                                  [-- <14> --]
 '2024-12-25T09:00:00Z'.as(datetime::T)>>{year,month,day}                             [-- <15> --]
-'not-a-date'.as(datetime::T)                                                          [-- <16> --]
 ----
 <1> construct a `datetime::T` representing the current date and time.
 <2> type-check: validate that the `uri::T` satisfies the `datetime::T` structure (returns the value, or `noobj` if it doesn't).
@@ -113,8 +111,7 @@ datetime::<//2024.12:25/09/00/00/000?tz=-0500>>>{hour,minute,second,millis}     
 <10> `select` mutation: extract `datetime::T` `port` (day) and add 1.
 <11> `where` filter: keep the value only when `port` (day) is `25`.
 <12> `record` round-trip: convert to `rec::T`, update the `tz` query field, and cast back to `datetime::T`.
-<13> parse an ISO-8601 string with timezone offset into a `datetime::T`.
+<13> parse an https://en.wikipedia.org/wiki/ISO_8601[ISO-8601] string with timezone offset into a `datetime::T`.
 <14> parse a Docker-format timestamp (space-separated, timezone name) into a `datetime::T`.
 <15> parse a UTC / Zulu timestamp into a `datetime::T`.
-<16> invalid date strings return a `fail::T` (caught by `<ERROR>`).
 |===

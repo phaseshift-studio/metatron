@@ -301,7 +301,9 @@ bin/metatron</code></pre>
 </div>
 <img src="images/metatron-character-ansi.png" width="250px" style="float:left; margin:10px;"></a>
 <div class="paragraph">
-<p>Software is an endless maze of standards, specifications, packages, frameworks, utilities&#8201;&#8212;&#8201;all touching fundamental concepts regarding the nature of the world we find ourselves in. This collective endeavour marks a high-point in rational human thought and in being so, serves as a "legoland" for the well-tuned mind that finds joy in discovering and manipulating abstract structures using cold, discrete mechanical processes all without breaking a sweat nor leaving the comfort of one&#8217;s home. From web technologies, to database technologies, to AI technologies, and so forth, millions of developers are <em>clickity clacking</em> away&#8201;&#8212;&#8201;sewing a massive technological quilt. metatron is one such patch that provides a distillation of computing down to a few fundamental patterns that, when used together, transform the complex morass of seemingly orthogonal technologies into a comprehensible and usable set of constructs not easily realized nor written using prior art.</p>
+<p>Software is an endless maze of standards, specifications, packages, frameworks, utilities&#8201;&#8212;&#8201;all touching fundamental concepts regarding the nature of the world we find ourselves in.
+This collective endeavour marks a high-point in rational human thought and in being so, serves as a "legoland" for the well-tuned mind that finds joy in discovering and manipulating abstract structures using cold, discrete mechanical processes all without breaking a sweat nor leaving the comfort of one&#8217;s home.
+From web technologies, to database technologies, to AI technologies, and so forth, millions of developers are <em>clickity clacking</em> away&#8201;&#8212;&#8201;sewing a massive technological quilt. metatron is one such patch that provides a distillation of computing down to a few fundamental patterns that, when used together, transform the complex morass of seemingly orthogonal technologies into a comprehensible and usable set of constructs not easily realized nor written using prior art.</p>
 </div>
 <div class="paragraph">
 <p>metatron touches on fundamental concepts in languages, compilers, operating systems, networks, databases, web technologies, and more –– all from the vantage point of that enables one to speak to this world at large, simply and effectively.</p>
@@ -323,7 +325,8 @@ bin/metatron</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>However, such stateless one-off interactions don&#8217;t capture the full power of metatron. To use metatron as it was intended to be used is through instances of <code>console::T</code> or <code>desktop::T</code>&#8201;&#8212;&#8201;the REPL terminal application and/or the desktop application, respectively.</p>
+<p>However, such stateless one-off interactions don&#8217;t capture the full power of metatron.
+To use metatron as it was intended to be used is through instances of <code>console::T</code> or <code>desktop::T</code>&#8201;&#8212;&#8201;the REPL terminal application and/or the desktop application, respectively.</p>
 </div>
 </div>
 </div>
@@ -383,7 +386,8 @@ There are 3 categories of objs:</p>
 \tt lhs \underbrace{\Rightarrow}_* code\{{\underbrace{inst_0 \cdot \underbrace{(inst_1 + inst_2)}_+ \cdot \ldots \cdot inst_n}_*}\} \underbrace{\Rightarrow}_= rhs \]</p>
 </div>
 <div class="paragraph">
-<p>There is one <a href="https://en.wikipedia.org/wiki/Universal_property">universal</a> obj that is a mono, a poly, and a call: <code>noobj</code>. <code>noobj</code> is similar to the <a href="https://en.wikipedia.org/wiki/Null_pointer">null</a> value found in many programming languages save that it has an operational semantic aligned with its role as the <a href="https://en.wikipedia.org/wiki/Zero_object_(algebra)">0-object</a> (zero) of the algebraic ring formed by the set of all objs along with the two ring operators: <code>*</code> and <code>+</code> (apply/compose and branch/split, respectively). Finally, at the other end of the spectrum, there is an obj which serves as the 1-object (one) called "all" and denoted <code>#</code>.</p>
+<p>There is one <a href="https://en.wikipedia.org/wiki/Universal_property">universal</a> obj that is a mono, a poly, and a call: <code>noobj</code>. <code>noobj</code> is similar to the <a href="https://en.wikipedia.org/wiki/Null_pointer">null</a> value found in many programming languages save that it has an operational semantic aligned with its role as the <a href="https://en.wikipedia.org/wiki/Zero_object_(algebra)">0-object</a> (zero) of the algebraic ring formed by the set of all objs along with the two ring operators: <code>*</code> and <code>+</code> (apply/compose and branch/split, respectively).
+Finally, at the other end of the spectrum, there is an obj which serves as the 1-object (one) called "all" and denoted <code>#</code>.</p>
 </div>
 <table class="tableblock frame-all grid-all table-bordered small center" style="width: 70%;">
 <colgroup>
@@ -427,7 +431,9 @@ mtron&gt; [#,noobj]&gt;-        [-- # + noobj --]
 <div class="content">
 <h4 id="_ring_theory" class="discrete">Ring Theory</h4>
 <div class="paragraph">
-<p><a href="https://en.wikipedia.org/wiki/Ring_theory">Ring theory</a> is the beating heart of metatron. Its axioms and subsequent theorems are carefully woven throughout the design, where rings are coupled with rings through the various layers of computing abstraction. The most prominent uses are found in:</p>
+<p><a href="https://en.wikipedia.org/wiki/Ring_theory">Ring theory</a> is the beating heart of metatron.
+Its axioms and subsequent theorems are carefully woven throughout the design, where rings are coupled with rings through the various layers of computing abstraction.
+The most prominent uses are found in:</p>
 </div>
 <div class="olist arabic">
 <ol class="arabic">
@@ -450,7 +456,8 @@ mtron&gt; [#,noobj]&gt;-        [-- # + noobj --]
 </div>
 <div class="paragraph">
 <p>There is nothing "difficult" about ring theory.
-In fact, grade school has already ingrained the most important concepts&#8201;&#8212;&#8201;namely, how <code>*</code> and <code>+</code> operate on objects (e.g. numbers) individually and in concert with one another (e.g. the <a href="https://en.wikipedia.org/wiki/FOIL_method">foil method</a>). In metatron, its not just numbers that are constrained by these axioms, but more generally, objs and various constructions of objs.</p>
+In fact, grade school has already ingrained the most important concepts&#8201;&#8212;&#8201;namely, how <code>*</code> and <code>+</code> operate on objects (e.g. numbers) individually and in concert with one another (e.g. the <a href="https://en.wikipedia.org/wiki/FOIL_method">foil method</a>).
+In metatron, its not just numbers that are constrained by these axioms, but more generally, objs and various constructions of objs.</p>
 </div>
 <div class="paragraph">
 <p>For a gentle, yet thorough presentation on ring theory and its use in metatron, please review <a href="http://metatron.phaseshift.studio/articles/stream-ring-theory">stream ring theory</a>.</p>
@@ -475,7 +482,7 @@ However, within metatron, all spaces are functionally equivalent as dictated by 
 <div class="olist arabic">
 <ol class="arabic">
 <li>
-<p>Download metatron either as an <code>npm</code> package, a <code>docker</code> container, or a <code>maven</code> project.</p>
+<p>Download metatron either as an <code>npm</code> package, a <code>dckr</code> container, or a <code>maven</code> project.</p>
 </li>
 <li>
 <p>Load metatron using a boot file.
@@ -542,16 +549,20 @@ mtron&gt; [a=&gt;1,b=&gt;[c=&gt;[5,6,7]]]&gt;&gt;b/c/1
 <div class="content">
 <h4 id="_the_nature_of_space" class="discrete">The Nature of Space</h4>
 <div class="paragraph">
-<p>At its core, metatron is the infrastructure of a distributed address space used for reading and writing objs, where an address is a key and an obj is the value (<strong>a key/value store</strong>). This space is aware of the internal structure of the value and supports uniquely identifying substructures in the value (<strong>a column store</strong>).</p>
+<p>At its core, metatron is the infrastructure of a distributed address space used for reading and writing objs, where an address is a key and an obj is the value (<strong>a key/value store</strong>).
+This space is aware of the internal structure of the value and supports uniquely identifying substructures in the value (<strong>a column store</strong>).</p>
 </div>
 <div class="paragraph">
-<p>For metatron, the set of all uniform resource identifiers is the address space as it can reference structures at various nested levels of complexity (<strong>a web server</strong>). The particular uri scheme used by metatron offers more than just the ability to denote the location of an obj, it can also refer to an obj&#8217;s type (<strong>a semantic web</strong>), an obj&#8217;s functional signature (<strong>a lambda server</strong>), and any pre/post-processing read/write modulators (<strong>a rest server</strong>).</p>
+<p>For metatron, the set of all uniform resource identifiers is the address space as it can reference structures at various nested levels of complexity (<strong>a web server</strong>).
+The particular uri scheme used by metatron offers more than just the ability to denote the location of an obj, it can also refer to an obj&#8217;s type (<strong>a semantic web</strong>), an obj&#8217;s functional signature (<strong>a lambda server</strong>), and any pre/post-processing read/write modulators (<strong>a rest server</strong>).</p>
 </div>
 <div class="paragraph">
-<p>Nested poly objs provide an interesting twist in that they maintain an internal NAT-like address scheme for routing requests to the objs contained therein (<strong>an ldap server</strong>). In this way, polys control not just a point in space, but regions of space (<strong>a document store</strong>) that can overlap, blurring the line between where one poly ends and another begins (<strong>an mqtt broker</strong>).</p>
+<p>Nested poly objs provide an interesting twist in that they maintain an internal NAT-like address scheme for routing requests to the objs contained therein (<strong>an ldap server</strong>).
+In this way, polys control not just a point in space, but regions of space (<strong>a document store</strong>) that can overlap, blurring the line between where one poly ends and another begins (<strong>an mqtt broker</strong>).</p>
 </div>
 <div class="paragraph">
-<p>Finally, the objs embedded in space aren&#8217;t just static datum (monos) or diffuse collections (polys), they are also active processes (calls) (<strong>a lisp interpreter</strong>). Amongst the set of calls, there is an interesting instruction called an <code>auto</code> which has the peculiar behavior of dereferencing itself to its referent upon access which yields colocation semantics amongst physically distributed objs (<strong>a graph database</strong>).</p>
+<p>Finally, the objs embedded in space aren&#8217;t just static datum (monos) or diffuse collections (polys), they are also active processes (calls) (<strong>a lisp interpreter</strong>).
+Amongst the set of calls, there is an interesting instruction called an <code>auto</code> which has the peculiar behavior of dereferencing itself to its referent upon access which yields colocation semantics amongst physically distributed objs (<strong>a graph database</strong>).</p>
 </div>
 <div class="paragraph">
 <p>And that&#8217;s just the beginning&#8230;&#8203;</p>
