@@ -78,5 +78,5 @@ while true; do
     if [ "$exit_code" -ne "$EXIT_RESET" ]; then
         exit "$exit_code"
     fi
-    printf '%b\n' "${GREEN}⟳ Restarting metatron...${NC}"
+    printf '\n%b\n\n' "${RED}⟳ ${YELLOW}restarting ${BLUE}m${CYAN}E${RED}t${YELLOW}A${GREEN}T${MAGENTA}r${RED}o${GREEN}N${NC}...${NC}"
 done

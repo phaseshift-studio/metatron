@@ -16,7 +16,7 @@
     ollama    => <http://ginger.local:11434>,
     embedding => <http://ginger.local:8025/api/v2>,
     knowgraph => <ws://ginger.local:8182/gremlin>,
-    session   => <mariadb://ginger.local:3306/drdb?createDatabaseIfNotExist=true&user=mtron&password=mtron>,
+    session   => <sqlite:/home/killswitch/.metatron/dr.sqlite>,
     localfs   => </home/killswitch/.hermes_clone>],
  tracer/stage => [stack=>false],
 
@@ -50,14 +50,9 @@ import(/m/mach/ui);
 space_root -> <${*boot/args/internal/sys}/space/dr>;
 [===================================================================]
 [===================================================================]
-        [=====================]  
+        [=====================]
         [======== HOME =======]
-        [=====================]   
-tblespace::[pattern    => </usr/dr/#>,
-            host       => !*<boot/args/external/session>,
-            driver     => <org.mariadb.jdbc.Driver>,
-            q          => [incrq::[=>],subq::[=>]],
-            route      => [/usr/dr/ => <>]]@</sys/space/usr/dr>;
+        [=====================]
 memspace::[
   pattern => </usr/marko/#>,                                 
         q => [mintq::[=>],
@@ -108,14 +103,6 @@ httpspace::[host     => !*<boot/args/external/web/http>,
      }
    }
 """.as(json::T).as(mcp_client::T).at(abc);
-wsspace::[host     => !*<boot/args/external/web/ws>,
-         pattern  => <ws://#>,
-         route    => [/mcp   => mcp_mtron_ws,
-                      /mtron => mtron_ws]]@/sys/space/web/ws;       
-mqttspace::[host    => <mqtt://ginger.local:1883>,
-            pattern => z2m:#,
-            q       => [subq::[=>]],
-            route   => [z2m: => z2m/]]@/sys/space/iot/z2m;
         [=====================]
         [======= DOCKER ======]
         [=====================]
@@ -127,6 +114,25 @@ dckrspace::[host    => <unix:///var/run/docker.sock>,
                                                           anchor        => bottom_left,
                                                           width         => 70]],
             route   => [docker: => <>]]@</sys/space/docker>;
+docker:container/dr_sqlite -> [image   => 'keinos/sqlite3:latest',
+                               volumes => ['/home/killswitch/.metatron:/data']];
+        [=====================]
+        [======== HOME =======]
+        [=====================]
+tblespace::[pattern    => </usr/dr/#>,
+            host       => <sqlite:/home/killswitch/.metatron/dr.sqlite>,
+            driver     => <org.sqlite.JDBC>,
+            table      => [,],
+            q          => [incrq::[=>],subq::[=>]],
+            route      => [/usr/dr/ => <>]]@</sys/space/usr/dr>;
+wsspace::[host     => !*<boot/args/external/web/ws>,
+         pattern  => <ws://#>,
+         route    => [/mcp   => mcp_mtron_ws,
+                      /mtron => mtron_ws]]@/sys/space/web/ws;       
+mqttspace::[host    => <mqtt://ginger.local:1883>,
+            pattern => z2m:#,
+            q       => [subq::[=>]],
+            route   => [z2m: => z2m/]]@/sys/space/iot/z2m;
         [=====================]
         [======== LLM ========]
         [=====================]                
@@ -185,7 +191,7 @@ agent::[
                                            session::[agent    => !*boot/args/internal/agent_home,
                                                      user     => !*boot/args/internal/user_home,
                                                      name     => 'general chat',
-                                                     algorithm=> [name=><message_window>, max=>50]]
+                                                     algorithm=> [name=><message_window>, max=>25]]
                                                           ==[_=>_].to(/usr/dr/session/1)) },
                         session       => /usr/dr/session/1,
                         tool          => [forget?noobj{0}<=noobj{0}(){ /usr/dr/message/+ -> noobj }]],

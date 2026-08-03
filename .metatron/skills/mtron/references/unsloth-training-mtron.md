@@ -218,6 +218,35 @@ Ollama runs via systemd on ginger.local as user `ollama`, models stored at
 manually copying blob files. Kill rogue user-level instances with `pkill ollama`
 if port 11434 is conflicting.
 
+### Extending Context Window
+
+Qwen3 models natively support 32K context but can be extended with RoPE scaling (YaRN) to 128K+
+via Ollama's `num_ctx` parameter. Create a new tag rather than overwriting the original:
+
+```bash
+# Show current model (check baked-in context length vs num_ctx)
+ollama show mtron-qwen-14b:latest
+
+# Dump Modelfile, append num_ctx, create new tag
+ollama show mtron-qwen-14b:latest --modelfile > /tmp/Modelfile-128k
+echo 'PARAMETER num_ctx 131072' >> /tmp/Modelfile-128k
+ollama create mtron-qwen-14b:128k -f /tmp/Modelfile-128k
+```
+
+`ollama show` will still display the native GGUF `context length` (e.g. 40960), but
+`num_ctx` in the Parameters section is what Ollama actually uses at runtime.
+The `OLLAMA_NUM_CTX` environment variable sets a system-wide default but per-model
+`num_ctx` takes precedence.
+
+To use the extended context without a rebuild, pass `num_ctx` per-request:
+```bash
+curl http://ginger.local:11434/api/generate -d '{
+  "model": "mtron-qwen-14b:latest",
+  "prompt": "...",
+  "options": {"num_ctx": 131072}
+}'
+```
+
 ---
 
 ## 6. HuggingFace Deployment

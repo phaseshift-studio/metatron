@@ -668,39 +668,39 @@ public class llmInstSet extends AbstractInstSet {
                         return noobj();
                     })),
             new StageDef(ON_BEFORE_CHAT, "onBeforeChat", new Class<?>[]{Agent.class},
-                    f -> instLambda((agent, ignored) -> f.onBeforeChat((Agent) agent))),
+                    f -> instLambda(ALL.maybe(), ALL.maybeSome(), (agent, ignored) -> f.onBeforeChat((Agent) agent))),
             new StageDef(ON_PARTIAL_RESPONSE, "onPartialResponse", new Class<?>[]{Agent.class, Str.class},
-                    f -> instLambda((agent, i) -> {
+                    f -> instLambda(ALL.maybe(), NOOBJ_TID.zero(), (agent, i) -> {
                         f.onPartialResponse((Agent) agent, i.arg(0).asStr());
                         return noobj();
                     })),
             new StageDef(ON_PARTIAL_THINKING, "onPartialThinking", new Class<?>[]{Agent.class, Str.class},
-                    f -> instLambda((agent, i) -> {
+                    f -> instLambda(ALL.maybe(), NOOBJ_TID.zero(), (agent, i) -> {
                         f.onPartialThinking((Agent) agent, i.arg(0).asStr());
                         return noobj();
                     })),
             new StageDef(ON_PARTIAL_TOOL_CALL, "onPartialToolCall", new Class<?>[]{Agent.class, Inst.class},
-                    f -> instLambda((agent, i) -> {
+                    f -> instLambda(ALL.maybe(), NOOBJ_TID.zero(), (agent, i) -> {
                         f.onPartialToolCall((Agent) agent, (Inst) i.arg(0));
                         return noobj();
                     })),
             new StageDef(BEFORE_TOOL_EXECUTION, "beforeToolExecution", new Class<?>[]{Agent.class, Inst.class},
-                    f -> instLambda((agent, i) -> {
+                    f -> instLambda(ALL.maybe(), NOOBJ_TID.zero(), (agent, i) -> {
                         f.beforeToolExecution((Agent) agent, (Inst) i.arg(0));
                         return noobj();
                     })),
             new StageDef(ON_TOOL_EXECUTED, "onToolExecuted", new Class<?>[]{Agent.class, Obj.class},
-                    f -> instLambda((agent, i) -> {
+                    f -> instLambda(ALL.maybe(), NOOBJ_TID.zero(), (agent, i) -> {
                         f.onToolExecuted((Agent) agent, i.arg(0));
                         return noobj();
                     })),
             new StageDef(ON_COMPLETE_RESPONSE, "onCompleteResponse", new Class<?>[]{Agent.class, Str.class},
-                    f -> instLambda((agent, i) -> {
+                    f -> instLambda(ALL.maybe(), NOOBJ_TID.zero(), (agent, i) -> {
                         f.onCompleteResponse((Agent) agent, i.arg(0).asStr());
                         return noobj();
                     })),
             new StageDef(ON_ERROR, "onError", new Class<?>[]{Agent.class, Fail.class},
-                    f -> instLambda((agent, ignored) -> {
+                    f -> instLambda(ALL.maybe(), NOOBJ_TID.zero(), (agent, ignored) -> {
                         f.onError((Agent) agent, null);
                         return noobj();
                     }))

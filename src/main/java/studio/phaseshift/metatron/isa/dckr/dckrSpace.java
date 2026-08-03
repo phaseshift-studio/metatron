@@ -26,6 +26,7 @@ import studio.phaseshift.metatron.isa.m.space.TopicTrie;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjYAMLSerializer;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.ui.widget.ProgressTableWidget;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -48,7 +49,6 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.dckr.dckrInstSet.DCKR_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.INST_CTOR_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.SPACE_TID;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
@@ -135,20 +135,27 @@ public class dckrSpace extends AbstractMemorySpace {
         final fURI routed = Space.Helper.routeFromSpace(vid, this.routes());
         final DataPath dp = DataPath.withoutDB(routed);
 
-        if ("container".equals(dp.collection()))
-            refreshContainers();
-        else if ("image".equals(dp.collection()))
+        if ("container".equals(dp.collection())) {
             refreshImages();
-        else if ("volume".equals(dp.collection()))
-            refreshVolumes();
-        else if ("network".equals(dp.collection()))
             refreshNetworks();
+            refreshVolumes();
+            refreshContainers();
+        } else if ("image".equals(dp.collection())) {
+            refreshImages();
+            refreshContainers();
+        } else if ("volume".equals(dp.collection())) {
+            refreshVolumes();
+            refreshContainers();
+        } else if ("network".equals(dp.collection())) {
+            refreshNetworks();
+            refreshContainers();
+        }
 
         return this.store.read(routed);
     }
 
     private void refreshContainers() {
-        refresh("ps", "-a", "--format", "json", "names", "id", "container");
+        refresh("ps", "-a", "--no-trunc", "--format", "json", "names", "id", "container");
         // Build graph: link each container under its image + add !* refs
         final Obj containers = this.store.read(f("container"));
         if (!containers.isNoObj()) {
@@ -160,35 +167,160 @@ public class dckrSpace extends AbstractMemorySpace {
                 if (imageName != null) {
                     final fURI graphPath = f("image").extend(imageName).extend("container").extend(name.uriValue().name());
                     this.store.write(graphPath, c);
+                    // Replace string image name with !* ref into dckrSpace image
+                    final Obj imageRef = uri(this.pattern().retractPattern().toString() + "image/" + imageName);
+                    c.at(uri("image"), imageRef, Poly.MUTABLE);
+                    this.store.write(f("container").extend(name.uriValue().name()), c);
                     byImage.computeIfAbsent(imageName, k -> new ArrayList<>()).add(name);
                 }
             });
-            // Add containers !* refs to each image rec
+            // Add containers refs to each image rec
             byImage.forEach((imageName, containerNames) -> {
                 final Obj image = this.store.read(f("image").extend(imageName));
                 if (!image.isNoObj() && image.isRec()) {
                     final List<Obj> refs = containerNames.stream()
-                            .map(n -> auto_from_(uri(this.pattern().toString() + "/container/"
-                                    + n.uriValue().name())).tryToInst())
+                            .map(n -> uri(this.pattern().retractPattern().toString() + "container/"
+                                    + n.uriValue().name()))
                             .map(i -> (Obj) i)
                             .toList();
                     image.asRec().at(uri("containers"), lst(refs), Poly.MUTABLE);
                     this.store.write(f("image").extend(imageName), image);
                 }
             });
+
+            // -- Network graph: container <-> network --
+            final Map<String, List<Obj>> byNetwork = new LinkedHashMap<>();
+            containers.asRec().jvm().forEach((name, obj) -> {
+                if (!obj.isRec()) return;
+                final Rec c = obj.asRec();
+                final String netName = c.at(uri("networks")).isNoObj() ? null
+                        : objToString(c.at(uri("networks")));
+                if (netName != null && !netName.isBlank()) {
+                    final Obj netRef = uri(this.pattern().retractPattern().toString() + "network/" + netName);
+                    c.at(uri("networks"), netRef, Poly.MUTABLE);
+                    this.store.write(f("container").extend(name.uriValue().name()), c);
+                    byNetwork.computeIfAbsent(netName, k -> new ArrayList<>()).add(name);
+                }
+            });
+            byNetwork.forEach((netName, containerNames) -> {
+                final Obj network = this.store.read(f("network").extend(netName));
+                if (!network.isNoObj() && network.isRec()) {
+                    final List<Obj> refs = containerNames.stream()
+                            .map(n -> uri(this.pattern().retractPattern().toString() + "container/"
+                                    + n.uriValue().name()))
+                            .map(i -> (Obj) i)
+                            .toList();
+                    network.asRec().at(uri("containers"), lst(refs), Poly.MUTABLE);
+                    this.store.write(f("network").extend(netName), network);
+                }
+            });
+
+            // -- Volume graph: container <-> volume --
+            // Mounts field is parsed as a URI from Docker NDJSON:
+            //   named volume: scheme=volName, path=/dest  (e.g. "myvol:/data")
+            //   bind mount:   no scheme, path=host/path   (e.g. "/host/path")
+            final Map<String, List<Obj>> byVolume = new LinkedHashMap<>();
+            containers.asRec().jvm().forEach((name, obj) -> {
+                if (!obj.isRec()) return;
+                final Rec c = obj.asRec();
+                final Obj mountsObj = c.at(uri("mounts"));
+                if (mountsObj.isNoObj()) return;
+
+                if (mountsObj.isUri()) {
+                    final fURI furi = mountsObj.uriValue();
+                    String volName = furi.scheme();
+                    if (volName == null || volName.isEmpty()) {
+                        // No colon in mount string — use path as source.
+                        // Single segment = named volume; multi-segment = bind mount.
+                        if (furi.path().size() != 1) return;
+                        volName = furi.pathString();
+                    }
+                    if (volName != null && !volName.isEmpty()) {
+                        final Obj ref = uri(this.pattern().retractPattern().toString() + "volume/" + volName);
+                        c.at(uri("mounts"), lst(ref), Poly.MUTABLE);
+                        this.store.write(f("container").extend(name.uriValue().name()), c);
+                        byVolume.computeIfAbsent(volName, k -> new ArrayList<>()).add(name);
+                    }
+                }
+            });
+            // Path-based lookup may need fallback to Rec scan for memSpace individual writes
+            final Obj allVols = this.store.read(f("volume"));
+            byVolume.forEach((volName, containerNames) -> {
+                Obj volume = this.store.read(f("volume").extend(volName));
+                if (volume.isNoObj() && !allVols.isNoObj() && allVols.isRec()) {
+                    for (final Obj v : allVols.asRec().jvm().values()) {
+                        if (!v.isRec()) continue;
+                        final Obj nameObj = v.asRec().at(uri("name"));
+                        if (nameObj.isNoObj()) continue;
+                        if (volName.equals(objToString(nameObj))) { volume = v; break; }
+                    }
+                }
+                if (!volume.isNoObj() && volume.isRec()) {
+                    final List<Obj> refs = containerNames.stream()
+                            .map(n -> uri(this.pattern().retractPattern().toString() + "container/"
+                                    + n.uriValue().name()))
+                            .map(i -> (Obj) i)
+                            .toList();
+                    volume.asRec().at(uri("containers"), lst(refs), Poly.MUTABLE);
+                    this.store.write(f("volume").extend(volName), volume);
+                }
+            });
         }
     }
 
     private void refreshImages() {
-        refresh("image", "ls", "--format", "json", "id", "repository", "image");
+        // Parse docker image ls NDJSON and write each image individually keyed by
+        // repository:tag (so containers can link to their image by repo:tag)
+        try {
+            final ProcessResult r = exec(dockerCmd("image", "ls", "--format", "json"));
+            for (final String line : r.stdout().split("\\R")) {
+                if (line.isBlank()) continue;
+                final Rec img = (Rec) DOCKER_SERIALIZER.inputBytes(line);
+                final String repo = img.at(uri("repository")).isNoObj() ? null
+                        : objToString(img.at(uri("repository")));
+                final String tag = img.at(uri("tag")).isNoObj() ? null
+                        : objToString(img.at(uri("tag")));
+                final String key = repo != null && tag != null ? repo + ":" + tag
+                        : repo != null ? repo
+                        : tag != null ? tag
+                        : objToString(img.at(uri("id")));
+                this.store.write(f("image").extend(key), img);
+            }
+        } catch (final Exception e) {
+            throw MTronException.of(e);
+        }
     }
 
     private void refreshVolumes() {
-        refresh("volume", "ls", "--format", "json", "name", "driver", "volume");
+        try {
+            final ProcessResult r = exec(dockerCmd("volume", "ls", "--format", "json"));
+            for (final String line : r.stdout().split("\\R")) {
+                if (line.isBlank()) continue;
+                final Rec vol = (Rec) DOCKER_SERIALIZER.inputBytes(line);
+                final String name = vol.at(uri("name")).isNoObj() ? null
+                        : objToString(vol.at(uri("name")));
+                if (name != null)
+                    this.store.write(f("volume").extend(name), vol);
+            }
+        } catch (final Exception e) {
+            throw MTronException.of(e);
+        }
     }
 
     private void refreshNetworks() {
-        refresh("network", "ls", "--format", "json", "name", "id", "network");
+        try {
+            final ProcessResult r = exec(dockerCmd("network", "ls", "--format", "json"));
+            for (final String line : r.stdout().split("\\R")) {
+                if (line.isBlank()) continue;
+                final Rec net = (Rec) DOCKER_SERIALIZER.inputBytes(line);
+                final String name = net.at(uri("name")).isNoObj() ? null
+                        : objToString(net.at(uri("name")));
+                if (name != null)
+                    this.store.write(f("network").extend(name), net);
+            }
+        } catch (final Exception e) {
+            throw MTronException.of(e);
+        }
     }
 
     /**
@@ -232,10 +364,12 @@ public class dckrSpace extends AbstractMemorySpace {
     private static String objToString(final Obj obj) {
         String s;
         if (obj.isStr()) s = Str.Helper.cleanString(obj, true);
-        else if (obj.isUri()) s = obj.uriValue().name();
-        else s = obj.toString();
-        // Docker prefixes container names with a leading slash
-        return s.startsWith("/") ? s.substring(1) : s;
+        else if (obj.isUri()) s = Str.Helper.cleanString(obj, true);
+        else s = new String(ObjmtronSerializer.compact().outputBytes(obj).array());
+        // Docker prefixes container names with a leading slash (e.g. "/sqlite").
+        // Don't strip if the value contains ':' — those are bind-mount paths
+        // ("/host/path:/container/path") or image references ("nginx:alpine").
+        return (s.startsWith("/") && !s.contains(":")) ? s.substring(1) : s;
     }
 
     // ===================================================================

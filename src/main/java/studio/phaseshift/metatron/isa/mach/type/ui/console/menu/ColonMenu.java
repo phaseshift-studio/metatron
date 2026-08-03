@@ -37,7 +37,10 @@ import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.mach.type.ui.tmux.Pane;
 import studio.phaseshift.metatron.isa.mach.type.ui.tmux.SplitLayout;
-import studio.phaseshift.metatron.isa.mach.type.ui.widget.*;
+import studio.phaseshift.metatron.isa.mach.type.ui.widget.AccordionWidget;
+import studio.phaseshift.metatron.isa.mach.type.ui.widget.PanelWidget;
+import studio.phaseshift.metatron.isa.mach.type.ui.widget.SubsWidget;
+import studio.phaseshift.metatron.isa.mach.type.ui.widget.TableWidget;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.io.PrintStream;
@@ -55,7 +58,6 @@ import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.ui.uiInstSet.UI_CONSOLE_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
@@ -136,84 +138,7 @@ public final class ColonMenu extends MRec {
             }
             return noobj();
         }), MUTABLE);
-
-        this.at("accordion", instLambda((lhs, inst) -> {
-            final String input = lhs.isStr() ? lhs.strValue().trim() : "";
-
-            if ("close".equalsIgnoreCase(input) || "collapse".equalsIgnoreCase(input)) {
-                if (this.accordion != null) this.accordion.at(str("collapse")).apply();
-            } else if ("open".equalsIgnoreCase(input) || "expand".equalsIgnoreCase(input)) {
-                if (this.accordion != null) this.accordion.at(str("expand")).apply();
-            } else if ("toggle".equalsIgnoreCase(input)) {
-                if (this.accordion != null) this.accordion.at(str("toggle")).apply();
-            } else if (input.startsWith("append ")) {
-                if (this.accordion != null) this.accordion.at(str("append")).apply(str(input.substring(7)));
-            } else if (!input.isEmpty()) {
-                final String[] parts = input.split(" ", 2);
-                final String title = parts.length > 0 ? parts[0] : "";
-                final String body = parts.length > 1 ? parts[1] : "";
-                this.accordion = new AccordionWidget(title, body);
-                this.accordion.style()
-                        .border(Border.continuous.foreground("{{y}}"))
-                        .foreground("{{y}}")
-                        .applyStyle();
-            }
-
-            if (this.accordion != null) {
-                final String output = this.accordion.renderInPlace();
-                if (console.isSplitMode() && console.getActivePane() != null) {
-                    console.getActivePane().appendOutput(output);
-                } else {
-                    Graphitty.out(Console.getTerminal().output(), output);
-                }
-            }
-            return noobj();
-        }), MUTABLE);
-
-        // ===== float =====
-        this.at("float", instLambda((lhs, inst) -> {
-            final String input = lhs.isStr() ? lhs.strValue().trim() : "";
-
-            if ("close".equalsIgnoreCase(input)) {
-                if (this.floatingAccordion != null) {
-                    this.floatingAccordion.unfloat(this.console.getFloatingSurface());
-                    this.floatingAccordion = null;
-                    LOG.none("{{*}}floating accordion dismissed{{X}}\n");
-                }
-                return noobj();
-            }
-
-            // Remove previous floating accordion if present
-            if (this.floatingAccordion != null) {
-                this.floatingAccordion.unfloat(this.console.getFloatingSurface());
-            }
-
-            // Parse anchor from input, default to TOP_RIGHT
-            final FloatingSurface.Anchor anchor = FloatingSurface.Anchor.parse(input);
-
-            // Jibberish demo content
-            final String title = "{{c}}⚡ Tachyon Matrix{{X}}";
-            final String body = "Flux variance   : 0.042 μΔ\n"
-                    + "Resonance freq  : 1.21 GW\n"
-                    + "Entropy cascade : ACTIVE\n"
-                    + "Phase alignment : 97.3%\n"
-                    + "Buffer integrity: NOMINAL";
-
-            this.floatingAccordion = new AccordionWidget(title, body);
-            this.floatingAccordion.style()
-                    .border(Border.continuous.foreground("{{c}}"))
-                    .foreground("{{c}}")
-                    .applyStyle();
-
-            // Float anchored, 36 columns wide
-            this.floatingAccordion.floatAt(this.console.getFloatingSurface(), anchor, 36);
-            this.console.getFloatingSurface().render();
-
-            LOG.none("{{*}}{{c}}floating accordion pinned %s (36 cols) — :float close to dismiss{{X}}\n",
-                    anchor.name().toLowerCase().replace('_', ' '));
-            return noobj();
-        }), MUTABLE);
-
+        
         // ===== connect =====
         this.at("connect", instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(NOOBJ_TID), lst(), (lhs, inst) -> {
             Router.writeToSpace("abc", block_(instLambda((lhs2, inst2) -> {
