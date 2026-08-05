@@ -46,6 +46,7 @@ isa.mach.type.ui.tool
   InstSelectorTool.java    ← instruction selector for dot-completion
   fURISelectorTool.java    ← URI/folder selector for wildcard completion
   TypeDiffTool.java        ← type diff visualizer
+  TreeSelectTool.java      ← interactive tree browser with nested obj inspection
 isa.mach.ui
   uiInstSet.java            ← mtron type/instruction registration for all UI types
 isa.m.type.reflect
@@ -472,6 +473,7 @@ private void redrawStack() {
 | `TraceTool` | `TableWidget` (cause chain + stack frames) |
 | `InstSelectorTool` | `SelectorWidget` → `TableWidget` (instruction pairs) |
 | `fURISelectorTool` | `SelectorWidget` → `TableWidget` (URI pairs) |
+| `TreeSelectTool` | `TreeWidget` (navigable tree) + `PanelWidget` (detail panel) |
 
 **Important:** These tools populate their `TableWidget`s via Java API (`addRow()`,
 `addMetadata()`).  They rely on the `sync()` guard pattern (section 2) to prevent
