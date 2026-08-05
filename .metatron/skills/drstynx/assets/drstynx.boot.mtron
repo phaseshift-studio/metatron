@@ -94,7 +94,7 @@ httpspace::[host     => !*<boot/args/external/web/http>,
   as(model::T).
   to(/usr/dr/model/embedding/_?incrq)
 ==]        
-"""
+[=="""
 {
      "type": "sse",
      "url": "http://127.0.0.1:64342/sse",
@@ -102,7 +102,8 @@ httpspace::[host     => !*<boot/args/external/web/http>,
        "IJ_MCP_SERVER_PROJECT_PATH": "/home/killswitch/software/metatron"
      }
    }
-""".as(json::T).as(mcp_client::T).at(abc);
+""".as(json::T).as(mcp_client::T).at(abc)
+==]
         [=====================]
         [======= DOCKER ======]
         [=====================]
@@ -114,8 +115,9 @@ dckrspace::[host    => <unix:///var/run/docker.sock>,
                                                           anchor        => bottom_left,
                                                           width         => 70]],
             route   => [docker: => <>]]@</sys/space/docker>;
-docker:container/dr_sqlite -> [image   => 'keinos/sqlite3:latest',
-                               volumes => ['/home/killswitch/.metatron:/data']];
+*docker:container/dr_sqlite.else([image   => keinos/sqlite3:latest,
+                                  volumes => ['/home/killswitch/.metatron:/data']].
+                                    to(docker:container/dr_sqlite));
         [=====================]
         [======== HOME =======]
         [=====================]
@@ -191,7 +193,7 @@ agent::[
                                            session::[agent    => !*boot/args/internal/agent_home,
                                                      user     => !*boot/args/internal/user_home,
                                                      name     => 'general chat',
-                                                     algorithm=> [name=><message_window>, max=>25]]
+                                                     algorithm=> [name=><message_window>, max=>15]]
                                                           ==[_=>_].to(/usr/dr/session/1)) },
                         session       => /usr/dr/session/1,
                         tool          => [forget?noobj{0}<=noobj{0}(){ /usr/dr/message/+ -> noobj }]],

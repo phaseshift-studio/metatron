@@ -83,9 +83,9 @@ public class mcpClient extends MRec {
                 //.roots(List.of(new McpRoot("metatron", "http://localhost:8999")))
                 .logHandler(message -> as().logger().debug("mcp log: %s", message))
                 .transport(createTransport(
-                        this.at(uri(TRANSPORT)),
+                        this.at(TRANSPORT).orElse(this.at(TYPE)),
                         this.at(uri(HEADERS)).orElse(rec()).jvm(),
-                        this.at(uri(HOST)).orElse(uri("")),
+                        Str.Helper.toUriOrStr(Str.Helper.cleanString(this.at(URL).orElse(this.at(uri(HOST)).orElse(uri("")))), true),
                         this.at(COMMAND).orElse(lst()).jvm()))
                 .autoHealthCheck(false)
                 .cacheToolList(true)

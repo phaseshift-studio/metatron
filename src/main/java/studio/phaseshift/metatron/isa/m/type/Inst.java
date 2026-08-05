@@ -346,12 +346,12 @@ public interface Inst extends Call {
                     Graphitty.log(cinst).trace("%s (lhs) => %s (inst) => %s (rhs) evaluated successfully", clhs, cinst, rhs);
                 } catch (final Exception e) {
                     throw MTronException.of(e, "apply failure:" +
-                                    "\n\t[lhs]    | %s" +
-                                    "\n\t \\_type  | %s" +
-                                    "\n\t  \\_pred | %s" +
-                                    "\n\t[inst]   | %s" +
-                                    "\n\t \\_dom   | %s" +
-                                    "\n\t \\_args  | %s",
+                                    "\n\t[lhs]    │ %s" +
+                                    "\n\t \\_type  │ %s" +
+                                    "\n\t  \\_pred │ %s" +
+                                    "\n\t[inst]   │ %s" +
+                                    "\n\t \\_dom   │ %s" +
+                                    "\n\t \\_args  │ %s",
                             clhs, clhs.tid(), clhs.type().predicateStack(), cinst, cinst.dom(), cinst.args());
                     // e.printStackTrace();
                 } finally {

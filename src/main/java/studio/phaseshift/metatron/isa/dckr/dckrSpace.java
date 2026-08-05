@@ -41,14 +41,15 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.HOST;
-import static studio.phaseshift.metatron.Tokens.PATTERN;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.dckr.dckrInstSet.DCKR_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.INST_CTOR_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.SPACE_TID;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
@@ -77,9 +78,8 @@ public class dckrSpace extends AbstractMemorySpace {
             .tid(SPACE_TID)
             .vid(DCKR_SPACE_TID)
             .isaPredicate(rec(
-                    uri(PATTERN), URI_TYPE,
-                    uri(HOST).maybe(), URI_TYPE,
-                    uri("progress").maybe(), rec()))
+                    uri(HOST).maybe().asUri(), URI_TYPE,
+                    uri("progress").maybe(), REC_TYPE))
             .constructor(
                     instC(INST_CTOR_TID.dom(ALL.maybe()).rng(DCKR_SPACE_TID),
                             lst(T(DCKR_SPACE_TID)),
@@ -110,7 +110,7 @@ public class dckrSpace extends AbstractMemorySpace {
                 : this.at(uri(HOST)).uriValue().toString();
         if (this.dockerHost != null)
             LOG.info("docker host {{y}}%s", this.dockerHost);
-        this.store = memSpace.of(this.pattern(), null);
+        this.store = memSpace.of(f("#"), null);
         final Obj pw = this.at(uri("progress"));
         this.progressWidget = (!pw.isNoObj() && pw instanceof ProgressTableWidget)
                 ? (ProgressTableWidget) pw : null;
@@ -151,6 +151,8 @@ public class dckrSpace extends AbstractMemorySpace {
             refreshContainers();
         }
 
+        //if (vid.isBranch())
+        //    return this.store.read(routed).stream().map(i -> rel(Space.Helper.routeToSpace(i.asRel().first().uriValue(), this.routes()).toUri(), i.asRel().second())).findFirst().orElse(rel(noobj(), noobj()).zero());
         return this.store.read(routed);
     }
 
@@ -168,8 +170,8 @@ public class dckrSpace extends AbstractMemorySpace {
                     final fURI graphPath = f("image").extend(imageName).extend("container").extend(name.uriValue().name());
                     this.store.write(graphPath, c);
                     // Replace string image name with !* ref into dckrSpace image
-                    final Obj imageRef = uri(this.pattern().retractPattern().toString() + "image/" + imageName);
-                    c.at(uri("image"), imageRef, Poly.MUTABLE);
+                    final Obj imageRef = auto_from_(uri(this.pattern().retractPattern().toString() + "image/" + imageName)).tryToInst();
+                    c.jvm().put(uri("image"), imageRef);
                     this.store.write(f("container").extend(name.uriValue().name()), c);
                     byImage.computeIfAbsent(imageName, k -> new ArrayList<>()).add(name);
                 }
@@ -181,9 +183,9 @@ public class dckrSpace extends AbstractMemorySpace {
                     final List<Obj> refs = containerNames.stream()
                             .map(n -> uri(this.pattern().retractPattern().toString() + "container/"
                                     + n.uriValue().name()))
-                            .map(i -> (Obj) i)
+                            .map(i -> (Obj) auto_from_(i).tryToInst())
                             .toList();
-                    image.asRec().at(uri("containers"), lst(refs), Poly.MUTABLE);
+                    image.asRec().jvm().put(uri("containers"), lst(refs));
                     this.store.write(f("image").extend(imageName), image);
                 }
             });
@@ -196,8 +198,8 @@ public class dckrSpace extends AbstractMemorySpace {
                 final String netName = c.at(uri("networks")).isNoObj() ? null
                         : objToString(c.at(uri("networks")));
                 if (netName != null && !netName.isBlank()) {
-                    final Obj netRef = uri(this.pattern().retractPattern().toString() + "network/" + netName);
-                    c.at(uri("networks"), netRef, Poly.MUTABLE);
+                    final Obj netRef = auto_from_(uri(this.pattern().retractPattern().toString() + "network/" + netName)).tryToInst();
+                    c.jvm().put(uri("networks"), netRef);
                     this.store.write(f("container").extend(name.uriValue().name()), c);
                     byNetwork.computeIfAbsent(netName, k -> new ArrayList<>()).add(name);
                 }
@@ -208,7 +210,7 @@ public class dckrSpace extends AbstractMemorySpace {
                     final List<Obj> refs = containerNames.stream()
                             .map(n -> uri(this.pattern().retractPattern().toString() + "container/"
                                     + n.uriValue().name()))
-                            .map(i -> (Obj) i)
+                            .map(i -> (Obj) auto_from_(i).tryToInst())
                             .toList();
                     network.asRec().at(uri("containers"), lst(refs), Poly.MUTABLE);
                     this.store.write(f("network").extend(netName), network);
@@ -252,7 +254,10 @@ public class dckrSpace extends AbstractMemorySpace {
                         if (!v.isRec()) continue;
                         final Obj nameObj = v.asRec().at(uri("name"));
                         if (nameObj.isNoObj()) continue;
-                        if (volName.equals(objToString(nameObj))) { volume = v; break; }
+                        if (volName.equals(objToString(nameObj))) {
+                            volume = v;
+                            break;
+                        }
                     }
                 }
                 if (!volume.isNoObj() && volume.isRec()) {
@@ -408,15 +413,17 @@ public class dckrSpace extends AbstractMemorySpace {
         }
 
         if ("volume".equals(dp.collection()) && dp.hasEntry() && !dp.hasField()) {
-            if (obj.isNoObj()) {
-                volumeRemove(dp.entry());
-                this.store.write(routed, noobj());
-                return noobj();
-            } else if (obj.isRec()) {
-                volumeCreate(dp.entry(), obj.asRec());
-                refreshVolumes();
-                return this.store.read(routed);
-            }
+            this.read(vid.asBranch()).stream().forEach(rel -> {
+                final DataPath vp = DataPath.of(rel.asRel().first().uriValue());
+                if (obj.isNoObj()) {
+                    volumeRemove(vp.collection());
+                    this.store.write(rel.asRel().first().uriValue(), noobj());
+                } else if (obj.isRec()) {
+                    volumeCreate(vp.collection(), obj.asRec());
+                }
+            });
+            refreshVolumes();
+            return this.read(vid);
         }
 
         if ("network".equals(dp.collection()) && dp.hasEntry() && !dp.hasField()) {
@@ -434,6 +441,16 @@ public class dckrSpace extends AbstractMemorySpace {
         // Store write value in internal store (compose configs, image metadata, etc.)
         this.store.write(routed, obj);
         return obj;
+    }
+
+    @Override
+    public Stream<IdObj> readStream(final fURI id) {
+        return this.store.readStream(id).map(i -> IdObj.of(Space.Helper.routeToSpace(i.furi(), this.routes()), i.obj()));
+    }
+
+    @Override
+    public Stream<IdObj> writeStream(final fURI id, final Obj obj) {
+        return this.store.writeStream(id, obj).map(i -> IdObj.of(Space.Helper.routeToSpace(i.furi(), this.routes()), i.obj()));
     }
 
     // ===================================================================

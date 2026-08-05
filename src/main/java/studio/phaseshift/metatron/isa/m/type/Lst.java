@@ -18,12 +18,12 @@
 
 package studio.phaseshift.metatron.isa.m.type;
 
-import studio.phaseshift.metatron.util.ProjectionFailureException;
 import studio.phaseshift.metatron.algebra.PlusMonoid;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
+import studio.phaseshift.metatron.util.ProjectionFailureException;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -207,6 +207,8 @@ public interface Lst extends Poly<Lst, List<Obj>>, PlusMonoid.O<Lst> {
 
     @Override
     default boolean test(final Obj rhs) {
+        if (this == rhs)
+            return true;
         if (rhs.isLst()) {
             //if (rhs.lstValue().size() > this.lstValue().size())
             //    return false;

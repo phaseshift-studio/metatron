@@ -126,7 +126,7 @@ public class dckrSpaceTest extends AbstractSpaceTest {
     public void testUpdateWrite(final UpdateTestCase tc) {
     }
 
-    @ParameterizedTest(name = "[{index}] {3}")
+    @ParameterizedTest()
     @CsvSource(value = {
             // resource
             "[id => abc, created => <2024-01-01>]                              % resource::T    % true  % resource matches itself",
@@ -170,7 +170,7 @@ public class dckrSpaceTest extends AbstractSpaceTest {
     // Image size — dimensional data type
     // ===================================================================
 
-    @ParameterizedTest(name = "[{index}] {3}")
+    @ParameterizedTest()
     @CsvSource(value = {
             "[id => abc, size => bB::142000000.0] % image::T % true  % bytes match",
             "[id => abc, size => kB::142000.0]  % image::T % true  % kilobytes match",
@@ -189,7 +189,7 @@ public class dckrSpaceTest extends AbstractSpaceTest {
     // TopicTrie-backed write + read (no Docker daemon needed)
     // ===================================================================
 
-    @ParameterizedTest(name = "[{index}] {3}")
+    @ParameterizedTest()
     @CsvSource(value = {
             "dtest:image/nginx -> [id => abc, repo_tags => [nginx:latest], size => mB::142.0] % [id => abc, repo_tags => [nginx:latest], size => mB::142.0] % writes and reads back",
             "dtest:image/nginx/nginx:latest -> [disk_usage => mB::777.0, id => <9a4b30ea58d6>]    % [disk_usage => mB::777.0, id => <9a4b30ea58d6>] % tag-level metadata",
@@ -198,7 +198,7 @@ public class dckrSpaceTest extends AbstractSpaceTest {
         checkCodeParseApply(LOG, writeExpr, readExpr);
     }
 
-    @ParameterizedTest(name = "[{index}] {3}")
+    @ParameterizedTest()
     @CsvSource(value = {
             "*dtest:image/nginx/nginx:latest/id  %  <9a4b30ea58d6>  % nested field read",
             "*dtest:image/nginx/nginx:latest/disk_usage  %  mB::777.0  % nested field read",
@@ -326,17 +326,17 @@ public class dckrSpaceTest extends AbstractSpaceTest {
                     "image.containers should have at least 2 entries, got: " + imageContainers.asLst().count());
 
             // Each entry should be a URI pointing to a container
-            imageContainers.asLst().elements().forEach(ref -> {
-                assertTrue(ref.isUri(),
-                        "each containers entry should be a URI, got: " + ref);
-                final String refStr = ref.uriValue().toString();
+            imageContainers.asLst().lstValue().forEach(ref -> {
+                assertTrue(Obj.Helper.isAutoPointer(ref),
+                        "each containers entry should be a !*, got: " + ref);
+                final String refStr = ref.asInst().arg(0).toString();
                 assertTrue(refStr.startsWith("dtest:container/"),
                         "ref should be under dtest:container/, got: " + refStr);
             });
 
             // Verify both containers are in the list
-            final List<String> refStrings = imageContainers.asLst().elements()
-                    .map(ref -> ref.uriValue().toString())
+            final List<String> refStrings = imageContainers.asLst().lstValue().stream()
+                    .map(ref -> ref.asInst().arg(0).uriValue().toString())
                     .toList();
             assertTrue(refStrings.stream().anyMatch(s -> s.contains(name1)),
                     "containers should include " + name1 + ", got: " + refStrings);
@@ -348,12 +348,12 @@ public class dckrSpaceTest extends AbstractSpaceTest {
                 final Obj container = space.read(f("dtest:container/" + name));
                 assertFalse(container.isNoObj(), "container " + name + " should exist");
 
-                final Obj imageField = container.asRec().at(uri("image"));
+                final Obj imageField = container.asRec().jvm().get(uri("image"));
                 assertFalse(imageField.isNoObj(),
                         "container.image should not be noobj");
-                assertTrue(imageField.isUri(),
-                        "container.image should be a URI, got: " + imageField);
-                final String imageRef = imageField.uriValue().toString();
+                assertTrue(Obj.Helper.isAutoPointer(imageField),
+                        "container.image should be a !*, got: " + imageField);
+                final String imageRef = imageField.asInst().arg(0).uriValue().toString();
                 assertTrue(imageRef.contains("nginx:alpine"),
                         "container.image URI should reference nginx:alpine, got: " + imageRef);
                 LOG.info("container {{b}}%s{{X}} -> image ref {{y}}%s", name, imageRef);
@@ -403,25 +403,25 @@ public class dckrSpaceTest extends AbstractSpaceTest {
                     "network.containers should have at least 1 entry");
 
             // Each entry is a URI
-            netContainers.asLst().elements().forEach(ref -> {
-                assertTrue(ref.isUri(),
-                        "each network.containers entry should be a URI, got: " + ref);
-                assertTrue(ref.uriValue().toString().startsWith("dtest:container/"),
-                        "ref should be under dtest:container/, got: " + ref.uriValue().toString());
+            netContainers.asLst().lstValue().forEach(ref -> {
+                assertTrue(Obj.Helper.isAutoPointer(ref),
+                        "each network.containers entry should be an auto_from, got: " + ref);
+                assertTrue(ref.asInst().arg(0).uriValue().toString().startsWith("dtest:container/"),
+                        "ref should be under dtest:container/, got: " + ref.asInst().arg(0).toString());
             });
 
             // Our container should be in the list
-            final boolean found = netContainers.asLst().elements()
-                    .anyMatch(ref -> ref.uriValue().toString().contains(name));
+            final boolean found = netContainers.asLst().lstValue().stream()
+                    .anyMatch(ref -> ref.asInst().arg(0).toString().contains(name));
             assertTrue(found, "network.containers should include " + name);
 
             // -- Container-side: networks field is a URI --
             final Obj container = space.read(f("dtest:container/" + name));
-            final Obj netField = container.asRec().at(uri("networks"));
+            final Obj netField = container.asRec().jvm().get(uri("networks"));
             assertFalse(netField.isNoObj(), "container.networks should not be noobj");
-            assertTrue(netField.isUri(),
+            assertTrue(Obj.Helper.isAutoPointer(netField),
                     "container.networks should be a URI, got: " + netField);
-            assertTrue(netField.uriValue().toString().contains("bridge"),
+            assertTrue(netField.asInst().arg(0).uriValue().toString().contains("bridge"),
                     "container.networks should reference bridge, got: " + netField);
             LOG.info("container {{b}}%s{{X}} -> network ref {{y}}%s", name, netField);
 

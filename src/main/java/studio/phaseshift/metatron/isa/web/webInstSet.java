@@ -173,10 +173,10 @@ public class webInstSet extends AbstractInstSet {
     public static Type OBJ_BYTE_BUFFER_SERIALIZER_TYPE;
     public static final fURI MCP_SERVER_TID = WEB_ISA_TID.extend("mcp").extend("mcp_server");
     public static final fURI MCP_CLIENT_TID = WEB_ISA_TID.extend("mcp").extend("mcp_client");
-    public static final fURI CLIENT_TID = WEB_ISA_TID.extend("client");
-    public static Type CLIENT_TYPE;
-    public static final fURI SERVER_TID = WEB_ISA_TID.extend("server");
-    public static Type SERVER_TYPE;
+    // public static final fURI CLIENT_TID = WEB_ISA_TID.extend("client");
+    // public static Type CLIENT_TYPE;
+    // public static final fURI SERVER_TID = WEB_ISA_TID.extend("server");
+    // public static Type SERVER_TYPE;
     public static Type MCP_CLIENT_TYPE;
     public static Type MCP_SERVER_TYPE;
 
@@ -301,10 +301,10 @@ public class webInstSet extends AbstractInstSet {
                                 "*<ws://localhost:8999/mtron>               [-- creates a wsmtron server session    --]",
                                 "<ws://localhost:8999/mtron/0/send>('ping') [-- sends str to wsmtron server session --]"),
                         /////////////////////////////////////////////////////////////////////////////////////////////////////
-                        docWrap(CLIENT_TYPE = Type.Builder.build().tid(REC_TID).vid(CLIENT_TID).create(),
+                        /*docWrap(CLIENT_TYPE = Type.Builder.build().tid(REC_TID).vid(CLIENT_TID).create(),
                                 "a generic web client which can be refined with useful behaviors"),
                         docWrap(SERVER_TYPE = Type.Builder.build().tid(REC_TID).vid(SERVER_TID).create(),
-                                "a generic web server which can be refined with useful behaviors"),
+                                "a generic web server which can be refined with useful behaviors"),*/
                         docWrap(WS_WEBSOCKET_TYPE, "a generic websocket obj which can be refined with useful behaviors"),
                         docWrap(WS_HANDLER_TYPE, "a websocket server which should be refined to implement protocol specs"),
                         docWrap(WS_CLIENT_TYPE, "an websocket client which should be refined to implement protocol specs"),
@@ -323,7 +323,7 @@ public class webInstSet extends AbstractInstSet {
                         docWrap(WEB_HTTP_HANDLER_TYPE, "a http handler serving web content from a router-backed space"),
                         /// //////////////////////////////
                         docWrap(MCP_SERVER_TYPE = Type.Builder.build()
-                                        .tid(SERVER_TID)
+                                        .tid(REC_TID)
                                         .vid(MCP_SERVER_TID)
                                         .isaPredicate(rec(
                                                 uri(TOOL).maybe().asUri(), rec(URI_TYPE, INST_TYPE).maybe(),
@@ -333,16 +333,16 @@ public class webInstSet extends AbstractInstSet {
                                                 new mcpServer(new LinkedHashMap<>(inst.arg(0).asRec().jvm()), MCP_SERVER_TID, inst.arg(0).vid()))).create(),
                                 "transport-agnostic mcp json-rpc protocol handler"),
                         docWrap(MCP_CLIENT_TYPE = Type.Builder.build()
-                                        .tid(CLIENT_TID)
+                                        .tid(REC_TID)
                                         .vid(MCP_CLIENT_TID)
                                         .isaPredicate(rec(
                                                 uri(HOST).maybe().asUri(), URI_TYPE,
                                                 uri(TRANSPORT).maybe(), URI_TYPE,
                                                 uri(COMMAND).maybe(), LST_TYPE,
-                                                uri(ENV).maybe(), rec(URI_TYPE, ALL_TYPE).maybe(),
-                                                uri(TOOL).maybe(), rec(URI_TYPE, T(LLM_TOOL_TID)).maybe(),
-                                                uri(STATUS).maybe(), isa_(BOOL_TYPE).else_(BOOL_FALSE)))
-                                        .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(MCP_CLIENT_TID), lst(T(REC_TID)),
+                                                uri(ENV).maybe(), rec(URI_TYPE, ALL_TYPE),
+                                                uri(TOOL).maybe(), rec(URI_TYPE, T(LLM_TOOL_TID)),
+                                                uri(STATUS).maybe(), BOOL_TYPE))
+                                        .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(MCP_CLIENT_TID), lst(REC_TYPE),
                                                 (x, inst) -> new mcpClient(inst.arg(0).asRec().jvm(), MCP_CLIENT_TID, inst.arg(0).vid())))
                                         .create(), "an mcp client type specification", "a connection to an existing mcp server",
                                 Map.of(

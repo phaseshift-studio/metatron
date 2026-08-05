@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -29,6 +29,31 @@ import static studio.phaseshift.metatron.isa.mach.type.ui.Widget.X;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public interface Border {
+
+    class AbstractBorder implements Border {
+        private final String borderString;
+
+        public AbstractBorder(final String borderString) {
+            this.borderString = borderString;
+        }
+
+        public String toString() {
+            return this.borderString;
+        }
+
+        public boolean equals(final Object other) {
+            return other instanceof Border && this.borderString.equals(other.toString());
+        }
+
+        public int hashCode() {
+            return this.borderString.hashCode();
+        }
+
+        @Override
+        public String border() {
+            return this.borderString;
+        }
+    }
 
     String border();
 
@@ -64,25 +89,33 @@ public interface Border {
         return this.border().split(";")[7];
     }
 
-    /** Character where a vertical inner divider meets the top border. */
+    /**
+     * Character where a vertical inner divider meets the top border.
+     */
     default String topIntersection() {
         final String[] p = this.border().split(";");
         return p.length > 8 ? p[8] : this.topSide();
     }
 
-    /** Character where a vertical inner divider meets the bottom border. */
+    /**
+     * Character where a vertical inner divider meets the bottom border.
+     */
     default String bottomIntersection() {
         final String[] p = this.border().split(";");
         return p.length > 9 ? p[9] : this.bottomSide();
     }
 
-    /** Character where a horizontal inner divider meets the left border. */
+    /**
+     * Character where a horizontal inner divider meets the left border.
+     */
     default String leftIntersection() {
         final String[] p = this.border().split(";");
         return p.length > 10 ? p[10] : this.leftSide();
     }
 
-    /** Character where a horizontal inner divider meets the right border. */
+    /**
+     * Character where a horizontal inner divider meets the right border.
+     */
     default String rightIntersection() {
         final String[] p = this.border().split(";");
         return p.length > 11 ? p[11] : this.rightSide();
@@ -124,8 +157,8 @@ public interface Border {
             final String sanitized;
             if (first >= 0 && last > first) {
                 sanitized = row.substring(0, first) + ' '
-                          + row.substring(first + 1, last) + ' '
-                          + row.substring(last + 1);
+                        + row.substring(first + 1, last) + ' '
+                        + row.substring(last + 1);
             } else {
                 sanitized = row;
             }
@@ -139,7 +172,9 @@ public interface Border {
         return builder;
     }
 
-    /** Build a single border line, placing intersection chars at the given column positions. */
+    /**
+     * Build a single border line, placing intersection chars at the given column positions.
+     */
     private static StringBuilder buildBorderLine(final int width, final String normal, final String intersection, final java.util.BitSet positions) {
         final StringBuilder sb = new StringBuilder(width);
         for (int i = 0; i < width; i++) {
@@ -169,34 +204,36 @@ public interface Border {
 
     static Border parse(final String name) {
         if (name == null || name.isEmpty()) return Border.none;
+        if (name.contains(";"))
+            return new AbstractBorder(name);
         // Extract the last segment if it's a URI path (e.g. /.../content/continuous → continuous)
         final String shortName = name.contains("/") ? name.substring(name.lastIndexOf('/') + 1) : name;
         return switch (shortName.toLowerCase()) {
-            case "simple"     -> Border.simple;
-            case "thick"      -> Border.thick;
-            case "none"       -> Border.none;
-            case "hash"       -> Border.hash;
-            case "asterisk"   -> Border.asterisk;
-            case "period"     -> Border.period;
-            case "rounded"    -> Border.rounded;
+            case "simple" -> Border.simple;
+            case "thick" -> Border.thick;
+            case "none" -> Border.none;
+            case "hash" -> Border.hash;
+            case "asterisk" -> Border.asterisk;
+            case "period" -> Border.period;
+            case "rounded" -> Border.rounded;
             case "continuous" -> Border.continuous;
             default -> Border.none;
         };
     }
 
-    Border simple = () -> "+;+;+;+;|;|;-;-;-;-;|;|";
+    Border simple = new AbstractBorder("+;+;+;+;|;|;-;-;-;-;|;|");
 
-    Border thick = () -> "[];[];[];[];||;||;=;=;=;=;||;||";
+    Border thick = new AbstractBorder("[];[];[];[];||;||;=;=;=;=;||;||");
 
-    Border none = () -> " ; ; ; ; ; ; ; ; ; ; ; ";
+    Border none = new AbstractBorder(" ; ; ; ; ; ; ; ; ; ; ; ");
 
-    Border hash = () -> "#;#;#;#;#;#;#;#;#;#;#;#";
+    Border hash = new AbstractBorder("#;#;#;#;#;#;#;#;#;#;#;#");
 
-    Border asterisk = () -> "*;*;*;*;*;*;*;*;*;*;*;*";
+    Border asterisk = new AbstractBorder("*;*;*;*;*;*;*;*;*;*;*;*");
 
-    Border period = () -> ".;.;.;.;.;.;.;.;.;.;.;.";
+    Border period = new AbstractBorder(".;.;.;.;.;.;.;.;.;.;.;.");
 
-    Border rounded = () -> "/;\\;\\;/;|;|;-;-;-;-;|;|";
+    Border rounded = new AbstractBorder("/;\\;\\;/;|;|;-;-;-;-;|;|");
 
-    Border continuous = () -> "┌;┐;└;┘;│;│;─;─;┬;┴;├;┤";
+    Border continuous = new AbstractBorder("┌;┐;└;┘;│;│;─;─;┬;┴;├;┤");
 }

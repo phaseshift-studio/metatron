@@ -67,7 +67,7 @@ public interface Space extends Rec, Closeable {
         final Obj key = uri(QPROC);
         if (this.at(key).isNoObj())
             this.at(key, lst(), MUTABLE);
-        this.at(key).asLst().add(qProc, MUTABLE);
+        this.at(key).asLst().lstValue().add(qProc);
         return this;
     }
 
@@ -199,7 +199,7 @@ public interface Space extends Rec, Closeable {
                     .filter(e -> vid.toString().startsWith(e.getValue().apply(vidURI).uriValue().toString()))
                     .map(e -> e.getKey().apply(vidURI).uriValue().extend(
                                     vid.toString().replaceFirst(e.getValue().apply(vidURI).uriValue().toString(), ""))
-                                    .qLess().q(vid.qMap()))
+                            .qLess().q(vid.qMap()))
                     .findFirst()
                     .orElse(vid);
         }

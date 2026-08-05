@@ -35,8 +35,6 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.INSTSET_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.NOOBJ_TID;
-import static studio.phaseshift.metatron.isa.m.type.NoObj.NOOBJ_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
@@ -113,6 +111,7 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
             } else if (k.equals(uri(TYPE))) {
                 v.lstValue().stream()
                         .filter(t -> checkDepth(t, this.tid))
+                        .filter(t -> !Objects.isNull(t))
                         .forEach(t -> {
                             if (!checkPattern(t))
                                 Router.writeToSpace(t);

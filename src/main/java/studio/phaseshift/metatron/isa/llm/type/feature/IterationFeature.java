@@ -149,7 +149,7 @@ public class IterationFeature extends AbstractFeature {
      * returns the linked iteration Rec (or noobj at the ends of the chain).
      */
     @Override
-    public Lst skill() {
+    public Lst skill(final Agent agent) {
         return lst(rec(
                 uri(NAME), uri(ITERATION),
                 uri(DESC), str("Iteration graph overlay with prev/next linked-list navigation"),

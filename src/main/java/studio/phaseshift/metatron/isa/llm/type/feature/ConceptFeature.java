@@ -202,7 +202,7 @@ public class ConceptFeature extends AbstractFeature {
     // Skill
     // =========================================================================
 
-    public Lst skill() {
+    public Lst skill(final Agent agent) {
         final String content = switch (this.extractor) {
             case TaggingExtractor t -> CONCEPT_EXTRACTOR_TAG_SYSTEM_MESSAGE;
             case AgentExtractor a -> CONCEPT_EXTRACTOR_AGENT_SYSTEM_MESSAGE;

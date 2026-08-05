@@ -280,6 +280,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
     }
 
     default boolean test(final Obj rhs) {
+        if (this == rhs) return true;
         return Obj.Helper.testObjs(this, rhs);
     }
 
@@ -870,7 +871,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             : (!rhs.asType().hasPredicate() ||
                             (lhs.isType()
                                     ? Objects.equals(lhs.asType().predicate(), rhs.asType().predicate())
-                                    : !rhs.asType().predicate().apply(lhs).isNothing()));
+                                    : !rhs.asType().apply(lhs).isNothing()));
                 }
             }
 
@@ -1054,7 +1055,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                     return (O) clone.selfTID(tid);
                 }
             }
-            if (null != jvm && !Objects.equals(jvm, obj.jvm()) || !tid.equals(obj.tid()) || !Objects.equals(vid, obj.vid())) {
+            if (null != jvm && !Objects.equals(jvm, obj.jvm()) || !Objects.equals(tid, obj.tid()) || !Objects.equals(vid, obj.vid())) {
                 try {
                     final O clone = (O) obj.clone();
                     Obj.Helper.objCheckAndSave(clone, jvm, tid, null == vid || vid.isEmpty() ? null : vid);
@@ -1267,9 +1268,13 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                     // Mutation box: detach the anchor (no auto-write during compute),
                     // compute in-memory (IMMUTABLE), then atomically write the result.
                     instC(UPDATE_INST_TID.dom(A).rng(B.maybeSome()), lst(T(B.maybeSome())), (lhs, inst) -> {
-                        final Obj detached = lhs.clone().selfVID(null);
-                        final Obj result = Poly.Helper.updateRecursion(detached, inst.arg(0), IMMUTABLE);
-                        return null != lhs.vid() ? Router.writeToSpace(lhs.vid(), result) : result;
+                        if (lhs.hasVID() && !inst.arg(0).isPoly() && !inst.arg(0).isCall()) {
+                            return Router.writeToSpace(lhs.vid(), inst.arg(0));
+                        } else {
+                            final Obj detached = lhs.clone().selfVID(null);
+                            final Obj result = Poly.Helper.updateRecursion(detached, inst.arg(0), IMMUTABLE);
+                            return null != lhs.vid() ? Router.writeToSpace(lhs.vid(), result) : result;
+                        }
                     }),
                     instC(EXPLAIN_INST_TID.dom(A.maybe()).rng(ALL_STAR), lst(), (lhs, inst) -> {
                         // explain_rewrite handles normal case; bare explain() is a no-op
@@ -1324,7 +1329,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                                 .collect(new CommonUtil.RecCollector());
                     }),
                     docWrap(instC(EVAL_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(ALL_TYPE), (lhs, inst) -> inst.arg(0)),
-                            "can be any obj", "the result of applying the lhs to the arg", Map.of(jnt(0), "the mtron obj to evaluate"), "evaluates an mtron obj"),
+                            "maybe an obj", "the result of applying the lhs to the arg", Map.of(jnt(0), "the mtron obj to evaluate"), "evaluates an mtron obj"),
                     docWrap(instC(PARSE_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(STR_TYPE), (lhs, inst) -> MIME.MIMEType.of(inst.arg(0).tid().toString(), MIME.MIMEType.APPLICATION_MTRON).serializer().inputBytes(inst.arg(0).strValue())),
                             "can be any obj", "the result of parsing arg into obj", Map.of(jnt(0), "a str encoding of an obj"), "parses the arg str based on str mime type (default application/mtron)",
                             """
@@ -1390,15 +1395,15 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
         return objs(arg.stream().map(k -> {
             final String key = k.asUri().uriValue().toString();
             return switch (key) {
-                case "year"   -> jnt(Integer.parseInt(lhs.uriValue().host().split("\\.")[0]));
-                case "month"  -> jnt(Integer.parseInt(lhs.uriValue().host().split("\\.")[1]));
-                case "day"    -> jnt(lhs.uriValue().port());
-                case "hour"   -> jnt(Integer.parseInt(lhs.uriValue().path().get(lhs.uriValue().path().size() - 4)));
+                case "year" -> jnt(Integer.parseInt(lhs.uriValue().host().split("\\.")[0]));
+                case "month" -> jnt(Integer.parseInt(lhs.uriValue().host().split("\\.")[1]));
+                case "day" -> jnt(lhs.uriValue().port());
+                case "hour" -> jnt(Integer.parseInt(lhs.uriValue().path().get(lhs.uriValue().path().size() - 4)));
                 case "minute" -> jnt(Integer.parseInt(lhs.uriValue().path().get(lhs.uriValue().path().size() - 3)));
                 case "second" -> jnt(Integer.parseInt(lhs.uriValue().path().get(lhs.uriValue().path().size() - 2)));
                 case "millis" -> jnt(Integer.parseInt(lhs.uriValue().path().get(lhs.uriValue().path().size() - 1)));
-                case "tz"     -> str(lhs.uriValue().qMap().get("tz"));
-                default       -> Uri.Helper.rshiftUri(lhs, lst(k)).elements().findFirst().orElse(noobj());
+                case "tz" -> str(lhs.uriValue().qMap().get("tz"));
+                default -> Uri.Helper.rshiftUri(lhs, lst(k)).elements().findFirst().orElse(noobj());
             };
         }));
     }

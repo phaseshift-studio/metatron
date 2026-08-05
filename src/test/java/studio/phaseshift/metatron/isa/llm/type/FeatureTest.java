@@ -49,6 +49,13 @@ public abstract class FeatureTest extends AbstractMetatronTest {
     }
 
     /**
+     * Create an Agent with the given features in its feature list.
+     */
+    protected static Agent agentDummy() {
+        return agentWithFeatures();
+    }
+
+    /**
      * Dispatch a hook by JVM key to a feature with args.
      */
     protected static void dispatchHook(final Agent agent, final Obj feature,

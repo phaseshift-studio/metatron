@@ -346,17 +346,18 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
     // ── Inst generation ──────────────────────────────────────────
 
     public StringBuilder generateInst(final StringBuilder sb, final Inst inst, final int depth, final int padding, boolean nested) {
-        if (inst.tid().basePath().equals(AUTO_FROM_INST_TID)) {
+        if (null == inst.tid()) {
+            sb.append("inst");
+            renderInstArg(sb, depth + 1, padding, nested, inst.arg(0));
+        } else if (inst.tid().basePath().equals(AUTO_FROM_INST_TID)) {
             sb.append("!*");
             renderInstArg(sb, depth + 1, padding, nested, inst.arg(0));
         } else if (inst.tid().basePath().equals(AUTO_AT_INST_TID) && inst.arg(1).isNoObj()) {
             sb.append("!@");
             renderInstArg(sb, depth + 1, padding, nested, inst.arg(0));
-
         } else if (inst.tid().basePath().equals(AUTO_INST_TID)) {
             sb.append("!");
             renderInstArg(sb, depth + 1, padding, nested, inst.arg(0));
-
         } else if (inst.tid().basePath().equals(FROM_INST_TID)) {
             sb.append("*");
             renderInstArg(sb, depth + 1, padding, nested, inst.arg(0));

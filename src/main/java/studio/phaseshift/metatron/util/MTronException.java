@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -25,13 +25,18 @@ import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.Optional;
 
 public class MTronException extends RuntimeException {
 
-    /** Back-pointer to the mtron-level {@link Fail} wrapping this exception. Set-once. */
+    /**
+     * Back-pointer to the mtron-level {@link Fail} wrapping this exception. Set-once.
+     */
     private volatile Fail failRef;
 
-    /** @return the mtron {@link Fail} that wraps this exception, or {@code null} */
+    /**
+     * @return the mtron {@link Fail} that wraps this exception, or {@code null}
+     */
     public Fail fail() {
         return this.failRef;
     }
@@ -51,6 +56,8 @@ public class MTronException extends RuntimeException {
      * MTronException frames to find the real throw site.
      */
     public static StackTraceElement originOf(final Throwable t) {
+        if (null == t)
+            return null;
         Throwable target = t;
         while (target.getCause() != null
                 && target.getCause().getStackTrace().length > 0
@@ -62,7 +69,7 @@ public class MTronException extends RuntimeException {
         }
         return target.getStackTrace().length > 0
                 ? target.getStackTrace()[0]
-                : t.getStackTrace()[0];
+                : t.getStackTrace().length > 0 ? t.getStackTrace()[0] : null;
     }
 
     /**
@@ -92,8 +99,8 @@ public class MTronException extends RuntimeException {
 
     private MTronException(final String message, final Throwable cause) {
         super(null == cause ? Graphitty.string(message) : Graphitty.string((message != null ? message : "(null)").replace("%", "%%") + "[%s<%d>:%s]",
-                originOf(cause).getClassName().substring(originOf(cause).getClassName().lastIndexOf('.') + 1),
-                originOf(cause).getLineNumber(),
+                Optional.ofNullable(originOf(cause)).map(o -> o.getClassName().substring(o.getClassName().lastIndexOf('.') + 1)).orElse("no stack element"),
+                Optional.ofNullable(originOf(cause)).map(StackTraceElement::getLineNumber).orElse(0),
                 causeSummary(cause)), cause);
     }
 
@@ -109,7 +116,7 @@ public class MTronException extends RuntimeException {
     }
 
     public static MTronException of(final Throwable cause) {
-        if(cause instanceof MTronException)
+        if (cause instanceof MTronException)
             return (MTronException) cause;
         final MTronException m = convert(cause);
         return cause.getCause() != null ? m.cause(convert(cause.getCause())) : m;
@@ -154,7 +161,8 @@ public class MTronException extends RuntimeException {
             // chain is available through getCause() and the stack trace
             // through getStackTrace().  Embedding them in the message
             // buries the signal and discards structured cause data.
-            return new MTronException(throwable.getMessage(), throwable);
+            // throwable.printStackTrace();
+            return new MTronException(null == throwable.getMessage() ? "fail" : throwable.getMessage(), throwable);
         }
     }
 
