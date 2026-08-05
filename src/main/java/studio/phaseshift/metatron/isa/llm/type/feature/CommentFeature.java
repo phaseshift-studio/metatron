@@ -20,25 +20,26 @@ package studio.phaseshift.metatron.isa.llm.type.feature;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
-import studio.phaseshift.metatron.isa.m.type.Inst;
+import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.mach.type.Router;
 
 import java.util.Map;
 
-import static studio.phaseshift.metatron.Tokens.NAME;
-import static studio.phaseshift.metatron.Tokens.TOOL;
+import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
-import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_AGENT_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.NOOBJ_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.type.thread.VirtualThread.virtual;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -50,18 +51,26 @@ public class CommentFeature extends AbstractFeature {
     }
 
     @Override
-    public Obj onBeforeChat(final Agent agent) {
-        final Inst commentInst = instC(f("comment").dom(LLM_AGENT_TID).rng(NOOBJ_TID.zero()), lst(STR_TYPE), (lhs, inst) -> {
-            final Agent ag = lhs.as();
-            final String agentName = agent.at(NAME).orElse(str("agent")).strValue();
-            final String comment = inst.arg(0).strValue();
-            ag.interrupt();
-            docWrap(virtual(instLambda((l, i) -> l.<Agent>as().chat(i.arg(0).strValue()))).apply(ag), "agent %s processing comment: %s".formatted(agentName, comment));
-            LOG.info("%s received comment: %s", agentName, comment);
-            return noobj();
-        });
-        Router.writeToSpace("comment", commentInst);
-        this.at(TOOL, lst(commentInst), MUTABLE);
-        return noobj();
+    public Lst skill(final Agent agent) {
+        return lst(rec(mutableMap(uri(NAME), uri("comment"),
+                uri(DESC), str("inject a note to the agent mid-iteraction"),
+                uri(CONTENT), str("""
+                                  use the associated comment tool to interject into an agents thinking process as a way
+                                  to steer/nudge the agent's deliberation according to the content of the comment.
+                                  """),
+                uri(TOOL), lst(
+                        docWrap(instC(f("comment").dom(ALL.maybe()).rng(NOOBJ_TID.zero()), lst(STR_TYPE), (lhs, inst) -> {
+                                    final String agentName = agent.at(NAME).orElse(str("agent")).strValue();
+                                    final String comment = inst.arg(0).strValue();
+                                    agent.interrupt();
+                                    docWrap(virtual(instLambda((l, i) -> l.<Agent>as().chat(i.arg(0).strValue()))).apply(agent), "agent %s processing comment: %s".formatted(agentName, comment));
+                                    LOG.info("%s received comment: %s", agentName, comment);
+                                    return noobj();
+                                }),
+                                "maybe an obj",
+                                "terminal inst yields no result",
+                                Map.of(jnt(0), "a comment str"),
+                                "inserts a comment into the agent's thinking process")))));
+
     }
 }

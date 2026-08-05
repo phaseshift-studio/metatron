@@ -24,13 +24,15 @@ import studio.phaseshift.metatron.furi.q.BaseQ;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 
-import java.util.HashMap;
 import java.util.Optional;
 
+import static studio.phaseshift.metatron.Tokens.PATTERN;
 import static studio.phaseshift.metatron.Tokens.SUBQ;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.SUBQ_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -42,7 +44,7 @@ public class mqttSpaceSubQ extends BaseQ {
     protected final QProc subq = QCollection.subq();
 
     public mqttSpaceSubQ(final mqttSpace space) {
-        super(new HashMap<>(), f(SUBQ), SUBQ_TID);
+        super(mutableMap(uri(PATTERN), uri(SUBQ)), f(SUBQ), SUBQ_TID);
         this.space = space;
         this.onWrite = new mqttSpaceSubQ.OnWrite();
         this.onRead = this.subq.onRead().get();

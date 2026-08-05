@@ -24,10 +24,10 @@ import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSQLSerializer;
-import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.tble.schema.storage.TableSchema;
 import studio.phaseshift.metatron.isa.tble.tbleSpace;
+import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
@@ -37,24 +37,12 @@ import java.sql.*;
 import java.util.*;
 
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.m.mInstSet.BOOL_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.CODE_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.INT_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.LST_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_INST_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.REAL_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.REL_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.STR_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
-import static studio.phaseshift.metatron.isa.m.type.Poly.MUTABLE;
-import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
@@ -774,12 +762,12 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
     /**
      * Upsert a row into {@link #MTRON_META_TABLE}.
      *
-     * @param conn      the JDBC connection
-     * @param tableName lowercase table name
+     * @param conn       the JDBC connection
+     * @param tableName  lowercase table name
      * @param columnName lowercase column name
-     * @param baseVid   base type VID string (e.g. {@code "int::T"})
-     * @param objTid    full type ID string (e.g. {@code "int::T[nat]"}), may be null
-     * @param refTable  FK target table, may be null
+     * @param baseVid    base type VID string (e.g. {@code "int::T"})
+     * @param objTid     full type ID string (e.g. {@code "int::T[nat]"}), may be null
+     * @param refTable   FK target table, may be null
      */
     private void persistColumnType(final Connection conn, final String tableName,
                                    final String columnName, final String baseVid,
@@ -1051,8 +1039,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
                     final String typeName2 = cols.getString("TYPE_NAME");
                     final ColumnMetadata raced = new ColumnMetadata(columnName, sqlType2, typeName2);
                     metadata.columns.add(raced);
-                    this.space.logger().info("column {{b}}%s{{X}}.%s already exists (race); using DB-reported type %s",
-                            metadata.tableName, columnName, typeName2);
+                    this.space.logger().info("column {{b}}%s{{X}}.%s already exists (race); using DB-reported type %s", metadata.tableName, columnName, typeName2);
                     return raced;
                 }
             }
@@ -1233,7 +1220,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
      * write so the normal {@code directWriter} path is never reached.
      */
     public int ensureTableAndInsert(final Connection conn, final String tableName,
-                                     final Rec rec) throws java.sql.SQLException {
+                                    final Rec rec) throws java.sql.SQLException {
         final boolean isNew = !tableSchemas.containsKey(tableName.toLowerCase());
         if (isNew)
             createTableFromRecord(conn, tableName, rec, null);

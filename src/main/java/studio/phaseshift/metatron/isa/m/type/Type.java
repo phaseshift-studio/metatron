@@ -481,6 +481,8 @@ public interface Type extends Obj {
                 return true;
             while (true) {
                 // LOG.warn("checking %s is a %s",objType, type);
+                if (objType.isRootType())
+                    return false;
                 if (objType.vid().test(nominalVID))
                     return true;
                 if (objType.isBaseType())

@@ -66,10 +66,6 @@ public interface Stylable<T extends Stylable<T>> {
         public T stylable;
         public Border border = null;
         public FloatingSurface.Anchor anchor = null;
-        public int width = 0;
-        public int height = 0;
-        public int top = 0;
-        public int left = 0;
 
         protected Style(final T stylable) {
             super(new LinkedHashMap<>(), UI_STYLE_TID, null);
@@ -261,9 +257,6 @@ public interface Stylable<T extends Stylable<T>> {
             this.jvm().put(uri("top"), jnt(top));
             this.jvm().put(uri("left"), jnt(left));
             this.anchor = anchor;
-            this.width = width;
-            this.top = top;
-            this.left = left;
             return this;
         }
 
@@ -273,9 +266,6 @@ public interface Stylable<T extends Stylable<T>> {
             this.jvm().remove(uri("top"));
             this.jvm().remove(uri("left"));
             this.anchor = null;
-            this.width = 0;
-            this.top = 0;
-            this.left = 0;
             return this;
         }
 
@@ -294,10 +284,12 @@ public interface Stylable<T extends Stylable<T>> {
          * Display width override.  0 = use the widget's natural width.
          */
         public int width() {
-            if (this.width > 0) return this.width;
-            if (this.at("width").isInt())
-                return this.at("width").asInt().intValue().intValue();
-            return 0;
+            return this.at("width").orElse(jnt(0)).asInt().intValue().intValue();
+        }
+
+        public Style<T> width(final int w) {
+            this.jvm().put(uri("width"), jnt(w));
+            return this;
         }
 
         /**
@@ -307,15 +299,11 @@ public interface Stylable<T extends Stylable<T>> {
          * at the bottom.
          */
         public int height() {
-            if (this.height > 0) return this.height;
-            if (this.at("height").isInt())
-                return this.at("height").asInt().intValue().intValue();
-            return 0;
+            return this.at("height").orElse(jnt(0)).asInt().intValue().intValue();
         }
 
         public Style<T> height(final int h) {
             this.jvm().put(uri("height"), jnt(h));
-            this.height = h;
             return this;
         }
 
@@ -323,20 +311,24 @@ public interface Stylable<T extends Stylable<T>> {
          * Row offset from the anchor edge (CSS {@code top}).
          */
         public int top() {
-            if (this.top > 0) return this.top;
-            if (this.at("top").isInt())
-                return this.at("top").asInt().intValue().intValue();
-            return 0;
+            return this.at("top").orElse(jnt(0)).asInt().intValue().intValue();
+        }
+
+        public Style<T> top(final int t) {
+            this.jvm().put(uri("top"), jnt(t));
+            return this;
         }
 
         /**
          * Column offset from the anchor edge (CSS {@code left}).
          */
         public int left() {
-            if (this.left > 0) return this.left;
-            if (this.at("left").isInt())
-                return this.at("left").asInt().intValue().intValue();
-            return 0;
+            return this.at("left").orElse(jnt(0)).asInt().intValue().intValue();
+        }
+
+        public Style<T> left(final int l) {
+            this.jvm().put(uri("left"), jnt(l));
+            return this;
         }
 
         /**

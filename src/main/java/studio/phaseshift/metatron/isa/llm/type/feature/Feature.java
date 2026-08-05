@@ -62,7 +62,7 @@ public interface Feature {
      * skill so the agent can learn usage details on demand rather than
      * carrying them in every system prompt.
      */
-    default Lst skill() {
+    default Lst skill(final Agent agent) {
         return lst().c(cInt::zero);
     }
 

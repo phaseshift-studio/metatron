@@ -186,6 +186,11 @@ It is true that there exists structural features of marko that make this person 
 However, if the system operating with such types can not make that distinction (perhaps no sensors to do so), then an explicit statement of the fact that marko is not a chicken allows such unrefined systems (literally) to operate effectively using said classification.
 This is the difference between **experiential knowledge** (structural) and **authoratative knowledge** (nominal).
 
+NOTE: Type definitions in space are **monotonic**: once a type is defined with a predicate or constructor, subsequent redefinitions can only *add* structural constraints, never remove them.
+If `person::T` is written as a structural type and later referenced as `being::T\@person` (a nominal definition with no predicate), the existing predicate is inherited — the type remains structural.
+This prevents retroactive invalidation of values already constructed and checked against the original type contract.
+To define a fresh nominal type at a point in space that previously held a structural type, explicitly clear the type from space first (e.g., `person \-> noobj`).
+
 [discrete]
 === Type Constructors
 

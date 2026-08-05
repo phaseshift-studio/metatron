@@ -118,6 +118,18 @@ public interface Str extends Mono, PlusMonoid.O<Str> {
 
         public final static Map<String, Pattern> REGEX_CACHE = new ConcurrentHashMap<>();
 
+        public static Obj toUriOrStr(final String string, final boolean uriFallback) {
+            if (string.startsWith("<") && string.endsWith(">"))
+                return uri(string.substring(1, string.length() - 1));
+            else if (string.contains(" ") ||
+                    string.contains("\n") ||
+                    string.contains("\r") ||
+                    string.contains("\"") ||
+                    string.contains("'"))
+                return str(string);
+            return uriFallback ? uri(string) : str(string);
+        }
+
         public static String cleanString(final Obj obj) {
             return cleanString(obj, false);
         }

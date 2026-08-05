@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -24,15 +24,14 @@ import org.jline.terminal.Size;
 import org.jline.terminal.Terminal;
 import org.jline.utils.Display;
 import org.jline.utils.InfoCmp;
+import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.reflect.JRec;
 import studio.phaseshift.metatron.isa.mach.type.ui.Widget;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Console;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 
-import java.util.Arrays;
 import java.util.Map;
-import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.reflect.JRec;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -45,7 +44,7 @@ public abstract class AbstractWidget<W extends AbstractWidget<W>> extends JRec<W
 
     public AbstractWidget(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
-        this.size = this.terminal.getSize();
+        this.size = null == this.terminal ? new Size() : this.terminal.getSize();
         this.display = new Display(this.terminal, false);
         this.display.resize(this.size.getRows(), this.size.getColumns());
         this.cursor = new Cursor(0, 0);
@@ -65,7 +64,9 @@ public abstract class AbstractWidget<W extends AbstractWidget<W>> extends JRec<W
     protected int paneAvailHeight = -1;
     protected int paneAvailWidth = -1;
 
-    /** Tracks the number of lines the last render consumed, for in-place updates. */
+    /**
+     * Tracks the number of lines the last render consumed, for in-place updates.
+     */
     private int lastRenderHeight;
 
     /**
@@ -118,7 +119,9 @@ public abstract class AbstractWidget<W extends AbstractWidget<W>> extends JRec<W
         this.paneAvailWidth = width;
     }
 
-    /** Returns {@code true} when pane bounds have been set via {@link #setPaneBounds}. */
+    /**
+     * Returns {@code true} when pane bounds have been set via {@link #setPaneBounds}.
+     */
     public boolean hasPaneBounds() {
         return this.paneStartRow > 0;
     }
@@ -170,7 +173,7 @@ public abstract class AbstractWidget<W extends AbstractWidget<W>> extends JRec<W
         terminal.writer().flush();
     }
 
-    
+
     @Override
     public Style<W> getStyle() {
         return this.style;

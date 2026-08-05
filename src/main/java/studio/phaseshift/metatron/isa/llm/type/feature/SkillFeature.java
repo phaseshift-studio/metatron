@@ -35,7 +35,7 @@ public class SkillFeature extends AbstractFeature {
             if (entry != agent.feature(SKILL)) {
                 Lst skillObj = lst0().zero();
                 if (entry instanceof Feature feat)
-                    skillObj = feat.skill();
+                    skillObj = feat.skill(agent);
                 if (skillObj.isNoObj() || skillObj.asLst().isEmpty())
                     skillObj = entry.asRec().at(SKILL).orElse(lst());
                 if (skillObj.isNoObj() || skillObj.asLst().isEmpty()) continue;

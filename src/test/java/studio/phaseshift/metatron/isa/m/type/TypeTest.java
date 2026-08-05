@@ -566,6 +566,9 @@ public class TypeTest extends AbstractMetatronTest {
 
     @ParameterizedTest
     @TestData(value = {
+            "person -> noobj",
+            "chicken -> noobj",
+            "being -> noobj",
             "rec::T[?[name=>str::T,age=>int::T]]@being",
             "being::T@person",
             "being::T@chicken",
@@ -836,7 +839,7 @@ public class TypeTest extends AbstractMetatronTest {
             "mortal::T             | int::T        | false                   | different base branches (mortal→rec, int)",
     }, delimiter = '|')
     public void testIsStructuralRefinementOf(final String typeAStr, final String typeBStr,
-                                              final boolean expected, final String description) {
+                                             final boolean expected, final String description) {
         final Type typeA = ObjmtronSerializer.<Type>parse(typeAStr);
         final Type typeB = ObjmtronSerializer.<Type>parse(typeBStr);
         assertEquals(expected, typeA.isStructuralRefinementOf(typeB), description);
@@ -885,7 +888,7 @@ public class TypeTest extends AbstractMetatronTest {
             "int::T                | int::T        | coefficient span: {1,1} span {1,1} = {1,1}",
     }, delimiter = '|')
     public void testFindLCDCoefficientSpan(final String typeAStr, final String typeBStr,
-                                            final String description) {
+                                           final String description) {
         final Type typeA = ObjmtronSerializer.<Type>parse(typeAStr);
         final Type typeB = ObjmtronSerializer.<Type>parse(typeBStr);
         final Type lcd = Type.Helper.findLCD(List.of(typeA, typeB));
@@ -896,6 +899,34 @@ public class TypeTest extends AbstractMetatronTest {
                 description + ": typeA coeff " + typeA.c() + " within LCD coeff " + lcd.c());
         assertTrue(typeB.c().within(lcd.c()),
                 description + ": typeB coeff " + typeB.c() + " within LCD coeff " + lcd.c());
+    }
+
+    @ParameterizedTest
+    @TestData(value = {
+            "being -> rec::T[?[age=>int::T]]@being",
+            "person -> being::T[?[name=>str::T]]@person"
+    })
+    @CsvSource(value = {
+            // typeA                                 | success
+            "being::[name=>34]                       | false",
+            "being::[name=>'marko']                  | false",
+            "being::[=>]                             | false",
+            "being::[age=>34]                        | true",
+            "being::[auge=>6]                        | false",
+            "being::[age=>'34']                      | false",
+            "person::3                               | false",
+            "person::[=>]                            | false",
+            "person::[age=>34]                       | false",
+            "person::[name=>'marko',age=>'x']        | false",
+            "person::[name=>'marko',age=>29]         | true"
+    }, delimiter = '|')
+    public void testPredicateConstructionChain(final String obj, final boolean success) {
+        try {
+            final Obj v = ObjmtronSerializer.parse(obj);
+            assertTrue(success, "%s should be a valid value".formatted(v));
+        } catch (final Exception e) {
+            assertFalse(success, "%s is not a valid value");
+        }
     }
 
 }

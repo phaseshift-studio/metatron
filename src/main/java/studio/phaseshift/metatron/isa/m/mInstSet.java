@@ -57,6 +57,7 @@ import static studio.phaseshift.metatron.isa.m.type.Rel.REL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.*;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
@@ -91,7 +92,7 @@ public class mInstSet extends AbstractInstSet {
     public static final fURI SPACE_TID = M_ISA_TID.extend("space");
     /// ////////////////////////////////////////////////////////
     public static final fURI INST_CTOR_TID = M_ISA_INST_TID.extend(CTOR).dom(ALL.maybe());
-    public static final fURI INST_PRED_TID = M_ISA_INST_TID.extend("pred");
+    public static final fURI INST_PRED_TID = M_ISA_INST_TID.extend("pred").rng(ALL.maybe());
     public static final fURI LIKE_INST_TID = M_ISA_INST_TID.extend("like");
     public static final fURI CAUSE_INST_TID = M_ISA_INST_TID.extend("cause");
     public static final fURI NATIVE_INST_TID = M_ISA_INST_TID.extend("native");
@@ -230,8 +231,8 @@ public class mInstSet extends AbstractInstSet {
             .vid(SPACE_TID)
             .isaPredicate(rec(
                     uri(PATTERN), URI_TYPE,
-                    uri(QPROC).maybe(), lst(QPROC_TYPE),
-                    uri(ROUTE).maybe(), rec(URI_TYPE, URI_TYPE),
+                    uri(QPROC).maybe(), lst(QPROC_TYPE.maybe().asType()),
+                    uri(ROUTE).maybe(), rec(T(URI_TID.maybe()), URI_TYPE),
                     uri(SCHEMA).maybe(), T(INSTSET_TID) // nominal-only: avoids structural recursion in InstSet
             )).create();
 
@@ -433,8 +434,8 @@ public class mInstSet extends AbstractInstSet {
                         REGEX_TYPE = Type.Builder.build().tid(STR_TID).vid(REGEX_TID).create(),
                         /// ///////////////////////////////////
                         SUBQ_TYPE = docWrap(Type.Builder.build()
-                                        .vid(SUBQ_TID)
                                         .tid(QPROC_TID)
+                                        .vid(SUBQ_TID)
                                         .isaPredicate(rec(uri(SUB).maybe().asUri(), rec(URI_TYPE, SUBQ_TYPE)))
                                         .constructor(QCollection::subq)
                                         .create(), "", "",
@@ -761,6 +762,19 @@ public class mInstSet extends AbstractInstSet {
                                                     // No optimization possible, return original
                                                     return matched;
                                                 })).asCode()), "leverages distributive ring law to pull common monoidally bound components to the left"),
+                        docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("range_skip_take"),
+                                code -> code.selfJVM(
+                                        Rewriter.search(code.asCode().insts())
+                                                .match(List.of(instA(RANGE_INST_TID)))
+                                                .repeat()
+                                                .rewrite(map -> {
+                                                    final List<Inst> matched = map.values().stream().toList();
+                                                    final Inst rangeInst = matched.getFirst();
+                                                    return Stream.of(
+                                                            instB(SKIP_INST_TID, lst(rangeInst.arg(0))),
+                                                            instB(TAKE_INST_TID, lst(jnt(rangeInst.arg(1).intValue() - rangeInst.arg(0).intValue())))).toList();
+                                                })).asCode()), "rewrites virtual range inst rewritten to skip/take"),
+
                         docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("explain_profile"),
                                 code -> {
                                     final List<Inst> insts = code.insts();

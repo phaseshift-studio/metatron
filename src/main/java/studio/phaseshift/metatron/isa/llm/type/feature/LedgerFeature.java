@@ -58,7 +58,7 @@ public class LedgerFeature extends AbstractFeature {
     }
 
     @Override
-    public Lst skill() {
+    public Lst skill(final Agent agent) {
         final fURI ledgerVID = this.at(LEDGER).uriValue();
         return lst(rec(uri(NAME), uri(LEDGER),
                 uri(DESC), str("persistent agent-owned scratchpad for cross-turn task tracking"),

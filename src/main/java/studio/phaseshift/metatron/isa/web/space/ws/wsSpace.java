@@ -57,7 +57,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.web.space.http.httpSpace.CONFIG;
 import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
@@ -108,12 +107,9 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
     public static final Type WS_SPACE_TYPE = Type.Builder.build()
             .tid(SPACE_TID)
             .vid(WS_SPACE_TID)
-            .isaPredicate(rec(
-                    uri(HOST), URI_TYPE,
-                    uri(PATTERN), URI_TYPE,
-                    uri(ROUTE), REC_TYPE))
-            .constructor(instC(INST_CTOR_TID.dom(WS_SPACE_TID).rng(WS_SPACE_TID),
-                    lst(T(REC_TID, isa_(CONFIG))), (lhs, inst) -> wsSpace.of(inst.arg(0).recValue(), inst.arg(0).vid()))).create();
+            .isaPredicate(rec(uri(HOST), URI_TYPE))
+            .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(WS_SPACE_TID),
+                    lst(T(WS_SPACE_TID)), (lhs, inst) -> wsSpace.of(inst.arg(0).recValue(), inst.arg(0).vid()))).create();
 
     private final memSpace cache;
 

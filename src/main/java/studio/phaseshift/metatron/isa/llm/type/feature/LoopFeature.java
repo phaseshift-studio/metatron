@@ -82,7 +82,7 @@ public class LoopFeature extends AbstractFeature {
     }
 
     @Override
-    public Lst skill() {
+    public Lst skill(final Agent agent) {
         final String instructions = LOOP_FEATURE_INSTRUCTIONS
                 .replace("%%%1", this.maxLoops > 0 ? this.maxLoops + "" : "<no limit>")
                 .replace("%%%2", this.maxTimeMillis > 0 ? this.maxTimeMillis + "" : "<no limit>");

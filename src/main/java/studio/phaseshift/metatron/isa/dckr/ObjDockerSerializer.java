@@ -24,6 +24,7 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Str;
 import studio.phaseshift.metatron.isa.mach.io.type.AbstractObjSerializer;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
@@ -171,13 +172,20 @@ public class ObjDockerSerializer extends AbstractObjSerializer<String> {
      * Parse Docker label string "key=val,key=val" into a Rec.
      */
     private static Rec parseLabels(final String content) {
-        final Map<Obj, Obj> map = new LinkedHashMap<>();
+        final Rec labels = rec();
         for (final String pair : content.split(",")) {
             final int eq = pair.indexOf('=');
-            if (eq > 0)
-                map.put(uri(pair.substring(0, eq).trim()), uri(pair.substring(eq + 1).trim()));
+            if (eq > 0) {
+                Obj p;
+                try {
+                    p = ObjmtronSerializer.parse(pair.substring(eq + 1).trim());
+                } catch (final Exception e) {
+                    p = Str.Helper.toUriOrStr(pair.substring(eq + 1).trim(), true);
+                }
+                labels.at(uri(pair.substring(0, eq).trim()), p, MUTABLE);
+            }
         }
-        return rec(map);
+        return labels;
     }
 
     // ===================================================================

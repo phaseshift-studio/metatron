@@ -27,7 +27,7 @@ public class SkillFeatureTest extends FeatureTest {
     public void testLoopFeatureHasSkill() {
         final LoopFeature loop = new LoopFeature(new LinkedHashMap<>(), feat("loop"), null) {
         };
-        final Obj skill = loop.skill();
+        final Obj skill = loop.skill(agentDummy());
         assertFalse(skill.isNoObj(), "LoopFeature should have a skill");
         assertTrue(skill.asLst().at(0).isRec(), "skill should be a Rec");
         final Rec skillRec = skill.asLst().at(0).asRec();
@@ -40,7 +40,7 @@ public class SkillFeatureTest extends FeatureTest {
     public void testLedgerFeatureHasSkill() {
         final LedgerFeature ledger = new LedgerFeature(new LinkedHashMap<>(), feat("ledger"), null) {
         };
-        final Obj skill = ledger.skill();
+        final Obj skill = ledger.skill(agentDummy());
         assertFalse(skill.isNoObj(), "LedgerFeature should have a skill");
         assertEquals("ledger", skill.asLst().at(0).asRec().at(uri(NAME)).uriValue().toString());
     }
@@ -50,7 +50,7 @@ public class SkillFeatureTest extends FeatureTest {
         // skill() Rec must match LLM_SKILL_TYPE so mSkill.of(rec).toSkill() succeeds
         final LoopFeature loop = new LoopFeature(new LinkedHashMap<>(), feat("loop"), null) {
         };
-        final Lst skillLst = loop.skill();
+        final Lst skillLst = loop.skill(agentDummy());
         assertFalse(skillLst.isNoObj());
         final Rec skillRec = skillLst.at(0);
         final var lc4jSkill = mSkill.of(skillRec).toSkill();
@@ -59,7 +59,7 @@ public class SkillFeatureTest extends FeatureTest {
 
         final LedgerFeature ledger = new LedgerFeature(new LinkedHashMap<>(), feat("ledger"), null) {
         };
-        final var ledgerSkill = mSkill.of(ledger.skill().asLst().at(0).asRec()).toSkill();
+        final var ledgerSkill = mSkill.of(ledger.skill(agentDummy()).asLst().at(0).asRec()).toSkill();
         assertEquals("ledger", ledgerSkill.name());
     }
 
@@ -68,15 +68,15 @@ public class SkillFeatureTest extends FeatureTest {
         // Features that are purely observational should not declare a skill
         final AuditFeature audit = new AuditFeature(new LinkedHashMap<>(), feat("audit"), null) {
         };
-        assertTrue(audit.skill().isNoObj(), "AuditFeature should have no skill");
+        assertTrue(audit.skill(agentDummy()).isNoObj(), "AuditFeature should have no skill");
 
         final StageFeature stage = new StageFeature(new LinkedHashMap<>(), feat("stage"), null) {
         };
-        assertTrue(stage.skill().isNoObj(), "StageFeature should have no skill");
+        assertTrue(stage.skill(agentDummy()).isNoObj(), "StageFeature should have no skill");
 
         final ThinkFeature think = new ThinkFeature(new LinkedHashMap<>(), feat("think"), null) {
         };
-        assertTrue(think.skill().isNoObj(), "ThinkFeature should have no skill");
+        assertTrue(think.skill(agentDummy()).isNoObj(), "ThinkFeature should have no skill");
     }
 
     @Test
@@ -85,7 +85,7 @@ public class SkillFeatureTest extends FeatureTest {
         final AbstractFeature plain =
                 new AbstractFeature(new LinkedHashMap<>(), feat("plain"), null) {
                 };
-        assertTrue(plain.skill().isNoObj(), "bare Feature should have no skill");
+        assertTrue(plain.skill(agentDummy()).isNoObj(), "bare Feature should have no skill");
     }
 
     @Test
@@ -101,7 +101,7 @@ public class SkillFeatureTest extends FeatureTest {
         // Verify both skills are non-noobj
         for (final Obj entry : a.features().lstValue()) {
             if (entry instanceof AbstractFeature f) {
-                final Obj skill = f.skill();
+                final Obj skill = f.skill(agentDummy());
                 if (entry instanceof LoopFeature || entry instanceof LedgerFeature)
                     assertFalse(skill.isNoObj(), "%s should have a skill".formatted(entry.getClass().getSimpleName()));
             }
@@ -112,7 +112,7 @@ public class SkillFeatureTest extends FeatureTest {
     public void testLoopSkillContainsBlockSyntax() {
         final LoopFeature loop = new LoopFeature(new LinkedHashMap<>(), feat("loop"), null) {
         };
-        final String content = loop.skill().asLst().at(0).asRec().at(uri(CONTENT)).strValue();
+        final String content = loop.skill(agentDummy()).asLst().at(0).asRec().at(uri(CONTENT)).strValue();
         assertTrue(content.contains("<<mtron:loop>>"),
                 "skill content should explain the mtron:loop block syntax");
         assertTrue(content.contains("prompt"),
@@ -126,7 +126,7 @@ public class SkillFeatureTest extends FeatureTest {
         final LoopFeature loopWithDelay = new LoopFeature(
                 mutableMap(uri("delay"), real(2.0d)), feat("loop"), null) {
         };
-        final String content = loopWithDelay.skill().asLst().at(0).asRec().at(uri(CONTENT)).strValue();
+        final String content = loopWithDelay.skill(agentDummy()).asLst().at(0).asRec().at(uri(CONTENT)).strValue();
         LOG.warn("loop skill content: %s", content);
         assertTrue(content.contains("delay"),
                 "skill content should mention configured delay");

@@ -23,6 +23,7 @@ import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
 import studio.phaseshift.metatron.isa.llm.type.feature.*;
+import studio.phaseshift.metatron.isa.llm.type.feature.Feature;
 import studio.phaseshift.metatron.isa.llm.type.mSkill;
 import studio.phaseshift.metatron.isa.llm.type.mTool;
 import studio.phaseshift.metatron.isa.m.type.*;
@@ -42,8 +43,6 @@ import static studio.phaseshift.metatron.isa.llm.type.Model.model;
 import static studio.phaseshift.metatron.isa.llm.type.mTool.LLM_TOOL_TYPE;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.*;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.or_;
 import static studio.phaseshift.metatron.isa.m.type.Fail.FAIL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
@@ -222,6 +221,7 @@ public class llmInstSet extends AbstractInstSet {
                                         .create(),
                                 null, null, mutableMap(
                                         uri(NAME).maybe(), "sender identity for multi-user conversations",
+                                        uri(TEXT).maybe(), "text of a single content message",
                                         uri(CONTENTS), "the message contents"
                                         /*  uri(SIZE), "the data size of the message content"*/), "a user message"),
                         docWrap(LLM_TOOL_REQUEST_MESSAGE_TYPE = Type.Builder.build()
@@ -249,7 +249,7 @@ public class llmInstSet extends AbstractInstSet {
                                 null, null, mutableMap(
                                         uri(TEXT), "the response text",
                                         uri(TOOL_REQUESTS), "the tool execution requests made by the model",
-                                        uri("+attributes"), "extra provider metadata is stored as top-level fields on the rec"),
+                                        uri("attributes"), "extra provider metadata is stored as top-level fields on the rec"),
                                 "an ai/assistant message"),
                         docWrap(LLM_TOOL_RESULT_MESSAGE_TYPE = Type.Builder.build()
                                         .tid(MESSAGE_TID)
@@ -278,13 +278,14 @@ public class llmInstSet extends AbstractInstSet {
                         docWrap(LLM_MESSAGE_TYPE = Type.Builder.build()
                                         .tid(REC_TID)
                                         .vid(MESSAGE_TID)
-                                        .isaPredicate(or_(lst(
-                                                isa_(LLM_SYSTEM_MESSAGE_TYPE),
-                                                isa_(LLM_USER_MESSAGE_TYPE),
-                                                isa_(LLM_AI_MESSAGE_TYPE),
-                                                isa_(LLM_TOOL_RESULT_MESSAGE_TYPE),
-                                                isa_(LLM_THINKING_MESSAGE_TYPE)
-                                        )))
+                                        .isaPredicate(rec())
+                                        /*.predicate(tid_().is_(or_(
+                                                eq_(uri(SYSTEM_MESSAGE_TID)),
+                                                eq_(uri(USER_MESSAGE_TID)),
+                                                eq_(uri(AI_MESSAGE_TID)),
+                                                eq_(uri(TOOL_RESULT_MESSAGE_TID)),
+                                                eq_(uri(THINKING_MESSAGE_TID))*/
+                                        //  )).tryToInst())
                                         .create(),
                                 null, null,
                                 mutableMap(),
@@ -616,21 +617,22 @@ public class llmInstSet extends AbstractInstSet {
      * no-op defaults in {@link AbstractFeature})
      * get wired up — no manual stage lists needed.
      *
-     * @param f the feature to register hooks on
+     * @param feature the feature to register hooks on
      */
     @SuppressWarnings("unchecked")
-    private static Obj createStageLambdas(final Obj f) {
+    private static Obj createStageLambdas(final Obj feature) {
         for (final StageDef def : STAGE_DEFS) {
             try {
-                if (f instanceof AbstractFeature featureObj) {
+                if (feature instanceof AbstractFeature featureObj) {
                     if (featureObj.at(uri(def.stageName)).isNoObj()) {
                         final Method method = featureObj.getClass().getMethod(def.methodName, def.paramTypes);
-                        if (method.getDeclaringClass() != AbstractFeature.class) {
+                        if (method.getDeclaringClass() != AbstractFeature.class &&
+                                method.getDeclaringClass() != Feature.class) {
                             featureObj.at(uri(def.stageName), def.lambdaFactory.apply(featureObj), MUTABLE);
                         }
                     }
-                } else if (f instanceof Rec) {
-                    f.logger().warn("mtron native feature loaded: %s", f.tid());
+                } else if (feature instanceof Rec) {
+                    feature.logger().warn("mtron native feature loaded: %s", feature.tid());
                 }
             } catch (final NoSuchMethodException e) {
                 // All methods are declared on Feature — this should never happen
@@ -648,7 +650,7 @@ public class llmInstSet extends AbstractInstSet {
         } catch (final NoSuchMethodException e) {
             // All methods are declared on Feature — this should never happen
         }*/
-        return f;
+        return feature;
     }
 
     // ---- stage hook definitions -----------------------------------------
