@@ -29,6 +29,7 @@ import studio.phaseshift.metatron.isa.mach.type.ui.Widget;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Console;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Editor;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.menu.ColonMenu;
+import studio.phaseshift.metatron.isa.mach.type.ui.tool.TreeSelectTool;
 import studio.phaseshift.metatron.isa.mach.type.ui.widget.*;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -89,6 +90,8 @@ public class uiInstSet extends AbstractInstSet {
     public static Type UI_SELECTOR_TYPE;
     public static final fURI UI_PANEL_TID = UI_WIDGET_TID.extend("panel");
     public static Type UI_PANEL_TYPE;
+    public static final fURI UI_TREE_SELECT_TOOL_TID = UI_WIDGET_TID.extend("tree_select");
+    public static Type UI_TREE_SELECT_TOOL_TYPE;
     public static final fURI UI_ANCHOR_TID = UI_ISA_TID.extend("anchor");
     public static Type UI_ANCHOR_TYPE;
     public static final fURI UI_CONSOLE_TID = UI_ISA_TID.extend("console");
@@ -240,7 +243,20 @@ public class uiInstSet extends AbstractInstSet {
                                         .create(), "rec", "panel", Map.of(
                                         uri(TITLE), "the title of the panel",
                                         uri(BODY), "the body content of the panel"),
-                                "a simple bordered UI panel widget")),
+                                "a simple bordered UI panel widget"),
+                        docWrap(UI_TREE_SELECT_TOOL_TYPE = Type.Builder.build()
+                                        .tid(UI_WIDGET_TID)
+                                        .vid(UI_TREE_SELECT_TOOL_TID)
+                                        .isaPredicate(rec(
+                                                uri(ROOT), URI_TYPE,
+                                                uri(MAX), INT_TYPE))
+                                        .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(UI_TREE_SELECT_TOOL_TID),
+                                                lst(T(REC_TID)), (lhs, inst) ->
+                                                        new TreeSelectTool(inst.arg(0).as().jvm(), UI_TREE_SELECT_TOOL_TID, inst.arg(0).vid())))
+                                        .create(), "maybe an obj", "a tree select tool",
+                                Map.of(uri(ROOT), "the root uri to traverse from",
+                                        uri(MAX), "the max depth to traverse"),
+                                "an interactive tree browser with nested obj inspection via arrow keys and enter")),
                 uri(INST), lst(
                         instC(AS_INST_TID.dom(UI_TREE_TID).rng(STR_TID), lst(STR_TYPE), (lhs, inst) -> str(((Widget<?>) lhs).format())),
                         docWrap(instC(UI_INST_TID.extend("display").dom(UI_WIDGET_TID).rng(NOOBJ_TID.zero()), lst(), (lhs, inst) -> {

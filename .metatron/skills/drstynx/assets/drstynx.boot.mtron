@@ -19,7 +19,6 @@
     session   => <sqlite:/home/killswitch/.metatron/dr.sqlite>,
     localfs   => </home/killswitch/.hermes_clone>],
  tracer/stage => [stack=>false],
-
  header       => """
    ______          _______ __   {{r}}PhaseShift Studio                    
   |   _  \ .----. |   _   |  |_.--.--.-----.--.--.
@@ -47,7 +46,6 @@ import(/m/vec);
 import(/m/iot);
 import(/m/dckr);
 import(/m/mach/ui);
-space_root -> <${*boot/args/internal/sys}/space/dr>;
 [===================================================================]
 [===================================================================]
         [=====================]
@@ -158,7 +156,7 @@ vecspace::[pattern     => v:#,
  [------------------------------------^--]                                  
                           ]]]@/sys/space/vec/embed
 ==]
-grphspace::[pattern  => h:#,
+grphspace::[pattern   => h:#,
              host     => !*<boot/args/external/knowgraph>,
              q        => [incrq::[=>],subq::[=>]],
              schema   => noobj,
@@ -184,6 +182,9 @@ grphspace::[pattern  => h:#,
 [== if the llm session already exists, continue, else create it ==]    
 [== <drdb:llm_session>.mult(print('\n what session number?: ').stdin().as(uri::T)).to(session_vid) ==]
 [-- tag::asciidoc_tag[] --]
+inst() {
+  
+}@choose_model;
 agent::[
   name     => 'dr.stynx',
   desc     => 'the agent dr.stynx is here to be of use in the metatron',
@@ -197,10 +198,10 @@ agent::[
                                                           ==[_=>_].to(/usr/dr/session/1)) },
                         session       => /usr/dr/session/1,
                         tool          => [forget?noobj{0}<=noobj{0}(){ /usr/dr/message/+ -> noobj }]],
-    chat_feature:::::::[model         => model::[provider     => ollama,
-                                                 protocol     => ollama,
-                                                 host         => <http://ginger.local:11434>,
-                                                 llm          => mtron-qwen-14b:latest],
+    chat_feature:::::::[model         => !(*</usr/dr/model>.else(model::[provider     => ollama,
+                                                                         protocol     => ollama,
+                                                                         host         => <http://ginger.local:11434>,
+                                                                         llm          => mtron-qwen-14b:latest])),
                         response      => [to => print(_)]],
     think_feature::::::[on_agent_ctor => inst(a=>agent::T){
                                             accordion::[title => "thoughts", 
