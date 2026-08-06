@@ -249,14 +249,18 @@ public class uiInstSet extends AbstractInstSet {
                                         .vid(UI_TREE_SELECT_TOOL_TID)
                                         .isaPredicate(rec(
                                                 uri(ROOT), URI_TYPE,
-                                                uri(MAX), INT_TYPE))
+                                                uri(MAX), INT_TYPE,
+                                                uri(CODE).maybe(), ALL_TYPE.orElse(id_().tryToInst()),
+                                                uri("mini").maybe(), ALL_TYPE.orElse(id_().tryToInst())))
                                         .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(UI_TREE_SELECT_TOOL_TID),
                                                 lst(T(REC_TID)), (lhs, inst) ->
                                                         new TreeSelectTool(inst.arg(0).as().jvm(), UI_TREE_SELECT_TOOL_TID, inst.arg(0).vid())))
                                         .create(), "maybe an obj", "a tree select tool",
                                 Map.of(uri(ROOT), "the root uri to traverse from",
-                                        uri(MAX), "the max depth to traverse"),
-                                "an interactive tree browser with nested obj inspection via arrow keys and enter")),
+                                        uri(MAX), "the max depth to traverse",
+                                        uri(CODE).maybe(), "instruction called on Enter with the selected node's rel::T (default: identity)",
+                                        uri("mini").maybe(), "instruction called on each tree node's obj to produce a suffix label (default: identity)"),
+                                "an interactive tree browser: arrow keys navigate, Enter fires code on selected node, right/left expand/contract, mini labels each node")),
                 uri(INST), lst(
                         instC(AS_INST_TID.dom(UI_TREE_TID).rng(STR_TID), lst(STR_TYPE), (lhs, inst) -> str(((Widget<?>) lhs).format())),
                         docWrap(instC(UI_INST_TID.extend("display").dom(UI_WIDGET_TID).rng(NOOBJ_TID.zero()), lst(), (lhs, inst) -> {

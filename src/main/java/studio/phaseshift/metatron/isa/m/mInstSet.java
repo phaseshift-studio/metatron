@@ -436,7 +436,7 @@ public class mInstSet extends AbstractInstSet {
                         SUBQ_TYPE = docWrap(Type.Builder.build()
                                         .tid(QPROC_TID)
                                         .vid(SUBQ_TID)
-                                        .isaPredicate(rec(uri(SUB).maybe().asUri(), rec(URI_TYPE, SUBQ_TYPE)))
+                                        .isaPredicate(rec(uri(SUB).maybe().asUri(), rec(T(URI_TID.maybe()), SUBQ_TYPE)))
                                         .constructor(QCollection::subq)
                                         .create(), "", "",
                                 Map.of(uri(SUB).maybe().asUri(), "subscriptions to register immediately upon construction"),

@@ -30,13 +30,15 @@ import studio.phaseshift.metatron.isa.AbstractSpace;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
-import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.m.type.Rel;
+import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
-import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
-import studio.phaseshift.metatron.isa.mach.type.ui.console.Console;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.StatusLine;
+import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -51,18 +53,13 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.iot.iotInstSet.IOT_ISA_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.SPACE_TID;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
-import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
-import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.web.webInstSet.OBJ_SERIALIZER_TYPE;
 
 
 public class mqttSpace extends AbstractSpace<Mqtt5Client> {
@@ -136,8 +133,8 @@ public class mqttSpace extends AbstractSpace<Mqtt5Client> {
                     .topicFilter(this.redirect(this.pattern, true).toString())
                     .retainHandling(Mqtt5RetainHandling.SEND)
                     .callback(p -> {
+                        final fURI topic = this.redirect(f(p.getTopic().toString()), false);
                         try {
-                            final fURI topic = this.redirect(f(p.getTopic().toString()), false);
                             LOG.debug("received %s => %s", p.getTopic(), topic);
                             StatusLine.message(str("%s => %s".formatted(topic, new String(p.getPayloadAsBytes()))));
                             Router.global().stats().ioStats().incrBytesRecv(p.getPayload().isPresent() ? p.getPayloadAsBytes().length : 0);
@@ -155,7 +152,7 @@ public class mqttSpace extends AbstractSpace<Mqtt5Client> {
                             // the subscription TARGET stored by preWrite.
                             QProc.Helper.processQlessWrite(this.qs(), topic, obj);
                         } catch (final Exception e) {
-                            LOG.error(e);
+                            LOG.error("unable to process %s: %s", topic, e);
                         }
                     })
                     .send()

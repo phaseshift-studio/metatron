@@ -55,8 +55,6 @@ import java.util.Optional;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_MODEL_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
-import static studio.phaseshift.metatron.isa.m.math.mathInstSet.GBYTE_TYPE;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_BYTE_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Rec.REC_TYPE;
@@ -117,17 +115,16 @@ public final class LLMFactory {
                         .map(m -> {
                             try {
                                 final Rec postModel = rec(mutableMap(
-                                                // uri(PROVIDER), auto_from_(spaceRec.vid()).tryToInst(),
-                                                //uri(NAME), uri(m.get0().getName()),
-                                                //uri(LICENSE), Optional.ofNullable(m.get1().getLicense()).map(MStr::str).map(o -> (Obj) o).orElse(noobj()),
-                                                //uri(THINK), m.get1().getCapabilities().contains(THINKING) ? rec() : noobj(),
-                                                uri(SKILL), lst(m.get1().getCapabilities().stream().map(MUri::uri)),
-                                                uri(SIZE), real(Long.valueOf(m.get0().getSize()).doubleValue(), MATH_BYTE_TID, null).as(GBYTE_TYPE)),
-                                        REC_TID, null);
+                                        // uri(PROVIDER), auto_from_(spaceRec.vid()).tryToInst(),
+                                        //uri(NAME), uri(m.get0().getName()),
+                                        //uri(LICENSE), Optional.ofNullable(m.get1().getLicense()).map(MStr::str).map(o -> (Obj) o).orElse(noobj()),
+                                        //uri(THINK), m.get1().getCapabilities().contains(THINKING) ? rec() : noobj(),
+                                        uri(SKILL), lst(m.get1().getCapabilities().stream().map(MUri::uri)),
+                                        uri(SIZE), real(Long.valueOf(m.get0().getSize()).doubleValue(), MATH_BYTE_TID, null)));
                                 postModel.jvm().putAll(preModel.jvm());
                                 return postModel;
                             } catch (final Exception e) {
-                                throw MTronException.of("unable to to construct model from %s", m);
+                                throw MTronException.of(e, "unable to construct model from %s", m);
                             }
                         })
                         .findFirst()
@@ -155,18 +152,17 @@ public final class LLMFactory {
                         .filter(m -> m.name().equals(preModel.at(LLM).uriValue().toString()))
                         .map(m -> {
                             final Rec postModel = rec(mutableMap(
-                                            uri(NAME), uri(m.name()),
-                                            uri(DESC), Optional.ofNullable(m.description()).filter(d -> !d.isBlank()).map(MStr::str).map(o -> (Obj) o).orElse(noobj()),
-                                            uri(TYPE), Optional.ofNullable(m.type()).map(t -> uri(t.name().toLowerCase())).map(o -> (Obj) o).orElse(noobj())
-                                    ),//uri(PROVIDER), auto_from_(spaceRec.vid()).tryToInst()),
-                                    LLM_MODEL_TID, null);
+                                    uri(NAME), uri(m.name()),
+                                    uri(DESC), Optional.ofNullable(m.description()).filter(d -> !d.isBlank()).map(MStr::str).map(o -> (Obj) o).orElse(noobj()),
+                                    uri(TYPE), Optional.ofNullable(m.type()).map(t -> uri(t.name().toLowerCase())).map(o -> (Obj) o).orElse(noobj())
+                            ));
                             postModel.jvm().putAll(preModel.jvm());
                             return postModel;
                         })
                         .findFirst()
                         .orElseThrow(() -> MTronException.of("unknown model: %s", preModel.at(LLM)));
             }
-            default -> throw new IllegalArgumentException("unsupported llm protocol: " + preModel.at(PROTOCOL));
+            default -> throw MTronException.of("unsupported llm protocol: %s in %s", preModel.at(PROTOCOL), preModel);
         };
     }
 
@@ -218,7 +214,6 @@ public final class LLMFactory {
         final fURI provider = model.at(f(PROTOCOL)).uriValue();
         final String host = model.at(HOST).uriValue().toString();
         final boolean thinking = agent.hasFeature(THINK);
-        final String modelName = Str.Helper.cleanString(model.at(NAME));
         final Str api_key = model.at(API_KEY).orElse(str0());//model.at(f(PROVIDER)).asRec().at(API_KEY).orElse(str0());
         // final Str organization = model.at(f(PROVIDER)).asRec().at(ORG).orElse(str0());
         final String name = Str.Helper.cleanString(model.at(LLM));
@@ -253,18 +248,18 @@ public final class LLMFactory {
                 // final String orgId = organization.strValue().isBlank() ? null : organization.strValue();
                 final String baseUrl = (host != null && !host.isBlank() && !host.equals("https://api.openai.com/v1")) ? host : null;
                 // Fail early if a response format was requested but the model can't honor it
-                if (hasResponseFormat && host != null && host.contains("api.openai.com") && !openAiSupportsJsonObject(modelName))
-                    throw MTronException.of("response format not supported by %s — use gpt-4-turbo, gpt-4o, or newer", modelName);
+                if (hasResponseFormat && host != null && host.contains("api.openai.com") && !openAiSupportsJsonObject(name))
+                    throw MTronException.of("response format not supported by %s — use gpt-4-turbo, gpt-4o, or newer", name);
                 // Pick the best response_format the model actually supports:
                 //   gpt-4o+ / o-series  → json_schema (Structured Outputs)
                 //   gpt-4-turbo / gpt-3.5-turbo → json_object
-                final ResponseFormat openAiFormat = openAiSupportsStructuredOutputs(modelName) ?
+                final ResponseFormat openAiFormat = openAiSupportsStructuredOutputs(name) ?
                         createResponseFormat(responseFormat) :
                         createJsonObjectResponseFormat(responseFormat);
                 final OpenAiStreamingChatModel.OpenAiStreamingChatModelBuilder builder = OpenAiStreamingChatModel.builder()
                         .apiKey(api_key.strValue())
                         .baseUrl(baseUrl)
-                        .modelName(modelName)
+                        .modelName(name)
                         .returnThinking(thinking)
                         .sendThinking(thinking, "reasoning_content")
                         //.organizationId(orgId)
@@ -281,7 +276,7 @@ public final class LLMFactory {
                 final AnthropicStreamingChatModel.AnthropicStreamingChatModelBuilder builder =
                         AnthropicStreamingChatModel.builder()
                                 .apiKey(api_key.strValue())
-                                .modelName(modelName)
+                                .modelName(name)
                                 .returnThinking(thinking)
                                 .logRequests(true)
                                 .logResponses(true)

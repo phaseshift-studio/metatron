@@ -119,6 +119,7 @@ dckrspace::[host    => <unix:///var/run/docker.sock>,
         [=====================]
         [======== HOME =======]
         [=====================]
+[==memspace::[pattern=>/usr/dr/#,q          => [incrq::[=>],subq::[=>]],router=>[/usr/dr/ => <>]]@/sys/space/usr/dr==]
 tblespace::[pattern    => </usr/dr/#>,
             host       => <sqlite:/home/killswitch/.metatron/dr.sqlite>,
             driver     => <org.sqlite.JDBC>,
@@ -181,21 +182,25 @@ grphspace::[pattern   => h:#,
         [======================]
 [== if the llm session already exists, continue, else create it ==]    
 [== <drdb:llm_session>.mult(print('\n what session number?: ').stdin().as(uri::T)).to(session_vid) ==]
+model::[
+  provider => deepseek,
+  protocol => openai,
+  host     => <https://api.deepseek.com>,
+  api_key  => !*</sys/env/DEEPSEEK_API_KEY>,
+  llm      => <deepseek-v4-pro>
+]@/usr/dr/model;
 [-- tag::asciidoc_tag[] --]
-inst() {
-  
-}@choose_model;
 agent::[
   name     => 'dr.stynx',
   desc     => 'the agent dr.stynx is here to be of use in the metatron',
   root     => !*boot/args/internal/agent_home,
   feature  => [
     session_feature::::[on_agent_ctor => inst(a=>agent::T){ *</usr/dr/session/1>.else(
-                                           session::[agent    => !*boot/args/internal/agent_home,
-                                                     user     => !*boot/args/internal/user_home,
-                                                     name     => 'general chat',
-                                                     algorithm=> [name=><message_window>, max=>15]]
-                                                          ==[_=>_].to(/usr/dr/session/1)) },
+                                           session::[agent     => !*boot/args/internal/agent_home,
+                                                     user      => !*boot/args/internal/user_home,
+                                                     name      => 'general chat',
+                                                     algorithm => [name=><message_window>, max=>15]]
+                                                           ==[_=>_].to(/usr/dr/session/1)) },
                         session       => /usr/dr/session/1,
                         tool          => [forget?noobj{0}<=noobj{0}(){ /usr/dr/message/+ -> noobj }]],
     chat_feature:::::::[model         => !(*</usr/dr/model>.else(model::[provider     => ollama,
@@ -214,13 +219,13 @@ agent::[
     skill_feature::::::[skill         => [metatronfs:skills/metatron, metatronfs:skills/mtron]],
     concept_feature::::[base          => /usr/dr/concept,
                         extractor     => lucene],
-    tool_feature:::::::[tool          =>[!*eval,!*sql,!*codegraph]],
+    tool_feature:::::::[tool          => [!*eval,!*sql,!*codegraph]],
     audit_feature::::::[on_agent_ctor => inst(a=>agent::T) {  
                                            accordion::[title  => "audit", 
                                                        body   => "",
                                                        style  => style::[anchor=>bottom_right,width=>65,height=>30,
                                                                         left=>-2,top=>8,foreground =>"{{y}}"]]@<audit_widget> },
-                        to            => inst(a=>str::T){ @<audit_widget>>>=[body=>+*a].display() }],
+                        to            => inst?#{?}<=#{?}(a=>str::T){ @<audit_widget>>>=[body=>+*a].display() }],
     system_feature:::::[              => ]]]@<dr>; 
 [-- end::asciidoc_tag[] --]
 [== user console ==] 

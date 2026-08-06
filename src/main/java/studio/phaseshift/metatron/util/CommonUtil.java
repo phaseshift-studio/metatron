@@ -676,16 +676,41 @@ public final class CommonUtil {
      */
     public static void treeConsumer(final fURI root, final int maxDepth,
                                     final Consumer<TreeEntry> consumer) {
-        _treeWalk(root, maxDepth, 0, true, consumer);
+        treeConsumer(root, maxDepth, Set.of(), consumer);
+    }
+
+    /**
+     * Walk a metatron space tree depth-first with per-branch expansion.
+     * <p>
+     * Nodes in {@code forceExpand} have their children read even when
+     * {@code depth >= maxDepth}, enabling selective deepening of specific
+     * branches without expanding the entire tree.
+     *
+     * @param root        the root URI to start from
+     * @param maxDepth    maximum levels to descend (0 = root only)
+     * @param forceExpand URIs whose children should always be read
+     * @param consumer    receives each node as it is visited
+     */
+    public static void treeConsumer(final fURI root, final int maxDepth,
+                                    final Set<fURI> forceExpand,
+                                    final Consumer<TreeEntry> consumer) {
+        _treeWalk(root, maxDepth, forceExpand, 0, true, consumer);
     }
 
     private static void _treeWalk(final fURI uri, final int maxDepth, final int depth,
                                   final boolean isLast, final Consumer<TreeEntry> consumer) {
+        _treeWalk(uri, maxDepth, Set.of(), depth, isLast, consumer);
+    }
+
+    private static void _treeWalk(final fURI uri, final int maxDepth,
+                                  final Set<fURI> forceExpand,
+                                  final int depth, final boolean isLast,
+                                  final Consumer<TreeEntry> consumer) {
         final Obj obj = Router.readFromSpace(uri);
         final String name = uri.name();
 
         final java.util.List<fURI> childUris = new java.util.ArrayList<>();
-        if (depth < maxDepth) {
+        if (depth < maxDepth || forceExpand.contains(uri)) {
             // Read direct children via +/ on the specific parent URI.
             // Each space implements +/ to return the immediate children
             // of the given node (e.g. local:a/+/ → a1, a2).  This is the
@@ -702,7 +727,7 @@ public final class CommonUtil {
         consumer.accept(new TreeEntry(uri, name, obj, depth, isLast, childUris.size()));
 
         for (int i = 0; i < childUris.size(); i++) {
-            _treeWalk(childUris.get(i), maxDepth, depth + 1,
+            _treeWalk(childUris.get(i), maxDepth, forceExpand, depth + 1,
                     i == childUris.size() - 1, consumer);
         }
     }

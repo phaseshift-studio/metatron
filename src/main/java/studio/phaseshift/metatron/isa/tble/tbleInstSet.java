@@ -27,9 +27,9 @@ import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSQLSerializer;
-import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.tble.schema.SQLRewriteUtils;
+import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.io.BufferedInputStream;
@@ -115,12 +115,10 @@ public class tbleInstSet extends AbstractInstSet {
                                                 instC(M_ISA_INST_TID.dom(ALL_STAR).rng(ALL_STAR), lst(), (lhs, inst) -> MTronException.wrap(() -> str(new String(new BufferedInputStream(Objects.requireNonNull(tbleInstSet.class.getResourceAsStream("llm_messages_schema.sql"))).readAllBytes()))))),
                                         REC_TID, TBLE_ISA_TID.extend("helper")),
                                 "a collection of tble related utilities")),
-                uri(TYPE), lst(
-                        docWrap(TABLE_TYPE, "a stream of equally wide rows"),
-                        docWrap(TBLE_SPACE_TYPE, "a metatron realization of a relational database")),
+                uri(TYPE), lst(docWrap(TBLE_SPACE_TYPE, "a metatron realization of a relational database", "*.metatron/skill/mtron/references/tble_space.md")),
                 uri(INST), lst(Stream.of(
                         docWrap(instC(SQL_INST_TID.dom(TBLE_SPACE_TID).rng(REC_TID.maybeSome()), lst(STR_TYPE), (lhs, inst) ->
-                                    MTronException.wrap(() -> lhs.<tbleSpace>as().sql(inst.arg(0).strValue()))
+                                        MTronException.wrap(() -> lhs.<tbleSpace>as().sql(inst.arg(0).strValue()))
                                 ), "a table space typically backed by an sql-compliant relational database",
                                 "a result set as a stream of rows in mtron",
                                 mutableMap(jnt(0), "an sql query"),
@@ -703,24 +701,25 @@ public class tbleInstSet extends AbstractInstSet {
 
                         // Optimize: *kvPath/+.count() → SELECT COUNT(*) FROM kv_store WHERE furi LIKE ...
                         docWrap(RewriteBuilder.forDatabase(tbleSpace.class)
-                                .tid(TBLE_ISA_REWRITE_TID.extend("kv_count"))
-                                .rng(INT_TID)
-                                .match(FROM_INST_TID, COUNT_INST_TID)
-                                .matchSpacePredicate(kvGuard)
-                                .optimizeWithURI("kv_from_count", (space, dp, expandedURI, coeff) -> {
-                                    final fURI stored = Space.Helper.routeFromSpace(expandedURI, space.routes());
-                                    final String whereClause = KVStoreUtil.translateKVPatternToSQL(stored);
-                                    if (whereClause == null) throw MTronException.of("untranslatable KV pattern: %s", stored);
-                                    final String sql = "SELECT COUNT(*) FROM kv_store WHERE " + whereClause;
-                                    try (final Statement stmt = space.sjvm().createStatement();
-                                         final ResultSet rs = stmt.executeQuery(sql)) {
-                                        final long count = rs.next() ? rs.getLong(1) : 0L;
-                                        return jnt(count).c(c -> c.mult((cInt) coeff));
-                                    } catch (SQLException e) {
-                                        throw MTronException.of(e, "%s", sql);
-                                    }
-                                })
-                                .build(),
+                                        .tid(TBLE_ISA_REWRITE_TID.extend("kv_count"))
+                                        .rng(INT_TID)
+                                        .match(FROM_INST_TID, COUNT_INST_TID)
+                                        .matchSpacePredicate(kvGuard)
+                                        .optimizeWithURI("kv_from_count", (space, dp, expandedURI, coeff) -> {
+                                            final fURI stored = Space.Helper.routeFromSpace(expandedURI, space.routes());
+                                            final String whereClause = KVStoreUtil.translateKVPatternToSQL(stored);
+                                            if (whereClause == null)
+                                                throw MTronException.of("untranslatable KV pattern: %s", stored);
+                                            final String sql = "SELECT COUNT(*) FROM kv_store WHERE " + whereClause;
+                                            try (final Statement stmt = space.sjvm().createStatement();
+                                                 final ResultSet rs = stmt.executeQuery(sql)) {
+                                                final long count = rs.next() ? rs.getLong(1) : 0L;
+                                                return jnt(count).c(c -> c.mult((cInt) coeff));
+                                            } catch (SQLException e) {
+                                                throw MTronException.of(e, "%s", sql);
+                                            }
+                                        })
+                                        .build(),
                                 "/col/+, /col/+/+, /col/*",
                                 "kv_count(kv_store, WHERE furi LIKE ...)",
                                 Map.of(),
@@ -728,9 +727,9 @@ public class tbleInstSet extends AbstractInstSet {
 
                         // Optimize: *kvPath/+.take(n) → SELECT * FROM kv_store WHERE furi LIKE ... LIMIT n
                         docWrap(new KVLimitRewriteBuilder(TBLE_ISA_REWRITE_TID.extend("kv_limit"))
-                                .match(FROM_INST_TID, TAKE_INST_TID)
-                                .matchSpacePredicate(kvGuard)
-                                .build(),
+                                        .match(FROM_INST_TID, TAKE_INST_TID)
+                                        .matchSpacePredicate(kvGuard)
+                                        .build(),
                                 "/col/+.take(5)",
                                 "kv_limit(kv_store, WHERE furi LIKE ..., LIMIT n)",
                                 Map.of(),

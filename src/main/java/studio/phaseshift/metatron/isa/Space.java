@@ -47,6 +47,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableList;
 
 public interface Space extends Rec, Closeable {
 
@@ -56,7 +57,7 @@ public interface Space extends Rec, Closeable {
     }
 
     default Lst qs() {
-        return this.at(uri(QPROC)).orElse(lst());
+        return this.at(uri(QPROC)).orElse(lst(mutableList()));
     }
 
     default boolean hasQ(final fURI qPattern) {

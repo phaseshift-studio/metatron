@@ -23,13 +23,17 @@ import org.jline.keymap.KeyMap;
 import org.jline.terminal.Attributes;
 import org.jline.utils.InfoCmp;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.type.Call;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.m.type.Rel;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.ui.Border;
+import studio.phaseshift.metatron.isa.mach.type.ui.console.Console;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.widget.*;
 import studio.phaseshift.metatron.util.CommonUtil;
+import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.*;
 
@@ -38,6 +42,8 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.ui.uiInstSet.UI_PANEL_TID;
@@ -45,11 +51,14 @@ import static studio.phaseshift.metatron.isa.mach.ui.uiInstSet.UI_TREE_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /**
- * TreeSelect — interactive tree browser with nested obj inspection.
+ * TreeSelect — interactive tree browser with code-driven selection and
+ * per-branch expansion.
  * <p>
- * Arrow keys navigate the tree rows.  {@code Enter} pushes a detail view
- * showing the object at the selected URI.  {@code Ctrl-D} pops the current
- * level (or exits at the root).
+ * Arrow keys navigate the tree rows.  {@code Enter} passes the selected
+ * node's {@code rel::T} (URI → value) to the user-configurable
+ * {@code code} field.  {@code Right} expands the current branch one level
+ * deeper (or increases {@code max} for leaf nodes).  {@code Ctrl-D} pops
+ * the current level (or exits at the root).
  * <p>
  * Architecture mirrors {@link ExplainTool}: a stack of levels, each with
  * its own offset and selection state, rendered via {@link WidgetCanvas}.
@@ -58,8 +67,14 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  */
 public class TreeSelectTool extends AbstractWidget<TreeSelectTool> {
 
+    private static final Style<?> DEFAULT_STYLE =
+            Style.from(rec(uri("mini"), instLambda((lhs, inst) -> str(lhs.asRel().second().tid().name()))))
+                    .border(Border.continuous)
+                    .pointer("{{r}}>{{/r}}")
+                    .foreground("{{y}}");
+
     private enum Action {
-        QUIT, DOWN_ROW, UP_ROW, SELECT
+        QUIT, DOWN_ROW, UP_ROW, SELECT, RIGHT, LEFT
     }
 
     // ==================================================================
@@ -79,6 +94,8 @@ public class TreeSelectTool extends AbstractWidget<TreeSelectTool> {
         final int spawnCol;
 
         TreeLevel(final fURI root, final int maxDepth,
+                  final Set<fURI> forceExpand,
+                  final Call mini,
                   final int offsetX, final int offsetY,
                   final int spawnRow, final int spawnCol,
                   final Rec parentStyle) {
@@ -92,11 +109,13 @@ public class TreeSelectTool extends AbstractWidget<TreeSelectTool> {
             final Map<Obj, Obj> jvm = mutableMap(
                     uri(ROOT), root.toUri(),
                     uri(MAX), jnt(maxDepth),
-                    uri(CODE), instLambda((lhs, inst) -> noobj()));
+                    uri(CODE), mini);
             if (parentStyle != null) {
-                jvm.put(uri("style"), parentStyle);
+                jvm.put(uri(STYLE), parentStyle);
             }
             this.tree = new TreeWidget(jvm, UI_TREE_TID, null);
+            if (!forceExpand.isEmpty())
+                this.tree.forceExpand(forceExpand);
         }
 
         int rowCount() {
@@ -136,10 +155,10 @@ public class TreeSelectTool extends AbstractWidget<TreeSelectTool> {
 
             final String formatted = ObjmtronSerializer.single().write(obj);
             final Map<Obj, Obj> jvm = mutableMap(
-                    uri("title"), str(" Details: " + objUri + " "),
-                    uri("body"), str(formatted));
+                    uri(TITLE), str(" " + objUri + " "),
+                    uri(BODY), str(formatted));
             if (parentStyle != null) {
-                jvm.put(uri("style"), parentStyle);
+                jvm.put(uri(STYLE), parentStyle);
             }
             this.panel = new PanelWidget(jvm, UI_PANEL_TID, null);
         }
@@ -158,27 +177,46 @@ public class TreeSelectTool extends AbstractWidget<TreeSelectTool> {
     // ==================================================================
 
     private final Deque<Object> stack = new ArrayDeque<>();
-    private final fURI rootUri;
-    private final int maxDepth;
+    private final Set<fURI> expandedNodes = new HashSet<>();
     private Attributes savedAttributes;
     private boolean running = false;
     private int totalHeightUsed = 0;
 
     public TreeSelectTool(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
-        final Obj r = jvm.get(uri(ROOT));
-        this.rootUri = (r != null && r.isUri()) ? r.uriValue() : null;
-        final Obj m = jvm.get(uri(MAX));
-        this.maxDepth = (m != null && m.isInt()) ? m.asInt().intValue().intValue() : 3;
         readStyle(this.jvm());
     }
 
+    private fURI rootUri() {
+        return this.at(ROOT).orThrow(MTronException.of("no root uri provided")).uriValue();
+    }
+
+    private int maxDepth() {
+        return this.at(uri(MAX)).orElse(jnt(3)).intValue().intValue();
+    }
+
+    private void maxDepth(final int value) {
+        jvmWrite(uri(MAX), jnt(value));
+    }
+
+    private Call code() {
+        return this.at(uri(CODE)).orElse(instLambda((lhs, inst) -> {
+            this.pushDetailLevel(lhs.asRel().second(), lhs.asRel().first().uriValue(), 0, 0, 0, 0);
+            return noobj();
+        }));
+    }
+
+    private Call label() {
+        return this.at(uri(LABEL));
+    }
+
     private void readStyle(final Map<Obj, Obj> jvm) {
-        final Obj s = jvm.get(uri("style"));
+        final Obj s = jvm.getOrDefault(uri(STYLE), DEFAULT_STYLE);
         if (s != null && s.isRec()) {
             final Style<TreeSelectTool> st = Style.from(s.as());
             st.stylable = this;
-            this.style(st);
+            this.style = st;
+            this.at(STYLE, st);
         }
     }
 
@@ -188,13 +226,14 @@ public class TreeSelectTool extends AbstractWidget<TreeSelectTool> {
 
     @Override
     public void run() {
+        Console.userMode.set(true);
         // Enter raw mode for arrow-key reading
         savedAttributes = terminal.enterRawMode();
         terminal.puts(InfoCmp.Capability.keypad_xmit);
         terminal.puts(InfoCmp.Capability.cursor_invisible);
         terminal.writer().flush();
 
-        pushTreeLevel(rootUri, maxDepth, 0, 0, -1, -1);
+        pushTreeLevel(rootUri(), maxDepth(), expandedNodes, 0, 0, -1, -1);
 
         this.running = true;
         final BindingReader bindingReader = new BindingReader(terminal.reader());
@@ -228,6 +267,8 @@ public class TreeSelectTool extends AbstractWidget<TreeSelectTool> {
         keyMap.bind(Action.UP_ROW, key(terminal, InfoCmp.Capability.key_up));
         keyMap.bind(Action.QUIT, "");              // Ctrl-D
         keyMap.bind(Action.SELECT, Utilities.enter_key);   // Enter
+        keyMap.bind(Action.RIGHT, key(terminal, InfoCmp.Capability.key_right)); // Right arrow
+        keyMap.bind(Action.LEFT, key(terminal, InfoCmp.Capability.key_left));   // Left arrow
         return keyMap;
     }
 
@@ -256,6 +297,16 @@ public class TreeSelectTool extends AbstractWidget<TreeSelectTool> {
                     handleSelect(t);
                 }
             }
+            case RIGHT -> {
+                if (top instanceof TreeLevel t) {
+                    handleRight(t);
+                }
+            }
+            case LEFT -> {
+                if (top instanceof TreeLevel t) {
+                    handleLeft(t);
+                }
+            }
             case QUIT -> {
                 popLevel();
                 if (stack.isEmpty()) {
@@ -265,20 +316,85 @@ public class TreeSelectTool extends AbstractWidget<TreeSelectTool> {
         }
     }
 
+    /**
+     * Enter key: pass the selected node's {@code rel::T} (URI → value)
+     * to the user-configured {@link #code} instruction.
+     */
     private void handleSelect(final TreeLevel level) {
         if (level.rowCount() == 0) return;
         final CommonUtil.TreeEntry entry = level.getEntry(level.selectedRow);
         if (entry == null) return;
 
-        // Read the current object at this URI
-        final Obj obj = Router.readFromSpace(entry.uri());
-        if (obj == null || obj.isNoObj()) return;
+        // Build rel::T for the selected node: URI → value
+        final Rel nodeRel = rel(uri(entry.uri()), entry.obj());
+        code().apply(nodeRel);
+    }
 
-        // Push a detail view offset from the parent
-        final int newOffsetX = level.offsetX + 4;
-        final int newOffsetY = level.offsetY + level.selectedRow + 2;
-        pushDetailLevel(obj, entry.uri(), newOffsetX, newOffsetY,
-                level.selectedRow, 0);
+    /**
+     * Right arrow: expand the selected branch one level deeper.
+     * Always increments the global {@code max} depth so expansion is
+     * immediately visible.  Additionally, tracks the node for per-branch
+     * expansion so that subsequent right-arrow presses on the same
+     * branch deepen it further (depth-first) without broadening every
+     * other branch at the same pace.
+     */
+    private void handleRight(final TreeLevel level) {
+        if (level.rowCount() == 0) return;
+        final CommonUtil.TreeEntry entry = level.getEntry(level.selectedRow);
+        if (entry == null) return;
+
+        // Per-branch tracking: force this subtree one level deeper.
+        expandedNodes.add(entry.uri());
+        // Global expansion: always bump max so the change is visible.
+        maxDepth(maxDepth() + 1);
+        rebuildTreeLevel(level);
+    }
+
+    /**
+     * Left arrow: contract the selected branch one level.
+     * Removes the node from per-branch expansion tracking and decrements
+     * the global {@code max} depth, with a floor of 1 so the tree never
+     * collapses completely.
+     */
+    private void handleLeft(final TreeLevel level) {
+        if (level.rowCount() == 0) return;
+        final CommonUtil.TreeEntry entry = level.getEntry(level.selectedRow);
+        if (entry == null) return;
+
+        expandedNodes.remove(entry.uri());
+        if (maxDepth() > 1) {
+            maxDepth(maxDepth() - 1);
+        }
+        rebuildTreeLevel(level);
+    }
+
+    /**
+     * Pop and re-push the current tree level with updated
+     * {@link #maxDepth} and {@link #expandedNodes}, preserving the
+     * selected node by URI so the cursor stays on the expanded node
+     * even after new rows shift the indices.
+     */
+    private void rebuildTreeLevel(final TreeLevel current) {
+        final fURI selectedUri = (current.selectedRow >= 0 && current.selectedRow < current.tree.entries().size())
+                ? current.getEntry(current.selectedRow).uri()
+                : null;
+        stack.pop();
+        pushTreeLevel(current.root, maxDepth(), expandedNodes,
+                current.offsetX, current.offsetY,
+                current.spawnRow, current.spawnCol);
+        if (selectedUri != null) {
+            final Object top = stack.peek();
+            if (top instanceof TreeLevel t) {
+                final List<CommonUtil.TreeEntry> entries = t.tree.entries();
+                for (int i = 0; i < entries.size(); i++) {
+                    if (entries.get(i).uri().equals(selectedUri)) {
+                        t.selectedRow = i;
+                        return;
+                    }
+                }
+                // URI not found (shouldn't happen) — keep row 0
+            }
+        }
     }
 
     // ==================================================================
@@ -286,9 +402,11 @@ public class TreeSelectTool extends AbstractWidget<TreeSelectTool> {
     // ==================================================================
 
     private void pushTreeLevel(final fURI root, final int maxDepth,
+                               final Set<fURI> forceExpand,
                                final int offsetX, final int offsetY,
                                final int spawnRow, final int spawnCol) {
-        stack.push(new TreeLevel(root, maxDepth, offsetX, offsetY, spawnRow, spawnCol,
+        stack.push(new TreeLevel(root, maxDepth, forceExpand, label(),
+                offsetX, offsetY, spawnRow, spawnCol,
                 this.getStyle()));
     }
 
@@ -313,18 +431,17 @@ public class TreeSelectTool extends AbstractWidget<TreeSelectTool> {
      * Redraw all levels from bottom (oldest) to top (active), dimming
      * non-active levels so the user can see the stack depth.
      * <p>
-     * All colours, the pointer character, and border-drawing glyphs are
+     * All colors, the pointer character, and border-drawing glyphs are
      * read from {@link #getStyle()} so that a mtron {@code style::[...]}
-     * expression is honoured.
+     * expression is honored.
      */
     private void redrawStack() {
         final List<Object> levels = new ArrayList<>(stack);
         Collections.reverse(levels); // draw bottom → top
 
-        final var style = this.getStyle();
+        final Style<?> style = this.getStyle();
         final String fg = style.foreground();                   // e.g. "{{y}}"
-        final String pointer = style.pointer().isEmpty()
-                ? "{{r}}>" : style.pointer();                    // e.g. "{{r}}>"
+        final String pointer = style.at("pointer").orElse(str("{{r}}>")).strValue();
         final String dimColor = "{{w}}";
 
         final WidgetCanvas canvas = beginRedraw(totalHeightUsed);
@@ -340,9 +457,9 @@ public class TreeSelectTool extends AbstractWidget<TreeSelectTool> {
                 final List<String> rows = t.rowStrings();
 
                 // Header bar
-                final String activeColor = isTop ? fg : dimColor;
-                canvas.line(Graphitty.string(activeColor + indent
-                        + " Tree: " + t.root + " {{X}}"));
+                //final String activeColor = isTop ? fg : dimColor;
+                //canvas.line(Graphitty.string(activeColor + indent
+                //        + " Tree: " + t.root + " {{X}}"));
 
                 for (int lineIdx = 0; lineIdx < rows.size(); lineIdx++) {
                     final boolean isSelected = isTop && lineIdx == t.selectedRow;
@@ -350,11 +467,13 @@ public class TreeSelectTool extends AbstractWidget<TreeSelectTool> {
                     final String raw = rows.get(lineIdx);
 
                     if (isSelected) {
-                        canvas.line(Graphitty.string(indent + pointer + " " + raw));
+                        canvas.line(Graphitty.string(indent + pointer + "{{X}} " + raw));
                     } else if (isSpawn) {
                         canvas.line(Graphitty.string("{{[R]}}" + indent + "  " + raw + "{{X}}"));
-                    } else {
+                    } else if (false) {
                         canvas.line(Graphitty.string(dimColor + indent + "  " + raw));
+                    } else {
+                        canvas.line(Graphitty.string(indent + "  " + raw));
                     }
                 }
 
@@ -362,9 +481,9 @@ public class TreeSelectTool extends AbstractWidget<TreeSelectTool> {
 
             } else if (level instanceof DetailLevel d) {
                 final String indent = " ".repeat(d.offsetX);
-                final String activeColor = isTop ? fg : dimColor;
+                //final String activeColor = isTop ? fg : dimColor;
                 for (final String line : d.rowStrings()) {
-                    canvas.line(Graphitty.string(activeColor + indent + line));
+                    canvas.line(Graphitty.string(/*activeColor + */indent + line));
                 }
                 canvas.blankLine();
             }
@@ -373,7 +492,7 @@ public class TreeSelectTool extends AbstractWidget<TreeSelectTool> {
         // Status bar
         final Object top = stack.peek();
         if (top instanceof TreeLevel t) {
-            canvas.statusLine("{{w}}ctrl-d{{g}}:back {{w}}<^v>{{g}}:nav {{w}}enter{{g}}:inspect {{X}}  {{y}}["
+            canvas.statusLine("{{w}}ctrl-d{{g}}:back {{w}}<^v>{{g}}:nav {{w}}enter{{g}}:select {{w}}<left|right>{{g}}:expand {{X}}  {{y}}["
                     + (t.selectedRow + 1) + "/" + t.rowCount() + "]{{X}}");
         } else if (top instanceof DetailLevel) {
             canvas.statusLine("{{w}}ctrl-d{{g}}:back {{X}}");
@@ -391,10 +510,5 @@ public class TreeSelectTool extends AbstractWidget<TreeSelectTool> {
     @Override
     public String format() {
         return ""; // Rendering is handled by run() via WidgetCanvas
-    }
-
-    @Override
-    public String toString() {
-        return "TreeSelect[root=" + rootUri + ", depth=" + maxDepth + "]";
     }
 }

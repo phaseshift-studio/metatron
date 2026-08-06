@@ -55,6 +55,7 @@ import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
@@ -151,8 +152,8 @@ public class dckrSpace extends AbstractMemorySpace {
             refreshContainers();
         }
 
-        //if (vid.isBranch())
-        //    return this.store.read(routed).stream().map(i -> rel(Space.Helper.routeToSpace(i.asRel().first().uriValue(), this.routes()).toUri(), i.asRel().second())).findFirst().orElse(rel(noobj(), noobj()).zero());
+        if (vid.isBranch())
+            return this.store.read(routed).stream().map(i -> rel(Space.Helper.routeToSpace(i.asRel().first().uriValue(), this.routes()).toUri(), i.asRel().second())).findFirst().orElse(rel(noobj(), noobj()).zero());
         return this.store.read(routed);
     }
 

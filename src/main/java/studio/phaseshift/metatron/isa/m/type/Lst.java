@@ -50,7 +50,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 public interface Lst extends Poly<Lst, List<Obj>>, PlusMonoid.O<Lst> {
 
-    public static final Type LST_TYPE = Type.Builder.build()
+    Type LST_TYPE = Type.Builder.build()
             .tid(LST_TID)
             .vid(LST_TID).create();
 
@@ -202,7 +202,7 @@ public interface Lst extends Poly<Lst, List<Obj>>, PlusMonoid.O<Lst> {
 
     @Override
     default Lst zero() {
-        return lst(List.of());
+        return lst(new ArrayList<>());
     }
 
     @Override
