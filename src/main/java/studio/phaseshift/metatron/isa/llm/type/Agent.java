@@ -209,7 +209,6 @@ public class Agent extends MRec {
     }
 
     public Obj chat(final String message, final Rec responseFormat) {
-        // final StringBuilder response = new StringBuilder();
         this.interrupt.set(false);
         if (this.first.getAndSet(false))
             this.features().elements().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_AGENT_CTOR, this));
@@ -325,7 +324,6 @@ public class Agent extends MRec {
                         }
                         final String fullText = null == c.aiMessage().text() ? "" : c.aiMessage().text();
                         Router.global().stats().ioStats().incrBytesRecv(fullText.getBytes().length);
-
                         // Parse response format if requested
                         final boolean formatted = !responseFormat.isNoObj();
                         final Obj chatResult;

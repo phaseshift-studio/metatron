@@ -28,18 +28,10 @@ import studio.phaseshift.metatron.isa.mach.type.ui.Border;
 import studio.phaseshift.metatron.isa.mach.type.ui.Widget;
 import studio.phaseshift.metatron.util.CommonUtil;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.id_;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
-import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
-import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
-import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /*
@@ -59,6 +51,7 @@ public class TreeWidget extends JRec<TreeWidget> implements Widget<TreeWidget> {
     private final List<TreeRow> rows = new ArrayList<>();
     private Style<TreeWidget> style = Style.empty();
     private Cursor cursor;
+    private Set<fURI> forceExpand = Set.of();
 
     /**
      * One precomputed row in the tree.
@@ -116,12 +109,21 @@ public class TreeWidget extends JRec<TreeWidget> implements Widget<TreeWidget> {
         }
     }
 
+    /**
+     * Set URIs whose children should always be read regardless of {@link #max}
+     * depth, enabling per-branch expansion.  Triggers a rebuild on next render.
+     */
+    public void forceExpand(final Set<fURI> forceExpand) {
+        this.forceExpand = Objects.requireNonNull(forceExpand);
+        this.built = false;
+    }
+
     private void buildRows() {
         rows.clear();
         if (null == this.root) return;
-        final boolean[] lastStack = new boolean[this.max + 1];
+        final boolean[] lastStack = new boolean[Math.max(this.max, 1) + 32]; // generous upper bound for expanded branches
         final Border border = this.style.border();
-        CommonUtil.treeConsumer(this.root, this.max, entry -> {
+        CommonUtil.treeConsumer(this.root, this.max, this.forceExpand, entry -> {
             final int d = entry.depth();
             if (d > 0) lastStack[d - 1] = entry.isLast();
             final String prefix = treePrefix(d, lastStack, entry.isLast(), border);
@@ -223,10 +225,5 @@ public class TreeWidget extends JRec<TreeWidget> implements Widget<TreeWidget> {
 
     public int rowCount() {
         return rows.size();
-    }
-
-    @Override
-    public String toString() {
-        return "TreeWidget[root=" + root + ", entries=" + rows.size() + "]";
     }
 }

@@ -37,6 +37,7 @@ public interface Widget<W extends Widget<W>> extends Stylable<W>, AutoCloseable,
     default void close() {
         if (null != Console.LOCAL_INSTANCE)
             this.unfloat(Console.LOCAL_INSTANCE.getFloatingSurface());
+        Console.userMode.set(false);
     }
 
     W cursor(final Cursor cursor);
@@ -53,6 +54,7 @@ public interface Widget<W extends Widget<W>> extends Stylable<W>, AutoCloseable,
      */
     @Override
     default void run() {
+        Console.userMode.set(true);
         final var style = this.getStyle();
         if (Console.LOCAL_INSTANCE != null && style.hasFloat()) {
             final int floatW = style.width() > 0 ? style.width() : this.width();

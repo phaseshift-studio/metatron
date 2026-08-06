@@ -132,15 +132,16 @@ public class llmInstSet extends AbstractInstSet {
                                         .tid(REC_TID)
                                         .vid(LLM_MODEL_TID)
                                         .isaPredicate(rec(
-                                                uri(PROVIDER), URI_TYPE,
+                                                uri(PROVIDER).maybe().asUri(), URI_TYPE,
                                                 uri(HOST), URI_TYPE,
                                                 uri(PROTOCOL), URI_TYPE,
                                                 uri(LLM), URI_TYPE,
+                                                uri(API_KEY).maybe(), STR_TYPE,
                                                 uri(SIZE).maybe(), DATA_SIZE_TYPE,
                                                 uri(QUANT).maybe(), INT_TYPE,
                                                 uri(COST).maybe(), rec(uri(IN), MATH_CURRENCY_TYPE, uri(OUT), MATH_CURRENCY_TYPE).maybe()))
-                                        .constructor(instC(INST_CTOR_TID.rng(LLM_MODEL_TID), lst(REC_TYPE),
-                                                (lhs, inst) -> LLMFactory.createModel(inst.arg(0).asRec()).selfTID(LLM_MODEL_TID).vid(inst.arg(0).vid()))).create(),
+                                        .constructor(arg -> LLMFactory.createModel(arg.asRec()))
+                                        .create(),
                                 null, null,
                                 Map.of(uri(PROVIDER).maybe(), "optional name of ai model provider",
                                         uri(HOST), "the ai model provider's http rest endpoint",
@@ -189,8 +190,7 @@ public class llmInstSet extends AbstractInstSet {
                         docWrap(LLM_SYSTEM_MESSAGE_TYPE = Type.Builder.build()
                                         .tid(MESSAGE_TID)
                                         .vid(SYSTEM_MESSAGE_TID)
-                                        .isaPredicate(rec(
-                                                uri(TEXT), STR_TYPE))
+                                        .isaPredicate(rec(uri(TEXT), STR_TYPE))
                                         //   uri(SIZE), DATA_SIZE_TYPE))
                                         .create(),
                                 null, null,
@@ -216,13 +216,13 @@ public class llmInstSet extends AbstractInstSet {
                                         .isaPredicate(rec(
                                                 uri(NAME).maybe().asUri(), STR_TYPE,
                                                 uri(TEXT).maybe(), STR_TYPE,
-                                                uri(CONTENTS).maybe(), ALL_TYPE))
+                                                uri(CONTENTS).maybe(), T(ALL_STAR)))
                                         //uri(SIZE).maybe(), DATA_SIZE_TYPE))
                                         .create(),
                                 null, null, mutableMap(
                                         uri(NAME).maybe(), "sender identity for multi-user conversations",
                                         uri(TEXT).maybe(), "text of a single content message",
-                                        uri(CONTENTS), "the message contents"
+                                        uri(CONTENTS).maybe(), "the message contents"
                                         /*  uri(SIZE), "the data size of the message content"*/), "a user message"),
                         docWrap(LLM_TOOL_REQUEST_MESSAGE_TYPE = Type.Builder.build()
                                         .tid(MESSAGE_TID)
@@ -278,7 +278,7 @@ public class llmInstSet extends AbstractInstSet {
                         docWrap(LLM_MESSAGE_TYPE = Type.Builder.build()
                                         .tid(REC_TID)
                                         .vid(MESSAGE_TID)
-                                        .isaPredicate(rec())
+                                        //.predicate(id_().tryToInst())
                                         /*.predicate(tid_().is_(or_(
                                                 eq_(uri(SYSTEM_MESSAGE_TID)),
                                                 eq_(uri(USER_MESSAGE_TID)),
@@ -323,9 +323,8 @@ public class llmInstSet extends AbstractInstSet {
                                                 uri(ON_COMPLETE_RESPONSE).maybe(), ALL_TYPE,
                                                 uri(ON_ERROR).maybe(), ALL_TYPE))
                                         .create(),
-                                "",
-                                "", mutableMap(
-                                        uri(SKILL).maybe(), "a skill associated with the feature",
+                                null, null, mutableMap(
+                                        uri(SKILL).maybe(), "skills associated with the feature",
                                         uri(ON_AGENT_CTOR).maybe(), "inst?noobj<=agent(){ [-- one time setup --] }",
                                         uri(ON_BEFORE_CHAT).maybe(), "inst?#{?}<=agent(){ [-- non-noobj to short-circuit --] }",
                                         uri(ON_PARTIAL_RESPONSE).maybe(), "inst?noobj<=agent(text=>str::T)",
@@ -343,8 +342,7 @@ public class llmInstSet extends AbstractInstSet {
                                                 uri(NAME).maybe().asUri(), STR_TYPE,
                                                 uri(DESC).maybe(), STR_TYPE,
                                                 uri(FEATURE).maybe(), lst(LLM_FEATURE_TYPE)))
-                                        .constructor(instC(INST_CTOR_TID.rng(LLM_AGENT_TID), lst(REC_TYPE),
-                                                (lhs, inst) -> new Agent(inst.arg(0).recValue(), LLM_AGENT_TID, inst.arg(0).vid())))
+                                        .constructor(arg -> new Agent(arg.recValue(), LLM_AGENT_TID, arg.vid()))
                                         .create(), null, null, Map.of(
                                         uri(NAME), "a convenient name for the agent",
                                         uri(DESC), "a description of the agent given to the agent in their system prompt",
@@ -358,128 +356,84 @@ public class llmInstSet extends AbstractInstSet {
                                         uri(MODEL), LLM_MODEL_TYPE,
                                         uri(RESPONSE), rec(uri(TO), ALL_TYPE),
                                         uri(FORMAT).maybe(), ALL_TYPE))
-                                .constructor(instC(INST_CTOR_TID.rng(LLM_CHAT_FEATURE_TID),
-                                        lst(REC_TYPE), (lhs, inst) ->
-                                                createStageLambdas(new ChatFeature(inst.arg(0).asRec().jvm(),
-                                                        LLM_CHAT_FEATURE_TID, inst.arg(0).vid()))))
+                                .constructor(arg -> createStageLambdas(new ChatFeature(arg.asRec().jvm(), LLM_CHAT_FEATURE_TID, arg.vid())))
                                 .create(),
                         Type.Builder.build()
                                 .tid(LLM_FEATURE_TID)
                                 .vid(LLM_SESSION_FEATURE_TID)
                                 .isaPredicate(rec(SESSION, URI_TYPE))
-                                .constructor(instC(INST_CTOR_TID.rng(LLM_SESSION_FEATURE_TID),
-                                        lst(REC_TYPE), (lhs, inst) ->
-                                                createStageLambdas(new SessionFeature(inst.arg(0).asRec().jvm(),
-                                                        LLM_SESSION_FEATURE_TID, inst.arg(0).vid()))))
+                                .constructor(arg -> createStageLambdas(new SessionFeature(arg.asRec().jvm(), LLM_SESSION_FEATURE_TID, arg.vid())))
                                 .create(),
                         Type.Builder.build()
                                 .tid(LLM_FEATURE_TID)
                                 .vid(LLM_TOOL_FEATURE_TID)
                                 .isaPredicate(rec(TOOL, LST_TYPE))
-                                .constructor(instC(INST_CTOR_TID.rng(LLM_TOOL_FEATURE_TID),
-                                        lst(REC_TYPE), (lhs, inst) ->
-                                                createStageLambdas(new ToolFeature(inst.arg(0).asRec().jvm(),
-                                                        LLM_TOOL_FEATURE_TID, inst.arg(0).vid()))))
+                                .constructor(arg -> createStageLambdas(new ToolFeature(arg.asRec().jvm(), LLM_TOOL_FEATURE_TID, arg.vid())))
                                 .create(),
                         Type.Builder.build()
                                 .tid(LLM_FEATURE_TID)
                                 .vid(LLM_SKILL_FEATURE_TID)
-                                .constructor(instC(INST_CTOR_TID.rng(LLM_SKILL_FEATURE_TID),
-                                        lst(REC_TYPE), (lhs, inst) ->
-                                                createStageLambdas(new SkillFeature(inst.arg(0).asRec().jvm(),
-                                                        LLM_SKILL_FEATURE_TID, inst.arg(0).vid()))))
+                                .constructor(arg -> createStageLambdas(new SkillFeature(arg.asRec().jvm(), LLM_SKILL_FEATURE_TID, arg.vid())))
                                 .create(),
                         Type.Builder.build()
                                 .tid(LLM_FEATURE_TID)
                                 .vid(LLM_SYSTEM_FEATURE_TID)
-                                .constructor(instC(INST_CTOR_TID.rng(LLM_SYSTEM_FEATURE_TID),
-                                        lst(REC_TYPE), (lhs, inst) ->
-                                                createStageLambdas(new SystemFeature(inst.arg(0).asRec().jvm(),
-                                                        LLM_SYSTEM_FEATURE_TID, inst.arg(0).vid()))))
+                                .constructor(arg -> createStageLambdas(new SystemFeature(arg.asRec().jvm(), LLM_SYSTEM_FEATURE_TID, arg.vid())))
                                 .create(),
                         Type.Builder.build()
                                 .tid(LLM_FEATURE_TID)
                                 .vid(LLM_RECALL_FEATURE_TID)
-                                .constructor(instC(INST_CTOR_TID.rng(LLM_RECALL_FEATURE_TID),
-                                        lst(REC_TYPE), (lhs, inst) ->
-                                                createStageLambdas(new SimilarityRecallFeature(inst.arg(0).asRec().jvm(),
-                                                        LLM_RECALL_FEATURE_TID, inst.arg(0).vid()))))
+                                .constructor(arg -> createStageLambdas(new SimilarityRecallFeature(arg.asRec().jvm(), LLM_RECALL_FEATURE_TID, arg.vid())))
                                 .create(),
                         Type.Builder.build()
                                 .tid(LLM_FEATURE_TID)
                                 .vid(LLM_NOTE_FEATURE_TID)
-                                .constructor(instC(INST_CTOR_TID.rng(LLM_NOTE_FEATURE_TID),
-                                        lst(REC_TYPE), (lhs, inst) ->
-                                                new NoteFeature(inst.arg(0).asRec().jvm(),
-                                                        LLM_NOTE_FEATURE_TID, inst.arg(0).vid())))
+                                .constructor(arg -> createStageLambdas(new NoteFeature(arg.asRec().jvm(), LLM_NOTE_FEATURE_TID, arg.vid())))
                                 .create(),
                         docWrap(Type.Builder.build()
                                         .tid(LLM_FEATURE_TID)
                                         .vid(LLM_THINK_FEATURE_TID)
-                                        .constructor(instC(INST_CTOR_TID.rng(LLM_THINK_FEATURE_TID),
-                                                lst(REC_TYPE), (lhs, inst) ->
-                                                        createStageLambdas(new ThinkFeature(inst.arg(0).asRec().jvm(),
-                                                                LLM_THINK_FEATURE_TID, inst.arg(0).vid()))))
+                                        .constructor(arg -> createStageLambdas(new ThinkFeature(arg.asRec().jvm(), LLM_THINK_FEATURE_TID, arg.vid())))
                                         .create(),
-                                "",
-                                "",
+                                null, null,
                                 mutableMap(),
                                 "think feature captures thinking text during response generation"),
                         docWrap(Type.Builder.build()
                                         .tid(LLM_FEATURE_TID)
                                         .vid(LLM_STAGE_FEATURE_TID)
-                                        .constructor(instC(INST_CTOR_TID.rng(LLM_STAGE_FEATURE_TID),
-                                                lst(REC_TYPE), (lhs, inst) ->
-                                                        createStageLambdas(new StageFeature(inst.arg(0).asRec().jvm(),
-                                                                LLM_STAGE_FEATURE_TID, inst.arg(0).vid()))))
+                                        .constructor(arg -> createStageLambdas(new StageFeature(arg.asRec().jvm(), LLM_STAGE_FEATURE_TID, arg.vid())))
                                         .create(),
-                                "",
-                                "",
+                                null, null,
                                 mutableMap(),
                                 "appends typed stage entries to res(stages). purely observational — no configuration needed."),
                         docWrap(Type.Builder.build()
                                         .tid(LLM_FEATURE_TID)
                                         .vid(LLM_CONCEPT_FEATURE_TID)
-                                        .constructor(instC(INST_CTOR_TID.rng(LLM_CONCEPT_FEATURE_TID),
-                                                lst(REC_TYPE), (lhs, inst) ->
-                                                        createStageLambdas(new ConceptFeature(inst.arg(0).asRec().jvm(), LLM_CONCEPT_FEATURE_TID, inst.arg(0).vid()))))
+                                        .constructor(arg -> createStageLambdas(new ConceptFeature(arg.asRec().jvm(), LLM_CONCEPT_FEATURE_TID, arg.vid())))
                                         .create(),
-                                "",
-                                "",
+                                null, null,
                                 mutableMap(),
                                 "extracts and normalizes concepts from the agent response and thinking stream"),
                         docWrap(Type.Builder.build()
                                         .tid(LLM_FEATURE_TID)
                                         .vid(LLM_COMMENT_FEATURE_TID)
-                                        .constructor(instC(INST_CTOR_TID.rng(LLM_COMMENT_FEATURE_TID),
-                                                lst(REC_TYPE), (lhs, inst) ->
-                                                        createStageLambdas(new CommentFeature(inst.arg(0).asRec().jvm(), LLM_COMMENT_FEATURE_TID, inst.arg(0).vid()))))
+                                        .constructor(arg -> createStageLambdas(new CommentFeature(arg.asRec().jvm(), LLM_COMMENT_FEATURE_TID, arg.vid())))
                                         .create(),
-                                "",
-                                "",
-                                mutableMap(),
+                                null, null, mutableMap(),
                                 "allows user to interject with a comment in the current chat lifecycle of the agent"),
                         docWrap(Type.Builder.build()
                                         .tid(LLM_FEATURE_TID)
                                         .vid(LLM_COST_FEATURE_TID)
-                                        .constructor(instC(INST_CTOR_TID.rng(LLM_COST_FEATURE_TID),
-                                                lst(REC_TYPE), (lhs, inst) ->
-                                                        createStageLambdas(new CostFeature(inst.arg(0).asRec().jvm(),
-                                                                LLM_COST_FEATURE_TID, inst.arg(0).vid()))))
+                                        .constructor(arg -> createStageLambdas(new CostFeature(arg.asRec().jvm(), LLM_COST_FEATURE_TID, arg.vid())))
                                         .create(),
-                                "",
-                                "", mutableMap(),
+                                null, null, mutableMap(),
                                 "tracks per-model pricing and accumulates cost during execution"),
                         docWrap(Type.Builder.build()
                                         .tid(LLM_FEATURE_TID)
                                         .vid(LLM_AUDIT_FEATURE_TID)
-                                        .constructor(instC(INST_CTOR_TID.rng(LLM_AUDIT_FEATURE_TID),
-                                                lst(REC_TYPE), (lhs, inst) ->
-                                                        createStageLambdas(new AuditFeature(inst.arg(0).asRec().jvm(),
-                                                                LLM_AUDIT_FEATURE_TID, inst.arg(0).vid()))))
+                                        .constructor(arg -> createStageLambdas(new AuditFeature(arg.asRec().jvm(), LLM_AUDIT_FEATURE_TID, arg.vid())))
                                         .create(),
-                                "",
-                                "", mutableMap(),
+                                null, null, mutableMap(),
                                 "lifecycle audit trail with table text and widget result"),
                         docWrap(Type.Builder.build()
                                         .tid(LLM_FEATURE_TID)
@@ -489,13 +443,9 @@ public class llmInstSet extends AbstractInstSet {
                                                 uri("max_time").maybe().asUri(), ALL_TYPE,
                                                 uri("delay").maybe().asUri(), ALL_TYPE,
                                                 uri("preserve").maybe().asUri(), LST_TYPE))
-                                        .constructor(instC(INST_CTOR_TID.rng(LLM_LOOP_FEATURE_TID),
-                                                lst(REC_TYPE), (lhs, inst) ->
-                                                        createStageLambdas(new LoopFeature(inst.arg(0).asRec().jvm(),
-                                                                LLM_LOOP_FEATURE_TID, inst.arg(0).vid()))))
+                                        .constructor(arg -> createStageLambdas(new LoopFeature(arg.asRec().jvm(), LLM_LOOP_FEATURE_TID, arg.vid())))
                                         .create(),
-                                "",
-                                "", mutableMap(
+                                null, null, mutableMap(
                                         uri("max_loop").maybe(), "max iterations (default 10)",
                                         uri("max_time").maybe(), "wall-clock ceiling (time::T)",
                                         uri("delay").maybe(), "delay between iterations for polling (time::T)",
@@ -506,10 +456,7 @@ public class llmInstSet extends AbstractInstSet {
                                         .tid(LLM_FEATURE_TID)
                                         .vid(LLM_LEDGER_FEATURE_TID)
                                         .isaPredicate(rec(uri("init").maybe().asUri(), LST_TYPE))
-                                        .constructor(instC(INST_CTOR_TID.rng(LLM_LEDGER_FEATURE_TID),
-                                                lst(REC_TYPE), (lhs, inst) ->
-                                                        createStageLambdas(new LedgerFeature(inst.arg(0).asRec().jvm(),
-                                                                LLM_LEDGER_FEATURE_TID, inst.arg(0).vid()))))
+                                        .constructor(arg -> createStageLambdas(new LedgerFeature(arg.asRec().jvm(), LLM_LEDGER_FEATURE_TID, arg.vid())))
                                         .create(),
                                 "ledger feature — persistent agent-owned scratchpad for cross-turn task tracking",
                                 "", mutableMap(
@@ -519,13 +466,9 @@ public class llmInstSet extends AbstractInstSet {
                         docWrap(Type.Builder.build()
                                         .tid(LLM_FEATURE_TID)
                                         .vid(LLM_ITERATION_FEATURE_TID)
-                                        .constructor(instC(INST_CTOR_TID.rng(LLM_ITERATION_FEATURE_TID),
-                                                lst(REC_TYPE), (lhs, inst) ->
-                                                        createStageLambdas(new IterationFeature(inst.arg(0).asRec().jvm(),
-                                                                LLM_ITERATION_FEATURE_TID, inst.arg(0).vid()))))
+                                        .constructor(arg -> createStageLambdas(new IterationFeature(arg.asRec().jvm(), LLM_ITERATION_FEATURE_TID, arg.vid())))
                                         .create(),
-                                "",
-                                "", mutableMap(),
+                                null, null, mutableMap(),
                                 "overlays an iteration graph on the message ledger — each chat turn creates a linked iteration node with prev/next pointers and message back-references",
                                 "iteration_feature::[]")),
                        /* Type.Builder.build()
@@ -605,7 +548,8 @@ public class llmInstSet extends AbstractInstSet {
                                 "the models chat response", // rng
                                 mutableMap(jnt(0), "the message to send the model", jnt(1), "the desired response format"), // args
                                 "communicate with am llm enriched by tools, skills, etc. and receive response in particular format", // desc
-                                "*<ollama:qwen3:latest>+[response=>[to=>print(_)],think=>to(/ai/thoughts/_?incrq)].chat('what is 4+2?',[answer=>int::T])"))));
+                                "*<ollama:qwen3:latest>+[response=>[to=>print(_)],think=>to(/ai/thoughts/_?incrq)].chat('what is 4+2?',[answer=>int::T])"))))
+        ;
         docWrap(this, "large language model think and reason within the metatron");
         super.setup();
     }

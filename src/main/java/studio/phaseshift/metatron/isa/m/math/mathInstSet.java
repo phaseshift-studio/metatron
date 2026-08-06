@@ -36,6 +36,7 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.as_;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.id_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Real.REAL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
@@ -130,13 +131,13 @@ public class mathInstSet extends AbstractInstSet {
     public static final Type TIME_TYPE = Type.Builder.build()
             .tid(REAL_TID)
             .vid(MATH_TIME_TID)
+            .predicate(id_().tryToInst())
             .create();
 
     public static final Type MILLIS_TYPE = Type.Builder.build()
             .tid(MATH_TIME_TID)
             .vid(MATH_MILLIS_TID)
-            .constructor(lhs -> {
-                final Real arg = lhs.asReal();
+            .constructor(arg -> {
                 final String tid = arg.tid().toString();
                 return switch (tid) {
                     case MATH_SECOND_STRING -> arg.jvm(arg.asReal().jvm() * 1000.0d);
@@ -149,8 +150,7 @@ public class mathInstSet extends AbstractInstSet {
     public static final Type SECOND_TYPE = Type.Builder.build()
             .tid(MATH_TIME_TID)
             .vid(MATH_SECOND_TID)
-            .constructor(lhs -> {
-                final Real arg = lhs.asReal();
+            .constructor(arg -> {
                 final String tid = arg.tid().toString();
                 return switch (tid) {
                     case MATH_MILLIS_STRING -> arg.jvm(arg.asReal().jvm() / 1000.0d);
@@ -163,8 +163,7 @@ public class mathInstSet extends AbstractInstSet {
     public static final Type MINUTE_TYPE = Type.Builder.build()
             .tid(MATH_TIME_TID)
             .vid(MATH_MINUTE_TID)
-            .constructor(lhs -> {
-                final Real arg = lhs.asReal();
+            .constructor(arg -> {
                 final String tid = arg.tid().toString();
                 return switch (tid) {
                     case MATH_MILLIS_STRING -> arg.jvm(arg.asReal().jvm() / 60.0d / 1000.0d);
@@ -177,8 +176,7 @@ public class mathInstSet extends AbstractInstSet {
     public static final Type HOUR_TYPE = Type.Builder.build()
             .tid(MATH_TIME_TID)
             .vid(MATH_HOUR_TID)
-            .constructor(lhs -> {
-                final Real arg = lhs.asReal();
+            .constructor(arg -> {
                 final String tid = arg.tid().toString();
                 return switch (tid) {
                     case MATH_MILLIS_STRING -> arg.jvm(arg.asReal().jvm() / 60.0d / 60.0d / 1000.0d);
@@ -207,7 +205,7 @@ public class mathInstSet extends AbstractInstSet {
             .tid(URI_TID)
             .vid(MATH_DATETIME_TID)
             .predicate((lhs, inst) -> {
-                final fURI dt = lhs.asUri().uriValue();
+                final fURI dt = inst.arg(0).asUri().uriValue();
                 if (dt.hasScheme() && dt.scheme() != null && !dt.scheme().isEmpty())
                     return noobj();
                 if (!dt.hasHost() || !DT_HOST_PATTERN.matcher(dt.host()).matches())
@@ -231,7 +229,7 @@ public class mathInstSet extends AbstractInstSet {
                     return noobj();
                 }
                 if (!dt.qMap().containsKey("tz")) return noobj();
-                return lhs;
+                return inst.arg(0);
             })
             .create();
 
@@ -380,14 +378,14 @@ public class mathInstSet extends AbstractInstSet {
     public static final Type DATA_SIZE_TYPE = Type.Builder.build()
             .tid(REAL_TID)
             .vid(MATH_DATA_TID)
-            //.predicate(id_().tryToInst())
+            .predicate(id_().tryToInst())
             .create();
+
 
     public static final Type BYTE_TYPE = Type.Builder.build()
             .tid(MATH_DATA_TID)
             .vid(MATH_BYTE_TID)
-            .constructor(lhs -> {
-                final Real arg = lhs.asReal();
+            .constructor(arg -> {
                 final String tid = arg.tid().toString();
                 return switch (tid) {
                     case MATH_KBYTE_STRING -> arg.jvm(arg.asReal().jvm() * 1024.0d);
@@ -403,8 +401,7 @@ public class mathInstSet extends AbstractInstSet {
     public static final Type KBYTE_TYPE = Type.Builder.build()
             .tid(MATH_DATA_TID)
             .vid(MATH_KBYTE_TID)
-            .constructor(lhs -> {
-                final Real arg = lhs.asReal();
+            .constructor(arg -> {
                 final String tid = arg.tid().toString();
                 return switch (tid) {
                     case MATH_BYTE_STRING -> arg.jvm(arg.asReal().jvm() / 1024.0d);
@@ -419,8 +416,7 @@ public class mathInstSet extends AbstractInstSet {
     public static final Type MBYTE_TYPE = Type.Builder.build()
             .tid(MATH_DATA_TID)
             .vid(MATH_MBYTE_TID)
-            .constructor(lhs -> {
-                final Real arg = lhs.asReal();
+            .constructor(arg -> {
                 final String tid = arg.tid().toString();
                 return switch (tid) {
                     case MATH_BYTE_STRING -> arg.jvm(arg.asReal().jvm() / 1024.0d / 1024.0d);
@@ -435,8 +431,7 @@ public class mathInstSet extends AbstractInstSet {
     public static final Type GBYTE_TYPE = Type.Builder.build()
             .tid(MATH_DATA_TID)
             .vid(MATH_GBYTE_TID)
-            .constructor(lhs -> {
-                final Real arg = lhs.asReal();
+            .constructor(arg -> {
                 final String tid = arg.tid().toString();
                 return switch (tid) {
                     case MATH_BYTE_STRING -> arg.jvm(arg.asReal().jvm() / 1024.0d / 1024.0d / 1024.0d);
@@ -451,8 +446,7 @@ public class mathInstSet extends AbstractInstSet {
     public static final Type TBYTE_TYPE = Type.Builder.build()
             .tid(MATH_DATA_TID)
             .vid(MATH_TBYTE_TID)
-            .constructor(lhs -> {
-                final Real arg = lhs.asReal();
+            .constructor(arg -> {
                 final String tid = arg.tid().toString();
                 return switch (tid) {
                     case MATH_BYTE_STRING -> arg.jvm(arg.asReal().jvm() / 1024.0d / 1024.0d / 1024.0d / 1024.0d);
@@ -467,8 +461,7 @@ public class mathInstSet extends AbstractInstSet {
     public static final Type PBYTE_TYPE = Type.Builder.build()
             .tid(MATH_DATA_TID)
             .vid(MATH_PBYTE_TID)
-            .constructor(lhs -> {
-                final Real arg = lhs.asReal();
+            .constructor(arg -> {
                 final String tid = arg.tid().toString();
                 return switch (tid) {
                     case MATH_BYTE_STRING ->

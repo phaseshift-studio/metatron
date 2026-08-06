@@ -636,7 +636,7 @@ public interface Type extends Obj {
                 throw MTronException.of("vid must be set prior to specifying predicate");
             if (null == this.tid)
                 throw MTronException.of("tid must be set prior to specifying predicate");
-            return this.predicate(instC(INST_PRED_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(this.tid)), predicate));
+            return this.predicate(instC(INST_PRED_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL_STAR)), predicate));
         }
 
         public Builder isaPredicate(final Obj predicate) {
@@ -651,7 +651,7 @@ public interface Type extends Obj {
         public Builder constructor(final Function<Obj, Obj> function) {
             if (null == this.vid)
                 throw MTronException.of("vid must be set prior to specifying constructor");
-            return this.constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(this.vid), lst(T(this.tid)), (lhs, inst) -> function.apply(inst.arg(0))));
+            return this.constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(this.vid), lst(T(ALL_STAR)), (lhs, inst) -> function.apply(inst.arg(0))));
         }
 
         public Builder constructor(final Supplier<Obj> supplier) {

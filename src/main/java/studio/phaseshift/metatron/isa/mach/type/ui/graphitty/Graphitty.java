@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -138,7 +138,9 @@ public class Graphitty {
         }
     }
 
-    /** The terminal OutputStream registered by Console at startup. */
+    /**
+     * The terminal OutputStream registered by Console at startup.
+     */
     private static volatile OutputStream terminalOutput;
 
     /**
@@ -149,12 +151,16 @@ public class Graphitty {
      */
     private static volatile java.util.function.Consumer<String> terminalWriter;
 
-    /** Register the terminal output stream. Called once by Console at startup. */
+    /**
+     * Register the terminal output stream. Called once by Console at startup.
+     */
     public static void init(final OutputStream terminalOutput) {
         Graphitty.terminalOutput = terminalOutput;
     }
 
-    /** Register a terminal-writer bridge for serialized rendering. */
+    /**
+     * Register a terminal-writer bridge for serialized rendering.
+     */
     public static void setTerminalWriter(final java.util.function.Consumer<String> writer) {
         Graphitty.terminalWriter = writer;
     }
@@ -285,6 +291,12 @@ public class Graphitty {
                     } else if ('t' == j) {
                         this.htab();
                         i++;
+                    } else if ('{' == j) {
+                        this.print("{");
+                        i++;
+                    } else if ('}' == j) {
+                        this.print("}");
+                        i++;
                     } else {
                         this.out.write(buffer.charAt(i));
                     }
@@ -308,33 +320,33 @@ public class Graphitty {
                         Stream.of(rule.toString().split(RULE_SEPARATOR))
                                 .filter(p -> !p.isEmpty())
                                 .forEach(rulePiece -> {
-                            if (rulePiece.charAt(0) == '/') {
-                                final String closeRule = rulePiece.substring(1);
-                                final String openRule = this.rewriteStack.pop();
-                                if (!openRule.equals(closeRule))
-                                    throw MTronException.of("unmatched rule wrap: %s != %s [buffer: %s]", openRule, closeRule, buffer.replace("{{", "").replace("}}", ""));
-                                else {
-                                    String reset = this.rewriteStack.isEmpty() ? null : this.rewrites.get(this.rewriteStack.peek());
-                                    reset = null == reset ? this.rewrites.get("X") : reset.replace("\033[", "\033[0;");
-                                    if (null != reset)
-                                        this.parseDSL(reset);
-                                }
-                            } else {
-                                this.rewriteStack.push(rulePiece);
-                                String r = this.rewrites.get(rulePiece);
-                                while (null != r && r.startsWith("{{") && r.endsWith("}}"))
-                                    r = this.rewrites.get(r.substring(2, r.length() - 2));
+                                    if (rulePiece.charAt(0) == '/') {
+                                        final String closeRule = rulePiece.substring(1);
+                                        final String openRule = this.rewriteStack.pop();
+                                        if (!openRule.equals(closeRule))
+                                            throw MTronException.of("unmatched rule wrap: %s != %s [buffer: %s]", openRule, closeRule, buffer.replace("{{", "").replace("}}", ""));
+                                        else {
+                                            String reset = this.rewriteStack.isEmpty() ? null : this.rewrites.get(this.rewriteStack.peek());
+                                            reset = null == reset ? this.rewrites.get("X") : reset.replace("\033[", "\033[0;");
+                                            if (null != reset)
+                                                this.parseDSL(reset);
+                                        }
+                                    } else {
+                                        this.rewriteStack.push(rulePiece);
+                                        String r = this.rewrites.get(rulePiece);
+                                        while (null != r && r.startsWith("{{") && r.endsWith("}}"))
+                                            r = this.rewrites.get(r.substring(2, r.length() - 2));
 
-                                if (rulePiece.length() > 2 && Set.of("^<", "v<").contains(rulePiece.substring(0, 2))) {
-                                    if (!rulePiece.substring(2).equals("0"))
-                                        r = this.rewrites.get(rulePiece.substring(0, 2)).replace("{{" + rulePiece.substring(0, 2) + "}}", rulePiece.substring(2));
-                                } else if (Set.of('^', 'v', '<', '>', '|').contains(rulePiece.charAt(0))) {
-                                    if (!rulePiece.substring(1).equals("0"))
-                                        r = this.rewrites.get("" + rulePiece.charAt(0)).replace("{{" + rulePiece.charAt(0) + "}}", rulePiece.substring(1));
-                                }
-                                if (null != r) this.parseDSL(r);
-                            }
-                        });
+                                        if (rulePiece.length() > 2 && Set.of("^<", "v<").contains(rulePiece.substring(0, 2))) {
+                                            if (!rulePiece.substring(2).equals("0"))
+                                                r = this.rewrites.get(rulePiece.substring(0, 2)).replace("{{" + rulePiece.substring(0, 2) + "}}", rulePiece.substring(2));
+                                        } else if (Set.of('^', 'v', '<', '>', '|').contains(rulePiece.charAt(0))) {
+                                            if (!rulePiece.substring(1).equals("0"))
+                                                r = this.rewrites.get("" + rulePiece.charAt(0)).replace("{{" + rulePiece.charAt(0) + "}}", rulePiece.substring(1));
+                                        }
+                                        if (null != r) this.parseDSL(r);
+                                    }
+                                });
                     }
 
                 } else {

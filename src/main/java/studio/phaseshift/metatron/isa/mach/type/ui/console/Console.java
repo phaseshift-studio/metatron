@@ -127,6 +127,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
     );
     public static Console LOCAL_INSTANCE = null;
     public Machine machine = null;
+    public static AtomicBoolean userMode = new AtomicBoolean(false);
 
     // ========== Split Pane Support ==========
     // Pane tree: root can be a single Pane or a SplitContainer with nested panes
@@ -1004,7 +1005,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                         } catch (final Exception e) {
                             // do nothing
                         }
-                        if (!future.isDone()) {
+                        if (!future.isDone() && !userMode.get()) {
                             terminal.writer().write(Highlighter.format("{{k}}\ncancel stream with [q] {{X}}"));
                             if (terminal.reader().read() == 'q') {
                                 this.write(Graphitty.string("{{-X-&|0}}"));
@@ -1025,9 +1026,10 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                 this.printResult(failResult);
                 this.promptTraceForFails(failResult);
             } finally {
-                if (this.activePane != null) {
+                userMode.set(false);
+                if (this.activePane != null)
                     this.activePane.clearMachine();
-                }
+
             }
         }
     }

@@ -65,7 +65,7 @@ import static studio.phaseshift.metatron.isa.tble.tbleInstSet.TBLE_ISA_TID;
 /**
  * Abstract base test suite for tbleSpace with database-agnostic tests.
  * Subclasses provide database-specific configuration via {@link DatabaseConfig}.
- * 
+ * <p>
  * See {@link #parseObj(String)}.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -75,6 +75,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathTest impleme
 
     /**
      * tbleIncQ is the native incrQ qproc implemented as AUTO INCREMENT
+     *
      * @return
      */
     @Override
@@ -122,12 +123,12 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathTest impleme
     @Override
     @ParameterizedTest
     @CsvSource(value = {
-            "*<db:+>               % collection",    // wildcard collection → every result is a Type
+            "*<$$/instset/+>       % collection",    // wildcard collection → every result is a Type
             "*<db:users/+>.take(1) % entry",         // specific collection + wildcard entry → first is instance
             "*<db:users/+>.take(2) % entry",         // second entry also an instance (not just first)
     }, delimiter = '%')
     public void testDataPathSegmentTypes(final String code, final String segmentType) {
-        super.testDataPathSegmentTypes(code, segmentType);
+        super.testDataPathSegmentTypes(code.replace("$$", SPACE_VID.toString()), segmentType);
     }
 
     @Override
@@ -337,8 +338,10 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathTest impleme
         return f("db:rewrite_test");
     }
 
-    /** Route inherited KV tests through the {@code kv/} collection so they
-     *  bypass table mapping entirely.  Rewrite tests use the parent prefix. */
+    /**
+     * Route inherited KV tests through the {@code kv/} collection so they
+     * bypass table mapping entirely.  Rewrite tests use the parent prefix.
+     */
     @Override
     protected fURI testUri(String suffix) {
         return f("db:kv/test/" + suffix);
@@ -349,7 +352,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathTest impleme
         // For testMonoUpdate, $$ → db: so seed data writes to db:<collection>/<docId>
         // and update/read expressions resolve to the same two-segment document paths.
         if (testMethod != null && ("testMonoUpdate".equals(testMethod.getName()) ||
-                                   "testUpdateWrite".equals(testMethod.getName()))) {
+                "testUpdateWrite".equals(testMethod.getName()))) {
             if (!expression.contains("$$")) return expression;
             // a/b/c URI scheme: strip $$/, strip b-prefix from numeric entries,
             // keep a (table) and c (field) prefixes as part of the name.
@@ -390,9 +393,9 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathTest impleme
     // =========================================================================
     //  Type-prefix parser for @CsvSource test data
     // =========================================================================
-    
+
     protected static Obj parseObj(final String encoded) {
-       return ObjmtronSerializer.singleNoClip().read(encoded);
+        return ObjmtronSerializer.singleNoClip().read(encoded);
     }
 
     // =========================================================================
@@ -515,16 +518,16 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathTest impleme
      */
     @ParameterizedTest(name = "[{index}] Write {2} to {0}/{1}")
     @CsvSource(delimiter = '|', quoteCharacter = '\'', textBlock = """     
-                                            users    | 1   | name         | "Alice Updated"        | "Alice Updated"
-                                            products | 101 | product_name | str::"Gaming Laptop"   | str::"Gaming Laptop"
-                                            users    | 1   | age          | 31                     | int::31
-                                            users    | 2   | age          | 26                     | int::26
-                                            products | 102 | quantity     | 100                    | int::100
-                                            products | 103 | quantity     | 0                      | int::0
-                                            users    | 1   | salary       | 80000.00               | real::80000.00
-                                            products | 101 | price        | real::999.00           | real::999.00
-                                            users    | 3   | salary       | real::100000.50        | real::100000.50
-                                            """)
+                                                                   users    | 1   | name         | "Alice Updated"        | "Alice Updated"
+                                                                   products | 101 | product_name | str::"Gaming Laptop"   | str::"Gaming Laptop"
+                                                                   users    | 1   | age          | 31                     | int::31
+                                                                   users    | 2   | age          | 26                     | int::26
+                                                                   products | 102 | quantity     | 100                    | int::100
+                                                                   products | 103 | quantity     | 0                      | int::0
+                                                                   users    | 1   | salary       | 80000.00               | real::80000.00
+                                                                   products | 101 | price        | real::999.00           | real::999.00
+                                                                   users    | 3   | salary       | real::100000.50        | real::100000.50
+                                                                   """)
     public void testWriteIndividualFields(String table, String rowId, String field,
                                           String newValueEncoded, String expectedEncoded) throws Exception {
         final Obj newValue = parseObj(newValueEncoded);
@@ -590,12 +593,12 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathTest impleme
      */
     @ParameterizedTest(name = "[{index}] Insert new row into {0}")
     @CsvSource(delimiter = '|', quoteCharacter = '\'', textBlock = """
-                                            users    | 100 | name | str::"Test User" | name | "Test User" | age | int::25 | salary | real::50000.00 | active | bool::true | email | "test@example.com"
-                                            products | 200 | product_name | str::"New Product" | product_name | "New Product" | price | real::199.99 | in_stock | bool::true | quantity | int::10 | category | str::"Test Category"
-                                            users    | 101 | age  | int::0  | name | str::"Zero Age" | age | int::0 | salary | real::0.0 | active | bool::false | email | str::"zero@example.com"
-                                            users    | 102 | name | str::"Max Val" | name | str::"Max Val" | age | int::999 | salary | real::999999.99 | active | true | email | str::"max@example.com"
-                                            products | 201 | price | real::0.0 | product_name | str::"Free Item" | price | real::0.0 | in_stock | bool::true | quantity | 0 | category | str::"Free"
-                                            """)
+                                                                   users    | 100 | name | str::"Test User" | name | "Test User" | age | int::25 | salary | real::50000.00 | active | bool::true | email | "test@example.com"
+                                                                   products | 200 | product_name | str::"New Product" | product_name | "New Product" | price | real::199.99 | in_stock | bool::true | quantity | int::10 | category | str::"Test Category"
+                                                                   users    | 101 | age  | int::0  | name | str::"Zero Age" | age | int::0 | salary | real::0.0 | active | bool::false | email | str::"zero@example.com"
+                                                                   users    | 102 | name | str::"Max Val" | name | str::"Max Val" | age | int::999 | salary | real::999999.99 | active | true | email | str::"max@example.com"
+                                                                   products | 201 | price | real::0.0 | product_name | str::"Free Item" | price | real::0.0 | in_stock | bool::true | quantity | 0 | category | str::"Free"
+                                                                   """)
     public void testInsertNewRows(String table, String rowId, String verifyField,
                                   String expectedEncoded,
                                   String col1, String val1,
@@ -1690,18 +1693,18 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathTest impleme
             // rows are returned.
             final String tableName = "multi_test";
             final Obj result = space.sql("""
-                    -- Create a temp table for this test
-                    CREATE TABLE %s (id INTEGER PRIMARY KEY, label TEXT);
-
-                    -- Insert some rows
-                    INSERT INTO %s VALUES (1, 'alpha');
-                    INSERT INTO %s VALUES (2, 'beta');
-
-                    -- Blank line above this comment should be ignored
-
-                    -- Final query: should be the result returned
-                    SELECT * FROM %s ORDER BY id;
-                    """.formatted(tableName, tableName, tableName, tableName));
+                                         -- Create a temp table for this test
+                                         CREATE TABLE %s (id INTEGER PRIMARY KEY, label TEXT);
+                                         
+                                         -- Insert some rows
+                                         INSERT INTO %s VALUES (1, 'alpha');
+                                         INSERT INTO %s VALUES (2, 'beta');
+                                         
+                                         -- Blank line above this comment should be ignored
+                                         
+                                         -- Final query: should be the result returned
+                                         SELECT * FROM %s ORDER BY id;
+                                         """.formatted(tableName, tableName, tableName, tableName));
             final List<Obj> rows = result.stream().toList();
             assertEquals(2, rows.size(), "should have 2 rows");
             assertEquals(str("alpha"), rows.get(0).asRec().at(uri("label")),
@@ -1743,9 +1746,9 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathTest impleme
      */
     @Test
     public void testWildcardCollectionReturnsSchemaTypes() throws Exception {
-        final Obj result = ObjmtronSerializer.parse("*db:+").apply();
+        final Obj result = ObjmtronSerializer.parse("*" + SPACE_VID + "/instset/+").apply();
         assertTrue(result.isObjs() || result.isLst(),
-                "*db:+ should return a stream of Types, got: " + result);
+                "*" + SPACE_VID + "/instset/+ should return a stream of Types, got: " + result);
         final List<Obj> types = result.stream().toList();
         assertFalse(types.isEmpty(),
                 "*db:+ should return at least one schema Type");
@@ -2110,8 +2113,8 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathTest impleme
 
             // Verify initial _mtron_meta state
             final int initialCount = space.sql(
-                    "SELECT COUNT(*) AS cnt FROM _mtron_meta WHERE table_name = '" +
-                            tableName + "'").stream().toList().get(0)
+                            "SELECT COUNT(*) AS cnt FROM _mtron_meta WHERE table_name = '" +
+                                    tableName + "'").stream().toList().get(0)
                     .asRec().at(uri("cnt")).asInt().jvm().intValue();
             // $table sentinel + name + age = 3 rows
             assertEquals(3, initialCount,
@@ -2138,8 +2141,8 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathTest impleme
 
             // -- Verify total count increased ----------------------------------
             final int finalCount = space.sql(
-                    "SELECT COUNT(*) AS cnt FROM _mtron_meta WHERE table_name = '" +
-                            tableName + "'").stream().toList().get(0)
+                            "SELECT COUNT(*) AS cnt FROM _mtron_meta WHERE table_name = '" +
+                                    tableName + "'").stream().toList().get(0)
                     .asRec().at(uri("cnt")).asInt().jvm().intValue();
             assertEquals(4, finalCount,
                     "should have $table + name + age + email = 4 rows after ALTER");
@@ -2198,8 +2201,8 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathTest impleme
 
             // Verify types are in _mtron_meta before restart
             final int beforeCount = space1.sql(
-                    "SELECT COUNT(*) AS cnt FROM _mtron_meta WHERE table_name = '" +
-                            tableName + "'").stream().toList().get(0)
+                            "SELECT COUNT(*) AS cnt FROM _mtron_meta WHERE table_name = '" +
+                                    tableName + "'").stream().toList().get(0)
                     .asRec().at(uri("cnt")).asInt().jvm().intValue();
             assertTrue(beforeCount >= 3,
                     "should have at least $table + 2 columns before restart, got: " + beforeCount);
@@ -2294,8 +2297,8 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathTest impleme
 
             // -- Verify $table sentinel stores the custom TID ------------------
             final Obj sentinelRow = space.sql(
-                    "SELECT obj_tid FROM _mtron_meta WHERE table_name = '" +
-                            tableName + "' AND column_name = '$table'")
+                            "SELECT obj_tid FROM _mtron_meta WHERE table_name = '" +
+                                    tableName + "' AND column_name = '$table'")
                     .stream().toList().get(0);
             final String storedTid = sentinelRow.asRec().at(uri("obj_tid")).strValue();
             assertEquals(customTid.toString(), storedTid,
@@ -2431,7 +2434,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathTest impleme
     /**
      * Absolute URI stored in an FK-named column is returned as plain Uri,
      * not wrapped in auto_from and not path-doubled.
-     *
+     * <p>
      * Regression: store /x/session/1 in message.session — naming convention
      * matches table "session".  Without the '/' guard, the value gets wrapped
      * in auto_from_() and the space pattern is prepended, doubling the path.
@@ -2470,8 +2473,11 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathTest impleme
             LOG.info("FK absolute-URI test passed on {}",
                     staticDbConfig.getDatabaseName());
         } finally {
-            try { testSpace.sql("DROP TABLE IF EXISTS message; DROP TABLE IF EXISTS session"); }
-            catch (final Exception ex) { LOG.warn("[ignored] %s", ex); }
+            try {
+                testSpace.sql("DROP TABLE IF EXISTS message; DROP TABLE IF EXISTS session");
+            } catch (final Exception ex) {
+                LOG.warn("[ignored] %s", ex);
+            }
             Router.global().removeSpace(testSpace.vid());
             testSpace.close();
         }
@@ -2518,8 +2524,11 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathTest impleme
             LOG.info("FK bare-PK test passed on {}",
                     staticDbConfig.getDatabaseName());
         } finally {
-            try { testSpace.sql("DROP TABLE IF EXISTS note; DROP TABLE IF EXISTS user"); }
-            catch (final Exception ex) { LOG.warn("[ignored] %s", ex); }
+            try {
+                testSpace.sql("DROP TABLE IF EXISTS note; DROP TABLE IF EXISTS user");
+            } catch (final Exception ex) {
+                LOG.warn("[ignored] %s", ex);
+            }
             Router.global().removeSpace(testSpace.vid());
             testSpace.close();
         }
@@ -2527,7 +2536,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathTest impleme
 
     /**
      * JSON list stored in an FK-named column is NOT treated as a FK.
-     *
+     * <p>
      * Regression: column "message" storing [auto_from(...), auto_from(...)]
      * matched table "message" by naming convention.  Without the '[' guard,
      * the entire JSON string was treated as a single FK path segment,
@@ -2571,8 +2580,11 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathTest impleme
             LOG.info("FK JSON-list guard test passed on {}",
                     staticDbConfig.getDatabaseName());
         } finally {
-            try { testSpace.sql("DROP TABLE IF EXISTS concept; DROP TABLE IF EXISTS message"); }
-            catch (final Exception ex) { LOG.warn("[ignored] %s", ex); }
+            try {
+                testSpace.sql("DROP TABLE IF EXISTS concept; DROP TABLE IF EXISTS message");
+            } catch (final Exception ex) {
+                LOG.warn("[ignored] %s", ex);
+            }
             Router.global().removeSpace(testSpace.vid());
             testSpace.close();
         }

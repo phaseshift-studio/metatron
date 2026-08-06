@@ -335,7 +335,7 @@ public class SQLSchemaGenerator {
     public SQLSchemaInstSet generateSchemaInstset(final fURI schemaVid) {
         final List<Type> types = new ArrayList<>();
         for (final ExistingTableSchema.TableMetadata table : tableMetadata) {
-            final fURI typeVid = f(table.tableName().toLowerCase());
+            final fURI typeVid = schemaVid.extend(table.tableName().toLowerCase());
             types.add(generateTableTypeAt(table, typeVid));
         }
         return new SQLSchemaInstSet(schemaVid, types);

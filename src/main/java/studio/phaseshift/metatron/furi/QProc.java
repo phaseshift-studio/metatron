@@ -24,6 +24,7 @@ import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
+import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.TriFunction;
 
 import java.util.*;
@@ -205,8 +206,9 @@ public interface QProc extends Rec {
                 final List<String> qSpace = space.qs().lstValue().stream().map(q -> q.asRec().at(PATTERN).uriValue()).map(fURI::toString).toList();
                 vid.qMap().keySet().stream().filter(k -> !k.equals(DOCQ) && !k.equals(DOM) && !k.equals(RNG)).forEach(k -> {
                     if (!qSpace.contains(k)) {
-                        space.logger().warn("no %s query processor attached", k);
-                        check.set(false);
+                        throw MTronException.of("no %s query processor attached", k);
+                        //space.logger().warn("no %s query processor attached", k);
+                        //check.set(false);
                     }
                 });
                 return check.get();
