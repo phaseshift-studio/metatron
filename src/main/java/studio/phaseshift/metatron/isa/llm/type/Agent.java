@@ -24,7 +24,6 @@ import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.output.Response;
 import dev.langchain4j.service.AiServices;
 import dev.langchain4j.service.tool.ToolErrorHandlerResult;
-import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.CostCalculator;
 import studio.phaseshift.metatron.isa.llm.LLMFactory;
@@ -246,7 +245,8 @@ public class Agent extends MRec {
             this.feature(CHAT).ifPresent(chat -> chat.asRec().at(FORMAT, (responseFormat.isNoObj() || responseFormat.asRec().isEmpty()) ? noobj() : responseFormat, MUTABLE));
             // ── Phase 2: Build LC4j service from Agent's own JVM state ──
             final AiServices<AgentServices> service = AiServices.builder(AgentServices.class)
-                    .executeToolsConcurrently(BootLoader.getExecutor())
+                    // .executeToolsConcurrently()
+                    // .executeToolsConcurrently(BootLoader.getExecutor())
                     .toolExecutionErrorHandler((error, context) -> {
                         if (this.has(TOOL) && this.feature(TOOL).asRec().has(ON_ERROR)) {
                             this.feature(TOOL).asRec().at(ON_ERROR).asInst().args(lst(this, fail(error)));
@@ -254,8 +254,8 @@ public class Agent extends MRec {
                             LOG.error(error);
                         }
                         return new ToolErrorHandlerResult(error.getMessage());
-                    })
-                    .storeRetrievedContentInChatMemory(true);
+                    });
+            //.storeRetrievedContentInChatMemory(true);
             // AgentUtility.buildService(this, service);
             //////////////////////////////////////////////////////////////////////////////////
             // ADD ANOTHER FEATURE HOOK -- onSetup
