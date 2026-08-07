@@ -75,6 +75,10 @@ fsspace::[
   pattern => metatronfs:#,
   q       => [mimeq::[=>],lineq::[=>]],
     route => [metatronfs: => <~/software/metatron/.metatron/>]]@</sys/space/fs/metatron>;  
+fsspace::[
+  pattern => src:#,
+  q       => [mimeq::[=>],lineq::[=>]],
+    route => [src: => <~/software/metatron/>]]@</sys/space/fs/src>;  
         [=====================]  
         [======== WEB ========]
         [=====================]              

@@ -143,7 +143,9 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
         final List<Rec> allMessages = Router.readFromSpace(msgBase.extend("+/"))
                 .stream()
                 .map(Obj::asRel)
-                .filter(pair -> pair.second().isRec() && !pair.second().asRec().tid().equals(THINKING_MESSAGE_TID))
+                .filter(pair -> pair.second().isRec()
+                        && !pair.second().asRec().tid().equals(THINKING_MESSAGE_TID)
+                        && !pair.second().asRec().tid().equals(SYSTEM_MESSAGE_TID))
                 .filter(pair -> {
                     final Obj sessionField = pair.second().asRec().at(uri(SESSION)).orElse(noobj());
                     final fURI stored = sessionField.isUri() ? sessionField.uriValue()
@@ -281,12 +283,19 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
     }
 
     /**
-     * Returns the target window size from the session algorithm config, or a
-     * sensible default.  The actual returned list may be larger because
-     * {@link #adjustSkipToPreservePairs} expands the window backward to
-     * include an {@code AiMessage(tool_calls)} when the cutoff would
-     * otherwise orphan its {@code ToolExecutionResultMessage}s.
+     * Returns the store-level window size as a multiple of the LangChain4j
+     * {@link dev.langchain4j.memory.chat.MessageWindowChatMemory} window.
+     * <p>
+     * The store window must be larger than the LC4j window so that pair-aware
+     * expansion ({@link #adjustSkipToPreservePairs}) is not immediately
+     * undone by {@code MessageWindowChatMemory} trimming back to the
+     * configured limit.  With a 3× factor, the store returns enough history
+     * that LC4j's internal trim is a safe no-op for normal conversation
+     * patterns, while the pair-aware skip still guards the boundary against
+     * orphaned {@code ToolExecutionResultMessage}s.
      */
+    private static final int STORE_WINDOW_FACTOR = 3;
+
     private int getMaxMessages() {
         try {
             final Obj sessFeature = this.agent.feature(SESSION);
@@ -295,13 +304,13 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
                 if (!algo.isNoObj() && algo.isRec()) {
                     final Obj maxVal = algo.asRec().at(MAX);
                     if (!maxVal.isNoObj() && maxVal.isInt())
-                        return maxVal.intValue().intValue();
+                        return Math.max(50, maxVal.intValue().intValue() * STORE_WINDOW_FACTOR);
                 }
             }
         } catch (final Exception e) {
             LOG.debug("could not read max messages from session config: %s", e.getMessage());
         }
-        return 100; // sensible default when session config is unavailable
+        return 150; // sensible default (50 × 3) when session config is unavailable
     }
 
     /**
