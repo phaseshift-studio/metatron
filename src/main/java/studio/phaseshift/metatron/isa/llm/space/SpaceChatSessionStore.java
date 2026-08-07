@@ -138,26 +138,8 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
         if (!(sessionVID instanceof fURI sesVID))
             return new ArrayList<>();
         final fURI msgBase = this.agent.at(ROOT).uriValue().extend(MESSAGE);
-        // Count matching messages → sql_where_count rewrite
-        final int count = from_(uri(msgBase.extend("+"))).where_(rec(SESSION, uri(sesVID))).count_().apply().intValue().intValue();
-        final int max = this.getMaxMessages();
-        final int skip = Math.max(0, count - max);
 
-        // ── SQL-optimized path (commented out for debugging) ──────────
-        // mFluent fluent = from_(uri(msgBase.extend("+")))
-        //         .where_(rec(SESSION, uri(sesVID)))
-        //         .order_(uri("id"));
-        // if (skip > 0)
-        //     fluent = (mFluent) fluent.skip_(jnt(skip));
-        // final List<Rec> allMessages = fluent.tryToInst().apply(jnt(1))
-        //         .stream()
-        //         .filter(msg -> msg.isRec() && !msg.asRec().tid().equals(THINKING_MESSAGE_TID))
-        //         .map(Obj::asRec)
-        //         .toList();
-
-        // ── Non-optimized stream path (normal space read) ─────────────
-        // streamFromSpace on a branch (+) wraps results in rel(uri, obj);
-        // extract the obj (second element of the rel) before filtering.
+        // ── Read all session messages (no skip yet — we adjust for pairs) ─
         final List<Rec> allMessages = Router.readFromSpace(msgBase.extend("+/"))
                 .stream()
                 .map(Obj::asRel)
@@ -169,17 +151,25 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
                     return stored != null && stored.equals(sesVID);
                 })
                 .sorted(Comparator.comparing(a -> Integer.parseInt(a.first().uriValue().name())))
-                .skip(skip)
                 .map(pair -> pair.second().asRec())
                 .toList();
-        return allMessages.stream().map(m -> {
-            try {
-                return SERIALIZER.write(m.vid(null));
-            } catch (final Exception e) {
-                LOG.warn("error converting stored message to ChatMessage (ignoring): %s", e);
-                return null;
-            }
-        }).filter(Objects::nonNull).toList();
+
+        // ── Pair-aware window: don't break AiMessage(tool_calls) /
+        //     ToolExecutionResultMessage groups ──────────────────────
+        final int max = this.getMaxMessages();
+        final int rawSkip = Math.max(0, allMessages.size() - max);
+        final int skip = adjustSkipToPreservePairs(allMessages, rawSkip);
+
+        return allMessages.stream()
+                .skip(skip)
+                .map(m -> {
+                    try {
+                        return SERIALIZER.write(m.vid(null));
+                    } catch (final Exception e) {
+                        LOG.warn("error converting stored message to ChatMessage (ignoring): %s", e);
+                        return null;
+                    }
+                }).filter(Objects::nonNull).toList();
     }
 
     @Override
@@ -290,8 +280,114 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
         LOG.debug("deleted messages for session %s", sesVID);
     }
 
+    /**
+     * Returns the target window size from the session algorithm config, or a
+     * sensible default.  The actual returned list may be larger because
+     * {@link #adjustSkipToPreservePairs} expands the window backward to
+     * include an {@code AiMessage(tool_calls)} when the cutoff would
+     * otherwise orphan its {@code ToolExecutionResultMessage}s.
+     */
     private int getMaxMessages() {
-        return 15;// this.agent.feature(SESSION).asRec().at(ALGORITHM).asRec().at(MAX).intValue().intValue();
+        try {
+            final Obj sessFeature = this.agent.feature(SESSION);
+            if (!sessFeature.isNoObj()) {
+                final Obj algo = sessFeature.asRec().at(ALGORITHM);
+                if (!algo.isNoObj() && algo.isRec()) {
+                    final Obj maxVal = algo.asRec().at(MAX);
+                    if (!maxVal.isNoObj() && maxVal.isInt())
+                        return maxVal.intValue().intValue();
+                }
+            }
+        } catch (final Exception e) {
+            LOG.debug("could not read max messages from session config: %s", e.getMessage());
+        }
+        return 100; // sensible default when session config is unavailable
+    }
+
+    /**
+     * Adjust the skip index so the window (a) never starts on an orphaned
+     * {@code ToolExecutionResultMessage}, and (b) always starts with a
+     * {@code UserMessage} (or at the very beginning).  The chat API
+     * requires every non-system message group to begin with a user message.
+     *
+     * @param messages all session messages, sorted oldest→newest by ID
+     * @param skip     the initial skip index (may be 0)
+     * @return adjusted skip index, {@code <= skip}
+     */
+    static int adjustSkipToPreservePairs(final List<Rec> messages, int skip) {
+        if (skip <= 0 || skip >= messages.size())
+            return skip;
+
+        // ── Rule 1: don't orphan a ToolResult from its AiMessage ──────
+        skip = pullInPairedAiMessage(messages, skip);
+
+        // ── Rule 2: window must start with a user message ─────────────
+        skip = pullInPrecedingUserMessage(messages, skip);
+
+        return skip;
+    }
+
+    /**
+     * If the window starts on a {@code ToolExecutionResultMessage}, walk
+     * backward to find its paired {@code AiMessage} and move the skip
+     * boundary to include it.
+     */
+    static int pullInPairedAiMessage(final List<Rec> messages, final int skip) {
+        if (skip <= 0 || skip >= messages.size())
+            return skip;
+
+        final Rec first = messages.get(skip);
+        if (!first.tid().equals(TOOL_RESULT_MESSAGE_TID))
+            return skip;
+
+        final String toolCallId = first.at(uri(CONTENTS)).orElse(str("")).strValue();
+        if (toolCallId.isBlank())
+            return skip;
+
+        for (int i = skip - 1; i >= 0; i--) {
+            final Rec candidate = messages.get(i);
+            if (!candidate.tid().equals(AI_MESSAGE_TID))
+                continue;
+            final Obj toolReqs = candidate.at(uri(TOOL_REQUESTS));
+            if (toolReqs.isNoObj() || !toolReqs.isLst())
+                continue;
+            final boolean found = toolReqs.asLst().elements()
+                    .filter(Obj::isRec)
+                    .anyMatch(tr -> toolCallId.equals(
+                            tr.asRec().at(uri(CONTENTS)).orElse(str("")).strValue()));
+            if (found)
+                return i; // expand window to include the paired AiMessage
+        }
+
+        return skip;
+    }
+
+    /**
+     * If the window starts on an {@code AiMessage} (rather than a
+     * {@code UserMessage} or {@code SystemMessage}), walk backward to
+     * include the preceding user message.  The chat API requires every
+     * turn to begin with a user message.
+     */
+    static int pullInPrecedingUserMessage(final List<Rec> messages, final int skip) {
+        if (skip <= 0 || skip >= messages.size())
+            return skip;
+
+        final fURI firstTid = messages.get(skip).tid();
+        // System message is fine — MessageWindowChatMemory always keeps it first
+        if (firstTid.equals(SYSTEM_MESSAGE_TID) || firstTid.equals(USER_MESSAGE_TID))
+            return skip;
+
+        // Window starts with AiMessage or ToolResult — find preceding user message
+        for (int i = skip - 1; i >= 0; i--) {
+            final fURI tid = messages.get(i).tid();
+            if (tid.equals(USER_MESSAGE_TID))
+                return i;
+            // Stop at system message — it's already the absolute start
+            if (tid.equals(SYSTEM_MESSAGE_TID))
+                return i;
+        }
+
+        return 0; // no user message found — return everything
     }
 
     ///////////////////////////////////////////////////////////////////////////
