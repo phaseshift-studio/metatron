@@ -73,6 +73,7 @@ fsspace::[
     route => [localfs: => <~/.hermes_clone>]]@</sys/space/fs/dr>; 
 fsspace::[
   pattern => metatronfs:#,
+  q       => [mimeq::[=>]],
     route => [metatronfs: => <~/software/metatron/.metatron/>]]@</sys/space/fs/metatron>;  
         [=====================]  
         [======== WEB ========]
@@ -113,9 +114,18 @@ dckrspace::[host    => <unix:///var/run/docker.sock>,
                                                           anchor        => bottom_left,
                                                           width         => 70]],
             route   => [docker: => <>]]@</sys/space/docker>;
-*docker:container/dr_sqlite.else([image   => keinos/sqlite3:latest,
-                                  volumes => ['/home/killswitch/.metatron:/data']].
-                                    to(docker:container/dr_sqlite));
+
+
+[== *docker:container/dr_sqlite.else([image   => keinos/sqlite3:latest,
+                                  user    => root,
+                                  volumes => ['/home/killswitch/.metatron:/data'],
+                                  command => ['sh', '-c', 'sqlite3 /data/dr.sqlite ".databases" && chmod 777 /data /data/dr.sqlite']].
+                                    to(docker:container/dr_sqlite)) ==]
+*docker:container/dr_sqlite.else(
+  [services => [sqlite => [image   => hibitdev/sqlite:latest,
+                           volumes => ['/home/killswitch/.metatron:/db'],
+                           command => ['tail', '-f', '/dev/null']]]]@docker:compose/dr_sqlite);
+
         [=====================]
         [======== HOME =======]
         [=====================]
