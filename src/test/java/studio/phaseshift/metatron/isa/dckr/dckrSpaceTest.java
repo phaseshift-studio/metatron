@@ -98,6 +98,25 @@ public class dckrSpaceTest extends AbstractSpaceTest {
         Assumptions.assumeTrue(dockerAvailable, "Docker daemon not available");
     }
 
+    @AfterAll
+    public static void cleanupDockerResources() throws Exception {
+        if (!dockerAvailable)
+            return;
+        // Remove test containers
+        execDocker("rm -f $(docker ps -a --filter name=mtron-test- -q) 2>/dev/null || true");
+        // Remove test volumes
+        execDocker("volume rm $(docker volume ls --filter name=mtron-test- -q) 2>/dev/null || true");
+        // Remove test networks (compose creates them)
+        execDocker("network prune -f --filter name=mtron-test- 2>/dev/null || true");
+        STATIC_LOG.info("cleaned up docker test resources");
+    }
+
+    private static void execDocker(final String args) throws Exception {
+        final Process p = new ProcessBuilder("/bin/sh", "-c", "docker " + args)
+                .redirectErrorStream(true).start();
+        p.waitFor(10, TimeUnit.SECONDS);
+    }
+
     // ===================================================================
     // Type matching — docker type hierarchy
     // ===================================================================
@@ -312,14 +331,14 @@ public class dckrSpaceTest extends AbstractSpaceTest {
         space.write(f("dtest:container/" + name2), runConfig);
 
         try {
-            // -- Image-side: containers field is a list of URIs --
+            // -- Image-side: container field is a list of URIs --
             final Obj image = space.read(f("dtest:image/nginx:alpine"));
             assertFalse(image.isNoObj(), "image should be addressable by repository:tag");
             LOG.info("image {{b}}%s", image);
 
-            final Obj imageContainers = image.asRec().at(uri("containers"));
+            final Obj imageContainers = image.asRec().at(uri("container"));
             assertFalse(imageContainers.isNoObj(),
-                    "image.containers should not be noobj (Docker 'Containers' count should be overwritten)");
+                    "image.container should not be noobj (Docker 'Containers' count should be overwritten)");
             assertTrue(imageContainers.isLst(),
                     "image.containers should be a list, got: " + imageContainers);
             assertTrue(imageContainers.asLst().count() >= 2,
@@ -394,13 +413,13 @@ public class dckrSpaceTest extends AbstractSpaceTest {
             assertFalse(network.isNoObj(), "bridge network should exist");
             LOG.info("bridge network {{b}}%s", network);
 
-            final Obj netContainers = network.asRec().at(uri("containers"));
+            final Obj netContainers = network.asRec().at(uri("container"));
             assertFalse(netContainers.isNoObj(),
-                    "network.containers should not be noobj");
+                    "network.container should not be noobj");
             assertTrue(netContainers.isLst(),
-                    "network.containers should be a list, got: " + netContainers);
+                    "network.container should be a list, got: " + netContainers);
             assertTrue(netContainers.asLst().count() >= 1,
-                    "network.containers should have at least 1 entry");
+                    "network.container should have at least 1 entry");
 
             // Each entry is a URI
             netContainers.asLst().lstValue().forEach(ref -> {
@@ -413,16 +432,16 @@ public class dckrSpaceTest extends AbstractSpaceTest {
             // Our container should be in the list
             final boolean found = netContainers.asLst().lstValue().stream()
                     .anyMatch(ref -> ref.asInst().arg(0).toString().contains(name));
-            assertTrue(found, "network.containers should include " + name);
+            assertTrue(found, "network.container should include " + name);
 
-            // -- Container-side: networks field is a URI --
+            // -- Container-side: network field is a !* ref --
             final Obj container = space.read(f("dtest:container/" + name));
-            final Obj netField = container.asRec().jvm().get(uri("networks"));
-            assertFalse(netField.isNoObj(), "container.networks should not be noobj");
+            final Obj netField = container.asRec().jvm().get(uri("network"));
+            assertFalse(netField.isNoObj(), "container.network should not be noobj");
             assertTrue(Obj.Helper.isAutoPointer(netField),
-                    "container.networks should be a URI, got: " + netField);
+                    "container.network should be a !*, got: " + netField);
             assertTrue(netField.asInst().arg(0).uriValue().toString().contains("bridge"),
-                    "container.networks should reference bridge, got: " + netField);
+                    "container.network should reference bridge, got: " + netField);
             LOG.info("container {{b}}%s{{X}} -> network ref {{y}}%s", name, netField);
 
             // -- Direct network lookup works --
@@ -454,7 +473,7 @@ public class dckrSpaceTest extends AbstractSpaceTest {
             final Obj volume = space.read(f("dtest:volume/" + volName));
             assertFalse(volume.isNoObj(), "volume should exist");
 
-            final Obj volContainers = volume.asRec().at(uri("containers"));
+            final Obj volContainers = volume.asRec().at(uri("container"));
             assertFalse(volContainers.isNoObj(),
                     "volume.containers should not be noobj");
             assertTrue(volContainers.isLst(),
@@ -464,26 +483,30 @@ public class dckrSpaceTest extends AbstractSpaceTest {
 
             volContainers.asLst().elements().forEach(ref -> {
                 assertTrue(ref.isUri(),
-                        "each volume.containers entry should be a URI, got: " + ref);
+                        "each volume.container entry should be a URI, got: " + ref);
                 assertTrue(ref.uriValue().toString().startsWith("dtest:container/"),
                         "ref should be under dtest:container/");
             });
 
             final boolean found = volContainers.asLst().elements()
-                    .anyMatch(ref -> ref.uriValue().toString().contains(containerName));
-            assertTrue(found, "volume.containers should include " + containerName);
+                    .anyMatch(ref -> ref.isUri() && ref.uriValue().toString().contains(containerName));
+            assertTrue(found, "volume.container should include " + containerName);
 
-            // -- Container-side: mounts field is a list of URIs --
+            // -- Container-side: mount field is a list of !* refs --
             final Obj container = space.read(f("dtest:container/" + containerName));
-            final Obj mountsField = container.asRec().at(uri("mounts"));
-            assertFalse(mountsField.isNoObj(), "container.mounts should not be noobj");
+            final Obj mountsField = container.asRec().at(uri("mount"));
+            assertFalse(mountsField.isNoObj(), "container.mount should not be noobj");
             assertTrue(mountsField.isLst(),
-                    "container.mounts should be a list, got: " + mountsField);
+                    "container.mount should be a list, got: " + mountsField);
 
-            final boolean volRefFound = mountsField.asLst().elements()
-                    .anyMatch(ref -> ref.isUri() && ref.uriValue().toString().contains(volName));
+            final boolean volRefFound = mountsField.asLst().lstValue().stream()
+                    .anyMatch(ref -> {
+                        if (!ref.isInst()) return false;
+                        final String refUri = ref.asInst().arg(0).uriValue().toString();
+                        return refUri.contains(volName);
+                    });
             assertTrue(volRefFound,
-                    "container.mounts should contain a ref to " + volName + ", got: " + mountsField);
+                    "container.mount should contain a ref to " + volName + ", got: " + mountsField);
             LOG.info("container {{b}}%s{{X}} -> volume refs {{y}}%s", containerName, mountsField);
 
             // -- Direct volume lookup works --

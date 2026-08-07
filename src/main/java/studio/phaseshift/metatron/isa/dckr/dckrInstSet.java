@@ -113,8 +113,9 @@ public class dckrInstSet extends AbstractInstSet {
                                         .tid(DOCKER_RESOURCE_TID)
                                         .vid(DOCKER_IMAGE_TID)
                                         .isaPredicate(rec(
-                                                (Obj) uri("repo_tags").maybe(), lst(URI_TYPE),
-                                                uri(SIZE).maybe(), T(MATH_DATA_TID)))
+                                                uri("repo_tags").maybe().asUri(), lst(URI_TYPE),
+                                                uri(SIZE).maybe(), T(MATH_DATA_TID),
+                                                uri("container").maybe(), ALL_TYPE))
                                         .create(),
                                 "a docker image — refines docker_resource::T",
                                 "[id => <sha256:abc123>, repo_tags => [<nginx:latest>], size => mB::142.0]",
@@ -133,9 +134,11 @@ public class dckrInstSet extends AbstractInstSet {
                                         .tid(DOCKER_RESOURCE_TID)
                                         .vid(DOCKER_CONTAINER_TID)
                                         .isaPredicate(rec(
-                                                uri("image"), URI_TYPE,
+                                                uri("image"), T(ALL),
                                                 uri(STATE).maybe(), T(DOCKER_CONTAINER_STATE_TID),
-                                                uri("ports").maybe(), lst(URI_TYPE)))
+                                                uri("ports").maybe(), lst(URI_TYPE),
+                                                uri("network").maybe(), ALL_TYPE,
+                                                uri("mount").maybe(), ALL_TYPE))
                                         .create(),
                                 "a docker container — refines docker_resource::T",
                                 "[id => <a1b2c3>, image => <nginx:latest>, state => running, ports => [<8080:80>]]",
@@ -145,7 +148,8 @@ public class dckrInstSet extends AbstractInstSet {
                                         .vid(DOCKER_VOLUME_TID)
                                         .isaPredicate(rec(
                                                 (Obj) uri(DRIVER).maybe(), URI_TYPE,
-                                                uri("mountpoint").maybe(), URI_TYPE))
+                                                uri("mountpoint").maybe(), URI_TYPE,
+                                                uri("container").maybe(), ALL_TYPE))
                                         .create(),
                                 "a docker volume — refines docker_resource::T"),
                         docWrap(
@@ -154,7 +158,8 @@ public class dckrInstSet extends AbstractInstSet {
                                         .vid(DOCKER_NETWORK_TID)
                                         .isaPredicate(rec(
                                                 (Obj) uri(DRIVER).maybe(), URI_TYPE,
-                                                uri("scope").maybe(), URI_TYPE))
+                                                uri("scope").maybe(), URI_TYPE,
+                                                uri("container").maybe(), ALL_TYPE))
                                         .create(),
                                 "a docker network — refines docker_resource::T"),
                         docWrap(DOCKER_COMPOSE_TYPE = Type.Builder.build()

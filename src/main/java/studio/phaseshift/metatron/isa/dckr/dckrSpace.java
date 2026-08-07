@@ -27,6 +27,7 @@ import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjYAMLSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
+import studio.phaseshift.metatron.isa.mach.type.ui.console.Console;
 import studio.phaseshift.metatron.isa.mach.type.ui.widget.ProgressTableWidget;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -36,11 +37,10 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.HOST;
@@ -55,10 +55,12 @@ import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
+import static studio.phaseshift.metatron.util.IteratorUtil.map;
 
 /**
  * A metatron space bridging to a Docker daemon.
@@ -128,6 +130,41 @@ public class dckrSpace extends AbstractMemorySpace {
     }
 
     // ===================================================================
+    // directReader / directWriter — bridge to internal memSpace store
+    // ===================================================================
+
+    @Override
+    public Function<fURI, Iterator<IdObj>> directReader() {
+        return (pattern) -> {
+            final fURI routed = Space.Helper.routeFromSpace(pattern, this.routes());
+            final Iterator<IdObj> storeResults = this.store.directReader().apply(routed);
+            return map(storeResults, kv ->
+                    IdObj.of(Space.Helper.routeToSpace(kv.furi(), this.routes()), kv.obj()));
+        };
+    }
+
+    @Override
+    public BiFunction<fURI, Obj, Obj> directWriter() {
+        return (pattern, obj) -> {
+            if (pattern.hasPattern()) {
+                // Expand wildcard: read matching entries, write obj to each
+                this.directReader().apply(pattern)
+                        .forEachRemaining(kv -> this.write(kv.furi(), obj));
+            } else {
+                final fURI routed = Space.Helper.routeFromSpace(pattern, this.routes());
+                if (obj.isNoObj()) {
+                    this.store.sjvm().remove(routed);
+                } else {
+                    if (obj.isRec())
+                        Rec.Helper.stripNone(obj.asRec());
+                    this.store.sjvm().put(routed, obj);
+                }
+            }
+            return obj;
+        };
+    }
+
+    // ===================================================================
     // Read — refresh store from Docker daemon, then delegate
     // ===================================================================
 
@@ -135,8 +172,7 @@ public class dckrSpace extends AbstractMemorySpace {
     public Obj read(final fURI vid) {
         final fURI routed = Space.Helper.routeFromSpace(vid, this.routes());
         final DataPath dp = DataPath.withoutDB(routed);
-
-        if ("container".equals(dp.collection())) {
+        if ("container".equals(dp.collection()) || "+".equals(dp.collection())) {
             refreshImages();
             refreshNetworks();
             refreshVolumes();
@@ -153,7 +189,7 @@ public class dckrSpace extends AbstractMemorySpace {
         }
 
         if (vid.isBranch())
-            return this.store.read(routed).stream().map(i -> rel(Space.Helper.routeToSpace(i.asRel().first().uriValue(), this.routes()).toUri(), i.asRel().second())).findFirst().orElse(rel(noobj(), noobj()).zero());
+            return objs(this.store.read(routed).stream().map(i -> rel(Space.Helper.routeToSpace(i.asRel().first().uriValue(), this.routes()).toUri(), i.asRel().second())));
         return this.store.read(routed);
     }
 
@@ -168,8 +204,6 @@ public class dckrSpace extends AbstractMemorySpace {
                 final Rec c = obj.asRec();
                 final String imageName = c.at(uri("image")).isNoObj() ? null : objToString(c.at(uri("image")));
                 if (imageName != null) {
-                    final fURI graphPath = f("image").extend(imageName).extend("container").extend(name.uriValue().name());
-                    this.store.write(graphPath, c);
                     // Replace string image name with !* ref into dckrSpace image
                     final Obj imageRef = auto_from_(uri(this.pattern().retractPattern().toString() + "image/" + imageName)).tryToInst();
                     c.jvm().put(uri("image"), imageRef);
@@ -186,7 +220,7 @@ public class dckrSpace extends AbstractMemorySpace {
                                     + n.uriValue().name()))
                             .map(i -> (Obj) auto_from_(i).tryToInst())
                             .toList();
-                    image.asRec().jvm().put(uri("containers"), lst(refs));
+                    image.asRec().jvm().put(uri("container"), lst(refs));
                     this.store.write(f("image").extend(imageName), image);
                 }
             });
@@ -196,11 +230,13 @@ public class dckrSpace extends AbstractMemorySpace {
             containers.asRec().jvm().forEach((name, obj) -> {
                 if (!obj.isRec()) return;
                 final Rec c = obj.asRec();
+                // Docker field is "Networks" → ObjDockerSerializer produces "networks"
                 final String netName = c.at(uri("networks")).isNoObj() ? null
                         : objToString(c.at(uri("networks")));
                 if (netName != null && !netName.isBlank()) {
                     final Obj netRef = auto_from_(uri(this.pattern().retractPattern().toString() + "network/" + netName)).tryToInst();
-                    c.jvm().put(uri("networks"), netRef);
+                    c.jvm().put(uri("network"), netRef);
+                    c.jvm().remove(uri("networks"));
                     this.store.write(f("container").extend(name.uriValue().name()), c);
                     byNetwork.computeIfAbsent(netName, k -> new ArrayList<>()).add(name);
                 }
@@ -213,15 +249,14 @@ public class dckrSpace extends AbstractMemorySpace {
                                     + n.uriValue().name()))
                             .map(i -> (Obj) auto_from_(i).tryToInst())
                             .toList();
-                    network.asRec().at(uri("containers"), lst(refs), Poly.MUTABLE);
+                    network.asRec().at(uri("container"), lst(refs), Poly.MUTABLE);
                     this.store.write(f("network").extend(netName), network);
                 }
             });
 
             // -- Volume graph: container <-> volume --
-            // Mounts field is parsed as a URI from Docker NDJSON:
-            //   named volume: scheme=volName, path=/dest  (e.g. "myvol:/data")
-            //   bind mount:   no scheme, path=host/path   (e.g. "/host/path")
+            // Docker field is "Mounts" → ObjDockerSerializer produces "mounts".
+            // Named volumes (non-path source) are tracked in docker volume ls.
             final Map<String, List<Obj>> byVolume = new LinkedHashMap<>();
             containers.asRec().jvm().forEach((name, obj) -> {
                 if (!obj.isRec()) return;
@@ -229,21 +264,26 @@ public class dckrSpace extends AbstractMemorySpace {
                 final Obj mountsObj = c.at(uri("mounts"));
                 if (mountsObj.isNoObj()) return;
 
+                final List<Obj> containerVolRefs = new ArrayList<>();
                 if (mountsObj.isUri()) {
-                    final fURI furi = mountsObj.uriValue();
-                    String volName = furi.scheme();
-                    if (volName == null || volName.isEmpty()) {
-                        // No colon in mount string — use path as source.
-                        // Single segment = named volume; multi-segment = bind mount.
-                        if (furi.path().size() != 1) return;
-                        volName = furi.pathString();
-                    }
-                    if (volName != null && !volName.isEmpty()) {
-                        final Obj ref = uri(this.pattern().retractPattern().toString() + "volume/" + volName);
-                        c.at(uri("mounts"), lst(ref), Poly.MUTABLE);
-                        this.store.write(f("container").extend(name.uriValue().name()), c);
+                    final String volName = extractVolumeName(mountsObj);
+                    if (volName != null)
+                        containerVolRefs.add(auto_from_(uri(this.pattern().retractPattern().toString() + "volume/" + volName)).tryToInst());
+                } else if (mountsObj.isLst()) {
+                    mountsObj.asLst().elements().forEach(mount -> {
+                        final String volName = extractVolumeName(mount);
+                        if (volName != null)
+                            containerVolRefs.add(auto_from_(uri(this.pattern().retractPattern().toString() + "volume/" + volName)).tryToInst());
+                    });
+                }
+                if (!containerVolRefs.isEmpty()) {
+                    c.jvm().put(uri("mount"), lst(containerVolRefs));
+                    c.jvm().remove(uri("mounts"));
+                    this.store.write(f("container").extend(name.uriValue().name()), c);
+                    containerVolRefs.forEach(ref -> {
+                        final String volName = ref.asInst().arg(0).uriValue().name();
                         byVolume.computeIfAbsent(volName, k -> new ArrayList<>()).add(name);
-                    }
+                    });
                 }
             });
             // Path-based lookup may need fallback to Rec scan for memSpace individual writes
@@ -267,11 +307,42 @@ public class dckrSpace extends AbstractMemorySpace {
                                     + n.uriValue().name()))
                             .map(i -> (Obj) i)
                             .toList();
-                    volume.asRec().at(uri("containers"), lst(refs), Poly.MUTABLE);
+                    volume.asRec().jvm().put(uri("container"), lst(refs));
                     this.store.write(f("volume").extend(volName), volume);
                 }
             });
         }
+    }
+
+    /**
+     * Extract a Docker volume name from a mount object.  Returns {@code null}
+     * when the source is a bind-mount path (starts with {@code /}, {@code .},
+     * or {@code ~}) — those are not tracked in {@code docker volume ls}.
+     */
+    private String extractVolumeName(final Obj mount) {
+        if (mount.isUri()) {
+            final fURI furi = mount.uriValue();
+            final String scheme = furi.scheme();
+            if (scheme != null && !scheme.isEmpty())
+                return scheme;                        // "myvol:/data" → myvol
+            // No scheme: bare named volume ("myvol") or bind mount ("/host/path")
+            if (furi.path().size() == 1) {
+                final String name = furi.pathString();
+                if (!name.startsWith("/") && !name.startsWith(".") && !name.startsWith("~"))
+                    return name;                      // bare named volume
+            }
+            return null;                              // multi-segment: bind mount, skip
+        }
+        if (mount.isRec()) {
+            // Mount object: {source: "myvol", destination: "/data", ...}
+            final Obj src = mount.asRec().at(uri("source"));
+            if (src.isNoObj()) return null;
+            final String s = objToString(src);
+            if (s.startsWith("/") || s.startsWith(".") || s.startsWith("~"))
+                return null;                          // bind mount
+            return s;
+        }
+        return null;
     }
 
     private void refreshImages() {
@@ -387,6 +458,17 @@ public class dckrSpace extends AbstractMemorySpace {
         final fURI routed = Space.Helper.routeFromSpace(vid, this.routes());
         final DataPath dp = DataPath.withoutDB(routed);
 
+        // Expand + wildcard in entry position: write obj to each concrete child
+        if (dp.hasEntry() && "+".equals(dp.entry())) {
+            final fURI parentRouted = routed.retract(1);
+            this.store.readStream(parentRouted.asBranch()).forEach(kv -> {
+                final fURI concreteRouted = kv.furi();
+                final fURI concreteVID = Space.Helper.routeToSpace(concreteRouted, this.routes());
+                this.write(concreteVID, obj);
+            });
+            return obj;
+        }
+
         if ("compose".equals(dp.collection()) && dp.hasEntry() && !dp.hasField()) {
             final String name = dp.entry();
             if (obj.isNoObj()) {
@@ -417,10 +499,10 @@ public class dckrSpace extends AbstractMemorySpace {
             this.read(vid.asBranch()).stream().forEach(rel -> {
                 final DataPath vp = DataPath.of(rel.asRel().first().uriValue());
                 if (obj.isNoObj()) {
-                    volumeRemove(vp.collection());
+                    volumeRemove(vp.entry());
                     this.store.write(rel.asRel().first().uriValue(), noobj());
                 } else if (obj.isRec()) {
-                    volumeCreate(vp.collection(), obj.asRec());
+                    volumeCreate(vp.entry(), obj.asRec());
                 }
             });
             refreshVolumes();
@@ -446,12 +528,16 @@ public class dckrSpace extends AbstractMemorySpace {
 
     @Override
     public Stream<IdObj> readStream(final fURI id) {
-        return this.store.readStream(id).map(i -> IdObj.of(Space.Helper.routeToSpace(i.furi(), this.routes()), i.obj()));
+        final fURI routed = Space.Helper.routeFromSpace(id, this.routes());
+        return this.store.readStream(routed).map(i ->
+                IdObj.of(Space.Helper.routeToSpace(i.furi(), this.routes()), i.obj()));
     }
 
     @Override
     public Stream<IdObj> writeStream(final fURI id, final Obj obj) {
-        return this.store.writeStream(id, obj).map(i -> IdObj.of(Space.Helper.routeToSpace(i.furi(), this.routes()), i.obj()));
+        final fURI routed = Space.Helper.routeFromSpace(id, this.routes());
+        return this.store.writeStream(routed, obj).map(i ->
+                IdObj.of(Space.Helper.routeToSpace(i.furi(), this.routes()), i.obj()));
     }
 
     // ===================================================================
@@ -460,8 +546,9 @@ public class dckrSpace extends AbstractMemorySpace {
 
     private void composeUp(final String name, final Rec config) {
         try {
-            this.pullWidget = this.progressWidget != null
-                    ? this.progressWidget : new ProgressTableWidget();
+            this.pullWidget = Console.getTerminal() == null ? null :
+                    (this.progressWidget != null
+                            ? this.progressWidget : new ProgressTableWidget());
             final Path dir = COMPOSE_DIR.resolve(name);
             Files.createDirectories(dir);
             final Path yamlFile = dir.resolve("docker-compose.yml");
@@ -469,7 +556,8 @@ public class dckrSpace extends AbstractMemorySpace {
             LOG.info("wrote compose file {{y}}%s", yamlFile);
             exec(dockerCmd("compose", "--progress=plain", "-f", yamlFile.toString(), "-p", name, "up", "-d"));
             LOG.info("compose {{b}}%s{{X}} up", name);
-            this.pullWidget.close();
+            if (null != this.pullWidget)
+                this.pullWidget.close();
             this.pullWidget = null;
         } catch (final Exception e) {
             if (this.pullWidget != null) {
@@ -500,6 +588,10 @@ public class dckrSpace extends AbstractMemorySpace {
         final String image = objToString(config.at(uri("image"))
                 .orThrow(MTronException.of("container config must have an 'image' field")));
         final List<String> cmd = dockerCmdList("run", "-d", "--name", name);
+        if (config.has("user")) {
+            cmd.add("--user");
+            cmd.add(objToString(config.at(uri("user"))));
+        }
         if (config.has("ports")) {
             config.at(uri("ports")).asLst().elements()
                     .forEach(p -> {
@@ -517,8 +609,23 @@ public class dckrSpace extends AbstractMemorySpace {
         if (config.has("volumes")) {
             config.at(uri("volumes")).asLst().elements()
                     .forEach(v -> {
+                        final String volStr = objToString(v);
+                        // Auto-create named volumes (format: "volName:/container/path")
+                        final int colonIdx = volStr.indexOf(':');
+                        if (colonIdx > 0) {
+                            final String source = volStr.substring(0, colonIdx);
+                            // Named volumes are simple names (not paths starting with / or .)
+                            if (!source.startsWith("/") && !source.startsWith(".") && !source.startsWith("~")) {
+                                try {
+                                    exec(dockerCmd("volume", "create", source));
+                                    LOG.info("auto-created volume {{b}}%s", source);
+                                } catch (final Exception e) {
+                                    LOG.warn("could not create volume %s: %s", source, e.getMessage());
+                                }
+                            }
+                        }
                         cmd.add("-v");
-                        cmd.add(objToString(v));
+                        cmd.add(volStr);
                     });
         }
         if (config.has("network")) {
@@ -526,6 +633,28 @@ public class dckrSpace extends AbstractMemorySpace {
             cmd.add(objToString(config.at(uri("network"))));
         }
         cmd.add(image);
+        if (config.has("command")) {
+            final Obj commandObj = config.at(uri("command"));
+            if (commandObj.isStr() || commandObj.isUri()) {
+                // Split on whitespace so each token becomes a separate argv entry.
+                // Use raw string (not objToString) to preserve leading slashes in paths.
+                final String cmdStr = commandObj.isStr() ? commandObj.strValue()
+                        : commandObj.uriValue().toString();
+                for (final String token : cmdStr.split("\\s+")) {
+                    if (!token.isBlank())
+                        cmd.add(token);
+                }
+            } else if (commandObj.isLst()) {
+                commandObj.asLst().elements().forEach(c -> {
+                    // Use raw string value — objToString() strips leading '/' from
+                    // path-like strings (designed for Docker container names), but
+                    // command arguments like "/data/dr.sqlite" must preserve the slash.
+                    if (c.isStr()) cmd.add(c.strValue());
+                    else if (c.isUri()) cmd.add(c.uriValue().toString());
+                    else cmd.add(objToString(c));
+                });
+            }
+        }
         try {
             exec(cmd.toArray(new String[0]));
             LOG.info("container {{b}}%s{{X}} started from {{y}}%s", name, image);
@@ -690,12 +819,14 @@ public class dckrSpace extends AbstractMemorySpace {
                         if (trimmed.matches("^[0-9a-f]{12} .*")) {
                             final String layer = trimmed.substring(0, 12);
                             layerRows.put(layer, parseDockerProgress(layer, trimmed));
-                            if (pullWidget == null)
-                                pullWidget = this.progressWidget != null ? this.progressWidget : new ProgressTableWidget();
-                            layerRows.values().forEach(r ->
-                                    pullWidget.addProgressRow(r.asRec()));
+                            if (Console.getTerminal() != null) {
+                                if (pullWidget == null)
+                                    pullWidget = this.progressWidget != null ? this.progressWidget : new ProgressTableWidget();
+                                layerRows.values().forEach(r ->
+                                        pullWidget.addProgressRow(r.asRec()));
+                                pullWidget.run();
+                            }
                             //pullWidget.close();
-                            pullWidget.run();
                         } else {
                             LOG.info("{{y}}%s", trimmed);
                         }
