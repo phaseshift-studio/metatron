@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -53,17 +54,23 @@ public class SpaceChatSessionStoreTest extends AbstractMetatronTest {
 
     // ── Message factories ────────────────────────────────────────────
 
-    /** A bare system message. */
+    /**
+     * A bare system message.
+     */
     private static Rec S() {
         return rec(mutableMap(uri(TEXT), str("system prompt")), SYSTEM_MESSAGE_TID, null);
     }
 
-    /** A bare user message. */
+    /**
+     * A bare user message.
+     */
     private static Rec U() {
         return rec(mutableMap(uri(TEXT), str("user says hello")), USER_MESSAGE_TID, null);
     }
 
-    /** An AI message without tool calls. */
+    /**
+     * An AI message without tool calls.
+     */
     private static Rec A() {
         return rec(mutableMap(uri(TEXT), str("ai responds")), AI_MESSAGE_TID, null);
     }
@@ -83,7 +90,9 @@ public class SpaceChatSessionStoreTest extends AbstractMetatronTest {
         return rec(map, AI_MESSAGE_TID, null);
     }
 
-    /** A tool execution result message keyed by its tool call id. */
+    /**
+     * A tool execution result message keyed by its tool call id.
+     */
     private static Rec T(final String toolCallId) {
         return rec(mutableMap(
                 uri(CONTENTS), str(toolCallId),
@@ -91,7 +100,9 @@ public class SpaceChatSessionStoreTest extends AbstractMetatronTest {
         ), TOOL_RESULT_MESSAGE_TID, null);
     }
 
-    /** Varargs → List. */
+    /**
+     * Varargs → List.
+     */
     private static List<Rec> msgs(final Rec... messages) {
         return new ArrayList<>(List.of(messages));
     }
@@ -295,5 +306,115 @@ public class SpaceChatSessionStoreTest extends AbstractMetatronTest {
         // More window slots than messages — nothing to skip
         final List<Rec> m = msgs(S(), U(), A());
         assertEquals(0, SpaceChatSessionStore.adjustSkipToPreservePairs(m, 0));
+    }
+
+    // ── System-message interleaving (production bug) ──────────────────
+
+    /**
+     * Mirror the filter that {@code getMessages()} applies:
+     * thinking and system messages are excluded from the LLM context.
+     */
+    private static List<Rec> filterStoreMessages(final List<Rec> messages) {
+        return messages.stream()
+                .filter(m -> !m.tid().equals(THINKING_MESSAGE_TID) && !m.tid().equals(SYSTEM_MESSAGE_TID))
+                .toList();
+    }
+
+    @Test
+    void filter_excludesSystemMessages() {
+        final List<Rec> m = msgs(U(), S(), A(), S(), T("c1"));
+        final List<Rec> filtered = filterStoreMessages(m);
+        // System messages stripped
+        assertEquals(3, filtered.size());
+        assertEquals(USER_MESSAGE_TID, filtered.get(0).tid());
+        assertEquals(AI_MESSAGE_TID, filtered.get(1).tid());
+        assertEquals(TOOL_RESULT_MESSAGE_TID, filtered.get(2).tid());
+    }
+
+    @Test
+    void filter_excludesThinkingMessages() {
+        final Rec thinking = rec(mutableMap(uri(TEXT), str("hmm")), THINKING_MESSAGE_TID, null);
+        final List<Rec> m = msgs(U(), thinking, A());
+        final List<Rec> filtered = filterStoreMessages(m);
+        assertEquals(2, filtered.size());
+        assertEquals(USER_MESSAGE_TID, filtered.get(0).tid());
+        assertEquals(AI_MESSAGE_TID, filtered.get(1).tid());
+    }
+
+    @Test
+    void systemMessageInterleavedBetweenToolResults_pairsStayIntact() {
+        // Exact reproduction of the production bug:
+        // AiMessage(tool_calls: [c0, c1, c2])
+        // ToolResult(c0)
+        // ToolResult(c1)
+        // SystemMessage         ← injected by mirrorSystemMessage() during tool loop
+        // ToolResult(c2)        ← becomes orphaned if system message not filtered
+        final List<Rec> m = msgs(
+                U(),
+                A("c0", "c1", "c2"),
+                T("c0"),
+                T("c1"),
+                S(),             // interleaved system message — the bug
+                T("c2")
+        );
+        final List<Rec> filtered = filterStoreMessages(m);
+
+        // After filtering: U, A{c0,c1,c2}, T{c0}, T{c1}, T{c2}
+        assertEquals(5, filtered.size());
+        assertEquals(USER_MESSAGE_TID, filtered.get(0).tid());
+        assertEquals(AI_MESSAGE_TID, filtered.get(1).tid());
+        assertEquals(TOOL_RESULT_MESSAGE_TID, filtered.get(2).tid());
+        assertEquals(TOOL_RESULT_MESSAGE_TID, filtered.get(3).tid());
+        assertEquals(TOOL_RESULT_MESSAGE_TID, filtered.get(4).tid());
+
+        // Pair-aware skip with a tight window (max=3): rawSkip = 5-3 = 2
+        // first=[2]=T{c0} → pullInPairedAiMessage → skip=1 (A{c0,c1,c2})
+        // → pullInPrecedingUserMessage → skip=0 (U) — window must start with user
+        final int skip = SpaceChatSessionStore.adjustSkipToPreservePairs(filtered, 2);
+        assertEquals(0, skip);
+
+        final List<Rec> window = filtered.subList(skip, filtered.size());
+        assertEquals(5, window.size());
+        assertEquals(USER_MESSAGE_TID, window.get(0).tid());          // starts with user
+        assertEquals(AI_MESSAGE_TID, window.get(1).tid());            // AiMessage with tool_calls
+        assertEquals(TOOL_RESULT_MESSAGE_TID, window.get(2).tid());   // T{c0}
+        assertEquals(TOOL_RESULT_MESSAGE_TID, window.get(3).tid());   // T{c1}
+        assertEquals(TOOL_RESULT_MESSAGE_TID, window.get(4).tid());   // T{c2}
+    }
+
+    @Test
+    void multipleSystemMessagesInterleaved_allStripped() {
+        // Multiple system message injections during multi-round tool calls
+        final List<Rec> m = msgs(
+                U(),
+                A("c0", "c1"),
+                T("c0"),
+                S(),             // injected
+                T("c1"),
+                S(),             // injected
+                A(),
+                S(),             // injected
+                U(),
+                A("c2"),
+                S(),             // injected
+                T("c2")
+        );
+        final List<Rec> filtered = filterStoreMessages(m);
+
+        // Should be: U, A{c0,c1}, T{c0}, T{c1}, A, U, A{c2}, T{c2}
+        assertEquals(8, filtered.size());
+        // Verify no system messages remain
+        assertTrue(filtered.stream().noneMatch(r -> r.tid().equals(SYSTEM_MESSAGE_TID)));
+        // Verify tool-call/result pairs are consecutive
+        // First pair: A{c0,c1} @ idx 1, T{c0} @ idx 2, T{c1} @ idx 3
+        assertEquals(AI_MESSAGE_TID, filtered.get(1).tid());
+        assertEquals(TOOL_RESULT_MESSAGE_TID, filtered.get(2).tid());
+        assertEquals(TOOL_RESULT_MESSAGE_TID, filtered.get(3).tid());
+        // Second pair: A{c2} @ idx 6, T{c2} @ idx 7
+        assertEquals(AI_MESSAGE_TID, filtered.get(6).tid());
+        assertEquals(TOOL_RESULT_MESSAGE_TID, filtered.get(7).tid());
+
+        // Pair-aware skip: rawSkip = 8-3 = 5, first=[5]=U → unchanged
+        assertEquals(5, SpaceChatSessionStore.adjustSkipToPreservePairs(filtered, 5));
     }
 }
