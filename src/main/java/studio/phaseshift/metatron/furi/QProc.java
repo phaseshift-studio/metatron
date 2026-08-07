@@ -244,15 +244,18 @@ public interface QProc extends Rec {
 
         public static Optional<Obj> processPostRead(final Lst qs, final fURI vid, final Obj current) {
             if (!vid.hasQ() || qs.isEmpty()) return Optional.empty();
-            Obj acc = null;
+            Obj acc = current;
+            boolean found = false;
             for (final QProc q : qs.<QProc>elements().toList()) {
                 if (vid.hasQ(q.pattern()) && q.onRead().isPresent()) {
                     final Optional<Obj> r = q.onRead().get().postRead(vid, current);
-                    if (r.isPresent())
-                        acc = acc == null ? r.get() : acc.append(r.get());
+                    if (r.isPresent()) {
+                        found = true;
+                        acc = r.get();
+                    }
                 }
             }
-            return Optional.ofNullable(acc).filter(a -> !a.isNoObj());
+            return Optional.ofNullable(found ? acc : null).filter(a -> !a.isNoObj());
         }
 
         public static Optional<Obj> processQlessWrite(final Lst qs, final fURI vid, final Obj obj) {

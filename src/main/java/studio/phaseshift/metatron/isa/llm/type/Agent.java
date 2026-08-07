@@ -34,6 +34,7 @@ import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Str;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.ui.console.StatusLine;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
@@ -187,6 +188,7 @@ public class Agent extends MRec {
             if (hookKey.equals(ON_AGENT_CTOR) || feature.at(ACTIVE).orElse(BOOL_TRUE).boolValue()) {
                 if (!hookKey.equals(ON_ERROR))
                     this.currentHook.set(Tuple.Pair.with(feature.tid(), f(hookKey)));
+                StatusLine.message(str("[%s][%s]".formatted(feature.tid(), hookKey)));
                 feature.at(uri(hookKey)).asInst().args(lst(args)).apply(this);
             } else {
                 LOG.debug("skipping inactive feature: [%s][%s]", feature.tid(), hookKey);
@@ -242,6 +244,15 @@ public class Agent extends MRec {
             this.feature(CHAT).ifPresent(chat -> chat.asRec().at(FORMAT, (responseFormat.isNoObj() || responseFormat.asRec().isEmpty()) ? noobj() : responseFormat, MUTABLE));
             // ── Phase 2: Build LC4j service from Agent's own JVM state ──
             final AiServices<AgentServices> service = AiServices.builder(AgentServices.class);
+                    /*.toolExecutionErrorHandler((error, context) -> {
+                        if (this.has(TOOL) && this.feature(TOOL).asRec().has(ON_ERROR)) {
+                            this.feature(TOOL).asRec().at(ON_ERROR).asInst().args(lst(this, fail(error)));
+                        } else {
+                            LOG.error(error);
+                        }
+                        return new ToolErrorHandlerResult(error.getMessage());
+                    })
+                    .storeRetrievedContentInChatMemory(true);*/
             // AgentUtility.buildService(this, service);
             //////////////////////////////////////////////////////////////////////////////////
             // ADD ANOTHER FEATURE HOOK -- onSetup
@@ -309,6 +320,7 @@ public class Agent extends MRec {
                         features.stream().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_PARTIAL_THINKING, str(t.text())));
                     })
                     .onError(e -> {
+                        e.printStackTrace();
                         final fURI currentFeature = this.currentHook.get().get0();
                         final fURI currentStage = this.currentHook.get().get1();
                         final String errorMessage = "[" + currentFeature + "][" + currentStage + "]";

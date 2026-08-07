@@ -41,6 +41,8 @@ import java.util.function.Predicate;
 
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.mInstSet.AT_INST_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.FROM_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -140,6 +142,36 @@ public class RewriteBuilder<S extends Space> {
     
     public RewriteBuilder<S> matchPredicate(final Predicate<List<Inst>> matchPredicate) {
         this.matchPredicate = matchPredicate;
+        return this;
+    }
+
+    /**
+     * Replaces the first match-position TID (typically {@code FROM_INST_TID})
+     * with {@code ALL} so the rewrite fires for both {@code *} and {@code @}
+     * source instructions.  A FROM/AT guard is merged into the
+     * {@link #matchPredicate} — if the first matched instruction is neither
+     * {@code FROM_INST_TID} nor {@code AT_INST_TID}, the rewrite is skipped.
+     *
+     * <p>Safe to call after {@link #match(fURI...)} — replaces the first
+     * element of the match pattern.  Idempotent: subsequent calls are no-ops.
+     *
+     * @return this builder
+     */
+    public RewriteBuilder<S> matchFromOrAt() {
+        // Replace first match-position TID with ALL so both FROM and AT match.
+        if (!this.matchPattern.isEmpty()) {
+            this.matchPattern.set(0, ALL);
+        }
+        // Merge FROM/AT guard with any existing matchPredicate.
+        final Predicate<List<Inst>> existing = this.matchPredicate;
+        this.matchPredicate = matches -> {
+            final Inst first = matches.getFirst().asInst();
+            if (!first.tid().test(FROM_INST_TID) && !first.tid().test(AT_INST_TID))
+                return false;
+            if (existing != null && !existing.test(matches))
+                return false;
+            return true;
+        };
         return this;
     }
 

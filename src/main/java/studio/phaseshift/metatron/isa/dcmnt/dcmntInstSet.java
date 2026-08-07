@@ -205,18 +205,6 @@ public class dcmntInstSet extends AbstractInstSet {
                                 }
                         ),
 
-                        // Optimize: *collection.has() → MongoDB countDocuments() > 0
-                        CommonRewrites.hasRewrite(
-                                dcmntSpace.class,
-                                DCMNT_ISA_REWRITE_TID.extend("mql_has"),
-                                (space, dp) -> {
-                                    final String collectionName = dp.collection();
-                                    final MongoCollection<Document> collection = space.getDatabase().getCollection(collectionName);
-                                    // Use limit(1) for efficiency - we only need to know if at least one exists
-                                    return collection.find().limit(1).first() != null;
-                                }
-                        ),
-
                         // Optimize: *collection.where([field=>value]) → MongoDB find(filter)
                         CommonRewrites.whereRewrite(
                                 dcmntSpace.class,

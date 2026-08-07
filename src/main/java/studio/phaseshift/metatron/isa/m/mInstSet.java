@@ -466,6 +466,12 @@ public class mInstSet extends AbstractInstSet {
                         docWrap(INCRQ_TYPE, "internal counter increments and appends value to vid"),
                         docWrap(EMBEDQ_TYPE, "either store and retrieve obj's vector embedding"),
                         docWrap(CONSTQ_TYPE, "prevents the vid from being mutated once set"),
+                        docWrap(LINEQ_TYPE, "edits a string at line number",
+                                "<mtron.txt?lineq=14>     -> 'line 14 replacement'                   [-- write a single line --]",
+                                "<mtron.txt?lineq=14-25>  -> 'line 14 \\n through 25 replacement'    [-- write a line range  --]",
+                                "*<mtron.txt?lineq=14>    -> 'line 14'                               [-- read a single line  --]",
+                                "*<mtron.txt?lineq=14-25> -> 'line 14 \\n through 25 replacement'    [-- read a line range   --]",
+                                "*<mtron.txt?mimeq=text/plain&lineq=2>    [-- read 2nd line of the mime transformed encoding --]"),
                         docWrap(MIMEQ_TYPE, "maps the obj to the specified mime type"),
                         ////////////////////////////////////////////////////////////////////////////
                         docWrap(AUTHORITY_TYPE = Type.Builder.build()

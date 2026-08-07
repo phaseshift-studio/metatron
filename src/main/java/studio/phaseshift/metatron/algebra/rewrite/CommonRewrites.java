@@ -25,6 +25,7 @@ import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Objs;
+import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.ArrayList;
@@ -35,7 +36,6 @@ import java.util.function.BiPredicate;
 import java.util.function.Function;
 
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
-import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -120,14 +120,31 @@ public final class CommonRewrites {
         return RewriteBuilder.forDatabase(spaceType)
                 .tid(rewriteTid)
                 .rng(INT_TID)
-                .match(FROM_INST_TID, COUNT_INST_TID)
+                // ALL (wildcard) catches both FROM_INST_TID (*) and AT_INST_TID (@);
+                // the matchPredicate below rejects non-source instructions.
+                .match(ALL, COUNT_INST_TID)
                 .matchPredicate(matches -> {
-                    final Obj ref = matches.getFirst().arg(0);
+                    final Inst first = matches.getFirst().asInst();
+                    // Only FROM (*) and AT (@) instructions carry a data-path URI
+                    if (!first.tid().test(FROM_INST_TID) && !first.tid().test(AT_INST_TID))
+                        return false;
+                    final Obj ref = first.arg(0);
                     // only apply when the path ends at collection level (no field/extensions)
                     // URIs with extensions (e.g., /V/1/OUT/+) represent traversals, not simple counts
                     if (!ref.isUri()) return true;
-                    final DataPath dp = DataPath.withoutDB(ref.uriValue());
-                    return !dp.collectionIsWildcard() && !dp.hasField() && !dp.hasExtension();
+                    // Resolve through the space first so that space-prefixed paths
+                    // (e.g., /usr/dr/message/+) are correctly decomposed — otherwise
+                    // the space prefix segments are misidentified as collection/entry,
+                    // and the real collection lands in "field", blocking the rewrite.
+                    final fURI rawUri = ref.uriValue();
+                    final Space space = studio.phaseshift.metatron.isa.mach.type.Router.global().getSpaceFor(rawUri);
+                    final fURI resolvedUri = space != null ? space.redirect(rawUri, true) : rawUri;
+                    final DataPath dp = DataPath.withoutDB(resolvedUri);
+                    // An empty field segment (from asBranch() trailing "/")
+                    // is a branch marker, not a real field — allow it.
+                    return !dp.collectionIsWildcard()
+                            && !dp.hasExtension()
+                            && (dp.field() == null || dp.field().isEmpty());
                 })
                 .matchSpacePredicate(matchSpacePredicate)
                 .optimize("from_count", (space, dp, coeff) -> {
@@ -166,6 +183,7 @@ public final class CommonRewrites {
                 .tid(rewriteTID)
                 .rng(A)
                 .match(FROM_INST_TID, SUM_INST_TID)
+                .matchFromOrAt()
                 .matchSpacePredicate(matchSpacePredicate)
                 .optimize("from_sum", (space, dp, coeff) -> {
                     final Number sum = sumFunction.apply(space, dp);
@@ -205,6 +223,7 @@ public final class CommonRewrites {
                 .tid(rewriteTID)
                 .rng(REAL_TID)
                 .match(FROM_INST_TID, MEAN_INST_TID)
+                .matchFromOrAt()
                 .matchSpacePredicate(matchSpacePredicate)
                 .optimize("from_mean", (space, dp, coeff) -> {
                     final double mean = meanFunction.apply(space, dp);
@@ -277,6 +296,7 @@ public final class CommonRewrites {
                 .tid(rewriteTID)
                 .rng(ALL_STAR)
                 .match(FROM_INST_TID, TAKE_INST_TID)
+                .matchFromOrAt()
                 .build();
     }
 
@@ -381,52 +401,6 @@ public final class CommonRewrites {
     }
 
     /**
-     * Create a "has" (existence check) optimization rewrite.
-     *
-     * <p>Optimizes {@code from(furi).has()} to use native database EXISTS operations
-     * instead of loading all records just to check if any exist.
-     *
-     * <p>Example: {@code SELECT EXISTS(SELECT 1 FROM table LIMIT 1)}
-     *
-     * @param spaceType   The database space type
-     * @param rewriteTID  The type ID for this specific rewrite
-     * @param hasFunction Function that executes the native existence check
-     * @param <S>         The space type
-     * @return The rewrite instruction
-     */
-    public static <S extends Space> Inst hasRewrite(
-            final Class<S> spaceType,
-            final fURI rewriteTID,
-            final BiFunction<S, DataPath, Boolean> hasFunction) {
-        return hasRewrite(spaceType, rewriteTID, hasFunction, null);
-    }
-
-    public static <S extends Space> Inst hasRewrite(
-            final Class<S> spaceType,
-            final fURI rewriteTID,
-            final BiFunction<S, DataPath, Boolean> hasFunction,
-            final BiPredicate<S, List<Inst>> matchSpacePredicate) {
-
-        return RewriteBuilder.forDatabase(spaceType)
-                .tid(rewriteTID)
-                .rng(BOOL_TID)
-                .match(FROM_INST_TID, HAS_INST_TID)
-                .matchPredicate(matches -> {
-                    final Obj ref = matches.getFirst().arg(0);
-                    // only apply when the path ends at collection level (no field/extensions)
-                    if (!ref.isUri()) return true;
-                    final DataPath dp = DataPath.withoutDB(ref.uriValue());
-                    return !dp.hasField() && !dp.hasExtension() && !dp.collectionIsWildcard();
-                })
-                .matchSpacePredicate(matchSpacePredicate)
-                .optimize("from_has", (space, dp, coeff) -> {
-                    final boolean exists = hasFunction.apply(space, dp);
-                    return studio.phaseshift.metatron.isa.m.type.impl.MBool.bool(exists);
-                })
-                .build();
-    }
-
-    /**
      * Functional interface for select/projection operations.
      *
      * @param <S> The space type
@@ -436,8 +410,8 @@ public final class CommonRewrites {
         /**
          * Execute the native select/projection operation.
          *
-         * @param space   The database space
-         * @param furi    The resolved fURI for the table/collection
+         * @param space  The database space
+         * @param furi   The resolved fURI for the table/collection
          * @param fields The list of field/field names to select
          * @return The projected results (typically an Objs of rows with only selected fields)
          * @throws Exception if the operation fails
@@ -480,6 +454,7 @@ public final class CommonRewrites {
                 .tid(rewriteTID)
                 .rng(ALL_STAR)
                 .match(FROM_INST_TID, RSHIFT_INST_TID)
+                .matchFromOrAt()
                 .build();
     }
 
@@ -514,6 +489,10 @@ public final class CommonRewrites {
                 final Space space = studio.phaseshift.metatron.isa.mach.type.Router.global().getSpaceFor(oldfURI);
 
                 if (!this.spaceType.isInstance(space)) {
+                    return matchedInsts.stream().map(Obj::asInst).toList();
+                }
+
+                if (this.matchPredicate != null && !this.matchPredicate.test(matchedInsts)) {
                     return matchedInsts.stream().map(Obj::asInst).toList();
                 }
 
@@ -632,8 +611,14 @@ public final class CommonRewrites {
         EXISTS(null);
 
         private final String symbol;
-        ComparisonOp(final String symbol) { this.symbol = symbol; }
-        public String symbol() { return symbol; }
+
+        ComparisonOp(final String symbol) {
+            this.symbol = symbol;
+        }
+
+        public String symbol() {
+            return symbol;
+        }
     }
 
     /**
@@ -641,14 +626,27 @@ public final class CommonRewrites {
      * Each query language provides its own implementation.
      */
     public interface ConditionFormatter {
-        /** Format an equality condition: field = value */
+        /**
+         * Format an equality condition: field = value
+         */
         String equality(String field, String value);
-        /** Format a comparison: field op value */
+
+        /**
+         * Format a comparison: field op value
+         */
         String comparison(String field, ComparisonOp op, String value);
-        /** Format an existence check (field IS NOT NULL or equivalent) */
+
+        /**
+         * Format an existence check (field IS NOT NULL or equivalent)
+         */
         String exists(String field);
-        /** Escape a string literal for the backend */
-        default String escapeLiteral(String s) { return s; }
+
+        /**
+         * Escape a string literal for the backend
+         */
+        default String escapeLiteral(String s) {
+            return s;
+        }
     }
 
     /**
@@ -668,8 +666,8 @@ public final class CommonRewrites {
         /**
          * Execute the native where/filter operation.
          *
-         * @param space       The database space
-         * @param dp          The decomposed DataPath
+         * @param space        The database space
+         * @param dp           The decomposed DataPath
          * @param filterClause The native filter clause
          * @return The filtered results
          * @throws Exception if the operation fails
@@ -722,6 +720,7 @@ public final class CommonRewrites {
                 .tid(rewriteTID)
                 .rng(ALL_STAR)
                 .match(FROM_INST_TID, WHERE_INST_TID)
+                .matchFromOrAt()
                 .build();
     }
 
@@ -764,6 +763,10 @@ public final class CommonRewrites {
                 final Space space = studio.phaseshift.metatron.isa.mach.type.Router.global().getSpaceFor(oldfURI);
 
                 if (!this.spaceType.isInstance(space)) {
+                    return matchedInsts.stream().map(Obj::asInst).toList();
+                }
+
+                if (this.matchPredicate != null && !this.matchPredicate.test(matchedInsts)) {
                     return matchedInsts.stream().map(Obj::asInst).toList();
                 }
 
@@ -867,6 +870,13 @@ public final class CommonRewrites {
                 return this.conditionFormatter.exists(fieldName);
             }
 
+            // Handle URI values — quote the full URI string for equality.
+            // E.g., /usr/dr/session/1 → session = '/usr/dr/session/1'
+            if (value.isUri()) {
+                return this.conditionFormatter.equality(fieldName,
+                        quoteLiteral(value.asUri().uriValue().toString()));
+            }
+
             // Handle literal values - equality check
             if (value.isInt()) {
                 return this.conditionFormatter.equality(fieldName, String.valueOf(value.asInt().jvm()));
@@ -927,7 +937,9 @@ public final class CommonRewrites {
             return null;
         }
 
-        /** Quote a string literal using the backend's escaping rules. */
+        /**
+         * Quote a string literal using the backend's escaping rules.
+         */
         private String quoteLiteral(final String s) {
             final String escaped = this.conditionFormatter.escapeLiteral(s);
             return "'" + escaped + "'";
@@ -944,8 +956,8 @@ public final class CommonRewrites {
         /**
          * Execute the native count with where filter.
          *
-         * @param space    The database space
-         * @param dp    The resolved data path
+         * @param space        The database space
+         * @param dp           The resolved data path
          * @param filterClause The native filter clause
          * @return The count of matching rows
          * @throws Exception if the operation fails
@@ -1086,10 +1098,10 @@ public final class CommonRewrites {
         /**
          * Execute the native filtered+limited query.
          *
-         * @param space    The database space
-         * @param dp       The decomposed DataPath for the table/collection
+         * @param space        The database space
+         * @param dp           The decomposed DataPath for the table/collection
          * @param filterClause The native filter clause
-         * @param limit    The limit value from take(n)
+         * @param limit        The limit value from take(n)
          * @return The filtered and limited results
          * @throws Exception if the operation fails
          */
@@ -1271,6 +1283,7 @@ public final class CommonRewrites {
                 .tid(rewriteTID)
                 .rng(ALL_STAR)
                 .match(FROM_INST_TID, SKIP_INST_TID)
+                .matchFromOrAt()
                 .build();
     }
 
@@ -1305,6 +1318,10 @@ public final class CommonRewrites {
                 final Space space = studio.phaseshift.metatron.isa.mach.type.Router.global().getSpaceFor(oldfURI);
 
                 if (!this.spaceType.isInstance(space)) {
+                    return matchedInsts.stream().map(Obj::asInst).toList();
+                }
+
+                if (this.matchPredicate != null && !this.matchPredicate.test(matchedInsts)) {
                     return matchedInsts.stream().map(Obj::asInst).toList();
                 }
 
@@ -1368,11 +1385,11 @@ public final class CommonRewrites {
      * rewrite turns {@code from().skip()} into {@code sql_offset}, then this
      * rewrite fuses {@code sql_offset.take()} into a single paginated query.
      *
-     * @param spaceType          The database space type
-     * @param offsetRewriteTID   The TID of the native offset/skip instruction to match
-     * @param rewriteTID         The TID for this rewrite's output instruction
+     * @param spaceType           The database space type
+     * @param offsetRewriteTID    The TID of the native offset/skip instruction to match
+     * @param rewriteTID          The TID for this rewrite's output instruction
      * @param offsetLimitFunction Function that executes the native offset+limit operation
-     * @param <S>                The space type
+     * @param <S>                 The space type
      * @return The rewrite instruction
      */
     public static <S extends Space> Inst offsetLimitRewrite(
@@ -1611,6 +1628,221 @@ public final class CommonRewrites {
     }
 
     // =========================================================================
+    //  WHERE + ORDER composed rewrite
+    // =========================================================================
+
+    @FunctionalInterface
+    public interface WhereOrderOperation<S extends Space> {
+        Obj execute(S space, DataPath dp, String filterClause, List<String> columns) throws Exception;
+    }
+
+    public static <S extends Space> Inst whereOrderRewrite(
+            final Class<S> spaceType,
+            final fURI whereRewriteTID,
+            final fURI rewriteTID,
+            final WhereOrderOperation<S> whereOrderFunction) {
+        return whereOrderRewrite(spaceType, whereRewriteTID, rewriteTID, whereOrderFunction, null);
+    }
+
+    public static <S extends Space> Inst whereOrderRewrite(
+            final Class<S> spaceType,
+            final fURI whereRewriteTID,
+            final fURI rewriteTID,
+            final WhereOrderOperation<S> whereOrderFunction,
+            final BiPredicate<S, List<Inst>> matchSpacePredicate) {
+
+        return new WhereOrderRewriteBuilder<>(spaceType, whereRewriteTID, whereOrderFunction, matchSpacePredicate)
+                .tid(rewriteTID)
+                .rng(ALL_STAR)
+                .match(whereRewriteTID, ORDER_INST_TID)
+                .build();
+    }
+
+    private static class WhereOrderRewriteBuilder<S extends Space> extends RewriteBuilder<S> {
+        private final fURI whereRewriteTID;
+        private final WhereOrderOperation<S> whereOrderOperation;
+
+        WhereOrderRewriteBuilder(final Class<S> spaceType, final fURI whereRewriteTID,
+                                 final WhereOrderOperation<S> whereOrderOperation) {
+            this(spaceType, whereRewriteTID, whereOrderOperation, null);
+        }
+
+        WhereOrderRewriteBuilder(final Class<S> spaceType, final fURI whereRewriteTID,
+                                 final WhereOrderOperation<S> whereOrderOperation,
+                                 final BiPredicate<S, List<Inst>> matchSpacePredicate) {
+            super(spaceType);
+            this.whereRewriteTID = whereRewriteTID;
+            this.whereOrderOperation = whereOrderOperation;
+            this.matchSpacePredicate = matchSpacePredicate;
+            this.rewriteName = "from_where_order";
+            this.optimization = (space, furi, coeff) -> null;
+        }
+
+        @Override
+        protected Function<Map<Inst, Inst>, List<Inst>> createRewriteFunction() {
+            return map -> {
+                final List<Inst> matchedInsts = new ArrayList<>(map.values());
+                final Inst whereInst = matchedInsts.get(0);
+                final Inst orderInst = matchedInsts.get(1);
+
+                final Obj args = whereInst.args();
+                if (!args.isLst() || args.asLst().count() < 2) {
+                    return matchedInsts.stream().map(Obj::asInst).toList();
+                }
+
+                final fURI furi = args.asLst().at(0).asUri().uriValue();
+                final String filterClause = args.asLst().at(1).asStr().jvm();
+
+                // Extract columns from order's arg (same logic as OrderRewriteBuilder)
+                final Obj columnSpecArg = orderInst.arg(0);
+                final Obj columnSpec;
+                if (columnSpecArg.isInst()) {
+                    columnSpec = columnSpecArg.asInst().arg(0);
+                } else {
+                    columnSpec = columnSpecArg;
+                }
+                final List<String> columns = extractColumnNames(columnSpec);
+                if (columns == null || columns.isEmpty()) {
+                    LOG.debug("where+order columns too complex for native translation: %s", columnSpecArg);
+                    return matchedInsts.stream().map(Obj::asInst).toList();
+                }
+                
+                final Space space = Router.global().getSpaceFor(furi);
+
+                if (!this.spaceType.isInstance(space)) {
+                    return matchedInsts.stream().map(Obj::asInst).toList();
+                }
+
+                final S typedSpace = this.spaceType.cast(space);
+
+                if (this.matchSpacePredicate != null && !this.matchSpacePredicate.test(typedSpace, matchedInsts)) {
+                    LOG.debug("matchSpacePredicate rejected where+order rewrite for URI %s", furi);
+                    return matchedInsts.stream().map(Obj::asInst).toList();
+                }
+
+                final DataPath dp = DataPath.withoutDB(furi);
+
+                LOG.debug("evaluating native where+order on %s with clause '%s' and columns %s in space %s",
+                        furi, filterClause, columns, space);
+
+                return List.of(instC(
+                        this.rewriteTid.dom(ALL_STAR).rng(this.resultTid),
+                        lst(uri(furi), str(filterClause), lst(columns.stream().<Obj>map(col -> str(col)).toList())),
+                        (lhs, inst) -> {
+                            try {
+                                return this.whereOrderOperation.execute(typedSpace, dp, filterClause, columns);
+                            } catch (final Exception e) {
+                                throw MTronException.of(e, "failed to execute native where+order operation");
+                            }
+                        }
+                ));
+            };
+        }
+    }
+
+    // =========================================================================
+    //  WHERE + ORDER + OFFSET composed rewrite
+    // =========================================================================
+
+    @FunctionalInterface
+    public interface WhereOrderOffsetOperation<S extends Space> {
+        Obj execute(S space, DataPath dp, String filterClause, List<String> columns, long skip) throws Exception;
+    }
+
+    public static <S extends Space> Inst whereOrderOffsetRewrite(
+            final Class<S> spaceType,
+            final fURI whereOrderRewriteTID,
+            final fURI rewriteTID,
+            final WhereOrderOffsetOperation<S> whereOrderOffsetFunction) {
+        return whereOrderOffsetRewrite(spaceType, whereOrderRewriteTID, rewriteTID, whereOrderOffsetFunction, null);
+    }
+
+    public static <S extends Space> Inst whereOrderOffsetRewrite(
+            final Class<S> spaceType,
+            final fURI whereOrderRewriteTID,
+            final fURI rewriteTID,
+            final WhereOrderOffsetOperation<S> whereOrderOffsetFunction,
+            final BiPredicate<S, List<Inst>> matchSpacePredicate) {
+
+        return new WhereOrderOffsetRewriteBuilder<>(spaceType, whereOrderRewriteTID, whereOrderOffsetFunction, matchSpacePredicate)
+                .tid(rewriteTID)
+                .rng(ALL_STAR)
+                .match(whereOrderRewriteTID, SKIP_INST_TID)
+                .build();
+    }
+
+    private static class WhereOrderOffsetRewriteBuilder<S extends Space> extends RewriteBuilder<S> {
+        private final fURI whereOrderRewriteTID;
+        private final WhereOrderOffsetOperation<S> whereOrderOffsetOperation;
+
+        WhereOrderOffsetRewriteBuilder(final Class<S> spaceType, final fURI whereOrderRewriteTID,
+                                       final WhereOrderOffsetOperation<S> whereOrderOffsetOperation) {
+            this(spaceType, whereOrderRewriteTID, whereOrderOffsetOperation, null);
+        }
+
+        WhereOrderOffsetRewriteBuilder(final Class<S> spaceType, final fURI whereOrderRewriteTID,
+                                       final WhereOrderOffsetOperation<S> whereOrderOffsetOperation,
+                                       final BiPredicate<S, List<Inst>> matchSpacePredicate) {
+            super(spaceType);
+            this.whereOrderRewriteTID = whereOrderRewriteTID;
+            this.whereOrderOffsetOperation = whereOrderOffsetOperation;
+            this.matchSpacePredicate = matchSpacePredicate;
+            this.rewriteName = "from_where_order_skip";
+            this.optimization = (space, furi, coeff) -> null;
+        }
+
+        @Override
+        protected Function<Map<Inst, Inst>, List<Inst>> createRewriteFunction() {
+            return map -> {
+                final List<Inst> matchedInsts = new ArrayList<>(map.values());
+                final Inst whereOrderInst = matchedInsts.get(0);
+                final Inst skipInst = matchedInsts.get(1);
+
+                final Obj args = whereOrderInst.args();
+                if (!args.isLst() || args.asLst().count() < 3) {
+                    return matchedInsts.stream().map(Obj::asInst).toList();
+                }
+
+                final fURI furi = args.asLst().at(0).asUri().uriValue();
+                final String filterClause = args.asLst().at(1).asStr().jvm();
+                final List<String> columns = args.asLst().at(2).asLst().lstValue().stream()
+                        .map(o -> o.strValue()).toList();
+                final long skipValue = skipInst.arg(0).asInt().jvm();
+
+                final Space space = studio.phaseshift.metatron.isa.mach.type.Router.global().getSpaceFor(furi);
+
+                if (!this.spaceType.isInstance(space)) {
+                    return matchedInsts.stream().map(Obj::asInst).toList();
+                }
+
+                final S typedSpace = this.spaceType.cast(space);
+
+                if (this.matchSpacePredicate != null && !this.matchSpacePredicate.test(typedSpace, matchedInsts)) {
+                    LOG.debug("matchSpacePredicate rejected where+order+offset rewrite for URI %s", furi);
+                    return matchedInsts.stream().map(Obj::asInst).toList();
+                }
+
+                final DataPath dp = DataPath.withoutDB(furi);
+
+                LOG.debug("evaluating native where+order+offset on %s clause='%s' columns=%s skip=%d in space %s",
+                        furi, filterClause, columns, skipValue, space);
+
+                return List.of(instC(
+                        this.rewriteTid.dom(ALL_STAR).rng(this.resultTid),
+                        lst(uri(furi), str(filterClause), lst(columns.stream().<Obj>map(col -> str(col)).toList()), jnt(skipValue)),
+                        (lhs, inst) -> {
+                            try {
+                                return this.whereOrderOffsetOperation.execute(typedSpace, dp, filterClause, columns, skipValue);
+                            } catch (final Exception e) {
+                                throw MTronException.of(e, "failed to execute native where+order+offset operation");
+                            }
+                        }
+                ));
+            };
+        }
+    }
+
+    // =========================================================================
     //  WHERE + OFFSET + LIMIT composed rewrite
     // =========================================================================
 
@@ -1737,6 +1969,7 @@ public final class CommonRewrites {
                 .tid(rewriteTID)
                 .rng(ALL_STAR)
                 .match(FROM_INST_TID, ORDER_INST_TID)
+                .matchFromOrAt()
                 .build();
     }
 
@@ -1784,6 +2017,10 @@ public final class CommonRewrites {
                 final Space space = studio.phaseshift.metatron.isa.mach.type.Router.global().getSpaceFor(oldfURI);
 
                 if (!this.spaceType.isInstance(space)) {
+                    return matchedInsts.stream().map(Obj::asInst).toList();
+                }
+
+                if (this.matchPredicate != null && !this.matchPredicate.test(matchedInsts)) {
                     return matchedInsts.stream().map(Obj::asInst).toList();
                 }
 
@@ -1840,6 +2077,7 @@ public final class CommonRewrites {
                 .tid(rewriteTID)
                 .rng(ALL_STAR)
                 .match(FROM_INST_TID, DEDUP_INST_TID)
+                .matchFromOrAt()
                 .build();
     }
 
@@ -1885,6 +2123,10 @@ public final class CommonRewrites {
                 final Space space = studio.phaseshift.metatron.isa.mach.type.Router.global().getSpaceFor(oldfURI);
 
                 if (!this.spaceType.isInstance(space)) {
+                    return matchedInsts.stream().map(Obj::asInst).toList();
+                }
+
+                if (this.matchPredicate != null && !this.matchPredicate.test(matchedInsts)) {
                     return matchedInsts.stream().map(Obj::asInst).toList();
                 }
 

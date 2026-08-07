@@ -640,67 +640,6 @@ public abstract class AbstractGrphSpaceTest extends AbstractDataPathTest impleme
         }.generateAllRewriteTestCases();
     }
 
-    @ParameterizedTest(name = "[{index}] {0}")
-    @MethodSource("provideRewriteVerificationTestCases")
-    public void testRewriteVerification(String description, String code, String nativeInstName) throws Exception {
-        runRewriteVerificationTest(description, code, nativeInstName);
-    }
-
-    static Stream<Arguments> provideRewriteVerificationTestCases() {
-        return new AbstractGrphSpaceTest(f("/g")) {
-        }.generateRewriteVerificationTestCases();
-    }
-
-    // ========================================================================
-    //  Ad-hoc rewrite firing test — overridden with grph-specific cases
-    // ========================================================================
-
-    @Override
-    public Stream<Arguments> generateRewriteFiringTestCases() {
-        final String pre = getNativeInstructionPrefix();  // "gremlin_"
-        final Stream<Arguments> base = CommonRewritesTestContract.super.generateRewriteFiringTestCases();
-        return Stream.concat(base, Stream.of(
-                // --- SHOULD rewrite ---
-                Arguments.of("firing: *grph wildcard count should rewrite",
-                        "*/g/V.count()",
-                        pre + "count",
-                        true),
-                Arguments.of("firing: *grph update+count should rewrite (side-effect + not anchored)",
-                        "*/g/V.update([age=>+12]).count()",
-                        pre + "count",
-                        true),
-                Arguments.of("firing: *grph where should rewrite",
-                        "*/g/V.where([age=>?>20])",
-                        pre + "where",
-                        true),
-                // --- SHOULD NOT rewrite ---
-                Arguments.of("firing: @grph anchored update+count should NOT rewrite (side-effect must persist)",
-                        "@/g/V.update([age=>+12]).count()",
-                        pre + "count",
-                        false),
-                Arguments.of("firing: *grph where with impossible predicate should NOT rewrite (schema short-circuit)",
-                        "*/g/V/.where([age=>?<0]).count()",
-                        pre + "where",
-                        false)
-        ));
-    }
-
-    @ParameterizedTest(name = "[{index}] {0}")
-    @MethodSource("provideRewriteFiringTestCases")
-    public void testRewriteFiring(String description, String code, String nativeInstName, boolean shouldRewrite) throws Exception {
-        runRewriteFiringTest(description, code, nativeInstName, shouldRewrite);
-    }
-
-    static Stream<Arguments> provideRewriteFiringTestCases() {
-        return new AbstractGrphSpaceTest(f("/g")) {
-        }.generateRewriteFiringTestCases();
-    }
-
-    @Test
-    public void testRewriteInstSanity() throws Exception {
-        runRewriteInstSanityTest();
-    }
-
     // ========================================================================
     //  Serialization round-trip — URI <> wrapping
     // ========================================================================

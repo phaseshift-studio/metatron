@@ -399,7 +399,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathTest impleme
     }
 
     // =========================================================================
-    //  Rewrite tests (delegated to PostgreSQLTbleSpaceTest for test data)
+    //  Rewrite tests — generated from CommonRewritesTestContract with db:rewrite_test prefix
     // =========================================================================
 
     @ParameterizedTest(name = "[{index}] {0}")
@@ -409,53 +409,15 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathTest impleme
     }
 
     public static Stream<Arguments> provideAllRewriteTestCases() {
-        return new PostgreSQLTbleSpaceTest().generateAllRewriteTestCases();
-    }
-
-    @Disabled
-    @ParameterizedTest(name = "[{index}] {0}")
-    @MethodSource("providePlanVerificationTestCases")
-    public void testRewritePlans(String description, String code, String nativeInstName) throws Exception {
-        final Code parsed = ObjmtronSerializer.parse(code);
-        final Code rewritten = parsed.rewrite();
-        LOG.info("Testing Rewrite Plan: %s", description);
-        LOG.info("  Code: %s", code);
-        LOG.info("  Plan: %s", rewritten);
-
-        final String fullNativeInstName = getNativeInstructionPrefix() + nativeInstName;
-        assertTrue(rewritten.stream().anyMatch(
-                        obj -> obj.isInst()
-                                && obj.asInst().tid().name().equals(fullNativeInstName)),
-                "Plan should contain " + fullNativeInstName);
-    }
-
-    public static Stream<Arguments> providePlanVerificationTestCases() {
-        return new PostgreSQLTbleSpaceTest().generatePlanVerificationTestCases();
-    }
-
-    // verify/firing tests: now enabled via getRewriteInstUri() which fetches
-    // rewriters directly from the InstSet (Router.readFromSpace("/m/tble").at("rewrite"))
-
-    @Disabled("parse().rewrite() does not trigger tbleSpace rewrites")
-    @ParameterizedTest(name = "[{index}] {0}")
-    @MethodSource("provideRewriteVerificationTestCases")
-    public void testRewriteVerification(String description, String code, String nativeInstName) throws Exception {
-        runRewriteVerificationTest(description, code, nativeInstName);
-    }
-
-    static Stream<Arguments> provideRewriteVerificationTestCases() {
-        return Stream.empty();
-    }
-
-    @Disabled("parse().rewrite() does not trigger tbleSpace rewrites")
-    @ParameterizedTest(name = "[{index}] {0}")
-    @MethodSource("provideRewriteFiringTestCases")
-    public void testRewriteFiring(String description, String code, String nativeInstName, boolean shouldRewrite) throws Exception {
-        runRewriteFiringTest(description, code, nativeInstName, shouldRewrite);
-    }
-
-    static Stream<Arguments> provideRewriteFiringTestCases() {
-        return Stream.empty();
+        // Static bridge — getTestDataUriPrefix() is instance-bound but returns the
+        // same prefix for all tble backends.  Use a lightweight anonymous impl
+        // rather than coupling to a specific subclass.
+        return new CommonRewritesTestContract() {
+            @Override
+            public fURI getTestDataUriPrefix() {
+                return f("db:rewrite_test");
+            }
+        }.generateAllRewriteTestCases();
     }
 
     // =========================================================================
@@ -2587,6 +2549,187 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathTest impleme
             }
             Router.global().removeSpace(testSpace.vid());
             testSpace.close();
+        }
+    }
+
+    // =========================================================================
+    //  Long-prefix count/where rewrite tests
+    // =========================================================================
+
+    /**
+     * Verifies that {@code sql_count} and {@code sql_where_count} rewrites
+     * activate correctly with longer, non-trivial route prefixes.
+     *
+     * <p>The {@code matchPredicate} in {@code countRewrite}
+     * must resolve the URI through the space before
+     * {@link studio.phaseshift.metatron.furi.DataPath#withoutDB DataPath.withoutDB}
+     * decomposition — otherwise the space-prefix segments are misidentified as
+     * collection / entry / field, and {@code !dp.hasField() && !dp.hasExtension()}
+     * blocks the rewrite.
+     *
+     * <p>A single space with pattern {@code x:#} is created with three route
+     * entries that strip different long-prefix shapes.  {@code getSpaceFor}
+     * matches any {@code x:…} URI against the space, then the route strips
+     * the long prefix before DataPath decomposition:
+     * <ul>
+     *   <li>{@code x:a:bb:ccc  → ""} — single colon-bearing segment</li>
+     *   <li>{@code x:a/b/c      → ""} — three plain path segments</li>
+     *   <li>{@code x:a:b/c      → ""} — scheme-like first part + two path segments</li>
+     * </ul>
+     */
+    @Test
+    public void testLongPrefixCountAndWhereRewrites() throws Exception {
+        final fURI spaceVid = f("/sys/space/tble/long_prefix_test");
+
+        // Single space, three route entries — each strips a different long prefix.
+        final tbleSpace testSpace = tbleSpace.of(
+                rec(
+                        uri(PATTERN), uri("x:#"),
+                        uri(HOST), uri(staticDbConfig.getJdbcHost()),
+                        uri(DRIVER), uri(staticDbConfig.getDriverClass()),
+                        uri(ROUTE), rec(
+                                uri("x:a:bb:ccc"), uri(""),
+                                uri("x:a/b/c"), uri(""),
+                                uri("x:a:b/c"), uri("")),
+                        uri(TABLE), lst()
+                ).jvm(),
+                spaceVid
+        );
+
+        // (URI base, label, table suffix)
+        final String[][] variants = {
+                {"x:a:bb:ccc", "colon_seg", "cs_items"},
+                {"x:a/b/c", "path_seg", "ps_items"},
+                {"x:a:b/c", "mixed_seg", "ms_items"},
+        };
+
+        try {
+            for (final String[] v : variants) {
+                final String base = v[0];
+                final String label = v[1];
+                final String table = v[2];
+                final String fullBase = base + "/" + table;
+
+                // Seed 5 rows: val = 10, 20, 30, 40, 50; tag = odd/even alternating
+                for (int i = 1; i <= 5; i++) {
+                    Router.writeToSpace(f(fullBase + "/" + i),
+                            rec(uri("val"), jnt(i * 10),
+                                    uri("tag"), str(i % 2 == 0 ? "even" : "odd")));
+                }
+
+                // --- count rewrite (* clone form) ---
+                final Obj countResult = ObjmtronSerializer.parse(
+                        "*" + fullBase + "/+.count()").apply();
+                assertEquals(jnt(5), countResult,
+                        label + ": * count() should return 5");
+
+                // --- count rewrite (@ anchor form) ---
+                final Obj atCountResult = ObjmtronSerializer.parse(
+                        "@" + fullBase + "/+.count()").apply();
+                assertEquals(jnt(5), atCountResult,
+                        label + ": @ count() should return 5");
+
+                // --- @ limit rewrite (returns rows, must have VIDs) ---
+                final Obj atLimitResult = ObjmtronSerializer.parse(
+                        "@" + fullBase + "/+.take(3)").apply();
+                final List<Obj> atLimitRows = atLimitResult.stream().toList();
+                assertEquals(3, atLimitRows.size(), label + ": @ take(3) should return 3 rows");
+                for (final Obj row : atLimitRows) {
+                    assertNotNull(row.vid(), label + ": @ take row should have a VID");
+                    assertNotNull(row.vid().scheme(),
+                            label + ": @ take row VID should be routable: " + row.vid());
+                }
+
+                // --- @ where rewrite (returns rows, must have VIDs) ---
+                final Obj atWhereResult = ObjmtronSerializer.parse(
+                        "@" + fullBase + "/+.where([val=>?<30])").apply();
+                final List<Obj> atWhereRows = atWhereResult.stream().toList();
+                assertEquals(2, atWhereRows.size(),
+                        label + ": @ where val<30 should find 2 rows (10,20)");
+                for (final Obj row : atWhereRows) {
+                    assertNotNull(row.vid(), label + ": @ where row should have a VID");
+                    assertNotNull(row.vid().scheme(),
+                            label + ": @ where row VID should be routable: " + row.vid());
+                }
+
+                // --- where + count rewrite (integer predicate) ---
+                final Obj whereCountResult = ObjmtronSerializer.parse(
+                        "*" + fullBase + "/+.where([val=>?>20]).count()").apply();
+                assertEquals(jnt(3), whereCountResult,
+                        label + ": where val>20 should find 3 rows (30,40,50)");
+
+                // --- where + count rewrite (string predicate) ---
+                final Obj whereCountStr = ObjmtronSerializer.parse(
+                        "*" + fullBase + "/+.where([tag=>\"even\"]).count()").apply();
+                assertEquals(jnt(2), whereCountStr,
+                        label + ": where tag=even should find 2 rows");
+
+                // --- where + order rewrite (rows with VIDs, sorted) ---
+                final Obj whereOrderResult = ObjmtronSerializer.parse(
+                        "@" + fullBase + "/+.where([val=>?>20]).order(select(val))").apply();
+                final List<Obj> whereOrderRows = whereOrderResult.stream().toList();
+                assertEquals(3, whereOrderRows.size(),
+                        label + ": @ where val>20 order by val should return 3 rows");
+                for (final Obj row : whereOrderRows) {
+                    assertNotNull(row.vid(), label + ": @ where+order row should have a VID");
+                    assertNotNull(row.vid().scheme(),
+                            label + ": @ where+order row VID should be routable: " + row.vid());
+                }
+                // Verify ascending order by val
+                assertEquals(jnt(30), whereOrderRows.get(0).asRec().at(uri("val")),
+                        label + ": first row val should be 30");
+                assertEquals(jnt(50), whereOrderRows.get(2).asRec().at(uri("val")),
+                        label + ": last row val should be 50");
+
+                LOG.info("Long-prefix rewrite PASSED for '%s' on %s",
+                        base, staticDbConfig.getDatabaseName());
+            }
+        } finally {
+            for (final String[] v : variants) {
+                try {
+                    testSpace.sql("DROP TABLE IF EXISTS " + v[2]);
+                } catch (final Exception ex) {
+                    LOG.warn("[ignored] %s", ex);
+                }
+            }
+            Router.global().removeSpace(testSpace.vid());
+            testSpace.close();
+        }
+    }
+
+    /**
+     * Verifies that {@code @} (anchor / {@code AT_INST_TID}) form of
+     * {@code count()} triggers the same native SQL rewrite as the
+     * {@code *} (clone / {@code FROM_INST_TID}) form.
+     *
+     * <p>Uses a dedicated space with its own seeded data to avoid
+     * contamination from other tests that drop/recreate tables.
+     */
+    @Test
+    public void testAtAnchorCountRewrite() throws Exception {
+        final tbleSpace space = createTestSpace();
+        try {
+            // Seed a table through the space so the schema tracks it
+            for (int i = 1; i <= 7; i++) {
+                Router.writeToSpace(f("db:at_count_test/" + i),
+                        rec(uri("val"), jnt(i)));
+            }
+
+            // ── * count (baseline) ──────────────────────────────────────
+            final Obj starCount = ObjmtronSerializer.parse("*db:at_count_test/+.count()").apply();
+            assertEquals(jnt(7), starCount, "* count");
+
+            // ── @ count ─────────────────────────────────────────────────
+            final Obj atCount = ObjmtronSerializer.parse("@db:at_count_test/+.count()").apply();
+            assertEquals(jnt(7), atCount, "@ count");
+
+            LOG.info("@ anchor count rewrite test PASSED on {}",
+                    staticDbConfig.getDatabaseName());
+        } finally {
+            try { space.sql("DROP TABLE IF EXISTS at_count_test"); }
+            catch (final Exception ex) { LOG.warn("[ignored] %s", ex); }
+            Router.global().removeSpace(space.vid());
+            space.close();
         }
     }
 }

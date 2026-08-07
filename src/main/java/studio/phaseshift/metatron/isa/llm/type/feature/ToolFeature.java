@@ -71,7 +71,7 @@ public class ToolFeature extends AbstractFeature {
             this.logger().info("tool executed: %s(%s) => %s",
                     Str.Helper.cleanString(r.at(uri(NAME))),
                     Str.Helper.cleanString(r.at(uri(TOOL_ARGUMENTS))),
-                    Str.Helper.cleanString(r.at(uri(RESULT))));
+                    CommonUtil.clipString(Str.Helper.cleanString(r.at(uri(RESULT))), 50, true));
         } else {
             this.logger().info("tool executed: %s", CommonUtil.clipString(result.toString(), 50, true));
         }

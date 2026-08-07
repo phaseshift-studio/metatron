@@ -66,6 +66,10 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  */
 public final class QCollection {
 
+    public static final fURI LINEQ_PATTERN = f("lineq");
+    public static final fURI LINEQ_TID = QPROC_TID.extend(LINEQ_PATTERN);
+    public static final Type LINEQ_TYPE = Type.Builder.build().tid(QPROC_TID).vid(LINEQ_TID).constructor(QCollection::lineq).create();
+    //
     public static final fURI MIMEQ_PATTERN = f("mimeq");
     public static final fURI MIMEQ_TID = QPROC_TID.extend(MIMEQ_PATTERN);
     public static final Type MIMEQ_TYPE = Type.Builder.build().tid(QPROC_TID).vid(MIMEQ_TID).constructor(QCollection::mimeQ).create();
@@ -158,6 +162,46 @@ public final class QCollection {
 
     private QCollection() {
         // do nothing 
+    }
+
+    /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    private static int[] lineRange(final fURI lineq, final int maxLines) {
+        final String lines = lineq.q(LINEQ_PATTERN.toString());
+        final String[] lineRange = lines.split("-");
+        if (lineRange.length == 0 || lineRange.length > 2)
+            throw MTronException.of("not a legal line range: %s", lines);
+        int start = Integer.parseInt(lineRange[0]);
+        int stop = lineRange.length == 2 ? Integer.parseInt(lineRange[1]) : start;
+        if (stop >= maxLines)
+            stop = maxLines - 1;
+        return new int[]{start, stop};
+    }
+
+    public static QProc lineq() {
+        return QProc.Helper.build(LINEQ_TID, LINEQ_PATTERN)
+                .preWrite((furi, obj) -> {
+                    final String objString = Str.Helper.cleanString(Router.readFromSpace(furi.removeQ(LINEQ_TID)));
+                    final String[] split = objString.split("\n");
+                    int[] lineRange = lineRange(furi, split.length);
+                    for (int i = lineRange[0]; i < lineRange[1]; i++) {
+                        split[i] = "";
+                    }
+                    split[lineRange[0]] = Str.Helper.cleanString(obj);
+                    return Router.writeToSpace(furi.removeQ(LINEQ_TID), str(String.join("\n", split)));
+                }).postRead((furi, obj) -> {
+                    final String objString = Str.Helper.cleanString(obj);
+                    final String[] split = objString.split("\n");
+                    int[] lineRange = lineRange(furi, split.length);
+                    final String[] result = new String[(lineRange[1] - lineRange[0]) + 1];
+                    int counter = 0;
+                    for (int i = lineRange[0]; i <= lineRange[1]; i++) {
+                        result[counter++] = split[i];
+                    }
+                    return str(String.join("\n", result));
+                }).create();
     }
 
     /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////

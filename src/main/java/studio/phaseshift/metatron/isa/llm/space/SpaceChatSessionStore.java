@@ -41,9 +41,8 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.q.QCollection.INCRQ;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
 import static studio.phaseshift.metatron.isa.llm.type.Agent.res;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.at_;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.from_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -65,6 +64,7 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
      * Used by ConceptFeature to link concepts to recently written messages.
      */
     private final Set<fURI> currentMessages = new HashSet<>();
+    private final AtomicInteger messageCount = new AtomicInteger(0);
 
     /**
      * Per-session dedup: set of content hashes already written, keyed by session VID.
@@ -137,35 +137,41 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
     public List<ChatMessage> getMessages(final Object sessionVID) {
         if (!(sessionVID instanceof fURI sesVID))
             return new ArrayList<>();
-        // Read all messages for this session, skip thinking rows
         final fURI msgBase = this.agent.at(ROOT).uriValue().extend(MESSAGE);
-        final List<Rec> allMessages = new ArrayList<>();
-        final AtomicInteger found = new AtomicInteger(0);
-        // from_(msgBase.extend("+").toUri()).where_(rec(uri(SESSION), sesVID.toUri())).apply()
-        at_(uri(msgBase.extend("+")))
-                .where_(rec(SESSION, uri(sesVID)))
-                .tryToInst().apply(jnt(1))
+        // Count matching messages → sql_where_count rewrite
+        final int count = from_(uri(msgBase.extend("+"))).where_(rec(SESSION, uri(sesVID))).count_().apply().intValue().intValue();
+        final int max = this.getMaxMessages();
+        final int skip = Math.max(0, count - max);
+
+        // ── SQL-optimized path (commented out for debugging) ──────────
+        // mFluent fluent = from_(uri(msgBase.extend("+")))
+        //         .where_(rec(SESSION, uri(sesVID)))
+        //         .order_(uri("id"));
+        // if (skip > 0)
+        //     fluent = (mFluent) fluent.skip_(jnt(skip));
+        // final List<Rec> allMessages = fluent.tryToInst().apply(jnt(1))
+        //         .stream()
+        //         .filter(msg -> msg.isRec() && !msg.asRec().tid().equals(THINKING_MESSAGE_TID))
+        //         .map(Obj::asRec)
+        //         .toList();
+
+        // ── Non-optimized stream path (normal space read) ─────────────
+        // streamFromSpace on a branch (+) wraps results in rel(uri, obj);
+        // extract the obj (second element of the rel) before filtering.
+        final List<Rec> allMessages = Router.readFromSpace(msgBase.extend("+/"))
                 .stream()
-                .forEach(msg -> {
-                    if (!msg.isRec()) {
-                        LOG.warn("non-message obj in llm messages: %s", msg);
-                    } else {
-                        final Rec msgRec = msg.asRec();
-                        if (msgRec.tid().equals(THINKING_MESSAGE_TID)) return;
-                        final Obj sessionField = msgRec.at(uri(SESSION));
-                        final fURI sessionURI = sessionField.isUri() ? sessionField.uriValue()
-                                : sessionField.isInst() ? sessionField.asInst().vid()
-                                : null;
-                        if (sessionURI != null && sessionURI.equals(sesVID)) {
-                            allMessages.add(msgRec);
-                            found.incrementAndGet();
-                        }
-                    }
-                });
-        allMessages.sort(Comparator.comparing(a -> Integer.parseInt(a.vid().name())));
-        LOG.info("messages found for context window: " + found.get());
-        // ChatMemory handles its own windowing (token-based or message-based)
-        // after hydrating from the store; return all messages and let it prune
+                .map(Obj::asRel)
+                .filter(pair -> pair.second().isRec() && !pair.second().asRec().tid().equals(THINKING_MESSAGE_TID))
+                .filter(pair -> {
+                    final Obj sessionField = pair.second().asRec().at(uri(SESSION)).orElse(noobj());
+                    final fURI stored = sessionField.isUri() ? sessionField.uriValue()
+                            : sessionField.isInst() ? sessionField.asInst().vid() : null;
+                    return stored != null && stored.equals(sesVID);
+                })
+                .sorted(Comparator.comparing(a -> Integer.parseInt(a.first().uriValue().name())))
+                .skip(skip)
+                .map(pair -> pair.second().asRec())
+                .toList();
         return allMessages.stream().map(m -> {
             try {
                 return SERIALIZER.write(m.vid(null));
@@ -173,7 +179,7 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
                 LOG.warn("error converting stored message to ChatMessage (ignoring): %s", e);
                 return null;
             }
-        }).filter(m -> !Objects.isNull(m)).toList();
+        }).filter(Objects::nonNull).toList();
     }
 
     @Override
@@ -282,6 +288,10 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
             WRITTEN_HASHES.remove(sesVID);
         }
         LOG.debug("deleted messages for session %s", sesVID);
+    }
+
+    private int getMaxMessages() {
+        return 15;// this.agent.feature(SESSION).asRec().at(ALGORITHM).asRec().at(MAX).intValue().intValue();
     }
 
     ///////////////////////////////////////////////////////////////////////////
