@@ -169,12 +169,12 @@ public final class QCollection {
     /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     private static int[] lineRange(final fURI lineq, final int maxLines) {
-        final String lines = lineq.q(LINEQ_PATTERN.toString());
+        final String lines = lineq.q(LINEQ_PATTERN.toString()).trim();
         final String[] lineRange = lines.split("-");
         if (lineRange.length == 0 || lineRange.length > 2)
             throw MTronException.of("not a legal line range: %s", lines);
-        int start = Integer.parseInt(lineRange[0]);
-        int stop = lineRange.length == 2 ? Integer.parseInt(lineRange[1]) : start;
+        int start = Integer.parseInt(lineRange[0].trim());
+        int stop = lineRange.length == 2 ? Integer.parseInt(lineRange[1].trim()) : start;
         if (stop >= maxLines)
             stop = maxLines - 1;
         return new int[]{start, stop};
@@ -183,14 +183,15 @@ public final class QCollection {
     public static QProc lineq() {
         return QProc.Helper.build(LINEQ_TID, LINEQ_PATTERN)
                 .preWrite((furi, obj) -> {
-                    final String objString = Str.Helper.cleanString(Router.readFromSpace(furi.removeQ(LINEQ_TID)));
+                    final String objString = Str.Helper.cleanString(Router.readFromSpace(furi.removeQ(LINEQ_PATTERN)));
                     final String[] split = objString.split("\n");
                     int[] lineRange = lineRange(furi, split.length);
-                    for (int i = lineRange[0]; i < lineRange[1]; i++) {
+                    for (int i = lineRange[0]; i <= lineRange[1]; i++) {
                         split[i] = "";
                     }
                     split[lineRange[0]] = Str.Helper.cleanString(obj);
-                    return Router.writeToSpace(furi.removeQ(LINEQ_TID), str(String.join("\n", split)));
+                    Router.writeToSpace(furi.removeQ(LINEQ_PATTERN), str(Arrays.stream(split).filter(s -> !s.isEmpty()).collect(Collectors.joining("\n"))));
+                    return obj;
                 }).postRead((furi, obj) -> {
                     final String objString = Str.Helper.cleanString(obj);
                     final String[] split = objString.split("\n");

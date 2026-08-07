@@ -18,30 +18,27 @@
 
 package studio.phaseshift.metatron.isa.mach.space;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.furi.q.LineQTest;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.AbstractSpaceTest;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.mach.type.Router;
-import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.io.space.fs.fsSpace;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
+import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.io.File;
 import java.nio.file.FileSystems;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.STR_TID;
@@ -54,7 +51,7 @@ import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_ISA_TID;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class fsSpaceTest extends AbstractSpaceTest {
+public class fsSpaceTest extends AbstractSpaceTest implements LineQTest {
 
     private static final File SOURCE_DIR = new File("src/test/resources/isa/sys/space/");
     private static final File TARGET_DIR = new File("/tmp/fsspace_test");
@@ -79,11 +76,26 @@ public class fsSpaceTest extends AbstractSpaceTest {
         if (!java.nio.file.Files.exists(dir)) return;
         try (var s = java.nio.file.Files.walk(dir)) {
             s.sorted(java.util.Comparator.reverseOrder())
-             .forEach(p -> { try { java.nio.file.Files.delete(p); } catch (Exception e) {} });
-        } catch (Exception e) {}
+                    .forEach(p -> {
+                        try {
+                            java.nio.file.Files.delete(p);
+                        } catch (Exception e) {
+                        }
+                    });
+        } catch (Exception e) {
+        }
     }
-    @BeforeAll static void cleanBefore() { wipeFsSpaceDir(); }
-    @AfterAll  static void cleanAfter()  { wipeFsSpaceDir(); }
+
+    @BeforeAll
+    static void cleanBefore() {
+        wipeFsSpaceDir();
+    }
+
+    @AfterAll
+    static void cleanAfter() {
+        wipeFsSpaceDir();
+    }
+
     @BeforeAll
     public static void setupInstSet() {
         InstSet.importInstSet(MACH_ISA_TID);
@@ -133,14 +145,16 @@ public class fsSpaceTest extends AbstractSpaceTest {
     @Override
     protected boolean skipUpdateTestCase(final String id) {
         return switch (id) {
-            case "M28","M29","M30","M31","M39" -> true;  // wildcards + nested delete
+            case "M28", "M29", "M30", "M31", "M39" -> true;  // wildcards + nested delete
             //case "M45" -> true;  // rec→file creates path fsSpace walks as directory in later tests
             default -> false;
         };
     }
 
     @Override
-    protected String cleanupExpr() { return "$$/__noop__"; }
+    protected String cleanupExpr() {
+        return "$$/__noop__";
+    }
 
     @Override
     public void testMonoReadWrite(final String writeExpression, final String readExpression, final String expectedExpression) {

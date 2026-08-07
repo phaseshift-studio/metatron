@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -21,24 +21,18 @@ package studio.phaseshift.metatron.furi.q;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.TestCategory;
-import studio.phaseshift.metatron.furi.QProc;
-import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.util.CommonUtil;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static studio.phaseshift.metatron.furi.q.QCollection.*;
+import static studio.phaseshift.metatron.furi.q.QCollection.SUBQ_SUB_TID;
+import static studio.phaseshift.metatron.furi.q.QCollection.SUBQ_TID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public interface SubQTest {
-
-
-    Space getSpace();
-
-    String make(final String expression);
+public interface SubQTest extends QProcTest {
 
     @TestCategory.Crud
     @TestCategory.Concurrent
@@ -48,15 +42,11 @@ public interface SubQTest {
             "$$/xyz?subq     ->sub::[code=>>>1.plus(10).to($$/abc)]    % $$/xyz -> 12            % *$$/abc.eq(22)",
             "$$/xyz/a?subq   ->sub::[code=>>>0.to($$/abc)]             % $$/xyz/a -> 12          % *$$/abc.eq($$/xyz/a)",
             "$$/xyz/#?subq   ->sub::[code=>>>0.to($$/abc)]             % $$/xyz/a -> 12          % *$$/abc.eq($$/xyz/a)",
-         //   "$$/xyz/+/+?subq ->sub::[code=>>>0.to($$/abc)]             % $$/xyz/a -> 12          % *$$/abc.else(true)",
+            //   "$$/xyz/+/+?subq ->sub::[code=>>>0.to($$/abc)]             % $$/xyz/a -> 12          % *$$/abc.else(true)",
             "$$/xyz/+/+?subq ->sub::[code=>>>1.to($$/abc)]             % $$/xyz/a/b -> 12        % *$$/abc.eq(12)"
     }, delimiter = '%')
     default void testSubQ(String subscription, String writing, String expecting) {
-        final Space space = this.getSpace();
-        if (getSpace().qs().lstValue().stream().noneMatch(x -> ((QProc)x).pattern().equals(SUBQ_PATTERN))) {
-            space.logger().warn("manually adding subq to %s", space.vidOrTid());
-            space.addQ(QCollection.subq());
-        }
+        this.attachQ(SUBQ_TID);
         final Obj sub = ObjmtronSerializer.parse(make(subscription)).apply();
         assertEquals(SUBQ_SUB_TID, sub.tid());
         final Obj writeObj = ObjmtronSerializer.parse(make(writing)).apply();
