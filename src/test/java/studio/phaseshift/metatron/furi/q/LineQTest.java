@@ -18,23 +18,19 @@
 
 package studio.phaseshift.metatron.furi.q;
 
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.TestData;
-import studio.phaseshift.metatron.furi.QProc;
-import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static studio.phaseshift.metatron.furi.q.QCollection.LINEQ_TID;
 
-public interface LineQTest {
+public interface LineQTest extends QProcTest {
 
-    Space getSpace();
 
-    String make(final String expression);
-    
     @ParameterizedTest
     @TestData({
             "$$/xyz -> \"\"\"this is\na long\nmulti-line\nstring\"\"\""
@@ -49,14 +45,29 @@ public interface LineQTest {
             "*$$/xyz?lineq=0-10    % '''this is\na long\nmulti-line\nstring'''",
     }, delimiter = '%')
     default void testLineQRead(String code, String expected) {
-        final Space space = this.getSpace();
-        if (getSpace().qs().lstValue().stream().noneMatch(x -> ((QProc) x).pattern().equals(LINEQ_TID))) {
-            space.logger().warn("manually adding lineq to %s", space.vidOrTid());
-            space.addQ(QCollection.lineq());
-        }
+        this.attachQ(LINEQ_TID);
         final Obj resultObj = ObjmtronSerializer.parse(make(code)).apply();
         final Obj expectedObj = ObjmtronSerializer.parse(make(expected)).apply();
         assertEquals(expectedObj, resultObj);
+    }
+
+    @Test
+    default void testLineQWrite() {
+        this.attachQ(LINEQ_TID);
+        for (final String source : new String[]{
+                "$$/xyz ->  \"\"\"this is\na long\nmulti-line\nstring\"\"\"           % \"\"\"this is\na long\nmulti-line\nstring\"\"\"",
+                "*$$/xyz?lineq=0                                                      % \"this is\"",
+                "$$/xyz?lineq=0 -> \"xxx\"                                            % \"xxx\"",
+                "*$$/xyz                                                              % \"\"\"xxx\na long\nmulti-line\nstring\"\"\"",
+                "$$/xyz?lineq=1-2 -> \"abc\"                                          % \"abc\"",
+                "*$$/xyz                                                              % \"\"\"xxx\nabc\nstring\"\"\"",
+                "$$/xyz?lineq=0-10 -> \"z\"                                            % \"z\"",
+                "*$$/xyz                                                              % \"\"\"z\"\"\""}) {
+            final Obj resultObj = ObjmtronSerializer.parse(make(source.split("%")[0])).apply();
+            final Obj expectedObj = ObjmtronSerializer.parse(make(source.split("%")[1])).apply();
+            assertEquals(expectedObj, resultObj);
+        }
+
     }
 
 }
