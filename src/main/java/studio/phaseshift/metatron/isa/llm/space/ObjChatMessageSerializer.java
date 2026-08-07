@@ -369,23 +369,36 @@ public class ObjChatMessageSerializer extends AbstractObjSerializer<ChatMessage>
                 .attributes(attrs);
         if (!text.isEmpty())
             builder.text(text);
-        if (rec.has(uri(TOOL_REQUESTS))) {
-            final Lst toolReqs = rec.at(uri(TOOL_REQUESTS)).asLst();
-            final List<ToolExecutionRequest> requests = toolReqs.elements()
-                    .filter(Obj::isRec)
-                    .map(tr -> {
-                        final Rec trRec = tr.asRec();
-                        final String argsToken = VOCAB.from(LLM_TOOL_TID, "arguments");
-                        return ToolExecutionRequest.builder()
-                                .name(Str.Helper.cleanString(trRec.at(uri(NAME)).orElse(str("")), true))
-                                .arguments(trRec.at(uri(argsToken)).orElse(str("")).strValue())
-                                .id(Str.Helper.cleanString(trRec.at(uri(CONTENTS)).orElse(str("")), true))
-                                .build();
-                    })
-                    .toList();
+
+        // Tool execution requests — may be a proper Lst from _mtron_meta
+        // type coercion, or a raw Str from a read path that didn't apply
+        // column type metadata.
+        final List<ToolExecutionRequest> requests = parseToolRequests(rec);
+        if (!requests.isEmpty())
             builder.toolExecutionRequests(requests);
-        }
+
         return builder.build();
+    }
+
+    private static List<ToolExecutionRequest> parseToolRequests(final Rec rec) {
+        final Obj trObj = rec.at(uri(TOOL_REQUESTS));
+        if (trObj.isNoObj() || !trObj.isLst())
+            return List.of();
+        final Lst toolReqs = trObj.asLst();
+        if (toolReqs.lstValue().isEmpty())
+            return List.of();
+        final String argsToken = VOCAB.from(LLM_TOOL_TID, "arguments");
+        return toolReqs.elements()
+                .filter(Obj::isRec)
+                .map(tr -> {
+                    final Rec trRec = tr.asRec();
+                    return ToolExecutionRequest.builder()
+                            .name(Str.Helper.cleanString(trRec.at(uri(NAME)).orElse(str("")), true))
+                            .arguments(trRec.at(uri(argsToken)).orElse(str("")).strValue())
+                            .id(Str.Helper.cleanString(trRec.at(uri(CONTENTS)).orElse(str("")), true))
+                            .build();
+                })
+                .toList();
     }
 
     private static ToolExecutionResultMessage toToolResultMessage(final Rec rec) {

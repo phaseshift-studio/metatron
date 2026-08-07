@@ -88,6 +88,10 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
         return this.addInst(instB(mInstSet.WHERE_INST_TID, lst(obj)));
     }
 
+    public F range_(final Obj start, final Obj end) {
+        return this.addInst(instB(mInstSet.RANGE_INST_TID, lst(start, end)));
+    }
+
     public F else_(final Obj obj) {
         return this.addInst(instB(mInstSet.ELSE_INST_TID, lst(obj)));
     }
@@ -230,6 +234,10 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
 
     public F select_(final Obj obj) {
         return this.addInst(instB(mInstSet.SELECT_INST_TID, lst(obj)));
+    }
+
+    public F order_(final Obj obj) {
+        return this.addInst(instB(mInstSet.ORDER_INST_TID, lst(obj)));
     }
 
     public F group_(final Obj obj) {
@@ -623,6 +631,10 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
             return new mFluent<F>().select_(obj);
         }
 
+        public static <F extends mFluent<F>> F order_(final Obj obj) {
+            return new mFluent<F>().order_(obj);
+        }
+
         public static <F extends mFluent<F>> F group_(final Obj obj) {
             return new mFluent<F>().group_(obj);
         }
@@ -773,6 +785,10 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
 
         public static <F extends mFluent<F>> F dedup_() {
             return new mFluent<F>().dedup_();
+        }
+
+        public static <F extends mFluent<F>> F range_(final Obj start, Obj end) {
+            return new mFluent<F>().range_(start, end);
         }
 
         public static <F extends mFluent<F>> F explain_(final Obj obj) {

@@ -526,6 +526,18 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
         return rowNames.length == 1 ? objs(labeledValues.values()) : rec(labeledValues, tid, null);
     }
 
+    /**
+     * Read a single row from {@code rs} using the schema's column metadata,
+     * applying FK resolution and type-aware deserialization from {@code _mtron_meta}.
+     * The {@code _tid} column is extracted to set the Rec's TID.
+     */
+    public Rec readRow(final ResultSet rs, final String tableName) throws SQLException {
+        final TableMetadata metadata = this.tableSchemas.get(tableName.toLowerCase());
+        if (metadata == null)
+            return ObjSQLSerializer.readCurrentAsRec(rs);
+        return (Rec) readTableRow(rs, metadata);
+    }
+
     private Obj readColumnWithMetadata(final ResultSet rs, final ColumnMetadata col,
                                        final String tableName) throws SQLException {
         // Check registered FKs (from JDBC metadata, _mtron_meta, or naming convention)

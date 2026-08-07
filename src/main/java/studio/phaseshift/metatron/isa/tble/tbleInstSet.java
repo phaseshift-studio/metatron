@@ -108,6 +108,15 @@ public class tbleInstSet extends AbstractInstSet {
             return KVStoreUtil.translateKVPatternToSQL(stored) != null;
         };
 
+        // Build an external row VID using the route's external key as prefix
+        // (instead of prefix + routeToSpace, which breaks when the route
+        // value is empty — startsWith("") matches everything).
+        final java.util.function.Function<tbleSpace, fURI> externalPrefix = space -> {
+            if (space.routes().isEmpty())
+                return space.vid();
+            return space.routes().keySet().iterator().next().uriValue();
+        };
+
         this.jvm().putAll(mutableMap(
                 uri(CONST), lst(
                         docWrap(rec(mutableMap(
@@ -208,20 +217,21 @@ public class tbleInstSet extends AbstractInstSet {
                                         // Read rows and stamp routable VIDs for space routing
                                         final Objs rows = objs0();
                                         while (rs.next()) {
-                                            final Rec rawRow = ObjSQLSerializer.readCurrentAsRec(rs);
-                                            final Rec coerced = rawRow;
+                                            final Rec row = space.existingTableSchema.readRow(rs, tableName);
+                                            final Rec coerced = row;
                                             /*final Rec coerced = space.existingTableSchema != null
-                                                    ? space.existingTableSchema.coerceRow(tableName, rawRow)
-                                                    : rawRow;*/
-                                            final fURI rowVID = Space.Helper.routeToSpace(
+                                                    ? space.existingTableSchema.coerceRow(tableName, row)
+                                                    : row;*/
+                                            final fURI prefix = externalPrefix.apply(space);
+                                            final fURI rowVID =
                                                     pkColumns.isEmpty()
-                                                            ? space.vid().extend(tableName).extend(coerced.at(uri("id")).toString())
+                                                            ? prefix.extend(tableName).extend(coerced.at(uri("id")).toString())
                                                             : pkColumns.stream()
                                                             .map(col -> coerced.at(uri(col)).toString())
-                                                            .reduce(space.vid().extend(tableName),
+                                                            .reduce(prefix.extend(tableName),
                                                                     (vid, seg) -> vid.extend(seg),
-                                                                    (a, b) -> b),
-                                                    space.routes());
+                                                                    (a, b) -> b);
+
                                             rows.append(coerced.selfVID(rowVID));
                                         }
                                         return rows.asObjs();
@@ -268,17 +278,18 @@ public class tbleInstSet extends AbstractInstSet {
                                         // Read rows and stamp routable VIDs for space routing
                                         final Objs rows = objs0();
                                         while (rs.next()) {
-                                            final Rec rawRow = ObjSQLSerializer.readCurrentAsRec(rs);
-                                            final fURI rowVID = Space.Helper.routeToSpace(
+                                            final Rec row = space.existingTableSchema.readRow(rs, tableName);
+                                            final fURI prefix = externalPrefix.apply(space);
+                                            final fURI rowVID =
                                                     pkColumns.isEmpty()
-                                                            ? space.vid().extend(tableName).extend(rawRow.at(uri("id")).toString())
+                                                            ? prefix.extend(tableName).extend(row.at(uri("id")).toString())
                                                             : pkColumns.stream()
-                                                            .map(col -> rawRow.at(uri(col)).toString())
-                                                            .reduce(space.vid().extend(tableName),
+                                                            .map(col -> row.at(uri(col)).toString())
+                                                            .reduce(prefix.extend(tableName),
                                                                     (vid, seg) -> vid.extend(seg),
-                                                                    (a, b) -> b),
-                                                    space.routes());
-                                            rows.append(rawRow.selfVID(rowVID));
+                                                                    (a, b) -> b);
+
+                                            rows.append(row.selfVID(rowVID));
                                         }
                                         return rows.asObjs();
                                     } catch (SQLException e) {
@@ -314,17 +325,18 @@ public class tbleInstSet extends AbstractInstSet {
 
                                         final Objs rows = objs0();
                                         while (rs.next()) {
-                                            final Rec rawRow = ObjSQLSerializer.readCurrentAsRec(rs);
-                                            final fURI rowVID = Space.Helper.routeToSpace(
+                                            final Rec row = space.existingTableSchema.readRow(rs, tableName);
+                                            final fURI prefix = externalPrefix.apply(space);
+                                            final fURI rowVID =
                                                     pkColumns.isEmpty()
-                                                            ? space.vid().extend(tableName).extend(rawRow.at(uri("id")).toString())
+                                                            ? prefix.extend(tableName).extend(row.at(uri("id")).toString())
                                                             : pkColumns.stream()
-                                                            .map(col -> rawRow.at(uri(col)).toString())
-                                                            .reduce(space.vid().extend(tableName),
+                                                            .map(col -> row.at(uri(col)).toString())
+                                                            .reduce(prefix.extend(tableName),
                                                                     (vid, seg) -> vid.extend(seg),
-                                                                    (a, b) -> b),
-                                                    space.routes());
-                                            rows.append(rawRow.selfVID(rowVID));
+                                                                    (a, b) -> b);
+
+                                            rows.append(row.selfVID(rowVID));
                                         }
                                         return rows.asObjs();
                                     } catch (SQLException e) {
@@ -337,24 +349,6 @@ public class tbleInstSet extends AbstractInstSet {
                                 },
                                 tableGuard
                         ), "sql_offset(table,800).take(10)", "sql_offset_limit(table, 800, 10)", Map.of(), "fuses offset and limit into a single native SELECT ... LIMIT n OFFSET m"),
-
-                        // Optimize: *table.has() → SELECT EXISTS(SELECT 1 FROM table LIMIT 1)
-                        docWrap(CommonRewrites.hasRewrite(
-                                tbleSpace.class,
-                                TBLE_ISA_REWRITE_TID.extend("sql_has"),
-                                (space, dp) -> {
-                                    final String tableName = dp.collection();
-                                    try (final Statement stmt = space.sjvm().createStatement();
-                                         final ResultSet rs = stmt.executeQuery("SELECT EXISTS(SELECT 1 FROM " + tableName + " LIMIT 1)")) {
-                                        return rs.next() && rs.getBoolean(1);
-                                    } catch (SQLException e) {
-                                        if (e.getErrorCode() == 1054)
-                                            return false;
-                                        throw MTronException.of(e);
-                                    }
-                                },
-                                tableGuard
-                        ), "pre-rewrite code", "post-rewrite code", Map.of(), "leverages native SELECT EXISTS to check if table has any rows"),
 
                         // Optimize: *table.where([col=>val]) → SELECT * FROM table WHERE col = val
                         docWrap(CommonRewrites.whereRewrite(
@@ -380,19 +374,20 @@ public class tbleInstSet extends AbstractInstSet {
                                         // Read rows and stamp routable VIDs for space routing
                                         final Objs rows = objs0();
                                         while (rs.next()) {
-                                            final Rec rawRow = ObjSQLSerializer.readCurrentAsRec(rs);
-                                            final Rec coerced = rawRow; /*space.existingTableSchema != null
-                                                    ? space.existingTableSchema.coerceRow(tableName, rawRow)
-                                                    : rawRow;*/
-                                            final fURI rowVID = Space.Helper.routeToSpace(
+                                            final Rec row = space.existingTableSchema.readRow(rs, tableName);
+                                            final Rec coerced = row; /*space.existingTableSchema != null
+                                                    ? space.existingTableSchema.coerceRow(tableName, row)
+                                                    : row;*/
+                                            final fURI prefix = externalPrefix.apply(space);
+                                            final fURI rowVID =
                                                     pkColumns.isEmpty()
-                                                            ? space.vid().extend(tableName).extend(coerced.at(uri("id")).toString())
+                                                            ? prefix.extend(tableName).extend(coerced.at(uri("id")).toString())
                                                             : pkColumns.stream()
                                                             .map(col -> coerced.at(uri(col)).toString())
-                                                            .reduce(space.vid().extend(tableName),
+                                                            .reduce(prefix.extend(tableName),
                                                                     (vid, seg) -> vid.extend(seg),
-                                                                    (a, b) -> b),
-                                                    space.routes());
+                                                                    (a, b) -> b);
+
                                             rows.append(coerced.selfVID(rowVID));
                                         }
                                         return rows.asObjs();
@@ -429,6 +424,100 @@ public class tbleInstSet extends AbstractInstSet {
                                 tableGuard
                         ), "pre-rewrite code", "post-rewrite code", Map.of(), "leverages native SELECT COUNT(*) ... WHERE to count filtered rows"),
 
+                        // Optimize: sql_where.order(select(col)) → SELECT * FROM table WHERE ... ORDER BY col
+                        docWrap(CommonRewrites.whereOrderRewrite(
+                                tbleSpace.class,
+                                TBLE_ISA_REWRITE_TID.extend("sql_where"),
+                                TBLE_ISA_REWRITE_TID.extend("sql_where_order"),
+                                (space, dp, filterClause, columns) -> {
+                                    final String tableName = dp.collection();
+                                    final String orderClause = String.join(", ", columns);
+                                    final String sql = "SELECT * FROM " + tableName + " WHERE " + filterClause + " ORDER BY " + orderClause;
+                                    try (final Statement stmt = space.sjvm().createStatement();
+                                         final ResultSet rs = stmt.executeQuery(sql)) {
+                                        final DatabaseMetaData dbMeta = space.sjvm().getMetaData();
+                                        final List<String> pkColumns = new ArrayList<>();
+                                        try (final ResultSet pkRs = dbMeta.getPrimaryKeys(null, null, tableName)) {
+                                            while (pkRs.next()) pkColumns.add(pkRs.getString("COLUMN_NAME"));
+                                        }
+                                        final Objs rows = objs0();
+                                        while (rs.next()) {
+                                            final Rec row = space.existingTableSchema.readRow(rs, tableName);
+                                            final fURI prefix = externalPrefix.apply(space);
+                                            final fURI rowVID =
+                                                    pkColumns.isEmpty()
+                                                            ? prefix.extend(tableName).extend(row.at(uri("id")).toString())
+                                                            : pkColumns.stream()
+                                                            .map(col -> row.at(uri(col)).toString())
+                                                            .reduce(prefix.extend(tableName),
+                                                                    (vid, seg) -> vid.extend(seg),
+                                                                    (a, b) -> b);
+
+                                            rows.append(row.selfVID(rowVID));
+                                        }
+                                        return rows.asObjs();
+                                    } catch (SQLException e) {
+                                        if (e.getErrorCode() == 1054) return noobj();
+                                        throw MTronException.of(e, "%s", sql);
+                                    } catch (final Exception e) {
+                                        throw MTronException.of(e, "%s", sql);
+                                    }
+                                },
+                                tableGuard
+                        ), "sql_where(table,cond).order(select(name))", "sql_where_order(table, cond, [name])", Map.of(), "fuses where and order into a single native SELECT ... WHERE ... ORDER BY"),
+
+                        // Optimize: sql_where_order.skip(n) → SELECT * FROM table WHERE ... ORDER BY ... OFFSET n
+                        docWrap(CommonRewrites.whereOrderOffsetRewrite(
+                                tbleSpace.class,
+                                TBLE_ISA_REWRITE_TID.extend("sql_where_order"),
+                                TBLE_ISA_REWRITE_TID.extend("sql_where_order_offset"),
+                                (space, dp, filterClause, columns, skip) -> {
+                                    final String tableName = dp.collection();
+                                    final String orderClause = String.join(", ", columns);
+                                    final String sql;
+                                    if (space.isSqlite()) {
+                                        sql = "SELECT * FROM " + tableName + " WHERE " + filterClause + " ORDER BY " + orderClause + " LIMIT -1 OFFSET " + skip;
+                                    } else {
+                                        final String backend = space.backend();
+                                        if (backend != null && (backend.contains("mysql") || backend.contains("mariadb"))) {
+                                            sql = "SELECT * FROM " + tableName + " WHERE " + filterClause + " ORDER BY " + orderClause + " LIMIT 18446744073709551615 OFFSET " + skip;
+                                        } else {
+                                            sql = "SELECT * FROM " + tableName + " WHERE " + filterClause + " ORDER BY " + orderClause + " OFFSET " + skip;
+                                        }
+                                    }
+                                    try (final Statement stmt = space.sjvm().createStatement();
+                                         final ResultSet rs = stmt.executeQuery(sql)) {
+                                        final DatabaseMetaData dbMeta = space.sjvm().getMetaData();
+                                        final List<String> pkColumns = new ArrayList<>();
+                                        try (final ResultSet pkRs = dbMeta.getPrimaryKeys(null, null, tableName)) {
+                                            while (pkRs.next()) pkColumns.add(pkRs.getString("COLUMN_NAME"));
+                                        }
+                                        final Objs rows = objs0();
+                                        while (rs.next()) {
+                                            final Rec row = space.existingTableSchema.readRow(rs, tableName);
+                                            final fURI prefix = externalPrefix.apply(space);
+                                            final fURI rowVID =
+                                                    pkColumns.isEmpty()
+                                                            ? prefix.extend(tableName).extend(row.at(uri("id")).toString())
+                                                            : pkColumns.stream()
+                                                            .map(col -> row.at(uri(col)).toString())
+                                                            .reduce(prefix.extend(tableName),
+                                                                    (vid, seg) -> vid.extend(seg),
+                                                                    (a, b) -> b);
+
+                                            rows.append(row.selfVID(rowVID));
+                                        }
+                                        return rows.asObjs();
+                                    } catch (SQLException e) {
+                                        if (e.getErrorCode() == 1054) return noobj();
+                                        throw MTronException.of(e, "%s", sql);
+                                    } catch (final Exception e) {
+                                        throw MTronException.of(e, "%s", sql);
+                                    }
+                                },
+                                tableGuard
+                        ), "sql_where_order(table,cond,[col]).skip(800)", "sql_where_order_offset(table, cond, [col], 800)", Map.of(), "fuses where, order, and offset into a single native SELECT ... WHERE ... ORDER BY ... OFFSET n"),
+
                         // Optimize: sql_where.take(n) → SELECT * FROM table WHERE ... LIMIT n
                         docWrap(CommonRewrites.whereLimitRewrite(
                                 tbleSpace.class,
@@ -452,17 +541,18 @@ public class tbleInstSet extends AbstractInstSet {
                                         // Read rows and stamp routable VIDs for space routing
                                         final Objs rows = objs0();
                                         while (rs.next()) {
-                                            final Rec rawRow = ObjSQLSerializer.readCurrentAsRec(rs);
-                                            final Rec coerced = rawRow;
-                                            final fURI rowVID = Space.Helper.routeToSpace(
+                                            final Rec row = space.existingTableSchema.readRow(rs, tableName);
+                                            final Rec coerced = row;
+                                            final fURI prefix = externalPrefix.apply(space);
+                                            final fURI rowVID =
                                                     pkColumns.isEmpty()
-                                                            ? space.vid().extend(tableName).extend(coerced.at(uri("id")).toString())
+                                                            ? prefix.extend(tableName).extend(coerced.at(uri("id")).toString())
                                                             : pkColumns.stream()
                                                             .map(col -> coerced.at(uri(col)).toString())
-                                                            .reduce(space.vid().extend(tableName),
+                                                            .reduce(prefix.extend(tableName),
                                                                     (vid, seg) -> vid.extend(seg),
-                                                                    (a, b) -> b),
-                                                    space.routes());
+                                                                    (a, b) -> b);
+
                                             rows.append(coerced.selfVID(rowVID));
                                         }
                                         return rows.asObjs();
@@ -504,17 +594,18 @@ public class tbleInstSet extends AbstractInstSet {
                                         }
                                         final Objs rows = objs0();
                                         while (rs.next()) {
-                                            final Rec rawRow = ObjSQLSerializer.readCurrentAsRec(rs);
-                                            final fURI rowVID = Space.Helper.routeToSpace(
+                                            final Rec row = space.existingTableSchema.readRow(rs, tableName);
+                                            final fURI prefix = externalPrefix.apply(space);
+                                            final fURI rowVID =
                                                     pkColumns.isEmpty()
-                                                            ? space.vid().extend(tableName).extend(rawRow.at(uri("id")).toString())
+                                                            ? prefix.extend(tableName).extend(row.at(uri("id")).toString())
                                                             : pkColumns.stream()
-                                                            .map(col -> rawRow.at(uri(col)).toString())
-                                                            .reduce(space.vid().extend(tableName),
+                                                            .map(col -> row.at(uri(col)).toString())
+                                                            .reduce(prefix.extend(tableName),
                                                                     (vid, seg) -> vid.extend(seg),
-                                                                    (a, b) -> b),
-                                                    space.routes());
-                                            rows.append(rawRow.selfVID(rowVID));
+                                                                    (a, b) -> b);
+
+                                            rows.append(row.selfVID(rowVID));
                                         }
                                         return rows.asObjs();
                                     } catch (SQLException e) {
@@ -544,17 +635,18 @@ public class tbleInstSet extends AbstractInstSet {
                                         }
                                         final Objs rows = objs0();
                                         while (rs.next()) {
-                                            final Rec rawRow = ObjSQLSerializer.readCurrentAsRec(rs);
-                                            final fURI rowVID = Space.Helper.routeToSpace(
+                                            final Rec row = space.existingTableSchema.readRow(rs, tableName);
+                                            final fURI prefix = externalPrefix.apply(space);
+                                            final fURI rowVID =
                                                     pkColumns.isEmpty()
-                                                            ? space.vid().extend(tableName).extend(rawRow.at(uri("id")).toString())
+                                                            ? prefix.extend(tableName).extend(row.at(uri("id")).toString())
                                                             : pkColumns.stream()
-                                                            .map(col -> rawRow.at(uri(col)).toString())
-                                                            .reduce(space.vid().extend(tableName),
+                                                            .map(col -> row.at(uri(col)).toString())
+                                                            .reduce(prefix.extend(tableName),
                                                                     (vid, seg) -> vid.extend(seg),
-                                                                    (a, b) -> b),
-                                                    space.routes());
-                                            rows.append(rawRow.selfVID(rowVID));
+                                                                    (a, b) -> b);
+
+                                            rows.append(row.selfVID(rowVID));
                                         }
                                         return rows.asObjs();
                                     } catch (SQLException e) {
@@ -626,17 +718,18 @@ public class tbleInstSet extends AbstractInstSet {
                                         }
                                         final Objs rows = objs0();
                                         while (rs.next()) {
-                                            final Rec rawRow = ObjSQLSerializer.readCurrentAsRec(rs);
-                                            final fURI rowVID = Space.Helper.routeToSpace(
+                                            final Rec row = space.existingTableSchema.readRow(rs, tableName);
+                                            final fURI prefix = externalPrefix.apply(space);
+                                            final fURI rowVID =
                                                     pkColumns.isEmpty()
-                                                            ? space.vid().extend(tableName).extend(rawRow.at(uri("id")).toString())
+                                                            ? prefix.extend(tableName).extend(row.at(uri("id")).toString())
                                                             : pkColumns.stream()
-                                                            .map(col -> rawRow.at(uri(col)).toString())
-                                                            .reduce(space.vid().extend(tableName),
+                                                            .map(col -> row.at(uri(col)).toString())
+                                                            .reduce(prefix.extend(tableName),
                                                                     (vid, seg) -> vid.extend(seg),
-                                                                    (a, b) -> b),
-                                                    space.routes());
-                                            rows.append(rawRow.selfVID(rowVID));
+                                                                    (a, b) -> b);
+
+                                            rows.append(row.selfVID(rowVID));
                                         }
                                         return rows.asObjs();
                                     } catch (SQLException e) {
@@ -794,7 +887,8 @@ public class tbleInstSet extends AbstractInstSet {
                                 while (rs.next()) {
                                     final fURI rowFuri = f(rs.getString("furi"));
                                     final Obj deserialized = ObjJSONSerializer.parse(rs.getString("obj"));
-                                    final fURI rowVID = Space.Helper.routeToSpace(rowFuri, typedSpace.routes());
+                                    // rowFuri is already in external form from the KV store
+                                    final fURI rowVID = rowFuri;
                                     rows.append(deserialized.selfVID(rowVID));
                                 }
                                 return rows.asObjs();

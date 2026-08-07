@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.isa.m.space;
 
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.furi.q.LineQTest;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.furi.q.SubQTest;
 import studio.phaseshift.metatron.isa.AbstractSpaceTest;
@@ -31,12 +32,13 @@ import java.io.File;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.Tokens.DATA;
+import static studio.phaseshift.metatron.Tokens.PATTERN;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
-public class memSpaceTest extends AbstractSpaceTest implements SubQTest {
+public class memSpaceTest extends AbstractSpaceTest implements SubQTest, LineQTest {
 
     public memSpaceTest() {
         super(() -> {

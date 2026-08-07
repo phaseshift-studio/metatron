@@ -138,7 +138,7 @@ public class mTool extends MRec {
                                 e -> e.second().tid().toString()
                         )),
                         "<no description>"));
-        inst.logger().info("building ai compliant tool from mtron inst: %s", inst.tid());
+        inst.logger().debug("building ai compliant tool from mtron inst: %s", inst.tid());
         return doc;//rec(mutableMap(uri(INST), inst, uri(NAME), uri(inst.tid()), uri(DESC), str(doc.description()), uri(ARG), doc.args()), LLM_TOOL_TID, null);
     }
 }

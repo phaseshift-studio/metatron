@@ -73,7 +73,7 @@ fsspace::[
     route => [localfs: => <~/.hermes_clone>]]@</sys/space/fs/dr>; 
 fsspace::[
   pattern => metatronfs:#,
-  q       => [mimeq::[=>]],
+  q       => [mimeq::[=>],lineq::[=>]],
     route => [metatronfs: => <~/software/metatron/.metatron/>]]@</sys/space/fs/metatron>;  
         [=====================]  
         [======== WEB ========]
@@ -223,6 +223,7 @@ agent::[
                                                         body  => "",
                                                         style => style::[anchor=>top_right,width=>65,
                                                                          height=>15,left=>-2]]@<think_widget> },
+                       on_before_chat => inst(){ @<think_widget>>>=[body=>''].map(noobj) },
                        think          => [to => inst(a=>str::T){ @<think_widget>>>=[body=>+*a].display() }]],
     loop_feature:::::::[max_loop      => 100],                         
     comment_feature::::[              => ],
@@ -235,7 +236,7 @@ agent::[
                                                        body   => "",
                                                        style  => style::[anchor=>bottom_right,width=>65,height=>30,
                                                                         left=>-2,top=>8,foreground =>"{{y}}"]]@<audit_widget> },
-                        to            => inst?#{?}<=#{?}(a=>str::T){ @<audit_widget>>>=[body=>+*a].display() }],
+                        to            => inst(a=>str::T){ @<audit_widget>>>=[body=>+*a].display() }],
     system_feature:::::[              => ]]]@<dr>; 
 [-- end::asciidoc_tag[] --]
 [== user console ==] 

@@ -38,6 +38,7 @@ import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Str;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.thread.CoreThread;
+import studio.phaseshift.metatron.isa.mach.type.ui.console.StatusLine;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.CommonUtil;
@@ -325,7 +326,7 @@ public class ConceptFeature extends AbstractFeature {
                         final Lst messages = msgObj.asLst();
                         if (!messages.lstValue().isEmpty()) {
                             this.conceptRecommendations.add(conceptURI.name());
-                            LOG.info("adding recommendation: %s", conceptURI.name());
+                            LOG.debug("adding recommendation: %s", conceptURI.name());
                         }
                     }
                 }
@@ -422,8 +423,10 @@ public class ConceptFeature extends AbstractFeature {
             final Matcher matcher = CONCEPT_PATTERN.matcher(text);
             while (matcher.find()) {
                 final String concept = CommonUtil.normalize(matcher.group(1));
-                if (!concept.isEmpty() && conceptStrings.add(concept))
-                    LOG.info("%s extracted", concept);
+                if (!concept.isEmpty() && conceptStrings.add(concept)) {
+                    StatusLine.message(str("%s extracted".formatted(concept)));
+                    // LOG.info("%s extracted", concept);
+                }
             }
             return conceptStrings;
         }

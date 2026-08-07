@@ -20,20 +20,14 @@ package studio.phaseshift.metatron.algebra.rewrite;
 
 import org.junit.jupiter.params.provider.Arguments;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.type.Code;
-import studio.phaseshift.metatron.isa.m.type.InstSet;
-import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.mach.type.Router;
 
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static studio.phaseshift.metatron.Tokens.REWRITE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
-import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
  * Contract interface for testing common rewrite optimizations across database implementations.
@@ -147,58 +141,6 @@ public interface CommonRewritesTestContract {
         assertEquals(expected, result, description);
     }
 
-    /**
-     * Executes a rewrite plan verification test. Checks that the rewritten code contains
-     * the expected native instruction.
-     *
-     * @param description    Human-readable test description
-     * @param code           The mtron code to compile and rewrite
-     * @param nativeInstName The expected native instruction name (partial match)
-     * @deprecated Use {@link #runRewriteVerificationTest(String, String, String)} instead.
-     * This method uses {@code parsed.rewrite()} which does NOT trigger
-     * space-specific rewrites.
-     */
-    @Deprecated
-    default void runRewritePlanTest(String description, String code, String nativeInstName) throws Exception {
-        final Code parsed = ObjmtronSerializer.parse(code);
-        final Code rewritten = parsed.rewrite();
-        final String plan = rewritten.toString();
-        assertTrue(plan.contains(nativeInstName),
-                description + " - Plan should contain '" + nativeInstName + "': " + plan);
-    }
-
-    /**
-     * Verifies that the rewritten instruction plan contains the native instruction name,
-     * confirming the rewrite actually transformed the code.
-     * <p>
-     * If the expected instruction is not found but a partial rewrite is detected
-     * (e.g., {@code gremlin_where} present but {@code gremlin_where_count} is not),
-     * a {@code [WARN]} is emitted via stderr instead of failing — partial rewriting
-     * is still valuable even when full composition doesn't fold in.
-     *
-     * @param description    Human-readable test description
-     * @param code           The mtron code to parse and rewrite
-     * @param nativeInstName The expected native instruction name (substring match)
-     */
-    default void runRewriteVerificationTest(String description, String code, String nativeInstName) throws Exception {
-        final Code parsed = ObjmtronSerializer.parse(code);
-        final Code rewritten = parsed.rewrite();
-        final String plan = rewritten.toString();
-        if (plan.contains(nativeInstName)) {
-            return; // full composition succeeded
-        }
-        // check for partial rewrite (e.g., gremlin_where present when gremlin_where_count is expected)
-        final String partial = nativeInstName.contains("_")
-                ? nativeInstName.substring(0, nativeInstName.lastIndexOf('_'))
-                : nativeInstName;
-        if (!partial.equals(nativeInstName) && plan.contains(partial)) {
-            System.err.printf("[WARN] %s — partial rewrite: '%s' present but '%s' not fully composed in plan%n       %s%n",
-                    description, partial, nativeInstName, plan);
-        } else {
-            fail(description + " — expected '" + nativeInstName + "' not found in rewritten plan (no rewrite detected): " + plan);
-        }
-    }
-
     // ========================================================================
     // ALL-IN-ONE TEST DATA PROVIDER
     // ========================================================================
@@ -233,6 +175,8 @@ public interface CommonRewritesTestContract {
                 generateWhereLimitTestCases(),
                 generateWhereOffsetTestCases(),
                 generateWhereOffsetLimitTestCases(),
+                generateWhereOrderTestCases(),
+                generateWhereOrderOffsetTestCases(),
                 generateOrderTestCases(),
                 generateDedupTestCases(),
                 generateAggregationTestCases(),
@@ -250,7 +194,6 @@ public interface CommonRewritesTestContract {
     default Stream<Arguments> generateCountTestCases() {
         final String p = getTestDataUriPrefix().toString();
         return Stream.of(
-                // Basic count
                 Arguments.of("count: all rows", "*" + p + "/+.count()", jnt(10)),
                 Arguments.of("count: with id removal", "*" + p + "/+._.count()", jnt(10))
         );
@@ -272,7 +215,10 @@ public interface CommonRewritesTestContract {
                 Arguments.of("limit: take(5)", "*" + p + "/+.take(5).count()", jnt(5)),
                 Arguments.of("limit: take(10) all", "*" + p + "/+.take(10).count()", jnt(10)),
                 Arguments.of("limit: take(100) > data", "*" + p + "/+.take(100).count()", jnt(10)),
-                Arguments.of("limit: take(0)", "*" + p + "/+.take(0).count()", jnt(0))
+                Arguments.of("limit: take(0)", "*" + p + "/+.take(0).count()", jnt(0)),
+                // @ (anchor) — same results via sql_limit rewrite
+                Arguments.of("limit: @ take(2)", "@" + p + "/+.take(2).count()", jnt(2)),
+                Arguments.of("limit: @ take(5)", "@" + p + "/+.take(5).count()", jnt(5))
         );
     }
 
@@ -293,7 +239,9 @@ public interface CommonRewritesTestContract {
                 Arguments.of("skip: skip(5)", "*" + p + "/+.skip(5).count()", jnt(5)),
                 Arguments.of("skip: skip(9)", "*" + p + "/+.skip(9).count()", jnt(1)),
                 Arguments.of("skip: skip(10) all", "*" + p + "/+.skip(10).count()", jnt(0)),
-                Arguments.of("skip: skip(100) past end", "*" + p + "/+.skip(100).count()", jnt(0))
+                Arguments.of("skip: skip(100) past end", "*" + p + "/+.skip(100).count()", jnt(0)),
+                // @ (anchor)
+                Arguments.of("skip: @ skip(3)", "@" + p + "/+.skip(3).count()", jnt(7))
         );
     }
 
@@ -373,11 +321,13 @@ public interface CommonRewritesTestContract {
                 Arguments.of("where: value <= 0 (none)", "*" + p + "/+.where([value=>?<=0]).count()", jnt(0)),
                 Arguments.of("where: value <= 1", "*" + p + "/+.where([value=>?<=1]).count()", jnt(1)),
                 Arguments.of("where: value <= 5", "*" + p + "/+.where([value=>?<=5]).count()", jnt(5)),
-                Arguments.of("where: value <= 10 (all)", "*" + p + "/+.where([value=>?<=10]).count()", jnt(10))
+                Arguments.of("where: value <= 10 (all)", "*" + p + "/+.where([value=>?<=10]).count()", jnt(10)),
 
                 // Boolean predicates - commented out: SQLite stores booleans as 0/1 integers
                 // Arguments.of("where: active = true",         "*" + p + "/+.where([active=>true]).count()",   jnt(5)),
-                // Arguments.of("where: active = false",        "*" + p + "/+.where([active=>false]).count()",  jnt(5))
+                // Arguments.of("where: active = false",        "*" + p + "/+.where([active=>false]).count()",  jnt(5)),
+                // @ (anchor) — where fires on AT source, then count chains
+                Arguments.of("where: @ value = 5", "@" + p + "/+.where([value=>5]).count()", jnt(1))
         );
     }
 
@@ -397,7 +347,9 @@ public interface CommonRewritesTestContract {
                 Arguments.of("where+count: value > 5", "*" + p + "/+.where([value=>?>5]).count()", jnt(5)),
                 Arguments.of("where+count: value > 9", "*" + p + "/+.where([value=>?>9]).count()", jnt(1)),
                 Arguments.of("where+count: value > 10", "*" + p + "/+.where([value=>?>10]).count()", jnt(0)),
-                Arguments.of("where+count: value < 3", "*" + p + "/+.where([value=>?<3]).count()", jnt(2))
+                Arguments.of("where+count: value < 3", "*" + p + "/+.where([value=>?<3]).count()", jnt(2)),
+                // @ (anchor) — where fires on AT source, then sql_where_count composes
+                Arguments.of("where+count: @ value > 5", "@" + p + "/+.where([value=>?>5]).count()", jnt(5))
                 // Arguments.of("where+count: active=true",     "*" + p + "/+.where([active=>true]).count()",   jnt(5))  // SQLite boolean issue
         );
     }
@@ -507,6 +459,44 @@ public interface CommonRewritesTestContract {
                 Arguments.of("order: by value take(5)", "*" + p + "/+.order(select(value)).take(5).count()", jnt(5)),
                 // order + where + take (order before where)
                 Arguments.of("order: by name take(1)", "*" + p + "/+.order(select(name)).take(1).count()", jnt(1))
+        );
+    }
+
+    // ========================================================================
+    // WHERE + ORDER COMBINED REWRITE TEST CASES
+    // ========================================================================
+
+    default Stream<Arguments> generateWhereOrderTestCases() {
+        final String p = getTestDataUriPrefix().toString();
+        return Stream.of(
+                // where+order — chain .count() to verify row count (order doesn't change it)
+                Arguments.of("where+order: >5 order by value count",
+                        "*" + p + "/+.where([value=>?>5]).order(select(value)).count()", jnt(5)),
+                Arguments.of("where+order: >3 order by name count",
+                        "*" + p + "/+.where([value=>?>3]).order(select(name)).count()", jnt(7)),
+                // @ (anchor) — verify VID stamping through composed rewrite
+                Arguments.of("where+order: @ >5 order by value count",
+                        "@" + p + "/+.where([value=>?>5]).order(select(value)).count()", jnt(5))
+        );
+    }
+
+    // ========================================================================
+    // WHERE + ORDER + OFFSET COMBINED REWRITE TEST CASES
+    // ========================================================================
+
+    default Stream<Arguments> generateWhereOrderOffsetTestCases() {
+        final String p = getTestDataUriPrefix().toString();
+        return Stream.of(
+                // where+order+offset — chain .count() to verify row count after skip
+                Arguments.of("where+order+offset: >3 order by value skip(2)",
+                        "*" + p + "/+.where([value=>?>3]).order(select(value)).skip(2).count()", jnt(5)),
+                Arguments.of("where+order+offset: >5 order by name skip(1)",
+                        "*" + p + "/+.where([value=>?>5]).order(select(name)).skip(1).count()", jnt(4)),
+                Arguments.of("where+order+offset: >3 order by value skip(10) past end",
+                        "*" + p + "/+.where([value=>?>3]).order(select(value)).skip(10).count()", jnt(0)),
+                // @ (anchor)
+                Arguments.of("where+order+offset: @ >3 order by value skip(2)",
+                        "@" + p + "/+.where([value=>?>3]).order(select(value)).skip(2).count()", jnt(5))
         );
     }
 
@@ -625,186 +615,6 @@ public interface CommonRewritesTestContract {
                 Arguments.of("compose: count.lt(large)", "*" + p + "/+.count().lt(100000000)", bool(true)),
                 Arguments.of("compose: where.count.lt(large)", "*" + p + "/+.where([value=>?>0]).count().lt(999999)", bool(true)),
                 Arguments.of("compose: sum.lt(large)", "*" + p + "/+>>value.sum().lt(100000000)", bool(true))
-        );
-    }
-
-    // ========================================================================
-    // PLAN VERIFICATION TEST CASES
-    // ========================================================================
-
-    /**
-     * Generates test cases that verify the rewritten execution plan contains native instructions.
-     * Use with runRewritePlanTest().
-     *
-     * @return Stream of (description, code, expected native instruction name)
-     */
-    /**
-     * Generates test cases that verify the rewritten execution plan contains native instructions.
-     * <p>
-     * NOTE: These tests are currently disabled because mParser.parse().rewrite() does not
-     * trigger space-specific rewrites. The rewrites are applied during actual evaluation
-     * when code is routed through a space.
-     *
-     * @return Empty stream (tests disabled)
-     */
-    default Stream<Arguments> generatePlanVerificationTestCases() {
-        // Plan verification tests disabled - parse().rewrite() doesn't trigger space-specific rewrites
-        // The rewrites are registered in tbleInstSet/dcmntInstSet and only apply during evaluation
-        return Stream.empty();
-    }
-
-    // ========================================================================
-    // REWRITE VERIFICATION TEST CASES
-    // ========================================================================
-
-    /**
-     * Generates test cases that verify the rewrite actually transformed the code.
-     * Uses {@link #runRewriteVerificationTest} which calls {@code resolve(noobj())}
-     * to trigger the full space-specific rewrite pipeline.
-     * <p>
-     * Each case specifies the native instruction name that MUST appear in the
-     * resolved plan, proving the rewriter fired (not an identity passthrough).
-     * <p>
-     * The prefix from {@link #getNativeInstructionPrefix()} is prepended to
-     * each native instruction name (e.g., "sql_" → "sql_count").
-     *
-     * @return Stream of (description, code, expected native instruction name)
-     */
-    default Stream<Arguments> generateRewriteVerificationTestCases() {
-        final String p = getTestDataUriPrefix().toString();
-        final String pre = getNativeInstructionPrefix();
-        return Stream.of(
-                // count rewrite
-                Arguments.of("verify: count rewrite fires", "*" + p + "/+.count()", pre + "count"),
-                // limit/take rewrite
-                Arguments.of("verify: limit rewrite fires", "*" + p + "/+.take(3)", pre + "limit"),
-                // where rewrite
-                Arguments.of("verify: where rewrite fires", "*" + p + "/+.where([value=>?>5])", pre + "where"),
-                // where+count composed rewrite
-                Arguments.of("verify: where+count rewrite fires", "*" + p + "/+.where([value=>?>5]).count()", pre + "where_count"),
-                // where+limit composed rewrite
-                Arguments.of("verify: where+limit rewrite fires", "*" + p + "/+.where([value=>?>3]).take(2)", pre + "where_limit"),
-                // skip/offset rewrite
-                Arguments.of("verify: skip rewrite fires", "*" + p + "/+.skip(3)", pre + "offset"),
-                // skip+limit composed rewrite
-                Arguments.of("verify: skip+limit rewrite fires", "*" + p + "/+.skip(3).take(2)", pre + "offset_limit"),
-                // where+offset composed rewrite
-                Arguments.of("verify: where+offset rewrite fires", "*" + p + "/+.where([value=>?>3]).skip(2)", pre + "where_offset"),
-                // where+offset+limit composed rewrite
-                Arguments.of("verify: where+offset+limit rewrite fires", "*" + p + "/+.where([value=>?>3]).skip(2).take(1)", pre + "where_offset_limit"),
-                // order rewrite
-                Arguments.of("verify: order rewrite fires", "*" + p + "/+.order(select(name))", pre + "order"),
-                // dedup/distinct rewrite
-                Arguments.of("verify: dedup rewrite fires", "*" + p + "/+.dedup(select(name))", pre + "distinct")
-        );
-    }
-
-    // ========================================================================
-    // REWRITE-INST SANITY TEST
-    // ========================================================================
-
-    /**
-     * Verifies that {@code Router.readFromSpace(getRewriteInstUri()).at("rewrite")}
-     * returns a non-empty list of {@code code{?}<=code()} rewrite instructions.
-     * Fails if the InstSet URI is non-null but the fetch returns nothing.
-     */
-    default void runRewriteInstSanityTest() throws Exception {
-        final fURI instUri = getRewriteInstUri();
-        if (instUri == null) return; // skip — backend doesn't support InstSet fetching
-        final Obj instSet = Router.readFromSpace(instUri).as();
-        assertFalse(instSet.isNoObj(), "there is no schema instset for the space and thus, no rewrites");
-        assertTrue(instSet.isInstSet(), "the schema of the space must be an instset");
-        final Obj rewritesObj = instSet.<InstSet>as().at(uri(REWRITE));
-        final boolean isLst = rewritesObj.isLst();
-        final boolean isObjs = rewritesObj.isObjs();
-        if (!isLst && !isObjs) {
-            System.err.printf("[WARN] %s — at('rewrite') returned %s (expected Lst or Objs)%n",
-                    instUri, rewritesObj.type());
-            return;
-        }
-        final java.util.List<Obj> rewrites = new java.util.ArrayList<>();
-        for (final Obj r : (Iterable<Obj>) rewritesObj) {
-            rewrites.add(r);
-        }
-        if (rewrites.isEmpty()) {
-            System.err.printf("[WARN] %s — at('rewrite') returned empty list%n", instUri);
-            return;
-        }
-        final boolean allCodeInsts = rewrites.stream().allMatch(r ->
-                r.isInst() && r.asInst().tid().toString().contains("code"));
-        if (!allCodeInsts) {
-            System.err.printf("[WARN] %s — not all rewrites are code{?}<=code insts:%n", instUri);
-            rewrites.forEach(r -> System.err.printf("       %s%n", r));
-        } else {
-            System.out.printf("[OK] %s — %d rewrite inst(s) fetched successfully%n", instUri, rewrites.size());
-        }
-    }
-
-    // ========================================================================
-    // AD-HOC REWRITE FIRING TEST CASES
-    // ========================================================================
-
-    /**
-     * Verifies whether a specific mtron expression triggers rewrite optimization.
-     * <p>
-     * {@code $$} in the code is replaced with {@link #getTestDataUriPrefix()}.
-     *
-     * @param description    Human-readable test description
-     * @param code           The mtron code to parse and rewrite ({@code $$} = prefix)
-     * @param nativeInstName The native instruction name to look for (prefix auto-prepended)
-     * @param shouldRewrite  true = plan SHOULD contain it, false = should NOT
-     */
-    default void runRewriteFiringTest(String description, String code, String nativeInstName, boolean shouldRewrite) throws Exception {
-        final String resolvedCode = code.replace("$$", getTestDataUriPrefix().toString());
-        final Code parsed = ObjmtronSerializer.parse(resolvedCode);
-        final Code rewritten = parsed.rewrite();
-        final String plan = rewritten.toString();
-        final boolean found = plan.contains(nativeInstName);
-        if (shouldRewrite && !found) {
-            // check for partial rewrite
-            final String partial = nativeInstName.contains("_")
-                    ? nativeInstName.substring(0, nativeInstName.lastIndexOf('_'))
-                    : nativeInstName;
-            if (!partial.equals(nativeInstName) && plan.contains(partial)) {
-                System.err.printf("[WARN] %s — partial rewrite: '%s' present but '%s' not fully composed in plan%n       code: %s%n       plan: %s%n",
-                        description, partial, nativeInstName, resolvedCode, plan);
-            } else {
-                fail(description + " — expected '" + nativeInstName + "' in rewritten plan but no rewrite detected: " + plan);
-            }
-        } else if (!shouldRewrite && found) {
-            fail(description + " — '" + nativeInstName + "' found in rewritten plan but should NOT have fired: " + plan);
-        }
-    }
-
-    /**
-     * Generates ad-hoc rewrite firing test cases.
-     * <p>
-     * Each case: {@code (description, code, nativeInstName, shouldRewrite)}.
-     * {@code $$} in the code string is substituted with {@link #getTestDataUriPrefix()}.
-     * <p>
-     * The default set contains backend-agnostic cases using the common
-     * {@code *$$/+.count()} / {@code *$$/+.take()} patterns.  Backends can
-     * override this method to add backend-specific cases (graph traversals,
-     * anchored mutations, schema short-circuits, etc.).
-     *
-     * @return Stream of (description, code, nativeInstName, shouldRewrite)
-     */
-    default Stream<Arguments> generateRewriteFiringTestCases() {
-        final String pre = getNativeInstructionPrefix();
-        return Stream.of(
-                // --- SHOULD rewrite: simple collection-level patterns ---
-                Arguments.of("firing: from().count() should rewrite", "*$$/+.count()", pre + "count", true),
-                Arguments.of("firing: from().take() should rewrite", "*$$/+.take(3)", pre + "limit", true),
-                Arguments.of("firing: from().where() should rewrite", "*$$/+.where([value=>?>5])", pre + "where", true),
-                Arguments.of("firing: from().where().count() should rewrite", "*$$/+.where([value=>?>5]).count()", pre + "where_count", true),
-                Arguments.of("firing: from().where().take() should rewrite", "*$$/+.where([value=>?>3]).take(2)", pre + "where_limit",
-                        true),
-                Arguments.of("firing: from().skip() should rewrite", "*$$/+.skip(3)", pre + "offset", true),
-                Arguments.of("firing: from().skip().take() should rewrite", "*$$/+.skip(3).take(2)", pre + "offset_limit", true),
-                Arguments.of("firing: from().where().skip() should rewrite", "*$$/+.where([value=>?>3]).skip(2)", pre + "where_offset", true),
-                Arguments.of("firing: from().where().skip().take() should rewrite", "*$$/+.where([value=>?>3]).skip(2).take(1)", pre + "where_offset_limit", true),
-                Arguments.of("firing: from().order() should rewrite", "*$$/+.order(select(name))", pre + "order", true),
-                Arguments.of("firing: from().dedup() should rewrite", "*$$/+.dedup(select(name))", pre + "distinct", true)
         );
     }
 
