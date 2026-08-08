@@ -459,28 +459,6 @@ public class llmInstSet extends AbstractInstSet {
                                 null, null, mutableMap(),
                                 "overlays an iteration graph on the message ledger — each chat turn creates a linked iteration node with prev/next pointers and message back-references",
                                 "iteration_feature::[]")),
-                       /* Type.Builder.build()
-                                .tid(LLM_FEATURE_TID)
-                                .vid(LLM_FEATURE_TID.extend("mail"))
-                                .constructor(instC(INST_CTOR_TID.rng(LLM_FEATURE_TID.extend("mail")),
-                                        lst(REC_TYPE), (lhs, inst) ->
-                                                new MailFeature(inst.arg(0).asRec().jvm(),
-                                                        LLM_FEATURE_TID.extend("mail"), inst.arg(0).vid())))
-                                .create()),*/
-                      /*  docWrap(Type.Builder.build().tid(REC_TID).vid(LLM_MODEL_TID).
-                                        isaPredicate(rec(
-                                                uri(PROVIDER), LLM_CATALOG_SPACE_TYPE,
-                                                uri(NAME), URI_TYPE,
-                                                uri(DESC).maybe(), STR_TYPE,
-                                                uri(COST).maybe(), rec(uri(IN), MATH_CURRENCY_TYPE, uri(OUT), MATH_CURRENCY_TYPE).maybe(),
-                                                uri(SIZE).maybe().asUri(), BYTE_TYPE,
-                                                uri(FEATURE).maybe(), LLM_FEATURE_TYPE)).create(),
-                                "a large language model", "the model construction", mutableMap(
-                                        uri(PROVIDER), "provider catalog containing llm model",
-                                        uri(NAME), "the model name from the host catalog",
-                                        uri(COST).maybe(), "the cost per million tokens to use this llm (in/out costs)",
-                                        uri(FEATURE).maybe(), "llm features can be moved or shared between multiple models"),
-                                "an mtron interface to a large language model")*/
                 uri(INST), lst(
                         docWrap(instC(AS_INST_TID.dom(REC_TID).rng(LLM_MODEL_TID),
                                         lst(LLM_MODEL_TYPE),

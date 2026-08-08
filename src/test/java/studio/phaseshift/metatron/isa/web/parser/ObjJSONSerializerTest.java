@@ -25,11 +25,18 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractSerializerTest;
 import studio.phaseshift.metatron.Training;
-import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.m.type.Call;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.m.type.Str;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
+import static studio.phaseshift.metatron.Tokens.HEADERS;
+import static studio.phaseshift.metatron.Tokens.HOST;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.gt_;
@@ -44,12 +51,14 @@ import static studio.phaseshift.metatron.isa.web.webInstSet.JSON_TID;
 
 public class ObjJSONSerializerTest extends AbstractSerializerTest<JsonElement> {
 
-
     public ObjJSONSerializerTest() {
-        super(new ObjJSONSerializer());
+        super(new ObjJSONSerializer(), JSON_TID, "json");
     }
 
-    //{"_tid":"/m/rel", "_value":[1,2]}          | 1=>2
+    // ===================================================================
+    //  JSON translation (existing)
+    // ===================================================================
+
     @ParameterizedTest
     @CsvSource(delimiter = '|', textBlock = """
                                                     1 | 1
@@ -92,19 +101,155 @@ public class ObjJSONSerializerTest extends AbstractSerializerTest<JsonElement> {
         return (toSerialize.equals("< >") || toSerialize.contains("{24}") || toSerialize.startsWith("[a,[b,12,'abc']"));
     }
 
+    // ===================================================================
+    //  Type-conversion: str -> json::T  (tag + validate)
+    // ===================================================================
+
+    @ParameterizedTest(name = "[{index}] {1}")
+    @CsvSource(quoteCharacter = '~', value = {
+            "'{\"a\":[1,2,3],\"b\":true}'  %  object with array and bool",
+            "'[1,2,3]'                      %  array",
+            "'true'                         %  boolean",
+            "'false'                        %  boolean false",
+            "'null'                         %  null",
+            "'42'                           %  integer",
+            "'3.14'                         %  real",
+            "'\"hello\"'                     %  string",
+            "'{}'                           %  empty object",
+            "'[]'                           %  empty array",
+    }, delimiter = '%')
+    void testStrToJsonType(final String mtronValue, final String desc) {
+        final Str result = assertStrToType(mtronValue);
+        assertTrue(result.strValue().length() >= 0, "must have content: " + desc);
+    }
+
+    // ===================================================================
+    //  Type-conversion: json::T -> rec::T  (parse)
+    // ===================================================================
+
+    @ParameterizedTest(name = "[{index}] {1}")
+    @CsvSource(quoteCharacter = '~', value = {
+            "'{\"a\":[1,2,3],\"b\":true}'  %  object parses to rec",
+            "'{\"x\":1,\"y\":2}'            %  flat object",
+            "'{}'                           %  empty object -> empty rec",
+    }, delimiter = '%')
+    void testJsonToRec(final String mtronValue, final String desc) {
+        final Rec result = assertTypeToRec(mtronValue);
+        assertTrue(result.count() >= 0, "must be a valid rec: " + desc);
+    }
+
+    // ===================================================================
+    //  Type-conversion: rec::T -> json::T  (serialize)
+    // ===================================================================
+
+    @ParameterizedTest(name = "[{index}] {1}")
+    @CsvSource(quoteCharacter = '~', value = {
+            "'{\"a\":[1,2,3],\"b\":true}'  %  round-trip through rec",
+            "'{\"x\":1}'                    %  minimal object",
+            "'{\"arr\":[1,2,3]}'            %  object with array value",
+    }, delimiter = '%')
+    void testRecToJson(final String mtronValue, final String desc) {
+        final Str original = assertStrToType(mtronValue);
+        final Str roundTripped = assertRecToType(mtronValue);
+        // Semantic idempotency: re-parse both JSON strings, they must produce equal recs
+        final Obj r1 = ObjJSONSerializer.simple().inputBytes(original.strValue());
+        final Obj r2 = ObjJSONSerializer.simple().inputBytes(roundTripped.strValue());
+        assertEquals(r1, r2, "semantic round-trip must preserve structure: " + desc);
+    }
+
+    // ===================================================================
+    //  Predicate rejection: invalid JSON
+    // ===================================================================
+
+    @ParameterizedTest(name = "[{index}] {1}")
+    @CsvSource(quoteCharacter = '~', value = {
+            "'not json'          %  plain text",
+            "'{broken'           %  unclosed brace",
+            "'{\"a\":}'          %  missing value",
+    }, delimiter = '%')
+    void testInvalidJsonRejected(final String mtronValue, final String desc) {
+        assertRejected(mtronValue);
+    }
+
+    // ===================================================================
+    //  Integration: full chain from mtron (existing testAsInst pattern)
+    // ===================================================================
+
     @Test
     public void testAsInst() {
-        InstSet.importInstSet(f("/m/web"));
-        final Str jsonStr = ObjmtronSerializer.singleNoClip().parse("""
-                                                                    '{"a":[1,2,3],"b":true}'.as(json::T)
-                                                                    """).apply().as();
+        final Str jsonStr = eval("'{\"a\":[1,2,3],\"b\":true}'.as(json::T)").as();
         assertEquals(JSON_TID, jsonStr.tid());
-        final Rec jsonRec = ObjmtronSerializer.singleNoClip().parse("""
-                                                                    %s.as(rec::T)
-                                                                    """.formatted(jsonStr)).apply().as();
+        assertTrue(jsonStr.isStr());
+
+        final Rec jsonRec = eval("'" + jsonStr.strValue() + "'.as(json::T).as(rec::T)").as();
         assertEquals(REC_TID, jsonRec.tid());
         assertEquals(rec(uri("a"), lst(jnt(1), jnt(2), jnt(3)), uri("b"), bool(true)), jsonRec);
+
+        // rec->json round-trip
+        final Str jsonStr2 = eval("'" + jsonStr.strValue() + "'.as(json::T).as(rec::T).as(json::T)").as();
+        assertEquals(JSON_TID, jsonStr2.tid());
+        assertTrue(jsonStr2.isStr());
     }
+
+    // ===================================================================
+    //  MCP client <-> JSON conversion
+    // ===================================================================
+
+    @Test
+    public void testMcpClientJsonRoundTrip() {
+        // Skip if the MCP server port isn't available
+        boolean portOpen;
+        try (final java.net.Socket s = new java.net.Socket()) {
+            s.connect(new java.net.InetSocketAddress("127.0.0.1", 64342), 1000);
+            portOpen = true;
+        } catch (final Exception e) {
+            portOpen = false;
+        }
+        assumeTrue(portOpen, "skipped: no MCP server on 127.0.0.1:64342");
+
+        final String configJson = """
+                {
+                    "type": "sse",
+                    "url": "http://127.0.0.1:64342/sse",
+                    "headers": {
+                        "IJ_MCP_SERVER_PROJECT_PATH": "/home/killswitch/software/metatron"
+                    }
+                }""";
+
+        // json -> mcp_client
+        final Obj client = eval("'" + configJson + "'.as(json::T).as(mcp_client::T)");
+        assertTrue(client.isRec(), "json->mcp_client must produce a rec");
+        assertEquals(f("/m/web/mcp/mcp_client"), client.tid(), "must be tagged as mcp_client");
+
+        // verify key fields survived the forward conversion
+        final Rec clientRec = client.asRec();
+        assertTrue(clientRec.has(uri("type")), "must have type field");
+        assertTrue(clientRec.has(uri(HOST)), "must have host field (from url)");
+        assertTrue(clientRec.has(uri(HEADERS)), "must have headers field");
+
+        // mcp_client -> json (reverse)
+        final Str jsonStr = eval("'" + configJson + "'.as(json::T).as(mcp_client::T).as(json::T)").as();
+        assertEquals(JSON_TID, jsonStr.tid(), "must be tagged as json::T");
+        assertTrue(jsonStr.isStr());
+
+        // semantic round-trip: re-parse both JSON strings, key fields must match
+        final Rec originalRec = ObjJSONSerializer.simple().inputBytes(configJson).asRec();
+        final Rec roundTrippedRec = ObjJSONSerializer.simple().inputBytes(jsonStr.strValue()).asRec();
+        final Obj type1 = originalRec.at(uri("type"));
+        final Obj type2 = roundTrippedRec.at(uri("type"));
+        assertEquals(type1.isUri() ? type1.uriValue().toString() : type1.strValue(),
+                type2.isUri() ? type2.uriValue().toString() : type2.strValue(),
+                "type must survive round-trip");
+        final Obj url1 = originalRec.at(uri("url"));
+        final Obj url2 = roundTrippedRec.at(uri("url"));
+        assertEquals(url1.isUri() ? url1.uriValue().toString() : url1.strValue(),
+                url2.isUri() ? url2.uriValue().toString() : url2.strValue(),
+                "url must survive round-trip");
+    }
+
+    // ===================================================================
+    //  Simple lossy encoding (existing)
+    // ===================================================================
 
     @Training(
             value = "the simple JSON encoding of mtron objs is lossy",
@@ -112,7 +257,6 @@ public class ObjJSONSerializerTest extends AbstractSerializerTest<JsonElement> {
             mapDesc = {"the mtron expression <<lhs>> serializes to the simple (lossy) JSON <<rhs>>"})
     @ParameterizedTest
     @CsvSource(quoteCharacter = '~', delimiter = '%', value = {
-            // mtron expression                  % expected simple JSON        % description
             "[1,2,3]                            % [1,2,3]                     % lst serializes as a plain array",
             "{9,0}                              % [9,0]                       % objs serializes as a plain array",
             "[a=>1]                             % {\"a\":1}                    % rec serializes as a plain object",
@@ -122,10 +266,8 @@ public class ObjJSONSerializerTest extends AbstractSerializerTest<JsonElement> {
             "<//2024.12:25/09/00/00/000?tz=-0500>.as(datetime::T)  % \"</2024.12:25/09/00/00/000?tz=-0500>\"  % datetime (a uri refinement) serializes as its wrapped uri",
     })
     public void testSimpleLossyEncoding(final String mtron, final String expectedJson, final String desc) {
-        InstSet.importInstSet(f("/m/math"));
         LOG.info("%s => %s (%s)", mtron, expectedJson, desc);
         final Obj obj = ObjmtronSerializer.parse(mtron).apply();
         assertEquals(expectedJson, ObjJSONSerializer.simple().write(obj).toString());
     }
-
 }

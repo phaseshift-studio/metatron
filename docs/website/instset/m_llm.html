@@ -463,8 +463,8 @@ bin/metatron</code></pre>
     <p class="mb-0 text-light">an agent is an llm enriched with embodied capabilities</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#name" class="text-light">name</a> <span class="text-light">=&gt;</span> <a href="#'a convenient name for the agent'" class="text-info">&#39;a convenient name for the agent&#39;</a>
-  <a href="#feature" class="text-light">feature</a> <span class="text-light">=&gt;</span> <a href="#'the ordered lst of capabilities attached to the agent'" class="text-info">&#39;the ordered lst of capabilities attached to the agent&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#feature" class="text-light">feature</a> <span class="text-light">=&gt;</span> <a href="#'the ordered lst of capabilities attached to the agent'" class="text-info">&#39;the ordered lst of capabilities attached to the agent&#39;</a>
+  <a href="#name" class="text-light">name</a> <span class="text-light">=&gt;</span> <a href="#'a convenient name for the agent'" class="text-info">&#39;a convenient name for the agent&#39;</a>
   <a href="#desc" class="text-light">desc</a> <span class="text-light">=&gt;</span> <a href="#'a description of the agent given to the agent in their system prompt'" class="text-info">&#39;a description of the agent given to the agent in their system prompt&#39;</a>
 </pre>
 </div>
@@ -477,7 +477,7 @@ bin/metatron</code></pre>
         <small class="text-muted code">/m/llm/message/ai</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">message::T[?[{?}text=&gt;str::T,{?}tool_requests=&gt;[tool_request::T]]]@/m/llm/message/ai</code></pre></div>
-    
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__message" class="code inherited-link">message::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}session=&gt;uri::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">an ai/assistant message</p>
 </div><div class="card-body py-2">
@@ -787,7 +787,7 @@ bin/metatron</code></pre>
         </span>
         <small class="text-muted code">/m/llm/message</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T@/m/llm/message</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[{?}session=&gt;uri::T]]@/m/llm/message</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">polymorphic chat message — one of system, user, ai, tool_result, or thinking; discriminated by _tid column</p>
@@ -814,13 +814,13 @@ bin/metatron</code></pre>
     <p class="mb-0 text-light">populate a model reference rec using data from the ai provider&#39;s http-endpoint</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#llm" class="text-light">llm</a> <span class="text-light">=&gt;</span> <a href="#'the name of a model offered by the ai provider'" class="text-info">&#39;the name of a model offered by the ai provider&#39;</a>
-  <a href="#host" class="text-light">host</a> <span class="text-light">=&gt;</span> <a href="#"the ai model provider's http rest endpoint"" class="text-info">&quot;the ai model provider&#39;s http rest endpoint&quot;</a>
-  <a href="#protocol" class="text-light">protocol</a> <span class="text-light">=&gt;</span> <a href="#'the http rest endpoint protocol (ollama, openai, anthropic)'" class="text-info">&#39;the http rest endpoint protocol (ollama, openai, anthropic)&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}cost" class="text-light">{?}cost</a> <span class="text-light">=&gt;</span> <a href="#'the cost per million tokens to use this llm (in__out costs)'" class="text-info">out costs)&#39;</a>
   <a href="#{?}size" class="text-light">{?}size</a> <span class="text-light">=&gt;</span> <a href="#'the size of the model'" class="text-info">&#39;the size of the model&#39;</a>
-  <a href="#{?}cost" class="text-light">{?}cost</a> <span class="text-light">=&gt;</span> <a href="#'the cost per million tokens to use this llm (in__out costs)'" class="text-info">out costs)&#39;</a>
-  <a href="#{?}provider" class="text-light">{?}provider</a> <span class="text-light">=&gt;</span> <a href="#'optional name of ai model provider'" class="text-info">&#39;optional name of ai model provider&#39;</a>
+  <a href="#protocol" class="text-light">protocol</a> <span class="text-light">=&gt;</span> <a href="#'the http rest endpoint protocol (ollama, openai, anthropic)'" class="text-info">&#39;the http rest endpoint protocol (ollama, openai, anthropic)&#39;</a>
+  <a href="#host" class="text-light">host</a> <span class="text-light">=&gt;</span> <a href="#"the ai model provider's http rest endpoint"" class="text-info">&quot;the ai model provider&#39;s http rest endpoint&quot;</a>
+  <a href="#llm" class="text-light">llm</a> <span class="text-light">=&gt;</span> <a href="#'the name of a model offered by the ai provider'" class="text-info">&#39;the name of a model offered by the ai provider&#39;</a>
   <a href="#{?}quant" class="text-light">{?}quant</a> <span class="text-light">=&gt;</span> <a href="#'the level of quantization of the model'" class="text-info">&#39;the level of quantization of the model&#39;</a>
+  <a href="#{?}provider" class="text-light">{?}provider</a> <span class="text-light">=&gt;</span> <a href="#'optional name of ai model provider'" class="text-info">&#39;optional name of ai model provider&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -964,7 +964,7 @@ bin/metatron</code></pre>
         <small class="text-muted code">/m/llm/message/system</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">message::T[?[text=&gt;str::T]]@/m/llm/message/system</code></pre></div>
-    
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__message" class="code inherited-link">message::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}session=&gt;uri::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a system message provides behavioral and response-style instructions to the model</p>
 </div><div class="card-body py-2">
@@ -1025,7 +1025,7 @@ bin/metatron</code></pre>
         <small class="text-muted code">/m/llm/message/thinking</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">message::T[?[text=&gt;str::T]]@/m/llm/message/thinking</code></pre></div>
-    
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__message" class="code inherited-link">message::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}session=&gt;uri::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a thinking/reasoning trace message — stored in the ledger but excluded from the LC4j chat window</p>
 </div><div class="card-body py-2">
@@ -1074,7 +1074,7 @@ bin/metatron</code></pre>
         <small class="text-muted code">/m/llm/message/tool_request</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">message::T[?[name=&gt;uri::T,{?}args=&gt;str::T,text=&gt;str::T,{?}contents=&gt;str::T]]@/m/llm/message/tool_request</code></pre></div>
-    
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__message" class="code inherited-link">message::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}session=&gt;uri::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a tool execution request — nested inside an ai message&#39;s tool_requests list</p>
 </div><div class="card-body py-2">
@@ -1094,7 +1094,7 @@ bin/metatron</code></pre>
         <small class="text-muted code">/m/llm/message/tool_result</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">message::T[?[name=&gt;uri::T,text=&gt;str::T,{?}id=&gt;str::T]]@/m/llm/message/tool_result</code></pre></div>
-    
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__message" class="code inherited-link">message::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}session=&gt;uri::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a tool execution result message</p>
 </div><div class="card-body py-2">
@@ -1113,7 +1113,7 @@ bin/metatron</code></pre>
         <small class="text-muted code">/m/llm/message/user</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">message::T[?[{?}name=&gt;str::T,{?}text=&gt;str::T,{?}contents=&gt;#{*}::T]]@/m/llm/message/user</code></pre></div>
-    
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__message" class="code inherited-link">message::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}session=&gt;uri::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a user message</p>
 </div><div class="card-body py-2">

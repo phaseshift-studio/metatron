@@ -28,10 +28,7 @@ import studio.phaseshift.metatron.isa.mach.type.ui.Border;
 import studio.phaseshift.metatron.isa.mach.type.ui.Widget;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Highlighter;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
@@ -68,6 +65,7 @@ public class PanelWidget extends JRec<PanelWidget> implements Widget<PanelWidget
     @JRecElement(key = "body", rng = "/m/str")
     private String body;
     private Style<PanelWidget> style = Style.empty();
+    private int maxWidth = 0;   // 0 = no word-wrap; >0 = max chars per body line
     private Cursor cursor;
 
     // ── JRec constructor ───────────────────────────────────────────
@@ -137,6 +135,12 @@ public class PanelWidget extends JRec<PanelWidget> implements Widget<PanelWidget
         return this;
     }
 
+    /** Set the maximum width for body lines. 0 = no wrapping. */
+    public PanelWidget maxWidth(final int w) {
+        this.maxWidth = w;
+        return this;
+    }
+
     // ── Widget contract ────────────────────────────────────────────
 
     @Override public PanelWidget cursor(final Cursor cursor) { this.cursor = cursor; return this; }
@@ -158,8 +162,20 @@ public class PanelWidget extends JRec<PanelWidget> implements Widget<PanelWidget
     @Override
     public String format() {
         this.sync();
-        final List<String> lines = Arrays.asList(
+        final List<String> rawLines = Arrays.asList(
                 (null != this.body ? this.body : "").replace("\\n", "\n").split("\\r?\\n", -1));
+
+        // Word-wrap if maxWidth is set
+        final List<String> lines;
+        if (this.maxWidth > 0) {
+            lines = new ArrayList<>();
+            for (final String raw : rawLines) {
+                lines.addAll(wrapLine(raw, this.maxWidth));
+            }
+        } else {
+            lines = rawLines;
+        }
+
         final int maxLen = Stream.concat(Stream.of(this.title).filter(Objects::nonNull), lines.stream())
                 .map(Highlighter::visualLength)
                 .max(Integer::compareTo).orElse(0);
@@ -184,6 +200,10 @@ public class PanelWidget extends JRec<PanelWidget> implements Widget<PanelWidget
             sb.append(this.style.border().bottomLeftCorner()).append(bottom)
                     .append(this.style.border().bottomRightCorner()).append("\n");
         return sb.toString();
+    }
+
+    private static List<String> wrapLine(final String line, final int maxW) {
+        return Utilities.wordWrap(line, maxW);
     }
 
     @Override public String toString() { return this.format(); }

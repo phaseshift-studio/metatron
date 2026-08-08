@@ -261,9 +261,7 @@ public class httpSpace extends AbstractSpace<HttpServer> {
         return (pattern) -> {
             // Normalize bare host URLs (http://host → http://host/) so route
             // matching and Jsoup fetch behave identically with or without trailing slash.
-            final fURI pat = (pattern.segmentLength() == 0) && pattern.hasHost()
-                    ? pattern.asBranch() : pattern;
-
+            final fURI pat = (pattern.segmentLength() == 0) && pattern.hasHost() ? pattern.asBranch() : pattern;
             // 1 — Try local route table first
             try {
                 final fURI route = Space.Helper.routeFromSpace(pat.scheme(null).host(null), this.routes());
@@ -280,8 +278,7 @@ public class httpSpace extends AbstractSpace<HttpServer> {
                 fURI runningPattern = pat;
                 int steps = 0;
                 while (true) {
-                    final Connection.Response response = Jsoup.connect(runningPattern.toString())
-                            .ignoreContentType(true).ignoreHttpErrors(true).execute();
+                    final Connection.Response response = Jsoup.connect(runningPattern.toString()).ignoreContentType(true).ignoreHttpErrors(true).execute();
                     if (response.statusCode() == 404) {
                         if (runningPattern.segmentLength() == 0)
                             return IteratorUtil.of();

@@ -23,7 +23,7 @@ import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 
 public class ObjmtronSerializerTest extends AbstractSerializerTest<String> {
     public ObjmtronSerializerTest() {
-        super(new ObjmtronSerializer());
+        super(new ObjmtronSerializer(), null, null);
     }
 }
 

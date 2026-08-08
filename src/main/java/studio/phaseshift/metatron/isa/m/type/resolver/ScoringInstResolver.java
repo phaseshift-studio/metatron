@@ -88,7 +88,9 @@ public class ScoringInstResolver implements InstResolver {
             }
         }
         if (userInst.tid().big().test(AS_INST_TID)) {
-            final List<Obj> result = Router.readFromSpace(AS_INST_TID.dom(lhs.tid()).rng(Obj.Helper.specificTypeId(userInst.arg(0)))).stream().toList();
+            final List<Obj> result = Router.readFromSpace(AS_INST_TID
+                    .dom(Obj.Helper.specificTypeId(lhs))
+                    .rng(Obj.Helper.specificTypeId(userInst.arg(0)))).stream().toList();
             if (!result.isEmpty()) {
                 userInst.logger().debug("fast as() resolution: %s", result);
                 return result.getFirst().as();

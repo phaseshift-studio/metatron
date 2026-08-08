@@ -243,9 +243,6 @@ public class MIME {
             final Obj obj = Optional.ofNullable(this.serializer())
                     .map(s -> s.inputBytes(ByteBuffer.wrap(data)))
                     .orElseThrow(() -> MTronException.of("no serializer for %s", this.value));
-            if (this.isHtml()) return obj.as(HTML_TYPE);
-            //if(this.isJson()) return obj.as(JSON_TYPE); // TODO: need test cases
-            //if(this.isBinary()) return obj.as(BYTES_TYPE);
             return obj;
         }
 
