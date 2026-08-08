@@ -312,9 +312,9 @@ bin/metatron</code></pre>
                         <pre><code>instset::[
  pattern=&gt;/m/grph/#,
  q=&gt;[docq::[
+ pattern=&gt;docq,
  pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
  pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
- pattern=&gt;docq,
  obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
  inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
  space=&gt;[super=&gt;!*/m],
@@ -500,7 +500,7 @@ bin/metatron</code></pre>
     <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[?[
   {?}schema=&gt;instset::T,
   {?}config=&gt;rec::T]][ctor?grphspace&lt;=#{?}(rec::T)]@/m/grph/space/grphspace</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m.html#__m__space" class="code inherited-link">space::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[pattern=&gt;uri::T,{?}q=&gt;[qproc::T],{?}route=&gt;[uri::T=&gt;uri::T],{?}schema=&gt;instset::T]</code></div></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m.html#__m__space" class="code inherited-link">space::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[pattern=&gt;uri::T,{?}q=&gt;[qproc{?}::T],{?}route=&gt;[uri{?}::T=&gt;uri::T],{?}schema=&gt;instset::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a space for graph traversal</p>
 </div>

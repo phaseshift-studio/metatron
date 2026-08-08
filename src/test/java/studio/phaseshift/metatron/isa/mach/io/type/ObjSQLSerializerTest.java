@@ -18,23 +18,23 @@
 
 package studio.phaseshift.metatron.isa.mach.io.type;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.TypeCheck;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
-import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.m.type.InstSet;
+import studio.phaseshift.metatron.isa.m.type.Lst;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.mach.type.LogObj;
 import studio.phaseshift.metatron.isa.tble.space.ExistingTableSchema.ColumnMetadata;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.LOGG;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.math.mathInstSet.DATETIME_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
@@ -56,6 +56,7 @@ public class ObjSQLSerializerTest {
         BootLoader.BOOTING = true;
         BootLoader.TESTING = true;
         BootLoader.load(rec(uri(LOGG), uri(LogObj.getSLF4J().toString().toLowerCase())));
+        InstSet.importInstSet(f("/m/math"));
     }
 
     @AfterAll
@@ -150,6 +151,39 @@ public class ObjSQLSerializerTest {
             final Obj mem = rec.at(studio.phaseshift.metatron.isa.m.type.impl.MUri.uri("mem"));
             assertTrue(mem.isLst());
             assertEquals(3L, mem.asLst().count());
+        }
+
+        @Test
+        @DisplayName("ISO datetime string is parsed back to datetime::T")
+        void testDatetimeISO() {
+            // ISO-8601 string → datetime::T (the actual database round-trip)
+            final Obj result = ObjSQLSerializer.readMaybeJSON("2026-08-07 18:42:12.889");
+            assertTrue(result.isUri(), "expected Uri, got " + result.getClass().getSimpleName());
+            assertTrue(result.test(DATETIME_TYPE),
+                    "expected datetime::T, got " + result.tid());
+        }
+
+        @Test
+        @DisplayName("legacy // datetime URI is parsed back to datetime::T")
+        void testDatetimeLegacyURI() {
+            final Obj result = ObjSQLSerializer.readMaybeJSON(
+                    "//2026.08:7/18/42/12/889?tz=0000");
+            assertTrue(result.isUri(), "expected Uri, got " + result.getClass().getSimpleName());
+        }
+
+        @Test
+        @DisplayName("non-datetime // string returns as plain Str")
+        void testNonDatetimeDoubleSlash() {
+            // "//not.a.datetime" starts with // but isn't a valid datetime URI
+            final Obj result = ObjSQLSerializer.readMaybeJSON("//not.a.datetime");
+            assertTrue(result.isStr(), "expected Str, got " + result.getClass().getSimpleName());
+        }
+
+        @Test
+        @DisplayName("blank datetime URI string returns as Str")
+        void testBlankDatetime() {
+            final Obj result = ObjSQLSerializer.readMaybeJSON("  ");
+            assertTrue(result.isStr());
         }
     }
 

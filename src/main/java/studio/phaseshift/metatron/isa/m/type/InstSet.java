@@ -149,7 +149,7 @@ public interface InstSet extends Space {
         });
     }
 
-    static void importInstSet(final fURI vid) {
+    public static void importInstSet(final fURI vid) {
         importInstSet(vid, null);
     }
 }

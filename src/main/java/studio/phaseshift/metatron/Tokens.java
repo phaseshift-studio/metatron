@@ -61,6 +61,7 @@ public final class Tokens {
     public static final String BLOCK = "block";
     public static final String AI = "ai";
     public static final String TIME = "time";
+    public static final String HASH = "hash";
     public static final String POSTGRESQL = "postgresql";
     public static final String ENTRY = "entry";
     public static final String RAG = "rag";

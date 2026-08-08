@@ -278,14 +278,7 @@ public class llmInstSet extends AbstractInstSet {
                         docWrap(LLM_MESSAGE_TYPE = Type.Builder.build()
                                         .tid(REC_TID)
                                         .vid(MESSAGE_TID)
-                                        //.predicate(id_().tryToInst())
-                                        /*.predicate(tid_().is_(or_(
-                                                eq_(uri(SYSTEM_MESSAGE_TID)),
-                                                eq_(uri(USER_MESSAGE_TID)),
-                                                eq_(uri(AI_MESSAGE_TID)),
-                                                eq_(uri(TOOL_RESULT_MESSAGE_TID)),
-                                                eq_(uri(THINKING_MESSAGE_TID))*/
-                                        //  )).tryToInst())
+                                        .isaPredicate(rec(uri(SESSION).maybe().asUri(), URI_TYPE))
                                         .create(),
                                 null, null,
                                 mutableMap(),
@@ -384,11 +377,6 @@ public class llmInstSet extends AbstractInstSet {
                                 .tid(LLM_FEATURE_TID)
                                 .vid(LLM_RECALL_FEATURE_TID)
                                 .constructor(arg -> createStageLambdas(new SimilarityRecallFeature(arg.asRec().jvm(), LLM_RECALL_FEATURE_TID, arg.vid())))
-                                .create(),
-                        Type.Builder.build()
-                                .tid(LLM_FEATURE_TID)
-                                .vid(LLM_NOTE_FEATURE_TID)
-                                .constructor(arg -> createStageLambdas(new NoteFeature(arg.asRec().jvm(), LLM_NOTE_FEATURE_TID, arg.vid())))
                                 .create(),
                         docWrap(Type.Builder.build()
                                         .tid(LLM_FEATURE_TID)

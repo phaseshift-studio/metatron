@@ -312,9 +312,9 @@ bin/metatron</code></pre>
                         <pre><code>instset::[
  pattern=&gt;/m/math/#,
  q=&gt;[docq::[
+ pattern=&gt;docq,
  pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
  pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
- pattern=&gt;docq,
  obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
  inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
  space=&gt;[super=&gt;!*/m],
@@ -470,8 +470,8 @@ bin/metatron</code></pre>
         </span>
         <small class="text-muted code">/m/math/data/bB</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">data::T[][ctor?bB&lt;=#{?}(data::T)]@/m/math/data/bB</code></pre></div>
-    
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">data::T[][ctor?bB&lt;=#{?}(#{*}::T)]@/m/math/data/bB</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__math__data" class="code inherited-link">data::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">id()</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a byte of data</p>
 </div>
@@ -496,7 +496,7 @@ bin/metatron</code></pre>
         </span>
         <small class="text-muted code">/m/math/data</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">real::T@/m/math/data</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">real::T[id()]@/m/math/data</code></pre></div>
     
     
 </div><div class="card mb-3" id="__m__math__datetime">
@@ -507,7 +507,7 @@ bin/metatron</code></pre>
         </span>
         <small class="text-muted code">/m/math/datetime</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(uri::T){&lt;j&gt;}]@/m/math/datetime</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(#{*}::T){&lt;j&gt;}]@/m/math/datetime</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a datetime as uri: //yyyy.MM:dd/HH/mm/ss/SSS?tz=+-HHmm</p>
@@ -533,8 +533,8 @@ bin/metatron</code></pre>
         </span>
         <small class="text-muted code">/m/math/data/gB</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">data::T[][ctor?gB&lt;=#{?}(data::T)]@/m/math/data/gB</code></pre></div>
-    
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">data::T[][ctor?gB&lt;=#{?}(#{*}::T)]@/m/math/data/gB</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__math__data" class="code inherited-link">data::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">id()</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a gigabyte (1024 megabytes) of data</p>
 </div>
@@ -546,7 +546,7 @@ bin/metatron</code></pre>
         </span>
         <small class="text-muted code">/m/math/time/hour</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/math/time::T[][ctor?hour&lt;=#{?}(time::T)]@/m/math/time/hour</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/math/time::T[][ctor?hour&lt;=#{?}(#{*}::T)]@/m/math/time/hour</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">an hour of time (60 minutes)</p>
@@ -559,8 +559,8 @@ bin/metatron</code></pre>
         </span>
         <small class="text-muted code">/m/math/data/kB</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">data::T[][ctor?kB&lt;=#{?}(data::T)]@/m/math/data/kB</code></pre></div>
-    
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">data::T[][ctor?kB&lt;=#{?}(#{*}::T)]@/m/math/data/kB</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__math__data" class="code inherited-link">data::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">id()</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a kilobyte (1024 bytes) of data</p>
 </div>
@@ -572,8 +572,8 @@ bin/metatron</code></pre>
         </span>
         <small class="text-muted code">/m/math/data/mB</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">data::T[][ctor?mB&lt;=#{?}(data::T)]@/m/math/data/mB</code></pre></div>
-    
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">data::T[][ctor?mB&lt;=#{?}(#{*}::T)]@/m/math/data/mB</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__math__data" class="code inherited-link">data::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">id()</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a megabyte (1024 kilobytes) of data</p>
 </div>
@@ -585,7 +585,7 @@ bin/metatron</code></pre>
         </span>
         <small class="text-muted code">/m/math/time/millis</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/math/time::T[][ctor?millis&lt;=#{?}(time::T)]@/m/math/time/millis</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/math/time::T[][ctor?millis&lt;=#{?}(#{*}::T)]@/m/math/time/millis</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a millisecond of time</p>
@@ -598,7 +598,7 @@ bin/metatron</code></pre>
         </span>
         <small class="text-muted code">/m/math/time/minute</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/math/time::T[][ctor?minute&lt;=#{?}(time::T)]@/m/math/time/minute</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/math/time::T[][ctor?minute&lt;=#{?}(#{*}::T)]@/m/math/time/minute</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a minute of time (60 seconds)</p>
@@ -611,8 +611,8 @@ bin/metatron</code></pre>
         </span>
         <small class="text-muted code">/m/math/data/pB</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">data::T[][ctor?pB&lt;=#{?}(data::T)]@/m/math/data/pB</code></pre></div>
-    
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">data::T[][ctor?pB&lt;=#{?}(#{*}::T)]@/m/math/data/pB</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__math__data" class="code inherited-link">data::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">id()</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a petabyte (1024 terabytes) of data</p>
 </div>
@@ -624,7 +624,7 @@ bin/metatron</code></pre>
         </span>
         <small class="text-muted code">/m/math/time/second</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/math/time::T[][ctor?second&lt;=#{?}(time::T)]@/m/math/time/second</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/math/time::T[][ctor?second&lt;=#{?}(#{*}::T)]@/m/math/time/second</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a second of time (1000 millis)</p>
@@ -637,8 +637,8 @@ bin/metatron</code></pre>
         </span>
         <small class="text-muted code">/m/math/data/tB</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">data::T[][ctor?tB&lt;=#{?}(data::T)]@/m/math/data/tB</code></pre></div>
-    
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">data::T[][ctor?tB&lt;=#{?}(#{*}::T)]@/m/math/data/tB</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__math__data" class="code inherited-link">data::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">id()</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a terabyte (1024 gigabytes) of data</p>
 </div>

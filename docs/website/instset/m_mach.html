@@ -312,9 +312,9 @@ bin/metatron</code></pre>
                         <pre><code>instset::[
  pattern=&gt;/m/mach/#,
  q=&gt;[docq::[
+ pattern=&gt;docq,
  pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
  pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
- pattern=&gt;docq,
  obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
  inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
  space=&gt;[super=&gt;!*/m],
@@ -428,8 +428,8 @@ bin/metatron</code></pre>
         </span>
         <small class="text-muted code">/m/mach/clstrspace</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">space::T[?[{?}peer=&gt;{?}[uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(uri::T){&lt;j&gt;}]@/m/uri/authority=&gt;#::T]]][ctor?clstrspace&lt;=#{?}(space::T)]@/m/mach/clstrspace</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m.html#__m__space" class="code inherited-link">space::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[pattern=&gt;uri::T,{?}q=&gt;[qproc::T],{?}route=&gt;[uri::T=&gt;uri::T],{?}schema=&gt;instset::T]</code></div></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">space::T[?[{?}peer=&gt;{?}[uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(#{*}::T){&lt;j&gt;}]@/m/uri/authority=&gt;#::T]]][ctor?clstrspace&lt;=#{?}(#{*}::T)]@/m/mach/clstrspace</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m.html#__m__space" class="code inherited-link">space::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[pattern=&gt;uri::T,{?}q=&gt;[qproc{?}::T],{?}route=&gt;[uri{?}::T=&gt;uri::T],{?}schema=&gt;instset::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a peer is a wsclient to a mtron_ws handler.
 *x and x-&gt;y are the respective read/write insts sent to the peer for evaluation.
@@ -459,10 +459,10 @@ bin/metatron</code></pre>
     <p class="mb-0 text-light">run a concurrent core thread</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}loop" class="text-light">{?}loop</a> <span class="text-light">=&gt;</span> <a href="#'delay to repeat code evaluation (default is evaluate once)'" class="text-info">&#39;delay to repeat code evaluation (default is evaluate once)&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}state" class="text-light">{?}state</a> <span class="text-light">=&gt;</span> <a href="#'current state of the thread'" class="text-info">&#39;current state of the thread&#39;</a>
+  <a href="#{?}loop" class="text-light">{?}loop</a> <span class="text-light">=&gt;</span> <a href="#'delay to repeat code evaluation (default is evaluate once)'" class="text-info">&#39;delay to repeat code evaluation (default is evaluate once)&#39;</a>
   <a href="#code" class="text-light">code</a> <span class="text-light">=&gt;</span> <a href="#'the code the thread will execute'" class="text-info">&#39;the code the thread will execute&#39;</a>
   <a href="#{?}result" class="text-light">{?}result</a> <span class="text-light">=&gt;</span> <a href="#'the last result produced by the thread'" class="text-info">&#39;the last result produced by the thread&#39;</a>
-  <a href="#{?}state" class="text-light">{?}state</a> <span class="text-light">=&gt;</span> <a href="#'current state of the thread'" class="text-info">&#39;current state of the thread&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -559,7 +559,7 @@ bin/metatron</code></pre>
         </span>
         <small class="text-muted code">/m/mach/machine/swarm</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">machine::T[?[code=&gt;#::T]][ctor?swarm&lt;=#{?}(machine::T)]@/m/mach/machine/swarm</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">machine::T[?[code=&gt;#::T]][ctor?swarm&lt;=#{?}(#{*}::T)]@/m/mach/machine/swarm</code></pre></div>
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__thread" class="code inherited-link">thread::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
  code=&gt;#::T,
  {?}source=&gt;uri::T,
@@ -627,10 +627,10 @@ the objs referenced by the monads that halt are the result of the machine execut
     <p class="mb-0 text-light">run a concurrent virtual thread</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}loop" class="text-light">{?}loop</a> <span class="text-light">=&gt;</span> <a href="#'delay to repeat code evaluation (default is evaluate once)'" class="text-info">&#39;delay to repeat code evaluation (default is evaluate once)&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}state" class="text-light">{?}state</a> <span class="text-light">=&gt;</span> <a href="#'current state of the thread'" class="text-info">&#39;current state of the thread&#39;</a>
+  <a href="#{?}loop" class="text-light">{?}loop</a> <span class="text-light">=&gt;</span> <a href="#'delay to repeat code evaluation (default is evaluate once)'" class="text-info">&#39;delay to repeat code evaluation (default is evaluate once)&#39;</a>
   <a href="#code" class="text-light">code</a> <span class="text-light">=&gt;</span> <a href="#'the code the thread will execute'" class="text-info">&#39;the code the thread will execute&#39;</a>
   <a href="#{?}result" class="text-light">{?}result</a> <span class="text-light">=&gt;</span> <a href="#'the last result produced by the thread'" class="text-info">&#39;the last result produced by the thread&#39;</a>
-  <a href="#{?}state" class="text-light">{?}state</a> <span class="text-light">=&gt;</span> <a href="#'current state of the thread'" class="text-info">&#39;current state of the thread&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -645,7 +645,7 @@ the objs referenced by the monads that halt are the result of the machine execut
         <small class="text-muted code">/m/mach/space/fsspace</small>
     </div>
     <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[?[pattern=&gt;uri::T,route=&gt;[uri::T=&gt;uri::T],{?}script=&gt;[uri::T=&gt;uri::T]]][inst?fsspace&lt;=#{?}(rec::T)]@/m/mach/space/fsspace</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m.html#__m__space" class="code inherited-link">space::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[pattern=&gt;uri::T,{?}q=&gt;[qproc::T],{?}route=&gt;[uri::T=&gt;uri::T],{?}schema=&gt;instset::T]</code></div></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m.html#__m__space" class="code inherited-link">space::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[pattern=&gt;uri::T,{?}q=&gt;[qproc{?}::T],{?}route=&gt;[uri{?}::T=&gt;uri::T],{?}schema=&gt;instset::T]</code></div></div>
     
 </div><div class="card mb-3" id="__m__mach__space__serial">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -653,7 +653,7 @@ the objs referenced by the monads that halt are the result of the machine execut
         <small class="text-muted code">/m/mach/space/serial</small>
     </div>
     <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[][inst?serial&lt;=#{?}(?[pattern=&gt;uri::T,route=&gt;rec::T])]@/m/mach/space/serial</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m.html#__m__space" class="code inherited-link">space::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[pattern=&gt;uri::T,{?}q=&gt;[qproc::T],{?}route=&gt;[uri::T=&gt;uri::T],{?}schema=&gt;instset::T]</code></div></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m.html#__m__space" class="code inherited-link">space::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[pattern=&gt;uri::T,{?}q=&gt;[qproc{?}::T],{?}route=&gt;[uri{?}::T=&gt;uri::T],{?}schema=&gt;instset::T]</code></div></div>
     
 </div>
 </div><div class="container-xxl mb-4" id="instructions">

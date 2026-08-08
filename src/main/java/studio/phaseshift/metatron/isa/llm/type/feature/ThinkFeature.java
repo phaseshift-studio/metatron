@@ -19,24 +19,23 @@
 package studio.phaseshift.metatron.isa.llm.type.feature;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.llm.space.SpaceChatSessionStore;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
-import studio.phaseshift.metatron.isa.m.parser.mFluent;
+import studio.phaseshift.metatron.isa.m.math.mathInstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Str;
-import studio.phaseshift.metatron.isa.m.type.impl.MUri;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.INCRQ;
-import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.THINKING_MESSAGE_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -67,16 +66,14 @@ public class ThinkFeature extends AbstractFeature {
         if (!this.thinkDone.getAndSet(true)) {
             this.buffer.append("\n\n");
             agent.feature(THINK).asRec().at(f(THINK).extend(TO)).apply(str(this.buffer.toString()));
-            // storage of thoughts
-            final SessionFeature sessionFeature = agent.feature(SESSION).as();
-            final SpaceChatSessionStore store = sessionFeature.store();
-            final Set<fURI> messageVIDs = store.getCurrentMessages();
-            final Rec thought = rec(
-                    THINK, str(this.full.toString().trim()),
-                    MESSAGE, objs(messageVIDs.stream().map(MUri::uri).map(mFluent.StartLess::auto_from_).map(u -> (Obj) u).toList()));
+            final fURI thinkWriteURI = agent.feature(THINK).asRec().at(ROOT).orElse(agent.at(ROOT).uriValue().extend(THINK).toUri()).uriValue().extend("_").addQ(INCRQ);
+            final Rec thought = rec(mutableMap(uri(TEXT), str(this.full.toString().trim())), THINKING_MESSAGE_TID, null);
+            thought.recValue().put(uri(TIME), mathInstSet.nowDatetime());
+            thought.recValue().put(uri(SESSION), agent.feature(SESSION).asRec().at(SESSION));
             this.buffer = new StringBuilder();
             this.full = new StringBuilder();
-            Router.writeToSpace(agent.at(ROOT).uriValue().extend(THINK).extend("_").addQ(INCRQ), thought);
+            LOG.info("writing thought to %s", thinkWriteURI);
+            Router.writeToSpace(thinkWriteURI, thought);
         }
     }
 }

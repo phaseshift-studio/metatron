@@ -837,6 +837,16 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
         return Types.VARCHAR;
     }
 
+    private static String sqlTypeName(final int jdbcType) {
+        return switch (jdbcType) {
+            case Types.BOOLEAN -> "BOOLEAN";
+            case Types.INTEGER -> "INTEGER";
+            case Types.REAL -> "REAL";
+            case Types.TIMESTAMP -> "TIMESTAMP";
+            default -> "TEXT";
+        };
+    }
+
     private int writeField(final Connection conn, final TableMetadata metadata, final String rowId,
                            final String fieldName, final Obj value) throws SQLException {
         final ColumnMetadata column = metadata.columns.stream()
@@ -1019,21 +1029,8 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
      */
     private ColumnMetadata addColumnOnTheFly(final Connection conn, final TableMetadata metadata,
                                              final String columnName, final Obj value) throws SQLException {
-        final String sqlType;
-        final int jdbcType;
-        if (value.isBool()) {
-            sqlType = "BOOLEAN";
-            jdbcType = Types.BOOLEAN;
-        } else if (value.isInt()) {
-            sqlType = "INTEGER";
-            jdbcType = Types.INTEGER;
-        } else if (value.isReal()) {
-            sqlType = "REAL";
-            jdbcType = Types.REAL;
-        } else {
-            sqlType = "TEXT";
-            jdbcType = Types.VARCHAR;
-        }
+        final int jdbcType = sqlTypeForMono(value);
+        final String sqlType = sqlTypeName(jdbcType);
 
         final String ddl = String.format("ALTER TABLE %s ADD COLUMN %s %s",
                 q(metadata.tableName), q(columnName), sqlType);
@@ -1131,7 +1128,8 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
                 final Obj value = pair.get0();
                 final ColumnMetadata column = pair.get1();
                 validateColumnWrite(value, column, metadata.tableName);
-                final int sqlType = value.isPoly() ? Types.VARCHAR : column.sqlType;
+                final int sqlType = (!value.isPoly() && !value.isNoObj() && column.sqlType == Types.VARCHAR)
+                        ? sqlTypeForMono(value) : column.sqlType;
                 writeParameter(stmt, i + 1, value, sqlType);
             }
             final int inserted = stmt.executeUpdate();
@@ -1207,7 +1205,8 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
                 final Obj value = pair.get0();
                 final ColumnMetadata column = pair.get1();
                 validateColumnWrite(value, column, metadata.tableName);
-                final int sqlType = value.isPoly() ? Types.VARCHAR : column.sqlType;
+                final int sqlType = (!value.isPoly() && !value.isNoObj() && column.sqlType == Types.VARCHAR)
+                        ? sqlTypeForMono(value) : column.sqlType;
                 writeParameter(stmt, i + 1, value, sqlType);
             }
             stmt.executeUpdate();
@@ -1502,12 +1501,8 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
             if (val.isAutoFrom()) {
                 ddl.append(q(colName)).append(" INTEGER");
             } else {
-                final String sqlType;
-                if (val.isBool()) sqlType = "BOOLEAN";
-                else if (val.isInt()) sqlType = "INTEGER";
-                else if (val.isReal()) sqlType = "REAL";
-                else sqlType = "TEXT";
-                ddl.append(q(colName)).append(" ").append(sqlType);
+                final int jdbcType = sqlTypeForMono(val);
+                ddl.append(q(colName)).append(" ").append(sqlTypeName(jdbcType));
                 if ("id".equalsIgnoreCase(colName)) {
                     ddl.append(" PRIMARY KEY");
                 }

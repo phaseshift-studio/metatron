@@ -310,9 +310,9 @@ bin/metatron</code></pre>
                     aria-labelledby="flush-headingOne" data-bs-parent="#accordionInstSet">
                     <div class="accordion-body">
                         <pre><code>instset::[pattern=&gt;/m/iot/#,q=&gt;[docq::[
+ pattern=&gt;docq,
  pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
  pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
- pattern=&gt;docq,
  obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
  inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],space=&gt;[super=&gt;!*/m],type=&gt;[
  mqttspace::T,
@@ -354,7 +354,7 @@ bin/metatron</code></pre>
         <small class="text-muted code">/m/iot/haos/space/haos</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">mqttspace::T[][inst(?[pattern=&gt;uri::T])]@/m/iot/haos/space/haos</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__iot__space__mqttspace" class="code inherited-link">mqttspace::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[host=&gt;uri::T]</code></div><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m.html#__m__space" class="code inherited-link">space::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[pattern=&gt;uri::T,{?}q=&gt;[qproc::T],{?}route=&gt;[uri::T=&gt;uri::T],{?}schema=&gt;instset::T]</code></div></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__iot__space__mqttspace" class="code inherited-link">mqttspace::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[host=&gt;uri::T]</code></div><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m.html#__m__space" class="code inherited-link">space::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[pattern=&gt;uri::T,{?}q=&gt;[qproc{?}::T],{?}route=&gt;[uri{?}::T=&gt;uri::T],{?}schema=&gt;instset::T]</code></div></div>
     
 </div>
 </div><div class="container-xxl mb-4" id="spaces">
@@ -365,7 +365,7 @@ bin/metatron</code></pre>
         <small class="text-muted code">/m/iot/space/mqttspace</small>
     </div>
     <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[?[host=&gt;uri::T]][inst?mqttspace&lt;=#{?}(rec::T)]@/m/iot/space/mqttspace</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m.html#__m__space" class="code inherited-link">space::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[pattern=&gt;uri::T,{?}q=&gt;[qproc::T],{?}route=&gt;[uri::T=&gt;uri::T],{?}schema=&gt;instset::T]</code></div></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m.html#__m__space" class="code inherited-link">space::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[pattern=&gt;uri::T,{?}q=&gt;[qproc{?}::T],{?}route=&gt;[uri{?}::T=&gt;uri::T],{?}schema=&gt;instset::T]</code></div></div>
     
 </div>
 </div><div class="container-xxl py-3 text-center">

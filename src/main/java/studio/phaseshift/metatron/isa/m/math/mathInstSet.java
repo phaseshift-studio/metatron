@@ -301,7 +301,7 @@ public class mathInstSet extends AbstractInstSet {
     /**
      * Build a datetime URI from components.
      */
-    private static Uri buildDatetimeUri(final ZonedDateTime zdt) {
+    public static Uri buildDatetimeUri(final ZonedDateTime zdt) {
         String tz = zdt.getOffset().getId().replace(":", "");
         if ("Z".equals(tz)) tz = "+0000";
         return buildDatetimeUri(zdt.getYear(), zdt.getMonthValue(), zdt.getDayOfMonth(),
