@@ -13,14 +13,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Setup OpenJDK 24
+      - name: Setup OpenJDK 26
         uses: actions/setup-java@v4
         with:
-          java-version: '24'
+          java-version: '26'
           distribution: 'oracle'
           cache: maven
       - name: Install ijhttp
-        run: | 
+        run: |
           curl -f -s -L -o ijhttp.zip https://jb.gg/ijhttp/latest
           unzip -q ijhttp.zip -d ./tmp
           mkdir "${GITHUB_WORKSPACE}/target"
