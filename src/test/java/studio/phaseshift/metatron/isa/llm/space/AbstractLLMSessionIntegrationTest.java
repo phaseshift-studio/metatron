@@ -24,9 +24,9 @@ import dev.langchain4j.data.message.TextContent;
 import dev.langchain4j.data.message.UserMessage;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.SkipWhenPortUnavailable;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
@@ -83,7 +83,7 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  *   <li>{@link #cleanupSession()} — tear down the space and any resources</li>
  * </ul>
  */
-@Disabled
+@SkipWhenPortUnavailable(value = 11434)
 public abstract class AbstractLLMSessionIntegrationTest extends AbstractMetatronTest {
 
     /* ------------------------------------------------------------
@@ -120,6 +120,7 @@ public abstract class AbstractLLMSessionIntegrationTest extends AbstractMetatron
     /* ------------------------------------------------------------
      * Lifecycle
      * ---------------------------------------------------------- */
+
 
     @BeforeEach
     void initSession() throws Exception {
