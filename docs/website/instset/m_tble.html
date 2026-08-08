@@ -312,18 +312,16 @@ bin/metatron</code></pre>
                         <pre><code>instset::[
  pattern=&gt;/m/tble/#,
  q=&gt;[docq::[
+ pattern=&gt;docq,
  pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
  pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
- pattern=&gt;docq,
  obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
  inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
  space=&gt;[super=&gt;!*/m],
  const=&gt;[[llm_chat_schema=&gt;inst?#{*}&lt;=#{*}()]@helper],
- type=&gt;[
-  table::T,
-  tblespace::T],
+ type=&gt;[tblespace::T],
  inst=&gt;[sql?rec{*}&lt;=tblespace(str::T)],
- rewrite=&gt;[/m/tble/inst/rewrite/sql_count?code{?}&lt;=code(),/m/tble/inst/rewrite/sql_sum?code{?}&lt;=code(),/m/tble/inst/rewrite/sql_mean?code{?}&lt;=code(),/m/tble/inst/rewrite/sql_limit?code{?}&lt;=code(),/m/tble/inst/rewrite/sql_offset?code{?}&lt;=code(),/m/tble/inst/rewrite/sql_offset_limit?code{?}&lt;=code(),/m/tble/inst/rewrite/sql_has?code{?}&lt;=code(),/m/tble/inst/rewrite/sql_where?code{?}&lt;=code(),/m/tble/inst/rewrite/sql_where_count?code{?}&lt;=code(),/m/tble/inst/rewrite/sql_where_limit?code{?}&lt;=code(),...(7 more)]]@/m/tble</code></pre>
+ rewrite=&gt;[/m/tble/inst/rewrite/sql_count?code{?}&lt;=code(),/m/tble/inst/rewrite/sql_sum?code{?}&lt;=code(),/m/tble/inst/rewrite/sql_mean?code{?}&lt;=code(),/m/tble/inst/rewrite/sql_limit?code{?}&lt;=code(),/m/tble/inst/rewrite/sql_offset?code{?}&lt;=code(),/m/tble/inst/rewrite/sql_offset_limit?code{?}&lt;=code(),/m/tble/inst/rewrite/sql_where?code{?}&lt;=code(),/m/tble/inst/rewrite/sql_where_count?code{?}&lt;=code(),/m/tble/inst/rewrite/sql_where_order?code{?}&lt;=code(),/m/tble/inst/rewrite/sql_where_order_offset?code{?}&lt;=code(),...(8 more)]]@/m/tble</code></pre>
                     </div>
                 </div>
             </div>
@@ -331,7 +329,7 @@ bin/metatron</code></pre>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <a href="#consts" class="btn btn-outline-primary">Consts <span class="pill-label badge bg-secondary">1</span></a><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">1</span></a><a href="#spaces" class="btn btn-outline-primary">Spaces <span class="pill-label badge bg-info">1</span></a><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">1</span></a><a href="#rewrites" class="btn btn-outline-primary">Rewrites <span class="pill-label badge bg-warning">17</span></a>
+        <a href="#consts" class="btn btn-outline-primary">Consts <span class="pill-label badge bg-secondary">1</span></a><button class="btn btn-outline-secondary" disabled>Types <span class="pill-label badge bg-dark">0</span></button><a href="#spaces" class="btn btn-outline-primary">Spaces <span class="pill-label badge bg-info">1</span></a><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">1</span></a><a href="#rewrites" class="btn btn-outline-primary">Rewrites <span class="pill-label badge bg-warning">18</span></a>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="card">
@@ -341,12 +339,6 @@ bin/metatron</code></pre>
     <div class="d-flex flex-wrap"><a href="#__m__tble__helper" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">helper</span>
     <span class="pill-label badge bg-secondary ms-2">C</span>
-</a></div>
-</div><div class="mb-3">
-    <h6 class="text-primary mb-2">Types</h6>
-    <div class="d-flex flex-wrap"><a href="#__m__tble__table" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">table</span>
-    <span class="pill-label badge bg-primary ms-2">T</span>
 </a></div>
 </div><div class="mb-3">
     <h6 class="text-primary mb-2">Spaces</h6>
@@ -373,9 +365,6 @@ bin/metatron</code></pre>
     <span class="pill-label badge bg-warning text-dark ms-2">R</span>
 </a><a href="#__m__tble__inst__rewrite__sql_distinct?rng=__m__code{?}&dom=__m__code" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">sql_distinct</span>
-    <span class="pill-label badge bg-warning text-dark ms-2">R</span>
-</a><a href="#__m__tble__inst__rewrite__sql_has?rng=__m__code{?}&dom=__m__code" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">sql_has</span>
     <span class="pill-label badge bg-warning text-dark ms-2">R</span>
 </a><a href="#__m__tble__inst__rewrite__sql_limit?rng=__m__code{?}&dom=__m__code" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">sql_limit</span>
@@ -413,6 +402,12 @@ bin/metatron</code></pre>
 </a><a href="#__m__tble__inst__rewrite__sql_where_offset_limit?rng=__m__code{?}&dom=__m__code" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">sql_where_offset_limit</span>
     <span class="pill-label badge bg-warning text-dark ms-2">R</span>
+</a><a href="#__m__tble__inst__rewrite__sql_where_order?rng=__m__code{?}&dom=__m__code" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">sql_where_order</span>
+    <span class="pill-label badge bg-warning text-dark ms-2">R</span>
+</a><a href="#__m__tble__inst__rewrite__sql_where_order_offset?rng=__m__code{?}&dom=__m__code" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">sql_where_order_offset</span>
+    <span class="pill-label badge bg-warning text-dark ms-2">R</span>
 </a></div>
 </div></div>
     </div>
@@ -428,22 +423,6 @@ bin/metatron</code></pre>
     <p class="mb-0 text-light">a collection of tble related utilities</p>
 </div>
 </div>
-</div><div class="container-xxl mb-4" id="types">
-    <h3 class="text-primary mb-3">Types <span class="pill-label badge bg-primary">1</span></h3>
-    <div class="card mb-3" id="__m__tble__table">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <span>
-            <span class="code text-primary fw-bold">table::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__uri" class="instset-doc-small-code text-info code">/m/uri::T</a></span>
-        </span>
-        <small class="text-muted code">/m/tble/table</small>
-    </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">uri::T[?rec{*}::T]@/m/tble/table</code></pre></div>
-    
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">a stream of equally wide rows</p>
-</div>
-</div>
 </div><div class="container-xxl mb-4" id="spaces">
     <h3 class="text-primary mb-3">Spaces <span class="pill-label badge bg-info">1</span></h3>
     <div class="card mb-3" id="__m__tble__space__tblespace">
@@ -452,9 +431,12 @@ bin/metatron</code></pre>
         <small class="text-muted code">/m/tble/space/tblespace</small>
     </div>
     <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[?[host=&gt;uri::T,driver=&gt;uri::T]][ctor?tblespace&lt;=#{?}(rec::T)]@/m/tble/space/tblespace</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m.html#__m__space" class="code inherited-link">space::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[pattern=&gt;uri::T,{?}q=&gt;[qproc::T],{?}route=&gt;[uri::T=&gt;uri::T],{?}schema=&gt;instset::T]</code></div></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m.html#__m__space" class="code inherited-link">space::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[pattern=&gt;uri::T,{?}q=&gt;[qproc{?}::T],{?}route=&gt;[uri{?}::T=&gt;uri::T],{?}schema=&gt;instset::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a metatron realization of a relational database</p>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*.metatron/skill/mtron/references/tble_space.md</code></pre>
 </div>
 </div>
 </div><div class="container-xxl mb-4" id="instructions">
@@ -482,7 +464,7 @@ bin/metatron</code></pre>
 </div>
 </div>
 </div><div class="container-xxl mb-4" id="rewrites">
-    <h3 class="text-primary mb-3">Rewrites <span class="pill-label badge bg-warning text-dark">17</span></h3>
+    <h3 class="text-primary mb-3">Rewrites <span class="pill-label badge bg-warning text-dark">18</span></h3>
     <div class="card mb-3" id="__m__tble__inst__rewrite__kv_count?rng=__m__code{?}&dom=__m__code">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -538,20 +520,6 @@ bin/metatron</code></pre>
     <p class="mb-0 text-light">leverages native SELECT DISTINCT to deduplicate rows in the database</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#*table__+.dedup(select(name))" class="text-info">+.dedup(select(name))</a> <span class="text-light">=&gt;</span> <a href="#sql_distinct(table, [name])" class="text-success">sql_distinct(table, [name])</a></pre>
-</div>
-</div><div class="card mb-3" id="__m__tble__inst__rewrite__sql_has?rng=__m__code{?}&dom=__m__code">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <span>
-            <span class="code text-warning fw-bold">sql_has</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#__m__code" data-bs-toggle="tooltip" title="domain" class="code text-info">code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__code{?}" data-bs-toggle="tooltip" title="maybe range" class="code text-success">code{?}</a></span></span>
-        </span>
-        <small class="text-muted code">/m/tble/inst/rewrite/sql_has?rng=/m/code{?}&amp;dom=/m/code</small>
-    </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/tble/inst/rewrite/sql_has?rng=code{?}&dom=code(){<j>}</code></pre></div>
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">leverages native SELECT EXISTS to check if table has any rows</p>
-</div><div class="card-body py-2">
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#pre-rewrite code" class="text-info">pre-rewrite code</a> <span class="text-light">=&gt;</span> <a href="#post-rewrite code" class="text-success">post-rewrite code</a></pre>
 </div>
 </div><div class="card mb-3" id="__m__tble__inst__rewrite__sql_limit?rng=__m__code{?}&dom=__m__code">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -720,6 +688,34 @@ bin/metatron</code></pre>
     <p class="mb-0 text-light">fuses where, offset, and limit into a single native SELECT ... WHERE ... LIMIT n OFFSET m</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#sql_where_offset(table,cond,800).take(10)" class="text-info">sql_where_offset(table,cond,800).take(10)</a> <span class="text-light">=&gt;</span> <a href="#sql_where_offset_limit(table, cond, 800, 10)" class="text-success">sql_where_offset_limit(table, cond, 800, 10)</a></pre>
+</div>
+</div><div class="card mb-3" id="__m__tble__inst__rewrite__sql_where_order?rng=__m__code{?}&dom=__m__code">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-warning fw-bold">sql_where_order</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#__m__code" data-bs-toggle="tooltip" title="domain" class="code text-info">code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__code{?}" data-bs-toggle="tooltip" title="maybe range" class="code text-success">code{?}</a></span></span>
+        </span>
+        <small class="text-muted code">/m/tble/inst/rewrite/sql_where_order?rng=/m/code{?}&amp;dom=/m/code</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/tble/inst/rewrite/sql_where_order?rng=code{?}&dom=code(){<j>}</code></pre></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">fuses where and order into a single native SELECT ... WHERE ... ORDER BY</p>
+</div><div class="card-body py-2">
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#sql_where(table,cond).order(select(name))" class="text-info">sql_where(table,cond).order(select(name))</a> <span class="text-light">=&gt;</span> <a href="#sql_where_order(table, cond, [name])" class="text-success">sql_where_order(table, cond, [name])</a></pre>
+</div>
+</div><div class="card mb-3" id="__m__tble__inst__rewrite__sql_where_order_offset?rng=__m__code{?}&dom=__m__code">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-warning fw-bold">sql_where_order_offset</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#__m__code" data-bs-toggle="tooltip" title="domain" class="code text-info">code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__code{?}" data-bs-toggle="tooltip" title="maybe range" class="code text-success">code{?}</a></span></span>
+        </span>
+        <small class="text-muted code">/m/tble/inst/rewrite/sql_where_order_offset?rng=/m/code{?}&amp;dom=/m/code</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/tble/inst/rewrite/sql_where_order_offset?rng=code{?}&dom=code(){<j>}</code></pre></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">fuses where, order, and offset into a single native SELECT ... WHERE ... ORDER BY ... OFFSET n</p>
+</div><div class="card-body py-2">
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#sql_where_order(table,cond,[col]).skip(800)" class="text-info">sql_where_order(table,cond,[col]).skip(800)</a> <span class="text-light">=&gt;</span> <a href="#sql_where_order_offset(table, cond, [col], 800)" class="text-success">sql_where_order_offset(table, cond, [col], 800)</a></pre>
 </div>
 </div>
 </div><div class="container-xxl py-3 text-center">

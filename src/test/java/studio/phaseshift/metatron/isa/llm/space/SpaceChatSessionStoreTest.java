@@ -302,6 +302,19 @@ public class SpaceChatSessionStoreTest extends AbstractMetatronTest {
     }
 
     @Test
+    void adjustSkip_orphanDeepInWindow_rule3Fires() {
+        // Rule 3: boundary passes rules 1+2 (starts with user), but a
+        // ToolResult inside the window is orphaned — its AiMessage is
+        // before the skip boundary.
+        // [0]=A{c0}, [1]=U, [2]=T{c0}
+        // rawSkip=2 → [1]=U, [2]=T{c0}
+        // Rule 1: [1]=U → no change. Rule 2: [1]=U → no change.
+        // Rule 3: [2]=T{c0} → find A{c0} at [0] < skip(1) → skip=0.
+        final List<Rec> m = msgs(A("c0"), U(), T("c0"));
+        assertEquals(0, SpaceChatSessionStore.adjustSkipToPreservePairs(m, 2));
+    }
+
+    @Test
     void adjustSkip_windowLargerThanMessages_skipZero() {
         // More window slots than messages — nothing to skip
         final List<Rec> m = msgs(S(), U(), A());
@@ -347,7 +360,7 @@ public class SpaceChatSessionStoreTest extends AbstractMetatronTest {
         // AiMessage(tool_calls: [c0, c1, c2])
         // ToolResult(c0)
         // ToolResult(c1)
-        // SystemMessage         ← injected by mirrorSystemMessage() during tool loop
+        // SystemMessage         ← injected by SystemFeature.onBeforeChat() during tool loop
         // ToolResult(c2)        ← becomes orphaned if system message not filtered
         final List<Rec> m = msgs(
                 U(),

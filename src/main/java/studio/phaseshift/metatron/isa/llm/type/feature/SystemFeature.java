@@ -2,17 +2,15 @@ package studio.phaseshift.metatron.isa.llm.type.feature;
 
 import dev.langchain4j.service.AiServices;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.llm.space.SpaceChatSessionStore;
+import studio.phaseshift.metatron.isa.llm.MessageBuilder;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
 import studio.phaseshift.metatron.isa.llm.type.AgentServices;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.Rec;
 
-import java.util.LinkedHashMap;
 import java.util.Map;
 
-import static studio.phaseshift.metatron.Tokens.SESSION;
-import static studio.phaseshift.metatron.Tokens.TEXT;
+import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.furi.q.QCollection.INCRQ;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.SYSTEM_MESSAGE_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
@@ -31,21 +29,34 @@ public class SystemFeature extends AbstractFeature {
             service.systemMessage(systemMessage);
     }
 
+    // Key used to store the last-written text in this feature's JVM
+    private static final String LAST = "last_system_text";
+
     @Override
     public Obj onBeforeChat(final Agent agent) {
-        // System messages are accumulated via agent.addSystemMessage() —
-        // this feature ensures they are mirrored to the session store.
-        final String systemMessage = String.join("\n", agent.getSystemMessages());
+        final StringBuilder sb = new StringBuilder();
+        if (agent.has(DESC)) {
+            final String desc = agent.at(DESC).strValue();
+            if (!desc.isBlank()) sb.append(desc).append("\n");
+        }
+        sb.append(String.join("\n", agent.getSystemMessages()));
+        final String systemMessage = sb.toString().trim();
         if (!systemMessage.isBlank() && agent.hasFeature(SESSION)) {
-            final Rec sess = agent.feature(SESSION).orElse(noobjRec());
-            if (!sess.isNoObj() && sess.vid() != null) {
+            // Only write if the system message changed since last chat
+            final String lastText = this.at(uri(LAST)).orElse(str("")).strValue();
+            if (!systemMessage.equals(lastText)) {
+                final fURI sessionVID = agent.feature(SESSION).asRec().at(SESSION).uriValue();
                 try {
-                    final Map<Obj, Obj> systemMap = new LinkedHashMap<>();
-                    systemMap.put(uri(TEXT), str(systemMessage));
-                    final Rec systemRec = rec(systemMap, SYSTEM_MESSAGE_TID, null);
-                    SpaceChatSessionStore.mirrorSystemMessage(agent, sess.vid(), systemRec);
+                    final fURI writePath = agent.at(ROOT).uriValue().extend(MESSAGE)
+                            .extend("_").addQ(INCRQ);
+                    MessageBuilder.build(SYSTEM_MESSAGE_TID)
+                            .text(systemMessage)
+                            .time()
+                            .session(sessionVID)
+                            .create(writePath);
+                    this.at(uri(LAST), str(systemMessage), MUTABLE);
                 } catch (final Exception e) {
-                    this.logger().warn("system message mirror failed: %s", e.getMessage());
+                    this.logger().warn("system message write failed (non-blocking): %s", e.getMessage());
                 }
             }
         }

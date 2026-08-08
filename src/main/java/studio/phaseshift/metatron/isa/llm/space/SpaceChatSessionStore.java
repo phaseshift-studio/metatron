@@ -23,27 +23,19 @@ import dev.langchain4j.store.memory.chat.ChatMemoryStore;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
+import studio.phaseshift.metatron.isa.m.math.mathInstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.Poly;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
-import studio.phaseshift.metatron.util.MTronException;
 
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.time.Instant;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.q.QCollection.INCRQ;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
-import static studio.phaseshift.metatron.isa.llm.type.Agent.res;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.from_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
@@ -64,48 +56,6 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
      * Used by ConceptFeature to link concepts to recently written messages.
      */
     private final Set<fURI> currentMessages = new HashSet<>();
-    private final AtomicInteger messageCount = new AtomicInteger(0);
-
-    /**
-     * Per-session dedup: set of content hashes already written, keyed by session VID.
-     * Prevents duplicates across store instances (LC4j creates a new store per chat call)
-     * without leaking state between different sessions.
-     */
-    private static final Map<fURI, Set<String>> WRITTEN_HASHES = new LinkedHashMap<>();
-
-    /**
-     * Clear the static dedup cache.  Called between tests that reuse the same
-     * session VID pattern on fresh space instances.
-     */
-    static void clearDedupCache() {
-        synchronized (WRITTEN_HASHES) {
-            WRITTEN_HASHES.clear();
-        }
-    }
-
-    /**
-     * Mirror a pre-built system message Rec to the unified message table.
-     * System messages bypass {@code ChatMemoryStore.updateMessages()} — they're
-     * injected via {@code AiServices.systemMessage()}.
-     */
-    public static void mirrorSystemMessage(final Agent agent, final fURI sessionVID, final Rec systemRec) {
-        final String hash = contentHash(systemRec);
-        systemRec.recValue().put(uri(HASH), str(hash));
-        systemRec.recValue().put(uri(TIME), str(Date.from(Instant.now()).toString()));
-        systemRec.recValue().put(uri(SESSION), uri(sessionVID));
-        synchronized (WRITTEN_HASHES) {
-            final Set<String> seen = WRITTEN_HASHES.computeIfAbsent(sessionVID, k -> new LinkedHashSet<>());
-            if (!seen.add(hash)) return;
-        }
-        try {
-            Router.writeToSpace(agent.at(ROOT).uriValue().extend(MESSAGE).extend("_").addQ(INCRQ), systemRec);
-        } catch (final Exception e) {
-            LOG.debug("mirror system message failed (non-blocking): %s", e.getMessage());
-        }
-    }
-
-    // -- HASH key ------------------------------------------------------------
-    private static final String HASH = "hash";
 
     public SpaceChatSessionStore(final Agent agent, final Space space) {
         this.agent = Objects.requireNonNull(agent, "agent must not be null");
@@ -144,8 +94,9 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
                 .stream()
                 .map(Obj::asRel)
                 .filter(pair -> pair.second().isRec()
-                        && !pair.second().asRec().tid().equals(THINKING_MESSAGE_TID)
-                        && !pair.second().asRec().tid().equals(SYSTEM_MESSAGE_TID))
+                        && (pair.second().asRec().tid().equals(USER_MESSAGE_TID)
+                        || pair.second().asRec().tid().equals(AI_MESSAGE_TID)
+                        || pair.second().asRec().tid().equals(TOOL_RESULT_MESSAGE_TID)))
                 .filter(pair -> {
                     final Obj sessionField = pair.second().asRec().at(uri(SESSION)).orElse(noobj());
                     final fURI stored = sessionField.isUri() ? sessionField.uriValue()
@@ -174,84 +125,59 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
                 }).filter(Objects::nonNull).toList();
     }
 
+    /**
+     * AiMessages produced during the LangChain4j tool loop (intermediate
+     * responses with {@code tool_calls}) never reach
+     * {@code TokenStream.onCompleteResponse()} — only the final text
+     * response does.  ToolResults ARE written eagerly by
+     * {@code ToolFeature.onToolExecuted()}, so without this store path
+     * the AiMessage is missing and its ToolResults appear orphaned on
+     * the next chat.
+     * <p>
+     * Static: dedup must survive across store instances.  LC4j creates a
+     * new store per chat, but calls {@code updateMessages()} with the
+     * full message list including historical AiMessages from prior chats.
+     * Without a static set, every AiMessage is re-written on every chat.
+     */
+    private static final Set<String> writtenAiTexts = new HashSet<>();
+
+    static void clearWrittenAiTexts() {
+        synchronized (writtenAiTexts) {
+            writtenAiTexts.clear();
+        }
+    }
+
     @Override
     public void updateMessages(final Object sessionVID, final List<ChatMessage> messages) {
-        if (!(sessionVID instanceof fURI sesVID)) {
-            LOG.warn("session obj is not a uri: %s", sessionVID);
+        if (!(sessionVID instanceof fURI sesVID) || messages == null || messages.isEmpty())
             return;
-        }
-        if (null == messages || messages.isEmpty())
-            return;
-        LOG.info("updating messages %s", messages);
 
-        // -- 1. Convert incoming messages to typed Recs + compute hashes -----
-        final List<Rec> incomingRecs = new ArrayList<>();
+        final fURI writePath = this.agent.at(ROOT).uriValue().extend(MESSAGE)
+                .extend("_").addQ(INCRQ);
+
         for (final ChatMessage msg : messages) {
             try {
                 final Rec msgRec = SERIALIZER.read(msg).asRec();
-                final String hash = contentHash(msgRec);
-                msgRec.recValue().put(uri(HASH), str(hash));
-                msgRec.recValue().put(uri(TIME), str(Date.from(Instant.now()).toString()));
+                if (!msgRec.tid().equals(AI_MESSAGE_TID))
+                    continue;
+
+                // Dedup: use text + first tool call ID to distinguish
+                // AiMessages with empty text (tool-only responses).
+                String dedupKey = msgRec.at(uri(TEXT)).orElse(str("")).strValue();
+                final Obj toolReqs = msgRec.at(uri(TOOL_REQUESTS));
+                if (!toolReqs.isNoObj() && toolReqs.isLst() && !toolReqs.asLst().lstValue().isEmpty())
+                    dedupKey += "|" + toolReqs.asLst().elements()
+                            .findFirst().get().asRec().at(uri(CONTENTS)).orElse(str("")).strValue();
+                if (!writtenAiTexts.add(dedupKey))
+                    continue;
+
+                msgRec.recValue().put(uri(TIME), mathInstSet.nowDatetime());
                 msgRec.recValue().put(uri(SESSION), uri(sesVID));
-                incomingRecs.add(msgRec);
-                //         incomingHashes.add(hash);
+                Router.writeToSpace(writePath, msgRec);
             } catch (final Exception e) {
-                LOG.error("error converting incoming chat message (type=%s, class=%s): %s",
-                        msg.type(), msg.getClass().getSimpleName(), e);
+                LOG.warn("error writing AiMessage (non-blocking): %s", e.getMessage());
             }
         }
-
-        // -- 2. Append new messages (hash-based dedup) -----------------------
-        LOG.info("appending new messages [size:%d]", messages.size());
-        final Set<String> sessionHashes;
-        synchronized (WRITTEN_HASHES) {
-            sessionHashes = WRITTEN_HASHES.computeIfAbsent(sesVID, k -> new LinkedHashSet<>());
-        }
-        int written = 0;
-        final fURI writePath = this.agent.at(ROOT).uriValue().extend(MESSAGE).extend("_").addQ(INCRQ);
-        for (final Rec incomingRec : incomingRecs) {
-            final String hash = incomingRec.recValue().get(uri(HASH)).strValue();
-            synchronized (WRITTEN_HASHES) {
-                if (!sessionHashes.add(hash)) continue; // already written
-            }
-            try {
-                final Obj writtenObj = Router.writeToSpace(writePath, incomingRec);
-                LOG.debug("updating current messages [size:%d]", this.currentMessages.size());
-                if ((writtenObj.typeId().equals(USER_MESSAGE_TID) ||
-                        writtenObj.typeId().equals(AI_MESSAGE_TID)) &&
-                        !writtenObj.asRec().has(TOOL_REQUESTS))
-                    this.currentMessages.add(writtenObj.vid());
-                written++;
-            } catch (final Exception e) {
-                LOG.warn("error writing message to message (non-blocking): %s", e.getMessage());
-            }
-        }
-
-        // -- 3. Write thinking row if accumulated ----------------------------
-        final Obj thinking = this.agent.at(res(THINKING));
-        if (!thinking.isNoObj() && !thinking.strValue().isBlank()) {
-            final Map<Obj, Obj> thinkingMap = new LinkedHashMap<>();
-            thinkingMap.put(uri(TEXT), str(thinking.strValue()));
-            thinkingMap.put(uri(TIME), str(Date.from(Instant.now()).toString()));
-            thinkingMap.put(uri(SESSION), uri(sesVID));
-            final Rec thinkingRec = rec(thinkingMap, THINKING_MESSAGE_TID, null);
-            final String thinkingHash = contentHash(thinkingRec);
-            thinkingRec.recValue().put(uri(HASH), str(thinkingHash));
-            synchronized (WRITTEN_HASHES) {
-                if (sessionHashes.add(thinkingHash)) {
-                    try {
-                        Router.writeToSpace(writePath, thinkingRec);
-                    } catch (final Exception e) {
-                        LOG.warn("error writing thinking to message (non-blocking): %s", e.getMessage());
-                    }
-                }
-            }
-            // Clear thinking from blackboard so it isn't re-written next turn
-            this.agent.at(res(THINKING), noobj(), Poly.MUTABLE);
-        }
-
-        LOG.debug("wrote %d messages + %s thinking for session %s",
-                written, thinking.isNoObj() ? "no" : "yes", sesVID);
     }
 
     @Override
@@ -259,7 +185,6 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
         if (!(sessionVID instanceof fURI sesVID))
             return;
 
-        // Read and delete all messages for this session sequentially by id
         final fURI msgBase = this.agent.at(ROOT).uriValue().extend(MESSAGE);
         for (int id = 1; ; id++) {
             try {
@@ -275,12 +200,12 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
                 break; // no more entries
             }
         }
-
-        synchronized (WRITTEN_HASHES) {
-            WRITTEN_HASHES.remove(sesVID);
-        }
         LOG.debug("deleted messages for session %s", sesVID);
     }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Window management
+    ///////////////////////////////////////////////////////////////////////////
 
     /**
      * Returns the store-level window size as a multiple of the LangChain4j
@@ -313,6 +238,10 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
         return 150; // sensible default (50 × 3) when session config is unavailable
     }
 
+    ///////////////////////////////////////////////////////////////////////////
+    // Pair-aware skip
+    ///////////////////////////////////////////////////////////////////////////
+
     /**
      * Adjust the skip index so the window (a) never starts on an orphaned
      * {@code ToolExecutionResultMessage}, and (b) always starts with a
@@ -327,12 +256,57 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
         if (skip <= 0 || skip >= messages.size())
             return skip;
 
-        // ── Rule 1: don't orphan a ToolResult from its AiMessage ──────
+        // ── Rule 1: don't orphan a ToolResult from its AiMessage at
+        //     the window boundary ─────────────────────────────────────
         skip = pullInPairedAiMessage(messages, skip);
 
         // ── Rule 2: window must start with a user message ─────────────
         skip = pullInPrecedingUserMessage(messages, skip);
 
+        // ── Rule 3: scan the entire window for any ToolResult whose
+        //     AiMessage was skipped — expand until no orphans remain ──
+        skip = pullInAllOrphanedToolResults(messages, skip);
+
+        return skip;
+    }
+
+    /**
+     * Scan the window for any {@code ToolExecutionResultMessage} whose
+     * paired {@code AiMessage} is before the skip boundary.  If found,
+     * expand the skip to include it and re-scan until no orphans remain.
+     */
+    private static int pullInAllOrphanedToolResults(final List<Rec> messages, int skip) {
+        boolean changed;
+        do {
+            changed = false;
+            for (int i = skip; i < messages.size(); i++) {
+                final Rec msg = messages.get(i);
+                if (!msg.tid().equals(TOOL_RESULT_MESSAGE_TID))
+                    continue;
+                final String toolCallId = msg.at(uri(CONTENTS)).orElse(str("")).strValue();
+                if (toolCallId.isBlank())
+                    continue;
+                // Find the paired AiMessage
+                for (int j = i - 1; j >= 0; j--) {
+                    final Rec candidate = messages.get(j);
+                    if (!candidate.tid().equals(AI_MESSAGE_TID))
+                        continue;
+                    final Obj toolReqs = candidate.at(uri(TOOL_REQUESTS));
+                    if (toolReqs.isNoObj() || !toolReqs.isLst())
+                        continue;
+                    final boolean found = toolReqs.asLst().elements()
+                            .filter(Obj::isRec)
+                            .anyMatch(tr -> toolCallId.equals(
+                                    tr.asRec().at(uri(CONTENTS)).orElse(str("")).strValue()));
+                    if (found && j < skip) {
+                        skip = j;
+                        changed = true;
+                        break; // re-scan from the new skip position
+                    }
+                    if (found) break; // AiMessage is already in window
+                }
+            }
+        } while (changed);
         return skip;
     }
 
@@ -397,50 +371,5 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
         }
 
         return 0; // no user message found — return everything
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Content hashing
-    ///////////////////////////////////////////////////////////////////////////
-
-    /**
-     * Computes a SHA-256 content hash of the given message Rec.
-     * Strips volatile metadata fields and uses sorted-key serialization
-     * so the same logical message produces the same hash regardless of
-     * map implementation (LinkedHashMap vs HashMap on tbleSpace read-back).
-     */
-    static String contentHash(final Rec msgRec) {
-        final Map<Obj, Obj> saved = new LinkedHashMap<>();
-        final Obj[] volatileKeys = {uri(HASH), uri(NAME), uri(TYPE), uri(THINKING), uri(TIME), uri(SESSION), uri(URI)};
-        for (final Obj key : volatileKeys) {
-            final Obj val = msgRec.recValue().remove(key);
-            if (val != null) saved.put(key, val);
-        }
-        try {
-            // Deterministic: sort entries by key, emit key:value.
-            // Decode text values so the hash is based on logical content,
-            // not mtron encoding (which can vary on whitespace differences).
-            final List<String> entries = new ArrayList<>();
-            for (final Map.Entry<Obj, Obj> e : msgRec.recValue().entrySet()) {
-                final String key = e.getKey().toString();
-                final String val = ObjChatMessageSerializer.decodeRawValue(e.getValue());
-                entries.add(key + ":" + val);
-            }
-            entries.sort(String::compareTo);
-            final String payload = msgRec.tid() + "|" + String.join("|", entries);
-            final byte[] bytes = payload.getBytes();
-            final MessageDigest md = MessageDigest.getInstance("SHA-256");
-            final byte[] digest = md.digest(bytes);
-            final StringBuilder sb = new StringBuilder();
-            for (final byte b : digest)
-                sb.append(String.format("%02x", b));
-            return sb.toString();
-        } catch (final NoSuchAlgorithmException e) {
-            throw MTronException.of("SHA-256 not available: %s", e);
-        } catch (final Exception e) {
-            throw MTronException.of(e);
-        } finally {
-            msgRec.recValue().putAll(saved);
-        }
     }
 }

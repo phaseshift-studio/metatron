@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.isa.mach.io.type;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.math.mathInstSet;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
 import studio.phaseshift.metatron.util.MTronException;
@@ -26,9 +27,18 @@ import studio.phaseshift.metatron.util.MTronException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.sql.*;
-import java.util.*;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.mInstSet.LST_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
+import static studio.phaseshift.metatron.isa.m.math.mathInstSet.DATETIME_TYPE;
+import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_DATETIME_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -37,8 +47,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs0;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.m.mInstSet.LST_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
 
 /**
  * Serializer for converting between SQL types and Metatron objects.
@@ -164,6 +172,91 @@ public class ObjSQLSerializer extends AbstractObjSerializer<Object> {
     // ---- JDBC bridge: read --------------------------------------------------
 
     /**
+     * Parse a {@code datetime::T} URI ({@code //yyyy.MM:dd/HH/mm/ss/SSS?tz=±HHmm})
+     * into a {@link ZonedDateTime}, or return {@code null} if the value
+     * is not a datetime URI.
+     */
+    private static ZonedDateTime toZonedDateTime(final Obj value) {
+        if (!value.isUri() || !"datetime".equals(value.tid().name())) {
+            return null;
+        }
+        final fURI furi = value.uriValue();
+        // host = "yyyy.MM", port = dd, path = [HH, mm, ss, SSS]
+        final String host = furi.host();
+        if (host == null || host.length() < 7) return null;
+        final int year = Integer.parseInt(host.substring(0, 4));
+        final int month = Integer.parseInt(host.substring(5, 7));
+        final int day = furi.port();
+        final List<String> path = furi.path();
+        if (path.size() < 4) return null;
+        final int hour = Integer.parseInt(path.get(path.size() - 4));
+        final int minute = Integer.parseInt(path.get(path.size() - 3));
+        final int second = Integer.parseInt(path.get(path.size() - 2));
+        final int millis = Integer.parseInt(path.getLast());
+        final String tzStr = furi.qMap().getOrDefault("tz", "+0000");
+        final ZoneId zone = ZoneId.of(tzStr.replaceAll("([+-]\\d{2})(\\d{2})", "$1:$2"));
+        return ZonedDateTime.of(year, month, day, hour, minute, second, millis * 1_000_000, zone);
+    }
+
+    private static java.sql.Date toSqlDate(final Obj value) {
+        final ZonedDateTime zdt = toZonedDateTime(value);
+        if (zdt != null)
+            return java.sql.Date.valueOf(zdt.toLocalDate());
+        if (value.isStr())
+            return java.sql.Date.valueOf(value.asStr().jvm());
+        return java.sql.Date.valueOf(value.toString());
+    }
+
+    private static java.sql.Time toSqlTime(final Obj value) {
+        final ZonedDateTime zdt = toZonedDateTime(value);
+        if (zdt != null)
+            return java.sql.Time.valueOf(zdt.toLocalTime());
+        if (value.isStr())
+            return java.sql.Time.valueOf(value.asStr().jvm());
+        return java.sql.Time.valueOf(value.toString());
+    }
+
+    private static java.sql.Timestamp toSqlTimestamp(final Obj value) {
+        final ZonedDateTime zdt = toZonedDateTime(value);
+        if (zdt != null)
+            return java.sql.Timestamp.valueOf(zdt.toLocalDateTime());
+        if (value.isStr())
+            return java.sql.Timestamp.valueOf(value.asStr().jvm());
+        return java.sql.Timestamp.valueOf(value.toString());
+    }
+
+    /**
+     * Convert a {@code datetime::T} URI directly to an ISO-8601 string
+     * suitable for SQLite TEXT/TIMESTAMP columns.  Avoids JDBC
+     * {@code setTimestamp} round-trip issues in SQLite.
+     */
+    private static String toSqlDatetimeString(final Obj value) {
+        final ZonedDateTime zdt = toZonedDateTime(value);
+        if (zdt != null)
+            return zdt.toLocalDateTime().toString().replace('T', ' ');
+        if (value.isStr())
+            return value.asStr().jvm();
+        return value.toString();
+    }
+
+    /**
+     * Read a SQL {@link java.sql.Timestamp} as a {@code datetime::T} URI.
+     */
+    private static Obj readDateTime(final ResultSet rs, final String columnName) throws SQLException {
+        final Timestamp ts = rs.getTimestamp(columnName);
+        if (ts == null) return noobj();
+        final ZonedDateTime zdt = ts.toInstant().atZone(ZoneId.systemDefault());
+        return mathInstSet.buildDatetimeUri(zdt);
+    }
+
+    private static Obj readDateTime(final ResultSet rs, final int columnIndex) throws SQLException {
+        final Timestamp ts = rs.getTimestamp(columnIndex);
+        if (ts == null) return noobj();
+        final ZonedDateTime zdt = ts.toInstant().atZone(ZoneId.systemDefault());
+        return mathInstSet.buildDatetimeUri(zdt);
+    }
+
+    /**
      * Read a metatron object from a SQL ResultSet column by name.
      */
     protected Obj readColumn(final ResultSet rs, final String columnName, final int sqlType) throws SQLException {
@@ -178,7 +271,7 @@ public class ObjSQLSerializer extends AbstractObjSerializer<Object> {
             case Types.REAL, Types.FLOAT, Types.DOUBLE, Types.DECIMAL, Types.NUMERIC -> real(rs.getDouble(columnName));
             case Types.CHAR, Types.VARCHAR, Types.LONGVARCHAR, Types.NCHAR, Types.NVARCHAR, Types.LONGNVARCHAR ->
                     readMaybeJSON(rs.getString(columnName));
-            case Types.DATE, Types.TIME, Types.TIMESTAMP -> str(rs.getString(columnName));
+            case Types.DATE, Types.TIME, Types.TIMESTAMP -> readDateTime(rs, columnName);
             case Types.BINARY, Types.VARBINARY, Types.LONGVARBINARY -> str(rs.getString(columnName));
             default -> readMaybeJSON(value.toString());
         };
@@ -199,7 +292,7 @@ public class ObjSQLSerializer extends AbstractObjSerializer<Object> {
             case Types.REAL, Types.FLOAT, Types.DOUBLE, Types.DECIMAL, Types.NUMERIC -> real(rs.getDouble(columnIndex));
             case Types.CHAR, Types.VARCHAR, Types.LONGVARCHAR, Types.NCHAR, Types.NVARCHAR, Types.LONGNVARCHAR ->
                     readMaybeJSON(rs.getString(columnIndex));
-            case Types.DATE, Types.TIME, Types.TIMESTAMP -> str(rs.getString(columnIndex));
+            case Types.DATE, Types.TIME, Types.TIMESTAMP -> readDateTime(rs, columnIndex);
             case Types.BINARY, Types.VARBINARY, Types.LONGVARBINARY -> str(rs.getString(columnIndex));
             default -> readMaybeJSON(value.toString());
         };
@@ -245,7 +338,10 @@ public class ObjSQLSerializer extends AbstractObjSerializer<Object> {
                 final String clean = (raw.startsWith("<") && raw.endsWith(">"))
                         ? raw.substring(1, raw.length() - 1)
                         : raw;
-                return uri(f(clean));
+                final Obj uriObj = uri(f(clean));
+                if (uriObj.test(DATETIME_TYPE))
+                    return uri(f(clean), MATH_DATETIME_TID, null);
+                return uriObj;
             }
 
             if ("bool".equals(typeName)) {
@@ -260,6 +356,19 @@ public class ObjSQLSerializer extends AbstractObjSerializer<Object> {
                 final String raw = rs.getString(columnName);
                 if (raw == null || raw.isBlank()) return noobj();
                 return MTRON.inputBytes(raw.getBytes(StandardCharsets.UTF_8));
+            }
+
+            // datetime::T — use readDateTime for TIMESTAMP columns, or
+            // parse a datetime URI string from a VARCHAR column.
+            if ("datetime".equals(typeName)) {
+                if (sqlType == Types.DATE || sqlType == Types.TIME || sqlType == Types.TIMESTAMP)
+                    return readDateTime(rs, columnName);
+                final String raw = rs.getString(columnName);
+                if (raw == null || raw.isBlank()) return noobj();
+                try {
+                    return uri(f(raw), MATH_DATETIME_TID, null);
+                } catch (final Exception ignored) { /* fall through */ }
+                return readMaybeJSON(raw);
             }
 
             // Plain string — don't guess at JSON/mtron/numbers/bools.
@@ -288,6 +397,19 @@ public class ObjSQLSerializer extends AbstractObjSerializer<Object> {
         if (first == '<' && trimmed.endsWith(">")) {
             return uri(trimmed.substring(1, trimmed.length() - 1));
         }
+        // datetime::T stored as ISO-8601 string: yyyy-MM-dd HH:mm:ss[.SSS]
+        if (first >= '0' && first <= '9' && trimmed.length() >= 19
+                && trimmed.charAt(4) == '-' && trimmed.charAt(7) == '-') {
+            try {
+                return mathInstSet.parseDatetime(trimmed);
+            } catch (final Exception ignored) { /* fall through */ }
+        }
+        // datetime::T URIs (legacy): //yyyy.MM:dd/HH/mm/ss/SSS?tz=±HHmm
+        if (first == '/' && trimmed.startsWith("//") && trimmed.length() > 20) {
+            try {
+                return uri(f(trimmed), MATH_DATETIME_TID, null);
+            } catch (final Exception ignored) { /* fall through */ }
+        }
         if (first == '[' || first == '{') {
             try {
                 return ObjJSONSerializer.simple().inputBytes(value);
@@ -300,8 +422,14 @@ public class ObjSQLSerializer extends AbstractObjSerializer<Object> {
             }
         }
         // Plain numbers stored in VARCHAR columns (e.g. mono written over a Rec)
-        try { return jnt(Long.parseLong(value)); } catch (NumberFormatException e) {}
-        try { return real(Double.parseDouble(value)); } catch (NumberFormatException e) {}
+        try {
+            return jnt(Long.parseLong(value));
+        } catch (NumberFormatException e) {
+        }
+        try {
+            return real(Double.parseDouble(value));
+        } catch (NumberFormatException e) {
+        }
         if ("true".equalsIgnoreCase(value) || "false".equalsIgnoreCase(value))
             return bool(Boolean.parseBoolean(value));
         return str(value);
@@ -402,10 +530,11 @@ public class ObjSQLSerializer extends AbstractObjSerializer<Object> {
                 if (value.isStr()) {
                     stmt.setString(paramIndex, value.asStr().jvm());
                 } else if (value.isUri()) {
-                    // Write the plain URI string — _mtron_meta tracks the column
-                    // type, so the read path knows this is a URI without needing
-                    // the legacy <> wrapper.
-                    stmt.setString(paramIndex, value.asUri().uriValue().toString());
+                    if ("datetime".equals(value.tid().name())) {
+                        stmt.setString(paramIndex, toSqlDatetimeString(value));
+                    } else {
+                        stmt.setString(paramIndex, value.asUri().uriValue().toString());
+                    }
                 } else if (value.isPoly()) {
                     // Poly values (Lst, Rec, Inst, Code) — use canonical
                     // no-clip mtron format so they round-trip cleanly.
@@ -415,25 +544,13 @@ public class ObjSQLSerializer extends AbstractObjSerializer<Object> {
                 }
             }
             case Types.DATE -> {
-                if (value.isStr()) {
-                    stmt.setDate(paramIndex, java.sql.Date.valueOf(value.asStr().jvm()));
-                } else {
-                    stmt.setDate(paramIndex, java.sql.Date.valueOf(value.toString()));
-                }
+                stmt.setDate(paramIndex, toSqlDate(value));
             }
             case Types.TIME -> {
-                if (value.isStr()) {
-                    stmt.setTime(paramIndex, java.sql.Time.valueOf(value.asStr().jvm()));
-                } else {
-                    stmt.setTime(paramIndex, java.sql.Time.valueOf(value.toString()));
-                }
+                stmt.setTime(paramIndex, toSqlTime(value));
             }
             case Types.TIMESTAMP -> {
-                if (value.isStr()) {
-                    stmt.setTimestamp(paramIndex, java.sql.Timestamp.valueOf(value.asStr().jvm()));
-                } else {
-                    stmt.setTimestamp(paramIndex, java.sql.Timestamp.valueOf(value.toString()));
-                }
+                stmt.setTimestamp(paramIndex, toSqlTimestamp(value));
             }
             default -> stmt.setString(paramIndex, value.toString());
         }
@@ -528,7 +645,7 @@ public class ObjSQLSerializer extends AbstractObjSerializer<Object> {
             case Types.REAL, Types.FLOAT, Types.DOUBLE, Types.DECIMAL, Types.NUMERIC -> real(rs.getDouble(columnIndex));
             case Types.CHAR, Types.VARCHAR, Types.LONGVARCHAR, Types.NCHAR, Types.NVARCHAR, Types.LONGNVARCHAR ->
                     readMaybeJSON(rs.getString(columnIndex));
-            case Types.DATE, Types.TIME, Types.TIMESTAMP -> str(rs.getString(columnIndex));
+            case Types.DATE, Types.TIME, Types.TIMESTAMP -> readDateTime(rs, columnIndex);
             case Types.BINARY, Types.VARBINARY, Types.LONGVARBINARY -> str(rs.getString(columnIndex));
             default -> readMaybeJSON(value.toString());
         };

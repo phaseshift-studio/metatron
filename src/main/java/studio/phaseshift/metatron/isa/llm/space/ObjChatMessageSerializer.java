@@ -35,6 +35,7 @@ import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 import static studio.phaseshift.metatron.Tokens.*;
@@ -381,8 +382,17 @@ public class ObjChatMessageSerializer extends AbstractObjSerializer<ChatMessage>
     }
 
     private static List<ToolExecutionRequest> parseToolRequests(final Rec rec) {
-        final Obj trObj = rec.at(uri(TOOL_REQUESTS));
-        if (trObj.isNoObj() || !trObj.isLst())
+        Obj trObj = rec.at(uri(TOOL_REQUESTS));
+        if (trObj.isNoObj())
+            return List.of();
+        // tbleSpace may store nested Lst as a mtron string in TEXT columns;
+        // parse it back if readMaybeJSON returned a plain Str.
+        if (trObj.isStr()) {
+            try {
+                trObj = ObjmtronSerializer.compact().inputBytes(trObj.strValue().getBytes(StandardCharsets.UTF_8));
+            } catch (final Exception ignored) { /* leave as-is */ }
+        }
+        if (!trObj.isLst())
             return List.of();
         final Lst toolReqs = trObj.asLst();
         if (toolReqs.lstValue().isEmpty())

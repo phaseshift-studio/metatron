@@ -6,6 +6,7 @@ import dev.langchain4j.mcp.client.McpClient;
 import dev.langchain4j.service.AiServices;
 import dev.langchain4j.service.tool.ToolExecutor;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.llm.MessageBuilder;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
 import studio.phaseshift.metatron.isa.llm.type.AgentServices;
 import studio.phaseshift.metatron.isa.llm.type.mTool;
@@ -22,6 +23,8 @@ import java.util.List;
 import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.furi.q.QCollection.INCRQ;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.TOOL_RESULT_MESSAGE_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.web.webInstSet.MCP_CLIENT_TYPE;
 
@@ -72,6 +75,22 @@ public class ToolFeature extends AbstractFeature {
                     Str.Helper.cleanString(r.at(uri(NAME))),
                     Str.Helper.cleanString(r.at(uri(TOOL_ARGUMENTS))),
                     CommonUtil.clipString(Str.Helper.cleanString(r.at(uri(RESULT))), 50, true));
+
+            // Write ToolResult to the message ledger
+            if (agent.hasFeature(SESSION)) {
+                try {
+                    MessageBuilder.build(TOOL_RESULT_MESSAGE_TID)
+                            .put(NAME, uri(Str.Helper.cleanString(r.at(uri(NAME)))))
+                            .text(Str.Helper.cleanString(r.at(uri(RESULT))))
+                            .contents(Str.Helper.cleanString(r.at(uri(CONTENTS))))
+                            .time()
+                            .session(agent.feature(SESSION).asRec().at(SESSION).uriValue())
+                            .create(agent.at(ROOT).uriValue().extend(MESSAGE)
+                                    .extend("_").addQ(INCRQ));
+                } catch (final Exception e) {
+                    this.logger().warn("tool result write failed (non-blocking): %s", e.getMessage());
+                }
+            }
         } else {
             this.logger().info("tool executed: %s", CommonUtil.clipString(result.toString(), 50, true));
         }

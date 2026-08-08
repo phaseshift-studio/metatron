@@ -33,6 +33,7 @@ import studio.phaseshift.metatron.isa.llm.type.Agent;
 import studio.phaseshift.metatron.isa.llm.type.Model;
 import studio.phaseshift.metatron.isa.llm.type.feature.ChatFeature;
 import studio.phaseshift.metatron.isa.llm.type.feature.SessionFeature;
+import studio.phaseshift.metatron.isa.llm.type.feature.SystemFeature;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.mach.type.Router;
@@ -137,9 +138,7 @@ public abstract class AbstractLLMSessionIntegrationTest extends AbstractMetatron
         this.sessionStore = null;
         cleanupSession();
         this.space = null;
-        // Clear the static mirror dedup cache so a fresh space with the same
-        // session VID pattern gets fresh mirror writes (tests reuse VIDs).
-        SpaceChatSessionStore.clearDedupCache();
+        SpaceChatSessionStore.clearWrittenAiTexts();
     }
 
     /* ------------------------------------------------------------
@@ -437,11 +436,12 @@ public abstract class AbstractLLMSessionIntegrationTest extends AbstractMetatron
                 uri("mem"), auto_at_(sessionVID()).tryToInst(),
                 uri(ALGORITHM), rec(mutableMap(uri(NAME), uri("message_window"), uri(MAX), jnt(max))));
         final SessionFeature session = new SessionFeature(sessionConfig.jvm(), LLM_SESSION_FEATURE_TID, null);
+        final SystemFeature system = new SystemFeature(mutableMap(), LLM_SYSTEM_FEATURE_TID, null);
         final Rec agentRec = rec(mutableMap(
                 uri(NAME), str("llm-session-test-agent"),
                 uri(DESC), str("testing llm-session implementation"),
                 uri(ROOT), sessionVID().retract(2).toUri(),
-                uri(FEATURE), lst(mutableList(chat, session))), LLM_AGENT_TID, null);
+                uri(FEATURE), lst(mutableList(system, chat, session))), LLM_AGENT_TID, null);
         return Agent.agent(agentRec);
     }
 

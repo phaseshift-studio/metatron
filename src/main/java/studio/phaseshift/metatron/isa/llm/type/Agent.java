@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.llm.type;
 
+import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.embedding.EmbeddingModel;
@@ -57,8 +58,10 @@ import java.util.regex.Pattern;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.AI_MESSAGE_TID;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_AGENT_TID;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_CHAT_RESULT_TID;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.TOOL_REQUEST_MESSAGE_TID;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_MILLIS_TID;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TRUE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -289,7 +292,8 @@ public class Agent extends MRec {
                         final Rec toolRec = rec(
                                 uri(NAME), str(tool.request().name()),
                                 uri(TOOL_ARGUMENTS), str(tool.request().arguments()),
-                                uri(RESULT), str(tool.result()));
+                                uri(RESULT), str(tool.result()),
+                                uri(CONTENTS), str(tool.request().id()));
                         this.at(res("tool_executed"), toolRec, MUTABLE);
                         features.stream().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_TOOL_EXECUTED, toolRec));
                     })
@@ -369,6 +373,26 @@ public class Agent extends MRec {
                             final String cleanText = cleaned.toString().stripTrailing();
                             chatResult = str(cleanText);
                         }
+                        // Store raw AiMessage info so ChatFeature can write it to the
+                        // message ledger (text + any tool execution requests)
+                        final Map<Obj, Obj> aiMap = mutableMap();
+                        aiMap.put(uri(TEXT), str(fullText));
+                        if (c.aiMessage().hasToolExecutionRequests()) {
+                            final List<Obj> toolReqs = new ArrayList<>();
+                            for (final ToolExecutionRequest req : c.aiMessage().toolExecutionRequests()) {
+                                final Map<Obj, Obj> trMap = mutableMap();
+                                trMap.put(uri(NAME), uri(req.name()));
+                                if (req.arguments() != null && !req.arguments().isBlank())
+                                    trMap.put(uri(TOOL_ARGUMENTS), str(req.arguments()));
+                                if (req.id() != null && !req.id().isBlank())
+                                    trMap.put(uri(CONTENTS), str(req.id()));
+                                trMap.put(uri(TEXT), str(req.name() + "(" + req.arguments() + ")"));
+                                toolReqs.add(rec(trMap, TOOL_REQUEST_MESSAGE_TID, null));
+                            }
+                            aiMap.put(uri(TOOL_REQUESTS), lst(toolReqs));
+                        }
+                        this.at(res("ai_message"), rec(aiMap, AI_MESSAGE_TID, null), MUTABLE);
+
                         // Elapsed time — written before hook dispatch so features can read it
                         final long elapsed = (System.nanoTime() - startNanos) / 1_000_000;
                         this.at(res(TIME), mathInstSet.normalizeTime(real((double) elapsed, MATH_MILLIS_TID, null)), MUTABLE);
