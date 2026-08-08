@@ -67,18 +67,24 @@ public interface Inst extends Call {
     Type INST_TYPE = Type.Builder.build().tid(M_ISA_INST_TID).vid(M_ISA_INST_TID).create();
 
     enum Form {
-        initial,
-        terminal,
-        fork,
-        join,
-        reducer,
-        gather,
-        scatter,
-        catcher,
-        filter,
-        mapper,
-        flatmapper,
-        standard;
+        initial("generates objs from nothing; domain coefficient is zero"),
+        terminal("renders objs to nothing; range coefficient is zero"),
+        fork("splits objs across parallel streams"),
+        join("merges parallel streams of objs into a single stream"),
+        reducer("gathers multiple inputs and produces a single output (range coefficient is one)"),
+        gather("accepts multiple inputs; domain max coefficient is unbounded"),
+        scatter("distributes a single input across multiple outputs (range > 1)"),
+        catcher("handles fail objs, intercepting fail propagation"),
+        filter("conditionally passes or drops objs (range coefficient is maybe)"),
+        mapper("one-to-one obj transformation (domain coefficient is one, range is one)"),
+        flatmapper("one-to-many obj transformation (domain coefficient is one, range > 1)"),
+        standard("an instruction with no well-defined classification");
+
+        public final String description;
+
+        Form(final String description) {
+            this.description = description;
+        }
 
         public static Form of(final Inst inst) {
             if (inst.isInitial())
@@ -143,7 +149,7 @@ public interface Inst extends Call {
     default Obj arg(final int index) {
         return this.args().isLst() ?
                 (this.args().lstValue().size() > index ? this.args().lstValue().get(index) : noobj()) :
-                IteratorUtil.index(this.args().elements().iterator(), index, noobj()).<Rel>as().second();
+                IteratorUtil.index(this.args().elements().iterator(), index, noobj()).orElse(rel(noobj(), noobj())).second();
     }
 
     @Override
@@ -165,6 +171,33 @@ public interface Inst extends Call {
 
     default boolean hasf() {
         return null != this.jvm() && null != this.jvm().get1();
+    }
+
+    /**
+     * Returns true if this instruction's function is a native Java lambda
+     * (as opposed to mtron code). Requires {@link #hasf()} to be true.
+     */
+    default boolean isJavaFunction() {
+        return this.hasf() && this.f().isLambda();
+    }
+
+    /**
+     * Returns the mtron code Obj stored in this instruction's function,
+     * or {@code noobj()} if the function is a Java lambda or absent.
+     */
+    default Obj getMtronFunctionObj() {
+        if (!this.hasf() || this.f().isLambda()) return noobj();
+        return (Obj) this.f().func;
+    }
+
+    /**
+     * Returns the class name of the underlying function object.
+     * For Java lambdas this is the synthetic lambda class name.
+     * Returns null if no function is present.
+     */
+    default String functionClassName() {
+        if (!this.hasf()) return null;
+        return this.f().func.getClass().getName();
     }
 
     default Obj seed() {
@@ -400,7 +433,7 @@ public interface Inst extends Call {
     }
 
     default boolean isFlatMap() {
-        return this.dom().c().isOne() && this.rng().c().isMaybeSome();
+        return this.dom().c().isOne() && this.rng().c().gt(this.rng().c().one());
     }
 
     default boolean isTerminal() {

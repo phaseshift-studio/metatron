@@ -1131,7 +1131,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             "any objs", "the objs as is", Map.of(), "a passthrough function \\(f(X) \\to \\parallel X \\)"),
                     docWrap(instC(BARRIER_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(T(A.maybeSome())), (lhs, inst) -> inst.arg(0).append(lhs)),
                             "any objs", "the objs appended to the arg objs", Map.of(jnt(0), "the objs to append"), "an append function \\(f(X)\\to X\\)"),
-                    docWrap(instC(AS_INST_TID.dom(A).rng(A), lst(T(A)), (lhs, inst) -> lhs.as(inst.arg(0).asType())),
+                    docWrap(instC(AS_INST_TID.dom(A).rng(B), lst(T(B)), (lhs, inst) -> lhs.tid(inst.arg(0).asType().vid())),
                             "any obj", "the lhs obj as the arg type", Map.of(jnt(0), "the type to construct from the lhs"), "a type construction function \\(f(x)\\to x\\)"),
                     instC(REPEAT_INST_TID.dom(A).rng(A.maybeSome()).addQ(MONAD), rec(uri(CODE), T(A.maybeSome()), uri(UNTIL), BOOL_TYPE), (lhs, inst) -> {
                         try {

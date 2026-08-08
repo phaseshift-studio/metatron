@@ -22,8 +22,9 @@ import studio.phaseshift.metatron.isa.mach.type.ui.Widget;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Highlighter;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -42,8 +43,54 @@ public class Utilities {
     public static final CharSequence left_key = "\u2190";
     public static final CharSequence right_key = "\02192";
 
+    /** Regex to capture leading Graphitty codes for re-insertion on wrapped lines. */
+    private static final Pattern LEADING_CODES = Pattern.compile("^(\\{\\{[^}]*}})*");
+
     public static int maxWidth(final List<String> strings) {
         return strings.stream().flatMap(s -> Arrays.stream(s.split("\n"))).map(Highlighter::visualLength).max(Integer::compareTo).orElse(0);
+    }
+
+    /**
+     * Word-wrap a single line at the given width, preserving leading Graphitty codes
+     * so that continuation lines keep their colour.  Lines already within the limit
+     * are returned as-is.  A {@code maxW <= 0} means no wrapping.
+     *
+     * @param line the line to wrap (may contain Graphitty markup)
+     * @param maxW maximum visible characters per output line
+     * @return wrapped lines (single-element list if no wrapping needed)
+     */
+    public static List<String> wordWrap(final String line, final int maxW) {
+        if (maxW <= 0 || Highlighter.visualLength(line) <= maxW) {
+            return List.of(line);
+        }
+        // Extract leading Graphitty codes so continuation lines keep colour
+        final Matcher m = LEADING_CODES.matcher(line);
+        final String leadIn = m.find() ? m.group() : "";
+        final String rest = leadIn.isEmpty() ? line : line.substring(leadIn.length());
+
+        // Strip any remaining codes for clean wrapping
+        final String stripped = Highlighter.unformat(rest);
+        final String[] words = stripped.split(" ");
+        final List<String> wrapped = new ArrayList<>();
+        final StringBuilder current = new StringBuilder();
+
+        for (final String word : words) {
+            if (word.isEmpty()) continue;
+            final int newLen = current.length() + (current.isEmpty() ? 0 : 1) + word.length();
+            if (newLen > maxW && !current.isEmpty()) {
+                wrapped.add(leadIn + current);
+                current.setLength(0);
+            }
+            if (!current.isEmpty()) current.append(' ');
+            current.append(word);
+            // Handle a single word longer than maxW — hard-break it
+            while (current.length() > maxW) {
+                wrapped.add(leadIn + current.substring(0, maxW));
+                current.delete(0, maxW);
+            }
+        }
+        if (!current.isEmpty()) wrapped.add(leadIn + current);
+        return wrapped.isEmpty() ? List.of("") : wrapped;
     }
 
     public static void runCursorLessWidget(final Widget<?> widget, final boolean close) {

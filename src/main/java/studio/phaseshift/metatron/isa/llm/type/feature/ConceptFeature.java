@@ -205,9 +205,9 @@ public class ConceptFeature extends AbstractFeature {
 
     public Lst skill(final Agent agent) {
         final String content = switch (this.extractor) {
-            case TaggingExtractor t -> CONCEPT_EXTRACTOR_TAG_SYSTEM_MESSAGE;
-            case AgentExtractor a -> CONCEPT_EXTRACTOR_AGENT_SYSTEM_MESSAGE;
-            case LuceneExtractor l -> CONCEPT_EXTRACTOR_LUCENE_SYSTEM_MESSAGE;
+            case TaggingExtractor ignored -> CONCEPT_EXTRACTOR_TAG_SYSTEM_MESSAGE;
+            case AgentExtractor ignored -> CONCEPT_EXTRACTOR_AGENT_SYSTEM_MESSAGE;
+            case LuceneExtractor ignored -> CONCEPT_EXTRACTOR_LUCENE_SYSTEM_MESSAGE;
             case null, default -> null;
         };
         if (content == null) return lst();

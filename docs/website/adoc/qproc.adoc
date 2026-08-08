@@ -1,7 +1,8 @@
 [discrete]
 == Q Processors
 
-A query process (_qproc_) is a space attachment that intercepts reads and writes according to the query parameters of the uri. These space extensions provide a practical technique that spans many use cases ranging from pub/sub, documentation, counters, transactions, type constraints, immutable constants, permissions, and more. 
+A query process (_qproc_) is a space attachment that intercepts reads and writes according to the query parameters of the uri.
+These space extensions provide a practical technique that spans many use cases ranging from pub/sub, documentation, counters, transactions, type constraints, immutable constants, permissions, and more.
 
 Currently, metarton provides the following qprocs in the core distribution.
 
@@ -66,27 +67,34 @@ where a qproc may implement any of the associated read/write interception stages
 [mtron]
 ----
 */sys/space/usr
-/usr/notes/#?subq -> sub::[on_recv=>print('${>>1} written to ${>>0}')]
+/usr/notes/#?subq -> sub::[code=>print('${>>1} written to ${>>0}')]
 */usr/notes/#?subq
 /usr/notes/#?subq -> none
 */usr/notes/#?subq
 ----
 
-For target removal of subscriptions, place the subscription in space by vid. Then use `subq` value to match on the vid.
+For target removal of subscriptions, place the subscription in space by vid.
+Then use `subq` value to match on the vid.
 
 [mtron]
 ----
-/usr/notes/#?subq -> sub::[on_recv=>print('${>>1} written to ${>>0}')]@abc
+/usr/notes/#?subq -> sub::[code=>print('${>>1} written to ${>>0}')]@abc
 */usr/notes/#?subq
 /usr/notes/#?subq=abc -> none
 */usr/notes/#?subq
 ----
 
 [discrete]
-==== docq: documentation for human and agent
+==== docq: read and write obj documentation for humans and agents
 
 [discrete]
-==== typeq: space type constraints
+==== typeq: read and write type constraints in space
 
 [discrete]
-==== incrq: furis with counters
+==== incrq: reada and write furis with counters
+
+[discrete]
+==== lineq: read and write str::T with line precision
+
+[discrete]
+==== mimeq: read and write objs using mime-types

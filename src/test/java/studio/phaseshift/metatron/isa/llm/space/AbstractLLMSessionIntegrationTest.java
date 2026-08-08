@@ -138,7 +138,6 @@ public abstract class AbstractLLMSessionIntegrationTest extends AbstractMetatron
         this.sessionStore = null;
         cleanupSession();
         this.space = null;
-        SpaceChatSessionStore.clearWrittenAiTexts();
     }
 
     /* ------------------------------------------------------------

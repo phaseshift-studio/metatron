@@ -22,10 +22,13 @@ import org.jline.keymap.BindingReader;
 import org.jline.keymap.KeyMap;
 import org.jline.terminal.Attributes;
 import org.jline.utils.InfoCmp;
-import studio.phaseshift.metatron.isa.m.type.Code;
-import studio.phaseshift.metatron.isa.m.type.Inst;
-import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.furi.c.cInt;
+import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.furi.q.QCollection;
+import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.Border;
+import studio.phaseshift.metatron.isa.mach.type.ui.console.Highlighter;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.mach.type.ui.widget.*;
@@ -33,6 +36,7 @@ import studio.phaseshift.metatron.isa.mach.type.ui.widget.*;
 import java.util.*;
 
 import static org.jline.keymap.KeyMap.key;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 
 /**
@@ -74,6 +78,12 @@ public class ExplainTool extends AbstractWidget<ExplainTool> {
         // Track which cell in the PARENT spawned this level (for visual connector)
         final int spawnRow;        // Row in parent that spawned this (-1 if root)
         final int spawnCol;        // Column in parent that spawned this (-1 if root)
+
+        // ── Popup overlay state ──────────────────────────────────────
+        PanelWidget panelPopup;         // Info panel popup (docs, type, form desc, coeff)
+        TableWidget argTablePopup;      // Multi-arg selection table
+        List<Obj> argEntries;           // Arg objects for drill-down from arg table
+        int argTableSelectedRow = 0;    // Selected row in arg table popup
 
         ExplainLevel(final Code code, final int offsetX, final int offsetY, final int spawnRow, final int spawnCol) {
             this.code = code;//.resolve(noobj());
@@ -117,7 +127,6 @@ public class ExplainTool extends AbstractWidget<ExplainTool> {
     private Attributes savedAttributes;
     private boolean running = false;
     private int totalHeightUsed = 0;  // Track how many lines we've used
-    private String statusMessage = null;  // Temporary message to show in status bar
 
     public ExplainTool(final Code code) {
         this.rootCode = code;
@@ -178,6 +187,20 @@ public class ExplainTool extends AbstractWidget<ExplainTool> {
         ExplainLevel current = stack.peek();
         if (current == null) return;
 
+        // ── Popup-mode dispatch ──────────────────────────────────────
+        if (current.argTablePopup != null) {
+            handleArgTableAction(current, action);
+            return;
+        }
+        if (current.panelPopup != null) {
+            // SELECT or QUIT dismisses a panel popup
+            if (action == Action.SELECT || action == Action.QUIT) {
+                current.panelPopup = null;
+            }
+            return;
+        }
+
+        // ── Normal table navigation ──────────────────────────────────
         switch (action) {
             case DOWN_ROW:
                 current.selectedRow = Math.min(current.selectedRow + 1, current.dataRowCount() - 1);
@@ -198,7 +221,7 @@ public class ExplainTool extends AbstractWidget<ExplainTool> {
             case SELECT:
                 handleSelect(current);
                 break;
-                
+
             case SPACE:
                 handleCompile(current);
                 break;
@@ -212,45 +235,343 @@ public class ExplainTool extends AbstractWidget<ExplainTool> {
         }
     }
 
+    /**
+     * Handle key actions when an arg-table popup is active.
+     * Up/Down navigate rows, Enter drills into the selected arg, Esc/QUIT dismisses.
+     */
+    private void handleArgTableAction(ExplainLevel current, Action action) {
+        switch (action) {
+            case DOWN_ROW:
+                if (current.argEntries != null && !current.argEntries.isEmpty())
+                    current.argTableSelectedRow = Math.min(current.argTableSelectedRow + 1, current.argEntries.size() - 1);
+                break;
+            case UP_ROW:
+                current.argTableSelectedRow = Math.max(current.argTableSelectedRow - 1, 0);
+                break;
+            case SELECT:
+                drillIntoSelectedArg(current);
+                break;
+            case QUIT:
+                // Dismiss arg table popup, return to cell navigation
+                current.argTablePopup = null;
+                current.argEntries = null;
+                current.argTableSelectedRow = 0;
+                break;
+            default:
+                // Other keys ignored in arg-table mode
+                break;
+        }
+    }
+
+    /**
+     * Drill into the currently selected arg in the arg-table popup.
+     */
+    private void drillIntoSelectedArg(ExplainLevel current) {
+        if (current.argEntries == null || current.argTableSelectedRow >= current.argEntries.size()) return;
+        Obj selectedArg = current.argEntries.get(current.argTableSelectedRow);
+        current.argTablePopup = null;
+        current.argEntries = null;
+        current.argTableSelectedRow = 0;
+
+        if (selectedArg.isObjCall()) {
+            // Code arg → push new ExplainLevel
+            int newOffsetX = current.offsetX + 4;
+            int newOffsetY = current.offsetY + current.selectedRow + 3;
+            pushLevel(selectedArg.asCode(), newOffsetX, newOffsetY, current.selectedRow, current.selectedCol);
+        } else {
+            // Non-code arg → show in panel popup
+            current.panelPopup = buildArgDetailPanel(selectedArg);
+        }
+    }
+
+    /**
+     * Create a styled popup PanelWidget with green border and cyan title.
+     * All popup panels flow through this factory for consistent look.
+     */
+    private PanelWidget makePopupPanel(String title, String body) {
+        PanelWidget panel = new PanelWidget("{{c}}" + title + "{{\\c}}", body);
+        panel.style().border(Border.continuous.foreground("{{g}}")).applyStyle();
+        return panel;
+    }
+
+    /**
+     * Build a panel showing a single non-code argument value.
+     */
+    private PanelWidget buildArgDetailPanel(Obj arg) {
+        return buildObjWithDocsPanel(arg, "argument");
+    }
+
 
     private void handleCompile(ExplainLevel current) {
         this.popLevel();
         this.pushLevel(current.code.resolve(noobj()).rewrite(), current.offsetX, current.offsetY, current.spawnRow, current.spawnCol);
-        
+
     }
+
+    // =====================================================================
+    // Column-specific select handlers
+    // =====================================================================
+
     private void handleSelect(ExplainLevel current) {
-        // Check if we're on the 'args' column
         String header = current.table.header(current.selectedCol);
+        int row = current.selectedRow;
 
-        if ("args".equals(header)) {
-            Inst inst = current.getInst(current.selectedRow);
-            if (inst != null) {
-                // Find first code argument
-                Optional<Obj> codeArg = inst.args().values()
-                        .filter(Obj::isCode)
-                        .findFirst();
+        switch (header) {
+            case "op"    -> handleOpSelect(current, row);
+            case "dom"   -> handleDomRngSelect(current, row, true);
+            case "rng"   -> handleDomRngSelect(current, row, false);
+            case "args"  -> handleArgsSelect(current, row);
+            case "f"     -> handleFSelect(current, row);
+            case "desc"  -> handleDescSelect(current, row);
+            case "c_dom" -> handleCoefSelect(current, row, true);
+            case "c_rng" -> handleCoefSelect(current, row, false);
+            default      -> { /* unhandled column */ }
+        }
+    }
 
-                if (codeArg.isPresent()) {
-                    // Calculate offset for nested table (indent right and down)
-                    int newOffsetX = current.offsetX + 4;
-                    int newOffsetY = current.offsetY + current.selectedRow + 3; // +3 for header rows
+    // ── op ───────────────────────────────────────────────────────────
 
-                    // Pass spawn position so we can draw connector from parent cell
-                    pushLevel(codeArg.get().asCode(), newOffsetX, newOffsetY,
-                              current.selectedRow, current.selectedCol);
-                } else {
-                    // Flash or beep - no code to drill into
-                    showMessage(current, "{{y}}no nested code in args{{X}}");
-                }
+    private void handleOpSelect(ExplainLevel current, int row) {
+        Inst inst = getMetadataInst(current, row);
+        if (inst == null) return;
+        current.panelPopup = buildObjWithDocsPanel(inst, inst.tid().name());
+    }
+
+    // ── dom / rng ─────────────────────────────────────────────────────
+
+    private void handleDomRngSelect(ExplainLevel current, int row, boolean isDom) {
+        int metaIdx = isDom ? 1 : 2;
+        Type type = (Type) current.table.rowMetadata(row).get(metaIdx);
+        if (type == null) return;
+        String label = type.vid().small() + (isDom ? " domain" : " range");
+        current.panelPopup = buildObjWithDocsPanel(type, label);
+    }
+
+    // ── args ──────────────────────────────────────────────────────────
+
+    private void handleArgsSelect(ExplainLevel current, int row) {
+        Poly<?, ?> args = getMetadataArgs(current, row);
+        if (args == null || args.isEmpty()) {
+            String kind = (args != null && args.isRec()) ? "rec" : "lst";
+            current.panelPopup = makePopupPanel(kind + " arguments", "{{y}}no arguments{{X}}");
+            return;
+        }
+
+        long count = args.count();
+        if (count == 1) {
+            // Single arg — show directly
+            Obj singleArg = args.isLst()
+                    ? args.lstValue().getFirst()
+                    : args.recValue().values().iterator().next();
+            if (singleArg.isObjCall()) {
+                int newOffsetX = current.offsetX + 4;
+                int newOffsetY = current.offsetY + current.selectedRow + 3;
+                pushLevel(singleArg.asCode(), newOffsetX, newOffsetY, current.selectedRow, current.selectedCol);
+            } else {
+                current.panelPopup = buildArgDetailPanel(singleArg);
             }
-        } else if ("op".equals(header)) {
-            // Could show instruction documentation here
-            Inst inst = current.getInst(current.selectedRow);
-            if (inst != null) {
-                showMessage(current, "{{c}}%s{{X}} :: {{m}}%s{{X}} -> {{m}}%s{{X}}",
-                        inst.tid().toUri(), inst.dom(), inst.rng());
+        } else {
+            // Multiple args — show selection table
+            showArgTablePopup(current, args);
+        }
+    }
+
+    private void showArgTablePopup(ExplainLevel current, Poly<?, ?> args) {
+        List<Obj> entries = new ArrayList<>();
+        List<String> labels = new ArrayList<>();
+
+        if (args.isLst()) {
+            int idx = 0;
+            for (Obj arg : args.lstValue()) {
+                entries.add(arg);
+                labels.add("[" + idx++ + "] " + summarizeArg(arg));
+            }
+        } else {
+            for (Map.Entry<Obj, Obj> kv : args.recValue().entrySet()) {
+                entries.add(kv.getValue());
+                labels.add(kv.getKey().uriValue().toString() + " => " + summarizeArg(kv.getValue()));
             }
         }
+
+        current.argEntries = entries;
+        current.argTableSelectedRow = 0;
+
+        // Build a small TableWidget for arg selection
+        TableWidget tbl = new TableWidget(List.of("arg"));
+        for (String label : labels) {
+            tbl.addRow(List.of(label));
+        }
+        tbl.style()
+                .border(Border.continuous.foreground("{{b}}"))
+                .divider("{{b}}|")
+                .pointer("{{r}}>")
+                .applyStyle();
+        current.argTablePopup = tbl;
+    }
+
+    private static String summarizeArg(Obj arg) {
+        if (arg.isCall()) {
+            return arg.asCall().insts().stream()
+                    .map(i -> i.tid().name())
+                    .reduce((a, b) -> a + "." + b).orElse("call");
+        }
+        return arg.toShortString().replace("\n", " ").trim();
+    }
+
+    // ── f ─────────────────────────────────────────────────────────────
+
+    private void handleFSelect(ExplainLevel current, int row) {
+        Inst inst = getMetadataInst(current, row);
+        if (inst == null) return;
+
+        if (!inst.hasf()) {
+            current.panelPopup = makePopupPanel("function",
+                    "{{y}}No function registered for this instruction.{{X}}\n" +
+                    "The instruction may be resolved at runtime or defined externally.");
+            return;
+        }
+
+        if (inst.isJavaFunction()) {
+            // <j> — Java lambda
+            String className = inst.functionClassName();
+            fURI basePath = inst.tid().basePath();
+            Obj doc = Router.readFromSpace(basePath.addQ(QCollection.DOCQ));
+            String docBody = (doc.isRec() && !QCollection.isNoDocs(doc))
+                    ? new QCollection.Docs(doc.asRec()).description()
+                    : "{{y}}no documentation available{{X}}";
+
+            String body = Graphitty.string(
+                    "{{m}}Java Implementation{{X}}\n" +
+                    "{{w}}class:{{X}} %s\n" +
+                    "{{w}}documentation:{{X}}\n%s",
+                    className, docBody);
+            current.panelPopup = makePopupPanel(inst.tid().name() + " <j>", body);
+        } else {
+            // <m> — mtron code → push new ExplainLevel
+            Obj mtronObj = inst.getMtronFunctionObj();
+            if (mtronObj.isObjCall()) {
+                int newOffsetX = current.offsetX + 4;
+                int newOffsetY = current.offsetY + current.selectedRow + 3;
+                pushLevel(mtronObj.asCode(), newOffsetX, newOffsetY, current.selectedRow, current.selectedCol);
+            } else if (mtronObj.isNoObj()) {
+                current.panelPopup = makePopupPanel("function",
+                        "{{y}}mtron function object is empty.{{X}}");
+            } else {
+                current.panelPopup = makePopupPanel("function <m>",
+                        mtronObj.toCleanString());
+            }
+        }
+    }
+
+    // ── desc ──────────────────────────────────────────────────────────
+
+    private void handleDescSelect(ExplainLevel current, int row) {
+        Inst inst = getMetadataInst(current, row);
+        if (inst == null) return;
+        Inst.Form form = Inst.Form.of(inst);
+        current.panelPopup = makePopupPanel(
+                form.name() + " instruction",
+                "{{w}}" + form.description + "{{X}}");
+    }
+
+    // ── c_dom / c_rng ─────────────────────────────────────────────────
+
+    private void handleCoefSelect(ExplainLevel current, int row, boolean isDom) {
+        int metaIdx = isDom ? 6 : 7;
+        cInt c = (cInt) current.table.rowMetadata(row).get(metaIdx);
+        if (c == null) return;
+        String label = (isDom ? "domain coefficient" : "range coefficient");
+
+        String sugar = c.toString();
+        String desugar = "{" + (c.min() == null ? "" : c.min()) + "," + (c.max() == null ? "" : c.max()) + "}";
+        String body = Graphitty.string(
+                "{{w}}sugar:{{X}}  %s\n{{w}}range:{{X}} %s",
+                sugar, desugar);
+        current.panelPopup = makePopupPanel(label, body);
+    }
+
+    // =====================================================================
+    // Popup builders
+    // =====================================================================
+
+    /**
+     * Build a unified popup panel for an Obj: identity header line, followed
+     * by documentation (if a docq exists) or the highlighted Obj (if not).
+     */
+    private PanelWidget buildObjWithDocsPanel(Obj obj, String title) {
+        StringBuilder sb = new StringBuilder();
+
+        // ── 1. Identity header ──────────────────────────────────────
+        if (obj.isType()) {
+            if (obj.asType().isBaseType()) {
+                sb.append(Graphitty.string("{{b}}%s{{\\b}}{{m}}::T{{\\m}}", obj.vid()));
+            } else {
+                sb.append(Graphitty.string("{{b}}%s{{\\b}}{{m}}::T{{\\m}} refines {{b}}%s{{\\b}}{{m}}::T{{\\m}}",
+                        obj.vid(), obj.tid()));
+            }
+        } else if (obj.isInst()) {
+            sb.append(Graphitty.string("{{b}}%s{{\\b}}{{m}}::T{{\\m}} refines {{b}}/m/inst{{\\b}}{{m}}::T{{\\m}}",
+                    obj.tid().basePath()));
+        } else {
+            sb.append(Graphitty.string("{{b}}%s{{\\b}}{{m}}::T{{\\m}}{{g}}[{{\\g}}%s{{g}}]{{\\g}}",
+                    obj.tid(), obj));
+        }
+
+        // ── 2. Documentation or fallback ────────────────────────────
+        fURI key = docqKey(obj);
+        if (key != null) {
+            Obj docObj = Router.readFromSpace(key.addQ(QCollection.DOCQ));
+            if (docObj.isRec() && !QCollection.isNoDocs(docObj)) {
+                QCollection.Docs docs = new QCollection.Docs(docObj.asRec());
+                // desc
+                String desc = docs.description();
+                if (desc != null && !desc.isBlank() && !desc.equals(QCollection.NO_DOCS_STRING)) {
+                    sb.append("\n\n{{w}}").append(desc).append("{{X}}");
+                }
+                // args — let Highlighter color it
+                Poly<?, ?> docsArgs = docs.args();
+                if (docsArgs != null && !docsArgs.isEmpty()) {
+                    sb.append("\n\n{{m}}args:{{X}}\n").append(Highlighter.format(docsArgs));
+                }
+                // examples — white
+                List<String> examples = docs.examples();
+                if (!examples.isEmpty()) {
+                    sb.append("\n\n{{m}}examples:{{X}}\n");
+                    for (String ex : examples) {
+                        sb.append("  {{w}}").append(ex).append("{{X}}\n");
+                    }
+                }
+                return makePopupPanel(title, sb.toString());
+            }
+        }
+
+        // ── 3. No docq — show the highlighted Obj ────────────────────
+        sb.append("\n\n").append(Highlighter.format(obj));
+        return makePopupPanel(title, sb.toString());
+    }
+
+    /** Find a usable URI for docq lookup from the given Obj. */
+    private static fURI docqKey(Obj obj) {
+        if (obj.isType() && obj.vid() != null && !obj.vid().isGeneric()) return obj.vid();
+        if (obj.isInst()) return obj.tid().basePath();
+        if (obj.vid() != null && !obj.vid().isGeneric()) return obj.vid().noQ();
+        return null;
+    }
+
+    // =====================================================================
+    // Metadata helpers
+    // =====================================================================
+
+    /** Get the Inst from metadata slot 0 (or 5, both store the Inst). */
+    private Inst getMetadataInst(ExplainLevel level, int row) {
+        Object meta = level.table.rowMetadata(row).get(0);
+        return meta instanceof Inst i ? i : null;
+    }
+
+    /** Get the args Poly from metadata slot 3. */
+    private Poly<?, ?> getMetadataArgs(ExplainLevel level, int row) {
+        Object meta = level.table.rowMetadata(row).get(3);
+        return meta instanceof Poly<?, ?> p ? p : null;
     }
 
     private void pushLevel(Code code, int offsetX, int offsetY, int spawnRow, int spawnCol) {
@@ -304,6 +625,11 @@ public class ExplainTool extends AbstractWidget<ExplainTool> {
                     content = Graphitty.string(dimColor) + indent + line;
                 }
                 canvas.line(content);
+
+                // Render popup overlay after the selected row (top level only)
+                if (isTop && isSelected && hasPopup(level)) {
+                    renderPopupLines(level, canvas, indent);
+                }
             }
 
             if (hasChild) canvas.blankLine();
@@ -316,17 +642,18 @@ public class ExplainTool extends AbstractWidget<ExplainTool> {
         final ExplainLevel top = stack.peek();
         if (top != null) {
             final String mark = top.rewritten ? "{{[g]&w}} R {{X}}" : "{{[y]&w}} R {{X}}";
-            canvas.statusLine(mark + " {{w}}ctrl-d{{g}}:back {{w}}<^v>{{g}}:nav {{w}}enter{{g}}:inspect {{w}}space{{g}}:rewrite {{X}}");
+            final String hint;
+            if (top.argTablePopup != null) {
+                hint = mark + " {{w}}<^v>{{g}}:nav-arg {{w}}enter{{g}}:drill {{w}}ctrl-d{{g}}:back {{X}}";
+            } else if (top.panelPopup != null) {
+                hint = mark + " {{w}}enter/ctrl-d{{g}}:dismiss {{X}}";
+            } else {
+                hint = mark + " {{w}}ctrl-d{{g}}:back {{w}}<^v>{{g}}:nav {{w}}enter{{g}}:inspect {{w}}space{{g}}:rewrite {{X}}";
+            }
+            canvas.statusLine(hint);
         }
 
         totalHeightUsed = canvas.finish();
-    }
-
-    /**
-     * Show a temporary message in the status bar (will be shown on next redraw).
-     */
-    private void showMessage(ExplainLevel level, String format, Object... args) {
-        this.statusMessage = Graphitty.string(format, args);
     }
 
     /**
@@ -440,6 +767,94 @@ public class ExplainTool extends AbstractWidget<ExplainTool> {
     @Override
     public String format() {
         return ""; // Rendering is handled by run()
+    }
+
+    // =====================================================================
+    // Popup rendering helpers
+    // =====================================================================
+
+    /**
+     * Render all active popup lines for a level (panel or arg-table),
+     * indented relative to the level's offset.
+     */
+    private void renderPopupLines(ExplainLevel level, WidgetCanvas canvas, String indent) {
+        if (level.argTablePopup != null) {
+            renderArgTablePopupLines(level, canvas, indent);
+        } else if (level.panelPopup != null) {
+            renderPanelPopupLines(level, canvas, indent);
+        }
+    }
+
+    private void renderPanelPopupLines(ExplainLevel level, WidgetCanvas canvas, String indent) {
+        // Compute available width: terminal minus indent, popup padding, border, and margin
+        int avail = terminal.getWidth() - level.offsetX - 6;
+        if (avail > 20) level.panelPopup.maxWidth(avail);
+        String formatted = level.panelPopup.format();
+        String[] lines = formatted.split("\n", -1);
+        String popupIndent = indent + "  ";
+        for (String line : lines) {
+            canvas.line(popupIndent + line);
+        }
+    }
+
+    private void renderArgTablePopupLines(ExplainLevel level, WidgetCanvas canvas, String indent) {
+        TableWidget tbl = level.argTablePopup;
+        String popupIndent = indent + "  ";
+        List<String> headers = tbl.headers;
+        List<List<Object>> rows = tbl.rows();
+
+        if (headers.isEmpty() && rows.isEmpty()) return;
+
+        // Build formatted lines with selection highlighting
+        List<String> popupLines = new ArrayList<>();
+        final String divider = "{{b}}|";
+        final String pointer = "{{r}}>";
+        final int selRow = level.argTableSelectedRow;
+
+        // Header line
+        if (!headers.isEmpty()) {
+            StringBuilder hdr = new StringBuilder(divider);
+            for (String h : headers) {
+                hdr.append(h).append("  ").append(divider);
+            }
+            popupLines.add(Graphitty.string(hdr.toString()));
+            // Separator
+            popupLines.add(Graphitty.string(divider + "─".repeat(Math.max(1, headers.get(0).length() + 1)) + divider));
+        }
+
+        // Data rows
+        for (int r = 0; r < rows.size(); r++) {
+            List<Object> row = rows.get(r);
+            StringBuilder rb = new StringBuilder();
+            if (r == selRow) {
+                rb.append(pointer); // selection pointer
+            } else {
+                rb.append(divider);
+            }
+            for (Object cell : row) {
+                rb.append(cell.toString());
+                if (r == selRow) {
+                    rb.append("  ").append(divider);
+                } else {
+                    rb.append("  ").append(divider);
+                }
+            }
+            popupLines.add(Graphitty.string(rb.toString()));
+        }
+
+        // Hint line
+        popupLines.add(Graphitty.string("{{w}}enter:select  esc:back{{X}}"));
+
+        for (String line : popupLines) {
+            canvas.line(popupIndent + line);
+        }
+    }
+
+    /**
+     * Returns true if the given level has any active popup overlay.
+     */
+    private boolean hasPopup(ExplainLevel level) {
+        return level != null && (level.panelPopup != null || level.argTablePopup != null);
     }
 
     @Override

@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -18,11 +18,10 @@
 
 package studio.phaseshift.metatron.isa.mach.type.ui.tool;
 
-import studio.phaseshift.metatron.isa.mach.type.ui.console.Console;
-
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.ui.console.Console;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.widget.SelectorWidget;
 
@@ -56,8 +55,7 @@ public class fURISelectorTool extends SelectorWidget<fURI, fURISelectorTool> {
 
     @Override
     protected String getTitleLine() {
-        return studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty.string(
-                "{{g}}%d fURIs found{{X}}", items.size());
+        return Graphitty.string("{{g}}%d fURIs found{{X}}", items.size());
     }
 
     @Override
@@ -65,7 +63,7 @@ public class fURISelectorTool extends SelectorWidget<fURI, fURISelectorTool> {
         final String furiName = item.toString();
         final var buf = Console.LOCAL_INSTANCE.getReader().getBuffer();
         buf.clear();
-        terminal.writer().write(Graphitty.string("{{<%d}}",item.name().length()+1));
+        terminal.writer().write(Graphitty.string("{{<%d}}", item.name().length() + 1));
         buf.write("*" + furiName + "/");
         buf.cursor(buf.length());
     }

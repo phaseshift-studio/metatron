@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -18,16 +18,22 @@
 
 package studio.phaseshift.metatron;
 
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import studio.phaseshift.metatron.isa.m.parser.mParser;
+import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.m.type.Str;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 
 import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 
 /**
  * Abstract base class for testing {@link ObjSerializer} implementations.
@@ -60,12 +66,29 @@ public abstract class AbstractSerializerTest<T> extends AbstractMetatronTest {
     protected final ObjSerializer<T> serializer;
 
     /**
-     * Constructs a new test instance with the specified serializer.
+     * The type VID for the str-refinement being tested (e.g., HTML_TID, JSON_TID).
+     * Set by subclasses that test string-refinement types via {@code .as(type::T)} chains.
+     */
+    protected fURI typeVid;
+
+    /**
+     * The mtron type name used in {@code .as(name::T)} expressions (e.g., "html", "json").
+     */
+    protected String typeName;
+
+    /**
+     * Constructs a new test instance with the specified serializer and type metadata.
      *
      * @param serializer the {@link ObjSerializer} implementation to test
+     * @param typeVid    the type VID (e.g., {@code HTML_TID}) for str-refinement tests;
+     *                   may be {@code null} for serializers that don't test type chains
+     * @param typeName   the mtron type name (e.g., "html") for {@code .as(name::T)} chains;
+     *                   may be {@code null}
      */
-    public AbstractSerializerTest(final ObjSerializer<T> serializer) {
+    public AbstractSerializerTest(final ObjSerializer<T> serializer, final fURI typeVid, final String typeName) {
         this.serializer = serializer;
+        this.typeVid = typeVid;
+        this.typeName = typeName;
     }
 
     /**
@@ -84,32 +107,81 @@ public abstract class AbstractSerializerTest<T> extends AbstractMetatronTest {
     }
 
     /**
-     * Parameterized test that verifies serialization and deserialization round-trip correctness.
-     * <p>
-     * This test performs the following steps:
-     * <ol>
-     *   <li>Parses the input string into an {@link Obj} using {@link mParser}</li>
-     *   <li>Serializes the object using the configured serializer</li>
-     *   <li>Deserializes the buffer back into an {@link Obj}</li>
-     *   <li>Asserts that the original and deserialized objects are equal</li>
-     * </ol>
-     * </p>
-     * <p>
-     * If {@link #ignoreFail(String)} returns {@code true} for the input string, the test will
-     * log a warning instead of failing when objects don't match.
-     * </p>
-     *
-     * @param objString the string representation of the Metatron object to test
-     */
-    /**
      * Verifies that a roundtrip is structurally lossless.
-     * The result must be equal to the original, and their types (including TID/VID) 
+     * The result must be equal to the original, and their types (including TID/VID)
      * must be identical.
      */
     protected void assertLosslessRoundtrip(Obj original, Obj result) {
         assertEquals(original, result, "Value mismatch in roundtrip");
         assertEquals(original.type(), result.type(), "Type/TID/VID mismatch in roundtrip");
     }
+
+    // ═══════════════════════════════════════════════════════════════════
+    //  Type-conversion plumbing (str-refinement types)
+    // ═══════════════════════════════════════════════════════════════════
+
+    @BeforeAll
+    public static void importWebTypes() {
+        InstSet.importInstSet(f("/m/web"));
+    }
+
+    /**
+     * Parse and apply a mtron expression, returning the result.
+     * The return type is inferred from the assignment context (e.g., {@code Str s = eval("...")}).
+     */
+    @SuppressWarnings("unchecked")
+    protected <O extends Obj> O eval(final String mtronExpr) {
+        return (O) ObjmtronSerializer.singleNoClip().parse(mtronExpr).apply();
+    }
+
+    /**
+     * Assert that a mtron value expression converts to the str-refinement type
+     * (e.g., {@code '"<html>..."'.as(html::T)}).  Returns the tagged {@link Str}.
+     */
+    protected Str assertStrToType(final String mtronValueExpr) {
+        final String expr = mtronValueExpr + ".as(" + typeName + "::T)";
+        final Obj result = eval(expr);
+        assertEquals(typeVid, result.tid(), "str→" + typeName + "::T tag: " + mtronValueExpr);
+        assertTrue(result.isStr(), "str→" + typeName + "::T must produce a string: " + mtronValueExpr);
+        return result.asStr();
+    }
+
+    /**
+     * Assert that a mtron value expression parses through the str-refinement type
+     * into a {@link Rec} (e.g., {@code '"<html>..."'.as(html::T).as(rec::T)}).
+     */
+    protected Rec assertTypeToRec(final String mtronValueExpr) {
+        final String expr = mtronValueExpr + ".as(" + typeName + "::T).as(rec::T)";
+        final Obj result = eval(expr);
+        assertTrue(result.isRec(), typeName + "::T→rec::T must produce a Rec: " + mtronValueExpr);
+        return result.asRec();
+    }
+
+    /**
+     * Assert that a mtron value expression round-trips through the str-refinement
+     * type, rec parse, and back (e.g., {@code '"<html>..."'.as(html::T).as(rec::T).as(html::T)}).
+     * Returns the final tagged {@link Str}.
+     */
+    protected Str assertRecToType(final String mtronValueExpr) {
+        final String expr = mtronValueExpr + ".as(" + typeName + "::T).as(rec::T).as(" + typeName + "::T)";
+        final Obj result = eval(expr);
+        assertEquals(typeVid, result.tid(), "rec::T→" + typeName + "::T tag: " + mtronValueExpr);
+        assertTrue(result.isStr(), "rec::T→" + typeName + "::T must produce a string: " + mtronValueExpr);
+        return result.asStr();
+    }
+
+    /**
+     * Assert that a mtron expression throws (predicate rejects invalid input).
+     * Uses {@code checkCodeParseApply(LOG, expr, "<ERROR>")}.
+     */
+    protected void assertRejected(final String mtronValueExpr) {
+        final String expr = mtronValueExpr + ".as(" + typeName + "::T)";
+        checkCodeParseApply(LOG, expr, "<ERROR>");
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    //  Generic Obj round-trip via serializer.write() / serializer.read()
+    // ═══════════════════════════════════════════════════════════════════
 
     @ParameterizedTest
     @CsvSource(value = {

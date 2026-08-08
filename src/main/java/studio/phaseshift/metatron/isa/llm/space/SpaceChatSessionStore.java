@@ -35,6 +35,7 @@ import java.util.*;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.q.QCollection.INCRQ;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
+import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TRUE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -115,8 +116,13 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
 
         return allMessages.stream()
                 .skip(skip)
+                .peek(m -> {
+                    if (!m.tid().equals(AI_MESSAGE_TID) || !m.has(TOOL_REQUESTS))
+                        this.currentMessages.add(m.vid());
+                })
                 .map(m -> {
                     try {
+                        m.recValue().put(uri(WRITTEN_KEY), BOOL_TRUE);
                         return SERIALIZER.write(m.vid(null));
                     } catch (final Exception e) {
                         LOG.warn("error converting stored message to ChatMessage (ignoring): %s", e);
@@ -139,13 +145,7 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
      * full message list including historical AiMessages from prior chats.
      * Without a static set, every AiMessage is re-written on every chat.
      */
-    private static final Set<String> writtenAiTexts = new HashSet<>();
-
-    static void clearWrittenAiTexts() {
-        synchronized (writtenAiTexts) {
-            writtenAiTexts.clear();
-        }
-    }
+    private static final String WRITTEN_KEY = "_w";   // in-memory marker, rides LC4j attributes
 
     @Override
     public void updateMessages(final Object sessionVID, final List<ChatMessage> messages) {
@@ -161,14 +161,9 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
                 if (!msgRec.tid().equals(AI_MESSAGE_TID))
                     continue;
 
-                // Dedup: use text + first tool call ID to distinguish
-                // AiMessages with empty text (tool-only responses).
-                String dedupKey = msgRec.at(uri(TEXT)).orElse(str("")).strValue();
-                final Obj toolReqs = msgRec.at(uri(TOOL_REQUESTS));
-                if (!toolReqs.isNoObj() && toolReqs.isLst() && !toolReqs.asLst().lstValue().isEmpty())
-                    dedupKey += "|" + toolReqs.asLst().elements()
-                            .findFirst().get().asRec().at(uri(CONTENTS)).orElse(str("")).strValue();
-                if (!writtenAiTexts.add(dedupKey))
+                // Already persisted — _w was stamped by getMessages(),
+                // rode through LangChain4j's ChatMessage.attributes()
+                if (!msgRec.at(uri(WRITTEN_KEY)).isNoObj())
                     continue;
 
                 msgRec.recValue().put(uri(TIME), mathInstSet.nowDatetime());

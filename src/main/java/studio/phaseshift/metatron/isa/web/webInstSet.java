@@ -62,7 +62,6 @@ import static studio.phaseshift.metatron.isa.m.type.Inst.INST_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -126,16 +125,38 @@ public class webInstSet extends AbstractInstSet {
             .create();
 
     public static final Type XML_TYPE = Type.Builder.build()
-            .tid(REC_TID)
-            .vid(XML_TID).create();
+            .tid(STR_TID)
+            .vid(XML_TID)
+            .predicate((lhs, inst) -> {
+                try {
+                    ObjXMLSerializer.parse(inst.arg(0).strValue());
+                    return lhs;
+                } catch (final Exception e) {
+                    return noobj();
+                }
+            }).create();
     public static final Type HTML_TYPE = Type.Builder.build()
-            .tid(XML_TID)
+            .tid(STR_TID)
             .vid(HTML_TID)
-            .isaPredicate(rec(uri(HTML), rec(uri(HEAD), rec(uri(TITLE).maybe().asUri(), STR_TYPE), uri(BODY), REC_TYPE))).create();
+            .predicate((lhs, inst) -> {
+                try {
+                    ObjHTMLSerializer.parse(inst.arg(0).strValue());
+                    return lhs;
+                } catch (final Exception e) {
+                    return noobj();
+                }
+            }).create();
     public static final Type JAVA_TYPE = Type.Builder.build()
-            .tid(REC_TID)
+            .tid(STR_TID)
             .vid(JAVA_TID)
-            .create();
+            .predicate((lhs, inst) -> {
+                try {
+                    ObjJavaSerializer.parse(inst.arg(0).strValue());
+                    return lhs;
+                } catch (final Exception e) {
+                    return noobj();
+                }
+            }).create();
     public static final Type JSON_TYPE = Type.Builder.build()
             .tid(STR_TID)
             .vid(JSON_TID)
@@ -162,7 +183,16 @@ public class webInstSet extends AbstractInstSet {
     public static final Type CSS_TYPE = Type.Builder.build()
             .tid(REC_TID)
             .vid(CSS_TID).create();
-    public static final Type MARKDOWN_TYPE = Type.Builder.build().tid(REC_TID).vid(MARKDOWN_TID).create();
+    public static final Type MARKDOWN_TYPE = Type.Builder.build().tid(STR_TID)
+            .vid(MARKDOWN_TID)
+            .predicate((lhs, inst) -> {
+                try {
+                    ObjMarkdownSerializer.parse(inst.arg(0).strValue());
+                    return lhs;
+                } catch (final Exception e) {
+                    return noobj();
+                }
+            }).create();
 
     // ── Serializer type definitions ──────────────────────────────────
     public static Type OBJ_SERIALIZER_TYPE;
@@ -373,19 +403,42 @@ public class webInstSet extends AbstractInstSet {
                                 "ping(localhost:8777)",
                                 "virtual::[code=>ping(localhost:8777)-<{@x+*0,@y+1},loop=>second::2.0]"),
                         instC(WEB_ISA_TID.extend("inst/format").dom(MARKDOWN_TID).rng(STR_TID), lst(), (lhs, inst) -> str(ObjMarkdownSerializer.format(ObjMarkdownSerializer.single().write(lhs).getChars().toString()))),
-                        instC(AS_INST_TID.dom(STR_TID).rng(JSON_TID), lst(JSON_TYPE), (lhs, inst) -> lhs.tid(JSON_TID)),
-                        instC(AS_INST_TID.dom(STR_TID).rng(YAML_TID), lst(YAML_TYPE), (lhs, inst) -> lhs.tid(YAML_TID)),
+                        //   instC(AS_INST_TID.dom(STR_TID).rng(JSON_TID), lst(JSON_TYPE), (lhs, inst) -> lhs.tid(JSON_TID)),
+                        //   instC(AS_INST_TID.dom(STR_TID).rng(YAML_TID), lst(YAML_TYPE), (lhs, inst) -> lhs.tid(YAML_TID)),
                         instC(AS_INST_TID.dom(JSON_TID).rng(REC_TID), lst(REC_TYPE), (lhs, inst) -> ObjJSONSerializer.simple().inputBytes(lhs.strValue())),
                         instC(AS_INST_TID.dom(YAML_TID).rng(REC_TID), lst(REC_TYPE), (lhs, inst) -> ObjYAMLSerializer.single().inputBytes(lhs.strValue())),
                         instC(AS_INST_TID.dom(REC_TID).rng(JSON_TID), lst(JSON_TYPE), (lhs, inst) -> str(new String(ObjJSONSerializer.simple().outputBytes(lhs).array(), StandardCharsets.UTF_8), JSON_TID, null)),
-                        instC(AS_INST_TID.dom(STR_TID).rng(XML_TID), lst(T(XML_TID)), (lhs, inst) -> ObjXMLSerializer.parse(lhs.asStr().strValue())),
-                        instC(AS_INST_TID.dom(STR_TID).rng(HTML_TID), lst(HTML_TYPE), (lhs, inst) -> ObjHTMLSerializer.parse(lhs.asStr().strValue())),
-                        instC(AS_INST_TID.dom(STR_TID).rng(MARKDOWN_TID), lst(MARKDOWN_TYPE), (lhs, inst) -> ObjMarkdownSerializer.parse(lhs.asStr().strValue())),
-                        instC(AS_INST_TID.dom(STR_TID).rng(JAVA_TID), lst(JAVA_TYPE), (obj, inst) -> ObjJavaSerializer.single().inputBytes(obj.strValue().getBytes())),
-                        instC(AS_INST_TID.dom(JAVA_TID).rng(STR_TID), lst(STR_TYPE), (obj, inst) -> str(new String(ObjJavaSerializer.single().outputBytes(obj).array()))),
-                        instC(AS_INST_TID.dom(HTML_TID).rng(STR_TID), lst(STR_TYPE), (lhs, inst) -> str(ObjHTMLSerializer.single().write(lhs).outerHtml())),
-                        instC(AS_INST_TID.dom(MARKDOWN_TID).rng(STR_TID), lst(STR_TYPE), (lhs, inst) -> str(ObjMarkdownSerializer.single().write(lhs).getChars().toString())),
-                        instC(AS_INST_TID.dom(MARKDOWN_TID).rng(HTML_TID), lst(HTML_TYPE), (lhs, inst) -> ObjMarkdownSerializer.single().toHTML(ObjMarkdownSerializer.single().write(lhs))),
+                        //   instC(AS_INST_TID.dom(STR_TID).rng(XML_TID), lst(XML_TYPE), (lhs, inst) -> lhs.tid(XML_TID)),
+                        instC(AS_INST_TID.dom(XML_TID).rng(REC_TID), lst(REC_TYPE), (lhs, inst) -> ObjXMLSerializer.parse(lhs.strValue())),
+                        instC(AS_INST_TID.dom(REC_TID).rng(XML_TID), lst(XML_TYPE), (lhs, inst) -> str(new String(ObjXMLSerializer.single().outputBytes(lhs).array(), StandardCharsets.UTF_8), XML_TID, null)),
+                        //   instC(AS_INST_TID.dom(STR_TID).rng(HTML_TID), lst(HTML_TYPE), (lhs, inst) -> lhs.tid(HTML_TID)),
+                        instC(AS_INST_TID.dom(HTML_TID).rng(REC_TID), lst(REC_TYPE), (lhs, inst) -> ObjHTMLSerializer.parse(lhs.strValue())),
+                        instC(AS_INST_TID.dom(REC_TID).rng(HTML_TID), lst(HTML_TYPE), (lhs, inst) -> str(ObjHTMLSerializer.single().write(lhs).outerHtml(), HTML_TID, null)),
+                        //  instC(AS_INST_TID.dom(STR_TID).rng(MARKDOWN_TID), lst(MARKDOWN_TYPE), (lhs, inst) -> lhs.tid(MARKDOWN_TID)),
+                        instC(AS_INST_TID.dom(MARKDOWN_TID).rng(REC_TID), lst(REC_TYPE), (lhs, inst) -> ObjMarkdownSerializer.parse(lhs.strValue())),
+                        instC(AS_INST_TID.dom(REC_TID).rng(MARKDOWN_TID), lst(MARKDOWN_TYPE), (lhs, inst) -> str(ObjMarkdownSerializer.single().write(lhs).getChars().toString(), MARKDOWN_TID, null)),
+                        //   instC(AS_INST_TID.dom(STR_TID).rng(JAVA_TID), lst(JAVA_TYPE), (lhs, inst) -> lhs.tid(JAVA_TID)),
+                        instC(AS_INST_TID.dom(JAVA_TID).rng(REC_TID), lst(REC_TYPE), (lhs, inst) -> ObjJavaSerializer.single().inputBytes(lhs.strValue().getBytes())),
+                        instC(AS_INST_TID.dom(REC_TID).rng(JAVA_TID), lst(JAVA_TYPE), (lhs, inst) -> str(new String(ObjJavaSerializer.single().outputBytes(lhs).array()), JAVA_TID, null)),
+                        instC(AS_INST_TID.dom(MARKDOWN_TID).rng(HTML_TID), lst(HTML_TYPE), (lhs, inst) -> str(ObjMarkdownSerializer.single().toHTML(ObjMarkdownSerializer.single().write(lhs)), HTML_TID, null)),
+                        instC(AS_INST_TID.dom(MCP_CLIENT_TID).rng(JSON_TID), lst(JSON_TYPE), (lhs, inst) -> {
+                            final mcpClient client = (mcpClient) lhs;
+                            final Map<Obj, Obj> configMap = new LinkedHashMap<>();
+                            // type
+                            if (client.jvm().containsKey(uri("type")))
+                                configMap.put(uri("type"), client.jvm().get(uri("type")));
+                            // url (use host value if url key is absent)
+                            if (client.jvm().containsKey(uri(URL)))
+                                configMap.put(uri(URL), client.jvm().get(uri(URL)));
+                            else if (client.jvm().containsKey(uri(HOST)))
+                                configMap.put(uri(URL), client.jvm().get(uri(HOST)));
+                            // headers
+                            if (client.jvm().containsKey(uri(HEADERS)))
+                                configMap.put(uri(HEADERS), client.jvm().get(uri(HEADERS)));
+                            final Rec configRec = rec(configMap, REC_TID, null);
+                            final byte[] jsonBytes = ObjJSONSerializer.simple().outputBytes(configRec).array();
+                            return str(new String(jsonBytes, StandardCharsets.UTF_8), JSON_TID, null);
+                        }),
                         instC(AS_INST_TID.dom(JSON_TID).rng(MCP_CLIENT_TID.some()), lst(MCP_CLIENT_TYPE), (lhs, inst) -> {
                             final Rec parse = ObjJSONSerializer.simple().inputBytes(lhs.strValue()).asRec();
                             List<Rec> servers = new ArrayList<>();
@@ -423,7 +476,7 @@ public class webInstSet extends AbstractInstSet {
                         }))));
         //  instC(AS_INST_TID.dom(ALL).rng(STR_TID), lst(JSON_STRING_TYPE), (lhs, inst) -> str(ObjJSONSerializer.simple().write(lhs).toString())))))
         docWrap(this,
-                "the world of the web within the metatron",
+                "the world of the web widens metatron",
                 "/usr/idea -> *<http://metatron.phaseshift.studio/html/head/title>");
 
         super.setup();

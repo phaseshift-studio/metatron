@@ -29,6 +29,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.m.type.Rel;
 import studio.phaseshift.metatron.isa.mach.io.type.AbstractObjSerializer;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
@@ -36,7 +37,13 @@ import studio.phaseshift.metatron.util.MTronException;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 import java.io.StringReader;
+import java.io.StringWriter;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 
@@ -116,7 +123,75 @@ public class ObjXMLSerializer extends AbstractObjSerializer<Document> {
 
     @Override
     public Document write(final Obj obj) {
-        return null;
+        try {
+            if (!obj.isRec())
+                throw MTronException.of("XML write requires a Rec, got: %s", obj.type());
+            final Rec rec = obj.asRec();
+            // The rec is structured as rec(rootTagName, readElement(rootElement))
+            // i.e. a single Rel: uri(tag) => elementRec
+            final java.util.Iterator<Rel> iter = rec.elements().iterator();
+            if (!iter.hasNext())
+                throw MTronException.of("XML Rec must have at least one element");
+            final Rel rootRel = iter.next();
+            final String rootTag = rootRel.first().isUri() ?
+                    rootRel.first().uriValue().toString() : rootRel.first().toString();
+            final Rec rootElementRec = rootRel.second().asRec();
+
+            final DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+            final Document doc = factory.newDocumentBuilder().newDocument();
+            doc.appendChild(writeElement(rootTag, rootElementRec, doc));
+            return doc;
+        } catch (final MTronException e) {
+            throw e;
+        } catch (final Exception e) {
+            throw MTronException.of(e, "unable to write XML: %s", obj);
+        }
+    }
+
+    private Element writeElement(final String tagName, final Rec rec, final Document doc) {
+        final Element element = doc.createElement(tagName);
+
+        // attributes
+        final Obj attrObj = rec.jvm().get(uri("attr"));
+        if (null != attrObj && attrObj.isRec()) {
+            attrObj.asRec().jvm().forEach((k, v) ->
+                    element.setAttribute(k.uriValue().toString(), v.strValue()));
+        }
+
+        // child elements — stored as a Lst of Rel(uri(tag), elementRec)
+        final Obj nodeObj = rec.jvm().get(uri("node"));
+        if (null != nodeObj && nodeObj.isLst()) {
+            nodeObj.asLst().elements().forEach(child -> {
+                if (child.isRel()) {
+                    final Rel childRel = child.asRel();
+                    final String childTag = childRel.first().isUri() ?
+                            childRel.first().uriValue().toString() : childRel.first().toString();
+                    element.appendChild(writeElement(childTag, childRel.second().asRec(), doc));
+                }
+            });
+        }
+
+        // text content
+        final Obj textObj = rec.jvm().get(uri("text"));
+        if (null != textObj && textObj.isStr()) {
+            element.setTextContent(textObj.strValue());
+        }
+
+        return element;
+    }
+
+    @Override
+    public ByteBuffer outputBytes(final Obj obj) throws MTronException {
+        final Document doc = write(obj);
+        try {
+            final Transformer transformer = TransformerFactory.newInstance().newTransformer();
+            transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
+            final StringWriter writer = new StringWriter();
+            transformer.transform(new DOMSource(doc), new StreamResult(writer));
+            return ByteBuffer.wrap(writer.toString().getBytes(StandardCharsets.UTF_8));
+        } catch (final Exception e) {
+            throw MTronException.of(e, "unable to serialize XML: %s", obj);
+        }
     }
 
     public static Rec parse(final String xml) {

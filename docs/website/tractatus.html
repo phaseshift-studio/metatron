@@ -1738,6 +1738,7 @@ Over the remainder of this documentation, each of the components of Dr.Stynx&#82
                                                            ==[_=&gt;_].to(/usr/dr/session/1)) },
                         session       =&gt; /usr/dr/session/1,
                         tool          =&gt; [forget?noobj{0}&lt;=noobj{0}(){ /usr/dr/message/+ -&gt; noobj }]],
+    system_feature:::::[              =&gt; ],
     chat_feature:::::::[model         =&gt; !(*&lt;/usr/dr/model&gt;.else(model::[provider     =&gt; ollama,
                                                                          protocol     =&gt; ollama,
                                                                          host         =&gt; &lt;http://ginger.local:11434&gt;,
@@ -1762,8 +1763,7 @@ Over the remainder of this documentation, each of the components of Dr.Stynx&#82
                                                        body   =&gt; "",
                                                        style  =&gt; style::[anchor=&gt;bottom_right,width=&gt;65,height=&gt;30,
                                                                         left=&gt;-2,top=&gt;8,foreground =&gt;"{{y}}"]]@&lt;audit_widget&gt; },
-                        to            =&gt; inst(a=&gt;str::T){ @&lt;audit_widget&gt;&gt;&gt;=[body=&gt;+*a].display() }],
-    system_feature:::::[              =&gt; ]]]@&lt;dr&gt;; </code></pre>
+                        to            =&gt; inst(a=&gt;str::T){ @&lt;audit_widget&gt;&gt;&gt;=[body=&gt;+*a].display() }]]]@&lt;dr&gt;; </code></pre>
 </div>
 </div>
 <h4 id="sec-features" class="discrete">Features</h4>
@@ -2843,7 +2843,7 @@ The predicate component of the type definition tests an <code>int</code> to dete
 <div class="paragraph">
 <p>While every <code>type</code> is an <code>obj</code>, not every <code>obj</code> is a <code>type</code>.
 Those <code>objs</code> that are not <code>types</code> are <em>instances</em> of some <code>type</code>.
-This is the foundation for all other <code>objs</code> in {{g}}m{{y}}e{{c}}T{{g}}a{{r}}T{{r}}R{{c}}o{{m}}n{{X}}.</p>
+This is the foundation for all other <code>objs</code> in {{r}}M{{y}}E{{c}}t{{y}}a{{b}}t{{r}}r{{c}}o{{y}}n{{X}}.</p>
 </div>
 <h4 id="sec-cascading-type-constructions" class="discrete">cascading type constructions</h4>
 <h3 id="sec-mono-types" class="discrete">mono types</h3>
@@ -4875,13 +4875,16 @@ mtron> [x0,x1,x2]>-.-<[*(* g/+/+)]
 <ul>
 <li class="legend-lvl-3"><a href="#sec-qproc-examples" onclick="var t=document.getElementById('sec-qproc-examples');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">qproc examples</a></li>
 <li class="legend-lvl-4"><a href="#sec-subq-publish-and-subscribe-to-patterns-in-space" onclick="var t=document.getElementById('sec-subq-publish-and-subscribe-to-patterns-in-space');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">subq: publish and subscribe to patterns in space</a></li>
-<li class="legend-lvl-4"><a href="#sec-docq-documentation-for-human-and-agent" onclick="var t=document.getElementById('sec-docq-documentation-for-human-and-agent');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">docq: documentation for human and agent</a></li>
-<li class="legend-lvl-4"><a href="#sec-typeq-space-type-constraints" onclick="var t=document.getElementById('sec-typeq-space-type-constraints');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">typeq: space type constraints</a></li>
-<li class="legend-lvl-4"><a href="#sec-incrq-furis-with-counters" onclick="var t=document.getElementById('sec-incrq-furis-with-counters');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">incrq: furis with counters</a></li>
+<li class="legend-lvl-4"><a href="#sec-docq-read-and-write-obj-documentation-for-humans-and-agents" onclick="var t=document.getElementById('sec-docq-read-and-write-obj-documentation-for-humans-and-agents');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">docq: read and write obj documentation for humans and agents</a></li>
+<li class="legend-lvl-4"><a href="#sec-typeq-read-and-write-type-constraints-in-space" onclick="var t=document.getElementById('sec-typeq-read-and-write-type-constraints-in-space');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">typeq: read and write type constraints in space</a></li>
+<li class="legend-lvl-4"><a href="#sec-incrq-reada-and-write-furis-with-counters" onclick="var t=document.getElementById('sec-incrq-reada-and-write-furis-with-counters');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">incrq: reada and write furis with counters</a></li>
+<li class="legend-lvl-4"><a href="#sec-lineq-read-and-write-strt-with-line-precision" onclick="var t=document.getElementById('sec-lineq-read-and-write-strt-with-line-precision');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">lineq: read and write str::T with line precision</a></li>
+<li class="legend-lvl-4"><a href="#sec-mimeq-read-and-write-objs-using-mime-types" onclick="var t=document.getElementById('sec-mimeq-read-and-write-objs-using-mime-types');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">mimeq: read and write objs using mime-types</a></li>
 </ul>
 </div>
 <div class="paragraph">
-<p>A query process (<em>qproc</em>) is a space attachment that intercepts reads and writes according to the query parameters of the uri. These space extensions provide a practical technique that spans many use cases ranging from pub/sub, documentation, counters, transactions, type constraints, immutable constants, permissions, and more.</p>
+<p>A query process (<em>qproc</em>) is a space attachment that intercepts reads and writes according to the query parameters of the uri.
+These space extensions provide a practical technique that spans many use cases ranging from pub/sub, documentation, counters, transactions, type constraints, immutable constants, permissions, and more.</p>
 </div>
 <div class="paragraph">
 <p>Currently, metarton provides the following qprocs in the core distribution.</p>
@@ -5027,15 +5030,10 @@ mtron> [x0,x1,x2]>-.-<[*(* g/+/+)]
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys/space/usr
-mtron&gt; /usr/notes/#?subq -&gt; sub::[on_recv=&gt;print('${&gt;&gt;1} written to ${&gt;&gt;0}')]
-==&gt;fail::[obj does not match /m/space/qproc/subq/sub::T
-     [on_recv=&gt;print('${&gt;&gt;1} written to ${&gt;&gt;0}')]
-         X=&gt;
-     rec::T[?[{?}target=&gt;uri::T,code=&gt;#::T]]@/m/space/qproc/subq/sub
-     --------------------------------------------------------------------------
-     [noobj=&gt;(==&gt;{?}target)=&gt;noobj=&gt;/=&gt;uri::T,noobj=&gt;(X=&gt;code)=&gt;noobj=&gt;X=&gt;#::T]]@/sys/fail/32
+mtron&gt; /usr/notes/#?subq -&gt; sub::[code=&gt;print('${&gt;&gt;1} written to ${&gt;&gt;0}')]
+==&gt;sub::[code=&gt;print('${&gt;&gt;1} written to ${&gt;&gt;0}'),target=&gt;/usr/notes/#]
 mtron&gt; */usr/notes/#?subq
-==&gt;[,]
+==&gt;[sub::[code=&gt;print('${&gt;&gt;1} written to ${&gt;&gt;0}'),target=&gt;/usr/notes/#]]
 mtron&gt; /usr/notes/#?subq -&gt; none
 ==&gt;none
 mtron&gt; */usr/notes/#?subq
@@ -5043,28 +5041,26 @@ mtron&gt; */usr/notes/#?subq
 </div>
 </div>
 <div class="paragraph">
-<p>For target removal of subscriptions, place the subscription in space by vid. Then use <code>subq</code> value to match on the vid.</p>
+<p>For target removal of subscriptions, place the subscription in space by vid.
+Then use <code>subq</code> value to match on the vid.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; /usr/notes/#?subq -&gt; sub::[on_recv=&gt;print('${&gt;&gt;1} written to ${&gt;&gt;0}')]@abc
-==&gt;fail::[obj does not match /m/space/qproc/subq/sub::T
-     [on_recv=&gt;print('${&gt;&gt;1} written to ${&gt;&gt;0}')]@abc
-         X=&gt;
-     rec::T[?[{?}target=&gt;uri::T,code=&gt;#::T]]@/m/space/qproc/subq/sub
-     --------------------------------------------------------------------------
-     [noobj=&gt;(==&gt;{?}target)=&gt;noobj=&gt;/=&gt;uri::T,noobj=&gt;(X=&gt;code)=&gt;noobj=&gt;X=&gt;#::T]]@/sys/fail/34
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; /usr/notes/#?subq -&gt; sub::[code=&gt;print('${&gt;&gt;1} written to ${&gt;&gt;0}')]@abc
+==&gt;sub::[code=&gt;print('${&gt;&gt;1} written to ${&gt;&gt;0}'),target=&gt;/usr/notes/#]@abc
 mtron&gt; */usr/notes/#?subq
-==&gt;[,]
+==&gt;[sub::[code=&gt;print('${&gt;&gt;1} written to ${&gt;&gt;0}'),target=&gt;/usr/notes/#]@abc]
 mtron&gt; /usr/notes/#?subq=abc -&gt; none
 ==&gt;none
 mtron&gt; */usr/notes/#?subq
 ==&gt;[,]</code></pre>
 </div>
 </div>
-<h4 id="sec-docq-documentation-for-human-and-agent" class="discrete">docq: documentation for human and agent</h4>
-<h4 id="sec-typeq-space-type-constraints" class="discrete">typeq: space type constraints</h4>
-<h4 id="sec-incrq-furis-with-counters" class="discrete">incrq: furis with counters</h4>
+<h4 id="sec-docq-read-and-write-obj-documentation-for-humans-and-agents" class="discrete">docq: read and write obj documentation for humans and agents</h4>
+<h4 id="sec-typeq-read-and-write-type-constraints-in-space" class="discrete">typeq: read and write type constraints in space</h4>
+<h4 id="sec-incrq-reada-and-write-furis-with-counters" class="discrete">incrq: reada and write furis with counters</h4>
+<h4 id="sec-lineq-read-and-write-strt-with-line-precision" class="discrete">lineq: read and write str::T with line precision</h4>
+<h4 id="sec-mimeq-read-and-write-objs-using-mime-types" class="discrete">mimeq: read and write objs using mime-types</h4>
 </div>
 <div class="collapse position-relative" id="card-11">
 <button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-11" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
@@ -5262,6 +5258,19 @@ mtron&gt; *fs:m     ​3​
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys/space/localfs     ​1​
 mtron&gt; */sys/space/localfs/script     ​2​
 mtron&gt; *&lt;fs:m/bin/metatron&gt;     ​3​
+==&gt;'[?25l'
+==&gt;{2}'⠙ resolving dependencies'
+==&gt;{2}'⠹ resolving dependencies'
+==&gt;{2}'⠸ resolving dependencies'
+==&gt;{2}'⠼ resolving dependencies'
+==&gt;{2}'⠴ resolving dependencies'
+==&gt;{2}'⠦ resolving dependencies'
+==&gt;'⠧ resolving dependencies'
+==&gt;'⠇ resolving dependencies'
+==&gt;'⠏ resolving dependencies'
+==&gt;'⠋ resolving dependencies'
+==&gt;'⠧ resolving dependencies[?12l[?25h'
+==&gt;'[K[0;32m✓[0m resolving dependencies'
 ==&gt;null
 mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T)     ​4​
 ==&gt;fail::[apply failure:
@@ -5323,16 +5332,16 @@ mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T).as(str::T)     ​5​
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; bin:bash('-c',df)
 ==&gt;'Filesystem             1K-blocks       Used Available Use% Mounted on'
-==&gt;'tmpfs                    6356184       6440   6349744   1% /run'
+==&gt;'tmpfs                    6356184       6348   6349836   1% /run'
 ==&gt;'efivarfs                     128         42        82  34% /sys/firmware/efi/efivars'
-==&gt;'/dev/nvme1n1p2         959786032  491122080 419835744  54% /'
-==&gt;'tmpfs                   31780908     490268  31290640   2% /dev/shm'
+==&gt;'/dev/nvme1n1p2         959786032  491836748 419121076  54% /'
+==&gt;'tmpfs                   31780908     498464  31282444   2% /dev/shm'
 ==&gt;'tmpfs                       5120         20      5100   1% /run/lock'
 ==&gt;'tmpfs                   31780908          0  31780908   0% /run/qemu'
 ==&gt;'/dev/nvme1n1p1            523248       6288    516960   2% /boot/efi'
 ==&gt;'tmpfs                    6356180        280   6355900   1% /run/user/1000'
 ==&gt;'/dev/nvme0n1p2         976744444  251306824 725437620  26% /media/hdd0'
-==&gt;'//192.168.1.72/beast1 1921208544 1329840384 591368160  70% /srv/beast/hdd1'
+==&gt;'//192.168.1.72/beast1 1921208544 1329946040 591262504  70% /srv/beast/hdd1'
 mtron&gt; bin:bash('-c',ls)
 ==&gt;'AGENTS.md'
 ==&gt;bin
@@ -5493,7 +5502,7 @@ mtron&gt; gB::1.0.lt(kB::12000000.0)
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; datetime_now()     ​1​
-==&gt;datetime::&lt;//2026.08:7/15/39/15/731?tz=-0600&gt;
+==&gt;datetime::&lt;//2026.08:7/20/29/21/697?tz=-0600&gt;
 mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;?datetime::T     ​2​
 ==&gt;&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;
 mtron&gt; datetime::&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;&gt;&gt;year     ​3​
@@ -7449,7 +7458,7 @@ mtron&gt; catalog::[host         =&gt; &lt;http://localhost:1234/v1&gt;,
    	 \_args  │ [[
     host=&gt;http://localhost:8777,
     pattern=&gt;http://#,
-    route=&gt;[/=&gt;&lt;&gt;,/mcp=&gt;mcp_mtron_http,/docs=&gt;target/docs,/console=&gt;src/main/resources/web/console]]@/sys/space/web/http][Net&lt;-2&gt;:Address already in use[Net&lt;-2&gt;:Address already in use] ← Address already in use]][Address already in use[Net&lt;-2&gt;:Address already in use]][Address already in use]@/sys/fail/52]@/sys/fail/54</code></pre>
+    route=&gt;[/=&gt;&lt;&gt;,/mcp=&gt;mcp_mtron_http,/docs=&gt;target/docs,/console=&gt;src/main/resources/web/console]]@/sys/space/web/http][Net&lt;-2&gt;:Address already in use[Net&lt;-2&gt;:Address already in use] ← Address already in use]][Address already in use[Net&lt;-2&gt;:Address already in use]][Address already in use]@/sys/fail/76]@/sys/fail/78</code></pre>
 </div>
 </div>
 <h3 id="sec-html-type" class="discrete">HTML Type</h3>
@@ -7466,7 +7475,7 @@ mtron&gt; *&lt;http://phaseshift.studio/splash.html&gt;     ​2​
    	  \_pred │ []
    	[inst]   │ *&lt;http://phaseshift.studio/splash.html&gt;
    	 \_dom   │ #{?}::T
-   	 \_args  │ [&lt;http://phaseshift.studio/splash.html&gt;][BasicRouter&lt;255&gt;:no active space supports pattern &lt;http://phaseshift.studio/splash.html&gt;]][no active space supports pattern &lt;http://phaseshift.studio/splash.html&gt;]@/sys/fail/56
+   	 \_args  │ [&lt;http://phaseshift.studio/splash.html&gt;][BasicRouter&lt;255&gt;:no active space supports pattern &lt;http://phaseshift.studio/splash.html&gt;]][no active space supports pattern &lt;http://phaseshift.studio/splash.html&gt;]@/sys/fail/80
 mtron&gt; *&lt;http://phaseshift.studio/splash.html/html/head/title&gt;     ​3​
 ==&gt;fail::[apply failure:
    	[lhs]    │ noobj
@@ -7474,7 +7483,7 @@ mtron&gt; *&lt;http://phaseshift.studio/splash.html/html/head/title&gt;     ​3
    	  \_pred │ []
    	[inst]   │ *&lt;http://phaseshift.studio/splash.html/html/head/title&gt;
    	 \_dom   │ #{?}::T
-   	 \_args  │ [&lt;http://phaseshift.studio/splash.html/html/head/title&gt;][BasicRouter&lt;255&gt;:no active space supports pattern &lt;http://phaseshift.studio/splash.html/html/head/title&gt;]][no active space supports pattern &lt;http://phaseshift.studio/splash.html/html/head/title&gt;]@/sys/fail/58
+   	 \_args  │ [&lt;http://phaseshift.studio/splash.html/html/head/title&gt;][BasicRouter&lt;255&gt;:no active space supports pattern &lt;http://phaseshift.studio/splash.html/html/head/title&gt;]][no active space supports pattern &lt;http://phaseshift.studio/splash.html/html/head/title&gt;]@/sys/fail/82
 mtron&gt; *&lt;http://phaseshift.studio/splash.html&gt;.as(str::T)     ​4​
 ==&gt;fail::[apply failure:
    	[lhs]    │ noobj
@@ -7482,7 +7491,7 @@ mtron&gt; *&lt;http://phaseshift.studio/splash.html&gt;.as(str::T)     ​4​
    	  \_pred │ []
    	[inst]   │ *&lt;http://phaseshift.studio/splash.html&gt;
    	 \_dom   │ #{?}::T
-   	 \_args  │ [&lt;http://phaseshift.studio/splash.html&gt;][BasicRouter&lt;255&gt;:no active space supports pattern &lt;http://phaseshift.studio/splash.html&gt;]][no active space supports pattern &lt;http://phaseshift.studio/splash.html&gt;]@/sys/fail/60</code></pre>
+   	 \_args  │ [&lt;http://phaseshift.studio/splash.html&gt;][BasicRouter&lt;255&gt;:no active space supports pattern &lt;http://phaseshift.studio/splash.html&gt;]][no active space supports pattern &lt;http://phaseshift.studio/splash.html&gt;]@/sys/fail/84</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -7521,7 +7530,7 @@ mtron&gt; *&lt;http://phaseshift.studio/splash.html&gt;.as(str::T)     ​4​
    	  \_pred │ []
    	[inst]   │ *http://localhost:11434
    	 \_dom   │ #{?}::T
-   	 \_args  │ [http://localhost:11434][BasicRouter&lt;255&gt;:no active space supports pattern http://localhost:11434]][no active space supports pattern http://localhost:11434]@/sys/fail/62
+   	 \_args  │ [http://localhost:11434][BasicRouter&lt;255&gt;:no active space supports pattern http://localhost:11434]][no active space supports pattern http://localhost:11434]@/sys/fail/86
 mtron&gt; *&lt;http://localhost:11434/api/tags&gt;     ​2​
 ==&gt;fail::[apply failure:
    	[lhs]    │ noobj
@@ -7529,7 +7538,7 @@ mtron&gt; *&lt;http://localhost:11434/api/tags&gt;     ​2​
    	  \_pred │ []
    	[inst]   │ *http://localhost:11434/api/tags
    	 \_dom   │ #{?}::T
-   	 \_args  │ [http://localhost:11434/api/tags][BasicRouter&lt;255&gt;:no active space supports pattern http://localhost:11434/api/tags]][no active space supports pattern http://localhost:11434/api/tags]@/sys/fail/64</code></pre>
+   	 \_args  │ [http://localhost:11434/api/tags][BasicRouter&lt;255&gt;:no active space supports pattern http://localhost:11434/api/tags]][no active space supports pattern http://localhost:11434/api/tags]@/sys/fail/88</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -7582,7 +7591,7 @@ mtron&gt; */m/llm/inst/+?dom=model</code></pre>
    	  \_pred │ []
    	[inst]   │ *http://localhost:11434/api/tags/0
    	 \_dom   │ #{?}::T
-   	 \_args  │ [http://localhost:11434/api/tags/0][BasicRouter&lt;255&gt;:no active space supports pattern http://localhost:11434/api/tags/0]][no active space supports pattern http://localhost:11434/api/tags/0]@/sys/fail/82</code></pre>
+   	 \_args  │ [http://localhost:11434/api/tags/0][BasicRouter&lt;255&gt;:no active space supports pattern http://localhost:11434/api/tags/0]][no active space supports pattern http://localhost:11434/api/tags/0]@/sys/fail/106</code></pre>
 </div>
 </div>
 <div class="colist arabic">

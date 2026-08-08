@@ -27,7 +27,6 @@ import studio.phaseshift.metatron.isa.mach.type.ui.widget.AbstractWidget;
 import studio.phaseshift.metatron.isa.mach.type.ui.widget.TableWidget;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 
@@ -38,7 +37,6 @@ public class ProfileTool extends AbstractWidget<ProfileTool> {
 
     protected Call call;
     protected TableWidget instTable;
-    private static final int CLIP_LENGTH = 20;
 
     public ProfileTool(final Call call) {
         this.instTable = new TableWidget(List.of("op", "dom", "rng", "args", "f", "desc", "c_dom", "c_rng"));
@@ -60,24 +58,24 @@ public class ProfileTool extends AbstractWidget<ProfileTool> {
                     "{{m}}" + Inst.Form.of(i).toString(),
                     "{{g}}{{{" + (inDom ? "y" : "r") + "}}" + dom.toString() + "{{g}}}{{X}}",
                     "{{g}}{{{y}}" + rng.toString() + "{{g}}}{{X}}")).style().background("{{[b]}}").foreground("{{y}}").divider("{{r}}|").apply();
-            this.instTable.addMetadata(List.of(i, i.dom(), i.rng(), i.args(), null == i.f() ? Inst.f.of(noobj()) : i.f(), i /*Router.global().read(i.tid().q(DOCQ))*/, i.dom().c(), i.rng().c()));
+            this.instTable.addMetadata(List.of(i, i.dom(), i.rng(), i.args(), null == i.f() ? Inst.f.of(noobj()) : i.f(), i, dom, rng));
         }
         this.style().attachment(this.instTable, true).apply();
     }
 
-    private String generateArgsString(final Poly<?, ?> args) {
+    private static String generateArgsString(final Poly<?, ?> args) {
         final String argsString;
         if (args.isLst()) {
             argsString = args.lstValue().stream().map(o -> o.isCall() ?
                     o.asCall().insts().stream().map(i -> i.tid().name()).reduce((a, b) -> a + "." + b).orElse("") :
-                    o.toShortString()).collect(Collectors.joining(",")).replaceAll("\n","").trim();
+                    o.toShortString()).collect(java.util.stream.Collectors.joining(",")).replaceAll("\n", "").trim();
         } else {
             argsString = args.recValue().entrySet().stream().map(kv ->
                     kv.getKey().uriValue().toString() + "=>" + (kv.getValue().isCall() ?
                             kv.getValue().asCall().insts().stream().map(i -> i.tid().name()).reduce((a, b) -> a + "." + b).orElse("") :
-                            kv.getValue().toShortString())).collect(Collectors.joining(",")).replaceAll("\n","").trim();
+                            kv.getValue().toShortString())).collect(java.util.stream.Collectors.joining(",")).replaceAll("\n", "").trim();
         }
-        return argsString.length() > CLIP_LENGTH ? (argsString.substring(0, CLIP_LENGTH - 1) + "...") : argsString;
+        return argsString.length() > 20 ? (argsString.substring(0, 19) + "...") : argsString;
     }
 
     public String toString() {

@@ -30,7 +30,7 @@ import java.nio.ByteBuffer;
 public class ObjByteBufferSerializerTest extends AbstractSerializerTest<ByteBuffer> {
 
    public ObjByteBufferSerializerTest() {
-       super(new ObjByteBufferSerializer());
+       super(new ObjByteBufferSerializer(), null, null);
    }
 
 }

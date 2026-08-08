@@ -39,7 +39,6 @@ import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.as_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.id_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Real.REAL_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -497,7 +496,7 @@ public class mathInstSet extends AbstractInstSet {
                         // uri → datetime identity cast (predicate validates in Type.apply)
                         instC(AS_INST_TID.dom(URI_TID).rng(MATH_DATETIME_TID), lst(URI_TYPE), (lhs, inst) -> lhs.asUri().tid(MATH_DATETIME_TID)),
                         // str → datetime (parse ISO-8601 / Docker timestamps)
-                        instC(AS_INST_TID.dom(STR_TID).rng(MATH_DATETIME_TID), lst(STR_TYPE), (lhs, inst) -> parseDatetime(lhs.strValue())),
+                        instC(AS_INST_TID.dom(STR_TID).rng(MATH_DATETIME_TID), lst(DATETIME_TYPE), (lhs, inst) -> parseDatetime(lhs.strValue())),
                         /*instC(MATH_NOW_INST_TID.dom(ALL.maybe()).rng(MATH_TIME_TID), lst(), (lhs, inst) -> real((double) System.currentTimeMillis(), MATH_TIME_TID, null)),
                         instC(AS_INST_TID.dom(MATH_TIME_TID).rng(STR_TID), lst(TIME_TYPE), (lhs, inst) -> {
                             Date date = new Date(lhs.realValue().intValue());
