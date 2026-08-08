@@ -285,11 +285,11 @@ public class ExplainTool extends AbstractWidget<ExplainTool> {
     }
 
     /**
-     * Create a styled popup PanelWidget with green border and cyan title.
+     * Create a styled popup PanelWidget with green border and blue title.
      * All popup panels flow through this factory for consistent look.
      */
     private PanelWidget makePopupPanel(String title, String body) {
-        PanelWidget panel = new PanelWidget("{{c}}" + title + "{{\\c}}", body);
+        PanelWidget panel = new PanelWidget("{{b}}" + title + "{{\\b}}", body);
         panel.style().border(Border.continuous.foreground("{{g}}")).applyStyle();
         return panel;
     }
@@ -298,7 +298,7 @@ public class ExplainTool extends AbstractWidget<ExplainTool> {
      * Build a panel showing a single non-code argument value.
      */
     private PanelWidget buildArgDetailPanel(Obj arg) {
-        return buildObjWithDocsPanel(arg, "argument");
+        return buildObjWithDocsPanel(arg, arg.tid() + "{{\\b}}{{m}}::T{{\\m}}");
     }
 
 
@@ -334,7 +334,9 @@ public class ExplainTool extends AbstractWidget<ExplainTool> {
     private void handleOpSelect(ExplainLevel current, int row) {
         Inst inst = getMetadataInst(current, row);
         if (inst == null) return;
-        current.panelPopup = buildObjWithDocsPanel(inst, inst.tid().name());
+        String title = Graphitty.string("{{b}}%s{{\\b}}{{m}}::T{{\\m}} refines {{b}}/m/inst{{\\b}}{{m}}::T{{\\m}}",
+                inst.tid().basePath());
+        current.panelPopup = buildObjWithDocsPanel(inst, title);
     }
 
     // ── dom / rng ─────────────────────────────────────────────────────
@@ -343,8 +345,15 @@ public class ExplainTool extends AbstractWidget<ExplainTool> {
         int metaIdx = isDom ? 1 : 2;
         Type type = (Type) current.table.rowMetadata(row).get(metaIdx);
         if (type == null) return;
-        String label = type.vid().small() + (isDom ? " domain" : " range");
-        current.panelPopup = buildObjWithDocsPanel(type, label);
+        String suffix = isDom ? " domain" : " range";
+        String title;
+        if (type.isBaseType()) {
+            title = Graphitty.string("{{b}}%s{{\\b}}{{m}}::T{{\\m}}%s", type.vid(), suffix);
+        } else {
+            title = Graphitty.string("{{b}}%s{{\\b}}{{m}}::T{{\\m}} refines {{b}}%s{{\\b}}{{m}}::T{{\\m}}%s",
+                    type.vid(), type.tid(), suffix);
+        }
+        current.panelPopup = buildObjWithDocsPanel(type, title);
     }
 
     // ── args ──────────────────────────────────────────────────────────
@@ -495,29 +504,14 @@ public class ExplainTool extends AbstractWidget<ExplainTool> {
     // =====================================================================
 
     /**
-     * Build a unified popup panel for an Obj: identity header line, followed
-     * by documentation (if a docq exists) or the highlighted Obj (if not).
+     * Build a unified popup panel for an Obj: documentation (if a docq
+     * exists) or the highlighted Obj (if not).  Identity is carried in
+     * the title bar by the caller.
      */
     private PanelWidget buildObjWithDocsPanel(Obj obj, String title) {
         StringBuilder sb = new StringBuilder();
 
-        // ── 1. Identity header ──────────────────────────────────────
-        if (obj.isType()) {
-            if (obj.asType().isBaseType()) {
-                sb.append(Graphitty.string("{{b}}%s{{\\b}}{{m}}::T{{\\m}}", obj.vid()));
-            } else {
-                sb.append(Graphitty.string("{{b}}%s{{\\b}}{{m}}::T{{\\m}} refines {{b}}%s{{\\b}}{{m}}::T{{\\m}}",
-                        obj.vid(), obj.tid()));
-            }
-        } else if (obj.isInst()) {
-            sb.append(Graphitty.string("{{b}}%s{{\\b}}{{m}}::T{{\\m}} refines {{b}}/m/inst{{\\b}}{{m}}::T{{\\m}}",
-                    obj.tid().basePath()));
-        } else {
-            sb.append(Graphitty.string("{{b}}%s{{\\b}}{{m}}::T{{\\m}}{{g}}[{{\\g}}%s{{g}}]{{\\g}}",
-                    obj.tid(), obj));
-        }
-
-        // ── 2. Documentation or fallback ────────────────────────────
+        // ── Documentation or fallback ───────────────────────────────
         fURI key = docqKey(obj);
         if (key != null) {
             Obj docObj = Router.readFromSpace(key.addQ(QCollection.DOCQ));
@@ -526,27 +520,29 @@ public class ExplainTool extends AbstractWidget<ExplainTool> {
                 // desc
                 String desc = docs.description();
                 if (desc != null && !desc.isBlank() && !desc.equals(QCollection.NO_DOCS_STRING)) {
-                    sb.append("\n\n{{w}}").append(desc).append("{{X}}");
+                    sb.append("{{w}}").append(desc).append("{{X}}");
                 }
                 // args — let Highlighter color it
                 Poly<?, ?> docsArgs = docs.args();
                 if (docsArgs != null && !docsArgs.isEmpty()) {
-                    sb.append("\n\n{{m}}args:{{X}}\n").append(Highlighter.format(docsArgs));
+                    sb.append(sb.length() > 0 ? "\n\n{{m}}args:{{X}}\n" : "{{m}}args:{{X}}\n")
+                      .append(Highlighter.format(docsArgs));
                 }
                 // examples — white
                 List<String> examples = docs.examples();
                 if (!examples.isEmpty()) {
-                    sb.append("\n\n{{m}}examples:{{X}}\n");
-                    for (String ex : examples) {
-                        sb.append("  {{w}}").append(ex).append("{{X}}\n");
+                    sb.append(sb.length() > 0 ? "\n\n{{m}}examples:{{X}}\n" : "{{m}}examples:{{X}}\n");
+                    for (int i = 0; i < examples.size(); i++) {
+                        sb.append("  {{w}}").append(examples.get(i)).append("{{X}}");
+                        if (i < examples.size() - 1) sb.append("\n");
                     }
                 }
                 return makePopupPanel(title, sb.toString());
             }
         }
 
-        // ── 3. No docq — show the highlighted Obj ────────────────────
-        sb.append("\n\n").append(Highlighter.format(obj));
+        // No docq — show the highlighted Obj
+        sb.append(Highlighter.format(obj));
         return makePopupPanel(title, sb.toString());
     }
 
