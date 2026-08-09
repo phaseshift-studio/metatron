@@ -26,6 +26,7 @@ import studio.phaseshift.metatron.isa.llm.type.Agent;
 import studio.phaseshift.metatron.isa.m.math.mathInstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.m.type.Rel;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
@@ -91,7 +92,7 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
         final fURI msgBase = this.agent.at(ROOT).uriValue().extend(MESSAGE);
 
         // ── Read all session messages (no skip yet — we adjust for pairs) ─
-        final List<Rec> allMessages = Router.readFromSpace(msgBase.extend("+/"))
+        final List<Rel> allMessages = Router.readFromSpace(msgBase.extend("+/"))
                 .stream()
                 .map(Obj::asRel)
                 .filter(pair -> pair.second().isRec()
@@ -105,7 +106,6 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
                     return stored != null && stored.equals(sesVID);
                 })
                 .sorted(Comparator.comparing(a -> Integer.parseInt(a.first().uriValue().name())))
-                .map(pair -> pair.second().asRec())
                 .toList();
 
         // ── Pair-aware window: don't break AiMessage(tool_calls) /
@@ -116,10 +116,11 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
 
         return allMessages.stream()
                 .skip(skip)
-                .peek(m -> {
-                    if (!m.tid().equals(AI_MESSAGE_TID) || !m.has(TOOL_REQUESTS))
-                        this.currentMessages.add(m.vid());
+                .peek(pair -> {
+                    if (!pair.second().tid().equals(AI_MESSAGE_TID) || !pair.second().asRec().has(TOOL_REQUESTS))
+                        this.currentMessages.add(pair.first().uriValue());
                 })
+                .map(pair -> pair.second().asRec())
                 .map(m -> {
                     try {
                         m.recValue().put(uri(WRITTEN_KEY), BOOL_TRUE);
@@ -247,7 +248,7 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
      * @param skip     the initial skip index (may be 0)
      * @return adjusted skip index, {@code <= skip}
      */
-    static int adjustSkipToPreservePairs(final List<Rec> messages, int skip) {
+    static int adjustSkipToPreservePairs(final List<Rel> messages, int skip) {
         if (skip <= 0 || skip >= messages.size())
             return skip;
 
@@ -270,12 +271,12 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
      * paired {@code AiMessage} is before the skip boundary.  If found,
      * expand the skip to include it and re-scan until no orphans remain.
      */
-    private static int pullInAllOrphanedToolResults(final List<Rec> messages, int skip) {
+    private static int pullInAllOrphanedToolResults(final List<Rel> messages, int skip) {
         boolean changed;
         do {
             changed = false;
             for (int i = skip; i < messages.size(); i++) {
-                final Rec msg = messages.get(i);
+                final Rec msg = messages.get(i).second().as();
                 if (!msg.tid().equals(TOOL_RESULT_MESSAGE_TID))
                     continue;
                 final String toolCallId = msg.at(uri(CONTENTS)).orElse(str("")).strValue();
@@ -283,7 +284,7 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
                     continue;
                 // Find the paired AiMessage
                 for (int j = i - 1; j >= 0; j--) {
-                    final Rec candidate = messages.get(j);
+                    final Rec candidate = messages.get(j).second().as();
                     if (!candidate.tid().equals(AI_MESSAGE_TID))
                         continue;
                     final Obj toolReqs = candidate.at(uri(TOOL_REQUESTS));
@@ -310,20 +311,20 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
      * backward to find its paired {@code AiMessage} and move the skip
      * boundary to include it.
      */
-    static int pullInPairedAiMessage(final List<Rec> messages, final int skip) {
+    static int pullInPairedAiMessage(final List<Rel> messages, final int skip) {
         if (skip <= 0 || skip >= messages.size())
             return skip;
 
-        final Rec first = messages.get(skip);
-        if (!first.tid().equals(TOOL_RESULT_MESSAGE_TID))
+        final Rel first = messages.get(skip);
+        if (!first.values().findFirst().get().tid().equals(TOOL_RESULT_MESSAGE_TID))
             return skip;
 
-        final String toolCallId = first.at(uri(CONTENTS)).orElse(str("")).strValue();
+        final String toolCallId = first.values().findFirst().get().asRec().at(uri(CONTENTS)).orElse(str("")).strValue();
         if (toolCallId.isBlank())
             return skip;
 
         for (int i = skip - 1; i >= 0; i--) {
-            final Rec candidate = messages.get(i);
+            final Rec candidate = messages.get(i).second().as();
             if (!candidate.tid().equals(AI_MESSAGE_TID))
                 continue;
             final Obj toolReqs = candidate.at(uri(TOOL_REQUESTS));
@@ -346,18 +347,18 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
      * include the preceding user message.  The chat API requires every
      * turn to begin with a user message.
      */
-    static int pullInPrecedingUserMessage(final List<Rec> messages, final int skip) {
+    static int pullInPrecedingUserMessage(final List<Rel> messages, final int skip) {
         if (skip <= 0 || skip >= messages.size())
             return skip;
 
-        final fURI firstTid = messages.get(skip).tid();
+        final fURI firstTid = messages.get(skip).second().tid();
         // System message is fine — MessageWindowChatMemory always keeps it first
         if (firstTid.equals(SYSTEM_MESSAGE_TID) || firstTid.equals(USER_MESSAGE_TID))
             return skip;
 
         // Window starts with AiMessage or ToolResult — find preceding user message
         for (int i = skip - 1; i >= 0; i--) {
-            final fURI tid = messages.get(i).tid();
+            final fURI tid = messages.get(i).second().tid();
             if (tid.equals(USER_MESSAGE_TID))
                 return i;
             // Stop at system message — it's already the absolute start

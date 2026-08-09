@@ -151,6 +151,11 @@
             <version>${lucene.version}</version>
         </dependency>
         <dependency>
+            <groupId>org.apache.lucene</groupId>
+            <artifactId>lucene-suggest</artifactId>
+            <version>${lucene.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.zeroturnaround</groupId>
             <artifactId>zt-exec</artifactId>
             <version>${zt.version}</version>
@@ -493,6 +498,12 @@
                 <includes>
                     <include>logback.xml</include>
                     <include>ansi_headers.txt</include>
+                </includes>
+            </resource>
+            <resource>
+                <directory>src/main/resources</directory>
+                <includes>
+                    <include>studio/phaseshift/metatron/util/dictionary_en.txt</include>
                 </includes>
             </resource>
             <!-- META-INF/services handled via bin/metatron classpath (src/main/resources) -->

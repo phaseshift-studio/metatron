@@ -22,10 +22,12 @@ import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.m.type.Rel;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -33,6 +35,7 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
@@ -103,56 +106,56 @@ public class SpaceChatSessionStoreTest extends AbstractMetatronTest {
     /**
      * Varargs → List.
      */
-    private static List<Rec> msgs(final Rec... messages) {
-        return new ArrayList<>(List.of(messages));
+    private static List<Rel> msgs(final Rec... messages) {
+        return new ArrayList<>(Stream.of(messages).map(m -> rel(uri("temp"), m)).toList());
     }
 
     // ── pullInPairedAiMessage ────────────────────────────────────────
 
     @Test
     void pullInPairedAiMessage_skipZero_unchanged() {
-        final List<Rec> m = msgs(U(), A("c1"), T("c1"));
+        final List<Rel> m = msgs(U(), A("c1"), T("c1"));
         assertEquals(0, SpaceChatSessionStore.pullInPairedAiMessage(m, 0));
     }
 
     @Test
     void pullInPairedAiMessage_skipAtSize_unchanged() {
-        final List<Rec> m = msgs(U(), A("c1"), T("c1"));
+        final List<Rel> m = msgs(U(), A("c1"), T("c1"));
         assertEquals(3, SpaceChatSessionStore.pullInPairedAiMessage(m, 3));
     }
 
     @Test
     void pullInPairedAiMessage_firstIsUser_unchanged() {
         // Window: [U, A{c1}, T{c1}] — starts with user, no orphans
-        final List<Rec> m = msgs(S(), U(), A("c1"), T("c1"));
+        final List<Rel> m = msgs(S(), U(), A("c1"), T("c1"));
         assertEquals(1, SpaceChatSessionStore.pullInPairedAiMessage(m, 1));
     }
 
     @Test
     void pullInPairedAiMessage_firstIsAi_unchanged() {
         // AiMessage is not a ToolResult — rule 1 doesn't apply
-        final List<Rec> m = msgs(S(), U(), A("c1"), T("c1"));
+        final List<Rel> m = msgs(S(), U(), A("c1"), T("c1"));
         assertEquals(2, SpaceChatSessionStore.pullInPairedAiMessage(m, 2));
     }
 
     @Test
     void pullInPairedAiMessage_orphanedToolResult_pullsInAiMessage() {
         // [2]=T{c1} is orphaned — its paired AiMessage is at [1]
-        final List<Rec> m = msgs(S(), A("c1"), T("c1"));
+        final List<Rel> m = msgs(S(), A("c1"), T("c1"));
         assertEquals(1, SpaceChatSessionStore.pullInPairedAiMessage(m, 2));
     }
 
     @Test
     void pullInPairedAiMessage_orphanedMiddleToolResult_pullsInAiMessage() {
         // [2]=T{c1} orphaned, but AiMessage at [0] has both c1 and c2
-        final List<Rec> m = msgs(A("c1", "c2"), T("c1"), T("c2"));
+        final List<Rel> m = msgs(A("c1", "c2"), T("c1"), T("c2"));
         assertEquals(0, SpaceChatSessionStore.pullInPairedAiMessage(m, 2));
     }
 
     @Test
     void pullInPairedAiMessage_toolCallIdNotFound_unchanged() {
         // T{c99} references an id that doesn't exist in any AiMessage
-        final List<Rec> m = msgs(S(), U(), A("c1"), T("c99"));
+        final List<Rel> m = msgs(S(), U(), A("c1"), T("c99"));
         assertEquals(2, SpaceChatSessionStore.pullInPairedAiMessage(m, 2));
     }
 
@@ -160,7 +163,7 @@ public class SpaceChatSessionStoreTest extends AbstractMetatronTest {
     void pullInPairedAiMessage_noToolCallId_unchanged() {
         // ToolResult without a contents/id field
         final Rec orphan = rec(mutableMap(uri(TEXT), str("no id")), TOOL_RESULT_MESSAGE_TID, null);
-        final List<Rec> m = msgs(S(), U(), A("c1"), orphan);
+        final List<Rel> m = msgs(S(), U(), A("c1"), orphan);
         assertEquals(3, SpaceChatSessionStore.pullInPairedAiMessage(m, 3));
     }
 
@@ -168,48 +171,48 @@ public class SpaceChatSessionStoreTest extends AbstractMetatronTest {
 
     @Test
     void pullInPrecedingUserMessage_skipZero_unchanged() {
-        final List<Rec> m = msgs(U(), A());
+        final List<Rel> m = msgs(U(), A());
         assertEquals(0, SpaceChatSessionStore.pullInPrecedingUserMessage(m, 0));
     }
 
     @Test
     void pullInPrecedingUserMessage_firstIsUser_unchanged() {
-        final List<Rec> m = msgs(S(), U(), A());
+        final List<Rel> m = msgs(S(), U(), A());
         assertEquals(1, SpaceChatSessionStore.pullInPrecedingUserMessage(m, 1));
     }
 
     @Test
     void pullInPrecedingUserMessage_firstIsSystem_unchanged() {
         // System message at boundary is fine — it's the absolute start
-        final List<Rec> m = msgs(S(), U(), A());
+        final List<Rel> m = msgs(S(), U(), A());
         assertEquals(0, SpaceChatSessionStore.pullInPrecedingUserMessage(m, 0));
     }
 
     @Test
     void pullInPrecedingUserMessage_firstIsAi_pullsInUser() {
         // Window starts with AiMessage — need preceding UserMessage
-        final List<Rec> m = msgs(S(), U(), A("c1"), T("c1"));
+        final List<Rel> m = msgs(S(), U(), A("c1"), T("c1"));
         assertEquals(1, SpaceChatSessionStore.pullInPrecedingUserMessage(m, 2));
     }
 
     @Test
     void pullInPrecedingUserMessage_firstIsToolResult_pullsInUser() {
         // Window starts with ToolResult (already paired, but still need UserMessage)
-        final List<Rec> m = msgs(S(), U(), A("c1"), T("c1"));
+        final List<Rel> m = msgs(S(), U(), A("c1"), T("c1"));
         assertEquals(1, SpaceChatSessionStore.pullInPrecedingUserMessage(m, 3));
     }
 
     @Test
     void pullInPrecedingUserMessage_stopsAtSystem() {
         // No UserMessage between system and AiMessage — fall back to system
-        final List<Rec> m = msgs(S(), A("c1"), T("c1"));
+        final List<Rel> m = msgs(S(), A("c1"), T("c1"));
         assertEquals(0, SpaceChatSessionStore.pullInPrecedingUserMessage(m, 1));
     }
 
     @Test
     void pullInPrecedingUserMessage_noUserMessage_returnsZero() {
         // No UserMessage or SystemMessage at all — return everything
-        final List<Rec> m = msgs(A("c1"), T("c1"));
+        final List<Rel> m = msgs(A("c1"), T("c1"));
         assertEquals(0, SpaceChatSessionStore.pullInPrecedingUserMessage(m, 1));
     }
 
@@ -219,7 +222,7 @@ public class SpaceChatSessionStoreTest extends AbstractMetatronTest {
     void adjustSkip_aiMessageAtBoundary_pullsInUser() {
         // Window starts on A() — rule 2 pulls in preceding UserMessage
         // [S, U, A, U, A], skip=2 → first=[2]=A()
-        final List<Rec> m = msgs(S(), U(), A(), U(), A());
+        final List<Rel> m = msgs(S(), U(), A(), U(), A());
         assertEquals(1, SpaceChatSessionStore.adjustSkipToPreservePairs(m, 2));
     }
 
@@ -227,7 +230,7 @@ public class SpaceChatSessionStoreTest extends AbstractMetatronTest {
     void adjustSkip_aiAtBoundary_scansThroughToolResultsToFindUser() {
         // skip=5 drops [0..4]; first=[5]=A() which needs a user.
         // Rule 2 scans backward through T{c2}, T{c1}, A{c1,c2}, finds U() at [1].
-        final List<Rec> m = msgs(
+        final List<Rel> m = msgs(
                 S(), U(), A("c1", "c2"), T("c1"), T("c2"),  // [0..4]
                 A(), U(), A("c3"), T("c3")                  // [5..8]
         );
@@ -239,26 +242,26 @@ public class SpaceChatSessionStoreTest extends AbstractMetatronTest {
         // skip=3 drops [0..2]; first=[3]=T{c1} — orphaned tool result!
         // Rule 1: T{c1} → find paired AiMessage at [2] → skip=2
         // Rule 2: [2]=A{c1} needs user → find U() at [1] → skip=1
-        final List<Rec> m = msgs(S(), U(), A("c1"), T("c1"), U(), A());
+        final List<Rel> m = msgs(S(), U(), A("c1"), T("c1"), U(), A());
         assertEquals(1, SpaceChatSessionStore.adjustSkipToPreservePairs(m, 3));
     }
 
     @Test
     void adjustSkip_userAtBoundary_noAdjustment() {
         // skip=4 drops [0..3]; first=[4]=U() — already a UserMessage, no change
-        final List<Rec> m = msgs(S(), U(), A("c1"), T("c1"), U(), A());
+        final List<Rel> m = msgs(S(), U(), A("c1"), T("c1"), U(), A());
         assertEquals(4, SpaceChatSessionStore.adjustSkipToPreservePairs(m, 4));
     }
 
     @Test
     void adjustSkip_skipZero_unchanged() {
-        final List<Rec> m = msgs(U(), A("c1"), T("c1"));
+        final List<Rel> m = msgs(U(), A("c1"), T("c1"));
         assertEquals(0, SpaceChatSessionStore.adjustSkipToPreservePairs(m, 0));
     }
 
     @Test
     void adjustSkip_skipAtSize_unchanged() {
-        final List<Rec> m = msgs(U(), A("c1"), T("c1"));
+        final List<Rel> m = msgs(U(), A("c1"), T("c1"));
         assertEquals(3, SpaceChatSessionStore.adjustSkipToPreservePairs(m, 3));
     }
 
@@ -268,7 +271,7 @@ public class SpaceChatSessionStoreTest extends AbstractMetatronTest {
         // Round 1: U, A{c1,c2}, T{c1}, T{c2}, A
         // Round 2: U, A{c3}, T{c3}, A
         // Round 3: U, A{c4,c5}, T{c4}, T{c5}
-        final List<Rec> m = msgs(
+        final List<Rel> m = msgs(
                 S(),           // [0]
                 U(),           // [1]  user round 1
                 A("c1", "c2"), // [2]  ai with 2 tool calls
@@ -310,14 +313,14 @@ public class SpaceChatSessionStoreTest extends AbstractMetatronTest {
         // rawSkip=2 → [1]=U, [2]=T{c0}
         // Rule 1: [1]=U → no change. Rule 2: [1]=U → no change.
         // Rule 3: [2]=T{c0} → find A{c0} at [0] < skip(1) → skip=0.
-        final List<Rec> m = msgs(A("c0"), U(), T("c0"));
+        final List<Rel> m = msgs(A("c0"), U(), T("c0"));
         assertEquals(0, SpaceChatSessionStore.adjustSkipToPreservePairs(m, 2));
     }
 
     @Test
     void adjustSkip_windowLargerThanMessages_skipZero() {
         // More window slots than messages — nothing to skip
-        final List<Rec> m = msgs(S(), U(), A());
+        final List<Rel> m = msgs(S(), U(), A());
         assertEquals(0, SpaceChatSessionStore.adjustSkipToPreservePairs(m, 0));
     }
 
@@ -335,8 +338,8 @@ public class SpaceChatSessionStoreTest extends AbstractMetatronTest {
 
     @Test
     void filter_excludesSystemMessages() {
-        final List<Rec> m = msgs(U(), S(), A(), S(), T("c1"));
-        final List<Rec> filtered = filterStoreMessages(m);
+        final List<Rel> m = msgs(U(), S(), A(), S(), T("c1"));
+        final List<Rec> filtered = filterStoreMessages(m.stream().map(r -> r.second().asRec()).toList());
         // System messages stripped
         assertEquals(3, filtered.size());
         assertEquals(USER_MESSAGE_TID, filtered.get(0).tid());
@@ -347,8 +350,8 @@ public class SpaceChatSessionStoreTest extends AbstractMetatronTest {
     @Test
     void filter_excludesThinkingMessages() {
         final Rec thinking = rec(mutableMap(uri(TEXT), str("hmm")), THINKING_MESSAGE_TID, null);
-        final List<Rec> m = msgs(U(), thinking, A());
-        final List<Rec> filtered = filterStoreMessages(m);
+        final List<Rel> m = msgs(U(), thinking, A());
+        final List<Rec> filtered = filterStoreMessages(m.stream().map(x -> (Rec) x.second()).toList());
         assertEquals(2, filtered.size());
         assertEquals(USER_MESSAGE_TID, filtered.get(0).tid());
         assertEquals(AI_MESSAGE_TID, filtered.get(1).tid());
@@ -362,7 +365,7 @@ public class SpaceChatSessionStoreTest extends AbstractMetatronTest {
         // ToolResult(c1)
         // SystemMessage         ← injected by SystemFeature.onBeforeChat() during tool loop
         // ToolResult(c2)        ← becomes orphaned if system message not filtered
-        final List<Rec> m = msgs(
+        final List<Rel> m = msgs(
                 U(),
                 A("c0", "c1", "c2"),
                 T("c0"),
@@ -370,7 +373,7 @@ public class SpaceChatSessionStoreTest extends AbstractMetatronTest {
                 S(),             // interleaved system message — the bug
                 T("c2")
         );
-        final List<Rec> filtered = filterStoreMessages(m);
+        final List<Rec> filtered = filterStoreMessages(m.stream().map(x -> (Rec) x.second()).toList());
 
         // After filtering: U, A{c0,c1,c2}, T{c0}, T{c1}, T{c2}
         assertEquals(5, filtered.size());
@@ -383,7 +386,7 @@ public class SpaceChatSessionStoreTest extends AbstractMetatronTest {
         // Pair-aware skip with a tight window (max=3): rawSkip = 5-3 = 2
         // first=[2]=T{c0} → pullInPairedAiMessage → skip=1 (A{c0,c1,c2})
         // → pullInPrecedingUserMessage → skip=0 (U) — window must start with user
-        final int skip = SpaceChatSessionStore.adjustSkipToPreservePairs(filtered, 2);
+        final int skip = SpaceChatSessionStore.adjustSkipToPreservePairs(filtered.stream().map(r -> rel(uri("temp"), r)).toList(), 2);
         assertEquals(0, skip);
 
         final List<Rec> window = filtered.subList(skip, filtered.size());
@@ -398,7 +401,7 @@ public class SpaceChatSessionStoreTest extends AbstractMetatronTest {
     @Test
     void multipleSystemMessagesInterleaved_allStripped() {
         // Multiple system message injections during multi-round tool calls
-        final List<Rec> m = msgs(
+        final List<Rel> m = msgs(
                 U(),
                 A("c0", "c1"),
                 T("c0"),
@@ -412,7 +415,7 @@ public class SpaceChatSessionStoreTest extends AbstractMetatronTest {
                 S(),             // injected
                 T("c2")
         );
-        final List<Rec> filtered = filterStoreMessages(m);
+        final List<Rec> filtered = filterStoreMessages(m.stream().map(x -> (Rec) x.second()).toList());
 
         // Should be: U, A{c0,c1}, T{c0}, T{c1}, A, U, A{c2}, T{c2}
         assertEquals(8, filtered.size());
@@ -428,6 +431,6 @@ public class SpaceChatSessionStoreTest extends AbstractMetatronTest {
         assertEquals(TOOL_RESULT_MESSAGE_TID, filtered.get(7).tid());
 
         // Pair-aware skip: rawSkip = 8-3 = 5, first=[5]=U → unchanged
-        assertEquals(5, SpaceChatSessionStore.adjustSkipToPreservePairs(filtered, 5));
+        assertEquals(5, SpaceChatSessionStore.adjustSkipToPreservePairs(filtered.stream().map(r -> rel(uri("temp"), r)).toList(), 5));
     }
 }

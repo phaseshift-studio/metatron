@@ -19,6 +19,8 @@
 package studio.phaseshift.metatron.isa.mach.type.ui;
 
 import org.jline.terminal.Cursor;
+import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Console;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Highlighter;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
@@ -26,12 +28,21 @@ import studio.phaseshift.metatron.isa.mach.type.ui.widget.FloatingSurface;
 
 import java.util.List;
 
+import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public interface Widget<W extends Widget<W>> extends Stylable<W>, AutoCloseable, Runnable {
 
-    public static final String X = "{{X}}";
+    String X = "{{X}}";
+
+    static <W extends Widget<W>> Widget<W> of(final Rec recWidget) {
+        if (recWidget instanceof Widget)
+            return (Widget<W>) recWidget;
+        return (Widget<W>) Router.readFromSpace(recWidget.tid()).asType().constructor().asInst().args(lst(recWidget.selfTID(REC_TID))).apply();
+    }
 
     @Override
     default void close() {
