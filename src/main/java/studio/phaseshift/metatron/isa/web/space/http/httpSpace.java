@@ -182,12 +182,26 @@ public class httpSpace extends AbstractSpace<HttpServer> {
             try {
                 Obj handler = cache.read(sessionVid);
                 if (handler.isNoObj()) {
+                    LOG.debug("creating handler: typeVID=%s sessionVid=%s", typeVID, sessionVid);
                     final Map<Obj, Obj> config = mutableMap(
                             uri(IN), uri(MIME.MIMEType.APPLICATION_JSON.value),
                             uri(OUT), uri(MIME.MIMEType.APPLICATION_JSON.value)
                     );
                     config.putAll(handlerConfig);
-                    handler = rec(config, typeVID, sessionVid);
+                    // Use the type constructor directly — rec()->construct()->big()
+                    // may redirect to a different URI where the type has no constructor,
+                    // falling through to a plain MRec (same root cause as the wsSpace
+                    // ClassCastException fix).
+                    final Obj type = Router.global().read(typeVID);
+                    if (type.isType() && type.asType().hasConstructor()) {
+                        handler = type.asType().constructor().apply(rec(config)).as();
+                        if (!handler.isFail())
+                            handler.self(handler.jvm(), typeVID, sessionVid);
+                        else
+                            handler = rec(config, typeVID, sessionVid);
+                    } else {
+                        handler = rec(config, typeVID, sessionVid);
+                    }
                     cache.write(sessionVid, handler);
                 }
                 if (handler instanceof HttpRec hr) {
@@ -291,7 +305,21 @@ public class httpSpace extends AbstractSpace<HttpServer> {
                         if (null == contentType || contentType == MIME.MIMEType.TEXT_PLAIN) {
                             contentType = MIME.MIMEType.fromExtension(runningPattern.name(), contentType);
                         }
-                        final Obj docObj = null != contentType ? contentType.fromBytes(response.body()) : str(response.body());
+                        // MIME resolution (mirrors fsSpace.readFileAsObj):
+                        //   default → typed string (e.g. html::"<html>...</html>")
+                        //     where the MIME's corresponding type TID predicates the content
+                        //   ?mimeq=... is handled by QCollection.mimeQ() postRead QProc
+                        final Obj docObj;
+                        if (null != contentType) {
+                            final fURI contentTid = contentType.toTid();
+                            docObj = null != contentTid
+                                    ? str(response.body(), contentTid, /*vid*/ null)
+                                    : str(response.body());
+                        } else {
+                            docObj = str(response.body());
+                        }
+                        LOG.debug("fetched %s [status=%d, contentType=%s, objTid=%s]",
+                                runningPattern, response.statusCode(), contentType, docObj.tid());
                         final Uri key = uri(pat.scheme(null).host(null).tail(steps).asRelative());
                         if (key.uriValue().toString().trim().isEmpty())
                             return docObj.isNoObj() ? IteratorUtil.of() : IteratorUtil.of(IdObj.of(pat, docObj));
@@ -299,6 +327,10 @@ public class httpSpace extends AbstractSpace<HttpServer> {
                             final Obj subDocObj = docObj.asRec().at(key);
                             return subDocObj.isNoObj() ? IteratorUtil.of() : IteratorUtil.of(IdObj.of(pat, subDocObj));
                         }
+                        // Non-rec result (e.g. typed str like html::"...") — return as-is
+                        // for the root pattern, empty for sub-path lookups
+                        if (docObj.isStr())
+                            return steps == 0 ? IteratorUtil.of(IdObj.of(pat, docObj)) : IteratorUtil.of();
                         return IteratorUtil.of();
                     }
                 }

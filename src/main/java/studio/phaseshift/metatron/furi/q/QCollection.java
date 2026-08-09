@@ -33,6 +33,8 @@ import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
@@ -218,10 +220,29 @@ public final class QCollection {
                         throw MTronException.of("unknown mime type: %s", mime);
                     if (!mime.equals(mimeType.value))
                         throw MTronException.of("mime-type mismatch: %s %s", mime, mimeType.value);
-                    LOG.debug("MTRON obj for %s: %s (%s)", mime, obj, mimeType.value);
-                    final Object nativeObject = mimeType.serializer().write(obj);
-                    LOG.debug("NATIVE serialized: %s", nativeObject);
-                    return str(nativeObject.toString());
+                    // Determine the content-specific MIME type from the obj's TID,
+                    // falling back to URI/file extension if the TID is bare STR_TID.
+                    // This is independent of the ?mimeq= value — ?mimeq= controls what
+                    // we DO with the result (tag vs structural parse), not what the content IS.
+                    MIME.MIMEType probed = MIME.MIMEType.fromType(obj, null);
+                    if (null == probed)
+                        probed = MIME.MIMEType.fromExtension(furi.name(), null);
+                    // Step 1: tag with probed MIME's TID (triggers predicate validation)
+                    if (null != probed) {
+                        final fURI tid = probed.toTid();
+                        if (null != tid) {
+                            obj = obj.tid(tid);
+                            // Step 2: application/x-mtron → structural parse via content serializer
+                            if (MIME.MIMEType.APPLICATION_MTRON == mimeType && obj.isStr())
+                                return probed.serializer().inputBytes(ByteBuffer.wrap(obj.strValue().getBytes(StandardCharsets.UTF_8)));
+                            return obj;
+                        }
+                    }
+                    // No content-type match — fall back to mimeq serialization
+                    // (e.g. str "hello" with ?mimeq=application/json → "\"hello\"")
+                    if (mimeType.hasSerializer())
+                        return str(mimeType.serializer().write(obj).toString());
+                    return obj;
                 }).create();
     }
 

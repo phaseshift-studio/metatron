@@ -158,6 +158,7 @@ public class mInstSet extends AbstractInstSet {
     public static final fURI AT_INST_TID = M_ISA_INST_TID.extend("at");
     public static final fURI IS_INST_TID = M_ISA_INST_TID.extend("is");
     public static final fURI ISA_INST_TID = M_ISA_INST_TID.extend("isa");
+    public static final fURI SORTA_INST_TID = M_ISA_INST_TID.extend("sorta");
     public static final fURI OR_INST_TID = M_ISA_INST_TID.extend("or");
     public static final fURI AND_INST_TID = M_ISA_INST_TID.extend("and");
     public static final fURI MATCHES_INST_TID = M_ISA_INST_TID.extend("matches");
@@ -860,6 +861,7 @@ public class mInstSet extends AbstractInstSet {
                 Sugar.prefix("?<=", List.of(IS_INST_TID, LTE_INST_TID), 1),
                 Sugar.prefix("?<", List.of(IS_INST_TID, LT_INST_TID), 1),
                 Sugar.prefix("?!=", List.of(IS_INST_TID, NEQ_INST_TID), 1),
+                Sugar.prefix("?~", List.of(SORTA_INST_TID), 1),
                 Sugar.prefix("?", List.of(ISA_INST_TID), 1),
                 Sugar.prefix("!@", List.of(AUTO_AT_INST_TID), 1),
                 Sugar.prefix("@", List.of(AT_INST_TID), 1),

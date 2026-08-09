@@ -348,8 +348,10 @@ public class ObjHTMLSerializer extends AbstractObjSerializer<Document> {
 
     @Override
     public Document write(final Obj obj) {
+        if (obj.isStr())
+            return Jsoup.parse(obj.strValue());
         if (!obj.isRec())
-            throw MTronException.of("only rec can be translated to an html document");
+            throw MTronException.of("only rec or html str can be translated to an html document");
         final Document document = new Document(".");
         final Rec rootRec = obj.asRec();
 

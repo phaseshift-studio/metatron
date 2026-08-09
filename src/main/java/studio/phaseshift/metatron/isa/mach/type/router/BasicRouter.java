@@ -185,7 +185,7 @@ public class BasicRouter extends AbstractSpace<Map<Obj, Obj>> implements Router 
     }
 
     @Override
-    public void addSpace(final Space space) {
+    public synchronized void addSpace(final Space space) {
         if (null == space.vid()) {
             LOG.debug("vid-less spaces are self-managed and not indexed by router: %s", space);
             return;
@@ -222,7 +222,7 @@ public class BasicRouter extends AbstractSpace<Map<Obj, Obj>> implements Router 
     }
 
     @Override
-    public void removeSpace(final fURI pattern) {
+    public synchronized void removeSpace(final fURI pattern) {
         if (null == pattern)
             return;
         this.spaces().jvm()
@@ -339,9 +339,10 @@ public class BasicRouter extends AbstractSpace<Map<Obj, Obj>> implements Router 
 
     @Override
     public Router clone(final Object jvm, final fURI tid, final fURI vid) {
-        this.jvm = jvm;
-        this.tid = tid;
-        this.vid = vid;
+        Space.Helper.noCloneWarning(this);
+        //this.jvm = jvm;
+        //this.tid = tid;
+        //this.vid = vid;
         return this;
     }
 

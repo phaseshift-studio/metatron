@@ -84,7 +84,7 @@ public class web_httpHandler extends HttpRec {
             try {
                 final HttpExchange exchange = this.exchange;
                 if (exchange == null) {
-                    LOG.error("no exchange available for GET handler");
+                    // exchange is null during type-checking of the isaPredicate
                     return noobj();
                 }
 
@@ -177,13 +177,14 @@ public class web_httpHandler extends HttpRec {
                 // Structured rec values use type-specific serializers (HTML, JSON).
                 // Leaf values (str, jnt, bool, noobj, etc.) use APPLICATION_MTRON
                 // so type information is preserved through the serialization round-trip.
+                // fromType checks the obj's TID (works for both rec and typed str)
                 final MIME.MIMEType contentType = requestURI.hasQ(OUT) ?
                         MIME.MIMEType.of(requestURI.q(OUT)) :
-                        (requestObj.isRec()
-                                ? MIME.MIMEType.fromType(requestObj,
-                                        MIME.MIMEType.fromExtension(contentTypeHint.name(), MIME.MIMEType.TEXT_PLAIN))
-                                : MIME.MIMEType.APPLICATION_MTRON);
+                        MIME.MIMEType.fromType(requestObj,
+                                MIME.MIMEType.fromExtension(contentTypeHint.name(),
+                                        requestObj.isRec() ? MIME.MIMEType.TEXT_PLAIN : MIME.MIMEType.APPLICATION_MTRON));
                 this.send(requestObj, contentType);
+                LOG.debug("served %s [contentType=%s, objTid=%s]", requestURI, contentType.value, requestObj.tid());
                 return requestObj;
 
             } catch (final Exception e) {
@@ -208,6 +209,10 @@ public class web_httpHandler extends HttpRec {
                     return noobj();
                 }
                 final HttpExchange exchange = this.exchange;
+                if (exchange == null) {
+                    // exchange is null during type-checking of the isaPredicate
+                    return noobj();
+                }
                 final fURI webRoot = this.at(uri(WEB_ROOT)).uriValue();
                 final String mountPath = exchange.getHttpContext().getPath();
                 final String fullPath = exchange.getRequestURI().getPath();

@@ -151,29 +151,44 @@ public class MFail extends MObj implements Fail {
     }
 
     /**
-     * Reconstructs {@code mtronCauseHead}'s chain so that {@code tCause}
-     * (which carries its own nested causes via the constructor) is threaded
-     * at the tail.  Uses only constructors — no {@link Throwable#initCause}
-     * which is blocked in JDK 25+ after null-cause construction.
+     * Thread {@code tCause} at the tail of {@code mtronCauseHead}'s chain
+     * while preserving {@code tCause}'s original stack frames intact.
+     * Uses {@link Throwable#initCause} where possible; falls back to
+     * constructor wrapping on JDK 25+ (initCause blocked after null-cause).
      */
     private static Throwable rebuildMtronChainWithCause(final Throwable mtronCauseHead,
                                                          final Throwable tCause) {
-        final java.util.List<Throwable> chain = new java.util.ArrayList<>();
-        Throwable c = mtronCauseHead;
-        while (c != null) {
-            chain.add(c);
-            c = c.getCause();
+        if (null == tCause)
+            return mtronCauseHead;
+        // Walk to the tail of the mtron chain
+        Throwable tail = mtronCauseHead;
+        while (tail.getCause() != null)
+            tail = tail.getCause();
+        // Try to thread tCause directly — preserves its original stack frames
+        try {
+            tail.initCause(tCause);
+            return mtronCauseHead;
+        } catch (final IllegalStateException e) {
+            // JDK 25+: initCause blocked on null-cause construction.
+            // Fall back to wrapping the tail with a new throwable that
+            // carries tCause as its cause.  The rest of the mtron chain
+            // above tail is untouched.
+            final RuntimeException leaf = new RuntimeException(
+                    tail.getMessage() != null ? tail.getMessage() : "", tCause);
+            leaf.setStackTrace(tail.getStackTrace());
+            if (mtronCauseHead == tail)
+                return leaf;
+            // Replace tail with leaf in the chain
+            Throwable parent = mtronCauseHead;
+            while (parent.getCause() != tail)
+                parent = parent.getCause();
+            try {
+                parent.initCause(leaf);
+            } catch (final Exception ignored) {
+                // best effort — chain above leaf is intact, just missing one link
+            }
+            return mtronCauseHead;
         }
-        Throwable rebuilt = tCause;
-        for (int i = chain.size() - 1; i >= 0; i--) {
-            final Throwable original = chain.get(i);
-            final RuntimeException wrapper = new RuntimeException(
-                    original.getMessage() != null ? original.getMessage() : "",
-                    rebuilt);
-            wrapper.setStackTrace(original.getStackTrace());
-            rebuilt = wrapper;
-        }
-        return rebuilt;
     }
 
     /**

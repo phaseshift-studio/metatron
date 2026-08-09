@@ -26,6 +26,7 @@ import studio.phaseshift.metatron.isa.AbstractSpace;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Highlighter;
@@ -205,16 +206,30 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
                     throw MTronException.of("websocket handler type required: %s at %s", wsHandlerType, wsHandlerTypeID);
                 LOG.info("starting session with websocket handler: %s", wsHandlerType);
                 final fURI vid = this.baseURI.extend(routePath.qLess()).extend(this.counter.getAndIncrement() + "");
-
-                // Delegate construction to the metatron type system:
-                // rec(map, tid, vid) -> MObj.of() -> Obj.Helper.construct() which looks up
-                // the Type at wsHandlerTypeVID in the Router and calls its constructor if present.
-                // This allows user-defined websocket handler subtypes to be instantiated correctly.
-                // Pass an empty map — the type's constructor applies its own defaults for IN/OUT.
-                final Obj handler = rec(mutableMap(
-                                uri(IN), routePath.hasQ(IN) ? uri(routePath.q(IN)) : noobj(),
-                                uri(OUT), routePath.hasQ(OUT) ? uri(routePath.q(OUT)) : noobj()),
-                        wsHandlerTypeID, vid);
+                // Construct the handler through the type system:
+                // Use wsHandlerType's constructor directly (already read from Router at
+                // wsHandlerTypeID above).  We bypass rec()->MObj.of()->construct() because
+                // construct() resolves through tid.big() which may redirect to a different
+                // URI where the type has no constructor, falling through to a plain MRec.
+                //
+                // No Router.writeToSpace() needed here — onOpen() writes the handler to
+                // this.space.cache, and getSession() reads from cache, not the Router.
+                final Rec config = rec(mutableMap(
+                        uri(IN), routePath.hasQ(IN) ? uri(routePath.q(IN)) : noobj(),
+                        uri(OUT), routePath.hasQ(OUT) ? uri(routePath.q(OUT)) : noobj()));
+                final Obj handler;
+                if (wsHandlerType.asType().hasConstructor()) {
+                    handler = wsHandlerType.asType().constructor().apply(config).as();
+                    if (handler.isFail()) {
+                        conn.close(4000, "unable to construct handler: " + handler);
+                        throw MTronException.of("wsserver construction failed: {{y}}%s{{X}}", handler);
+                    }
+                    handler.self(handler.jvm(), wsHandlerTypeID, vid);
+                } else {
+                    // Fallback: type has no constructor — use the config rec as-is.
+                    // This shouldn't normally happen for well-formed handler types.
+                    handler = config.tid(wsHandlerTypeID).vid(vid);
+                }
                 if (handler.isNoObj() || handler.isFail()) {
                     conn.close(4000, "unable to construct server " + handler);
                     throw MTronException.of("client {{b}}%s{{X}} wsserver construction failed: {{y}}%s{{X}}", conn.getRemoteSocketAddress(), handler);
@@ -262,6 +277,7 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
                     }
                 }
             } catch (final Exception e) {
+                e.printStackTrace();
                 LOG.error("error on new connection with %s: %s", conn.getRemoteSocketAddress(), e);
                 conn.closeConnection(3000, "error on connection: " + e);
                 // Do NOT re-throw — propagating an exception from an event handler
