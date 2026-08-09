@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.llm.space;
 
+import studio.phaseshift.metatron.SkipWhenPortUnavailable;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
@@ -29,10 +30,10 @@ import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.furi.q.QCollection.incrQ;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.furi.q.QCollection.incrQ;
 import static studio.phaseshift.metatron.isa.tble.tbleInstSet.TBLE_ISA_TID;
 
 /*
@@ -46,6 +47,7 @@ import static studio.phaseshift.metatron.isa.tble.tbleInstSet.TBLE_ISA_TID;
  * {@code createTableFromRecord} on the first write — no manual DDL needed.
  * Messages are stored via KV at {@code sqlite:msg/{memId}/{pos}}.
  */
+@SkipWhenPortUnavailable(value = 11434)
 public class SqliteLLMSessionIntegrationTest extends AbstractLLMSessionIntegrationTest {
 
     private static final String DB_PATH = "target/test-llm-session-int.db";
@@ -87,7 +89,10 @@ public class SqliteLLMSessionIntegrationTest extends AbstractLLMSessionIntegrati
     @Override
     protected void cleanupSession() throws Exception {
         if (this.space != null) {
-            try { Router.global().removeSpace(this.space.vid()); } catch (final Exception ignored) {}
+            try {
+                Router.global().removeSpace(this.space.vid());
+            } catch (final Exception ignored) {
+            }
             this.space.close();
             this.space = null;
         }

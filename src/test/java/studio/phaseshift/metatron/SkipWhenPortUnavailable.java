@@ -53,7 +53,7 @@ public @interface SkipWhenPortUnavailable {
                     // usually if bind fails, port is busy (available for service).
                     // Adjust logic based on whether you want to skip if port is BUSY or FREE.
                     // If checking if service is UP: try connecting, if fail -> disabled.
-                    return ConditionEvaluationResult.disabled("Port " + a.value() + " check failed.");
+                    return ConditionEvaluationResult.enabled("Port " + a.value() + " check failed.");
                 }
             }).orElse(ConditionEvaluationResult.enabled("No port condition found"));
         }
