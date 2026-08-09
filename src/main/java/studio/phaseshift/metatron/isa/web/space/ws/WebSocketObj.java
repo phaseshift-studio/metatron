@@ -23,7 +23,6 @@ import org.java_websocket.handshake.Handshakedata;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.Real;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.web.type.MIME;
@@ -38,11 +37,8 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.m.mInstSet.NOOBJ_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.Poly.MUTABLE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
-import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /*
@@ -90,12 +86,12 @@ public interface WebSocketObj extends Rec, Closeable {
     default void close() {
         try {
             if (null != this.getWebSocket() && !this.getWebSocket().isClosed()) {
-                this.logger().info("closing %s", this.getThisVID());
+                this.logger().info("closing %s", this.vidOrTid());
                 this.getWebSocket().close();
             } else
-                throw MTronException.of("websocket already closed for %s", this.getThisVID());
+                throw MTronException.of("websocket already closed for %s", this.vidOrTid());
         } catch (final Exception e) {
-            this.logger().error("error closing websocket: %s", this.getThisVID(), e);
+            this.logger().error("error closing websocket: %s", this.vidOrTid(), e);
         }
     }
 
