@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.llm.space;
 
+import studio.phaseshift.metatron.SkipWhenPortUnavailable;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
@@ -29,10 +30,10 @@ import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.furi.q.QCollection.incrQ;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.furi.q.QCollection.incrQ;
 import static studio.phaseshift.metatron.isa.tble.tbleInstSet.TBLE_ISA_TID;
 
 /*
@@ -46,6 +47,7 @@ import static studio.phaseshift.metatron.isa.tble.tbleInstSet.TBLE_ISA_TID;
  * auto-created by tbleSpace's {@code createTableFromRecord} on the first
  * write — no manual DDL needed.
  */
+@SkipWhenPortUnavailable(value = 11434)
 public class MariaDBLLMSessionIntegrationTest extends AbstractLLMSessionIntegrationTest {
 
     private static final String MEM_TABLE = "llm_session";
@@ -85,12 +87,18 @@ public class MariaDBLLMSessionIntegrationTest extends AbstractLLMSessionIntegrat
     @Override
     protected void cleanupSession() throws Exception {
         if (this.space != null) {
-            try { Router.global().removeSpace(this.space.vid()); } catch (final Exception ignored) {}
+            try {
+                Router.global().removeSpace(this.space.vid());
+            } catch (final Exception ignored) {
+            }
             this.space.close();
             this.space = null;
         }
         if (this.dbConfig != null) {
-            try { dbConfig.teardown(); } catch (final Exception ignored) {}
+            try {
+                dbConfig.teardown();
+            } catch (final Exception ignored) {
+            }
             this.dbConfig = null;
         }
     }

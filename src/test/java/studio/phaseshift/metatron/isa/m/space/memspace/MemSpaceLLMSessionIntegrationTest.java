@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.m.space.memspace;
 
+import studio.phaseshift.metatron.SkipWhenPortUnavailable;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.llm.space.AbstractLLMSessionIntegrationTest;
@@ -50,6 +51,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * Session VID:  {@code /mem/example/llm_session/1}
  * Message path: {@code /mem/example/msg/1/0}
  */
+@SkipWhenPortUnavailable(value = 11434)
 public class MemSpaceLLMSessionIntegrationTest extends AbstractLLMSessionIntegrationTest {
 
     private static final fURI SPACE_VID = f("/sys/space/test_llm_mem_int");
@@ -77,7 +79,10 @@ public class MemSpaceLLMSessionIntegrationTest extends AbstractLLMSessionIntegra
     @Override
     protected void cleanupSession() throws Exception {
         if (this.space != null) {
-            try { Router.global().removeSpace(this.space.vid()); } catch (final Exception ignored) {}
+            try {
+                Router.global().removeSpace(this.space.vid());
+            } catch (final Exception ignored) {
+            }
             this.space.close();
             this.space = null;
         }
