@@ -36,9 +36,11 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static studio.phaseshift.metatron.Tokens.PATTERN;
 import static studio.phaseshift.metatron.Tokens.ROUTE;
@@ -228,5 +230,112 @@ public class CommonUtilTest extends AbstractMetatronTest {
     void testNormalization(String input, String expected) {
         if (input == null) input = "";
         assertEquals(expected, CommonUtil.normalize(input));
+    }
+
+    // =========================================================================
+    // correctSpelling(String) — built-in dictionary
+    // =========================================================================
+
+    @ParameterizedTest(name = "[{index}] correction: ''{0}'' -> ''{1}''")
+    @CsvSource(value = {
+            // Exact matches — already in dictionary
+            "intelligence | intelligence",
+            "algorithm | algorithm",
+            "language | language",
+            "database | database",
+
+            // Single-edit misspellings (deletion)
+            "inteligence | intelligence",
+            "algorith | algorithm",
+            "languge | language",
+            "databse | database",
+
+            // Single-edit misspellings (transposition)
+            "langauge | language",
+
+            // Single-edit misspellings (substitution)
+            "databaze | database",
+            "mesage | message",
+
+            // More single-edit misspellings — common typos
+            "recomend | recommend",
+            "seperate | separate",
+            "enviroment | environment",
+            "goverment | government",
+            "neccessary | necessary",
+            "paralel | parallel",
+            "similiar | similar",
+            "specfic | specific",
+            "sucess | success",
+            "writting | writing",
+
+            // Short-but-viable corrections (4+ chars, single edit)
+            "grph | graph",
+            "netwrk | network",
+            "agnt | agent",
+
+            // Two-edit misspellings on longer words
+            "intelligance | intelligence",
+            "algorhythm | algorithm",
+
+            // Words not in dictionary, not close to anything → unchanged
+            "xyzzy | xyzzy",
+            "wombat | wombat",
+
+            // Short words (< 4 chars) → always unchanged
+            "cat | cat",
+            "the | the",
+            "abc | abc",
+    }, delimiter = '|')
+    void testCorrectSpellingBuiltin(String input, String expected) {
+        assertEquals(expected, CommonUtil.correctSpelling(input));
+    }
+
+    @Test
+    void testCorrectSpellingNull() {
+        assertNull(CommonUtil.correctSpelling(null));
+    }
+
+    @Test
+    void testCorrectSpellingBlank() {
+        assertEquals("", CommonUtil.correctSpelling(""));
+        assertEquals("   ", CommonUtil.correctSpelling("   "));
+    }
+
+    // =========================================================================
+    // correctSpelling(String, Set<String>) — caller-provided dictionary
+    // =========================================================================
+
+    @Test
+    void testCorrectSpellingWithCustomDictionary() {
+        final Set<String> dict = Set.of("intelligence", "algorithm", "database");
+
+        // Exact match
+        assertEquals("intelligence", CommonUtil.correctSpelling("intelligence", dict));
+
+        // Single-edit correction
+        assertEquals("intelligence", CommonUtil.correctSpelling("inteligence", dict));
+        assertEquals("algorithm", CommonUtil.correctSpelling("algorith", dict));
+
+        // Word not in dictionary → unchanged
+        assertEquals("language", CommonUtil.correctSpelling("language", dict));
+
+        // Short word → unchanged
+        assertEquals("cat", CommonUtil.correctSpelling("cat", dict));
+
+        // Empty dictionary → unchanged
+        assertEquals("inteligence", CommonUtil.correctSpelling("inteligence", Set.of()));
+
+        // Null dictionary → unchanged
+        assertEquals("inteligence", CommonUtil.correctSpelling("inteligence", null));
+    }
+
+    @Test
+    void testCorrectSpellingNoFalsePositiveOnShortDict() {
+        // With a small dictionary, a word that's not close to anything
+        // should not be incorrectly "corrected"
+        final Set<String> dict = Set.of("neural", "token", "weight");
+        assertEquals("gradient", CommonUtil.correctSpelling("gradient", dict));
+        assertEquals("attention", CommonUtil.correctSpelling("attention", dict));
     }
 }

@@ -42,6 +42,7 @@ import studio.phaseshift.metatron.isa.mach.type.ui.console.StatusLine;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.CommonUtil;
+import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.io.IOException;
@@ -89,6 +90,8 @@ public class ConceptFeature extends AbstractFeature {
     private final Extractor extractor;
     private final MessageIndexer indexer; // shared across extractor types for read-side queries
     private final List<String> conceptRecommendations = new ArrayList<>();
+    private final Set<String> knownConceptNames = new LinkedHashSet<>();
+    private boolean knownConceptNamesLoaded = false;
     // ── Templates ───────────────────────────────────────────────────
 
     /**
@@ -260,21 +263,71 @@ public class ConceptFeature extends AbstractFeature {
     }
 
     /**
+     * Lazily populate {@link #knownConceptNames} from the concept space.
+     * Each concept is stored as a direct child of {@link #getBaseURI()};
+     * we enumerate them via the {@code +/} branch query.
+     */
+    private void loadExistingConceptNames() {
+        if (this.knownConceptNamesLoaded) return;
+        this.knownConceptNamesLoaded = true;
+        try {
+            final Obj children = Router.readFromSpace(this.getBaseURI().extend("+/"));
+            if (children.isLst()) {
+                children.asLst().stream()
+                        .filter(o -> !o.isNoObj())
+                        .forEach(o -> {
+                            final fURI conceptURI = o.asRel().first().uriValue();
+                            final String name = conceptURI.name();
+                            if (name != null && !name.isBlank() && name.length() >= 4) {
+                                this.knownConceptNames.add(name);
+                            }
+                        });
+                LOG.debug("loaded %d existing concept names from space", this.knownConceptNames.size());
+            }
+        } catch (final Exception e) {
+            // Space may not be ready yet — concepts will accumulate as they arrive
+            LOG.debug("could not load existing concept names: %s", e.getMessage());
+        }
+    }
+
+    /**
      * Persist concepts into the space graph with co-location links and
      * message back-references.  Shared by all extractor implementations.
+     * <p>
+     * Before storing, incoming concept strings are spell-checked against
+     * the existing concept names in the space.  If a close match is found
+     * (e.g. "inteligence" vs "intelligence"), the existing spelling is used
+     * instead, preventing the concept graph from being polluted by typos.
      */
     private Set<fURI> addConceptsToSpace(final Agent agent, final Set<String> conceptStrings) {
         final Set<fURI> concepts = new HashSet<>();
+
+        // ── Spell correction ─────────────────────────────────────────
+        // Check incoming concept strings against existing concept names
+        // so typos don't fragment the concept graph.
+        loadExistingConceptNames();
+        final Set<String> correctedStrings = new LinkedHashSet<>();
+        for (final String c : conceptStrings) {
+            final String corrected = CommonUtil.correctSpelling(c, this.knownConceptNames);
+            if (!corrected.equals(c)) {
+                LOG.debug("spell-corrected concept: '%s' -> '%s'", c, corrected);
+                StatusLine.message(str("corrected '%s' -> '%s'".formatted(c, corrected)));
+            }
+            correctedStrings.add(corrected);
+        }
+        this.knownConceptNames.addAll(correctedStrings);
+        // ── End spell correction ─────────────────────────────────────
+
         try {
-            LOG.debug("concepts to process: %s", conceptStrings);
-            for (final String concept : conceptStrings) {
+            LOG.debug("concepts to process: %s", correctedStrings);
+            for (final String concept : correctedStrings) {
                 final fURI conceptURI = this.getBaseURI().extend(concept);
                 final Rec conceptRec = Router.readFromSpace(conceptURI).orElse(rec());
                 //if (!conceptRec.has(CONCEPT)) conceptRec.at(CONCEPT, uri(concept), MUTABLE);
                 final Lst conceptLink = conceptRec.at(CONCEPT).orElse(lst());
                 final Set<Obj> conceptLinkList = new LinkedHashSet<>(conceptLink.jvm());
                 final int conceptLinkListSize = conceptLinkList.size();
-                conceptLinkList.addAll(conceptStrings.stream()
+                conceptLinkList.addAll(correctedStrings.stream()
                         .filter(c -> !c.equals(concept))
                         .map(c -> auto_from_(this.getBaseURI().extend(c)).tryToInst()).toList());
                 if (conceptLinkList.size() > conceptLinkListSize) {

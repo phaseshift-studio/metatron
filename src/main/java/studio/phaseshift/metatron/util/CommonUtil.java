@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.util;
 
+import org.apache.lucene.search.spell.LevenshteinDistance;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
@@ -207,6 +208,117 @@ public final class CommonUtil {
             concept = concept.substring(0, concept.length() - 1);
         }
         return concept.replace(' ', '_').replace("'", "").replace("\"", "").replace("&", "and");
+    }
+
+    // =========================================================================
+    // Spell correction
+    // =========================================================================
+
+    /**
+     * Lucene Levenshtein distance — returns a normalized similarity score
+     * between 0.0 (completely different) and 1.0 (identical).
+     */
+    private static final LevenshteinDistance LEVENSHTEIN = new LevenshteinDistance();
+
+    /**
+     * Common English words loaded lazily from {@code dictionary_en.txt}
+     * on the classpath.  One word per line; lines starting with {@code #}
+     * are comments.  Compatible with SCOWL-generated word lists — drop a
+     * SCOWL {@code wl.txt} (size 60 or larger) at this resource path to
+     * replace the built-in dictionary.
+     */
+    private static Set<String> COMMON_WORDS = null;
+
+    private static synchronized Set<String> commonWords() {
+        if (COMMON_WORDS == null) {
+            final InputStream in = CommonUtil.class.getResourceAsStream("dictionary_en.txt");
+            if (in == null) {
+                throw MTronException.of(
+                        "dictionary_en.txt not found on classpath — "
+                        + "ensure src/main/resources is on the classpath and "
+                        + "dictionary_en.txt is included in the build");
+            }
+            final Set<String> words = new HashSet<>();
+            try (final BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(in, java.nio.charset.StandardCharsets.UTF_8))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    final String word = line.trim().toLowerCase();
+                    if (!word.isEmpty() && !word.startsWith("#") && word.length() >= 4) {
+                        words.add(word);
+                    }
+                }
+            } catch (final IOException e) {
+                throw MTronException.of("failed to read dictionary_en.txt: %s", e.getMessage());
+            }
+            COMMON_WORDS = Collections.unmodifiableSet(words);
+            System.err.println("INFO: loaded " + COMMON_WORDS.size() + " words from dictionary_en.txt");
+        }
+        return COMMON_WORDS;
+    }
+
+    /**
+     * Correct the spelling of a word against the built-in dictionary of
+     * common English words loaded from {@code dictionary_en.txt}.
+     * Returns the closest match within an edit-distance threshold, or the
+     * original word if no correction is found.
+     * <p>
+     * Words shorter than 4 characters are returned unchanged — they are
+     * too short for reliable correction.
+     *
+     * @param word the word to check
+     * @return the corrected word, or the original if no correction is needed
+     */
+    public static String correctSpelling(final String word) {
+        return correctSpelling(word, commonWords());
+    }
+
+    /**
+     * Correct the spelling of a word against a provided dictionary.
+     * Returns the closest dictionary entry within an edit-distance threshold,
+     * or the original word if no close match is found.
+     * <p>
+     * Words shorter than 4 characters or already present in the dictionary
+     * are returned unchanged.
+     *
+     * @param word       the word to check
+     * @param dictionary the set of correctly-spelled words to match against
+     * @return the corrected word, or the original if no correction is needed
+     */
+    public static String correctSpelling(final String word, final Set<String> dictionary) {
+        if (word == null || word.isBlank() || dictionary == null || dictionary.isEmpty())
+            return word;
+
+        final String normalized = word.toLowerCase().trim();
+
+        // Very short words are too prone to false positives
+        if (normalized.length() < 4)
+            return word;
+
+        // Already in dictionary — no correction needed
+        if (dictionary.contains(normalized))
+            return word;
+
+        String bestMatch = null;
+        float bestScore = 0.0f;
+
+        for (final String candidate : dictionary) {
+            if (candidate.length() < 4) continue; // skip short dictionary entries too
+            final float score = LEVENSHTEIN.getDistance(normalized, candidate.toLowerCase());
+            if (score > bestScore) {
+                bestScore = score;
+                bestMatch = candidate;
+                if (score >= 1.0f) break; // exact match, can't do better
+            }
+        }
+
+        // Threshold: require at least 75% similarity.
+        // For words of length 4, a single edit gives 0.75 — we accept that.
+        // For longer words, even two edits still clears 0.75.
+        if (bestMatch != null && bestScore >= 0.75f) {
+            return bestMatch;
+        }
+        return word;
     }
 
     public static List<String> splitOnNonQuotedSequence(final String sequence, final char split, boolean includeSplitCharacter) {
@@ -589,12 +701,10 @@ public final class CommonUtil {
         private static final String[] FRAMES = {"|", "/", "-", "\\"};
         private static final long INTERVAL_MS = 120;
 
-        private final String message;
         private final java.util.concurrent.atomic.AtomicBoolean running = new java.util.concurrent.atomic.AtomicBoolean(true);
         private final Thread thread;
 
         private Spinner(final String message) {
-            this.message = message;
             this.thread = new Thread(() -> {
                 int idx = 0;
                 while (running.get()) {
