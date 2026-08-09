@@ -51,9 +51,10 @@ public class MTronException extends RuntimeException {
     }
 
     /**
-     * Find the most useful stack frame: walk to the deepest cause first
-     * (its origin is usually closer to the actual problem), then skip
-     * MTronException frames to find the real throw site.
+     * Find the most useful stack frame: walk to the deepest cause
+     * (its origin is usually closest to the actual problem), then
+     * return the first stack frame.  No more filtering out
+     * MTronException frames — those ARE the call sites.
      */
     public static StackTraceElement originOf(final Throwable t) {
         if (null == t)
@@ -63,13 +64,9 @@ public class MTronException extends RuntimeException {
                 && target.getCause().getStackTrace().length > 0
                 && !(target.getCause() instanceof StackOverflowError))
             target = target.getCause();
-        for (final StackTraceElement frame : target.getStackTrace()) {
-            if (!frame.getClassName().equals(MTronException.class.getName()))
-                return frame;
-        }
-        return target.getStackTrace().length > 0
-                ? target.getStackTrace()[0]
-                : t.getStackTrace().length > 0 ? t.getStackTrace()[0] : null;
+        if (target.getStackTrace().length > 0)
+            return target.getStackTrace()[0];
+        return t.getStackTrace().length > 0 ? t.getStackTrace()[0] : null;
     }
 
     /**

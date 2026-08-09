@@ -19,30 +19,24 @@
 package studio.phaseshift.metatron.isa.mach.io.space.fs;
 
 import org.zeroturnaround.exec.ProcessExecutor;
-import org.zeroturnaround.exec.ProcessResult;
 import org.zeroturnaround.exec.stream.LogOutputStream;
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractSpace;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.*;
-import studio.phaseshift.metatron.isa.m.type.impl.MObjs;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.web.type.MIME;
-import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.CommonUtil;
+import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.io.*;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.nio.file.FileSystem;
-import java.nio.file.attribute.PosixFilePermission;
-import java.nio.file.attribute.PosixFilePermissions;
 import java.util.*;
-import java.util.concurrent.Future;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -61,7 +55,8 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.mach.machInstSet.*;
+import static studio.phaseshift.metatron.isa.mach.machInstSet.DIR_TID;
+import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_ISA_TID;
 
 public class fsSpace extends AbstractSpace<FileSystem> {
 
@@ -152,7 +147,29 @@ public class fsSpace extends AbstractSpace<FileSystem> {
         LOG.info("reading %s [mime:%s]", file.getPath(), mimeType.value);
         // Use parse (not eval) to avoid executing potential write-side-effect expressions
         // in the file content (e.g. !* or -> sugar that Router.writeToSpace).
-        return mimeType.serializer().inputBytes(fileBytes);
+        //
+        // MIME resolution strategy:
+        //
+        // 1. Known content TID (HTML, JSON, etc.) → typed string
+        //    e.g. html::"<html>...</html>" with predicate validation.
+        //    Structural parse (rec::T) is handled by mimeQ postRead.
+        //
+        // 2. application/x-mtron from query (?mimeq=) → bare string, let mimeQ
+        //    postRead handle structural parse with the correct content serializer.
+        //
+        // 3. application/x-mtron from file extension (.mtron) → parse via
+        //    ObjmtronSerializer to produce the native mtron obj.
+        //
+        // 4. Other serializable MIME types → use the MIME's serializer.
+        final boolean fromMimeq = qMap.containsKey(MIMEQ_PATTERN.toString());
+        if (mimeType == MIME.MIMEType.APPLICATION_MTRON && fromMimeq)
+            return str(new String(fileBytes));  // case 2: defer to mimeQ
+        final fURI contentTid = mimeType.toTid();
+        if (null != contentTid)
+            return str(new String(fileBytes), contentTid, /*vid*/ null);  // case 1
+        if (mimeType.hasSerializer())
+            return mimeType.serializer().inputBytes(fileBytes);  // cases 3 & 4
+        return str(new String(fileBytes));
     }
 
     @Override

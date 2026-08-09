@@ -102,6 +102,8 @@ public class HttpRec extends MRec {
      */
     public void handle(final HttpExchange exchange) throws IOException {
         this.exchange = exchange;
+        LOG.debug("handling %s %s [handler=%s]", exchange.getRequestMethod(),
+                exchange.getRequestURI(), this.vidOrTid());
         try {
             switch (exchange.getRequestMethod().toUpperCase()) {
                 case "GET" -> doGet(exchange);
@@ -252,10 +254,12 @@ public class HttpRec extends MRec {
      * Send a raw JSON string response.
      */
     protected void sendJsonString(final int status, final String json) throws IOException {
+        if (this.exchange == null)  // type-checking guard
+            return;
         final byte[] bytes = json.getBytes(StandardCharsets.UTF_8);
-        exchange.getResponseHeaders().set("Content-Type", "application/json");
-        exchange.sendResponseHeaders(status, bytes.length);
-        try (final OutputStream os = exchange.getResponseBody()) {
+        this.exchange.getResponseHeaders().set("Content-Type", "application/json");
+        this.exchange.sendResponseHeaders(status, bytes.length);
+        try (final OutputStream os = this.exchange.getResponseBody()) {
             os.write(bytes);
         }
     }
@@ -274,7 +278,8 @@ public class HttpRec extends MRec {
      */
     public void send(final Obj message) {
         if (this.exchange == null) {
-            LOG.error("no exchange available to send response");
+            // exchange is null during type-checking of the isaPredicate
+            // (rhs.test(cinst.rng()) evaluates insts to verify result types)
             return;
         }
         try {
@@ -302,7 +307,7 @@ public class HttpRec extends MRec {
      */
     public void send(final Obj message, final MIME.MIMEType contentType) {
         if (this.exchange == null) {
-            LOG.error("no exchange available to send response");
+            // exchange is null during type-checking of the isaPredicate
             return;
         }
         try {

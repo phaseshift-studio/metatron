@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -22,9 +22,9 @@ import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.isa.dcmnt.schema.storage.ObjBSONSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjJavaSerializer;
-import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.web.parser.ObjHTMLSerializer;
+import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -47,6 +47,7 @@ class MIMETest extends AbstractMetatronTest {
         assertEquals(MIME.MIMEType.IMAGE_JPEG, MIME.MIMEType.fromExtension("photo.jpeg", null));
         assertEquals(MIME.MIMEType.TEXT_JAVA, MIME.MIMEType.fromExtension("/src/studio/phaseshift/metatron/isa/m/mInstSet.java", null));
         assertEquals(MIME.MIMEType.APPLICATION_MTRON, MIME.MIMEType.fromExtension("file.mtron", null));
+        assertEquals(MIME.MIMEType.APPLICATION_MTRON, MIME.MIMEType.fromExtension("file", null));
         assertEquals(MIME.MIMEType.TEXT_PLAIN, MIME.MIMEType.fromExtension("file.unknown", MIME.MIMEType.TEXT_PLAIN));
         assertNull(MIME.MIMEType.fromExtension("file.unknown", null));
         assertNull(MIME.MIMEType.fromExtension(null, null));

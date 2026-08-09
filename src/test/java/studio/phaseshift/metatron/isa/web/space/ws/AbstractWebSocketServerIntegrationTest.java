@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -101,6 +101,7 @@ public abstract class AbstractWebSocketServerIntegrationTest extends AbstractMet
         InstSet.importInstSet(WEB_ISA_TID);
         this.space = createWSSpace();
         assertNotNull(this.space, "wsSpace should be created");
+        assertTrue(this.space.at(HOST).uriValue().test(this.space.pattern()), "the space host should match the space pattern");
 
         // Derive host and port from the space
         this.wsHost = this.space.at(HOST).uriValue().host();
@@ -165,8 +166,8 @@ public abstract class AbstractWebSocketServerIntegrationTest extends AbstractMet
 
                     @Override
                     public CompletionStage<?> onText(final WebSocket webSocket,
-                                                      final CharSequence data,
-                                                      final boolean last) {
+                                                     final CharSequence data,
+                                                     final boolean last) {
                         lastResponse.set(data.toString());
                         responseLatch.countDown();
                         webSocket.request(1);
@@ -182,16 +183,16 @@ public abstract class AbstractWebSocketServerIntegrationTest extends AbstractMet
                 });
 
         final boolean opened = openLatch.await(getWsTimeoutSeconds(), TimeUnit.SECONDS);
-        assertTrue(opened, "WebSocket connection should open within timeout");
-        assertNull(errorRef.get(), "WebSocket connection should not error: " + errorRef.get());
+        assertTrue(opened, "websocket connection should open within timeout");
+        assertNull(errorRef.get(), "websocket connection should not error: " + errorRef.get());
 
         this.webSocket = wsRef.get();
-        assertNotNull(this.webSocket, "WebSocket should be connected");
+        assertNotNull(this.webSocket, "websocket should be connected");
         return this.webSocket;
     }
 
     protected String sendAndReceive(final String message) throws Exception {
-        assertNotNull(this.webSocket, "WebSocket must be connected before sending");
+        assertNotNull(this.webSocket, "websocket must be connected before sending");
         this.responseLatch = new CountDownLatch(1);
         this.lastResponse.set(null);
         this.webSocket.sendText(message, true);
@@ -201,7 +202,7 @@ public abstract class AbstractWebSocketServerIntegrationTest extends AbstractMet
     }
 
     protected ByteBuffer sendAndReceiveBinary(final ByteBuffer message) throws Exception {
-        assertNotNull(this.webSocket, "WebSocket must be connected before sending");
+        assertNotNull(this.webSocket, "websocket must be connected before sending");
         final CountDownLatch binaryLatch = new CountDownLatch(1);
         final AtomicReference<ByteBuffer> responseRef = new AtomicReference<>();
         this.webSocket.sendBinary(message, true);
@@ -233,15 +234,15 @@ public abstract class AbstractWebSocketServerIntegrationTest extends AbstractMet
     @Test
     public void testWebSocketConnection() throws Exception {
         final WebSocket ws = connectToServer(primaryRoutePath());
-        assertNotNull(ws, "WebSocket should be connected");
-        assertFalse(ws.isOutputClosed(), "WebSocket output should be open");
-        assertFalse(ws.isInputClosed(), "WebSocket input should be open");
+        assertNotNull(ws, "websocket should be connected");
+        assertFalse(ws.isOutputClosed(), "websocket output should be open");
+        assertFalse(ws.isInputClosed(), "websocket input should be open");
     }
 
     @Test
     public void testWebSocketConnectionAndClosure() throws Exception {
         final WebSocket ws = connectToServer(primaryRoutePath());
-        assertNotNull(ws, "WebSocket should connect");
+        assertNotNull(ws, "websocket should connect");
         final CompletableFuture<WebSocket> closeFuture = ws.sendClose(1000, "test done");
         closeFuture.get(getWsTimeoutSeconds(), TimeUnit.SECONDS);
     }

@@ -15,12 +15,19 @@ catalog::[host         => <http://localhost:1234/v1>, /
 ----
 ====
 
-The `/m/web` instruction set enables a wide range of capabilities centered around `http`-based systems and websocket-based systems. Correspondingly, there exists `httpspace` and `wsspace` that manage respective network i/o connections. Along with these spaces are various serializers that provide the mtron encoding of common web document standards such as html, xml, json, markdown, and the like. 
+The `/m/web` instruction set enables a wide range of capabilities centered around `http`-based systems and websocket-based systems.
+Correspondingly, there exists `httpspace` and `wsspace` that manage respective network i/o connections.
+Along with these spaces are various serializers that provide structural encoding/decoding of common web document standards such as html, xml, json, markdown, yaml, and the like.
+
+Web document types (`html::T`, `json::T`, `xml::T`, `markdown::T`, etc.) refine `str::T` — the MIME type acts as a Predicate on the string content (e.g., `html::T` validates that the string is well-formed HTML).
+The structural `rec::T` representation is opt-in via `.as(rec::T)` or the `?mimeq=application/x-mtron` query processor.
 
 [discrete]
 === HTTP Space
 
-The `httpspace::T` is a space capable of spawning and managing `http` connection handlers both as servers and as clients. The pattern of an `httpspace` dictates the breadth of resources accessible. When `http://#` is the pattern, the world wide web becomes a source of metatron objs.
+The `httpspace::T` is a space capable of spawning and managing `http` connection handlers both as servers and as clients.
+The pattern of an `httpspace` dictates the breadth of resources accessible.
+When `http://#` is the pattern, the world wide web becomes a source of metatron objs.
 
 [mtron]
 ----
@@ -34,83 +41,105 @@ httpspace::[                                                   /
 ]@/sys/space/web/http
 ----
 
-
 [discrete]
 === HTML Type
 
-The type `html::T < rec::T` (a refinement of `rec::T`) represents an https://en.wikipedia.org/wiki/HTML[HTML] document.
+The type `html::T < str::T` (a refinement of `str::T`) represents an https://en.wikipedia.org/wiki/HTML[HTML] document.
+The MIME type acts as a Predicate — `html::T` validates that the content is well-formed HTML.
+The structural `rec::T` DOM tree is opt-in.
 
 [mtron]
 ----
-html::T                                                    [-- <1> --]
-*<http://phaseshift.studio/splash.html>                    [-- <2> --]
-*<http://phaseshift.studio/splash.html/html/head/title>    [-- <3> --]
-*<http://phaseshift.studio/splash.html>.as(str::T)         [-- <4> --]
+html::T                                                              [-- <1> --]
+*<http://phaseshift.studio/splash.html>                              [-- <2> --]
+*<http://phaseshift.studio/splash.html>.as(rec::T)                   [-- <3> --]
+*<http://phaseshift.studio/splash.html>.as(rec::T)/html/head/title   [-- <4> --]
+*<http://phaseshift.studio/splash.html?mimeq=application/x-mtron>    [-- <5> --]
+*<http://phaseshift.studio/splash.html>.as(rec::T)                   [-- <6> --]
 ----
-<1> The structural definition of `html::T`.
-<2> Retrieve the `index.html` of the website. Content-type yields `text/html` which for metatron maps to `html::T`.
-<3> The `title` element of the `index.html` of the website.
-<4> The `index.html` of the website as a `str::T` (`string => rec => string`).
 
+<1> `html::T` refines `str::T` — a typed string with predicate validation.
+<2> Default read returns an `html::"..."` typed string.
+<3> Cast to `rec::T` via `.as(rec::T)` to get the DOM tree structure.
+<4> Tree-walk into the DOM: access `html/head/title` after structural parse.
+<5> Alternative: `?mimeq=application/x-mtron` triggers structural parse at read time via the `mimeq` query processor (server-side).
+<6> Alternative: `as(rec::T)` maps the `html::T` to a `rec::T` form (client-side).
 
 [discrete]
 === Accessing REST APIs
 
-When a https://en.wikipedia.org/wiki/REST[REST] endpoint has a URL address that matches an `httpspace` pattern, the REST resources can be used in metatron. This is possible because `httpspace` transforms data "in the wild" (e.g. `application/json`) into an isomorphic `obj`. If the newly mapped `obj` is typed, then it inherits the instructions for that type as defined by the `instset` of the type. As such, REST resources can be enriched/typed to become active computational objs in metatron.
+When a https://en.wikipedia.org/wiki/REST[REST] endpoint has a URL address that matches an `httpspace` pattern, the REST resources can be used in metatron.
+This is possible because `httpspace` transforms data "in the wild" (e.g. `application/json`) into an isomorphic `obj`.
+If the newly mapped `obj` is typed, then it inherits the instructions for that type as defined by the `instset` of the type.
+As such, REST resources can be enriched/typed to become active computational objs in metatron.
 
-A http://ollama.com/[Ollama] will serve to demonstrate how to leverage foreign resources in metatron.
+The http://ollama.com/[Ollama] endpoint will serve to demonstrate how to leverage foreign resources in metatron.
 
 [mtron]
 ----
-*<http://localhost:11434>               [-- <1> --]            
-*<http://localhost:11434/api/tags>      [-- <2> --]
+*<http://localhost:11434>                                      [-- <1> --]
+*<http://localhost:11434/api/tags>                             [-- <2> --]
+*<http://localhost:11434/api/tags?mimeq=application/x-mtron>   [-- <3> --]
+*<http://localhost:11434/api/tags>.as(rec::T)                  [-- <4> --]
 ----
-<1> Ollama is up and running.
-<2> The `/api/tags` resource contains a list of all LLM models available for use.
 
-Once the desired REST resource has been accessed, it's possible to map the resource into a form that meets the structural requirements of an mtron `type`. In doing so, the resource then acquires the behaviors defined in the type's respective `instset`. For this example, that `instset` is `/m/llm`.
+<1> Ollama is up and running.
+<2> The `/api/tags` resource returns a typed `+json::"..."+` string by default.
+<3> With `?mimeq=application/x-mtron`, the response is parsed to `+rec::T+` for field/index access.
+<4> Equivalent behavior as the previous example save the `json::T` to `rec::T` transformation happens client-side.
+
+Once the desired REST resource has been accessed, it's possible to map the resource into a form that meets the structural requirements of an mtron `type`.
+In doing so, the resource then acquires the behaviors defined in the type's respective `instset`.
+For this example, that `instset` is `/m/llm`.
 
 [mtron]
 ----
 */m/llm/model                   
 */m/llm/inst/+?dom=model
 ----
+
 <1> The `model::T` type in `/m/llm`.
 <2> The `/m/llm` instructions with a domain of `model::T`  (an object oriented perspective -- `obj.f()`).
 
-When the REST resource is manipulated to fit the structural specification of `model::T`, then  `http://localhost:1234/v1/models` can be the source of `chat?#\<=model`.
-
+When the REST resource is manipulated to fit the structural specification of `model::T`, then  `http://localhost:11434/api/tags` can be the source of `chat?#\<=model`.
 
 [mtron]
 ----
-*<http://localhost:11434/api/tags/0>.>>data/1.          /
-  -<[provider=> ollama,                                 /
-     protocol=> ollama,                                 /
-     host    => <http://localhost:11434>,               /
-     name    => >>id.as(uri::T)].as(model::T)           /
-  .chat('are you there?') 
+*<http://localhost:11434/api/tags?mimeq=application/x-mtron>/0.>>data/1.  /
+  -<[provider=> ollama,                                                   /
+     protocol=> ollama,                                                   /
+     host    => <http://localhost:11434>,                                 /
+     name    => >>id.as(uri::T)].as(model::T)                             /
+  .chat('are you there?')
 ----
-<1> The OpenAPI `application/json` resource is morphed into a metatron `model::T` and then the model is chatted with.
+
+<1> The OpenAPI `application/json` resource is morphed into a metatron `model::T` via `?mimeq=application/x-mtron` for structural access, and then the model is chatted with.
 
 [discrete]
 === WebSocket Space
 
-The `wsspace::T` is similar to `httpspace::T`, but enables long running connections and bidirectional communication. A particular useful aspect of `wsspace::T` is for communication between two metatron instances. 
+The `wsspace::T` is similar to `httpspace::T`, but enables long running connections and bidirectional communication.
+A particular useful aspect of `wsspace::T` is for communication between two metatron instances.
 
 [discrete]
 ==== Remote Console
 
-If another metatron instance is running on a remote machine, it's possible to route all console input to the remote metatron for evaluation. In order to make the experience seamless for the user, the `redirect/input` relation of `console::T` can be used.
+If another metatron instance is running on a remote machine, it's possible to route all console input to the remote metatron for evaluation.
+In order to make the experience seamless for the user, the `redirect/input` relation of `console::T` can be used.
 
-NOTE: In the following example, the "remote" metatron instance is `localhost`. This is because all code examples in this documentation are evaluated when the documentation is compiled. Note that `localhost` can be set to any hostname or IP address that is running a metatron instance with a `wsspace::T` exposing the `mtron_ws::T` handler.
+NOTE: In the following example, the "remote" metatron instance is `localhost`.
+This is because all code examples in this documentation are evaluated when the documentation is compiled.
+Note that `localhost` can be set to any hostname or IP address that is running a metatron instance with a `wsspace::T` exposing the `mtron_ws::T` handler.
 
 [mtron]
 ----
 wsclient::[host=><ws://localhost:8555/mtron>]@/usr/ui/console/remote  [-- <1> --]
 ----
+
 <1> creates a websocket connection to a remote metatron instance with a `wsspace::T` exposing an `mtron_ws::T` route.
 
-In the local console UI (the REPL), use the `:redirect/input` metacommand to have all user input processed by an arbitrary `inst`. When that `inst` is a `wsclient::T.send_recv()`, then a remote console is effected.
+In the local console UI (the REPL), use the `:redirect/input` metacommand to have all user input processed by an arbitrary `inst`.
+When that `inst` is a `wsclient::T.send_recv()`, then a remote console is effected.
 
 [source,mtron]
 ----
@@ -130,10 +159,45 @@ mtron> :redirect/input
 [INFO ] [/usr/ui/console] console input currently redirected to noobj
 ----
 
-The `console::T.redirect/input` can be any `inst`. The flexibility of such redirection allows any number of use cases such as broadcasting, local processing w/ side effects, and more.
+The `console::T.redirect/input` can be any `inst`.
+The flexibility of such redirection allows any number of use cases such as broadcasting, local processing w/ side effects, and more.
 
 [discrete]
-=== Content-Type
+=== The `mimeq` Query Processor
+
+The `?mimeq=` query parameter on file and HTTP URIs controls how content is read.
+It is implemented by the `mimeq` query processor (`QCollection.mimeQ()`) which must be mounted on the space:
+
+[source,mtron]
+----
+fsspace::[q => [mimeq::[=>]], ...]   # mount on fsSpace
+httpspace::[q => [mimeq::[=>]], ...] # mount on httpSpace
+----
+
+The `mimeq` postRead processor operates in two steps:
+
+. **Probe & Tag** — determines the actual content MIME type from the object's TID (or falls back to URI/file extension), then tags the string with the correct type TID.
+This triggers Predicate validation (e.g., `html::T` validates the string is well-formed HTML).
+. **Structural Parse** — if `?mimeq=application/x-mtron` is requested, runs the content-type-specific serializer (`ObjHTMLSerializer` for HTML, `ObjJSONSerializer` for JSON, etc.) to produce the `rec::T` structural representation.
+
+[source,mtron]
+----
+[-- default: typed string --]
+*<local:index.html>
+==>html::"<html>...</html>"
+
+[-- structural parse via mimeq --]
+*<local:index.html?mimeq=application/x-mtron>
+==>[html => [head => [...], body => [...]]]
+
+[-- explicit type tagging (no structural parse) --]
+*<local:data.json?mimeq=text/html>  # tags as html, even for .json file
+----
+
+[discrete]
+=== Content-Type Negotiation
+
+The `in` and `out` query parameters on websocket connections specify the serialization format for messages. `application/x-mtron` is the native mtron wire format; `application/json` produces standard JSON.
 
 [source,bash]
 ----

@@ -38,6 +38,8 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.web.webInstSet.HTML_TID;
+import static studio.phaseshift.metatron.isa.web.webInstSet.JSON_TID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -128,18 +130,18 @@ public class web_httpHandlerTest extends AbstractHTTPServerTest {
 
         private Space contentSpace;
 
-        @BeforeEach
+        // called explicitly from setupHTTPSpace() — not @BeforeEach
         public void setupContentSpace() {
             this.contentSpace = memSpace.of(rec(
                     uri(PATTERN), uri("mem:test-pages/#"),
                     uri(ROUTE), rec()
             ), f("/sys/space/test/web-int/" + getClass().getSimpleName()));
             Router.writeToSpace(f("mem:test-pages/index.html"),
-                    str("<html><body><h1>Hello World</h1></body></html>"));
+                    str("<html><body><h1>Hello World</h1></body></html>", HTML_TID, null));
             Router.writeToSpace(f("mem:test-pages/about.html"),
-                    str("<html><body><h1>About</h1></body></html>"));
+                    str("<html><body><h1>About</h1></body></html>", HTML_TID, null));
             Router.writeToSpace(f("mem:test-pages/data.json"),
-                    str("{\"key\":\"value\"}"));
+                    str("{\"key\":\"value\"}", JSON_TID, null));
         }
 
         @AfterEach
@@ -152,6 +154,14 @@ public class web_httpHandlerTest extends AbstractHTTPServerTest {
         }
 
         @Override
+        public void setupHTTPSpace() {
+            // contentSpace must exist before httpSpace construction —
+            // createHTTPSpace() reads route target from Router
+            setupContentSpace();
+            super.setupHTTPSpace();
+        }
+
+        @Override
         protected httpSpace createHTTPSpace() {
             // Web route: the route value is a URI (not a Type) → auto-creates web_httpHandler
             return httpSpace.of(rec(
@@ -159,7 +169,7 @@ public class web_httpHandlerTest extends AbstractHTTPServerTest {
                     uri(HOST), uri("http://localhost:" + generatePort()),
                     uri(PATTERN), uri("http://#"),
                     uri(ROUTE), rec(
-                            uri("/"), uri("web-test-pages"))
+                            uri("/"), uri("mem:test-pages"))
             ), f("/sys/space/http/web-test"));
         }
 

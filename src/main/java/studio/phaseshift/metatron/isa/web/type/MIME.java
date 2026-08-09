@@ -170,6 +170,25 @@ public class MIME {
             return this.equals(APPLICATION_MTRON);
         }
 
+        /**
+         * Returns the type TID for this MIME type (e.g. TEXT_HTML → HTML_TID).
+         * Returns null for MIME types that don't have a corresponding metatron type.
+         */
+        public fURI toTid() {
+            return switch (this) {
+                case TEXT_HTML -> HTML_TID;
+                case TEXT_MARKDOWN -> MARKDOWN_TID;
+                case APPLICATION_JSON -> JSON_TID;
+                case APPLICATION_XML -> XML_TID;
+                case TEXT_CSS -> CSS_TID;
+                case TEXT_JAVA -> JAVA_TID;
+                case APPLICATION_YAML -> YAML_TID;
+                // APPLICATION_MTRON intentionally omitted — it's the structural parse gate
+                case APPLICATION_MTRON -> null;
+                default -> null;
+            };
+        }
+
         public boolean isXml() {
             return this.equals(APPLICATION_ATOM_XML) || this.equals(APPLICATION_XHTML_XML) || this.equals(APPLICATION_XML);
         }
