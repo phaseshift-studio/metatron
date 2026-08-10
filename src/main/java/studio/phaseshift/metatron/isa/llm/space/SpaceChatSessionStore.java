@@ -38,6 +38,7 @@ import static studio.phaseshift.metatron.furi.q.QCollection.INCRQ;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TRUE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
@@ -52,6 +53,8 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
 
     private final Agent agent;
     private final Space space;
+    private final int depth;
+    private final int chatId;
 
     /**
      * Messages written by this store instance, keyed by TID.
@@ -59,9 +62,12 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
      */
     private final Set<fURI> currentMessages = new HashSet<>();
 
-    public SpaceChatSessionStore(final Agent agent, final Space space) {
+    public SpaceChatSessionStore(final Agent agent, final Space space, final int depth,
+                                  final int chatId) {
         this.agent = Objects.requireNonNull(agent, "agent must not be null");
         this.space = Objects.requireNonNull(space, "space must not be null");
+        this.depth = depth;
+        this.chatId = chatId;
     }
 
     public Space space() {
@@ -104,6 +110,24 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
                     final fURI stored = sessionField.isUri() ? sessionField.uriValue()
                             : sessionField.isInst() ? sessionField.asInst().vid() : null;
                     return stored != null && stored.equals(sesVID);
+                })
+                .filter(pair -> {
+                    final Obj depthField = pair.second().asRec().at(uri(DEPTH));
+                    return !depthField.isNoObj()
+                            && depthField.isInt()
+                            && depthField.intValue().intValue() == this.depth;
+                })
+                .filter(pair -> {
+                    // Depth >= 2: further isolate by chatId so that a previous
+                    // turn's recursive sub-agent messages don't leak into the
+                    // current turn's sub-agent context.  Depth 1 shares all
+                    // messages at this depth for conversational continuity.
+                    if (this.depth <= 1)
+                        return true;
+                    final Obj chatIdField = pair.second().asRec().at(uri(CHAT_ID));
+                    return !chatIdField.isNoObj()
+                            && chatIdField.isInt()
+                            && chatIdField.intValue().intValue() == this.chatId;
                 })
                 .sorted(Comparator.comparing(a -> Integer.parseInt(a.first().uriValue().name())))
                 .toList();
@@ -169,6 +193,8 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
 
                 msgRec.recValue().put(uri(TIME), mathInstSet.nowDatetime());
                 msgRec.recValue().put(uri(SESSION), uri(sesVID));
+                msgRec.recValue().put(uri(DEPTH), jnt(this.depth));
+                msgRec.recValue().put(uri(CHAT_ID), jnt(this.chatId));
                 Router.writeToSpace(writePath, msgRec);
             } catch (final Exception e) {
                 LOG.warn("error writing AiMessage (non-blocking): %s", e.getMessage());

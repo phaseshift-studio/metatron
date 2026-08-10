@@ -25,8 +25,8 @@ import studio.phaseshift.metatron.isa.m.type.Real;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.Uri;
 
-import java.time.ZonedDateTime;
 import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.util.List;
@@ -42,11 +42,13 @@ import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.as_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.id_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Real.REAL_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
+import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
@@ -319,7 +321,9 @@ public class mathInstSet extends AbstractInstSet {
                 null, null, Map.of("tz", tz), null), MATH_DATETIME_TID, null);
     }
 
-    /** Date-time formatter: Monday, August 9, 2026 02:14:24 PM +00:00 */
+    /**
+     * Date-time formatter: Monday, August 9, 2026 02:14:24 PM +00:00
+     */
     private static final DateTimeFormatter HUMAN_DTF = new DateTimeFormatterBuilder()
             .appendPattern("EEEE, MMMM d, yyyy hh:mm:ss a")
             .appendLiteral(' ')
@@ -530,6 +534,7 @@ public class mathInstSet extends AbstractInstSet {
                         instC(MATH_DATETIME_NOW_INST_TID.dom(ALL.maybe()).rng(MATH_DATETIME_TID), lst(), (lhs, inst) -> nowDatetime()),
                         // uri → datetime identity cast (predicate validates in Type.apply)
                         instC(AS_INST_TID.dom(URI_TID).rng(MATH_DATETIME_TID), lst(URI_TYPE), (lhs, inst) -> lhs.asUri().tid(MATH_DATETIME_TID)),
+                        instC(AS_INST_TID.dom(MATH_DATETIME_TID).rng(STR_TID), lst(STR_TYPE), (lhs, inst) -> str(humanReadableDatetime(lhs.asUri()))),
                         // str → datetime (parse ISO-8601 / Docker timestamps)
                         instC(AS_INST_TID.dom(STR_TID).rng(MATH_DATETIME_TID), lst(DATETIME_TYPE), (lhs, inst) -> parseDatetime(lhs.strValue())),
                         /*instC(MATH_NOW_INST_TID.dom(ALL.maybe()).rng(MATH_TIME_TID), lst(), (lhs, inst) -> real((double) System.currentTimeMillis(), MATH_TIME_TID, null)),

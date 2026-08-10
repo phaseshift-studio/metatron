@@ -128,7 +128,7 @@ public abstract class AbstractLLMSessionIntegrationTest extends AbstractMetatron
 
         // SessionFeature.onBeforeChat() persists the session policy row on first chat
         this.agent = buildAgent();
-        this.sessionStore = new SpaceChatSessionStore(this.agent, this.space);
+        this.sessionStore = new SpaceChatSessionStore(this.agent, this.space, 1, 1);
         // Add a system message — gets mirrored to the unified message table
         this.agent.addSystemMessage("You are a helpful test assistant.");
     }
@@ -233,7 +233,7 @@ public abstract class AbstractLLMSessionIntegrationTest extends AbstractMetatron
         // Session is pre-seeded via createSession above; onBeforeChat will use it as-is
         this.agent = buildAgentWithMax(smallMax);
         this.agent.addSystemMessage("You are a test assistant.");
-        this.sessionStore = new SpaceChatSessionStore(this.agent, this.space);
+        this.sessionStore = new SpaceChatSessionStore(this.agent, this.space, 1, 1);
 
         // Chat 5 times — MessageWindowChatMemory evicts beyond max internally
         for (int i = 1; i <= 5; i++) {

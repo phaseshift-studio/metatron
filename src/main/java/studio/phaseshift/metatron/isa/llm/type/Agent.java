@@ -52,6 +52,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -90,6 +91,26 @@ public class Agent extends MRec {
     private String userMessage;
     protected final GraphittyLogger LOG = Graphitty.log(this);
 
+    /**
+     * Cached recursion depth for the current {@link #chat} call.
+     * Populated from {@link #depthMap} at the start of {@code chat()};
+     * returned by {@link #chatDepth()}.
+     */
+    private int currentDepth = 0;
+
+    int currentChatId = 0;
+
+    public void setCurrentChatId(final int chatId) {
+        this.currentChatId = chatId;
+    }
+
+    /**
+     * Per-session recursion depth counter, stored outside any single
+     * {@link Agent} instance so that {@link #agent(Rec)} wrappers share
+     * the same counter.  Keyed by session VID string.
+     */
+    private static final ConcurrentHashMap<String, AtomicInteger> depthMap = new ConcurrentHashMap<>();
+
 
     public Agent(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(new ConcurrentHashMap<>(jvm), tid, vid);
@@ -113,6 +134,36 @@ public class Agent extends MRec {
 
     public void userMessage(final String msg) {
         this.userMessage = msg;
+    }
+
+    /**
+     * Returns the current chat recursion depth for this agent instance.
+     * Populated from the session-keyed {@link #depthMap} at the start of
+     * {@link #chat(String, Rec)}.  0 = idle, 1 = top-level, 2+ = recursive.
+     */
+    public int chatDepth() {
+        return this.currentDepth;
+    }
+
+    /**
+     * Returns the execution identifier for the current chat call
+     * (monotonic counter per session).  Set by {@code SessionFeature.onBeforeChat}.
+     */
+    public int chatId() {
+        return this.currentChatId;
+    }
+
+    /** Resolve the session VID from this agent's {@code session_feature} config. */
+    private fURI resolveSessionVID() {
+        if (this.hasFeature(SESSION)) {
+            final Obj sessionFeature = this.feature(SESSION);
+            if (!sessionFeature.isNoObj() && sessionFeature.isRec()) {
+                final Obj sessionField = sessionFeature.asRec().at(uri(SESSION));
+                if (sessionField.isUri())
+                    return sessionField.uriValue();
+            }
+        }
+        return null;
     }
 
     // ── Factory ────────────────────────────────────────────────────
@@ -216,6 +267,11 @@ public class Agent extends MRec {
 
     public Obj chat(final String message, final Rec responseFormat) {
         this.interrupt.set(false);
+        final fURI sessionVID = resolveSessionVID();
+        final String depthKey = sessionVID != null ? sessionVID.toString() : this.tid().toString();
+        final AtomicInteger counter = depthMap.computeIfAbsent(depthKey, k -> new AtomicInteger(0));
+        this.currentDepth = counter.incrementAndGet();
+        try {
         if (this.first.getAndSet(false))
             this.features().elements().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_AGENT_CTOR, this));
         Router.global().stats().ioStats().incrBytesSent(message.getBytes().length);
@@ -430,6 +486,10 @@ public class Agent extends MRec {
         if (!this.at(res("loop_results")).isNoObj()) resultMap.put(uri("loop_results"), this.at(res("loop_results")));
         this.currentHook.set(null);
         return rec(resultMap, LLM_CHAT_RESULT_TID, null);
+        } finally {
+            counter.decrementAndGet();
+            this.currentDepth = 0;
+        }
     }
 
     // ── Embed ──────────────────────────────────────────────────────

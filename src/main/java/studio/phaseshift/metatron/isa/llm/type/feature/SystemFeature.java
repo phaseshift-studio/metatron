@@ -53,6 +53,8 @@ public class SystemFeature extends AbstractFeature {
                             .text(systemMessage)
                             .time()
                             .session(sessionVID)
+                            .depth(agent.chatDepth())
+                            .chatId(agent.chatId())
                             .create(writePath);
                     this.at(uri(LAST), str(systemMessage), MUTABLE);
                 } catch (final Exception e) {

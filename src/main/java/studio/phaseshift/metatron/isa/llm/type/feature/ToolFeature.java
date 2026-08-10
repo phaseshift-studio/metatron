@@ -25,6 +25,7 @@ import java.util.Map;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.q.QCollection.INCRQ;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.TOOL_RESULT_MESSAGE_TID;
+import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.web.webInstSet.MCP_CLIENT_TYPE;
 
@@ -79,14 +80,24 @@ public class ToolFeature extends AbstractFeature {
             // Write ToolResult to the message ledger
             if (agent.hasFeature(SESSION)) {
                 try {
-                    MessageBuilder.build(TOOL_RESULT_MESSAGE_TID)
+                    final String resultText = Str.Helper.cleanString(r.at(uri(RESULT)));
+                    final MessageBuilder builder = MessageBuilder.build(TOOL_RESULT_MESSAGE_TID)
                             .put(NAME, uri(Str.Helper.cleanString(r.at(uri(NAME)))))
-                            .text(Str.Helper.cleanString(r.at(uri(RESULT))))
+                            .text(resultText)
                             .contents(Str.Helper.cleanString(r.at(uri(CONTENTS))))
                             .time()
                             .session(agent.feature(SESSION).asRec().at(SESSION).uriValue())
-                            .create(agent.at(ROOT).uriValue().extend(MESSAGE)
-                                    .extend("_").addQ(INCRQ));
+                            .depth(agent.chatDepth())
+                            .chatId(agent.chatId());
+
+                    // Retrieve the raw Obj stashed by mTool before LC4j forced it to a string
+                    final String toolCallId = Str.Helper.cleanString(r.at(uri(CONTENTS)));
+                    final Obj stashed = mTool.resultStash.remove(toolCallId);
+                    if (stashed != null && (stashed.isRec() || stashed.isInst()))
+                        builder.put(CHAT, stashed);
+
+                    builder.create(agent.at(ROOT).uriValue().extend(MESSAGE)
+                            .extend("_").addQ(INCRQ));
                 } catch (final Exception e) {
                     this.logger().warn("tool result write failed (non-blocking): %s", e.getMessage());
                 }

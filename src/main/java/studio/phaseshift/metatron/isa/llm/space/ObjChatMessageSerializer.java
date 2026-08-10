@@ -492,7 +492,7 @@ public class ObjChatMessageSerializer extends AbstractObjSerializer<ChatMessage>
             final String keyName = e.getKey().uriValue().name();
             if (knownKeys.contains(keyName)) continue;
             // Internal infrastructure — never expose to LC4j
-            if ("hash".equals(keyName) || TIME.equals(keyName) || SESSION.equals(keyName)) continue;
+            if ("hash".equals(keyName) || TIME.equals(keyName) || SESSION.equals(keyName) || DEPTH.equals(keyName) || CHAT_ID.equals(keyName) || CHAT.equals(keyName)) continue;
             attrs.put(keyName, Str.Helper.cleanString(e.getValue(), true));
         }
         return attrs;

@@ -32,6 +32,7 @@ import studio.phaseshift.metatron.util.Tuple;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -60,6 +61,10 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class mTool extends MRec {
+
+    /** Stashes raw Obj results before LC4j serialization, keyed by tool call id.
+     *  Retrieved by {@code ToolFeature.onToolExecuted} to preserve nested structure. */
+    public static final ConcurrentHashMap<String, Obj> resultStash = new ConcurrentHashMap<>();
 
     public static final Type LLM_TOOL_TYPE = docWrap(Type.Builder.build().tid(REC_TID).vid(LLM_TOOL_TID).isaPredicate(rec(
                     uri(INST), T(ALL),
@@ -116,6 +121,8 @@ public class mTool extends MRec {
                     .args(args)
                     .apply(arguments.containsKey(LHS) ? ObjmtronSerializer.compact().read(arguments.get(LHS).toString()) : noobj());
             inst.logger().debug("evaluating mtron_inst tool: %s => %s => %s", arguments.getOrDefault(LHS, noobj()), inst, result);
+            // Stash the raw Obj so ToolFeature can embed it in the monad tree
+            resultStash.put(toolExecutionRequest.id(), result);
             final String stringResult = ObjmtronSerializer.compact().write(result);
             return (null == stringResult || stringResult.isBlank()) ? "noobj" : stringResult; // prevents llm protocol from failing on empty or null results
         };
