@@ -34,7 +34,9 @@ import studio.phaseshift.metatron.isa.mach.type.Router;
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.PATTERN;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.math.mathInstSet.DATETIME_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
@@ -268,6 +270,27 @@ public class mathInstSetTest extends AbstractInstSetTest {
         Obj expected = ObjmtronSerializer.parse(expectedType);
         LOG.debug("result [%s] expected [%s] [should match: %b]", result, expected, shouldMatch);
         assertEquals(shouldMatch, result.test(expected));
+    }
+
+    @ParameterizedTest(name = "[{index}] {0} => {1}")
+    @CsvSource(value = {
+            // Winter date, negative offset
+            "datetime::<//2024.12:25/09/00/00/000?tz=-0500>   % Wednesday, December 25, 2024 09:00:00 AM -05:00",
+            // Summer date, UTC
+            "datetime::<//2026.08:9/10/14/24/508?tz=+0000>     % Sunday, August 9, 2026 10:14:24 AM +00:00",
+            // Midnight, New Year's Day
+            "datetime::<//2026.01:1/00/00/00/000?tz=+0000>     % Thursday, January 1, 2026 12:00:00 AM +00:00",
+            // Noon, west coast US
+            "datetime::<//2026.07:4/12/00/00/000?tz=-0800>     % Saturday, July 4, 2026 12:00:00 PM -08:00",
+            // 11:59 PM, positive half-hour offset (India)
+            "datetime::<//2026.12:31/23/59/59/999?tz=+0530>    % Thursday, December 31, 2026 11:59:59 PM +05:30",
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testDateTime(final String datetime, final String expected) {
+        final Obj parse = ObjmtronSerializer.parse(datetime).apply();
+        assertEquals(expected, mathInstSet.humanReadableDatetime(parse.asUri()));
+        assertTrue(parse.testNominally(DATETIME_TYPE));
+        assertFalse(uri("a/b/c").testNominally(DATETIME_TYPE));
+        assertTrue(parse.testNominally(URI_TYPE));
     }
 
     @ParameterizedTest

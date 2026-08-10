@@ -170,7 +170,7 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
     }
 
     default fURI noQ() {
-        return fURI.of(this.scheme(), this.host(), this.port(), this.path(), this.c(), this.poly(), Map.of(), this.templates());
+        return this.q(Map.of());
     }
 
     default boolean hasAuthority() {

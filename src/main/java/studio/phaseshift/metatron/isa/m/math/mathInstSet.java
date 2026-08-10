@@ -26,6 +26,9 @@ import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.Uri;
 
 import java.time.ZonedDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -314,6 +317,38 @@ public class mathInstSet extends AbstractInstSet {
                 List.of(String.format("%02d", hour), String.format("%02d", minute),
                         String.format("%02d", second), String.format("%03d", millis)),
                 null, null, Map.of("tz", tz), null), MATH_DATETIME_TID, null);
+    }
+
+    /** Date-time formatter: Monday, August 9, 2026 02:14:24 PM +00:00 */
+    private static final DateTimeFormatter HUMAN_DTF = new DateTimeFormatterBuilder()
+            .appendPattern("EEEE, MMMM d, yyyy hh:mm:ss a")
+            .appendLiteral(' ')
+            .appendOffset("+HH:MM", "+00:00")
+            .toFormatter();
+
+    /**
+     * Convert a datetime URI to a human-readable string like
+     * {@code Monday, August 9, 2026 10:14:24 AM UTC}.
+     */
+    public static String humanReadableDatetime(final studio.phaseshift.metatron.isa.m.type.Uri dt) {
+        final fURI furi = dt.uriValue();
+        final String[] hostParts = furi.host().split("\\.");
+        final int year = Integer.parseInt(hostParts[0]);
+        final int month = Integer.parseInt(hostParts[1]);
+        final int day = furi.port();
+        final var path = furi.path();
+        // Leading / produces an empty first segment: skip it
+        final int off = path.get(0).isEmpty() ? 1 : 0;
+        final int hour = Integer.parseInt(path.get(off));
+        final int minute = Integer.parseInt(path.get(off + 1));
+        final int second = Integer.parseInt(path.get(off + 2));
+        final int millis = Integer.parseInt(path.get(off + 3));
+        final String tzStr = dt.uriValue().hasQ() && dt.uriValue().qMap().containsKey("tz")
+                ? dt.uriValue().qMap().get("tz") : "+0000";
+        final ZoneOffset offset = ZoneOffset.of(tzStr);
+        final ZonedDateTime zdt = ZonedDateTime.of(year, month, day, hour, minute, second,
+                millis * 1_000_000, offset);
+        return zdt.format(HUMAN_DTF);
     }
 
     /**

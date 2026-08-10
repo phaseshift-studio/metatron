@@ -35,6 +35,9 @@ import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static studio.phaseshift.metatron.isa.m.math.mathInstSet.DATETIME_TYPE;
+import static studio.phaseshift.metatron.isa.m.math.mathInstSet.humanReadableDatetime;
+
 /**
  * CardUtil — shared panel-card factory for consistent look &amp; feel across tools.
  * <p>
@@ -86,7 +89,7 @@ public final class CardUtil {
      * blue title, and the given body string.
      */
     public static PanelWidget popup(final String title, final String body) {
-        final PanelWidget p = new PanelWidget("{{b}}" + title + "{{\\b}}", body);
+        final PanelWidget p = new PanelWidget("{{b}}" + title + body);
         p.style().border(popupBorder()).applyStyle();
         constrainWidth(p);
         return p;
@@ -194,19 +197,41 @@ public final class CardUtil {
      * so nested Recs/Lsts and Types compose naturally.
      */
     public static Widget<?> explorerCard(final Obj obj) {
-        final TableWidget table;
+        // Type with poly isaPredicate → interactive Selector
         if (obj.isType()) {
-            table = predicateTable((Type) obj);
-        } else if (obj.isPoly()) {
-            table = valueTable(obj.as());
-        } else {
-            table = null;
+            final TableWidget table = predicateTable((Type) obj);
+            if (table != null) return selectorFor(table);
+            return card(obj);
         }
-
-        if (table != null) {
-            return selectorFor(table);
+        // Poly values (Rec/Lst) → interactive Selector
+        if (obj.isPoly()) {
+            return selectorFor(valueTable(obj.as()));
         }
+        // Datetime → special card with human-readable format
+        if (obj.testNominally(DATETIME_TYPE)) {
+            return datetimeCard(obj);
+        }
+        // Default PanelWidget
         return card(obj);
+    }
+
+    // =====================================================================
+    // Datetime card
+    // =====================================================================
+
+    /**
+     * Build a card for a datetime value: standard title + docq body,
+     * the raw datetime URI, and a human-readable ISO line indented
+     * with a corner arrow.
+     */
+    private static PanelWidget datetimeCard(final Obj dt) {
+        final String body = dt + "\n"
+                + "  {{g}}╰{{X}}"
+                + humanReadableDatetime(dt.asUri());
+        final PanelWidget p = new PanelWidget(titleOf(dt), body);
+        p.style().border(cardBorder()).applyStyle();
+        constrainWidth(p);
+        return p;
     }
 
     /**
@@ -258,7 +283,8 @@ public final class CardUtil {
                 poly.isRec() ? "key" : "#", valueHeader));
         table.style()
                 .border(Border.continuous.foreground("{{b}}"))
-                .divider("{{g}}" + Border.continuous.leftSide())
+                .headerDivider("{{b}}" + Border.continuous.leftSide() + "{{X}}")
+                .divider("{{b}}" + Border.continuous.leftSide())
                 .pointer("{{r}}>")
                 .applyStyle();
 
@@ -285,9 +311,30 @@ public final class CardUtil {
     private static String cellSummary(final Obj val) {
         if (val.isRec()) return "{…" + val.asRec().count() + " rels}";
         if (val.isLst()) return "[…" + val.asLst().count() + " objs]";
-        if (val.isStr()) return Utilities.textClip(val.toString(), 80);
+        if (val.isStr()) return clipQuoted(val.toString(), 80);
         if (val.isType()) return ((Type) val).vid().small().toString();
         return Utilities.textClip(val.toString(), 80);
+    }
+
+    /**
+     * Clip a quoted string for table-cell display, preserving the closing
+     * quote ({@code """}, {@code "}, {@code '}, etc.) after the ellipsis
+     * so syntax highlighting stays balanced.
+     */
+    private static String clipQuoted(final String s, final int max) {
+        final String flat = s.replace('\n', ' ').replace('\r', ' ');
+        if (flat.length() <= max) return flat;
+        final String close = closingQuote(flat);
+        final int keep = Math.max(1, max - 1 - close.length());
+        return flat.substring(0, Math.min(keep, flat.length() - close.length())) + "…" + close;
+    }
+
+    private static String closingQuote(final String s) {
+        if (s.endsWith("\"\"\"")) return "\"\"\"";
+        if (s.endsWith("'''")) return "'''";
+        if (s.endsWith("\"")) return "\"";
+        if (s.endsWith("'")) return "'";
+        return "";
     }
 
     /**

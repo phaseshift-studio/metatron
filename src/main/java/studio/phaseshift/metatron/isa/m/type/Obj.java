@@ -280,13 +280,13 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
 
     default boolean testNominally(final Obj rhs) {
         Type lhsType = Obj.Helper.specificType(this);
-        Type rhsType = Obj.Helper.specificType(rhs);
+        final Type rhsType = Obj.Helper.specificType(rhs);
         while (true) {
             if (lhsType.vid().test(rhsType.vid()))
                 return true;
-            if (rhsType.isBaseType())
+            if (lhsType.isBaseType())
                 break;
-            rhsType = rhsType.parentType();
+            lhsType = lhsType.parentType();
         }
         return false;
     }
