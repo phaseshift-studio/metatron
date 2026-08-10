@@ -2732,4 +2732,100 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathTest impleme
             space.close();
         }
     }
+
+    // =========================================================================
+    //  _mtron_meta — base_vid vs obj_tid for structured subtypes
+    // =========================================================================
+
+    /**
+     * Verifies that when a column stores a structured Rec subtype (e.g.
+     * {@code chat_result::T} whose base type is {@code rec::T}), the
+     * {@code _mtron_meta} row uses {@code base_vid} for deserialization
+     * dispatch while {@code obj_tid} preserves the specific subtype.
+     *
+     * <p>Key invariant: {@code base_vid} is {@code /m/rec} so that
+     * {@code readColumnWithType} triggers mtron parsing on read, while
+     * {@code obj_tid} (e.g. {@code /m/llm/chat_result}) is the declared
+     * subtype.  Without this, a column storing {@code chat_result::[...]}
+     * would be returned as raw {@code str::T} instead of a navigable
+     * {@code chat_result::T} Rec.</p>
+     */
+    @Test
+    public void testMtronMetaBaseVidTriggersRecDeserialization() throws Exception {
+        // Ensure _mtron_meta is recreated with current schema
+        try (final Connection c = staticDbConfig.getConnection();
+             final Statement s = c.createStatement()) {
+            s.executeUpdate("DROP TABLE IF EXISTS _mtron_meta");
+        }
+        final fURI spaceVid = f("/sys/space/tble/subtype_deser_test");
+        final tbleSpace space = tbleSpace.of(
+                rec(
+                        uri(PATTERN), uri("sst:#"),
+                        uri(HOST), uri(staticDbConfig.getJdbcHost()),
+                        uri(DRIVER), uri(staticDbConfig.getDriverClass()),
+                        uri(TABLE), lst(),
+                        uri(ROUTE), rec(uri("sst:"), uri(""))
+                ).jvm(),
+                spaceVid
+        );
+        final String tableName = "subtype_test";
+        try {
+            // --- Write a Rec with a non-trivial subtype TID as a column value ---
+            // Simulates what happens when mTool.resultStash supplies a chat_result::T Rec
+            final fURI subtypeTid = f("/m/llm/chat_result");  // base is /m/rec
+            final Rec nestedRec = rec(
+                    uri("response"), str("nested response text"),
+                    uri("time"), str("1.234s")
+            ).tid(subtypeTid).asRec();
+
+            Router.writeToSpace(f("sst:" + tableName + "/1"), rec(
+                    uri("label"), str("outer row"),
+                    uri("result"), nestedRec
+            ));
+
+            // --- Verify _mtron_meta: base_vid vs obj_tid ---
+            final Obj metaRows = space.sql(
+                    "SELECT column_name, base_vid, obj_tid FROM _mtron_meta " +
+                            "WHERE table_name = '" + tableName +
+                            "' AND column_name = 'result'");
+            final List<Obj> rows = metaRows.stream().toList();
+            assertEquals(1, rows.size(), "_mtron_meta should have one row for 'result' column");
+
+            final Rec metaRow = rows.get(0).asRec();
+            final String baseVid = metaRow.at(uri("base_vid")).strValue();
+            final String objTid = metaRow.at(uri("obj_tid")).strValue();
+
+            // base_vid must be the structural type (/m/rec) — this is what
+            // readColumnWithType checks to decide "mtron-parse this TEXT"
+            assertTrue(baseVid.contains("rec"),
+                    "base_vid should contain 'rec' (the structural base type), got: " + baseVid);
+
+            // obj_tid must preserve the specific subtype
+            assertEquals(subtypeTid.toString(), objTid,
+                    "obj_tid should be the specific subtype TID");
+
+            // --- Read back via space: result should be a proper Rec, not a Str ---
+            final Obj row = space.read(f("sst:" + tableName + "/1"));
+            assertTrue(row.isRec(), "row should be a Rec");
+            final Obj resultField = row.asRec().at(uri("result"));
+            assertTrue(resultField.isRec(),
+                    "'result' field should be deserialized as a Rec, got: " + resultField.type());
+            assertEquals(subtypeTid, resultField.asRec().tid(),
+                    "nested Rec should preserve its subtype TID");
+            assertEquals(str("nested response text"),
+                    resultField.asRec().at(uri("response")),
+                    "nested Rec fields should be accessible");
+
+            LOG.info("_mtron_meta base_vid/obj_tid subtype deserialization test passed on {}",
+                    staticDbConfig.getDatabaseName());
+        } finally {
+            try {
+                space.sql("DROP TABLE IF EXISTS " + tableName);
+            } catch (final Exception ex) {
+                LOG.warn("[ignored] %s", ex);
+            }
+            Router.global().removeSpace(space.vid());
+            space.close();
+        }
+    }
 }

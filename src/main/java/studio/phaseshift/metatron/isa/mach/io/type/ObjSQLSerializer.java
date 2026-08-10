@@ -376,6 +376,22 @@ public class ObjSQLSerializer extends AbstractObjSerializer<Object> {
                 final String raw = rs.getString(columnName);
                 return raw != null ? str(raw) : noobj();
             }
+
+            // Unknown subtype (e.g. chat_result::T whose base is rec::T).
+            // Try mtron parsing only when the raw string looks structured
+            // (e.g. "chat_result::[...]", "[...]", "{...}") — primitive
+            // values like "29" or "true" stay on the JDBC code path below.
+            {
+                final String raw = rs.getString(columnName);
+                if (raw != null && !raw.isBlank()) {
+                    final String trimmed = raw.stripLeading();
+                    if (trimmed.indexOf("::[") > 0 || trimmed.startsWith("[") || trimmed.startsWith("{")) {
+                        try {
+                            return MTRON.inputBytes(raw.getBytes(StandardCharsets.UTF_8));
+                        } catch (final Exception ignored) { /* fall through to readColumn */ }
+                    }
+                }
+            }
         }
         // No _mtron_meta entry — fall back to JDBC-type-based reading
         // (which uses readMaybeJSON heuristics for VARCHAR columns).

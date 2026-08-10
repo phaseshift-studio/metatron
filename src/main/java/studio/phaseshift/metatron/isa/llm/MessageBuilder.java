@@ -27,6 +27,7 @@ import studio.phaseshift.metatron.isa.mach.type.Router;
 import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -104,6 +105,22 @@ public class MessageBuilder {
     public MessageBuilder session(final fURI sessionVID) {
         if (sessionVID != null)
             this.map.put(uri(SESSION), uri(sessionVID));
+        return this;
+    }
+
+    /**
+     * Set the {@code depth} field (recursion depth: 0=top-level, 1+=nested).
+     */
+    public MessageBuilder depth(final int depth) {
+        this.map.put(uri(DEPTH), jnt(depth));
+        return this;
+    }
+
+    /**
+     * Set the {@code chat_id} field (monotonic execution counter per session).
+     */
+    public MessageBuilder chatId(final int chatId) {
+        this.map.put(uri(CHAT_ID), jnt(chatId));
         return this;
     }
 

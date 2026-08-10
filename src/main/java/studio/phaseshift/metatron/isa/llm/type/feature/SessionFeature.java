@@ -71,8 +71,15 @@ public class SessionFeature extends AbstractFeature {
         final fURI sessionID = this.at(SESSION).uriValue();
         Rec session = Router.readFromSpace(sessionID).orElse(rec());
         try {
+            // Monotonic execution counter — incremented on every chat() call,
+            // persisted with the session so it survives restarts.  Used by
+            // SpaceChatSessionStore for cross-turn sub-agent isolation.
+            final int chatId = session.at(uri(CHAT_ID)).orElse(jnt(0)).intValue().intValue() + 1;
+            session.at(uri(CHAT_ID), jnt(chatId), MUTABLE);
+            agent.setCurrentChatId(chatId);
+
             final Space space = Router.global().getSpaceFor(sessionID);
-            final SpaceChatSessionStore store = new SpaceChatSessionStore(agent, space);
+            final SpaceChatSessionStore store = new SpaceChatSessionStore(agent, space, agent.chatDepth(), chatId);
             this.store = store;
             // Ensure session exists in space with required fields
             if (session.at(ALGORITHM).isNoObj()) {

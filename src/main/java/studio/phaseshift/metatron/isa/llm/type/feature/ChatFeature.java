@@ -42,6 +42,8 @@ public class ChatFeature extends AbstractFeature {
                     .session(agent.hasFeature(SESSION)
                             ? agent.feature(SESSION).asRec().at(SESSION).uriValue()
                             : null)
+                    .depth(agent.chatDepth())
+                    .chatId(agent.chatId())
                     .create(agent.at(ROOT).uriValue().extend(MESSAGE)
                             .extend("_").addQ(INCRQ));
         } catch (final Exception e) {
@@ -57,7 +59,13 @@ public class ChatFeature extends AbstractFeature {
 
     @Override
     public void onCompleteResponse(final Agent agent, final Str text) {
-        agent.at(res(CHAT, RESPONSE), text, MUTABLE);
+        // Formatted responses are already structured Recs (parsed from JSON) —
+        // store directly at res(CHAT) so the result is navigable without the
+        // extra 'response' wrapper.  Free-text stays wrapped as {response=>...}.
+        if (text.isStr())
+            agent.at(res(CHAT, RESPONSE), text, MUTABLE);
+        else
+            agent.at(res(CHAT), text, MUTABLE);
         // AiMessages are persisted by SpaceChatSessionStore.updateMessages(),
         // which catches both intermediate tool_call responses (that never
         // reach TokenStream.onCompleteResponse) and the final text response.

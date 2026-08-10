@@ -117,6 +117,7 @@ public class llmInstSet extends AbstractInstSet {
     public static Type LLM_TOOL_REQUEST_MESSAGE_TYPE;
     public static Type LLM_THINKING_MESSAGE_TYPE;
     public static Type LLM_NOTES_TYPE;
+    public static Type LLM_CHAT_RESULT_TYPE;
     public static ObjFactory LLM_OBJ_FACTORY = MObjFactory.of().addExtension(MVec.class, x -> lst(x.jvm().stream().toList()));
     public static Type LLM_FEATURE_TYPE;
 
@@ -197,7 +198,7 @@ public class llmInstSet extends AbstractInstSet {
                                 Map.of(uri(TEXT), "the system message text body"),
                                 //  uri(SIZE), "the data size of the text body"),
                                 "a system message provides behavioral and response-style instructions to the model"),
-                        docWrap(Type.Builder.build()
+                        docWrap(LLM_CHAT_RESULT_TYPE = Type.Builder.build()
                                         .tid(REC_TID)
                                         .vid(LLM_CHAT_RESULT_TID)
                                         .isaPredicate(rec(
@@ -257,12 +258,14 @@ public class llmInstSet extends AbstractInstSet {
                                         .isaPredicate(rec(
                                                 uri(NAME), URI_TYPE,
                                                 uri(TEXT), STR_TYPE,
+                                                uri(CHAT).maybe(), ALL_TYPE,
                                                 //      uri(SIZE), DATA_SIZE_TYPE,
                                                 uri(ID).maybe(), STR_TYPE))
                                         .create(),
                                 null, null, mutableMap(
                                         uri(NAME), "the tool that was executed",
                                         uri(TEXT), "the text result of the tool execution",
+                                        uri(CHAT).maybe(), "mtron-serialized chat_result::T when the tool was a recursive chat call",
                                         //   uri(SIZE), "the data size of the message text",
                                         uri(ID).maybe(), "correlation id matching the tool execution request"),
                                 "a tool execution result message"),

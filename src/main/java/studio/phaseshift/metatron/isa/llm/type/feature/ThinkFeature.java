@@ -33,6 +33,7 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.INCRQ;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.THINKING_MESSAGE_TID;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
@@ -70,6 +71,8 @@ public class ThinkFeature extends AbstractFeature {
             final Rec thought = rec(mutableMap(uri(TEXT), str(this.full.toString().trim())), THINKING_MESSAGE_TID, null);
             thought.recValue().put(uri(TIME), mathInstSet.nowDatetime());
             thought.recValue().put(uri(SESSION), agent.feature(SESSION).asRec().at(SESSION));
+            thought.recValue().put(uri(DEPTH), jnt(agent.chatDepth()));
+            thought.recValue().put(uri(CHAT_ID), jnt(agent.chatId()));
             this.buffer = new StringBuilder();
             this.full = new StringBuilder();
             LOG.info("writing thought to %s", thinkWriteURI);

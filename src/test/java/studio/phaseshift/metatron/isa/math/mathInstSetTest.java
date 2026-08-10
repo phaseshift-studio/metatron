@@ -323,8 +323,8 @@ public class mathInstSetTest extends AbstractInstSetTest {
             "<//2024.12:25/09/00/00/000?tz=-0500>.as(rec::T)>>=[q=>[tz=>'+0000']]>>q/tz     % '+0000'",
             // TODO: bug in rec update: "<//2024.12:25/09/00/00/000?tz=-0500>.as(rec::T)>>=[q/tz=>'+0000']>>q>>tz       % '+0000'",
             // Record → URI → datetime round-trip (fixed Rec→URI q field handling)
-            "[host=><2024.12>,port=>25,path=>[<>,<09>,<00>,<00>,<000>],c=>[min=>1,max=>1],q=>[tz=>'-0500']].as(uri::T).as(datetime::T).as(str::T)    % '//2024.12:25/09/00/00/000?tz=-0500'",
-            "[host=><2024.12>,port=>25,path=>[<>,<09>,<00>,<00>,<000>],c=>[min=>1,max=>1],q=>[tz=>'-0500']].as(datetime::T).as(str::T)    % '//2024.12:25/09/00/00/000?tz=-0500'",
+            "[host=><2024.12>,port=>25,path=>[<>,<09>,<00>,<00>,<000>],c=>[min=>1,max=>1],q=>[tz=>'-0500']].as(uri::T).as(datetime::T).as(str::T)    % 'Wednesday, December 25, 2024 09:00:00 AM -05:00'",
+            "[host=><2024.12>,port=>25,path=>[<>,<09>,<00>,<00>,<000>],c=>[min=>1,max=>1],q=>[tz=>'-0500']].as(datetime::T).as(uri::T)    % <//2024.12:25/09/00/00/000?tz=-0500>",
             // Where (=?=) filter
             "<//2024.12:25/09/00/00/000?tz=-0500>=?=[port=>25]                     % <//2024.12:25/09/00/00/000?tz=-0500>",
             "<//2024.12:25/09/00/00/000?tz=-0500>=?=[port=>26]                     % noobj",
