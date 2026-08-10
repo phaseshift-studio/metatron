@@ -41,6 +41,14 @@ A distributed data-oriented computing language and virtual machine built in Java
 
 - **Java**: JDK 21+ to compile and run (CI uses Oracle JDK 24, jDeploy uses Temurin JDK 25)
 
+### Code Style
+
+- In general, adopt existing patterns in the codebase.
+- Use American English spelling in variables and documentation (e.g. color not colour).
+- `final` all variables and method arguments. Rarely should non-final variables be used.
+- `this.` should be used when referencing fields.
+- Leverage existing `XXXUtil`, `XXX.Helper`, etc. style static method providers for common algorithms.
+
 ### Test Framework
 
 - **JUnit 5** (Jupiter), surefire 3.5.5
@@ -54,7 +62,7 @@ A distributed data-oriented computing language and virtual machine built in Java
   Java methods.
 - Use standalone `@Test` methods only for multistep orchestration (e.g., concurrency tests, complex setup/teardown) or
   non-tabular scenarios.
-- The `%` delimiter avoids collision with mtron syntax (commas, pipes, semicolons).
+- The `%` delimiter avoids collision with mtron syntax which use commas, pipes, semicolons.
 - The `@TestData` test method annotation enables preloading data (or configuring metatron state) prior to test
   evaluation.
 
@@ -62,7 +70,7 @@ A distributed data-oriented computing language and virtual machine built in Java
 
 ```java
 
-@ParameterizedTest(name = "[{index}] {4}")
+@ParameterizedTest()
 @TestData(value = {
         "a -> 555",
         "@/sys/thread/executor >>= noobj"
@@ -96,7 +104,7 @@ Each CSV row with `delimiter='%'` produces one entry per active map (`map1`, `ma
 first element is not `-1` (the default). With `map1={0,1}` and
 `map2={2,3}`, a row like `a%1%b%2%comment` generates:
 
-```json
+```jsonld
 {
   "instruction": "Evaluate this mtron expression: lhs evaluates to rhs",
   "input": "a",
@@ -118,7 +126,7 @@ for the full training pipeline.
     - `checkCodeEvaluate(LOG, evaluate, fetch, expected)` — evaluate, fetch read-back, assert
     - `checkEquality(LOG, a, b, equals)` — compare two objs with log output
     - `<ERROR>` as an expected value triggers the fail-expected assertion path.
-    - avoid `assertTrue/False` assertions as they provide information back to user on failure.
+    - avoid `assertTrue/False` assertions as they provide little information back to user on failure.
 
 ### Canonical Test Examples
 
@@ -129,7 +137,8 @@ The best example of the desired test-style can be found at:
 
 Every test class must extend `AbstractMetatronTest`. In `@BeforeAll`:
 
-1. `TypeCheck.disable(TypeCheck.code_resolve)` — disables full code resolution requirement in tests
+1. `TypeCheck.disable(TypeCheck.code_resolve)` — disables full code resolution requirement in tests (i.e. dynamic
+   resolution is 'ok')
 2. `BootLoader.BOOTING = true` — sets booting state
 3. `BootLoader.TESTING = true` — skips shutdown hook headless wait
 4. `BootLoader.load(...)` — initializes the VM
@@ -208,18 +217,22 @@ and `<uri> -> <obj>` reference).
 - mono types: `bool`, `bytes`, `int`, `real`, `str`, `uri`.`
 - poly types: `rec` (record/map), `lst` (list),
 - call types: `inst`, `code`
-  IMPORTANT NOTE CONCERNING `tid` vs `vid`:
-- for a type: `vid` is the type's name and `tid` is the type's refinement. e.g. `int::T[?>0]@nat`. `vid = nat`,
-  `tid = int`.
-- for a value: `vid` is the value's location in space and `tid` is the type the constraints it. e.g.
-  `nat::29@/usr/marko/age`. The `int` is a `nat::T` (tid) and it's located at `/usr/marko/age` (vid).
+
+**IMPORTANT** `tid` vs `vid`:
+
+- for a type: `vid` is the type's name and `tid` is the type's refinement.
+    - `int::T[?>0]@nat`. `vid = nat`,
+      `tid = int`.
+- for a value: `vid` is the value's location in space and `tid` is the type constraining the value.
+    - `nat::29@/usr/marko/age`. The `int` is a `nat::T` (tid) and it's located at `/usr/marko/age` (vid).
+    - `*/usr/marko/age` returns `nat::29`.
 
 **URI components**:
 
 - wildcards: `+` = single segment, `#` = multi-segment (MQTT-style)
-- process: `?incq` (auto-increment), `?subq` (pubsub), `?docq` (documentation associated with uri), etc.
+- q procs: `?incq` (auto-increment), `?subq` (pubsub), `?docq` (documentation associated with uri), etc.
 - dom/rng: `inst?a<=b()` is an instruction that maps objs of type `b` to objs of type `a` (note reverse arrow `<=`).
-  ultimately compiles to the URI `inst?dom=b&rng=a`
+  ultimately compiles to the URI `inst?dom=b&rng=a`.
 
 ### Boot Loader Lifecycle
 
@@ -262,12 +275,13 @@ Docker build is **disabled by default** (`skipDocker=true` in pom). Enable with 
 
 The project maintains two skill sets under `.metatron/skills/`:
 
-| Skill | Path | Purpose |
-|---|---|---|
-| **metatron** | `.metatron/skills/metatron/` | VM architecture, type system, boot process, MCP, UI architecture |
-| **mtron** | `.metatron/skills/mtron/` | Language reference, examples, training pipeline, data-source adapters |
+| Skill        | Path                         | Purpose                                                               |
+|--------------|------------------------------|-----------------------------------------------------------------------|
+| **metatron** | `.metatron/skills/metatron/` | VM architecture, type system, boot process, MCP, UI architecture      |
+| **mtron**    | `.metatron/skills/mtron/`    | Language reference, examples, training pipeline, data-source adapters |
 
 Each skill has:
+
 - `SKILL.md` — index with a **References** section listing all `.md` docs
 - `references/*.md` — detailed topic docs (architecture, patterns, language spec)
 - `scripts/` — Python utilities (MCP client, training)
@@ -275,41 +289,39 @@ Each skill has:
 
 ### When to Update
 
-Whenever you create, rename, or significantly change a Java class that is documented
-in a reference `.md`, update the corresponding file:
+Whenever you create, rename, or significantly change a Java class that is documented in a reference `.md`, update the
+corresponding file:
 
-| You changed… | Update… |
-|---|---|
-| A widget or UI class (`uiInstSet`, `TreeWidget`, `PanelWidget`, any tool) | `.metatron/skills/metatron/references/ui-instset-java.md` |
-| A type system class (`Type`, `MType`, `Inst`, `Code`) | `.metatron/skills/metatron/references/type-system-java.md` or `…-mtron.md` |
-| A rewrite class (`Rewriter`, `RewriteBuilder`) | `.metatron/skills/metatron/references/rewrite-system-java.md` |
-| A space class (`tbleSpace`, `fsSpace`) | `.metatron/skills/metatron/references/tble-space-java.md` or create a new space doc |
-| mtron language syntax or semantics | `.metatron/skills/mtron/references/mtron-language-reference.md` |
-| An MCP server/client class | `.metatron/skills/metatron/references/mcp-mtron.md` or `.metatron/skills/mtron/references/mcp-server-*.md` |
-| A new data-source integration (`dckrSpace`, etc.) | `.metatron/skills/mtron/references/` — create a new doc |
+| You changed…                                                              | Update…                                                                                                    |
+|---------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------|
+| A widget or UI class (`uiInstSet`, `TreeWidget`, `PanelWidget`, any tool) | `.metatron/skills/metatron/references/ui-instset-java.md`                                                  |
+| A type system class (`Type`, `MType`, `Inst`, `Code`)                     | `.metatron/skills/metatron/references/type-system-java.md` or `…-mtron.md`                                 |
+| A rewrite class (`Rewriter`, `RewriteBuilder`)                            | `.metatron/skills/metatron/references/rewrite-system-java.md`                                              |
+| A space class (`tbleSpace`, `fsSpace`)                                    | `.metatron/skills/metatron/references/tble-space-java.md` or create a new space doc                        |
+| mtron language syntax or semantics                                        | `.metatron/skills/mtron/references/mtron-language-reference.md`                                            |
+| An MCP server/client class                                                | `.metatron/skills/metatron/references/mcp-mtron.md` or `.metatron/skills/mtron/references/mcp-server-*.md` |
+| A new data-source integration (`dckrSpace`, etc.)                         | `.metatron/skills/mtron/references/` — create a new doc                                                    |
 
 ### How to Update
 
-1. **Add new classes to the package map** — every reference doc has a tree listing of
-   Java files in the relevant package. Add new files there.
+1. **Add new classes to the package map** — every reference doc has a tree listing of Java files in the relevant
+   package. Add new files there.
 2. **Add new types to relevant tables** — e.g., the Tool→Widget dependency table in
    `ui-instset-java.md`, or type registration tables elsewhere.
 3. **Update counts, examples, or signatures** if the change invalidates them.
-4. **Create a new `references/<topic>.md`** when adding a substantial new subsystem
-   (a new space backend, a new instruction set family, etc.). Follow the `---` YAML
-   frontmatter convention with `name` and `description` fields. Add the new file to
-   the **References** list in the parent `SKILL.md`.
-5. **User-directed:** only create or update `.md` files when the user explicitly asks
-   you to, or when the change is clearly mechanical (adding a new class to an existing
-   package map). For substantive documentation rewrites, confirm with the user first.
+4. **Create a new `references/<topic>.md`** when adding a substantial new subsystem (a new space backend, a new
+   instruction set family, etc.). Follow the `---` YAML frontmatter convention with `name` and `description` fields. Add
+   the new file to the **References** list in the parent `SKILL.md`.
+5. **User-directed:** only create or update `.md` files when the user explicitly asks you to, or when the change is
+   clearly mechanical (adding a new class to an existing package map). For substantive documentation rewrites, confirm
+   with the user first.
 
 ### Existing Docs
 
-- **metatron skill**: `references/` covers the type system (Java + mtron), UI
-  architecture, rewrite system, tbleSpace, and MCP client/servers.
-- **mtron skill**: `references/` covers the language reference, MCP server
-  architecture, math instructions, HTTP fetching, dckrSpace, answer-questions
-  patterns, and the Unsloth training pipeline.
+- **metatron skill**: `references/` covers the type system (Java + mtron), UI architecture, rewrite system, tbleSpace,
+  and MCP client/servers.
+- **mtron skill**: `references/` covers the language reference, MCP server architecture, math instructions, HTTP
+  fetching, dckrSpace, answer-questions patterns, and the Unsloth training pipeline.
 
 ---
 

@@ -47,6 +47,7 @@ isa.mach.type.ui.tool
   fURISelectorTool.java    ← URI/folder selector for wildcard completion
   TypeDiffTool.java        ← type diff visualizer
   TreeSelectTool.java      ← interactive tree browser with nested obj inspection
+  SwipePanelWidgetTool.java ← left-right swipe panel for browsing a stream of objs
 isa.mach.ui
   uiInstSet.java            ← mtron type/instruction registration for all UI types
 isa.m.type.reflect
@@ -58,6 +59,7 @@ isa.m.type.reflect
 Every widget implements `Widget<W> extends Stylable<W>, AutoCloseable, Runnable`.
 
 Key methods:
+
 ```java
 // Present this widget.  Default: checks style.hasFloat() →
 // floatAt() + surface.render()  OR  Graphitty.out(format()).
@@ -69,50 +71,70 @@ String format()
 
 // CSS-style float positioning on any widget.
 default W floatAt(FloatingSurface surface, int row, int col)
+
 default W floatAt(FloatingSurface surface, Anchor anchor, int width)
+
 default W floatAt(FloatingSurface surface, Anchor anchor, int width, int top, int left)
+
 default W unfloat(FloatingSurface surface)
 ```
 
 **Consolidation note:** `display()` was removed — `run()` is the single presentation method.
 
-**`chromeLines()`** — defaults to 1 if a border is configured, 0 otherwise. Widgets with column headers or status bars override to add their own.  Used by `FloatingSurface` to preserve structural chrome when the `height` cap clips body lines.
+**`chromeLines()`** — defaults to 1 if a border is configured, 0 otherwise. Widgets with column headers or status bars
+override to add their own. Used by `FloatingSurface` to preserve structural chrome when the `height` cap clips body
+lines.
 
-**`rowCount()` / `rowString(int)` / `rowStrings()`** — defaults that split `format()` output by `\n`.  Selectors iterate over these for cursor navigation; a widget that wants column-aware selection should either override them or attach a `TableWidget`.
+**`rowCount()` / `rowString(int)` / `rowStrings()`** — defaults that split `format()` output by `\n`. Selectors iterate
+over these for cursor navigation; a widget that wants column-aware selection should either override them or attach a
+`TableWidget`.
 
 ## 2. JRec state bridge (`JRec.java`)
 
-There are **two** state models in the widget tree, depending on when the widget was
-written:
+There are **two** state models in the widget tree, depending on when the widget was written:
 
 ### Model A: JVM-as-source-of-truth (AccordionWidget — preferred for new widgets)
 
-State lives in the **persistent store** (memSpace, tbleSpace, etc.).  Java fields
-annotated with `@JRecElement` are **metadata for mtron introspection only** —
-never read by Java code.  Mutators call `jvmWrite()`.  `format()` calls `jvmRead()`
+State lives in the **persistent store** (memSpace, tbleSpace, etc.). Java fields annotated with `@JRecElement` are
+**metadata for mtron introspection only** — never read by Java code. Mutators call `jvmWrite()`.  `format()` calls
+`jvmRead()`
 and extracts values fresh on every render.
 
 ### Model B: Java-fields-as-storage (legacy — TableWidget, PanelWidget, TreeWidget)
 
-Java fields ARE the data store.  A private `sync()` method pulls initial state from
-JVM when the widget was constructed from mtron, but once Java fields are populated
-(by Java API or prior sync), JVM is never consulted again.  Mutators use direct
-field assignment or builders (`addRow()`, `addMetadata()`).
+Java fields ARE the data store. A private `sync()` method pulls initial state from JVM when the widget was constructed
+from mtron, but once Java fields are populated (by Java API or prior sync), JVM is never consulted again. Mutators use
+direct field assignment or builders (`addRow()`, `addMetadata()`).
 
 **Shared primitives** (both models):
 
 ```java
 // Read latest state from persistent store (if vid is set) or local JVM merge.
-jvmRead() → Router.global().read(vid) → freshObj.jvm()
+jvmRead() → Router.
+
+global().
+
+read(vid) → freshObj.
+
+jvm()
 
 // Write a single field with >>=-style merge: read fresh, merge, write back.
 jvmWrite(key, value)
 
 // Static typed extractors — use with Map<Obj,Obj> from jvmRead():
-jvmStr(jvm, key)     → String
-jvmBool(jvm, key)    → boolean  (defaults true if absent)
-jvmInt(jvm, key, fb) → int      (with fallback)
-jvmBody(jvm, key)    → List<String>  (splits \\n and \n)
+jvmStr(jvm, key)     →
+
+String
+jvmBool(jvm, key)    →
+
+boolean(defaults true if absent)
+
+jvmInt(jvm, key, fb) →
+
+int(with fallback)
+
+jvmBody(jvm, key)    → List<String>  (splits \\
+n and \n)
 ```
 
 **Model A — JVM-as-source-of-truth** (AccordionWidget; preferred for new widgets):
@@ -125,14 +147,17 @@ public MyWidget(Map<Obj, Obj> jvm, fURI tid, fURI vid) {
 }
 
 // format() — one jvmRead(), all state extracted fresh
-@Override public String format() {
+@Override
+public String format() {
     Map<Obj, Obj> jvm = jvmRead();
     String title = jvmStr(jvm, keyTitle);
     // ... render ...
 }
 
 // Mutators — write through to persistent store
-public void setTitle(String t) { jvmWrite(kTitle, str(t)); }
+public void setTitle(String t) {
+    jvmWrite(kTitle, str(t));
+}
 ```
 
 **Model B — Java-fields-as-storage** (TableWidget, PanelWidget, TreeWidget; legacy):
@@ -160,58 +185,74 @@ private void sync() {
 }
 ```
 
-**⚠️ History:** Before 2026-07-26, `TableWidget.sync()` unconditionally `clear()`ed
-Java fields and repopulated from the JVM snapshot.  This destroyed Java-constructed
-tables (ProfileTool, ExplainTool, TraceTool) because the JVM serialization round-trip
-through `MObjFactory.toObj()` changes container types (`Objs` vs `Lst`, `ListN` vs
-`ArrayList`).  The `javaPopulated` flag (shown above) fixes this.  It's safer than
-per-field `isEmpty()` guards because a Java-constructed table may legitimately have
-an empty field (e.g. headers-only table with no rows) — without the flag, sync would
-pull stale rows from a prior mtron construction.
+**⚠️ History:** Before 2026-07-26, `TableWidget.sync()` unconditionally `clear()`ed Java fields and repopulated from the
+JVM snapshot. This destroyed Java-constructed tables (ProfileTool, ExplainTool, TraceTool) because the JVM serialization
+round-trip through `MObjFactory.toObj()` changes container types (`Objs` vs `Lst`, `ListN` vs
+`ArrayList`). The `javaPopulated` flag (shown above) fixes this. It's safer than per-field `isEmpty()` guards because a
+Java-constructed table may legitimately have an empty field (e.g. headers-only table with no rows) — without the flag,
+sync would pull stale rows from a prior mtron construction.
 
-**Also: avoid `Stream.toList()` in sync().**  `Stream.toList()` (Java 16+) returns
-immutable `ImmutableCollections$ListN`.  Use `Collectors.toCollection(ArrayList::new)`
+**Also: avoid `Stream.toList()` in sync ().**  `Stream.toList()` (Java 16+) returns immutable
+`ImmutableCollections$ListN`. Use `Collectors.toCollection(ArrayList::new)`
 instead — it keeps rows on the mutable-`ArrayList` path the rest of the codebase expects.
 
 **When to use the legacy sync pattern vs. direct `jvmRead()`:**
-- **New widgets** (AccordionWidget): read from `jvmRead()` directly in `format()`.  Java fields are metadata only.  Mutators use `jvmWrite()`.
-- **Legacy widgets** (TableWidget, PanelWidget, TreeWidget): Java fields are the storage.  `sync()` populates them from JVM.  Mutators use direct field assignment or `addRow()`/`addMetadata()` builders.  The sync guard protects these from being overwritten.
+
+- **New widgets** (AccordionWidget): read from `jvmRead()` directly in `format()`. Java fields are metadata only.
+  Mutators use `jvmWrite()`.
+- **Legacy widgets** (TableWidget, PanelWidget, TreeWidget): Java fields are the storage.  `sync()` populates them from
+  JVM. Mutators use direct field assignment or `addRow()`/`addMetadata()` builders. The sync guard protects these from
+  being overwritten.
 
 ## 3. Style system (`Stylable.Style`)
 
-Style is a JVM-backed rec.  Fields:
+Style is a JVM-backed rec. Fields:
 
-| Field | Type            | Description |
-|---|-----------------|---|
-| `border` | uri             | simple, continuous, rounded, none, thick, hash, asterisk, period |
-| `background` | str             | Graphitty color macro e.g. `{{[R]}}` |
-| `foreground` | str             | Graphitty color macro e.g. `{{g}}` |
-| `divider` | str             | Column/row divider char |
-| `headerDivider` | str             | Header divider char |
-| `pointer` | str             | Selection pointer e.g. `{{r}}>` |
-| `anchor` | uri (coproduct) | top_left, top_middle, top_right, bottom_left, bottom_middle, bottom_right |
-| `width` | int             | Display width in columns; 0 = natural |
-| `top` | int             | Row offset from anchor edge (CSS top) |
-| `left` | int             | Column offset from anchor edge (CSS left) |
-| `leftMargin` | int             | Left margin |
-| `rightMargin` | int             | Right margin |
-| `topMargin` | int             | Top margin |
-| `bottomMargin` | int             | Bottom margin |
-| `height` | int             | Display height cap in rows; 0 = unbounded. Content exceeding this cap keeps header/chrome lines and discards top body lines (scroll-up behavior) |
+| Field           | Type            | Description                                                                                                                                      |
+|-----------------|-----------------|--------------------------------------------------------------------------------------------------------------------------------------------------|
+| `border`        | uri             | simple, continuous, rounded, none, thick, hash, asterisk, period                                                                                 |
+| `background`    | str             | Graphitty color macro e.g. `{{[R]}}`                                                                                                             |
+| `foreground`    | str             | Graphitty color macro e.g. `{{g}}`                                                                                                               |
+| `divider`       | str             | Column/row divider char                                                                                                                          |
+| `headerDivider` | str             | Header divider char                                                                                                                              |
+| `pointer`       | str             | Selection pointer e.g. `{{r}}>`                                                                                                                  |
+| `anchor`        | uri (coproduct) | top_left, top_middle, top_right, bottom_left, bottom_middle, bottom_right                                                                        |
+| `width`         | int             | Display width in columns; 0 = natural                                                                                                            |
+| `top`           | int             | Row offset from anchor edge (CSS top)                                                                                                            |
+| `left`          | int             | Column offset from anchor edge (CSS left)                                                                                                        |
+| `leftMargin`    | int             | Left margin                                                                                                                                      |
+| `rightMargin`   | int             | Right margin                                                                                                                                     |
+| `topMargin`     | int             | Top margin                                                                                                                                       |
+| `bottomMargin`  | int             | Bottom margin                                                                                                                                    |
+| `height`        | int             | Display height cap in rows; 0 = unbounded. Content exceeding this cap keeps header/chrome lines and discards top body lines (scroll-up behavior) |
 
 Float-related:
+
 ```java
 style.floatAt(anchor, width, top, left)  // configure floating
-style.hasFloat()                          // true if anchor is set
-style.anchor()                            // returns Anchor enum
-style.width()                             // display width override
-style.top() / style.left()                // offsets
-style.unfloat()                           // clear floating config
+style.
+
+hasFloat()                          // true if anchor is set
+style.
+
+anchor()                            // returns Anchor enum
+style.
+
+width()                             // display width override
+style.
+
+top() /style.
+
+left()                // offsets
+style.
+
+unfloat()                           // clear floating config
 ```
 
 Text utility:
+
 ```java
-Style.wrapLines(List<String> lines, int maxWidth) → List<String>
+Style.wrapLines(List<String> lines, int maxWidth) →List<String>
 // Splits lines at word boundaries to fit maxWidth visual chars.
 // Any widget with text content can call this.
 ```
@@ -223,20 +264,33 @@ Style.wrapLines(List<String> lines, int maxWidth) → List<String>
 FloatingSurface surface = new FloatingSurface(terminal);
 
 // Pin a widget:
-surface.add(widget, row, col);                       // absolute
-surface.add(widget, anchor, width);                  // anchored
-surface.add(widget, anchor, width, top, left);       // anchored + offsets
+surface.
+
+add(widget, row, col);                       // absolute
+surface.
+
+add(widget, anchor, width);                  // anchored
+surface.
+
+add(widget, anchor, width, top, left);       // anchored + offsets
 
 // Anchor enum: TOP_LEFT, TOP_MIDDLE, TOP_RIGHT, BOTTOM_LEFT, BOTTOM_MIDDLE, BOTTOM_RIGHT
 // Anchor.parse("top_middle") → TOP_MIDDLE  (also "tm", "tl", "tr", "bl", "bm", "br")
 
 // Render cycle (automatic):
-surface.render();  // \033[s → draw all → \033[u (preserves cursor)
-surface.remove(widget);  // unpin + clear area
-surface.clear();         // remove all
+surface.
+
+render();  // \033[s → draw all → \033[u (preserves cursor)
+surface.
+
+remove(widget);  // unpin + clear area
+surface.
+
+clear();         // remove all
 ```
 
 **Console integration** is automatic:
+
 ```java
 Console.LOCAL_INSTANCE.getFloatingSurface()  // shared instance
 // Rendered at every prepareForInput() + renderPanes()
@@ -255,17 +309,47 @@ public static final fURI UI_MYWIDGET_TID = UI_ISA_TID.extend("mywidget");
 public static Type UI_MYWIDGET_TYPE;
 
 // In setup():
-UI_MYWIDGET_TYPE = Type.Builder.build()
-    .tid(UI_WIDGET_TID)               // parent type
-    .vid(UI_MYWIDGET_TID)             // this type
-    .isaPredicate(rec(                // field declarations for mtron introspection
-        uri("title").maybe(), STR_TYPE,
-        uri("body").maybe(), STR_TYPE
+UI_MYWIDGET_TYPE =Type.Builder.
+
+build()
+    .
+
+tid(UI_WIDGET_TID)               // parent type
+    .
+
+vid(UI_MYWIDGET_TID)             // this type
+    .
+
+isaPredicate(rec(                // field declarations for mtron introspection
+        uri("title").
+
+maybe(),STR_TYPE,
+
+uri("body").
+
+maybe(),STR_TYPE
     ))
-    .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(UI_MYWIDGET_TID),
-        lst(T(REC_TID)),
-        (lhs, inst) -> new MyWidget(inst.arg(0).as().jvm(), UI_MYWIDGET_TID, inst.arg(0).vid())))
-    .create();
+            .
+
+constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).
+
+rng(UI_MYWIDGET_TID),
+
+lst(T(REC_TID)),
+        (lhs,inst)->new
+
+MyWidget(inst.arg(0).
+
+as().
+
+jvm(),UI_MYWIDGET_TID,inst.
+
+arg(0).
+
+vid())))
+        .
+
+create();
 ```
 
 ### Instruction registration
@@ -273,33 +357,76 @@ UI_MYWIDGET_TYPE = Type.Builder.build()
 ```java
 // display — standard for all widgets
 docWrap(instC(UI_INST_TID.extend("display")
-        .dom(UI_WIDGET_TID).rng(NOOBJ_TID),
-        lst(),
-        (lhs, inst) -> { ((Widget<?>) lhs).run(); ((Widget<?>) lhs).close(); return noobj(); }),
-    "display the widget on the terminal");
+        .
+
+dom(UI_WIDGET_TID).
+
+rng(NOOBJ_TID),
+
+lst(),
+        (lhs,inst)->{((Widget<?>)lhs).
+
+run(); ((Widget<?>)lhs).
+
+close(); return
+
+noobj(); }),
+        "display the widget on the terminal");
 
 // Custom instructions (AccordionWidget example):
 // Register in the widget's format() method with a one-time guard:
-if (!jvm.containsKey(uri("toggle"))) {
-    this.at(uri("toggle"), instLambda((l, i) -> {
-        this.toggle();
-        Graphitty.out(Console.getTerminal().output(), this.format() + "\n");
-        return noobj();
-    }), MUTABLE);
-}
+        if(!jvm.
+
+containsKey(uri("toggle"))){
+        this.
+
+at(uri("toggle"),instLambda((l,i)->{
+        this.
+
+toggle();
+        Graphitty.
+
+out(Console.getTerminal().
+
+output(), this.
+
+format() +"\n");
+        return
+
+noobj();
+    }),MUTABLE);
+        }
 ```
 
 ### Coproduct types
 
 ```java
 // For closed-set URI values (like Anchor) — derived from the enum so they stay in sync:
-UI_ANCHOR_TYPE = Type.Builder.build()
-    .tid(URI_TID)
-    .vid(UI_ANCHOR_TID)
-    .isaPredicate(inside_(lst(Arrays.stream(FloatingSurface.Anchor.values())
-        .map(a -> uri(a.name().toLowerCase()))
-        .toArray(Obj[]::new))))
-    .create();
+UI_ANCHOR_TYPE =Type.Builder.
+
+build()
+    .
+
+tid(URI_TID)
+    .
+
+vid(UI_ANCHOR_TID)
+    .
+
+isaPredicate(inside_(lst(Arrays.stream(FloatingSurface.Anchor.values())
+        .
+
+map(a ->
+
+uri(a.name().
+
+toLowerCase()))
+        .
+
+toArray(Obj[]::new))))
+        .
+
+create();
 ```
 
 ## 6. How to create a new Widget
@@ -362,27 +489,29 @@ UI_ANCHOR_TYPE = Type.Builder.build()
    ```
 
 2. **Register the type** in `uiInstSet.java`:
-   - Add `public static final fURI UI_MYWIDGET_TID` and `public static Type UI_MYWIDGET_TYPE`
-   - Add type definition in `setup()` with `.isaPredicate(rec(...))` and `.constructor(...)`
-   - Add to `display` instruction if needed
+    - Add `public static final fURI UI_MYWIDGET_TID` and `public static Type UI_MYWIDGET_TYPE`
+    - Add type definition in `setup()` with `.isaPredicate(rec(...))` and `.constructor(...)`
+    - Add to `display` instruction if needed
 
 3. **For floating support**: nothing extra — `Widget.run()` already checks `style.hasFloat()`
 
 4. **For word-wrap**: call `Stylable.Style.wrapLines(lines, maxWidth)` in `format()`
 
-5. **For interactive widgets** (keyboard input): extend `AbstractWidget`, override `run()` with a modal loop using `BindingReader`
+5. **For interactive widgets** (keyboard input): extend `AbstractWidget`, override `run()` with a modal loop using
+   `BindingReader`
 
 6. **Choose the right state model**:
 
    | If your widget… | Use |
-   |---|---|
+                        |---|---|
    | Has simple key/value fields, built from mtron or Java | **Model A** (JVM-as-source-of-truth).  Mutators call `jvmWrite()`, `format()` calls `jvmRead()`.  See AccordionWidget. |
    | Has list/table data populated via Java builders (`addRow()`, etc.) | **Model B** (Java-fields-as-storage) with the `javaPopulated` tracking flag.  See TableWidget. |
    | Is a pure display widget with no mutable state | Either — Model A is simpler. |
 
 ## 7. Key patterns
 
-### Read style from JVM before run()
+### Read style from JVM before run ()
+
 ```java
 public MyWidget(...) {
     super(...);
@@ -391,12 +520,15 @@ public MyWidget(...) {
 ```
 
 ### @JRecElement fields are metadata, NOT state
+
 ```java
+
 @JRecElement(key = "title", rng = "/m/str")
 private String _title = "";  // never read by Java code — jvmStr() is the source of truth
 ```
 
-### One jvmRead() per render
+### One jvmRead () per render
+
 ```java
 Map<Obj, Obj> jvm = jvmRead();  // single roundtrip
 String a = jvmStr(jvm, "a");
@@ -405,6 +537,7 @@ List<String> c = jvmBody(jvm, "c");
 ```
 
 ### Anchor naming
+
 ```java
 // mtron: anchor=>top_middle  (URI, not string)
 // Java:  FloatingSurface.Anchor.TOP_MIDDLE
@@ -413,24 +546,28 @@ List<String> c = jvmBody(jvm, "c");
 ```
 
 ### Border defaults
+
 ```java
-if (this.style.border() == Border.none)
-    this.style.border(Border.continuous);  // Unicode box-drawing characters
+if(this.style.border() ==Border.none)
+        this.style.
+
+border(Border.continuous);  // Unicode box-drawing characters
 ```
 
 ## 8. Tool package (`isa.mach.type.ui.tool`)
 
-Tools are higher-level compositions of widgets for specific REPL interactions.
-They extend `AbstractWidget` and override `run()` with a modal input loop.  Unlike
-display-only widgets (which use `Widget.run()` default → float or inline `format()`),
-tools own their entire render cycle via `beginRedraw()` → `WidgetCanvas`.
+Tools are higher-level compositions of widgets for specific REPL interactions. They extend `AbstractWidget` and override
+`run()` with a modal input loop. Unlike display-only widgets (which use `Widget.run()` default → float or inline
+`format()`), tools own their entire render cycle via `beginRedraw()` → `WidgetCanvas`.
 
 ### Lifecycle
 
 ```java
 // In Console.java — triggered by Tab, Enter on code, colon commands, etc.
 ExplainTool explain = new ExplainTool(code.as());
-Utilities.runCursorLessWidget(explain, true);
+Utilities.
+
+runCursorLessWidget(explain, true);
 ```
 
 `Utilities.runCursorLessWidget()` hides the cursor, calls `widget.run()`, then calls
@@ -462,45 +599,160 @@ private void redrawStack() {
 ```
 
 `WidgetCanvas` handles two modes transparently:
-- **Absolute** (pane bounds set): ANSI cursor-positioning inside the pane's content area. Lines exceeding `contentMaxLines` are silently dropped.
-- **Relative** (no pane bounds): cursor-up to previous height → clear line → print → `\r\n`.  `previousHeight` is used to clear leftover lines from taller prior renders.
+
+- **Absolute** (pane bounds set): ANSI cursor-positioning inside the pane's content area. Lines exceeding
+  `contentMaxLines` are silently dropped.
+- **Relative** (no pane bounds): cursor-up to previous height → clear line → print → `\r\n`.  `previousHeight` is used
+  to clear leftover lines from taller prior renders.
 
 ### Tool → Widget dependencies
 
-| Tool | Widgets used |
-|---|---|
-| `ExplainTool` | `ProfileTool` → `TableWidget` (instruction table) |
-| `TraceTool` | `TableWidget` (cause chain + stack frames) |
-| `InstSelectorTool` | `SelectorWidget` → `TableWidget` (instruction pairs) |
-| `fURISelectorTool` | `SelectorWidget` → `TableWidget` (URI pairs) |
-| `TreeSelectTool` | `TreeWidget` (navigable tree) + `PanelWidget` (detail panel) |
+| Tool                   | Widgets used                                                     |
+|------------------------|------------------------------------------------------------------|
+| `ExplainTool`          | `ProfileTool` → `TableWidget` (instruction table)                |
+| `TraceTool`            | `TableWidget` (cause chain + stack frames)                       |
+| `InstSelectorTool`     | `SelectorWidget` → `TableWidget` (instruction pairs)             |
+| `fURISelectorTool`     | `SelectorWidget` → `TableWidget` (URI pairs)                     |
+| `TreeSelectTool`       | `TreeWidget` (navigable tree) + `PanelWidget` (detail panel)     |
+| `SwipePanelWidgetTool` | `PanelWidget` (obj display panel, docq + Highlighter formatting) |
 
 **Important:** These tools populate their `TableWidget`s via Java API (`addRow()`,
-`addMetadata()`).  They rely on the `sync()` guard pattern (section 2) to prevent
-data corruption — without it, `TableWidget.format()` → `sync()` would clear
-Java-populated rows and replace them with JVM-serialized representations that
-don't preserve the exact column structure.
+`addMetadata()`). They rely on the `sync()` guard pattern (section 2) to prevent data corruption — without it,
+`TableWidget.format()` → `sync()` would clear Java-populated rows and replace them with JVM-serialized representations
+that don't preserve the exact column structure.
 
 ### Selector vs SelectorWidget
 
 Two selection widgets exist with different rendering approaches:
 
-- **`Selector`** (older): Uses JLine's `Display.updateAnsi()` for rendering.  Navigates an attached widget's `rowString()` output.
-- **`SelectorWidget`** (newer): Uses `beginRedraw()` → `WidgetCanvas` for rendering.  Manages its own `TableWidget` with item pairs.  Preferred for new tool development.
+- **`Selector`** (older): Uses JLine's `Display.updateAnsi()` for rendering. Navigates an attached widget's
+  `rowString()` output.
+- **`SelectorWidget`** (newer): Uses `beginRedraw()` → `WidgetCanvas` for rendering. Manages its own `TableWidget` with
+  item pairs. Preferred for new tool development.
 
-### applyStyle() vs apply() — real-world footgun
+### applyStyle () vs apply () — real-world footgun
 
 ```java
 // WRONG — .apply() calls Obj.apply() (identity function — returns the Style, not the widget):
-widget.style().border(...).apply();
+widget.style().
+
+border(...).
+
+apply();
 // ^^ compiles, runs without error, but does NOT wire the style to the widget.
 //    ProfileTool.java line 63 still uses this pattern (as of 2026-07-26).
 
 // RIGHT — .applyStyle() calls stylable.style(this):
-widget.style().border(...).applyStyle();
+widget.
+
+style().
+
+border(...).
+
+applyStyle();
 ```
 
-The default `Obj.apply()` (no-arg) returns `this` — the `Style` object.  The return
-value is discarded, so the chain silently no-ops.  The compiler can't catch this
-because `Style extends MRec extends MObj implements Obj`, and `Obj` has
+The default `Obj.apply()` (no-arg) returns `this` — the `Style` object. The return value is discarded, so the chain
+silently no-ops. The compiler can't catch this because `Style extends MRec extends MObj implements Obj`, and `Obj` has
 `default Obj apply() { return this.apply(noobj()); }`.
+
+## 9. Graphitty — terminal markup DSL (`Graphitty.java`)
+
+Graphitty is a lightweight macro-to-ANSI preprocessor used throughout the UI layer. Tags are written `{{...}}` and are
+stripped by `Graphitty.strip()` for visual-length calculations. The DSL supports three families of tags:
+
+### Colour / effect tags
+
+| Tag                                                                                           | ANSI equivalent | Description                                                       |
+|-----------------------------------------------------------------------------------------------|-----------------|-------------------------------------------------------------------|
+| `{{X}}`                                                                                       | `\033[m`        | reset all attributes                                              |
+| `{{k}}` / `{{r}}` / `{{g}}` / `{{y}}` / `{{b}}` / `{{m}}` / `{{c}}` / `{{w}}`                 | `\033[30..37m`  | foreground: black, red, green, yellow, blue, magenta, cyan, white |
+| `{{d}}`                                                                                       | `\033[39m`      | default foreground                                                |
+| `{{[k]}}` / `{{[r]}}` / `{{[g]}}` / `{{[y]}}` / `{{[b]}}` / `{{[m]}}` / `{{[c]}}` / `{{[w]}}` | `\033[40..47m`  | background colours                                                |
+| `{{[X]}}`                                                                                     | `\033[49m`      | default background                                                |
+| `{{R}}` / `{{G}}` / `{{Y}}` / `{{B}}` / `{{M}}` / `{{C}}` / `{{W}}`                           | `\033[1;3xm`    | bold foregrounds                                                  |
+| `{{~}}`                                                                                       | `\033[3m`       | italics                                                           |
+| `{{_}}`                                                                                       | `\033[4m`       | underline                                                         |
+| `{{-}}`                                                                                       | `\033[9m`       | strikethrough                                                     |
+
+### Cursor / screen tags
+
+| Tag       | ANSI equivalent | Description                                  |
+|-----------|-----------------|----------------------------------------------|
+| `{{@}}`   | `\033[H`        | cursor home (row 1, col 1)                   |
+| `{{^N}}`  | `\033[NA`       | up N lines (e.g. `{{^5}}`; N=1 when omitted) |
+| `{{vN}}`  | `\033[NB`       | down N lines                                 |
+| `{{<N}}`  | `\033[ND`       | left N columns                               |
+| `{{>N}}`  | `\033[NC`       | right N columns                              |
+| `{{\|N}}` | `\033[NG`       | absolute column N (1-based)                  |
+| `{{-N}}`  | `\033[NH`       | absolute row N (1-based)                     |
+| `{{^<N}}` | `\033[NF`       | beginning of Nth previous line               |
+| `{{v<N}}` | `\033[NE`       | beginning of Nth next line                   |
+| `{{-X-}}` | `\033[2K`       | clear entire current line                    |
+| `{{X-}}`  | `\033[0K`       | clear from cursor to end of line             |
+| `{{-X}}`  | `\033[1K`       | clear from beginning of line to cursor       |
+| `{{XX}}`  | `\033[2J`       | clear entire screen                          |
+| `{{Xv}}`  | `\033[0J`       | clear from cursor to bottom of screen        |
+| `{{X^}}`  | `\033[1J`       | clear from top of screen to cursor           |
+| `{{(s)}}` | `\033[s`        | save cursor position                         |
+| `{{(e)}}` | `\033[u`        | restore cursor position                      |
+| `{{*}}`   | `\033[?25h`     | show cursor                                  |
+| `{{.}}`   | `\033[?25l`     | hide cursor                                  |
+
+### Stack and chaining
+
+Every opened tag is **pushed onto a stack**. Closing with `{{/rule}}` pops the most-recently-opened matching rule and
+restores the previous style. If the popped rule had a parent still on the stack, the parent's escape is re-emitted with
+a
+`\033[0;…` prefix so the parent style "wins" over the default reset.
+
+Tags separated by `&` are **chained** — `{{r&_}}` emits red-foreground (`\033[31m`)
+followed by underline (`\033[4m`), pushing both rules in left-to-right order.
+
+```java
+// Stack example — closing restores the previous colour:
+"{{B}}blue title{{/B}} and normal text"   // bold blue → reset → normal
+
+// Chaining example — multiple effects in one tag:
+        "{{r&_}}red underlined{{/r&_}}"            // red + underline → reset both
+
+// Combined:
+        "{{b}}a {{R}}bold red{{/R}} then back to blue{{/b}}."  // bold red → blue → normal
+```
+
+### Static helpers
+
+| Method                                  | Purpose                                                                                                                                                 |
+|-----------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `Graphitty.string(f, args...)`          | Convert a Graphitty format string to ANSI.  Used everywhere in widget `format()` methods.                                                               |
+| `Graphitty.strip(str)`                  | Remove all ANSI escapes (and Graphitty tags) to measure **visual length**.  Used by `Highlighter.visualLength()` and `WidgetCanvas` for width clipping. |
+| `Graphitty.out(stream, f, args...)`     | Write a Graphitty string directly to an output stream.  Used by `WidgetCanvas.finish()` for the final flush.                                            |
+| `Graphitty.writeToTerminal(f, args...)` | Write through the serialized terminal-writer bridge (FloatingSurface-safe).                                                                             |
+| `Graphitty.viewLength(str)`             | Alias for `strip(str).length()`.                                                                                                                        |
+
+### Typical widget usage
+
+Widgets emit **Graphitty-markup strings** from `format()`. The caller is responsible for converting them to ANSI before
+writing to the terminal:
+
+```java
+// In a widget format() method — return Graphitty markup:
+@Override
+public String format() {
+    return "{{b}}Welcome{{X}} to the {{w}}Machine{{X}}";
+}
+
+// At the call site — convert to ANSI and flush:
+Graphitty.
+
+out(terminal.output(),widget.
+
+format());
+// or: terminal.writer().write(Graphitty.string(widget.format()));
+```
+
+`WidgetCanvas` handles this automatically: `canvas.line(content)` stores the raw markup, and `canvas.finish()` passes
+the entire buffer through `Graphitty.out()`
+in one batch.  `canvas.statusLine()` pre-converts its argument with
+`Graphitty.string()` immediately (because it needs to measure the stripped length for pane-width clipping in absolute
+mode).

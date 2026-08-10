@@ -93,6 +93,26 @@ public class Utilities {
         return wrapped.isEmpty() ? List.of("") : wrapped;
     }
 
+    /**
+     * Clip text to {@code maxW} visible characters, appending {@code …} when
+     * truncated.  Preserves leading Graphitty codes so the clip marker inherits
+     * the same colour.  A {@code maxW <= 0} means no clipping.
+     *
+     * @param text the text to clip (may contain Graphitty markup)
+     * @param maxW maximum visible characters before the ellipsis
+     * @return original text or a clipped version ending in {@code …}
+     */
+    public static String textClip(final String text, final int maxW) {
+        // Collapse newlines to spaces so table rows stay single-line.
+        final String collapsed = text.replace('\n', ' ').replace('\r', ' ');
+        if (maxW <= 0 || Highlighter.visualLength(collapsed) <= maxW) return collapsed;
+        final Matcher m = LEADING_CODES.matcher(collapsed);
+        final String leadIn = m.find() ? m.group() : "";
+        final String rest = leadIn.isEmpty() ? collapsed : collapsed.substring(leadIn.length());
+        final String stripped = Highlighter.unformat(rest);
+        return leadIn + stripped.substring(0, Math.max(1, maxW - 1)) + "…";
+    }
+
     public static void runCursorLessWidget(final Widget<?> widget, final boolean close) {
         int height=widget.height();
         Graphitty.log(Widget.class).none("{{.}}");
