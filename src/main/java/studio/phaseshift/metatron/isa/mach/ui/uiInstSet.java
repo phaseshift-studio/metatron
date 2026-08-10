@@ -29,6 +29,7 @@ import studio.phaseshift.metatron.isa.mach.type.ui.Widget;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Console;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Editor;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.menu.ColonMenu;
+import studio.phaseshift.metatron.isa.mach.type.ui.tool.SwipePanelWidgetTool;
 import studio.phaseshift.metatron.isa.mach.type.ui.tool.TreeSelectTool;
 import studio.phaseshift.metatron.isa.mach.type.ui.widget.*;
 import studio.phaseshift.metatron.util.MTronException;
@@ -92,6 +93,8 @@ public class uiInstSet extends AbstractInstSet {
     public static Type UI_PANEL_TYPE;
     public static final fURI UI_TREE_SELECT_TOOL_TID = UI_WIDGET_TID.extend("tree_select");
     public static Type UI_TREE_SELECT_TOOL_TYPE;
+    public static final fURI UI_SWIPE_PANEL_TID = UI_WIDGET_TID.extend("swipe_panel");
+    public static Type UI_SWIPE_PANEL_TYPE;
     public static final fURI UI_ANCHOR_TID = UI_ISA_TID.extend("anchor");
     public static Type UI_ANCHOR_TYPE;
     public static final fURI UI_CONSOLE_TID = UI_ISA_TID.extend("console");
@@ -260,7 +263,17 @@ public class uiInstSet extends AbstractInstSet {
                                         uri(MAX), "the max depth to traverse",
                                         uri(CODE).maybe(), "instruction called on Enter with the selected node's rel::T (default: identity)",
                                         uri("mini").maybe(), "instruction called on each tree node's obj to produce a suffix label (default: identity)"),
-                                "an interactive tree browser: arrow keys navigate, Enter fires code on selected node, right/left expand/contract, mini labels each node")),
+                                "an interactive tree browser: arrow keys navigate, Enter fires code on selected node, right/left expand/contract, mini labels each node"),
+                        docWrap(UI_SWIPE_PANEL_TYPE = Type.Builder.build()
+                                        .tid(UI_WIDGET_TID)
+                                        .vid(UI_SWIPE_PANEL_TID)
+                                        .isaPredicate(rec(uri(OBJ).maybe().asUri(), LST_TYPE))
+                                        .constructor(ctor -> new SwipePanelWidgetTool(ctor.asRec().jvm(), UI_SWIPE_PANEL_TID, ctor.vid()))
+                                        .create(),
+                                "lst of objs",
+                                "a swipe panel widget tool",
+                                Map.of(uri(OBJ), "the list of objs to swipe through"),
+                                "a left-right swipe panel: arrow keys navigate, pgup/pgdn jump ±5, ctrl-d quits; displays each obj in a PanelWidget with docq+Highlighter formatting")),
                 uri(INST), lst(
                         instC(AS_INST_TID.dom(UI_TREE_TID).rng(STR_TID), lst(STR_TYPE), (lhs, inst) -> str(((Widget<?>) lhs).format())),
                         docWrap(instC(UI_INST_TID.extend("display").dom(UI_WIDGET_TID).rng(NOOBJ_TID.zero()), lst(), (lhs, inst) -> {

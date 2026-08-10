@@ -48,8 +48,7 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.type.Bool.*;
 import static studio.phaseshift.metatron.isa.m.type.Bytes.BYTES_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Code.CODE_TYPE;
@@ -830,7 +829,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
         private static final ObjSerializer<String> SERIALIZER = ObjmtronSerializer.singleNoClip();
 
         public static fURI specificTypeId(final Obj obj) {
-            return obj.isType() && null != obj.vid() ? obj.vid() : obj.tid();
+            return obj.isType() && obj.hasVID() ? obj.vid() : obj.tid();
         }
 
         public static Type specificType(final Obj obj) {
@@ -1115,7 +1114,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                     instC(RANGE_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(INT_TYPE, isa_(INT_TYPE).else_(jnt(0)).tryToInst()), (lhs, inst) -> lhs.take(cInt.of(inst.arg(0).intValue())).get1().take(cInt.of(inst.arg(1).intValue())).get0()),
                     docWrap(instC(ORDER_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()).q(BLOCK, null), lst(ALL_TYPE), (lhs, inst) -> lhs.isNoObj() ? noobj() : objs(lhs.stream().sorted(new ObjSelectComparator(inst.arg(0))))),
                             "any objs", "the objs sorted by the arg obj", Map.of(jnt(0), "the obj to sort by"), "a sorting function \\(f(X)\\to X'\\)"),
-                  /*  instC(M_ISA_INST_TID.extend("via").dom(A).rng(B), lst(REL_TYPE), (lhs, inst) -> {
+                    instC(M_ISA_INST_TID.extend("via").dom(A).rng(B), lst(REL_TYPE), (lhs, inst) -> {
                         Rel currentTransform = inst.arg(0).asRel();
                         Obj currentObj = lhs;
                         while (!currentTransform.isNoObj()) {
@@ -1128,7 +1127,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             }
                         }
                         throw MTronException.of("transformation path must be a chain rel of types: %s", inst.arg(0));
-                    }),*/
+                    }),
                     instC(AS_INST_TID.dom(A).rng(NOOBJ_TID.zero()), lst(), (lhs, inst) -> noobj()),
                     docWrap(instC(AS_INST_TID.dom(A).rng(B), lst(ALL_TYPE), (lhs, inst) -> inst.arg(0).isType() ? lhs.as(inst.arg(0).asType()) : fail(MTronException.of("%s is not a %s", lhs, inst.arg(0)))),
                             "any obj", "the lhs obj as the arg type", Map.of(jnt(0), "the type to cast to"), "a type casting function \\(f(x)\\to x\\)"),
@@ -1219,8 +1218,8 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             "maybe an obj", "the lhs obj else the arg obj", Map.of(jnt(0), "the rhs obj is the lhs is noobj"), "\\[ f(\\tt{lhs}) = \\left\\{ \\begin{aligned} \\tt{lhs} & \\quad \\text{if } \\tt{lhs} \\neq \\emptyset \\\\ \\tt{arg}_0 & \\quad \\text{otherwise.} \\end{aligned} \\right. \\]"),// TODO: rec args needs resolution on generics connected
                     docWrap(instC(IS_INST_TID.dom(A.maybe()).rng(A.maybe()), lst(isa_(T(BOOL_TID)).else_(BOOL_FALSE).tryToInst()), (lhs, inst) -> inst.arg(0).orElse(BOOL_FALSE).boolValue() ? lhs : noobj()),
                             "any obj", "the lhs obj if arg is true", Map.of(jnt(0), "filter lhs if false"), "filters the lhs obj"), // TODO: generics are not working for some reason
-                    docWrap(instC(ISA_INST_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(ALL_TYPE), (lhs, inst) -> lhs.test(inst.arg(0)) ? lhs : noobj()),
-                            "an obj to match", "the unaltered obj if arg matches", Map.of(jnt(0), "filter lhs if doesn't match arg"), "a filter function \\(f(x)\\to \\{\\emptyset \\cup x\\}\\)"),
+                    //   docWrap(instC(ISA_INST_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(ALL_TYPE), (lhs, inst) -> lhs.test(inst.arg(0)) ? lhs : noobj()),
+                    //        "an obj to match", "the unaltered obj if arg matches", Map.of(jnt(0), "filter lhs if doesn't match arg"), "a filter function \\(f(x)\\to \\{\\emptyset \\cup x\\}\\)"),
                     docWrap(instC(ISA_INST_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(ALL_TYPE), (lhs, inst) -> lhs.test(inst.arg(0)) ? lhs : noobj()),
                             "an obj to match", "the unaltered obj if arg matches", Map.of(jnt(0), "filter lhs if doesn't match arg"), "a filter function \\(f(x)\\to \\{\\emptyset \\cup x\\}\\)"),
                     docWrap(instC(SORTA_INST_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(ALL_TYPE), (lhs, inst) -> lhs.testNominally(inst.arg(0)) ? lhs : noobj()),

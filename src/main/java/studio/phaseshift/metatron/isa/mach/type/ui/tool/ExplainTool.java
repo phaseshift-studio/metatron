@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -28,7 +28,6 @@ import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.Border;
-import studio.phaseshift.metatron.isa.mach.type.ui.console.Highlighter;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.mach.type.ui.widget.*;
@@ -36,12 +35,11 @@ import studio.phaseshift.metatron.isa.mach.type.ui.widget.*;
 import java.util.*;
 
 import static org.jline.keymap.KeyMap.key;
-import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 
 /**
  * Explain - A code explanation widget with proper nested window support.
- *
+ * <p>
  * Features:
  * - Navigate cells with arrow keys
  * - Press Enter on 'args' column to drill into nested code
@@ -135,13 +133,14 @@ public class ExplainTool extends AbstractWidget<ExplainTool> {
     @Override
     public void run() {
         // Enter raw mode
+        terminal.writer().print("\n");
         savedAttributes = terminal.enterRawMode();
         terminal.puts(InfoCmp.Capability.keypad_xmit);
         terminal.puts(InfoCmp.Capability.cursor_invisible);
         terminal.writer().flush();
 
         // Don't clear screen - draw below current position
-        // Get current cursor position as our base
+        // Get current cursor position as the base
         // The row where we start drawing (below prompt)
         //int baseRow = 0;  // We'll draw relative to current position
 
@@ -149,10 +148,9 @@ public class ExplainTool extends AbstractWidget<ExplainTool> {
 
         // Main event loop
         this.running = true;
-        BindingReader bindingReader = new BindingReader(terminal.reader());
+        BindingReader bindingReader = new BindingReader(this.terminal.reader());
         KeyMap<Action> keyMap = buildKeyMap();
-
-        while (running && !stack.isEmpty()) {
+        while (this.running && !this.stack.isEmpty()) {
             redrawStack();
             Action action = bindingReader.readBinding(keyMap);
             handleAction(action);
@@ -179,7 +177,7 @@ public class ExplainTool extends AbstractWidget<ExplainTool> {
         keyMap.bind(Action.LEFT_COL, key(terminal, InfoCmp.Capability.key_left));
         keyMap.bind(Action.QUIT, "\u0004"); // Ctrl-D
         keyMap.bind(Action.SELECT, Utilities.enter_key);
-        keyMap.bind(Action.SPACE," ");
+        keyMap.bind(Action.SPACE, " ");
         return keyMap;
     }
 
@@ -280,27 +278,9 @@ public class ExplainTool extends AbstractWidget<ExplainTool> {
             pushLevel(selectedArg.asCode(), newOffsetX, newOffsetY, current.selectedRow, current.selectedCol);
         } else {
             // Non-code arg → show in panel popup
-            current.panelPopup = buildArgDetailPanel(selectedArg);
+            current.panelPopup = CardUtil.popup(selectedArg);
         }
     }
-
-    /**
-     * Create a styled popup PanelWidget with green border and blue title.
-     * All popup panels flow through this factory for consistent look.
-     */
-    private PanelWidget makePopupPanel(String title, String body) {
-        PanelWidget panel = new PanelWidget("{{b}}" + title + "{{\\b}}", body);
-        panel.style().border(Border.continuous.foreground("{{g}}")).applyStyle();
-        return panel;
-    }
-
-    /**
-     * Build a panel showing a single non-code argument value.
-     */
-    private PanelWidget buildArgDetailPanel(Obj arg) {
-        return buildObjWithDocsPanel(arg, arg.tid() + "{{\\b}}{{m}}::T{{\\m}}");
-    }
-
 
     private void handleCompile(ExplainLevel current) {
         this.popLevel();
@@ -317,15 +297,15 @@ public class ExplainTool extends AbstractWidget<ExplainTool> {
         int row = current.selectedRow;
 
         switch (header) {
-            case "op"    -> handleOpSelect(current, row);
-            case "dom"   -> handleDomRngSelect(current, row, true);
-            case "rng"   -> handleDomRngSelect(current, row, false);
-            case "args"  -> handleArgsSelect(current, row);
-            case "f"     -> handleFSelect(current, row);
-            case "desc"  -> handleDescSelect(current, row);
+            case "op" -> handleOpSelect(current, row);
+            case "dom" -> handleDomRngSelect(current, row, true);
+            case "rng" -> handleDomRngSelect(current, row, false);
+            case "args" -> handleArgsSelect(current, row);
+            case "f" -> handleFSelect(current, row);
+            case "desc" -> handleDescSelect(current, row);
             case "c_dom" -> handleCoefSelect(current, row, true);
             case "c_rng" -> handleCoefSelect(current, row, false);
-            default      -> { /* unhandled column */ }
+            default -> { /* unhandled column */ }
         }
     }
 
@@ -336,7 +316,7 @@ public class ExplainTool extends AbstractWidget<ExplainTool> {
         if (inst == null) return;
         String title = Graphitty.string("{{b}}%s{{\\b}}{{m}}::T{{\\m}} refines {{b}}/m/inst{{\\b}}{{m}}::T{{\\m}}",
                 inst.tid().basePath());
-        current.panelPopup = buildObjWithDocsPanel(inst, title);
+        current.panelPopup = CardUtil.popup(title, CardUtil.bodyOf(inst));
     }
 
     // ── dom / rng ─────────────────────────────────────────────────────
@@ -353,7 +333,7 @@ public class ExplainTool extends AbstractWidget<ExplainTool> {
             title = Graphitty.string("{{b}}%s{{\\b}}{{m}}::T{{\\m}} refines {{b}}%s{{\\b}}{{m}}::T{{\\m}}%s",
                     type.vid(), type.tid(), suffix);
         }
-        current.panelPopup = buildObjWithDocsPanel(type, title);
+        current.panelPopup = CardUtil.popup(title, CardUtil.bodyOf(type));
     }
 
     // ── args ──────────────────────────────────────────────────────────
@@ -362,7 +342,7 @@ public class ExplainTool extends AbstractWidget<ExplainTool> {
         Poly<?, ?> args = getMetadataArgs(current, row);
         if (args == null || args.isEmpty()) {
             String kind = (args != null && args.isRec()) ? "rec" : "lst";
-            current.panelPopup = makePopupPanel(kind + " arguments", "{{y}}no arguments{{X}}");
+            current.panelPopup = CardUtil.popup(kind + " arguments", "{{y}}no arguments{{X}}");
             return;
         }
 
@@ -377,7 +357,7 @@ public class ExplainTool extends AbstractWidget<ExplainTool> {
                 int newOffsetY = current.offsetY + current.selectedRow + 3;
                 pushLevel(singleArg.asCode(), newOffsetX, newOffsetY, current.selectedRow, current.selectedCol);
             } else {
-                current.panelPopup = buildArgDetailPanel(singleArg);
+                current.panelPopup = CardUtil.popup(singleArg);
             }
         } else {
             // Multiple args — show selection table
@@ -434,9 +414,9 @@ public class ExplainTool extends AbstractWidget<ExplainTool> {
         if (inst == null) return;
 
         if (!inst.hasf()) {
-            current.panelPopup = makePopupPanel("function",
+            current.panelPopup = CardUtil.popup("function",
                     "{{y}}No function registered for this instruction.{{X}}\n" +
-                    "The instruction may be resolved at runtime or defined externally.");
+                            "The instruction may be resolved at runtime or defined externally.");
             return;
         }
 
@@ -451,10 +431,10 @@ public class ExplainTool extends AbstractWidget<ExplainTool> {
 
             String body = Graphitty.string(
                     "{{m}}Java Implementation{{X}}\n" +
-                    "{{w}}class:{{X}} %s\n" +
-                    "{{w}}documentation:{{X}}\n%s",
+                            "{{w}}class:{{X}} %s\n" +
+                            "{{w}}documentation:{{X}}\n%s",
                     className, docBody);
-            current.panelPopup = makePopupPanel(inst.tid().name() + " <j>", body);
+            current.panelPopup = CardUtil.popup(inst.tid().name() + " <j>", body);
         } else {
             // <m> — mtron code → push new ExplainLevel
             Obj mtronObj = inst.getMtronFunctionObj();
@@ -463,10 +443,10 @@ public class ExplainTool extends AbstractWidget<ExplainTool> {
                 int newOffsetY = current.offsetY + current.selectedRow + 3;
                 pushLevel(mtronObj.asCode(), newOffsetX, newOffsetY, current.selectedRow, current.selectedCol);
             } else if (mtronObj.isNoObj()) {
-                current.panelPopup = makePopupPanel("function",
+                current.panelPopup = CardUtil.popup("function",
                         "{{y}}mtron function object is empty.{{X}}");
             } else {
-                current.panelPopup = makePopupPanel("function <m>",
+                current.panelPopup = CardUtil.popup("function <m>",
                         mtronObj.toCleanString());
             }
         }
@@ -478,7 +458,7 @@ public class ExplainTool extends AbstractWidget<ExplainTool> {
         Inst inst = getMetadataInst(current, row);
         if (inst == null) return;
         Inst.Form form = Inst.Form.of(inst);
-        current.panelPopup = makePopupPanel(
+        current.panelPopup = CardUtil.popup(
                 form.name() + " instruction",
                 "{{w}}" + form.description + "{{X}}");
     }
@@ -496,75 +476,24 @@ public class ExplainTool extends AbstractWidget<ExplainTool> {
         String body = Graphitty.string(
                 "{{w}}sugar:{{X}}  %s\n{{w}}range:{{X}} %s",
                 sugar, desugar);
-        current.panelPopup = makePopupPanel(label, body);
-    }
-
-    // =====================================================================
-    // Popup builders
-    // =====================================================================
-
-    /**
-     * Build a unified popup panel for an Obj: documentation (if a docq
-     * exists) or the highlighted Obj (if not).  Identity is carried in
-     * the title bar by the caller.
-     */
-    private PanelWidget buildObjWithDocsPanel(Obj obj, String title) {
-        StringBuilder sb = new StringBuilder();
-
-        // ── Documentation or fallback ───────────────────────────────
-        fURI key = docqKey(obj);
-        if (key != null) {
-            Obj docObj = Router.readFromSpace(key.addQ(QCollection.DOCQ));
-            if (docObj.isRec() && !QCollection.isNoDocs(docObj)) {
-                QCollection.Docs docs = new QCollection.Docs(docObj.asRec());
-                // desc
-                String desc = docs.description();
-                if (desc != null && !desc.isBlank() && !desc.equals(QCollection.NO_DOCS_STRING)) {
-                    sb.append("{{w}}").append(desc).append("{{X}}");
-                }
-                // args — let Highlighter color it
-                Poly<?, ?> docsArgs = docs.args();
-                if (docsArgs != null && !docsArgs.isEmpty()) {
-                    sb.append(sb.length() > 0 ? "\n\n{{m}}args:{{X}}\n" : "{{m}}args:{{X}}\n")
-                      .append(Highlighter.format(docsArgs));
-                }
-                // examples — white
-                List<String> examples = docs.examples();
-                if (!examples.isEmpty()) {
-                    sb.append(sb.length() > 0 ? "\n\n{{m}}examples:{{X}}\n" : "{{m}}examples:{{X}}\n");
-                    for (int i = 0; i < examples.size(); i++) {
-                        sb.append("  {{w}}").append(examples.get(i)).append("{{X}}");
-                        if (i < examples.size() - 1) sb.append("\n");
-                    }
-                }
-                return makePopupPanel(title, sb.toString());
-            }
-        }
-
-        // No docq — show the highlighted Obj
-        sb.append(Highlighter.format(obj));
-        return makePopupPanel(title, sb.toString());
-    }
-
-    /** Find a usable URI for docq lookup from the given Obj. */
-    private static fURI docqKey(Obj obj) {
-        if (obj.isType() && obj.vid() != null && !obj.vid().isGeneric()) return obj.vid();
-        if (obj.isInst()) return obj.tid().basePath();
-        if (obj.vid() != null && !obj.vid().isGeneric()) return obj.vid().noQ();
-        return null;
+        current.panelPopup = CardUtil.popup(label, body);
     }
 
     // =====================================================================
     // Metadata helpers
     // =====================================================================
 
-    /** Get the Inst from metadata slot 0 (or 5, both store the Inst). */
+    /**
+     * Get the Inst from metadata slot 0 (or 5, both store the Inst).
+     */
     private Inst getMetadataInst(ExplainLevel level, int row) {
         Object meta = level.table.rowMetadata(row).get(0);
         return meta instanceof Inst i ? i : null;
     }
 
-    /** Get the args Poly from metadata slot 3. */
+    /**
+     * Get the args Poly from metadata slot 3.
+     */
     private Poly<?, ?> getMetadataArgs(ExplainLevel level, int row) {
         Object meta = level.table.rowMetadata(row).get(3);
         return meta instanceof Poly<?, ?> p ? p : null;
@@ -595,20 +524,20 @@ public class ExplainTool extends AbstractWidget<ExplainTool> {
         final WidgetCanvas canvas = beginRedraw(totalHeightUsed);
 
         for (int levelIdx = 0; levelIdx < levels.size(); levelIdx++) {
-            final ExplainLevel level   = levels.get(levelIdx);
-            final boolean isTop        = (levelIdx == levels.size() - 1);
-            final ExplainLevel child   = (levelIdx + 1 < levels.size()) ? levels.get(levelIdx + 1) : null;
-            final boolean hasChild     = child != null && child.spawnRow >= 0;
-            final List<String> lines   = level.profile.rowStrings();
-            final String dimColor      = isTop ? "" : "{{w}}";
-            final String indent        = " ".repeat(level.offsetX);
+            final ExplainLevel level = levels.get(levelIdx);
+            final boolean isTop = (levelIdx == levels.size() - 1);
+            final ExplainLevel child = (levelIdx + 1 < levels.size()) ? levels.get(levelIdx + 1) : null;
+            final boolean hasChild = child != null && child.spawnRow >= 0;
+            final List<String> lines = level.profile.rowStrings();
+            final String dimColor = isTop ? "" : "{{w}}";
+            final String indent = " ".repeat(level.offsetX);
 
             for (int lineIdx = 0; lineIdx < lines.size(); lineIdx++) {
-                final String line      = lines.get(lineIdx);
-                final int dataLineIdx  = lineIdx - 2;
-                final boolean isDataRow  = dataLineIdx >= 0 && dataLineIdx < level.dataRowCount();
-                final boolean isSelected = isTop  && isDataRow && dataLineIdx == level.selectedRow;
-                final boolean isSpawn    = !isTop && hasChild  && isDataRow && dataLineIdx == child.spawnRow;
+                final String line = lines.get(lineIdx);
+                final int dataLineIdx = lineIdx - 2;
+                final boolean isDataRow = dataLineIdx >= 0 && dataLineIdx < level.dataRowCount();
+                final boolean isSelected = isTop && isDataRow && dataLineIdx == level.selectedRow;
+                final boolean isSpawn = !isTop && hasChild && isDataRow && dataLineIdx == child.spawnRow;
 
                 final String content;
                 if (isSelected) {
