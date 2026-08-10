@@ -60,8 +60,6 @@ color green "\{\}"
 color blue "[^-][<][^=]([^>])*[>][^-]^(=>)]"
 icolor blue "[,a-z0-9_/-]+::"
 color green "::"
-### type
-color magenta "::T"
 ### uri <>
 color blue "[<][^>]*[>]"
 color green "<" ">"
@@ -69,11 +67,6 @@ color green "<" ">"
 icolor cyan "</?(<|>|[a-z]|[0-9]|/|_|-|:|\+|#|\.|\s)*>\s*=>"
 icolor cyan "/?(<|>|\+|#|[a-z]|[0-9]|/|_|-|:|\.)*\s*=>"
 color yellow "\$\{[^}]*\}" "<="
-### str
-color yellow "[\"][^\"]*[\"]"
-color yellow "['][^']*[']"
-color yellow start="\"\"\"" end="\"\"\""
-color gray "<[^>]>"
 ### fail
 color red "([a-z]|[0-9]|/)*fail::"
 color red "(=>)?X=>"
@@ -83,8 +76,15 @@ color magenta "=>" ">-" "-<" "==" "_/" "\\_" "=?=" ">>="
 color green "\(" "\)" "\[" "\]" ","
 ### noobj 
 color magenta "noobj"
+### type
+color magenta "::T"
 ### @vid
 color yellow "@<(/|[a-zA-Z0-9]|\.|#|\+| |:|-|_|\?|\^)+>" "@(/|[a-zA-Z0-9]|:|#|\+|-|_|\?|\^)+"
+### str
+color yellow "[\"][^\"]*[\"]"
+color yellow "['][^']*[']"
+color yellow start="\"\"\"" end="\"\"\""
+color gray "<[^>]>"
 ### comments
 color gray start="\[--" end="--]"
 color gray start="\[==" end="==]"

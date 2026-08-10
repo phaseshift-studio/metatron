@@ -42,7 +42,6 @@ import studio.phaseshift.metatron.isa.mach.type.ui.console.StatusLine;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.CommonUtil;
-import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.io.IOException;
@@ -67,6 +66,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.mach.type.thread.VirtualThread.virtual;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /*
@@ -435,8 +435,12 @@ public class ConceptFeature extends AbstractFeature {
             }
             // newConcepts.addAll(thoughtConcepts);
         }
-        if (!newConcepts.isEmpty())
-            this.injectConceptRecommendations(agent, newConcepts);
+        if (!newConcepts.isEmpty()) {
+            docWrap(virtual(instLambda((a, b) -> {
+                this.injectConceptRecommendations(agent, newConcepts);
+                return noobj();
+            })), "updating concept graph").apply();
+        }
     }
 
     // =========================================================================

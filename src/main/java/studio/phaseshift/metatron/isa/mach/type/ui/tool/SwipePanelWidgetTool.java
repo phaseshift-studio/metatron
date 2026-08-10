@@ -59,8 +59,8 @@ public class SwipePanelWidgetTool extends AbstractWidget<SwipePanelWidgetTool> {
     private int selectorItemIndex = -1;  // which item the table was built for
     private TableWidget selectorTable;
     private int selectorRow = 0;
-    private boolean selectorFocused = false; // true after first Enter
-    private PanelWidget drillPopup;
+    private boolean selectorFocused = false; // true after ↑↓, cleared by ←→
+    private Widget<?> drillPopup;
 
     private enum Action {
         QUIT, NEXT, PREV, PAGE_DOWN, PAGE_UP, UP_ROW, DOWN_ROW, SELECT
@@ -145,44 +145,33 @@ public class SwipePanelWidgetTool extends AbstractWidget<SwipePanelWidgetTool> {
             return;
         }
 
-        // ── Selector table focused (second Enter already pressed) ────
-        if (selectorFocused) {
+        // ── Selector table interaction ───────────────────────────────
+        if (selectorTable != null) {
             switch (action) {
+                // ↑↓ show the pointer at row 0 on first press; navigate thereafter
                 case UP_ROW:
-                    selectorRow = Math.max(0, selectorRow - 1);
+                    if (selectorFocused)
+                        selectorRow = Math.max(0, selectorRow - 1);
+                    selectorFocused = true;
                     return;
                 case DOWN_ROW:
-                    selectorRow = Math.min(selectorRow + 1,
-                            selectorTable.rows().size() - 1);
+                    if (selectorFocused)
+                        selectorRow = Math.min(selectorRow + 1,
+                                selectorTable.rows().size() - 1);
+                    selectorFocused = true;
                     return;
                 case SELECT: {
                     final Obj drillObj = CardUtil.predicateValueAt(selectorTable, selectorRow);
                     if (drillObj != null) {
-                        drillPopup = CardUtil.popup(drillObj);
+                        drillPopup = CardUtil.explorerCard(drillObj);
                     }
                     return;
                 }
-                case QUIT:
-                    selectorFocused = false;
-                    return;
-                // ← → pgup/pgdn stay in focus — no-op
+                // ← → pgup/pgdn clear pointer and navigate items
                 case NEXT, PREV, PAGE_DOWN, PAGE_UP:
-                    return;
-                default:
-                    return;
-            }
-        }
-
-        // ── Selector table present but not yet focused ───────────────
-        if (selectorTable != null) {
-            switch (action) {
-                case SELECT:
-                    selectorFocused = true;
-                    return;
-                case NEXT, PREV, PAGE_DOWN, PAGE_UP:
-                    // Swipe navigation — clear selector state
                     selectorTable = null;
                     selectorRow = 0;
+                    selectorFocused = false;
                     break;
                 case QUIT:
                     running = false;
@@ -253,17 +242,13 @@ public class SwipePanelWidgetTool extends AbstractWidget<SwipePanelWidgetTool> {
         final String hint;
         if (drillPopup != null) {
             hint = "{{w}}enter/ctrl-d{{g}}:dismiss{{X}}";
-        } else if (selectorFocused) {
-            hint = String.format(
-                    "{{w}}[%d/%d] {{g}}↕{{g}}:field {{w}}enter{{g}}:drill {{w}}ctrl-d{{g}}:back{{X}}",
-                    currentIndex + 1, (int) this.at(OBJ).asLst().count());
         } else if (selectorTable != null) {
             hint = String.format(
-                    "{{w}}[%d/%d] {{g}}↔{{g}}:nav {{w}}pgup/pgdn{{g}}:±5 {{w}}enter{{g}}:focus {{w}}ctrl-d{{g}}:quit{{X}}",
+                    "{{w}}[%d/%d] {{w}}↔{{g}}:swipe {{w}}↕{{g}}:field {{w}}enter{{g}}:drill {{w}}ctrl-d{{g}}:quit{{X}}",
                     currentIndex + 1, (int) this.at(OBJ).asLst().count());
         } else {
             hint = String.format(
-                    "{{w}}[%d/%d] {{g}}↔{{g}}:nav {{w}}pgup/pgdn{{g}}:±5 {{w}}ctrl-d{{g}}:quit{{X}}",
+                    "{{w}}[%d/%d] {{w}}↔{{g}}:swipe {{w}}pgup/pgdn{{g}}:±5 {{w}}ctrl-d{{g}}:quit{{X}}",
                     currentIndex + 1, (int) this.at(OBJ).asLst().count());
         }
         canvas.line(hint);
@@ -283,16 +268,24 @@ public class SwipePanelWidgetTool extends AbstractWidget<SwipePanelWidgetTool> {
      */
     private void renderSelectorTable(final WidgetCanvas canvas) {
         final List<String> lines = selectorTable.rowStrings();
-        int dataRowCount = 0;
+        final String divider = "{{b}}" + Border.continuous.leftSide();
+        final int dataRows = selectorTable.rows().size();
 
+        // Count total divider-bearing lines; data rows are the last 'dataRows' of them.
+        int totalMatches = 0;
         for (String line : lines) {
-            // Data rows are the lines containing the divider ({{g}}│).
-            // Count them to map selectorRow without guessing header offsets.
-            if (line.contains("{{g}}│")) {
-                if (selectorFocused && dataRowCount == selectorRow) {
-                    line = line.replaceFirst("\\{\\{g\\}\\}│", "{{r}}>");
+            if (line.contains(divider)) totalMatches++;
+        }
+        final int skip = totalMatches - dataRows; // header, header-divider, etc.
+
+        int matchCount = 0;
+        for (String line : lines) {
+            if (line.contains(divider)) {
+                final int dataRow = matchCount - skip;
+                if (selectorFocused && dataRow >= 0 && dataRow == selectorRow) {
+                    line = line.replaceFirst("\\{\\{b\\}\\}" + Border.continuous.leftSide(), "{{r}}>");
                 }
-                dataRowCount++;
+                matchCount++;
             }
             canvas.line(line);
         }
