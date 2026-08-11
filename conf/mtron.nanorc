@@ -35,7 +35,7 @@ color green "=>"
 icolor yellow "0x([0-9]|[A-F]|[a-f])+"
 color yellow,underline "0x"
 ### bool
-color yellow "(true)|(false)"
+color yellow "(^|[^/])(true|false)([^/]|$)"
 # qProc keys
 icolor cyan "(|#|\+|[a-z]|-|_|\{.\})+(=|<=)(?!>)"
 icolor blue "=([a-z]|[0-9]|\.|_|-|/|#|\+)+"

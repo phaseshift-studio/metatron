@@ -281,6 +281,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                     .option(LineReader.Option.AUTO_FRESH_LINE, true)
                     .option(LineReader.Option.HISTORY_IGNORE_DUPS, true)
                     .option(LineReader.Option.DISABLE_EVENT_EXPANSION, true)
+                    .option(LineReader.Option.MOUSE, false)
                     .variable(LineReader.SECONDARY_PROMPT_PATTERN, Graphitty.string("{{-X&v1&^1&m}}     {{g}}| {{X}}"))
                     .variable(LineReader.INDENTATION, 0)
                     .completer(new MCompleter(this))
@@ -1192,9 +1193,10 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                         ? "{{y}}display stack trace / type table {{g}}[y/N/t]{{y}}?{{X}} "
                         : "{{y}}display stack trace {{g}}[y/N]{{y}}?{{X}} ";
                 final String response = this.reader.readLine(Highlighter.format(prompt));
-                if (response.trim().equalsIgnoreCase("y")) {
+                // null → Ctrl-D / EOF at the prompt; treat as "no"
+                if (null != response && response.trim().equalsIgnoreCase("y")) {
                     e.printStackTrace();
-                } else if (isTypeMismatch && response.trim().equalsIgnoreCase("t")) {
+                } else if (null != response && isTypeMismatch && response.trim().equalsIgnoreCase("t")) {
                     final TypeMismatchException tme = (TypeMismatchException) e;
                     terminal.writer().write("\n");
                     final TypeDiffTool widget = new TypeDiffTool(tme.instance(), tme.type());
@@ -1248,110 +1250,77 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
         private CustomWidgets(final LineReader reader) {
             super(reader);
             getKeyMap().bind((Widget) () -> {
-                BootLoader.getExecutor().elements().filter(r -> Router.readFromSpace(r.first().uriValue().q(DOCQ_PATTERN)).toString().contains("agent")).forEach(r -> ((mThread) r.second()).stop());
+                Console.this.at("menu/stop-agents").apply(noobj());
                 return true;
             }, ctrl('d'));
             getKeyMap().bind((Widget) () -> {
-                final String current = this.reader.getBuffer().toString();
-                try {
-                    final String formatted = ObjmtronSerializer.parse(current).toString();
-                    // Replace the buffer and let JLine's own display engine erase the old
-                    // content and draw the new.  The old manual erase loop counted actual
-                    // '\n' characters, which broke when COLUMNS < terminal width caused
-                    // the input to visually wrap across more rows than the loop knew about.
+                Console.this.at("menu/format").apply(noobj());
+                return true;
+            }, alt('f'));
+            /// CYCLE TO NEXT PANE (Alt+N)
+            getKeyMap().bind((Widget) () -> {
+                if (Console.this.splitMode) {
+                    Console.this.at("menu/next-pane").apply(noobj());
                     this.reader.getBuffer().clear();
-                    this.reader.getBuffer().write(formatted);
-                    // Returning true signals JLine to redraw the line; no manual
-                    // erase needed since JLine tracks exact visual row count.
-                } catch (final Exception e) {
-                    // do nothing (most likely unparsable buffer)
+                    callWidget("accept-line");
                 }
                 return true;
-            }, ctrl('f'));
-            /// CYCLE TO NEXT PANE (Ctrl+W)
-            getKeyMap().bind((Widget)
-                    () -> {
-                        if (Console.this.splitMode) {
-                            Console.this.nextPane();
-                            // renderPanes() would move the cursor via absolute ANSI escapes,
-                            // but JLine's internal Display.cursorPos stays stale.  When JLine
-                            // redraws after the widget it moves RELATIVE to that stale position
-                            // and draws in the wrong pane.  The only reliable fix is to
-                            // terminate the current readLine() via accept-line; the REPL loop
-                            // then calls prepareForInput() → renderPanes() and starts a fresh
-                            // readLine() correctly anchored in the new active pane.
-                            this.reader.getBuffer().clear(); // don't accidentally submit partial input
-                            callWidget("accept-line");
-                        }
-                        return true;
-                    }, ctrl('w'));
-            /// CYCLE TO PREVIOUS PANE (Ctrl+Shift+W = Alt+W in some terminals)
-            getKeyMap().bind((Widget)
-                    () -> {
-                        if (Console.this.splitMode) {
-                            Console.this.prevPane();
-                            this.reader.getBuffer().clear();
-                            callWidget("accept-line");
-                        } else {
-                            // Original behavior when not in split mode
-                            reader.getBuffer().up();
-                            reader.getBuffer().write("\n");
-                        }
-                        return true;
-                    }, alt('w'));
-            /// RESIZE PANE SMALLER (Ctrl+Shift+< = Alt+< in most terminals)
-            getKeyMap().bind((Widget)
-                    () -> {
-                        if (Console.this.splitMode) {
-                            Console.this.resizeActivePane(-0.05f);
-                            Console.this.renderPanes(false); // user-initiated — force render
-                            Console.this.redrawBuffer();
-                        }
-                        return true;
-                    }, "\033<");  // Alt+<
-            /// RESIZE PANE LARGER (Ctrl+Shift+> = Alt+> in most terminals)
-            getKeyMap().bind((Widget)
-                    () -> {
-                        if (Console.this.splitMode) {
-                            Console.this.resizeActivePane(0.05f);
-                            Console.this.renderPanes(false); // user-initiated — force render
-                            Console.this.redrawBuffer();
-                        }
-                        return true;
-                    }, "\033>");  // Alt+>
-            /// SPLIT PANE VERTICALLY OR HORIZONTALLY
-            getKeyMap().bind((Widget)
-                    () -> {
-                        Console.this.split(SplitLayout.VERTICAL);
-                        Console.this.renderPanes(false); // user-initiated — force render
-                        Console.this.redrawBuffer();
-                        return true;
-                    }, "\033[1;5C");  // Ctrl+<right>
-            getKeyMap().bind((Widget)
-                    () -> {
-                        Console.this.split(SplitLayout.HORIZONTAL);
-                        Console.this.renderPanes(false); // user-initiated — force render
-                        Console.this.redrawBuffer();
-                        return true;
-                    }, "\033[1;5A");  // Ctrl+<up>
+            }, alt('n'));
+            /// CYCLE TO PREVIOUS PANE (Alt+P)
+            getKeyMap().bind((Widget) () -> {
+                if (Console.this.splitMode) {
+                    Console.this.at("menu/prev-pane").apply(noobj());
+                    this.reader.getBuffer().clear();
+                    callWidget("accept-line");
+                } else {
+                    reader.getBuffer().up();
+                    reader.getBuffer().write("\n");
+                }
+                return true;
+            }, alt('p'));
+            /// RESIZE PANE SMALLER (Alt+<)
+            getKeyMap().bind((Widget) () -> {
+                if (Console.this.splitMode) {
+                    Console.this.at("menu/shrink").apply(noobj());
+                    Console.this.redrawBuffer();
+                }
+                return true;
+            }, "\033<");
+            /// RESIZE PANE LARGER (Alt+>)
+            getKeyMap().bind((Widget) () -> {
+                if (Console.this.splitMode) {
+                    Console.this.at("menu/grow").apply(noobj());
+                    Console.this.redrawBuffer();
+                }
+                return true;
+            }, "\033>");
+            /// SPLIT PANE SIDE-BY-SIDE OR STACKED
+            getKeyMap().bind((Widget) () -> {
+                Console.this.at("menu/split").apply(str("v"));
+                Console.this.redrawBuffer();
+                return true;
+            }, "\033[1;3C");  // Alt+<right>
+            getKeyMap().bind((Widget) () -> {
+                Console.this.at("menu/split").apply(str("h"));
+                Console.this.redrawBuffer();
+                return true;
+            }, "\033[1;3A");  // Alt+<up>
+            // Alt+char fallback if CSI sequences cause terminal issues:
+            // getKeyMap().bind((Widget) () -> {
+            //     Console.this.at("menu/split").apply(str("v"));
+            //     Console.this.redrawBuffer();
+            //     return true;
+            // }, alt('v'));
+            // getKeyMap().bind((Widget) () -> {
+            //     Console.this.at("menu/split").apply(str("h"));
+            //     Console.this.redrawBuffer();
+            //     return true;
+            // }, alt('h'));
             /// TURN ON/OFF TYPE CHECKING
-            getKeyMap().bind((Widget)
-                    () -> {
-                        if (TypeCheck.level() == 0)
-                            TypeCheck.enable(TypeCheck.values());
-                        else
-                            TypeCheck.disable(TypeCheck.getEnabled().stream().toList().getFirst());
-                        return true;
-                    }, ctrl('t'));
-            /// AGENT CHAT
-            getKeyMap().bind((Widget)
-                    () -> {
-                        if (!at("agent").isNoObj())
-                            getReader().getBuffer().write("@" + at("agent") + ".chat(\"\"\"");
-                        else
-                            LOG.warn("no agent reference stored at %s", vidOrTid().extend("agent"));
-                        return true;
-                    }, alt('c'));
+            getKeyMap().bind((Widget) () -> {
+                Console.this.at("menu/cycle-check").apply(noobj());
+                return true;
+            }, alt('t'));
             /// FAST NAVIGATION: JUMP BY WORD (Shift+Left/Right)
             getKeyMap().bind((Widget)
                     () -> {
@@ -1363,62 +1332,19 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                         callWidget("forward-word");
                         return true;
                     }, "\033[1;2C");  // Shift+<right>
-            /// FAST DELETION: DELETE WORD BACKWARDS (Ctrl+Backspace)
-            // CSI u / kitty keyboard protocol format (kitty, ghostty, iTerm2, xterm-modifyOtherKeys)
-            getKeyMap().bind((Widget)
-                    () -> {
-                        callWidget("backward-kill-word");
-                        return true;
-                    }, "\033[127;5u");
-            getKeyMap().bind((Widget)
-                    () -> {
-                        callWidget("backward-kill-word");
-                        return true;
-                    }, "\033[8;5u");
-            // Fallback: terminals without extended key reporting often send plain BS (0x08)
-            getKeyMap().bind((Widget)
-                    () -> {
-                        callWidget("backward-kill-word");
-                        return true;
-                    }, "\b");
-            /// CREATE NEW LINE BELOW CURRENT LOCATION
-            getKeyMap().bind((Widget)
-                    () -> {
-                        reader.getBuffer().write("\n");
-                        return true;
-                    }, alt('s'));
             /// PUT CURRENT BUFFER IN FULL SCREEN EDITOR
-            getKeyMap().bind((Widget)
-                    () -> Editor.of(Console.this, reader.getBuffer().toString()), ctrl('y'));
-            /// QUIT METATRON (CLOSE EVERYTHING)
-            getKeyMap().bind((Widget)
-                    () -> {
-                        Console.this.close();
-                        System.exit(0);
-                        return true;
-                    }, ctrl('q'));
-            /// CHAT OVERLAY — Alt+C adds a new \_ level below the current one
-            /// (or below the mtron> prompt if no \_ lines exist yet).
-            /// The first \_ aligns under the mtron> input text (after the
-            /// prompt); each nesting level moves right one more column.
             getKeyMap().bind((Widget) () -> {
-                final Buffer buffer = reader.getBuffer();
-                final String text = buffer.toString();
-                // Count existing \_ lines to determine the new level's depth
-                int depth = 0;
-                int idx = -1;
-                while ((idx = text.indexOf("\\_ ", idx + 1)) >= 0) {
-                    depth++;
-                }
-                // Indent to align with the mtron> input column + one space per level
-                final int promptWidth = Highlighter.visualLength(
-                        Console.this.getCurrentLanguage().prompt);
-                // Append a new \_ line at the end with appropriate indentation
-                buffer.cursor(buffer.length());
-                buffer.write("\n" + " ".repeat(promptWidth - 2 + depth) + "\\_ ");
-                // Clear the JLine "|" secondary prompt from continuation lines
-                reader.setVariable(LineReader.SECONDARY_PROMPT_PATTERN,
-                        Graphitty.string("{{-X-}}{{v1&^1&m}}"));
+                Console.this.at("menu/editor").apply(noobj());
+                return true;
+            }, alt('e'));
+            /// QUIT METATRON (CLOSE EVERYTHING)
+            getKeyMap().bind((Widget) () -> {
+                Console.this.at("menu/quit").apply(noobj());
+                return true;
+            }, ctrl('q'));
+            /// CHAT OVERLAY — Alt+L adds a new \_ level below the current one
+            getKeyMap().bind((Widget) () -> {
+                Console.this.at("menu/line").apply(noobj());
                 return true;
             }, alt('l'));
             /// CANCEL DEEPEST CHAT LEVEL (ESC) — removes the innermost \_ line,

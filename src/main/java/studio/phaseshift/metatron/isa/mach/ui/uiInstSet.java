@@ -28,7 +28,7 @@ import studio.phaseshift.metatron.isa.mach.type.ui.Stylable;
 import studio.phaseshift.metatron.isa.mach.type.ui.Widget;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Console;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Editor;
-import studio.phaseshift.metatron.isa.mach.type.ui.console.menu.ColonMenu;
+import studio.phaseshift.metatron.isa.mach.type.ui.console.menu.CommandPalette;
 import studio.phaseshift.metatron.isa.mach.type.ui.tool.SwipePanelWidgetTool;
 import studio.phaseshift.metatron.isa.mach.type.ui.tool.TreeSelectTool;
 import studio.phaseshift.metatron.isa.mach.type.ui.widget.*;
@@ -115,7 +115,7 @@ public class uiInstSet extends AbstractInstSet {
                                 //.isaPredicate(rec())
                                 .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(UI_CONSOLE_TID), lst(T(REC_TID)), (lhs, inst) -> {
                                     final Console console = new Console(inst.arg(0).as(), inst.arg(0).vid());
-                                    new ColonMenu(console).attach(rec());
+                                    new CommandPalette(console).attach(rec());
                                     docWrap(virtual(instLambda((_lhs, inst2) -> {
                                         console.run();
                                         return noobj();
