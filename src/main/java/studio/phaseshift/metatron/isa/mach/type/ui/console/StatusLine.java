@@ -39,11 +39,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
-import static org.slf4j.event.Level.*;
-import static studio.phaseshift.metatron.Tokens.OBJ;
-import static studio.phaseshift.metatron.Tokens.SOURCE;
-import static studio.phaseshift.metatron.Tokens.STATUS;
-import static studio.phaseshift.metatron.Tokens.SUBQ;
+import static org.slf4j.event.Level.ERROR;
+import static org.slf4j.event.Level.INFO;
+import static org.slf4j.event.Level.WARN;
+import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.STR_TID;
@@ -91,10 +90,10 @@ public class StatusLine implements Runnable {
     }
 
     public static void message(final Obj message) {
-        StatusLine.lastMessage = Str.Helper.cleanString(message);
+        StatusLine.lastMessage = formatMessage(Str.Helper.cleanString(message));
     }
 
-    private String formatMessage(final String message) {
+    private static String formatMessage(final String message) {
         String newMessage = Graphitty.strip(message.trim());
         while (newMessage.startsWith("\""))
             newMessage = newMessage.substring(1);
