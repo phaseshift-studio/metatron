@@ -185,11 +185,11 @@ public class TypeTest extends AbstractMetatronTest {
             // obj               | type                                         | matches?
             "noobj               | noobj{0}::T                                | true",
             "noobj{0}            | noobj{0}::T                                   | true",
-            // "noobj               | abc{*}::T                                  | true",
-            // "noobj               | abc{?}::T                                  | true",
+            "noobj               | abc{*}::T                                  | true",
+            "noobj               | abc{?}::T                                  | true",
             "noobj               | int{?}::T                                  | true",
             "noobj               | A{?}::T                                    | true",
-            // TODO: "{0}noobj            | abc{+}::T                                  | false",
+            "{0}noobj            | abc{+}::T                                  | false",
             "1                   | noobj::T                                   | false",
             "1                   | str::T                                     | false",
             "1                   | lst::T                                     | false",
@@ -512,7 +512,7 @@ public class TypeTest extends AbstractMetatronTest {
             "agenat  % .                                        % int::2.as(agenat::T).as(int::T).as(agenat::T)    % true",
             //   "agenat  % .                                        % int::2.as(agenat::T).as(int::T).as(agenat::T).as(int::T)  % false",
             "agenat  % .                                        % int::2.as(nat::T).as(agenat::T)                  % true",
-            //  ".       % .                                        % agenat::-1                                       % false",
+            ".       % .                                        % agenat::-1                                       % false",
             ".       % .                                        % agenat::200                                      % false",
             ".       % .                                        % nat::200.as(agenat::T)                           % false",
             ".       % .                                        % agenat::29                                       % true",
@@ -582,6 +582,8 @@ public class TypeTest extends AbstractMetatronTest {
             "[name=>'bill',age=>10].as(person::T).as(rec::T)      | [name=>'bill',age=>10]",
             "being::[name=>'bill',age=>10].as(person::T)          | <ERROR>",
             "being::[name=>'bill',age=>10].as(chicken::T)         | <ERROR>",
+            "person::[name=>'bob',age=>55].as(chicken::T)         | <ERROR>",
+            "being::[name=>'bob',age=>55].as(chicken::T)          | <ERROR>",
             "*marko.?rec::T                                       | person::[name=>'marko',age=>29]",
             "*marko.?being::T                                     | person::[name=>'marko',age=>29]",
             "*marko.?person::T                                    | person::[name=>'marko',age=>29]",
@@ -595,16 +597,22 @@ public class TypeTest extends AbstractMetatronTest {
             "*snowbutt.as(rec::T)                                 | [name=>'snowbutt',age=>7]",
             "*marko.as(chicken::T)                                | <ERROR>",
             "*marko.as(being::T)                                  | being::[name=>'marko',age=>29]",
+            "*marko.as(something::T)                              | <ERROR>", // non-existent types are nominal
             "*marko.as(rec::T)                                    | [name=>'marko',age=>29]",
+            "*marko.as(rec::T).as(something::T)                   | something::[name=>'marko',age=>29]",
+            // "*marko.as(rec::T).as(A::T)                           | <ERROR>", // values shouldn't type generic?
+            "*marko.as(rec::T).as(something::T).as(chicken::T)    | <ERROR>",
     }, delimiter = '|')
     public void testNominalTyping(final String code, final String expected) {
         assertTrue(T(f("person")).isNominal());
         assertTrue(T(f("chicken")).isNominal());
         assertFalse(T(f("being")).isNominal());
+        assertTrue(T(f("something")).isNominal());
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
         assertTrue(T(f("person")).isNominal());
         assertTrue(T(f("chicken")).isNominal());
         assertFalse(T(f("being")).isNominal());
+        assertTrue(T(f("something")).isNominal());
     }
 
 
@@ -661,13 +669,13 @@ public class TypeTest extends AbstractMetatronTest {
             "1                         %  2                              % false",
             "1                         % '1'                             % false",
             "1                         % int::T                          % true",
-            //      "1                         % entity::T                       % false",
+            "1                         % entity::T                       % false",
             "entity::T                 % entity::T                       % true",
             "thing::T                  % entity::T                       % true",
             "thing::T                  % thing::T                        % true",
             "person::T                 % person::T                       % true",
-            // "entity::T                 % thing::T                        % false",
-            // "[a=>1]                    % entity::T                       % false",
+            "entity::T                 % thing::T                        % false",
+            "[a=>1]                    % entity::T                       % false",
             "entity::[a=>1]            % entity::T                       % true",
             "[a=>1]                    % person::T                       % false",
             "entity::[a=>1]            % person::T                       % false",
@@ -710,16 +718,16 @@ public class TypeTest extends AbstractMetatronTest {
             "[name=>'marko',age=>29,alias=>{'m','mar','mr','mmm'}]               % person::T             % true",
             "[name=>'marko',age=>29,alias=>{'m','mar','mr','mmm'}]               % rec::T             % true",
             "[flag=>'us',member=>{}]                                             % team::T               % false",
-            //   "[flag=>'us',member=>{being::[age=>29],being::[age=>34]}]            % team::T               % true",
+            "[flag=>'us',member=>{being::[age=>29],being::[age=>34]}]            % team::T               % true",
             "[flag=>'us',member=>{being::[age=>29],mortal::[age=>134]}]          % team::T               % false",
-            //   "[flag=>'us',member=>{being::[age=>29],person::[name=>'a',age=>35]}] % team::T               % true",
+            "[flag=>'us',member=>{being::[age=>29],person::[name=>'a',age=>35]}] % team::T               % true",
             "[flag=>'us',member=>{being::[age=>29],[blah=>'stuff']}]             % team::T               % false",
-            //  "[flag=>'us',member=>{[age=>29],[age=>34]}]                          % team::T               % true",
-            //   "[flag=>'us',member=>{[age=>29],[age=>34],[age=>35]}]                % team::T               % true",
-            //  "[flag=>'usa',member=>{[age=>29],[age=>34],[age=>35]}]               % team::T               % false",
+            "[flag=>'us',member=>{[age=>29],[age=>34]}]                          % team::T               % true",
+            "[flag=>'us',member=>{[age=>29],[age=>34],[age=>35]}]                % team::T               % true",
+            "[flag=>'usa',member=>{[age=>29],[age=>34],[age=>35]}]               % team::T               % false",
             "[flag=>'mex',member=>{[age=>12]}]                                   % team::T               % false",
             "[flag=>'mex',member=>{[age=>12],[age=>13]}]                         % team::T               % false",
-            //  "[flag=>'mx',member=>{[age=>12],[age=>13]}]                          % team::T               % true",
+            "[flag=>'mx',member=>{[age=>12],[age=>13]}]                          % team::T               % true",
     }, delimiter = '%')
     public void testComplexTypes(final String instance, final String type, final boolean matches) {
         LOG.debug("testing %s %s %s", instance, matches ? "{{g}}matches{{/g}}" : "{{r}}doesn't match{{/r}}", type);
