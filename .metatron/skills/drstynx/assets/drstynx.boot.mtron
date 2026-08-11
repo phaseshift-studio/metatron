@@ -203,6 +203,7 @@ model::[
   api_key  => !*</sys/env/DEEPSEEK_API_KEY>,
   llm      => <deepseek-v4-pro>
 ]@/usr/dr/model;
+/usr/dr/agent -> |!*dr;
 [-- tag::asciidoc_tag[] --]
 agent::[
   name     => 'dr.stynx',
@@ -228,12 +229,18 @@ agent::[
                                                         body  => "",
                                                         style => style::[anchor=>top_right,width=>65,
                                                                          height=>15,left=>-2]]@<think_widget> },
-                       on_before_chat => inst(){ @<think_widget>>>=[body=>''].map(noobj) },
+                       on_before_chat => inst?#{*}<=#{?}(){ @<think_widget>>>=[body=>''] },
                        root           => /usr/dr/message,
                        think          => [to => inst(a=>str::T){ @<think_widget>>>=[body=>+*a].display() }]],
     loop_feature:::::::[max_loop      => 100],                         
     comment_feature::::[              => ],
-    skill_feature::::::[skill         => [metatronfs:skills/agent,metatronfs:skills/metatron, metatronfs:skills/mtron]],
+    skill_feature::::::[skill         => [!(*<metatronfs:skills/agent/SKILL.md>.-<'/usr/agent'>-.
+                                            plus(*<boot/args/internal/agent_home>.as(str::T)).
+                                            sum?str<=str{*}().
+                                            as(markdown::T).
+                                            as(skill::T)),
+                                           metatronfs:skills/metatron, 
+                                           metatronfs:skills/mtron]],
     concept_feature::::[base          => /usr/dr/concept,
                         extractor     => lucene],
     tool_feature:::::::[tool          => [!*eval,!*sql,!*codegraph]],

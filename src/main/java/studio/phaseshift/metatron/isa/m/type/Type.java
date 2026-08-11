@@ -219,6 +219,8 @@ public interface Type extends Obj {
             return this.test(rhs.dom());
         if (!rhs.isType())
             return false;
+        if (rhs.asType().isNominal())
+            return this.testNominally(rhs);
         if (null != this.vid() && Objects.equals(this.vid(), rhs.vid()))
             return this.c().within(rhs.c()) &&
                     (!rhs.asType().hasPredicate() || Objects.equals(this.predicate(), rhs.asType().predicate()));
@@ -290,7 +292,7 @@ public interface Type extends Obj {
             if (types == null || types.isEmpty())
                 return null;
             if (types.size() == 1)
-                return types.iterator().next().vid(lcdVID).asType();
+                return types.iterator().next().asType();
 
             // 1. Find the common nominal ancestor TID via VID-chain intersection
             final fURI commonTID = commonTID(types);

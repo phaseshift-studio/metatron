@@ -68,7 +68,6 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 public class mInstSet extends AbstractInstSet {
 
     public static final fURI M_ISA_TID = f("/m");
-    public static final fURI MTRON_TID = f("/m");
     // /m/obj
     public static final fURI FAIL_TID = M_ISA_TID.extend("fail");
     public static final fURI BOOL_TID = M_ISA_TID.extend("bool");
@@ -480,7 +479,7 @@ public class mInstSet extends AbstractInstSet {
                                 .vid(AUTHORITY_TID)
                                 .predicate((lhs, inst) -> {
                                     final fURI uri = inst.arg(0).uriValue();
-                                    return (uri.hasAuthority() && !uri.hasScheme() && uri.pathLength() == 0 && uri.qMap().isEmpty()) ?
+                                    return (uri.hasHost() && !uri.hasScheme() && uri.c().isOne() && !uri.hasPoly() && uri.pathLength() == 0 && uri.qMap().isEmpty()) ?
                                             inst.arg(0) : uri().c(cInt.ZERO());
                                 }).create(), "a uri containing only a host:port component with port being optional")),
                 uri(CONST), lst(

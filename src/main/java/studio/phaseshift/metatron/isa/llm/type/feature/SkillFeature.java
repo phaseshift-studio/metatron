@@ -41,7 +41,7 @@ public class SkillFeature extends AbstractFeature {
                 if (skillObj.isNoObj() || skillObj.asLst().isEmpty()) continue;
                 try {
                     skillObj.asLst().elements().forEach(s -> {
-                        final Skill skill = mSkill.of(s.asRec()).toSkill();
+                        final Skill skill = (s.isStr() ? mSkill.of(s.asStr()) : mSkill.of(s.asRec())).toSkill();
                         allSkills.add(skill);
                         agent.logger().info("adding %s skill from feature %s", skill.name(), entry.tid());
                     });
