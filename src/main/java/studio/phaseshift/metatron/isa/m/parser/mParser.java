@@ -30,28 +30,20 @@ import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Sugar;
 import studio.phaseshift.metatron.isa.m.mInstSet;
-import studio.phaseshift.metatron.isa.m.type.Call;
-import studio.phaseshift.metatron.isa.m.type.Code;
-import studio.phaseshift.metatron.isa.m.type.Fail;
-import studio.phaseshift.metatron.isa.m.type.Inst;
-import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.*;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.MTronException;
-import studio.phaseshift.metatron.util.TriConsumer;
 import studio.phaseshift.metatron.util.Tuple;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
@@ -80,7 +72,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
-
+import static studio.phaseshift.metatron.util.CommonUtil.mutableList;
 import static studio.phaseshift.metatron.util.CommonUtil.splitOnNonQuotedSequence;
 import static studio.phaseshift.metatron.util.Tuple.Triplet;
 
@@ -415,7 +407,7 @@ public class mParser {
     }
 
     public static Parser lst_internal() {
-        return choice(of(','), m_call_prefix(MAP_INST_TID).separatedBy(of(',').trim())).map(t -> t.equals(',') ? List.of() : ((List) t).stream().filter(o -> o instanceof Obj).toList());
+        return choice(of(','), m_call_prefix(MAP_INST_TID).separatedBy(of(',').trim())).map(t -> t.equals(',') ? mutableList() : mutableList(((List) t).stream().filter(o -> o instanceof Obj).toList()));
     }
 
     public static Parser rec_internal(final Parser keyParser, final Parser valueParser) {
@@ -506,7 +498,11 @@ public class mParser {
         // Position lands on an opener — look ahead for missing closer
         if (atChar == '[' || atChar == '(' || atChar == '<' || atChar == '{') {
             final char matchingCloser = switch (atChar) {
-                case '[' -> ']'; case '(' -> ')'; case '<' -> '>'; case '{' -> '}'; default -> '\0';
+                case '[' -> ']';
+                case '(' -> ')';
+                case '<' -> '>';
+                case '{' -> '}';
+                default -> '\0';
             };
             if (!hasMatchingCloser(buffer, pos, atChar, matchingCloser))
                 return "unclosed '" + atChar + "' — missing '" + matchingCloser + "'?";
@@ -941,8 +937,8 @@ public class mParser {
     }
 
     public static Parser m_type_prefix(final fURI baseType) {
-        return (null == baseType) ? opt(seq(m_furi(REDUCED_FURI_CHARS, true, true, true), of("://").not(), of(":").repeat(2,Integer.MAX_VALUE)).pick(0), baseType) :
-                opt(choice(seq(m_furi(REDUCED_FURI_CHARS, true, true, true), of("://").not(), of(":").repeat(2,Integer.MAX_VALUE)).pick(0), m_furi_coefficient().map(t -> {
+        return (null == baseType) ? opt(seq(m_furi(REDUCED_FURI_CHARS, true, true, true), of("://").not(), of(":").repeat(2, Integer.MAX_VALUE)).pick(0), baseType) :
+                opt(choice(seq(m_furi(REDUCED_FURI_CHARS, true, true, true), of("://").not(), of(":").repeat(2, Integer.MAX_VALUE)).pick(0), m_furi_coefficient().map(t -> {
                     try {
                         return baseType.c(cInt.of((String) t));
                     } catch (Exception e) {
@@ -1107,7 +1103,7 @@ public class mParser {
      * simplified human-readable explanation.
      */
     public record ParseDiagnostic(Obj result, int line, int column, int position,
-                                   String buffer, String message, boolean success) {
+                                  String buffer, String message, boolean success) {
         public static ParseDiagnostic ok(final Obj result) {
             return new ParseDiagnostic(result, 0, 0, -1, "", "", true);
         }

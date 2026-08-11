@@ -136,7 +136,7 @@ public class ScoringInstResolver implements InstResolver {
                     final int score = scoreSpecificity(lhs, userInst, apiInst);
                     Inst transformed = userInst.hasDom() ? apiInst.dom(userInst.dom()) : apiInst;
                     transformed = userInst.hasRng() ? transformed.rng(userInst.rng()) : transformed;
-                    transformed = userInst.tid().basePath().equals(AS_INST_TID) ? transformed.rng(userInst.arg(0).isNoObj() ? NOOBJ_TYPE : userInst.arg(0).asType()) : transformed;
+                    transformed = userInst.tid().basePath().equals(AS_INST_TID) ? transformed.rng(userInst.arg(0).isNoObj() ? NOOBJ_TYPE : Obj.Helper.specificType(userInst.arg(0))) : transformed;
                     transformed = lhs.isInst() ? transformed : Inst.Helper.bindGenerics(lhs, transformed, userInst);
                     return new ScoredCandidate(apiInst, transformed, score);
                 })

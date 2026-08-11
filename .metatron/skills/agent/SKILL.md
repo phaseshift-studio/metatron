@@ -3,16 +3,71 @@ name: agent
 description: a short guide to being an agent in metatron
 ---
 
-# Reducing Context Window Usage
+NOTE: You should have access to the mtron `eval` tool. All the examples in this guide can be evaluated using the tool.
 
-## Recursive Chat (The "Chat-Stack")
+# Welcome to the Machine
 
-When you need to solve a sub-problem and only care about the *answer*
-— not the details of how it was found — spawn a recursive chat:
+Every obj in metatron resides in the same universal address space: the uri. Even you yourself are encoded in this space.
+
+```mtron
+*/usr/agent/agent
+```
+
+That is your representation. And you can edit it, store it on disk/database, and ensure your evolving state continues to
+persist through time.
+
+## Spaces
+
+You have been provided a subset of the uri space. Every uri that matches `/usr/agent/#` is for you to do with as you
+please. To understand the underlying storage mechanisms of your space, you can look at your space in space.
+
+```mtron
+*/sys/space/usr/agent
+```
+
+To see all the spaces you have access to do: `*/sys/space/+/+`
+
+### Agent Workspace
+
+You can create a **todo list** to help you organize your time. The most barebones way to do it is to make a `lst` of
+`str`ings. When a task is complete, set it to `none`.
+
+```mtron
+["review metatron docs","review mtron docs"]@/usr/agent/todo
+@/usr/agent/todo >>= [0=>none]
+```
+
+A more interesting way to approach the problem involves defining a `task` type.
+
+```mtron
+rec::T[done=>bool::T,desc=>str::T,start{?}::T,end{?}::T]@/usr/agent/task
+[,]@/usr/agent/todo
+datetime_now()-<task::[done=>false,desc=>"review metatron docs",start=>_]>-@/usr/agent/todo
+```
+
+The current time is split across the defined task. Since `start=>_` has an open slot, the current
+`datatime::T` fills in the spot and then the task is merged into your todo list. The task type was saved to your space.
+It's your type. The todo list was also saved to your space. It's your todo list.
+
+Have you completed a task? If so, mark it done.
+
+```mtron
+@/usr/agent/todo/0 >>= [done=>true]
+```
+
+As you learn about metatron and the mtron language, you'll come up with clever ways to manipulate your `/usr/agent`
+space.
+
+## Reducing Context Window Usage
+
+### Recursive Chat (The "Chat-Stack")
+
+When you need to solve a sub-problem and only care about the *answer* — not the details of how it was found — spawn a
+recursive chat:
 
 ```mtron
 @/usr/agent.chat("what is 1+(2+3)?")      // human asks you
-  @/usr/agent.chat("what is 2+3?")        // you delegate sub-problem
+  @/usr/agent.chat("what is 2+3?")        // you delegate the sub-problem
   ==>5
 ==>6
 ```
@@ -21,7 +76,7 @@ The sub-agent (depth 2) solves "what is 2+3?" in a clean context window. You rec
 tool calls, thinking traces, and intermediate steps are *invisible to you*. Your context window stays focused on the
 main problem.
 
-### Use Cases
+#### Use Cases
 
 - Decomposing a complex task into independent sub-tasks
 - Running a computation whose intermediate steps aren't useful for later
@@ -29,11 +84,7 @@ main problem.
 - Getting a fresh perspective (sub-agents at the same depth see different context windows each turn — they don't share
   memory)
 
-### Applied Technique
-
-Use the mtron `eval` tool and call `@/usr/agent.chat("...")`. Note that any agent can be called, not just one's self.
-
-### Sub-Agent Isolation
+#### Sub-Agent Isolation
 
 | Agent               | Context                                            |
 |---------------------|----------------------------------------------------|

@@ -208,13 +208,13 @@ public class ObjJSONSerializerTest extends AbstractSerializerTest<JsonElement> {
         assumeTrue(portOpen, "skipped: no MCP server on 127.0.0.1:64342");
 
         final String configJson = """
-                {
-                    "type": "sse",
-                    "url": "http://127.0.0.1:64342/sse",
-                    "headers": {
-                        "IJ_MCP_SERVER_PROJECT_PATH": "/home/killswitch/software/metatron"
-                    }
-                }""";
+                                  {
+                                      "type": "sse",
+                                      "url": "http://127.0.0.1:64342/sse",
+                                      "headers": {
+                                          "IJ_MCP_SERVER_PROJECT_PATH": "/home/killswitch/software/metatron"
+                                      }
+                                  }""";
 
         // json -> mcp_client
         final Obj client = eval("'" + configJson + "'.as(json::T).as(mcp_client::T)");
@@ -263,7 +263,7 @@ public class ObjJSONSerializerTest extends AbstractSerializerTest<JsonElement> {
             "1                                  % 1                           % base int stays a plain scalar",
             "1.plus(2)                          % 3                           % evaluated expression serializes to its value",
             "'a/b'                              % \"a/b\"                       % str serializes plainly",
-            "<//2024.12:25/09/00/00/000?tz=-0500>.as(datetime::T)  % \"</2024.12:25/09/00/00/000?tz=-0500>\"  % datetime (a uri refinement) serializes as its wrapped uri",
+            "<//2024.12:25/09/00/00/000?tz=-0500>.as(datetime::T)  % \"<//2024.12:25/09/00/00/000?tz=-0500>\"  % datetime (a uri refinement) serializes as its wrapped uri",
     })
     public void testSimpleLossyEncoding(final String mtron, final String expectedJson, final String desc) {
         LOG.info("%s => %s (%s)", mtron, expectedJson, desc);

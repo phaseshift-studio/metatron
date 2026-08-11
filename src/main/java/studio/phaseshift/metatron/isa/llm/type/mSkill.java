@@ -24,14 +24,20 @@ import dev.langchain4j.skills.DefaultSkill;
 import dev.langchain4j.skills.DefaultSkillResource;
 import dev.langchain4j.skills.FileSystemSkillLoader;
 import dev.langchain4j.skills.Skill;
+import org.commonmark.ext.front.matter.YamlFrontMatterExtension;
+import org.commonmark.ext.front.matter.YamlFrontMatterVisitor;
+import org.commonmark.node.Node;
+import org.commonmark.parser.Parser;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.m.type.Str;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.io.File;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -95,5 +101,35 @@ public class mSkill extends MRec {
 
     public static mSkill of(final Rec skillRec) {
         return new mSkill(skillRec, LLM_SKILL_TID, skillRec.vid());
+    }
+
+    public static mSkill of(final Str skillStr) {
+        final Map<String, List<String>> frontMatter = parseFrontMatter(skillStr.strValue());
+        skillStr.logger().info("front matter loaded: %s", frontMatter);
+        return new mSkill(Skill.builder()
+                .name(frontMatter.get("name").getFirst())
+                .description(frontMatter.get("description").getFirst())
+                .content(extractContent(skillStr.strValue())).build(), LLM_SKILL_TID, null);
+    }
+
+    static final Parser PARSER = Parser.builder()
+            .extensions(List.of(YamlFrontMatterExtension.create()))
+            .build();
+
+    static Map<String, List<String>> parseFrontMatter(String markdown) {
+        Node document = PARSER.parse(markdown);
+        YamlFrontMatterVisitor visitor = new YamlFrontMatterVisitor();
+        document.accept(visitor);
+        return visitor.getData();
+    }
+
+    static String extractContent(String markdown) {
+        if (markdown.startsWith("---")) {
+            int secondDelimiter = markdown.indexOf("\n---", 3);
+            if (secondDelimiter != -1) {
+                return markdown.substring(secondDelimiter + 4).trim();
+            }
+        }
+        return markdown;
     }
 }

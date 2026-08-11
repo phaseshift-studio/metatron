@@ -31,6 +31,7 @@ import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.PCMonad;
 import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.thread.VirtualThread;
 import studio.phaseshift.metatron.isa.web.type.MIME;
 import studio.phaseshift.metatron.util.*;
 
@@ -281,6 +282,8 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
     default boolean testNominally(final Obj rhs) {
         Type lhsType = Obj.Helper.specificType(this);
         final Type rhsType = Obj.Helper.specificType(rhs);
+        if (lhsType.isBaseType())
+            return lhsType.baseType().test(rhsType.baseType());
         while (true) {
             if (lhsType.vid().test(rhsType.vid()))
                 return true;
@@ -524,24 +527,10 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
     }
 
     default Obj as(final Type type) {
-        if (type.isNominal()) {
-            if (!Type.Helper.nominalTypeChecker(this, type))
-                throw MTronException.of("%s is not a %s\n[nominal type]", this, type);
-        }
-        if (!type.hasPredicate() && !type.hasConstructor() && this.tid().equals(type.vid()))
-            return this;
-        if (type.hasPredicate()) {
-            boolean match;
-            try {
-                match = this.test(type);
-            } catch (final Exception e) {
-                match = false;
-            }
-            if (!match)
-                throw MTronException.of("%s is not a %s\n%s", this, type.predicate(), indent(Poly.Helper.diffObjRecursion(this, Type.Helper.typePredicateObj(type)).toString(), 2));
-        }
-        //return type.hasConstructor() ? type.constructor().apply(this).selfTID(type.vid()) : this.tid(type.vidOrTid());
-        return type.hasConstructor() ? Obj.Helper.objClone(this, this.jvm(), type.vidOrTid(), this.vid()) : this.tid(type.vidOrTid());
+        if (this.test(type))
+            return type.hasConstructor() ? Obj.Helper.objClone(this, this.jvm(), type.vidOrTid(), this.vid()) : this.tid(type.vidOrTid());
+        else
+            throw MTronException.of("%s is not a %s [%s]", this, type, type.isNominal() ? "nominal" : "structural");
     }
 
     default Bool asBool() {
@@ -857,6 +846,8 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                 return rhs.tid().c().isZeroable() || rhs.tid().equals(NOOBJ_TID);
             if (rhs.isNoObj())
                 return lhs.c().isZeroable();
+            if (rhs.isType() && rhs.asType().isNominal())
+                return lhs.testNominally(rhs);
             //if (!lhs.baseType().test(rhs.baseType()))
             //   return false;
             // if (!lhs.isObjCall() && rhs.isType() && rhs.asType().isNominal() &&
@@ -1108,7 +1099,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                         }
                     }),
                     instC(FORK_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(ALL_TYPE), (lhs, inst) -> {
-                        studio.phaseshift.metatron.isa.mach.type.thread.VirtualThread.virtual(inst.arg(0)).applyAsync(lhs);
+                        VirtualThread.virtual(inst.arg(0)).applyAsync(lhs);
                         return lhs;
                     }),
                     instC(RANGE_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(INT_TYPE, isa_(INT_TYPE).else_(jnt(0)).tryToInst()), (lhs, inst) -> lhs.take(cInt.of(inst.arg(0).intValue())).get1().take(cInt.of(inst.arg(1).intValue())).get0()),
@@ -1231,6 +1222,14 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                     instC(SPLIT_INST_TID.dom(ALL.dom(ALL).rng(ALL)).rng(LST_TID), lst(LST_TYPE), (lhs, inst) -> lst(inst.arg(0).stream().map(o -> o.apply(lhs)).collect(new CommonUtil.LstCollector()))),
                     docWrap(instC(CHOOSE_INST_TID.dom(ALL).rng(REL_TID.maybe()), lst(T(REC_TID)), (lhs, inst) -> inst.arg(0).<Rec>as().elements().map(Obj::<Rel>as).map(e -> e.<Rel>jvm(Tuple.Pair.with(e.first().apply(lhs), e.second()))).filter(e -> !e.first().isNoObj()).findFirst().map(e -> e.<Obj>jvm(Tuple.Pair.with(e.first(), e.second().apply(lhs)))).orElse(noobj())),
                             "any obj", "the split as an objs", Map.of(jnt(0), "the branches"), "a branching function f(x):g(a)->a',g(b)->b',..."),
+                    /**
+                     * instC(MERGE_INST_TID.dom(A.maybeSome()).rng(LST_TID), lst(LST_TYPE), (lhs, inst) ->
+                     *                             inst.arg(0).clone(Stream.concat(lhs.stream(), inst.arg(0).elements()).toList(),
+                     *                                     inst.arg(0).type().isBaseType() ?
+                     *                                             inst.arg(0).tid().poly(Type.Helper.generateLCD(objs(lhs).stream().map(Obj::type).collect(Collectors.toSet()), LST_TID).vid()) :
+                     *                                             inst.arg(0).type().vid(),
+                     *                                     inst.arg(0).vid())),
+                     */
                     instC(MERGE_INST_TID.dom(A.maybeSome()).rng(LST_TID), lst(T(LST_TID)), (lhs, inst) -> inst.arg(0).jvm(Stream.concat(lhs.stream(), inst.arg(0).elements()).toList())),
                     instC(MERGE_INST_TID.dom(A.maybeSome()).rng(ALL_STAR), lst(T(ALL_STAR)), (lhs, inst) -> objs(Stream.concat(inst.args().elements(), lhs.elements()))),
                     instC(MERGE_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(T(A.maybeSome())), (lhs, inst) -> objs(Stream.concat(lhs.stream(), inst.arg(0).stream()))),

@@ -575,19 +575,36 @@ public class TypeTest extends AbstractMetatronTest {
             "person::[name=>'marko',age=>29]@marko",
             "chicken::[name=>'snowbutt',age=>7]@snowbutt"})
     @CsvSource(value = {
-            "[name=>'bill',age=>10].as(person::T)       | person::[name=>'bill',age=>10]",
-            "*marko.?rec::T                             | person::[name=>'marko',age=>29]",
-            "*marko.?being::T                           | person::[name=>'marko',age=>29]",
-            "*marko.?person::T                          | person::[name=>'marko',age=>29]",
-            "*marko.?chicken::T                         | noobj",
-            "*snowbutt.?rec::T                          | chicken::[name=>'snowbutt',age=>7]",
-            "*snowbutt.?being::T                        | chicken::[name=>'snowbutt',age=>7]",
-            "*snowbutt.?being::T                        | chicken::[name=>'snowbutt',age=>7]",
-            "*snowbutt.?person::T                       | noobj",
-            "*snowbutt.as(person::T)                    | <ERROR>",
+            "[name=>'bill',age=>10].as(person::T)                 | person::[name=>'bill',age=>10]",
+            "[name=>'bill',age=>10].as(chicken::T)                | chicken::[name=>'bill',age=>10]",
+            "[name=>'bill',age=>10].as(chicken::T).as(being::T)   | being::[name=>'bill',age=>10]",
+            "[name=>'bill',age=>10].as(person::T).as(being::T)    | being::[name=>'bill',age=>10]",
+            "[name=>'bill',age=>10].as(person::T).as(rec::T)      | [name=>'bill',age=>10]",
+            "being::[name=>'bill',age=>10].as(person::T)          | <ERROR>",
+            "being::[name=>'bill',age=>10].as(chicken::T)         | <ERROR>",
+            "*marko.?rec::T                                       | person::[name=>'marko',age=>29]",
+            "*marko.?being::T                                     | person::[name=>'marko',age=>29]",
+            "*marko.?person::T                                    | person::[name=>'marko',age=>29]",
+            "*marko.?chicken::T                                   | noobj",
+            "*snowbutt.?rec::T                                    | chicken::[name=>'snowbutt',age=>7]",
+            "*snowbutt.?being::T                                  | chicken::[name=>'snowbutt',age=>7]",
+            "*snowbutt.?chicken::T                                | chicken::[name=>'snowbutt',age=>7]",
+            "*snowbutt.?person::T                                 | noobj",
+            "*snowbutt.as(person::T)                              | <ERROR>",
+            "*snowbutt.as(being::T)                               | being::[name=>'snowbutt',age=>7]",
+            "*snowbutt.as(rec::T)                                 | [name=>'snowbutt',age=>7]",
+            "*marko.as(chicken::T)                                | <ERROR>",
+            "*marko.as(being::T)                                  | being::[name=>'marko',age=>29]",
+            "*marko.as(rec::T)                                    | [name=>'marko',age=>29]",
     }, delimiter = '|')
     public void testNominalTyping(final String code, final String expected) {
+        assertTrue(T(f("person")).isNominal());
+        assertTrue(T(f("chicken")).isNominal());
+        assertFalse(T(f("being")).isNominal());
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+        assertTrue(T(f("person")).isNominal());
+        assertTrue(T(f("chicken")).isNominal());
+        assertFalse(T(f("being")).isNominal());
     }
 
 

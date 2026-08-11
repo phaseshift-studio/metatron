@@ -25,25 +25,19 @@ import studio.phaseshift.metatron.isa.m.type.Type;
 import java.sql.Types;
 import java.util.*;
 
-import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TID;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
+import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.id_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.Rec.REC_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Real.REAL_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.Rec.REC_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
-import static studio.phaseshift.metatron.isa.m.mInstSet.ALL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
 
 /**
  * Generates mtron type definitions from SQL table metadata.
@@ -357,12 +351,12 @@ public class SQLSchemaGenerator {
             final FKTarget fkTarget = getFKTarget(tbl, column.name());
             if (fkTarget != null) {
                 final Obj fkPredicate = isa_(uri(fkTarget.targetPath()))
-                        .auto_from_(id_(),noobj())
+                        .auto_from_(id_(), noobj())
                         .tryToInst();
                 fields.put(uri(column.name()), fkPredicate);
             } else {
                 final Type columnType = sqlTypeToMtronType(column, tbl);
-                fields.put(uri(column.name()), columnType);
+                fields.put(uri(column.name()).maybe(), columnType);
             }
         }
 

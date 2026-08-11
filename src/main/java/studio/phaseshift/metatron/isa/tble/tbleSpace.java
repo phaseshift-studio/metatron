@@ -539,12 +539,13 @@ public class tbleSpace extends AbstractSpace<Connection> implements SchemaSpace 
                 // Returns empty iterator when collection is unknown, falling through
                 // to the key-value path below.
                 final DataPath dp = DataPath.of(f(this.databaseName).extend(aligned));
-                if (dp.hasCollection() && !dp.hasEntry()) {
-                    final Iterator<IdObj> schemaResults =
+                // if (dp.hasCollection() && !dp.hasEntry()) {
+                   /* final Iterator<IdObj> schemaResults =
                             resolveCollectionSchema(dp.collection());
                     if (schemaResults.hasNext())
-                        return collectResults(schemaResults, pattern);
-                }
+                        return collectResults(schemaResults, pattern);*/
+                //return IteratorUtil.of();
+                //}
 
                 // ── table-mapped path (entry-level) ──
                 if (this.existingTableSchema != null
