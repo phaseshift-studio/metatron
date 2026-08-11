@@ -89,7 +89,7 @@ public final class CardUtil {
      * blue title, and the given body string.
      */
     public static PanelWidget popup(final String title, final String body) {
-        final PanelWidget p = new PanelWidget("{{b}}" + title + body);
+        final PanelWidget p = new PanelWidget("{{b}}" + title + "\n" + body);
         p.style().border(popupBorder()).applyStyle();
         constrainWidth(p);
         return p;
@@ -171,7 +171,7 @@ public final class CardUtil {
                         if (!sb.isEmpty()) sb.append("\n\n");
                         sb.append("{{m}}examples:{{X}}\n");
                         for (int i = 0; i < examples.size(); i++) {
-                            sb.append("  {{w}}").append(examples.get(i)).append("{{X}}");
+                            sb.append("  ").append(Highlighter.format(examples.get(i)));
                             if (i < examples.size() - 1) sb.append("\n");
                         }
                     }
