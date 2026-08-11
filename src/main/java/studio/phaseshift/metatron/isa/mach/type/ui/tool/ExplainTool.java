@@ -28,6 +28,7 @@ import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.Border;
+import studio.phaseshift.metatron.isa.mach.type.ui.console.Highlighter;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.mach.type.ui.widget.*;
@@ -271,7 +272,7 @@ public class ExplainTool extends AbstractWidget<ExplainTool> {
         current.argEntries = null;
         current.argTableSelectedRow = 0;
 
-        if (selectedArg.isObjCall()) {
+        if (selectedArg.isCode()) {
             // Code arg → push new ExplainLevel
             int newOffsetX = current.offsetX + 4;
             int newOffsetY = current.offsetY + current.selectedRow + 3;
@@ -352,7 +353,7 @@ public class ExplainTool extends AbstractWidget<ExplainTool> {
             Obj singleArg = args.isLst()
                     ? args.lstValue().getFirst()
                     : args.recValue().values().iterator().next();
-            if (singleArg.isObjCall()) {
+            if (singleArg.isCode()) {
                 int newOffsetX = current.offsetX + 4;
                 int newOffsetY = current.offsetY + current.selectedRow + 3;
                 pushLevel(singleArg.asCode(), newOffsetX, newOffsetY, current.selectedRow, current.selectedCol);
@@ -388,7 +389,7 @@ public class ExplainTool extends AbstractWidget<ExplainTool> {
         // Build a small TableWidget for arg selection
         TableWidget tbl = new TableWidget(List.of("arg"));
         for (String label : labels) {
-            tbl.addRow(List.of(label));
+            tbl.addRow(List.of(Highlighter.format(label)));
         }
         tbl.style()
                 .border(Border.continuous.foreground("{{b}}"))
@@ -438,7 +439,7 @@ public class ExplainTool extends AbstractWidget<ExplainTool> {
         } else {
             // <m> — mtron code → push new ExplainLevel
             Obj mtronObj = inst.getMtronFunctionObj();
-            if (mtronObj.isObjCall()) {
+            if (mtronObj.isCode()) {
                 int newOffsetX = current.offsetX + 4;
                 int newOffsetY = current.offsetY + current.selectedRow + 3;
                 pushLevel(mtronObj.asCode(), newOffsetX, newOffsetY, current.selectedRow, current.selectedCol);
@@ -475,7 +476,7 @@ public class ExplainTool extends AbstractWidget<ExplainTool> {
         String desugar = "{" + (c.min() == null ? "" : c.min()) + "," + (c.max() == null ? "" : c.max()) + "}";
         String body = Graphitty.string(
                 "{{w}}sugar:{{X}}  %s\n{{w}}range:{{X}} %s",
-                sugar, desugar);
+                Highlighter.format(sugar), Highlighter.format(desugar));
         current.panelPopup = CardUtil.popup(label, body);
     }
 

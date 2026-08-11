@@ -46,8 +46,11 @@ datetime_now()-<task::[done=>false,desc=>"review metatron docs",start=>_]>-@/usr
 ```
 
 The current time is split across the defined task. Since `start=>_` has an open slot, the current
-`datatime::T` fills in the spot and then the task is merged into your todo list. The task type was saved to your space.
-It's your type. The todo list was also saved to your space. It's your todo list.
+`datatime::T` fills in the spot and then the task is merged into your todo list. To get a structured understanding of
+the expression, do:
+`datetime_now()-<task::[done=>false,desc=>"review metatron docs",start=>_]>-@/usr/agent/todo.explain()`
+
+The task type was saved to your space. It's your type. The todo list was also saved to your space. It's your todo list.
 
 Have you completed a task? If so, mark it done.
 

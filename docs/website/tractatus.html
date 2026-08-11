@@ -1418,6 +1418,13 @@ mtron&gt; httpspace::[host     =&gt; http://localhost:8777,
                    pattern  =&gt; &lt;http://#&gt;,
                    route    =&gt; [/mcp     =&gt; mcp_mtron_http,
                                 /       =&gt; &lt;&gt;]]@/sys/space/web/http
+==&gt;fail::[unable to construct httpspace::T: fail::[apply failure:
+   	[lhs]    │ [host=&gt;http://localhost:8777,q=&gt;[mimeq::[pattern=&gt;mimeq,post_read=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T)]],pattern=&gt;http://#,route=&gt;[/mcp=&gt;mcp_mtron_http,/=&gt;&lt;&gt;]]@/sys/space/web/http
+   	 \_type  │ /m/rec
+   	  \_pred │ []
+   	[inst]   │ /m/web/space/httpspace/ctor?rng=httpspace&amp;dom=#{?}([host=&gt;http://localhost:8777,q=&gt;[mimeq::[pattern=&gt;mimeq,post_read=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T)]],pattern=&gt;http://#,route=&gt;[/mcp=&gt;mcp_mtron_http,/=&gt;&lt;&gt;]]@/sys/space/web/http){&lt;j&gt;}
+   	 \_dom   │ #{?}::T
+   	 \_args  │ [[host=&gt;http://localhost:8777,q=&gt;[mimeq::[pattern=&gt;mimeq,post_read=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T)]],pattern=&gt;http://#,route=&gt;[/mcp=&gt;mcp_mtron_http,/=&gt;&lt;&gt;]]@/sys/space/web/http][Net&lt;-2&gt;:Address already in use[Net&lt;-2&gt;:Address already in use] ← Address already in use]][Address already in use[Net&lt;-2&gt;:Address already in use]][Address already in use]@/sys/fail/52]@/sys/fail/54
 mtron&gt; wsspace::[host     =&gt; ws://localhost:8555,
                  pattern  =&gt; &lt;ws://#&gt;,
                  q        =&gt; [docq::[=&gt;],subq::[=&gt;]],
@@ -1578,7 +1585,14 @@ The purpose of breaking up the example into two expression is to highlight the O
                to(http://localhost:11434/api/show).
                =?=[capabilities=&gt;has(thinking).has(tools)]].dom().
          order(&gt;&gt;size * -1).
-         take(1).to(ollama_model)</code></pre>
+         take(1).to(ollama_model)
+==&gt;fail::[apply failure:
+   	[lhs]    │ noobj
+   	 \_type  │ noobj{0}
+   	  \_pred │ []
+   	[inst]   │ *http://localhost:11434/api/tags/+
+   	 \_dom   │ #{?}::T
+   	 \_args  │ [http://localhost:11434/api/tags/+][MTronException&lt;127&gt;:no active space supports pattern http://localhost:11434/api/tags/+]][no active space supports pattern http://localhost:11434/api/tags/+]@/sys/fail/120</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -1742,19 +1756,25 @@ Over the remainder of this documentation, each of the components of Dr.Stynx&#82
     chat_feature:::::::[model         =&gt; !(*&lt;/usr/dr/model&gt;.else(model::[provider     =&gt; ollama,
                                                                          protocol     =&gt; ollama,
                                                                          host         =&gt; &lt;http://ginger.local:11434&gt;,
-                                                                         llm          =&gt; &lt;devstral-small-2:24b-instruct-2512-q8_0&gt;])),
+                                                                         llm          =&gt; mtron-qwen-14b:latest])),
                         response      =&gt; [to =&gt; print(_)]],
     think_feature::::::[on_agent_ctor =&gt; inst(a=&gt;agent::T){
                                             accordion::[title =&gt; "thoughts", 
                                                         body  =&gt; "",
                                                         style =&gt; style::[anchor=&gt;top_right,width=&gt;65,
                                                                          height=&gt;15,left=&gt;-2]]@&lt;think_widget&gt; },
-                       on_before_chat =&gt; inst(){ @&lt;think_widget&gt;&gt;&gt;=[body=&gt;''].map(noobj) },
+                       on_before_chat =&gt; inst?#{*}&lt;=#{?}(){ @&lt;think_widget&gt;&gt;&gt;=[body=&gt;''] },
                        root           =&gt; /usr/dr/message,
                        think          =&gt; [to =&gt; inst(a=&gt;str::T){ @&lt;think_widget&gt;&gt;&gt;=[body=&gt;+*a].display() }]],
     loop_feature:::::::[max_loop      =&gt; 100],                         
     comment_feature::::[              =&gt; ],
-    skill_feature::::::[skill         =&gt; [metatronfs:skills/metatron, metatronfs:skills/mtron]],
+    skill_feature::::::[skill         =&gt; [!(*&lt;metatronfs:skills/agent/SKILL.md&gt;.-&lt;'/usr/agent'&gt;-.
+                                            plus(*&lt;boot/args/internal/agent_home&gt;.as(str::T)).
+                                            sum?str&lt;=str{*}().
+                                            as(markdown::T).
+                                            as(skill::T)),
+                                           metatronfs:skills/metatron, 
+                                           metatronfs:skills/mtron]],
     concept_feature::::[base          =&gt; /usr/dr/concept,
                         extractor     =&gt; lucene],
     tool_feature:::::::[tool          =&gt; [!*eval,!*sql,!*codegraph]],
@@ -1800,7 +1820,7 @@ mtron> doc_model(aix).>>=+
         [feature =>[
           tool      => [!*eval],
           response  => [to=>_]]]
-==>fail::[unable to locate inst-f of doc_model(aix)@<0>]@/sys/fail/130
+==>fail::[unable to locate inst-f of doc_model(aix)@<0>]@/sys/fail/154
 ----
 
 [source,mtron]
@@ -1831,18 +1851,23 @@ As such, an MCP client has an natural mapping to an LLM tool feature.
 [source,mtron]
 ----
 mtron> mcp_client::[host => ws://localhost:8555/mcp]@/usr/ai/mcp/mtron
-==>fail::[unable to construct mcp_client::T: fail::[apply failure:
-   	[lhs]    │ [host=>ws://localhost:8555/mcp]@/usr/ai/mcp/mtron
-   	 \_type  │ /m/rec
-   	  \_pred │ []
-   	[inst]   │ ctor?rng=mcp_client&dom=#{?}([host=>ws://localhost:8555/mcp]@/usr/ai/mcp/mtron){<j>}
-   	 \_dom   │ #{?}::T
-   	 \_args  │ [[host=>ws://localhost:8555/mcp]@/usr/ai/mcp/mtron][SocketChannelImpl<204>:java.util.concurrent.ExecutionException: java.lang.RuntimeException: java.util.concurrent.ExecutionException: java.net.ConnectException[SocketChannelImpl<204>:java.util.concurrent.ExecutionException: java.lang.RuntimeException: java.util.concurrent.ExecutionException: java.net.ConnectException ← java.lang.RuntimeException: java.util.concurrent.ExecutionException: java.net.ConnectException ← java.util.concurrent.ExecutionException: java.net.ConnectException ← java.net.ConnectException ← ...] ← java.util.concurrent.ExecutionException: java.lang.RuntimeException: java.util.concurrent.ExecutionException: java.net.ConnectException ← java.lang.RuntimeException: java.util.concurrent.ExecutionException: java.net.ConnectException ← java.util.concurrent.ExecutionException: java.net.ConnectException ← ...]][java.util.concurrent.ExecutionException: java.lang.RuntimeException: java.util.concurrent.ExecutionException: java.net.ConnectException[SocketChannelImpl<204>:java.util.concurrent.ExecutionException: java.lang.RuntimeException: java.util.concurrent.ExecutionException: java.net.ConnectException ← java.lang.RuntimeException: java.util.concurrent.ExecutionException: java.net.ConnectException ← java.util.concurrent.ExecutionException: java.net.ConnectException ← java.net.ConnectException ← ...]][java.util.concurrent.ExecutionException: java.lang.RuntimeException: java.util.concurrent.ExecutionException: java.net.ConnectException][java.lang.RuntimeException: java.util.concurrent.ExecutionException: java.net.ConnectException][java.util.concurrent.ExecutionException: java.net.ConnectException][java.net.ConnectException][][]@/sys/fail/134]@/sys/fail/136
+==>mcp_client::[
+    host=>ws://localhost:8555/mcp,
+    status=>!inst?bool<=#{?}(),
+    tool=>[
+     write_memory=>inst?#{?}<=#{?}(current_memory=>'',previous_memory=>''),
+     read_memory=>inst?#{?}<=#{?}(memory_vid=>''),
+     eval_mtron=>inst?#{?}<=#{?}(code=>''),
+     list_space=>inst?#{?}<=#{?}(),
+     router_info=>inst?#{?}<=#{?}(),
+     find_inst=>inst?#{?}<=#{?}(pattern=>'',dom=>'',rng=>''),
+     spawn_wsclient=>inst?#{?}<=#{?}(host=>'the full ws:// uri of the websocket server to connect to',on_message=>'the function to evaluate on every received message'),
+     spawn_wshandler=>inst?#{?}<=#{?}(host=>'the full ws:// uri of the websocket handler to expose',on_message=>'the function to evaluate on every received message')]]@/usr/ai/mcp/mtron
 mtron> doc_model(aix).>>=+
         [feature =>[
           tool      => [!*/usr/ai/mcp/mtron],
           response  => [to=>_]]]
-==>fail::[unable to locate inst-f of doc_model(aix)@<0>]@/sys/fail/138
+==>fail::[unable to locate inst-f of doc_model(aix)@<0>]@/sys/fail/156
 ----
 
 Given that an `mcp_client::T` is an index of `insts`.
@@ -1919,7 +1944,7 @@ mtron> *ollama:+.
    	  \_pred │ []
    	[inst]   │ *ollama:+
    	 \_dom   │ #{?}::T
-   	 \_args  │ [ollama:+][MTronException<127>:no active space supports pattern ollama:+]][no active space supports pattern ollama:+]@/sys/fail/188
+   	 \_args  │ [ollama:+][MTronException<127>:no active space supports pattern ollama:+]][no active space supports pattern ollama:+]@/sys/fail/206
 ----
 
 <1> create a `lst` to server as the an ordered sequence of chat interactions.
@@ -2536,8 +2561,7 @@ mtron&gt;  -21.as(int::T).as(nat::T).as(age::T)     ​4​
    	  \_pred │ []
    	[inst]   │ as?rng=nat&amp;dom=int(nat::T){&lt;j&gt;}@<i class="conum" data-value="2"></i><b>(2)</b>
    	 \_dom   │ int::T
-   	 \_args  │ [nat::T][MTronException&lt;127&gt;:-21 is not a is(gt(0))...]][-21 is not a is(gt(0))
-     -21=&gt;(X=&gt;is(gt(0)))]@/sys/fail/36
+   	 \_args  │ [nat::T][MTronException&lt;127&gt;:-21 is not a int::T[is(gt(0))]@nat [structural]]][-21 is not a int::T[is(gt(0))]@nat [structural]]@/sys/fail/36
 mtron&gt;  121.as(int::T).as(nat::T).as(age::T)     ​5​
 ==&gt;fail::[apply failure:
    	[lhs]    │ nat::121
@@ -2545,8 +2569,7 @@ mtron&gt;  121.as(int::T).as(nat::T).as(age::T)     ​5​
    	  \_pred │ [is(gt(0))]
    	[inst]   │ as?rng=age&amp;dom=int(age::T){&lt;j&gt;}@<i class="conum" data-value="3"></i><b>(3)</b>
    	 \_dom   │ int::T
-   	 \_args  │ [age::T][MTronException&lt;127&gt;:nat::121 is not a is(lt(120))...]][nat::121 is not a is(lt(120))
-     nat::121=&gt;(X=&gt;is(lt(120)))]@/sys/fail/38
+   	 \_args  │ [age::T][MTronException&lt;127&gt;:nat::121 is not a nat::T[is(lt(120))]@age [structural]]][nat::121 is not a nat::T[is(lt(120))]@age [structural]]@/sys/fail/38
 mtron&gt; rec::T[?[name=&gt;str::T,age=&gt;age::T]]@chicken     ​6​
 mtron&gt; chicken::[name=&gt;'snowbutt',age=&gt;7]     ​7​
 ==&gt;chicken::[name=&gt;'snowbutt',age=&gt;7]
@@ -2680,8 +2703,7 @@ mtron&gt;  chicken::[name=&gt;'snowbutt',age=&gt;7].as(human::T)     ​5​
      age=&gt;age::T])]
    	[inst]   │ as?rng=human&amp;dom=rec(human::T){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
    	 \_dom   │ rec::T
-   	 \_args  │ [human::T][MTronException&lt;127&gt;:chicken::[name=&gt;'snowbutt',age=&gt;7] is not a human::T...]][chicken::[name=&gt;'snowbutt',age=&gt;7] is not a human::T
-   [nominal type]]@/sys/fail/42
+   	 \_args  │ [human::T][MTronException&lt;127&gt;:chicken::[name=&gt;'snowbutt',age=&gt;7] is not a human::T [nominal]]][chicken::[name=&gt;'snowbutt',age=&gt;7] is not a human::T [nominal]]@/sys/fail/42
 mtron&gt; [name=&gt;'fuzzy feet',age=&gt;2].as(chicken::T)     ​6​
 ==&gt;chicken::[name=&gt;'fuzzy feet',age=&gt;2]
 mtron&gt; 'punky'.as(chicken::T)     ​7​
@@ -2691,12 +2713,9 @@ mtron&gt; 'punky'.as(chicken::T)     ​7​
    	  \_pred │ []
    	[inst]   │ as?rng=chicken&amp;dom=str(chicken::T){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
    	 \_dom   │ str::T
-   	 \_args  │ [chicken::T][MTronException&lt;127&gt;:'punky' is not a isa([...]]['punky' is not a isa([
+   	 \_args  │ [chicken::T][MTronException&lt;127&gt;:'punky' is not a rec::T[?[...]]['punky' is not a rec::T[?[
      name=&gt;str::T,
-     age=&gt;age::T])
-     'punky'=&gt;(X=&gt;[
-      name=&gt;str::T,
-      age=&gt;age::T])]@/sys/fail/44</code></pre>
+     age=&gt;age::T]]@chicken [structural]]@/sys/fail/44</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -2812,8 +2831,7 @@ mtron&gt;  -2.as(nat::T)     ​6​
    	  \_pred │ []
    	[inst]   │ as?rng=int&amp;dom=int(int::T){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
    	 \_dom   │ int::T
-   	 \_args  │ [int::T][MTronException&lt;127&gt;:-2 is not a is(gt(0))...]][-2 is not a is(gt(0))
-     -2=&gt;(X=&gt;is(gt(0)))]@/sys/fail/78
+   	 \_args  │ [int::T][MTronException&lt;127&gt;:-2 is not a int::T[is(gt(0))][choose([is(lt(0))=&gt;mult(-1),id()=&gt;id()]).rshift()] [structural]]][-2 is not a int::T[is(gt(0))][choose([is(lt(0))=&gt;mult(-1),id()=&gt;id()]).rshift()] [structural]]@/sys/fail/78
 mtron&gt;  nat::2 * -1     ​7​
 ==&gt;fail::[apply failure:
    	[lhs]    │ nat::2
@@ -2848,7 +2866,7 @@ The predicate component of the type definition tests an <code>int</code> to dete
 <div class="paragraph">
 <p>While every <code>type</code> is an <code>obj</code>, not every <code>obj</code> is a <code>type</code>.
 Those <code>objs</code> that are not <code>types</code> are <em>instances</em> of some <code>type</code>.
-This is the foundation for all other <code>objs</code> in {{m}}m{{r}}e{{y}}T{{y}}a{{c}}t{{g}}R{{c}}O{{g}}N{{X}}.</p>
+This is the foundation for all other <code>objs</code> in {{b}}m{{y}}E{{y}}t{{c}}A{{r}}T{{r}}r{{m}}O{{c}}N{{X}}.</p>
 </div>
 <h4 id="sec-cascading-type-constructions" class="discrete">cascading type constructions</h4>
 <h3 id="sec-mono-types" class="discrete">mono types</h3>
@@ -3507,8 +3525,7 @@ mtron&gt;  int::-10.as(nat::T)
    	  \_pred │ []
    	[inst]   │ as?rng=int&amp;dom=int(int::T){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
    	 \_dom   │ int::T
-   	 \_args  │ [int::T][MTronException&lt;127&gt;:-10 is not a is(gt(0))...]][-10 is not a is(gt(0))
-     -10=&gt;(X=&gt;is(gt(0)))]@/sys/fail/200</code></pre>
+   	 \_args  │ [int::T][MTronException&lt;127&gt;:-10 is not a int::T[is(gt(0))] [structural]]][-10 is not a int::T[is(gt(0))] [structural]]@/sys/fail/200</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -3614,8 +3631,7 @@ mtron&gt;  int::-10.as(nat::T)
    	  \_pred │ []
    	[inst]   │ as?rng=int&amp;dom=int(int::T){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
    	 \_dom   │ int::T
-   	 \_args  │ [int::T][MTronException&lt;127&gt;:-10 is not a is(gt(0))...]][-10 is not a is(gt(0))
-     -10=&gt;(X=&gt;is(gt(0)))]@/sys/fail/204</code></pre>
+   	 \_args  │ [int::T][MTronException&lt;127&gt;:-10 is not a int::T[is(gt(0))] [structural]]][-10 is not a int::T[is(gt(0))] [structural]]@/sys/fail/204</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -3645,8 +3661,7 @@ mtron&gt;  nat::125.as(age::T)
    	  \_pred │ [is(gt(0))]
    	[inst]   │ as?rng=int&amp;dom=int(int::T){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
    	 \_dom   │ int::T
-   	 \_args  │ [int::T][MTronException&lt;127&gt;:nat::125 is not a is(lt(120))...]][nat::125 is not a is(lt(120))
-     nat::125=&gt;(X=&gt;is(lt(120)))]@/sys/fail/208
+   	 \_args  │ [int::T][MTronException&lt;127&gt;:nat::125 is not a int::T[is(lt(120))] [structural]]][nat::125 is not a int::T[is(lt(120))] [structural]]@/sys/fail/208
 mtron&gt;  125.as(nat::T).as(age::T)
 ==&gt;fail::[apply failure:
    	[lhs]    │ 125
@@ -3654,8 +3669,7 @@ mtron&gt;  125.as(nat::T).as(age::T)
    	  \_pred │ []
    	[inst]   │ as?rng=int&amp;dom=int(int::T){&lt;j&gt;}@<i class="conum" data-value="2"></i><b>(2)</b>
    	 \_dom   │ int::T
-   	 \_args  │ [int::T][MTronException&lt;127&gt;:125 is not a is(lt(120))...]][125 is not a is(lt(120))
-     125=&gt;(X=&gt;is(lt(120)))]@/sys/fail/210</code></pre>
+   	 \_args  │ [int::T][MTronException&lt;127&gt;:125 is not a int::T[is(lt(120))] [structural]]][125 is not a int::T[is(lt(120))] [structural]]@/sys/fail/210</code></pre>
 </div>
 </div>
 <div class="listingblock">
@@ -5324,16 +5338,16 @@ mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T).as(str::T)     ​5​
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; bin:bash('-c',df)
 ==&gt;'Filesystem             1K-blocks       Used Available Use% Mounted on'
-==&gt;'tmpfs                    6356184       6364   6349820   1% /run'
+==&gt;'tmpfs                    6356184       6380   6349804   1% /run'
 ==&gt;'efivarfs                     128         42        82  34% /sys/firmware/efi/efivars'
-==&gt;'/dev/nvme1n1p2         959786032  491646852 419310972  54% /'
-==&gt;'tmpfs                   31780908     404848  31376060   2% /dev/shm'
+==&gt;'/dev/nvme1n1p2         959786032  492545580 418412244  55% /'
+==&gt;'tmpfs                   31780908     599980  31180928   2% /dev/shm'
 ==&gt;'tmpfs                       5120         20      5100   1% /run/lock'
 ==&gt;'tmpfs                   31780908          0  31780908   0% /run/qemu'
 ==&gt;'/dev/nvme1n1p1            523248       6288    516960   2% /boot/efi'
-==&gt;'tmpfs                    6356180        296   6355884   1% /run/user/1000'
+==&gt;'tmpfs                    6356180        288   6355892   1% /run/user/1000'
 ==&gt;'/dev/nvme0n1p2         976744444  251306824 725437620  26% /media/hdd0'
-==&gt;'//192.168.1.72/beast1 1921208544 1354432100 566776444  71% /srv/beast/hdd1'
+==&gt;'//192.168.1.72/beast1 1921208544 1379658692 541549852  72% /srv/beast/hdd1'
 mtron&gt; bin:bash('-c',ls)
 ==&gt;'AGENTS.md'
 ==&gt;bin
@@ -5494,7 +5508,7 @@ mtron&gt; gB::1.0.lt(kB::12000000.0)
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; datetime_now()     ​1​
-==&gt;datetime::&lt;//2026.08:9/06/13/32/951?tz=-0600&gt;
+==&gt;datetime::&lt;//2026.08:11/01/14/03/356?tz=-0600&gt;
 mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;?datetime::T     ​2​
 ==&gt;&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;
 mtron&gt; datetime::&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;&gt;&gt;year     ​3​
@@ -6362,7 +6376,7 @@ mtron&gt; *g:V/1/OUT/te:hot/a/owner/name     ​3​
    	  \_pred │ []
    	[inst]   │ *g:V/1/OUT/te:hot/a/owner/name
    	 \_dom   │ #{?}::T
-   	 \_args  │ [g:V/1/OUT/te:hot/a/owner/name][Obj&lt;598&gt;:unable to convert mfail to rec::T[Obj&lt;598&gt;:class studio.phaseshift.metatron.isa.m.type.impl.MFail cannot be cast to class studio.phaseshift.metatron.isa.m.type.Rec (studio.phaseshift.metatron.isa.m.type.impl.MFail and studio.phaseshift.metatron.isa.m.type.Rec are in unnamed module of loader 'app')] ← class studio.phaseshift.metatron.isa.m.type.impl.MFail cannot be cast to class studio.phaseshift.metatron.isa.m.type.Rec (studio.phaseshift.metatron.isa.m.type.impl.MFail and studio.phaseshift.metatron.isa.m.type.Rec are in unnamed module of loader 'app')]][unable to convert mfail to rec::T[Obj&lt;598&gt;:class studio.phaseshift.metatron.isa.m.type.impl.MFail cannot be cast to class studio.phaseshift.metatron.isa.m.type.Rec (studio.phaseshift.metatron.isa.m.type.impl.MFail and studio.phaseshift.metatron.isa.m.type.Rec are in unnamed module of loader 'app')]][class studio.phaseshift.metatron.isa.m.type.impl.MFail cannot be cast to class studio.phaseshift.metatron.isa.m.type.Rec (studio.phaseshift.metatron.isa.m.type.impl.MFail and studio.phaseshift.metatron.isa.m.type.Rec are in unnamed module of loader 'app')]@/sys/fail/78
+   	 \_args  │ [g:V/1/OUT/te:hot/a/owner/name][Obj&lt;586&gt;:unable to convert mfail to rec::T[Obj&lt;586&gt;:class studio.phaseshift.metatron.isa.m.type.impl.MFail cannot be cast to class studio.phaseshift.metatron.isa.m.type.Rec (studio.phaseshift.metatron.isa.m.type.impl.MFail and studio.phaseshift.metatron.isa.m.type.Rec are in unnamed module of loader 'app')] ← class studio.phaseshift.metatron.isa.m.type.impl.MFail cannot be cast to class studio.phaseshift.metatron.isa.m.type.Rec (studio.phaseshift.metatron.isa.m.type.impl.MFail and studio.phaseshift.metatron.isa.m.type.Rec are in unnamed module of loader 'app')]][unable to convert mfail to rec::T[Obj&lt;586&gt;:class studio.phaseshift.metatron.isa.m.type.impl.MFail cannot be cast to class studio.phaseshift.metatron.isa.m.type.Rec (studio.phaseshift.metatron.isa.m.type.impl.MFail and studio.phaseshift.metatron.isa.m.type.Rec are in unnamed module of loader 'app')]][class studio.phaseshift.metatron.isa.m.type.impl.MFail cannot be cast to class studio.phaseshift.metatron.isa.m.type.Rec (studio.phaseshift.metatron.isa.m.type.impl.MFail and studio.phaseshift.metatron.isa.m.type.Rec are in unnamed module of loader 'app')]@/sys/fail/78
 mtron&gt; *g:V/1/OUT/te:cold/x/total     ​4​
 ==&gt;15.0000
 mtron&gt; *g:V/1/OUT/knows.count()     ​5​
@@ -6383,7 +6397,7 @@ mtron&gt; *g:V/1.outE(te:hot/a)&gt;&gt;owner&gt;&gt;name     ​3​
    	  \_pred │ []
    	[inst]   │ !*g:V/2
    	 \_dom   │ #{?}::T
-   	 \_args  │ [g:V/2,noobj][Obj$Helper&lt;1003&gt;:obj does not match person::T...]][obj does not match person::T
+   	 \_args  │ [g:V/2,noobj][Obj$Helper&lt;993&gt;:obj does not match person::T...]][obj does not match person::T
      [name=&gt;'vadas',age=&gt;27]
          X=&gt;
      vrtx::T[?[age=&gt;int::T,name=&gt;str::T,city=&gt;str::T]]@person
@@ -6686,8 +6700,11 @@ mtron&gt; v1     ​1​
 mtron&gt; *v1     ​2​
 ==&gt;[name=&gt;'marko',age=&gt;29,out_=&gt;[knows=&gt;{!*v2,!*v3},created=&gt;!*v4]]
 mtron&gt; *v1.outE(knows)     ​3​
+==&gt;fail::[lhs range does not match inst domain: rec::T =&gt; elmt::T@/m/grph/vrtx [outE?rng=edge{*}&amp;dom=vrtx(knows){&lt;j&gt;}@&lt;1&gt;]]@/sys/fail/146
 mtron&gt; *v1.outE(knows).outE(created)     ​4​
-mtron&gt; *v1.outE(knows).outE(created).&gt;&gt;name     ​5​</code></pre>
+==&gt;fail::[lhs range does not match inst domain: rec::T =&gt; elmt::T@/m/grph/vrtx [outE?rng=edge{*}&amp;dom=vrtx(knows){&lt;j&gt;}@&lt;1&gt;]]@/sys/fail/148
+mtron&gt; *v1.outE(knows).outE(created).&gt;&gt;name     ​5​
+==&gt;fail::[lhs range does not match inst domain: rec::T =&gt; elmt::T@/m/grph/vrtx [outE?rng=edge{*}&amp;dom=vrtx(knows){&lt;j&gt;}@&lt;1&gt;]]@/sys/fail/150</code></pre>
 </div>
 </div>
 </div>
@@ -6776,8 +6793,11 @@ mtron&gt; *v1     ​2​
     outE_=&gt;[knows=&gt;{[weight=&gt;0.5000,inV_=&gt;!*v2,outV_=&gt;!*v1],[weight=&gt;0.5000,inV_=&gt;!*v4,outV_=&gt;!*v1]}],
     created=&gt;[weight=&gt;0.2000,inV_=&gt;!*v3,outV_=&gt;!*v1]]
 mtron&gt; *v1.out(knows)     ​3​
+==&gt;fail::[lhs range does not match inst domain: rec::T =&gt; elmt::T@/m/grph/vrtx [out?rng=vrtx{*}&amp;dom=vrtx(knows){&lt;j&gt;}@&lt;1&gt;]]@/sys/fail/152
 mtron&gt; *v1.out(knows).out(created)     ​4​
-mtron&gt; *v1.out(knows).out(created).&gt;&gt;name     ​5​</code></pre>
+==&gt;fail::[lhs range does not match inst domain: rec::T =&gt; elmt::T@/m/grph/vrtx [out?rng=vrtx{*}&amp;dom=vrtx(knows){&lt;j&gt;}@&lt;1&gt;]]@/sys/fail/154
+mtron&gt; *v1.out(knows).out(created).&gt;&gt;name     ​5​
+==&gt;fail::[lhs range does not match inst domain: rec::T =&gt; elmt::T@/m/grph/vrtx [out?rng=vrtx{*}&amp;dom=vrtx(knows){&lt;j&gt;}@&lt;1&gt;]]@/sys/fail/156</code></pre>
 </div>
 </div>
 </div>
@@ -7680,7 +7700,7 @@ Note that <code>localhost</code> can be set to any hostname or IP address that i
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; wsclient::[host=&gt;&lt;ws://localhost:8555/mtron&gt;]@/usr/ui/console/remote     ​1​
-==&gt;[
+==&gt;wsclient::[
     host=&gt;ws://localhost:8555/mtron,
     send=&gt;inst?#{*}&lt;=#{?}(#{*}::T),
     send_recv=&gt;inst?#{*}&lt;=#{?}(#{*}::T),
