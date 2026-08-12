@@ -374,6 +374,13 @@ public class mParser {
                         pick(t, 0), pick(t, 3)));
     }
 
+    private static final Pattern MTRON_COMMENT = Pattern.compile(
+            "\\[--.*?(--]|$)|\\[==[\\s\\S]*?==]", Pattern.MULTILINE);
+
+    public static String stripComments(final String input) {
+        return MTRON_COMMENT.matcher(input).replaceAll("");
+    }
+
     public static Parser m_paren_wrap(final Parser parser) {
         return m_paren_wrap(parser, false);
     }
@@ -432,11 +439,10 @@ public class mParser {
 
     public static <O extends Obj> O eval(final String code) {
         final AtomicReference<Obj> running = new AtomicReference<>(noobj());
-        splitOnNonQuotedSequence(code.replaceAll("\\[==.*?=]", ""), ';', false).stream()
+        splitOnNonQuotedSequence(stripComments(code), ';', false).stream()
                 .filter(s -> !s.trim().isEmpty())
                 .map(s -> Arrays.stream(s.split("\n"))
                         .map(String::trim)
-                        .filter(t -> !t.startsWith("[--"))
                         .reduce("", (a, b) -> a + b + "\n"))
                 .map(s -> mParser.parse(s).apply())
                 .filter(o -> !o.isNoObj())
@@ -622,7 +628,7 @@ public class mParser {
     }
 
     public static <O extends Obj> O parse(final String code) {
-        final String trimmed = code.trim();
+        final String trimmed = stripComments(code.trim());
         if (trimmed.isEmpty())
             return (O) noobj();
         // Use cached parser instead of rebuilding on every call
@@ -634,21 +640,15 @@ public class mParser {
             throw MTronException.of("infinite recursion detected in parser: possible left recursion in '%s'", trimmed);
         }
         long parseTime = System.nanoTime() - start;
-
         if (result.isFailure()) {
             throw MTronException.of(formatParseError(result));
         }
-
         start = System.nanoTime();
         O obj = result.get();
         long getTime = System.nanoTime() - start;
-
-        // Log timing for expressions (disable in production)
         // Log timing for expressions (disable in production)
         if (parseTime > 1_000_000) // > 1ms
             LOG.debug("Parse timing for '%s': parse=%dms, get=%dms", trimmed, parseTime / 1_000_000, getTime / 1_000_000);
-
-
         return obj;
     }
 
@@ -688,7 +688,7 @@ public class mParser {
      * match without the following expression succeeding.
      */
     public static <O extends Obj> O parseMulti(final String code) {
-        final String trimmed = code.trim();
+        final String trimmed = stripComments(code.trim());
         if (trimmed.isEmpty())
             return (O) noobj();
 
@@ -1079,19 +1079,7 @@ public class mParser {
                 seq(startToken.trim(), opt(seq(of('?'), m_furi_inst_dom_rng()).map(t -> pick(t, 1)), null), sugar_args(null != endToken), null == endToken ? of("") : endToken.trim())
                         .map(t -> instB(tid.qString(pick(t, 1)), lst(mParser.<Obj>pick(t, 2)))));
     }
-
-
-    public static final Pattern BLOCK_COMMENT_PATTERN = Pattern.compile("(\\[==).*?(==])", Pattern.DOTALL);
-    public static final Pattern LINE_COMMENT_PATTERN = Pattern.compile("(\\[--).*?(--])", Pattern.DOTALL);
-
-    public static String removeBlockComments(final String source) {
-        return BLOCK_COMMENT_PATTERN.matcher(source).replaceAll("");
-    }
-
-    public static String removeLineComments(final String line) {
-        return LINE_COMMENT_PATTERN.matcher(line).replaceAll("");
-    }
-
+    
     public record FileParseError(int lineNumber, String lineString, Exception parseException) {
     }
 
@@ -1152,11 +1140,9 @@ public class mParser {
         final List<String> lines = Files.readAllLines(file.toPath());
         final String source = lines.stream().reduce("", (a, b) -> a + b + "\n");
         final AtomicInteger lineNumber = new AtomicInteger(0);
-        return splitOnNonQuotedSequence(source, ';', false).stream()
+        return splitOnNonQuotedSequence(stripComments(source), ';', false).stream()
                 .map(s -> Arrays.stream(s.split("\n"))
                         .peek(x -> lineNumber.incrementAndGet())
-                        .map(mParser::removeBlockComments)
-                        .map(mParser::removeLineComments)
                         .filter(x -> !x.isBlank())
                         .reduce("", (a, b) -> a + b + "\n"))
                 .peek(s -> LOG.debug("evaluating line: %s", s))

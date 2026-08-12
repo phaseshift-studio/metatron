@@ -120,6 +120,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
     private final GraphittyLogger LOG = Graphitty.log(this);
     private static Terminal terminal;
     private final LineReader reader;
+    private final Widgets widgets;
     private final StatusLine status;
     private final static ConfigurationPath configurations = new ConfigurationPath(
             Paths.get("conf"),                                     // application-wide settings
@@ -286,7 +287,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                     .variable(LineReader.INDENTATION, 0)
                     .completer(new MCompleter(this))
                     .build();
-            new CustomWidgets(this.reader);
+            this.widgets = new Widgets(this.reader) { /* keys bound by CommandPalette.bindKeys */ };
             this.status = new StatusLine(this);
             docWrap(virtual(instLambda((lhs, inst2) -> {
                 Console.this.status.run();
@@ -332,6 +333,10 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
 
     public LineReader getReader() {
         return this.reader;
+    }
+
+    public Widgets getWidgets() {
+        return this.widgets;
     }
 
     public String prompt() {
@@ -775,6 +780,11 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
      */
     public void renderPanes() {
         renderPanes(true);
+    }
+
+    /** Force immediate pane render — never defers for typing. */
+    public void renderPanesNow() {
+        renderPanes(false);
     }
 
     /**
@@ -1244,246 +1254,6 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
         }
         LOG.none("\t{{b}}ve{{y}}rs{{m}}ion {{y}}%s{{X}}\n", METATRON_VERSION);
         Graphitty.out(terminal.output(), "   {{m}}:help{{X}} for console features\n\n");
-    }
-
-    class CustomWidgets extends Widgets {
-        private CustomWidgets(final LineReader reader) {
-            super(reader);
-            getKeyMap().bind((Widget) () -> {
-                Console.this.at("menu/stop-agents").apply(noobj());
-                return true;
-            }, ctrl('d'));
-            getKeyMap().bind((Widget) () -> {
-                Console.this.at("menu/format").apply(noobj());
-                return true;
-            }, alt('f'));
-            /// CYCLE TO NEXT PANE (Alt+N)
-            getKeyMap().bind((Widget) () -> {
-                if (Console.this.splitMode) {
-                    Console.this.at("menu/next-pane").apply(noobj());
-                    this.reader.getBuffer().clear();
-                    callWidget("accept-line");
-                }
-                return true;
-            }, alt('n'));
-            /// CYCLE TO PREVIOUS PANE (Alt+P)
-            getKeyMap().bind((Widget) () -> {
-                if (Console.this.splitMode) {
-                    Console.this.at("menu/prev-pane").apply(noobj());
-                    this.reader.getBuffer().clear();
-                    callWidget("accept-line");
-                } else {
-                    reader.getBuffer().up();
-                    reader.getBuffer().write("\n");
-                }
-                return true;
-            }, alt('p'));
-            /// RESIZE PANE SMALLER (Alt+<)
-            getKeyMap().bind((Widget) () -> {
-                if (Console.this.splitMode) {
-                    Console.this.at("menu/shrink").apply(noobj());
-                    Console.this.redrawBuffer();
-                }
-                return true;
-            }, "\033<");
-            /// RESIZE PANE LARGER (Alt+>)
-            getKeyMap().bind((Widget) () -> {
-                if (Console.this.splitMode) {
-                    Console.this.at("menu/grow").apply(noobj());
-                    Console.this.redrawBuffer();
-                }
-                return true;
-            }, "\033>");
-            /// SPLIT PANE SIDE-BY-SIDE OR STACKED
-            getKeyMap().bind((Widget) () -> {
-                Console.this.at("menu/split").apply(str("v"));
-                Console.this.redrawBuffer();
-                return true;
-            }, "\033[1;3C");  // Alt+<right>
-            getKeyMap().bind((Widget) () -> {
-                Console.this.at("menu/split").apply(str("h"));
-                Console.this.redrawBuffer();
-                return true;
-            }, "\033[1;3A");  // Alt+<up>
-            // Alt+char fallback if CSI sequences cause terminal issues:
-            // getKeyMap().bind((Widget) () -> {
-            //     Console.this.at("menu/split").apply(str("v"));
-            //     Console.this.redrawBuffer();
-            //     return true;
-            // }, alt('v'));
-            // getKeyMap().bind((Widget) () -> {
-            //     Console.this.at("menu/split").apply(str("h"));
-            //     Console.this.redrawBuffer();
-            //     return true;
-            // }, alt('h'));
-            /// TURN ON/OFF TYPE CHECKING
-            getKeyMap().bind((Widget) () -> {
-                Console.this.at("menu/cycle-check").apply(noobj());
-                return true;
-            }, alt('t'));
-            /// FAST NAVIGATION: JUMP BY WORD (Shift+Left/Right)
-            getKeyMap().bind((Widget)
-                    () -> {
-                        callWidget("backward-word");
-                        return true;
-                    }, "\033[1;2D");  // Shift+<left>
-            getKeyMap().bind((Widget)
-                    () -> {
-                        callWidget("forward-word");
-                        return true;
-                    }, "\033[1;2C");  // Shift+<right>
-            /// PUT CURRENT BUFFER IN FULL SCREEN EDITOR
-            getKeyMap().bind((Widget) () -> {
-                Console.this.at("menu/editor").apply(noobj());
-                return true;
-            }, alt('e'));
-            /// QUIT METATRON (CLOSE EVERYTHING)
-            getKeyMap().bind((Widget) () -> {
-                Console.this.at("menu/quit").apply(noobj());
-                return true;
-            }, ctrl('q'));
-            /// CHAT OVERLAY — Alt+L adds a new \_ level below the current one
-            getKeyMap().bind((Widget) () -> {
-                Console.this.at("menu/line").apply(noobj());
-                return true;
-            }, alt('l'));
-            /// CANCEL DEEPEST CHAT LEVEL (ESC) — removes the innermost \_ line,
-            /// backing out one nesting level.  When no \_ lines exist, clears
-            /// the entire buffer (JLine default ESC behaviour).
-            getKeyMap().bind((Widget) () -> {
-                final Buffer buffer = reader.getBuffer();
-                final String text = buffer.toString();
-                // Find the last \_ in the buffer
-                int lastChat = -1, pos = -1;
-                while ((pos = text.indexOf("\\_ ", pos + 1)) >= 0) {
-                    lastChat = pos;
-                }
-                if (lastChat >= 0) {
-                    // Walk back from the \_ to the preceding \n
-                    int lineStart = text.lastIndexOf('\n', lastChat - 1);
-                    if (lineStart < 0) lineStart = 0;
-                    buffer.cursor(lineStart);
-                    buffer.delete(buffer.length() - lineStart);
-                    // If that was the last \_ line, restore normal secondary prompt
-                    if (!buffer.toString().contains("\\_ ")) {
-                        reader.setVariable(LineReader.SECONDARY_PROMPT_PATTERN,
-                                Graphitty.string("{{-X&v1&^1&m}}     {{g}}| {{X}}"));
-                    }
-                } else {
-                    buffer.clear();
-                }
-                return true;
-            }, "\033");
-            /// EXPLAIN BUFFER CODE (IF IS CODE) OR DOT-COMPLETION FOR INSTRUCTIONS
-            getKeyMap().bind((Widget) () -> {
-                try {
-                    final String bufferText = this.reader.getBuffer().toString();
-                    if (bufferText.trim().startsWith(COLON)) {
-                        // colon menu selector widget
-                    } else {
-                        // Check if buffer ends with '.' for instruction completion
-                        if (bufferText.trim().endsWith(".")) {
-                            final Obj parsed = ObjmtronSerializer.parse(bufferText.trim().substring(0, bufferText.trim().length() - 1));
-                            if (parsed.isCode()) {
-                                terminal.writer().write("\n");
-                                final InstSelectorTool selector = new InstSelectorTool(parsed.resolve(noobj()).as(), bufferText);
-                                if (selector.hasItems()) {
-                                    // Constrain the selector to the active pane when in split mode
-                                    if (Console.this.splitMode && Console.this.activePane != null) {
-                                        final int[] pos = Console.this.calculatePanePosition(Console.this.activePane);
-                                        if (pos != null) selector.setPaneBounds(pos[0], pos[1], pos[2], pos[3]);
-                                    }
-                                    Utilities.runCursorLessWidget(selector, true);
-                                    // Restore the full pane layout after the widget closes
-                                    if (Console.this.splitMode) {
-                                        Console.this.renderPanes(false); // restore after fullscreen widget
-                                    }
-                                }
-                            }
-                        } else if (bufferText.trim().startsWith("*") && (bufferText.trim().endsWith("/") || bufferText.trim().endsWith(":"))) {
-                            terminal.writer().write("\n");
-                            final fURISelectorTool selector = new fURISelectorTool(bufferText);
-                            if (selector.hasItems()) {
-                                // Constrain the selector to the active pane when in split mode
-                                if (Console.this.splitMode && Console.this.activePane != null) {
-                                    final int[] pos = Console.this.calculatePanePosition(Console.this.activePane);
-                                    if (pos != null) selector.setPaneBounds(pos[0], pos[1], pos[2], pos[3]);
-                                }
-                                Utilities.runCursorLessWidget(selector, true);
-                                // Restore the full pane layout after the widget closes
-                                if (Console.this.splitMode) {
-                                    Console.this.renderPanes(false); // restore after fullscreen widget
-                                }
-                            }
-                        } else {
-                            // show explain widget for code
-                            final Obj code = ObjmtronSerializer.parse(bufferText);
-                            if (code.isCode()) {
-                                terminal.writer().write("\n");
-                                final ExplainTool explain = new ExplainTool(code.as());
-                                // Constrain the widget to the active pane when in split mode
-                                if (Console.this.splitMode && Console.this.activePane != null) {
-                                    final int[] pos = Console.this.calculatePanePosition(Console.this.activePane);
-                                    if (pos != null) explain.setPaneBounds(pos[0], pos[1], pos[2], pos[3]);
-                                }
-                                Utilities.runCursorLessWidget(explain, true);
-                                // Restore the full pane layout after the widget closes
-                                if (Console.this.splitMode) {
-                                    Console.this.renderPanes(false); // restore after fullscreen widget
-                                }
-                                redrawBuffer();
-                            }
-                        }
-                    }
-                } catch (final Exception e) {
-                    LOG.error(e);
-                }
-                return true;
-            }, key(Console.terminal, InfoCmp.Capability.tab));
-            /// ERASE BUFFER BACK TO FIRST OCCURRENCE OF CHARACTER (Alt+K then <char>)
-            // Bind all printable characters with Alt+K prefix
-            for (char c = 32; c <= 126; c++) {
-                final char targetChar = c;
-                // Alt+K followed by character: ESC + 'k' + character
-                final String altKSequence = "\033k" + c;
-                getKeyMap().bind((Widget) () -> {
-                    eraseBackToChar(targetChar);
-                    return true;
-                }, altKSequence);
-            }
-        }
-
-        /**
-         * Erase the buffer back to (and including) the first occurrence of the target character.
-         * Searches from the current cursor position backwards.
-         */
-        private void eraseBackToChar(char targetChar) {
-            final Buffer buffer = reader.getBuffer();
-            final String currentText = buffer.toString();
-            final int cursorPos = buffer.cursor();
-
-            if (cursorPos == 0) {
-                return; // Nothing to erase
-            }
-
-            // Search backwards from cursor position for the target character
-            int targetPos = -1;
-            for (int i = cursorPos - 1; i >= 0; i--) {
-                if (currentText.charAt(i) == targetChar) {
-                    targetPos = i;
-                    break;
-                }
-            }
-
-            if (targetPos == -1) {
-                // Character not found, do nothing
-                return;
-            }
-
-            // Delete from targetPos to cursor position
-            buffer.cursor(targetPos);
-            buffer.delete(cursorPos - targetPos);
-        }
     }
 
 }

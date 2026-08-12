@@ -62,8 +62,10 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  */
 public class mTool extends MRec {
 
-    /** Stashes raw Obj results before LC4j serialization, keyed by tool call id.
-     *  Retrieved by {@code ToolFeature.onToolExecuted} to preserve nested structure. */
+    /**
+     * Stashes raw Obj results before LC4j serialization, keyed by tool call id.
+     * Retrieved by {@code ToolFeature.onToolExecuted} to preserve nested structure.
+     */
     public static final ConcurrentHashMap<String, Obj> resultStash = new ConcurrentHashMap<>();
 
     public static final Type LLM_TOOL_TYPE = docWrap(Type.Builder.build().tid(REC_TID).vid(LLM_TOOL_TID).isaPredicate(rec(

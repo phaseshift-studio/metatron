@@ -21,7 +21,6 @@ package studio.phaseshift.metatron.util;
 import org.apache.lucene.search.spell.LevenshteinDistance;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Highlighter;
@@ -173,10 +172,6 @@ public final class CommonUtil {
         return lines.length;
     }
 
-    public static String removeComments(final String mtron) {
-        return mParser.removeLineComments(mParser.removeBlockComments(mtron));
-    }
-
     public static String removeQuotes(final String quotedString) {
         String unquotedString = quotedString.trim();
         while (unquotedString.startsWith("\"") || unquotedString.startsWith("'")) {
@@ -235,8 +230,8 @@ public final class CommonUtil {
             if (in == null) {
                 throw MTronException.of(
                         "dictionary_en.txt not found on classpath — "
-                        + "ensure src/main/resources is on the classpath and "
-                        + "dictionary_en.txt is included in the build");
+                                + "ensure src/main/resources is on the classpath and "
+                                + "dictionary_en.txt is included in the build");
             }
             final Set<String> words = new HashSet<>();
             try (final BufferedReader reader = new BufferedReader(

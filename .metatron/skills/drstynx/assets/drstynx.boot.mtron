@@ -56,7 +56,8 @@ memspace::[
         q => [mintq::[=>],
                docq::[=>],
                subq::[=>],
-               mimeq::[=>],
+              mimeq::[=>],
+              lineq::[=>],
               incrq::[=>]]]@</sys/space/usr/marko>;                 
         [=====================]  
         [====== FILE SYS =====]
@@ -67,7 +68,7 @@ fsspace::[
     route => [root: => /usr/bin]]@</sys/space/fs/root>;
 fsspace::[
   pattern => localfs:#,
-        q => [subq::[=>],
+        q => [ subq::[=>],
               mimeq::[=>],
               safeq::[=>]],
     route => [localfs: => <~/.hermes_clone>]]@</sys/space/fs/dr>; 
@@ -86,7 +87,7 @@ httpspace::[host     => !*<boot/args/external/web/http>,
             q        => [mimeq::[=>]],
             pattern  => <http://#>,
             route    => [/mcp     => mcp_mtron_http,
-                         /       => <>]]@/sys/space/web/http;   
+                         /        => <>]]@/sys/space/web/http;   
 [==  
 *boot/args/external/ollama.mult(api/tags/models).*(_).>-.
   =?=[capabilities=>[embedding]].
@@ -110,8 +111,8 @@ httpspace::[host     => !*<boot/args/external/web/http>,
         [=====================]
         [======= DOCKER ======]
         [=====================]
-dckrspace::[host    => <unix:///var/run/docker.sock>,
-            pattern => docker:#,
+dckrspace::[host     => <unix:///var/run/docker.sock>,
+            pattern  => docker:#,
             progress => progress_table::[style => style::[body          => "{{y}}={{g}}",
                                                           pointer       => "{{g}}>{{X}}",
                                                           border        => continuous,
@@ -140,7 +141,7 @@ tblespace::[pattern    => </usr/dr/#>,
             table      => [,],
             q          => [incrq::[=>],subq::[=>]],
             route      => [/usr/dr/ => <>]]@</sys/space/usr/dr>;
-wsspace::[host     => !*<boot/args/external/web/ws>,
+wsspace::[host    => !*<boot/args/external/web/ws>,
          pattern  => <ws://#>,
          route    => [/mcp   => mcp_mtron_ws,
                       /mtron => mtron_ws]]@/sys/space/web/ws;       
@@ -151,14 +152,6 @@ mqttspace::[host    => <mqtt://ginger.local:1883>,
         [=====================]
         [======== LLM ========]
         [=====================]                
-[==
-tblespace::[pattern    => drdb:#,
-            host       => !*<boot/args/external/session>,
-            driver     => <org.mariadb.jdbc.Driver>,
-            q          => [incrq::[=>],subq::[=>]],
-            route      => [drdb:embedding/abc => v:abc,
-                           drdb:              => <>]]@/sys/space/tble/dr
-==]
 [==            
 vecspace::[pattern     => v:#,
            host        => !*<boot/args/external/embedding>,
