@@ -1953,6 +1953,55 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathTest impleme
     }
 
     // =========================================================================
+    //  KvStore TID column — primitive sub-type round-trip
+    // =========================================================================
+
+    /**
+     * Verifies that primitive sub-types (e.g., {@code usd_currency}) survive
+     * a write/read cycle through the kv_store table.  Each CSV row writes
+     * a typed value, reads it back, and asserts the TID matches.
+     *
+     * <pre>
+     * CSV columns: {@code type_uri, value, expectedType}
+     * </pre>
+     */
+    @ParameterizedTest(name = "[{index}] {0} {2} round-trip")
+    @CsvSource(delimiter = '%', value = {
+            /* Rows are: db:kv/<entry> % <value expression> % <expected tid> */
+            "db:kv/cost_in    % usd_currency::0.0008 % usd_currency",
+            "db:kv/cost_out   % usd_currency::0.0005 % usd_currency",
+            "db:kv/cost_total % usd_currency::0.0012 % usd_currency",
+    })
+    public void testKvStoreTidPreserved(String uri, String valueEncoded, String expectedTid) throws Exception {
+        // Ensure math ISA is loaded so usd_currency type is registered
+        InstSet.importInstSet(f("/m/math"));
+        final Obj value = parseObj(valueEncoded);
+        final fURI expectedTidURI = f(expectedTid);
+
+        final tbleSpace space = createTestSpace();
+        try {
+            // Write a typed real value to kv_store
+            Router.writeToSpace(f(uri), value);
+
+            // Read it back
+            final Obj roundTripped = Router.readFromSpace(f(uri));
+            assertFalse(roundTripped.isNoObj(), "should read back non-noobj");
+            assertTrue(roundTripped.isReal(), "should be a real");
+            assertEquals(value.realValue(), roundTripped.realValue(), 0.0,
+                    "numeric value should be preserved");
+
+            // The key assertion: subtype TID must survive the write/read cycle
+            assertEquals(expectedTidURI, roundTripped.tid(),
+                    "TID should be " + expectedTid + " — kv_store.tid column must preserve sub-type");
+
+            LOG.info("kv_store tid round-trip OK: %s → %s", value, roundTripped);
+        } finally {
+            Router.global().removeSpace(space.vid());
+            space.close();
+        }
+    }
+
+    // =========================================================================
     //  _mtron_meta column-type persistence — on-first-write
     // =========================================================================
 

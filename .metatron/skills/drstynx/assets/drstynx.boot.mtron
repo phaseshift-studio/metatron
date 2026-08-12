@@ -227,14 +227,14 @@ agent::[
                        think          => [to => inst(a=>str::T){ @<think_widget>>>=[body=>+*a].display() }]],
     loop_feature:::::::[max_loop      => 100],                         
     comment_feature::::[              => ],
-    skill_feature::::::[skill         => [!(*<metatronfs:skills/agent/SKILL.md>.-<'/usr/agent'>-.
+    skill_feature::::::[skill         => [[==!(*<metatronfs:skills/agent/SKILL.md>.-<'/usr/agent'>-.
                                             plus(*<boot/args/internal/agent_home>.as(str::T)).
                                             sum?str<=str{*}().
                                             as(markdown::T).
-                                            as(skill::T)),
+                                            as(skill::T)),==]
                                            metatronfs:skills/metatron, 
                                            metatronfs:skills/mtron]],
-    concept_feature::::[base          => /usr/dr/concept,
+    concept_feature::::[root          => /usr/dr/concept,
                         extractor     => lucene],
     tool_feature:::::::[tool          => [!*eval,!*sql,!*codegraph]],
     audit_feature::::::[on_agent_ctor => inst(a=>agent::T) {  
@@ -242,7 +242,12 @@ agent::[
                                                        body   => "",
                                                        style  => style::[anchor=>bottom_right,width=>65,height=>30,
                                                                         left=>-2,top=>8,foreground =>"{{y}}"]]@<audit_widget> },
-                        to            => inst(a=>str::T){ @<audit_widget>>>=[body=>+*a].display() }]]]@<dr>; 
+                        to            => inst(a=>str::T){ @<audit_widget>>>=[body=>+*a].display() }],
+    cost_feature:::::::[root          => /usr/dr/cost,
+                        to            => inst(in_cost=>real::T,out_cost=>real::T,total_cost=>real::T){ 
+                                           /usr/marko/console/status("cost total: ${*2} [in: ${*0} out: ${*1}]") },
+                        rate          => [in  => usd_currency::0.435,
+                                          out => usd_currency::0.870]]]]@<dr>; 
 [-- end::asciidoc_tag[] --]
 [== user console ==] 
 console::[agent=>dr,header=>!*boot/args/header]@/usr/marko/console;

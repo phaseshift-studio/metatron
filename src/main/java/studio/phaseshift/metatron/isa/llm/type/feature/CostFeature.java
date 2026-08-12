@@ -1,83 +1,114 @@
+/*
+ * metatron: a distributed virtual machine and language
+ *  Copyright (C) 2025- PhaseShift Studio, LLC
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for the terms of the License.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package studio.phaseshift.metatron.isa.llm.type.feature;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.llm.CostCalculator;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
-import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.m.type.Fail;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Real;
+import studio.phaseshift.metatron.isa.m.type.Str;
+import studio.phaseshift.metatron.isa.mach.type.Router;
 
 import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.isa.llm.type.Agent.res;
-import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
-import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
- * Tracks LLM cost across the chat lifecycle.  During {@code onBeforeChat}
- * it scans features for model configs and looks up provider pricing.
- * Streaming hooks accumulate cost deltas, and {@code onCompleteResponse}
- * writes the final cost rec to the Agent's result blackboard.
+ * Tracks LLM cost during chat using real token data from {@link CostCalculator}.
+ * Pricing is configured on this feature itself (not the model):
+ *
+ * <pre>
+ * cost_feature::[root             =&gt; /usr/dr/cost,
+ *                 cost =&gt; [in_cost  =&gt; usd_currency::0.065,
+ *                           out_cost =&gt; usd_currency::0.001]]
+ * </pre>
+ * <p>
+ * During {@code onBeforeChat} it creates a {@link CostCalculator} from its own
+ * pricing config and stores it on the Agent.  The calculator is wired into
+ * LangChain4j by {@code LLMFactory.createChatInteraction}, accumulates real
+ * token costs during streaming, and {@code onCompleteResponse} writes the
+ * final totals to space at {@code root/in}, {@code root/out}, {@code root/total}.
  */
 public class CostFeature extends AbstractFeature {
 
-    private double inboundCostPerToken = 0.0;
-    private double outboundCostPerToken = 0.0;
-    private double accumulatedCost = 0.0;
+    private static final fURI ROOT = f("root");
+    private final fURI currencyTID;
+    private final CostCalculator calculator;
+
+    private record Cost(Real in, Real out, Real total) {
+    }
 
     public CostFeature(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
+        this.currencyTID = this.at(f(RATE).extend(IN)).orElse(real(0.0)).tid();
+        this.calculator = new CostCalculator(this.at(f(RATE).extend(IN)).realValue(), this.at(f(RATE).extend(OUT)).realValue(), this.currencyTID);
     }
 
     @Override
-    public Obj onBeforeChat(final Agent agent) {
-        // TODO: scan feature list for models, query provider pricing APIs
-        // For now, read cost from the ChatFeature's model config
-        final Obj chatFeat = agent.feature(CHAT);
-        final Obj chatModel = chatFeat.isNoObj() ? noobj() : ((Poly) chatFeat).at(uri(MODEL));
-        if (!chatModel.isNoObj()) {
-            final Rec model = chatModel.asRec();
-            final Obj costConfig = model.at(uri(COST));
-            if (!costConfig.isNoObj()) {
-                final Rec costRec = costConfig.asRec();
-                this.inboundCostPerToken = costRec.at(uri("in")).orElse(real(0d)).realValue();
-                this.outboundCostPerToken = costRec.at(uri("out")).orElse(real(0d)).realValue();
-            }
-        }
-        this.accumulatedCost = 0.0;
-        agent.at(res(COST), rec(), MUTABLE);
-        return noobj();
+    public void onAgentCtor(final Agent agent) {
+        // Create calculator and store on Agent; LLMFactory will pick it up
+        this.calculator.setCost(this.at(f(COST).extend(IN)).orElse(real(0.0)).realValue(), this.at(f(COST).extend(IN)).orElse(real(0.0)).realValue());
+        agent.costCalculator().set(this.calculator);
     }
 
-    @Override
-    public void onToolExecuted(final Agent agent, final Obj result) {
-        // Accumulate cost based on tool execution bytes
-        if (result.isRec()) {
-            final Rec r = result.asRec();
-            final String toolResult = r.at(uri(RESULT)).orElse(noobj()).strValue();
-            if (!toolResult.isBlank())
-                this.accumulatedCost += toolResult.getBytes().length * this.inboundCostPerToken;
-        }
-    }
 
     @Override
     public void onCompleteResponse(final Agent agent, final Str response) {
-        final double responseCost = response.strValue().getBytes().length * this.outboundCostPerToken;
-        this.accumulatedCost += responseCost;
-
-        final Rec costRec = rec(
-                uri("inbound"), real(this.accumulatedCost * this.inboundCostPerToken),
-                uri("outbound"), real(responseCost),
-                uri("total"), real(this.accumulatedCost)
-        );
-        agent.at(res(COST), costRec, MUTABLE);
+        final Cost cost = persistCost();
+        LOG.info("running cost: %s => %s", cost, this.at(TO));
+        if (!this.at(TO).isNoObj())
+            this.at(TO).asInst().args(lst(cost.in(), cost.out(), cost.total())).apply(jnt(1));
     }
 
     @Override
     public void onError(final Agent agent, final Fail fail) {
-        // Finalize cost even on error
-        final Rec costRec = rec(
-                uri("total"), real(this.accumulatedCost)
-        );
-        agent.at(res(COST), costRec, MUTABLE);
+        // Finalize cost even on error — whatever accumulated is still useful
+        final Cost cost = persistCost();
+        if (!this.at(TO).isNoObj())
+            this.at(TO).asInst().args(lst(cost.in(), cost.out(), cost.total())).apply(jnt(1));
+    }
+
+    /**
+     * Read cost data from the Agent blackboard and persist to space.
+     * The blackboard is populated by Agent.chat() Phase 3 right before
+     * feature hooks fire, so features can read it here.
+     */
+    public Cost persistCost() {
+        final fURI root = this.at(ROOT).orThrow("no cost_feature root provided").uriValue();
+        final Real inCost = real(this.calculator.getInputCost(), this.currencyTID, null);
+        final Real outCost = real(this.calculator.getOutputCost(), this.currencyTID, null);
+        final Real totalCost = real(this.calculator.getTotalCost(), this.currencyTID, null);
+        try {
+            // Write in/out/total to space so other features (e.g., AuditFeature) can read it
+            Router.writeToSpace(root.extend(IN), inCost);
+            Router.writeToSpace(root.extend(OUT), outCost);
+            Router.writeToSpace(root.extend(TOTAL), totalCost);
+            LOG.info("persisted cost to %s: in=%.4f, out=%.4f, total=%.4f", root.toString(), inCost.realValue(), outCost.realValue(), totalCost.realValue());
+        } catch (final Exception e) {
+            LOG.warn("failed to persist cost data: %s", e.getMessage());
+        }
+        return new Cost(inCost, outCost, totalCost);
     }
 }

@@ -220,7 +220,7 @@ public class ConceptFeature extends AbstractFeature {
                 uri(TOOL), lst(
                         docWrap(instC(MESSAGES_INST_TID.dom(ALL.maybe()).rng(STR_TID.maybeSome()),
                                         lst(URI_TYPE),
-                                        start_(jnt(0)).from_(uri("0")).dedup_().swap_(block_(mult_(uri(this.getBaseURI())))).from_(id_()).select_(uri(f("message").extend("+").extend("text"))).tryToInst()),
+                                        start_(jnt(0)).from_(uri("0")).dedup_().swap_(block_(mult_(uri(this.getRootUri())))).from_(id_()).select_(uri(f("message").extend("+").extend("text"))).tryToInst()),
                                 "maybe an obj",
                                 "a stream of message texts",
                                 Map.of(jnt(0), "a concept uri"),
@@ -228,7 +228,7 @@ public class ConceptFeature extends AbstractFeature {
                                 MESSAGES_INST_TID + "(metatron) [-- returns messages discussing metatron --]"),
                         docWrap(instC(CONCEPTS_INST_TID.dom(ALL.maybe()).rng(LST_TID.maybeSome()),
                                         lst(URI_TYPE),
-                                        start_(jnt(0)).from_(uri("0")).dedup_().swap_(block_(mult_(uri(this.getBaseURI())))).from_(id_()).select_(uri("concept")).tryToInst()),
+                                        start_(jnt(0)).from_(uri("0")).dedup_().swap_(block_(mult_(uri(this.getRootUri())))).from_(id_()).select_(uri("concept")).tryToInst()),
                                 "maybe an obj",
                                 "a lst of related concept auto_froms",
                                 Map.of(jnt(0), "a concept uri"),
@@ -258,20 +258,20 @@ public class ConceptFeature extends AbstractFeature {
     // Shared concept storage
     // =========================================================================
 
-    private fURI getBaseURI() {
-        return this.at(BASE).uriValue();
+    private fURI getRootUri() {
+        return this.at(ROOT).uriValue();
     }
 
     /**
      * Lazily populate {@link #knownConceptNames} from the concept space.
-     * Each concept is stored as a direct child of {@link #getBaseURI()};
+     * Each concept is stored as a direct child of {@link #getRootUri()};
      * we enumerate them via the {@code +/} branch query.
      */
     private void loadExistingConceptNames() {
         if (this.knownConceptNamesLoaded) return;
         this.knownConceptNamesLoaded = true;
         try {
-            final Obj children = Router.readFromSpace(this.getBaseURI().extend("+/"));
+            final Obj children = Router.readFromSpace(this.getRootUri().extend("+/"));
             if (children.isLst()) {
                 children.asLst().stream()
                         .filter(o -> !o.isNoObj())
@@ -321,7 +321,7 @@ public class ConceptFeature extends AbstractFeature {
         try {
             LOG.debug("concepts to process: %s", correctedStrings);
             for (final String concept : correctedStrings) {
-                final fURI conceptURI = this.getBaseURI().extend(concept);
+                final fURI conceptURI = this.getRootUri().extend(concept);
                 final Rec conceptRec = Router.readFromSpace(conceptURI).orElse(rec());
                 //if (!conceptRec.has(CONCEPT)) conceptRec.at(CONCEPT, uri(concept), MUTABLE);
                 final Lst conceptLink = conceptRec.at(CONCEPT).orElse(lst());
@@ -329,7 +329,7 @@ public class ConceptFeature extends AbstractFeature {
                 final int conceptLinkListSize = conceptLinkList.size();
                 conceptLinkList.addAll(correctedStrings.stream()
                         .filter(c -> !c.equals(concept))
-                        .map(c -> auto_from_(this.getBaseURI().extend(c)).tryToInst()).toList());
+                        .map(c -> auto_from_(this.getRootUri().extend(c)).tryToInst()).toList());
                 if (conceptLinkList.size() > conceptLinkListSize) {
                     conceptRec.jvm().put(uri(CONCEPT), lst(new ArrayList<>(conceptLinkList)));
                     if (agent.hasFeature(SESSION)) {

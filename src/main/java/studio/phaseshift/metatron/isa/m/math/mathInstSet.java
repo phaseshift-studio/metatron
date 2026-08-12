@@ -108,6 +108,7 @@ public class mathInstSet extends AbstractInstSet {
     public static final Type MATH_CURRENCY_TYPE = Type.Builder.build()
             .tid(REAL_TID)
             .vid(MATH_CURRENCY_TID)
+            .isaPredicate(REAL_TYPE) // TODO: fix
             .create();
 
     static {

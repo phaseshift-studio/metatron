@@ -239,8 +239,9 @@ public final class LLMFactory {
                                 .logger(Graphitty.log(OllamaStreamingChatModel.class).logger(Level.WARN));
                 if (hasResponseFormat)
                     builder = builder.responseFormat(createResponseFormat(responseFormat2));
-                if (!model.at(COST).isNoObj())
-                    builder.listeners(List.of(new CostCalculator(model.at(COST).as())));
+                final CostCalculator calculator = agent.costCalculator().get();
+                if (calculator != null)
+                    builder.listeners(List.of(calculator));
                 yield builder.build();
             }
             case OPENAI -> {
@@ -268,8 +269,9 @@ public final class LLMFactory {
                         .logger(Graphitty.log(OpenAiStreamingChatModel.class).logger(Level.WARN))
                         .timeout(Duration.ofSeconds(60))
                         .responseFormat(openAiFormat);
-                if (!model.at(COST).isNoObj())
-                    builder.listeners(List.of(new CostCalculator(model.at(COST).as())));
+                final CostCalculator calculator = agent.costCalculator().get();
+                if (calculator != null)
+                    builder.listeners(List.of(calculator));
                 yield builder.build();
             }
             case ANTHROPIC -> {
@@ -283,8 +285,9 @@ public final class LLMFactory {
                                 // .listeners(model.cost().isPresent() ? List.of(new CostCalculator(model.cost().get())) : null)
                                 .logger(Graphitty.log(AnthropicStreamingChatModel.class).logger(Level.WARN))
                                 .responseFormat(createResponseFormat(responseFormat));
-                if (!model.at(COST).isNoObj())
-                    builder.listeners(List.of(new CostCalculator(model.at(COST).as())));
+                final CostCalculator calculator = agent.costCalculator().get();
+                if (calculator != null)
+                    builder.listeners(List.of(calculator));
                 yield builder.build();
             }
 

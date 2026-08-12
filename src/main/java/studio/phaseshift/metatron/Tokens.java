@@ -70,6 +70,7 @@ public final class Tokens {
     public static final String ID = "id";
     public static final String IN = "in";
     public static final String OUT = "out";
+    public static final String TOTAL = "total";
     public static final String COEFFICIENT = "coefficient";
     public static final String QUERY = "query";
     public static final String DOM = "dom";
@@ -84,6 +85,7 @@ public final class Tokens {
     public static final String LICENSE = "license";
     public static final String THINK = "think";
     public static final String COST = "cost";
+    public static final String RATE = "rate";
     public static final String THOUGHT = "thought";
     public static final String MEMORY = "memory";
     public static final String SESSION = "session";

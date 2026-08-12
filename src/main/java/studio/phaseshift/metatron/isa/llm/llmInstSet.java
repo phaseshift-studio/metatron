@@ -36,6 +36,7 @@ import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.DOCS_TID;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.llm.type.Agent.agent;
@@ -415,10 +416,20 @@ public class llmInstSet extends AbstractInstSet {
                         docWrap(Type.Builder.build()
                                         .tid(LLM_FEATURE_TID)
                                         .vid(LLM_COST_FEATURE_TID)
+                                        .isaPredicate(rec(
+                                                uri(ROOT), URI_TYPE,
+                                                uri(RATE), rec(
+                                                        uri(IN), MATH_CURRENCY_TYPE,
+                                                        uri(OUT), MATH_CURRENCY_TYPE)))
                                         .constructor(arg -> createStageLambdas(new CostFeature(arg.asRec().jvm(), LLM_COST_FEATURE_TID, arg.vid())))
                                         .create(),
-                                null, null, mutableMap(),
-                                "tracks per-model pricing and accumulates cost during execution"),
+                                null, null, mutableMap(
+                                        uri(ROOT), "the URI prefix where cost data is persisted (e.g., /usr/dr/cost)",
+                                        uri(f(RATE).extend(IN)), "cost per million input tokens",
+                                        uri(f(RATE).extend(OUT)), "cost per million output tokens"
+                                ),
+                                "tracks real token-based LLM costs via CostCalculator, persists in/out/total to space",
+                                "cost_feature::[root=>/usr/dr/cost,cost=>[in_cost=>usd_currency::0.065,out_cost=>usd_currency::0.001]]"),
                         docWrap(Type.Builder.build()
                                         .tid(LLM_FEATURE_TID)
                                         .vid(LLM_AUDIT_FEATURE_TID)
