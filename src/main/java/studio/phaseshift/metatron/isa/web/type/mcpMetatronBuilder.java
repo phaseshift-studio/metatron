@@ -76,7 +76,9 @@ public final class mcpMetatronBuilder {
             try {
                 final Obj reparsed = ObjmtronSerializer.singleNoClip()
                         .inputBytes(studio.phaseshift.metatron.isa.m.type.Str.Helper.cleanString(arg));
-                if (!reparsed.isFail())
+                // Only replace if mtron found a better type — URI→URI means the
+                // original was correct and re-parsing would double-resolve paths.
+                if (!reparsed.isFail() && !reparsed.isUri())
                     return reparsed;
             } catch (final Exception ignored) {
                 // plain text that isn't mtron — keep original
