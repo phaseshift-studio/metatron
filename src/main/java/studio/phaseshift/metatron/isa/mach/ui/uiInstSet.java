@@ -115,7 +115,9 @@ public class uiInstSet extends AbstractInstSet {
                                 //.isaPredicate(rec())
                                 .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(UI_CONSOLE_TID), lst(T(REC_TID)), (lhs, inst) -> {
                                     final Console console = new Console(inst.arg(0).as(), inst.arg(0).vid());
-                                    new CommandPalette(console).attach(rec());
+                                    final CommandPalette palette = new CommandPalette(console);
+                                    palette.attach(rec());
+                                    palette.bindKeys(console.getWidgets());
                                     docWrap(virtual(instLambda((_lhs, inst2) -> {
                                         console.run();
                                         return noobj();

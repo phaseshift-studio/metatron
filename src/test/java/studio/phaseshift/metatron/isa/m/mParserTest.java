@@ -28,7 +28,6 @@ import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.Bytes;
-import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.impl.MCode;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
@@ -40,11 +39,8 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static studio.phaseshift.metatron.AbstractMetatronTest.checkCodeParseApply;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.plus_;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.start_;
 import static studio.phaseshift.metatron.isa.m.parser.mParser.m_bool;
 import static studio.phaseshift.metatron.isa.m.parser.mParser.m_bytes;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -55,7 +51,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
-import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 
@@ -197,21 +192,35 @@ public class mParserTest extends AbstractMetatronTest {
     }
 
     // Comment tests that don't fit in CSV (brackets, multi-line)
-    @Test
-    public void testCommentParseEdgeCases() {
-        // Comment-only
-        assertTrue(ObjmtronSerializer.parse("[-- a comment --]").isNoObj());
-        assertTrue(ObjmtronSerializer.parse("[== a block ==]").isNoObj());
-        assertTrue(ObjmtronSerializer.parse("[-- a comment \n\n --]\n\n").isNoObj());
-        // Leading line comment + expression
-        assertEquals(start_(jnt(1)).plus_(jnt(2)),
-                ObjmtronSerializer.parse("[-- a comment --]\n\r1+2"));
-        assertEquals(plus_(jnt(2)).tryToInst(),
-                ObjmtronSerializer.parse("[-- a comment --]\n\rplus(2)"));
-        assertEquals(start_(jnt(1)).plus_(jnt(2)),
-                ObjmtronSerializer.parse("[-- a comment\n\r\n\r --]1+2"));
-        // Invalid comment syntax
-        assertThrows(Exception.class, () -> ObjmtronSerializer.parse("-- a comment\n\n --"));
+    @ParameterizedTest
+    @CsvSource(value = {
+            // ; sugar path through operator chain
+            "[-- a comment --]                                                     % noobj",
+            "[== a comment ==]                                                     % noobj",
+            "[== a comment ==]1+2                                                  % 1.plus(2)",
+            "1+[== a comment ==]2                                                  % 1.plus(2)",
+            "1[== a comment ==]+[--more--]2                                        % 1.plus(2)",
+            "~[-- a comment --]\n\n~                                               % noobj",
+            "~[-- a comment \n\n --]\n1+2\n~                                       % <ERROR>",
+            "~[== a comment \n\n ==]\n1+2\n~                                       % 1.plus(2)",
+            "~[== [-- a comment --] \n\n ==]\n1+2\n~                               % 1.plus(2)",
+            "~[== [-- a; comment; --] \n\n ==]\n;map(2)\n~                         % map(2)",
+            "~[== [-- a; comment; --]\r\n\r\n \n\n ==]\n;map(2)\n~                 % map(2)",
+            "~[----]~                                                              % noobj",
+            "~[====]~                                                              % noobj",
+            // [-- closed by EOL (no --]), not by --]
+            "~[-- just to eol\n1+2~                                                % 1.plus(2)",
+            // [-- with --] appearing twice — non-greedy stops at first
+            "~[-- a -- b --]c--]~                                                  % <ERROR>",
+            // [== containing bare [-- that closes at EOL mid-block
+            "~[== line1 [-- inline\nline3 ==]\n1+2~                                % 1.plus(2)",
+            // Stray --] / ==] without opener — should parse as expression? error?
+            "~--]~                                                                 % <ERROR>",
+            "~==]~                                                                 % <ERROR>",
+
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testCommentParseEdgeCases(final String lhs, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, lhs, expected);
     }
 
     // ========================================
@@ -262,11 +271,11 @@ public class mParserTest extends AbstractMetatronTest {
 
         // Mid-expression comments: parser limitation — m_comment() in obj_parser
         // greedily matches as a standalone expression, stopping before the value.
-        assertThrows(Exception.class, () -> ObjmtronSerializer.parse("1+[-- comment --]2"));
-        assertThrows(Exception.class, () -> ObjmtronSerializer.parse("1.[-- comment --]plus(2)"));
-        assertThrows(Exception.class, () -> ObjmtronSerializer.parse("[1,[-- c --]2,3]"));
-        assertThrows(Exception.class, () -> ObjmtronSerializer.parse("[a=>1,[-- c --]b=>2]"));
-        assertThrows(Exception.class, () -> ObjmtronSerializer.parse("1+[== block ==]2"));
+        assertDoesNotThrow(() -> ObjmtronSerializer.parse("1+[-- comment --]2"));
+        assertDoesNotThrow(() -> ObjmtronSerializer.parse("1.[-- comment --]plus(2)"));
+        assertDoesNotThrow(() -> ObjmtronSerializer.parse("[1,[-- c --]2,3]"));
+        assertDoesNotThrow(() -> ObjmtronSerializer.parse("[a=>1,[-- c --]b=>2]"));
+        assertDoesNotThrow(() -> ObjmtronSerializer.parse("1+[== block ==]2"));
     }
 
     // ========================================
@@ -588,7 +597,7 @@ public class mParserTest extends AbstractMetatronTest {
             "plus(1,2)                                                   % ok                % instruction call",
     }, delimiter = '%', quoteCharacter = '~')
     public void testParseDiagnoseSuccessCases(final String code,
-                                               final String expectedMsgFragment, final String desc) {
+                                              final String expectedMsgFragment, final String desc) {
         final mParser.ParseDiagnostic diag = mParser.parseDiagnose(code);
         assertTrue(diag.success(),
                 () -> desc + ": should succeed, got: " + diag.message());
@@ -619,7 +628,7 @@ public class mParserTest extends AbstractMetatronTest {
             "1.-<[-<[?>0=>5,_=>_]>                                       % unclosed '['      % operator chars mask real unclosed bracket",
     }, delimiter = '%', quoteCharacter = '~')
     public void testParseDiagnoseFailureCases(final String code,
-                                               final String expectedMsgFragment, final String desc) {
+                                              final String expectedMsgFragment, final String desc) {
         final mParser.ParseDiagnostic diag = mParser.parseDiagnose(code);
         assertFalse(diag.success(),
                 () -> desc + ": should fail");

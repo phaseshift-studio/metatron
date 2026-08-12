@@ -22,11 +22,15 @@ import org.jline.builtins.Commands;
 import org.jline.builtins.TTop;
 import org.jline.reader.Buffer;
 import org.jline.reader.LineReader;
+import org.jline.reader.Widget;
+import org.jline.utils.InfoCmp;
+import org.jline.widget.Widgets;
 import org.slf4j.event.Level;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.Tracer;
 import studio.phaseshift.metatron.TypeCheck;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
@@ -40,15 +44,22 @@ import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.mach.type.ui.tmux.Pane;
 import studio.phaseshift.metatron.isa.mach.type.ui.tmux.SplitLayout;
+import studio.phaseshift.metatron.isa.mach.type.ui.tool.ExplainTool;
+import studio.phaseshift.metatron.isa.mach.type.ui.tool.InstSelectorTool;
+import studio.phaseshift.metatron.isa.mach.type.ui.tool.fURISelectorTool;
 import studio.phaseshift.metatron.isa.mach.type.ui.widget.PanelWidget;
 import studio.phaseshift.metatron.isa.mach.type.ui.widget.SubsWidget;
 import studio.phaseshift.metatron.isa.mach.type.ui.widget.TableWidget;
+import studio.phaseshift.metatron.isa.mach.type.ui.widget.Utilities;
 
 import java.io.PrintStream;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
+import static org.jline.keymap.KeyMap.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_INST_TID;
@@ -71,6 +82,11 @@ public final class CommandPalette extends MRec {
     public static final fURI COMMAND_PALETTE_TID = UI_CONSOLE_TID.extend("command_palette");
     private final GraphittyLogger LOG = Graphitty.log(this);
     private final Console console;
+
+    /**
+     * Simple 1:1 key bindings that just dispatch to the named command.
+     */
+    private final List<Map.Entry<String, String>> simpleKeys = new ArrayList<>();
 
     public Rec attach(final Rec menuRec, final String... menuItemsToAdd) {
         for (final String item : menuItemsToAdd.length == 0 ? this.getMenuItems() : menuItemsToAdd) {
@@ -171,6 +187,7 @@ public final class CommandPalette extends MRec {
             System.exit(0);
             return noobj();
         }), MUTABLE);
+        bindKey("quit", ctrl('q'));
 
         // ===== reset =====
         this.at("reset", instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(NOOBJ_TID), lst(), (lhs, inst) -> {
@@ -194,7 +211,7 @@ public final class CommandPalette extends MRec {
                 if (args.length > 1)
                     GraphittyLogger.setDefaultTargetPane(Integer.parseInt(args[1]));
             }
-            LOG.none("log level: %s [target pane: %s]\n", LogObj.getSLF4J().toString().toLowerCase(), GraphittyLogger.getDefaultTargetPane());
+            LOG.info("log level: %s [target pane: %s]", LogObj.getSLF4J().toString().toLowerCase(), GraphittyLogger.getDefaultTargetPane());
             return noobj();
         }), MUTABLE);
 
@@ -402,6 +419,7 @@ public final class CommandPalette extends MRec {
             }
             return noobj();
         }), MUTABLE);
+        bindKey("format", alt('f'));
 
         // ===== next-pane (Ctrl+W) =====
         this.at("next-pane", instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(NOOBJ_TID), lst(), (lhs, inst) -> {
@@ -446,12 +464,14 @@ public final class CommandPalette extends MRec {
             StatusLine.message(str("typer: " + TypeCheck.getEnabled()));
             return noobj();
         }), MUTABLE);
+        bindKey("cycle-check", alt('t'));
 
         // ===== editor (Ctrl+Y) =====
         this.at("editor", instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(NOOBJ_TID), lst(), (lhs, inst) -> {
             Editor.of(console, console.getReader().getBuffer().toString());
             return noobj();
         }), MUTABLE);
+        bindKey("editor", alt('e'));
 
         // ===== line (Alt+L) — add a new \_ chat overlay line below the buffer =====
         this.at("line", instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(NOOBJ_TID), lst(), (lhs, inst) -> {
@@ -469,6 +489,7 @@ public final class CommandPalette extends MRec {
                     Graphitty.string("{{-X-}}{{v1&^1&m}}"));
             return noobj();
         }), MUTABLE);
+        bindKey("line", alt('l'));
     }
 
     /**
@@ -483,6 +504,224 @@ public final class CommandPalette extends MRec {
      */
     private static String cc(final String text) {
         return "{{m}}" + text + "{{X}}";
+    }
+
+    /**
+     * Register a simple 1:1 key binding that dispatches to the named command.
+     * Call this right after the corresponding {@code this.at(name, ...)} definition.
+     */
+    private void bindKey(final String command, final String keySequence) {
+        this.simpleKeys.add(Map.entry(command, keySequence));
+    }
+
+    // ========== Keyboard Shortcuts ==========
+
+    /**
+     * Register all keyboard shortcuts on the given {@link Widgets} instance.
+     * Each widget is a thin dispatcher — the action logic lives in this palette's
+     * {@code :command} entries.
+     */
+    public void bindKeys(final Widgets widgets) {
+        // Simple 1:1 dispatch — declared alongside the command via key(name, sequence)
+        for (final Map.Entry<String, String> binding : this.simpleKeys) {
+            widgets.getKeyMap().bind((Widget) () -> {
+                this.at(binding.getKey()).apply(noobj());
+                return true;
+            }, binding.getValue());
+        }
+
+        // stop-agents — still inline (command temporarily commented out)
+        widgets.getKeyMap().bind((Widget) () -> {
+            this.at("stop-agents").apply(noobj());
+            return true;
+        }, ctrl('d'));
+
+        // -------------------------------------------------------
+        // Panes
+        widgets.getKeyMap().bind((Widget) () -> {
+            if (console.isSplitMode()) {
+                this.at("next-pane").apply(noobj());
+                console.getReader().getBuffer().clear();
+                widgets.callWidget("accept-line");
+            }
+            return true;
+        }, alt('n'));
+        widgets.getKeyMap().bind((Widget) () -> {
+            if (console.isSplitMode()) {
+                this.at("prev-pane").apply(noobj());
+                console.getReader().getBuffer().clear();
+                widgets.callWidget("accept-line");
+            } else {
+                console.getReader().getBuffer().up();
+                console.getReader().getBuffer().write("\n");
+            }
+            return true;
+        }, alt('p'));
+        widgets.getKeyMap().bind((Widget) () -> {
+            if (console.isSplitMode()) {
+                this.at("shrink").apply(noobj());
+                console.redrawBuffer();
+            }
+            return true;
+        }, "\033<");
+        widgets.getKeyMap().bind((Widget) () -> {
+            if (console.isSplitMode()) {
+                this.at("grow").apply(noobj());
+                console.redrawBuffer();
+            }
+            return true;
+        }, "\033>");
+        widgets.getKeyMap().bind((Widget) () -> {
+            this.at("split").apply(str("v"));
+            console.redrawBuffer();
+            return true;
+        }, "\033[1;3C");  // Alt+<right>
+        widgets.getKeyMap().bind((Widget) () -> {
+            this.at("split").apply(str("h"));
+            console.redrawBuffer();
+            return true;
+        }, "\033[1;3A");  // Alt+<up>
+        // Alt+char fallback if CSI sequences cause terminal issues:
+        // widgets.getKeyMap().bind((Widget) () -> {
+        //     this.at("split").apply(str("v"));
+        //     console.redrawBuffer();
+        //     return true;
+        // }, alt('v'));
+        // widgets.getKeyMap().bind((Widget) () -> {
+        //     this.at("split").apply(str("h"));
+        //     console.redrawBuffer();
+        //     return true;
+        // }, alt('h'));
+
+        // -------------------------------------------------------
+        // Word navigation
+        // -------------------------------------------------------
+        widgets.getKeyMap().bind((Widget) () -> {
+            widgets.callWidget("backward-word");
+            return true;
+        }, "\033[1;2D");  // Shift+<left>
+        widgets.getKeyMap().bind((Widget) () -> {
+            widgets.callWidget("forward-word");
+            return true;
+        }, "\033[1;2C");  // Shift+<right>
+
+        // -------------------------------------------------------
+        // ESC — cancel deepest chat level, or clear buffer
+        // -------------------------------------------------------
+        widgets.getKeyMap().bind((Widget) () -> {
+            final Buffer buffer = console.getReader().getBuffer();
+            final String text = buffer.toString();
+            int lastChat = -1, pos = -1;
+            while ((pos = text.indexOf("\\_ ", pos + 1)) >= 0) {
+                lastChat = pos;
+            }
+            if (lastChat >= 0) {
+                int lineStart = text.lastIndexOf('\n', lastChat - 1);
+                if (lineStart < 0) lineStart = 0;
+                buffer.cursor(lineStart);
+                buffer.delete(buffer.length() - lineStart);
+                if (!buffer.toString().contains("\\_ ")) {
+                    console.getReader().setVariable(LineReader.SECONDARY_PROMPT_PATTERN,
+                            Graphitty.string("{{-X&v1&^1&m}}     {{g}}| {{X}}"));
+                }
+            } else {
+                buffer.clear();
+            }
+            return true;
+        }, "\033");
+
+        // -------------------------------------------------------
+        // Tab — explain / dot-completion / furi selector
+        // -------------------------------------------------------
+        widgets.getKeyMap().bind((Widget) () -> {
+            try {
+                final String bufferText = console.getReader().getBuffer().toString();
+                if (bufferText.trim().startsWith(":")) {
+                    // colon menu selector widget
+                } else {
+                    if (bufferText.trim().endsWith(".")) {
+                        final Obj parsed = ObjmtronSerializer.parse(bufferText.trim().substring(0, bufferText.trim().length() - 1));
+                        if (parsed.isCode()) {
+                            Console.getTerminal().writer().write("\n");
+                            final InstSelectorTool selector = new InstSelectorTool(parsed.resolve(noobj()).as(), bufferText);
+                            if (selector.hasItems()) {
+                                if (console.isSplitMode() && console.getActivePane() != null) {
+                                    final int[] pos = console.calculatePanePosition(console.getActivePane());
+                                    if (pos != null) selector.setPaneBounds(pos[0], pos[1], pos[2], pos[3]);
+                                }
+                                Utilities.runCursorLessWidget(selector, true);
+                                if (console.isSplitMode()) {
+                                    console.renderPanesNow();
+                                }
+                            }
+                        }
+                    } else if (bufferText.trim().startsWith("*") && (bufferText.trim().endsWith("/") || bufferText.trim().endsWith(":"))) {
+                        Console.getTerminal().writer().write("\n");
+                        final fURISelectorTool selector = new fURISelectorTool(bufferText);
+                        if (selector.hasItems()) {
+                            if (console.isSplitMode() && console.getActivePane() != null) {
+                                final int[] pos = console.calculatePanePosition(console.getActivePane());
+                                if (pos != null) selector.setPaneBounds(pos[0], pos[1], pos[2], pos[3]);
+                            }
+                            Utilities.runCursorLessWidget(selector, true);
+                            if (console.isSplitMode()) {
+                                console.renderPanesNow();
+                            }
+                        }
+                    } else {
+                        final Obj code = ObjmtronSerializer.parse(bufferText);
+                        if (code.isCode()) {
+                            Console.getTerminal().writer().write("\n");
+                            final ExplainTool explain = new ExplainTool(code.as());
+                            if (console.isSplitMode() && console.getActivePane() != null) {
+                                final int[] pos = console.calculatePanePosition(console.getActivePane());
+                                if (pos != null) explain.setPaneBounds(pos[0], pos[1], pos[2], pos[3]);
+                            }
+                            Utilities.runCursorLessWidget(explain, true);
+                            if (console.isSplitMode()) {
+                                console.renderPanesNow();
+                            }
+                            console.redrawBuffer();
+                        }
+                    }
+                }
+            } catch (final Exception e) {
+                LOG.error(e);
+            }
+            return true;
+        }, key(Console.getTerminal(), InfoCmp.Capability.tab));
+
+        // -------------------------------------------------------
+        // Alt+K — erase buffer back to first occurrence of char
+        // -------------------------------------------------------
+        for (char c = 32; c <= 126; c++) {
+            final char targetChar = c;
+            final String altKSequence = "\033k" + c;
+            widgets.getKeyMap().bind((Widget) () -> {
+                eraseBackToChar(console.getReader(), targetChar);
+                return true;
+            }, altKSequence);
+        }
+    }
+
+    /**
+     * Erase the buffer back to (and including) the first occurrence of {@code targetChar}.
+     */
+    private static void eraseBackToChar(final LineReader reader, final char targetChar) {
+        final Buffer buffer = reader.getBuffer();
+        final String currentText = buffer.toString();
+        final int cursorPos = buffer.cursor();
+        if (cursorPos == 0) return;
+        int targetPos = -1;
+        for (int i = cursorPos - 1; i >= 0; i--) {
+            if (currentText.charAt(i) == targetChar) {
+                targetPos = i;
+                break;
+            }
+        }
+        if (targetPos == -1) return;
+        buffer.cursor(targetPos);
+        buffer.delete(cursorPos - targetPos);
     }
 
 }
