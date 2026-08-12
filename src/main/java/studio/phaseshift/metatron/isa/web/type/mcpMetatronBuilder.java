@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -67,6 +67,25 @@ public final class mcpMetatronBuilder {
     // ========================================
 
     /**
+     * Re-parse a string-valued MCP argument through the mtron parser.
+     * JSON deserialization collapses str, uri, code, and inst into
+     * {@code "string"} — the mtron parser is the authoritative deserializer.
+     */
+    private static Obj normArg(final Obj arg) {
+        if (arg.isUri()) {
+            try {
+                final Obj reparsed = ObjmtronSerializer.singleNoClip()
+                        .inputBytes(studio.phaseshift.metatron.isa.m.type.Str.Helper.cleanString(arg));
+                if (!reparsed.isFail())
+                    return reparsed;
+            } catch (final Exception ignored) {
+                // plain text that isn't mtron — keep original
+            }
+        }
+        return arg;
+    }
+
+    /**
      * Build the metatron-native MCP tool definitions and merge them into the
      * supplied jvm map.  Caller-supplied entries always win — this method
      * never overwrites existing keys.
@@ -108,7 +127,7 @@ public final class mcpMetatronBuilder {
             tools.at(uri("eval_mtron"), docWrap(instC(
                             M_ISA_INST_TID.dom(NOOBJ_TID.zero()).rng(ALL.maybeSome()),
                             rec(uri("code"), STR_TYPE), (lhs, inst) -> {
-                                final Obj codeArg = inst.arg(f("code"), 0);
+                                final Obj codeArg = normArg(inst.arg(f("code"), 0));
                                 if (codeArg.isCall())
                                     return codeArg.apply();
                                 else {
