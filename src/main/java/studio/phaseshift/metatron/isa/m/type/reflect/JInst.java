@@ -46,9 +46,9 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 public @interface JInst {
     String tid();
 
-    String dom() default "#";
+    String dom() default "#{?}";
 
-    String rng() default "#";
+    String rng() default "#{*}";
 
     Attach attach();
 

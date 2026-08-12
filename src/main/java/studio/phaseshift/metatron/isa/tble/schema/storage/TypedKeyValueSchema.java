@@ -67,6 +67,7 @@ public class TypedKeyValueSchema implements TableSchema {
                                    CREATE TABLE IF NOT EXISTS kv_store (
                                        furi VARCHAR(512) NOT NULL PRIMARY KEY,
                                        type VARCHAR(32) NOT NULL,
+                                       tid VARCHAR(512),
                                        bool_val BOOLEAN,
                                        int_val BIGINT,
                                        real_val DOUBLE PRECISION,
@@ -113,43 +114,43 @@ public class TypedKeyValueSchema implements TableSchema {
         if (obj.isBool()) {
             type = "bool";
             if (isPostgreSQL) {
-                sql = "INSERT INTO " + TABLE_NAME + " (furi, type, bool_val) VALUES (?, ?, ?) " +
-                        "ON CONFLICT (furi) DO UPDATE SET type = EXCLUDED.type, bool_val = EXCLUDED.bool_val;";
+                sql = "INSERT INTO " + TABLE_NAME + " (furi, type, tid, bool_val) VALUES (?, ?, ?, ?) " +
+                        "ON CONFLICT (furi) DO UPDATE SET type = EXCLUDED.type, tid = EXCLUDED.tid, bool_val = EXCLUDED.bool_val;";
             } else {
-                sql = "REPLACE INTO " + TABLE_NAME + " (furi, type, bool_val) VALUES (?, ?, ?);";
+                sql = "REPLACE INTO " + TABLE_NAME + " (furi, type, tid, bool_val) VALUES (?, ?, ?, ?);";
             }
         } else if (obj.isInt()) {
             type = "int";
             if (isPostgreSQL) {
-                sql = "INSERT INTO " + TABLE_NAME + " (furi, type, int_val) VALUES (?, ?, ?) " +
-                        "ON CONFLICT (furi) DO UPDATE SET type = EXCLUDED.type, int_val = EXCLUDED.int_val;";
+                sql = "INSERT INTO " + TABLE_NAME + " (furi, type, tid, int_val) VALUES (?, ?, ?, ?) " +
+                        "ON CONFLICT (furi) DO UPDATE SET type = EXCLUDED.type, tid = EXCLUDED.tid, int_val = EXCLUDED.int_val;";
             } else {
-                sql = "REPLACE INTO " + TABLE_NAME + " (furi, type, int_val) VALUES (?, ?, ?);";
+                sql = "REPLACE INTO " + TABLE_NAME + " (furi, type, tid, int_val) VALUES (?, ?, ?, ?);";
             }
         } else if (obj.isReal()) {
             type = "real";
             if (isPostgreSQL) {
-                sql = "INSERT INTO " + TABLE_NAME + " (furi, type, real_val) VALUES (?, ?, ?) " +
-                        "ON CONFLICT (furi) DO UPDATE SET type = EXCLUDED.type, real_val = EXCLUDED.real_val;";
+                sql = "INSERT INTO " + TABLE_NAME + " (furi, type, tid, real_val) VALUES (?, ?, ?, ?) " +
+                        "ON CONFLICT (furi) DO UPDATE SET type = EXCLUDED.type, tid = EXCLUDED.tid, real_val = EXCLUDED.real_val;";
             } else {
-                sql = "REPLACE INTO " + TABLE_NAME + " (furi, type, real_val) VALUES (?, ?, ?);";
+                sql = "REPLACE INTO " + TABLE_NAME + " (furi, type, tid, real_val) VALUES (?, ?, ?, ?);";
             }
         } else if (obj.isStr()) {
             type = "str";
             if (isPostgreSQL) {
-                sql = "INSERT INTO " + TABLE_NAME + " (furi, type, str_val) VALUES (?, ?, ?) " +
-                        "ON CONFLICT (furi) DO UPDATE SET type = EXCLUDED.type, str_val = EXCLUDED.str_val;";
+                sql = "INSERT INTO " + TABLE_NAME + " (furi, type, tid, str_val) VALUES (?, ?, ?, ?) " +
+                        "ON CONFLICT (furi) DO UPDATE SET type = EXCLUDED.type, tid = EXCLUDED.tid, str_val = EXCLUDED.str_val;";
             } else {
-                sql = "REPLACE INTO " + TABLE_NAME + " (furi, type, str_val) VALUES (?, ?, ?);";
+                sql = "REPLACE INTO " + TABLE_NAME + " (furi, type, tid, str_val) VALUES (?, ?, ?, ?);";
             }
         } else {
             // Complex types: Inst, Code, Rec, Lst, Poly, etc.
             type = "complex";
             if (isPostgreSQL) {
-                sql = "INSERT INTO " + TABLE_NAME + " (furi, type, complex_val) VALUES (?, ?, ?) " +
-                        "ON CONFLICT (furi) DO UPDATE SET type = EXCLUDED.type, complex_val = EXCLUDED.complex_val;";
+                sql = "INSERT INTO " + TABLE_NAME + " (furi, type, tid, complex_val) VALUES (?, ?, ?, ?) " +
+                        "ON CONFLICT (furi) DO UPDATE SET type = EXCLUDED.type, tid = EXCLUDED.tid, complex_val = EXCLUDED.complex_val;";
             } else {
-                sql = "REPLACE INTO " + TABLE_NAME + " (furi, type, complex_val) VALUES (?, ?, ?);";
+                sql = "REPLACE INTO " + TABLE_NAME + " (furi, type, tid, complex_val) VALUES (?, ?, ?, ?);";
             }
         }
 
@@ -157,19 +158,22 @@ public class TypedKeyValueSchema implements TableSchema {
             final Obj writeObj = obj.selfVID(null);
             stmt.setString(1, furi.toString());
             stmt.setString(2, type);
+            // Store the TID if it differs from the base type default
+            final fURI objTid = writeObj.tid();
+            stmt.setString(3, objTid != null ? objTid.toString() : null);
 
-            // Set the appropriate value based on type
+            // Set the appropriate value based on type (index 4 now)
             if (obj.isBool()) {
-                stmt.setBoolean(3, writeObj.asBool().boolValue());
+                stmt.setBoolean(4, writeObj.asBool().boolValue());
             } else if (obj.isInt()) {
-                stmt.setLong(3, writeObj.asInt().intValue());
+                stmt.setLong(4, writeObj.asInt().intValue());
             } else if (obj.isReal()) {
-                stmt.setDouble(3, writeObj.asReal().realValue());
+                stmt.setDouble(4, writeObj.asReal().realValue());
             } else if (obj.isStr()) {
-                stmt.setString(3, writeObj.asStr().strValue());
+                stmt.setString(4, writeObj.asStr().strValue());
             } else {
                 // Use ObjmtronSerializer for complex types
-                stmt.setString(3, SERIALIZER.write(writeObj));
+                stmt.setString(4, SERIALIZER.write(writeObj));
             }
 
             return stmt.executeUpdate();
@@ -183,11 +187,11 @@ public class TypedKeyValueSchema implements TableSchema {
 
         if (pattern.hasPattern()) {
             // Pattern query - return all objects
-            sql = "SELECT furi, type, bool_val, int_val, real_val, str_val, complex_val FROM " + TABLE_NAME + ";";
+            sql = "SELECT furi, type, tid, bool_val, int_val, real_val, str_val, complex_val FROM " + TABLE_NAME + ";";
             stmt = conn.prepareStatement(sql);
         } else {
             // Exact match query
-            sql = "SELECT furi, type, bool_val, int_val, real_val, str_val, complex_val FROM " + TABLE_NAME + " WHERE furi = ?;";
+            sql = "SELECT furi, type, tid, bool_val, int_val, real_val, str_val, complex_val FROM " + TABLE_NAME + " WHERE furi = ?;";
             stmt = conn.prepareStatement(sql);
             stmt.setString(1, pattern.toString());
         }
@@ -198,21 +202,23 @@ public class TypedKeyValueSchema implements TableSchema {
         while (rs.next()) {
             final fURI furi = f(rs.getString("furi"));
             final String type = rs.getString("type");
+            final String tidStr = rs.getString("tid");
+            final fURI tid = tidStr != null && !tidStr.isEmpty() ? f(tidStr) : null;
             final Obj obj;
 
             // Reconstruct the Obj based on its type
             switch (type) {
                 case "bool":
-                    obj = bool(rs.getBoolean("bool_val"));
+                    obj = tid != null ? bool(rs.getBoolean("bool_val"), tid, null) : bool(rs.getBoolean("bool_val"));
                     break;
                 case "int":
-                    obj = jnt(rs.getLong("int_val"));
+                    obj = tid != null ? jnt(rs.getLong("int_val"), tid, null) : jnt(rs.getLong("int_val"));
                     break;
                 case "real":
-                    obj = real(rs.getDouble("real_val"));
+                    obj = tid != null ? real(rs.getDouble("real_val"), tid, null) : real(rs.getDouble("real_val"));
                     break;
                 case "str":
-                    obj = str(rs.getString("str_val"));
+                    obj = tid != null ? str(rs.getString("str_val"), tid, null) : str(rs.getString("str_val"));
                     break;
                 case "complex":
                     // Use ObjmtronSerializer to parse complex types

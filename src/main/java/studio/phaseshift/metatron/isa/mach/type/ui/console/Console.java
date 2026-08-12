@@ -27,7 +27,6 @@ import org.jline.reader.impl.DefaultParser;
 import org.jline.reader.impl.history.DefaultHistory;
 import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
-import org.jline.utils.InfoCmp;
 import org.jline.widget.Widgets;
 import org.slf4j.event.Level;
 import studio.phaseshift.metatron.BootLoader;
@@ -42,17 +41,16 @@ import studio.phaseshift.metatron.isa.m.type.reflect.JRecElement;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
-import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.machine.SwarmMachine;
 import studio.phaseshift.metatron.isa.mach.type.thread.FutureObj;
-import studio.phaseshift.metatron.isa.mach.type.thread.mThread;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.mach.type.ui.tmux.Pane;
 import studio.phaseshift.metatron.isa.mach.type.ui.tmux.PaneNode;
 import studio.phaseshift.metatron.isa.mach.type.ui.tmux.SplitContainer;
 import studio.phaseshift.metatron.isa.mach.type.ui.tmux.SplitLayout;
-import studio.phaseshift.metatron.isa.mach.type.ui.tool.*;
+import studio.phaseshift.metatron.isa.mach.type.ui.tool.TraceTool;
+import studio.phaseshift.metatron.isa.mach.type.ui.tool.TypeDiffTool;
 import studio.phaseshift.metatron.isa.mach.type.ui.widget.FloatingSurface;
 import studio.phaseshift.metatron.isa.mach.type.ui.widget.Utilities;
 import studio.phaseshift.metatron.util.CommonUtil;
@@ -73,12 +71,10 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-import static org.jline.keymap.KeyMap.*;
 import static studio.phaseshift.metatron.BootLoader.BOOTING;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.furi.q.QCollection.DOCQ_PATTERN;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.START_INST_TID;
@@ -117,6 +113,11 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
     public String postfix = "";
     @JRecElement(key = "serializer", rng = "/m/rec")
     public ObjSerializer<String> serializer = new ObjmtronSerializer();
+    @JRecElement(key = "status", rng = "/m/inst")
+    public Inst statusLine = instLambda((lhs, inst) -> {
+        StatusLine.message(inst.arg(0));
+        return noobj();
+    });
     private final GraphittyLogger LOG = Graphitty.log(this);
     private static Terminal terminal;
     private final LineReader reader;
@@ -287,7 +288,8 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                     .variable(LineReader.INDENTATION, 0)
                     .completer(new MCompleter(this))
                     .build();
-            this.widgets = new Widgets(this.reader) { /* keys bound by CommandPalette.bindKeys */ };
+            this.widgets = new Widgets(this.reader) { /* keys bound by CommandPalette.bindKeys */
+            };
             this.status = new StatusLine(this);
             docWrap(virtual(instLambda((lhs, inst2) -> {
                 Console.this.status.run();
@@ -782,7 +784,9 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
         renderPanes(true);
     }
 
-    /** Force immediate pane render — never defers for typing. */
+    /**
+     * Force immediate pane render — never defers for typing.
+     */
     public void renderPanesNow() {
         renderPanes(false);
     }

@@ -374,6 +374,10 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
         return (O) this;
     }
 
+    default <O extends Obj> O orThrow(final String format, final Object... params) {
+        return orThrow(MTronException.of(format, params));
+    }
+
     default <O extends Obj> O as() {
         return (O) this;
     }

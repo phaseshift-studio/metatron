@@ -59,10 +59,7 @@ import java.util.regex.Pattern;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.llm.llmInstSet.AI_MESSAGE_TID;
-import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_AGENT_TID;
-import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_CHAT_RESULT_TID;
-import static studio.phaseshift.metatron.isa.llm.llmInstSet.TOOL_REQUEST_MESSAGE_TID;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_MILLIS_TID;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TRUE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -83,6 +80,12 @@ public class Agent extends MRec {
 
     private final List<String> systemMessages = new ArrayList<>();
     private final AtomicReference<Tuple.Pair<fURI, fURI>> currentHook = new AtomicReference<>(null);
+    /**
+     * Holds the {@link CostCalculator} created during streaming so that
+     * Phase 4 and features can read accumulated token costs after chat completes.
+     * Set by {@code CostFeature.onBeforeChat} or by {@link LLMFactory#createChatInteraction}.
+     */
+    private final AtomicReference<CostCalculator> costCalculator = new AtomicReference<>(null);
     final AtomicBoolean interrupt = new AtomicBoolean(false);
     final AtomicBoolean first = new AtomicBoolean(true);
     /**
@@ -153,7 +156,9 @@ public class Agent extends MRec {
         return this.currentChatId;
     }
 
-    /** Resolve the session VID from this agent's {@code session_feature} config. */
+    /**
+     * Resolve the session VID from this agent's {@code session_feature} config.
+     */
     private fURI resolveSessionVID() {
         if (this.hasFeature(SESSION)) {
             final Obj sessionFeature = this.feature(SESSION);
@@ -164,6 +169,13 @@ public class Agent extends MRec {
             }
         }
         return null;
+    }
+
+    /**
+     * Accessor for the cost calculator so features and LLMFactory can share it.
+     */
+    public AtomicReference<CostCalculator> costCalculator() {
+        return this.costCalculator;
     }
 
     // ── Factory ────────────────────────────────────────────────────
@@ -272,220 +284,222 @@ public class Agent extends MRec {
         final AtomicInteger counter = depthMap.computeIfAbsent(depthKey, k -> new AtomicInteger(0));
         this.currentDepth = counter.incrementAndGet();
         try {
-        if (this.first.getAndSet(false))
-            this.features().elements().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_AGENT_CTOR, this));
-        Router.global().stats().ioStats().incrBytesSent(message.getBytes().length);
-        final CountDownLatch latch = new CountDownLatch(1);
-        final AtomicBoolean isTooling = new AtomicBoolean(false);
-        final AtomicReference<MTronException> isError = new AtomicReference<>();
-        final long startNanos = System.nanoTime();
-        try {
-            final List<Obj> features = this.features().lstValue();
-            if (message.isBlank())
-                throw MTronException.of("no message provided: %s", this.vid());
+            if (this.first.getAndSet(false))
+                this.features().elements().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_AGENT_CTOR, this));
+            Router.global().stats().ioStats().incrBytesSent(message.getBytes().length);
+            final CountDownLatch latch = new CountDownLatch(1);
+            final AtomicBoolean isTooling = new AtomicBoolean(false);
+            final AtomicReference<MTronException> isError = new AtomicReference<>();
+            final long startNanos = System.nanoTime();
+            try {
+                final List<Obj> features = this.features().lstValue();
+                if (message.isBlank())
+                    throw MTronException.of("no message provided: %s", this.vid());
 
-            // ── Phase 1: onBeforeChat — features push state to Agent blackboard ──
-            this.userMessage = message;
-            // Clear result blackboard for this execution
-            this.at(res(CHAT), noobj(), MUTABLE);
-            this.at(res(COST), noobj(), MUTABLE);
-            this.at(res("stages"), noobj(), MUTABLE);
-            this.at(res(ERROR), noobj(), MUTABLE);
+                // ── Phase 1: onBeforeChat — features push state to Agent blackboard ──
+                this.userMessage = message;
+                // Clear result blackboard for this execution
+                this.at(res(CHAT), noobj(), MUTABLE);
+                this.at(res(COST), noobj(), MUTABLE);
+                this.at(res("stages"), noobj(), MUTABLE);
+                this.at(res(ERROR), noobj(), MUTABLE);
 
-            for (final Obj feat : features) {
-                final Obj result = feat instanceof Feature ?
-                        ((Feature) feat).onBeforeChat(this) :
-                        feat.asPoly().at(uri(ON_BEFORE_CHAT)).apply(this);
-                if (!result.isNoObj()) {
-                    LOG.info("feature short-circuited: %s", result);
-                    return result;
+                for (final Obj feat : features) {
+                    final Obj result = feat instanceof Feature ?
+                            ((Feature) feat).onBeforeChat(this) :
+                            feat.asPoly().at(uri(ON_BEFORE_CHAT)).apply(this);
+                    if (!result.isNoObj()) {
+                        LOG.info("feature short-circuited: %s", result);
+                        return result;
+                    }
                 }
-            }
-            this.feature(CHAT).ifPresent(chat -> chat.asRec().at(FORMAT, (responseFormat.isNoObj() || responseFormat.asRec().isEmpty()) ? noobj() : responseFormat, MUTABLE));
-            // ── Phase 2: Build LC4j service from Agent's own JVM state ──
-            final AiServices<AgentServices> service = AiServices.builder(AgentServices.class)
-                    // .executeToolsConcurrently()
-                    // .executeToolsConcurrently(BootLoader.getExecutor())
-                    .toolExecutionErrorHandler((error, context) -> {
-                        if (this.has(TOOL) && this.feature(TOOL).asRec().has(ON_ERROR)) {
-                            this.feature(TOOL).asRec().at(ON_ERROR).asInst().args(lst(this, fail(error)));
-                        } else {
-                            LOG.error(error);
-                        }
-                        return new ToolErrorHandlerResult(error.getMessage());
-                    });
-            //.storeRetrievedContentInChatMemory(true);
-            // AgentUtility.buildService(this, service);
-            //////////////////////////////////////////////////////////////////////////////////
-            // ADD ANOTHER FEATURE HOOK -- onSetup
-            final Obj chatFeature = this.feature(CHAT);
-            if (chatFeature.isNoObj())
-                throw MTronException.of("agent has no chat feature: %s", this.vidOrTid());
-            final Rec chat = chatFeature.asRec();
-            if (this.hasFeature(SESSION))
-                SessionFeature.buildSession(this, service);
-            if (this.hasFeature(SKILL))
-                SkillFeature.buildSkills(this, service);
-            if (this.hasFeature(TOOL))
-                ToolFeature.buildTools(this, service);
-            if (this.hasFeature(SYSTEM))
-                SystemFeature.buildSystemMessage(this, service);
-            //////////////////////////////////////////////////////////////////////////////////
-            final AgentServices agent = (this.has(DESC) && !this.at(DESC).strValue().isBlank() ?
-                    service.systemMessageTransformer((current, content) ->
-                            (this.at(DESC).orElse(str0()).strValue() + "\n\n" +
-                                    (current != null ? current : "")).trim()) : service)
-                    .streamingChatModel(LLMFactory.createChatInteraction(this,
-                            chat.at(uri(MODEL)),
-                            chat.at(uri(RESPONSE)),
-                            chat.at(uri(FORMAT)))).build();
-            // ── Phase 3: Stream — write events to result blackboard, dispatch hooks ──
-            LOG.info("processed message: %s %s", this.userMessage, this.feature(CHAT).asRec().at(FORMAT).orElse(rec(uri(FORMAT), uri("none"))));
-            agent.chat(this.userMessage)
-                    .onToolExecuted(tool -> {
-                        if (this.interrupt.get()) latch.countDown();
-                        isTooling.set(false);
-                        final Rec toolRec = rec(
-                                uri(NAME), str(tool.request().name()),
-                                uri(TOOL_ARGUMENTS), str(tool.request().arguments()),
-                                uri(RESULT), str(tool.result()),
-                                uri(CONTENTS), str(tool.request().id()));
-                        this.at(res("tool_executed"), toolRec, MUTABLE);
-                        features.stream().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_TOOL_EXECUTED, toolRec));
-                    })
-                    .onPartialToolCall(partialToolCall -> {
-                        if (this.interrupt.get()) {
+                this.feature(CHAT).ifPresent(chat -> chat.asRec().at(FORMAT, (responseFormat.isNoObj() || responseFormat.asRec().isEmpty()) ? noobj() : responseFormat, MUTABLE));
+                // ── Phase 2: Build LC4j service from Agent's own JVM state ──
+                final AiServices<AgentServices> service = AiServices.builder(AgentServices.class)
+                        // .executeToolsConcurrently()
+                        // .executeToolsConcurrently(BootLoader.getExecutor())
+                        // .maxToolCallingRoundTrips()
+                        .toolExecutionErrorHandler((error, context) -> {
+                            if (this.has(TOOL) && this.feature(TOOL).asRec().has(ON_ERROR)) {
+                                this.feature(TOOL).asRec().at(ON_ERROR).asInst().args(lst(this, fail(error)));
+                            } else {
+                                LOG.error(error);
+                            }
+                            return new ToolErrorHandlerResult(error.getMessage());
+                        });
+                //.storeRetrievedContentInChatMemory(true);
+                // AgentUtility.buildService(this, service);
+                //////////////////////////////////////////////////////////////////////////////////
+                // ADD ANOTHER FEATURE HOOK -- onSetup
+                final Obj chatFeature = this.feature(CHAT);
+                if (chatFeature.isNoObj())
+                    throw MTronException.of("agent has no chat feature: %s", this.vidOrTid());
+                final Rec chat = chatFeature.asRec();
+                if (this.hasFeature(SESSION))
+                    SessionFeature.buildSession(this, service);
+                if (this.hasFeature(SKILL))
+                    SkillFeature.buildSkills(this, service);
+                if (this.hasFeature(TOOL))
+                    ToolFeature.buildTools(this, service);
+                if (this.hasFeature(SYSTEM))
+                    SystemFeature.buildSystemMessage(this, service);
+                //////////////////////////////////////////////////////////////////////////////////
+                final AgentServices agent = (this.has(DESC) && !this.at(DESC).strValue().isBlank() ?
+                        service.systemMessageTransformer((current, content) ->
+                                (this.at(DESC).orElse(str0()).strValue() + "\n\n" +
+                                        (current != null ? current : "")).trim()) : service)
+                        .streamingChatModel(LLMFactory.createChatInteraction(this,
+                                chat.at(uri(MODEL)),
+                                chat.at(uri(RESPONSE)),
+                                chat.at(uri(FORMAT)))).build();
+                // ── Phase 3: Stream — write events to result blackboard, dispatch hooks ──
+                LOG.info("processed message: %s %s", this.userMessage, this.feature(CHAT).asRec().at(FORMAT).orElse(rec(uri(FORMAT), uri("none"))));
+                agent.chat(this.userMessage)
+                        .onToolExecuted(tool -> {
+                            if (this.interrupt.get()) latch.countDown();
+                            isTooling.set(false);
+                            final Rec toolRec = rec(
+                                    uri(NAME), str(tool.request().name()),
+                                    uri(TOOL_ARGUMENTS), str(tool.request().arguments()),
+                                    uri(RESULT), str(tool.result()),
+                                    uri(CONTENTS), str(tool.request().id()));
+                            this.at(res("tool_executed"), toolRec, MUTABLE);
+                            features.stream().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_TOOL_EXECUTED, toolRec));
+                        })
+                        .onPartialToolCall(partialToolCall -> {
+                            if (this.interrupt.get()) {
+                                latch.countDown();
+                                return;
+                            }
+                            if (!isTooling.getAndSet(true)) {
+                                this.logger().none(Graphitty.sillyPrint("tooling...\n", true, true));
+                                this.logger().none("\t{{y}}partial{{X}}: {{b}}%s{{g}}({{b}}%s{{g}}){{X}}\n",
+                                        partialToolCall.name(), partialToolCall.partialArguments());
+                            }
+                            features.stream().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_PARTIAL_TOOL_CALL));
+                        })
+                        .onPartialResponse(s -> {
+                            if (this.interrupt.get()) {
+                                latch.countDown();
+                                return;
+                            }
+                            Router.global().stats().ioStats().incrBytesRecv(s.getBytes().length);
+                            //response.append(s);
+                            features.stream().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_PARTIAL_RESPONSE, str(s)));
+                        })
+                        .onPartialThinking(t -> {
+                            if (this.interrupt.get()) {
+                                latch.countDown();
+                                return;
+                            }
+                            Router.global().stats().ioStats().incrBytesRecv(t.text().getBytes().length);
+                            features.stream().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_PARTIAL_THINKING, str(t.text())));
+                        })
+                        .onError(e -> {
+                            e.printStackTrace();
+                            final fURI currentFeature = this.currentHook.get().get0();
+                            final fURI currentStage = this.currentHook.get().get1();
+                            final String errorMessage = "[" + currentFeature + "][" + currentStage + "]";
+                            LOG.error("%s: %s", errorMessage, e);
+                            isError.set(MTronException.of("%s: %s", errorMessage, e));
+                            this.at(res(ERROR), str(e.getMessage()), MUTABLE);
+                            features.stream().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_ERROR));
                             latch.countDown();
-                            return;
-                        }
-                        if (!isTooling.getAndSet(true)) {
-                            this.logger().none(Graphitty.sillyPrint("tooling...\n", true, true));
-                            this.logger().none("\t{{y}}partial{{X}}: {{b}}%s{{g}}({{b}}%s{{g}}){{X}}\n",
-                                    partialToolCall.name(), partialToolCall.partialArguments());
-                        }
-                        features.stream().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_PARTIAL_TOOL_CALL));
-                    })
-                    .onPartialResponse(s -> {
-                        if (this.interrupt.get()) {
-                            latch.countDown();
-                            return;
-                        }
-                        Router.global().stats().ioStats().incrBytesRecv(s.getBytes().length);
-                        //response.append(s);
-                        features.stream().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_PARTIAL_RESPONSE, str(s)));
-                    })
-                    .onPartialThinking(t -> {
-                        if (this.interrupt.get()) {
-                            latch.countDown();
-                            return;
-                        }
-                        Router.global().stats().ioStats().incrBytesRecv(t.text().getBytes().length);
-                        features.stream().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_PARTIAL_THINKING, str(t.text())));
-                    })
-                    .onError(e -> {
-                        e.printStackTrace();
-                        final fURI currentFeature = this.currentHook.get().get0();
-                        final fURI currentStage = this.currentHook.get().get1();
-                        final String errorMessage = "[" + currentFeature + "][" + currentStage + "]";
-                        LOG.error("%s: %s", errorMessage, e);
-                        isError.set(MTronException.of("%s: %s", errorMessage, e));
-                        this.at(res(ERROR), str(e.getMessage()), MUTABLE);
-                        features.stream().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_ERROR));
-                        latch.countDown();
-                    }).onCompleteResponse(c -> {
-                        if (this.interrupt.get()) {
-                            latch.countDown();
-                            return;
-                        }
-                        final String fullText = null == c.aiMessage().text() ? "" : c.aiMessage().text();
-                        Router.global().stats().ioStats().incrBytesRecv(fullText.getBytes().length);
-                        // Parse response format if requested
-                        final boolean formatted = !responseFormat.isNoObj();
-                        final Obj chatResult;
-                        if (formatted) {
-                            chatResult = ObjJSONSerializer.simple().inputBytes(fullText);
-                        } else {
-                            // Parse <<TYPE:KEY>>...<</TYPE:KEY>> blocks into res(KEY), strip from chat
-                            final Matcher blockMatcher = MTRON_BLOCK.matcher(fullText);
-                            final StringBuilder cleaned = new StringBuilder(fullText);
-                            int stripped = 0;
-                            while (blockMatcher.find()) {
-                                final String tag = blockMatcher.group(1);
-                                final String key = blockMatcher.group(2);
-                                final String body = blockMatcher.group(3);
-                                try {
-                                    final MIME.MIMEType mime = mimeForTag(tag);
-                                    final Obj parsed = mime.fromBytes(body.getBytes(StandardCharsets.UTF_8));
-                                    this.at(res(key), parsed, MUTABLE);
-                                    // Strip block from visible text
-                                    final int start = blockMatcher.start() - stripped;
-                                    final int end = blockMatcher.end() - stripped;
-                                    cleaned.delete(start, end);
-                                    stripped += (end - start);
-                                } catch (final Exception e) {
-                                    LOG.warn("failed to parse <<%s:%s>> block: %s", tag, key, e.getMessage());
+                        }).onCompleteResponse(c -> {
+                            if (this.interrupt.get()) {
+                                latch.countDown();
+                                return;
+                            }
+                            final String fullText = null == c.aiMessage().text() ? "" : c.aiMessage().text();
+                            Router.global().stats().ioStats().incrBytesRecv(fullText.getBytes().length);
+                            // Parse response format if requested
+                            final boolean formatted = !responseFormat.isNoObj();
+                            final Obj chatResult;
+                            if (formatted) {
+                                chatResult = ObjJSONSerializer.simple().inputBytes(fullText);
+                            } else {
+                                // Parse <<TYPE:KEY>>...<</TYPE:KEY>> blocks into res(KEY), strip from chat
+                                final Matcher blockMatcher = MTRON_BLOCK.matcher(fullText);
+                                final StringBuilder cleaned = new StringBuilder(fullText);
+                                int stripped = 0;
+                                while (blockMatcher.find()) {
+                                    final String tag = blockMatcher.group(1);
+                                    final String key = blockMatcher.group(2);
+                                    final String body = blockMatcher.group(3);
+                                    try {
+                                        final MIME.MIMEType mime = mimeForTag(tag);
+                                        final Obj parsed = mime.fromBytes(body.getBytes(StandardCharsets.UTF_8));
+                                        this.at(res(key), parsed, MUTABLE);
+                                        // Strip block from visible text
+                                        final int start = blockMatcher.start() - stripped;
+                                        final int end = blockMatcher.end() - stripped;
+                                        cleaned.delete(start, end);
+                                        stripped += (end - start);
+                                    } catch (final Exception e) {
+                                        LOG.warn("failed to parse <<%s:%s>> block: %s", tag, key, e.getMessage());
+                                    }
                                 }
+                                final String cleanText = cleaned.toString().stripTrailing();
+                                chatResult = str(cleanText);
                             }
-                            final String cleanText = cleaned.toString().stripTrailing();
-                            chatResult = str(cleanText);
-                        }
-                        // Store raw AiMessage info so ChatFeature can write it to the
-                        // message ledger (text + any tool execution requests)
-                        final Map<Obj, Obj> aiMap = mutableMap();
-                        aiMap.put(uri(TEXT), str(fullText));
-                        if (c.aiMessage().hasToolExecutionRequests()) {
-                            final List<Obj> toolReqs = new ArrayList<>();
-                            for (final ToolExecutionRequest req : c.aiMessage().toolExecutionRequests()) {
-                                final Map<Obj, Obj> trMap = mutableMap();
-                                trMap.put(uri(NAME), uri(req.name()));
-                                if (req.arguments() != null && !req.arguments().isBlank())
-                                    trMap.put(uri(TOOL_ARGUMENTS), str(req.arguments()));
-                                if (req.id() != null && !req.id().isBlank())
-                                    trMap.put(uri(CONTENTS), str(req.id()));
-                                trMap.put(uri(TEXT), str(req.name() + "(" + req.arguments() + ")"));
-                                toolReqs.add(rec(trMap, TOOL_REQUEST_MESSAGE_TID, null));
+                            // Store raw AiMessage info so ChatFeature can write it to the
+                            // message ledger (text + any tool execution requests)
+                            final Map<Obj, Obj> aiMap = mutableMap();
+                            aiMap.put(uri(TEXT), str(fullText));
+                            if (c.aiMessage().hasToolExecutionRequests()) {
+                                final List<Obj> toolReqs = new ArrayList<>();
+                                for (final ToolExecutionRequest req : c.aiMessage().toolExecutionRequests()) {
+                                    final Map<Obj, Obj> trMap = mutableMap();
+                                    trMap.put(uri(NAME), uri(req.name()));
+                                    if (req.arguments() != null && !req.arguments().isBlank())
+                                        trMap.put(uri(TOOL_ARGUMENTS), str(req.arguments()));
+                                    if (req.id() != null && !req.id().isBlank())
+                                        trMap.put(uri(CONTENTS), str(req.id()));
+                                    trMap.put(uri(TEXT), str(req.name() + "(" + req.arguments() + ")"));
+                                    toolReqs.add(rec(trMap, TOOL_REQUEST_MESSAGE_TID, null));
+                                }
+                                aiMap.put(uri(TOOL_REQUESTS), lst(toolReqs));
                             }
-                            aiMap.put(uri(TOOL_REQUESTS), lst(toolReqs));
-                        }
-                        this.at(res("ai_message"), rec(aiMap, AI_MESSAGE_TID, null), MUTABLE);
+                            this.at(res("ai_message"), rec(aiMap, AI_MESSAGE_TID, null), MUTABLE);
 
-                        // Elapsed time — written before hook dispatch so features can read it
-                        final long elapsed = (System.nanoTime() - startNanos) / 1_000_000;
-                        this.at(res(TIME), mathInstSet.normalizeTime(real((double) elapsed, MATH_MILLIS_TID, null)), MUTABLE);
-                        this.logger().none("\n");
-                        features.stream().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_COMPLETE_RESPONSE, chatResult));
-                        // Signal main thread AFTER all blackboard writes complete
-                        latch.countDown();
-                    }).start();
-            latch.await();
-            if (this.interrupt.get()) {
-                final fURI currentFeature = this.currentHook.get().get0();
-                final fURI currentStage = this.currentHook.get().get1();
-                final String warnMessage = "[" + currentFeature + "][" + currentStage + "]";
-                LOG.warn("%s: agent interrupted", warnMessage);
-                throw new InterruptedException();
+                            // Elapsed time — written before hook dispatch so features can read it
+                            final long elapsed = (System.nanoTime() - startNanos) / 1_000_000;
+                            this.at(res(TIME), mathInstSet.normalizeTime(real((double) elapsed, MATH_MILLIS_TID, null)), MUTABLE);
+                            this.logger().none("\n");
+                            features.stream().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_COMPLETE_RESPONSE, chatResult));
+                            // Signal main thread AFTER all blackboard writes complete
+                            latch.countDown();
+                        }).start();
+                latch.await();
+                if (this.interrupt.get()) {
+                    final fURI currentFeature = this.currentHook.get().get0();
+                    final fURI currentStage = this.currentHook.get().get1();
+                    final String warnMessage = "[" + currentFeature + "][" + currentStage + "]";
+                    LOG.warn("%s: agent interrupted", warnMessage);
+                    throw new InterruptedException();
+                }
+                if (null != isError.get())
+                    throw isError.get();
+            } catch (final InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return rec(mutableMap(uri(STOP), BOOL_TRUE), LLM_CHAT_RESULT_TID, null);
+            } catch (final Exception e) {
+                throw MTronException.of(e);
             }
-            if (null != isError.get())
-                throw isError.get();
-        } catch (final InterruptedException e) {
-            Thread.currentThread().interrupt();
-            return rec(mutableMap(uri(STOP), BOOL_TRUE), LLM_CHAT_RESULT_TID, null);
-        } catch (final Exception e) {
-            throw MTronException.of(e);
-        }
 
-        // ── Phase 4: Assemble result Rec from blackboard ──
-        final Map<Obj, Obj> resultMap = new LinkedHashMap<>();
-        final Obj chatResult = this.at(res(CHAT));
-        resultMap.put(uri(CHAT), chatResult);
-        resultMap.put(uri(TIME), this.at(res(TIME)));
-        // if (!this.at(res(COST)).isNoObj()) resultMap.put(uri(COST), this.at(res(COST)));
-        if (!this.at(res("stages")).isNoObj()) resultMap.put(uri("stages"), this.at(res("stages")));
-        resultMap.put(uri(ERROR), this.at(res(ERROR)));
-        if (!this.at(res(AUDIT)).isNoObj()) resultMap.put(uri(AUDIT), this.at(res(AUDIT)));
-        if (!this.at(res("loop_results")).isNoObj()) resultMap.put(uri("loop_results"), this.at(res("loop_results")));
-        this.currentHook.set(null);
-        return rec(resultMap, LLM_CHAT_RESULT_TID, null);
+            // ── Phase 4: Assemble result Rec from blackboard ──
+            final Map<Obj, Obj> resultMap = new LinkedHashMap<>();
+            final Obj chatResult = this.at(res(CHAT));
+            resultMap.put(uri(CHAT), chatResult);
+            resultMap.put(uri(TIME), this.at(res(TIME)));
+            if (!this.at(res(COST)).isNoObj()) resultMap.put(uri(COST), this.at(res(COST)));
+            if (!this.at(res("stages")).isNoObj()) resultMap.put(uri("stages"), this.at(res("stages")));
+            resultMap.put(uri(ERROR), this.at(res(ERROR)));
+            if (!this.at(res(AUDIT)).isNoObj()) resultMap.put(uri(AUDIT), this.at(res(AUDIT)));
+            if (!this.at(res("loop_results")).isNoObj())
+                resultMap.put(uri("loop_results"), this.at(res("loop_results")));
+            this.currentHook.set(null);
+            return rec(resultMap, LLM_CHAT_RESULT_TID, null);
         } finally {
             counter.decrementAndGet();
             this.currentDepth = 0;
@@ -498,9 +512,9 @@ public class Agent extends MRec {
         if (this.first.getAndSet(false))
             this.features().elements().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_AGENT_CTOR, this));
         final EmbeddingModel agent = LLMFactory.createEmbeddingInteraction(Model.model(this.at(MODEL).asRec()));
-        final Obj costObj = this.at(feat(COST));
+       /* final Obj costObj = this.at(feat(COST));
         if (!costObj.isNoObj())
-            agent.addListener(new CostCalculator(costObj.autoResolve(this).asRec()));
+            agent.addListener(new CostCalculator(costObj.asRec().at(RATE));*/
         final TextSegment embeddingString = TextSegment.from(Str.Helper.cleanString(toEmbed));
         final Response<Embedding> response = agent.embed(embeddingString);
         if (null != response.tokenUsage())
