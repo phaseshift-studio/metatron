@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -19,10 +19,7 @@
 package studio.phaseshift.metatron.isa.mach.type.monad;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.type.Call;
-import studio.phaseshift.metatron.isa.m.type.Inst;
-import studio.phaseshift.metatron.isa.m.type.Lst;
-import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.type.PCMonad;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
@@ -30,6 +27,7 @@ import studio.phaseshift.metatron.util.CommonUtil;
 
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec0;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_MONAD_TID;
 
 /*
@@ -78,12 +76,12 @@ public class BasicPCMonad extends AbstractPCMonad implements PCMonad {
     }*/
 
     /// //////////////////////////////////////////////////////////////////////////////////////
-    
-    public static PCMonad pcmonad(final Obj obj, final Inst inst, final Call code) {
-        return new BasicPCMonad(lst(CommonUtil.arrayList(obj, inst, noobj(), code)), MACH_BASIC_MONAD_TID, null);
+
+    public static PCMonad pcmonad(final Obj obj, final Inst inst, final Rec state, final Call code) {
+        return new BasicPCMonad(lst(CommonUtil.arrayList(obj, inst, state, code)), MACH_BASIC_MONAD_TID, null);
     }
 
     public static PCMonad pcmonad(final Obj obj) {
-        return pcmonad(obj, noobj(), noobj());
+        return pcmonad(obj, noobj(), rec0(), noobj());
     }
 }

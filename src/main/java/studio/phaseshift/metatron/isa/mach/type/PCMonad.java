@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -21,9 +21,9 @@ package studio.phaseshift.metatron.isa.mach.type;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.m.type.impl.MCode;
 import studio.phaseshift.metatron.util.CommonUtil;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
@@ -31,7 +31,6 @@ import java.util.function.Function;
 import static studio.phaseshift.metatron.Tokens.LOOP;
 import static studio.phaseshift.metatron.Tokens.MONAD;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.Poly.MUTABLE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
@@ -79,51 +78,47 @@ public interface PCMonad extends Monad<Lst> {
         return this.dead() && !this.halted();
     }
 
-    default Code code() {
-        return (Code) this.jvm().jvm().get(3);
-    }
-
     default PCMonad nextInst() {
-        return this.jvm(lst(CommonUtil.arrayList(this.obj(), this.code().nextInst(this.inst()), noobj(), this.code())));
+        return this.jvm(lst(CommonUtil.arrayList(this.obj(), this.code().nextInst(this.inst()), this.state(), this.code())));
     }
 
     default PCMonad next(final Obj obj) {
-        return this.jvm(lst(CommonUtil.arrayList(obj, this.code().nextInst(this.inst()), noobj(), this.code())));
+        return this.jvm(lst(CommonUtil.arrayList(obj, this.code().nextInst(this.inst()), this.state(), this.code())));
     }
 
-
-    default <OBJ extends Obj> OBJ state(final fURI key) {
-        return this.state().at(key);
+    default PCMonad incrLoop(final int incr) {
+        return this.state(this.state().at(uri(LOOP), this.state().at(LOOP).orElse(jnt(0)).plus(jnt(incr))).as());
     }
 
-    default PCMonad updateLoop(final int incr) {
-        return this.updateState(uri(LOOP), loop -> incr == 0 ? noobj() : loop.jvm(loop.orElse(jnt(0)).intValue() + incr));
+    /**
+     * Pop (reset) the loop counter — called when a repeat invocation exits so a
+     * chained repeat starts its counter at 0.
+     */
+    default PCMonad popLoop() {
+        return this.state(this.state().at(uri(LOOP), jnt(0)).as());
     }
 
-    default PCMonad updateState(final String key, final Function<Obj, Obj> updateFunction) {
-        return this.updateState(uri(key), updateFunction);
-    }
-
-    default PCMonad updateState(final fURI key, final Function<Obj, Obj> updateFunction) {
-        return this.updateState(uri(key), updateFunction);
-    }
-
-    default PCMonad updateState(final Uri key, final Function<Obj, Obj> updateFunction) {
-        this.jvm().jvm().set(2, this.state().at(key, updateFunction.apply(this.state().at(key)), MUTABLE).as());
-        return this;
+    default Int loop() {
+        return this.state().at(LOOP).orElse(jnt(0));
     }
 
     default Rec state() {
-        return null == this.jvm().jvm().get(2) || this.jvm().jvm().get(2).isNoObj() ? rec(new HashMap<>()) : (Rec) this.jvm().jvm().get(2);
+        return this.jvm().asLst().jvm().get(2).orElse(rec());
     }
 
     default Inst inst() {
-        return (Inst) this.jvm().jvm().get(1);
+        return this.jvm().asLst().jvm().get(1).c(c -> c.mult(this.c())).as();
     }
 
     default Obj obj() {
-        return this.jvm().jvm().getFirst();
+        final Obj inner = this.jvm().asLst().jvm().getFirst();
+        return inner.isObjs() ? inner : inner.c(c -> c.mult(this.c()));
     }
+
+    default Code code() {
+        return this.jvm().asLst().jvm().get(3).orElse(MCode.code(List.of(noobj()))).c(c -> c.mult(this.c())).as();
+    }
+
 
     @Override
     PCMonad tid(final fURI tid);
@@ -148,8 +143,13 @@ public interface PCMonad extends Monad<Lst> {
     }
 
     default PCMonad inst(final Inst inst) {
-        return this.clone(List.of(this.obj(), inst, this.state(), this.code()), this.tid(), this.vid());
+        return this.clone(lst(this.obj(), inst, this.state(), this.code()), this.tid(), this.vid());
     }
+
+    default PCMonad state(final Rec state) {
+        return this.clone(lst(this.obj(), this.inst(), state, this.code()), this.tid(), this.vid());
+    }
+
 
     @Override
     default Type dom() {
@@ -165,14 +165,14 @@ public interface PCMonad extends Monad<Lst> {
     PCMonad clone();
 
     @Override
-    default PCMonad apply() {
+    default Obj apply() {
         if (this.halted())
             return this;
         final boolean monadicInst = this.inst().tid().hasQ(MONAD);
-        final Obj nextObj = this.inst().apply(monadicInst ? 
+        final Obj nextObj = this.inst().apply(monadicInst ?
                 this :        // don't unwrap monad (lhs)
                 this.obj());
-        return monadicInst ? nextObj.asMonad() : this.next(nextObj);
+        return monadicInst ? nextObj : this.next(nextObj);
         //return this.next(monadicInst ? nextObj.asMonad().obj(): nextObj); // wrap monad (rhs)
     }
 

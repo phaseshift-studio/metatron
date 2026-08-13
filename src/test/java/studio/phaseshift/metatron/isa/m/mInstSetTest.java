@@ -36,9 +36,7 @@ import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.Call;
 import studio.phaseshift.metatron.isa.m.type.NoObj;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
-import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.Map;
@@ -613,23 +611,34 @@ public class mInstSetTest extends AbstractInstSetTest {
 
 
     @ParameterizedTest
-    @Disabled("solve problem with type predicate rewriting")
     @CsvSource(value = {
-            "1.repeat(plus(1),10))                                                                % 11",
-            "1.repeat(plus(1),10).repeat(minus(1),11)                                             % 0",
-            "1.repeat(10,10)                                                                      % 10",
-            "1.repeat(10,0)                                                                       % 1",
-            "{1,2}.repeat(plus(1),10)                                                             % {11,12}",
+            "1.repeat(code=>plus(1),until=>loop().is(eq(10)))                                                 % 11",
+            "1.repeat(code=>plus(1),until=>loop().is(eq(1)))                                                  % 2",
+            "1.repeat(code=>plus(1),until=>loop().is(gt(3)))                                                  % 5",
+            "1.repeat(code=>plus(1),until=>loop().is(lt(3)))                                                  % 1",
+            "10.repeat(code=>plus(1),until=>loop().is(eq(5)))                                                 % 15",
+            "0.repeat(code=>plus(1),until=>loop().is(eq(5)))                                                  % 5",
+            "1.repeat(code=>mult(2),until=>loop().is(eq(4)))                                                  % 16",
+            "1.repeat(code=>plus(1),until=>is(gt(10)))                                                        % 11",
+            "1.repeat(code=>plus(1),until=>is(gt(4)))                                                         % 5",
+            "1.repeat(code=>plus(1),until=>is(gte(4)))                                                        % 4",
+            "1.repeat(code=>plus(1),until=>is(eq(5)))                                                         % 5",
+            "1.repeat(code=>plus(1),until=>_.gt(4))                                                           % 5",
+            "5.repeat(code=>plus(1),until=>is(gt(4)))                                                         % 5",
+            "5.repeat(code=>minus(1),until=>is(eq(0)))                                                        % 0",
+            "1.repeat(code=>minus(1),until=>is(lt(0)))                                                        % -1",
+            "1.repeat(code=>plus(2),until=>is(gt(10)))                                                        % 11",
+            "1.repeat(code=>plus(1).plus(1),until=>is(gt(10)))                                                % 11",
+            "{10,20}.repeat(code=>plus(1),until=>is(gt(12)))                                                  % {20,13}",
+            "1.repeat(code=>plus(1),until=>loop().is(eq(5)),emit=>true)                                       % {1,2,3,4,5,6}",
+            "1.repeat(code=>plus(1),until=>loop().is(eq(5)),emit=>is(eq(3)))                                  % {3,6}",
+            "1.repeat(code=>plus(1),until=>loop().is(eq(5)),emit=>loop().is(eq(3)))                           % {4,6}",
+            "1.repeat(code=>plus(1),until=>loop().is(eq(5)),emit=>false)                                      % 6",
+            "1.repeat(code=>plus(1),until=>loop().is(eq(10)),emit=>is(eq(5)))                                 % {5,11}",
+            "1.repeat(code=>plus(1),until=>loop().is(eq(3))).repeat(code=>mult(2),until=>loop().is(eq(2)))    % 16",
     }, delimiter = '%')
     public void testRepeat(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
-        long current = System.currentTimeMillis();
-        ObjmtronSerializer.parse("1.repeat(plus(1),35000)").apply();
-        long time = System.currentTimeMillis() - current;
-        if (time > 1500)
-            throw MTronException.of("repeat took too long: %s --- inst resolution isn't being cached", time);
-        else
-            LOG.warn("repeat took %s (inst resolution is being cached)", time);
     }
 
     @ParameterizedTest

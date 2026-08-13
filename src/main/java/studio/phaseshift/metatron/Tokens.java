@@ -122,6 +122,7 @@ public final class Tokens {
     public static final String CHAT_ID = "chat_id";
     public static final String TEXT = "text";
     public static final String UNTIL = "until";
+    public static final String EMIT = "emit";
     public static final String MONAD = "monad";
     public static final String REPEAT = "repeat";
     public static final String SHORT = "short";

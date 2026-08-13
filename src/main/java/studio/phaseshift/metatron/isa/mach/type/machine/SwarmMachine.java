@@ -49,7 +49,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs0;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_MACHINE_TID;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_SWARM_MACHINE_TID;
 import static studio.phaseshift.metatron.isa.mach.type.monad.BasicPCMonad.pcmonad;
 
@@ -109,8 +108,15 @@ public class SwarmMachine extends VirtualThread implements Machine {
     public static Machine of(final Obj start, final Code code) {
         if (!start.isNoObj()) {
             final List<Inst> prepended = new ArrayList<>();
-            prepended.add(MInst.instB(mInstSet.START_INST_TID, lst(start)));
-            prepended.addAll(code.codeValue());
+            if (start.isMonad()) {
+                // Monad start: no START inst - the monad's obj + state seed the code's
+                // first inst via resolve()/runMonadicLoop; the monad's own inst (e.g.
+                // repeat) must not be re-applied as the next instruction.
+                prepended.addAll(code.codeValue());
+            } else {
+                prepended.add(MInst.instB(mInstSet.START_INST_TID, lst(start)));
+                prepended.addAll(code.codeValue());
+            }
             return new SwarmMachine(
                     new LinkedHashMap<>(Map.of(uri(CODE), MCode.of(prepended))),
                     MACH_SWARM_MACHINE_TID, null);
@@ -224,15 +230,16 @@ public class SwarmMachine extends VirtualThread implements Machine {
 
     @Override
     public SwarmMachine resolve(final Obj lhs) {
-        final Code resolvedCode = this.code().resolve(lhs);
+        final Obj resolveLhs = lhs.isMonad() ? lhs.asMonad().obj() : lhs;
+        final Code resolvedCode = this.code().resolve(resolveLhs);
         final SwarmMachine mach = this.code(resolvedCode);
         for (final Inst inst : mach.code().jvm()) {
             if (inst.isInitial()) {
                 LOG.trace("  {{g}}==>{{/g}} creating {{y}}initial{{/y}} monad at %s", inst);
-                this.running().append(pcmonad(noobj(), inst, resolvedCode));
+                this.running().append(pcmonad(noobj(), inst, lhs.isMonad() ? lhs.asMonad().state() : rec0(), resolvedCode));
             } else if (inst.isGather()) {
                 LOG.trace("  {{m}}==|{{/m}} creating {{y}}barrier{{/y}} monad at %s", inst);
-                final PCMonad m = pcmonad(objs0(), inst, resolvedCode);
+                final PCMonad m = pcmonad(objs0(), inst, lhs.isMonad() ? lhs.asMonad().state() : rec0(), resolvedCode);
                 mach.barriers().<LinkedList<Obj>>jvmAs().add(m);
             }
         }
@@ -268,7 +275,8 @@ public class SwarmMachine extends VirtualThread implements Machine {
         Router.global().stats().monadicStats().resetMonads();
         final Code code = this.resolve(this.at(START)).code();
         if (this.running().c().isZero()) {
-            this.running().append(pcmonad(noobj(), code.insts().getFirst(), code));
+            final Obj start = this.at(START);
+            this.running().append(pcmonad(start.isMonad() ? start.asMonad().obj() : start, code.insts().getFirst(), start.isMonad() ? start.asMonad().state() : rec0(), code));
         }
 
         // Monadic processing loop
@@ -294,42 +302,44 @@ public class SwarmMachine extends VirtualThread implements Machine {
             if (null != m) {
                 LOG.trace("   {{g}}=>{{/g}} processing monad %s [%s]", m, m.inst().isInitial() ? "initial" : "midway");
                 final PCMonad x = this.split(m);
-                final PCMonad n = x.apply();
-                LOG.trace(" {{g}}===>{{/g}} post-processing monad %s", n);
-                if (n.obj().isFail())
-                    this.infiniteFailCounter.incrementAndGet();
-                if (n.inst().isBatching() && (!n.dead() || n.inst().dom().c().isZeroable())) {
-                    if (n.inst().isGather()) {
-                        final PCMonad barrier = this.barriers().<LinkedList<PCMonad>>jvmAs().peek();
-                        LOG.trace("{{m}}====|{{/m}} appending living obj to barrier %s", n);
-                        if (null == barrier)
-                            throw MTronException.of("barrier should exist: %s", n.inst());
-                        barrier.obj().append(n.obj());
-                        Router.global().stats().monadicStats().incrBarrierMonads(1L);
-                    } else {
+                x.apply().stream().forEach(y -> {
+                    final PCMonad n = y.as();
+                    LOG.trace(" {{g}}===>{{/g}} post-processing monad %s", n);
+                    if (n.obj().isFail())
+                        this.infiniteFailCounter.incrementAndGet();
+                    if (n.inst().isBatching() && (!n.dead() || n.inst().dom().c().isZeroable())) {
+                        if (n.inst().isGather()) {
+                            final PCMonad barrier = this.barriers().<LinkedList<PCMonad>>jvmAs().peek();
+                            LOG.trace("{{m}}====|{{/m}} appending living obj to barrier %s", n);
+                            if (null == barrier)
+                                throw MTronException.of("barrier should exist: %s", n.inst());
+                            barrier.obj().append(n.obj());
+                            Router.global().stats().monadicStats().incrBarrierMonads(1L);
+                        } else {
+                            this.running().append(n);
+                        }
+                    } else if (!n.dead()) {
+                        if (n.halted()) {
+                            LOG.trace("{{y}}====>{{/y}} halting monad %s", n);
+                            n.obj().iterator().forEachRemaining(no -> {
+                                Router.global().stats().monadicStats().incrHaltedMonads(1L);
+                                // this.halted().append(no); // TODO: make configurable (lazy result or aggregate result)
+                                this.onHalt.accept(no);
+                            });
+                        } else {
+                            LOG.trace("{{g}}====>{{/g}} propagating monad %s", n);
+                            n.obj().iterator().forEachRemaining(no -> {
+                                this.running().append(n.obj(no));
+                            });
+                        }
+                    } else if (n.zombie() && n.inst().dom().c().isZeroable()) {
+                        LOG.trace("{{c}}====>{{/c}} walking undead zombie monad %s", n);
                         this.running().append(n);
-                    }
-                } else if (!n.dead()) {
-                    if (n.halted()) {
-                        LOG.trace("{{y}}====>{{/y}} halting monad %s", n);
-                        n.obj().iterator().forEachRemaining(no -> {
-                            Router.global().stats().monadicStats().incrHaltedMonads(1L);
-                           // this.halted().append(no); // TODO: make configurable (lazy result or aggregate result)
-                            this.onHalt.accept(no);
-                        });
                     } else {
-                        LOG.trace("{{g}}====>{{/g}} propagating monad %s", n);
-                        n.obj().iterator().forEachRemaining(no -> {
-                            this.running().append(n.obj(no));
-                        });
+                        Router.global().stats().monadicStats().incrKilledMonads(1L);
+                        LOG.trace("{{r}}====>{{/r}} killing monad %s", n);
                     }
-                } else if (n.zombie() && n.inst().dom().c().isZeroable()) {
-                    LOG.trace("{{c}}====>{{/c}} walking undead zombie monad %s", n);
-                    this.running().append(n);
-                } else {
-                    Router.global().stats().monadicStats().incrKilledMonads(1L);
-                    LOG.trace("{{r}}====>{{/r}} killing monad %s", n);
-                }
+                });
             } else if (!this.barriers().isEmpty()) {
                 final PCMonad barrier = this.barriers().<LinkedList<PCMonad>>jvmAs().poll();
                 if (null != barrier) {
@@ -344,12 +354,12 @@ public class SwarmMachine extends VirtualThread implements Machine {
                         nextBarrier.obj().append(result);
                     } else if (nextInst.isBatching()) {
                         Router.global().stats().monadicStats().incrBarrierMonads(-1L);
-                        this.running().append(pcmonad(result, nextInst, code));
+                        this.running().append(pcmonad(result, nextInst, noobjRec(), code));
                         Router.global().stats().monadicStats().incrRunningMonads(1L);
                     } else {
                         LOG.trace("  {{m}}==|{{/m}} scattering barrier obj %s to %s", result, nextInst);
                         result.forEach(o -> {
-                            final PCMonad n = pcmonad(o, nextInst, code);
+                            final PCMonad n = pcmonad(o, nextInst, noobjRec(), code);
                             Router.global().stats().monadicStats().incrBarrierMonads(-1L);
                             LOG.trace(" {{m}}===|{{/m}} scattering %s", n);
                             this.running().append(n);

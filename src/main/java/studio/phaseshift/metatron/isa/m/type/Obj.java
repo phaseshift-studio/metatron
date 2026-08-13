@@ -75,7 +75,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer.OBJ_SERIAL_TID;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_MONAD_TYPE;
-import static studio.phaseshift.metatron.isa.mach.type.monad.BasicPCMonad.pcmonad;
 import static studio.phaseshift.metatron.util.CommonUtil.indent;
 import static studio.phaseshift.metatron.util.CommonUtil.nullOrElse;
 import static studio.phaseshift.metatron.util.Tuple.Pair;
@@ -1140,20 +1139,36 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             "any objs", "the objs appended to the arg objs", Map.of(jnt(0), "the objs to append"), "an append function \\(f(X)\\to X\\)"),
                     docWrap(instC(AS_INST_TID.dom(A).rng(B), lst(T(B)), (lhs, inst) -> lhs.tid(inst.arg(0).asType().vid())),
                             "any obj", "the lhs obj as the arg type", Map.of(jnt(0), "the type to construct from the lhs"), "a type construction function \\(f(x)\\to x\\)"),
-                    instC(REPEAT_INST_TID.dom(A).rng(A.maybeSome()).addQ(MONAD), rec(uri(CODE), T(A.maybeSome()), uri(UNTIL), BOOL_TYPE), (lhs, inst) -> {
-                        try {
-                            final PCMonad monad = lhs.isMonad() ? lhs.asMonad() : pcmonad(lhs);
-                            if (monad.isNoObj() || monad.obj().isNoObj()) return monad.nextInst();
-                            final Obj breakPredicate = inst.arg(1);
-                            if (breakPredicate.apply(monad.obj()).booleanCheck()) {
-                                return monad.updateLoop(0).nextInst();
+                    instC(LOOP_INST_TID.dom(A).rng(INT_TID).addQ(MONAD), lst(), (lhs, inst) -> lhs.asMonad().obj(lhs.asMonad().loop()).nextInst()),
+                    instC(REPEAT_INST_TID.dom(A).rng(A.maybeSome()).addQ(MONAD), rec(
+                            uri(CODE), T(A.maybeSome()),
+                            uri(UNTIL).maybe(), BOOL_TYPE,
+                            uri(EMIT).maybe(), BOOL_TYPE), (lhs, inst) -> {
+                        final Obj repeatedApply = inst.arg(f(CODE), 0);
+                        final Obj untilPredicate = inst.arg(f(UNTIL), 1);
+                        final Obj emitPredicate = inst.arg(f(EMIT), 2);
+                        final List<Obj> toEmit = new ArrayList<>();
+                        lhs.stream().map(Obj::asMonad).forEach(monad -> {
+                            // monad.logger().info("BEGIN MONAD: %s", monad.loop());
+                            if (monad.isNoObj() || monad.obj().isNoObj()) {
+                                toEmit.add(monad.nextInst());
+                            } else {
+                                final Obj emitCode = emitPredicate.isCall() ? emitPredicate.<Call>as().toCode() : emitPredicate;
+                                final boolean emit = emitCode.apply(monad).booleanCheck();
+                                if (emit)
+                                    toEmit.add(monad.popLoop().nextInst());
+                                final Obj untilCode = untilPredicate.isCall() ? untilPredicate.<Call>as().toCode() : untilPredicate;
+                                if (untilCode.apply(monad).booleanCheck()) {
+                                    if (!emit)
+                                        toEmit.add(monad.popLoop().nextInst());
+                                } else {
+                                    final PCMonad monadX = monad.obj(repeatedApply.apply(monad.obj())).incrLoop(1);
+                                    //  monadX.logger().info("END MONAD: %s", monadX.loop());
+                                    toEmit.add(monadX);
+                                }
                             }
-                            final Obj repeatedApply = inst.arg(0);
-                            return monad.updateLoop(1).obj(repeatedApply.apply(monad.obj()));
-                        } catch (final Exception e) {
-                            //e.printStackTrace();
-                            throw e;
-                        }
+                        });
+                        return objs(toEmit);
                     }),
                    /* instC(REPEAT_INST_TID.dom(A).rng(A.maybeSome()).addQ(MONAD), lst(ALL_TYPE, ALL_TYPE), (lhs, inst) -> {
                         Obj current = ((PCMonad) lhs).obj();
