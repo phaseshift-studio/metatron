@@ -19,27 +19,27 @@
 package studio.phaseshift.metatron.isa.m.type;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
+import studio.phaseshift.metatron.isa.m.type.resolver.InstResolver;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.machine.SwarmMachine;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
-import studio.phaseshift.metatron.isa.m.type.resolver.InstResolver;
-import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
-import java.util.*;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
+import static studio.phaseshift.metatron.Tokens.MONAD;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.NOOBJ;
-import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 
 public interface Code extends Call {
@@ -82,7 +82,7 @@ public interface Code extends Call {
                         if (rewritten.isCode()) {
                             rewrittenCode.set(rewritten.asCode());
                         } else {
-                           // throw MTronException.of("rewrite %s rewrote to non-code %s", r, rewritten);
+                            // throw MTronException.of("rewrite %s rewrote to non-code %s", r, rewritten);
                         }
                     });
             if (hash == (hash = rewrittenCode.get().hashCode()))
@@ -135,7 +135,7 @@ public interface Code extends Call {
     }
 
     default Type rng() {
-        return this.jvm().isEmpty() ? T(NOOBJ) : T(this.jvm().get(this.jvm().size() - 1).rng().tid());
+        return this.jvm().isEmpty() ? T(NOOBJ) : T(this.jvm().getLast().rng().tid());
     }
 
     @Override
@@ -145,11 +145,14 @@ public interface Code extends Call {
 
     @Override
     default Obj apply(final Obj lhs) {
-        final Call resolve = this.tryToInst().resolve(lhs);
-        if (resolve.isCode()) {
-            return objs(SwarmMachine.of(lhs, resolve.as()).apply(noobj()));
-        }
-        return objs(resolve.apply(lhs));
+        final Call code = this.tryToInst();
+        if (code.isCode())
+            return SwarmMachine.of(lhs, code.as()).apply(lhs.isMonad() ? lhs : noobj());
+        // single inst: dispatch by the inst's own monad flag. A monadic inst (loop())
+        // receives the monad; a value inst is resolved and applied against the monad's obj.
+        final boolean monadic = code.isInst() && code.resolve(lhs).tid().hasQ(MONAD);
+        final Obj arg = lhs.isMonad() && !monadic ? lhs.asMonad().obj() : lhs;
+        return code.resolve(arg).apply(arg);
     }
 
     public static class CodeType {

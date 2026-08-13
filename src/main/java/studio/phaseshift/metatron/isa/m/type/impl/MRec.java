@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -67,8 +67,8 @@ public class MRec extends MObj implements Rec {
     public static Rec rec0() {
         return Rec.EMPTY_REC;
     }
-    
-    public static Rec noobjRec(){
+
+    public static Rec noobjRec() {
         return Rec.NOOBJ_REC;
     }
 
@@ -98,7 +98,8 @@ public class MRec extends MObj implements Rec {
 
     public Rec clone() {
         final MRec clone = (MRec) super.clone();
-        clone.jvm = new LinkedHashMap<>((Map<Obj,Obj>)this.jvm);
+        clone.jvm = new LinkedHashMap<>((Map<Obj, Obj>) this.jvm);
+        //DEEP CLONE -- use when necessary: this.jvm().entrySet().stream().collect(Collectors.toMap(kv -> kv.getKey().clone(), kv -> kv.getValue().clone(), (a, b) -> a, LinkedHashMap::new));
         return clone;
     }
 
@@ -109,7 +110,7 @@ public class MRec extends MObj implements Rec {
 
     @Override
     public Rec self(final Object jvm, final fURI tid, final fURI vid) {
-        return super.self(null == jvm ? this.jvm :Rec.Helper.cleanMap((Map<Obj, Obj>) jvm), tid, vid);
+        return super.self(null == jvm ? this.jvm : Rec.Helper.cleanMap((Map<Obj, Obj>) jvm), tid, vid);
     }
 
     @Override
