@@ -22,7 +22,6 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import studio.phaseshift.metatron.AbstractSerializerTest;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Str;
@@ -37,10 +36,13 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.web.webInstSet.JAVA_TID;
 
-/*
+/**
+ * Verifies the fine-grained CST Java serializer ({@link ObjJavaSerializer}).
+ * Shared round-trip coverage lives in {@link AbstractJavaSerializerTest}.
+ *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class ObjJavaSerializerTest extends AbstractSerializerTest<String> {
+public class ObjJavaSerializerTest extends AbstractJavaSerializerTest {
 
     private final ObjJavaSerializer serializer = ObjJavaSerializer.single();
 
@@ -48,36 +50,11 @@ public class ObjJavaSerializerTest extends AbstractSerializerTest<String> {
         super(new ObjJavaSerializer(), JAVA_TID, "java");
     }
 
-    @Override
-    public void testSerializeDeserializeObj(final String objString) {
-        // The ObjJavaSerializer is a language->Rec bridge, not a generic Obj serializer.
-    }
-
     // ===================================================================
-    //  Helpers (existing)
+    //  Helpers
     // ===================================================================
 
-    private static String normalize(final String javaSource) {
-        return javaSource
-                .replaceAll("\\h+", " ")
-                .replaceAll(" *\n *", "\n")
-                .replaceAll("\n+", "\n")
-                .trim();
-    }
-
-    private void assertRoundTripIdempotent(final String javaSource) {
-        final Obj mtron1 = serializer.read(javaSource);
-        assertTrue(mtron1.isRec(), "parse must produce a Rec");
-        final String java2 = serializer.write(mtron1);
-        assertNotNull(java2);
-        assertFalse(java2.isBlank(), "regenerated source must not be blank");
-        final Obj mtron2 = serializer.read(java2);
-        assertTrue(mtron2.isRec());
-        final String java3 = serializer.write(mtron2);
-        assertEquals(java2, java3, "serializer must be idempotent: second write produces identical source");
-    }
-
-    private void assertPathText(final Obj rec, final String path, final String expected) {
+    private static void assertPathText(final Obj rec, final String path, final String expected) {
         final Obj val = rec.asRec().at(uri(path));
         assertFalse(val.isNoObj(), "path '" + path + "' must exist");
         final String actual = val.isStr() ? val.strValue() :
@@ -85,7 +62,7 @@ public class ObjJavaSerializerTest extends AbstractSerializerTest<String> {
         assertEquals(expected, actual, "path '" + path + "' text mismatch");
     }
 
-    private Obj findChildByType(final Obj parent, final String typeName) {
+    private static Obj findChildByType(final Obj parent, final String typeName) {
         if (!parent.isRec()) return noobj();
         final Obj out = parent.asRec().at(uri(OUT));
         if (out.isNoObj() || !out.isLst()) return noobj();
@@ -99,7 +76,7 @@ public class ObjJavaSerializerTest extends AbstractSerializerTest<String> {
     }
 
     // ===================================================================
-    //  Basic structure tests (existing)
+    //  Structure tests (CST shape)
     // ===================================================================
 
     @Test
@@ -119,7 +96,7 @@ public class ObjJavaSerializerTest extends AbstractSerializerTest<String> {
     public void testClassWithPackage() {
         final String java = """
                             package com.example;
-                            
+
                             public class Hello {
                             }""";
         final Obj rec = serializer.read(java);
@@ -134,7 +111,7 @@ public class ObjJavaSerializerTest extends AbstractSerializerTest<String> {
     public void testClassWithImport() {
         final String java = """
                             import java.util.List;
-                            
+
                             public class Test {
                             }""";
         final Obj rec = serializer.read(java);
@@ -187,219 +164,45 @@ public class ObjJavaSerializerTest extends AbstractSerializerTest<String> {
         assertFalse(params.isNoObj());
     }
 
-    // (The remaining existing tests are unchanged — omitted here for brevity
-    //  but preserved in the actual file)
-
-    // ===================================================================
-    //  Round-trip tests (existing)
-    // ===================================================================
-
-    @Test
-    public void testRoundTripEmptyClass() {
-        assertRoundTripIdempotent("""
-                                  public class Empty {
-                                  }""");
-    }
-
-    @Test
-    public void testRoundTripClassWithField() {
-        assertRoundTripIdempotent("""
-                                  public class Person {
-                                      private String name;
-                                      private int age;
-                                  }""");
-    }
-
-    @Test
-    public void testRoundTripClassWithMethod() {
-        assertRoundTripIdempotent("""
-                                  public class Greeter {
-                                      public String hello(String name) {
-                                          return "Hello, " + name;
-                                      }
-                                  }""");
-    }
-
-    @Test
-    public void testRoundTripInterface() {
-        assertRoundTripIdempotent("""
-                                  public interface Handler {
-                                      void handle(String input);
-                                      int status();
-                                  }""");
-    }
-
-    @Test
-    public void testRoundTripEnum() {
-        assertRoundTripIdempotent("""
-                                  public enum Status {
-                                      PENDING,
-                                      ACTIVE,
-                                      CLOSED
-                                  }""");
-    }
-
-    @Test
-    public void testRoundTripRecord() {
-        assertRoundTripIdempotent("""
-                                  public record Pair(String key, int value) {
-                                  }""");
-    }
-
-    @Test
-    public void testRoundTripIfElse() {
-        assertRoundTripIdempotent("""
-                                  public class Branch {
-                                      public String test(int x) {
-                                          if (x > 0) {
-                                              return "positive";
-                                          } else {
-                                              return "negative";
-                                          }
-                                      }
-                                  }""");
-    }
-
-    @Test
-    public void testRoundTripForLoop() {
-        assertRoundTripIdempotent("""
-                                  public class Loop {
-                                      public int sum(int n) {
-                                          int total = 0;
-                                          for (int i = 0; i < n; i++) {
-                                              total = total + i;
-                                          }
-                                          return total;
-                                      }
-                                  }""");
-    }
-
-    @Test
-    public void testRoundTripWhileLoop() {
-        assertRoundTripIdempotent("""
-                                  public class Waiter {
-                                      public void waitUntil(boolean done) {
-                                          while (!done) {
-                                              Thread.yield();
-                                          }
-                                      }
-                                  }""");
-    }
-
-    @Test
-    public void testRoundTripTryCatch() {
-        assertRoundTripIdempotent("""
-                                  public class Safe {
-                                      public String attempt() {
-                                          try {
-                                              return "ok";
-                                          } catch (Exception e) {
-                                              return "fail";
-                                          }
-                                      }
-                                  }""");
-    }
-
-    @Test
-    public void testRoundTripConstructor() {
-        assertRoundTripIdempotent("""
-                                  public class Point {
-                                      private int x;
-                                      private int y;
-                                  
-                                      public Point(int x, int y) {
-                                          this.x = x;
-                                          this.y = y;
-                                      }
-                                  
-                                      public int getX() {
-                                          return x;
-                                      }
-                                  }""");
-    }
-
-    @Test
-    public void testRoundTripAnnotations() {
-        assertRoundTripIdempotent("""
-                                  @Deprecated
-                                  public class OldThing {
-                                      @SuppressWarnings("unchecked")
-                                      public void doIt() {
-                                      }
-                                  }""");
-    }
-
-    @Test
-    public void testRoundTripGenerics() {
-        assertRoundTripIdempotent("""
-                                  public class Container<T extends Comparable<T>> {
-                                      private T item;
-                                  
-                                      public T get() {
-                                          return item;
-                                      }
-                                  
-                                      public void set(T item) {
-                                          this.item = item;
-                                      }
-                                  }""");
-    }
-
-    @Test
-    public void testRoundTripExtendsAndImplements() {
-        assertRoundTripIdempotent("""
-                                  public class MyList extends java.util.AbstractList<String>
-                                          implements java.util.RandomAccess {
-                                  
-                                      public String get(int index) {
-                                          return null;
-                                      }
-                                  
-                                      public int size() {
-                                          return 0;
-                                      }
-                                  }""");
-    }
-
     @Test
     public void testFullRoundTripComplexClass() {
         final String java1 = """
                              package com.example.model;
-                             
+
                              import java.util.List;
                              import java.util.Objects;
-                             
+
                              /**
                               * A person with a name and a list of roles.
                               */
                              public class Person implements Comparable<Person> {
-                             
+
                                  private final String name;
                                  private final int age;
                                  private final List<String> roles;
-                             
+
                                  public Person(String name, int age, List<String> roles) {
                                      this.name = name;
                                      this.age = age;
                                      this.roles = List.copyOf(roles);
                                  }
-                             
+
                                  public String getName() {
                                      return name;
                                  }
-                             
+
                                  public int getAge() {
                                      return age;
                                  }
-                             
+
                                  public List<String> getRoles() {
                                      return roles;
                                  }
-                             
+
                                  public boolean isAdult() {
                                      return age >= 18;
                                  }
-                             
+
                                  @Override
                                  public int compareTo(Person other) {
                                      int nameCmp = this.name.compareTo(other.name);
@@ -408,7 +211,7 @@ public class ObjJavaSerializerTest extends AbstractSerializerTest<String> {
                                      }
                                      return Integer.compare(this.age, other.age);
                                  }
-                             
+
                                  @Override
                                  public boolean equals(Object obj) {
                                      if (this == obj) return true;
@@ -416,7 +219,7 @@ public class ObjJavaSerializerTest extends AbstractSerializerTest<String> {
                                      Person p = (Person) obj;
                                      return age == p.age && Objects.equals(name, p.name);
                                  }
-                             
+
                                  @Override
                                  public int hashCode() {
                                      return Objects.hash(name, age);
@@ -455,7 +258,7 @@ public class ObjJavaSerializerTest extends AbstractSerializerTest<String> {
     }
 
     // ===================================================================
-    //  Type-conversion: str -> java::T  (tag + validate)
+    //  Type-conversion: str -> java::T, java::T -> rec::T, rec::T -> java::T
     // ===================================================================
 
     @ParameterizedTest(name = "[{index}] {1}")
@@ -471,10 +274,6 @@ public class ObjJavaSerializerTest extends AbstractSerializerTest<String> {
                 || result.strValue().contains("enum"), "must be valid Java: " + desc);
     }
 
-    // ===================================================================
-    //  Type-conversion: java::T -> rec::T  (parse)
-    // ===================================================================
-
     @ParameterizedTest(name = "[{index}] {1}")
     @CsvSource(quoteCharacter = '~', value = {
             "'public class Empty {}'           %  empty class parses to rec",
@@ -486,10 +285,6 @@ public class ObjJavaSerializerTest extends AbstractSerializerTest<String> {
         assertTrue(result.count() >= 0, "must be a valid rec: " + desc);
     }
 
-    // ===================================================================
-    //  Type-conversion: rec::T -> java::T  (serialize)
-    // ===================================================================
-
     @ParameterizedTest(name = "[{index}] {1}")
     @CsvSource(quoteCharacter = '~', value = {
             "'public class Empty {}'           %  round-trip through rec",
@@ -500,10 +295,6 @@ public class ObjJavaSerializerTest extends AbstractSerializerTest<String> {
         assertTrue(roundTripped.strValue().contains("class"), "round-trip must produce Java: " + desc);
     }
 
-    // ===================================================================
-    //  Predicate rejection: invalid Java
-    // ===================================================================
-
     @Disabled
     @ParameterizedTest(name = "[{index}] {1}")
     @CsvSource(quoteCharacter = '~', value = {
@@ -513,10 +304,6 @@ public class ObjJavaSerializerTest extends AbstractSerializerTest<String> {
     void testInvalidJavaRejected(final String mtronValue, final String desc) {
         assertRejected(mtronValue);
     }
-
-    // ===================================================================
-    //  Integration: full type chain via mtron runtime
-    // ===================================================================
 
     @Test
     public void testJavaTypeChain() {
