@@ -86,7 +86,7 @@ public class ObjJavaSerializer extends AbstractObjSerializer<String> {
      * {@code libc.musl-x86_64.so.1} prevents loading on glibc hosts even
      * though all undefined symbols are standard C functions that glibc provides.
      */
-    private static void loadNativeLibrary() {
+    static void loadNativeLibrary() {
         final String libName = "libjava-tree-sitter.so";
         try (final InputStream is = ObjJavaSerializer.class.getClassLoader().getResourceAsStream(libName)) {
             if (is == null) {
