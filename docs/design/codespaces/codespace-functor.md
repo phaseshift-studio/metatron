@@ -281,3 +281,59 @@ if (CAPTURE_ALL || !hasNamedChildren || anonymousCount > 0) {
 ## 8. Summary
 
 The functor is defined by one rule: **every node's source span is addressable and editable.** Under the eager model (A) that means capturing `text` everywhere; under the lazy model (C) it means `start`/`end`/`generate`. Either way, codespace exposes `class/text`, `imports/{n}/text`, `fields/{name}/text`, and `methods/{name}/text` / `methods/{name}/body/text` as lossless, surgical, concurrency-safe edit surfaces.
+
+## 9. codeSpace, lockq, and Thread Ownership
+
+The agent-IDE build plan: `codeSpace::T` (a standard space implementation like `fsSpace`/`mqttSpace`, tailored for agent development) equipped with `q => [lineq::[=>], subq::[=>], lockq::[=>]]` query processors.
+
+### 9.1 lockq::T — advisory URI-pattern locks
+
+`lockq` follows the same `QCollection` qproc shape as `subq()` — a registry lst, a `preWrite`, a `qlessWrite`, a `preRead`:
+
+```
+cs:metatron/src/.../mTool/methods/#?lockq -> lock::[usr=>/usr/agent1, expire=>datetime://2343455]
+```
+
+- **preWrite** on `?lockq=lock::[...]` → register the lock against the base pattern (`cs:.../methods/#`); `noobj` → release
+- **qlessWrite** → the conflict check: on a normal write to `cs:.../methods/toSkill/body`, test the URI against each lock's pattern; a match that isn't expired **throws** (advisory — blocks the write)
+- **preRead** → return the lock rec(s) matching a URI
+
+The recursive `#` matching is the standard URI pattern test (`vid.test(pattern)`). `lockq::T` is one qproc in `QCollection`, structurally identical to `subq`.
+
+### 9.2 Thread ownership — the "who is this?" primitive
+
+Metatron's threads are first-class and walkable. From `*/sys/thread/+`:
+
+```
+core::    [...source absent...]@/sys/thread/main        ← root, waits for children then shutdown
+virtual:: [...source=>!*/sys/thread/main...]@/sys/thread/54249889   ← 'console statusline'
+virtual:: [...source=>!*/sys/thread/main...]@/sys/thread/bd8ce281   ← 'console repl'
+```
+
+Virtual threads carry `source` — a back-link to their parent thread. The identity design:
+
+- **Add an `owner` field to thread recs** (AbstractThread / VirtualThread / CoreThread).
+- **Agents**: their main execution thread carries `owner=>/usr/{agent}` (or the agent vid).
+- **Humans**: their interface into metatron is thread-based too — the `console repl` / `console statusline` threads get `owner=>/usr/{name}`.
+- **Child threads inherit**: resolve any thread's owner by walking `source` to the root thread and reading `owner`.
+
+### 9.3 lockq + ownership
+
+`lockq`'s `qlessWrite` reads the writing thread from `THREAD_STACK` (metatron keeps the current thread there), walks `source` to the root, extracts `owner`, and compares against the lock's `usr`:
+
+- owner matches → allowed (the lock holder, re-entrant)
+- no match and not expired → throw
+- no `owner` found on the walk (unowned/daemon thread) → treat as foreign → throw
+
+This is the uniform identity answer for agents, humans, and spawned children alike — one field on threads plus the `source` walk, no separate identity system.
+
+### 9.4 codeSpace::T
+
+A standard `AbstractSpace` subclass with:
+
+- `q => [lineq, subq, lockq]` in its query map
+- a **predefined watcher subscription** loaded on space-load — `sub::[name=>watcher, target=>cs:src/#, code=><reparse inst>]` — fires on any write to the source tree, re-parses the changed file, refreshes the cs rec index
+- the **structural-URI resolver** (`cs:.../classes/{name}/members/{kind}/{memberName}/body` → name-based walk into the coarse rec)
+- the **`superclass` bare-name → `!*` upgrade** (`superclass => !*<file://.../AbstractSpace.java>.as(java::T).as(cs_java::T)`) so `>>superclass` dereferences to the superclass's own cs rec, making the source tree a navigable type graph
+
+Once `codeSpace` is running, the goal is to move the coding agent itself *into* metatron to work in the crafted environment — to feel it and to find places for high-level instructions that make life easier for coding agents.
