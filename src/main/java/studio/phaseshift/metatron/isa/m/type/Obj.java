@@ -1149,21 +1149,24 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                         final Obj emitPredicate = inst.arg(f(EMIT), 2);
                         final List<Obj> toEmit = new ArrayList<>();
                         lhs.stream().map(Obj::asMonad).forEach(monad -> {
-                            // monad.logger().info("BEGIN MONAD: %s", monad.loop());
                             if (monad.isNoObj() || monad.obj().isNoObj()) {
-                                toEmit.add(monad.nextInst());
+                                toEmit.add(monad.loopback(false).nextInst());
                             } else {
+                                // fresh entry pushes a loop frame; a loopback continuation does not
+                                final boolean loopback = monad.isLoopback();
+                                final PCMonad m = monad.loopback(false);
+                                final PCMonad repeatMonad = loopback ? m : m.pushLoop();
                                 final Obj emitCode = emitPredicate.isCall() ? emitPredicate.<Call>as().toCode() : emitPredicate;
-                                final boolean emit = emitCode.apply(monad).booleanCheck();
+                                final boolean emit = emitCode.apply(repeatMonad).booleanCheck();
                                 if (emit)
-                                    toEmit.add(monad.popLoop().nextInst());
+                                    toEmit.add(repeatMonad.popLoop().nextInst());
                                 final Obj untilCode = untilPredicate.isCall() ? untilPredicate.<Call>as().toCode() : untilPredicate;
-                                if (untilCode.apply(monad).booleanCheck()) {
+                                if (untilCode.apply(repeatMonad).booleanCheck()) {
                                     if (!emit)
-                                        toEmit.add(monad.popLoop().nextInst());
+                                        toEmit.add(repeatMonad.popLoop().nextInst());
                                 } else {
-                                    final PCMonad monadX = monad.obj(repeatedApply.apply(monad.obj())).incrLoop(1);
-                                    //  monadX.logger().info("END MONAD: %s", monadX.loop());
+                                    final Obj codeResult = repeatedApply.apply(repeatMonad.obj());
+                                    final PCMonad monadX = repeatMonad.obj(codeResult).incrLoop(1).loopback(true);
                                     toEmit.add(monadX);
                                 }
                             }

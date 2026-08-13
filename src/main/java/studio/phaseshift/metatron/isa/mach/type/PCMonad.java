@@ -24,15 +24,20 @@ import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MCode;
 import studio.phaseshift.metatron.util.CommonUtil;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
 
 import static studio.phaseshift.metatron.Tokens.LOOP;
+import static studio.phaseshift.metatron.Tokens.LOOPBACK;
 import static studio.phaseshift.metatron.Tokens.MONAD;
+import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_FALSE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst0;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -86,20 +91,47 @@ public interface PCMonad extends Monad<Lst> {
         return this.jvm(lst(CommonUtil.arrayList(obj, this.code().nextInst(this.inst()), this.state(), this.code())));
     }
 
-    default PCMonad incrLoop(final int incr) {
-        return this.state(this.state().at(uri(LOOP), this.state().at(LOOP).orElse(jnt(0)).plus(jnt(incr))).as());
-    }
-
-    /**
-     * Pop (reset) the loop counter — called when a repeat invocation exits so a
-     * chained repeat starts its counter at 0.
-     */
-    default PCMonad popLoop() {
-        return this.state(this.state().at(uri(LOOP), jnt(0)).as());
+    default Lst loopStack() {
+        return this.state().at(LOOP).orElse(lst0()).asLst();
     }
 
     default Int loop() {
-        return this.state().at(LOOP).orElse(jnt(0));
+        final List<Obj> stack = this.loopStack().jvm();
+        return stack.isEmpty() ? jnt(0) : jnt(stack.get(stack.size() - 1).intValue());
+    }
+
+    default PCMonad incrLoop(final int incr) {
+        final List<Obj> stack = new ArrayList<>(this.loopStack().jvm());
+        if (stack.isEmpty())
+            stack.add(jnt(incr));
+        else
+            stack.set(stack.size() - 1, jnt(stack.get(stack.size() - 1).intValue() + incr));
+        return this.state(this.state().at(uri(LOOP), lst(stack)).as());
+    }
+
+    default PCMonad pushLoop() {
+        final List<Obj> stack = new ArrayList<>(this.loopStack().jvm());
+        stack.add(jnt(0));
+        return this.state(this.state().at(uri(LOOP), lst(stack)).as());
+    }
+
+    /**
+     * Pop the loop counter stack — called when a repeat invocation exits so a
+     * chained repeat starts its counter at 0.
+     */
+    default PCMonad popLoop() {
+        final List<Obj> stack = new ArrayList<>(this.loopStack().jvm());
+        if (!stack.isEmpty())
+            stack.remove(stack.size() - 1);
+        return this.state(this.state().at(uri(LOOP), lst(stack)).as());
+    }
+
+    default boolean isLoopback() {
+        return this.state().at(uri(LOOPBACK)).orElse(BOOL_FALSE).boolValue();
+    }
+
+    default PCMonad loopback(final boolean loopback) {
+        return this.state(this.state().at(uri(LOOPBACK), bool(loopback)).as());
     }
 
     default Rec state() {
