@@ -452,6 +452,7 @@ public class mInstSet extends AbstractInstSet {
                                 "*tree/#?subq                                            [-- all subs for all tree  --]"),
                         SUB_TYPE,
                         PUB_TYPE,
+                        LOCK_TYPE,
                         docWrap(TYPEQ_TYPE, "addr type constraint qproc",
                                 "abc?typeq -> int::T       [-- abc can only reference a single integer --]",
                                 "abc?typeq -> 'not an int' [-- yields a fail::T --]"),
@@ -474,6 +475,10 @@ public class mInstSet extends AbstractInstSet {
                                 "*<mtron.txt?lineq=14-25> [-- \"\"\"line 14\\\u200Bnthrough 25 replacement\"\"\" --][-- read a line range   --]",
                                 "*<mtron.txt?mimeq=text/plain&lineq=2>                                 [-- read 2nd line of the mime transformed encoding --]"),
                         docWrap(MIMEQ_TYPE, "maps the obj to the specified mime type"),
+                        docWrap(LOCKQ_TYPE, "advisory locks over regions of space: a write to a uri matching a held, unexpired lock throws",
+                                "cs:src/#?lockq -> lock::[usr=>/usr/agent1,expire=>datetime://...]   [-- acquire --]",
+                                "cs:src/.../Foo.java -> ...                                          [-- throws while locked --]",
+                                "cs:src/#?lockq -> noobj                                             [-- release --]"),
                         ////////////////////////////////////////////////////////////////////////////
                         docWrap(AUTHORITY_TYPE = Type.Builder.build()
                                 .tid(URI_TID)

@@ -70,4 +70,69 @@ public interface LineQTest extends QProcTest {
 
     }
 
+    @Test
+    default void testLineQPreservesStructure() {
+        this.attachQ(LINEQ_TID);
+        for (final String source : new String[]{
+                // blank lines survive a lineq edit
+                "$$/xyz ->  \"\"\"line1\n\nline2\nline3\"\"\"    % \"\"\"line1\n\nline2\nline3\"\"\"",
+                "$$/xyz?lineq=2 -> \"replaced\"                  % \"replaced\"",
+                "*$$/xyz                                        % \"\"\"line1\n\nreplaced\nline3\"\"\"",
+                // deletion: writing "" removes the range cleanly
+                "$$/xyz ->  \"\"\"line1\nline2\nline3\"\"\"       % \"\"\"line1\nline2\nline3\"\"\"",
+                "$$/xyz?lineq=1 -> \"\"                          % \"\"",
+                "*$$/xyz                                        % \"\"\"line1\nline3\"\"\"",
+                // multi-line replacement inserts a block
+                "$$/xyz ->  \"\"\"line1\nline2\"\"\"              % \"\"\"line1\nline2\"\"\"",
+                "$$/xyz?lineq=1 -> \"\"\"a\nb\nc\"\"\"            % \"\"\"a\nb\nc\"\"\"",
+                "*$$/xyz                                        % \"\"\"line1\na\nb\nc\"\"\""}) {
+            final Obj resultObj = ObjmtronSerializer.parse(make(source.split("%")[0])).apply();
+            final Obj expectedObj = ObjmtronSerializer.parse(make(source.split("%")[1])).apply();
+            assertEquals(expectedObj, resultObj);
+        }
+
+    }
+
+    @Test
+    default void testLineQAppend() {
+        this.attachQ(LINEQ_TID);
+        for (final String source : new String[]{
+                "$$/xyz ->  \"\"\"line1\nline2\"\"\"     % \"\"\"line1\nline2\"\"\"",
+                // ?lineq=2 (the line count) appends a single line
+                "$$/xyz?lineq=2 -> \"line3\"            % \"line3\"",
+                "*$$/xyz                                 % \"\"\"line1\nline2\nline3\"\"\"",
+                // appending beyond the line count also lands at the end
+                "$$/xyz?lineq=99 -> \"line4\"           % \"line4\"",
+                "*$$/xyz                                 % \"\"\"line1\nline2\nline3\nline4\"\"\""}) {
+            final Obj resultObj = ObjmtronSerializer.parse(make(source.split("%")[0])).apply();
+            final Obj expectedObj = ObjmtronSerializer.parse(make(source.split("%")[1])).apply();
+            assertEquals(expectedObj, resultObj);
+        }
+
+    }
+
+    @Test
+    default void testLineQInsert() {
+        this.attachQ(LINEQ_TID);
+        for (final String source : new String[]{
+                "$$/xyz ->  \"\"\"line1\nline2\nline3\"\"\"       % \"\"\"line1\nline2\nline3\"\"\"",
+                // lineq=+ inserts at the end
+                "$$/xyz?lineq=+ -> \"line4\"                      % \"line4\"",
+                "*$$/xyz                                         % \"\"\"line1\nline2\nline3\nline4\"\"\"",
+                // lineq=N+ inserts before line N — pushes it down, no overwrite
+                "$$/xyz?lineq=1+ -> \"inserted\"                  % \"inserted\"",
+                "*$$/xyz                                         % \"\"\"line1\ninserted\nline2\nline3\nline4\"\"\"",
+                // lineq=0+ inserts at the very beginning
+                "$$/xyz?lineq=0+ -> \"top\"                       % \"top\"",
+                "*$$/xyz                                         % \"\"\"top\nline1\ninserted\nline2\nline3\nline4\"\"\"",
+                // multi-line block insert
+                "$$/xyz?lineq=2+ -> \"\"\"a\nb\nc\"\"\"             % \"\"\"a\nb\nc\"\"\"",
+                "*$$/xyz                                         % \"\"\"top\nline1\na\nb\nc\ninserted\nline2\nline3\nline4\"\"\""}) {
+            final Obj resultObj = ObjmtronSerializer.parse(make(source.split("%")[0])).apply();
+            final Obj expectedObj = ObjmtronSerializer.parse(make(source.split("%")[1])).apply();
+            assertEquals(expectedObj, resultObj);
+        }
+
+    }
+
 }

@@ -58,6 +58,7 @@ memspace::[
                subq::[=>],
               mimeq::[=>],
               lineq::[=>],
+              lockq::[=>],
               incrq::[=>]]]@</sys/space/usr/marko>;                 
         [=====================]  
         [====== FILE SYS =====]
