@@ -22,7 +22,6 @@ import com.google.gson.JsonElement;
 import com.sun.net.httpserver.HttpServer;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
-import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractSpace;
 import studio.phaseshift.metatron.isa.Space;
@@ -32,6 +31,7 @@ import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.Uri;
 import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.sys.type.ThreadExecutor;
 import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
 import studio.phaseshift.metatron.isa.web.type.MIME;
 import studio.phaseshift.metatron.isa.web.webInstSet;
@@ -148,7 +148,7 @@ public class httpSpace extends AbstractSpace<HttpServer> {
                 }
             });
             LOG.info("starting web server at %s", this.at(HOST).uriValue().scheme(HTTP).toUri());
-            server.setExecutor(BootLoader.getExecutor());
+            server.setExecutor(ThreadExecutor.instance());
             Runtime.getRuntime().addShutdownHook(new Thread(this::close));
             LOG.info("available routes: %s", this.at(ROUTE));
             server.start();
@@ -241,7 +241,7 @@ public class httpSpace extends AbstractSpace<HttpServer> {
             final HttpServer server = HttpServer.create(
                     new InetSocketAddress(config.at(HOST).uriValue().host(),
                             config.at(HOST).uriValue().port()), 0);
-            server.setExecutor(BootLoader.getExecutor());
+            server.setExecutor(ThreadExecutor.instance());
             return new httpSpace(server, config.jvm(), vid);
         } catch (final Exception e) {
             throw MTronException.of(e);

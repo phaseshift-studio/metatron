@@ -312,7 +312,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
                 final String refTable = findReferencedTable(colName, tableNames);
                 if (refTable != null && !refTable.equalsIgnoreCase(srcTbl)) {
                     registerOrPendingFK(meta.tableName(), col.name(), refTable, "id");
-                    this.space.logger().info("inferred FK by convention: {{b}}%s.%s{{X}} → {{b}}%s{{X}}",
+                    this.space.logger().debug("inferred FK by convention: {{b}}%s.%s{{X}} → {{b}}%s{{X}}",
                             meta.tableName(), col.name(), refTable);
                 }
             }
@@ -421,7 +421,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
         final String refTable = findReferencedTable(colName, knownTables);
         if (refTable != null && !refTable.equalsIgnoreCase(tableName)) {
             schemaGenerator.registerFK(tableName, columnName, refTable, "id");
-            this.space.logger().info("lazy foreign key by convention: {{b}}%s.%s{{X}} → {{b}}%s{{X}}",
+            this.space.logger().debug("lazy foreign key by convention: {{b}}%s.%s{{X}} → {{b}}%s{{X}}",
                     tableName, columnName, refTable);
             return schemaGenerator.getFKTarget(tableName, columnName);
         }
@@ -1034,7 +1034,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
 
         final String ddl = String.format("ALTER TABLE %s ADD COLUMN %s %s",
                 q(metadata.tableName), q(columnName), sqlType);
-        this.space.logger().info("adding column on the fly: %s", ddl);
+        this.space.logger().debug("adding column on the fly: %s", ddl);
         try (final Statement stmt = conn.createStatement()) {
             stmt.executeUpdate(ddl);
         } catch (final SQLException e) {
@@ -1048,7 +1048,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
                     final String typeName2 = cols.getString("TYPE_NAME");
                     final ColumnMetadata raced = new ColumnMetadata(columnName, sqlType2, typeName2);
                     metadata.columns.add(raced);
-                    this.space.logger().info("column {{b}}%s{{X}}.%s already exists (race); using DB-reported type %s", metadata.tableName, columnName, typeName2);
+                    this.space.logger().warn("column {{b}}%s{{X}}.%s already exists (race) -- using db-reported type %s", metadata.tableName, columnName, typeName2);
                     return raced;
                 }
             }
@@ -1455,7 +1455,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
 
         this.tableSchemas.put(tableName.toLowerCase(),
                 new TableMetadata(catalog, tableName, columns, primaryKeys));
-        this.space.logger().info("created table {{b}}%s{{X}} with %s columns and primary keys %s",
+        this.space.logger().debug("created table {{b}}%s{{X}} with %s columns and primary keys %s",
                 tableName, columns.size(), primaryKeys);
     }
 

@@ -1091,7 +1091,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                                                 .getOutput()
                                                 .getBytes())));
                     }),
-                    instC(INSIDE_INST_TID.dom(A).rng(A.maybe()), lst(LST_TYPE), (lhs, inst) -> inst.arg(0).lstValue().stream().anyMatch(o -> o.test(lhs)) ? lhs : noobj()),
+                    instC(UNION_INST_TID.dom(A).rng(A.maybe()), lst(LST_TYPE), (lhs, inst) -> inst.arg(0).lstValue().stream().anyMatch(o -> o.test(lhs)) ? lhs : noobj()),
                     instC(SERIALIZE_INST_TID.dom(A).rng(B), lst(T(OBJ_SERIAL_TID)), (lhs, inst) -> {
                         final Object serialization = inst.arg(0).<ObjSerializer<?>>as().write(lhs);
                         try {
@@ -1122,7 +1122,10 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                         }
                         throw MTronException.of("transformation path must be a chain rel of types: %s", inst.arg(0));
                     }),
+                    //docWrap(instC(ZERO_INST_TID.dom(A).rng(A), lst(), (lhs, inst) -> ((PlusMonoid.O<?>) lhs).zero()), "a plus monoid obj", "the zero of the plus monoid", Map.of(), "the zero element of the monoidal set"),
+                    //docWrap(instC(ONE_INST_TID.dom(A).rng(A), lst(), (lhs, inst) -> ((MultMonoid.O<?>) lhs).one()), "a mult monoid obj", "the one of the multi monoid", Map.of(), "the one element of the monoidal set"),
                     instC(AS_INST_TID.dom(A).rng(NOOBJ_TID.zero()), lst(), (lhs, inst) -> noobj()),
+                    instC(AS_INST_TID.dom(A).rng(STR_TID), lst(STR_TYPE), (lhs, inst) -> str(Str.Helper.cleanString(lhs), inst.arg(0).vidOrTid().c(c -> c.mult(lhs.c())), null)),
                     docWrap(instC(AS_INST_TID.dom(A).rng(B), lst(ALL_TYPE), (lhs, inst) -> inst.arg(0).isType() ? lhs.as(inst.arg(0).asType()) : fail(MTronException.of("%s is not a %s", lhs, inst.arg(0)))),
                             "any obj", "the lhs obj as the arg type", Map.of(jnt(0), "the type to cast to"), "a type casting function \\(f(x)\\to x\\)"),
                     instC(IMPORT_INST_TID.dom(ALL.maybe()).rng(SPACE_TID.maybeSome()), lst(URI_TYPE, T(URI_TID.maybe())),

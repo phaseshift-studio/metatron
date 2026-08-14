@@ -36,6 +36,7 @@ import dev.langchain4j.model.openai.OpenAiStreamingChatModel;
 import org.slf4j.event.Level;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.llm.parser.JsonSchemaGenerator;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
 import studio.phaseshift.metatron.isa.llm.type.Model;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -56,6 +57,7 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_MODEL_TID;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_BYTE_TID;
+import static studio.phaseshift.metatron.isa.m.math.mathInstSet.normalizeData;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Rec.REC_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Str.str0;
@@ -120,7 +122,7 @@ public final class LLMFactory {
                                         //uri(LICENSE), Optional.ofNullable(m.get1().getLicense()).map(MStr::str).map(o -> (Obj) o).orElse(noobj()),
                                         //uri(THINK), m.get1().getCapabilities().contains(THINKING) ? rec() : noobj(),
                                         uri(SKILL), lst(m.get1().getCapabilities().stream().map(MUri::uri)),
-                                        uri(SIZE), real(Long.valueOf(m.get0().getSize()).doubleValue(), MATH_BYTE_TID, null)));
+                                        uri(SIZE), normalizeData(real(Long.valueOf(m.get0().getSize()).doubleValue(), MATH_BYTE_TID, null))));
                                 postModel.jvm().putAll(preModel.jvm());
                                 return postModel;
                             } catch (final Exception e) {

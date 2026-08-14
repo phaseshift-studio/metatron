@@ -1,6 +1,6 @@
 ---
 name: dckrspace
-description: >
+description: |
   Docker management through dckrSpace — pull, run, stop containers; manage images, volumes,
   networks; docker-compose up/down; navigate container↔resource graph links. All from mtron.
   TRIGGER: When working with Docker in metatron, dckrSpace, dockerspace::, docker: URIs,

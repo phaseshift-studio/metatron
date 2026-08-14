@@ -16,21 +16,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.sys.type_;
+package studio.phaseshift.metatron.isa.sys.type;
 
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
-import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.impl.MCode;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.mach.machInstSet;
-import studio.phaseshift.metatron.isa.mach.type.thread.AbstractThread;
 import studio.phaseshift.metatron.isa.mach.type.thread.VirtualThread;
 import studio.phaseshift.metatron.util.CommonUtil;
 
@@ -69,7 +67,7 @@ public class ThreadExecutorTest extends AbstractMetatronTest {
 
     @BeforeEach
     public void createExecutor() {
-        this.executor = BootLoader.getExecutor();
+        this.executor = ThreadExecutor.instance();
     }
 
     // =========================================================
@@ -239,8 +237,8 @@ public class ThreadExecutorTest extends AbstractMetatronTest {
                 .filter(sourceA::equals)
                 .noneMatch(sourceB::equals);
 
-  //      assertTrue(hasSourceA, "should find threads for source A");
-     //   assertTrue(hasSourceB, "should find threads for source B");
+        //      assertTrue(hasSourceA, "should find threads for source A");
+        //   assertTrue(hasSourceB, "should find threads for source B");
         assertTrue(hasNoSourceBforA, "thread A should NOT report source B");
     }
 

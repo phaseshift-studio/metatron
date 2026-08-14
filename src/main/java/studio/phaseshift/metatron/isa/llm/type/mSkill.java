@@ -20,6 +20,9 @@ package studio.phaseshift.metatron.isa.llm.type;
 
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.service.tool.ToolExecutor;
+import dev.langchain4j.service.tool.ToolProvider;
+import dev.langchain4j.service.tool.ToolProviderRequest;
+import dev.langchain4j.service.tool.ToolProviderResult;
 import dev.langchain4j.skills.DefaultSkill;
 import dev.langchain4j.skills.DefaultSkillResource;
 import dev.langchain4j.skills.FileSystemSkillLoader;
@@ -28,15 +31,20 @@ import org.commonmark.ext.front.matter.YamlFrontMatterExtension;
 import org.commonmark.ext.front.matter.YamlFrontMatterVisitor;
 import org.commonmark.node.Node;
 import org.commonmark.parser.Parser;
+import studio.phaseshift.metatron.TokenMapper;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.llm.type.feature.Feature;
+import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Str;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
+import studio.phaseshift.metatron.isa.mach.io.space.fs.fsSpace;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.io.File;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -54,6 +62,14 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  */
 public class mSkill extends MRec {
 
+    /**
+     * Metatron token → Anthropic MCP/skill vocabulary.  Metatron keeps a
+     * minimal token set (e.g. {@code desc}); this maps it onto the Anthropic
+     * names at the protocol boundary (e.g. {@code description}).
+     */
+    public static final TokenMapper ANTHROPIC_VOCAB = new TokenMapper()
+            .add(LLM_SKILL_TID, DESC, "description");
+
     private final Skill skill;
 
     public mSkill(final Skill skill, final fURI tid, final fURI vid) {
@@ -61,7 +77,7 @@ public class mSkill extends MRec {
                 uri(NAME), uri(skill.name()),
                 uri(DESC), str(skill.description()),
                 uri(CONTENT), str(skill.content()),
-                uri(ENTRY), skill.resources().isEmpty() ? noobj() : lst(skill.resources().stream().map(r -> rec(uri(DIR), uri(r.relativePath()), uri(CONTENT), str(r.content())).<Obj>as()).toList())), tid, vid);
+                uri(RESOURCE), skill.resources().isEmpty() ? noobj() : lst(skill.resources().stream().map(r -> rec(uri(URI), uri(r.relativePath()), uri(TEXT), str(r.content())).<Obj>as()).toList())), tid, vid);
         this.skill = skill;
     }
 
@@ -78,12 +94,12 @@ public class mSkill extends MRec {
             skill = skill.description(this.at(DESC).strValue());
         if (this.has(CONTENT))
             skill = skill.content(this.at(CONTENT).strValue());
-        if (this.has(ENTRY))
-            skill = skill.resources(this.at(ENTRY).asLst().elements()
+        if (this.has(RESOURCE))
+            skill = skill.resources(this.at(RESOURCE).asLst().elements()
                     .map(Obj::asRec)
                     .map(e -> new DefaultSkillResource.Builder()
-                            .relativePath(e.at(DIR).uriValue().toString())
-                            .content(e.at(CONTENT).strValue())
+                            .relativePath(e.at(URI).uriValue().toString())
+                            .content(e.at(TEXT).strValue())
                             .build())
                     .toList());
         if (this.has(TOOL)) {
@@ -116,7 +132,7 @@ public class mSkill extends MRec {
             .extensions(List.of(YamlFrontMatterExtension.create()))
             .build();
 
-    static Map<String, List<String>> parseFrontMatter(String markdown) {
+    public static Map<String, List<String>> parseFrontMatter(final String markdown) {
         Node document = PARSER.parse(markdown);
         YamlFrontMatterVisitor visitor = new YamlFrontMatterVisitor();
         document.accept(visitor);
@@ -131,5 +147,90 @@ public class mSkill extends MRec {
             }
         }
         return markdown;
+    }
+
+    /**
+     * Resolve the skills attached to every feature of an agent into a flat
+     * {@code Lst<mSkill>}.  Each feature exposes skills either as mtron-native
+     * recs ({@link Feature#skill(Agent)}) or as a {@code skill} field of URIs/
+     * recs; a URI element is loaded from its SKILL.md directory.
+     *
+     * @param agent the agent whose features are traversed
+     * @return a flat list of resolved skills
+     */
+    public static Lst skills(final Agent agent) {
+        return lst(agent.features().elements()
+                .flatMap(entry -> (entry instanceof Feature feat ? feat.skill(agent) : entry.asRec().at(SKILL).orElse(lst()))
+                        .elements()
+                        .map(s -> (Obj) (s.isUri() ? mSkill.of(fsSpace.staticObjToFile(s)) : mSkill.of(s.apply().asRec()))))
+                .toList());
+    }
+
+    /**
+     * The {@code as?skill<=agent} mapping: aggregate an agent's features' skills
+     * into a single {@code skill::T}.  The agent's name/desc become the skill's
+     * name/desc; the features' tools and resources are flattened into the
+     * skill's {@code tool} and {@code resource} fields (absent when empty).
+     *
+     * @param agent the agent to reduce to a skill
+     * @return a skill aggregating the agent's capabilities, vid-null
+     */
+    public static mSkill agentToSkill(final Agent agent) {
+        final String nameStr = Str.Helper.cleanString(agent.at(uri(NAME)));
+        final Obj desc = agent.at(uri(DESC));
+        final List<Obj> tools = new ArrayList<>();
+        final List<Obj> resources = new ArrayList<>();
+        for (final Obj entry : agent.features().elements().toList()) {
+            final Lst featureSkills = entry instanceof Feature feat ? feat.skill(agent) : entry.asRec().at(SKILL).orElse(lst());
+            for (final Obj s : featureSkills.elements().toList()) {
+                final mSkill skill = (mSkill) (s.isUri() ? mSkill.of(fsSpace.staticObjToFile(s)) : mSkill.of(s.apply().asRec()));
+                tools.addAll(skill.tools().elements().toList());
+                if (skill.has(RESOURCE))
+                    resources.addAll(skill.at(RESOURCE).asLst().elements().toList());
+                // each feature's own skill (its usage instructions) becomes a resource
+                if (skill.has(CONTENT)) {
+                    final Map<Obj, Obj> r = mutableMap(
+                            uri(URI), uri(entry.tid()),
+                            uri(NAME), str(entry.tid().name()));
+                    if (skill.has(DESC))
+                        r.put(uri(DESC), skill.at(uri(DESC)));
+                    r.put(uri(TEXT), skill.at(uri(CONTENT)));
+                    resources.add(rec(r));
+                }
+            }
+        }
+        final Map<Obj, Obj> jvm = mutableMap(
+                uri(NAME), uri(nameStr),
+                uri(DESC), desc.isNoObj() ? str("an agent named " + nameStr) : desc);
+        if (!tools.isEmpty())
+            jvm.put(uri(TOOL), lst(tools));
+        if (!resources.isEmpty())
+            jvm.put(uri(RESOURCE), lst(resources));
+        return new mSkill(rec(jvm), LLM_SKILL_TID, null);
+    }
+
+    /**
+     * The tools carried by this skill, as a {@code Lst} of tool insts.  Combines
+     * the mtron-native {@code tool} field with any {@link ToolProvider} tools the
+     * underlying LC4j {@link Skill} exposes (each folded into an inst via
+     * {@link mTool#toolToMtronDoc}).
+     *
+     * @return the flattened tool insts
+     */
+    public Lst tools() {
+        final List<Obj> tools = new ArrayList<>();
+        if (this.has(TOOL))
+            tools.addAll(this.at(TOOL).asLst().elements().toList());
+        if (null != this.skill) {
+            for (final ToolProvider provider : this.skill.toolProviders()) {
+                try {
+                    provider.provideTools(ToolProviderRequest.builder().build()).tools()
+                            .forEach((spec, executor) -> tools.add(mTool.toolToMtronDoc(spec, executor).at(OBJ)));
+                } catch (final Exception e) {
+                    this.logger().warn("unable to fold tool provider %s: %s", provider, e.getMessage());
+                }
+            }
+        }
+        return lst(tools);
     }
 }

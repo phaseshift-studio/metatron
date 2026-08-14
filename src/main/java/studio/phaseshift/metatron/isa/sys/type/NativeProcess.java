@@ -16,17 +16,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.sys.type_;
+package studio.phaseshift.metatron.isa.sys.type;
 
-import org.zeroturnaround.exec.ProcessExecutor;
-import studio.phaseshift.metatron.isa.m.type.Inst;
-import studio.phaseshift.metatron.isa.m.type.impl.MCode;
-import studio.phaseshift.metatron.isa.m.type.impl.MInst;
 import studio.phaseshift.metatron.isa.mach.type.thread.VirtualThread;
-
-import java.util.List;
-
-import static studio.phaseshift.metatron.isa.mach.type.thread.VirtualThread.virtual;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)

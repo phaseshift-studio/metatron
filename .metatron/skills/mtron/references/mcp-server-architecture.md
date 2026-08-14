@@ -1,6 +1,6 @@
 ---
 name: mcp-server-architecture
-description: >
+description: |
   Building MCP servers in mtron: type system, WebSocket routing, tool registration,
   mcp_wsServer / mcp_mtron_wsServer architecture, SpaceChatMemoryStore.
   TRIGGER: When building or modifying MCP servers, registering tools, setting up

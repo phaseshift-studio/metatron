@@ -4,6 +4,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.MessageBuilder;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
 import studio.phaseshift.metatron.isa.llm.type.Model;
+import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Str;
 
@@ -12,9 +13,18 @@ import java.util.Map;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.INCRQ;
+import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
 import static studio.phaseshift.metatron.isa.llm.type.Agent.res;
+import static studio.phaseshift.metatron.isa.m.mInstSet.NOOBJ_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
+import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
@@ -69,5 +79,29 @@ public class ChatFeature extends AbstractFeature {
         // AiMessages are persisted by SpaceChatSessionStore.updateMessages(),
         // which catches both intermediate tool_call responses (that never
         // reach TokenStream.onCompleteResponse) and the final text response.
+    }
+
+    private static final fURI CHAT_INST_TID = LLM_CHAT_FEATURE_TID.extend(INST).extend(CHAT);
+
+    /**
+     * Expose the agent's primary capability — {@code chat} — as a tool, so that
+     * an agent reduced to a {@code skill::T} (and ultimately an MCP server) can
+     * be chatted with.  The agent is captured from the {@code skill(agent)}
+     * argument; the tool's lhs is noobj.
+     */
+    @Override
+    public Lst skill(final Agent agent) {
+        return lst(rec(mutableMap(
+                uri(NAME), uri(CHAT),
+                uri(DESC), str("chat with the agent"),
+                uri(CONTENT), str("send a message to the agent and receive its response"),
+                uri(TOOL), lst(docWrap(instC(CHAT_INST_TID.dom(NOOBJ_TID.zero()).rng(LLM_CHAT_RESULT_TID),
+                                lst(STR_TYPE, T(REC_TID.maybe())),
+                                (lhs, inst) -> agent.chat(inst.arg(0).strValue(), inst.arg(1).isNoObj() ? noobjRec() : inst.arg(1).asRec())),
+                        "noobj lhs",
+                        "the agent's chat response",
+                        Map.of(jnt(0), "the message to send the agent", jnt(1), "optional response format"),
+                        "chat with the agent and receive its response",
+                        "chat('what is a database?')"))), LLM_SKILL_TID, null));
     }
 }

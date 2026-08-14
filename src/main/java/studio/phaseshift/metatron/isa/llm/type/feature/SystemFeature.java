@@ -1,10 +1,8 @@
 package studio.phaseshift.metatron.isa.llm.type.feature;
 
-import dev.langchain4j.service.AiServices;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.MessageBuilder;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
-import studio.phaseshift.metatron.isa.llm.type.AgentServices;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 
 import java.util.Map;
@@ -22,11 +20,8 @@ public class SystemFeature extends AbstractFeature {
         super(jvm, tid, vid);
     }
 
-
-    public static void buildSystemMessage(final Agent agent, final AiServices<AgentServices> service) {
-        final String systemMessage = String.join("\n", agent.getSystemMessages());
-        if (!systemMessage.isBlank())
-            service.systemMessage(systemMessage);
+    public static String generateSystemMessage(final Agent agent) {
+        return (String.join("\n", agent.getSystemMessages()) + "\n" + agent.at(DESC).orElse(str("")).strValue()).trim();
     }
 
     // Key used to store the last-written text in this feature's JVM
@@ -34,28 +29,20 @@ public class SystemFeature extends AbstractFeature {
 
     @Override
     public Obj onBeforeChat(final Agent agent) {
-        final StringBuilder sb = new StringBuilder();
-        if (agent.has(DESC)) {
-            final String desc = agent.at(DESC).strValue();
-            if (!desc.isBlank()) sb.append(desc).append("\n");
-        }
-        sb.append(String.join("\n", agent.getSystemMessages()));
-        final String systemMessage = sb.toString().trim();
+        final String systemMessage = generateSystemMessage(agent);
         if (!systemMessage.isBlank() && agent.hasFeature(SESSION)) {
             // Only write if the system message changed since last chat
             final String lastText = this.at(uri(LAST)).orElse(str("")).strValue();
             if (!systemMessage.equals(lastText)) {
                 final fURI sessionVID = agent.feature(SESSION).asRec().at(SESSION).uriValue();
                 try {
-                    final fURI writePath = agent.at(ROOT).uriValue().extend(MESSAGE)
-                            .extend("_").addQ(INCRQ);
                     MessageBuilder.build(SYSTEM_MESSAGE_TID)
                             .text(systemMessage)
                             .time()
                             .session(sessionVID)
                             .depth(agent.chatDepth())
                             .chatId(agent.chatId())
-                            .create(writePath);
+                            .create(agent.at(ROOT).uriValue().extend(MESSAGE).extend("_").addQ(INCRQ));
                     this.at(uri(LAST), str(systemMessage), MUTABLE);
                 } catch (final Exception e) {
                     this.logger().warn("system message write failed (non-blocking): %s", e.getMessage());

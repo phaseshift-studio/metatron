@@ -89,7 +89,7 @@ public class StatusLine implements Runnable {
         }));
     }
 
-    public static void message(final Obj message) {
+    public synchronized static void message(final Obj message) {
         StatusLine.lastMessage = formatMessage(Str.Helper.cleanString(message));
     }
 
@@ -111,7 +111,8 @@ public class StatusLine implements Runnable {
     }
 
     private void compileWidgets() {
-        final String color = this.getColor();
+        final String back = this.getBackgroundColor();
+        final String fore = this.getForegroundColor();
         this.line.clear();
         boolean capped = false;
         for (final Map.Entry<Uri, Call> ws : this.widgets.jvmTyped().entrySet()) {
@@ -121,13 +122,13 @@ public class StatusLine implements Runnable {
                 cap = "";
                 capped = true;
             } else {
-                cap = "▎ ";
+                cap = "▎";
             }
             if (!ws.getKey().uriValue().toString().endsWith("_"))
                 capped = false;
-            this.line.add(new AttributedString(Graphitty.string("{{g&[%s]}}%s%s{{[%s]}} ", color, cap, w, color)));
+            this.line.add(new AttributedString(Graphitty.string("{{%s&[%s]}}%s%s{{[%s]}}", fore, back, cap, w, back)));
         }
-        this.line.add(new AttributedString(Graphitty.string("{{g}}{{[" + color + "]}}%s.".formatted(" ".repeat(Console.getTerminal().getWidth())))));
+        this.line.add(new AttributedString(Graphitty.string("{{%s&[%s]}}%s.".formatted(fore, back, " ".repeat(Console.getTerminal().getWidth())))));
 
         final AttributedStringBuilder builder = new AttributedStringBuilder();
         for (final AttributedString s : this.line) {
@@ -137,7 +138,7 @@ public class StatusLine implements Runnable {
         this.line.add(builder.toAttributedString());
     }
 
-    private String getColor() {
+    private String getBackgroundColor() {
         final String color;
         if (this.state.equals(WARN))
             color = "y";
@@ -145,6 +146,17 @@ public class StatusLine implements Runnable {
             color = "r";
         else
             color = "b";
+        return color;
+    }
+
+    private String getForegroundColor() {
+        final String color;
+        if (this.state.equals(WARN))
+            color = "b";
+        else if (this.state.equals(ERROR))
+            color = "w";
+        else
+            color = "y";
         return color;
     }
 

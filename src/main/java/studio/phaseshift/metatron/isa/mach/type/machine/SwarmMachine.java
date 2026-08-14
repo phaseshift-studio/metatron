@@ -400,7 +400,7 @@ public class SwarmMachine extends VirtualThread implements Machine {
                 if (null != this.thread && !e.getMessage().contains("nterrupt")) {
                     if (null != this.future)
                         this.future.setObj(fail(e));
-                    this.logger().error("machine execution failed: %s", e.getMessage());
+                    //this.logger().error("machine execution failed: %s", e.getMessage());
                 }
             } finally {
                 this.stop();

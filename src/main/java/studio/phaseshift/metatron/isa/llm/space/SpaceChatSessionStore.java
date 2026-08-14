@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.isa.llm.space;
 
 import dev.langchain4j.data.message.ChatMessage;
+import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.store.memory.chat.ChatMemoryStore;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
@@ -63,7 +64,7 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
     private final Set<fURI> currentMessages = new HashSet<>();
 
     public SpaceChatSessionStore(final Agent agent, final Space space, final int depth,
-                                  final int chatId) {
+                                 final int chatId) {
         this.agent = Objects.requireNonNull(agent, "agent must not be null");
         this.space = Objects.requireNonNull(space, "space must not be null");
         this.depth = depth;
@@ -170,7 +171,7 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
      * full message list including historical AiMessages from prior chats.
      * Without a static set, every AiMessage is re-written on every chat.
      */
-    private static final String WRITTEN_KEY = "_w";   // in-memory marker, rides LC4j attributes
+    public static final String WRITTEN_KEY = "_w";   // in-memory marker, rides LC4j attributes
 
     @Override
     public void updateMessages(final Object sessionVID, final List<ChatMessage> messages) {
@@ -182,6 +183,8 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
 
         for (final ChatMessage msg : messages) {
             try {
+                if (msg instanceof UserMessage)
+                    continue;
                 final Rec msgRec = SERIALIZER.read(msg).asRec();
                 if (!msgRec.tid().equals(AI_MESSAGE_TID))
                     continue;
@@ -197,7 +200,7 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
                 msgRec.recValue().put(uri(CHAT_ID), jnt(this.chatId));
                 Router.writeToSpace(writePath, msgRec);
             } catch (final Exception e) {
-                LOG.warn("error writing AiMessage (non-blocking): %s", e.getMessage());
+                LOG.warn("error writing ai message (non-blocking): %s", e.getMessage());
             }
         }
     }

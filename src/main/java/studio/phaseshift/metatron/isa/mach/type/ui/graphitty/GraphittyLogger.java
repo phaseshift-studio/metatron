@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.event.Level;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Highlighter;
+import studio.phaseshift.metatron.isa.mach.type.ui.console.StatusLine;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -33,6 +34,9 @@ import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
+
+import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 
 public class GraphittyLogger extends LayoutBase<ILoggingEvent> {
     private static final Map<String, String> COLORS = new HashMap<>() {{
@@ -50,10 +54,14 @@ public class GraphittyLogger extends LayoutBase<ILoggingEvent> {
     // Console or Pane (avoiding a circular package dependency).
     // -----------------------------------------------------------------------
 
-    private static BiConsumer<Integer, String> paneWriter = (id, msg) -> {}; // no-op until Console registers
-    /** Writer for messages — mirrors {@code System.out.print()}
-     *  semantics (append without a trailing line break). */
-    private static BiConsumer<Integer, String> appendPaneWriter = (id, msg) -> {};
+    private static BiConsumer<Integer, String> paneWriter = (id, msg) -> {
+    }; // no-op until Console registers
+    /**
+     * Writer for messages — mirrors {@code System.out.print()}
+     * semantics (append without a trailing line break).
+     */
+    private static BiConsumer<Integer, String> appendPaneWriter = (id, msg) -> {
+    };
 
     /**
      * Register the pane writer.  Called once by {@code Console} during
@@ -101,7 +109,9 @@ public class GraphittyLogger extends LayoutBase<ILoggingEvent> {
         defaultTargetPaneId = paneId;
     }
 
-    /** Returns the global default target pane ID, or {@code -1} if none is set. */
+    /**
+     * Returns the global default target pane ID, or {@code -1} if none is set.
+     */
     public static int getDefaultTargetPane() {
         return defaultTargetPaneId;
     }
@@ -135,7 +145,9 @@ public class GraphittyLogger extends LayoutBase<ILoggingEvent> {
         return this;
     }
 
-    /** Returns the per-instance target pane ID, or {@code -1} when none is set. */
+    /**
+     * Returns the per-instance target pane ID, or {@code -1} when none is set.
+     */
     public int targetPane() {
         return this.targetPaneId;
     }
@@ -153,9 +165,11 @@ public class GraphittyLogger extends LayoutBase<ILoggingEvent> {
         return effectivePaneId() >= 0;
     }
 
-    /** Format a message with level-coloured prefix for pane output. */
+    /**
+     * Format a message with level-coloured prefix for pane output.
+     */
     private String formatPaneMessage(final Level level, final Object f, final Object... args) {
-        final String msg   = this.makeMessage(true, f, args);
+        final String msg = this.makeMessage(true, f, args);
         final String color = COLORS.getOrDefault(level.name(), "w");
         return Graphitty.string("{{w}}[{{%s}}%s%s{{w}}]{{X}} %s".formatted(
                 color,
@@ -253,6 +267,23 @@ public class GraphittyLogger extends LayoutBase<ILoggingEvent> {
         return this.logger().isEnabledForLevel(Level.ERROR) ? this.logLevel(Level.ERROR, f, args) : this;
     }
 
+    public GraphittyLogger status(final String level, final Object f, final Object... args) {
+        final String message = f.toString().formatted(args);
+        try {
+            StatusLine.message(str(message));
+        } catch (final Exception e) {
+            // do nothing
+        }
+        return switch (level) {
+            case TRACE -> this.trace(message);
+            case DEBUG -> this.debug(message);
+            case INFO -> this.info(message);
+            case WARN -> this.warn(message);
+            case ERROR -> this.error(message);
+            default -> this;
+        };
+    }
+
     /// ///////////////////////////////
 
     public GraphittyLogger none(final Object f, final Object... args) {
@@ -272,7 +303,7 @@ public class GraphittyLogger extends LayoutBase<ILoggingEvent> {
                 : (this.source instanceof Logger)
                 ? (Logger) this.source
                 : lc.getLogger(this.source.getClass());
-        final ch.qos.logback.classic.Logger current = (ch.qos.logback.classic.Logger)  log;
+        final ch.qos.logback.classic.Logger current = (ch.qos.logback.classic.Logger) log;
         current.setLevel(ch.qos.logback.classic.Level.valueOf(level.name()));
         return log;
     }

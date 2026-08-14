@@ -25,6 +25,7 @@ import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Highlighter;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.sys.type.ThreadExecutor;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -688,44 +689,65 @@ public final class CommonUtil {
      *   }
      * }</pre>
      */
-    public static Spinner spinner(final String message) {
-        return new Spinner(message);
+    public static Spinner spinner(final String message, final boolean rainbow) {
+        return new Spinner(message, null, rainbow);
     }
 
     public static final class Spinner implements AutoCloseable {
-        private static final String[] FRAMES = {"|", "/", "-", "\\"};
+        private static final Map<String, String[]> FRAMES = Map.of(
+                "level", new String[]{"▁", "▃", "▄", "▅", "▆", "▇", "█", "▇", "▆", "▅", "▄", "▃"},
+                "braille1", new String[]{"⢎⡰", "⢎⡡", "⢎⡑", "⢎⠱", "⠎⡱", "⢊⡱", "⢌⡱", "⢆⡱"},
+                "braille2", new String[]{"⣾", "⣽", "⣻", "⢿", "⡿", "⣟", "⣯", "⣷"},
+                "braille3", new String[]{"⠋", "⠙", "⠹", "⠸", "⢰", "⣰", "⣠", "⣄", "⣆", "⡆", "⠇", "⠏"},
+                "kitt", new String[]{"▉", "▊", "▋", "▌", "▍", "▎", "▏", "▎", "▍", "▌", "▋", "▊", "▉"},
+                "bounce1", new String[]{".", "_", "-", "'", "-", "_"},
+                "bounce2", new String[]{".", "o", "O", "°", "O", "o"},
+                "triangle", new String[]{"◣", "◤", "◥", "◢"});
+
         private static final long INTERVAL_MS = 120;
+        private String message;
 
         private final java.util.concurrent.atomic.AtomicBoolean running = new java.util.concurrent.atomic.AtomicBoolean(true);
         private final Thread thread;
 
-        private Spinner(final String message) {
+        private Spinner(final String message, final String frameStyle, final boolean rainbow) {
+            this.message = message;
+            final String[] frame = null == frameStyle || "random".equals(frameStyle) ?
+                    FRAMES.values()
+                            .stream()
+                            .skip(new Random().nextInt(FRAMES.size()))
+                            .findFirst()
+                            .orElse(FRAMES.get("line")) : FRAMES.get(frameStyle);
             this.thread = new Thread(() -> {
                 int idx = 0;
+                String currentFrame = "";
                 while (running.get()) {
-                    System.out.print(Graphitty.string(Graphitty.sillyPrint("\r  " + FRAMES[idx++ % 4] + " " + message, true, true)));
-                    System.out.flush();
+                    currentFrame = frame[idx++ % frame.length];
+                    System.out.print("\r" + (rainbow ? Graphitty.string(Graphitty.sillyPrint(currentFrame, rainbow, false)) : currentFrame) + " " + this.message);
+                    //System.out.flush();
                     try {
                         Thread.sleep(INTERVAL_MS);
                     } catch (final InterruptedException e) {
                         break;
                     }
                 }
-                System.out.print(Graphitty.string("{{-X-}}")); // overwrite with spaces, then return to col 0
+                System.out.print(Graphitty.string("{{-X-}}") + "\r"); // overwrite with spaces, then return to col 0
                 System.out.flush();
-            }, "spinner");
+            }, "spinner for [" + CommonUtil.clipString(message, 20, false) + "]");
             this.thread.setDaemon(true);
-            this.thread.start();
+            //  this.thread.start();
+            ThreadExecutor.instance().execute(this.thread);
         }
 
         /**
          * Stop the animation and wait for the line to clear.
          */
         public void stop() {
-            running.set(false);
-            thread.interrupt();
+            if (!running.getAndSet(false))
+                return;
+            this.thread.interrupt();
             try {
-                thread.join(200);
+                this.thread.join(200);
             } catch (final InterruptedException ignored) {
                 Thread.currentThread().interrupt();
             }
@@ -737,6 +759,10 @@ public final class CommonUtil {
         @Override
         public void close() {
             stop();
+        }
+
+        public void setMessage(final String format, final Object... args) {
+            this.message = format.formatted(args);
         }
     }
 

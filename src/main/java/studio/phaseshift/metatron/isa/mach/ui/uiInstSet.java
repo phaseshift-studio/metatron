@@ -127,7 +127,7 @@ public class uiInstSet extends AbstractInstSet {
                         docWrap(UI_ANCHOR_TYPE = Type.Builder.build()
                                 .tid(URI_TID)
                                 .vid(UI_ANCHOR_TID)
-                                .isaPredicate(inside_(lst(Arrays.stream(FloatingSurface.Anchor.values())
+                                .isaPredicate(union_(lst(Arrays.stream(FloatingSurface.Anchor.values())
                                         .map(a -> uri(a.name().toLowerCase()))
                                         .toArray(Obj[]::new))))
                                 .create(), "a float anchor position"),

@@ -1,3 +1,8 @@
+---
+name: math-instset
+description: The /m/math instruction set — numeric constants, unit-of-measurement types (millis, kB, datetime), and the type registry.
+---
+
 # Math Instruction Set (`/m/math`)
 
 The math instset provides numeric constants, unit-of-measurement types, and datetime handling. All types are registered under `/m/math/...` and available via the standard type resolution system.

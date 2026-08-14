@@ -1,6 +1,6 @@
 ---
 name: mtron-fsspace
-description: >
+description: |
   Learn how to read and write file system files using mtron via fsSpace. Covers MIME type
   handling, file I/O, the mimeq query processor, and pattern-based access.
   TRIGGER: When working with file reads/writes, local file access, file type detection,

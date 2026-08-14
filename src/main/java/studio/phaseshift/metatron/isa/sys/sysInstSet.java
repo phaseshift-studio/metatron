@@ -19,30 +19,23 @@
 package studio.phaseshift.metatron.isa.sys;
 
 import org.zeroturnaround.exec.ProcessExecutor;
-import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
-import studio.phaseshift.metatron.isa.m.math.mathInstSet;
 import studio.phaseshift.metatron.isa.m.type.Str;
-import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.sys.type_.ThreadExecutor;
+import studio.phaseshift.metatron.isa.sys.type.ThreadExecutor;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
-import java.nio.file.Path;
-import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
-import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
-import static studio.phaseshift.metatron.isa.m.math.mathInstSet.*;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.block_;
-import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MILLIS_TYPE;
+import static studio.phaseshift.metatron.isa.m.math.mathInstSet.TIME_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -50,13 +43,12 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.mach.io.space.fs.fsSpace.makeFile;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-@JREService(vid="/m/sys")
+@JREService(vid = "/m/sys")
 public class sysInstSet extends AbstractInstSet {
     public static final fURI SYS_ISA_TID = M_ISA_TID.extend("sys");
     public static final fURI SYS_INST_TID = SYS_ISA_TID.extend("inst");
@@ -84,7 +76,7 @@ public class sysInstSet extends AbstractInstSet {
 
     public void setup() {
         this.jvm().putAll(Map.of(
-                uri(CONST), lst(BootLoader.getExecutor()),
+                uri(CONST), lst(ThreadExecutor.instance()),
                 uri(INST), lst(
                         instC(SYS_INST_TID.extend("native").dom(A.maybe()).rng(B.maybeSome()), lst(STR_TYPE), (lhs, inst) -> {
                             final Str script = inst.arg(0).asStr();

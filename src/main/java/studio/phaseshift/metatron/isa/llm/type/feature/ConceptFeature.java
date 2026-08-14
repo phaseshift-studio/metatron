@@ -577,7 +577,7 @@ public class ConceptFeature extends AbstractFeature {
                 if (!normalized.isEmpty())
                     result.add(normalized);
             }
-            LOG.info("lucene extracted %d concepts from %d docs: %s",
+            LOG.status(DEBUG, "lucene extracted %d concepts from %d docs: %s",
                     result.size(), this.indexer.documentCount(), result);
             result.addAll(new TaggingExtractor().extract(agent, text, blocking));
             return result;

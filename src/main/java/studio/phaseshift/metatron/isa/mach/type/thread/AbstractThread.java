@@ -21,9 +21,9 @@ package studio.phaseshift.metatron.isa.mach.type.thread;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.Real;
 import studio.phaseshift.metatron.isa.m.type.Uri;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
+import studio.phaseshift.metatron.isa.sys.type.ThreadExecutor;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -31,7 +31,6 @@ import java.io.Closeable;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
-import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -41,7 +40,6 @@ import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MILLIS_TYPE;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
-import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /*
@@ -96,7 +94,7 @@ public abstract class AbstractThread extends MRec implements mThread, Closeable 
                 return this.future;
             }
             this.jvm().put(uri(START), other);
-            BootLoader.getExecutor().execute(this);
+            ThreadExecutor.instance().execute(this);
         }
         return this.future;
     }

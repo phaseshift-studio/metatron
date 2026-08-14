@@ -248,8 +248,8 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
         return this.addInst(instB(mInstSet.GET_INST_TID, lst(obj)));
     }
 
-    public F inside_(final Obj obj) {
-        return this.addInst(instB(mInstSet.INSIDE_INST_TID, lst(obj)));
+    public F union_(final Obj obj) {
+        return this.addInst(instB(mInstSet.UNION_INST_TID, lst(obj)));
     }
 
     public F split_(final Obj obj) {
@@ -643,8 +643,8 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
             return new mFluent<F>().get_(obj);
         }
 
-        public static <F extends mFluent<F>> F inside_(final Obj obj) {
-            return new mFluent<F>().inside_(obj);
+        public static <F extends mFluent<F>> F union_(final Obj obj) {
+            return new mFluent<F>().union_(obj);
         }
 
         public static <F extends mFluent<F>> F split_(final Obj obj) {

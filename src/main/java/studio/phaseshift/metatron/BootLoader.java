@@ -19,12 +19,10 @@
 package studio.phaseshift.metatron;
 /// ///////////////////////////////////////////////
 
-import org.apache.http.util.CharArrayBuffer;
-import org.java_websocket.client.WebSocketClient;
+import org.slf4j.bridge.SLF4JBridgeHandler;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.Space;
-import studio.phaseshift.metatron.Tracer;
 import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
@@ -44,28 +42,19 @@ import studio.phaseshift.metatron.isa.mach.type.thread.CoreThread;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.sys.sysInstSet;
-import studio.phaseshift.metatron.isa.sys.type_.ThreadExecutor;
+import studio.phaseshift.metatron.isa.sys.type.ThreadExecutor;
 import studio.phaseshift.metatron.isa.web.space.ws.WebSocketRec;
 import studio.phaseshift.metatron.isa.web.space.ws.WebSocketRecClient;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.IteratorUtil;
-import studio.phaseshift.metatron.util.MTronException;
-import org.slf4j.bridge.SLF4JBridgeHandler;
 
-import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.net.InetAddress;
-import java.nio.CharBuffer;
-import java.nio.file.FileSystem;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import static ch.qos.logback.classic.Level.TRACE;
@@ -73,21 +62,16 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
-import static studio.phaseshift.metatron.isa.m.mInstSet.STR_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.TRACER_TYPE_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.TYPER_TYPE_TID;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.block_;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_FALSE;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TRUE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
-import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_CLIENT_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
@@ -101,14 +85,15 @@ public class BootLoader implements Rec, Feature.SelfClone {
     public static boolean TESTING = false;
     public static boolean ONE_SHOT = false;
     public static volatile boolean RESET = false;
-    /** Exit code returned to the shell when a restart is requested.
-     *  {@code bin/metatron} loops when it sees this code. */
+    /**
+     * Exit code returned to the shell when a restart is requested.
+     * {@code bin/metatron} loops when it sees this code.
+     */
     public static final int EXIT_RESET = 100;
     public static java.util.function.IntConsumer EXIT_HANDLER = System::exit;
     private static final GraphittyLogger LOG;
     public static Router ROUTER;
     public static Rec ARGS;
-    private static volatile ThreadExecutor EXECUTOR;
     /**
      * Tracks the currently executing metatron thread on this Java thread.
      */
@@ -117,17 +102,10 @@ public class BootLoader implements Rec, Feature.SelfClone {
      * Keeps the main thread alive in headless mode (no console REPL to block it).
      */
     private static final CountDownLatch SHUTDOWN_LATCH = new CountDownLatch(1);
-    private static final Supplier<ThreadExecutor> THREAD_POOL_SUPPLIER = () -> {
-        return new ThreadExecutor(Executors.newCachedThreadPool(r -> new Thread(r, "metatron-" + Thread.currentThread().getId())), f("/sys/thread/executor"));
-    };
+
 
     static {
         LOG = Graphitty.log(new BootLoader());
-        EXECUTOR = THREAD_POOL_SUPPLIER.get();
-    }
-
-    public static ThreadExecutor getExecutor() {
-        return EXECUTOR;
     }
 
     public static void main(final String[] args) throws IOException {
@@ -300,7 +278,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
 
         if (null != webSocket) {
             final WebSocketRecClient client = new WebSocketRecClient(new WebSocketRec(mutableMap(uri(HOST), uri(webSocket)), WS_CLIENT_TID, null));
-            final CommonUtil.Spinner spinner = CommonUtil.spinner("waiting for response...");
+            final CommonUtil.Spinner spinner = CommonUtil.spinner("waiting for response...", false);
             final Thread shutdownHook = new Thread(() -> {
                 spinner.stop();
                 client.close();
@@ -400,8 +378,6 @@ public class BootLoader implements Rec, Feature.SelfClone {
     public static void load(final Rec args) {
         if (BOOTING) {
             // Re-create executor if a previous test run shut it down
-            if (EXECUTOR == null || EXECUTOR.isShutdown())
-                EXECUTOR = THREAD_POOL_SUPPLIER.get();
             /// /// PARSING OF BOOT ARGUMENT REC /// ///
             LOG.info("final boot args:\n%s", args);
             if (args.has(BOOT)) {
@@ -574,10 +550,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
                 Router.global().close();
             ROUTER = null;
             ARGS = null;
-            if (EXECUTOR != null) {
-                EXECUTOR.shutdownNow();
-                EXECUTOR = null;
-            }
+            ThreadExecutor.instance().shutdown();
             LOG.info("%s {{g}}successfully{{/g}} shutdown", Graphitty.sillyPrint("metatron", true, true));
         } catch (final Exception e) {
             LOG.error("%s {{r}}unsuccessfully{{/r}} shutdown: %s\n\t", Graphitty.sillyPrint("metatron", true, true), e);

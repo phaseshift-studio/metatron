@@ -16,13 +16,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.sys.type_;
+package studio.phaseshift.metatron.isa.sys.type;
 
 import org.jspecify.annotations.NonNull;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.*;
-import studio.phaseshift.metatron.isa.m.type.impl.MCode;
 import studio.phaseshift.metatron.isa.mach.machInstSet;
 import studio.phaseshift.metatron.isa.mach.type.thread.AbstractThread;
 import studio.phaseshift.metatron.isa.mach.type.thread.CoreThread;
@@ -30,15 +29,15 @@ import studio.phaseshift.metatron.isa.mach.type.thread.VirtualThread;
 
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.function.Supplier;
 
 import static studio.phaseshift.metatron.Tokens.*;
-
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst0;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
@@ -60,6 +59,8 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  */
 public class ThreadExecutor extends AbstractExecutorService implements Rec {
 
+    private volatile static ThreadExecutor EXECUTOR;
+
     private fURI vid;
     private final ExecutorService service;
     private boolean running = true;
@@ -71,6 +72,10 @@ public class ThreadExecutor extends AbstractExecutorService implements Rec {
      */
     public final Map<Obj, Obj> map;
 
+    private static final Supplier<ThreadExecutor> THREAD_POOL_SUPPLIER = () -> {
+        return new ThreadExecutor(Executors.newCachedThreadPool(r -> new Thread(r, "metatron-" + Thread.currentThread().getId())), f("/sys/thread/executor"));
+    };
+
     public ThreadExecutor(final ExecutorService service, final fURI vid) {
         this.service = service;
         this.vid = vid;
@@ -80,6 +85,12 @@ public class ThreadExecutor extends AbstractExecutorService implements Rec {
     }
 
     // ======================== Rec interface ========================
+
+    public static ThreadExecutor instance() {
+        if (null == EXECUTOR || EXECUTOR.isShutdown())
+            EXECUTOR = THREAD_POOL_SUPPLIER.get();
+        return EXECUTOR;
+    }
 
     @Override
     public fURI vid() {
@@ -144,11 +155,12 @@ public class ThreadExecutor extends AbstractExecutorService implements Rec {
      */
     @Override
     public void execute(@NonNull Runnable command) {
+        final String name = (command instanceof Thread) ? ((Thread) command).getName() : "metatron-thread";
         final CoreThread wrapper = CoreThread.core(instLambda((lhs, inst) -> {
             command.run();
             return noobj();
         }));
-        docWrap(wrapper, command.getClass().getName());
+        docWrap(wrapper, name);
         this.execute(wrapper);
     }
 

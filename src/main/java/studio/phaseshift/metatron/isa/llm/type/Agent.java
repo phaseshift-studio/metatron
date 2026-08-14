@@ -28,7 +28,10 @@ import dev.langchain4j.service.tool.ToolErrorHandlerResult;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.CostCalculator;
 import studio.phaseshift.metatron.isa.llm.LLMFactory;
-import studio.phaseshift.metatron.isa.llm.type.feature.*;
+import studio.phaseshift.metatron.isa.llm.type.feature.Feature;
+import studio.phaseshift.metatron.isa.llm.type.feature.SessionFeature;
+import studio.phaseshift.metatron.isa.llm.type.feature.SystemFeature;
+import studio.phaseshift.metatron.isa.llm.type.feature.ToolFeature;
 import studio.phaseshift.metatron.isa.m.math.mathInstSet;
 import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -39,8 +42,10 @@ import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.StatusLine;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.isa.sys.type.ThreadExecutor;
 import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
 import studio.phaseshift.metatron.isa.web.type.MIME;
+import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
@@ -63,7 +68,6 @@ import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_MILLIS_TID;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TRUE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.Str.str0;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
@@ -283,6 +287,7 @@ public class Agent extends MRec {
         final String depthKey = sessionVID != null ? sessionVID.toString() : this.tid().toString();
         final AtomicInteger counter = depthMap.computeIfAbsent(depthKey, k -> new AtomicInteger(0));
         this.currentDepth = counter.incrementAndGet();
+        final CommonUtil.Spinner waiting = CommonUtil.spinner("initializing agent...", true);
         try {
             if (this.first.getAndSet(false))
                 this.features().elements().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_AGENT_CTOR, this));
@@ -294,7 +299,7 @@ public class Agent extends MRec {
             try {
                 final List<Obj> features = this.features().lstValue();
                 if (message.isBlank())
-                    throw MTronException.of("no message provided: %s", this.vid());
+                    throw MTronException.of("no chat message provided: %s", this.vid());
 
                 // ── Phase 1: onBeforeChat — features push state to Agent blackboard ──
                 this.userMessage = message;
@@ -303,7 +308,13 @@ public class Agent extends MRec {
                 this.at(res(COST), noobj(), MUTABLE);
                 this.at(res("stages"), noobj(), MUTABLE);
                 this.at(res(ERROR), noobj(), MUTABLE);
-
+                final Obj chatFeature = this.feature(CHAT);
+                if (chatFeature.isNoObj())
+                    throw MTronException.of("agent has no chat feature: %s", this.vidOrTid());
+                final Rec chat = chatFeature.asRec();
+                chat.asRec().at(FORMAT, (responseFormat.isNoObj() || responseFormat.asRec().isEmpty()) ? noobj() : responseFormat, MUTABLE);
+                ///////////////////////////////////////////////////////////////////
+                waiting.setMessage("loading agent features...");
                 for (final Obj feat : features) {
                     final Obj result = feat instanceof Feature ?
                             ((Feature) feat).onBeforeChat(this) :
@@ -313,47 +324,34 @@ public class Agent extends MRec {
                         return result;
                     }
                 }
-                this.feature(CHAT).ifPresent(chat -> chat.asRec().at(FORMAT, (responseFormat.isNoObj() || responseFormat.asRec().isEmpty()) ? noobj() : responseFormat, MUTABLE));
-                // ── Phase 2: Build LC4j service from Agent's own JVM state ──
-                final AiServices<AgentServices> service = AiServices.builder(AgentServices.class)
+                final AiServices<AgentServices> service = AiServices.builder(AgentServices.class);
+                //////////////////////////////////////////////////////////////////////////////////
+                SessionFeature.buildSession(this, service);
+                ToolFeature.buildTools(this, service);
+                //SkillFeature.buildSkills(this, service);
+                //////////////////////////////////////////////////////////////////////////////////
+                final AgentServices agent = service
                         // .executeToolsConcurrently()
                         // .executeToolsConcurrently(BootLoader.getExecutor())
                         // .maxToolCallingRoundTrips()
+                        // .storeRetrievedContentInChatMemory(true);
+                        .executeToolsConcurrently(ThreadExecutor.instance())
                         .toolExecutionErrorHandler((error, context) -> {
-                            if (this.has(TOOL) && this.feature(TOOL).asRec().has(ON_ERROR)) {
+                            if (this.hasFeature(TOOL) && this.feature(TOOL).asRec().has(ON_ERROR)) {
                                 this.feature(TOOL).asRec().at(ON_ERROR).asInst().args(lst(this, fail(error)));
                             } else {
                                 LOG.error(error);
                             }
                             return new ToolErrorHandlerResult(error.getMessage());
-                        });
-                //.storeRetrievedContentInChatMemory(true);
-                // AgentUtility.buildService(this, service);
-                //////////////////////////////////////////////////////////////////////////////////
-                // ADD ANOTHER FEATURE HOOK -- onSetup
-                final Obj chatFeature = this.feature(CHAT);
-                if (chatFeature.isNoObj())
-                    throw MTronException.of("agent has no chat feature: %s", this.vidOrTid());
-                final Rec chat = chatFeature.asRec();
-                if (this.hasFeature(SESSION))
-                    SessionFeature.buildSession(this, service);
-                if (this.hasFeature(SKILL))
-                    SkillFeature.buildSkills(this, service);
-                if (this.hasFeature(TOOL))
-                    ToolFeature.buildTools(this, service);
-                if (this.hasFeature(SYSTEM))
-                    SystemFeature.buildSystemMessage(this, service);
-                //////////////////////////////////////////////////////////////////////////////////
-                final AgentServices agent = (this.has(DESC) && !this.at(DESC).strValue().isBlank() ?
-                        service.systemMessageTransformer((current, content) ->
-                                (this.at(DESC).orElse(str0()).strValue() + "\n\n" +
-                                        (current != null ? current : "")).trim()) : service)
+                        })
+                        .systemMessage(SystemFeature.generateSystemMessage(this))
                         .streamingChatModel(LLMFactory.createChatInteraction(this,
                                 chat.at(uri(MODEL)),
                                 chat.at(uri(RESPONSE)),
                                 chat.at(uri(FORMAT)))).build();
                 // ── Phase 3: Stream — write events to result blackboard, dispatch hooks ──
-                LOG.info("processed message: %s %s", this.userMessage, this.feature(CHAT).asRec().at(FORMAT).orElse(rec(uri(FORMAT), uri("none"))));
+                LOG.debug("processed message: %s %s", this.userMessage, this.feature(CHAT).asRec().at(FORMAT).orElse(rec(uri(FORMAT), uri("none"))));
+                waiting.setMessage("waiting for agent response...");
                 agent.chat(this.userMessage)
                         .onToolExecuted(tool -> {
                             if (this.interrupt.get()) latch.countDown();
@@ -379,6 +377,7 @@ public class Agent extends MRec {
                             features.stream().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_PARTIAL_TOOL_CALL));
                         })
                         .onPartialResponse(s -> {
+                            waiting.close();
                             if (this.interrupt.get()) {
                                 latch.countDown();
                                 return;
@@ -388,6 +387,7 @@ public class Agent extends MRec {
                             features.stream().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_PARTIAL_RESPONSE, str(s)));
                         })
                         .onPartialThinking(t -> {
+                            waiting.close();
                             if (this.interrupt.get()) {
                                 latch.countDown();
                                 return;
@@ -396,7 +396,7 @@ public class Agent extends MRec {
                             features.stream().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_PARTIAL_THINKING, str(t.text())));
                         })
                         .onError(e -> {
-                            e.printStackTrace();
+                            waiting.close();
                             final fURI currentFeature = this.currentHook.get().get0();
                             final fURI currentStage = this.currentHook.get().get1();
                             final String errorMessage = "[" + currentFeature + "][" + currentStage + "]";
@@ -406,6 +406,7 @@ public class Agent extends MRec {
                             features.stream().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_ERROR));
                             latch.countDown();
                         }).onCompleteResponse(c -> {
+                            waiting.close();
                             if (this.interrupt.get()) {
                                 latch.countDown();
                                 return;
@@ -471,6 +472,7 @@ public class Agent extends MRec {
                             latch.countDown();
                         }).start();
                 latch.await();
+                waiting.close();
                 if (this.interrupt.get()) {
                     final fURI currentFeature = this.currentHook.get().get0();
                     final fURI currentStage = this.currentHook.get().get1();
@@ -486,7 +488,6 @@ public class Agent extends MRec {
             } catch (final Exception e) {
                 throw MTronException.of(e);
             }
-
             // ── Phase 4: Assemble result Rec from blackboard ──
             final Map<Obj, Obj> resultMap = new LinkedHashMap<>();
             final Obj chatResult = this.at(res(CHAT));
@@ -501,8 +502,11 @@ public class Agent extends MRec {
             this.currentHook.set(null);
             return rec(resultMap, LLM_CHAT_RESULT_TID, null);
         } finally {
+            waiting.close();
+            this.systemMessages.clear();
             counter.decrementAndGet();
             this.currentDepth = 0;
+
         }
     }
 
