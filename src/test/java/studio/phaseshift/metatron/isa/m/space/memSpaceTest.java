@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.isa.m.space;
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.LineQTest;
+import studio.phaseshift.metatron.furi.q.LockQTest;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.furi.q.SubQTest;
 import studio.phaseshift.metatron.isa.AbstractSpaceTest;
@@ -38,7 +39,7 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
-public class memSpaceTest extends AbstractSpaceTest implements SubQTest, LineQTest {
+public class memSpaceTest extends AbstractSpaceTest implements SubQTest, LineQTest, LockQTest {
 
     public memSpaceTest() {
         super(() -> {
@@ -48,6 +49,7 @@ public class memSpaceTest extends AbstractSpaceTest implements SubQTest, LineQTe
                 file.delete();*/
             final Space space = memSpace.of(rec(uri(PATTERN), uri("/t/#")), /*uri(PERSIST), uri("/tmp/memspace-test.mtron"),*/ f("/sys/space/mem"));
             space.addQ(QCollection.subq());
+            space.addQ(QCollection.lockQ());
             return space;
         });
     }

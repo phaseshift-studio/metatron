@@ -18,9 +18,13 @@
 
 package studio.phaseshift.metatron.furi.q;
 
-import studio.phaseshift.metatron.furi.QProc;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+
+import java.util.LinkedHashMap;
+
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -31,9 +35,9 @@ public interface QProcTest {
 
     default Space attachQ(final fURI tid) {
         final Space space = this.getSpace();
-        if (getSpace().qs().lstValue().stream().noneMatch(x -> ((QProc) x).pattern().equals(tid))) {
+        if (getSpace().qs().lstValue().stream().noneMatch(x -> x.tid().equals(tid))) {
             space.logger().warn("manually adding %s to %s", tid.name(), space.vidOrTid());
-            space.addQ(QCollection.lineq());
+            space.addQ(rec(new LinkedHashMap<Obj, Obj>(), tid, null).as());
         }
         return space;
     }

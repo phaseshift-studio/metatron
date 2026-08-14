@@ -24,6 +24,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
+import studio.phaseshift.metatron.isa.m.math.mathInstSet;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.m.type.impl.MStr;
@@ -44,6 +45,7 @@ import static studio.phaseshift.metatron.furi.QProc.QPROC_TID;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
+import static studio.phaseshift.metatron.isa.m.math.mathInstSet.DATETIME_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
@@ -135,6 +137,25 @@ public final class QCollection {
     public static final fURI SUBQ_SUB_TID = SUBQ_TID.extend("sub");
     public static final fURI SUBQ_PUB_TID = SUBQ_TID.extend("pub");
     public static Type SUBQ_TYPE;
+    //
+    public static final fURI LOCKQ_PATTERN = f("lockq");
+    public static final fURI LOCKQ_TID = QPROC_TID.extend(LOCKQ_PATTERN);
+    public static final fURI LOCKQ_LOCK_TID = LOCKQ_TID.extend("lock");
+    public static final Type LOCKQ_TYPE = Type.Builder.build().tid(QPROC_TID).vid(LOCKQ_TID).constructor(QCollection::lockQ).create();
+    public static final Type LOCK_TYPE =
+            docWrap(Type.Builder.build()
+                            .tid(REC_TID)
+                            .vid(LOCKQ_LOCK_TID)
+                            .isaPredicate(rec(
+                                    uri(USR), URI_TYPE,
+                                    uri(EXPIRE).maybe(), DATETIME_TYPE))
+                            .create(), null, null, mutableMap(
+                            uri(USR), "the owner of the lock",
+                            uri(EXPIRE), "when the lock expires (a datetime::T) — no value means never"),
+                    "an advisory lock over a region of space",
+                    "cs:src/#?lockq -> lock::[usr=>/usr/agent1,expire=>datetime://...]",
+                    "cs:src/.../Foo.java -> ...  [-- throws while a matching lock is held --]",
+                    "cs:src/#?lockq -> noobj    [-- releases the lock --]");
     public static final Type SUB_TYPE =
             docWrap(Type.Builder.build()
                             .tid(REC_TID)
@@ -172,11 +193,22 @@ public final class QCollection {
 
     private static int[] lineRange(final fURI lineq, final int maxLines) {
         final String lines = lineq.q(LINEQ_PATTERN.toString()).trim();
+        if (lines.endsWith("+")) {
+            // insert mode: push everything below down, never overwrite.
+            // lineq=+ → insert at the end; lineq=N+ → insert before line N; lineq=0+ → at the top.
+            final String num = lines.substring(0, lines.length() - 1).trim();
+            if (num.isEmpty())
+                return new int[]{maxLines, maxLines - 1}; // insert at end
+            final int insert = Integer.parseInt(num);
+            return new int[]{Math.min(insert, maxLines), Math.min(insert, maxLines) - 1};
+        }
         final String[] lineRange = lines.split("-");
         if (lineRange.length == 0 || lineRange.length > 2)
             throw MTronException.of("not a legal line range: %s", lines);
         int start = Integer.parseInt(lineRange[0].trim());
         int stop = lineRange.length == 2 ? Integer.parseInt(lineRange[1].trim()) : start;
+        if (start >= maxLines)
+            return new int[]{maxLines, maxLines - 1}; // appending: the position after the last line
         if (stop >= maxLines)
             stop = maxLines - 1;
         return new int[]{start, stop};
@@ -186,13 +218,17 @@ public final class QCollection {
         return QProc.Helper.build(LINEQ_TID, LINEQ_PATTERN)
                 .preWrite((furi, obj) -> {
                     final String objString = Str.Helper.cleanString(Router.readFromSpace(furi.removeQ(LINEQ_PATTERN)));
-                    final String[] split = objString.split("\n");
-                    int[] lineRange = lineRange(furi, split.length);
-                    for (int i = lineRange[0]; i <= lineRange[1]; i++) {
-                        split[i] = "";
-                    }
-                    split[lineRange[0]] = Str.Helper.cleanString(obj);
-                    Router.writeToSpace(furi.removeQ(LINEQ_PATTERN), str(Arrays.stream(split).filter(s -> !s.isEmpty()).collect(Collectors.joining("\n"))));
+                    // split with -1 so trailing empties (and thus blank-line structure) are preserved
+                    final String[] split = objString.split("\n", -1);
+                    final int[] lineRange = lineRange(furi, split.length);
+                    final String cleaned = Str.Helper.cleanString(obj);
+                    // an empty replacement is a deletion (zero lines); otherwise split the replacement
+                    final String[] replacement = cleaned.isEmpty() ? new String[0] : cleaned.split("\n", -1);
+                    final List<String> result = new ArrayList<>(split.length + replacement.length);
+                    for (int i = 0; i < lineRange[0]; i++) result.add(split[i]);
+                    result.addAll(Arrays.asList(replacement));
+                    for (int i = lineRange[1] + 1; i < split.length; i++) result.add(split[i]);
+                    Router.writeToSpace(furi.removeQ(LINEQ_PATTERN), str(String.join("\n", result)));
                     return obj;
                 }).postRead((furi, obj) -> {
                     final String objString = Str.Helper.cleanString(obj);
@@ -588,6 +624,74 @@ public final class QCollection {
                             });
                     return noobj();
                 }).create();
+    }
+
+    /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public static QProc lockQ() {
+        final Lst locks = lst(new ArrayList<>());
+        return QProc.Helper.build(LOCKQ_TID, LOCKQ_PATTERN)
+                .obj(f(OBJ), locks)
+                // read: list the locks matching the read uri pattern
+                .preRead(vid -> lst(locks.elements()
+                        .filter(e -> vid.basePath().test(e.asRec().at(TARGET).uriValue()))))
+                // write: ?lockq=lock::[usr=>...,expire=>...] registers; ?lockq=noobj releases
+                .preWrite((vid, obj) -> {
+                    if (obj.isNoObj() || obj.isNone()) {
+                        locks.lstValue().removeIf(existing ->
+                                vid.basePath().bimatches(existing.asRec().at(TARGET).uriValue()));
+                        locks.logger().info("released lock on %s", vid.basePath());
+                        return noobj();
+                    }
+                    final Obj lock = obj.asRec().has(TARGET)
+                            ? obj
+                            : obj.asRec().at(TARGET, uri(vid.basePath())); // registry copy carries the pattern
+                    if (locks.lstValue().stream().noneMatch(lock::equals))
+                        locks.lstValue().add(lock);
+                    locks.logger().info("locked %s by %s", vid.basePath(), lock.asRec().at(USR));
+                    return obj; // the writer receives exactly what they wrote
+                })
+                // qless write: every write to the space passes through here — the conflict check.
+                // a matching, unexpired lock blocks the write (advisory).  The lock's owner may
+                // re-enter (their own lock doesn't block them); until threads carry an `owner`
+                // field, currentOwner() resolves to noobj so any non-owner write blocks.
+                .qlessWrite((vid, obj) -> {
+                    final Obj writer = currentOwner();
+                    for (final Obj l : locks.elements().toList()) {
+                        if (!l.isRec()) continue;
+                        final Rec lock = l.asRec();
+                        final Obj target = lock.at(TARGET);
+                        final Obj usr = lock.at(USR);
+                        if (target.isNoObj() || usr.isNoObj()) continue;
+                        if (vid.basePath().test(target.uriValue()) && !expired(lock.at(EXPIRE)) && !usr.equals(writer)) {
+                            return fail(MTronException.of("write blocked: %s is locked by %s", vid.toUri(false), usr));
+                        }
+                    }
+                    return noobj(); // no lock held — let the write proceed
+                }).create();
+    }
+
+    /**
+     * Resolve the identity of the writing thread by walking the thread's {@code source}
+     * spine to its root and reading {@code owner}.  Threads do not carry an {@code owner}
+     * field yet — once they do, resolve via {@code Router.THREAD_STACK}'s thread rec.
+     */
+    private static Obj currentOwner() {
+        return noobj(); // TODO: walk thread source spine → owner when threads carry it
+    }
+
+    /**
+     * True if the {@code expire} datetime::T is in the past.  No expiry → never expires.
+     */
+    private static boolean expired(final Obj expire) {
+        if (expire.isNoObj() || !expire.isUri()) return false; // never expires
+        try {
+            return System.currentTimeMillis() > mathInstSet.datetimeToMillis(expire.asUri());
+        } catch (final Exception e) {
+            return true; // malformed expiry — treat as expired so it can't block forever
+        }
     }
 
     /// //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

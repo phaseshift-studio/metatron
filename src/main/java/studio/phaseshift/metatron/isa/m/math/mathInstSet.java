@@ -21,10 +21,13 @@ package studio.phaseshift.metatron.isa.m.math;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
+import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Real;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.Uri;
+import studio.phaseshift.metatron.util.MTronException;
 
+import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
@@ -357,6 +360,43 @@ public class mathInstSet extends AbstractInstSet {
     }
 
     /**
+     * Convert a {@code datetime::T} URI to epoch millis.  Supports the structured form
+     * {@code //yyyy.MM:dd/HH/mm/ss/SSS?tz=±HHmm} and the millis shorthand
+     * {@code datetime://<epoch_millis>}.
+     */
+    public static long datetimeToMillis(final Uri dt) {
+        final fURI furi = dt.uriValue();
+        if (furi.host() != null && furi.host().matches("\\d+"))
+            return Long.parseLong(furi.host()); // millis shorthand
+        final String[] hostParts = furi.host().split("\\.");
+        final int year = Integer.parseInt(hostParts[0]);
+        final int month = Integer.parseInt(hostParts[1]);
+        final int day = furi.port();
+        final var path = furi.path();
+        final int off = path.get(0).isEmpty() ? 1 : 0;
+        final int hour = Integer.parseInt(path.get(off));
+        final int minute = Integer.parseInt(path.get(off + 1));
+        final int second = Integer.parseInt(path.get(off + 2));
+        final int millis = Integer.parseInt(path.get(off + 3));
+        final String tzStr = furi.hasQ() && furi.qMap().containsKey("tz") ? furi.qMap().get("tz") : "+0000";
+        return ZonedDateTime.of(year, month, day, hour, minute, second, millis * 1_000_000, ZoneOffset.of(tzStr))
+                .toInstant().toEpochMilli();
+    }
+
+    /**
+     * Convert a {@code time::T} (millis/second/minute/hour) to milliseconds.
+     */
+    private static double timeToMillis(final Obj time) {
+        return switch (time.tid().basePath().toString()) {
+            case MATH_MILLIS_STRING -> time.asReal().jvm();
+            case MATH_SECOND_STRING -> time.asReal().jvm() * 1000.0d;
+            case MATH_MINUTE_STRING -> time.asReal().jvm() * 1000.0d * 60.0d;
+            case MATH_HOUR_STRING -> time.asReal().jvm() * 1000.0d * 60.0d * 60.0d;
+            default -> throw MTronException.of("not a time unit: %s", time);
+        };
+    }
+
+    /**
      * Normalizes a time {@link Real} to the most human-readable unit.
      * Cascades upward through the time hierarchy when the value crosses
      * a ~2× threshold of the next larger unit:
@@ -533,6 +573,14 @@ public class mathInstSet extends AbstractInstSet {
                         docWrap(DATETIME_TYPE, "a datetime as uri: //yyyy.MM:dd/HH/mm/ss/SSS?tz=+-HHmm")),
                 uri(INST), lst(
                         instC(MATH_DATETIME_NOW_INST_TID.dom(ALL.maybe()).rng(MATH_DATETIME_TID), lst(), (lhs, inst) -> nowDatetime()),
+                        // datetime arithmetic: datetime + time -> datetime, datetime - time -> datetime,
+                        // datetime - datetime -> millis::T
+                        instC(PLUS_INST_TID.dom(MATH_DATETIME_TID).rng(MATH_DATETIME_TID), lst(TIME_TYPE), (lhs, inst) ->
+                                buildDatetimeUri(ZonedDateTime.ofInstant(Instant.ofEpochMilli(datetimeToMillis(lhs.asUri()) + (long) timeToMillis(inst.arg(0))), ZoneOffset.UTC))),
+                        instC(MINUS_INST_TID.dom(MATH_DATETIME_TID).rng(MATH_DATETIME_TID), lst(TIME_TYPE), (lhs, inst) ->
+                                buildDatetimeUri(ZonedDateTime.ofInstant(Instant.ofEpochMilli(datetimeToMillis(lhs.asUri()) - (long) timeToMillis(inst.arg(0))), ZoneOffset.UTC))),
+                        instC(MINUS_INST_TID.dom(MATH_DATETIME_TID).rng(MATH_TIME_TID), lst(DATETIME_TYPE), (lhs, inst) ->
+                                normalizeTime(real((double) (datetimeToMillis(lhs.asUri()) - datetimeToMillis(inst.arg(0).asUri())), MATH_MILLIS_TID, null))),
                         // uri → datetime identity cast (predicate validates in Type.apply)
                         instC(AS_INST_TID.dom(URI_TID).rng(MATH_DATETIME_TID), lst(URI_TYPE), (lhs, inst) -> lhs.asUri().tid(MATH_DATETIME_TID)),
                         instC(AS_INST_TID.dom(MATH_DATETIME_TID).rng(STR_TID), lst(STR_TYPE), (lhs, inst) -> str(humanReadableDatetime(lhs.asUri()))),
