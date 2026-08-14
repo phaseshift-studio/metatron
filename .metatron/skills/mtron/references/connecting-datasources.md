@@ -1,3 +1,8 @@
+---
+name: connecting-datasources
+description: Connecting external data sources to metatron spaces — the pattern and route model, creating !* references, and validating connections.
+---
+
 # Connecting Data Sources
 
 ## Workflow

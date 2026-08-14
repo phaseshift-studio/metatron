@@ -2,6 +2,7 @@ package studio.phaseshift.metatron.isa.llm.type;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.llm.type.feature.CostFeature;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.mach.type.Router;
@@ -23,7 +24,7 @@ public class CostFeatureTest extends FeatureTest {
 
     @BeforeAll
     public static void setupMemSpace() {
-        memSpace.of(f("/usr/#"), f("/sys/space/cost_feature/test"));
+        memSpace.of(f("/usr/#"), f("/sys/space/cost_feature/test")).addQ(QCollection.incrQ());
     }
 
     @Test
@@ -65,8 +66,8 @@ public class CostFeatureTest extends FeatureTest {
         agent.costCalculator().get().setCost(0.00435, 0.00870);
         cf.persistCost();
 
-        assertFalse(Router.readFromSpace(cf.at(ROOT).uriValue()).isNoObj(), "cost should be on blackboard");
-        assertEquals(0.01305, Router.readFromSpace(cf.at(f(ROOT)).uriValue().extend(TOTAL)).realValue(), 1e-10,
+        assertFalse(Router.readFromSpace(cf.at(ROOT).uriValue().extend("+")).isNoObj(), "cost should be on blackboard");
+        assertEquals(0.01305, Router.readFromSpace(cf.at(f(ROOT)).uriValue().extend("+").extend(TOTAL)).realValue(), 1e-10,
                 "total = in + out");
     }
 

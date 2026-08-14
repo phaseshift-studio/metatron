@@ -30,7 +30,6 @@ import dev.langchain4j.mcp.client.transport.stdio.StdioMcpTransport;
 import dev.langchain4j.mcp.client.transport.websocket.WebSocketMcpTransport;
 import dev.langchain4j.model.chat.request.json.JsonObjectSchema;
 import dev.langchain4j.service.tool.ToolExecutionResult;
-import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -40,6 +39,7 @@ import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.isa.sys.type.ThreadExecutor;
 import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
 import studio.phaseshift.metatron.isa.web.parser.ObjPlainTextSerializer;
 import studio.phaseshift.metatron.util.CommonUtil;
@@ -173,14 +173,14 @@ public class mcpClient extends MRec {
                     .logger(LOG.logger(WARN))
                     .customHeaders(stringHeaders)
                     .url(host.uriValue().toString())
-                    .executor(BootLoader.getExecutor())
+                    .executor(ThreadExecutor.instance())
                     .build();
         } else if (!command.isEmpty()) {  // STDIO
             return new StdioMcpTransport.Builder()
                     .command(command.stream().map(Str.Helper::cleanString).toList())
                     //.logEvents(false)
                     .logger(LOG.logger(WARN))
-                    .executorService(BootLoader.getExecutor())
+                    .executorService(ThreadExecutor.instance())
                     .environment(stringHeaders)
                     .build();
         } else if (host.isUri() && host.uriValue().hasScheme()) {
@@ -190,7 +190,7 @@ public class mcpClient extends MRec {
                         .logResponses(true)
                         .logger(LOG.logger(WARN))
                         .url(host.uriValue().toString())
-                        .executor(BootLoader.getExecutor())
+                        .executor(ThreadExecutor.instance())
                         .build();
             } else if (host.uriValue().name().equals("sse")) {  // TODO: remove when sse is no longer supported
                 return HttpMcpTransport.builder() // SSE
@@ -207,7 +207,7 @@ public class mcpClient extends MRec {
                         .logger(LOG.logger(WARN))
                         .customHeaders(stringHeaders)
                         .url(host.uriValue().toString())
-                        .executor(BootLoader.getExecutor())
+                        .executor(ThreadExecutor.instance())
                         .build();
 
             }

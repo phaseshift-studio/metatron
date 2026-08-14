@@ -144,8 +144,9 @@ tblespace::[pattern    => </usr/dr/#>,
             route      => [/usr/dr/ => <>]]@</sys/space/usr/dr>;
 wsspace::[host    => !*<boot/args/external/web/ws>,
          pattern  => <ws://#>,
-         route    => [/mcp   => mcp_mtron_ws,
-                      /mtron => mtron_ws]]@/sys/space/web/ws;       
+         route    => [[-- /drstyx => metatronfs:skills/drstynx, --]
+                      /mcp    => mcp_mtron_ws,
+                      /mtron  => mtron_ws]]@/sys/space/web/ws;       
 mqttspace::[host    => <mqtt://ginger.local:1883>,
             pattern => z2m:#,
             q       => [subq::[=>]],
@@ -212,7 +213,6 @@ agent::[
                                                            ==[_=>_].to(/usr/dr/session/1)) },
                         session       => /usr/dr/session/1,
                         tool          => [forget?noobj{0}<=noobj{0}(){ /usr/dr/message/+ -> noobj }]],
-    system_feature:::::[              => ],
     chat_feature:::::::[model         => !(*</usr/dr/model>.else(model::[provider     => ollama,
                                                                          protocol     => ollama,
                                                                          host         => <http://ginger.local:11434>,
@@ -244,6 +244,7 @@ agent::[
                                                        style  => style::[anchor=>bottom_right,width=>65,height=>30,
                                                                         left=>-2,top=>8,foreground =>"{{y}}"]]@<audit_widget> },
                         to            => inst(a=>str::T){ @<audit_widget>>>=[body=>+*a].display() }],
+    system_feature:::::[              => ],
     cost_feature:::::::[root          => /usr/dr/cost,
                         to            => inst(in_cost=>real::T,out_cost=>real::T,total_cost=>real::T){ 
                                            /usr/marko/console/status("cost total: ${*2} [in: ${*0} out: ${*1}]") },

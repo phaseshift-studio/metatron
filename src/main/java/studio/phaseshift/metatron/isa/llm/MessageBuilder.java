@@ -27,6 +27,8 @@ import studio.phaseshift.metatron.isa.mach.type.Router;
 import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.isa.llm.space.SpaceChatSessionStore.WRITTEN_KEY;
+import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TRUE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
@@ -113,6 +115,12 @@ public class MessageBuilder {
      */
     public MessageBuilder depth(final int depth) {
         this.map.put(uri(DEPTH), jnt(depth));
+        return this;
+    }
+
+
+    public MessageBuilder written() {
+        this.map.put(uri(WRITTEN_KEY), BOOL_TRUE);
         return this;
     }
 

@@ -39,9 +39,7 @@ import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.util.MTronException;
 
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -129,8 +127,6 @@ public abstract class AbstractLLMSessionIntegrationTest extends AbstractMetatron
         // SessionFeature.onBeforeChat() persists the session policy row on first chat
         this.agent = buildAgent();
         this.sessionStore = new SpaceChatSessionStore(this.agent, this.space, 1, 1);
-        // Add a system message — gets mirrored to the unified message table
-        this.agent.addSystemMessage("You are a helpful test assistant.");
     }
 
     @AfterEach
@@ -232,7 +228,6 @@ public abstract class AbstractLLMSessionIntegrationTest extends AbstractMetatron
         // Build agent with matching small max
         // Session is pre-seeded via createSession above; onBeforeChat will use it as-is
         this.agent = buildAgentWithMax(smallMax);
-        this.agent.addSystemMessage("You are a test assistant.");
         this.sessionStore = new SpaceChatSessionStore(this.agent, this.space, 1, 1);
 
         // Chat 5 times — MessageWindowChatMemory evicts beyond max internally
@@ -361,7 +356,6 @@ public abstract class AbstractLLMSessionIntegrationTest extends AbstractMetatron
     private void assertCollectionHasType(final fURI basePath, final String tableName,
                                          final fURI expectedTid, final String label,
                                          final int minRows, final int maxRows) {
-        final Map<String, Integer> hashCounts = new LinkedHashMap<>();
         int rows = 0;
         for (int id = 1; ; id++) {
             final Obj row = Router.readFromSpace(basePath.extend(tableName).extend(String.valueOf(id)));
@@ -370,12 +364,8 @@ public abstract class AbstractLLMSessionIntegrationTest extends AbstractMetatron
             final Rec rec = row.asRec();
             // Filter by TID — the _tid column is restored as rec.tid()
             if (!rec.tid().equals(expectedTid)) continue;
+            LOG.warn("ROW: %s", rec);
             rows++;
-
-            // Hash uniqueness
-            final Obj hf = rec.at(uri("hash"));
-            if (!hf.isNoObj() && hf.isStr())
-                hashCounts.merge(hf.strValue(), 1, Integer::sum);
         }
 
         assertTrue(rows >= minRows,

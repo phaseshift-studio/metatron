@@ -287,6 +287,7 @@ public final class Tokens {
     public static final String WARN = "warn";
     public static final String ERROR = "error";
     public static final String DEBUG = "debug";
+    public static final String TRACE = "trace";
     public static final String ARGS = "args";
     public static final String ENV = "env";
     public static final String MCP_SERVERS = "mcpServers";

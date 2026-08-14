@@ -20,15 +20,20 @@ package studio.phaseshift.metatron.isa.web.type;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
+import studio.phaseshift.metatron.isa.llm.type.mSkill;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.web.space.ws.WebSocketRec;
 import studio.phaseshift.metatron.isa.web.space.ws.WebSocketRecClient;
 import studio.phaseshift.metatron.util.CommonUtil;
 
+import java.nio.file.Path;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.*;
@@ -37,8 +42,6 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.DOCQ;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
 import static studio.phaseshift.metatron.isa.m.type.Inst.INST_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
@@ -57,6 +60,10 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public final class mcpMetatronBuilder {
+
+    private static final GraphittyLogger LOG = Graphitty.log(mcpMetatronBuilder.class);
+
+    private static final int LARGE_RESOURCE_THRESHOLD = 262_144; // 256 KB — above this, expose a reference, not inline content
 
     private mcpMetatronBuilder() {
         // do nothing
@@ -228,10 +235,27 @@ public final class mcpMetatronBuilder {
         }
 
         // ── resources ──────────────────────────────────────────────────────────
-        if (false && !jvm.containsKey(uri(RESOURCE))) {
-            final fURI prefix = f("mtronfs:skills/mtron/");
+        if (!jvm.containsKey(uri(RESOURCE))) {
             final Rec resources = rec(mutableMap());
-            resources.jvm().put(uri("writing-mtron-expressions.md"), auto_(auto_from_(prefix.extend("references/writing-mtron-expressions.md")).as_(STR_TYPE).asCode()).tryToInst());
+            final Path skillDir = Path.of(".metatron/skills/mtron");
+            mSkill.of(skillDir.toFile()).toSkill().resources().forEach(sr -> {
+                try {
+                    final Map<String, List<String>> frontMatter = mSkill.parseFrontMatter(sr.content());
+                    final Rec resource = rec(
+                            uri(URI), uri(sr.relativePath()),
+                            uri(NAME), str(frontMatter.getOrDefault("name", List.of(Path.of(sr.relativePath()).getFileName().toString())).getFirst()),
+                            uri("description"), str(frontMatter.getOrDefault("description", List.of("no description")).getFirst()));
+                    if (sr.content().length() > LARGE_RESOURCE_THRESHOLD) {
+                        // large resource — expose a reference to the file, not its inline content
+                        resource.at(uri(REFERENCE), str(skillDir.resolve(sr.relativePath()).toAbsolutePath().toString()), MUTABLE);
+                    } else {
+                        resource.at(uri(TEXT), str(sr.content()), MUTABLE);
+                    }
+                    resources.jvm().put(uri(sr.relativePath()), resource);
+                } catch (final Exception e) {
+                    LOG.warn("unable to build resource: %s", e);
+                }
+            });
             jvm.put(uri(RESOURCE), resources);
         }
 

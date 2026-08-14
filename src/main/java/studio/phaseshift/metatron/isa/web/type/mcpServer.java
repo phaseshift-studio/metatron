@@ -20,10 +20,7 @@ package studio.phaseshift.metatron.isa.web.type;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
-import studio.phaseshift.metatron.isa.m.type.Inst;
-import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.Poly;
-import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
@@ -91,6 +88,7 @@ public class mcpServer extends MRec {
                 case "tools/call" -> handleToolsCall(id, params);
                 case "resources/list" -> handleResourcesList(id, params);
                 case "resources/read" -> handleResourcesRead(id, params);
+                case "resources/templates/list" -> handleResourcesTemplatesList(id, params);
                 case "prompts/list" -> handlePromptsList(id, params);
                 case "prompts/get" -> handlePromptsGet(id, params);
                 case "initialize" -> handleInitialize(id, params);
@@ -154,13 +152,22 @@ public class mcpServer extends MRec {
      * Returns the list of resources registered in this server's {@code resource} rec.
      */
     protected Obj handleResourcesList(final Obj id, final Rec params) {
-        return mcpResponse(id, rec(
-                uri("resources"), lst(this.at(RESOURCE).orElse(rec0()).elements()
-                        .map(kv -> (Obj) rec(
-                                uri(URI), uri(kv.first().uriValue().toString()),
-                                uri(NAME), str(kv.first().uriValue().toString()),
-                                uri(DESCRIPTION), str(kv.second().toShortString())))
-                        .toList())));
+        return mcpResponse(id, rec(uri("resources"), lst(this.at(RESOURCE)
+                .orElse(rec0())
+                .jvm()
+                .values()
+                .stream()
+                .map(r -> {
+                    final Map<Obj, Obj> m = r.asRec().jvm();
+                    final Rec item = rec(
+                            uri(URI), str(m.get(uri(URI)).uriValue().toString()),
+                            uri(NAME), m.get(uri(NAME)),
+                            uri("description"), m.get(uri("description")));
+                    if (m.containsKey(uri(REFERENCE)))
+                        item.at(uri(REFERENCE), m.get(uri(REFERENCE)), MUTABLE);
+                    return (Obj) item;
+                })
+                .toList())));
     }
 
     /**
@@ -169,16 +176,25 @@ public class mcpServer extends MRec {
      */
     protected Obj handleResourcesRead(final Obj id, final Rec params) {
         final String resourceUri = params.at(uri(URI)).isNoObj() ? "" : params.at(uri(URI)).toCleanString();
-        final Obj resourceEntry = this.at(RESOURCE).orElse(rec0()).at(uri(resourceUri));
-        if (resourceEntry.isNoObj()) {
+        final Obj entry = this.at(RESOURCE).orElse(rec0()).jvm().get(uri(resourceUri));
+        if (null == entry || entry.isNoObj()) {
             return mcpError(id, jnt(-32602), str("resource not found: " + resourceUri));
-        } else {
-            final Obj resolved = resourceEntry.resolve(noobj());
-            return mcpResponse(id, rec(uri("contents"), lst(rec(
-                    uri(URI), uri(resourceUri),
-                    uri(TEXT), str(resolved.toCleanString()),
-                    uri("mimeType"), str("text/plain")))));
         }
+        final Map<Obj, Obj> m = entry.asRec().jvm();
+        // large resource: emit the reference path AS the text, not a non-standard field
+        final Obj content = m.containsKey(uri(REFERENCE)) ? m.get(uri(REFERENCE)) : m.get(uri(TEXT));
+        return mcpResponse(id, rec(uri("contents"), lst(rec(
+                        uri(URI), str(resourceUri),
+                        uri(TEXT), content,
+                        uri("mimeType"), str(MIME.MIMEType.fromExtension(resourceUri, MIME.MIMEType.TEXT_PLAIN).value)))));
+    }
+
+    /**
+     * Handle a {@code resources/templates/list} request.
+     * Resolves the named resource and returns its contents.
+     */
+    protected Obj handleResourcesTemplatesList(final Obj id, final Rec params) {
+        return mcpResponse(id, rec(uri("resourceTemplates"), lst()));
     }
 
     /**

@@ -49,13 +49,13 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
-import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SKILL_TID;
-import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_TOOL_TID;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.JREService;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_MILLIS_TID;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_TIME_TID;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.inside_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.union_;
 import static studio.phaseshift.metatron.isa.m.type.Bool.*;
 import static studio.phaseshift.metatron.isa.m.type.Inst.INST_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
@@ -125,7 +125,7 @@ public class webInstSet extends AbstractInstSet {
     public static Type MIME_OBJ_TYPE = Type.Builder.build()
             .tid(URI_TID)
             .vid(MIME_TYPE_TID)
-            .isaPredicate(inside_(Stream.of(MIME.MIMEType.values()).map(m -> uri(m.value)).collect(new CommonUtil.LstCollector())))
+            .isaPredicate(union_(Stream.of(MIME.MIMEType.values()).map(m -> uri(m.value)).collect(new CommonUtil.LstCollector())))
             .create();
 
     public static final Type XML_TYPE = Type.Builder.build()
@@ -421,29 +421,22 @@ public class webInstSet extends AbstractInstSet {
                                 "ping(localhost:8777)",
                                 "virtual::[code=>ping(localhost:8777)-<{@x+*0,@y+1},loop=>second::2.0]"),
                         instC(WEB_ISA_TID.extend("inst/format").dom(MARKDOWN_TID).rng(STR_TID), lst(), (lhs, inst) -> str(ObjMarkdownSerializer.format(ObjMarkdownSerializer.single().write(lhs).getChars().toString()))),
-                        //   instC(AS_INST_TID.dom(STR_TID).rng(JSON_TID), lst(JSON_TYPE), (lhs, inst) -> lhs.tid(JSON_TID)),
-                        //   instC(AS_INST_TID.dom(STR_TID).rng(YAML_TID), lst(YAML_TYPE), (lhs, inst) -> lhs.tid(YAML_TID)),
                         instC(AS_INST_TID.dom(MARKDOWN_TID).rng(LLM_SKILL_TID), lst(STR_TYPE), (lhs, inst) -> mSkill.of(lhs.asStr())),
                         instC(AS_INST_TID.dom(JSON_TID).rng(REC_TID), lst(REC_TYPE), (lhs, inst) -> ObjJSONSerializer.simple().inputBytes(lhs.strValue())),
                         instC(AS_INST_TID.dom(YAML_TID).rng(REC_TID), lst(REC_TYPE), (lhs, inst) -> ObjYAMLSerializer.single().inputBytes(lhs.strValue())),
                         instC(AS_INST_TID.dom(REC_TID).rng(JSON_TID), lst(JSON_TYPE), (lhs, inst) -> str(new String(ObjJSONSerializer.simple().outputBytes(lhs).array(), StandardCharsets.UTF_8), JSON_TID, null)),
-                        //   instC(AS_INST_TID.dom(STR_TID).rng(XML_TID), lst(XML_TYPE), (lhs, inst) -> lhs.tid(XML_TID)),
                         instC(AS_INST_TID.dom(XML_TID).rng(REC_TID), lst(REC_TYPE), (lhs, inst) -> ObjXMLSerializer.parse(lhs.strValue())),
                         instC(AS_INST_TID.dom(REC_TID).rng(XML_TID), lst(XML_TYPE), (lhs, inst) -> str(new String(ObjXMLSerializer.single().outputBytes(lhs).array(), StandardCharsets.UTF_8), XML_TID, null)),
-                        //   instC(AS_INST_TID.dom(STR_TID).rng(HTML_TID), lst(HTML_TYPE), (lhs, inst) -> lhs.tid(HTML_TID)),
                         instC(AS_INST_TID.dom(HTML_TID).rng(REC_TID), lst(REC_TYPE), (lhs, inst) -> ObjHTMLSerializer.parse(lhs.strValue())),
                         instC(AS_INST_TID.dom(REC_TID).rng(HTML_TID), lst(HTML_TYPE), (lhs, inst) -> str(ObjHTMLSerializer.single().write(lhs).outerHtml(), HTML_TID, null)),
-                        //  instC(AS_INST_TID.dom(STR_TID).rng(MARKDOWN_TID), lst(MARKDOWN_TYPE), (lhs, inst) -> lhs.tid(MARKDOWN_TID)),
                         instC(AS_INST_TID.dom(MARKDOWN_TID).rng(REC_TID), lst(REC_TYPE), (lhs, inst) -> ObjMarkdownSerializer.parse(lhs.strValue())),
                         instC(AS_INST_TID.dom(REC_TID).rng(MARKDOWN_TID), lst(MARKDOWN_TYPE), (lhs, inst) -> str(ObjMarkdownSerializer.single().write(lhs).getChars().toString(), MARKDOWN_TID, null)),
-                        //   instC(AS_INST_TID.dom(STR_TID).rng(JAVA_TID), lst(JAVA_TYPE), (lhs, inst) -> lhs.tid(JAVA_TID)),
                         instC(AS_INST_TID.dom(JAVA_TID).rng(REC_TID), lst(REC_TYPE), (lhs, inst) -> ObjJavaSerializer.single().inputBytes(lhs.strValue().getBytes())),
                         instC(AS_INST_TID.dom(REC_TID).rng(JAVA_TID), lst(JAVA_TYPE), (lhs, inst) -> str(new String(ObjJavaSerializer.single().outputBytes(lhs).array()), JAVA_TID, null)),
                         // cs (coarse schema) — cs_java::T is a rec::T refinement: the parse IS the
                         // cast.  as?cs_java<=java(cs_java::T) parses a dereferenced java::T str into
                         // the coarse rec; the rec↔cs_java paths re-tag (rec::T <-> cs_java::T).
                         instC(AS_INST_TID.dom(JAVA_TID).rng(CS_JAVA_TID), lst(CS_JAVA_TYPE), (lhs, inst) -> ObjJavaCSSerializer.parse(lhs.strValue())),
-                        //instC(AS_INST_TID.dom(CS_JAVA_TID).rng(REC_TID), lst(REC_TYPE), (lhs, inst) -> lhs.tid(REC_TID)),
                         instC(AS_INST_TID.dom(REC_TID).rng(CS_JAVA_TID), lst(CS_JAVA_TYPE), (lhs, inst) -> lhs.tid(CS_JAVA_TID)),
                         instC(AS_INST_TID.dom(MARKDOWN_TID).rng(HTML_TID), lst(HTML_TYPE), (lhs, inst) -> str(ObjMarkdownSerializer.single().toHTML(ObjMarkdownSerializer.single().write(lhs)), HTML_TID, null)),
                         instC(AS_INST_TID.dom(MCP_CLIENT_TID).rng(JSON_TID), lst(JSON_TYPE), (lhs, inst) -> {
@@ -464,6 +457,10 @@ public class webInstSet extends AbstractInstSet {
                             final byte[] jsonBytes = ObjJSONSerializer.simple().outputBytes(configRec).array();
                             return str(new String(jsonBytes, StandardCharsets.UTF_8), JSON_TID, null);
                         }),
+                       /* instC(AS_INST_TID.dom(LLM_SKILL_TID).rng(WS_MCP_HANDLER_TID), lst(LLM_SKILL_TYPE), (lhs, inst) -> {
+                            final mSkill skill = inst.arg(0).as();
+                            return new mcp_wsHandler(rec(TOOL, skill.at(TOOL), RESOURCE, skill.at(RESOURCE), PROMPT, skill.at(PROMPT)));
+                        }),*/
                         instC(AS_INST_TID.dom(JSON_TID).rng(MCP_CLIENT_TID.some()), lst(MCP_CLIENT_TYPE), (lhs, inst) -> {
                             final Rec parse = ObjJSONSerializer.simple().inputBytes(lhs.strValue()).asRec();
                             List<Rec> servers = new ArrayList<>();

@@ -30,7 +30,7 @@ import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.dckr.dckrSpace.DCKR_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_DATA_TID;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.inside_;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.union_;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
@@ -123,7 +123,7 @@ public class dckrInstSet extends AbstractInstSet {
                         docWrap(DOCKER_CONTAINER_STATE_TYPE = Type.Builder.build()
                                         .tid(URI_TID)
                                         .vid(DOCKER_CONTAINER_STATE_TID)
-                                        .isaPredicate(inside_(lst(
+                                        .isaPredicate(union_(lst(
                                                 uri("created"), uri("running"), uri("paused"),
                                                 uri("restarting"), uri("exited"), uri("dead"))))
                                         .create(),

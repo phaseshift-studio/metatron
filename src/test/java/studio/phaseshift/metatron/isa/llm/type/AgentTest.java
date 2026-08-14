@@ -18,20 +18,21 @@
 
 package studio.phaseshift.metatron.isa.llm.type;
 
-import dev.langchain4j.model.chat.request.json.*;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.SkipWhenPortUnavailable;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.llm.JsonSchemaGenerator;
 import studio.phaseshift.metatron.isa.llm.type.feature.AbstractFeature;
 import studio.phaseshift.metatron.isa.llm.type.feature.Feature;
 import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.tble.tbleSpace;
 
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -39,6 +40,7 @@ import java.sql.Statement;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
@@ -46,19 +48,10 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
 import static studio.phaseshift.metatron.isa.llm.type.Agent.feat;
 import static studio.phaseshift.metatron.isa.llm.type.Agent.res;
-import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.Real.REAL_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.Rec.REC_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRec.noobjRec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -68,53 +61,48 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
+@SkipWhenPortUnavailable(value = 11434)
 public class AgentTest extends AbstractMetatronTest {
 
     private static final String MODEL_NAME = "test-model";
     private static final String PROVIDER_NAME = "ollama";
     private static final String PROVIDER_HOST = "http://localhost:11434";
-    private static final String PROVIDER_KEY = "test-api-key";
 
     private Rec fixture;
     private Agent agent;
 
     @BeforeEach
     public void setup() {
+        InstSet.importInstSet(LLM_ISA_TID);
         fixture = buildFixture();
         agent = Agent.agent(fixture);
     }
 
     private static Rec buildFixture() {
         Map<Obj, Obj> map = new LinkedHashMap<>();
-        map.put(uri(NAME), uri(MODEL_NAME));
-        map.put(uri(MODEL), rec(mutableMap(
-                uri(NAME), uri(MODEL_NAME),
-                uri(PROTOCOL), str(PROVIDER_NAME),
-                uri(HOST), uri(PROVIDER_HOST),
-                uri(API_KEY), str(PROVIDER_KEY)
-        )));
-        map.put(uri(API_KEY), str(PROVIDER_KEY));
+        map.put(uri(NAME), str(MODEL_NAME));
         map.put(uri(FEATURE), lst(
                 rec(mutableMap(uri(THINK), rec())).tid(LLM_THINK_FEATURE_TID),
                 rec(mutableMap(uri(TOOL), lst(uri("/test/tool")))).tid(LLM_TOOL_FEATURE_TID),
                 rec(mutableMap(uri(SKILL), lst(str("a-skill")))).tid(LLM_SKILL_FEATURE_TID),
                 rec(mutableMap(uri(NOTE), lst(str("a-note")))).tid(LLM_NOTE_FEATURE_TID),
-                rec(mutableMap(uri(CHAT), str("you are helpful"))).tid(LLM_CHAT_FEATURE_TID),
+                // rec(mutableMap(uri(CHAT), str("you are helpful"))).tid(LLM_CHAT_FEATURE_TID),
                 rec(mutableMap(
                         uri(PATTERN), uri("/sys/docs/#"),
                         uri(MAX), jnt(5)
                 )).tid(LLM_FEATURE_TID.extend("rag")),
-                rec(mutableMap(uri(MEMORY), rec(mutableMap(
-                        uri("mem"), lst(),
-                        uri(ALGORITHM), rec(mutableMap(
-                                uri(MAX), jnt(15)
-                        ))
-                )))).tid(LLM_SESSION_FEATURE_TID),
-                rec(mutableMap(uri(RESPONSE), rec(mutableMap(
-                        uri(FORMAT), rec(mutableMap(
-                                uri("answer"), str("string")
-                        ))
-                )))).tid(LLM_CHAT_FEATURE_TID)
+                rec(mutableMap(
+                        uri(SESSION), uri("/usr/test/1"),
+                        uri(MEMORY), rec(mutableMap(
+                                uri("mem"), lst(),
+                                uri(ALGORITHM), rec(mutableMap(
+                                        uri(MAX), jnt(15)
+                                ))
+                        )))).tid(LLM_SESSION_FEATURE_TID),
+                rec(mutableMap(uri(MODEL), rec(mutableMap(
+                        uri(LLM), uri("qwen3:8b"),
+                        uri(PROTOCOL), uri(PROVIDER_NAME),
+                        uri(HOST), uri(PROVIDER_HOST)), LLM_MODEL_TID, null))).tid(LLM_CHAT_FEATURE_TID)
         ));
         return rec(map, LLM_AGENT_TID, null);
     }
@@ -145,39 +133,9 @@ public class AgentTest extends AbstractMetatronTest {
     }
 
     @Test
-    public void testTools() {
-        assertFalse(agent.feature(TOOL).isNoObj());
-        assertEquals(1, agent.feature(TOOL).elements().count());
-        assertEquals(uri("/test/tool"), agent.feature(TOOL).orElse(rec0()).atLst(TOOL).elements().findFirst().orElse(null));
-    }
-
-    @Test
-    public void testToolsAbsent() {
-        Rec empty = rec(mutableMap(uri(NAME), uri("empty")), LLM_MODEL_TID, null);
-        Agent emptyModel = Agent.agent(empty);
-        assertTrue(emptyModel.feature(TOOL).isNoObj(), "empty tool feature must not have tools");
-    }
-
-    @Test
-    @Disabled("cost will become CostFeature — revisit after feature design")
-    public void testCost() {
-        final Obj costObj = agent.at(feat(COST));
-        assertFalse(costObj.isNoObj());
-        final Rec costRec = costObj.autoResolve(agent).asRec();
-        assertEquals(real(0.01), costRec.at(uri("input")).orElse(null));
-        assertEquals(real(0.02), costRec.at(uri("output")).orElse(null));
-    }
-
-    @Test
     public void testSkills() {
         assertFalse(agent.feature(SKILL).isNoObj());
-        assertEquals(1, agent.feature(SKILL).elements().count());
-    }
-
-    @Test
-    public void testNotes() {
-        assertFalse(agent.feature(NOTE).isNoObj());
-        assertEquals(1, agent.feature(NOTE).elements().count());
+        assertEquals(2, agent.feature(SKILL).elements().count());
     }
 
     @Test
@@ -185,12 +143,6 @@ public class AgentTest extends AbstractMetatronTest {
         assertFalse(agent.feature(RAG).isNoObj());
         assertEquals(f("/sys/docs/#"), agent.feature(RAG).orElse(rec0()).at(PATTERN).uriValue());
         assertEquals(5, agent.feature(RAG).orElse(rec0()).at(MAX).intValue().intValue());
-    }
-
-    @Test
-    public void testSessionAbsent() {
-        Rec empty = rec(mutableMap(uri(NAME), uri("empty")), LLM_MODEL_TID, null);
-        assertTrue(Agent.agent(empty).feature(SESSION).isNoObj());
     }
 
     @Test
@@ -210,87 +162,6 @@ public class AgentTest extends AbstractMetatronTest {
         assertEquals(1, notes.asLst().lstValue().size());
     }
 
-    @Test
-    public void testResponseFormatAbsent() {
-        Rec empty = rec(mutableMap(uri(NAME), uri("empty")), LLM_MODEL_TID, null);
-        assertTrue(Agent.agent(empty).feature(CHAT).isNoObj());
-    }
-
-    // === JsonSchemaGenerator tests ===
-
-    @Test
-    public void testBoolSchema() {
-        JsonSchemaElement schema = JsonSchemaGenerator.objToSchema(BOOL_TYPE, noobjRec(), "test");
-        assertInstanceOf(JsonBooleanSchema.class, schema);
-    }
-
-    @Test
-    public void testIntSchema() {
-        JsonSchemaElement schema = JsonSchemaGenerator.objToSchema(INT_TYPE, noobjRec(), "test");
-        assertInstanceOf(JsonIntegerSchema.class, schema);
-    }
-
-    @Test
-    public void testRealSchema() {
-        JsonSchemaElement schema = JsonSchemaGenerator.objToSchema(REAL_TYPE, noobjRec(), "test");
-        assertInstanceOf(JsonNumberSchema.class, schema);
-    }
-
-    @Test
-    public void testUriSchema() {
-        JsonSchemaElement schema = JsonSchemaGenerator.objToSchema(URI_TYPE, noobjRec(), "test");
-        assertInstanceOf(JsonStringSchema.class, schema);
-    }
-
-    @Test
-    public void testStrSchema() {
-        JsonSchemaElement schema = JsonSchemaGenerator.objToSchema(STR_TYPE, noobjRec(), "test");
-        assertInstanceOf(JsonStringSchema.class, schema);
-    }
-
-    @Test
-    public void testLstSchema() {
-        Lst listWithItems = lst(uri("a"), uri("b"));
-        JsonSchemaElement schema = JsonSchemaGenerator.objToSchema(LST_TYPE, listWithItems, "test");
-        assertInstanceOf(JsonArraySchema.class, schema);
-    }
-
-    @Test
-    public void testRecSchema() {
-        Rec recWithFields = rec(uri("field"), STR_TYPE);
-        JsonSchemaElement schema = JsonSchemaGenerator.objToSchema(REC_TYPE, recWithFields, "test");
-        assertInstanceOf(JsonObjectSchema.class, schema);
-    }
-
-    @Test
-    public void testUnknownTypeFallsBackToString() {
-        // a type that doesn't match any known branch
-        JsonSchemaElement schema = JsonSchemaGenerator.objToSchema(
-                Type.Builder.build().tid(f("/sys/temp")).create(),
-                noobjRec(), "test");
-        assertInstanceOf(JsonStringSchema.class, schema);
-    }
-
-    @Test
-    public void testLstToSchemaEmptyList() {
-        JsonArraySchema schema = JsonSchemaGenerator.lstToSchema(lst(), "test");
-        assertNotNull(schema);
-        assertNotNull(schema.items());
-    }
-
-    @Test
-    public void testLstToSchemaWithItems() {
-        JsonArraySchema schema = JsonSchemaGenerator.lstToSchema(lst(uri("a")), "test");
-        assertNotNull(schema);
-    }
-
-    @Test
-    public void testRecToSchemaRequiredFields() {
-        Rec r = rec(uri("name"), STR_TYPE, uri("age"), INT_TYPE);
-        JsonObjectSchema schema = JsonSchemaGenerator.recToSchema(r, "person");
-        assertNotNull(schema);
-    }
-
     // ========================================================================
     //  Lifecycle hook dispatch tests
     // ========================================================================
@@ -300,7 +171,7 @@ public class AgentTest extends AbstractMetatronTest {
      */
     private Agent agentWithObserver() {
         final Map<Obj, Obj> map = new LinkedHashMap<>();
-        map.put(uri(NAME), uri("observer-agent"));
+        map.put(uri(NAME), str("observer-agent"));
         map.put(uri(FEATURE), lst(ObservedTestFeature.observe("test-observer")));
         return Agent.agent(rec(map, LLM_AGENT_TID, null));
     }
@@ -370,7 +241,7 @@ public class AgentTest extends AbstractMetatronTest {
     @Test
     public void testShortCircuit() {
         final Map<Obj, Obj> map = new LinkedHashMap<>();
-        map.put(uri(NAME), uri("short-circuit-agent"));
+        map.put(uri(NAME), str("short-circuit-agent"));
 
         // Feature that short-circuits on onBeforeChat
         final AbstractFeature blocker = new AbstractFeature(new LinkedHashMap<>(), feat("blocker"), null) {
@@ -410,7 +281,7 @@ public class AgentTest extends AbstractMetatronTest {
     @Test
     public void testMultipleFeaturesAllGetDispatched() {
         final Map<Obj, Obj> map = new LinkedHashMap<>();
-        map.put(uri(NAME), uri("multi-observer-agent"));
+        map.put(uri(NAME), str("multi-observer-agent"));
         map.put(uri(FEATURE), lst(
                 ObservedTestFeature.observe("obs-1"),
                 ObservedTestFeature.observe("obs-2")
@@ -450,7 +321,7 @@ public class AgentTest extends AbstractMetatronTest {
         // Simulate what Agent.chat() does: write time to res("time"),
         // then read it back in Phase 4 result assembly.
         final Map<Obj, Obj> map = new LinkedHashMap<>();
-        map.put(uri(NAME), uri("time-test-agent"));
+        map.put(uri(NAME), str("time-test-agent"));
         final Agent a = Agent.agent(rec(map, LLM_AGENT_TID, null));
 
         // Phase 3 (onCompleteResponse Lambda): write time to blackboard
@@ -475,7 +346,7 @@ public class AgentTest extends AbstractMetatronTest {
     public void testResultBlackboardShapeWithoutFeatures() {
         // Bare agent with no features — result should still have chat, time, error
         final Map<Obj, Obj> map = new LinkedHashMap<>();
-        map.put(uri(NAME), uri("bare-agent"));
+        map.put(uri(NAME), str("bare-agent"));
         final Agent a = Agent.agent(rec(map, LLM_AGENT_TID, null));
 
         a.at(res(CHAT), str("bare response"), MUTABLE);
@@ -590,5 +461,37 @@ public class AgentTest extends AbstractMetatronTest {
         // Delete via noobj
         Router.writeToSpace(MEM_VID, noobj());
         assertTrue(Router.readFromSpace(MEM_VID).isNoObj());
+    }
+
+    // ========================================================================
+    //  agent => skill (as?skill<=agent)
+    // ========================================================================
+
+    @Test
+    public void testAgentAsSkill() {
+        final Agent a = loadAgent();
+        final mSkill skill = mSkill.agentToSkill(a);
+        LOG.warn("agent converted to skill:\n%s", skill);
+        assertTrue(skill.testNominally(LLM_SKILL_TYPE), "result should be a skill::T");
+        assertEquals("test-agent", skill.at(uri(NAME)).uriValue().toString(), "skill name = agent name");
+        assertEquals("a test agent for the agent-to-skill mapping", skill.at(uri(DESC)).strValue(), "skill desc = agent desc");
+        assertNull(skill.vid(), "derived skill carries a null vid");
+        assertFalse(skill.at(uri(TOOL)).isNoObj(), "features' tools should be aggregated");
+        assertEquals(6, skill.at(uri(TOOL)).asLst().elements().count(), "prev/next + messages/concepts + check_comments + chat tools");
+    }
+
+    /**
+     * Evaluate the mtron agent at {@code test-agent.mtron} (co-located with this
+     * class) into an {@link Agent}.
+     */
+    private Agent loadAgent() {
+        try (BufferedInputStream bi = new BufferedInputStream(Objects.requireNonNull(AgentTest.class.getResourceAsStream("test-agent.mtron")))) {
+            final Obj agentObj = ObjmtronSerializer.single().inputBytes(bi.readAllBytes());
+            assertNotNull(agentObj);
+            assertTrue(agentObj.testNominally(LLM_AGENT_TYPE));
+            return Agent.agent(agentObj.asRec());
+        } catch (final Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 }

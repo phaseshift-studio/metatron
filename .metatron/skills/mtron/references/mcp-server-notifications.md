@@ -1,6 +1,6 @@
 ---
 name: mcp-server-notifications
-description: >
+description: |
   Implementing MCP server→client notifications in pure mtron using subq subscriptions on WebSocket spaces.
   TRIGGER: When working with MCP servers, WebSocket space subq processors, server→client push patterns,
   JSON-RPC 2.0 envelope construction, json:: type prefix, or declarative pub/sub in mtron spaces.

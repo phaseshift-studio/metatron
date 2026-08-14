@@ -1,0 +1,15 @@
+[== minimal agent for testing as?skill<=agent ==]
+/m/llm/agent::[
+  name    => 'test-agent',
+  desc    => 'a test agent for the agent-to-skill mapping',
+  root    => /usr/test,
+  feature => [
+    loop_feature:::::::[max_loop => 3],
+    iteration_feature::[=>],
+    concept_feature::::[root      => /usr/test/concept,
+                        extractor => tag],
+    comment_feature::::[=>],
+    chat_feature:::::::[model    => model::[host => <http://localhost:11434>, protocol => ollama, llm => qwen3:8b],
+                       response  => [to => print(_)]]
+  ]
+]

@@ -295,13 +295,19 @@ public class llmInstSet extends AbstractInstSet {
                                                 uri(NAME), URI_TYPE,
                                                 uri(DESC), STR_TYPE,
                                                 uri(CONTENT).maybe(), STR_TYPE,
-                                                uri(ENTRY).maybe(), lst(rec(uri(DIR), URI_TYPE, uri(CONTENT), STR_TYPE)))).create(),
+                                                uri(RESOURCE).maybe(), lst(rec(
+                                                        uri(URI), URI_TYPE,
+                                                        uri(NAME).maybe(), STR_TYPE,
+                                                        uri(DESC).maybe(), STR_TYPE,
+                                                        uri(TEXT), STR_TYPE)),
+                                                uri(TOOL).maybe(), lst(ALL_TYPE))).create(),
                                 "a skill.md specification", "",
                                 mutableMap(
                                         uri(NAME), "skill name",
                                         uri(DESC), "skill description",
                                         uri(CONTENT).maybe(), "skill.md document content",
-                                        uri(ENTRY).maybe(), "skill assets, references, and scripts"),
+                                        uri(RESOURCE).maybe(), "skill assets, references, and scripts",
+                                        uri(TOOL).maybe(), "skill tools"),
                                 "a skill.md specification to augment llm with specialized abilities",
                                 "*<local:.agent/skills>.as(skill::T)   [-- see as?skill<=dir() --]"),
                         docWrap(LLM_FEATURE_TYPE = Type.Builder.build()
@@ -336,7 +342,7 @@ public class llmInstSet extends AbstractInstSet {
                                         .tid(REC_TID)
                                         .vid(LLM_AGENT_TID)
                                         .isaPredicate(rec(
-                                                uri(NAME).maybe().asUri(), STR_TYPE,
+                                                uri(NAME), STR_TYPE,
                                                 uri(DESC).maybe(), STR_TYPE,
                                                 uri(FEATURE).maybe(), lst(LLM_FEATURE_TYPE)))
                                         .constructor(arg -> new Agent(arg.recValue(), LLM_AGENT_TID, arg.vid()))
@@ -351,7 +357,7 @@ public class llmInstSet extends AbstractInstSet {
                                 .vid(LLM_CHAT_FEATURE_TID)
                                 .isaPredicate(rec(
                                         uri(MODEL), LLM_MODEL_TYPE,
-                                        uri(RESPONSE), rec(uri(TO), ALL_TYPE),
+                                        uri(RESPONSE).maybe(), rec(uri(TO), ALL_TYPE).maybe(),
                                         uri(FORMAT).maybe(), ALL_TYPE))
                                 .constructor(arg -> createStageLambdas(new ChatFeature(arg.asRec().jvm(), LLM_CHAT_FEATURE_TID, arg.vid())))
                                 .create(),
@@ -501,7 +507,13 @@ public class llmInstSet extends AbstractInstSet {
                                 mutableMap(jnt(0), "the skill type"),
                                 "maps a directory to an llm skill where the dir follows the standard SKILL.md structure",
                                 "*<local:.agent/skills>.as(skill::T)"),
-                        // CHAT INSTRUCTION        
+                        docWrap(instC(AS_INST_TID.dom(LLM_AGENT_TID).rng(LLM_SKILL_TID), lst(LLM_SKILL_TYPE), (lhs, inst) -> mSkill.agentToSkill(lhs.<Agent>as())),
+                                "an agent",
+                                "a skill aggregating the agent's capabilities",
+                                mutableMap(jnt(0), "the skill type"),
+                                "maps an agent to a skill by aggregating its features' tools and resources",
+                                "*<ollama:qwen3:latest>+[response=>[to=>print(_)]].as(skill::T)"),
+                        // CHAT INSTRUCTION
                         docWrap(instC(LLM_INST_TID.extend("chat").dom(LLM_AGENT_TID).rng(LLM_CHAT_RESULT_TID), lst(STR_TYPE), (lhs, inst) -> agent(lhs.asRec()).chat(inst.arg(0).strValue())),
                                 "a model to chat with",  // dom
                                 "chat result rec [chat=>..., time=>..., ?cost=>..., ?stages=>..., ?error=>...]", // rng

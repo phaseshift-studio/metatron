@@ -75,7 +75,7 @@ public class ThinkFeature extends AbstractFeature {
             thought.recValue().put(uri(CHAT_ID), jnt(agent.chatId()));
             this.buffer = new StringBuilder();
             this.full = new StringBuilder();
-            LOG.info("writing thought to %s", thinkWriteURI);
+            LOG.debug("writing thought to %s", thinkWriteURI);
             Router.writeToSpace(thinkWriteURI, thought);
         }
     }

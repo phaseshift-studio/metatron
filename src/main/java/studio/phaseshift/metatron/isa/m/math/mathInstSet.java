@@ -76,7 +76,6 @@ public class mathInstSet extends AbstractInstSet {
     public static final fURI MATH_CEIL_INST_TID = MATH_INST_TID.extend("ceil");
     public static final fURI MATH_FLOOR_INST_TID = MATH_INST_TID.extend("floor");
     public static final fURI MATH_ROUND_INST_TID = MATH_INST_TID.extend("round");
-    public static final fURI MATH_POW_INST_TID = MATH_INST_TID.extend("pow");
     public static final fURI MATH_DATA_TID = MATH_ISA_TID.extend("data");
     public static final fURI MATH_BYTE_TID = MATH_DATA_TID.extend("bB");
     public static final fURI MATH_KBYTE_TID = MATH_DATA_TID.extend("kB");
@@ -599,7 +598,6 @@ public class mathInstSet extends AbstractInstSet {
                         instC(MATH_SIN_INST_TID.dom(ALL.maybe()).rng(REAL_TID), lst(REAL_TYPE), (lhs, inst) -> real(Math.sin(inst.arg(0).realValue()))),
                         instC(MATH_TAN_INST_TID.dom(ALL.maybe()).rng(REAL_TID), lst(REAL_TYPE), (lhs, inst) -> real(Math.tan(inst.arg(0).realValue()))),
                         instC(MATH_SQRT_INST_TID.dom(ALL.maybe()).rng(REAL_TID), lst(REAL_TYPE), (lhs, inst) -> real(Math.sqrt(inst.arg(0).realValue()))),
-                        instC(MATH_POW_INST_TID.dom(ALL.maybe()).rng(REAL_TID), lst(REAL_TYPE), (lhs, inst) -> real(Math.pow(lhs.realValue(), inst.arg(0).realValue()))),
                         instC(MATH_ATAN_INST_TID.dom(ALL.maybe()).rng(REAL_TID), lst(REAL_TYPE), (lhs, inst) -> real(Math.atan(inst.arg(0).realValue()))),
                         instC(MATH_ATAN2_INST_TID.dom(ALL.maybe()).rng(REAL_TID), lst(REAL_TYPE.c(cInt.of(2))), (lhs, inst) -> real(Math.atan2(inst.arg(0).take(cInt.ONE()).get0().realValue(), inst.arg(0).take(cInt.ONE()).get0().realValue()))),
                         instC(MATH_LOG_INST_TID.dom(ALL.maybe()).rng(REAL_TID), lst(REAL_TYPE), (lhs, inst) -> real(Math.log(inst.arg(0).realValue()))),

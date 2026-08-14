@@ -176,7 +176,7 @@ public class mInstSet extends AbstractInstSet {
     public static final fURI SKIP_INST_TID = M_ISA_INST_TID.extend("skip");
     public static final fURI BARRIER_INST_TID = M_ISA_INST_TID.extend("barrier");
     public static final fURI REIFY_INST_TID = M_ISA_INST_TID.extend("reify");
-    public static final fURI INSIDE_INST_TID = M_ISA_INST_TID.extend("inside");
+    public static final fURI UNION_INST_TID = M_ISA_INST_TID.extend("union");
     public static final fURI SELECT_INST_TID = M_ISA_INST_TID.extend("select");
     public static final fURI REMOVE_INST_TID = M_ISA_INST_TID.extend("remove");
     public static final fURI UPDATE_INST_TID = M_ISA_INST_TID.extend("update");

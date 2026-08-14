@@ -1,6 +1,6 @@
 ---
 name: http-page-fetching
-description: >
+description: |
   Fetching HTTP pages in mtron via httpSpace, HTML parse tree structure, and tree traversal.
   TRIGGER: When working with http:// dereferences, HTML parsing, web scraping, page fetching,
   HTML tree walking, extracting links from HTML.

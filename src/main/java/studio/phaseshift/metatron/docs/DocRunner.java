@@ -35,9 +35,9 @@ import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.rdf.rdfInstSet;
+import studio.phaseshift.metatron.isa.sys.type.ThreadExecutor;
 import studio.phaseshift.metatron.isa.tble.tbleInstSet;
 import studio.phaseshift.metatron.isa.web.webInstSet;
-import studio.phaseshift.metatron.util.CommonUtil;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
@@ -207,7 +207,7 @@ public class DocRunner {
             content = new MtronDocPreprocessor().process(content);    // evaluate [mtron] blocks
             Files.writeString(outFile, content.stripTrailing());
             LOG.info("  processed " + file.getFileName());
-            BootLoader.getExecutor().shutdownNow();
+            ThreadExecutor.instance().shutdownNow();
             //BootLoader.close();
         }
 

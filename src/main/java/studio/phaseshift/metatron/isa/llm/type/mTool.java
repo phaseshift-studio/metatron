@@ -18,18 +18,23 @@
 
 package studio.phaseshift.metatron.isa.llm.type;
 
+import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.model.chat.request.json.JsonObjectSchema;
 import dev.langchain4j.service.tool.ToolExecutor;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
+import studio.phaseshift.metatron.isa.llm.parser.JsonSchemaGenerator;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
 import studio.phaseshift.metatron.util.Tuple;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -39,17 +44,18 @@ import java.util.stream.Collectors;
 import static dev.langchain4j.internal.Json.fromJson;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.DOCQ;
 import static studio.phaseshift.metatron.furi.q.QCollection.Docs.doc;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
-import static studio.phaseshift.metatron.isa.llm.JsonSchemaGenerator.objToSchema;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_TOOL_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.AS_INST_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
+import static studio.phaseshift.metatron.isa.llm.parser.JsonSchemaGenerator.objToSchema;
+import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
@@ -138,16 +144,51 @@ public class mTool extends MRec {
 
 
     public static QCollection.Docs mtronInstToTool(final Inst inst) {
-        final QCollection.Docs doc = Router.readFromSpace(inst.tid().addQ(DOCQ))
-                .orSupply(() -> doc(inst,
-                        inst.dom().tid().toString(),
-                        inst.rng().tid().toString(),
-                        instB(AS_INST_TID, lst(REC_TYPE)).apply(inst.args().orElse(rec0())).asRec().elements().collect(Collectors.toMap(
-                                Rel::first,
-                                e -> e.second().tid().toString()
-                        )),
-                        "<no description>"));
+        final QCollection.Docs doc = (QCollection.Docs) Router.readFromSpace(inst.tid().addQ(DOCQ)).stream().findFirst().orElseGet(() -> doc(inst,
+                inst.dom().tid().toString(),
+                inst.rng().tid().toString(),
+                instB(AS_INST_TID, lst(REC_TYPE)).apply(inst.args().orElse(rec0())).asRec().elements().collect(Collectors.toMap(
+                        Rel::first,
+                        e -> e.second().tid().toString()
+                )),
+                "<no description>"));
         inst.logger().debug("building ai compliant tool from mtron inst: %s", inst.tid());
         return doc;//rec(mutableMap(uri(INST), inst, uri(NAME), uri(inst.tid()), uri(DESC), str(doc.description()), uri(ARG), doc.args()), LLM_TOOL_TID, null);
+    }
+
+    /**
+     * The inverse of {@link #mtronInstToolSpecification(QCollection.Docs)}:
+     * reconstruct a metatron tool {@code Docs} (and its backing inst) from a
+     * LangChain4j {@link ToolSpecification} / {@link ToolExecutor} pair.  Used
+     * to fold a {@code ToolProvider}'s tools into an agent-skill's {@code tool}
+     * field.
+     * <p>
+     * The tool name becomes the inst's tid (so the forward
+     * {@code basePath → _} naming round-trips), the parameter schema becomes the
+     * inst's typed args via {@link JsonSchemaGenerator#schemaToType}, and the
+     * executor is wrapped in the inst body.
+     *
+     * @param spec     the tool specification (name, description, parameters)
+     * @param executor the tool executor to delegate to
+     * @return a {@code Docs} carrying the inst plus its description/args
+     */
+    public static QCollection.Docs toolToMtronDoc(final ToolSpecification spec, final ToolExecutor executor) {
+        final JsonObjectSchema params = spec.parameters();
+        final Map<Obj, Obj> argTypes = new LinkedHashMap<>();
+        final Map<Obj, String> argDescs = new LinkedHashMap<>();
+        if (null != params) {
+            params.properties().forEach((name, sub) -> {
+                argTypes.put(uri(name), JsonSchemaGenerator.schemaToType(sub));
+                argDescs.put(uri(name), null == sub.description() || sub.description().isBlank() ? "<no description>" : sub.description());
+            });
+        }
+        final Inst inst = instC(f(spec.name()).rng(STR_TID.maybeSome()), rec(argTypes), (lhs, i) -> {
+            final String argsJson = i.args().isNoObj() ? "{}" :
+                    new String(ObjJSONSerializer.simple().outputBytes(i.args()).array(), StandardCharsets.UTF_8);
+            final String result = executor.execute(ToolExecutionRequest.builder().name(spec.name()).arguments(argsJson).build(), null);
+            return str(result);
+        });
+        final String description = null == spec.description() || spec.description().isBlank() ? "<no description>" : spec.description();
+        return doc(inst, "<no description>", "<no description>", argDescs, description);
     }
 }

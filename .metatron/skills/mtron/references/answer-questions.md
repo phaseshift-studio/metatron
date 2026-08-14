@@ -1,3 +1,8 @@
+---
+name: answer-questions
+description: How to answer questions about mtron/metatron — syntax, conceptual, and troubleshooting approaches, plus retrieving documentation via ?docq.
+---
+
 # Answering Questions
 
 ## Question Types
