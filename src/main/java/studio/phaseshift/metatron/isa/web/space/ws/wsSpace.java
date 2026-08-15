@@ -32,7 +32,9 @@ import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Highlighter;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.isa.web.space.ws.handler.mcp_wsHandler;
 import studio.phaseshift.metatron.isa.web.type.MIME;
+import studio.phaseshift.metatron.isa.web.type.mcpServer;
 import studio.phaseshift.metatron.isa.web.webInstSet;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
@@ -40,6 +42,7 @@ import studio.phaseshift.metatron.util.MTronException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -58,6 +61,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.web.space.ws.handler.mcp_wsHandler.WS_MCP_HANDLER_TID;
 import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
@@ -200,35 +204,33 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
                 final fURI routePath = f(conn.getResourceDescriptor().startsWith("/")
                         ? conn.getResourceDescriptor()
                         : "/" + conn.getResourceDescriptor());
-                final fURI wsHandlerTypeID = Space.Helper.routeFromSpace(routePath.qLess(), this.space.routes());
-                final Obj wsHandlerType = Router.readFromSpace(wsHandlerTypeID);
-                if (!wsHandlerType.isType())
-                    throw MTronException.of("websocket handler type required: %s at %s", wsHandlerType, wsHandlerTypeID);
+                final Obj routeValue = this.space.routes().entrySet().stream()
+                        .filter(e -> routePath.qLess().hasPrefix(e.getKey().uriValue()))
+                        .map(Map.Entry::getValue)
+                        .findFirst()
+                        .orElse(noobj());
+                Obj wsHandlerType = Space.Helper.resolveApply(this.space, routeValue);
+                if (wsHandlerType.isUri())
+                    wsHandlerType = Router.readFromSpace(wsHandlerType.uriValue());
+                if (!wsHandlerType.isType() && !(wsHandlerType instanceof mcpServer))
+                    throw MTronException.of("websocket handler type required: %s", wsHandlerType);
                 LOG.info("starting session with websocket handler: %s", wsHandlerType);
                 final fURI vid = this.baseURI.extend(routePath.qLess()).extend(this.counter.getAndIncrement() + "");
-                // Construct the handler through the type system:
-                // Use wsHandlerType's constructor directly (already read from Router at
-                // wsHandlerTypeID above).  We bypass rec()->MObj.of()->construct() because
-                // construct() resolves through tid.big() which may redirect to a different
-                // URI where the type has no constructor, falling through to a plain MRec.
-                //
-                // No Router.writeToSpace() needed here — onOpen() writes the handler to
-                // this.space.cache, and getSession() reads from cache, not the Router.
                 final Rec config = rec(mutableMap(
                         uri(IN), routePath.hasQ(IN) ? uri(routePath.q(IN)) : noobj(),
                         uri(OUT), routePath.hasQ(OUT) ? uri(routePath.q(OUT)) : noobj()));
                 final Obj handler;
-                if (wsHandlerType.asType().hasConstructor()) {
+                if (wsHandlerType instanceof mcpServer) {
+                    handler = new mcp_wsHandler(new LinkedHashMap<>(((mcpServer) wsHandlerType).jvm()), WS_MCP_HANDLER_TID, vid);
+                } else if (wsHandlerType.asType().hasConstructor()) {
                     handler = wsHandlerType.asType().constructor().apply(config).as();
                     if (handler.isFail()) {
                         conn.close(4000, "unable to construct handler: " + handler);
                         throw MTronException.of("wsserver construction failed: {{y}}%s{{X}}", handler);
                     }
-                    handler.self(handler.jvm(), wsHandlerTypeID, vid);
+                    handler.self(handler.jvm(), wsHandlerType.vid(), vid);
                 } else {
-                    // Fallback: type has no constructor — use the config rec as-is.
-                    // This shouldn't normally happen for well-formed handler types.
-                    handler = config.tid(wsHandlerTypeID).vid(vid);
+                    handler = config.tid(wsHandlerType.vid()).vid(vid);
                 }
                 if (handler.isNoObj() || handler.isFail()) {
                     conn.close(4000, "unable to construct server " + handler);

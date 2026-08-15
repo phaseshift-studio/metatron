@@ -19,7 +19,6 @@
 package studio.phaseshift.metatron.isa.llm.space;
 
 import dev.langchain4j.data.message.ChatMessage;
-import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.store.memory.chat.ChatMemoryStore;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
@@ -183,8 +182,6 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
 
         for (final ChatMessage msg : messages) {
             try {
-                if (msg instanceof UserMessage)
-                    continue;
                 final Rec msgRec = SERIALIZER.read(msg).asRec();
                 if (!msgRec.tid().equals(AI_MESSAGE_TID))
                     continue;
@@ -200,7 +197,7 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
                 msgRec.recValue().put(uri(CHAT_ID), jnt(this.chatId));
                 Router.writeToSpace(writePath, msgRec);
             } catch (final Exception e) {
-                LOG.warn("error writing ai message (non-blocking): %s", e.getMessage());
+                LOG.warn("error writing AiMessage (non-blocking): %s", e.getMessage());
             }
         }
     }
@@ -228,9 +225,9 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
         LOG.debug("deleted messages for session %s", sesVID);
     }
 
-    ///////////////////////////////////////////////////////////////////////////
-    // Window management
-    ///////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////
+// Window management
+///////////////////////////////////////////////////////////////////////////
 
     /**
      * Returns the store-level window size as a multiple of the LangChain4j
@@ -263,9 +260,9 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
         return 150; // sensible default (50 × 3) when session config is unavailable
     }
 
-    ///////////////////////////////////////////////////////////////////////////
-    // Pair-aware skip
-    ///////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////
+// Pair-aware skip
+///////////////////////////////////////////////////////////////////////////
 
     /**
      * Adjust the skip index so the window (a) never starts on an orphaned

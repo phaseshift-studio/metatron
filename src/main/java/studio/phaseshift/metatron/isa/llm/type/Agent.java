@@ -28,10 +28,7 @@ import dev.langchain4j.service.tool.ToolErrorHandlerResult;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.CostCalculator;
 import studio.phaseshift.metatron.isa.llm.LLMFactory;
-import studio.phaseshift.metatron.isa.llm.type.feature.Feature;
-import studio.phaseshift.metatron.isa.llm.type.feature.SessionFeature;
-import studio.phaseshift.metatron.isa.llm.type.feature.SystemFeature;
-import studio.phaseshift.metatron.isa.llm.type.feature.ToolFeature;
+import studio.phaseshift.metatron.isa.llm.type.feature.*;
 import studio.phaseshift.metatron.isa.m.math.mathInstSet;
 import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -42,7 +39,6 @@ import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.StatusLine;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
-import studio.phaseshift.metatron.isa.sys.type.ThreadExecutor;
 import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
 import studio.phaseshift.metatron.isa.web.type.MIME;
 import studio.phaseshift.metatron.util.CommonUtil;
@@ -68,6 +64,7 @@ import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_MILLIS_TID;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TRUE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.Str.str0;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
@@ -299,7 +296,7 @@ public class Agent extends MRec {
             try {
                 final List<Obj> features = this.features().lstValue();
                 if (message.isBlank())
-                    throw MTronException.of("no chat message provided: %s", this.vid());
+                    throw MTronException.of("no message provided: %s", this.vid());
 
                 // ── Phase 1: onBeforeChat — features push state to Agent blackboard ──
                 this.userMessage = message;
@@ -308,13 +305,7 @@ public class Agent extends MRec {
                 this.at(res(COST), noobj(), MUTABLE);
                 this.at(res("stages"), noobj(), MUTABLE);
                 this.at(res(ERROR), noobj(), MUTABLE);
-                final Obj chatFeature = this.feature(CHAT);
-                if (chatFeature.isNoObj())
-                    throw MTronException.of("agent has no chat feature: %s", this.vidOrTid());
-                final Rec chat = chatFeature.asRec();
-                chat.asRec().at(FORMAT, (responseFormat.isNoObj() || responseFormat.asRec().isEmpty()) ? noobj() : responseFormat, MUTABLE);
-                ///////////////////////////////////////////////////////////////////
-                waiting.setMessage("loading agent features...");
+
                 for (final Obj feat : features) {
                     final Obj result = feat instanceof Feature ?
                             ((Feature) feat).onBeforeChat(this) :
@@ -324,27 +315,41 @@ public class Agent extends MRec {
                         return result;
                     }
                 }
-                final AiServices<AgentServices> service = AiServices.builder(AgentServices.class);
-                //////////////////////////////////////////////////////////////////////////////////
-                SessionFeature.buildSession(this, service);
-                ToolFeature.buildTools(this, service);
-                //SkillFeature.buildSkills(this, service);
-                //////////////////////////////////////////////////////////////////////////////////
-                final AgentServices agent = service
+                this.feature(CHAT).ifPresent(chat -> chat.asRec().at(FORMAT, (responseFormat.isNoObj() || responseFormat.asRec().isEmpty()) ? noobj() : responseFormat, MUTABLE));
+                // ── Phase 2: Build LC4j service from Agent's own JVM state ──
+                final AiServices<AgentServices> service = AiServices.builder(AgentServices.class)
                         // .executeToolsConcurrently()
                         // .executeToolsConcurrently(BootLoader.getExecutor())
                         // .maxToolCallingRoundTrips()
-                        // .storeRetrievedContentInChatMemory(true);
-                        .executeToolsConcurrently(ThreadExecutor.instance())
                         .toolExecutionErrorHandler((error, context) -> {
-                            if (this.hasFeature(TOOL) && this.feature(TOOL).asRec().has(ON_ERROR)) {
+                            if (this.has(TOOL) && this.feature(TOOL).asRec().has(ON_ERROR)) {
                                 this.feature(TOOL).asRec().at(ON_ERROR).asInst().args(lst(this, fail(error)));
                             } else {
                                 LOG.error(error);
                             }
                             return new ToolErrorHandlerResult(error.getMessage());
-                        })
-                        .systemMessage(SystemFeature.generateSystemMessage(this))
+                        });
+                //.storeRetrievedContentInChatMemory(true);
+                // AgentUtility.buildService(this, service);
+                //////////////////////////////////////////////////////////////////////////////////
+                // ADD ANOTHER FEATURE HOOK -- onSetup
+                final Obj chatFeature = this.feature(CHAT);
+                if (chatFeature.isNoObj())
+                    throw MTronException.of("agent has no chat feature: %s", this.vidOrTid());
+                final Rec chat = chatFeature.asRec();
+                if (this.hasFeature(SESSION))
+                    SessionFeature.buildSession(this, service);
+                if (this.hasFeature(SKILL))
+                    SkillFeature.buildSkills(this, service);
+                if (this.hasFeature(TOOL))
+                    ToolFeature.buildTools(this, service);
+                if (this.hasFeature(SYSTEM))
+                    SystemFeature.buildSystemMessage(this, service);
+                //////////////////////////////////////////////////////////////////////////////////
+                final AgentServices agent = (this.has(DESC) && !this.at(DESC).strValue().isBlank() ?
+                        service.systemMessageTransformer((current, content) ->
+                                (this.at(DESC).orElse(str0()).strValue() + "\n\n" +
+                                        (current != null ? current : "")).trim()) : service)
                         .streamingChatModel(LLMFactory.createChatInteraction(this,
                                 chat.at(uri(MODEL)),
                                 chat.at(uri(RESPONSE)),

@@ -34,6 +34,7 @@ import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.sys.type.ThreadExecutor;
 import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
 import studio.phaseshift.metatron.isa.web.type.MIME;
+import studio.phaseshift.metatron.isa.web.type.mcpServer;
 import studio.phaseshift.metatron.isa.web.webInstSet;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
@@ -63,6 +64,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.web.space.http.handler.mcp_httpHandler.HTTP_MCP_HANDLER_TID;
 import static studio.phaseshift.metatron.isa.web.space.http.handler.web_httpHandler.WEB_HTTP_TID;
 import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
@@ -132,19 +134,22 @@ public class httpSpace extends AbstractSpace<HttpServer> {
                     return;
                 LOG.info("processing http route: %s => %s => %s", r.first().uriValue().toString(), r.second().uriValue().toString(), left.toString());
 
-                // ── All routes go through handler type construction ──
-                final fURI targetVID = r.second().uriValue();
-                if (!targetVID.toString().isEmpty()) {
-                    final Obj targetObj = Router.global().read(targetVID);
-                    if (targetObj.isType()) {
-                        // Type route: construct handler via type system (MCP, mtron, web_http, etc.)
-                        LOG.info("handling as handler route: %s => %s", left, targetVID);
-                        createHandlerRoute(server, left, targetVID);
-                    } else {
-                        // Non-type route: treat as web root — auto-create a web_httpHandler
-                        LOG.info("handling as web route: %s => %s (WEB_ROOT=%s)", left, WEB_HTTP_TID, targetVID);
-                        createWebHandlerRoute(server, left, targetVID);
-                    }
+                // ── Evaluate the route RHS: uri -> resolve, inst -> apply ──
+                Obj target = Space.Helper.resolveApply(this, r.second());
+                if (target.isUri())
+                    target = Router.global().read(target.uriValue());
+                if (target.isType()) {
+                    // Type route: construct handler via type system (MCP, mtron, web_http, etc.)
+                    LOG.info("handling as handler route: %s => %s", left, target.vid());
+                    createHandlerRoute(server, left, target.vid());
+                } else if (target instanceof mcpServer) {
+                    // mcp_server route: wrap the protocol in the http transport handler
+                    LOG.info("handling as mcp server route: %s", left);
+                    createHandlerRoute(server, left, HTTP_MCP_HANDLER_TID, ((mcpServer) target).jvm());
+                } else if (r.second().isUri()) {
+                    // Non-type route: treat as web root — auto-create a web_httpHandler
+                    LOG.info("handling as web route: %s => %s (WEB_ROOT=%s)", left, WEB_HTTP_TID, r.second().uriValue());
+                    createWebHandlerRoute(server, left, r.second().uriValue());
                 }
             });
             LOG.info("starting web server at %s", this.at(HOST).uriValue().scheme(HTTP).toUri());

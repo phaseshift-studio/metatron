@@ -43,6 +43,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.web.space.http.handler.mcp_httpHandler.HTTP_MCP_HANDLER_TID;
+import static studio.phaseshift.metatron.isa.web.webInstSet.MCP_SERVER_TID;
 import static studio.phaseshift.metatron.isa.web.space.http.handler.mcp_mtron_httpHandler.HTTP_MCP_MTRON_TID;
 import static studio.phaseshift.metatron.isa.web.space.http.handler.mcp_mtron_httpHandler.HTTP_MCP_MTRON_TYPE;
 
@@ -78,7 +79,7 @@ public class mcp_mtron_httpHandlerTest extends AbstractHTTPServerIntegrationTest
                 new LinkedHashMap<>(Map.of(
                         uri(IN), uri(MIME.MIMEType.APPLICATION_JSON.value),
                         uri(OUT), uri(MIME.MIMEType.APPLICATION_JSON.value))), vid),
-                mcpServer.MCP_SERVER_TID, vid);
+                MCP_SERVER_TID, vid);
     }
 
     @AfterEach

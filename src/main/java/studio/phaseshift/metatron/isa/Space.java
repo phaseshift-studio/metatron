@@ -76,7 +76,7 @@ public interface Space extends Rec, Closeable {
 
     Object sjvm();
 
-    Map<Uri, Uri> routes();
+    Map<Uri, Obj> routes();
 
     Stats stats();
 
@@ -191,7 +191,7 @@ public interface Space extends Rec, Closeable {
             space.logger().warn("the clone of a space is the space itself");
         }
 
-        public static fURI routeToSpace(final fURI vid, Map<Uri, Uri> routes) {
+        public static fURI routeToSpace(final fURI vid, Map<Uri, Obj> routes) {
             if (null == vid)
                 return null;
             final Uri vidURI = uri(vid);
@@ -205,7 +205,7 @@ public interface Space extends Rec, Closeable {
                     .orElse(vid);
         }
 
-        public static fURI routeFromSpace(final fURI vid, Map<Uri, Uri> routes) {
+        public static fURI routeFromSpace(final fURI vid, Map<Uri, Obj> routes) {
             if (null == vid)
                 return null;
             final Uri vidURI = uri(vid);

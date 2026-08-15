@@ -54,7 +54,7 @@ public final class noobjSpace implements Space, InstSet {
     }
 
     @Override
-    public Map<Uri, Uri> routes() {
+    public Map<Uri, Obj> routes() {
         return Map.of();
     }
 

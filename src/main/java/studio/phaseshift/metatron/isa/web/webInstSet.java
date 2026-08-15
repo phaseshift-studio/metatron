@@ -252,17 +252,9 @@ public class webInstSet extends AbstractInstSet {
                         ObjBSONSerializer.single()),
                 uri(TYPE), lst(
                         docWrap(MIME_OBJ_TYPE, "indicates the media type of the data as specified by RFC-9110"),
-                        docWrap(XML_TYPE, "a rec encoding of an xml document"),
-                        docWrap(HTML_TYPE, "a rec encoding of an html document",
-                                "*<http://metatron.phaseshift.studio> [-- yields an html::T --]",
-                                """
-                                html::[html=>
-                                       [head=>
-                                        [title=>"metatron"]],
-                                        body=>
-                                         [out=>[
-                                          [tag=>a,href=>...],
-                                          [tag...]]]]"""),
+                        docWrap(XML_TYPE, "a xml verified str encoding of an xml document"),
+                        docWrap(HTML_TYPE, "an html verified str encoding of an html document",
+                                "*<http://metatron.phaseshift.studio> [-- yields an html::T --]"),
                         docWrap(JSON_TYPE, "a json document"),
                         docWrap(YAML_TYPE, "a yaml document"),
                         docWrap(CSS_TYPE, "a rec encoding of a css document"),
@@ -427,7 +419,14 @@ public class webInstSet extends AbstractInstSet {
                         instC(AS_INST_TID.dom(REC_TID).rng(JSON_TID), lst(JSON_TYPE), (lhs, inst) -> str(new String(ObjJSONSerializer.simple().outputBytes(lhs).array(), StandardCharsets.UTF_8), JSON_TID, null)),
                         instC(AS_INST_TID.dom(XML_TID).rng(REC_TID), lst(REC_TYPE), (lhs, inst) -> ObjXMLSerializer.parse(lhs.strValue())),
                         instC(AS_INST_TID.dom(REC_TID).rng(XML_TID), lst(XML_TYPE), (lhs, inst) -> str(new String(ObjXMLSerializer.single().outputBytes(lhs).array(), StandardCharsets.UTF_8), XML_TID, null)),
-                        instC(AS_INST_TID.dom(HTML_TID).rng(REC_TID), lst(REC_TYPE), (lhs, inst) -> ObjHTMLSerializer.parse(lhs.strValue())),
+                        docWrap(instC(AS_INST_TID.dom(HTML_TID).rng(REC_TID), lst(REC_TYPE), (lhs, inst) -> ObjHTMLSerializer.parse(lhs.strValue())), """
+                                                                                                                                                      html::[html=>
+                                                                                                                                                             [head=>
+                                                                                                                                                              [title=>"metatron"]],
+                                                                                                                                                              body=>
+                                                                                                                                                               [out=>[
+                                                                                                                                                                [tag=>a,href=>...],
+                                                                                                                                                                [tag...]]]]"""),
                         instC(AS_INST_TID.dom(REC_TID).rng(HTML_TID), lst(HTML_TYPE), (lhs, inst) -> str(ObjHTMLSerializer.single().write(lhs).outerHtml(), HTML_TID, null)),
                         instC(AS_INST_TID.dom(MARKDOWN_TID).rng(REC_TID), lst(REC_TYPE), (lhs, inst) -> ObjMarkdownSerializer.parse(lhs.strValue())),
                         instC(AS_INST_TID.dom(REC_TID).rng(MARKDOWN_TID), lst(MARKDOWN_TYPE), (lhs, inst) -> str(ObjMarkdownSerializer.single().write(lhs).getChars().toString(), MARKDOWN_TID, null)),
@@ -443,7 +442,7 @@ public class webInstSet extends AbstractInstSet {
                             final mcpClient client = (mcpClient) lhs;
                             final Map<Obj, Obj> configMap = new LinkedHashMap<>();
                             // type
-                            if (client.jvm().containsKey(uri("type")))
+                            if (client.jvm().containsKey(uri(TYPE)))
                                 configMap.put(uri("type"), client.jvm().get(uri("type")));
                             // url (use host value if url key is absent)
                             if (client.jvm().containsKey(uri(URL)))
@@ -457,10 +456,6 @@ public class webInstSet extends AbstractInstSet {
                             final byte[] jsonBytes = ObjJSONSerializer.simple().outputBytes(configRec).array();
                             return str(new String(jsonBytes, StandardCharsets.UTF_8), JSON_TID, null);
                         }),
-                       /* instC(AS_INST_TID.dom(LLM_SKILL_TID).rng(WS_MCP_HANDLER_TID), lst(LLM_SKILL_TYPE), (lhs, inst) -> {
-                            final mSkill skill = inst.arg(0).as();
-                            return new mcp_wsHandler(rec(TOOL, skill.at(TOOL), RESOURCE, skill.at(RESOURCE), PROMPT, skill.at(PROMPT)));
-                        }),*/
                         instC(AS_INST_TID.dom(JSON_TID).rng(MCP_CLIENT_TID.some()), lst(MCP_CLIENT_TYPE), (lhs, inst) -> {
                             final Rec parse = ObjJSONSerializer.simple().inputBytes(lhs.strValue()).asRec();
                             List<Rec> servers = new ArrayList<>();
@@ -495,7 +490,13 @@ public class webInstSet extends AbstractInstSet {
                                 }
                                 return new mcpClient(next.asRec().jvm(), MCP_CLIENT_TID, lhs.vid());
                             }));
-                        }))));
+                        }),
+                        docWrap(instC(AS_INST_TID.dom(LLM_SKILL_TID).rng(MCP_SERVER_TID), lst(MCP_SERVER_TYPE), (lhs, inst) -> mcpServer.of(lhs.<mSkill>as())),
+                                "a skill",
+                                "an mcp server",
+                                mutableMap(jnt(0), "the server type"),
+                                "maps a skill to an mcp server exposing its tools and resources",
+                                "skill.as(mcp_server::T)"))));
         //  instC(AS_INST_TID.dom(ALL).rng(STR_TID), lst(JSON_STRING_TYPE), (lhs, inst) -> str(ObjJSONSerializer.simple().write(lhs).toString())))))
         docWrap(this,
                 "the world of the web widens metatron",

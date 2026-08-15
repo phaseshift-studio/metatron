@@ -133,7 +133,7 @@ public abstract class AbstractSpace<SJVM> extends MRec implements Space {
     }
 
     @Override
-    public Map<Uri, Uri> routes() {
+    public Map<Uri, Obj> routes() {
         return this.at(ROUTE).orElse(rec0()).jvmAs();
     }
 
