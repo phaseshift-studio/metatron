@@ -17,14 +17,12 @@ import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
 import static studio.phaseshift.metatron.isa.llm.type.Agent.res;
 import static studio.phaseshift.metatron.isa.m.mInstSet.NOOBJ_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
-import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
@@ -96,11 +94,11 @@ public class ChatFeature extends AbstractFeature {
                 uri(DESC), str("chat with the agent"),
                 uri(CONTENT), str("send a message to the agent and receive its response"),
                 uri(TOOL), lst(docWrap(instC(CHAT_INST_TID.dom(NOOBJ_TID.zero()).rng(LLM_CHAT_RESULT_TID),
-                                lst(STR_TYPE, T(REC_TID.maybe())),
-                                (lhs, inst) -> agent.chat(inst.arg(0).strValue(), inst.arg(1).isNoObj() ? noobjRec() : inst.arg(1).asRec())),
+                                lst(STR_TYPE),
+                                (lhs, inst) -> agent.chat(inst.arg(0).strValue())),
                         "noobj lhs",
                         "the agent's chat response",
-                        Map.of(jnt(0), "the message to send the agent", jnt(1), "optional response format"),
+                        Map.of(jnt(0), "the message to send the agent"),
                         "chat with the agent and receive its response",
                         "chat('what is a database?')"))), LLM_SKILL_TID, null));
     }

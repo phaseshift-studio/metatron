@@ -191,6 +191,7 @@ grphspace::[pattern   => h:#,
         [======================]
 [== if the llm session already exists, continue, else create it ==]    
 [== <drdb:llm_session>.mult(print('\n what session number?: ').stdin().as(uri::T)).to(session_vid) ==]
+
 model::[
   provider => deepseek,
   protocol => openai,
@@ -216,7 +217,7 @@ agent::[
     chat_feature:::::::[model         => !(*</usr/dr/model>.else(model::[provider     => ollama,
                                                                          protocol     => ollama,
                                                                          host         => <http://ginger.local:11434>,
-                                                                         llm          => mtron-qwen-14b:latest])),
+                                                                         llm          => <nemotron-3.5-lightning:30b>])),
                         response      => [to => print(_)]],
     think_feature::::::[on_agent_ctor => inst(a=>agent::T){
                                             accordion::[title => "thoughts", 

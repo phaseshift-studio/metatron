@@ -22,7 +22,6 @@ import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.service.tool.ToolExecutor;
 import dev.langchain4j.service.tool.ToolProvider;
 import dev.langchain4j.service.tool.ToolProviderRequest;
-import dev.langchain4j.service.tool.ToolProviderResult;
 import dev.langchain4j.skills.DefaultSkill;
 import dev.langchain4j.skills.DefaultSkillResource;
 import dev.langchain4j.skills.FileSystemSkillLoader;
@@ -183,7 +182,7 @@ public class mSkill extends MRec {
         for (final Obj entry : agent.features().elements().toList()) {
             final Lst featureSkills = entry instanceof Feature feat ? feat.skill(agent) : entry.asRec().at(SKILL).orElse(lst());
             for (final Obj s : featureSkills.elements().toList()) {
-                final mSkill skill = (mSkill) (s.isUri() ? mSkill.of(fsSpace.staticObjToFile(s)) : mSkill.of(s.apply().asRec()));
+                final mSkill skill = (s.isUri() ? mSkill.of(fsSpace.staticObjToFile(s)) : mSkill.of(s.apply().asRec()));
                 tools.addAll(skill.tools().elements().toList());
                 if (skill.has(RESOURCE))
                     resources.addAll(skill.at(RESOURCE).asLst().elements().toList());

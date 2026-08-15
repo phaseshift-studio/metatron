@@ -232,7 +232,7 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
     Rec self(final Object jvm, final fURI tid, final fURI vid);
 
     static <T> T wrap(final Obj obj, final Class<T> t) {
-        if (null == obj || !obj.isRec())
+        if (null == obj || obj.isNoObj() || !obj.isRec())
             throw MTronException.of("%s is not a rec::T", obj);
         if (t.isAssignableFrom(obj.getClass()))
             return (T) obj;

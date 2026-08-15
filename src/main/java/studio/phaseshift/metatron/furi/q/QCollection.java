@@ -20,11 +20,12 @@ package studio.phaseshift.metatron.furi.q;
 
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.QProc;
+import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.Space;
-import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.math.mathInstSet;
+import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.m.type.impl.MStr;
@@ -696,13 +697,13 @@ public final class QCollection {
 
     /// //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    private static void internalDocWrap(final Obj obj, final String domDesc, final String rngDesc, final Map<Obj, String> argDescription, final String description, final String... examples) {
+    private static Docs internalDocWrap(final Obj obj, final String domDesc, final String rngDesc, final Map<Obj, String> argDescription, final String description, final String... examples) {
         if (obj.isNoObj())
-            return;
+            return new Docs("nothing").c(cInt.ZERO()).as();
         final fURI objID = obj.isInst() ? obj.tid() : obj.vid();
         if (null == objID) {
             obj.logger().warn("unable to generate docs for a vid-less obj: %s", obj);
-            return;
+            return new Docs("nothing").c(cInt.ZERO()).as();
         }
         final Docs doc = Docs.doc(obj, domDesc, rngDesc, argDescription, description, examples);
         final Space objSpace = Router.global().getSpaceFor(objID);
@@ -714,11 +715,16 @@ public final class QCollection {
         } else {
             docq.get().at(OBJ).<Space>as().write(objID, doc);
         }
+        return doc;
     }
 
     public static Inst docWrap(final Inst inst, final String domDesc, final String rngDesc, final Map<Obj, String> argDescription, final String description, final String... examples) {
         internalDocWrap(inst, domDesc, rngDesc, argDescription, description, examples);
         return inst;
+    }
+
+    public static Docs docWrapDocs(final Inst inst, final String domDesc, final String rngDesc, final Map<Obj, String> argDescription, final String description, final String... examples) {
+        return internalDocWrap(inst, domDesc, rngDesc, argDescription, description, examples);
     }
 
     public static Inst docWrap(final Inst inst, final String description, final String... examples) {

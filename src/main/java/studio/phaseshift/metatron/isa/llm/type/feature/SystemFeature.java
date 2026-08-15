@@ -1,10 +1,8 @@
 package studio.phaseshift.metatron.isa.llm.type.feature;
 
-import dev.langchain4j.service.AiServices;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.MessageBuilder;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
-import studio.phaseshift.metatron.isa.llm.type.AgentServices;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 
 import java.util.Map;
@@ -23,11 +21,11 @@ public class SystemFeature extends AbstractFeature {
     }
 
 
-    public static void buildSystemMessage(final Agent agent, final AiServices<AgentServices> service) {
+    /*public static void buildSystemMessage(final Agent agent, final AiServices<AgentServices> service) {
         final String systemMessage = String.join("\n", agent.getSystemMessages());
         if (!systemMessage.isBlank())
             service.systemMessage(systemMessage);
-    }
+    }*/
 
     // Key used to store the last-written text in this feature's JVM
     private static final String LAST = "last_system_text";
