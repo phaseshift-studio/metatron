@@ -79,14 +79,14 @@ public class fsSpace extends AbstractSpace<FileSystem> {
 
     private fsSpace(final FileSystem sjvm, final Map<Obj, Obj> jvm, final fURI vid) {
         super(sjvm, jvm, FS_SPACE_TID, vid);
-        final Map<Uri, Uri> tempRoutes = new LinkedHashMap<>(this.routes());
+        final Map<Uri, Obj> tempRoutes = new LinkedHashMap<>(this.routes());
         this.at(ROUTE).<Map<Obj, Obj>>jvmAs().clear();
         tempRoutes.entrySet()
                 .stream()
                 .map(kv -> Map.entry(
                         uri(kv.getKey().toString().replace("~", System.getProperty(USER_HOME))),
                         uri(kv.getValue().toString().replace("~", System.getProperty(USER_HOME)))))
-                .forEach(kv -> this.at(ROUTE).<Map<Uri, Uri>>jvmAs().put(kv.getKey(), kv.getValue()));
+                .forEach(kv -> this.at(ROUTE).<Map<Uri, Obj>>jvmAs().put(kv.getKey(), kv.getValue()));
     }
 
     public static File staticObjToFile(final Obj obj) {

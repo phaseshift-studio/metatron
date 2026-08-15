@@ -296,7 +296,7 @@ public class dcmntSpaceSubQ extends BaseQ implements Closeable {
      */
     private fURI stripPatternPrefix(final fURI furi) {
         if (!space.routes().isEmpty()) {
-            final studio.phaseshift.metatron.isa.m.type.Uri routeTarget = space.routes().values().iterator().next();
+            final studio.phaseshift.metatron.isa.m.type.Uri routeTarget = (studio.phaseshift.metatron.isa.m.type.Uri) space.routes().values().iterator().next();
             final fURI prefix = routeTarget.asUri().uriValue().asNode();
             if (!prefix.path().isEmpty() && prefix.path().stream().anyMatch(s -> !s.isEmpty())) {
                 return furi.removePrefix(prefix);

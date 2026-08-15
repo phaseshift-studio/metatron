@@ -244,7 +244,7 @@ public final class mcpMetatronBuilder {
                     final Rec resource = rec(
                             uri(URI), uri(sr.relativePath()),
                             uri(NAME), str(frontMatter.getOrDefault("name", List.of(Path.of(sr.relativePath()).getFileName().toString())).getFirst()),
-                            uri("description"), str(frontMatter.getOrDefault("description", List.of("no description")).getFirst()));
+                            uri(DESC), str(frontMatter.getOrDefault("description", List.of("no description")).getFirst()));
                     if (sr.content().length() > LARGE_RESOURCE_THRESHOLD) {
                         // large resource — expose a reference to the file, not its inline content
                         resource.at(uri(REFERENCE), str(skillDir.resolve(sr.relativePath()).toAbsolutePath().toString()), MUTABLE);

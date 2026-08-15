@@ -142,11 +142,11 @@ tblespace::[pattern    => </usr/dr/#>,
             table      => [,],
             q          => [incrq::[=>],subq::[=>]],
             route      => [/usr/dr/ => <>]]@</sys/space/usr/dr>;
-wsspace::[host    => !*<boot/args/external/web/ws>,
-         pattern  => <ws://#>,
-         route    => [[-- /drstyx => metatronfs:skills/drstynx, --]
-                      /mcp    => mcp_mtron_ws,
-                      /mtron  => mtron_ws]]@/sys/space/web/ws;       
+wsspace::[host     => !*<boot/args/external/web/ws>,
+          pattern  => <ws://#>,
+          route    => [/drstynx => *dr.as(skill::T).as(mcp_server::T),
+                       /mcp     => mcp_mtron_ws,
+                       /mtron   => mtron_ws]]@/sys/space/web/ws;       
 mqttspace::[host    => <mqtt://ginger.local:1883>,
             pattern => z2m:#,
             q       => [subq::[=>]],

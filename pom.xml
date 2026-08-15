@@ -949,6 +949,8 @@
                     <artifactId>maven-surefire-plugin</artifactId>
                     <version>3.5.6</version>
                     <configuration>
+                        <parallel>classes</parallel>
+                        <threadCount>5</threadCount>
                         <argLine>
                             --sun-misc-unsafe-memory-access=allow
                             --enable-native-access=ALL-UNNAMED

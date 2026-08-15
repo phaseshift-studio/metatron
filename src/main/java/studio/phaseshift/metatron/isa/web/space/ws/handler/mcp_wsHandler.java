@@ -120,7 +120,4 @@ public class mcp_wsHandler extends WebSocketRec {
                 MIME.MIMEType.of(this.at(OUT).orElse(uri(MIME.MIMEType.APPLICATION_JSON.value)).uriValue().toString()));
     }
 
-    public Rec getToolList() {
-        return this.mcp.getToolList();
-    }
 }

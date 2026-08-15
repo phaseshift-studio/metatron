@@ -38,7 +38,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import static dev.langchain4j.internal.Json.fromJson;
@@ -57,7 +56,6 @@ import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -84,8 +82,7 @@ public class mTool extends MRec {
                     uri(NAME), "tool name",
                     uri(DESC), "tool description",
                     uri(ARG).maybe(), "tool arguments"),
-            "a tool function for the llm to use",
-            "*eval.as(tool::T)   [-- see as?tool<=inst() --]");
+            "a tool function for the llm to use");
 
     public mTool(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
@@ -104,16 +101,25 @@ public class mTool extends MRec {
             if (!inst.tid().dom().c().isZeroable())
                 required.add(LHS);
         }
-        final boolean recArgs = doc.args().isRec();
-        final AtomicInteger counter = new AtomicInteger(0);
-        doc.args().elements().forEach(e -> {
-            final Rel kv = recArgs ? e.asRel() : rel(uri(ARG + counter.getAndIncrement()), e);
-            parameters.addProperty(
-                    kv.first().toString(),
-                    objToSchema(kv.second().type(), Type.Helper.polyTypePredicateObj(kv.second().type()), kv.second().orElse(str("<no description>")).strValue()));
-            if (!kv.second().c().isZeroable())
-                required.add(kv.first().toString());
-        });
+        final Poly<?, ?> instArgs = inst.args().orElse(rec0());
+        if (instArgs.isRec()) {
+            instArgs.asRec().elements().forEach(e -> {
+                final Rel kv = e.asRel();
+                final Obj desc = doc.args().at(kv.first());
+                parameters.addProperty(kv.first().uriValue().basePath().toString(),
+                        objToSchema(kv.second().type(), Type.Helper.polyTypePredicateObj(kv.second().type()), desc.isNoObj() ? "<no description>" : desc.strValue()));
+                if (!kv.second().c().isZeroable())
+                    required.add(kv.first().uriValue().basePath().toString());
+            });
+        } else {
+            instArgs.asLst().indexedStream().forEach(r -> {
+                final Obj desc = doc.args().at(r.first());
+                parameters.addProperty(r.first().toString(),
+                        objToSchema(r.second().type(), Type.Helper.polyTypePredicateObj(r.second().type()), desc.isNoObj() ? "<no description>" : desc.strValue()));
+                if (!r.second().c().isZeroable())
+                    required.add(r.first().toString());
+            });
+        }
         parameters.required(required);
         ToolSpecification.Builder toolSpecBuilder = ToolSpecification.builder()
                 .name(inst.tid().basePath().toString().replaceAll("^/+", "").replace("/", "_"))
@@ -139,7 +145,7 @@ public class mTool extends MRec {
 
     public static Rec mtronDocToTool(final QCollection.Docs doc) {
         final Inst inst = doc.at(INST);
-        return rec(mutableMap(uri(INST), inst, uri(NAME), uri(inst.tid()), uri(DESC), str(doc.description()), uri(ARG), doc.args()), LLM_TOOL_TID, null);
+        return rec(mutableMap(uri(INST), inst, uri(NAME), uri(inst.tid().basePath()), uri(DESC), str(doc.description()), uri(ARG), doc.args()), LLM_TOOL_TID, null);
     }
 
 

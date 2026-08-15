@@ -55,7 +55,7 @@ public final class NoObjRouter extends MRec implements Router {
     }
 
     @Override
-    public Map<Uri, Uri> routes() {
+    public Map<Uri, Obj> routes() {
         return Map.of();
     }
 

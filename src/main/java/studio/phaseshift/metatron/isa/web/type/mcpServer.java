@@ -18,27 +18,31 @@
 
 package studio.phaseshift.metatron.isa.web.type;
 
+import dev.langchain4j.agent.tool.ToolSpecification;
+import dev.langchain4j.model.chat.request.json.*;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.furi.q.QCollection;
+import studio.phaseshift.metatron.isa.llm.type.mSkill;
+import studio.phaseshift.metatron.isa.llm.type.mTool;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.web.space.ws.WebSocketRec;
 import studio.phaseshift.metatron.isa.web.space.ws.handler.mcp_wsHandler;
 
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.furi.q.QCollection.DOCQ;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_SPACE_TID;
+import static studio.phaseshift.metatron.isa.web.webInstSet.MCP_SERVER_TID;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /**
  * Transport-agnostic MCP (Model Context Protocol) JSON-RPC protocol handler.
@@ -55,12 +59,39 @@ import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_SPACE_TID;
  */
 public class mcpServer extends MRec {
 
-    public static final fURI MCP_SERVER_TID = WS_SPACE_TID.extend("mcp_server");
     protected final GraphittyLogger LOG = Graphitty.log(this);
     private static final String DESCRIPTION = "description";
 
     public mcpServer(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
+    }
+
+    /**
+     * Reduce a {@link mSkill} to an MCP server: the skill's tools become the
+     * server's {@code tool} rec (keyed by derived tool name) and its resources
+     * become the server's {@code resource} rec (keyed by uri).  Prompts are
+     * absent (skills don't carry prompts).
+     *
+     * @param skill the skill to expose as an MCP server
+     * @return an {@code mcp_server::T} wrapping the skill's tools/resources
+     */
+    public static mcpServer of(final mSkill skill) {
+        final Map<Obj, Obj> jvm = mutableMap();
+        if (skill.has(TOOL)) {
+            final Rec tools = rec(mutableMap());
+            skill.at(TOOL).asLst().elements().forEach(inst -> {
+                tools.at(uri(inst.asInst().tid().basePath().toString().replaceAll("^/+", "").replace("/", "_")), inst, Rec.MUTABLE);
+            });
+            jvm.put(uri(TOOL), tools);
+        }
+        if (skill.has(RESOURCE)) {
+            final Rec resources = rec(mutableMap());
+            skill.at(RESOURCE).asLst().elements().forEach(r -> {
+                resources.jvm().put(r.asRec().at(uri(URI)), r);
+            });
+            jvm.put(uri(RESOURCE), resources);
+        }
+        return new mcpServer(jvm, MCP_SERVER_TID, null);
     }
 
     /**
@@ -116,10 +147,17 @@ public class mcpServer extends MRec {
     protected Obj handleToolsList(final Obj id, final Rec params) {
         return mcpResponse(id, rec(
                 uri("tools"), lst(this.at(TOOL).orElse(rec0()).elements()
-                        .map(kv -> (Obj) rec(
-                                uri(NAME), str(kv.first().uriValue().toString()),
-                                uri(DESCRIPTION), str(toolDescription(kv.second())),
-                                uri("inputSchema"), buildInputSchema(kv.second())))
+                        .map(kv -> {
+                            final Obj toolEntry = kv.second();
+                            if (!toolEntry.isObjInst())
+                                return (Obj) rec(uri(NAME), str(kv.first().uriValue().toString()),
+                                        uri(DESCRIPTION), str(toolEntry.toShortString()),
+                                        uri("inputSchema"), rec(uri(TYPE), str(OBJECT), uri("properties"), rec()));
+                            final ToolSpecification spec = mTool.mtronInstToolSpecification(mTool.mtronInstToTool(toolEntry.asInst())).get0();
+                            return (Obj) rec(uri(NAME), str(kv.first().uriValue().toString()),
+                                    uri(DESCRIPTION), str(null == spec.description() ? "<no description>" : spec.description()),
+                                    uri("inputSchema"), jsonSchemaToRec(spec.parameters()));
+                        })
                         .toList())));
     }
 
@@ -137,8 +175,14 @@ public class mcpServer extends MRec {
         if (toolEntry.isNoObj()) {
             return mcpError(id, jnt(-32601), str("tool not found: " + toolName));
         } else {
-            final Obj toolLhs = arguments.at(uri(LHS)).orElse(noobj());
-            final Obj toolResult = toolEntry.asInst().args(arguments).apply(toolLhs);
+            // parse raw JSON args into typed mtron objs (mirrors the LLM mTool executor)
+            final Inst toolInst = toolEntry.asInst();
+            final Map<Obj, Obj> argMap = arguments.jvm();
+            final Poly<?, ?> args = toolInst.args().isNoObj() ? lst() : (toolInst.args().isLst() ?
+                    lst(argMap.entrySet().stream().filter(e -> !e.getKey().equals(uri(LHS))).map(e -> ObjmtronSerializer.<Obj>parse(e.getValue().toString())).collect(Collectors.toList())) :
+                    rec(argMap.entrySet().stream().filter(e -> !e.getKey().equals(uri(LHS))).collect(Collectors.toMap(e -> uri(e.getKey().toString()), e -> ObjmtronSerializer.parse(e.getValue().toString())))));
+            final Obj toolLhs = argMap.containsKey(uri(LHS)) ? ObjmtronSerializer.compact().read(argMap.get(uri(LHS)).toString()) : noobj();
+            final Obj toolResult = toolInst.args(args).apply(toolLhs);
             if (toolResult.isFail())
                 return mcpError(id, jnt(-32603), str(toolResult.asFail().message()));
             return mcpResponse(id, rec(uri(CONTENT), lst(rec(
@@ -162,7 +206,7 @@ public class mcpServer extends MRec {
                     final Rec item = rec(
                             uri(URI), str(m.get(uri(URI)).uriValue().toString()),
                             uri(NAME), m.get(uri(NAME)),
-                            uri("description"), m.get(uri("description")));
+                            uri(DESCRIPTION), m.get(uri(DESC)));
                     if (m.containsKey(uri(REFERENCE)))
                         item.at(uri(REFERENCE), m.get(uri(REFERENCE)), MUTABLE);
                     return (Obj) item;
@@ -303,99 +347,41 @@ public class mcpServer extends MRec {
     }
 
     // ========================================
-    // JSON Schema helpers (docq integration)
+    // JSON Schema helper
     // ========================================
 
-    protected static String toolDescription(final Obj toolEntry) {
-        if (!toolEntry.isObjInst())
-            return toolEntry.toShortString();
-        final Inst inst = toolEntry.asInst();
-        final Obj docObj = Router.global().read(inst.tid().q(DOCQ, null));
-        if (docObj.isRec() && !QCollection.isNoDocs(docObj)) {
-            final QCollection.Docs doc = new QCollection.Docs(docObj.asRec());
-            final String desc = doc.description();
-            if (desc != null && !desc.isEmpty())
-                return desc;
-        }
-        return inst.tid().name();
-    }
-
-    protected static Rec buildInputSchema(final Obj toolEntry) {
-        if (!toolEntry.isObjInst())
+    /**
+     * Serialize a LangChain4j {@link JsonSchemaElement} to the MCP wire format
+     * (a mtron rec with {@code type}/{@code properties}/{@code required}).
+     */
+    protected static Rec jsonSchemaToRec(final JsonSchemaElement element) {
+        if (null == element)
             return rec(uri(TYPE), str(OBJECT), uri("properties"), rec());
-
-        final Inst inst = toolEntry.asInst();
-        final Obj docObj = Router.global().read(inst.tid().q(DOCQ, null));
-        final Rec docArgs = docObj.isRec() && !QCollection.isNoDocs(docObj)
-                ? new QCollection.Docs(docObj.asRec()).args().orElse(rec()).asRec()
-                : rec();
-
-        final Rec properties = rec();
-        final java.util.List<Obj> required = new java.util.ArrayList<>();
-
-        if (!inst.dom().isNoObj() && !inst.dom().c().isZeroable()) {
-            final String argDesc = docArgs.at(uri(DOM)).isNoObj()
-                    ? "" : docArgs.at(uri(DOM)).toCleanString();
-            properties.at(uri(LHS),
-                    rec(uri(TYPE), str(objTypeToJsonSchema(inst.dom())),
-                            uri(DESCRIPTION), str(argDesc)),
-                    Rec.MUTABLE);
-            required.add(str(LHS));
+        if (element instanceof JsonObjectSchema obj) {
+            final Rec properties = rec();
+            obj.properties().forEach((name, sub) -> properties.at(uri(name), jsonSchemaToRec(sub), Rec.MUTABLE));
+            return rec(uri(TYPE), str(OBJECT),
+                    uri("properties"), properties,
+                    uri(REQUIRED), lst(obj.required().stream().map(s -> (Obj) str(s)).toList()));
+        } else if (element instanceof JsonArraySchema arr) {
+            return rec(uri(TYPE), str("array"), uri("items"), jsonSchemaToRec(arr.items()));
+        } else if (element instanceof JsonBooleanSchema) {
+            return rec(uri(TYPE), str("boolean"));
+        } else if (element instanceof JsonIntegerSchema) {
+            return rec(uri(TYPE), str("integer"));
+        } else if (element instanceof JsonNumberSchema) {
+            return rec(uri(TYPE), str("number"));
+        } else if (element instanceof JsonStringSchema) {
+            return rec(uri(TYPE), str("string"));
+        } else if (element instanceof JsonEnumSchema en) {
+            return rec(uri(TYPE), str("string"), uri("enum"), lst(en.enumValues().stream().map(s -> (Obj) str(s)).toList()));
+        } else if (element instanceof JsonReferenceSchema ref) {
+            return rec(uri("$ref"), str(ref.reference()));
+        } else if (element instanceof JsonAnyOfSchema anyOf) {
+            return rec(uri("anyOf"), lst(anyOf.anyOf().stream().map(e -> (Obj) jsonSchemaToRec(e)).toList()));
+        } else {
+            return rec(uri(TYPE), str("string"));
         }
-
-        final Poly<?, ?> args = inst.args().orElse(rec());
-        if (!args.isNoObj() && !args.isEmpty()) {
-            if (args.isRec()) {
-                args.asRec().elements().forEach(rel -> {
-                    final String argName = rel.first().uriValue().toString();
-                    final String argDesc = docArgs.at(rel.first()).isNoObj()
-                            ? "" : docArgs.at(rel.first()).toCleanString();
-                    properties.at(uri(argName),
-                            rec(uri(TYPE), str(objTypeToJsonSchema(rel.second())),
-                                    uri(DESCRIPTION), str(argDesc)),
-                            Rec.MUTABLE);
-                    if (!rel.second().c().isZeroable())
-                        required.add(str(argName));
-                });
-            } else if (args.isLst()) {
-                args.asLst().indexedStream().forEach(indexedArg -> {
-                    final String argName = String.valueOf(indexedArg.first().intValue().intValue());
-                    final Obj argType = indexedArg.second();
-                    final Obj docEntry = docArgs.at(indexedArg.first());
-                    final String argDesc = docEntry.isNoObj() ? "" : docEntry.toCleanString();
-                    properties.at(uri(argName),
-                            rec(uri(TYPE), str(objTypeToJsonSchema(argType)),
-                                    uri(DESCRIPTION), str(argDesc)),
-                            Rec.MUTABLE);
-                    if (!argType.c().isZeroable())
-                        required.add(str(argName));
-                });
-            }
-        }
-
-        return rec(
-                uri(TYPE), str(OBJECT),
-                uri("properties"), properties,
-                uri(REQUIRED), lst(required));
-    }
-
-    protected static String objTypeToJsonSchema(final Obj obj) {
-        if (obj.isStr() || obj.isUri()) return "string";
-        if (obj.isInt()) return "integer";
-        if (obj.isReal()) return "number";
-        if (obj.isBool()) return "boolean";
-        if (obj.isLst()) return "array";
-        if (obj.isRec()) return OBJECT;
-        if (obj.isType()) {
-            final String tidName = obj.asType().vid().basePath().toString();
-            if (tidName.contains("str") || tidName.contains("uri")) return "string";
-            if (tidName.contains("int")) return "integer";
-            if (tidName.contains("real")) return "number";
-            if (tidName.contains("bool")) return "boolean";
-            if (tidName.contains("lst")) return "array";
-            if (tidName.contains("rec")) return OBJECT;
-        }
-        return "string";
     }
 
     // ========================================
@@ -410,13 +396,5 @@ public class mcpServer extends MRec {
                 MIME.MIMEType.of(MIME.MIMEType.APPLICATION_JSON.value),
                 MIME.MIMEType.of(MIME.MIMEType.APPLICATION_JSON.value));
     }
-
-    /**
-     * Returns an empty tool list — subclasses override to provide tools.
-     */
-    public Rec getToolList() {
-        return rec();
-    }
-
 
 }

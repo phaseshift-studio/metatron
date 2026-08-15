@@ -1,9 +1,12 @@
 package studio.phaseshift.metatron.isa.llm.type.feature;
 
+import dev.langchain4j.service.AiServices;
+import dev.langchain4j.service.tool.ToolProvider;
 import dev.langchain4j.skills.Skill;
 import dev.langchain4j.skills.Skills;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
+import studio.phaseshift.metatron.isa.llm.type.AgentServices;
 import studio.phaseshift.metatron.isa.llm.type.mSkill;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.io.space.fs.fsSpace;
@@ -22,7 +25,7 @@ public class SkillFeature extends AbstractFeature {
         super(jvm, tid, vid);
     }
 
-   /* public static void buildSkills(final Agent agent, final AiServices<AgentServices> service) {
+    public static void buildSkills(final Agent agent, final AiServices<AgentServices> service) {
         final List<Skill> allSkills = agent.features().asLst()
                 .elements()
                 .flatMap(entry -> (entry instanceof Feature feat ?
@@ -39,16 +42,16 @@ public class SkillFeature extends AbstractFeature {
         }
         try {
             final Skills skills = new Skills.Builder().skills(allSkills).build();
-            // final ToolProvider skillToolProvider = skills.toolProvider();
+            final ToolProvider skillToolProvider = skills.toolProvider();
             agent.addSystemMessage(
                     "\nYou have access to the following skills:\n" +
                             skills.formatAvailableSkills()
                             + "\nWhen the user's request relates to one of these skills, activate it first using the `activate_skill` tool before proceeding.");
-            // service.toolProvider(skillToolProvider);
+            service.toolProvider(skillToolProvider);
         } catch (final Exception e) {
             throw MTronException.of("unable to setup skills: %s", e);
         }
-    }*/
+    }
 
     @Override
     public Obj onBeforeChat(final Agent agent) {
