@@ -20,3 +20,4 @@ studio.phaseshift.metatron.isa.web.webInstSet
 studio.phaseshift.metatron.isa.grph.grphInstSet
 studio.phaseshift.metatron.isa.dckr.dckrInstSet
 studio.phaseshift.metatron.isa.llm.llmInstSet
+studio.phaseshift.metatron.isa.ide.ideInstSet

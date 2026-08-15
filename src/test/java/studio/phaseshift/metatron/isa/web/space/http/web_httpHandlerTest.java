@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.web.space.http;
 
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -144,7 +145,7 @@ public class web_httpHandlerTest extends AbstractHTTPServerTest {
                     str("{\"key\":\"value\"}", JSON_TID, null));
         }
 
-        @AfterEach
+        @AfterAll
         public void teardownContentSpace() {
             if (this.contentSpace != null) {
                 Router.global().removeSpace(this.contentSpace.vid());

@@ -863,8 +863,10 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                                 (lhs.isType() && Objects.equals(lhs.asType().predicate(), rhs.asType().predicate())));
 
             // ── ObjCall handling ──
-            if (rhs.isObjCall() && !rhs.asCall().isPredicate(lhs))
-                return true;
+            if (rhs.isObjCall() && !rhs.asCall().isPredicate(lhs)) {
+                return Obj.Helper.specificType(lhs).test(rhs.dom()) && Obj.Helper.specificType(lhs).test(rhs.rng());
+                //return true;
+            }
 
             // ── non-base type with TID→VID match: predicate-aware early exit ──
             if (rhs.isType()) {

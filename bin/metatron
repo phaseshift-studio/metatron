@@ -18,6 +18,11 @@ set -euo pipefail
 # ── resolve project root ───────────────────────────────────────────
 cd "$(dirname "$(readlink -f "$0")")/.."
 
+# ── container toolchain: root FS is read-only, so use the in-repo JDK
+#    and the patched ./mvnw (JAVA_HOME/Maven caches live under .build/) ──
+MVNW="./mvnw"
+if [ -x "./.build/jdk/bin/java" ]; then JAVA_BIN="./.build/jdk/bin/java"; else JAVA_BIN="java"; fi
+
 # Source utility functions (spinner, etc.)
 . "$(dirname "$(readlink -f "$0")")/utility.sh"
 
@@ -29,7 +34,7 @@ STEP_RAN=0
 if [ ! -f "$CP_FILE" ] || [ pom.xml -nt "$CP_FILE" ]; then
     MVN_LOG=$(mktemp)
     set +e
-    mvn dependency:build-classpath -DincludeScope=runtime -Dmdep.outputFile="$CP_FILE" -q > "$MVN_LOG" 2>&1 &
+    "$MVNW" dependency:build-classpath -DincludeScope=runtime -Dmdep.outputFile="$CP_FILE" -q > "$MVN_LOG" 2>&1 &
     spinner $! "resolving dependencies"
     wait $!
     MVN_EXIT=$?
@@ -46,7 +51,7 @@ if [ ! -d target/classes ] || \
    [ -n "$(find src -name '*.java' -newer target/classes -print -quit 2>/dev/null)" ]; then
     MVN_LOG=$(mktemp)
     set +e
-    mvn compile -q > "$MVN_LOG" 2>&1 &
+    "$MVNW" compile -q > "$MVN_LOG" 2>&1 &
     # spinner $! "compiling"
     wait $!
     MVN_EXIT=$?
@@ -65,7 +70,7 @@ if [ "$STEP_RAN" -eq 0 ]; then echo; fi
 EXIT_RESET=100
 while true; do
     set +e
-    java \
+    "$JAVA_BIN" \
         -Dlogback.configurationFile=conf/logback.xml \
         -Djava.util.logging.config.file=conf/logging.properties \
         --add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED \
