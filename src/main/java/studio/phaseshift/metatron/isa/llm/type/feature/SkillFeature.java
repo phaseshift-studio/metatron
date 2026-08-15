@@ -1,7 +1,6 @@
 package studio.phaseshift.metatron.isa.llm.type.feature;
 
 import dev.langchain4j.service.AiServices;
-import dev.langchain4j.service.tool.ToolProvider;
 import dev.langchain4j.skills.Skill;
 import dev.langchain4j.skills.Skills;
 import studio.phaseshift.metatron.furi.fURI;
@@ -16,8 +15,14 @@ import java.util.List;
 import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.SKILL;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.NOOBJ;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.furi.q.QCollection.docWrapDocs;
+import static studio.phaseshift.metatron.isa.m.mInstSet.LST_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 
 public class SkillFeature extends AbstractFeature {
 
@@ -42,12 +47,17 @@ public class SkillFeature extends AbstractFeature {
         }
         try {
             final Skills skills = new Skills.Builder().skills(allSkills).build();
-            final ToolProvider skillToolProvider = skills.toolProvider();
-            agent.addSystemMessage(
+            agent.addToolProvider(skills.toolProvider());
+            agent.addTool(docWrapDocs(instC(f("list_skills").dom(NOOBJ.zero()).rng(LST_TID), lst(),
+                            (lhs, inst) -> lst(allSkills.stream().map(s -> (Obj) str(s.name() + ":" + s.description())).toList())),
+                    "no domain",
+                    "a lst[str] of skills",
+                    Map.of(),
+                    "generates a lst of available skills by name and description"));
+            service.systemMessage(
                     "\nYou have access to the following skills:\n" +
                             skills.formatAvailableSkills()
                             + "\nWhen the user's request relates to one of these skills, activate it first using the `activate_skill` tool before proceeding.");
-            service.toolProvider(skillToolProvider);
         } catch (final Exception e) {
             throw MTronException.of("unable to setup skills: %s", e);
         }
@@ -68,6 +78,7 @@ public class SkillFeature extends AbstractFeature {
 
         try {
             final Skills skills = new Skills.Builder().skills(allSkills).build();
+            agent.addToolProvider(skills.toolProvider());
             agent.addSystemMessage(
                     "\nYou have access to the following skills:\n" +
                             skills.formatAvailableSkills()

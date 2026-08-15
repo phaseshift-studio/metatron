@@ -18,6 +18,10 @@
 
 package studio.phaseshift.metatron.isa.llm.type.feature;
 
+import dev.langchain4j.service.AiServices;
+import dev.langchain4j.service.tool.ToolProvider;
+import dev.langchain4j.skills.Skill;
+import dev.langchain4j.skills.Skills;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.CharArraySet;
 import org.apache.lucene.analysis.TokenStream;
@@ -32,10 +36,13 @@ import org.apache.lucene.store.Directory;
 import org.apache.lucene.util.BytesRef;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
+import studio.phaseshift.metatron.isa.llm.type.AgentServices;
+import studio.phaseshift.metatron.isa.llm.type.mSkill;
 import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Str;
+import studio.phaseshift.metatron.isa.mach.io.space.fs.fsSpace;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.thread.CoreThread;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.StatusLine;
@@ -46,13 +53,14 @@ import studio.phaseshift.metatron.util.MTronException;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
+import static studio.phaseshift.metatron.furi.q.QCollection.*;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
 import static studio.phaseshift.metatron.isa.llm.type.Agent.res;
 import static studio.phaseshift.metatron.isa.m.mInstSet.LST_TID;
@@ -64,6 +72,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst0;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.type.thread.VirtualThread.virtual;
@@ -75,6 +84,7 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 public class ConceptFeature extends AbstractFeature {
 
+    private final AtomicBoolean loaded = new AtomicBoolean(false);
     private static final String CONCEPT = "concept";
     private static final String MESSAGE = "message";
     private static final fURI MESSAGES_INST_TID = LLM_CONCEPT_FEATURE_TID.extend(INST).extend("messages");
@@ -170,6 +180,19 @@ public class ConceptFeature extends AbstractFeature {
                                                                   Both tools can take 1 or more concept arguments.
                                                                   """;
 
+
+    public AiServices<AgentServices> build(final Agent agent, final AiServices<AgentServices> service) {
+        final List<Skill> skillList = this.skill(agent).elements()
+                .map(s -> s.isUri() ?
+                        mSkill.of(fsSpace.staticObjToFile(s)).toSkill() :
+                        mSkill.of(s.apply().asRec()).toSkill()).toList();
+        final Skills skills = new Skills.Builder().skills(skillList).build();
+        final ToolProvider skillToolProvider = skills.toolProvider();
+        agent.addToolProvider(skillToolProvider);
+        this.onBeforeChat(agent);
+        return service;
+    }
+
     // =========================================================================
     // Constructor
     // =========================================================================
@@ -207,6 +230,7 @@ public class ConceptFeature extends AbstractFeature {
     // =========================================================================
 
     public Lst skill(final Agent agent) {
+        this.loaded.set(true);
         final String content = switch (this.extractor) {
             case TaggingExtractor ignored -> CONCEPT_EXTRACTOR_TAG_SYSTEM_MESSAGE;
             case AgentExtractor ignored -> CONCEPT_EXTRACTOR_AGENT_SYSTEM_MESSAGE;
@@ -214,7 +238,7 @@ public class ConceptFeature extends AbstractFeature {
             case null, default -> null;
         };
         if (content == null) return lst();
-        return lst(rec(mutableMap(uri(NAME), uri(CONCEPT),
+        final Lst skills = lst(rec(mutableMap(uri(NAME), uri(CONCEPT),
                 uri(DESC), str("In situ concept graph construction w/ spreading activation recommendation"),
                 uri(CONTENT), str(content),
                 uri(TOOL), lst(
@@ -233,6 +257,12 @@ public class ConceptFeature extends AbstractFeature {
                                 "a lst of related concept auto_froms",
                                 Map.of(jnt(0), "a concept uri"),
                                 "fetches concepts associated with the provided concept"))), LLM_SKILL_TID, null));
+        skills.elements().map(s -> s.asRec().at(TOOL).orElse(lst0())).flatMap(t -> t.asLst().elements()).forEach(t -> {
+            Router.readFromSpace(((Obj) t).tid().addQ(DOCQ)).stream().forEach(doc -> {
+                agent.addTool((Docs) doc);
+            });
+        });
+        return skills;
         
             /*
           docWrap(instC(LLM_CONCEPT_FEATURE_TID.extend(INST).extend("messages").dom(ALL.maybe()).rng(STR_TID.maybeSome()),

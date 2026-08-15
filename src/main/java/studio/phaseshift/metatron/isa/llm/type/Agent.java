@@ -19,15 +19,20 @@
 package studio.phaseshift.metatron.isa.llm.type;
 
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
+import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.output.Response;
 import dev.langchain4j.service.AiServices;
 import dev.langchain4j.service.tool.ToolErrorHandlerResult;
+import dev.langchain4j.service.tool.ToolExecutor;
+import dev.langchain4j.service.tool.ToolProvider;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.llm.CostCalculator;
 import studio.phaseshift.metatron.isa.llm.LLMFactory;
+import studio.phaseshift.metatron.isa.llm.mToolProvider;
 import studio.phaseshift.metatron.isa.llm.type.feature.*;
 import studio.phaseshift.metatron.isa.m.math.mathInstSet;
 import studio.phaseshift.metatron.isa.m.type.Lst;
@@ -64,7 +69,6 @@ import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_MILLIS_TID;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TRUE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.Str.str0;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
@@ -89,6 +93,21 @@ public class Agent extends MRec {
     private final AtomicReference<CostCalculator> costCalculator = new AtomicReference<>(null);
     final AtomicBoolean interrupt = new AtomicBoolean(false);
     final AtomicBoolean first = new AtomicBoolean(true);
+    private final mToolProvider toolProvider = new mToolProvider();
+
+    public void addToolProvider(final ToolProvider toolProvider) {
+        this.toolProvider.addToolProvider(toolProvider);
+    }
+
+    public void addTool(final Tuple.Pair<ToolSpecification, ToolExecutor> tool) {
+        this.toolProvider.addTool(mTool.toolToMtronDoc(tool.get0(), tool.get1()));
+    }
+
+    public QCollection.Docs addTool(final QCollection.Docs instSpec) {
+        this.toolProvider.addTool(instSpec);
+        return instSpec;
+    }
+
     /**
      * The current user message — single source of truth, mutable by features.
      */
@@ -196,7 +215,7 @@ public class Agent extends MRec {
     }
 
     public Lst features() {
-        return this.at(feat()).orElse(lst());
+        return this.at(FEATURE).orElse(lst());
     }
 
     // ── Path builders ──────────────────────────────────────────────
@@ -321,6 +340,7 @@ public class Agent extends MRec {
                         // .executeToolsConcurrently()
                         // .executeToolsConcurrently(BootLoader.getExecutor())
                         // .maxToolCallingRoundTrips()
+                        .toolProvider(this.toolProvider)
                         .toolExecutionErrorHandler((error, context) -> {
                             if (this.has(TOOL) && this.feature(TOOL).asRec().has(ON_ERROR)) {
                                 this.feature(TOOL).asRec().at(ON_ERROR).asInst().args(lst(this, fail(error)));
@@ -343,13 +363,12 @@ public class Agent extends MRec {
                     SkillFeature.buildSkills(this, service);
                 if (this.hasFeature(TOOL))
                     ToolFeature.buildTools(this, service);
-                if (this.hasFeature(SYSTEM))
-                    SystemFeature.buildSystemMessage(this, service);
+                // if (this.hasFeature(SYSTEM))
+                //     SystemFeature.buildSystemMessage(this, service);
+                this.at(feat(CONCEPT)).ifPresent(c -> ((ConceptFeature) c).build(this, service));
                 //////////////////////////////////////////////////////////////////////////////////
-                final AgentServices agent = (this.has(DESC) && !this.at(DESC).strValue().isBlank() ?
-                        service.systemMessageTransformer((current, content) ->
-                                (this.at(DESC).orElse(str0()).strValue() + "\n\n" +
-                                        (current != null ? current : "")).trim()) : service)
+                final AgentServices agent = service
+                        .systemMessageTransformer(current -> current + String.join("\n", this.systemMessages))
                         .streamingChatModel(LLMFactory.createChatInteraction(this,
                                 chat.at(uri(MODEL)),
                                 chat.at(uri(RESPONSE)),

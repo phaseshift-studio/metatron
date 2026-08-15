@@ -6,25 +6,30 @@ import dev.langchain4j.mcp.client.McpClient;
 import dev.langchain4j.service.AiServices;
 import dev.langchain4j.service.tool.ToolExecutor;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.llm.MessageBuilder;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
 import studio.phaseshift.metatron.isa.llm.type.AgentServices;
 import studio.phaseshift.metatron.isa.llm.type.mTool;
 import studio.phaseshift.metatron.isa.llm.type.mcpClient;
+import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Str;
+import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.furi.q.QCollection.DOCQ;
 import static studio.phaseshift.metatron.furi.q.QCollection.INCRQ;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.TOOL_RESULT_MESSAGE_TID;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.web.webInstSet.MCP_CLIENT_TYPE;
 
@@ -37,20 +42,20 @@ public class ToolFeature extends AbstractFeature {
     public static void buildTools(final Agent agent, final AiServices<AgentServices> service) {
         agent.features().elements().map(Obj::asRec).filter(f -> f.has(TOOL)).forEach(feature -> {
             final Obj tool = feature.at(TOOL);
-            final Map<ToolSpecification, ToolExecutor> tools = new HashMap<>();
             final List<McpClient> mcpClients = new ArrayList<>();
             tool.elements().forEach(t -> {
                 try {
                     if (t.isRec() && t.test(MCP_CLIENT_TYPE)) {
                         mcpClients.add(Rec.wrap(t.as(), mcpClient.class).client());
                     } else if (t.isObjInst()) {
-                        // if (!QCollection.isNoDocs(Router.readFromSpace(t.tid().addQ(DOCQ)))) {
-                        final Tuple.Pair<ToolSpecification, ToolExecutor> pair =
-                                mTool.mtronInstToolSpecification(mTool.mtronInstToTool(t.asInst()));
-                        tools.put(pair.get0(), pair.get1());
-                        //   } else {
-                        // TODO: handle when a tool doesn't have docs
-                        //   }
+                        final Obj docs = Router.readFromSpace(t.tid().addQ(DOCQ)).as();
+                        if (!QCollection.isNoDocs(docs)) {
+                            agent.addTool(docs.as());
+                        } else {
+                            final Tuple.Pair<ToolSpecification, ToolExecutor> pair =
+                                    mTool.mtronInstToolSpecification(mTool.mtronInstToTool(t.asInst()));
+                            agent.addTool(Tuple.Pair.with(pair.get0(), pair.get1()));
+                        }
                     } /*else if (t.isRec() && t.test(LLM_TOOL_TYPE)) {
                         final Tuple.Pair<ToolSpecification, ToolExecutor> pair =
                                 mTool.mtronInstToolSpecification(t.asRec());
@@ -60,11 +65,17 @@ public class ToolFeature extends AbstractFeature {
                     feature.logger().warn("unable to build tool from %s (ignoring): %s", t, e.getMessage());
                 }
             });
-            if (!tools.isEmpty())
-                service.tools(tools);
             if (!mcpClients.isEmpty())
-                service.toolProvider(McpToolProvider.builder().mcpClients(mcpClients).build());
+                agent.addToolProvider(McpToolProvider.builder().mcpClients(mcpClients).build());
         });
+    }
+
+    @Override
+    public Lst skill(final Agent agent) {
+        return lst(rec(uri(NAME), uri("tool"),
+                uri(DESC), str("tool extensions intended for llm use"),
+                uri(CONTENT), str("any mtron inst can be added to tool feature and it will be mapped to an mcp tool"),
+                uri(TOOL), this.at(TOOL)));
     }
 
     @Override
