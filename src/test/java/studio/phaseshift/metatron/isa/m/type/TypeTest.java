@@ -48,6 +48,30 @@ public class TypeTest extends AbstractMetatronTest {
     @ParameterizedTest
     @CsvSource(value = {
             // obj                | type                            | matches?
+            "1                    | plus?int<=int(3)                | true",
+            "{2}1                 | plus?#{*}<=int{2}(3)            | true",
+            "{2}1                 | plus?int<=int{2}(3)             | false",
+            "{3}1                 | plus?int<=int{2}(3)             | false",
+            "{0,5}1               | plus?int<=int{2}(3)             | false",
+            "1                    | plus(a)                         | true",
+            "1                    | plus?uri<=uri(a)                | false",
+            "{2}1                 | plus?uri<=uri{2}(a)             | false",
+            "{2}1                 | plus?<=#{2}(a)                  | true",
+    }, delimiter = '|')
+    public void testInstType(final String obj, final String inst, final boolean matches) {
+        try {
+            Obj o = ObjmtronSerializer.parse(obj);
+            Obj i = ObjmtronSerializer.parse(inst);
+            LOG.warn("testing %s %s %s", o, matches ? "{{c}}in{{/c}}" : "{{c}}not in{{/c}}", i);
+            assertEquals(matches, o.test(i));
+        } catch (Exception e) {
+            assertFalse(matches, "an exception occurred: " + e);
+        }
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            // obj                | type                            | matches?
             "1                    | /m/int                      | true",
             "1                    | int                         | true",
             "\"a_string\"         | /m/int                      | false",

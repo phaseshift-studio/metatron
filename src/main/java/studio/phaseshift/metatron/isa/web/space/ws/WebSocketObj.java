@@ -26,7 +26,6 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.web.type.MIME;
-import studio.phaseshift.metatron.util.MTronException;
 
 import java.io.Closeable;
 import java.nio.ByteBuffer;
@@ -88,8 +87,7 @@ public interface WebSocketObj extends Rec, Closeable {
             if (null != this.getWebSocket() && !this.getWebSocket().isClosed()) {
                 this.logger().info("closing %s", this.vidOrTid());
                 this.getWebSocket().close();
-            } else
-                throw MTronException.of("websocket already closed for %s", this.vidOrTid());
+            }
         } catch (final Exception e) {
             this.logger().error("error closing websocket: %s", this.vidOrTid(), e);
         }

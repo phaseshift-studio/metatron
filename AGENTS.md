@@ -41,6 +41,23 @@ A distributed data-oriented computing language and virtual machine built in Java
 
 - **Java**: JDK 21+ to compile and run (CI uses Oracle JDK 24, jDeploy uses Temurin JDK 25)
 
+### Build Environment (this container)
+
+The root filesystem is read-only (`HOME=/root`, `/usr` not writable), so the
+toolchain lives inside the repo under `.build/` (git-ignored):
+
+- **`./mvnw` is patched to self-configure — just run it.** When `JAVA_HOME` is
+  unset it falls back to `.build/jdk` (Temurin 24, matching CI), keeps Maven
+  caches under `.build/m2/`, and passes `.build/m2/settings.xml` which redirects
+  the local repository into the workspace. No env setup needed.
+- **`bin/metatron` is patched the same way** (uses `./mvnw` and
+  `.build/jdk/bin/java`).
+- To put the JDK on PATH explicitly (e.g. running `java`/`javac` directly),
+  `source build-env.sh`.
+- `.build/jdk21` exists for reference, but **tests must run on the default
+  JDK 24**: the pom's surefire `argLine` includes `--sun-misc-unsafe-memory-access=allow`,
+  a JDK 23+ flag that JDK 21 rejects (this is why CI uses JDK 24).
+
 ### Code Style
 
 - In general, adopt existing patterns in the codebase.

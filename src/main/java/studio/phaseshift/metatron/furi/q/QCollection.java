@@ -107,6 +107,10 @@ public final class QCollection {
     public static final String DOCQ = "docq";
     public static final fURI DOCQ_PATTERN = f(DOCQ);
     public static final fURI DOCQ_TID = QPROC_TID.extend(DOCQ_PATTERN);
+    // dual-mode interface doc key: a docs::T carrying 'build' (how to implement the interface)
+    // alongside 'desc' (how to use it) is an interface doc.  docQ().preRead branches on the
+    // implementation status of the docq'd inst — unimplemented → build docs, implemented → use docs.
+    public static final fURI DOC_BUILD = f("build");
     public static final Type DOCQ_TYPE = Type.Builder.build()
             .tid(QPROC_TID)
             .vid(DOCQ_TID)
@@ -123,6 +127,7 @@ public final class QCollection {
                             uri(RNG).maybe(), STR_TYPE,
                             uri(ARGS).maybe(), T(ALL), // fix: noobj=>noobj slipping trhough the cracks somewhere rec(URI_TYPE,STR_TYPE).maybe(),
                             uri(DESC), STR_TYPE,
+                            uri(DOC_BUILD).maybe(), STR_TYPE,
                             uri(EXAMPLE).maybe(), LST_TYPE))
                     .constructor(arg0 -> new Docs(arg0.recValue(), DOCS_TID, null))
                     .inst(AS_INST_TID.dom(DOCS_TID).rng(STR_TID), lst(STR_TYPE), (lhs, inst) -> str(lhs.toString()))
@@ -450,10 +455,23 @@ public final class QCollection {
                     return doc;
                 })
                 .preRead((vid) -> {
-                    final Obj doc = INST_DOCS.read(vid.removeQ(DOCQ));
-                    return doc.isNoObj() ?
+                    final Obj instDoc = INST_DOCS.read(vid.removeQ(DOCQ));
+                    final Obj doc = instDoc.isNoObj() ?
                             OBJ_DOCS.read(vid.removeQ(DOCQ)).orElse(NO_DOCS.plus(rec(uri(OBJ), Router.global().read(vid.removeQ(DOCQ))))) :
-                            doc;
+                            instDoc;
+                    // dual-mode interface doc: a doc carrying 'build' (how to implement) alongside
+                    // 'desc' (how to use).  The branch is implementation status: an interface inst's
+                    // tid is the docq'd uri itself, and the watchdog swaps in the implementation on
+                    // write — so implemented iff the live inst is no longer the interface.  Unimplemented
+                    // → surface the build docs; implemented → surface the use docs.
+                    if (doc.isRec() && doc.asRec().has(DOC_BUILD)) {
+                        final Obj live = Router.global().read(vid.removeQ(DOCQ));
+                        final boolean implemented = !live.isNoObj() && live.isInst() &&
+                                !live.<Inst>as().tid().basePath().equals(vid.removeQ(DOCQ));
+                        if (!implemented)
+                            return ((Obj) doc.asRec().at(DESC, doc.asRec().at(DOC_BUILD))).tid(DOCS_TID);
+                    }
+                    return doc;
                 })
                 .create();
         if (!initialDocs.isNoObj()) {

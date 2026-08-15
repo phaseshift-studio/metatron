@@ -18,9 +18,11 @@
 
 package studio.phaseshift.metatron.isa.web.space.ws;
 
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -57,6 +59,7 @@ import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
  * The first entry in the route table is used as the primary connection path
  * for the base-class tests.
  */
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class AbstractWebSocketServerIntegrationTest extends AbstractMetatronTest {
 
     protected wsSpace space;
@@ -96,7 +99,7 @@ public abstract class AbstractWebSocketServerIntegrationTest extends AbstractMet
     // ========================================
     // Lifecycle
     // ========================================
-    @BeforeEach
+    @BeforeAll
     public void setupWsSpace() {
         InstSet.importInstSet(WEB_ISA_TID);
         this.space = createWSSpace();
@@ -119,7 +122,7 @@ public abstract class AbstractWebSocketServerIntegrationTest extends AbstractMet
     }
 
     @AfterEach
-    public void teardownWsSpace() {
+    public void closeClientWebSocket() {
         if (this.webSocket != null) {
             try {
                 this.webSocket.sendClose(1000, "test complete");
@@ -127,6 +130,10 @@ public abstract class AbstractWebSocketServerIntegrationTest extends AbstractMet
             }
             this.webSocket = null;
         }
+    }
+
+    @AfterAll
+    public void teardownWsSpace() {
         if (this.space != null) {
             Router.global().removeSpace(this.space.vid());
             Router.global().removeSpace(WEB_ISA_TID);

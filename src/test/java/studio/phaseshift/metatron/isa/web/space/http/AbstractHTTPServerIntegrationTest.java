@@ -18,9 +18,10 @@
 
 package studio.phaseshift.metatron.isa.web.space.http;
 
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -49,6 +50,7 @@ import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
  * </pre>
  * Everything — host, port, routes, vid — is derived from the returned space.
  */
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class AbstractHTTPServerIntegrationTest extends AbstractMetatronTest {
 
     protected httpSpace space;
@@ -91,7 +93,7 @@ public abstract class AbstractHTTPServerIntegrationTest extends AbstractMetatron
     // ========================================
     // Lifecycle
     // ========================================
-    @BeforeEach
+    @BeforeAll
     public void setupHTTPSpace() {
         InstSet.importInstSet(WEB_ISA_TID);
         this.space = createHTTPSpace();
@@ -105,7 +107,7 @@ public abstract class AbstractHTTPServerIntegrationTest extends AbstractMetatron
         this.httpClient = HttpClient.newHttpClient();
     }
 
-    @AfterEach
+    @AfterAll
     public void teardownHTTPSpace() {
         if (this.httpClient != null) {
             this.httpClient.close();
