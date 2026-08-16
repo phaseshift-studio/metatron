@@ -32,10 +32,7 @@ import studio.phaseshift.metatron.isa.m.parser.mParser;
 
 import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotSame;
-import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.algebra.Form.PLUS_MONOID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -116,7 +113,7 @@ public class LstTest extends AbstractAlgebraTest<Lst> {
             "{2}[a,b,c]>>{<100>,{23}<1>,34}                                             % {46}b",
             "{2}[a,b,c]>>{<0>,{23}<1/>,<2>}                                             % {{2}a,{46}<1>=>b,{2}c}",
             "{2}[a,b,c]>>{<0>,{23}<1/>,<2>}                                             % {2}[a,{23}<1>=>b,c]>-",
-            "{2}[a,b,c]>>{<0>,<1>,2}.<<                                                 % {6}[a,b,c]",
+            "{2}[a,b,c]>>{<0>,<1>,2}.<<                                                 % {6}<>",
             "{2}[a,b,{4}c]>>2                                                           % {8}c",
             // "{2}[a=>1,b=>2,c=>3]>>{a,{23}b/,c}.<<                                       % {25}[a=>1,b=>2,c=>3]", // TODO: review: is this the semantics we want?
     }, delimiter = '%')
