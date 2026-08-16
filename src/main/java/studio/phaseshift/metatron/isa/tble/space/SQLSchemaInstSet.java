@@ -22,6 +22,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
+import studio.phaseshift.metatron.isa.tble.tbleSpace;
 
 import java.util.Collection;
 
@@ -47,6 +48,11 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  */
 public class SQLSchemaInstSet extends AbstractInstSet {
 
+    /** The owning tbleSpace — set only on the eager empty placeholder so its first read can
+     *  lazily trigger the expensive table-mapping discovery.  The populated instset (built by
+     *  {@code ensureTableMapping}) has no back-reference. */
+    private final tbleSpace space;
+
     /**
      * Create a schema instset for a SQL database.
      *
@@ -56,10 +62,32 @@ public class SQLSchemaInstSet extends AbstractInstSet {
      *                  stores them in TYPE_TABLE locally
      */
     public SQLSchemaInstSet(final fURI schemaVid, final Collection<Type> types) {
+        this(schemaVid, types, null);
+    }
+
+    /** The eager empty placeholder — carries a back-reference to its tbleSpace for lazy population. */
+    public SQLSchemaInstSet(final fURI schemaVid, final Collection<Type> types, final tbleSpace space) {
         super(mutableMap(
                 uri(PATTERN), uri(schemaVid.extend(ALL)),
                 uri(TYPE), lst(types.stream().map(t -> (Obj) t).toList())
         ), INSTSET_TID, schemaVid);
+        this.space = space;
+    }
+
+    @Override
+    public Obj read(final fURI pattern) {
+        // An empty placeholder means the table-mapping discovery hasn't run yet: trigger it
+        // through the parent (which swaps in the populated instset), then delegate — but only
+        // when the walk actually produced a different instset.  If it didn't (a prior partial
+        // failure early-returns, or the database has no tables), fall through to the empty
+        // result rather than re-triggering forever.  Keeps the expensive catalog walk lazy
+        // while making */…/instset/+ reads self-sufficient.
+        if (null != this.space && this.types().isEmpty()) {
+            final SQLSchemaInstSet current = this.space.schemaInstset();
+            if (current != this)
+                return current.read(pattern);
+        }
+        return super.read(pattern);
     }
 
     @Override

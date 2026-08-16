@@ -239,7 +239,7 @@ public class ConceptFeature extends AbstractFeature {
         };
         if (content == null) return lst();
         final Lst skills = lst(rec(mutableMap(uri(NAME), uri(CONCEPT),
-                uri(DESC), str("In situ concept graph construction w/ spreading activation recommendation"),
+                uri(DESC), str("in situ concept graph construction w/ spreading activation recommendation"),
                 uri(CONTENT), str(content),
                 uri(TOOL), lst(
                         docWrap(instC(MESSAGES_INST_TID.dom(ALL.maybe()).rng(STR_TID.maybeSome()),

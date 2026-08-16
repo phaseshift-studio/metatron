@@ -234,7 +234,7 @@ public interface Type extends Obj {
             return false;
         if (!rhs.asType().parentType().isRootType() && !this.test(rhs.asType().parentType()))
             return false;
-        if (rhs.asType().isBaseType() && !this.baseType().test(rhs.tid()))
+        if (rhs.asType().isBaseType() && !this.baseTypeID().test(rhs.tid()))
             return false;
         if (rhs.tid().isGeneric())
             return !this.tid().isGeneric() || (this.c().within(rhs.c()) && this.tid().basePath().equals(rhs.tid().basePath()));
@@ -477,9 +477,9 @@ public interface Type extends Obj {
         public static boolean nominalTypeChecker(final Obj obj, final Type type) {
             Type objType = Obj.Helper.specificType(obj);
             final fURI nominalVID = type.vid();
-            if (!obj.baseType().test(type.baseType()))
+            if (!obj.baseTypeID().test(type.baseTypeID()))
                 return false;
-            if (objType.isBaseType() && objType.vid().test(type.baseType()))
+            if (objType.isBaseType() && objType.vid().test(type.baseTypeID()))
                 return true;
             while (true) {
                 // LOG.warn("checking %s is a %s",objType, type);
@@ -536,7 +536,7 @@ public interface Type extends Obj {
                 if (!lhs.test(rhs.asType().parentType()))
                     return false;
                 if (lhs.asType().isBaseType())
-                    return lhs.baseType().test(rhs.tid()) &&
+                    return lhs.baseTypeID().test(rhs.tid()) &&
                             (!rhs.asType().hasPredicate() || Objects.equals(lhs.asType().predicate(), rhs.asType().predicate())); // matches any abstract type to it's base type as long as within the coefficient boundaries
                 if (rhs.tid().isGeneric())
                     return !lhs.tid().isGeneric() ||
@@ -557,9 +557,9 @@ public interface Type extends Obj {
                     return false;
                 if (lhs.isObjs() && lhs.stream().allMatch(o -> o.test(rhs.asType().hasPredicate() ? rhs : rhs.tid(rhs.tid().c(o.c())))))
                     return true;
-                if (rhs.asType().isBaseType() && !lhs.baseType().test(rhs.tid()))
+                if (rhs.asType().isBaseType() && !lhs.baseTypeID().test(rhs.tid()))
                     return false;
-                return !rhs.asType().hasPredicate() || (!rhs.asType().predicate().apply(lhs.clone().selfTID(lhs.baseType())).isNothing()); // selfTID() prevents infinite recursion on type checking
+                return !rhs.asType().hasPredicate() || (!rhs.asType().predicate().apply(lhs.clone().selfTID(lhs.baseTypeID())).isNothing()); // selfTID() prevents infinite recursion on type checking
             } else {
                 return lhs.test(rhs);
             }

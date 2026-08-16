@@ -119,7 +119,7 @@ public class ScoringInstResolver implements InstResolver {
                 .filter(Obj::isObjInst)
                 .map(Obj::asInst)
                 .filter(i -> (i.args().isEmpty() && userInst.args().isEmpty()) || i.args().isRec() || i.args().count() >= userInst.args().count())
-                .filter(i -> !lhs.isInst() || (i.dom().baseType().equals(M_ISA_INST_TID)))
+                .filter(i -> !lhs.isInst() || (i.dom().baseTypeID().equals(M_ISA_INST_TID)))
                 .toList();
 
         if (viable.isEmpty())

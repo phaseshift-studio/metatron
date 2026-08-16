@@ -40,10 +40,8 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.Code.CODE_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Inst.INST_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.Type.TYPE_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBytes.bytes;
@@ -259,7 +257,7 @@ public class ObjJSONSerializer extends AbstractObjSerializer<JsonElement> {
 
         if (getDensity() == Density.OPAQUE && (obj.isObjs() || !obj.type().isBaseType() || obj.vid() != null)) {
             JsonObject envelope = new JsonObject();            // Use base type path without aggressive redirection to preserve shortcuts like '#'
-            String bidStr = obj.baseType().basePath().toString();
+            String bidStr = obj.baseTypeID().basePath().toString();
             if (bidStr.isEmpty() || bidStr.equals("#"))
                 envelope.add(BID_KEY, new JsonPrimitive(bidStr));
             else if (obj.isLst())
@@ -279,7 +277,7 @@ public class ObjJSONSerializer extends AbstractObjSerializer<JsonElement> {
         reader.setStrictness(Strictness.LENIENT);
         return single().read(JsonParser.parseReader(reader));
     }
-    
+
     @Override
     public Obj inputBytes(ByteBuffer bytes) throws MTronException {
         return parse(new String(bytes.array(), StandardCharsets.UTF_8));

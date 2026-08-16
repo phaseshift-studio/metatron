@@ -81,7 +81,7 @@ public abstract class AbstractMetatronTest {
         final Obj a = ObjmtronSerializer.parse(lhs);
         final Obj b = ObjmtronSerializer.parse(rhs);
         final boolean m = a.test(b);
-        LOG.warn("testing %s matches %s: %s [expected:%s]", a, b, m, matches);
+        LOG.debug("testing %s matches %s: %s [expected:%s]", a, b, m, matches);
         assertEquals(matches, m);
     }
 
@@ -279,7 +279,7 @@ public abstract class AbstractMetatronTest {
             Thread.sleep(milliseconds);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            LOG.warn("Network delay simulation interrupted");
+            LOG.warn("network delay simulation interrupted");
         }
     }
 
@@ -290,7 +290,7 @@ public abstract class AbstractMetatronTest {
         if (Router.loaded()) {
             return Router.global().at(uri("stats"));
         }
-        LOG.warn("Router not loaded, cannot get stats");
+        LOG.warn("router not loaded, cannot get stats");
         return noobj();
     }
 

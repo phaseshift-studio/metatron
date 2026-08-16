@@ -28,7 +28,6 @@ import java.util.Objects;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_INST_TID;
-import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 
 /**
  * Original instruction resolver that uses {@code findFirst()} selection.
@@ -54,7 +53,7 @@ public class FirstFindInstResolver implements InstResolver {
                 .filter(Obj::isInst)
                 .map(Obj::asInst)
                 .filter(i -> (i.args().isEmpty() && userInst.arg(0).isNoObj()) || i.args().isRec() || i.args().count() >= userInst.args().count())
-                .filter(i -> !lhs.isInst() || (i.dom().baseType().equals(M_ISA_INST_TID)))
+                .filter(i -> !lhs.isInst() || (i.dom().baseTypeID().equals(M_ISA_INST_TID)))
                 .map(i -> userInst.hasDom() ? i.dom(userInst.dom()) : i)
                 .map(i -> userInst.hasRng() ? i.rng(userInst.rng()) : i)
                 .map(i -> lhs.isInst() ? i : Inst.Helper.bindGenerics(lhs, i, userInst))

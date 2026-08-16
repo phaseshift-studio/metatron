@@ -22,7 +22,6 @@ import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.Real;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
@@ -34,10 +33,10 @@ import java.nio.ByteBuffer;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.Tokens.HOST;
+import static studio.phaseshift.metatron.Tokens.ON_MESSAGE;
 import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.print_;
-import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_CLIENT_TID;
 
@@ -60,7 +59,7 @@ public class WebSocketRecClient extends WebSocketClient implements Rec, Closeabl
         }
         try {
             if (this.connectBlocking(5000, TimeUnit.MILLISECONDS)) {
-                LOG.info("{{y}}%s {{g}}<=> {{y}}%s{{X}} opened", this.wsclient.getThisVID(), this.wsclient.getOtherVID());
+                LOG.debug("{{y}}%s {{g}}<=> {{y}}%s{{X}} opened", this.wsclient.getThisVID(), this.wsclient.getOtherVID());
                 return;
             }
         } catch (final Exception e) {

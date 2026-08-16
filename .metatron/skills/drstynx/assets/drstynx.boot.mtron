@@ -46,6 +46,8 @@ import(/m/vec);
 import(/m/iot);
 import(/m/dckr);
 import(/m/mach/ui);
+import(/m/ide);
+[== import(/m/ide); ==]
 [===================================================================]
 [===================================================================]
         [=====================]
@@ -74,9 +76,9 @@ fsspace::[
               safeq::[=>]],
     route => [localfs: => <~/.hermes_clone>]]@</sys/space/fs/dr>; 
 fsspace::[
-  pattern => metatronfs:#,
+  pattern => mfs:#,
   q       => [mimeq::[=>],lineq::[=>]],
-    route => [metatronfs: => <~/software/metatron/.metatron/>]]@</sys/space/fs/metatron>;  
+    route => [mfs: => <~/software/metatron/.metatron/>]]@</sys/space/fs/metatron>;  
 fsspace::[
   pattern => src:#,
   q       => [mimeq::[=>],lineq::[=>]],
@@ -229,13 +231,8 @@ agent::[
                        think          => [to => inst(a=>str::T){ @<think_widget>>>=[body=>+*a].display() }]],
     loop_feature:::::::[max_loop      => 100],                         
     comment_feature::::[              => ],
-    skill_feature::::::[skill         => [[==!(*<metatronfs:skills/agent/SKILL.md>.-<'/usr/agent'>-.
-                                            plus(*<boot/args/internal/agent_home>.as(str::T)).
-                                            sum?str<=str{*}().
-                                            as(markdown::T).
-                                            as(skill::T)),==]
-                                           metatronfs:skills/metatron, 
-                                           metatronfs:skills/mtron]],
+    skill_feature::::::[skill         => [ mfs:skills/metatron, 
+                                           mfs:skills/mtron]],
     concept_feature::::[root          => /usr/dr/concept,
                         extractor     => lucene],
     tool_feature:::::::[tool          => [!*eval,!*sql,!*codegraph]],
@@ -254,3 +251,9 @@ agent::[
 [-- end::asciidoc_tag[] --]
 [== user console ==] 
 console::[agent=>dr,header=>!*boot/args/header]@/usr/marko/console;
+[== console::[=>]@/usr/marko/console; ==]
+[==!(*<mfs:skills/agent/SKILL.md>.-<'/usr/agent'>-.
+                                            plus(*<boot/args/internal/agent_home>.as(str::T)).
+                                            sum?str<=str{*}().
+                                            as(markdown::T).
+                                            as(skill::T)),==]

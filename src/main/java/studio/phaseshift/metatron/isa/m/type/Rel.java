@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -37,6 +37,7 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.Poly.Helper.autoToggle;
 import static studio.phaseshift.metatron.isa.m.type.Poly.Helper.selectRelRecursion;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instA;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
@@ -77,15 +78,28 @@ public interface Rel extends Poly<Rel, Tuple.Pair<Obj, Obj>>, MultMonoid.O<Rel>,
         return 2;
     }
 
+    @Override
+    default <OBJ extends Obj> OBJ atDirect(final Obj key) {
+        return Rel.Helper.atToggle(this, key, false);
+    }
+
     /// /////////////////////////////////////////////////////////
     /// /////////////////////////////////////////////////////////
 
     default Obj first() {
-        return (this.c().isOne() ? this.jvm().get0() : this.jvm().get0().c(c -> c.mult(this.c()))).autoResolve(this);
+        return this.firstDirect().autoResolve(this);
     }
 
     default Obj second() {
-        return (this.c().isOne() ? this.jvm().get1() : this.jvm().get1().c(c -> c.mult(this.c()))).autoResolve(this);
+        return this.secondDirect().autoResolve(this);
+    }
+
+    default Obj firstDirect() {
+        return this.c().isOne() ? this.jvm().get0() : this.jvm().get0().c(c -> c.mult(this.c()));
+    }
+
+    default Obj secondDirect() {
+        return this.c().isOne() ? this.jvm().get1() : this.jvm().get1().c(c -> c.mult(this.c()));
     }
 
     default Rel first(final Obj key) {
@@ -108,27 +122,7 @@ public interface Rel extends Poly<Rel, Tuple.Pair<Obj, Obj>>, MultMonoid.O<Rel>,
     }*/
 
     default <O extends Obj> O at(final Obj key) {
-        if (key.isUri()) {
-            final boolean singleSegment = key.uriValue().path().size() == 1;
-            final String step = singleSegment ? key.uriValue().toString() : key.uriValue().path().getFirst();
-            O result;
-            final Uri asNode = uri(key.uriValue().asNode());
-            if (this.jvm().get0().test(asNode))
-                return (O) (key.uriValue().isBranch() ? rel(asNode, this.jvm().get1()) : this.jvm().get1()).autoResolve(this);
-            else {
-                final Obj temp = (this.jvm().get0().test(uri(f(step).asNode())) ? this.jvm().get1() : NoObj.noobj()).autoResolve(this);
-                result = (O) (key.uriValue().isBranch() ? rel(key.uriValue().asNode().toUri(), temp) : temp);
-            }
-            /// ///////////////////////////////////////////////////////////////////////////////////////////////////////
-            if (singleSegment) {
-                return result;
-            } else {
-                final fURI nextKey = key.uriValue().isBranch() ? key.uriValue().pretract(1).asBranch() : key.uriValue().pretract(1);
-                return (O) (this.jvm().get1().isPoly() ? this.jvm().get1().<Poly>as().at(uri(nextKey)) : noobj());
-            }
-        } else {
-            return (O) (this.jvm().get0().test(key) ? this.jvm().get1() : noobj());
-        }
+        return Rel.Helper.atToggle(this, key, true);
     }
 
     /*@Override
@@ -266,7 +260,7 @@ public interface Rel extends Poly<Rel, Tuple.Pair<Obj, Obj>>, MultMonoid.O<Rel>,
 
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
-                    instC(AS_INST_TID.dom(REL_TID).rng(LST_TID), lst(LST_TYPE), (lhs, inst) -> lst(List.of(lhs.asRel().jvm().get0(), lhs.asRel().jvm().get1()),inst.arg(0).vidOrTid().c(c->c.mult(lhs.c())),lhs.vid())),
+                    instC(AS_INST_TID.dom(REL_TID).rng(LST_TID), lst(LST_TYPE), (lhs, inst) -> lst(List.of(lhs.asRel().jvm().get0(), lhs.asRel().jvm().get1()), inst.arg(0).vidOrTid().c(c -> c.mult(lhs.c())), lhs.vid())),
                     instC(AS_INST_TID.dom(REL_TID).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> rec(lhs.asRel().jvm().get0(), lhs.asRel().jvm().get1())),
                     instC(MERGE_INST_TID.dom(REL_TID.maybeSome()).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> inst.arg(0).jvm(Stream.concat(lhs.stream().map(Obj::as), inst.arg(0).<Rec>as().elements().map(Obj::<Rel>as)).collect(Collectors.toMap(Rel::first, Rel::second, Obj::append, LinkedHashMap::new)))),
                     instC(SPLIT_INST_TID.dom(A).rng(REL_TID), lst(T(REL_TID)), (lhs, inst) -> rel(Tuple.Pair.with(inst.arg(0).asRel().first().apply(lhs), inst.arg(0).asRel().second().apply(lhs)), inst.arg(0).tid(), null)),
@@ -277,7 +271,7 @@ public interface Rel extends Poly<Rel, Tuple.Pair<Obj, Obj>>, MultMonoid.O<Rel>,
                     // instC(RSHIFT_INST_TID.dom(REL_TID).rng(ALL_STAR), lst(), (lhs, inst) -> lhs.<Rel>as().second()),
                     // instC(RSHIFT_INST_TID.dom(REL_TID).rng(ALL_STAR), lst(T(ALL)), (lhs, inst) -> lhs.asRel().at(inst.arg(0))),
                     instC(GET_INST_TID.dom(REL_TID).rng(A.maybe()), lst(T(ALL)), (lhs, inst) -> lhs.<Rel>as().at(inst.arg(0))),
-                    instC(SELECT_INST_TID.dom(REL_TID).rng(REL_TID.maybe()), lst(T(REL_TID)), (lhs, inst) -> selectRelRecursion(lhs.asRel(), inst.arg(0).asRel(),false)),
+                    instC(SELECT_INST_TID.dom(REL_TID).rng(REL_TID.maybe()), lst(T(REL_TID)), (lhs, inst) -> selectRelRecursion(lhs.asRel(), inst.arg(0).asRel(), false)),
                     // Ring operations
                     instC(PLUS_INST_TID.dom(REL_TID).rng(REL_TID.maybeSome()), lst(T(REL_TID.maybeSome())), (lhs, inst) -> {
                         if (inst.arg(0).isObjs()) {
@@ -328,6 +322,37 @@ public interface Rel extends Poly<Rel, Tuple.Pair<Obj, Obj>>, MultMonoid.O<Rel>,
     public static final class Helper {
         private Helper() {
             // do nothing
+        }
+
+        /**
+         * {@code at} with an auto-resolve toggle: {@code doAuto=true} resolves the matched value
+         * (the {@code at} behavior), {@code doAuto=false} returns it raw ({@code atDirect}).
+         * A rel is a pair — the first element is the key, the second is the value.
+         */
+        public static <OBJ extends Obj> OBJ atToggle(final Rel arel, final Obj key, final boolean doAuto) {
+            if (key.isUri()) {
+                final boolean singleSegment = key.uriValue().path().size() == 1;
+                final String step = singleSegment ? key.uriValue().toString() : key.uriValue().path().getFirst();
+                OBJ result;
+                final Uri asNode = uri(key.uriValue().asNode());
+                if (arel.jvm().get0().test(asNode))
+                    return autoToggle(arel,
+                            key.uriValue().isBranch() ? rel(asNode, arel.jvm().get1()) : arel.jvm().get1(), doAuto);
+                else {
+                    final Obj temp = autoToggle(arel,
+                            arel.jvm().get0().test(uri(f(step).asNode())) ? arel.jvm().get1() : NoObj.noobj(), doAuto);
+                    result = (OBJ) (key.uriValue().isBranch() ? rel(key.uriValue().asNode().toUri(), temp) : temp);
+                }
+                /// ///////////////////////////////////////////////////////////////////////////////////////////////////////
+                if (singleSegment) {
+                    return result;
+                } else {
+                    final fURI nextKey = key.uriValue().isBranch() ? key.uriValue().pretract(1).asBranch() : key.uriValue().pretract(1);
+                    return (OBJ) (arel.jvm().get1().isPoly() ? arel.jvm().get1().<Poly>as().at(uri(nextKey)) : noobj());
+                }
+            } else {
+                return autoToggle(arel, arel.jvm().get0().test(key) ? arel.jvm().get1() : noobj(), doAuto);
+            }
         }
 
         public static Obj rshiftRel(final Rel lhs, final Obj arg) {

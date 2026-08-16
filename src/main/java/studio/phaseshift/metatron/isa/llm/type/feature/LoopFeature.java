@@ -87,7 +87,7 @@ public class LoopFeature extends AbstractFeature {
                 .replace("%%%1", this.maxLoops > 0 ? this.maxLoops + "" : "<no limit>")
                 .replace("%%%2", this.maxTimeMillis > 0 ? this.maxTimeMillis + "" : "<no limit>");
         return lst(rec(uri(NAME), uri("loop"),
-                uri(DESC), str("Multi-pass reasoning loop with iteration control and polling support"),
+                uri(DESC), str("multi-pass reasoning loop with iteration control and polling support"),
                 uri(CONTENT), str(instructions)));
     }
 
@@ -166,7 +166,7 @@ public class LoopFeature extends AbstractFeature {
     @Override
     public void onError(final Agent agent, final Fail fail) {
         this.iterations.add(rec(
-                uri("iteration"), jnt(this.loopCount + 1),
+                uri(ITERATION), jnt(this.loopCount + 1),
                 uri(ERROR), fail.isNoObj() ? noobj() : fail));
         agent.at(LOOP_RESULTS, lst(this.iterations.stream().map(r -> (Obj) r).toList()), MUTABLE);
     }

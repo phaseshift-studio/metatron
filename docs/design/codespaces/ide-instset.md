@@ -78,3 +78,43 @@ Top three for v1 (highest agent value): **`cs_errors`** (collapse the verify loo
 ## Relation to codeSpace design
 
 Supersedes the custom `codeSpace::T` class idea. The structural-URI approach (`cs:.../classes/{name}/...`) becomes inst-level navigation (`cs_find(project, "Class.method")` → the rec) — arguably better for agents: they call high-level functions rather than hand-constructing URIs. The `cs_java::T` coarse schema (ObjJavaCSSerializer), lockq, lineq (replace/delete/append/insert), and the reparse watcher all carry over.
+
+## The auto instruction family — `!` vs `!*`
+
+There are two distinct auto forms, and they are not interchangeable:
+
+- **`!`** = `auto(inst())` — auto-**applies** an **instruction**. A field declared `str::T` can hold `!inst?str<=(){...}` and the type holds: dereferencing executes the inst and yields a value of its rng type.
+- **`!*`** = `auto(from())` — auto-**froms** a **uri**. `!*<uri>` dereferences to the value stored at that uri — used for lazy references where you want the uri *resolved*, not an inst *executed*.
+
+> General rule: `!inst::T` is type-compatible with the inst's **rng** — on access, auto-resolution applies the inst and yields a value of its rng type. A field declared `str::T` (or `cs_result::T`) can hold `!inst?str<=(){...}` and dereferencing guarantees the declared type.
+
+```
+[name => str::T]                    # field declared str::T
+[name => !inst?str<=(){...}]        # holds an auto-applied inst whose rng is str
+*rec/name                           # deref → executes → str::T ✓
+```
+
+## The `cs_project::T` command palette — deref = execute
+
+`build`/`test` map command-name uris to the **outcome type** (`cs_result::T`); the stored value is a `!inst` that *is* the command run:
+
+```
+build => [
+  mvn_test => !inst?cs_result<=noobj{0}(){ ... },   # ! — auto of the inst (executes on deref)
+  clean    => !inst?cs_result<=noobj{0}(){ ... },
+]
+```
+
+`*/usr/marko/dev/ide/build/mvn_test` resolves the uri → auto-applies the inst → the test runs → `cs_result::T`. **Resolving the uri triggers the act of building.** The field type is what you get (`cs_result::T`); the value is the lazy action.
+
+## Lazy `output` — `!*` to a minted uri
+
+The `output` field of `cs_result::T` is declared `str{*}::T` but holds a **`!*` auto-from ref** to a minted temp uri where the line-stream is stored (see `csRunner`). Only on access (`>>output`) does auto-from pull the stream from the temp uri — the result rec stays compact, and paging (`>>output.limit(10)`, `>>output.range(10,50)`) works on the materialized stream.
+
+```
+output => str{*}::T                 # declared str{*} — the line-stream type
+output => !*</sys/tmp/<id>>          # !* — auto-from of the uri, derefs to the stored stream
+>>output.limit(10)                  # deref materializes; paging works on the stream
+```
+
+Two lazy forms, one rule each: **`!` executes an inst; `!*` resolves a uri.** The `cs_project` palette uses `!inst` (each key is a runnable command); the `cs_result` output uses `!*` (a deferred uri read). This is what lets a `cs_result` carry a potentially-large output without materializing it until an agent asks.
