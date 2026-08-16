@@ -243,6 +243,7 @@ agent::[
                                                                         left=>-2,top=>8,foreground =>"{{y}}"]]@<audit_widget> },
                         to            => inst(a=>str::T){ @<audit_widget>>>=[body=>+*a].display() }],
     system_feature:::::[              => ],
+    complete_feature:::[on_complete_response => inst?#{*}<=#{?}(){ {@<audit_widget>,@<think_widget>} >>= [body=>""] } ],
     cost_feature:::::::[root          => /usr/dr/cost,
                         to            => inst(in_cost=>real::T,out_cost=>real::T,total_cost=>real::T){ 
                                            /usr/marko/console/status("cost total: ${*2} [in: ${*0} out: ${*1}]") },

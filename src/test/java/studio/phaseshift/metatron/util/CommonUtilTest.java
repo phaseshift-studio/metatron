@@ -24,7 +24,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
-import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.mach.io.space.fs.fsSpace;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
@@ -38,10 +37,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.PATTERN;
 import static studio.phaseshift.metatron.Tokens.ROUTE;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
@@ -93,7 +89,12 @@ public class CommonUtilTest extends AbstractMetatronTest {
         if (!Files.exists(ROOT)) return;
         try (var walk = Files.walk(ROOT)) {
             walk.sorted(Comparator.reverseOrder())
-                .forEach(p -> { try { Files.delete(p); } catch (IOException ignored) { } });
+                    .forEach(p -> {
+                        try {
+                            Files.delete(p);
+                        } catch (IOException ignored) {
+                        }
+                    });
         }
     }
 
@@ -109,7 +110,7 @@ public class CommonUtilTest extends AbstractMetatronTest {
     }
 
     @Test
-    public void testTreeConsumer()  {
+    public void testTreeConsumer() {
         final fsSpace space = FS_SPACE_TYPE.constructor().asInst().args(lst(rec(
                 uri(PATTERN), uri("local:#"),
                 uri(ROUTE), rec(uri("local:"), uri("/tmp/common_utils_test"))).vid(f("/sys/space/local")))).apply(noobj()).as();

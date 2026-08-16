@@ -838,7 +838,9 @@ public final class CommonUtil {
                                   final int depth, final boolean isLast,
                                   final Consumer<TreeEntry> consumer) {
         final Obj obj = Router.readFromSpace(uri);
-        final String name = uri.name();
+        // Directories carry the trailing / (a branch); the display name is the last real
+        // segment, so strip the branch marker before naming (keep the branch uri for navigation).
+        final String name = uri.asNode().name();
 
         final java.util.List<fURI> childUris = new java.util.ArrayList<>();
         if (depth < maxDepth || forceExpand.contains(uri)) {
@@ -852,7 +854,7 @@ public final class CommonUtil {
                         final Rel rel = o.asRel();
                         childUris.add(rel.first().uriValue());
                     });
-            childUris.sort(java.util.Comparator.comparing(fURI::name));
+            childUris.sort(java.util.Comparator.comparing(f -> f.asNode().name()));
         }
 
         consumer.accept(new TreeEntry(uri, name, obj, depth, isLast, childUris.size()));

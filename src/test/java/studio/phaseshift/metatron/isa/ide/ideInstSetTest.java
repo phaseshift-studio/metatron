@@ -33,6 +33,8 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static studio.phaseshift.metatron.Tokens.ERROR;
+import static studio.phaseshift.metatron.Tokens.STATUS;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.DOCQ;
@@ -133,9 +135,9 @@ public class ideInstSetTest extends AbstractMetatronTest {
         final Obj enriched = Router.readFromSpace(IDE_COMMAND_TID)
                 .asInst().args(rec(uri("command"), str("definitely-not-a-command-xyz"))).apply(noobj());
         final Obj result = enriched.asInst().apply(noobj());
-        assertTrue(result.isRec(), "a failed command must still emit a cs_result::T rec");
-        assertEquals(uri("failure"), result.asRec().at(uri("status")));
-        final Obj fails = result.asRec().at(uri("fails"));
+        assertTrue(result.isRec(), "a failed command must still emit a cs_result::T rec --- %s".formatted(result));
+        assertEquals(uri(ERROR), result.asRec().at(uri(STATUS)));
+        final Obj fails = result.asRec().at(uri(ERROR));
         assertTrue(fails.isLst() && !fails.asLst().elements().toList().isEmpty(),
                 "a failed command must collect the exception in fails");
     }

@@ -31,6 +31,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import static studio.phaseshift.metatron.Tokens.ERROR;
+import static studio.phaseshift.metatron.Tokens.SUCCESS;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.STR_TID;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_MILLIS_TID;
@@ -91,7 +93,7 @@ public final class CommandRunner {
             fails.add(fail(e));
         }
         final Map<Obj, Obj> map = new LinkedHashMap<>();
-        map.put(uri("status"), uri(exit == 0 && fails.isEmpty() ? "success" : "failure"));
+        map.put(uri("status"), uri(exit == 0 && fails.isEmpty() ? SUCCESS : ERROR));
         map.put(uri("runtime"), mathInstSet.normalizeTime(real((double) (System.currentTimeMillis() - start), MATH_MILLIS_TID, null)));
         if (!command.isBlank()) map.put(uri("command"), str(command));
         // the output is stored at a minted temp uri and referenced lazily — only >>output (the
@@ -101,7 +103,7 @@ public final class CommandRunner {
             Router.writeToSpace(outputURI, objs(lines));
             map.put(uri("output"), auto_from_(outputURI).tryToInst());
         }
-        if (!fails.isEmpty()) map.put(uri("fails"), lst(fails));
+        if (!fails.isEmpty()) map.put(uri(ERROR), lst(fails));
         return rec(map, ideInstSet.IDE_RESULT_TID, null);
     }
 }
