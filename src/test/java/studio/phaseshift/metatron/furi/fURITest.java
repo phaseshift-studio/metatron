@@ -27,7 +27,6 @@ import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Uri;
-import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.*;
@@ -1143,6 +1142,10 @@ public class fURITest extends AbstractMetatronTest {
 
     @ParameterizedTest
     @CsvSource(value = {
+            // "http://localhost:80/a/b/c       |[a,b,c]",
+            // "http://localhost:80/a/b/c/      |[a,b,c,<>]",
+            // "http://localhost:80//a/b/c      |[<>,a,b,c]",
+            // "http://localhost:80//a/b/c/     |[<>,a,b,c,<>]",
             "a/b/c{2}                |[a,b,c]",
             "a/b/c                   |[a,b,c]",
             "a/b/c{*}                |[a,b,c]",
@@ -1358,7 +1361,7 @@ public class fURITest extends AbstractMetatronTest {
         assertEquals(penultimate, parse.segments(parse.segmentLength() - 2, ""));
 
     }
-    
+
     @ParameterizedTest
     @CsvSource(value = {
             "/a/b#",
@@ -1377,7 +1380,7 @@ public class fURITest extends AbstractMetatronTest {
             "test:/a/b/c     | #               | ",
             "test:/a/b/c     | test:/a/b/c     | ",
             "test:/a         | test:/a         | ",
-          //  "test:/a/b/c     | test:/a/b       | /c",
+            //  "test:/a/b/c     | test:/a/b       | /c",
             "test:/a/b/c     | test:#          | ",
             "test:/a/b/c     | test:/d/#       | test:/a/b/c",
             "test:/a/b/c     | test:/a/b/      | c",

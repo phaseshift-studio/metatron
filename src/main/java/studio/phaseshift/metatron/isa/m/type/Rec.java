@@ -31,6 +31,7 @@ import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.map_;
@@ -370,8 +371,13 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
                         fURI furi = fURI.Singleton.empty();
                         if (lhsRec.has(SCHEME))
                             furi = furi.scheme(lhsRec.at(SCHEME).asUri().uriValue().toString());
+                        if (lhsRec.has(f(SUB)))
+                            return uri(lhsRec.at(SUB).uriValue().subdomain());
+                        //  else if (k.equals(f(AUTHORITY)))
+                        // return uri(f(this.uriValue().host()).port(this.uriValue().port()));
                         if (lhsRec.has(HOST))
                             furi = furi.host(lhsRec.at(HOST).asUri().uriValue().toString());
+
                         if (lhsRec.has(PORT))
                             furi = furi.port(lhsRec.at(PORT).asInt().intValue().intValue());
                         if (lhsRec.has(PATH))

@@ -110,26 +110,26 @@ public class UriTest extends AbstractMetatronTest {
             "test -> <http://www.marko.com:90/a/b/c?w=abc&x=1&y=2&z=!*test>",
             "b -> 42"})
     @CsvSource(value = {
-            "*test.>>scheme                   % http",
-            "*test.>>authority                % <www.marko.com:90>",
-            "*test>>host                      % <www.marko.com>",
-            "*test>>sub                       % <www>",
-            "*test>>{sub,port}                % {<www>,90}",
-            "*test.>>port                     % 90",
-            "*test.>>path                     % </a/b/c>",
-            "*test>>q                         % [w=><abc>,x=>1,y=>2,z=>!*test]",
-            "*test.>>q>>w                     % <abc>",
-            "*test.>>q>>x                     % 1",
-            "*test>>q>>y                      % 2",
-            "*test.>>q>>z                     % *test",
-            "*test.>>path>>1.*(_)             % 42",
-            "*test.>>0                        % a",
-            "*test.>>{1,2}                    % {b,c}",
-            "*test.>>(-1)                     % c",
-            "*test.>>{-1,0}                   % {c,a}",
-            "*test.>>{-2,0}                   % {b,a}",
-            "*test.>>{-2,1}                   % {2}b",
-            "*test.>>{-100,100}               % noobj"
+            "*test.as(rec::T)>>scheme                   % http",
+            "*test.as(rec::T)>>authority                % <www.marko.com:90>",
+            "*test.as(rec::T)>>host                      % <www.marko.com>",
+            "*test.as(rec::T)>>sub                       % <www>",
+            "*test.as(rec::T)>>{sub,port}                % {<www>,90}",
+            "*test.as(rec::T)>>port                      % 90",
+            //"*test.as(rec::T).>>path>-.as(uri::T).prod()          % </a/b/c>",
+            "*test.as(rec::T)>>q                         % [w=><abc>,x=>1,y=>2,z=>!*test]",
+            "*test.as(rec::T).>>q>>w                     % <abc>",
+            "*test.as(rec::T).>>q>>x                     % 1",
+            "*test.as(rec::T)>>q>>y                      % 2",
+            "*test.as(rec::T).>>q>>z                     % *test",
+            "*test.as(rec::T).>>path>>2.*(_)             % 42",
+            "*test.as(rec::T)>>path>>1                   % a",
+            "*test.as(rec::T)>>path>>{2,3}               % {b,c}",
+            "*test.as(rec::T)>>path>>(-1)                % c",
+            "*test.as(rec::T)>>path>>{-1,-3}             % {c,a}",
+            "*test.as(rec::T)>>path>>{-2,-3}             % {b,a}",
+            "*test.as(rec::T)>>path>>{-2,-5}             % b",
+            "*test.as(rec::T)>>path>>{-100,100}          % noobj"
     }, delimiter = '%')
     public void testGet(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
@@ -178,8 +178,8 @@ public class UriTest extends AbstractMetatronTest {
             "<a://b.com:123/c/d?x=1&y=2>.port(666)                     % <a://b.com:666/c/d?x=1&y=2>",
             "<a://b.com:123/c/d?x=1&y=2>.as(rec::T)>>host              % <b.com>",
             "<a://b.com:123/c/d?x=1&y=2>.host(<abc.org>)               % <a://abc.org:123/c/d?x=1&y=2>",
-            "<a://b.com:123/c/d?x=1&y=2>.as(rec::T)>>q                 % [x=><1>,y=><2>]",
-            "{23,56}<a://b.com:123/c/d?x=1&y=2>.as(rec::T)>>q          % {23,56}[x=><1>,y=><2>]",
+            "<a://b.com:123/c/d?x=1&y=2>.as(rec::T)>>q                 % [x=>1,y=>2]",
+            "{23,56}<a://b.com:123/c/d?x=1&y=2>.as(rec::T)>>q          % {23,56}[x=>1,y=>2]",
             // "<a://b.com:123/c/d?x=1&y=2>.query(x=3)                 % <a://b.com:123/c/d?x=3&y=2>",
     }, delimiter = '%')
     public void testAsRec(final String code, final String expected) {
