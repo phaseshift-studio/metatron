@@ -36,6 +36,7 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.Poly.Helper.autoToggle;
 import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code;
@@ -109,6 +110,11 @@ public interface Lst extends Poly<Lst, List<Obj>>, PlusMonoid.O<Lst> {
         return this.indexedStream().map(Rel::first);
     }
 
+    @Override
+    default <OBJ extends Obj> OBJ atDirect(final Obj key) {
+        return Lst.Helper.atToggle(this, key, false);
+    }
+
     default Lst at(final Obj key, final Obj value, final BiFunction<Poly<?, ?>, Object, Poly<?, ?>> operation) {
         if (key.isInt()) {
             final int keyIndex = key.intValue().intValue();
@@ -144,47 +150,7 @@ public interface Lst extends Poly<Lst, List<Obj>>, PlusMonoid.O<Lst> {
 
     @Override
     default <OBJ extends Obj> OBJ at(final Obj key) {
-        final cInt cKey = key.c();
-        if (key.isInt())
-            return (OBJ) (key.intValue() < 0 ?
-                    ((this.jvm().size() + 1 > (-1 * key.intValue())) ? this.jvm().get((int) (this.jvm().size() + key.asInt().intValue())) : noobj()) :
-                    ((this.jvm().size() > key.intValue()) ? this.jvm().get(key.asInt().intValue().intValue()) : noobj())
-                            .autoResolve(this)
-                            .parent(this)
-                            .c(c -> c.mult(cKey)));
-        else if (key.isUri()) {
-            // LOG.info("key: %s", key);
-            // if (key.uriValue().isEmpty())
-            //            return this.c(c -> c.mult(cKey)).as();
-
-            if (key.uriValue().segmentLength() == 0)
-                return (OBJ) noobj();
-            final String step = key.uriValue().segments().getFirst();
-            final boolean isBranch = key.uriValue().isBranch();
-            Stream<Obj> result;
-            // LOG.info("step: %s", step);
-            if (step.equals(Singleton.WILD_ONE.toString()) || step.equals(ALL.toString())) {
-                result = isBranch ? (Stream) this.indexedStream() : this.elements();
-            } else {
-                if (!CommonUtil.isInt(step))
-                    return (OBJ) noobj();
-                //throw MTronException.of("path segment is not an int: %s", step);
-                final Int k = jnt(Long.parseLong(step));
-                if (this.jvm().size() <= k.intValue().intValue())
-                    return (OBJ) noobj();
-                result = isBranch ? Stream.of(rel(uri(step), this.at(k.intValue().intValue()))) : Stream.of(this.at(k.intValue().intValue()));
-            }
-            if (key.uriValue().segmentLength() == 1) {
-                return (OBJ) objs(result.filter(x -> !x.isNoObj()).map(x -> x.c(c -> c.mult(cKey)).parent(this)));
-            } else {
-                return (OBJ) objs(result.filter(x -> !x.isNoObj()).filter(Obj::isPoly).map(x -> (Poly<?, ?>) x.c(c -> c.mult(cKey)).parent(this))
-                        .map(r -> isBranch ?
-                                r.at(uri(key.<Uri>as().uriValue().pretract(1).asBranch())) :
-                                r.at(uri(key.<Uri>as().uriValue().pretract(1)))));
-            }
-        } else {
-            throw MTronException.of("unknown key for lst: %s", key);
-        }
+        return Lst.Helper.atToggle(this, key, true);
     }
 
     @Override
@@ -281,6 +247,50 @@ public interface Lst extends Poly<Lst, List<Obj>>, PlusMonoid.O<Lst> {
 
         private Helper() {
             // do nothing
+        }
+
+        public static <OBJ extends Obj> OBJ atToggle(final Lst alst, final Obj key, final boolean doAuto) {
+            final cInt cKey = key.c();
+            if (key.isInt())
+                return (OBJ) autoToggle(alst, key.intValue() < 0 ?
+                        ((alst.jvm().size() + 1 > (-1 * key.intValue())) ? alst.jvm().get((int) (alst.jvm().size() + key.asInt().intValue())) : noobj()) :
+                        ((alst.jvm().size() > key.intValue()) ? alst.jvm().get(key.asInt().intValue().intValue()) : noobj()), doAuto)
+                        .c(c -> c.mult(cKey));
+            else if (key.isUri()) {
+                // LOG.info("key: %s", key);
+                // if (key.uriValue().isEmpty())
+                //            return this.c(c -> c.mult(cKey)).as();
+
+                if (key.uriValue().segmentLength() == 0)
+                    return (OBJ) noobj();
+                final String step = key.uriValue().segments().getFirst();
+                final boolean isBranch = key.uriValue().isBranch();
+                Stream<Obj> result;
+                // LOG.info("step: %s", step);
+                if (step.equals(Singleton.WILD_ONE.toString()) || step.equals(ALL.toString())) {
+                    result = isBranch ? (Stream) alst.indexedStream() : alst.elements();
+                } else {
+                    if (!CommonUtil.isInt(step))
+                        return (OBJ) noobj();
+                    //throw MTronException.of("path segment is not an int: %s", step);
+                    final Int k = jnt(Long.parseLong(step));
+                    if (alst.jvm().size() <= k.intValue().intValue())
+                        return (OBJ) noobj();
+                    result = isBranch ? Stream.of(rel(uri(step),
+                            autoToggle(alst, alst.jvm().get(k.intValue().intValue()), doAuto))) :
+                            Stream.of(autoToggle(alst, alst.jvm().get(k.intValue().intValue()), doAuto));
+                }
+                if (key.uriValue().segmentLength() == 1) {
+                    return (OBJ) objs(result.filter(x -> !x.isNoObj()).map(x -> x.c(c -> c.mult(cKey)).parent(alst)));
+                } else {
+                    return (OBJ) objs(result.filter(x -> !x.isNoObj()).filter(Obj::isPoly).map(x -> (Poly<?, ?>) x.c(c -> c.mult(cKey)).parent(alst))
+                            .map(r -> isBranch ?
+                                    r.at(uri(key.<Uri>as().uriValue().pretract(1).asBranch())) :
+                                    r.at(uri(key.<Uri>as().uriValue().pretract(1)))));
+                }
+            } else {
+                throw MTronException.of("unknown key for lst: %s", key);
+            }
         }
 
         public static Obj rshiftLst(final Lst lhs, final Obj arg) {

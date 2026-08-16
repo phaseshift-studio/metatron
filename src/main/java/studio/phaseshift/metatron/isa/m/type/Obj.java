@@ -282,7 +282,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
         Type lhsType = Obj.Helper.specificType(this);
         final Type rhsType = Obj.Helper.specificType(rhs);
         if (lhsType.isBaseType())
-            return lhsType.baseType().test(rhsType.baseType());
+            return lhsType.baseTypeID().test(rhsType.baseTypeID());
         while (true) {
             if (lhsType.vid().test(rhsType.vid()))
                 return true;
@@ -319,7 +319,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
         return T(this.tid());
     }
 
-    default fURI baseType() {
+    default fURI baseTypeID() {
         if (this.type().isRootType()) return ALL.c(this.c());
         else if (this.isBool()) return BOOL_TID.c(this.c());
         else if (this.isBytes()) return BYTES_TID.c(this.c());
@@ -338,7 +338,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
             final Type parent = this.asType().parentType();
             if (parent.isBaseType())
                 return parent.tid();
-            else return parent.baseType();
+            else return parent.baseTypeID();
         }
        /* else if (this.isType()) {
             if(null != this.vid()) {
@@ -829,7 +829,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
         }
 
         public static boolean isAuto(final Obj obj) {
-            return obj.isObjCall() && obj.tid().basePath().toString().startsWith("auto");
+            return obj.isObjCall() && obj.asCall().insts().getFirst().tid().basePath().toString().startsWith("auto");
         }
 
         /**
@@ -864,8 +864,10 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
 
             // ── ObjCall handling ──
             if (rhs.isObjCall() && !rhs.asCall().isPredicate(lhs)) {
-                return Obj.Helper.specificType(lhs).test(rhs.dom()) && Obj.Helper.specificType(lhs).test(rhs.rng());
-                //return true;
+                if (false)
+                    return (Obj.Helper.specificType(lhs).test(rhs.dom()) &&
+                            Obj.Helper.specificType(lhs).test(rhs.rng()));
+                return true;
             }
 
             // ── non-base type with TID→VID match: predicate-aware early exit ──
@@ -993,12 +995,12 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                         throw new TypeMismatchException(obj, obj.type(),
                                 "obj does not match %s::T\n%s\n%s\n%s\n%s\n%s",
                                 obj.tid(),
-                                indent(obj.tid(obj.baseType()).toString(), 2),
+                                indent(obj.tid(obj.baseTypeID()).toString(), 2),
                                 indent("X=>", 6),
                                 indent(obj.type().toString(), 2), indent("-".repeat(width), 2), indent(matchDiffString, 2));
                     } else {
                         final Type attemptedType = obj.type();
-                        throw MTronException.of("%s is not a %s".formatted(obj.selfTID(obj.baseType()), attemptedType));
+                        throw MTronException.of("%s is not a %s".formatted(obj.selfTID(obj.baseTypeID()), attemptedType));
                     }
                 }
             }

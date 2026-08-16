@@ -133,6 +133,7 @@ public class tbleSpace extends AbstractSpace<Connection> implements SchemaSpace 
     protected ObjSerializer<?> serializer;
     protected TableSchema schema;
     protected ExistingTableSchema existingTableSchema;
+    protected boolean tableMappingInitialized = false;
     protected SQLSchemaGenerator schemaGenerator;
     protected SQLSchemaInstSet schemaInstset;
     protected String databaseName;
@@ -189,6 +190,11 @@ public class tbleSpace extends AbstractSpace<Connection> implements SchemaSpace 
             this.databaseName = sjvm.getCatalog() != null ? sjvm.getCatalog() : "db";
             initializeSchema(sjvm);
             initializeTableMapping(sjvm);
+            // Eagerly register an empty schema-instset placeholder so */…/instset/+ reads
+            // always route to it (the expensive existing-table discovery stays lazy — the
+            // placeholder's first read triggers it and swaps in the populated instset).
+            this.schemaInstset = new SQLSchemaInstSet(this.vid().extend(INSTSET), List.of(), this);
+            Router.global().addSpace(this.schemaInstset);
         } catch (final SQLException ex) {
             throw MTronException.of(ex);
         }
@@ -250,16 +256,27 @@ public class tbleSpace extends AbstractSpace<Connection> implements SchemaSpace 
     }
 
     /**
-     * Sets up auto-discovery of existing SQL tables and the schema generator.
+     * Sets up table-mapping support without running the expensive catalog walk.
      *
-     * <p>When the {@code TABLE} config key is absent the space operates in pure
-     * key-value mode.  When present (even as an empty list) table mapping is
-     * enabled: JDBC metadata is scanned for existing tables, user-configured
-     * tables are merged in, and a {@link SQLSchemaInstSet} is registered with
-     * the Router in the {@code /m/} namespace for type resolution.
+     * <p>The existing-table discovery ({@link #ensureTableMapping()}) is deferred
+     * until a collection that could map to a SQL table is first accessed.  Pure
+     * key-value usage (collection {@code kv}/{@code msg}) never needs it, so this
+     * keeps per-space construction cheap for the common KV path.
      */
-    private void initializeTableMapping(final Connection conn) throws SQLException {
+    private void initializeTableMapping(final Connection conn) {
         this.existingTableSchema = new ExistingTableSchema(this, "kv_store");
+    }
+
+    /**
+     * Lazily runs the (expensive) existing-table discovery + schema-instset
+     * construction on first table-mapped access.  Idempotent.
+     */
+    private void ensureTableMapping() throws SQLException {
+        if (this.tableMappingInitialized)
+            return;
+        this.tableMappingInitialized = true;
+
+        final Connection conn = this.sjvm();
         this.existingTableSchema.initialize(conn);
         LOG.info("initialized {{g}}existing table schema{{X}} - discovered %s tables for database %s",
                 this.existingTableSchema.getTableNames().size(), null == conn.getCatalog() ? "" : conn.getCatalog());
@@ -315,9 +332,19 @@ public class tbleSpace extends AbstractSpace<Connection> implements SchemaSpace 
     }
 
     /**
-     * The schema instset — single source of truth for table types.
+     * The schema instset — single source of truth for table types.  Lazily builds it on first
+     * access (the expensive existing-table discovery stays deferred until a schema is actually
+     * requested).  A partial failure resets the mapping flag so a later call can retry.
      */
     public SQLSchemaInstSet schemaInstset() {
+        if (null == this.schemaInstset || this.schemaInstset.types().isEmpty()) {
+            try {
+                this.ensureTableMapping();
+            } catch (final SQLException e) {
+                this.tableMappingInitialized = false; // allow a later retry after a partial failure
+                throw MTronException.of(e);
+            }
+        }
         return this.schemaInstset;
     }
 
@@ -356,7 +383,9 @@ public class tbleSpace extends AbstractSpace<Connection> implements SchemaSpace 
      * to the instset instance.
      */
     public void onTableChanged(final String tableName) {
-        if (this.schemaInstset == null)
+        // The eager empty placeholder keeps schemaInstset non-null before the generator
+        // exists — both must be present to refresh a table's Type.
+        if (this.schemaInstset == null || this.schemaGenerator == null)
             return;
         final ExistingTableSchema.TableMetadata metadata =
                 this.existingTableSchema.getTableMetadata().stream()
@@ -455,13 +484,20 @@ public class tbleSpace extends AbstractSpace<Connection> implements SchemaSpace 
                 } else {
                     aligned = Space.Helper.routeFromSpace(pattern, this.routes());
 
+                    // Lazy table-mapping discovery — fired before the
+                    // type-declaration and table paths, which both require the
+                    // schema instset.  Collections that can't map to SQL tables
+                    // (kv/msg) skip the expensive catalog walk entirely.
+                    final DataPath dp = DataPath.of(f(this.databaseName).extend(aligned));
+                    if (dp.hasCollection() && isTableCandidate(dp.collection().toLowerCase()))
+                        ensureTableMapping();
+
                     // -- Collection-path type declaration ----------------
                     // Writing a Type to a collection path (no entry) is a
                     // schema declaration: place it under the schema instset
                     // namespace and write it directly.  (auto-save skips
                     // Types, so we can't rely on selfVID+objCheckAndSave.)
                     if (obj.isType() && this.schemaInstset != null) {
-                        final DataPath dp = DataPath.of(f(this.databaseName).extend(aligned));
                         if (dp.hasCollection() && !dp.hasEntry()) {
                             final fURI typeVID = this.schemaInstset.pattern()
                                     .retractPattern().extend(dp.collection());
@@ -478,7 +514,6 @@ public class tbleSpace extends AbstractSpace<Connection> implements SchemaSpace 
                         this.existingTableSchema.write(this.sjvm(), aligned, obj);
 
                     } else if (obj.isRec()) {
-                        final DataPath dp = DataPath.of(f(this.databaseName).extend(aligned));
                         final String coll = dp.collection().toLowerCase();
                         if (dp.hasEntry() && !dp.entryIsWildcard()
                                 && isTableCandidate(coll)) {
@@ -546,6 +581,10 @@ public class tbleSpace extends AbstractSpace<Connection> implements SchemaSpace 
                         return collectResults(schemaResults, pattern);*/
                 //return IteratorUtil.of();
                 //}
+
+                // Lazy table-mapping discovery (see ensureTableMapping).
+                if (dp.hasCollection() && isTableCandidate(dp.collection().toLowerCase()))
+                    ensureTableMapping();
 
                 // ── table-mapped path (entry-level) ──
                 if (this.existingTableSchema != null

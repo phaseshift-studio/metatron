@@ -85,7 +85,7 @@ public interface WebSocketObj extends Rec, Closeable {
     default void close() {
         try {
             if (null != this.getWebSocket() && !this.getWebSocket().isClosed()) {
-                this.logger().info("closing %s", this.vidOrTid());
+                this.logger().debug("closing %s", this.vidOrTid());
                 this.getWebSocket().close();
             }
         } catch (final Exception e) {

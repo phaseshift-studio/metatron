@@ -66,6 +66,8 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
 
     Poly<?, ?> zero();
 
+    <O extends Obj> O atDirect(final Obj key);
+
     <O extends Obj> O at(final Obj key);
 
     default <O extends Obj> O at(final String key) {
@@ -151,6 +153,10 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
     /// ///////////////////////////////////////////////////////////////////////////////////////
 
     class Helper {
+        public static <OBJ extends Obj> OBJ autoToggle(final Obj parent, final Obj obj, final boolean autoResolve) {
+            return (autoResolve ? obj.autoResolve(parent) : obj).parent(parent);
+        }
+
         public static Rec transformLstToRec(final Lst lhs, final fURI tid, final fURI vid) {
             return IteratorUtil.indexedStream(lhs.lstValue().iterator())
                     .map(r -> rel(jnt(r.get0()), r.get1()))
@@ -392,8 +398,8 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
                 final Obj typePredObj = Type.Helper.typePredicateObj(temp);
                 if (typePredObj.isRec())
                     result.jvm().putAll(Poly.Helper.diffRecRecursion(lhs.asRec(), typePredObj.asRec()).jvm());
-                else 
-                    result.jvm().put(lhs, Poly.Helper.diffObjRecursion(lhs,typePredObj));
+                else
+                    result.jvm().put(lhs, Poly.Helper.diffObjRecursion(lhs, typePredObj));
                 temp = temp.parentType();
             }
             return result;

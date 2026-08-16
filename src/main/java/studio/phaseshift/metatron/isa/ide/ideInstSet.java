@@ -86,7 +86,7 @@ public class ideInstSet extends AbstractInstSet {
                     uri("runtime").asUri(), TIME_TYPE,
                     uri("command").maybe().asUri(), STR_TYPE,
                     uri("root").maybe().asUri(), URI_TYPE,
-                    uri("output").maybe().asUri(), T(ALL_STAR), // str{*} — an empty stream is noobj, hence maybe
+                    uri("output").maybe().asUri(), T(ALL_STAR), // str{*} — an auto_from !* ref type-matches true
                     uri("fails").maybe().asUri(), LST_TYPE))
             .create();
 

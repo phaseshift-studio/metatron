@@ -432,7 +432,12 @@ public class BootLoader implements Rec, Feature.SelfClone {
             }
             final fURI SYS_VID = f("/sys");
             final Space sysSpace = memSpace.of(SYS_VID.extend(ALL), null);
-            sysSpace.jvm().put(uri(QPROC), lst(QCollection.docQ(), QCollection.subq(), QCollection.incrQ(), QCollection.mimeQ()));
+            sysSpace.jvm().put(uri(QPROC), lst(
+                    QCollection.docQ(),
+                    QCollection.subq(),
+                    QCollection.incrQ(),
+                    QCollection.mimeQ(),
+                    QCollection.lockQ()));
             /// CREATE A ROUTER AND ATTACH IT TO SYS
             ROUTER = new BasicRouter(SYS_VID.extend("router"));
             sysSpace.write(ROUTER.vid(), ROUTER);
@@ -440,6 +445,10 @@ public class BootLoader implements Rec, Feature.SelfClone {
             LOG.debug("router location: %s", ROUTER.vid());
             sysSpace.write("/sys/typer/stage", typer);
             sysSpace.write("/sys/rewriter", rewriter);
+            sysSpace.write("/sys/tmp", str("""
+                                           use /sys/tmp as a temporary location for objs.
+                                           note that /sys/tmp can be automatically garbage collected at any time.
+                                           """));
             // LOAD STDIO INSTRUCTIONS
            /* sysSpace.write("/sys/io/stdout", docWrap(instC(f("/sys/io/stdout").dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL.maybe())), (lhs, inst) -> {
                 final Object arg = inst.arg(0).jvm();

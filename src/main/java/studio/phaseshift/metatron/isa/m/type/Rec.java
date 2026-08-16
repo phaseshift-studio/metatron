@@ -37,6 +37,7 @@ import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.map_;
 import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.ObjFactory.LOG;
+import static studio.phaseshift.metatron.isa.m.type.Poly.Helper.autoToggle;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -140,49 +141,13 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
 
     @Override
     default <OBJ extends Obj> OBJ at(final Obj key) {
-        if (!key.isUri())
-            return this.jvm().getOrDefault(key, NoObj.noobj()).autoResolve(this).parent(this);
-        else {
-            //if (key.uriValue().isEmpty())
-            //   return this.c(c -> c.mult(key.c())).as();
-            if (key.uriValue().segmentLength() == 0)
-                return (OBJ) noobj();
-            final boolean singleSegment = key.uriValue().segmentLength() == 1;
-            final String step = singleSegment ? key.uriValue().asNode().toString() : key.uriValue().path().getFirst();
-            Obj result;
-            final Uri asNode = uri(key.uriValue().asNode());
-            final cInt cKey = key.c();
-            final boolean isBranch = key.uriValue().isBranch();
-            if (step.equals("..")) {
-                result = this.parent();
-            } else if (step.equals("+") || step.equals("#")) {
-                result = objs(isBranch ?
-                        this.jvm().entrySet().stream().map(e -> rel(e.getKey().autoResolve(this), e.getValue().autoResolve(this))).map(o -> o.c(c -> c.mult(cKey))).map(o -> o.parent(this)) :
-                        this.jvm().values().stream().map(obj -> obj.autoResolve(this)).map(o -> o.c(c -> c.mult(cKey))).map(o -> o.parent(this)));
-            } else if (this.jvm().containsKey(asNode)) {
-                return (isBranch ?
-                        rel(asNode, this.jvm().get(asNode)) :
-                        this.jvm().get(asNode).autoResolve(this)).c(c -> c.mult(cKey)).parent(this);
-            } else { // this.recValue().containsKey(uri(step))
-                final Obj temp = this.jvm().getOrDefault(uri(step), NoObj.noobj()).autoResolve(this).parent(this);
-                if (temp.isNoObj()) {
-                    return (OBJ) objs(this.jvm().entrySet()
-                            .stream()
-                            .filter(kv -> kv.getKey().isUri())
-                            .filter(kv -> kv.getKey().uriValue().test(asNode.uriValue()))
-                            .map(kv -> isBranch ? rel(kv.getKey(), kv.getValue().autoResolve(this)) : kv.getValue().autoResolve(this)));
-                } else {
-                    result = (isBranch ? rel(asNode, temp) : temp).c(c -> c.mult(cKey)).parent(this);
-                }
-            }
-            /// ///////////////////////////////////////////////////////////////////////////////////////////////////////
-            if (singleSegment) {
-                return result.parent(this).c(c -> c.mult(cKey)).as();
-            } else {
-                final fURI nextKey = isBranch ? key.uriValue().pretract(1).asBranch() : key.uriValue().pretract(1);
-                return (OBJ) objs(IteratorUtil.stream(result.iterator()).filter(Obj::isPoly).map(o -> o.parent(this).<Poly<?, ?>>as()).map(r -> r.<Poly>as().at(uri(nextKey))));
-            }
-        }
+        return Rec.Helper.atToggle(this, key, true);
+    }
+
+
+    @Override
+    default <O extends Obj> O atDirect(final Obj key) {
+        return Rec.Helper.atToggle(this, key, false);
     }
 
     @Override
@@ -195,13 +160,6 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
                 : v.append(o.jvm().get1())));
         return this.jvm(newMap);
     }
-
-   /* default Obj apply(final Obj lhs) {
-        if (lhs.isRec())
-            return Poly.Helper.applyRecRecursion(lhs.asRec(), this);
-        else return this;
-    }*/
-
 
     @Override
     default Rec vid(final fURI vid) {
@@ -248,6 +206,57 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
             // do nothing
         }
 
+        public static <OBJ extends Obj> OBJ atToggle(final Rec arec, final Obj key, final boolean doAuto) {
+            if (!key.isUri())
+                return autoToggle(arec, arec.jvm().getOrDefault(key, NoObj.noobj()), doAuto);
+            else {
+                //if (key.uriValue().isEmpty())
+                //   return this.c(c -> c.mult(key.c())).as();
+                if (key.uriValue().segmentLength() == 0)
+                    return (OBJ) noobj();
+                final boolean singleSegment = key.uriValue().segmentLength() == 1;
+                final String step = singleSegment ? key.uriValue().asNode().toString() : key.uriValue().path().getFirst();
+                Obj result;
+                final Uri asNode = uri(key.uriValue().asNode());
+                final cInt cKey = key.c();
+                final boolean isBranch = key.uriValue().isBranch();
+                if (step.equals("..")) {
+                    result = arec.parent();
+                } else if (step.equals("+") || step.equals("#")) {
+                    result = objs(isBranch ?
+                            arec.jvm().entrySet().stream().map(e -> rel(
+                                            autoToggle(arec, e.getKey(), doAuto),
+                                            autoToggle(arec, e.getValue(), doAuto)))
+                                    .map(o -> o.c(c -> c.mult(cKey))) :
+                            arec.jvm().values().stream().map(obj -> (Obj) autoToggle(arec, obj, doAuto))
+                                    .map(o -> o.c(c -> c.mult(cKey))));
+                } else if (arec.jvm().containsKey(asNode)) {
+                    return (OBJ) (isBranch ?
+                            rel(asNode, autoToggle(arec, arec.jvm().get(asNode), doAuto)) :
+                            autoToggle(arec, arec.jvm().get(asNode), doAuto)).c(c -> c.mult(cKey));
+                } else { // this.recValue().containsKey(uri(step))
+                    final Obj temp = autoToggle(arec, arec.jvm().getOrDefault(uri(step), NoObj.noobj()), doAuto);
+                    if (temp.isNoObj()) {
+                        return (OBJ) objs(arec.jvm().entrySet()
+                                .stream()
+                                .filter(kv -> kv.getKey().isUri())
+                                .filter(kv -> kv.getKey().uriValue().test(asNode.uriValue()))
+                                .map(kv -> isBranch ? rel(
+                                        kv.getKey(), autoToggle(arec, kv.getValue(), doAuto)) :
+                                        autoToggle(arec, kv.getValue(), doAuto)));
+                    } else {
+                        result = (isBranch ? rel(asNode, temp) : temp).c(c -> c.mult(cKey)).parent(arec);
+                    }
+                }
+                /// ///////////////////////////////////////////////////////////////////////////////////////////////////////
+                if (singleSegment) {
+                    return result.parent(arec).c(c -> c.mult(cKey)).as();
+                } else {
+                    final fURI nextKey = isBranch ? key.uriValue().pretract(1).asBranch() : key.uriValue().pretract(1);
+                    return (OBJ) objs(IteratorUtil.stream(result.iterator()).filter(Obj::isPoly).map(o -> o.parent(arec).<Poly<?, ?>>as()).map(r -> r.<Poly>as().at(uri(nextKey))));
+                }
+            }
+        }
 
         public static Map<Obj, Obj> cleanMap(final Map<Obj, Obj> jvm) {
             if (jvm.isEmpty())
@@ -419,7 +428,5 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
 
 
         }
-
-
     }
 }

@@ -376,6 +376,7 @@ public class llmInstSet extends AbstractInstSet {
                         Type.Builder.build()
                                 .tid(LLM_FEATURE_TID)
                                 .vid(LLM_SKILL_FEATURE_TID)
+                                // .isaPredicate(rec(SKILL, LST_TYPE))
                                 .constructor(arg -> createStageLambdas(new SkillFeature(arg.asRec().jvm(), LLM_SKILL_FEATURE_TID, arg.vid())))
                                 .create(),
                         Type.Builder.build()

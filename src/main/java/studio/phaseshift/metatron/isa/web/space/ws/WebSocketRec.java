@@ -26,7 +26,6 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Real;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
-import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.web.type.MIME;
@@ -79,7 +78,7 @@ public class WebSocketRec extends MRec implements WebSocketObj {
         }
         if (!map.containsKey(uri(CLOSE)))
             this.jvm().put(uri(CLOSE), instLambda((lhs, inst) -> {
-                this.logger().info("closing %s", this.vid());
+                LOG.debug("closing %s", this.vid());
                 this.close();
                 return noobj();
             }));
@@ -97,7 +96,7 @@ public class WebSocketRec extends MRec implements WebSocketObj {
     @Override
     public void onOpen(final WebSocket conn, final Handshakedata handshake) {
         try {
-            this.logger().info("{{y}}%s {{g}}<=> {{y}}%s{{X}} opened w/ serializers: [{{c}}in{{y}}=>{{X}}%s,{{c}}out{{y}}=>{{X}}%s]", this.vid(), this.getOtherVID(), this.getIO().input().value, this.getIO().output().value);
+            this.logger().status(DEBUG, "{{y}}%s {{g}}<=> {{y}}%s{{X}} opened w/ serializers: [{{c}}in{{y}}=>{{X}}%s,{{c}}out{{y}}=>{{X}}%s]", this.vid(), this.getOtherVID(), this.getIO().input().value, this.getIO().output().value);
             if (handshake instanceof ClientHandshake)
                 this.at(uri(ON_OPEN)).apply(uri(((ClientHandshake) handshake).getResourceDescriptor()));
             else
@@ -110,7 +109,7 @@ public class WebSocketRec extends MRec implements WebSocketObj {
     @Override
     public void onClose(final WebSocket conn, final int code, final String reason, final boolean remote) {
         try {
-            this.logger().info("{{y}}%s {{g}}<=> {{y}}%s{{X}} closed: code={{y}}%s{{X}}, reason={{y}}%s{{X}}", this.vid(), this.getOtherVID() == null ? "{{r}}noobj" : this.getOtherVID(), code, reason);
+            LOG.status(DEBUG, "{{y}}%s {{g}}<=> {{y}}%s{{X}} closed: code={{y}}%s{{X}}, reason={{y}}%s{{X}}", this.vid(), this.getOtherVID() == null ? "{{r}}noobj" : this.getOtherVID(), code, reason);
             this.at(uri(ON_CLOSE)).apply(rec(uri(CODE), jnt(code), uri(REASON), str(reason)));
             this.close();
         } catch (final Exception e) {
@@ -130,7 +129,7 @@ public class WebSocketRec extends MRec implements WebSocketObj {
     @Override
     public void onError(final WebSocket conn, final Exception ex) {
         try {
-            this.logger().error("{{y}}%s {{g}}<=> {{y}}%s{{X}} errored: %s", this.vid(), this.getOtherVID() == null ? "{{r}}noobj" : this.getOtherVID(), ex);
+            LOG.error("{{y}}%s {{g}}<=> {{y}}%s{{X}} errored: %s", this.vid(), this.getOtherVID() == null ? "{{r}}noobj" : this.getOtherVID(), ex);
             this.at(uri(ON_ERROR)).apply(fail(ex));
         } catch (final Exception e) {
             LOG.error("error processing error: %s", this.vid(), e);

@@ -87,7 +87,11 @@ public class ideInstSetTest extends AbstractMetatronTest {
         assertEquals(CS_RESULT_TID, result.tid());
         assertTrue(result.test(ideInstSet.CS_RESULT_TYPE), "a runner result must satisfy cs_result::T");
         assertEquals(uri("success"), result.asRec().at(uri("status")));
-        assertEquals("hi", result.asRec().at(uri("output")).strValue());
+        // output is a !* auto_from ref — atDirect bypasses auto_resolve; dereferencing
+        // materializes the line-stream
+        final Obj output = result.asRec().atDirect(uri("output"));
+        assertTrue(output.isInst(), "output must be a lazy !* ref, not the materialized stream");
+        assertEquals("hi", output.apply(noobj()).strValue());
         assertTrue(result.asRec().has(uri("runtime")), "runtime is a required field");
     }
 
@@ -109,7 +113,7 @@ public class ideInstSetTest extends AbstractMetatronTest {
         assertTrue(result.isRec(), "the enriched instruction must return a cs_result::T rec");
         assertEquals(CS_RESULT_TID, result.tid());
         assertEquals(uri("success"), result.asRec().at(uri("status")));
-        assertEquals("hi", result.asRec().at(uri("output")).strValue());
+        assertEquals("hi", result.asRec().atDirect(uri("output")).apply(noobj()).strValue());
     }
 
     @Test

@@ -112,9 +112,9 @@ public class uiInstSet extends AbstractInstSet {
                         docWrap(UI_CONSOLE_TYPE = Type.Builder.build()
                                 .tid(REC_TID)
                                 .vid(UI_CONSOLE_TID)
-                                //.isaPredicate(rec())
-                                .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(UI_CONSOLE_TID), lst(T(REC_TID)), (lhs, inst) -> {
-                                    final Console console = new Console(inst.arg(0).as(), inst.arg(0).vid());
+                                .isaPredicate(rec())
+                                .constructor(arg -> {
+                                    final Console console = new Console(arg.as(), arg.vid());
                                     final CommandPalette palette = new CommandPalette(console);
                                     palette.attach(rec());
                                     palette.bindKeys(console.getWidgets());
@@ -123,7 +123,7 @@ public class uiInstSet extends AbstractInstSet {
                                         return noobj();
                                     })), "console repl").applyAsync();
                                     return docWrap(console, "a user terminal repl", ":help");
-                                })).create(), "a terminal user interface"),
+                                }).create(), "a terminal user interface"),
                         docWrap(UI_ANCHOR_TYPE = Type.Builder.build()
                                 .tid(URI_TID)
                                 .vid(UI_ANCHOR_TID)
@@ -149,7 +149,7 @@ public class uiInstSet extends AbstractInstSet {
                                                 uri("width").maybe(), INT_TYPE,
                                                 uri("top").maybe(), INT_TYPE,
                                                 uri("left").maybe(), INT_TYPE))
-                                        .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(UI_STYLE_TID), lst(T(REC_TID)), (lhs, inst) -> Stylable.Style.from(inst.arg(0).asRec())))
+                                        .constructor(arg -> Stylable.Style.from(arg.asRec()))
                                         .create(), "maybe an obj", "a style obj", mutableMap(
                                         uri("border").maybe().asUri(), "the border style of the widget (e.g. border::none, border::simple, etc.)",
                                         uri("background").maybe(), "the background color of the widget",
@@ -179,12 +179,8 @@ public class uiInstSet extends AbstractInstSet {
                                         .isaPredicate(rec(
                                                 uri(TITLE).maybe().asUri(), STR_TYPE,
                                                 uri(BODY).maybe(), T(STR_TID.maybeSome())))
-                                        .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(UI_ACCORDION_TID),
-                                                lst(T(REC_TID)), (lhs, inst) -> {
-                                                    final AccordionWidget a = new AccordionWidget(inst.arg(0).asRec().jvm(), UI_ACCORDION_TID, inst.arg(0).vid());
-                                                    //Graphitty.out(Console.getTerminal().output(), a.format() + "\n");
-                                                    return a;
-                                                })).create(), "maybe an obj", "an accordion obj", Map.of(
+                                        .constructor(arg -> new AccordionWidget(arg.jvm(), UI_ACCORDION_TID, arg.vid()))
+                                        .create(), "maybe an obj", "an accordion obj", Map.of(
                                         uri(TITLE).maybe().asUri(), "the title of the accordion",
                                         uri(BODY).maybe(), "the body content of the accordion"),
                                 "an expandable/collapsible accordion widget"),
@@ -193,9 +189,7 @@ public class uiInstSet extends AbstractInstSet {
                                         .vid(UI_PROGRESS_TABLE_TID)
                                         .isaPredicate(rec(
                                                 (Obj) uri("rows").maybe(), LST_TYPE))
-                                        .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(UI_PROGRESS_TABLE_TID),
-                                                lst(T(REC_TID)), (lhs, inst) ->
-                                                        new ProgressTableWidget(inst.arg(0).recValue(), UI_PROGRESS_TABLE_TID, inst.arg(0).vid())))
+                                        .constructor(arg -> new ProgressTableWidget(arg.recValue(), UI_PROGRESS_TABLE_TID, arg.vid()))
                                         .create(),
                                 "a table of progress bars",
                                 "progress_table::[rows=>[[text=>'layer1',percent=>58.0],[text=>'layer2',percent=>23.0]]].run()"),
@@ -205,8 +199,7 @@ public class uiInstSet extends AbstractInstSet {
                                         .isaPredicate(rec(
                                                 uri(HEADER).maybe().asUri(), LST_TYPE,
                                                 uri(ROW).maybe(), T(LST_TID.maybeSome())))
-                                        .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(UI_TABLE_TID),
-                                                lst(T(REC_TID)), (lhs, inst) -> new TableWidget(inst.arg(0).asRec().jvm(), UI_TABLE_TID, inst.arg(0).vid()))).create(),
+                                        .constructor(arg -> new TableWidget(arg.asRec().jvm(), UI_TABLE_TID, arg.vid())).create(),
                                 "maybe an obj", "a table widget",
                                 Map.of(uri(HEADER).maybe().asUri(), "a lst of obj table headers",
                                         uri(ROW).maybe(), "a lst of poly table rows"),
@@ -218,9 +211,7 @@ public class uiInstSet extends AbstractInstSet {
                                                 uri(ROOT), URI_TYPE,
                                                 uri(MAX), INT_TYPE,
                                                 uri(CODE).maybe(), ALL_TYPE.orElse(id_().tryToInst())))
-                                        .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(UI_TREE_TID),
-                                                lst(T(REC_TID)), (lhs, inst) ->
-                                                        new TreeWidget(inst.arg(0).as().jvm(), UI_TREE_TID, inst.arg(0).vid())))
+                                        .constructor(arg -> new TreeWidget(arg.as().jvm(), UI_TREE_TID, arg.vid()))
                                         .create(), "maybe an obj", "a tree widget",
                                 Map.of(uri(ROOT), "the root uri to traverse from",
                                         uri(MAX), "the max depth to traverse",
@@ -230,11 +221,8 @@ public class uiInstSet extends AbstractInstSet {
                                         .tid(UI_WIDGET_TID)
                                         .vid(UI_SELECTOR_TID)
                                         .isaPredicate(rec())
-                                        .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(UI_SELECTOR_TID),
-                                                lst(T(REC_TID)), (lhs, inst) -> {
-                                                    final Selector s = new Selector(inst.arg(0).asRec().jvm(), UI_SELECTOR_TID, inst.arg(0).vid());
-                                                    return s;
-                                                })).create(), "maybe an obj",
+                                        .constructor(arg -> new Selector(arg.asRec().jvm(), UI_SELECTOR_TID, arg.vid()))
+                                        .create(), "maybe an obj",
                                 "a selector widget", Map.of(),
                                 "an interactive item selector widget"),
                         docWrap(UI_PANEL_TYPE = Type.Builder.build()
@@ -243,8 +231,7 @@ public class uiInstSet extends AbstractInstSet {
                                         .isaPredicate(rec(
                                                 uri(TITLE).maybe().asUri(), STR_TYPE,
                                                 uri(BODY).maybe(), T(STR_TID.maybeSome())))
-                                        .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(UI_PANEL_TID),
-                                                lst(T(REC_TID)), (lhs, inst) -> new PanelWidget(inst.arg(0).asRec().jvm(), UI_PANEL_TID, inst.arg(0).vid())))
+                                        .constructor(arg -> new PanelWidget(arg.asRec().jvm(), UI_PANEL_TID, arg.vid()))
                                         .create(), "rec", "panel", Map.of(
                                         uri(TITLE), "the title of the panel",
                                         uri(BODY), "the body content of the panel"),
@@ -257,9 +244,7 @@ public class uiInstSet extends AbstractInstSet {
                                                 uri(MAX), INT_TYPE,
                                                 uri(CODE).maybe(), ALL_TYPE.orElse(id_().tryToInst()),
                                                 uri("mini").maybe(), ALL_TYPE.orElse(id_().tryToInst())))
-                                        .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(UI_TREE_SELECT_TOOL_TID),
-                                                lst(T(REC_TID)), (lhs, inst) ->
-                                                        new TreeSelectTool(inst.arg(0).as().jvm(), UI_TREE_SELECT_TOOL_TID, inst.arg(0).vid())))
+                                        .constructor(arg -> new TreeSelectTool(arg.as().jvm(), UI_TREE_SELECT_TOOL_TID, arg.vid()))
                                         .create(), "maybe an obj", "a tree select tool",
                                 Map.of(uri(ROOT), "the root uri to traverse from",
                                         uri(MAX), "the max depth to traverse",
@@ -270,7 +255,7 @@ public class uiInstSet extends AbstractInstSet {
                                         .tid(UI_WIDGET_TID)
                                         .vid(UI_SWIPE_PANEL_TID)
                                         .isaPredicate(rec(uri(OBJ).maybe().asUri(), LST_TYPE))
-                                        .constructor(ctor -> new SwipePanelWidgetTool(ctor.asRec().jvm(), UI_SWIPE_PANEL_TID, ctor.vid()))
+                                        .constructor(arg -> new SwipePanelWidgetTool(arg.asRec().jvm(), UI_SWIPE_PANEL_TID, arg.vid()))
                                         .create(),
                                 "lst of objs",
                                 "a swipe panel widget tool",

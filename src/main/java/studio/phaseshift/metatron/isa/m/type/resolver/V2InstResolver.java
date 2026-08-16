@@ -19,7 +19,10 @@
 package studio.phaseshift.metatron.isa.m.type.resolver;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.m.type.Inst;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Poly;
+import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
@@ -70,7 +73,8 @@ public class V2InstResolver implements InstResolver {
     /**
      * A successfully transformed candidate with its specificity score.
      */
-    private record Match(Inst resolved, int score) {}
+    private record Match(Inst resolved, int score) {
+    }
 
     // ========================================================================
     // PUBLIC API
@@ -219,7 +223,7 @@ public class V2InstResolver implements InstResolver {
         }
 
         // --- pre-filter: inst-on-inst domain guard ---
-        if (lhs.isInst() && !apiInst.dom().baseType().equals(M_ISA_INST_TID)) {
+        if (lhs.isInst() && !apiInst.dom().baseTypeID().equals(M_ISA_INST_TID)) {
             return null;
         }
 
@@ -283,8 +287,8 @@ public class V2InstResolver implements InstResolver {
      * <p>
      * Lenient mode: only checks coefficient compatibility via {@code c().within()}.
      *
-     * @param lhs   the left-hand-side object
-     * @param dom   the instruction's domain type
+     * @param lhs    the left-hand-side object
+     * @param dom    the instruction's domain type
      * @param strict true for full type checking, false for coefficient-only
      * @return true if the LHS is compatible with the domain
      */
