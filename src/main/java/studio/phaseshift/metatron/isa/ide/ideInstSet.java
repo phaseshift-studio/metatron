@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.isa.ide;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
+import studio.phaseshift.metatron.isa.ide.parser.ObjJavaIDESerializer;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -33,7 +34,6 @@ import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.TIME_TYPE;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.union_;
-import static studio.phaseshift.metatron.isa.m.type.Inst.INST_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
@@ -41,12 +41,13 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.web.webInstSet.JAVA_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /**
  * The agent IDE instset.  Storage is a plain {@code fsSpace} with
  * {@code addQ(lineq) addQ(subq) addQ(lockq)}; the intelligence lives here:
- * Java for the heavy lifting ({@link csRunner}), thin mtron insts for the
+ * Java for the heavy lifting ({@link CommandRunner}), thin mtron insts for the
  * agent-facing surface.
  *
  * <p>Two types — the standard structure humans and agents work with:</p>
@@ -60,7 +61,7 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  * </ul>
  *
  * <p>One wrapper instruction — {@code cs_command}: given a command, produces the enriched
- * instruction that runs it through {@link csRunner}, applies the user's {@code to} conduit per
+ * instruction that runs it through {@link CommandRunner}, applies the user's {@code to} conduit per
  * output line, and returns a {@code cs_result::T}.  The user names the produced inst anything
  * and curates their own palette (e.g. {@code clean -> cs_command(command=>'mvn clean')}).</p>
  *
@@ -70,33 +71,56 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 public class ideInstSet extends AbstractInstSet {
 
     public static final fURI IDE_ISA_TID = M_ISA_TID.extend("ide");
-    public static final fURI IDE_TYPE_TID = IDE_ISA_TID.extend("type");
-    public static final fURI CS_RESULT_TID = IDE_TYPE_TID.extend("cs_result");
-    public static final fURI CS_PROJECT_TID = IDE_TYPE_TID.extend("cs_project");
+    public static final fURI IDE_RESULT_TID = IDE_ISA_TID.extend("result");
+    public static final fURI IDE_PROJECT_TID = IDE_ISA_TID.extend("project");
     public static final fURI IDE_INST_TID = IDE_ISA_TID.extend("inst");
-    public static final fURI CS_COMMAND_TID = IDE_INST_TID.extend("cs_command");
+    public static final fURI IDE_COMMAND_TID = IDE_INST_TID.extend("command");
+
+    // LANGUAGES
+
+    public static final fURI IDE_JAVA_TID = IDE_ISA_TID.extend("ide_java");
+    private static final fURI OBJ_SERIALIZER_TID = IDE_ISA_TID.extend("serializer");
+    // the coarse-schema (cs) serializer family — /m/web/serializer/cs/{lang}
+    public static final fURI OBJ_IDE_JAVA_SERIALIZER_TID = OBJ_SERIALIZER_TID.extend("obj_ide_java");
+    public static Type OBJ_IDE_JAVA_SERIALIZER_TYPE;
 
     // ── Types ────────────────────────────────────────────────────────
 
-    public static final Type CS_RESULT_TYPE = Type.Builder.build()
+    public static final Type IDE_RESULT_TYPE = Type.Builder.build()
             .tid(REC_TID)
-            .vid(CS_RESULT_TID)
+            .vid(IDE_RESULT_TID)
             .isaPredicate(rec(
-                    uri("status").asUri(), union_(lst(uri("success"), uri("failure"), uri("skipped"))),
-                    uri("runtime").asUri(), TIME_TYPE,
-                    uri("command").maybe().asUri(), STR_TYPE,
-                    uri("root").maybe().asUri(), URI_TYPE,
-                    uri("output").maybe().asUri(), T(ALL_STAR), // str{*} — an auto_from !* ref type-matches true
-                    uri("fails").maybe().asUri(), LST_TYPE))
+                    uri(STATUS), union_(lst(uri(SUCCESS), uri(ERROR), uri(HALTED))),
+                    uri(RUNTIME), TIME_TYPE,
+                    uri(COMMAND).maybe(), STR_TYPE,
+                    uri(PROJECT).maybe(), T(IDE_PROJECT_TID),
+                    uri(RESULT).maybe(), T(STR_TID.maybeSome()), // str{*} — an auto_from !* ref type-matches true
+                    uri(ERROR).maybe(), lst(T(FAIL_TID.maybe())).maybe()))
             .create();
 
-    public static final Type CS_PROJECT_TYPE = Type.Builder.build()
+    public static final Type IDE_PROJECT_TYPE = Type.Builder.build()
             .tid(REC_TID)
-            .vid(CS_PROJECT_TID)
+            .vid(IDE_PROJECT_TID)
             .isaPredicate(rec(
-                    uri("root").asUri(), URI_TYPE,
-                    uri("build").maybe().asUri(), rec(URI_TYPE, INST_TYPE),
-                    uri("test").maybe().asUri(), rec(URI_TYPE, INST_TYPE)))
+                    uri(ROOT).asUri(), URI_TYPE,
+                    uri(NAME).maybe().asUri(), STR_TYPE,
+                    uri(DESC).maybe(), STR_TYPE,
+                    uri(BUILD).maybe().asUri(), rec(URI_TYPE, IDE_RESULT_TYPE),
+                    uri(TEST).maybe().asUri(), rec(URI_TYPE, IDE_RESULT_TYPE),
+                    uri(CODE).maybe().asUri(), T(ALL))) // a !* ref to the source tree
+            .create();
+
+    public static final Type IDE_JAVA_TYPE = Type.Builder.build()
+            .tid(REC_TID)
+            .vid(IDE_JAVA_TID)
+            // top-level coarse-schema verification — the cs_java rec must expose classes (lst);
+            // package/imports/preamble/postscript are optional addressing/write views
+            .isaPredicate(rec(
+                    uri("classes").asUri(), LST_TYPE,
+                    uri("package").maybe().asUri(), STR_TYPE,
+                    uri("imports").maybe().asUri(), LST_TYPE,
+                    uri("preamble").maybe().asUri(), STR_TYPE,
+                    uri("postscript").maybe().asUri(), STR_TYPE))
             .create();
 
     public ideInstSet() {
@@ -107,26 +131,34 @@ public class ideInstSet extends AbstractInstSet {
     public void setup() {
         this.jvm().putAll(mutableMap(
                 uri(TYPE), lst(
-                        docWrap(CS_RESULT_TYPE,
+                        OBJ_IDE_JAVA_SERIALIZER_TYPE = Type.Builder.build()
+                                .tid(OBJ_SERIALIZER_TID)
+                                .vid(OBJ_IDE_JAVA_SERIALIZER_TID)
+                                .constructor(arg -> ObjJavaIDESerializer.single())
+                                .create(),
+                        docWrap(IDE_JAVA_TYPE, "a coarse rec encoding of a java source file optimized for semantic editing"),
+                        docWrap(IDE_RESULT_TYPE,
                                 "the standardized build/test/status outcome — rec::T with a union status verdict",
                                 "x>>status",
                                 "x>>output.limit(10)",
                                 "x>>runtime.normalize()"),
-                        docWrap(CS_PROJECT_TYPE,
-                                "the project descriptor — command palettes + root (the pom.xml of a metatron ide)",
-                                "cs_project::[root=><fs:/foo>,build=>[compile=><inst>]]")),
+                        docWrap(IDE_PROJECT_TYPE,
+                                "the project descriptor (the pom.xml of a metatron ide) — a project.mtron file at the project root",
+                                "cs_project::[name=>metatron,root=><fs:/foo>,code=>!*<fs:/foo/src>]")),
                 uri(INST), lst(
+                        instC(AS_INST_TID.dom(JAVA_TID).rng(IDE_JAVA_TID), lst(IDE_JAVA_TYPE), (lhs, inst) -> ObjJavaIDESerializer.parse(lhs.strValue())),
+                        instC(AS_INST_TID.dom(REC_TID).rng(IDE_JAVA_TID), lst(IDE_JAVA_TYPE), (lhs, inst) -> lhs.tid(IDE_JAVA_TID)),
                         docWrap(cs_command(),
                                 "noobj — cs_command is a factory (the lhs is unused)",
-                                "an enriched instruction that runs the command and returns cs_result::T",
+                                "an enriched instruction that runs the command and returns ide:result::T",
                                 Map.of(uri("command"), "the shell command to wrap"),
-                                "wrap a command into an enriched instruction that runs it and returns cs_result::T",
-                                "cs_command(command=>'mvn compile')         [-- an enriched build instruction --]",
-                                "cs_command([command=>'mvn -q test'])       [-- the command as a rec          --]",
-                                "my_build -> cs_command(command=>'mvn clean install')   [-- name it anything, curate a palette --]"))));
+                                "wrap a command into an enriched instruction that runs it and returns ide:result::T",
+                                "ide:command(command=>'mvn compile')                   [-- an enriched build instruction --]",
+                                "ide:command([command=>'mvn -q test'])                 [-- the command as a rec          --]",
+                                "my_build -> cs_command(command=>'mvn clean install')  [-- name it anything, curate a palette --]"))));
         super.setup();
-        docWrap(this, "the agent IDE — cs_project::T descriptors, cs_result::T outcomes, cs_command wrapped instructions",
-                "cs_command(command=>'mvn compile')");
+        docWrap(this, "the agent ide — project::T definition, build result::T and the links between them.",
+                "ide:command(command=>'mvn compile')");
     }
 
     /// ///////////////////////////////////////////////////////////////////////////////////////////
@@ -142,22 +174,22 @@ public class ideInstSet extends AbstractInstSet {
      * The wrapper: {@code cs_command(command=>str::T)} → the enriched command inst.
      */
     private static Inst cs_command() {
-        return instC(CS_COMMAND_TID.dom(ALL.maybe()).rng(M_ISA_INST_TID), rec(uri("command"), STR_TYPE),
+        return instC(IDE_COMMAND_TID.dom(ALL.maybe()).rng(M_ISA_INST_TID), rec(uri(COMMAND), STR_TYPE),
                 (lhs, inst) -> {
                     final Obj arg = inst.arg(0).isNoObj() ? inst.args() : inst.arg(0);
-                    final String command = arg.isRec() ? arg.asRec().at(uri("command")).strValue() : arg.strValue();
+                    final String command = arg.isRec() ? arg.asRec().at(uri(COMMAND)).strValue() : arg.strValue();
                     return enrich(command);
                 });
     }
 
     /**
      * The enriched instruction: a Java inst closing over the command that, on apply, runs it
-     * through {@link csRunner} — accepting the call-time {@code to} conduit and returning
+     * through {@link CommandRunner} — accepting the call-time {@code to} conduit and returning
      * {@code cs_result::T}.
      */
     private static Inst enrich(final String command) {
-        return instC(CS_COMMAND_TID.extend("runner").dom(ALL.maybe()).rng(CS_RESULT_TID),
-                rec(uri("to"), TO_CODE_TYPE),
-                (lhs, inst) -> csRunner.run(command, inst.args().at(uri("to"))));
+        return instC(IDE_COMMAND_TID.extend("runner").dom(ALL.maybe()).rng(IDE_RESULT_TID),
+                rec(uri(TO), TO_CODE_TYPE),
+                (lhs, inst) -> CommandRunner.run(command, inst.args().at(uri(TO))));
     }
 }

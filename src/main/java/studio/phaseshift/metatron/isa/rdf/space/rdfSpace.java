@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -18,34 +18,10 @@
 
 package studio.phaseshift.metatron.isa.rdf.space;
 
-import org.eclipse.rdf4j.model.Value;
-import org.eclipse.rdf4j.query.TupleQueryResult;
-import org.eclipse.rdf4j.repository.Repository;
-import org.eclipse.rdf4j.repository.http.HTTPRepository;
-import org.eclipse.rdf4j.repository.sail.SailRepository;
-import org.eclipse.rdf4j.repository.sparql.SPARQLRepository;
-import org.eclipse.rdf4j.sail.memory.MemoryStore;
-import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.AbstractSpace;
-import studio.phaseshift.metatron.isa.Space;
-import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
-import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
-import studio.phaseshift.metatron.isa.rdf.parser.ObjRDFSerializer;
-
-import java.util.*;
-import java.util.function.Function;
-import java.util.stream.Stream;
-
-import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.rdf.rdfInstSet.RDF_INST_TID;
-import static studio.phaseshift.metatron.isa.rdf.rdfInstSet.RDF_ISA_SPACE_TID;
-
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class rdfSpace<R extends Repository> extends AbstractSpace<R> {
+public class rdfSpace { /*<R extends Repository> extends AbstractSpace<R> {
 
     public static fURI SPARQL_INST_TID = RDF_INST_TID.extend(SPARQL);
     public static fURI RDF_SPACE_TID = RDF_ISA_SPACE_TID.extend("rdfspace");
@@ -90,5 +66,5 @@ public class rdfSpace<R extends Repository> extends AbstractSpace<R> {
             result.close();
             return results.iterator();
         };
-    }
+    }*/
 }

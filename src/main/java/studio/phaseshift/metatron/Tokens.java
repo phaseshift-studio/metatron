@@ -44,6 +44,7 @@ public final class Tokens {
     public static final String ANTHROPIC = "anthropic";
     public static final String OLLAMA = "ollama";
     public static final String RESULT = "result";
+    public static final String PROJECT = "project";
     public static final String DATA = "data";
     public static final String TO = "to";
     public static final String CONCEPT = "concept";
@@ -207,9 +208,11 @@ public final class Tokens {
     public static final String ON_PATCH = "on_patch";
     public static final String ON_HEAD = "on_head";
     public static final String ON_OPTIONS = "on_options";
+    public static final String ON_SELECT = "on_select";
     public static final String HOST = "host";
     public static final String HEADERS = "headers";
     public static final String HEADER = "header";
+    public static final String RUNTIME = "runtime";
     public static final String TRANSPORT = "transport";
     public static final String PROTOCOL = "protocol";
     public static final String COMMAND = "command";
@@ -220,6 +223,8 @@ public final class Tokens {
     public static final String SYSTEM = "system";
     public static final String PASS = "pass";
     public static final String NAME = "name";
+    public static final String BUILD = "build";
+    public static final String TEST = "test";
     public static final String DEFAULT = "default";
     public static final String BASE = "base";
     public static final String CREATOR = "creator";
@@ -286,6 +291,7 @@ public final class Tokens {
     public static final String AUDIT = "audit";
     public static final String INFO = "info";
     public static final String WARN = "warn";
+    public static final String SUCCESS = "success";
     public static final String ERROR = "error";
     public static final String DEBUG = "debug";
     public static final String TRACE = "trace";

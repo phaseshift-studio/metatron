@@ -26,6 +26,7 @@ import studio.phaseshift.metatron.isa.m.type.Uri;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.m.type.reflect.JRec;
 import studio.phaseshift.metatron.isa.m.type.reflect.JRecElement;
+import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -44,6 +45,7 @@ public class Rewriter extends JRec<Rewriter> {
 
     protected final List<Inst> sourceInsts;
     protected List<Inst> matchInsts;
+    protected List<Tuple.Pair<Inst, Integer>> matchChainPairs = List.of();
     protected Predicate<List<Inst>> matchPredicate = null;
     protected boolean repeat = false;
     protected boolean matchC = true;
@@ -69,6 +71,18 @@ public class Rewriter extends JRec<Rewriter> {
 
     public Rewriter match(final List<Inst> matchInsts) {
         this.matchInsts = matchInsts;
+        return this;
+    }
+
+    /**
+     * Match a chain of {@code (inst, min-chain-length)} pairs — the general form of a
+     * sequential match, where {@code <inst, 1>} is the single-inst case.  A chain matches
+     * a maximal run of each {@code inst} of length at least its minimum, so {@code <rshift, 2>}
+     * matches two or more consecutive rshift instructions.  Consume with {@link #rewriteChain}.
+     * (Varargs so it doesn't erase-clash with {@link #match(List)}.)
+     */
+    public Rewriter match(final Tuple.Pair<Inst, Integer>... matchPairs) {
+        this.matchChainPairs = List.of(matchPairs);
         return this;
     }
 
@@ -132,6 +146,54 @@ public class Rewriter extends JRec<Rewriter> {
                 break;
         }
         return current;
+    }
+
+    /**
+     * Rewrite a {@link #match(Tuple.Pair...) chain} of instructions: each maximal run of a
+     * pair's inst (length at least its minimum) is passed whole to the function.  Unlike the
+     * map-based {@link #rewrite(Function)}, a chain may repeat the same inst — the map can't
+     * hold duplicate pattern keys, but a run can.
+     */
+    public List<Inst> rewriteChain(final Function<List<Inst>, List<Inst>> rewriteFunc) {
+        List<Inst> current = this.sourceInsts;
+        List<Inst> last = List.of();
+        while (!Objects.equal(current, last)) {
+            last = current;
+            current = internalChainRewrite(this.matchChainPairs, current, rewriteFunc);
+            if (!this.repeat)
+                break;
+        }
+        return current;
+    }
+
+    private static List<Inst> internalChainRewrite(final List<Tuple.Pair<Inst, Integer>> pairs,
+                                                   final List<Inst> source,
+                                                   final Function<List<Inst>, List<Inst>> rewriteFunc) {
+        final List<Inst> out = new ArrayList<>();
+        int i = 0;
+        while (i < source.size()) {
+            int cursor = i;
+            final List<Inst> matched = new ArrayList<>();
+            boolean ok = true;
+            for (final Tuple.Pair<Inst, Integer> pair : pairs) {
+                final int runStart = cursor;
+                while (cursor < source.size() && instsMatch(pair.get0(), source.get(cursor)))
+                    cursor++;
+                if (cursor - runStart < pair.get1()) {
+                    ok = false;
+                    break;
+                }
+                matched.addAll(source.subList(runStart, cursor));
+            }
+            if (ok) {
+                out.addAll(rewriteFunc.apply(matched));
+                i = cursor;
+            } else {
+                out.add(source.get(i));
+                i++;
+            }
+        }
+        return out;
     }
 
 

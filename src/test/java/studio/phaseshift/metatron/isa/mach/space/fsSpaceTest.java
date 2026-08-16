@@ -301,6 +301,128 @@ public class fsSpaceTest extends AbstractSpaceTest implements LineQTest {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
+    /**
+     * A directory reads as a navigable dir::T rec — child-name => !*<child uri> refs, single
+     * depth and lazy.  {@code >>sub>>sub} descends one level at a time through the Router.
+     */
+    /**
+     * The general {@code space::T} tree: {@code Space.Helper.treeFromUri} builds the
+     * navigable obj tree from the universal {@code root/+/} child query — independent
+     * of any space's native container type.  {@code >>} descends it (referent side),
+     * {@code /} navigates it (reference side).
+     */
+    @Test
+    public void testGeneralSpaceTreeFromUri() {
+        try {
+            try {
+                final java.nio.file.Path root = java.nio.file.Path.of("/tmp/fsspace_test/treepoly");
+                java.nio.file.Files.createDirectories(root.resolve("code/main"));
+                java.nio.file.Files.writeString(root.resolve("code/main/App.java"), "class App {}");
+                java.nio.file.Files.writeString(root.resolve("notes.md"), "# notes");
+            } catch (final java.io.IOException e) {
+                throw MTronException.of(e);
+            }
+
+            // a directory derefs to its own uri — the structure is walked, not materialized
+            final Obj dir = ObjmtronSerializer.parse("*test:treepoly").apply();
+            assertTrue(dir.isUri(), "a directory must deref to its uri, got: " + dir);
+
+            // and the reference side still navigates with /
+            final Obj app = ObjmtronSerializer.parse("*<test:treepoly/code/main/App.java>").apply();
+            assertTrue(app.isStr(), "/ path navigation must reach the file, got: " + app);
+
+            // uri >> — the obj-less branch: child uris, no referents resolved;
+            // directories carry the trailing / (a branch)
+            AbstractMetatronTest.checkCodeParseApply(LOG,
+                    "test:treepoly >>",
+                    "{test:/treepoly/code/,<test:/treepoly/notes.md>}");
+            AbstractMetatronTest.checkCodeParseApply(LOG,
+                    "test:treepoly/code >>",
+                    "{test:/treepoly/code/main/}");
+
+            // uri << — pure uri arithmetic, the reference side's "go up"
+            AbstractMetatronTest.checkCodeParseApply(LOG,
+                    "test:treepoly/code/main <<",
+                    "test:treepoly/code");
+            AbstractMetatronTest.checkCodeParseApply(LOG,
+                    "test:treepoly <<",
+                    "test:");
+            // uri << <int> — retract n levels (a/b/c << 2 => a)
+            AbstractMetatronTest.checkCodeParseApply(LOG,
+                    "test:treepoly/code/main << 2",
+                    "test:treepoly");
+            // uri << <path> — retract a matching postfix (a/b/c/d << c/d => a/b)
+            AbstractMetatronTest.checkCodeParseApply(LOG,
+                    "test:treepoly/code/main << code/main",
+                    "test:treepoly");
+            // uri >> <path> — navigate the path (a/b/c >><2> => a/b/c/2)
+            AbstractMetatronTest.checkCodeParseApply(LOG,
+                    "test:treepoly >><code>",
+                    "test:treepoly/code");
+            // uri >> <int> and >> <pattern> — the walk: the descendants exactly N levels deep
+            // (the depth-N leaves, referentially the >>.>> broadcast)
+            AbstractMetatronTest.checkCodeParseApply(LOG,
+                    "test:treepoly >> 2",
+                    "{test:/treepoly/code/main/}");
+            AbstractMetatronTest.checkCodeParseApply(LOG,
+                    "test:treepoly >> <+/+>",
+                    "{test:/treepoly/code/main/}");
+            // the >>.>> broadcast and the >> N walk agree — which is what makes the
+            // rshift_chain rewrite (>>.>>.>> => >> 3) semantically sound
+            AbstractMetatronTest.checkCodeParseApply(LOG,
+                    "test:treepoly >>.>>",
+                    "test:/treepoly/code/main/");
+            AbstractMetatronTest.checkCodeParseApply(LOG,
+                    "test:treepoly >>.>>.>>",
+                    "<test:/treepoly/code/main/App.java>");
+            // >> 0 is the identity — descend zero levels is the uri itself
+            AbstractMetatronTest.checkCodeParseApply(LOG,
+                    "test:treepoly >> 0",
+                    "test:treepoly");
+        } finally {
+            Router.global().write(make("$$/treepoly/#"), noobj());
+        }
+    }
+
+    /**
+     * A directory derefs to its own uri — the structure is walked with {@code >>} (the
+     * reference walk), never materialized as a poly.  {@code /} navigates to a referent.
+     */
+    @Test
+    public void testDirectoryReadReturnsDirPoly() {
+        try {
+            // build a tree on disk (Java writes — a dotted path like App.java doesn't parse
+            // as an mtron write LHS, and this test is about READING directories anyway)
+            try {
+                final java.nio.file.Path root = java.nio.file.Path.of("/tmp/fsspace_test/dirpoly");
+                java.nio.file.Files.createDirectories(root.resolve("code/main/java"));
+                java.nio.file.Files.writeString(root.resolve("code/main/java/App.java"), "class App {}");
+                java.nio.file.Files.writeString(root.resolve("notes.md"), "# notes");
+            } catch (final java.io.IOException e) {
+                throw MTronException.of(e);
+            }
+
+            // a directory derefs to its own uri — no dir::T poly, just the address
+            final Obj dir = ObjmtronSerializer.parse("*test:dirpoly").apply();
+            assertTrue(dir.isUri(), "a directory must deref to its uri, got: " + dir);
+
+            // the reference walk reveals the structure: child uris, nothing resolved;
+            // directories carry the trailing / (a branch), files are nodes
+            AbstractMetatronTest.checkCodeParseApply(LOG,
+                    "test:dirpoly >>",
+                    "{test:/dirpoly/code/,<test:/dirpoly/notes.md>}");
+            AbstractMetatronTest.checkCodeParseApply(LOG,
+                    "test:dirpoly/code >>",
+                    "{test:/dirpoly/code/main/}");
+
+            // / navigation descends to a file's content (the deliberate deref)
+            final Obj app = ObjmtronSerializer.parse("*<test:dirpoly/code/main/java/App.java>").apply();
+            assertTrue(app.isStr(), "/ path navigation must reach the file, got: " + app);
+        } finally {
+            Router.global().write(make("$$/dirpoly/#"), noobj());
+        }
+    }
+
     @Disabled("resolveRead strips ?mimeq= via qLessExceptDomRng() before directReader sees it — needs API rethink")
     @ParameterizedTest
     @CsvSource(value = {

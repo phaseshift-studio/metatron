@@ -21,7 +21,6 @@ package studio.phaseshift.metatron.isa.ide;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.AbstractMetatronTest;
-import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -37,10 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.DOCQ;
-import static studio.phaseshift.metatron.isa.ide.ideInstSet.CS_COMMAND_TID;
-import static studio.phaseshift.metatron.isa.ide.ideInstSet.CS_PROJECT_TID;
-import static studio.phaseshift.metatron.isa.ide.ideInstSet.CS_RESULT_TID;
-import static studio.phaseshift.metatron.isa.ide.ideInstSet.IDE_ISA_TID;
+import static studio.phaseshift.metatron.isa.ide.ideInstSet.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.STR_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
@@ -52,7 +48,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 /**
  * The agent IDE instset: {@code cs_project::T} (the project descriptor) and {@code cs_result::T}
  * (the standardized outcome), plus the {@code cs_command} wrapper that turns a command into the
- * enriched instruction — which runs it through {@link csRunner}, applies the user's {@code to}
+ * enriched instruction — which runs it through {@link CommandRunner}, applies the user's {@code to}
  * conduit per output line, and returns {@code cs_result::T}.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -73,19 +69,19 @@ public class ideInstSetTest extends AbstractMetatronTest {
         // a valid project rec: root required, build/test palettes are rec-of-inst
         final Obj project = rec(uri("root"), uri("fs:/foo"),
                 uri("build"), rec(uri("compile"), command()));
-        assertTrue(project.test(ideInstSet.CS_PROJECT_TYPE), "a project rec with root must satisfy cs_project::T");
-        assertEquals(CS_PROJECT_TID, project.tid(CS_PROJECT_TID).tid());
+        assertTrue(project.test(ideInstSet.IDE_PROJECT_TYPE), "a project rec with root must satisfy cs_project::T");
+        assertEquals(IDE_PROJECT_TID, project.tid(IDE_PROJECT_TID).tid());
         // a project rec missing root fails the predicate
         final Obj missingRoot = rec(uri("build"), rec(uri("compile"), command()));
-        assertTrue(!missingRoot.test(ideInstSet.CS_PROJECT_TYPE), "a project rec without root must fail cs_project::T");
+        assertTrue(!missingRoot.test(ideInstSet.IDE_PROJECT_TYPE), "a project rec without root must fail cs_project::T");
     }
 
     @Test
     void testCsResultType() {
-        final Obj result = csRunner.run("echo hi", noobj());
+        final Obj result = CommandRunner.run("echo hi", noobj());
         assertTrue(result.isRec(), "the runner must emit a cs_result::T rec");
-        assertEquals(CS_RESULT_TID, result.tid());
-        assertTrue(result.test(ideInstSet.CS_RESULT_TYPE), "a runner result must satisfy cs_result::T");
+        assertEquals(IDE_RESULT_TID, result.tid());
+        assertTrue(result.test(ideInstSet.IDE_RESULT_TYPE), "a runner result must satisfy cs_result::T");
         assertEquals(uri("success"), result.asRec().at(uri("status")));
         // output is a !* auto_from ref — atDirect bypasses auto_resolve; dereferencing
         // materializes the line-stream
@@ -99,7 +95,7 @@ public class ideInstSetTest extends AbstractMetatronTest {
 
     @Test
     void testCsCommandWraps() {
-        final Obj wrapper = Router.readFromSpace(CS_COMMAND_TID);
+        final Obj wrapper = Router.readFromSpace(IDE_COMMAND_TID);
         assertTrue(wrapper.isInst(), "cs_command must be a registered inst");
         final Obj enriched = wrapper.asInst().args(rec(uri("command"), str("echo hi"))).apply(noobj());
         assertTrue(enriched.isInst(), "cs_command(command=>...) must return an enriched instruction");
@@ -107,11 +103,11 @@ public class ideInstSetTest extends AbstractMetatronTest {
 
     @Test
     void testEnrichedRunsCommand() {
-        final Obj enriched = Router.readFromSpace(CS_COMMAND_TID)
+        final Obj enriched = Router.readFromSpace(IDE_COMMAND_TID)
                 .asInst().args(rec(uri("command"), str("echo hi"))).apply(noobj());
         final Obj result = enriched.asInst().apply(noobj());
         assertTrue(result.isRec(), "the enriched instruction must return a cs_result::T rec");
-        assertEquals(CS_RESULT_TID, result.tid());
+        assertEquals(IDE_RESULT_TID, result.tid());
         assertEquals(uri("success"), result.asRec().at(uri("status")));
         assertEquals("hi", result.asRec().atDirect(uri("output")).apply(noobj()).strValue());
     }
@@ -124,7 +120,7 @@ public class ideInstSetTest extends AbstractMetatronTest {
                     collected.add(lhs.strValue());
                     return lhs;
                 });
-        final Obj enriched = Router.readFromSpace(CS_COMMAND_TID)
+        final Obj enriched = Router.readFromSpace(IDE_COMMAND_TID)
                 .asInst().args(rec(uri("command"), str("echo hi"))).apply(noobj());
         // the to conduit is rec-wrapped so the arg machinery keeps it as data
         final Obj result = enriched.asInst().args(rec(uri("to"), rec(uri("code"), to))).apply(noobj());
@@ -134,7 +130,7 @@ public class ideInstSetTest extends AbstractMetatronTest {
 
     @Test
     void testEnrichedFailsOnBadCommand() {
-        final Obj enriched = Router.readFromSpace(CS_COMMAND_TID)
+        final Obj enriched = Router.readFromSpace(IDE_COMMAND_TID)
                 .asInst().args(rec(uri("command"), str("definitely-not-a-command-xyz"))).apply(noobj());
         final Obj result = enriched.asInst().apply(noobj());
         assertTrue(result.isRec(), "a failed command must still emit a cs_result::T rec");
@@ -148,7 +144,7 @@ public class ideInstSetTest extends AbstractMetatronTest {
 
     @Test
     void testCsCommandDocs() {
-        final Obj doc = Router.readFromSpace(CS_COMMAND_TID.addQ(DOCQ));
+        final Obj doc = Router.readFromSpace(IDE_COMMAND_TID.addQ(DOCQ));
         assertTrue(doc.isRec(), "cs_command must carry documentation");
         assertTrue(doc.asRec().at(uri("desc")).strValue().contains("wrap"),
                 "the cs_command docs must describe the wrapper");
@@ -157,7 +153,7 @@ public class ideInstSetTest extends AbstractMetatronTest {
     /// ///////////////////////////////////////////////////////////////////////////////////////////
 
     private static Inst command() {
-        return instC(f("/m/ide/test/cmd").dom(ALL.maybe()).rng(CS_RESULT_TID), lst(),
+        return instC(f("/m/ide/test/cmd").dom(ALL.maybe()).rng(IDE_RESULT_TID), lst(),
                 (lhs, inst) -> noobj());
     }
 }

@@ -30,7 +30,10 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.impl.MObj;
-import studio.phaseshift.metatron.isa.mach.io.type.*;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjByteBufferSerializer;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjJavaSerializer;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjYAMLSerializer;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.web.parser.*;
 import studio.phaseshift.metatron.isa.web.type.MIME;
 import studio.phaseshift.metatron.isa.web.type.mcpServer;
@@ -100,7 +103,6 @@ public class webInstSet extends AbstractInstSet {
     public static final fURI CSS_TID = MIME_TYPE_TID.extend("css");
     public static final fURI MARKDOWN_TID = MIME_TYPE_TID.extend("markdown");
     public static final fURI JAVA_TID = MIME_TYPE_TID.extend("java");
-    public static final fURI CS_JAVA_TID = MIME_TYPE_TID.extend("cs_java");
     public static final fURI YAML_TID = MIME_TYPE_TID.extend("yaml");
 
     // ── Serializer types ────────────────────────────────────────────
@@ -115,10 +117,7 @@ public class webInstSet extends AbstractInstSet {
     public static final fURI OBJ_HTML_SERIALIZER_TID = OBJ_SERIALIZER_TID.extend("obj_html");
     public static final fURI OBJ_XML_SERIALIZER_TID = OBJ_SERIALIZER_TID.extend("obj_xml");
     public static final fURI OBJ_MARKDOWN_SERIALIZER_TID = OBJ_SERIALIZER_TID.extend("obj_markdown");
-    public static final fURI OBJ_JAVA_SERIALIZER_TID = OBJ_SERIALIZER_TID.extend("ojb_java");
-    // the coarse-schema (cs) serializer family — /m/web/serializer/cs/{lang}
-    public static final fURI CS_SERIALIZER_TID = OBJ_SERIALIZER_TID.extend("cs");
-    public static final fURI OBJ_CS_JAVA_SERIALIZER_TID = CS_SERIALIZER_TID.extend("obj_java");
+    public static final fURI OBJ_JAVA_SERIALIZER_TID = OBJ_SERIALIZER_TID.extend("obj_java");
     public static final fURI OBJ_RDF_SERIALIZER_TID = OBJ_SERIALIZER_TID.extend("obj_rdf");
     public static final fURI OBJ_PLAINTEXT_SERIALIZER_TID = OBJ_SERIALIZER_TID.extend("obj_text");
 
@@ -161,18 +160,6 @@ public class webInstSet extends AbstractInstSet {
                     return noobj();
                 }
             }).create();
-    public static final Type CS_JAVA_TYPE = Type.Builder.build()
-            .tid(REC_TID)
-            .vid(CS_JAVA_TID)
-            // top-level coarse-schema verification — the cs_java rec must expose classes (lst);
-            // package/imports/preamble/postscript are optional addressing/write views
-            .isaPredicate(rec(
-                    uri("classes").asUri(), LST_TYPE,
-                    uri("package").maybe().asUri(), STR_TYPE,
-                    uri("imports").maybe().asUri(), LST_TYPE,
-                    uri("preamble").maybe().asUri(), STR_TYPE,
-                    uri("postscript").maybe().asUri(), STR_TYPE))
-            .create();
     public static final Type JSON_TYPE = Type.Builder.build()
             .tid(STR_TID)
             .vid(JSON_TID)
@@ -260,7 +247,6 @@ public class webInstSet extends AbstractInstSet {
                         docWrap(CSS_TYPE, "a rec encoding of a css document"),
                         docWrap(MARKDOWN_TYPE, "a rec encoding of a markdown document"),
                         docWrap(JAVA_TYPE, "a rec encoding of a java source file"),
-                        docWrap(CS_JAVA_TYPE, "a rec encoding of a java source file (coarse schema)"),
                         docWrap(OBJ_SERIALIZER_TYPE = Type.Builder.build()
                                         .tid(OBJ_SERIALIZER_TID).vid(OBJ_SERIALIZER_TID).create(),
                                 "a serializer for converting objs to/from external formats"),
@@ -432,11 +418,10 @@ public class webInstSet extends AbstractInstSet {
                         instC(AS_INST_TID.dom(REC_TID).rng(MARKDOWN_TID), lst(MARKDOWN_TYPE), (lhs, inst) -> str(ObjMarkdownSerializer.single().write(lhs).getChars().toString(), MARKDOWN_TID, null)),
                         instC(AS_INST_TID.dom(JAVA_TID).rng(REC_TID), lst(REC_TYPE), (lhs, inst) -> ObjJavaSerializer.single().inputBytes(lhs.strValue().getBytes())),
                         instC(AS_INST_TID.dom(REC_TID).rng(JAVA_TID), lst(JAVA_TYPE), (lhs, inst) -> str(new String(ObjJavaSerializer.single().outputBytes(lhs).array()), JAVA_TID, null)),
+                        instC(AS_INST_TID.dom(STR_TID).rng(JAVA_TID), lst(JAVA_TYPE), (lhs, inst) -> str(lhs.strValue(), JAVA_TID, null)),
                         // cs (coarse schema) — cs_java::T is a rec::T refinement: the parse IS the
                         // cast.  as?cs_java<=java(cs_java::T) parses a dereferenced java::T str into
                         // the coarse rec; the rec↔cs_java paths re-tag (rec::T <-> cs_java::T).
-                        instC(AS_INST_TID.dom(JAVA_TID).rng(CS_JAVA_TID), lst(CS_JAVA_TYPE), (lhs, inst) -> ObjJavaCSSerializer.parse(lhs.strValue())),
-                        instC(AS_INST_TID.dom(REC_TID).rng(CS_JAVA_TID), lst(CS_JAVA_TYPE), (lhs, inst) -> lhs.tid(CS_JAVA_TID)),
                         instC(AS_INST_TID.dom(MARKDOWN_TID).rng(HTML_TID), lst(HTML_TYPE), (lhs, inst) -> str(ObjMarkdownSerializer.single().toHTML(ObjMarkdownSerializer.single().write(lhs)), HTML_TID, null)),
                         instC(AS_INST_TID.dom(MCP_CLIENT_TID).rng(JSON_TID), lst(JSON_TYPE), (lhs, inst) -> {
                             final mcpClient client = (mcpClient) lhs;

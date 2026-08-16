@@ -387,7 +387,10 @@ public interface Space extends Rec, Closeable {
         public static Stream<IdPoly> locateBasePoly(final Space space, final fURI furi) {
             fURI newFuri = furi.retract(1).asNode();
             while (!newFuri.segments().isEmpty()) {
-                final List<IdPoly> polys = space.readStream(newFuri).filter(oi -> oi.obj().isPoly()).map(IdPoly::from).toList();
+                final List<IdPoly> polys = space.readStream(newFuri)
+                        .filter(oi -> oi.obj().isPoly())
+                        .map(IdPoly::from)
+                        .toList();
                 if (!polys.isEmpty())
                     return polys.stream();
                 newFuri = newFuri.retract(1);
@@ -398,7 +401,7 @@ public interface Space extends Rec, Closeable {
         public static IdObj locateBaseObj(final Space space, final fURI furi, final fURI stopURI) {
             fURI newFuri = furi.retract(1).asNode();
             while (!newFuri.segments().isEmpty()) {
-                space.logger().info("checking %s", newFuri);
+                space.logger().debug("checking %s", newFuri);
                 Obj obj = space.read(newFuri);
                 if (!obj.isNoObj())
                     return IdObj.of(newFuri, obj);

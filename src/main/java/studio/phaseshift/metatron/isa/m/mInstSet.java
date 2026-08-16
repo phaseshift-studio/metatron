@@ -24,6 +24,7 @@ import studio.phaseshift.metatron.algebra.MultMonoid;
 import studio.phaseshift.metatron.algebra.PlusMonoid;
 import studio.phaseshift.metatron.algebra.rewrite.Rewriter;
 import studio.phaseshift.metatron.furi.c.cInt;
+import studio.phaseshift.metatron.util.Tuple;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
@@ -544,6 +545,21 @@ public class mInstSet extends AbstractInstSet {
                                                     return List.of(matched.getFirst());
                                                 })).asCode()),
 
+                        // Compress a bare rshift chain into a single walk: >>.>>.>> => >> 3.
+                        // DISABLED: the fold is only referentially sound on a uri (where
+                        // >> N is a depth walk); on a rec >> N is still positional, so
+                        // >>.>>.>>.>> (a value broadcast) ≠ >> 4 (an index).  Once rec >> N
+                        // is unified as "descend N", this becomes sound everywhere.
+                        // InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("rshift_chain"),
+                        //         code -> code.selfJVM(
+                        //                 Rewriter.search(code.insts())
+                        //                         .match(Tuple.Pair.with(instA(RSHIFT_INST_TID), 2))
+                        //                         .rewriteChain(run -> {
+                        //                             if (run.stream().anyMatch(i -> !i.args().isEmpty()))
+                        //                                 return run;
+                        //                             return List.of(instB(RSHIFT_INST_TID, lst(jnt(run.size()))));
+                        //                         })).asCode()),
+
                         // Optimize plus(0) for any PlusMonoid (identity)
                         // Pattern: .plus(0) → identity (no-op)
                         // DISABLED: This rewrite is interfering with Rec operations (RecTest.testAt() failures)
@@ -885,7 +901,7 @@ public class mInstSet extends AbstractInstSet {
                 Sugar.prefix(">>=", List.of(UPDATE_INST_TID), 1),
                 Sugar.prefix(">>", List.of(RSHIFT_INST_TID), 1),
                 Sugar.prefix(">>", List.of(RSHIFT_INST_TID), 0),
-                //Sugar.prefix("<<", List.of(LSHIFT_INST_TID), 1),
+                Sugar.prefix("<<", List.of(LSHIFT_INST_TID), 1),
                 Sugar.prefix("<<", List.of(LSHIFT_INST_TID), 0),
                 Sugar.prefix("++", List.of(MPLUS_INST_TID), 1), // TODO: gut
                 Sugar.prefix("+", List.of(PLUS_INST_TID), 1),

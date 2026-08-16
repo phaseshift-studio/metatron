@@ -149,17 +149,6 @@ public class BasicRouter extends AbstractSpace<Map<Obj, Obj>> implements Router 
     }
 
     @Override
-    public void registerPrefix(final fURI prefix, final fURI vid) {
-        final fURI existing = this.prefixToVID.getRaw(prefix);
-        if (existing != null && !Objects.equals(vid, existing))
-            throw MTronException.of("%s prefix already bound: %s + %s", prefix, vid, existing);
-        this.prefixToVID.putRaw(prefix, vid);
-        this.at(uri(PREFIX), this.prefixToVID.toRec(), MUTABLE);
-        LOG.info("prefix %s => %s registered", prefix, vid);
-    }
-
-
-    @Override
     public fURI redirect(final fURI furi, final boolean external) {
         if (!furi.hasPoly() && furi.isGeneric())
             return furi;
@@ -257,10 +246,20 @@ public class BasicRouter extends AbstractSpace<Map<Obj, Obj>> implements Router 
             return noobjSpace.single();
     }
 
+    @Override
+    public void registerPrefix(final fURI prefix, final fURI vid) {
+        final fURI existing = this.prefixToVID.getRaw(prefix);
+        if (existing != null && !Objects.equals(vid, existing))
+            throw MTronException.of("%s prefix already bound: %s + %s", prefix, vid, existing);
+        this.prefixToVID.putRaw(prefix, vid);
+        this.at(uri(PREFIX), this.prefixToVID.toRec(), MUTABLE);
+        LOG.info("prefix %s => %s registered", prefix, vid);
+    }
+
     private fURI alignPrefix(final fURI vid) {
         final fURI readableVID = vid.one();
         if (readableVID.hasScheme()) {
-            final fURI prefixed = this.prefixToVID.getRaw(f(readableVID.scheme() + ":"));
+            final fURI prefixed = this.prefixToVID.getRaw(f(readableVID.scheme()));
             if (null != prefixed) {
                 final fURI aligned = prefixed.extend(readableVID.scheme(null));
                 return aligned;

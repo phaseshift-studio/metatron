@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.isa.ide;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.math.mathInstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.util.CommonUtil;
@@ -52,9 +53,9 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public final class csRunner {
+public final class CommandRunner {
 
-    private csRunner() {
+    private CommandRunner() {
         // do nothing
     }
 
@@ -91,7 +92,7 @@ public final class csRunner {
         }
         final Map<Obj, Obj> map = new LinkedHashMap<>();
         map.put(uri("status"), uri(exit == 0 && fails.isEmpty() ? "success" : "failure"));
-        map.put(uri("runtime"), real((double) (System.currentTimeMillis() - start), MATH_MILLIS_TID, null));
+        map.put(uri("runtime"), mathInstSet.normalizeTime(real((double) (System.currentTimeMillis() - start), MATH_MILLIS_TID, null)));
         if (!command.isBlank()) map.put(uri("command"), str(command));
         // the output is stored at a minted temp uri and referenced lazily — only >>output (the
         // !* auto_from deref) materializes the str{*} line-stream, keeping the result rec compact
@@ -101,6 +102,6 @@ public final class csRunner {
             map.put(uri("output"), auto_from_(outputURI).tryToInst());
         }
         if (!fails.isEmpty()) map.put(uri("fails"), lst(fails));
-        return rec(map, ideInstSet.CS_RESULT_TID, null);
+        return rec(map, ideInstSet.IDE_RESULT_TID, null);
     }
 }

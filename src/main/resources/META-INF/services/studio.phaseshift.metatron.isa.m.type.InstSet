@@ -30,9 +30,6 @@ studio.phaseshift.metatron.isa.iot.miot.miotInstSet
 studio.phaseshift.metatron.isa.llm.llmInstSet
 studio.phaseshift.metatron.isa.tble.tbleInstSet
 studio.phaseshift.metatron.isa.dcmnt.dcmntInstSet
-studio.phaseshift.metatron.isa.rdf.rdfInstSet
 studio.phaseshift.metatron.isa.vec.vecInstSet
 studio.phaseshift.metatron.isa.dckr.dckrInstSet
-
-
 studio.phaseshift.metatron.isa.ide.ideInstSet

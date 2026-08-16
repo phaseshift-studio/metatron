@@ -19,7 +19,6 @@
 package studio.phaseshift.metatron.isa.mach.io.type;
 
 import ch.usi.si.seart.treesitter.Language;
-import ch.usi.si.seart.treesitter.LibraryLoader;
 import ch.usi.si.seart.treesitter.Node;
 import ch.usi.si.seart.treesitter.Parser;
 import ch.usi.si.seart.treesitter.Tree;
@@ -27,7 +26,6 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
-import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.io.InputStream;
@@ -42,10 +40,10 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.web.webInstSet.OBJ_JAVA_SERIALIZER_TID;
+import static studio.phaseshift.metatron.isa.web.webInstSet.OBJ_SERIALIZER_TID;
 
 /*
  * A serializer that converts Java source code into a metatron Rec (and back) using
@@ -61,8 +59,6 @@ import static studio.phaseshift.metatron.isa.web.webInstSet.OBJ_JAVA_SERIALIZER_
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class ObjJavaSerializer extends AbstractObjSerializer<String> {
-
-    public static final fURI OBJ_JAVA_SERIALIZER_VID = OBJ_JAVA_SERIALIZER_TID;
 
     /**
      * Key for the TreeSitter node type — deliberately NOT "type"
@@ -86,7 +82,7 @@ public class ObjJavaSerializer extends AbstractObjSerializer<String> {
      * {@code libc.musl-x86_64.so.1} prevents loading on glibc hosts even
      * though all undefined symbols are standard C functions that glibc provides.
      */
-    static void loadNativeLibrary() {
+    public static void loadNativeLibrary() {
         final String libName = "libjava-tree-sitter.so";
         try (final InputStream is = ObjJavaSerializer.class.getClassLoader().getResourceAsStream(libName)) {
             if (is == null) {
@@ -123,7 +119,7 @@ public class ObjJavaSerializer extends AbstractObjSerializer<String> {
     }
 
     public ObjJavaSerializer() {
-        super(OBJ_JAVA_SERIALIZER_TID, OBJ_JAVA_SERIALIZER_VID);
+        super(OBJ_SERIALIZER_TID, OBJ_JAVA_SERIALIZER_TID);
     }
 
     /**
@@ -1102,6 +1098,6 @@ public class ObjJavaSerializer extends AbstractObjSerializer<String> {
 
     @Override
     public fURI vid() {
-        return OBJ_JAVA_SERIALIZER_VID;
+        return OBJ_JAVA_SERIALIZER_TID;
     }
 }

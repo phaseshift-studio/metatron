@@ -29,7 +29,6 @@ import studio.phaseshift.metatron.isa.m.space.noobjSpace;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.io.space.fs.fsSpace;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.space.clstrSpace;
 import studio.phaseshift.metatron.isa.mach.type.PCMonad;
 import studio.phaseshift.metatron.isa.mach.type.Router;
@@ -37,12 +36,6 @@ import studio.phaseshift.metatron.isa.mach.type.machine.SwarmMachine;
 import studio.phaseshift.metatron.isa.mach.type.thread.AbstractThread;
 import studio.phaseshift.metatron.isa.mach.type.thread.CoreThread;
 import studio.phaseshift.metatron.isa.mach.type.thread.VirtualThread;
-import studio.phaseshift.metatron.isa.mach.type.ui.Widget;
-import studio.phaseshift.metatron.isa.mach.type.ui.console.Console;
-import studio.phaseshift.metatron.isa.mach.type.ui.console.Editor;
-import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
-import studio.phaseshift.metatron.isa.mach.type.ui.widget.TableWidget;
-import studio.phaseshift.metatron.isa.mach.type.ui.widget.Utilities;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.ImageUtil;
 import studio.phaseshift.metatron.util.MTronException;
@@ -52,11 +45,12 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.*;
@@ -70,7 +64,6 @@ import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBytes.bytes;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjFactory.M_FACTORY_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
@@ -109,7 +102,6 @@ public class machInstSet extends AbstractInstSet {
     public static final fURI MACH_SPACE_TID = MACH_ISA_TID.extend("space");
     public static final fURI FILE_TID = MACH_ISA_TID.extend("file");
     public static final String FILE_TID_STRING = "/m/mach/file";
-    public static final fURI DIR_TID = MACH_ISA_TID.extend("dir");
     public static final fURI IMAGE_TID = FILE_TID.extend("image");
     public static final fURI Q_TID = MACH_SPACE_TID.extend("q");
     public static final fURI FACTORY_TID = MACH_ISA_TID.extend("factory");
@@ -137,13 +129,6 @@ public class machInstSet extends AbstractInstSet {
             .constructor(instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(FILE_TID),
                     lst(T(URI_TID)),
                     (lhs, inst) -> makeFile(Path.of(inst.arg(0).uriValue().basePath().toString())))).create();
-    public static final Type DIR_TYPE = Type.Builder.build()
-            .tid(URI_TID)
-            .vid(DIR_TID)
-            //.predicate((uri, x) -> fsSpace.resolveFile(uri.as()).isDirectory() ? uri : noobj())
-            .constructor(instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(DIR_TID.maybe()),
-                    lst(T(URI_TID)),
-                    (lhs, inst) -> inst.arg(0).uriValue().isBranch() ? makeFile(Path.of(inst.arg(0).uriValue().basePath().toString())) : noobj())).create();
     public static final Type IMAGE_FILE_TYPE = Type.Builder.build()
             .tid(FILE_TID)
             .vid(IMAGE_TID).create();
@@ -185,7 +170,6 @@ public class machInstSet extends AbstractInstSet {
                         FS_SPACE_TYPE,
                         SERIAL_SPACE_TYPE,
                         FILE_TYPE,
-                        DIR_TYPE,
                         IMAGE_FILE_TYPE,
                         FACTORY_TYPE,
                         M_FACTORY_TYPE,
