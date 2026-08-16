@@ -49,6 +49,7 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
+import static studio.phaseshift.metatron.isa.m.math.mathInstSet.DATETIME_TYPE;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.type.Bool.*;
 import static studio.phaseshift.metatron.isa.m.type.Bytes.BYTES_TYPE;
@@ -1400,9 +1401,9 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                     //  "|-<[_,_].swap(||mult(_))  [-- [mult(_),mult(_)] --]"
                     //instC(RSHIFT_INST_TID.dom(ALL).rng(URI_TID.maybe()), lst(uri("vid")), (lhs, inst) -> null == lhs.vid() ? noobj() : lhs.vid().toUri()),
                     instC(RSHIFT_INST_TID.dom(A).rng(B.maybeSome()), lst(T(C.maybeSome())), (lhs, inst) -> {
-                        if (lhs.isUri() && lhs.asUri().tid().toString().equals("/m/math/datetime"))
+                        if (lhs.isUri() && lhs.asUri().testNominally(DATETIME_TYPE))
                             return datetimeRshift(lhs.asUri(), inst.arg(0));
-                        if (lhs.isRec())
+                        else if (lhs.isRec())
                             return Rec.Helper.rshiftRec(lhs.asRec(), inst.arg(0));
                         else if (lhs.isLst())
                             return Lst.Helper.rshiftLst(lhs.asLst(), inst.arg(0));

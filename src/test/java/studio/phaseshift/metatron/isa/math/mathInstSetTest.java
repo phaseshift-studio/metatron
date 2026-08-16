@@ -300,10 +300,10 @@ public class mathInstSetTest extends AbstractInstSetTest {
             "<http://example.com>.matches(datetime::T)                              % false",
             "<//2024.12:25/09/00/00/000?tz=-0500>.matches(datetime::T)              % true",
             // Structural projections (host/path/q → uri, port → int)
-            "<//2024.12:25/09/00/00/000?tz=-0500>>>host                            % <2024.12>",
-            "<//2024.12:25/09/00/00/000?tz=-0500>>>port                            % 25",
-            "<//2024.12:25/09/00/00/000?tz=-0500>>>path>>0                         % <09>",
-            "<//2024.12:25/09/00/00/000?tz=-0500>>>path>>3                         % <000>",
+            "<//2024.12:25/09/00/00/000?tz=-0500>.as(rec::T)>>host                            % <2024.12>",
+            "<//2024.12:25/09/00/00/000?tz=-0500>.as(rec::T)>>port                            % 25",
+            "<//2024.12:25/09/00/00/000?tz=-0500>.as(rec::T)>>path>>1                         % <09>",
+            "<//2024.12:25/09/00/00/000?tz=-0500>.as(rec::T)>>path>>4                         % <000>",
             // Datetime vocabulary >> (named projections, only on typed datetimes)
             "datetime::<//2024.12:25/09/00/00/000?tz=-0500>>>year                 % 2024",
             "datetime::<//2024.12:25/09/00/00/000?tz=-0500>>>month                % 12",
@@ -316,8 +316,8 @@ public class mathInstSetTest extends AbstractInstSetTest {
             // Poly projection and dt_now
             "datetime::<//2024.12:25/09/00/00/000?tz=-0500>>>{year,month,day}     % {2024,12,25}",
             // Select (==) mutation — host takes uri, not str
-            "<//2024.12:25/09/00/00/000?tz=-0500>==[port=>31]>>port                % 31",
-            "<//2024.12:25/09/00/00/000?tz=-0500>==[host=><2025.01>]>>host         % <2025.01>",
+            "<//2024.12:25/09/00/00/000?tz=-0500>.as(rec::T)==[port=>_]>>port                 % 25",
+            "<//2024.12:25/09/00/00/000?tz=-0500>.as(rec::T)==[host=><2025.01>]>>host         % <2025.01>",
             // q mutation via .as(rec::T) and >>=
             "<//2024.12:25/09/00/00/000?tz=-0500>.as(rec::T)>>=[q=>[tz=>'+0000']]>>q>>tz    % '+0000'",
             "<//2024.12:25/09/00/00/000?tz=-0500>.as(rec::T)>>=[q=>[tz=>'+0000']]>>q/tz     % '+0000'",

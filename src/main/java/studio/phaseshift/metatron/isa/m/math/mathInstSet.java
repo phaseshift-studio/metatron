@@ -114,6 +114,7 @@ public class mathInstSet extends AbstractInstSet {
             .create();
 
     static {
+        System.out.println(MATH_BYTE_TID.toString());
         assert MATH_BYTE_STRING.equals(MATH_BYTE_TID.toString());
         assert MATH_KBYTE_STRING.equals(MATH_KBYTE_TID.toString());
         assert MATH_MBYTE_STRING.equals(MATH_MBYTE_TID.toString());

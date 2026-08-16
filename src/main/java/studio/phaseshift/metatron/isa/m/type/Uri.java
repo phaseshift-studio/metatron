@@ -20,10 +20,11 @@ package studio.phaseshift.metatron.isa.m.type;
 
 import studio.phaseshift.metatron.algebra.Ring;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
+import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.impl.MStr;
-import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.m.type.impl.MUri;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
+import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.ProjectionFailureException;
@@ -75,6 +76,10 @@ public interface Uri extends Mono, Ring.O<Uri>, Comparable<Uri> {
         final fURI k = key.uriValue();
         if (k.equals(f(SCHEME)))
             return uri(this.uriValue().scheme());
+        else if (k.equals(f(SUB)))
+            return uri(this.uriValue().subdomain());
+        else if (k.equals(f(AUTHORITY)))
+            return uri(f(this.uriValue().host()).port(this.uriValue().port()));
         else if (k.equals(f(HOST)))
             return uri(this.uriValue().host());
         else if (k.equals(f(PORT)))
@@ -86,7 +91,7 @@ public interface Uri extends Mono, Ring.O<Uri>, Comparable<Uri> {
                     MIN, null == this.uriValue().c().min() ? noobj() : jnt((Long) this.uriValue().c().min()),
                     MAX, null == this.uriValue().c().max() ? noobj() : jnt((Long) this.uriValue().c().max()));
         else if (k.equals(f(QPROC)))
-            return rec(this.uriValue().qMap().entrySet().stream().map(kv -> rel(uri(kv.getKey()), uri(kv.getValue()))));
+            return rec(this.uriValue().qMap().entrySet().stream().map(kv -> rel(uri(kv.getKey()), ObjmtronSerializer.single().read(kv.getValue()))));
         else
             throw MTronException.of("unknown uri component: %s", k);
     }
@@ -324,11 +329,13 @@ public interface Uri extends Mono, Ring.O<Uri>, Comparable<Uri> {
                         final fURI lhsUri = lhs.asUri().uriValue();
                         return rec(
                                 SCHEME, lhsUri.scheme() == null ? noobj() : uri(lhsUri.scheme()),
+                                SUB, lhsUri.subdomain() == null ? noobj() : uri(lhsUri.subdomain()),
                                 HOST, lhsUri.host() == null ? noobj() : uri(lhsUri.host()),
                                 PORT, lhsUri.port() == -1 ? noobj() : jnt(lhsUri.port()),
+                                AUTHORITY, lhsUri.authority() == null ? noobj() : uri(lhsUri.authority()),
                                 PATH, lhsUri.path().isEmpty() ? noobj() : lst(lhsUri.path().stream().map(MUri::uri)),
                                 COEFF, rec(MIN, null == lhsUri.c().min() ? noobj() : jnt(lhsUri.c().min()), MAX, null == lhsUri.c().max() ? noobj() : jnt(lhsUri.c().max())),
-                                QPROC, lhsUri.qMap().isEmpty() ? noobj() : rec(lhsUri.qMap().entrySet().stream().map(kv -> rel(uri(kv.getKey()), uri(kv.getValue()))))).c(c -> c.mult(lhs.c()));
+                                QPROC, lhsUri.qMap().isEmpty() ? noobj() : rec(lhsUri.qMap().entrySet().stream().map(kv -> rel(uri(kv.getKey()), Helper.parseQ(kv.getValue()))))).c(c -> c.mult(lhs.c()));
                     }),
                     instC(REVERSE_INST_TID.dom(URI_TID).rng(URI_TID), lst(), (lhs, inst) -> lhs.jvm(lhs.uriValue().path(lhs.asUri().uriValue().path().reversed()))),
                     docWrap(instC(HAS_INST_TID.dom(URI_TID).rng(URI_TID.maybe()), lst(T(STR_TID)), (lhs, inst) -> REGEX_CACHE.compute(inst.arg(0).strValue(), (k, v) -> null == v ? Pattern.compile(k) : v).matcher(lhs.uriValue().toString()).find() ? lhs : noobj()),
@@ -442,11 +449,34 @@ public interface Uri extends Mono, Ring.O<Uri>, Comparable<Uri> {
          * the {@code >>.>>.>>} broadcast, so {@code >> N} is referentially the chain.
          */
         private static Obj readChildUris(final fURI pattern, final fURI base, final int depth) {
-            return objs(Router.readFromSpace(pattern.asBranch()).stream()
-                    .filter(o -> !o.isNoObj())
-                    .map(o -> o.asRel().first().uriValue())
+            // Read the space's RAW reader (real stored children only).  The resolving read
+            // (resolveRead) fabricates child uris via locateBasePoly/unrollPoly when the direct
+            // read is empty — the walk must never invent an address.  When no space supports
+            // the base uri, the walk is simply empty (no incident uris) — not an error.
+            if (!Router.global().hasSpaceFor(base))
+                return objs();
+            final Space space = Router.global().getSpaceFor(base);
+            final java.util.List<fURI> children = new java.util.ArrayList<>();
+            space.directReader().apply(pattern).forEachRemaining(kv -> {
+                if (!kv.obj().isNoObj())
+                    children.add(kv.furi());
+            });
+            return objs(children.stream()
                     .filter(u -> relativeDepth(u, base) == depth)
                     .map(u -> uri(u)));
+        }
+
+        /**
+         * A query value is stored as a raw string but is an mtron literal — parse it back to
+         * its native type (1 → int::1, abc → uri:abc, !*test → the auto-from ref).  Fall back to
+         * a plain str for anything that isn't a valid literal (free-text query values).
+         */
+        static Obj parseQ(final String value) {
+            try {
+                return ObjmtronSerializer.parse(value);
+            } catch (final Exception e) {
+                return str(value);
+            }
         }
 
         private static int relativeDepth(final fURI child, final fURI base) {
@@ -486,28 +516,11 @@ public interface Uri extends Mono, Ring.O<Uri>, Comparable<Uri> {
                     final int depth = (int) argUri.asNode().path().stream().filter("+"::equals).count();
                     return readChildUris(lhs.uriValue().extend(argUri.toString()), lhs.uriValue(), depth);
                 }
-                // uri >> <uri> — introspect a component name (scheme, host, path, …) or
-                // navigate to a child: a/b/c >><2> => a/b/c/2 — but only a real child,
-                // never a fabricated address.
-                final String component = argUri.toString();
+                // uri >> <uri> — navigate to a child: a/b/c >><2> => a/b/c/2 — but only a
+                // real child, never a fabricated address.  Uri components (scheme, host, …)
+                // live in rec space, not uri space — use .as(rec::T)>>component for those.
                 final fURI target = lhs.uriValue().extend(argUri.toString());
-                final Object result = switch (component) {
-                    case SCHEME -> lhs.uriValue().scheme();
-                    case SUB -> lhs.uriValue().subdomain();
-                    case HOST -> lhs.uriValue().host();
-                    case PORT -> lhs.uriValue().port();
-                    case AUTHORITY -> lhs.uriValue().authority();
-                    case PATH -> lhs.uriValue().pathString();
-                    case COEFF -> lst(jnt(lhs.uriValue().c().min()), jnt(lhs.uriValue().c().max()));
-                    case QPROC -> lhs.uriValue().qMap().entrySet().stream()
-                            .map(kv -> rel(MObjFactory.single().toObjFromString(kv.getKey()), MObjFactory.single().toObjFromString(kv.getValue())))
-                            .collect(new CommonUtil.RecCollector());
-                    default -> Router.readFromSpace(target).isNoObj() ? noobj() : uri(target);
-                };
-                return result instanceof Obj ? (Obj) result :
-                        (null == result || Integer.valueOf(-1) == result ? noobj() :
-                                (result instanceof Integer ? jnt((Integer) result) :
-                                        uri(result.toString())));
+                return Router.readFromSpace(target).isNoObj() ? noobj() : uri(target);
             }
             return noobj();
         }
