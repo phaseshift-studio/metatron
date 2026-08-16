@@ -55,7 +55,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.mach.machInstSet.DIR_TID;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_ISA_TID;
 
 public class fsSpace extends AbstractSpace<FileSystem> {
@@ -121,11 +120,9 @@ public class fsSpace extends AbstractSpace<FileSystem> {
                 if (file.isFile()) {
                     return readFileAsObj(file, qMap).vid(null);
                 } else if (file.isDirectory()) {
-                    // A directory's value is stored in a hidden .mtron file
-                    final File hidden = new File(file, ".mtron");
-                    if (hidden.exists() && hidden.isFile())
-                        return readFileAsObj(hidden, qMap).vid(null);
-                    return uri(this.redirect(f(file.getPath()), false), DIR_TID, null);
+                    // A directory derefs to its own uri, as a branch (trailing /) — its
+                    // structure (the child uris) is walked with >> and /, never materialized.
+                    return uri(this.redirect(f(file.getPath()), false).asBranch());
                 }
             }
         } catch (final Exception e) {
@@ -144,7 +141,7 @@ public class fsSpace extends AbstractSpace<FileSystem> {
         fs.close();
         //final String source = new String(fileBytes, StandardCharsets.UTF_8);
         //final fURI vid = source.startsWith("[-- @<") ? f(source.substring(6, source.indexOf("> --]\n")).trim()) : null;
-        LOG.info("reading %s [mime:%s]", file.getPath(), mimeType.value);
+        LOG.debug("reading %s [mime:%s]", file.getPath(), mimeType.value);
         // Use parse (not eval) to avoid executing potential write-side-effect expressions
         // in the file content (e.g. !* or -> sugar that Router.writeToSpace).
         //
@@ -184,7 +181,7 @@ public class fsSpace extends AbstractSpace<FileSystem> {
         final File file = new File(this.redirect(vid.qLess(), true).toString());
         if (file.isDirectory())
             throw MTronException.of("unable to write obj to an existing directory with same vid: %s", vid);
-        LOG.info("writing %s to %s [mime:%s]", obj, file.getPath(), mimeType.value);
+        LOG.debug("writing %s to %s [mime:%s]", obj, file.getPath(), mimeType.value);
         try {
             if (!file.exists()) {
                 new File(f(file.getAbsolutePath()).retract(1).toString()).mkdirs();
@@ -285,12 +282,12 @@ public class fsSpace extends AbstractSpace<FileSystem> {
                     if (!Files.exists(walkRoot))
                         return IteratorUtil.of();
                     final fURI walkRootFuri = Space.Helper.routeToSpace(f(walkRoot.toString()), this.routes());
-                    // +/ means "direct children only" — walk exactly one level.
-                    // asNode().path().size() counts the +/ segment, so for
-                    // local:a/+/ it returns 2 (a, +/) which would reach
-                    // grandchildren.  Force depth=1 for branch reads.
+                    // The walk depth is the number of + wildcards in the pattern:
+                    // +/ means direct children (depth 1), +/+ means grandchildren
+                    // (depth 2), etc.  # means unbounded.
                     final int walkDepth = keyQless.hasPattern("#") ? Integer.MAX_VALUE
-                            : keyQless.hasPattern("+") ? 1 : keyQless.asNode().path().size();
+                            : keyQless.hasPattern("+") ? (int) keyQless.asNode().path().stream().filter("+"::equals).count()
+                            : keyQless.asNode().path().size();
                     try (final Stream<Path> walk = Files.walk(walkRoot, walkDepth)) {
                         return walk
                                 .filter(p -> {
@@ -302,7 +299,10 @@ public class fsSpace extends AbstractSpace<FileSystem> {
                                         return false;
                                     }
                                 })
-                                .collect(Collectors.toMap(p -> Space.Helper.routeToSpace(f(p.toString()), this.routes()), p -> {
+                                .collect(Collectors.toMap(p -> {
+                                    final fURI routed = Space.Helper.routeToSpace(f(p.toString()), this.routes());
+                                    return p.toFile().isDirectory() ? routed.asBranch() : routed;
+                                }, p -> {
                                     final File file = p.toFile();
                                     return fileToObj(file, key.qMap());
                                 }, Obj::append, LinkedHashMap::new))
@@ -342,29 +342,6 @@ public class fsSpace extends AbstractSpace<FileSystem> {
                             }
                         } else {
                             value = this.fileToObj(file, key.qMap());
-                        }
-                        // Exact-path read on a directory without .mtron: enumerate children at depth 1
-                        if (value.isUri() && file.isDirectory()) {
-                            try {
-                                if (true)
-                                    return IdObj.of(key, fileToObj(file, key.qMap())).iterator();
-                                final java.util.List<Path> children = Files.list(file.toPath()).toList();
-                                if (!children.isEmpty()) {
-                                    final Map<fURI, Obj> collected = new LinkedHashMap<>();
-                                    for (final Path child : children) {
-                                        final fURI childFuri = Space.Helper.routeToSpace(f(child.toString()), this.routes());
-                                        collected.put(childFuri, fileToObj(child.toFile(), key.qMap()));
-                                    }
-                                    return collected.entrySet().stream()
-                                            .flatMap(kv -> {
-                                                if (kv.getValue().isPoly())
-                                                    return Space.Helper.unrollPoly(kv.getKey(), kv.getValue().as(), key.asNode().asRelative()).stream();
-                                                return Stream.of(IdObj.of(kv.getKey(), kv.getValue()));
-                                            }).iterator();
-                                }
-                            } catch (final IOException e) {
-                                throw MTronException.of(e);
-                            }
                         }
                         return IteratorUtil.of(IdObj.of(key, value));
                     } catch (final Exception e) {

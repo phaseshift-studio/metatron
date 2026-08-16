@@ -21,16 +21,14 @@ package studio.phaseshift.metatron.isa.mach.io.type;
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.AbstractSerializerTest;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.ide.parser.ObjJavaIDESerializer;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Shared test surface for Java source serializers (fine-grained CST via
- * {@link ObjJavaSerializer} and coarse-schema via {@link ObjJavaCSSerializer}).
+ * {@link ObjJavaSerializer} and coarse-schema via {@link ObjJavaIDESerializer}).
  *
  * <p>Both are language→Rec bridges (not generic Obj serializers) and both must
  * round-trip common Java constructs idempotently.  The round-trip tests below
@@ -186,12 +184,12 @@ public abstract class AbstractJavaSerializerTest extends AbstractSerializerTest<
                                   public class Point {
                                       private int x;
                                       private int y;
-
+                                  
                                       public Point(int x, int y) {
                                           this.x = x;
                                           this.y = y;
                                       }
-
+                                  
                                       public int getX() {
                                           return x;
                                       }
@@ -214,11 +212,11 @@ public abstract class AbstractJavaSerializerTest extends AbstractSerializerTest<
         assertRoundTripIdempotent("""
                                   public class Container<T extends Comparable<T>> {
                                       private T item;
-
+                                  
                                       public T get() {
                                           return item;
                                       }
-
+                                  
                                       public void set(T item) {
                                           this.item = item;
                                       }
@@ -230,11 +228,11 @@ public abstract class AbstractJavaSerializerTest extends AbstractSerializerTest<
         assertRoundTripIdempotent("""
                                   public class MyList extends java.util.AbstractList<String>
                                           implements java.util.RandomAccess {
-
+                                  
                                       public String get(int index) {
                                           return null;
                                       }
-
+                                  
                                       public int size() {
                                           return 0;
                                       }

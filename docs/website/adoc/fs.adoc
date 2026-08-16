@@ -95,3 +95,24 @@ fsspace::[                                          /
               mtron  => /bin/metatron],             /
     route => [local: => <~>]]@</sys/space/fs/local>
 ----
+
+[discrete]
+=== Directories as Navigable Polys
+
+Reading a directory returns a navigable `dir::T` poly — a rec of `child-name => !*<child uri>` refs, single depth and lazy. Each child dereferences through the router only on access, so `>>sub>>sub` descends one level at a time without materializing the tree or evaluating file contents.
+
+[mtron]
+----
+*<fs:m/src>                        [-- <1> --]
+*<fs:m/src> >> main >> java        [-- <2> --]
+fs:m/src >>                        [-- <3> --]
+fs:m/src >> 2                      [-- <4> --]
+*<fs:m/src/main/java>              [-- <5> --]
+----
+<1> the `dir::T` poly — `child-name => !*<child uri>` refs, single depth, lazy.
+<2> descend the obj tree one hop per `>>`.
+<3> the child uris, obj-less (the reference walk).
+<4> the descendants exactly 2 levels deep.
+<5> `/` path navigation to the referent.
+
+The `dir::T` poly is the **additive container** of the filesystem — a read projection, not a write target. The write/update path consults the space's `isWritableBase(Obj)` and never merges into a directory projection; writes land on the leaves. The same structure generalizes to every space via `Space.Helper.treeFromUri(root)`: a space's node reads as its emanating uris, regardless of storage (see `docs/design/ring-uri.md`).

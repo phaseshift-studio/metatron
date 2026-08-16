@@ -56,7 +56,7 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  * <p>
  * Arrow keys navigate the tree rows.  {@code Enter} passes the selected
  * node's {@code rel::T} (URI → value) to the user-configurable
- * {@code code} field.  {@code Right} expands the current branch one level
+ * {@code on_select} field.  {@code Right} expands the current branch one level
  * deeper (or increases {@code max} for leaf nodes).  {@code Ctrl-D} pops
  * the current level (or exits at the root).
  * <p>
@@ -95,7 +95,7 @@ public class TreeSelectTool extends AbstractWidget<TreeSelectTool> {
 
         TreeLevel(final fURI root, final int maxDepth,
                   final Set<fURI> forceExpand,
-                  final Call mini,
+                  final Call label,
                   final int offsetX, final int offsetY,
                   final int spawnRow, final int spawnCol,
                   final Rec parentStyle) {
@@ -109,7 +109,7 @@ public class TreeSelectTool extends AbstractWidget<TreeSelectTool> {
             final Map<Obj, Obj> jvm = mutableMap(
                     uri(ROOT), root.toUri(),
                     uri(MAX), jnt(maxDepth),
-                    uri(CODE), mini);
+                    uri(CODE), label);
             if (parentStyle != null) {
                 jvm.put(uri(STYLE), parentStyle);
             }
@@ -199,8 +199,8 @@ public class TreeSelectTool extends AbstractWidget<TreeSelectTool> {
         jvmWrite(uri(MAX), jnt(value));
     }
 
-    private Call code() {
-        return this.at(uri(CODE)).orElse(instLambda((lhs, inst) -> {
+    private Call onSelect() {
+        return this.at(uri(ON_SELECT)).orElse(instLambda((lhs, inst) -> {
             this.pushDetailLevel(lhs.asRel().second(), lhs.asRel().first().uriValue(), 0, 0, 0, 0);
             return noobj();
         }));
@@ -318,7 +318,7 @@ public class TreeSelectTool extends AbstractWidget<TreeSelectTool> {
 
     /**
      * Enter key: pass the selected node's {@code rel::T} (URI → value)
-     * to the user-configured {@link #code} instruction.
+     * to the user-configured {@link #onSelect} instruction.
      */
     private void handleSelect(final TreeLevel level) {
         if (level.rowCount() == 0) return;
@@ -327,7 +327,7 @@ public class TreeSelectTool extends AbstractWidget<TreeSelectTool> {
 
         // Build rel::T for the selected node: URI → value
         final Rel nodeRel = rel(uri(entry.uri()), entry.obj());
-        code().apply(nodeRel);
+        onSelect().apply(nodeRel);
     }
 
     /**

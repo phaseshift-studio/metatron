@@ -16,15 +16,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.mach.io.type;
+package studio.phaseshift.metatron.isa.ide.parser;
 
 import ch.usi.si.seart.treesitter.Language;
 import ch.usi.si.seart.treesitter.Node;
 import ch.usi.si.seart.treesitter.Parser;
 import ch.usi.si.seart.treesitter.Tree;
-import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.mach.io.type.AbstractObjSerializer;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjJavaSerializer;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.nio.ByteBuffer;
@@ -32,11 +33,12 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
+import static studio.phaseshift.metatron.isa.ide.ideInstSet.IDE_JAVA_TID;
+import static studio.phaseshift.metatron.isa.ide.ideInstSet.OBJ_IDE_JAVA_SERIALIZER_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.web.webInstSet.CS_JAVA_TID;
-import static studio.phaseshift.metatron.isa.web.webInstSet.OBJ_CS_JAVA_SERIALIZER_TID;
+import static studio.phaseshift.metatron.isa.web.webInstSet.OBJ_SERIALIZER_TID;
 
 /**
  * The coarse-schema Java serializer ("CS").  Parses Java source into the
@@ -59,11 +61,9 @@ import static studio.phaseshift.metatron.isa.web.webInstSet.OBJ_CS_JAVA_SERIALIZ
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class ObjJavaCSSerializer extends AbstractObjSerializer<String> {
+public class ObjJavaIDESerializer extends AbstractObjSerializer<String> {
 
-    public static final fURI OBJ_CS_JAVA_SERIALIZER_VID = OBJ_CS_JAVA_SERIALIZER_TID;
-
-    private static final ObjJavaCSSerializer INSTANCE = new ObjJavaCSSerializer();
+    private static final ObjJavaIDESerializer INSTANCE = new ObjJavaIDESerializer();
 
     private static final Parser PARSER;
 
@@ -72,12 +72,12 @@ public class ObjJavaCSSerializer extends AbstractObjSerializer<String> {
         PARSER = Parser.getFor(Language.JAVA);
     }
 
-    public static ObjJavaCSSerializer single() {
+    public static ObjJavaIDESerializer single() {
         return INSTANCE;
     }
 
-    public ObjJavaCSSerializer() {
-        super(OBJ_CS_JAVA_SERIALIZER_TID, OBJ_CS_JAVA_SERIALIZER_TID);
+    public ObjJavaIDESerializer() {
+        super(OBJ_SERIALIZER_TID, OBJ_IDE_JAVA_SERIALIZER_TID);
     }
 
     public static Obj parse(final String javaSource) {
@@ -124,7 +124,7 @@ public class ObjJavaCSSerializer extends AbstractObjSerializer<String> {
             if (preambleSet) {
                 result = result.at(uri("postscript"), str(programContent.substring(prevClassEnd)));
             }
-            return result.selfTID(CS_JAVA_TID);
+            return result.selfTID(IDE_JAVA_TID);
         } catch (final MTronException e) {
             throw e;
         } catch (final Exception e) {

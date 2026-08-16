@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -18,40 +18,18 @@
 
 package studio.phaseshift.metatron.isa.rdf;
 
-import org.eclipse.rdf4j.query.QueryResults;
-import org.eclipse.rdf4j.repository.util.Repositories;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
-import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
-import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
-import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
-import studio.phaseshift.metatron.isa.rdf.parser.ObjRDFSerializer;
-import studio.phaseshift.metatron.isa.rdf.space.rdfSpace;
-import studio.phaseshift.metatron.util.MTronException;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.stream.Stream;
-
-import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.Tokens.PATTERN;
+import static studio.phaseshift.metatron.Tokens.SPACE;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
-import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.else_;
-import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
-import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.rdf.parser.ObjRDFSerializer.OBJ_RDF_SERIALIZER_VID;
-import static studio.phaseshift.metatron.isa.rdf.space.rdfSpace.RDF_SPACE_TID;
-import static studio.phaseshift.metatron.isa.rdf.space.rdfSpace.SPARQL_INST_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /*
@@ -85,7 +63,7 @@ public class rdfInstSet extends AbstractInstSet {
     @Override
     public void setup() {
         //this.selfTID(INSTSET_TID);
-        this.jvm().putAll(mutableMap(
+       /* this.jvm().putAll(mutableMap(
                 uri(PATTERN), uri(RDF_ISA_TID.extend(ALL)),
                 uri(CONST), lst(ObjRDFSerializer.single()),
                 uri(TYPE), lst(
@@ -130,10 +108,10 @@ public class rdfInstSet extends AbstractInstSet {
                                 "a stream of named bindings",
                                 Map.of(jnt(0), "a sparql query"),
                                 "query a triple/quad store in native sparql and yield an mtron mapped result set",
-                                "*/sys/space/wikipedia.sparql('SELECT ?x ?y WHERE ?x foaf:knows ?y') [-- a sparql query with named bindings --]")))));
-        docWrap(this,
+                                "/sys/space/wikipedia.sparql('SELECT ?x ?y WHERE ?x foaf:knows ?y') [-- a sparql query with named bindings --]")))));*/
+        /*docWrap(this,
                 "expose metatron to the semantic web through rdf stores (databases) and rdf documents (rdf/json)",
-                "*<wikipedia://www.wikidata.org/wiki/Q54872>.>>o");
+                "*<wikipedia://www.wikidata.org/wiki/Q54872>.>>o");*/
         super.setup();
     }
 }

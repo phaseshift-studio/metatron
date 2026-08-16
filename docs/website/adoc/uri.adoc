@@ -531,7 +531,7 @@ x2 -> [a/b/c => 1,         /
 
 [mtron]
 ----
-[x0,x1,x2]>-.-<[*(* a/b/c)] 
+[x0,x1,x2]>-.-<[*(* a/b/c)]
 [x0,x1,x2]>-.-<[*(* a/b/+)]
 [x0,x1,x2]>-.-<[*(* a/+/+)]
 [x0,x1,x2]>-.-<[*(* +/b/+)]
@@ -539,6 +539,30 @@ x2 -> [a/b/c => 1,         /
 [x0,x1,x2]>-.-<[*(* a/+/c)]
 [x0,x1,x2]>-.-<[*(* +/+/c)]
 [x0,x1,x2]>-.-<[*(* g/+/+)]
-----
 -->
 ++++
+
+[discrete]
+=== Navigating the Reference Structure
+
+Metatron is address-first: `a` answers the *address*, `*a` answers the *value*. The uri is the reference; the obj is the referent — and the same operator walks either side of the reference. The address space is first-class, obj-free navigation; the referent is what you fetch when you choose.
+
+[mtron]
+----
+a/b/c/d -> 1                        [-- seed a leaf --]
+a/b/c/d/e -> 2                      [-- seed a deeper leaf --]
+a/b/c >>                            [-- <1> --]
+a/b/c >> 2                          [-- <2> --]
+a/b/c/d <<                          [-- <3> --]
+a/b/c/d/e << d/e                    [-- <4> --]
+a/b/c/d >> 0                        [-- <5> --]
+----
+<1> the **edge**: `a/b/c`'s child uris, obj-less.
+<2> the **walk**: descendants exactly 2 levels deep.
+<3> **retract** one level: the parent uri.
+<4> **retract** a matching postfix.
+<5> descend zero — the uri itself (the identity).
+
+`>>` on a **poly** selects a branch — keyed on a `rec`, indexed on a `lst` (the referent walk). `>>` on a **uri** extends — descends the address tree (the reference walk, nothing resolves). `<<` is pure uri arithmetic — the uri carries its own parent in its segments, never an obj parent link. The `@` anchor collapses the bridge: `5@a` is the value *with* its address, so writes flow back (pass-by-value@reference).
+
+Navigation never invents an address: `uri >> <path>` returns the child only if it *exists* (it resolves through the space); otherwise `noobj`. Walking the reference is safe because the reference is real — a made-up path is not an address, it is a lie. See `docs/design/ring-uri.md` for the full theory.

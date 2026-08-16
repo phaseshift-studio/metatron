@@ -47,7 +47,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.mach.machInstSet.DIR_TID;
 import static studio.phaseshift.metatron.isa.web.space.http.httpSpace.HTTP_HANDLER_TID;
 import static studio.phaseshift.metatron.isa.web.space.http.httpSpace.HTTP_SPACE_TID;
 
@@ -273,9 +272,9 @@ public class web_httpHandler extends HttpRec {
         }));
     }
 
-    /** Checks whether an object is noobj or a directory URI — used by DEFAULT_PAGE fallback. */
+    /** Checks whether an object is noobj or a directory — used by DEFAULT_PAGE fallback.
+     *  A directory derefs to its own uri (no content), so a uri result means "not content." */
     private static boolean isNoobjOrDir(final Obj requestObj) {
-        return requestObj.isNoObj()
-                || (requestObj.isUri() && DIR_TID.equals(requestObj.tid().basePath()));
+        return requestObj.isNoObj() || requestObj.isUri();
     }
 }

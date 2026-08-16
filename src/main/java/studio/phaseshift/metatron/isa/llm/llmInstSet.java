@@ -57,7 +57,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.io.space.fs.fsSpace.staticObjToFile;
-import static studio.phaseshift.metatron.isa.mach.machInstSet.DIR_TID;
 import static studio.phaseshift.metatron.isa.vec.vecInstSet.VEC_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
@@ -502,8 +501,8 @@ public class llmInstSet extends AbstractInstSet {
                                 mutableMap(jnt(0), "the tool type"),
                                 "maps an instruction to a tool specification for llm use",
                                 "*eval.as(tool::T)"),
-                        docWrap(instC(AS_INST_TID.dom(DIR_TID).rng(LLM_SKILL_TID), lst(LLM_SKILL_TYPE), (lhs, inst) -> mSkill.of(staticObjToFile(lhs))),
-                                "a dir containing the llm SKILL.md file",
+                        docWrap(instC(AS_INST_TID.dom(URI_TID).rng(LLM_SKILL_TID), lst(LLM_SKILL_TYPE), (lhs, inst) -> mSkill.of(staticObjToFile(lhs))),
+                                "a dir uri containing the llm SKILL.md file",
                                 "a mtron encoding of the specified skill",
                                 mutableMap(jnt(0), "the skill type"),
                                 "maps a directory to an llm skill where the dir follows the standard SKILL.md structure",

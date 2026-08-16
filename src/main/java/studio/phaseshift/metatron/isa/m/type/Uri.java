@@ -22,6 +22,7 @@ import studio.phaseshift.metatron.algebra.Ring;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
 import studio.phaseshift.metatron.isa.m.type.impl.MStr;
+import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.m.type.impl.MUri;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
@@ -435,38 +436,80 @@ public interface Uri extends Mono, Ring.O<Uri>, Comparable<Uri> {
             // do nothing
         }
 
+        /**
+         * Enumerate the uris matching {@code pattern}, keeping only those at exactly
+         * {@code depth} below {@code base} — the walk returns depth-N leaves, matching
+         * the {@code >>.>>.>>} broadcast, so {@code >> N} is referentially the chain.
+         */
+        private static Obj readChildUris(final fURI pattern, final fURI base, final int depth) {
+            return objs(Router.readFromSpace(pattern.asBranch()).stream()
+                    .filter(o -> !o.isNoObj())
+                    .map(o -> o.asRel().first().uriValue())
+                    .filter(u -> relativeDepth(u, base) == depth)
+                    .map(u -> uri(u)));
+        }
+
+        private static int relativeDepth(final fURI child, final fURI base) {
+            // The path lst carries the leading slash as a leading "" (["","a","b"] is /a/b) —
+            // drop it from both before comparing, so relative depth is plain segment counting.
+            final List<String> cp = child.path().stream().filter(s -> !s.isEmpty()).toList();
+            final List<String> bp = base.path().stream().filter(s -> !s.isEmpty()).toList();
+            int i = 0;
+            while (i < bp.size() && i < cp.size() && cp.get(i).equals(bp.get(i))) i++;
+            return cp.size() - i;
+        }
+
         public static Obj rshiftUri(final Uri lhs, final Obj arg) {
-            return objs(arg.stream().map(u -> {
-                if (u.isInt()) {
-                    final fURI uriFURI = lhs.uriValue();
-                    return u.intValue() < 0 ?
-                            (uriFURI.segmentLength() > (-1 * u.intValue().intValue()) ?
-                                    uri(uriFURI.asRelativeNode().segments().get(uriFURI.segmentLength() + u.intValue().intValue())) :
-                                    noobj()) :
-                            (uriFURI.segmentLength() > u.intValue().intValue() ?
-                                    uri(uriFURI.asRelativeNode().segments().get(u.intValue().intValue())) :
-                                    noobj());
-                } else {
-                    final String component = u.uriValue().toString();
-                    final Object result = switch (component) {
-                        case SCHEME -> lhs.uriValue().scheme();
-                        case SUB -> lhs.uriValue().subdomain();
-                        case HOST -> lhs.uriValue().host();
-                        case PORT -> lhs.uriValue().port();
-                        case AUTHORITY -> lhs.uriValue().authority();
-                        case PATH -> lhs.uriValue().pathString();
-                        case COEFF -> lst(jnt(lhs.uriValue().c().min()), jnt(lhs.uriValue().c().max()));
-                        case QPROC -> lhs.uriValue().qMap().entrySet().stream()
-                                .map(kv -> rel(MObjFactory.single().toObjFromString(kv.getKey()), MObjFactory.single().toObjFromString(kv.getValue())))
-                                .collect(new CommonUtil.RecCollector());
-                        default -> noobj();
-                    };
-                    return result instanceof Obj ? (Obj) result :
-                            (null == result || Integer.valueOf(-1) == result ? noobj() :
-                                    (result instanceof Integer ? jnt((Integer) result) :
-                                            uri(result.toString())));
+            if (arg.isNoObj()) {
+                // uri >> — the edge: the child uris emanating from this uri, obj-less.
+                // Reference-side navigation: the additive enumeration of the uri's children,
+                // no referents resolved.  e.g. a/b/c >> = {a/b/c/e, a/b/c/g}.
+                return readChildUris(lhs.uriValue().extend("+/"), lhs.uriValue(), 1);
+            }
+            if (arg.isInt()) {
+                // uri >> <int> — the walk: descend exactly <int> levels.  >> 0 is the
+                // identity (zero compositions of the edge) — the uri itself.
+                final int depth = arg.intValue().intValue();
+                if (depth == 0)
+                    return uri(lhs.uriValue());
+                final StringBuilder pattern = new StringBuilder();
+                for (int i = 0; i < depth; i++) {
+                    if (i > 0) pattern.append("/");
+                    pattern.append("+");
                 }
-            }));
+                return readChildUris(lhs.uriValue().extend(pattern.toString()), lhs.uriValue(), depth);
+            }
+            if (arg.isUri()) {
+                final fURI argUri = arg.uriValue();
+                if (argUri.hasPattern()) {
+                    // uri >> <pattern> — the walk: enumerate every uri matching lhs + pattern.
+                    final int depth = (int) argUri.asNode().path().stream().filter("+"::equals).count();
+                    return readChildUris(lhs.uriValue().extend(argUri.toString()), lhs.uriValue(), depth);
+                }
+                // uri >> <uri> — introspect a component name (scheme, host, path, …) or
+                // navigate to a child: a/b/c >><2> => a/b/c/2 — but only a real child,
+                // never a fabricated address.
+                final String component = argUri.toString();
+                final fURI target = lhs.uriValue().extend(argUri.toString());
+                final Object result = switch (component) {
+                    case SCHEME -> lhs.uriValue().scheme();
+                    case SUB -> lhs.uriValue().subdomain();
+                    case HOST -> lhs.uriValue().host();
+                    case PORT -> lhs.uriValue().port();
+                    case AUTHORITY -> lhs.uriValue().authority();
+                    case PATH -> lhs.uriValue().pathString();
+                    case COEFF -> lst(jnt(lhs.uriValue().c().min()), jnt(lhs.uriValue().c().max()));
+                    case QPROC -> lhs.uriValue().qMap().entrySet().stream()
+                            .map(kv -> rel(MObjFactory.single().toObjFromString(kv.getKey()), MObjFactory.single().toObjFromString(kv.getValue())))
+                            .collect(new CommonUtil.RecCollector());
+                    default -> Router.readFromSpace(target).isNoObj() ? noobj() : uri(target);
+                };
+                return result instanceof Obj ? (Obj) result :
+                        (null == result || Integer.valueOf(-1) == result ? noobj() :
+                                (result instanceof Integer ? jnt((Integer) result) :
+                                        uri(result.toString())));
+            }
+            return noobj();
         }
 
         // Use the same singleton exception from StrProjectionHelper or a shared one

@@ -130,13 +130,13 @@
                 <classifier>${os.detected.name}-${os.detected.arch}</classifier>
                 <version>${jlama.version}</version>
             </dependency>
-            <dependency>
-                <groupId>org.eclipse.rdf4j</groupId>
-                <artifactId>rdf4j-bom</artifactId>
-                <version>${rdf4j.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
+            <!-- <dependency>
+                 <groupId>org.eclipse.rdf4j</groupId>
+                 <artifactId>rdf4j-bom</artifactId>
+                 <version>${rdf4j.version}</version>
+                 <type>pom</type>
+                 <scope>import</scope>
+             </dependency> -->
         </dependencies>
     </dependencyManagement>
     <dependencies>
@@ -161,11 +161,11 @@
             <version>${zt.version}</version>
         </dependency>
         <!-- RDF -->
-        <dependency>
+        <!--<dependency>
             <groupId>org.eclipse.rdf4j</groupId>
             <artifactId>rdf4j-storage</artifactId>
             <type>pom</type>
-        </dependency>
+        </dependency>-->
         <!-- MARKDOWN -->
         <dependency>
             <groupId>com.vladsch.flexmark</groupId>

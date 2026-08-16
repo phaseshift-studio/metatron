@@ -242,15 +242,15 @@ public class uiInstSet extends AbstractInstSet {
                                         .isaPredicate(rec(
                                                 uri(ROOT), URI_TYPE,
                                                 uri(MAX), INT_TYPE,
-                                                uri(CODE).maybe(), ALL_TYPE.orElse(id_().tryToInst()),
-                                                uri("mini").maybe(), ALL_TYPE.orElse(id_().tryToInst())))
+                                                uri(ON_SELECT).maybe(), ALL_TYPE.orElse(id_().tryToInst()),
+                                                uri(LABEL).maybe(), ALL_TYPE.orElse(id_().tryToInst())))
                                         .constructor(arg -> new TreeSelectTool(arg.as().jvm(), UI_TREE_SELECT_TOOL_TID, arg.vid()))
                                         .create(), "maybe an obj", "a tree select tool",
                                 Map.of(uri(ROOT), "the root uri to traverse from",
                                         uri(MAX), "the max depth to traverse",
-                                        uri(CODE).maybe(), "instruction called on Enter with the selected node's rel::T (default: identity)",
-                                        uri("mini").maybe(), "instruction called on each tree node's obj to produce a suffix label (default: identity)"),
-                                "an interactive tree browser: arrow keys navigate, Enter fires code on selected node, right/left expand/contract, mini labels each node"),
+                                        uri(ON_SELECT).maybe(), "instruction called on Enter with the selected node's rel::T (default: identity)",
+                                        uri(LABEL).maybe(), "instruction called on each tree node's obj to produce a suffix label (default: identity)"),
+                                "an interactive tree browser: arrow keys navigate, Enter fires on_select on selected node, right/left expand/contract, label suffixes each node"),
                         docWrap(UI_SWIPE_PANEL_TYPE = Type.Builder.build()
                                         .tid(UI_WIDGET_TID)
                                         .vid(UI_SWIPE_PANEL_TID)

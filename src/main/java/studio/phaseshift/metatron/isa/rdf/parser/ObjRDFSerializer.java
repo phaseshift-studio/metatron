@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -18,7 +18,7 @@
 
 package studio.phaseshift.metatron.isa.rdf.parser;
 
-import org.eclipse.rdf4j.model.*;
+/*import org.eclipse.rdf4j.model.*;
 import org.eclipse.rdf4j.model.impl.DynamicModelFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
@@ -27,32 +27,16 @@ import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.RDFHandlerException;
 import org.eclipse.rdf4j.rio.RDFParser;
 import org.eclipse.rdf4j.rio.RDFParserRegistry;
-import org.eclipse.rdf4j.rio.helpers.AbstractRDFHandler;
+import org.eclipse.rdf4j.rio.helpers.AbstractRDFHandler;*/
+
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.mach.io.type.AbstractObjSerializer;
-import studio.phaseshift.metatron.util.MTronException;
 
-import java.io.ByteArrayInputStream;
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Stream;
-
-import static org.eclipse.rdf4j.model.util.Values.*;
-import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
-import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
-import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
-import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
-import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.web.webInstSet.OBJ_RDF_SERIALIZER_TID;
+//import static org.eclipse.rdf4j.model.util.Values.*;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class ObjRDFSerializer extends AbstractObjSerializer<Stream<Value>> {
+public class ObjRDFSerializer { /*extends AbstractObjSerializer<Stream<Value>> {
 
 
     public static final fURI OBJ_RDF_SERIALIZER_VID = OBJ_RDF_SERIALIZER_TID;
@@ -154,9 +138,10 @@ public class ObjRDFSerializer extends AbstractObjSerializer<Stream<Value>> {
             return model.stream().map(s -> SimpleValueFactory.getInstance().createTripleTerm(s.getSubject(), s.getPredicate(), s.getObject()));
         }
         throw MTronException.of("cannot write obj to rdf: %s".formatted(obj));
-    }
+    }*/
 
     public fURI vid() {
-        return OBJ_RDF_SERIALIZER_VID;
+        return null;
+        // return OBJ_RDF_SERIALIZER_VID;
     }
 }
