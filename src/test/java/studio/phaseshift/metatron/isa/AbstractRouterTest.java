@@ -48,9 +48,11 @@ public abstract class AbstractRouterTest extends AbstractMetatronTest {
 
     @ParameterizedTest
     @CsvSource(value = {
-            "math:pi   | /m/math/pi",
-            "math:e    | /m/math/e",
-            "math:e{3} | /m/math/e{3}",
+            "math:pi       | /m/math/pi",         // const lives directly under /m/math/
+            "math:e        | /m/math/e",
+            "math:e{3}     | /m/math/e{3}",
+            "math:cos      | /m/math/inst/cos",   // inst lives under /m/math/inst/ — resolved via redirect
+            "math:inst/cos | /m/math/inst/cos",   // full path — naive extension fallback
     }, delimiter = '|', nullValues = "null")
     @TestData(value = {
             "print('loading test data');",

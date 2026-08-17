@@ -20,13 +20,10 @@ package studio.phaseshift.metatron.isa.ide.parser;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import studio.phaseshift.metatron.Tracer;
-import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.mach.io.type.AbstractJavaSerializerTest;
-import studio.phaseshift.metatron.isa.mach.type.Router;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -60,13 +57,13 @@ public class ObjJavaIDESerializerTest extends AbstractJavaSerializerTest {
 
     @BeforeAll
     public static void loadInstSet() {
-        InstSet.importInstSet(f("/m/web"), f("web"));
         InstSet.importInstSet(f("/m/ide"), f("ide"));
-        Tracer.enable(Tracer.stack);
+        InstSet.importInstSet(f("/m/web"), f("web"));
+        //Tracer.enable(Tracer.stack);
     }
 
     public ObjJavaIDESerializerTest() {
-        super(new ObjJavaIDESerializer(), IDE_JAVA_TID, "ide_java");
+        super(new ObjJavaIDESerializer(), IDE_JAVA_TID, "ide:java");
     }
 
     /**
@@ -332,8 +329,9 @@ public class ObjJavaIDESerializerTest extends AbstractJavaSerializerTest {
 
     @Test
     public void testJavaToJavaIDE() {
+        // InstSet.importInstSet(f("/m/web"), f("web"));
         // dereference flow: a java::T str parses into the coarse cs_java rec
-        final Rec cs = eval("'public class Empty {}'.as(java::T).as(ide_java::T)");
+        final Rec cs = eval("'public class Empty {}'.as(/m/web/mime/java::T).as(ide:java::T)");
         assertTrue(cs.isRec());
         assertEquals(IDE_JAVA_TID, cs.tid());
         assertFalse(cs.at(uri("classes")).isNoObj(), "must expose classes");
@@ -341,22 +339,35 @@ public class ObjJavaIDESerializerTest extends AbstractJavaSerializerTest {
 
     @Test
     public void testJavaIDEToRec() {
-        // cs_java::T downgrades to plain rec::T
-        final Rec plain = eval("'public class Empty {}'.as(java::T).as(ide_java::T).as(rec::T)");
+        // InstSet.importInstSet(f("/m/web"), f("web"));
+        // ide:java::T downgrades to plain rec::T
+        final Rec plain = eval("'public class Empty {}'.as(/m/web/mime/java::T).as(ide:java::T).as(rec::T)");
         assertTrue(plain.isRec());
         assertEquals(REC_TID, plain.tid());
     }
 
     @Test
     public void testJavaIDETypeChain() {
-        // rec::T -> cs_java::T re-tags (cs_java is a rec refinement)
+        // InstSet.importInstSet(f("/m/web"), f("web"));
+        // rec::T -> ide:java::T re-tags (cs_java is a rec refinement)
         try {
-            final Rec cs = eval("'public class Empty {}'.as(java::T).as(ide_java::T).as(rec::T).as(ide_java::T)");
+            final Rec cs = eval("'public class Empty {}'.as(/m/web/mime/java::T).as(ide:java::T).as(rec::T).as(ide:java::T)");
             assertTrue(cs.isRec());
             assertEquals(IDE_JAVA_TID, cs.tid());
             assertFalse(cs.at(uri("classes")).isNoObj());
         } catch (final Exception e) {
             e.printStackTrace();
         }
+    }
+
+    @Test
+    public void testWebJavaViaPrefix() {
+        // `java` is a short name shared by the web instset (/m/web/mime/java) and the ide instset
+        // (/m/ide/java). The prefix must scope the redirect: web:java::T resolves to the web java
+        // type (not the ide one), so the as?str->java step still fires.
+        final Rec cs = eval("'public class Empty {}'.as(web:java::T).as(ide:java::T)");
+        assertTrue(cs.isRec());
+        assertEquals(IDE_JAVA_TID, cs.tid());
+        assertFalse(cs.at(uri("classes")).isNoObj(), "must expose classes");
     }
 }

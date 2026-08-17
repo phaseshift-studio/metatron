@@ -61,7 +61,7 @@ public class ideInstSetTest extends AbstractMetatronTest {
 
     @BeforeAll
     static void loadInstSets() {
-        InstSet.importInstSet(IDE_ISA_TID);
+        InstSet.importInstSet(IDE_ISA_TID, f("ide"));
     }
 
     /// ///////////////////////////////////////////////////////////////////////////////////////////
@@ -150,6 +150,18 @@ public class ideInstSetTest extends AbstractMetatronTest {
         assertTrue(doc.isRec(), "cs_command must carry documentation");
         assertTrue(doc.asRec().at(uri("desc")).strValue().contains("wrap"),
                 "the cs_command docs must describe the wrapper");
+    }
+
+    @Test
+    void testIdeCommandViaPrefix() {
+        // drstynx.boot.mtron does import(/m/ide, ide) — the second arg is the namespace prefix used
+        // to disambiguate short names across instsets. `ide:command` must resolve to the command inst
+        // the same way the bare `command` redirect does (insts live under /m/ide/inst/).
+        Router.global().registerPrefix(f("ide"), f("/m/ide"));
+        final Obj viaPrefix = Router.readFromSpace(f("ide:command"));
+        assertTrue(viaPrefix.isInst(), "ide:command must resolve to the command inst — %s".formatted(viaPrefix));
+        assertEquals(Router.readFromSpace(IDE_COMMAND_TID), viaPrefix,
+                "ide:command must equal the command inst at /m/ide/inst/command");
     }
 
     /// ///////////////////////////////////////////////////////////////////////////////////////////

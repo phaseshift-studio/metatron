@@ -194,13 +194,17 @@ grphspace::[pattern   => h:#,
 [== if the llm session already exists, continue, else create it ==]    
 [== <drdb:llm_session>.mult(print('\n what session number?: ').stdin().as(uri::T)).to(session_vid) ==]
 
-model::[
+[== model::[
   provider => deepseek,
   protocol => openai,
   host     => <https://api.deepseek.com>,
   api_key  => !*</sys/env/DEEPSEEK_API_KEY>,
-  llm      => <deepseek-v4-pro>
-]@/usr/dr/model;
+  llm      => <deepseek-v4-pro> 
+]@/usr/dr/model; ==]
+model::[provider     => ollama,
+                                                                         protocol     => ollama,
+                                                                         host         => <http://ginger.local:11434>,
+                                                                         llm          => <qwen3.8:27b>]@/usr/dr/model;
 /usr/dr/agent -> |!*dr;
 [-- tag::asciidoc_tag[] --]
 agent::[
@@ -219,14 +223,13 @@ agent::[
     chat_feature:::::::[model         => !(*</usr/dr/model>.else(model::[provider     => ollama,
                                                                          protocol     => ollama,
                                                                          host         => <http://ginger.local:11434>,
-                                                                         llm          => <nemotron-3.5-lightning:30b>])),
+                                                                         llm          => <qwen3.8:27b>])),
                         response      => [to => print(_)]],
     think_feature::::::[on_agent_ctor => inst(a=>agent::T){
                                             accordion::[title => "thoughts", 
                                                         body  => "",
-                                                        style => style::[anchor=>top_right,width=>65,
-                                                                         height=>15,left=>-2]]@<think_widget> },
-                       on_before_chat => inst?#{*}<=#{?}(){ @<think_widget>>>=[body=>''] },
+                                                        style => style::[anchor=>top_left, left=>1, top=>-1, width=>75, height=>10]]@<think_widget> },
+                       on_before_chat => @<think_widget> >>= [body=>""],
                        root           => /usr/dr/message,
                        think          => [to => inst(a=>str::T){ @<think_widget>>>=[body=>+*a].display() }]],
     loop_feature:::::::[max_loop      => 100],                         
@@ -243,7 +246,7 @@ agent::[
                                                                         left=>-2,top=>8,foreground =>"{{y}}"]]@<audit_widget> },
                         to            => inst(a=>str::T){ @<audit_widget>>>=[body=>+*a].display() }],
     system_feature:::::[              => ],
-    complete_feature:::[on_complete_response => inst?#{*}<=#{?}(){ {@<audit_widget>,@<think_widget>} >>= [body=>""] } ],
+    [== complete_feature:::[on_complete_response => @<think_widget> >>= noobj],==]
     cost_feature:::::::[root          => /usr/dr/cost,
                         to            => inst(in_cost=>real::T,out_cost=>real::T,total_cost=>real::T){ 
                                            /usr/marko/console/status("cost total: ${*2} [in: ${*0} out: ${*1}]") },

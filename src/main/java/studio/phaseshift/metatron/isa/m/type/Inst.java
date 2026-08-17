@@ -711,6 +711,71 @@ public interface Inst extends Call {
             return result;
         }
 
+        /**
+         * Enumerates every {@code as} instruction and reports dispatch ambiguities.
+         * <p>
+         * Dispatch resolves {@code as} by matching the input against each candidate's dom and choosing the
+         * most-specific (most-refined) dom that accepts it. That "most specific match" is only a total function
+         * when, for every rng, the candidate doms form a chain (totally ordered by refinement). This check
+         * reports the two ways that invariant breaks:
+         * <ol>
+         *   <li>duplicate — two {@code as} instructions sharing the same dom and the same rng;</li>
+         *   <li>incomparable — two {@code as} instructions with the same rng whose doms are neither {@code A ≤ B}
+         *   nor {@code B ≤ A}.</li>
+         * </ol>
+         * Refinement ({@code A ≤ B}) is {@code A.testNominally(B) && A.c().within(B.c())} — predicate-blind, so it
+         * certifies dispatch, not type-checking. The universal type {@code #} (and unbound generics) is comparable
+         * with everything.
+         *
+         * @return a list of violation messages; empty means the as-graph is unambiguous
+         */
+        public static List<String> checkAsGraph() {
+            final List<String> violations = new ArrayList<>();
+            if (!Router.loaded())
+                return violations;
+            final List<Inst> asInsts = Router.readFromSpace(AS_INST_TID).stream()
+                    .filter(Obj::isObjInst)
+                    .map(Obj::asInst)
+                    .sorted(Comparator.comparing(inst -> inst.tid().toString()))
+                    .toList();
+            final Map<String, List<Inst>> byRng = new LinkedHashMap<>();
+            for (final Inst inst : asInsts)
+                byRng.computeIfAbsent(typeKey(inst.rng()), k -> new ArrayList<>()).add(inst);
+            for (final List<Inst> group : byRng.values()) {
+                for (int i = 0; i < group.size(); i++) {
+                    for (int j = i + 1; j < group.size(); j++) {
+                        final Type domA = group.get(i).dom();
+                        final Type domB = group.get(j).dom();
+                        final String rngName = typeName(group.get(i).tid().rng());
+                        if (typeKey(domA).equals(typeKey(domB)))
+                            violations.add("duplicate as: dom '" + typeName(group.get(i).tid().dom()) + "' -> rng '" + rngName + "' appears twice");
+                        else if (incomparable(domA, domB))
+                            violations.add("ambiguous as: dom '" + typeName(group.get(i).tid().dom()) + "' vs dom '" + typeName(group.get(j).tid().dom()) + "' for rng '" + rngName + "' (incomparable)");
+                    }
+                }
+            }
+            return violations;
+        }
+
+        private static boolean incomparable(final Type a, final Type b) {
+            if (a.isRootType() || a.isGeneric() || b.isRootType() || b.isGeneric())
+                return false;
+            return !refines(a, b) && !refines(b, a);
+        }
+
+        private static boolean refines(final Type a, final Type b) {
+            return a.testNominally(b) && a.c().within(b.c());
+        }
+
+        private static String typeKey(final Type t) {
+            return t.tid().toString();
+        }
+
+        private static String typeName(final fURI f) {
+            final cInt c = f.c();
+            return f.name() + (null == c || c.isOne() ? "" : "{" + c + "}");
+        }
+
     }
 
     final class f implements BiFunction<Obj, Inst, Obj> {

@@ -64,7 +64,7 @@ public class TypeTest extends AbstractMetatronTest {
         try {
             Obj o = ObjmtronSerializer.parse(obj);
             Obj i = ObjmtronSerializer.parse(inst);
-            LOG.warn("testing %s %s %s", o, matches ? "{{c}}in{{/c}}" : "{{c}}not in{{/c}}", i);
+            LOG.debug("testing %s %s %s", o, matches ? "{{c}}in{{/c}}" : "{{c}}not in{{/c}}", i);
             assertEquals(matches, o.test(i));
         } catch (Exception e) {
             assertFalse(matches, "an exception occurred: " + e);
@@ -711,8 +711,8 @@ public class TypeTest extends AbstractMetatronTest {
     public void testNominalStructuralTypeSystem(final String objA, final String objB, final boolean matches) {
         final Obj objAA = ObjmtronSerializer.parse(objA);
         final Obj objBB = ObjmtronSerializer.parse(objB);
-        LOG.warn("%s is a %s@%s", objA, objAA.tid(), objAA.vid());
-        LOG.warn("%s is a %s@%s", objB, objBB.tid(), objBB.vid());
+        LOG.debug("%s is a %s@%s", objA, objAA.tid(), objAA.vid());
+        LOG.debug("%s is a %s@%s", objB, objBB.tid(), objBB.vid());
         if (matches) {
             assertTrue(objAA.test(objBB), objAA + " should match " + objBB);
         } else {

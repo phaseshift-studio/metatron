@@ -139,13 +139,27 @@ public class BasicRouter extends AbstractSpace<Map<Obj, Obj>> implements Router 
                 set.add(big.basePath());
                 return set;
             } else {
-                if (!v.contains(big.basePath()))
+                if (!v.contains(big.basePath()) && !this.hasRegisteredPrefix(big) && v.stream().noneMatch(this::hasRegisteredPrefix))
                     LOG.warn("multiple redirects for {{b}}%s{{X}}: {{b}}%s {{g}}+ {{b}}%s{{X}} (consider prefixing import)", small, big, v.toString().replace("[", "").replaceAll("]", ""));
                 v.add(big.basePath());
                 return v;
             }
         });
         this.bigToSmallRoutes.putRaw(big, small);
+    }
+
+    /**
+     * True if {@code target} lives under a namespace that has a prefix registered (a
+     * {@code prefixToVID} entry whose vid is a path-prefix of {@code target}). Used to silence
+     * the "multiple redirects ... consider prefixing import" warning once the short-name
+     * collision is already disambiguable via a prefix.
+     */
+    private boolean hasRegisteredPrefix(final fURI target) {
+        for (final Obj value : this.prefixToVID.values()) {
+            if (target.hasPrefix((fURI) value.jvm()))
+                return true;
+        }
+        return false;
     }
 
     @Override
@@ -189,7 +203,15 @@ public class BasicRouter extends AbstractSpace<Map<Obj, Obj>> implements Router 
                 .toList()
                 .forEach(spc -> {
                     LOG.warn("%s evicting %s (same pattern %s)", space, spc.vid(), space.pattern());
+                    // Eviction is a replacement, not a removal. spc.close() routes through
+                    // removeSpace(), which drops any prefix bound to this space's pattern (e.g.
+                    // `web`, `ide`, `math`). Snapshot those prefixes and restore them after close
+                    // so the new incarnation keeps its short-name prefix.
+                    final List<Map.Entry<Obj, Obj>> prefixes = this.prefixToVID.entrySet().stream()
+                            .filter(pv -> pv.getValue().uriValue().test(spc.pattern()))
+                            .toList();
                     spc.close();
+                    prefixes.forEach(pv -> this.prefixToVID.put(pv.getKey(), pv.getValue()));
                     if (spc.vid() != null)
                         this.spaces().jvm().remove(spc.vid().toUri());
                 });
@@ -253,7 +275,7 @@ public class BasicRouter extends AbstractSpace<Map<Obj, Obj>> implements Router 
             throw MTronException.of("%s prefix already bound: %s + %s", prefix, vid, existing);
         this.prefixToVID.putRaw(prefix, vid);
         this.at(uri(PREFIX), this.prefixToVID.toRec(), MUTABLE);
-        LOG.info("prefix %s => %s registered", prefix, vid);
+        LOG.info("prefix {{b}}%s {{g}}=> {{b}}%s{{X}} registered", prefix, vid);
     }
 
     private fURI alignPrefix(final fURI vid) {
@@ -261,8 +283,21 @@ public class BasicRouter extends AbstractSpace<Map<Obj, Obj>> implements Router 
         if (readableVID.hasScheme()) {
             final fURI prefixed = this.prefixToVID.getRaw(f(readableVID.scheme()));
             if (null != prefixed) {
-                final fURI aligned = prefixed.extend(readableVID.scheme(null));
-                return aligned;
+                final fURI suffix = readableVID.scheme(null);
+                // The suffix is a short name within the prefix's namespace (e.g. `web:java`). Short
+                // names are redirects — types register `java -> /m/web/mime/java`, insts register
+                // `command -> /m/ide/inst/command` — and a name can be shared across instsets (both
+                // /m/web and /m/ide register `java`). So resolve the suffix against the redirect table,
+                // preferring the target that lives under this prefix's vid — that scoping is the whole
+                // point of the prefix. Fall back to the naive prefix + path extension when no redirect
+                // target sits under the prefix (e.g. `ide:inst/command`).
+                final Set<fURI> routes = this.smallToBigRoutes.getOrDefaultRaw(suffix.basePath(), Set.of());
+                final Optional<fURI> target = routes.stream()
+                        .filter(r -> r.hasPrefix(prefixed.toString()))
+                        .findFirst();
+                if (target.isPresent())
+                    return target.get().c(suffix.c()).q(suffix.qMap()).resolve();
+                return prefixed.extend(suffix);
             }
         }
         return readableVID;

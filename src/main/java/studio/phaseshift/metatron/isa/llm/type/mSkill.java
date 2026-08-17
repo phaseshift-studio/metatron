@@ -119,11 +119,12 @@ public class mSkill extends MRec {
     }
 
     public static mSkill of(final Str skillStr) {
+
         final Map<String, List<String>> frontMatter = parseFrontMatter(skillStr.strValue());
         skillStr.logger().info("front matter loaded: %s", frontMatter);
         return new mSkill(Skill.builder()
-                .name(frontMatter.get("name").getFirst())
-                .description(frontMatter.get("description").getFirst())
+                .name(frontMatter.getOrDefault("name", List.of(skillStr.hasVID() ? skillStr.vid().toString() : "unnamed")).getFirst())
+                .description(frontMatter.getOrDefault("description", List.of("no description")).getFirst())
                 .content(extractContent(skillStr.strValue())).build(), LLM_SKILL_TID, null);
     }
 
