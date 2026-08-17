@@ -49,9 +49,9 @@ public class SkillFeature extends AbstractFeature {
             final Skills skills = new Skills.Builder().skills(allSkills).build();
             agent.addToolProvider(skills.toolProvider());
             agent.addTool(docWrapDocs(instC(f("list_skills").dom(NOOBJ.zero()).rng(LST_TID), lst(),
-                            (lhs, inst) -> lst(allSkills.stream().map(s -> (Obj) str(s.name() + ":" + s.description())).toList())),
+                            (lhs, inst) -> lst(allSkills.stream().map(s -> (Obj) lst(str(s.name()), str(s.description()))).toList())),
                     "no domain",
-                    "a lst[str] of skills",
+                    "a lst[lst[str,str]] of skills",
                     Map.of(),
                     "generates a lst of available skills by name and description"));
             service.systemMessage(
@@ -79,10 +79,7 @@ public class SkillFeature extends AbstractFeature {
         try {
             final Skills skills = new Skills.Builder().skills(allSkills).build();
             agent.addToolProvider(skills.toolProvider());
-            agent.addSystemMessage(
-                    "\nYou have access to the following skills:\n" +
-                            skills.formatAvailableSkills()
-                            + "\nWhen the user's request relates to one of these skills, activate it first using the `activate_skill` tool before proceeding.");
+            agent.addSystemMessage("skills accessible via calling list_skills() using the mtron eval tool");
         } catch (final Exception e) {
             throw MTronException.of("unable to setup skills: %s", e);
         }

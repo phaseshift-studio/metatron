@@ -217,6 +217,7 @@ public abstract class AbstractWidget<W extends AbstractWidget<W>> extends JRec<W
         this.terminal.puts(InfoCmp.Capability.exit_ca_mode);
         this.terminal.puts(InfoCmp.Capability.keypad_local);
         this.terminal.writer().flush();
+        Widget.super.close();
         //  this.attributes = null;
     }
 }

@@ -78,7 +78,7 @@ public class ideInstSet extends AbstractInstSet {
 
     // LANGUAGES
 
-    public static final fURI IDE_JAVA_TID = IDE_ISA_TID.extend("ide_java");
+    public static final fURI IDE_JAVA_TID = IDE_ISA_TID.extend("java");
     private static final fURI OBJ_SERIALIZER_TID = IDE_ISA_TID.extend("serializer");
     // the coarse-schema (cs) serializer family — /m/web/serializer/cs/{lang}
     public static final fURI OBJ_IDE_JAVA_SERIALIZER_TID = OBJ_SERIALIZER_TID.extend("obj_ide_java");

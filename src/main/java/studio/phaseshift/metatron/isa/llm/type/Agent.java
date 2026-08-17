@@ -276,7 +276,8 @@ public class Agent extends MRec {
                 if (!hookKey.equals(ON_ERROR))
                     this.currentHook.set(Tuple.Pair.with(feature.tid(), f(hookKey)));
                 StatusLine.message(str("[%s][%s]".formatted(feature.tid(), hookKey)));
-                feature.at(uri(hookKey)).asInst().args(lst(args)).apply(this);
+                final Obj hook = feature.at(uri(hookKey));
+                (hook.isInst() ? hook.asInst().args(lst(args)) : hook).apply(this);
             } else {
                 LOG.debug("skipping inactive feature: [%s][%s]", feature.tid(), hookKey);
             }

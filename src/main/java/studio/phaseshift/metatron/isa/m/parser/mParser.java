@@ -78,18 +78,18 @@ import static studio.phaseshift.metatron.util.Tuple.Triplet;
 
 public class mParser {
 
-    public static final SettableParser furi_parser = SettableParser.undefined();
+    private static final SettableParser furi_parser = SettableParser.undefined();
     private static final GraphittyLogger LOG = Graphitty.log(mParser.class);
-    private static final SettableParser obj_parser = SettableParser.undefined();
-    private static final SettableParser obj_no_code_parser = SettableParser.undefined();
-    private static final SettableParser obj_no_call_parser = SettableParser.undefined();
-    private static final SettableParser lst_parser = SettableParser.undefined();
-    private static final SettableParser rec_parser = SettableParser.undefined();
-    public static final SettableParser inst_parser = SettableParser.undefined();
-    private static final SettableParser rel_parser = SettableParser.undefined();
-    private static final SettableParser obj_rel_back_parser = SettableParser.undefined();
+    private static final SettableParser obj_parser = new MemoizedSettableParser();
+    private static final SettableParser obj_no_code_parser = new MemoizedSettableParser();
+    private static final SettableParser obj_no_call_parser = new MemoizedSettableParser();
+    private static final SettableParser lst_parser = new MemoizedSettableParser();
+    private static final SettableParser rec_parser = new MemoizedSettableParser();
+    public static final SettableParser inst_parser = new MemoizedSettableParser();
+    private static final SettableParser rel_parser = new MemoizedSettableParser();
+    private static final SettableParser obj_rel_back_parser = new MemoizedSettableParser();
     private static final SettableParser obj_rel_back_parser2 = SettableParser.undefined();
-    private static final SettableParser and_or_parser = SettableParser.undefined();
+    private static final SettableParser and_or_parser = new MemoizedSettableParser();
     // private static final SettableParser branch_parser = SettableParser.undefined();
     // Space-aware operator parsing:
     // Sugars defined with spaces (e.g., " * ") require those spaces in the source code.
@@ -1186,6 +1186,46 @@ public class mParser {
             return (O) ((List) list).get(index);
         } catch (final Exception e) {
             throw MTronException.of(e, "%s - unexpected %s[%d]", e, list, index);
+        }
+    }
+
+    // ── Packrat memoization ───────────────────────────────────────
+    // petitparser-java 2.4.0 has no built-in .memoized(); we memoize the recursive
+    // rules (the SettableParsers above) by (position) within a single parse run.
+    // This turns the otherwise-exponential backtracking on nested rec/lst literals
+    // into guaranteed-linear time (packrat parsing), without changing the grammar.
+    // The cache is keyed by input-buffer reference (each top-level parse owns its
+    // buffer), so a new parse run clears the cache automatically — no manual reset.
+    public static boolean MEMOIZE = true;
+
+    private static final class MemoizedSettableParser extends SettableParser {
+        private final ThreadLocal<State> state = ThreadLocal.withInitial(State::new);
+
+        MemoizedSettableParser() {
+            super(SettableParser.undefined());
+        }
+
+        @Override
+        public Result parseOn(final org.petitparser.context.Context context) {
+            if (!MEMOIZE)
+                return super.parseOn(context);
+            final State s = this.state.get();
+            if (s.buffer != context.getBuffer()) {   // new parse run → clear cache
+                s.cache.clear();
+                s.buffer = context.getBuffer();
+            }
+            final int position = context.getPosition();
+            final Result cached = s.cache.get(position);
+            if (null != cached)
+                return cached;
+            final Result result = super.parseOn(context);
+            s.cache.put(position, result);
+            return result;
+        }
+
+        private static final class State {
+            private String buffer;
+            private final Map<Integer, Result> cache = new HashMap<>();
         }
     }
 }

@@ -595,7 +595,7 @@ public class llmInstSet extends AbstractInstSet {
             String stageName,
             String methodName,
             Class<?>[] paramTypes,
-            java.util.function.Function<AbstractFeature, Inst> lambdaFactory
+            java.util.function.Function<AbstractFeature, Call> lambdaFactory
     ) {
     }
 

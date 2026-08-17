@@ -79,7 +79,7 @@ public class ChatFeature extends AbstractFeature {
         // reach TokenStream.onCompleteResponse) and the final text response.
     }
 
-    private static final fURI CHAT_INST_TID = LLM_CHAT_FEATURE_TID.extend(INST).extend(CHAT);
+    private static final fURI CHAT_INST_TID = LLM_CHAT_FEATURE_TID.extend(INST).extend("agent_chat");
 
     /**
      * Expose the agent's primary capability — {@code chat} — as a tool, so that
