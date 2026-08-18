@@ -23,7 +23,8 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
-import studio.phaseshift.metatron.AbstractDataPathTest;
+import studio.phaseshift.metatron.AbstractDataPathSpaceTest;
+import studio.phaseshift.metatron.SkipRegexTest;
 import studio.phaseshift.metatron.algebra.rewrite.CommonRewritesTestContract;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.IncrQTest;
@@ -71,7 +72,10 @@ import static studio.phaseshift.metatron.isa.tble.tbleInstSet.TBLE_ISA_TID;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public abstract class AbstractTbleSpaceTest extends AbstractDataPathTest implements CommonRewritesTestContract, IncrQTest {
+@SkipRegexTest(value = {
+        @SkipRegexTest.Skip(method = "testUpdateWrite", params = {"M12b", "M43", "M44", "M44b", "M48", "M32", "M45", "M46"})
+})
+public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest implements CommonRewritesTestContract, IncrQTest {
 
     /**
      * tbleIncQ is the native incrQ qproc implemented as AUTO INCREMENT
@@ -81,6 +85,17 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathTest impleme
     @Override
     public fURI incrQBaseURI() {
         return f(getSpace().pattern().scheme() + ":incrq");
+    }
+
+    @Override
+    protected fURI deducedBaseUri() {
+        return f("db:scratch");
+    }
+
+    @Override
+    protected boolean supportsLosslessFlatMigration() {
+        // Tables are schema-fixed: a mono flat entry can't be promoted to a row.
+        return false;
     }
 
     protected static final fURI SPACE_VID = f("/sys/space/tabledb/test");
@@ -364,20 +379,6 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathTest impleme
             return expression.contains("$$") ? expression.replace("$$/", "db:kv/") : expression;
         }
         return super.make(expression, testMethod);
-    }
-
-    // + merge on overlapping keys creates Objs from scalar values, e.g.
-    // [ca=>0] + [ca=>1] → [ca=>{0,1}].  This is a column type change
-    // (INTEGER → Objs) that relational databases don't support.
-    @Override
-    protected boolean skipUpdateTestCase(final String id) {
-        return switch (id) {
-            case "M12b", "M43", "M44", "M44b" -> true;    // C_A: + merge scalar → Objs type change
-            case "M48" -> true;                              // C_A: double-nested + Objs
-            case "M32" -> true;                              // C__: cross-ref FK overwrite (FK takes priority)
-            case "M45", "M46" -> true;                       // C__: mono↔rec type change (row can't become scalar)
-            default -> false;
-        };
     }
 
     @Override

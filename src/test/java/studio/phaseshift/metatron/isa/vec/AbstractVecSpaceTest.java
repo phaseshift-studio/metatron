@@ -26,6 +26,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractDataPathTest;
 import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.SkipRegexTest;
 import studio.phaseshift.metatron.TestData;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
@@ -66,6 +67,9 @@ import static studio.phaseshift.metatron.isa.vec.vecInstSet.VEC_ISA_TID;
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
+@SkipRegexTest(value = {
+        @SkipRegexTest.Skip(method = "testUpdateWrite", params = {"M28", "M29", "M30", "M31", "M32", "M33", "M34", "M35", "M36", "M37", "M38", "M39"})
+})
 public abstract class AbstractVecSpaceTest extends AbstractDataPathTest {
 
     protected static final fURI SPACE_VID = f("/sys/space/vctr/test");
@@ -77,19 +81,6 @@ public abstract class AbstractVecSpaceTest extends AbstractDataPathTest {
     }
 
     // ---- mtron $$ substitution for inherited parameterized tests ----
-
-    // VecSpace (ChromaDB) is a vector embedding store — add + similarity query,
-    // not a general CRUD space.  Wildcard writes, cross-ref FK resolution, and
-    // delete-by-noobj aren't supported.
-    @Override
-    protected boolean skipUpdateTestCase(final String id) {
-        return switch (id) {
-            case "M28","M29","M30","M31" -> true;  // wildcard/bulk writes
-            case "M32","M33","M34" -> true;        // cross-ref !* writes
-            case "M35","M36","M37","M38","M39" -> true; // delete via noobj
-            default -> false;
-        };
-    }
 
     @Override
     public fURI getTestDataUriPrefix() {

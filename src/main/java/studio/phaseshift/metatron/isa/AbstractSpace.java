@@ -115,7 +115,7 @@ public abstract class AbstractSpace<SJVM> extends MRec implements Space {
         //   1-segment: e.g. mongo:ddd -> [...] (auto-generated document ID)
         //   2-segment: e.g. mongo:col/docId -> [...] (explicit document write)
         // Deletes (noobj) are always permitted. Sub-field writes (3+ segments) bypass this check.
-        if (!obj.isNoObj()) {
+        if (!obj.isNoObj() && this.enforceRootConstraint(vid, obj)) {
             final Obj rootConstraint = this.at(uri(ROOT)).orElse(null);
             if (rootConstraint != null && !rootConstraint.isNoObj()
                     && !vid.isBranch()
@@ -130,6 +130,20 @@ public abstract class AbstractSpace<SJVM> extends MRec implements Space {
                     Space.Helper.resolveWrite(LOG, this, vid, obj, this.directWriter(), this.directReader());
                     return QProc.Helper.processPostWrite(this.qs(), vid, obj).orElse(obj);
                 }));
+    }
+
+    /**
+     * Whether the root type constraint (if any) should be enforced for this
+     * write.  Defaults to {@code true}; subclasses with a reserved flat
+     * namespace (e.g. dcmntSpace's {@code kv_store}) may override to relax it
+     * for that namespace so non-Rec roots are accepted rather than rejected.
+     *
+     * @param vid the write target address
+     * @param obj the value being written
+     * @return {@code true} to enforce the root constraint, {@code false} to bypass it
+     */
+    protected boolean enforceRootConstraint(final fURI vid, final Obj obj) {
+        return true;
     }
 
     @Override

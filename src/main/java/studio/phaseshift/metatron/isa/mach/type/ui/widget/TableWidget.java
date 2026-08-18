@@ -245,7 +245,7 @@ public class TableWidget extends JRec<TableWidget> implements Widget<TableWidget
 
     private String addSpace(final List<Integer> widths, final int index, final Object entry) {
         return " ".repeat(1 + Math.abs(widths.get(index)
-                - Highlighter.visualLength(entry.toString().trim())));
+                - Highlighter.visualLength(entry.toString())));
     }
 
     @Override

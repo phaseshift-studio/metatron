@@ -44,7 +44,6 @@ import static studio.phaseshift.metatron.isa.m.type.Uri.uri0;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
-
 public class memSpace extends AbstractMemorySpace {
 
     protected memSpace(final Map<Obj, Obj> config, final fURI vid) {

@@ -122,7 +122,7 @@ public class fsSpace extends AbstractSpace<FileSystem> {
                 } else if (file.isDirectory()) {
                     // A directory derefs to its own uri, as a branch (trailing /) — its
                     // structure (the child uris) is walked with >> and /, never materialized.
-                    return uri(this.redirect(f(file.getPath()), false).asBranch());
+                    return uri(this.redirect(f(file.getPath()), false));//.asBranch());
                 }
             }
         } catch (final Exception e) {
@@ -301,7 +301,7 @@ public class fsSpace extends AbstractSpace<FileSystem> {
                                 })
                                 .collect(Collectors.toMap(p -> {
                                     final fURI routed = Space.Helper.routeToSpace(f(p.toString()), this.routes());
-                                    return p.toFile().isDirectory() ? routed.asBranch() : routed;
+                                    return routed; //p.toFile().isDirectory() ? routed.asBranch() : routed;
                                 }, p -> {
                                     final File file = p.toFile();
                                     return fileToObj(file, key.qMap());

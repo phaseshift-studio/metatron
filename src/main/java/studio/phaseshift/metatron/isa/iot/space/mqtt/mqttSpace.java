@@ -44,10 +44,12 @@ import studio.phaseshift.metatron.util.MTronException;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
@@ -184,6 +186,13 @@ public class mqttSpace extends AbstractSpace<Mqtt5Client> {
             final Obj result = this.cache.read(pattern.one());
             return QProc.Helper.processPostRead(this.qs(), pattern, result).orElse(result);
         });
+    }
+
+    @Override
+    public Function<fURI, Iterator<IdObj>> directReader() {
+        // The reference-graph walk (>>) and wildcard reads go through directReader, not
+        // read(); without this override they hit the empty Space default and yield nothing.
+        return this.cache.directReader();
     }
 
     @Override

@@ -22,6 +22,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.TestMethodOrder;
+import studio.phaseshift.metatron.SkipRegexTest;
 
 /**
  * Test suite for tbleSpace using MariaDB via TestContainers.
@@ -33,6 +34,9 @@ import org.junit.jupiter.api.TestMethodOrder;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@SkipRegexTest(value = {
+        @SkipRegexTest.Skip(method = "testUpdateWrite", params = {"M33", "M34", "M37"})
+})
 public class MariaDBTbleSpaceTest extends AbstractTbleSpaceTest {
 
     /**
@@ -63,12 +67,4 @@ public class MariaDBTbleSpaceTest extends AbstractTbleSpaceTest {
         super(staticDbConfig);
     }
 
-    @Override
-    protected boolean skipUpdateTestCase(final String id) {
-        return switch (id) {
-            case "M33", "M34" -> true;  // cross-ref FK metadata — see PostgreSQL
-            case "M37" -> true;          // INTEGER PK delete with AUTO_INCREMENT
-            default -> super.skipUpdateTestCase(id);
-        };
-    }
 }

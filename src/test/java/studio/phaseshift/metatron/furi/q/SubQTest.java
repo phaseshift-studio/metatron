@@ -34,7 +34,8 @@ import static studio.phaseshift.metatron.furi.q.QCollection.SUBQ_TID;
  */
 public interface SubQTest extends QProcTest {
 
-    @TestCategory.Crud
+    @TestCategory.Write
+    @TestCategory.Read
     @TestCategory.Concurrent
     @ParameterizedTest(name = "[{index}] String: {0}")
     @CsvSource(value = {

@@ -20,8 +20,8 @@ package studio.phaseshift.metatron.isa.iot.space;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
 import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.SkipRegexTest;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.furi.q.SubQTest;
 import studio.phaseshift.metatron.isa.AbstractSpaceTest;
@@ -47,6 +47,13 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
+@SkipRegexTest(value = {
+        @SkipRegexTest.Skip(method = "testMonoUpdate"),
+        @SkipRegexTest.Skip(method = "testSequentialUpdates"),
+        @SkipRegexTest.Skip(method = "testBasicCRUD"),
+        @SkipRegexTest.Skip(method = "testTypeChanges"),
+        @SkipRegexTest.Skip(method = "testMultiFieldUpdates")
+})
 public class mqttSpaceTest extends AbstractSpaceTest implements SubQTest {
     private static final int PORT = generatePort();
 
@@ -79,31 +86,6 @@ public class mqttSpaceTest extends AbstractSpaceTest implements SubQTest {
         MoquetteServer.stop();
         CommonUtil.sleepThread(1000);
         AbstractMetatronTest.end();
-    }
-
-    @Override
-    @Disabled
-    public void testMonoUpdate() {
-    }
-
-    @Override
-    @Disabled
-    public void testSequentialUpdates(int iterations) {
-    }
-
-    @Override
-    @Disabled
-    public void testBasicCRUD(String description, String key, String valueStr) {
-    }
-
-    @Override
-    @Disabled
-    public void testTypeChanges(String description, Obj initialValue, Obj updatedValue) {
-    }
-
-    @Override
-    @Disabled
-    public void testMultiFieldUpdates(int fieldCount) {
     }
 
 }
