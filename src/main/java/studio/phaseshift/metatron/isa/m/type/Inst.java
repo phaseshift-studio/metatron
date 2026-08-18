@@ -711,50 +711,189 @@ public interface Inst extends Call {
             return result;
         }
 
+        /** An {@code as}-graph finding: the offending instructions, the violation kind, and a human-readable reason. */
+        public record Violation(List<Inst> insts, Type type, String reason) {
+
+            public enum Type {
+                /** two {@code as} instructions cast the same dom to the same rng — a redundant mapping */
+                DUPLICATE("two `as` instructions cast the same dom to the same rng — a redundant mapping:  f, g : A → B,  f ≠ g"),
+                /** same-rng doms are incomparable yet overlap — a future input could match both with no most-specific winner */
+                AMBIGUOUS("same-rng doms are incomparable yet overlap — a future input could match both with no most-specific winner:  ¬(A ≤ B) ∧ ¬(B ≤ A) ∧ ∃T. T ≤ A ∧ T ≤ B"),
+                /** same-rng doms are incomparable and disjoint — no input matches both, so dispatch stays total */
+                INCOMPARABLE("same-rng doms are incomparable and disjoint — no input matches both, so dispatch stays total:  ¬(A ≤ B) ∧ ¬(B ≤ A) ∧ ∄T. T ≤ A ∧ T ≤ B"),
+                /** two types are directly mutually castable — a pair of opposing casts, a candidate isomorphism/retraction */
+                COUPLING("two types are directly mutually castable (A ⇄ B) — a pair of opposing casts, a candidate isomorphism/retraction:  f : A → B,  g : B → A"),
+                /** two types are linked by a chain of couplings — connected in the reversible core of the as-graph */
+                ISOCHAIN("two types are linked by a chain of couplings (A ⇄ … ⇄ B) — connected in the reversible core G∩G⁻¹, each hop an opposing pair:  a chain of candidate-isomorphisms"),
+                /** two types are mutually reachable — the round-trip is an idempotent, so each is a retract of the other */
+                RETRACT("two types are mutually reachable (A ⇒ B ∧ B ⇒ A) — the round-trip A⇒B⇒A is an idempotent, so A ≅ im(e), a subobject of A, not necessarily A itself:  e = A⇒B⇒A,  e∘e = e,  A ≅ { a ∈ A : e(a) = a }");
+
+                private final String description;
+
+                Type(final String description) {
+                    this.description = description;
+                }
+
+                public String description() {
+                    return this.description;
+                }
+            }
+        }
+
         /**
-         * Enumerates every {@code as} instruction and reports dispatch ambiguities.
+         * Checks the {@code as}-graph for the requested {@link Violation.Type}s.
          * <p>
          * Dispatch resolves {@code as} by matching the input against each candidate's dom and choosing the
-         * most-specific (most-refined) dom that accepts it. That "most specific match" is only a total function
-         * when, for every rng, the candidate doms form a chain (totally ordered by refinement). This check
-         * reports the two ways that invariant breaks:
+         * most-specific (most-refined) dom that accepts it. The full check exposes four layers of potential
+         * ambiguity, from cheap syntactic facts up to graph reachability:
          * <ol>
-         *   <li>duplicate — two {@code as} instructions sharing the same dom and the same rng;</li>
-         *   <li>incomparable — two {@code as} instructions with the same rng whose doms are neither {@code A ≤ B}
-         *   nor {@code B ≤ A}.</li>
+         *   <li>{@link Violation.Type#DUPLICATE} — two {@code as} instructions sharing the same dom and rng;</li>
+         *   <li>{@link Violation.Type#AMBIGUOUS} / {@link Violation.Type#INCOMPARABLE} — same-rng doms that are
+         *   neither {@code A ≤ B} nor {@code B ≤ A}, split by whether they overlap;</li>
+         *   <li>{@link Violation.Type#COUPLING} / {@link Violation.Type#ISOCHAIN} / {@link Violation.Type#RETRACT}
+         *   — mutually castable type pairs (reversibility at three strengths).</li>
          * </ol>
          * Refinement ({@code A ≤ B}) is {@code A.testNominally(B) && A.c().within(B.c())} — predicate-blind, so it
-         * certifies dispatch, not type-checking. The universal type {@code #} (and unbound generics) is comparable
-         * with everything.
+         * certifies dispatch, not type-checking.
          *
-         * @return a list of violation messages; empty means the as-graph is unambiguous
+         * @param types the violation kinds to check (empty means all)
+         * @return the violations found, each at its tightest {@link Violation.Type}
          */
-        public static List<String> checkAsGraph() {
-            final List<String> violations = new ArrayList<>();
+        public static Set<Violation> checkAsGraph(final Violation.Type... types) {
+            final Set<Violation> violations = new HashSet<>();
             if (!Router.loaded())
                 return violations;
-            final List<Inst> asInsts = Router.readFromSpace(AS_INST_TID).stream()
-                    .filter(Obj::isObjInst)
-                    .map(Obj::asInst)
-                    .sorted(Comparator.comparing(inst -> inst.tid().toString()))
-                    .toList();
-            final Map<String, List<Inst>> byRng = new LinkedHashMap<>();
-            for (final Inst inst : asInsts)
-                byRng.computeIfAbsent(typeKey(inst.rng()), k -> new ArrayList<>()).add(inst);
-            for (final List<Inst> group : byRng.values()) {
-                for (int i = 0; i < group.size(); i++) {
-                    for (int j = i + 1; j < group.size(); j++) {
-                        final Type domA = group.get(i).dom();
-                        final Type domB = group.get(j).dom();
-                        final String rngName = typeName(group.get(i).tid().rng());
-                        if (typeKey(domA).equals(typeKey(domB)))
-                            violations.add("duplicate as: dom '" + typeName(group.get(i).tid().dom()) + "' -> rng '" + rngName + "' appears twice");
-                        else if (incomparable(domA, domB))
-                            violations.add("ambiguous as: dom '" + typeName(group.get(i).tid().dom()) + "' vs dom '" + typeName(group.get(j).tid().dom()) + "' for rng '" + rngName + "' (incomparable)");
+            final Set<Violation.Type> requested = 0 == types.length
+                    ? EnumSet.allOf(Violation.Type.class)
+                    : EnumSet.copyOf(Arrays.asList(types));
+            final List<Inst> asInsts = asInsts();
+            if (asInsts.isEmpty())
+                return violations;
+            // same-rng ambiguity (DUPLICATE / AMBIGUOUS / INCOMPARABLE)
+            if (requested.contains(Violation.Type.DUPLICATE) || requested.contains(Violation.Type.AMBIGUOUS) || requested.contains(Violation.Type.INCOMPARABLE)) {
+                // undirected type graph of every non-identity as edge (dom <-> rng), keyed by basePath — used to
+                // decide whether two same-base sibling doms "capture the same values" (reachable via a cross-over path)
+                final Map<fURI, Set<fURI>> graph = new HashMap<>();
+                for (final Inst inst : asInsts) {
+                    final fURI dom = inst.tid().dom().basePath();
+                    final fURI rng = inst.tid().rng().basePath();
+                    graph.computeIfAbsent(dom, k -> new HashSet<>()).add(rng);
+                    graph.computeIfAbsent(rng, k -> new HashSet<>()).add(dom);
+                }
+                final Map<fURI, List<Inst>> byRng = new LinkedHashMap<>();
+                for (final Inst inst : asInsts)
+                    byRng.computeIfAbsent(inst.tid().rng(), k -> new ArrayList<>()).add(inst);
+                for (final List<Inst> group : byRng.values()) {
+                    for (int i = 0; i < group.size(); i++) {
+                        for (int j = i + 1; j < group.size(); j++) {
+                            final Type domA = group.get(i).dom();
+                            final Type domB = group.get(j).dom();
+                            final Type rngType = group.get(i).rng();
+                            if (group.get(i).tid().dom().equals(group.get(j).tid().dom())) {
+                                if (requested.contains(Violation.Type.DUPLICATE))
+                                    violations.add(new Violation(group, Violation.Type.DUPLICATE, "duplicate as: dom " + group.get(i).dom() + " -> rng " + rngType.namedType() + " appears twice"));
+                            } else if (incomparable(domA, domB)) {
+                                final boolean sameBase = domA.tid().basePath().equals(domB.tid().basePath());
+                                final boolean overlapping = sameBase && reaches(graph, group.get(i).tid().dom().basePath(), group.get(j).tid().dom().basePath());
+                                final Violation.Type type = overlapping ? Violation.Type.AMBIGUOUS : Violation.Type.INCOMPARABLE;
+                                if (requested.contains(type))
+                                    violations.add(new Violation(group, type,
+                                            (overlapping ? "ambiguous" : "incomparable") + " as: dom " + group.get(i).dom() + " vs dom " + group.get(j).dom() + " for rng " + rngType.namedType()));
+                            }
+                        }
                     }
                 }
             }
+            // reversible/retract graph relations (COUPLING / ISOCHAIN / RETRACT)
+            if (requested.contains(Violation.Type.COUPLING) || requested.contains(Violation.Type.ISOCHAIN) || requested.contains(Violation.Type.RETRACT))
+                violations.addAll(retracts(asInsts, requested));
             return violations;
+        }
+
+        private static List<Inst> asInsts() {
+            return Router.readFromSpace(AS_INST_TID).stream()
+                    .filter(Obj::isObjInst)
+                    .map(Obj::asInst)
+                    .filter(inst -> !inst.tid().dom().equals(inst.tid().rng())) // identity casts (as?X<=X) are trivially true — not part of the graph
+                    .sorted(Comparator.comparing(inst -> inst.tid().toString()))
+                    .toList();
+        }
+
+        private static Set<Violation> retracts(final List<Inst> asInsts, final Set<Violation.Type> requested) {
+            final Set<Violation> retracts = new HashSet<>();
+            // directed type graph G (dom -> rng), keyed by basePath
+            final Map<fURI, Set<fURI>> graph = new HashMap<>();
+            for (final Inst inst : asInsts)
+                graph.computeIfAbsent(inst.tid().dom().basePath(), k -> new HashSet<>()).add(inst.tid().rng().basePath());
+            // reversible core G ∩ G⁻¹ — the undirected edges that exist in both directions
+            final Map<fURI, Set<fURI>> reversible = new HashMap<>();
+            for (final Map.Entry<fURI, Set<fURI>> edge : graph.entrySet()) {
+                final fURI dom = edge.getKey();
+                for (final fURI rng : edge.getValue()) {
+                    if (graph.getOrDefault(rng, Set.of()).contains(dom)) {
+                        reversible.computeIfAbsent(dom, k -> new HashSet<>()).add(rng);
+                        reversible.computeIfAbsent(rng, k -> new HashSet<>()).add(dom);
+                    }
+                }
+            }
+            final List<fURI> nodes = new ArrayList<>(graph.keySet());
+            nodes.sort(Comparator.comparing(fURI::toString));
+            for (int i = 0; i < nodes.size(); i++) {
+                for (int j = i + 1; j < nodes.size(); j++) {
+                    final fURI a = nodes.get(i);
+                    final fURI b = nodes.get(j);
+                    final Violation.Type type;
+                    if (graph.getOrDefault(a, Set.of()).contains(b) && graph.getOrDefault(b, Set.of()).contains(a))
+                        type = Violation.Type.COUPLING;                              // direct opposing pair
+                    else if (reaches(reversible, a, b))
+                        type = Violation.Type.ISOCHAIN;                              // chain of opposing pairs
+                    else if (reaches(graph, a, b) && reaches(graph, b, a))
+                        type = Violation.Type.RETRACT;                               // mutual reachability only
+                    else
+                        continue;
+                    if (requested.contains(type))
+                        retracts.add(new Violation(List.of(), type, typeName(a) + " ⇄ " + typeName(b)));
+                }
+            }
+            return retracts;
+        }
+
+        /**
+         * Manifests the implicit {@code as} instructions that arise from the subtype hierarchy of the
+         * types already present in the explicit as-graph.
+         * <p>
+         * A type {@code T} that is a nominal or structural refinement of {@code A} ({@code T.test(A)} holds)
+         * needs no explicit {@code as?A<=T}: the cast is just the removal of the constraint that
+         * distinguishes {@code T} from {@code A}, realized by re-tagging the value with {@code A}'s vid. Only
+         * direct refinements among the harvestable types are emitted — sibling subtypes (e.g. {@code json} vs
+         * {@code yaml}) and unrelated base types never satisfy {@code test}. Generics ({@code A}, {@code B})
+         * are per-instruction bindings and are excluded, as are the root and {@code noobj} types.
+         *
+         * @return the manifested implicit {@code as} instructions (empty when nothing is registered)
+         */
+        public static List<Inst> implicitAsGraph() {
+            final List<Inst> implicit = new ArrayList<>();
+            if (!Router.loaded())
+                return implicit;
+            final List<Type> types = Router.readFromSpace(AS_INST_TID).stream()
+                    .filter(Obj::isObjInst)
+                    .map(Obj::asInst)
+                    .flatMap(inst -> List.of(inst.dom().vid(), inst.rng().vid()).stream())
+                    .map(fURI::basePath)
+                    .distinct()
+                    .sorted(Comparator.comparing(fURI::toString))
+                    .map(vid -> T(vid))
+                    .filter(t -> !t.isGeneric() && !t.isRootType() && !t.vid().basePath().equals(NOOBJ_TID))
+                    .toList();
+            for (final Type src : types) {
+                for (final Type dst : types) {
+                    if (src.vid().equals(dst.vid()))
+                        continue;
+                    if (src.test(dst))
+                        implicit.add(instC(AS_INST_TID.dom(src.vid()).rng(dst.vid()), lst(dst), (lhs, inst) -> lhs.vid(inst.arg(0).vid())));
+                }
+            }
+            return implicit;
         }
 
         private static boolean incomparable(final Type a, final Type b) {
@@ -767,8 +906,19 @@ public interface Inst extends Call {
             return a.testNominally(b) && a.c().within(b.c());
         }
 
-        private static String typeKey(final Type t) {
-            return t.tid().toString();
+        private static boolean reaches(final Map<fURI, Set<fURI>> graph, final fURI a, final fURI b) {
+            final Set<fURI> seen = new HashSet<>();
+            final ArrayDeque<fURI> stack = new ArrayDeque<>();
+            stack.push(a);
+            while (!stack.isEmpty()) {
+                final fURI node = stack.pop();
+                if (node.equals(b))
+                    return true;
+                if (!seen.add(node))
+                    continue;
+                graph.getOrDefault(node, Set.of()).forEach(stack::push);
+            }
+            return false;
         }
 
         private static String typeName(final fURI f) {

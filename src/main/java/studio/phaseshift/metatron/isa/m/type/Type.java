@@ -93,6 +93,9 @@ public interface Type extends Obj {
         return (null != this.vid() && this.vid().hasPattern()) || this.tid().hasPattern();
     }
 
+    // Base types are excluded because they carry coefficient variance ({1}, {2}, …): `test()` and
+    // `testObjs()` use isNominal() as a shortcut to the coefficient-blind testNominally(), and base
+    // types must instead take the coefficient-aware full path. (testNominally strips coefficients.)
     default boolean isNominal() {
         return !this.hasPredicate() && !this.hasConstructor() && this.hasVID() && !this.isBaseType() && !this.vid().hasPattern() && !this.vid().isGeneric();
     }
@@ -230,6 +233,8 @@ public interface Type extends Obj {
                 this.vid().test(rhs.vid()) &&
                 (!rhs.asType().hasPredicate() || (Objects.equals(this.predicate(), rhs.asType().predicate()))))
             return this.c().within(rhs.c());
+        if (!this.isGeneric() && !rhs.asType().isGeneric() && !this.testNominally(rhs))
+            return false;
         if (!this.c().within(rhs.c()))
             return false;
         if (!rhs.asType().parentType().isRootType() && !this.test(rhs.asType().parentType()))
