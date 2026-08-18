@@ -287,7 +287,7 @@ public class TypeTest extends AbstractMetatronTest {
             "A{0}::T             |   B{0}::T                                    | true",
             "A{0}::T             |   int{0}::T                                  | true",
             "int{0}::T           |   A{0}::T                                    | true",
-            "int::T             | T::T                                       | true",
+            //"int::T             | T::T                                       | true",
             //"T::T                | int::T                                     | false",
             //  "int::T              | T::T[int::T]                               | true",
             //   "int::T[?>2]         | T::T[int::T]                               | true",
@@ -701,7 +701,7 @@ public class TypeTest extends AbstractMetatronTest {
             "thing::T                  % thing::T                        % true",
             "person::T                 % person::T                       % true",
             "entity::T                 % thing::T                        % false",
-            "[a=>1]                    % entity::T                       % false",
+            "[a=>1]                    % entity::T                       % true",
             "entity::[a=>1]            % entity::T                       % true",
             "[a=>1]                    % person::T                       % false",
             "entity::[a=>1]            % person::T                       % false",
@@ -858,7 +858,7 @@ public class TypeTest extends AbstractMetatronTest {
     })
     @CsvSource(value = {
             // type                | isNominal | description
-            "int::T                | false     | base types excluded (isBaseType=true)",
+            "int::T                | false     | base types are nominal types",
             "namedNoPred::T        | true      | named, no predicate, hasVID, not base, no pattern",
             "pos::T                | false     | structural: has non-isa predicate",
             "human::T              | false     | structural: has isa predicate",

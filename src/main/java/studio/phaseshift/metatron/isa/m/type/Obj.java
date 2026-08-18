@@ -282,8 +282,13 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
     default boolean testNominally(final Obj rhs) {
         Type lhsType = Obj.Helper.specificType(this);
         final Type rhsType = Obj.Helper.specificType(rhs);
+        if (lhsType.isGeneric() || rhsType.isGeneric())
+            return lhsType.tid().basePath().equals(rhsType.tid().basePath()) && lhsType.c().within(rhsType.c());
+        // A base type is nominally compatible with any base-or-nominal type of the same base form
+        // (rec ⇝ bad_person::T is a re-tag), but NOT with a constructed/predicated subtype
+        // (uri ⇝ file::T is a parse). testNominally strips coefficients.
         if (lhsType.isBaseType())
-            return lhsType.baseTypeID().test(rhsType.baseTypeID());
+            return (rhsType.isBaseType() || rhsType.isNominal()) && lhsType.baseTypeID().test(rhsType.baseTypeID());
         while (true) {
             if (lhsType.vid().test(rhsType.vid()))
                 return true;
@@ -292,6 +297,21 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
             lhsType = lhsType.parentType();
         }
         return false;
+    }
+
+    /**
+     * True when {@code this} and {@code rhs} carry the same <i>label</i> — the name, ignoring coefficient and
+     * query — or when {@code this} is a base type and {@code rhs} is a subtype of that base form (a re-tag, e.g.
+     * {@code rec ⇝ bad_person::T}). Distinct from {@link #testNominally(Obj)}: that is the directional subtype
+     * check; this is the symmetric same-form check.
+     */
+    default boolean testLabelNominal(final Obj rhs) {
+        final Type thisType = Obj.Helper.specificType(this);
+        final Type rhsType = Obj.Helper.specificType(rhs);
+        final fURI thisId = Obj.Helper.specificTypeId(this);
+        final fURI rhsId = Obj.Helper.specificTypeId(rhs);
+        return thisId.basePath().equals(rhsId.basePath())
+                || (thisType.isBaseType() && thisId.basePath().equals(rhsType.tid().basePath()));
     }
 
     default boolean test(final Obj rhs) {
@@ -336,6 +356,10 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
         else if (this.isNoObj()) return NOOBJ_TID.c(this.c());
         else if (this.isFail()) return FAIL_TID.c(this.c());
         else if (this.isType()) {
+            // a base type is its own base; without this the walk reaches root `#` (which reports
+            // isBaseType() == true) and returns `#` instead of the concrete base tid
+            if (this.asType().isBaseType())
+                return this.tid();
             final Type parent = this.asType().parentType();
             if (parent.isBaseType())
                 return parent.tid();

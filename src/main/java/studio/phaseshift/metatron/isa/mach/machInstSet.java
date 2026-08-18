@@ -264,10 +264,9 @@ public class machInstSet extends AbstractInstSet {
                             }
                             return noobj();
                         }),*/
-                        instC(AS_INST_TID.dom(URI_TID).rng(FILE_TID), lst(T(FILE_TID)), (lhs, inst) -> makeFile(Path.of(lhs.uriValue().toString()))),
                         instC(AS_INST_TID.dom(BYTES_TID).rng(IMAGE_TID), lst(T(IMAGE_TID), else_(real(1.0d))),
                                 (lhs, inst) -> str(ImageUtil.convertToAscii(lhs.bytesValue(), inst.arg(1).realValue())).tid(IMAGE_TID)),
-                        instC(AS_INST_TID.dom(URI_TID).rng(FILE_TID), lst(T(FILE_TID)), (lhs, inst) -> makeFile(Path.of(lhs.uriValue().toString())).vid(lhs.vid())),
+                        // instC(AS_INST_TID.dom(URI_TID).rng(FILE_TID), lst(T(FILE_TID)), (lhs, inst) -> makeFile(Path.of(lhs.uriValue().toString())).vid(lhs.vid())),
                         instC(AS_INST_TID.dom(FILE_TID).rng(BYTES_TID), lst(T(BYTES_TID)), (lhs, inst) -> {
                             try {
                                 final File file = fsSpace.staticObjToFile(lhs);
