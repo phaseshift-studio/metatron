@@ -92,6 +92,16 @@ public class mTool extends MRec {
         return new mTool(tool.jvm(), LLM_TOOL_TID, tool.vid());
     }
 
+    /**
+     * The single source of truth for mapping an instruction's tid to its MCP
+     * tool name: flatten the base path, dropping leading slashes and replacing
+     * {@code '/'} with {@code '_'}.  e.g. {@code /m/llm/feature/chat_feature/inst/agent_chat}
+     * becomes {@code m_llm_feature_chat_feature_inst_agent_chat}.
+     */
+    public static String toolName(final fURI tid) {
+        return tid.basePath().toString().replaceAll("^/+", "").replace("/", "_");
+    }
+
     public static Tuple.Pair<ToolSpecification, ToolExecutor> mtronInstToolSpecification(final QCollection.Docs doc) {
         final Inst inst = doc.at(OBJ);
         JsonObjectSchema.Builder parameters = new JsonObjectSchema.Builder();
@@ -122,7 +132,7 @@ public class mTool extends MRec {
         }
         parameters.required(required);
         ToolSpecification.Builder toolSpecBuilder = ToolSpecification.builder()
-                .name(inst.tid().basePath().toString().replaceAll("^/+", "").replace("/", "_"))
+                .name(toolName(inst.tid()))
                 .description(doc.description())
                 .parameters(parameters.build());
 
@@ -150,14 +160,15 @@ public class mTool extends MRec {
 
 
     public static QCollection.Docs mtronInstToTool(final Inst inst) {
-        final QCollection.Docs doc = (QCollection.Docs) Router.readFromSpace(inst.tid().addQ(DOCQ)).stream().findFirst().orElseGet(() -> doc(inst,
+        final Obj found = Router.readFromSpace(inst.tid().addQ(DOCQ)).stream().findFirst().orElse(noobj());
+        final QCollection.Docs doc = QCollection.isNoDocs(found) ? doc(inst,
                 inst.dom().tid().toString(),
                 inst.rng().tid().toString(),
                 instB(AS_INST_TID, lst(REC_TYPE)).apply(inst.args().orElse(rec0())).asRec().elements().collect(Collectors.toMap(
                         Rel::first,
                         e -> e.second().tid().toString()
                 )),
-                "<no description>"));
+                "<no description>") : (QCollection.Docs) found;
         inst.logger().debug("building ai compliant tool from mtron inst: %s", inst.tid());
         return doc;//rec(mutableMap(uri(INST), inst, uri(NAME), uri(inst.tid()), uri(DESC), str(doc.description()), uri(ARG), doc.args()), LLM_TOOL_TID, null);
     }

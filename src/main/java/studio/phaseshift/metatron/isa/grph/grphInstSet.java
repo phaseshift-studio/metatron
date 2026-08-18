@@ -21,8 +21,13 @@ package studio.phaseshift.metatron.isa.grph;
 import org.apache.tinkerpop.gremlin.jsr223.DefaultGremlinScriptEngineManager;
 import org.apache.tinkerpop.gremlin.jsr223.GremlinLangScriptEngineFactory;
 import org.apache.tinkerpop.gremlin.jsr223.GremlinScriptEngine;
+import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
-import org.apache.tinkerpop.gremlin.structure.*;
+import org.apache.tinkerpop.gremlin.structure.Direction;
+import org.apache.tinkerpop.gremlin.structure.Edge;
+import org.apache.tinkerpop.gremlin.structure.Element;
+import org.apache.tinkerpop.gremlin.structure.Vertex;
+import org.apache.tinkerpop.gremlin.util.iterator.IteratorUtils;
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.algebra.rewrite.CommonRewrites;
 import studio.phaseshift.metatron.algebra.rewrite.Rewriter;
@@ -223,16 +228,16 @@ public class grphInstSet extends AbstractInstSet {
                         VRTX_TYPE = docWrap(Type.Builder.build()
                                 .tid(ELMT_TID)
                                 .vid(VRTX_TID)
-                                /*.isaPredicate(rec(
+                                .isaPredicate(rec(
                                         OUT.maybe().asUri(), rec(URI_TYPE, T(EDGE_TID.maybeSome())),
-                                        IN.maybe(), rec(URI_TYPE, T(EDGE_TID.maybeSome()))))*/
+                                        IN.maybe(), rec(URI_TYPE, T(EDGE_TID.maybeSome()))))
                                 .create(), "a key/value attributed vertex"),
                         EDGE_TYPE = docWrap(Type.Builder.build()
                                 .tid(ELMT_TID)
                                 .vid(EDGE_TID)
-                                /*   .isaPredicate(rec(
-                                           OUT, rec(URI_TYPE, T(VRTX_TID)),
-                                           IN, rec(URI_TYPE, T(VRTX_TID))))*/
+                                .isaPredicate(rec(
+                                        OUT, rec(URI_TYPE, T(VRTX_TID)),
+                                        IN, rec(URI_TYPE, T(VRTX_TID))))
                                 .create(), "a directed key/value attributed binary edge"),
                         docWrap(GRPH_SPACE_TYPE, "a space for graph traversal"),
                         docWrap(MODERN_SCHEMA_TYPE, "a schema for the modern graph dataset")
@@ -247,7 +252,10 @@ public class grphInstSet extends AbstractInstSet {
                                 final GremlinScriptEngine engine = factory.getScriptEngine();
                                 engine.put("g", space.sjvm());
                                 final Object object = engine.eval(inst.arg(0).strValue());
-                                return MObjFactory.of().toObj(object);
+                                if (object instanceof Traversal)
+                                    return objs(IteratorUtils.stream(((Traversal) object).asAdmin()).map(o -> MObjFactory.single().toObj(o)));
+                                else
+                                    return MObjFactory.single().toObj(object);
                             } catch (Exception e) {
                                 return fail(e);
                             }
@@ -335,7 +343,7 @@ public class grphInstSet extends AbstractInstSet {
                                                             if (!ref.isUri())
                                                                 return matchList.stream().map(Obj::asInst).toList();
                                                             final DataPath dp = DataPath.withoutDB(ref.uriValue());
-                                                            if (!("V" .equals(dp.collection()) || "E" .equals(dp.collection()))
+                                                            if (!("V".equals(dp.collection()) || "E".equals(dp.collection()))
                                                                     || !dp.entryIsWildcard()
                                                                     || dp.hasField() || dp.hasExtension())
                                                                 return matchList.stream().map(Obj::asInst).toList();
@@ -343,7 +351,7 @@ public class grphInstSet extends AbstractInstSet {
                                                             final studio.phaseshift.metatron.isa.Space space = Router.global().getSpaceFor(furi);
                                                             if (!(space instanceof grphSpace gs))
                                                                 return matchList.stream().map(Obj::asInst).toList();
-                                                            final long count = "V" .equals(dp.collection())
+                                                            final long count = "V".equals(dp.collection())
                                                                     ? gs.sjvm().V().count().next()
                                                                     : gs.sjvm().E().count().next();
                                                             return List.of(instC(
@@ -357,7 +365,7 @@ public class grphInstSet extends AbstractInstSet {
                                 grphSpace.class,
                                 GRPH_REWRITE_TID.extend("gremlin_limit"),
                                 (space, dp, limit) -> {
-                                    final Iterator<? extends Element> elements = "V" .equals(dp.collection())
+                                    final Iterator<? extends Element> elements = "V".equals(dp.collection())
                                             ? space.sjvm().V().limit(limit)
                                             : space.sjvm().E().limit(limit);
                                     return objs(IteratorUtil.stream(elements).map(e -> (e instanceof Vertex v) ? new VertexRec(v, space) : new EdgeRec((Edge) e, space)));
@@ -369,7 +377,7 @@ public class grphInstSet extends AbstractInstSet {
                                 grphSpace.class,
                                 GRPH_REWRITE_TID.extend("gremlin_where").dom(GRPH_SPACE_TID).rng(VRTX_TID.maybeSome()),
                                 (space, dp, filterClause) -> {
-                                    if (!"V" .equals(dp.collection()))
+                                    if (!"V".equals(dp.collection()))
                                         throw MTronException.of("where-rewrite only supports the vertex (V) collection: %s", dp.collection());
                                     final org.apache.tinkerpop.gremlin.process.traversal.P<?> pred = parseGremlinPredicate(filterClause);
                                     final String field = extractPredicateField(filterClause);
@@ -509,8 +517,8 @@ public class grphInstSet extends AbstractInstSet {
     private static Object parsePredicateValue(final String valueStr) {
         if (valueStr.startsWith("'") && valueStr.endsWith("'"))
             return valueStr.substring(1, valueStr.length() - 1).replace("''", "'");
-        if ("TRUE" .equalsIgnoreCase(valueStr)) return true;
-        if ("FALSE" .equalsIgnoreCase(valueStr)) return false;
+        if ("TRUE".equalsIgnoreCase(valueStr)) return true;
+        if ("FALSE".equalsIgnoreCase(valueStr)) return false;
         try {
             return Integer.parseInt(valueStr);
         } catch (NumberFormatException ignored) {

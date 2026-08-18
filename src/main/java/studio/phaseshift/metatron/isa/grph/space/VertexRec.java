@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -46,14 +46,14 @@ public class VertexRec extends ElementRec<Vertex> {
     }
 
     public Vertex vertex() {
-        return this.element;
+        return this.element();
     }
 
     /**
      * Edge lookup via remote traversal — DetachedVertex.edges() returns empty.
      */
     public Stream<Obj> edges(final Direction direction, final String... labels) {
-        final var t = this.space.sjvm().V(this.element.id());
+        final var t = this.space.sjvm().V(this.element().id());
         final Iterator<Edge> it = switch (direction) {
             case OUT -> labels.length > 0 ? t.outE(labels) : t.outE();
             case IN -> labels.length > 0 ? t.inE(labels) : t.inE();
@@ -66,7 +66,7 @@ public class VertexRec extends ElementRec<Vertex> {
      * Adjacent vertex lookup via remote traversal — DetachedVertex.vertices() returns empty.
      */
     public Stream<Obj> vertices(final Direction direction, final String... labels) {
-        final var t = this.space.sjvm().V(this.element.id());
+        final var t = this.space.sjvm().V(this.element().id());
         final Iterator<Vertex> it = switch (direction) {
             case OUT -> labels.length > 0 ? t.out(labels) : t.out();
             case IN -> labels.length > 0 ? t.in(labels) : t.in();

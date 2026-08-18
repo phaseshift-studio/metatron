@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -24,7 +24,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.furi.q.QCollection;
-import studio.phaseshift.metatron.isa.grph.space.grphIncrQ;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
@@ -66,7 +65,7 @@ public class TinkerGrphSpaceTest extends AbstractGrphSpaceTest {
                 uri(ROUTE), rec(
                         uri("/g/V"), uri("V"),
                         uri("/g/E"), uri("E"),
-                      //  uri("/g/+"), uri("+"),
+                        //  uri("/g/+"), uri("+"),
                         uri("/g/S"), uri(MODERN_SCHEMA_TID)));
 
         // ── rewrite test space config (pattern /grt/#) ──

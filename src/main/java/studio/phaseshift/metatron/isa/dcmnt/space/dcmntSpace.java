@@ -396,6 +396,11 @@ public class dcmntSpace extends AbstractDataPathSpace<MongoClient> implements Sc
                             fieldName.toLowerCase()))
                         hasNewFields = true;
                 }
+                // Register the collection even when the Rec is empty (no fields),
+                // so subsequent reads recognize it as structured rather than
+                // falling through to the flat key-value store.
+                this.existingCollectionSchema.getLogicalTypes()
+                        .computeIfAbsent(collName.toLowerCase(), k -> new LinkedHashMap<>());
                 if (hasNewFields)
                     this.existingCollectionSchema.onCollectionChanged(
                             collName, isNewCollection);

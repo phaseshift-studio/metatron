@@ -57,10 +57,24 @@ do
 *mcp_server
 
 ```
+### Using tools from the client
+
+After connecting, `mcp_client::T` populates its `tool` field with `tool::T` entries keyed by `mTool.toolName(tid)` — the flattened instruction tid (e.g. `m_inst_eval_mtron`). Each entry carries `inst`, `name`, `desc`, and `arg`:
+
+```mtron
+mcp_client::[host=>http://localhost:8777/mcp]@a
+*a>>tool
+# => [m_inst_eval_mtron=>tool::[inst=>..., name=>m_inst_eval_mtron, desc=>..., arg=>...], ...]
+
+# invoke a tool by applying its inst field
+a/tool/m_inst_eval_mtron/inst("1+2")
+# => 3
+```
+
 ### WebSocket
 
 ```
-mcp_ws::[host => <http://127.0.0.1:29170/index-mcp/streamable-http>]@/usr/ai/mcp/index-mcp;
+mcp_client::[host => <http://127.0.0.1:29170/index-mcp/streamable-http>]@/usr/ai/mcp/index-mcp;
 ```
 
 
@@ -81,5 +95,5 @@ Given the `mcpServers` JSON snippet below:
 ```
 
 ```
-mcp_http::[host => <http://127.0.0.1:64342/stream>]@/usr/ai/mcp/intellij; 
+mcp_client::[host => <http://127.0.0.1:64342/stream>]@/usr/ai/mcp/intellij; 
 ```

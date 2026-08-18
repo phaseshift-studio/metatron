@@ -39,6 +39,7 @@
  import studio.phaseshift.metatron.furi.DataPath;
  import studio.phaseshift.metatron.furi.QProc;
  import studio.phaseshift.metatron.furi.fURI;
+ import studio.phaseshift.metatron.isa.AbstractDataPathSpace;
  import studio.phaseshift.metatron.isa.AbstractSpace;
  import studio.phaseshift.metatron.isa.SchemaSpace;
  import studio.phaseshift.metatron.isa.Space;
@@ -82,7 +83,7 @@
  /*
   * @author Marko A. Rodriguez (http://markorodriguez.com)
   */
- public class grphSpace extends AbstractSpace<GraphTraversalSource> implements SchemaSpace {
+ public class grphSpace extends AbstractDataPathSpace<GraphTraversalSource> implements SchemaSpace {
 
      public static final ObjSerializer<String> SERIALIZER = ObjmtronSerializer.singleNoClip();
      protected static ObjFactory FACTORY = null;
@@ -92,6 +93,14 @@
       * Config key for loading a pre-defined toy dataset (e.g. {@code /tinkerpop/modern}).
       */
      public static final String DATASET = "dataset";
+
+     /**
+      * Reserved vertex label for the flat key-value namespace, mirroring
+      * tbleSpace/dcmntSpace's {@code kv_store}.  URIs whose first segment is this
+      * label are stored as {@code kv_store}-labeled vertices with a {@code key}
+      * (full relative path) and a serialized {@code value} property.
+      */
+     public static final String KV_STORE = "kv_store";
 
      /**
       * Tracked for proper cleanup of the remote JanusGraph connection.
@@ -460,6 +469,16 @@
                          && t.isRefinementOf(VRTX_TYPE));
      }
 
+     /**
+      * Returns {@code true} when the given collection name is a known edge
+      * label in the schema InstSet.
+      */
+     private boolean isEdgeLabel(final String collectionName) {
+         return this.schema().types().stream()
+                 .anyMatch(t -> t.vid().name().equalsIgnoreCase(collectionName)
+                         && t.isRefinementOf(EDGE_TYPE));
+     }
+
      @Override
      public Space addQ(final QProc qProc) {
          // Intercept incrQ: replace the default in-memory counter with
@@ -507,7 +526,15 @@
                  if (routed.hasScheme() && !routed.test(this.pattern())) {
                      return new IdObj(routed, Router.global().read(routed)).iterator();
                  }
-                 final DataPath dp = routed.segments().get(0).equals(this.pattern().segments().get(0)) ? DataPath.of(routed) : DataPath.withoutDB(routed);
+                 // Flat key-value namespace (reserved kv_store label, or unknown collection).
+                 // Only for paths under this space's prefix; absolute cross-space paths
+                 // (e.g. /g/S → /m/grph/schema/... route) fall through to the fallback.
+                 if (!routed.isAbsolute() || routed.hasPrefix(this.pattern().retractPattern())) {
+                     final fURI rel = this.relative(routed);
+                     if (this.isFlatRead(rel))
+                         return this.readFlat(rel, pattern);
+                 }
+                 final DataPath dp = this.annotateTypes(routed.segments().get(0).equals(this.pattern().segments().get(0)) ? DataPath.of(routed) : DataPath.withoutDB(routed));
                  if (!dp.hasCollection()) return IteratorUtil.of();
                  if (!dp.hasEntry()) return readCollection(dp);
                  if ("V".equals(dp.collection())) {
@@ -604,8 +631,13 @@
      @Override
      public BiFunction<fURI, Obj, Obj> directWriter() {
          return (pattern, obj) -> {
-             // DELETING A VERTEX OR EDGE
+             // DELETING A VERTEX, EDGE, OR FLAT ENTRY
              if (obj.isNoObj()) {
+                 final fURI rel = this.relative(Space.Helper.routeFromSpace(pattern, this.routes()));
+                 if (this.isFlatRead(rel)) {
+                     this.writeFlat(rel, noobj());
+                     return noobj();
+                 }
                  this.read(pattern).stream().forEach(e -> {
                      LOG.debug("deleting element %s", e.vid());
                      if (e instanceof VertexRec vertexToDrop) {
@@ -618,69 +650,13 @@
              }
              final fURI routed = Space.Helper.routeFromSpace(pattern, this.routes());
              LOG.debug("writing tp3 vid: %s => %s", pattern, routed);
-             final DataPath dp = DataPath.withoutDB(routed);
-             final boolean isVertexCollection = "V".equals(dp.collection())
-                     || (dp.hasCollection() && isVertexLabel(dp.collection()));
-             if (isVertexCollection && dp.hasEntry() && CommonUtil.isInt(dp.entry())) {
-                 final Object id = CommonUtil.isInt(dp.entry()) ? Long.parseLong(dp.entry()) : dp.entry();
-                 final String label = "V".equals(dp.collection())
-                         ? (obj.isRec() && obj.asRec().jvm().containsKey(grphInstSet.LABEL)
-                            ? obj.asRec().jvm().get(grphInstSet.LABEL).uriValue().toString()
-                            : obj.tid().basePath().toString())
-                         : dp.collection();
-                 try {
-                     final Vertex vertex = IteratorUtil.stream(this.sjvm.V(id)).findFirst().orElseGet(() ->
-                             this.sjvm.addV(label).next());
-                     LOG.debug("writing vertex %s => %s", vid, vertex);
-                     // write properties from the Rec to the TinkerPop vertex
-                     obj.asRec().jvm().entrySet().stream()
-                             .filter(e -> !e.getKey().equals(grphInstSet.LABEL))
-                             .forEach(e -> {
-                                 final Obj value = e.getValue();
-                                 if (value.isNoObj() || value.isNone()) {
-                                     this.sjvm.V(vertex.id()).properties(e.getKey().uriValue().toString()).drop().hasNext();
-                                 } else if (!value.isAuto()) {
-                                     this.sjvm.V(vertex.id()).property(
-                                             e.getKey().uriValue().toString(),
-                                             ObjTP3Serializer.tp3Value(value)).next();
-                                 }
-                             });
-                     // Track field types for schema update
-                     if (obj.isRec()) {
-                         final Map<String, Obj> existing =
-                                 this.existingGraphSchema.getLogicalTypes()
-                                         .get(label.toLowerCase());
-                         final boolean isNewLabel = existing == null;
-                         boolean hasNew = isNewLabel;
-                         for (final Map.Entry<Obj, Obj> e : obj.asRec().jvm().entrySet()) {
-                             if (e.getKey().equals(grphInstSet.LABEL)) continue;
-                             final Obj value = e.getValue();
-                             if (value.isNoObj() || value.isNone()
-                                     || value.isAuto())
-                                 continue;
-                             final String propName = e.getKey().isUri()
-                                     ? e.getKey().asUri().uriValue().name()
-                                     : e.getKey().toString();
-                             this.existingGraphSchema.trackPropertyType(
-                                     label, propName, value);
-                             if (!isNewLabel && !existing.containsKey(
-                                     propName.toLowerCase()))
-                                 hasNew = true;
-                         }
-                         if (hasNew)
-                             this.existingGraphSchema.onLabelChanged(
-                                     label, isNewLabel);
-                     }
-                     this.at(AUTO_TX).ifPresent(x -> {
-                         if (x.boolValue()) {
-                             this.sjvm.tx().commit();
-                         }
-                     });
-                     return new VertexRec(vertex, this);
-                 } catch (final Exception e) {
-                     return fail(e);
-                 }
+             final fURI rel = this.relative(routed);
+             // Flat key-value namespace (reserved kv_store label, or deduced).
+             if (this.isFlatWrite(rel, obj)) {
+                 this.writeFlat(rel, obj);
+                 return obj;
              }
+             this.writeStructured(rel, obj);
              return obj;
          };
      }
@@ -704,5 +680,182 @@
          } finally {
              super.close();
          }
+     }
+
+     // =======================================================================
+     //  AbstractDataPathSpace hooks — flat kv_store namespace + structured write
+     // =======================================================================
+
+     @Override
+     protected boolean isReservedFlatName(final String firstSegment) {
+         return KV_STORE.equalsIgnoreCase(firstSegment);
+     }
+
+     @Override
+     protected boolean isStructuredCollection(final fURI relativePath) {
+         final List<String> segs = relativePath.segments();
+         if (segs == null || segs.isEmpty())
+             return false;
+         final String c = segs.getFirst();
+         if ("V".equalsIgnoreCase(c) || "E".equalsIgnoreCase(c))
+             return true;
+         if ("+".equals(c) || "#".equals(c))
+             return true; // wildcard collection → schema resolution (readCollection)
+         return this.schema().types().stream()
+                 .anyMatch(t -> t.vid().name().equalsIgnoreCase(c)
+                         && (t.isRefinementOf(VRTX_TYPE) || t.isRefinementOf(EDGE_TYPE)));
+     }
+
+     /**
+      * Normalize a routed path to the space-relative form.  {@code routeFromSpace}
+      * strips the route key for mapped collections ({@code /g/V} → {@code V/1})
+      * but leaves unmapped paths absolute ({@code /g/kv_store/x}); strip the
+      * {@code /g/} prefix here so the flat namespace sees a consistent relative key.
+      */
+     private fURI relative(final fURI routed) {
+         final fURI prefix = this.pattern().retractPattern();
+         return routed.hasPrefix(prefix) ? routed.removePrefix(prefix) : routed;
+     }
+
+     /**
+      * Annotate a positional DataPath with the metatron types resolved by the
+      * graph schema — the label type (collection) and the property type (field).
+      */
+     private DataPath annotateTypes(final DataPath dp) {
+         if (dp.collection() == null)
+             return dp;
+         DataPath typed = dp;
+         final Iterator<IdObj> schemaTypes = this.resolveCollectionSchema(dp.collection());
+         if (schemaTypes.hasNext()) {
+             final Obj t = schemaTypes.next().obj();
+             if (t instanceof Type type)
+                 typed = typed.type(DataPath.ROLE_COLLECTION, type);
+         }
+         if (dp.field() != null && this.existingGraphSchema != null) {
+             final Map<String, Obj> props =
+                     this.existingGraphSchema.getLogicalTypes().get(dp.collection().toLowerCase());
+             if (props != null) {
+                 final Obj pt = props.get(dp.field().toLowerCase());
+                 if (pt instanceof Type t)
+                     typed = typed.type(DataPath.ROLE_FIELD, t);
+             }
+         }
+         return typed;
+     }
+
+     @Override
+     protected void writeFlat(final fURI relativePath, final Obj obj) {
+         final String key = relativePath.toString();
+         if (obj.isNoObj()) {
+             this.sjvm.V().hasLabel(KV_STORE).has("key", key).drop().iterate();
+             return;
+         }
+         final Vertex existing = IteratorUtil.stream(
+                 this.sjvm.V().hasLabel(KV_STORE).has("key", key)).findFirst().orElse(null);
+         if (existing != null) {
+             this.sjvm.V(existing.id()).property("value", SERIALIZER.write(obj)).iterate();
+         } else {
+             this.sjvm.addV(KV_STORE).property("key", key).property("value", SERIALIZER.write(obj)).next();
+         }
+     }
+
+     @Override
+     protected Iterator<IdObj> readFlat(final fURI relativePath, final fURI pattern) {
+         final fURI nodePattern = pattern.asNode();
+         if (relativePath.hasPattern()) {
+             return IteratorUtil.stream(this.sjvm.V().hasLabel(KV_STORE)).flatMap(v -> {
+                 final String key = v.value("key").toString();
+                 final fURI vid = Space.Helper.routeToSpace(f(key), this.routes());
+                 final Obj val = SERIALIZER.read(v.value("value").toString());
+                 final List<IdObj> out = new ArrayList<>();
+                 if (vid.test(nodePattern))
+                     out.add(IdObj.of(vid, val));
+                 else if (val.isPoly())
+                     out.addAll(Space.Helper.unrollPoly(vid, val.as(), nodePattern));
+                 return out.stream();
+             }).iterator();
+         }
+         final Vertex v = IteratorUtil.stream(
+                 this.sjvm.V().hasLabel(KV_STORE).has("key", relativePath.toString())).findFirst().orElse(null);
+         if (v == null)
+             return IteratorUtil.of();
+         return IteratorUtil.of(IdObj.of(nodePattern, SERIALIZER.read(v.value("value").toString())));
+     }
+
+     @Override
+     protected void writeStructured(final fURI relativePath, final Obj obj) {
+         final DataPath dp = this.annotateTypes(DataPath.withoutDB(relativePath));
+         if (dp.collection() == null || dp.entry() == null)
+             return;
+         // Edges are created via addE (Phase 3); skip edge-label collections.
+         if ("E".equals(dp.collection()) || isEdgeLabel(dp.collection()))
+             return;
+         if (!CommonUtil.isInt(dp.entry()))
+             return;
+         if (!obj.isRec())
+             throw MTronException.of("graph vertex requires a Rec; cannot promote %s", obj.type());
+         final Object id = Long.parseLong(dp.entry());
+         final String label = "V".equals(dp.collection())
+                 ? (obj.isRec() && obj.asRec().jvm().containsKey(grphInstSet.LABEL)
+                    ? obj.asRec().jvm().get(grphInstSet.LABEL).uriValue().toString()
+                    : obj.tid().basePath().toString())
+                 : dp.collection();
+         try {
+             // Promote parked flat entries before the first write of a new label.
+             if (obj.isRec()
+                     && this.existingGraphSchema.getLogicalTypes().get(label.toLowerCase()) == null)
+                 this.migrateFlatToStructured(label);
+             final Vertex vertex = IteratorUtil.stream(this.sjvm.V(id)).findFirst()
+                     .orElseGet(() -> this.sjvm.addV(label).next());
+             obj.asRec().jvm().entrySet().stream()
+                     .filter(e -> !e.getKey().equals(grphInstSet.LABEL))
+                     .forEach(e -> {
+                         final Obj value = e.getValue();
+                         if (value.isNoObj() || value.isNone()) {
+                             this.sjvm.V(vertex.id()).properties(e.getKey().uriValue().toString()).drop().iterate();
+                         } else if (!value.isAuto()) {
+                             this.sjvm.V(vertex.id()).property(
+                                     e.getKey().uriValue().toString(), ObjTP3Serializer.tp3Value(value)).next();
+                         }
+                     });
+             // Track field types for schema update
+             final Map<String, Obj> existing =
+                     this.existingGraphSchema.getLogicalTypes().get(label.toLowerCase());
+             final boolean isNewLabel = existing == null;
+             boolean hasNew = isNewLabel;
+             for (final Map.Entry<Obj, Obj> e : obj.asRec().jvm().entrySet()) {
+                 if (e.getKey().equals(grphInstSet.LABEL)) continue;
+                 final Obj value = e.getValue();
+                 if (value.isNoObj() || value.isNone() || value.isAuto()) continue;
+                 final String propName = e.getKey().isUri()
+                         ? e.getKey().asUri().uriValue().name()
+                         : e.getKey().toString();
+                 this.existingGraphSchema.trackPropertyType(label, propName, value);
+                 if (!isNewLabel && !existing.containsKey(propName.toLowerCase()))
+                     hasNew = true;
+             }
+             if (hasNew)
+                 this.existingGraphSchema.onLabelChanged(label, isNewLabel);
+             this.at(AUTO_TX).ifPresent(x -> {
+                 if (x.boolValue())
+                     this.sjvm.tx().commit();
+             });
+         } catch (final Exception e) {
+             throw MTronException.of(e);
+         }
+     }
+
+     @Override
+     protected Stream<FlatEntry> scanFlat(final String collectionPrefix) {
+         final String prefix = collectionPrefix + "/";
+         return IteratorUtil.stream(this.sjvm.V().hasLabel(KV_STORE)
+                         .has("key", org.apache.tinkerpop.gremlin.process.traversal.TextP.startingWith(prefix)))
+                 .map(v -> new FlatEntry(v.value("key").toString(),
+                         SERIALIZER.read(v.value("value").toString())));
+     }
+
+     @Override
+     protected void removeFlat(final String fullKey) {
+         this.sjvm.V().hasLabel(KV_STORE).has("key", fullKey).drop().iterate();
      }
  }

@@ -23,7 +23,10 @@ import dev.langchain4j.model.chat.request.json.*;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.type.mSkill;
 import studio.phaseshift.metatron.isa.llm.type.mTool;
-import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.m.type.Inst;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Poly;
+import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
@@ -36,6 +39,7 @@ import java.util.stream.Collectors;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.Str.Helper.cleanString;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -80,7 +84,7 @@ public class mcpServer extends MRec {
         if (skill.has(TOOL)) {
             final Rec tools = rec(mutableMap());
             skill.at(TOOL).asLst().elements().forEach(inst -> {
-                tools.at(uri(inst.asInst().tid().basePath().toString().replaceAll("^/+", "").replace("/", "_")), inst, Rec.MUTABLE);
+                tools.at(uri(mTool.toolName(inst.asInst().tid())), inst, Rec.MUTABLE);
             });
             jvm.put(uri(TOOL), tools);
         }
@@ -154,7 +158,7 @@ public class mcpServer extends MRec {
                                         uri(DESCRIPTION), str(toolEntry.toShortString()),
                                         uri("inputSchema"), rec(uri(TYPE), str(OBJECT), uri("properties"), rec()));
                             final ToolSpecification spec = mTool.mtronInstToolSpecification(mTool.mtronInstToTool(toolEntry.asInst())).get0();
-                            return (Obj) rec(uri(NAME), str(kv.first().uriValue().toString()),
+                            return (Obj) rec(uri(NAME), str(spec.name()),
                                     uri(DESCRIPTION), str(null == spec.description() ? "<no description>" : spec.description()),
                                     uri("inputSchema"), jsonSchemaToRec(spec.parameters()));
                         })
@@ -179,16 +183,31 @@ public class mcpServer extends MRec {
             final Inst toolInst = toolEntry.asInst();
             final Map<Obj, Obj> argMap = arguments.jvm();
             final Poly<?, ?> args = toolInst.args().isNoObj() ? lst() : (toolInst.args().isLst() ?
-                    lst(argMap.entrySet().stream().filter(e -> !e.getKey().equals(uri(LHS))).map(e -> ObjmtronSerializer.<Obj>parse(e.getValue().toString())).collect(Collectors.toList())) :
-                    rec(argMap.entrySet().stream().filter(e -> !e.getKey().equals(uri(LHS))).collect(Collectors.toMap(e -> uri(e.getKey().toString()), e -> ObjmtronSerializer.parse(e.getValue().toString())))));
-            final Obj toolLhs = argMap.containsKey(uri(LHS)) ? ObjmtronSerializer.compact().read(argMap.get(uri(LHS)).toString()) : noobj();
+                    lst(argMap.entrySet().stream().filter(e -> !e.getKey().equals(uri(LHS))).map(e -> normArg(e.getValue())).collect(Collectors.toList())) :
+                    rec(argMap.entrySet().stream().filter(e -> !e.getKey().equals(uri(LHS))).collect(Collectors.toMap(e -> uri(e.getKey().toString()), e -> normArg(e.getValue())))));
+            final Obj toolLhs = argMap.containsKey(uri(LHS)) ? normArg(argMap.get(uri(LHS))) : noobj();
             final Obj toolResult = toolInst.args(args).apply(toolLhs);
             if (toolResult.isFail())
                 return mcpError(id, jnt(-32603), str(toolResult.asFail().message()));
             return mcpResponse(id, rec(uri(CONTENT), lst(rec(
-                    uri(TYPE), str("text"),
+                    uri(TYPE), str(TEXT),
                     uri(TEXT), str(toolResult.toCleanString())))));
         }
+    }
+
+    private static Obj normArg(final Obj arg) {
+        if (arg.isUri() || arg.isStr()) {
+            try {
+                final Obj reparsed = ObjmtronSerializer.singleNoClip().inputBytes(cleanString(arg));
+                // Only replace if mtron found a better type — URI→URI means the
+                // original was correct and re-parsing would double-resolve paths.
+                if (!reparsed.isFail() && !reparsed.isUri())
+                    return reparsed;
+            } catch (final Exception ignored) {
+                // plain text that isn't mtron — keep original
+            }
+        }
+        return arg;
     }
 
     /**
@@ -228,9 +247,9 @@ public class mcpServer extends MRec {
         // large resource: emit the reference path AS the text, not a non-standard field
         final Obj content = m.containsKey(uri(REFERENCE)) ? m.get(uri(REFERENCE)) : m.get(uri(TEXT));
         return mcpResponse(id, rec(uri("contents"), lst(rec(
-                        uri(URI), str(resourceUri),
-                        uri(TEXT), content,
-                        uri("mimeType"), str(MIME.MIMEType.fromExtension(resourceUri, MIME.MIMEType.TEXT_PLAIN).value)))));
+                uri(URI), str(resourceUri),
+                uri(TEXT), content,
+                uri("mimeType"), str(MIME.MIMEType.fromExtension(resourceUri, MIME.MIMEType.TEXT_PLAIN).value)))));
     }
 
     /**
@@ -357,31 +376,36 @@ public class mcpServer extends MRec {
     protected static Rec jsonSchemaToRec(final JsonSchemaElement element) {
         if (null == element)
             return rec(uri(TYPE), str(OBJECT), uri("properties"), rec());
+        final Rec base;
         if (element instanceof JsonObjectSchema obj) {
             final Rec properties = rec();
             obj.properties().forEach((name, sub) -> properties.at(uri(name), jsonSchemaToRec(sub), Rec.MUTABLE));
-            return rec(uri(TYPE), str(OBJECT),
+            base = rec(uri(TYPE), str(OBJECT),
                     uri("properties"), properties,
                     uri(REQUIRED), lst(obj.required().stream().map(s -> (Obj) str(s)).toList()));
         } else if (element instanceof JsonArraySchema arr) {
-            return rec(uri(TYPE), str("array"), uri("items"), jsonSchemaToRec(arr.items()));
+            base = rec(uri(TYPE), str("array"), uri("items"), jsonSchemaToRec(arr.items()));
         } else if (element instanceof JsonBooleanSchema) {
-            return rec(uri(TYPE), str("boolean"));
+            base = rec(uri(TYPE), str("boolean"));
         } else if (element instanceof JsonIntegerSchema) {
-            return rec(uri(TYPE), str("integer"));
+            base = rec(uri(TYPE), str("integer"));
         } else if (element instanceof JsonNumberSchema) {
-            return rec(uri(TYPE), str("number"));
+            base = rec(uri(TYPE), str("number"));
         } else if (element instanceof JsonStringSchema) {
-            return rec(uri(TYPE), str("string"));
+            base = rec(uri(TYPE), str("string"));
         } else if (element instanceof JsonEnumSchema en) {
-            return rec(uri(TYPE), str("string"), uri("enum"), lst(en.enumValues().stream().map(s -> (Obj) str(s)).toList()));
+            base = rec(uri(TYPE), str("string"), uri("enum"), lst(en.enumValues().stream().map(s -> (Obj) str(s)).toList()));
         } else if (element instanceof JsonReferenceSchema ref) {
-            return rec(uri("$ref"), str(ref.reference()));
+            base = rec(uri("$ref"), str(ref.reference()));
         } else if (element instanceof JsonAnyOfSchema anyOf) {
-            return rec(uri("anyOf"), lst(anyOf.anyOf().stream().map(e -> (Obj) jsonSchemaToRec(e)).toList()));
+            base = rec(uri("anyOf"), lst(anyOf.anyOf().stream().map(e -> (Obj) jsonSchemaToRec(e)).toList()));
         } else {
-            return rec(uri(TYPE), str("string"));
+            base = rec(uri(TYPE), str("string"));
         }
+        final String description = element.description();
+        if (null != description && !description.isBlank())
+            base.at(uri(DESCRIPTION), str(description), Rec.MUTABLE);
+        return base;
     }
 
     // ========================================

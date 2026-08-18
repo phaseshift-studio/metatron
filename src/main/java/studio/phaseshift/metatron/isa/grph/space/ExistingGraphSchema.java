@@ -177,6 +177,8 @@ public class ExistingGraphSchema {
         final Set<String> labels = new LinkedHashSet<>();
         g.V().label().dedup().forEachRemaining(labels::add);
         g.E().label().dedup().forEachRemaining(labels::add);
+        // The flat kv_store label is internal storage, not a schema type.
+        labels.remove(grphSpace.KV_STORE);
         this.space.logger().debug("discovered {{b}}%d{{X}} entity labels", labels.size());
         return new ArrayList<>(labels);
     }
