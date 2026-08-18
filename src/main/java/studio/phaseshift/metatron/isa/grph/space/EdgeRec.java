@@ -47,7 +47,7 @@ public class EdgeRec extends ElementRec<Edge> {
     }
 
     public Edge edge() {
-        return this.element;
+        return ((ElementMap<Edge>) this.jvm()).element;
     }
 
     /**
@@ -75,11 +75,11 @@ public class EdgeRec extends ElementRec<Edge> {
     }
 
     public Obj inVertex() {
-        return resolveEndpoint(this.element.inVertex());
+        return resolveEndpoint(this.element().inVertex());
     }
 
     public Obj outVertex() {
-        return resolveEndpoint(this.element.outVertex());
+        return resolveEndpoint(this.element().outVertex());
     }
 
     public Obj vertex(final Direction direction) {
@@ -105,7 +105,7 @@ public class EdgeRec extends ElementRec<Edge> {
 
         java.util.stream.Stream<Obj> stream = dir != null
                 ? java.util.stream.Stream.of(resolveEndpoint(
-                dir == Direction.IN ? this.element.inVertex() : this.element.outVertex()))
+                dir == Direction.IN ? this.element().inVertex() : this.element().outVertex()))
                 : java.util.stream.Stream.concat(inVertex().stream(), outVertex().stream());
 
         for (int i = 1; i < segs.size(); i++) {

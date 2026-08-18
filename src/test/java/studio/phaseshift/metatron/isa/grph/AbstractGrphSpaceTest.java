@@ -29,13 +29,14 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
-import studio.phaseshift.metatron.AbstractDataPathTest;
+import studio.phaseshift.metatron.AbstractDataPathSpaceTest;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.TestData;
 import studio.phaseshift.metatron.algebra.rewrite.CommonRewritesTestContract;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.IncrQTest;
 import studio.phaseshift.metatron.isa.AbstractSpaceTest;
+import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.grph.space.GraphLoader;
 import studio.phaseshift.metatron.isa.grph.space.grphSpace;
 import studio.phaseshift.metatron.isa.grph.space.schema.modernSchema;
@@ -77,7 +78,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public abstract class AbstractGrphSpaceTest extends AbstractDataPathTest implements CommonRewritesTestContract {
+public abstract class AbstractGrphSpaceTest extends AbstractDataPathSpaceTest implements CommonRewritesTestContract {
 
     // ========================================================================
     //  Backend configuration — set by subclass @BeforeAll
@@ -108,7 +109,16 @@ public abstract class AbstractGrphSpaceTest extends AbstractDataPathTest impleme
      * Called by subclass {@code @BeforeAll} after the backend is ready.
      */
     protected static void createRewriteTestSpace() {
-        grphSpace.of(rewriteTestConfigRec, REWRITE_TEST_SPACE_VID);
+        final grphSpace space = grphSpace.of(rewriteTestConfigRec, REWRITE_TEST_SPACE_VID);
+        // Seed the 10 vertices CommonRewritesTestContract expects
+        // (id/value 1-10, name item1-item10, active alternating true/false).
+        for (int i = 1; i <= 10; i++) {
+            space.sjvm().addV("item")
+                    .property("id", i)
+                    .property("value", i)
+                    .property("name", "item" + i)
+                    .property("active", (i % 2 == 1)).next();
+        }
     }
 
     @AfterAll
@@ -133,6 +143,36 @@ public abstract class AbstractGrphSpaceTest extends AbstractDataPathTest impleme
     @Override
     public fURI getRewriteInstUri() {
         return f("/m/grph");
+    }
+
+    // ========================================================================
+    //  AbstractDataPathSpaceTest — flat namespace wiring
+    // ========================================================================
+
+    @Override
+    protected fURI deducedBaseUri() {
+        return f("/g/kv_scratch");
+    }
+
+    @Override
+    protected boolean supportsLosslessFlatMigration() {
+        // A graph vertex is a labeled Rec — a bare mono/list flat entry can't be
+        // promoted to it (unlike a schemaless document).  Migration of monos is
+        // therefore not lossless; a grphSpace-specific migration test lands in
+        // Phase 3 alongside edge writes.
+        return false;
+    }
+
+    @Override
+    protected void dropDeducedCollection(final String collectionName) {
+        final Space space = Router.global().getSpaceFor(f("/g"));
+        if (space instanceof grphSpace gs)
+            gs.sjvm().V().hasLabel(collectionName).drop().iterate();
+    }
+
+    @Override
+    protected fURI testUri(final String suffix) {
+        return f("/g/kv_store/test/" + suffix);
     }
 
     // ========================================================================
@@ -531,11 +571,13 @@ public abstract class AbstractGrphSpaceTest extends AbstractDataPathTest impleme
 
     // ========================================================================
     //  Disabled abstract test overrides
+    //  (kept: tests needing wildcard/container/traversal/field-mutation
+    //   semantics not yet supported by the flat store — Phase 3+)
     // ========================================================================
 
     @Override
     @Test
-    @Disabled("grphSpace stores labeled vertices/edges under V/E collections; arbitrary KV paths not supported")
+    @Disabled("container aggregation + wildcard reads not yet supported by the flat store")
     public void testMonoRootlessReadWrites() {
         super.testMonoRootlessReadWrites();
     }
@@ -557,72 +599,7 @@ public abstract class AbstractGrphSpaceTest extends AbstractDataPathTest impleme
 
     @Override
     @Disabled
-    public void testStringCornerCases(String description, String value) {
-    }
-
-    @Override
-    @Disabled
-    public void testIntegerBoundaries(String description, long value) {
-    }
-
-    @Override
-    @Disabled
-    public void testRealBoundaries(String description, double value) {
-    }
-
-    @Override
-    @Disabled
-    public void testBooleanValues(String description, boolean value) {
-    }
-
-    @Override
-    @Disabled
-    public void testNonExistentAccess(String key) {
-    }
-
-    @Override
-    @Disabled
-    public void testSequentialUpdates(int iterations) {
-    }
-
-    @Override
-    @Disabled
-    public void testBasicCRUD(String description, String key, String valueStr) {
-    }
-
-    @Override
-    @Disabled
-    public void testTypePreservation(String description, Obj value) {
-    }
-
-    @Override
-    @Disabled
-    public void testNestedRecords(int depth) {
-    }
-
-    @Override
-    @Disabled
-    public void testListHandling(String description, studio.phaseshift.metatron.isa.m.type.Lst listValue, int expectedCount) {
-    }
-
-    @Override
-    @Disabled
-    public void testTypeChanges(String description, Obj initialValue, Obj updatedValue) {
-    }
-
-    @Override
-    @Disabled
     public void testMultiFieldUpdates(int fieldCount) {
-    }
-
-    @Override
-    @Disabled
-    public void testSpecialStringValues(String description, String value) {
-    }
-
-    @Override
-    @Disabled
-    public void testEmptyRecords(int testNumber) {
     }
 
     // ========================================================================

@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -20,8 +20,13 @@ package studio.phaseshift.metatron.isa.grph.space;
 
 import org.apache.tinkerpop.gremlin.structure.Element;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.type.Type;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Poly;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
+
+import java.util.function.BiFunction;
+
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
  * A Rec backed by a live TinkerPop {@link Element} (Vertex or Edge).
@@ -34,19 +39,37 @@ import studio.phaseshift.metatron.isa.m.type.impl.MRec;
  */
 public class ElementRec<T extends Element> extends MRec {
 
-    protected final T element;
+    //protected final T element;
     protected final grphSpace space;
 
     public ElementRec(final T element, final grphSpace space,
                       final fURI tid, final fURI vid) {
         // Bypass MObj(Map,tid,vid) constructor — its objCheckAndSave(this)
         // writes to the space, which creates another VertexRec, ad infinitum.
-        this.element = element;
         this.space = space;
-        this.jvm = new ElementMap<>(this.element); //Rec.Helper.cleanMap(materialize(element));
+        this.jvm = new ElementMap<>(element); //Rec.Helper.cleanMap(materialize(element));
         this.tid = tid;
         this.vid = vid;
     }
+
+    @Override
+    public ElementRec<T> at(final Obj key, final Obj value, final BiFunction<Poly<?, ?>, Object, Poly<?, ?>> operation) {
+        if (value.isPoly()) {
+            this.jvm().put(key, value);
+            return this;
+        } else
+            return (ElementRec<T>) super.at(key, value, operation);
+    }
+
+    @Override
+    public <OBJ extends Obj> OBJ at(final Obj key) {
+        final Obj temp = super.at(key);
+        if (temp.isNoObj()) {
+            return (OBJ) this.jvm().get(uri(key.uriValue().scheme("mtron")));
+        }
+        return (OBJ) temp;
+    }
+
 
     /**
      * Copy TinkerPop properties into a plain LinkedHashMap.
@@ -57,7 +80,7 @@ public class ElementRec<T extends Element> extends MRec {
         return map;
     }*/
     public T element() {
-        return this.element;
+        return ((ElementMap<T>) this.jvm()).element;
     }
 
     public grphSpace space() {
@@ -65,7 +88,7 @@ public class ElementRec<T extends Element> extends MRec {
     }
 
     public fURI elementVID() {
-        return null != this.vid ? this.vid : this.space.elementVID(this.element);
+        return null != this.vid ? this.vid : this.space.elementVID(this.element());
     }
 
     /** auto_from_ calls .vid(null) which triggers self(jvm, tid, null) —

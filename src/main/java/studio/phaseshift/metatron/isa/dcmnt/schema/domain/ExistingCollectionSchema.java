@@ -352,7 +352,17 @@ public class ExistingCollectionSchema {
                 && !this.collectionSchemas.containsKey(dp.collection().toLowerCase())
                 && !this.logicalTypes.containsKey(dp.collection().toLowerCase()))
             return null;
-        return dp;
+        // Annotate the positional decomposition with the resolved metatron types.
+        DataPath typed = dp.type(DataPath.ROLE_COLLECTION, this.getCollectionType(dp.collection()));
+        if (dp.field() != null) {
+            final Map<String, Obj> fieldTypes = this.logicalTypes.get(dp.collection().toLowerCase());
+            if (fieldTypes != null) {
+                final Obj ft = fieldTypes.get(dp.field().toLowerCase());
+                if (ft instanceof Type t)
+                    typed = typed.type(DataPath.ROLE_FIELD, t);
+            }
+        }
+        return typed;
     }
 
     /**

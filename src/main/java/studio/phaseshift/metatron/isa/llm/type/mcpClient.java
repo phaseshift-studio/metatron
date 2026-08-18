@@ -53,6 +53,7 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.*;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_TOOL_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.BOOL_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_INST_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_;
@@ -101,15 +102,10 @@ public class mcpClient extends MRec {
         final Rec tools = rec();
         this.client.listTools().stream().forEach(t -> {
             try {
-                final Map<Obj, String> documentationArgs = Optional.ofNullable(t.parameters())
-                        .map(JsonObjectSchema::properties)
-                        .map(p -> p.entrySet().stream()
-                                .map(kv -> new AbstractMap.SimpleEntry<Obj, String>(uri(kv.getKey()), kv.getValue().description()))
-                                .collect(Collectors.toMap(AbstractMap.SimpleEntry::getKey, AbstractMap.SimpleEntry::getValue))).orElse(null);
                 final Rec evaluationArgs = Optional.ofNullable(t.parameters())
                         .map(JsonObjectSchema::properties)
                         .map(p -> p.entrySet().stream()
-                                .map(kv -> rel(uri(kv.getKey()), str(kv.getValue().description())))
+                                .map(kv -> rel(uri(kv.getKey()), str(Optional.ofNullable(kv.getValue().description()).orElse("<no description>"))))
                                 .collect(new CommonUtil.RecCollector())).orElse(rec());
                 //////////////////////////////////////////////////////////////////////////////////////
                 final Inst toolInst = instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(ALL.maybe()),
@@ -138,12 +134,12 @@ public class mcpClient extends MRec {
                                 }
                             }
                         });
-                tools.at(f(t.name()), toolInst, MUTABLE);
-                if (vid != null && Router.global().getSpaceFor(vid).hasQ(DOCQ_PATTERN)) {
-                    final fURI toolDocQ = vid.extend("tool").extend(t.name()).addQ(DOCQ);
-                    Router.writeToSpace(toolDocQ, Docs.doc(toolInst, null, null, documentationArgs, t.description()));
-                    this.logger().info("tool documentation available at %s", toolDocQ);
-                }
+                final Map<Obj, Obj> toolJvm = new LinkedHashMap<>();
+                toolJvm.put(uri(INST), toolInst);
+                toolJvm.put(uri(NAME), uri(t.name()));
+                toolJvm.put(uri(DESC), str(Optional.ofNullable(t.description()).orElse("<no description>")));
+                toolJvm.put(uri(ARG), evaluationArgs);
+                tools.at(f(t.name()), rec(toolJvm, LLM_TOOL_TID, null), MUTABLE);
             } catch (final Exception e) {
                 throw MTronException.of(e, "error build server: " + t.name());
             }

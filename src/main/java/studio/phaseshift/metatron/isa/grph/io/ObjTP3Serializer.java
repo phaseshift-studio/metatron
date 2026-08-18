@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -23,27 +23,26 @@ import org.apache.tinkerpop.gremlin.structure.Element;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.grph.space.EdgeRec;
-
-import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import studio.phaseshift.metatron.isa.grph.space.VertexRec;
 import studio.phaseshift.metatron.isa.grph.space.grphSpace;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
-
-import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import studio.phaseshift.metatron.isa.mach.io.type.AbstractObjSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjByteBufferSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.nio.ByteBuffer;
 
-import static studio.phaseshift.metatron.isa.web.webInstSet.OBJ_TP3_SERIALIZER_TID;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.web.webInstSet.OBJ_TP3_SERIALIZER_TID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -91,7 +90,7 @@ public class ObjTP3Serializer extends AbstractObjSerializer<Element> {
      */
     public static Object tp3Value(final Obj obj) {
         return switch (obj) {
-            case NoObj __ -> null;
+            case NoObj ignored -> null;
             case Int i -> i.jvm();
             case Real r -> r.jvm();
             case Bool b -> b.jvm();
@@ -111,7 +110,7 @@ public class ObjTP3Serializer extends AbstractObjSerializer<Element> {
             return uri(f(s.substring(1, s.length() - 1)));
         }
         if (value instanceof String s) {
-            return str(s);
+            return ObjmtronSerializer.single().read(s);
         }
         return MObjFactory.single().toObj(value);
     }

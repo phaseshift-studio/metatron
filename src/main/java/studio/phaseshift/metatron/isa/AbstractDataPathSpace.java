@@ -133,7 +133,10 @@ public abstract class AbstractDataPathSpace<SJVM> extends AbstractSpace<SJVM> {
         final List<String> segs = relativePath.segments();
         if (segs != null && !segs.isEmpty() && this.isReservedFlatName(segs.getFirst()))
             return true;
-        return !this.isStructuredCollection(relativePath) && !obj.isRec();
+        // Deduced flat requires 2+ segments: a 1-segment path is the collection
+        // root (an auto-generated document/row id), not a flat key.
+        return (segs != null && segs.size() >= 2)
+                && !this.isStructuredCollection(relativePath) && !obj.isRec();
     }
 
     /**

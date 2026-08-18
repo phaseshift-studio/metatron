@@ -11,7 +11,7 @@ description: |
 
 ## Architecture
 
-MCP is client-initiated, but metatron's `mcp_wsServer` can send server→client notifications via the `send()` method inherited from `WebSocketRec` → `WebSocketObj`. The entire implementation is declarative mtron — zero Java.
+MCP is client-initiated, but metatron's `mcp_wsHandler` can send server→client notifications via the `send()` method inherited from `WebSocketRec` → `WebSocketObj`. The entire implementation is declarative mtron — zero Java.
 
 **Pattern**: A `subq` subscription on the WebSocket space intercepts writes to a per-instance notification URI subtree, builds a JSON-RPC 2.0 envelope, and sends it to the MCP client via the WebSocket connection.
 

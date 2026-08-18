@@ -30,7 +30,7 @@ import studio.phaseshift.metatron.util.IteratorUtil;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.mach.ui.uiInstSet.UI_TABLE_TID;
 
 /*
@@ -38,10 +38,10 @@ import static studio.phaseshift.metatron.isa.mach.ui.uiInstSet.UI_TABLE_TID;
  */
 public class TableWidget extends JRec<TableWidget> implements Widget<TableWidget> {
 
-    @JRecElement(key = "headers", rng = "/m/lst")
+    @JRecElement(key = "header", rng = "/m/lst")
     public final List<String> headers = new ArrayList<>();
 
-    @JRecElement(key = "rows", rng = "/m/lst")
+    @JRecElement(key = "row", rng = "/m/lst")
     public final List<List<Object>> table = new ArrayList<>();
 
     @JRecElement(key = "metadata", rng = "/m/lst")
@@ -88,17 +88,17 @@ public class TableWidget extends JRec<TableWidget> implements Widget<TableWidget
         if (this.javaPopulated) return;   // Java API owns the data
         final Map<Obj, Obj> jvm = jvmRead();
 
-        final Obj h = jvm.get(uri("headers"));
+        final Obj h = this.at(HEADER);
         if (h != null && !h.isNoObj())
             h.stream().filter(Obj::isStr).forEach(o -> this.headers.add(o.strValue()));
 
-        final Obj r = jvm.get(uri("rows"));
+        final Obj r = this.at(ROW);
         if (r != null && !r.isNoObj())
             r.stream().forEach(row -> this.addRow(row.stream()
                     .map(cell -> (Object) (cell.isStr() ? cell.strValue() : cell))
                     .collect(Collectors.toCollection(ArrayList::new))));
 
-        final Obj m = jvm.get(uri("metadata"));
+        final Obj m = this.at(METADATA);
         if (m != null && !m.isNoObj())
             m.stream().forEach(row -> this.addMetadata(row.stream()
                     .map(cell -> (Object) (cell.isStr() ? cell.strValue() : cell))

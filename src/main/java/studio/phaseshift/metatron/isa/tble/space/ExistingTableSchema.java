@@ -23,6 +23,8 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.m.type.Type;
+import studio.phaseshift.metatron.isa.m.type.impl.MType;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSQLSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.tble.schema.storage.TableSchema;
@@ -493,7 +495,19 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
         if (!dp.collectionIsWildcard()
                 && !this.tableSchemas.containsKey(dp.collection().toLowerCase()))
             return null;
-        return dp;
+        // Annotate the positional decomposition with the resolved metatron types.
+        DataPath typed = dp;
+        if (this.schemaGenerator != null)
+            typed = typed.type(DataPath.ROLE_COLLECTION, this.schemaGenerator.getTableType(dp.collection()));
+        if (dp.hasField()) {
+            final Map<String, fURI> cols = this.logicalTypes.get(dp.collection().toLowerCase());
+            if (cols != null) {
+                final fURI fieldTid = cols.get(dp.field().toLowerCase());
+                if (fieldTid != null)
+                    typed = typed.type(DataPath.ROLE_FIELD, MType.T(fieldTid));
+            }
+        }
+        return typed;
     }
 
     private Obj readTableRow(final ResultSet rs, final TableMetadata metadata, final String... rowNames) throws SQLException {

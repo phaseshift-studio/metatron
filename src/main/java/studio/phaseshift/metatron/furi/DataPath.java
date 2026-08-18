@@ -21,7 +21,10 @@ package studio.phaseshift.metatron.furi;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.*;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -68,10 +71,69 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.PLUS_INST_TID;
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public record DataPath(String db, String collection, String entry, String field, fURI extension) {
+public record DataPath(String db, String collection, String entry, String field, fURI extension,
+                       Map<fURI, Type> schema) {
 
     /** Sentinel segment value that means "no database" when placed at position 0. */
     public static final String NONE = "-";
+
+    /** Role keys for the parallel schema map ({@link #typeOf(fURI)}). */
+    public static final fURI ROLE_DB = f("db");
+    public static final fURI ROLE_COLLECTION = f("collection");
+    public static final fURI ROLE_ENTRY = f("entry");
+    public static final fURI ROLE_FIELD = f("field");
+
+    /**
+     * Positional constructor — leaves the schema map empty.  The parallel
+     * schema structure is populated later by a space's {@code resolveDataPath}
+     * (which knows the metatron Type of each segment).
+     */
+    public DataPath(final String db, final String collection, final String entry,
+                    final String field, final fURI extension) {
+        this(db, collection, entry, field, extension, Map.of());
+    }
+
+    /**
+     * Positional equality — the parallel schema map is an annotation, not part
+     * of the address identity.  Two DataPaths with the same segments are equal
+     * regardless of whether their types have been resolved.
+     */
+    @Override
+    public boolean equals(final Object other) {
+        if (this == other) return true;
+        if (!(other instanceof DataPath dp)) return false;
+        return Objects.equals(this.db, dp.db)
+                && Objects.equals(this.collection, dp.collection)
+                && Objects.equals(this.entry, dp.entry)
+                && Objects.equals(this.field, dp.field)
+                && Objects.equals(this.extension, dp.extension);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(this.db, this.collection, this.entry, this.field, this.extension);
+    }
+
+    /**
+     * The metatron {@link Type} of a positional role (db / collection / entry /
+     * field), or {@code null} when the schema has not been resolved for it.
+     */
+    public Type typeOf(final fURI role) {
+        return this.schema.get(role);
+    }
+
+    /**
+     * Return a copy of this DataPath with {@code role}'s schema type set.
+     * Used by space {@code resolveDataPath} implementations to annotate the
+     * positional decomposition with the metatron types they resolved.
+     */
+    public DataPath type(final fURI role, final Type type) {
+        if (null == type)
+            return this;
+        final Map<fURI, Type> annotated = new LinkedHashMap<>(this.schema);
+        annotated.put(role, type);
+        return new DataPath(this.db, this.collection, this.entry, this.field, this.extension, annotated);
+    }
 
     /**
      * Decompose an fURI into a DataPath, treating segment 0 as the
