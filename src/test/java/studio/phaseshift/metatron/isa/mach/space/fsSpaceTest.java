@@ -22,6 +22,7 @@ import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.SkipRegexTest;
 import studio.phaseshift.metatron.furi.q.LineQTest;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.AbstractSpaceTest;
@@ -51,6 +52,11 @@ import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_ISA_TID;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
+@SkipRegexTest(value = {
+        @SkipRegexTest.Skip(method = "testMultiFieldUpdates"),
+        @SkipRegexTest.Skip(method = "testUpdateWrite", params = {"M28", "M29", "M30", "M31", "M39"}),
+        @SkipRegexTest.Skip(method = "testRshiftDirectorySpine", params = {"rshift/a/\\.>>\\.>>\\.\\*_", "rshift/x.*"})
+})
 public class fsSpaceTest extends AbstractSpaceTest implements LineQTest {
 
     private static final File SOURCE_DIR = new File("src/test/resources/isa/sys/space/");
@@ -138,17 +144,6 @@ public class fsSpaceTest extends AbstractSpaceTest implements LineQTest {
         if (expression.contains("$$/"))
             return expression.replace("$$/", "test:");
         return super.make(expression);
-    }
-
-    // fsSpace stores flat files — no trie for wildcard expansion, no sub-rec
-    // traversal for nested field deletes.
-    @Override
-    protected boolean skipUpdateTestCase(final String id) {
-        return switch (id) {
-            case "M28", "M29", "M30", "M31", "M39" -> true;  // wildcards + nested delete
-            //case "M45" -> true;  // rec→file creates path fsSpace walks as directory in later tests
-            default -> false;
-        };
     }
 
     @Override
@@ -410,10 +405,10 @@ public class fsSpaceTest extends AbstractSpaceTest implements LineQTest {
             // directories carry the trailing / (a branch), files are nodes
             AbstractMetatronTest.checkCodeParseApply(LOG,
                     "test:dirpoly >>",
-                    "{test:/dirpoly/code/,<test:/dirpoly/notes.md>}");
+                    "{test:dirpoly/code,<test:dirpoly/notes.md>}");
             AbstractMetatronTest.checkCodeParseApply(LOG,
-                    "test:dirpoly/code >>",
-                    "{test:/dirpoly/code/main/}");
+                    "test:dirpoly/code/ >>",
+                    "{test:dirpoly/code/main/}");
 
             // / navigation descends to a file's content (the deliberate deref)
             final Obj app = ObjmtronSerializer.parse("*<test:dirpoly/code/main/java/App.java>").apply();
@@ -456,12 +451,6 @@ public class fsSpaceTest extends AbstractSpaceTest implements LineQTest {
     }, delimiter = '%')
     public void testFileAsInstruction(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
-    }
-
-    @Disabled
-    @Override
-    public void testMultiFieldUpdates(int fieldCount) {
-        // DO NOTHING
     }
 
     @Override

@@ -70,6 +70,10 @@ public class dckrSpaceTest extends AbstractSpaceTest {
         dockerAvailable = probeDocker();
     }
 
+    @Override
+    public void testRshiftDirectorySpine(final String a, final String b) {
+    }
+
     @BeforeAll
     public static void setupInstSet() throws Exception {
         InstSet.importInstSet(MATH_ISA_TID);

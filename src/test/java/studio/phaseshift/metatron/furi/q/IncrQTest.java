@@ -57,7 +57,8 @@ public interface IncrQTest {
      */
     fURI incrQBaseURI();
 
-    @TestCategory.Crud
+    @TestCategory.Write
+    @TestCategory.Read
     @Test
     default void testIncrQ() {
         final Space space = getSpace();

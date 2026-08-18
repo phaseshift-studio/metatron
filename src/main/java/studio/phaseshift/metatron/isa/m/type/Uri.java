@@ -20,15 +20,11 @@ package studio.phaseshift.metatron.isa.m.type;
 
 import studio.phaseshift.metatron.algebra.Ring;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.impl.MStr;
 import studio.phaseshift.metatron.isa.m.type.impl.MUri;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
-import studio.phaseshift.metatron.util.CommonUtil;
-import studio.phaseshift.metatron.util.MTronException;
-import studio.phaseshift.metatron.util.ProjectionFailureException;
-import studio.phaseshift.metatron.util.Tuple;
+import studio.phaseshift.metatron.util.*;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -451,19 +447,38 @@ public interface Uri extends Mono, Ring.O<Uri>, Comparable<Uri> {
         private static Obj readChildUris(final fURI pattern, final fURI base, final int depth) {
             // Read the space's RAW reader (real stored children only).  The resolving read
             // (resolveRead) fabricates child uris via locateBasePoly/unrollPoly when the direct
-            // read is empty — the walk must never invent an address.  When no space supports
-            // the base uri, the walk is simply empty (no incident uris) — not an error.
+            // read is empty.  The walk never invents an address from nothing, but when no uri
+            // sits exactly at `depth` it falls back to projecting deeper uris onto their
+            // depth-`depth` prefix — the implicit "directory spine" a flat space lacks.  When
+            // no space supports the base uri, the walk is simply empty — not an error.
             if (!Router.global().hasSpaceFor(base))
-                return objs();
-            final Space space = Router.global().getSpaceFor(base);
-            final java.util.List<fURI> children = new java.util.ArrayList<>();
-            space.directReader().apply(pattern).forEachRemaining(kv -> {
-                if (!kv.obj().isNoObj())
-                    children.add(kv.furi());
-            });
-            return objs(children.stream()
+                return noobj();
+            // The real reference spine: stored uris sitting exactly `depth` below base
+            // (e.g. fsSpace directories).  This is the common, non-synthesizing path.
+            final List<fURI> uris = new ArrayList<>(IteratorUtil.stream(
+                            Router.global().getSpaceFor(base).directReader().apply(pattern))
+                    .map(IdObj::furi)
                     .filter(u -> relativeDepth(u, base) == depth)
-                    .map(u -> uri(u)));
+                    .toList());
+            // Synthesize the directory spine: when nothing sits exactly at `depth`, project
+            // every uri deeper than `depth` onto its depth-`depth` prefix — the segment a
+            // filesystem would materialize as a directory on the way to a file.  Read-time
+            // only (nothing is written), so * on a synthesized uri still resolves to noobj.
+            if (uris.isEmpty()) {
+                IteratorUtil.stream(Router.global().getSpaceFor(base).directReader().apply(base.extend(fURI.Singleton.ALL)))
+                        .map(IdObj::furi)
+                        .filter(u -> relativeDepth(u, base) > depth)
+                        .map(u -> u.retract(relativeDepth(u, base) - depth))
+                        .forEach(uris::add);
+            }
+            // Preserve the base uri's absoluteness and branchness on every result — the
+            // walk must not drift between relative/absolute or node/branch forms as it
+            // reads real children or synthesizes the directory spine.
+            return objs(uris.stream()
+                    .map(u -> base.isRelative() ? u.asRelative() : u.asAbsolute())
+                    .map(u -> base.isBranch() ? u.asBranch() : u.asNode())
+                    .distinct()
+                    .map(MUri::uri));
         }
 
         /**

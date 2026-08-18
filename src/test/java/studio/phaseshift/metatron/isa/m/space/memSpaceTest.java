@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.isa.m.space;
 
 import org.junit.jupiter.api.Test;
+import studio.phaseshift.metatron.TestReport;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.LineQTest;
 import studio.phaseshift.metatron.furi.q.LockQTest;
@@ -39,6 +40,7 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
+@TestReport
 public class memSpaceTest extends AbstractSpaceTest implements SubQTest, LineQTest, LockQTest {
 
     public memSpaceTest() {

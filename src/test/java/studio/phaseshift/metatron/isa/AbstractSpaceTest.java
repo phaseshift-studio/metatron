@@ -126,8 +126,7 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
         return data;
     }
 
-    @TestCategory.Crud
-    @TestCategory.ReadWrite
+    @TestCategory.Read
     @ParameterizedTest
     @TestData(value = {
             """
@@ -157,8 +156,8 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
         assertEquals(f(expected), actual);
     }
 
-    @TestCategory.Crud
-    @TestCategory.ReadWrite
+    @TestCategory.Write
+    @TestCategory.Read
     @ParameterizedTest
     @CsvSource(value = {
             "1.to(a)                                               % *a                                % 1",
@@ -525,6 +524,7 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
      * <p>
      * Row format: {@code writeExpression % readExpression % expectedExpression}
      */
+    @TestCategory.Rootless
     @Test
     @TestData(value = {
             // seed: two siblings under one container
@@ -570,6 +570,7 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
         }
     }
 
+    @TestCategory.Update
     @Test
     @TestData(value = {
             // --- people (4 rows) ---
@@ -644,8 +645,7 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
         }
     }
 
-    @TestCategory.Crud
-    @TestCategory.ReadWrite
+    @TestCategory.Read
     @ParameterizedTest
     @TestData(value = {
             // --- nested org structure with cross-references ---
@@ -681,6 +681,41 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
         final Obj lookup = ObjmtronSerializer.parse(make(lookupExpression)).apply();
         final Obj result = ObjmtronSerializer.parse(make(expectedResult)).apply();
         assertEquals(result, lookup, "lookup: " + make(lookupExpression) + " | expected: " + make(expectedResult));
+    }
+
+    /**
+     * Tests that {@code >>} walks the URI reference graph synthesizing the implicit
+     * "directory spine": a flat space storing only {@code /a/b/c/d -> 42} still lets
+     * {@code /a.>>} yield {@code /a/b}, {@code /a.>>.>>} yield {@code /a/b/c}, and so on.
+     * Deeper leaves that diverge fan out at the level where they branch.
+     */
+    @TestCategory.Read
+    @ParameterizedTest
+    @TestData(value = {
+            "$$/rshift/a/b/c/d -> 42",
+            "$$/rshift/a/b/c/e -> 54",
+            "$$/rshift/x/y     -> [z=>1,zz=>[2,3]]"
+    })
+    @CsvSource(value = {
+            "$$/rshift/a.>>                        % {$$/rshift/a/b}",
+            "$$/rshift/a.>>.>>                     % {$$/rshift/a/b/c}",
+            "$$/rshift/a.>>.>>.>>                  % {$$/rshift/a/b/c/d,$$/rshift/a/b/c/e}",
+            "$$/rshift/a.>>.>>.>>.*_               % {42,54}",
+            "$$/rshift/a/.>>                       % {$$/rshift/a/b/}",
+            "$$/rshift/a/.>>.>>                    % {$$/rshift/a/b/c/}",
+            "$$/rshift/a/.>>.>>.>>                 % {$$/rshift/a/b/c/d/,$$/rshift/a/b/c/e/}",
+            "$$/rshift/a/.>>.>>.*_                 % ($$/rshift/a/b/c/=>[d=>42,e=>54])",
+            "$$/rshift/x.>>                        %  $$/rshift/x/y",
+            "$$/rshift/x/y.>>                      % {$$/rshift/x/y/z,$$/rshift/x/y/zz}",
+            "$$/rshift/x/y.>>.*_                   % {1,[2,3]}",
+            "$$/rshift/x/y.>>.>>                   % {$$/rshift/x/y/zz/0,$$/rshift/x/y/zz/1}",
+            "$$/rshift/x/y.>>.>>.*_                % {2,3}"
+    }, delimiter = '%')
+    public void testRshiftDirectorySpine(final String lookupExpression, final String expectedExpression) {
+        final String lookupExpr = make(lookupExpression);
+        final Obj lookup = ObjmtronSerializer.parse(lookupExpr).apply();
+        final Obj expected = ObjmtronSerializer.parse(make(expectedExpression)).apply();
+        assertEquals(expected, lookup, "lookup: " + lookupExpr + " | expected: " + make(expectedExpression));
     }
 
     @ParameterizedTest
@@ -916,7 +951,7 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
     /**
      * Test reading non-existent keys returns noobj.
      */
-    @TestCategory.Crud
+    @TestCategory.Read
     @ParameterizedTest(name = "[{index}] Non-existent: {0}")
     @CsvSource(value = {
             "simple missing key",
@@ -940,7 +975,8 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
     /**
      * Test sequential updates to the same key.
      */
-    @TestCategory.Crud
+    @TestCategory.Write
+    @TestCategory.Read
     @ParameterizedTest(name = "[{index}] Sequential updates: {0} iterations")
     @CsvSource(value = {
             "3",
@@ -971,7 +1007,9 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
     /**
      * Test basic CRUD operations: Create, Read, Update, Delete.
      */
-    @TestCategory.Crud
+    @TestCategory.Write
+    @TestCategory.Read
+    @TestCategory.Drop
     @ParameterizedTest(name = "[{index}] CRUD: {0}")
     @CsvSource(value = {
             "string value  | test_string  | 'Hello World'",
@@ -1191,7 +1229,7 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
     /**
      * Test updating multiple fields in a record independently.
      */
-    @TestCategory.Crud
+    @TestCategory.Update
     @ParameterizedTest(name = "[{index}] Multi-field update: {0} fields")
     @CsvSource(value = {
             "2",
@@ -1304,7 +1342,8 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
     // Each space must pass these — they exercise the core Space.Helper contracts.
     // =========================================================================
 
-    @TestCategory.Crud
+    @TestCategory.Write
+    @TestCategory.Read
     @ParameterizedTest
     @CsvSource(value = {
             // ── WRITE concrete node mono, READ exact ──
@@ -1394,10 +1433,6 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
         public String toString() {
             return id + ": " + description;
         }
-    }
-
-    protected boolean skipUpdateTestCase(final String id) {
-        return false;
     }
 
     protected String cleanupExpr() {
@@ -1537,14 +1572,10 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
 
     // ========================================
 
-    @TestCategory.Crud
+    @TestCategory.Update
     @ParameterizedTest(name = "[{index}] {0}")
     @MethodSource("provideAllUpdateWriteCases")
     public void testUpdateWrite(final UpdateTestCase tc) {
-        if (skipUpdateTestCase(tc.id())) {
-            Assumptions.assumeTrue(false, "space does not support: " + tc.id());
-            return;
-        }
         try {
             if (tc.seed() != null)
                 for (final String expr : tc.seed()) {

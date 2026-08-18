@@ -24,19 +24,20 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.ReplaceOptions;
+import com.mongodb.client.model.UpdateOptions;
 import org.bson.*;
 import org.bson.types.ObjectId;
 import org.javatuples.Pair;
 import studio.phaseshift.metatron.furi.DataPath;
 import studio.phaseshift.metatron.furi.QProc;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.AbstractDataPathSpace;
 import studio.phaseshift.metatron.isa.AbstractSpace;
 import studio.phaseshift.metatron.isa.SchemaSpace;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.dcmnt.schema.domain.CollectionSchemaInstSet;
 import studio.phaseshift.metatron.isa.dcmnt.schema.domain.ExistingCollectionSchema;
 import studio.phaseshift.metatron.isa.dcmnt.schema.storage.ObjBSONSerializer;
-import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
@@ -133,7 +134,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class dcmntSpace extends AbstractSpace<MongoClient> implements SchemaSpace {
+public class dcmntSpace extends AbstractDataPathSpace<MongoClient> implements SchemaSpace {
     private static final String NATIVE_CONNACK = "native/connack";
     public static final String ID_FIELD = "_id";
     /**
@@ -144,6 +145,14 @@ public class dcmntSpace extends AbstractSpace<MongoClient> implements SchemaSpac
      * Internal field used to wrap non-Rec values (Lst, primitives) in a BSON document.
      */
     public static final String MTRON_VALUE_FIELD = "__mtron_v";
+    /**
+     * Reserved collection name for the flat key-value address space, mirroring
+     * tbleSpace's {@code kv_store} table.  URIs whose first segment is this name
+     * are stored as {@code {_id: <full relative path>, __mtron_v: <any Obj>}}
+     * rather than decomposed into collection/document/field.  Excluded from
+     * schema discovery so it never becomes a schema type.
+     */
+    public static final String KV_STORE = "kv_store";
 
     protected MongoDatabase database;
     protected String databaseName;
@@ -210,7 +219,7 @@ public class dcmntSpace extends AbstractSpace<MongoClient> implements SchemaSpac
             this.at(uri(QPROC)).lstValue().remove(subQIndex);
             this.at(uri(QPROC)).lstValue().add(subQIndex, this.dcmntSpaceSubQ = new dcmntSpaceSubQ(this));
         }
-        LOG.debug("initialized {{g}}change stream subscription{{X}} support");
+        LOG.info("initialized {{g}}change stream subscription{{X}} support: %s", this.dcmntSpaceSubQ);
 
         // Schema discovery always runs at startup — root and schema are always populated.
         this.existingCollectionSchema = new ExistingCollectionSchema(this);
@@ -337,11 +346,26 @@ public class dcmntSpace extends AbstractSpace<MongoClient> implements SchemaSpac
             // Route from the space's external address pattern to the internal relative path
             final fURI relativePath = Space.Helper.routeFromSpace(pattern, this.routes());
 
-            // Decompose the relative path using DataPath
+            // Flat key-value address space (mirrors tbleSpace's kv_store table):
+            //   - reserved kv_store first segment → always flat (any value), or
+            //   - unknown collection + non-Rec value → flat (deduced).
+            if (this.isFlatWrite(relativePath, obj)) {
+                this.writeFlat(relativePath, obj);
+                return obj;
+            }
+
+            // Document path (known collection, or a Rec creating a new collection).
             final DataPath dp = this.resolveDataPath(relativePath);
 
             if (dp.collection() == null)
                 return noobj();
+
+            // A Rec writing to a previously-unknown collection creates a document
+            // collection.  Promote any flat kv entries parked under that prefix
+            // first so they aren't hidden by the new collection; the triggering
+            // write below then wins any same-address collision.
+            if (obj.isRec() && !this.isStructuredCollection(relativePath))
+                this.migrateFlatToStructured(dp.collection());
 
             resolveCollectionStream(dp.collection()).findFirst().ifPresent(collection -> {
                 LOG.debug("WRITING: %s %s", dp.collection(), dp.entry());
@@ -466,7 +490,8 @@ public class dcmntSpace extends AbstractSpace<MongoClient> implements SchemaSpac
             LOG.trace("updating field %s in document %s", fieldPathStr, documentId);
             collection.updateOne(
                     Filters.eq(ID_FIELD, parseObjectId(documentId)),
-                    new Document("$set", new Document(fieldPathStr, this.getSerializer().write(obj))));
+                    new Document("$set", new Document(fieldPathStr, this.getSerializer().write(obj))),
+                    new UpdateOptions().upsert(true));
         }
     }
 
@@ -474,7 +499,22 @@ public class dcmntSpace extends AbstractSpace<MongoClient> implements SchemaSpac
     public Function<fURI, Iterator<IdObj>> directReader() {
         return (pattern) -> {
             final fURI alignedPattern = Space.Helper.routeFromSpace(pattern, this.routes());
+
+            // Flat key-value address space (mirrors tbleSpace's kv_store table):
+            // reserved kv_store first segment, or an unknown collection, reads the
+            // entire relative path as a single key.
+            if (this.isFlatRead(alignedPattern))
+                return this.readFlat(alignedPattern, pattern);
+
             final DataPath dp = this.resolveDataPath(alignedPattern);
+
+            // A bare branch deref (`…/field/`, no wildcard) must materialize its children, so
+            // return empty and let resolveRead's branch-nesting build `branch => [child =>
+            // value, …]`.  The `!hasPattern()` is essential: the >> walk itself issues
+            // branch-shaped patterns (`…/+/`) that must still reach field-level access to
+            // unroll their descendants.
+            if (alignedPattern.isBranch() && !alignedPattern.hasPattern())
+                return IteratorUtil.of();
 
             // --- Field-level access (3+ segments): collection/doc/field[/deeper] ---
             if (dp.hasField()) {
@@ -534,10 +574,6 @@ public class dcmntSpace extends AbstractSpace<MongoClient> implements SchemaSpac
                 }
                 return IteratorUtil.of();
             }
-
-            // --- Branch path guard: return empty so resolveRead retries with WILD_ONE ---
-            if (alignedPattern.isBranch())
-                return IteratorUtil.of();
 
             // --- Collection / document level ---
             if (!dp.hasCollection())
@@ -797,5 +833,92 @@ public class dcmntSpace extends AbstractSpace<MongoClient> implements SchemaSpac
     private static String idToString(final Document doc) {
         final Object id = doc.get(ID_FIELD);
         return id instanceof ObjectId ? ((ObjectId) id).toHexString() : id != null ? id.toString() : "";
+    }
+
+    // =======================================================================
+    // Flat key-value address space (kv_store)
+    // =======================================================================
+
+    /**
+     * The reserved flat-namespace name.
+     */
+    @Override
+    protected boolean isReservedFlatName(final String firstSegment) {
+        return KV_STORE.equalsIgnoreCase(firstSegment);
+    }
+
+    /**
+     * Whether a space-relative path names a collection this space manages as a
+     * document collection (discovered at startup or tracked from a prior Rec
+     * write).  Unknown collections fall back to the flat kv namespace.
+     */
+    @Override
+    protected boolean isStructuredCollection(final fURI relativePath) {
+        return this.existingCollectionSchema != null
+                && this.existingCollectionSchema.resolveDataPath(relativePath) != null;
+    }
+
+    @Override
+    protected void writeFlat(final fURI relativePath, final Obj obj) {
+        final MongoCollection<Document> kv = this.database.getCollection(KV_STORE);
+        final String id = relativePath.toString();
+        if (obj.isNoObj()) {
+            LOG.trace("deleting kv entry %s", id);
+            kv.deleteOne(Filters.eq(ID_FIELD, id));
+            return;
+        }
+        final BsonDocument bsonDoc = new BsonDocument();
+        bsonDoc.put(ID_FIELD, new BsonString(id));
+        bsonDoc.put(MTRON_VALUE_FIELD, this.getSerializer().write(obj));
+        kv.withDocumentClass(BsonDocument.class)
+                .replaceOne(Filters.eq(ID_FIELD, id), bsonDoc, new ReplaceOptions().upsert(true));
+    }
+
+    @Override
+    protected Iterator<IdObj> readFlat(final fURI relativePath, final fURI pattern) {
+        final fURI nodePattern = pattern.asNode();
+        final MongoCollection<Document> kv = this.database.getCollection(KV_STORE);
+        if (relativePath.hasPattern()) {
+            return IteratorUtil.stream(kv.find()).flatMap(doc -> {
+                final String id = idToString(doc);
+                final fURI vid = Space.Helper.routeToSpace(f(id), this.routes());
+                final Obj val = processDocument(doc);
+                final List<IdObj> out = new ArrayList<>();
+                if (vid.test(nodePattern))
+                    out.add(IdObj.of(vid, val));
+                else if (val.isPoly())
+                    out.addAll(Space.Helper.unrollPoly(vid, val.as(), nodePattern));
+                return out.stream();
+            }).iterator();
+        }
+        final Document doc = kv.find(Filters.eq(ID_FIELD, relativePath.toString())).first();
+        if (doc == null)
+            return IteratorUtil.of();
+        return IteratorUtil.of(IdObj.of(nodePattern, processDocument(doc)));
+    }
+
+    @Override
+    protected void writeStructured(final fURI relativePath, final Obj obj) {
+        final DataPath dp = this.resolveDataPath(relativePath);
+        if (dp.collection() == null)
+            return;
+        final MongoCollection<Document> collection = this.database.getCollection(dp.collection());
+        if (dp.hasField())
+            writeField(collection, dp.entry(), dp.fieldPathStr(), obj);
+        else
+            writeDocument(collection, dp.entry(), obj);
+    }
+
+    @Override
+    protected Stream<FlatEntry> scanFlat(final String collectionPrefix) {
+        final MongoCollection<Document> kv = this.database.getCollection(KV_STORE);
+        final Pattern prefix = Pattern.compile("^" + Pattern.quote(collectionPrefix) + "/");
+        return IteratorUtil.stream(kv.find(Filters.regex(ID_FIELD, prefix)))
+                .map(entry -> new FlatEntry(idToString(entry), processDocument(entry)));
+    }
+
+    @Override
+    protected void removeFlat(final String fullKey) {
+        this.database.getCollection(KV_STORE).deleteOne(Filters.eq(ID_FIELD, fullKey));
     }
 }

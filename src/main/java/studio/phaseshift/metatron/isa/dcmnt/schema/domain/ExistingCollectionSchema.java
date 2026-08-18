@@ -162,7 +162,10 @@ public class ExistingCollectionSchema {
 
     private List<String> discoverEntities(final MongoDatabase database) {
         final List<String> names = new ArrayList<>();
-        database.listCollectionNames().forEach(names::add);
+        database.listCollectionNames().forEach(name -> {
+            if (!dcmntSpace.KV_STORE.equalsIgnoreCase(name))
+                names.add(name);
+        });
         this.space.logger().debug("discovered {{b}}%d{{X}} collections", names.size());
         return names;
     }

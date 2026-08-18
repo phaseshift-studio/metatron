@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -30,15 +30,15 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
+import studio.phaseshift.metatron.AbstractDataPathSpaceTest;
 import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.SkipRegexTest;
+import studio.phaseshift.metatron.TestReport;
 import studio.phaseshift.metatron.algebra.rewrite.CommonRewritesTestContract;
 import studio.phaseshift.metatron.furi.DataPath;
 import studio.phaseshift.metatron.furi.QProc;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.AbstractDataPathTest;
 import studio.phaseshift.metatron.furi.q.QCollection;
-import studio.phaseshift.metatron.furi.q.SubQTest;
-import studio.phaseshift.metatron.isa.AbstractSpaceTest;
 import studio.phaseshift.metatron.isa.dcmnt.space.dcmntSpace;
 import studio.phaseshift.metatron.isa.dcmnt.space.dcmntSpaceSubQ;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
@@ -79,7 +79,16 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class dcmntSpaceTest extends AbstractDataPathTest implements CommonRewritesTestContract {
+@SkipRegexTest(value = {
+        // The mono-at-root flat tests (string/int/real/bool/list/CRUD/type/special)
+        // now route through the reserved mongo:kv_store/ flat namespace and are enabled.
+        @SkipRegexTest.Skip(method = "testMultiFieldUpdates"),
+        @SkipRegexTest.Skip(method = "testMonoRootlessReadWrites"),
+        @SkipRegexTest.Skip(method = "testMonoUpdate"),
+        @SkipRegexTest.Skip(method = "testUpdateWrite", params = {"M12b", "M17", "M43", "M44", "M44b", "M48", "M28", "M30", "M31", "M32", "M36"})
+})
+@TestReport
+public class dcmntSpaceTest extends AbstractDataPathSpaceTest implements CommonRewritesTestContract {
 
     protected static MongoServer mongoServer;
     protected static String connectionString;
@@ -114,14 +123,19 @@ public class dcmntSpaceTest extends AbstractDataPathTest implements CommonRewrit
     public void testDataPathSegmentTypes(final String code, final String segmentType) {
         super.testDataPathSegmentTypes(code, segmentType);
     }
-    
+
     @Override
     public String make(final String expression, final Method testMethod) {
         // For testMonoUpdate, $$ → mongo: so seed data writes to mongo:<collection>/<docId>
         // and update/read expressions resolve to the same two-segment document paths.
+        if (testMethod != null && "testRshiftDirectorySpine".equals(testMethod.getName())) {
+            // Flat path spine: $$/rshift/a/b/c/d → mongo:rshift/a/b/c/d, so the >> walk
+            // descends collection → entry → field → extension like a directory spine.
+            return expression.contains("$$") ? expression.replace("$$/", "mongo:") : expression;
+        }
         if (testMethod != null && ("testMonoUpdate".equals(testMethod.getName()) ||
-                                   "testMonoDepth".equals(testMethod.getName()) ||
-                                   "testUpdateWrite".equals(testMethod.getName()))) {
+                "testMonoDepth".equals(testMethod.getName()) ||
+                "testUpdateWrite".equals(testMethod.getName()))) {
             if (!expression.contains("$$")) return expression;
             return expression
                     .replace("$$/a", "mongo:a")
@@ -130,17 +144,28 @@ public class dcmntSpaceTest extends AbstractDataPathTest implements CommonRewrit
         return super.make(expression, testMethod);
     }
 
-    // dcmntSpace (MongoDB): typed document model doesn't support scalar→Objs
-    // type changes from + merge, wildcard writes, or cross-ref FK resolution.
+    /**
+     * Route the inherited flat key-value tests (string/int/real/bool/list/CRUD/
+     * type-change/special-string) into the reserved {@code mongo:kv_store/test/}
+     * flat namespace, mirroring tbleSpace's {@code db:kv/test} base URI.  Kept
+     * separate from {@link #getTestDataUriPrefix()} (which the rewrite contract
+     * requires to be {@code mongo:rewrite_test}).
+     */
     @Override
-    protected boolean skipUpdateTestCase(final String id) {
-        return switch (id) {
-            case "M12b","M17","M43","M44","M44b","M48" -> true; // + merge scalar→Objs
-            case "M28","M30","M31" -> true;                      // wildcard writes
-            case "M32" -> true;                                   // cross-ref FK
-            case "M36" -> true;                                   // delete empty (no-op)
-            default -> false;
-        };
+    protected fURI testUri(final String suffix) {
+        return f("mongo:kv_store/test/" + suffix);
+    }
+
+    @Override
+    protected fURI deducedBaseUri() {
+        return f("mongo:scratch");
+    }
+
+    @Override
+    protected void dropDeducedCollection(final String collectionName) {
+        try (final MongoClient client = MongoClients.create(connectionString)) {
+            client.getDatabase(DB_NAME).getCollection(collectionName).drop();
+        }
     }
 
     @BeforeAll
@@ -150,81 +175,8 @@ public class dcmntSpaceTest extends AbstractDataPathTest implements CommonRewrit
 
     @Test
     public void testDcmntSpaceSubQ() {
-        assertEquals(1,this.space.qs().valueElements().filter(q -> ((QProc)q).pattern().equals(SUBQ_PATTERN)).count(),"subq qproc not found");
-        assertEquals(1,this.space.qs().valueElements().filter(q -> ((QProc)q).pattern().equals(SUBQ_PATTERN)).filter(q -> q instanceof dcmntSpaceSubQ).count(), "native dcmntSpaceSubQ not found");
-    }
-
-    // Disable all abstract tests - dcmntSpace has its own comprehensive MongoDB-specific tests
-    @Override
-    @Disabled
-    public void testStringCornerCases(String description, String value) {
-    }
-
-    @Override
-    @Disabled
-    public void testIntegerBoundaries(String description, long value) {
-    }
-
-    @Override
-    @Disabled
-    public void testRealBoundaries(String description, double value) {
-    }
-
-    @Override
-    @Disabled
-    public void testBooleanValues(String description, boolean value) {
-    }
-
-    @Override
-    @Disabled
-    public void testSequentialUpdates(int iterations) {
-    }
-
-    @Override
-    @Disabled
-    public void testBasicCRUD(String description, String key, String valueStr) {
-    }
-
-    @Override
-    @Disabled
-    public void testTypePreservation(String description, Obj value) {
-    }
-
-    @Override
-    @Disabled
-    public void testNestedRecords(int depth) {
-    }
-
-    @Override
-    @Disabled
-    public void testListHandling(String description, studio.phaseshift.metatron.isa.m.type.Lst listValue, int expectedCount) {
-    }
-
-    @Override
-    @Disabled
-    public void testTypeChanges(String description, Obj initialValue, Obj updatedValue) {
-    }
-
-    @Override
-    @Disabled
-    public void testMultiFieldUpdates(int fieldCount) {
-    }
-
-    @Override
-    @Disabled("Rootless container aggregation only works in memSpace's trie — " +
-              "database spaces store discrete documents with no implicit parent container")
-    public void testMonoRootlessReadWrites() {
-    }
-
-    @Override
-    @Disabled("?= filter + >>= wildcard update requires poly-level element iteration "
-            + "and write-back that dcmntSpace's MongoDB layer can't support")
-    public void testMonoUpdate() {
-    }
-
-    @Override
-    @Disabled
-    public void testSpecialStringValues(String description, String value) {
+        assertEquals(1, this.space.qs().valueElements().filter(q -> ((QProc) q).pattern().equals(SUBQ_PATTERN)).count(), "subq qproc not found");
+        assertEquals(1, this.space.qs().valueElements().filter(q -> ((QProc) q).pattern().equals(SUBQ_PATTERN)).filter(q -> q instanceof dcmntSpaceSubQ).count(), "native dcmntSpaceSubQ not found");
     }
 
     /**
@@ -296,8 +248,8 @@ public class dcmntSpaceTest extends AbstractDataPathTest implements CommonRewrit
                     .append("email", "billy@bob.com")
                     .append("active", false)
                     .append("sports", new Document()
-                            .append("skating",true)
-                            .append("shooting",false))
+                            .append("skating", true)
+                            .append("shooting", false))
                     .append("stats", List.of(
                             new Document()
                                     .append("year", 2024)
@@ -368,7 +320,7 @@ public class dcmntSpaceTest extends AbstractDataPathTest implements CommonRewrit
 
             assertEquals(bool(true), ObjmtronSerializer.parse("*mongo:users/user4/sports/skating").apply());
             assertEquals(bool(false), ObjmtronSerializer.parse("*mongo:users/user4/sports/shooting").apply());
-            
+
         } finally {
             space.close();
         }
@@ -408,7 +360,7 @@ public class dcmntSpaceTest extends AbstractDataPathTest implements CommonRewrit
 
             assertFalse(processDocumentCalled.get(),
                     "Field path MUST be pushed to MongoDB projection — processDocument() was called, "
-                    + "meaning the full document was fetched and traversed in Metatron");
+                            + "meaning the full document was fetched and traversed in Metatron");
 
             // --- array of documents ---
             processDocumentCalled.set(false);
@@ -594,8 +546,8 @@ public class dcmntSpaceTest extends AbstractDataPathTest implements CommonRewrit
             // Read it back
             final Rec readBackUser = space.read(f("mongo:users/user4")).as();
             final Rec readBackSports = space.read(f("mongo:users/user4/sports")).as();
-            assertEquals(readBackSports,readBackUser.at("sports"));
-            assertEquals(3,readBackSports.count());
+            assertEquals(readBackSports, readBackUser.at("sports"));
+            assertEquals(3, readBackSports.count());
             assertEquals(bool(true), readBackSports.at(f("swimming")));
             assertEquals(bool(true), readBackSports.at(f("skating")));
             assertEquals(bool(false), readBackSports.at(f("shooting")));
@@ -682,10 +634,10 @@ public class dcmntSpaceTest extends AbstractDataPathTest implements CommonRewrit
                 DataPath.expandStructural(f("mongo:users/user4/sports"), flatRec).toList();
         assertEquals(2, mergeLeaves.size(), "Rec with 2 fields should decompose to 2 leaves");
         assertTrue(mergeLeaves.stream().anyMatch(l ->
-                l.uri().equals(f("mongo:users/user4/sports/swimming")) && l.value().isBool()),
+                        l.uri().equals(f("mongo:users/user4/sports/swimming")) && l.value().isBool()),
                 "should contain swimming=>true leaf");
         assertTrue(mergeLeaves.stream().anyMatch(l ->
-                l.uri().equals(f("mongo:users/user4/sports/skating")) && l.value().isBool()),
+                        l.uri().equals(f("mongo:users/user4/sports/skating")) && l.value().isBool()),
                 "should contain skating=>false leaf");
     }
 

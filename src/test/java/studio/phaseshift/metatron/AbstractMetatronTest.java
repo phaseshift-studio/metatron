@@ -45,7 +45,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.io.ioInstSet.IO_ISA_TID;
 
-@ExtendWith(TestSkip.TestSkipExtension.class)
 @ExtendWith(TestData.TestDataExtension.class)
 public abstract class AbstractMetatronTest {
     static {

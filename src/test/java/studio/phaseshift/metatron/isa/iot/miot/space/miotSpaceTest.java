@@ -20,11 +20,8 @@ package studio.phaseshift.metatron.isa.iot.miot.space;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.extension.ExtendWith;
 import studio.phaseshift.metatron.AbstractMetatronTest;
-import studio.phaseshift.metatron.SkipInheritedTests;
-import studio.phaseshift.metatron.SkipInheritedTestsExtension;
-import studio.phaseshift.metatron.TestTag;
+import studio.phaseshift.metatron.SkipRegexTest;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.furi.q.SubQTest;
 import studio.phaseshift.metatron.isa.AbstractSpaceTest;
@@ -46,16 +43,16 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-@ExtendWith(SkipInheritedTestsExtension.class)
-@SkipInheritedTests(tags = {
-        TestTag.CRUD,        // Skip all CRUD tests
-        TestTag.BOUNDARY,    // Skip all boundary value tests
-        TestTag.TYPE,        // Skip all type preservation tests
-        TestTag.NESTED,      // Skip all nested structure tests
-        TestTag.LIST,        // Skip all list handling tests
-        TestTag.SPECIAL      // Skip all special value tests
-}, include = {
-        // "testMonoReadWrite"  // Include this CRUD test even though CRUD tag is skipped
+@SkipRegexTest(tags = {
+        "write",       // Skip write tests
+        "read",        // Skip read tests
+        "update",      // Skip update tests
+        "drop",        // Skip delete tests
+        "boundary",    // Skip all boundary value tests
+        "type",        // Skip all type preservation tests
+        "nested",      // Skip all nested structure tests
+        "list",        // Skip all list handling tests
+        "special"      // Skip all special value tests
 })
 public class miotSpaceTest extends AbstractSpaceTest implements SubQTest {
 

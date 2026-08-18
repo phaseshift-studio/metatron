@@ -22,6 +22,7 @@ import studio.phaseshift.metatron.furi.DataPath;
 import studio.phaseshift.metatron.furi.QProc;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
+import studio.phaseshift.metatron.isa.AbstractDataPathSpace;
 import studio.phaseshift.metatron.isa.AbstractSpace;
 import studio.phaseshift.metatron.isa.SchemaSpace;
 import studio.phaseshift.metatron.isa.Space;
@@ -40,12 +41,14 @@ import studio.phaseshift.metatron.isa.tble.space.ExistingTableSchema;
 import studio.phaseshift.metatron.isa.tble.space.SQLSchemaGenerator;
 import studio.phaseshift.metatron.isa.tble.space.SQLSchemaInstSet;
 import studio.phaseshift.metatron.isa.tble.space.tbleIncrQ;
+import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.sql.*;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
@@ -103,7 +106,7 @@ import static studio.phaseshift.metatron.isa.tble.tbleInstSet.TBLE_ISA_TID;
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class tbleSpace extends AbstractSpace<Connection> implements SchemaSpace {
+public class tbleSpace extends AbstractDataPathSpace<Connection> implements SchemaSpace {
 
     // ---- Database product-name fragments (matched case-insensitively) -----------
 
@@ -518,19 +521,23 @@ public class tbleSpace extends AbstractSpace<Connection> implements SchemaSpace 
                         if (dp.hasEntry() && !dp.entryIsWildcard()
                                 && isTableCandidate(coll)) {
                             final boolean isNew = !this.existingTableSchema.getTableNames().contains(coll);
-                            if (isNew)
+                            if (isNew) {
                                 this.existingTableSchema.createTableFromRecord(
                                         this.sjvm(), coll, obj.asRec(), dp.entry());
+                                // Promote flat kv entries parked under this prefix
+                                // into the new table (standard, schema-enforcing writes).
+                                this.migrateFlatToStructured(coll);
+                            }
                             final int id = this.existingTableSchema.write(this.sjvm(), aligned, obj.asRec());
                             if (isNew)
                                 onTableChanged(coll);
                         } else {
-                            writeKV(aligned, obj);
+                            writeFlat(aligned, obj);
                         }
 
                     } else {
                         // ── key-value path ──
-                        writeKV(aligned, obj);
+                        writeFlat(aligned, obj);
                     }
                 }
             } catch (final SQLException e) {
@@ -546,12 +553,17 @@ public class tbleSpace extends AbstractSpace<Connection> implements SchemaSpace 
     /**
      * Dispatches a key-value write to the appropriate schema backend.
      */
-    private void writeKV(final fURI pattern, final Obj obj) throws SQLException {
-        if (this.schema instanceof TypedKeyValueSchema typed) {
-            typed.write(this.sjvm(), pattern, obj);
-        } else {
-            final String json = obj.isNoObj() ? null : this.serializer.write(obj).toString();
-            this.schema.write(this.sjvm(), pattern, json);
+    @Override
+    protected void writeFlat(final fURI pattern, final Obj obj) {
+        try {
+            if (this.schema instanceof TypedKeyValueSchema typed) {
+                typed.write(this.sjvm(), pattern, obj);
+            } else {
+                final String json = obj.isNoObj() ? null : this.serializer.write(obj).toString();
+                this.schema.write(this.sjvm(), pattern, json);
+            }
+        } catch (final SQLException e) {
+            throw MTronException.of(e);
         }
     }
 
@@ -607,7 +619,7 @@ public class tbleSpace extends AbstractSpace<Connection> implements SchemaSpace 
                 }
 
                 // ── key-value path ──
-                return collectResults(this.schema.read(this.sjvm(), aligned), pattern);
+                return this.readFlat(aligned, pattern);
 
             } catch (final Exception e) {
                 throw MTronException.of(e);
@@ -641,5 +653,59 @@ public class tbleSpace extends AbstractSpace<Connection> implements SchemaSpace 
             }
         });
         return all.iterator();
+    }
+
+    // =======================================================================
+    //  AbstractDataPathSpace hooks — flat kv_store fallback + migration
+    // =======================================================================
+
+    @Override
+    protected boolean isReservedFlatName(final String firstSegment) {
+        return !isTableCandidate(firstSegment);
+    }
+
+    @Override
+    protected boolean isStructuredCollection(final fURI relativePath) {
+        return this.existingTableSchema != null
+                && this.existingTableSchema.isTablePath(relativePath);
+    }
+
+    @Override
+    protected Iterator<IdObj> readFlat(final fURI relativePath, final fURI pattern) {
+        try {
+            return collectResults(this.schema.read(this.sjvm(), relativePath), pattern);
+        } catch (final SQLException e) {
+            throw MTronException.of(e);
+        }
+    }
+
+    @Override
+    protected void writeStructured(final fURI relativePath, final Obj obj) {
+        try {
+            this.existingTableSchema.write(this.sjvm(), relativePath, obj);
+        } catch (final SQLException e) {
+            throw MTronException.of(e);
+        }
+    }
+
+    @Override
+    protected Stream<FlatEntry> scanFlat(final String collectionPrefix) {
+        final String prefix = collectionPrefix + "/";
+        try {
+            return IteratorUtil.stream(this.schema.read(this.sjvm(), f(collectionPrefix + "/#")))
+                    .filter(kv -> kv.furi().toString().startsWith(prefix))
+                    .map(kv -> new FlatEntry(kv.furi().toString(), kv.obj()));
+        } catch (final SQLException e) {
+            throw MTronException.of(e);
+        }
+    }
+
+    @Override
+    protected void removeFlat(final String fullKey) {
+        try {
+            this.schema.delete(this.sjvm(), f(fullKey));
+        } catch (final SQLException e) {
+            throw MTronException.of(e);
+        }
     }
 }

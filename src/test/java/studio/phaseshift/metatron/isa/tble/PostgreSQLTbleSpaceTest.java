@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -22,6 +22,8 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.TestMethodOrder;
+import studio.phaseshift.metatron.SkipRegexTest;
+import studio.phaseshift.metatron.TestReport;
 
 /**
  * Test suite for tbleSpace with PostgreSQL database using TestContainers.
@@ -30,20 +32,14 @@ import org.junit.jupiter.api.TestMethodOrder;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@SkipRegexTest(value = {
+        @SkipRegexTest.Skip(method = "testUpdateWrite", params = {"M33", "M34"})
+})
+@TestReport
 public class PostgreSQLTbleSpaceTest extends AbstractTbleSpaceTest {
 
     public PostgreSQLTbleSpaceTest() {
         super(new PostgreSQLDatabaseConfig());
-    }
-
-    @Override
-    protected boolean skipUpdateTestCase(final String id) {
-        return switch (id) {
-            // M33/M34: cross-ref FK auto_from resolved on SQLite but not PG/MariaDB.
-            // FK is registered via _mtron_meta but readColumnWithMetadata doesn't find it.
-            case "M33", "M34" -> true;
-            default -> super.skipUpdateTestCase(id);
-        };
     }
 
     @BeforeAll

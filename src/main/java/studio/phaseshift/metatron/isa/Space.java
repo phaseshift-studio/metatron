@@ -241,6 +241,7 @@ public interface Space extends Rec, Closeable {
             return Tuple.Pair.with(prefix, prepend);
         }
 
+
         public static List<IdObj> unrollPoly(final fURI polyvid, final Poly<?, ?> poly, final fURI pattern) {
             final List<IdObj> results = new ArrayList<>();
             if (!pattern.hasPattern()) {

@@ -28,6 +28,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.TestData;
+import studio.phaseshift.metatron.TestReport;
 import studio.phaseshift.metatron.Training;
 import studio.phaseshift.metatron.furi.QProc;
 import studio.phaseshift.metatron.furi.q.DocQTest;
@@ -45,7 +46,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 
-
+@TestReport
 public class mInstSetTest extends AbstractInstSetTest {
 
     public mInstSetTest() {
