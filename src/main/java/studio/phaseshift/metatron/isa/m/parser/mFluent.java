@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.ID_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -106,6 +107,10 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
 
     public F repeat_(final Obj obj) {
         return this.addInst(instB(mInstSet.REPEAT_INST_TID, obj.<Poly<?, ?>>as()));
+    }
+
+    public F repeat_(final Obj code, final Obj until, final Obj emit) {
+        return this.addInst(instB(mInstSet.REPEAT_INST_TID, rec(uri(CODE), code, uri(UNTIL), until, uri(EMIT), emit)));
     }
 
     public F end_() {
@@ -713,6 +718,10 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
 
         public static <F extends mFluent<F>> F rshift_(final Obj obj) {
             return new mFluent<F>().rshift_(obj);
+        }
+
+        public static <F extends mFluent<F>> F rshift_() {
+            return new mFluent<F>().rshift_(noobj());
         }
 
         // ========================================
