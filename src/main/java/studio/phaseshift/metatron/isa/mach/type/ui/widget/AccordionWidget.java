@@ -22,7 +22,6 @@ import org.jline.terminal.Cursor;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.reflect.JRec;
-import studio.phaseshift.metatron.isa.m.type.reflect.JRecElement;
 import studio.phaseshift.metatron.isa.mach.type.ui.Border;
 import studio.phaseshift.metatron.isa.mach.type.ui.Stylable;
 import studio.phaseshift.metatron.isa.mach.type.ui.Widget;
@@ -47,16 +46,10 @@ import static studio.phaseshift.metatron.isa.mach.ui.uiInstSet.UI_ACCORDION_TID;
  */
 public class AccordionWidget extends JRec<AccordionWidget> implements Widget<AccordionWidget> {
 
-    private static final Obj K_TITLE  = uri("title");
-    private static final Obj K_BODY   = uri("body");
-    private static final Obj K_EXP    = uri("expanded");
+    private static final Obj K_TITLE = uri("title");
+    private static final Obj K_BODY = uri("body");
+    private static final Obj K_EXP = uri("expanded");
     private static final Obj K_TOGGLE = uri("toggle");
-
-    // @JRecElement annotations are metadata for mtron introspection only.
-    @JRecElement(key = "title", rng = "/m/str")
-    private String _title = "";
-    @JRecElement(key = "expanded", rng = "/m/bool")
-    private boolean _expanded = true;
 
     private static final String EXPAND_INDICATOR = "[-]";
     private static final String COLLAPSE_INDICATOR = "[+]";
@@ -65,7 +58,9 @@ public class AccordionWidget extends JRec<AccordionWidget> implements Widget<Acc
     private int lastRenderHeight;
     private Cursor cursor;
 
-    /** Buffered appends — coalesced to avoid O(n²) string joining and per-line Router reads. */
+    /**
+     * Buffered appends — coalesced to avoid O(n²) string joining and per-line Router reads.
+     */
     private final StringBuilder pendingBuffer = new StringBuilder();
     private static final int BUFFER_FLUSH_THRESHOLD = 4096;
 
@@ -98,9 +93,17 @@ public class AccordionWidget extends JRec<AccordionWidget> implements Widget<Acc
 
     // ── state mutators (write through to persistent store) ─────────
 
-    public void expand()   { jvmWrite(K_EXP, bool(true)); }
-    public void collapse() { jvmWrite(K_EXP, bool(false)); }
-    public void toggle()   { jvmWrite(K_EXP, bool(!this.isExpanded())); }
+    public void expand() {
+        jvmWrite(K_EXP, bool(true));
+    }
+
+    public void collapse() {
+        jvmWrite(K_EXP, bool(false));
+    }
+
+    public void toggle() {
+        jvmWrite(K_EXP, bool(!this.isExpanded()));
+    }
 
     public AccordionWidget title(final String t) {
         jvmWrite(K_TITLE, str(t));
@@ -218,7 +221,9 @@ public class AccordionWidget extends JRec<AccordionWidget> implements Widget<Acc
         return lines.isEmpty() ? 2 : lines.size() + 2;
     }
 
-    /** Body lines after word-wrap (if floatWidth is set on the style). */
+    /**
+     * Body lines after word-wrap (if floatWidth is set on the style).
+     */
     private List<String> displayLines() {
         final List<String> body = this.readBody();
         final int floatW = this.style.width();
@@ -226,7 +231,9 @@ public class AccordionWidget extends JRec<AccordionWidget> implements Widget<Acc
         return Stylable.Style.wrapLines(body, floatW - 3);
     }
 
-    /** Read the body from the rec, resolving any auto_ expression. */
+    /**
+     * Read the body from the rec, resolving any auto_ expression.
+     */
     private List<String> readBody() {
         final Obj b = this.at(K_BODY);
         final List<String> lines = new ArrayList<>();
@@ -261,9 +268,18 @@ public class AccordionWidget extends JRec<AccordionWidget> implements Widget<Acc
         // Latch instructions and style from JVM on first render
         if (!jvmRead().containsKey(K_TOGGLE)) {
             readStyle();
-            this.at(K_TOGGLE, instLambda((l, i) -> { this.toggle(); return noobj(); }), MUTABLE);
-            this.at(uri("expand"), instLambda((l, i) -> { this.expand();  return noobj(); }), MUTABLE);
-            this.at(uri("collapse"), instLambda((l, i) -> { this.collapse(); return noobj(); }), MUTABLE);
+            this.at(K_TOGGLE, instLambda((l, i) -> {
+                this.toggle();
+                return noobj();
+            }), MUTABLE);
+            this.at(uri("expand"), instLambda((l, i) -> {
+                this.expand();
+                return noobj();
+            }), MUTABLE);
+            this.at(uri("collapse"), instLambda((l, i) -> {
+                this.collapse();
+                return noobj();
+            }), MUTABLE);
             this.at(uri("append"), instLambda((l, i) -> {
                 this.appendLine(l.isStr() ? l.strValue() : "");
                 // Defer rendering to the Console prompt cycle — rendering
@@ -281,7 +297,7 @@ public class AccordionWidget extends JRec<AccordionWidget> implements Widget<Acc
         final int bodyWidth = displayLines.stream().map(Highlighter::visualLength).max(Integer::compareTo).orElse(0);
         final int titleW = Highlighter.visualLength(title) + Highlighter.visualLength(ind) + 3;
         final int width = floatW > 0 ? Math.max(titleW, Math.min(Math.max(1, floatW - 2), bodyWidth + 3))
-                                     : Math.max(titleW, bodyWidth + 3);
+                : Math.max(titleW, bodyWidth + 3);
 
         final Border border = this.style.border() == Border.none ? Border.continuous : this.style.border();
         final StringBuilder sb = new StringBuilder();

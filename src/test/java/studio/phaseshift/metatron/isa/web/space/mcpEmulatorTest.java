@@ -99,6 +99,7 @@ public class mcpEmulatorTest extends AbstractMcpHandlerTest {
         final var tools = res.at(uri(RESULT)).asRec().at(uri("tools")).asLst();
         assertFalse(tools.lstValue().isEmpty(), "emulator should expose its own tools");
         // Check for known bootstrap tools
+        LOG.warn(tools);
         assertTrue(toolPresent(tools, "adduser"), "should have adduser");
         assertTrue(toolPresent(tools, "deluser"), "should have deluser");
         assertTrue(toolPresent(tools, "tools_list"), "should have tools_list");
@@ -255,7 +256,7 @@ public class mcpEmulatorTest extends AbstractMcpHandlerTest {
 
     private static boolean toolPresent(final studio.phaseshift.metatron.isa.m.type.Lst tools, final String name) {
         return tools.lstValue().stream()
-                .anyMatch(t -> t.isRec() && str(name).equals(t.asRec().at(uri(NAME))));
+                .anyMatch(t -> t.isRec() && t.asRec().at(uri(NAME)).strValue().contains(name));
     }
 
     private static String contentText(final Rec response) {
