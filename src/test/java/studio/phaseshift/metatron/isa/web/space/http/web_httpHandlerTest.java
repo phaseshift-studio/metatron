@@ -18,11 +18,7 @@
 
 package studio.phaseshift.metatron.isa.web.space.http;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.parallel.Isolated;
+import org.junit.jupiter.api.*;
 import studio.phaseshift.metatron.SkipWhenPortUnavailable;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
@@ -46,7 +42,6 @@ import static studio.phaseshift.metatron.isa.web.webInstSet.JSON_TID;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-@Isolated
 @SkipWhenPortUnavailable(value = 80)
 public class web_httpHandlerTest extends AbstractHTTPServerTest {
 
@@ -128,24 +123,10 @@ public class web_httpHandlerTest extends AbstractHTTPServerTest {
     // ========================================
     // Integration test — live HTTP
     // ========================================
-    
+
     public static class web_httpHandlerIntegrationTest extends AbstractHTTPServerIntegrationTest {
 
         private Space contentSpace;
-
-        // called explicitly from setupHTTPSpace() — not @BeforeEach
-        public void setupContentSpace() {
-            this.contentSpace = memSpace.of(rec(
-                    uri(PATTERN), uri("mem:test-pages/#"),
-                    uri(ROUTE), rec()
-            ), f("/sys/space/test/web-int/" + getClass().getSimpleName()));
-            Router.writeToSpace(f("mem:test-pages/index.html"),
-                    str("<html><body><h1>Hello World</h1></body></html>", HTML_TID, null));
-            Router.writeToSpace(f("mem:test-pages/about.html"),
-                    str("<html><body><h1>About</h1></body></html>", HTML_TID, null));
-            Router.writeToSpace(f("mem:test-pages/data.json"),
-                    str("{\"key\":\"value\"}", JSON_TID, null));
-        }
 
         @AfterAll
         public void teardownContentSpace() {
@@ -157,10 +138,18 @@ public class web_httpHandlerTest extends AbstractHTTPServerTest {
         }
 
         @Override
+        @BeforeAll
         public void setupHTTPSpace() {
-            // contentSpace must exist before httpSpace construction —
-            // createHTTPSpace() reads route target from Router
-            setupContentSpace();
+            this.contentSpace = memSpace.of(rec(
+                    uri(PATTERN), uri("mem:test-pages/#"),
+                    uri(ROUTE), rec()
+            ), f("/sys/space/test/web-int/" + getClass().getSimpleName()));
+            Router.writeToSpace(f("mem:test-pages/index.html"),
+                    str("<html><body><h1>Hello World</h1></body></html>", HTML_TID, null));
+            Router.writeToSpace(f("mem:test-pages/about.html"),
+                    str("<html><body><h1>About</h1></body></html>", HTML_TID, null));
+            Router.writeToSpace(f("mem:test-pages/data.json"),
+                    str("{\"key\":\"value\"}", JSON_TID, null));
             super.setupHTTPSpace();
         }
 

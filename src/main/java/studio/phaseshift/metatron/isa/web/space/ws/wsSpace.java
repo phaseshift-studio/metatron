@@ -263,7 +263,6 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
             try {
                 LOG.debug("creating new websocket server session w/ %s over %s", conn.getRemoteSocketAddress(), conn.getResourceDescriptor());
                 if (conn.getResourceDescriptor().equals("/")) {
-
                     for (final String line : CommonUtil.getHeader(CommonUtil.HEADER_FILE, null, true).split("\n"))
                         conn.send(line);
                     conn.send(String.format("metatron wsspace at {{b}}%s{{X}}\n", this.space.vid().toString()));
@@ -272,7 +271,7 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
                     conn.closeConnection(1000, "end transmission");
                 } else {
                     final WebSocketRec server = this.createServer(conn);
-                    if (null != server) {
+                    if (null != server && !server.isNoObj()) {
                         server.setWebSocket(conn);
                         this.space.cache.write(server.getThisVID(), server);
                         server.onOpen(conn, handshake);
