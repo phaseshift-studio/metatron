@@ -131,7 +131,9 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
             map.compute(uri(k.path().getFirst()), (k1, v) ->
                     k.path().size() == 1 ?
                             (value.isNoObj() ? null : (null != v && v.isObjs() ? v.append(value.parent(this)) : value.parent(this))) :
-                            (null != v && v.isRec() ? v.asRec() : rec()).at(k.pretract(1).toUri(), value.parent(this), operation));
+                            (null != v && v.isPoly()
+                                    ? v.<Poly<?, ?>>as().at(k.pretract(1).toUri(), value.parent(this), operation)
+                                    : rec().at(k.pretract(1).toUri(), value.parent(this), operation)));
             return (Rec) operation.apply(this, map);
         } else {
             final Map<Obj, Obj> map = new LinkedHashMap<>(this.recValue());

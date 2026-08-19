@@ -290,7 +290,7 @@ public class uiInstSet extends AbstractInstSet {
                 uri(INST), lst(
                         instC(AS_INST_TID.dom(UI_TREE_TID).rng(STR_TID), lst(STR_TYPE), (lhs, inst) -> str(((Widget<?>) lhs).format())),
                         docWrap(instC(UI_INST_TID.extend("display").dom(UI_WIDGET_TID).rng(NOOBJ_TID.zero()), lst(), (lhs, inst) -> {
-                            final Widget<?> widget = new TreeSelectTool(lhs.jvm(), UI_TREE_SELECT_TOOL_TID, lhs.vid());
+                            final Widget<?> widget = (Widget<?>) lhs;
                             widget.run();
                             widget.close();
                             return noobj();

@@ -326,7 +326,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
     }
 
     public void write(final Object object) {
-        Graphitty.writeToTerminal(object instanceof Obj ? this.serializer.write((Obj) object) : ((Highlighter) this.reader.getHighlighter()).write(object));
+        Graphitty.out(terminal.output(), object instanceof Obj ? this.serializer.write((Obj) object) : ((Highlighter) this.reader.getHighlighter()).write(object));
     }
 
     public static Terminal getTerminal() {

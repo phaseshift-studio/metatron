@@ -164,23 +164,7 @@ public class Graphitty {
     public static void setTerminalWriter(final java.util.function.Consumer<String> writer) {
         Graphitty.terminalWriter = writer;
     }
-
-    /**
-     * Write to the terminal. Routes through the bridge when available,
-     * otherwise writes directly to the registered terminal stream.
-     */
-    public static void writeToTerminal(final String f, final Object... args) {
-        final java.util.function.Consumer<String> writer = terminalWriter;
-        if (writer != null) {
-            writer.accept(Graphitty.string(f, args));
-            return;
-        }
-        final OutputStream out = terminalOutput;
-        if (out != null) {
-            out(out, f, args);
-        }
-    }
-
+    
     public static Graphitty stdout() {
         return GRAPHITTY_STDOUT;
     }

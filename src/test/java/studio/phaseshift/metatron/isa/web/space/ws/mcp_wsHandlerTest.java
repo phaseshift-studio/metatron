@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -19,6 +19,9 @@
 package studio.phaseshift.metatron.isa.web.space.ws;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
+import org.junit.jupiter.api.parallel.Isolated;
 import org.junit.jupiter.params.provider.Arguments;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -47,6 +50,8 @@ import static studio.phaseshift.metatron.isa.web.space.ws.handler.mcp_wsHandler.
 import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_HANDLER_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
+@Isolated
+@Execution(ExecutionMode.SAME_THREAD)
 public class mcp_wsHandlerTest extends AbstractWebSocketServerTest {
 
     @Override
@@ -232,7 +237,7 @@ public class mcp_wsHandlerTest extends AbstractWebSocketServerTest {
                 mutableMap(uri(TOOL), rec(
                         uri("greet"), instC(f("greet").dom(ALL.maybe()).rng(ALL.maybe()),
                                 rec(uri("name"), T(ALL.maybe())),
-                                (lhs, inst) -> str("Hello, " + inst.arg(f("name"),0).toCleanString())))), WS_MCP_HANDLER_TID, vid));
+                                (lhs, inst) -> str("Hello, " + inst.arg(f("name"), 0).toCleanString())))), WS_MCP_HANDLER_TID, vid));
 
         final Obj response = withTool.at(uri(ON_MESSAGE)).apply(rec(
                 uri(JSONRPC), str("2.0"),

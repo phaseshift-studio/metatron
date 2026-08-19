@@ -214,7 +214,7 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
                     wsHandlerType = Router.readFromSpace(wsHandlerType.uriValue());
                 if (!wsHandlerType.isType() && !(wsHandlerType instanceof mcpServer))
                     throw MTronException.of("websocket handler type required: %s", wsHandlerType);
-                LOG.info("starting session with websocket handler: %s", wsHandlerType);
+                LOG.debug("starting session with websocket handler: %s", wsHandlerType);
                 final fURI vid = this.baseURI.extend(routePath.qLess()).extend(this.counter.getAndIncrement() + "");
                 final Rec config = rec(mutableMap(
                         uri(IN), routePath.hasQ(IN) ? uri(routePath.q(IN)) : noobj(),
@@ -261,7 +261,7 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
         @Override
         public void onOpen(final WebSocket conn, final ClientHandshake handshake) {
             try {
-                LOG.info("creating new websocket server session w/ %s over %s", conn.getRemoteSocketAddress(), conn.getResourceDescriptor());
+                LOG.debug("creating new websocket server session w/ %s over %s", conn.getRemoteSocketAddress(), conn.getResourceDescriptor());
                 if (conn.getResourceDescriptor().equals("/")) {
 
                     for (final String line : CommonUtil.getHeader(CommonUtil.HEADER_FILE, null, true).split("\n"))
@@ -279,7 +279,6 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
                     }
                 }
             } catch (final Exception e) {
-                e.printStackTrace();
                 LOG.error("error on new connection with %s: %s", conn.getRemoteSocketAddress(), e);
                 conn.closeConnection(3000, "error on connection: " + e);
                 // Do NOT re-throw — propagating an exception from an event handler

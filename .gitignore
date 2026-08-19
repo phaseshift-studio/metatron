@@ -1,4 +1,5 @@
 .*
+*.sqlite
 opencode.json
 !.metatron/
 target/

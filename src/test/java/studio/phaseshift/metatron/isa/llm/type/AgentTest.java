@@ -22,6 +22,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Isolated;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.SkipWhenPortUnavailable;
 import studio.phaseshift.metatron.furi.fURI;
@@ -62,6 +63,7 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 @SkipWhenPortUnavailable(value = 11434)
+@Isolated
 public class AgentTest extends AbstractMetatronTest {
 
     private static final String MODEL_NAME = "test-model";
