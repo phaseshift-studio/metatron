@@ -22,6 +22,9 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
+import org.junit.jupiter.api.parallel.Isolated;
 import studio.phaseshift.metatron.SkipRegexTest;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
@@ -44,7 +47,6 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
-import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.web.webInstSet.*;
 
@@ -62,6 +64,8 @@ import static studio.phaseshift.metatron.isa.web.webInstSet.*;
         "list",        // Skip all list handling tests
         "special"      // Skip all special value tests
 })
+@Isolated
+@Execution(ExecutionMode.SAME_THREAD)
 public class httpSpaceTest extends AbstractSpaceTest {
     private static final String BASE_URL = "http://localhost:" + generatePort();
 
