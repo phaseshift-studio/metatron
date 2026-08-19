@@ -87,7 +87,7 @@ public class fsSpace extends AbstractSpace<FileSystem> {
                         uri(kv.getValue().toString().replace("~", System.getProperty(USER_HOME)))))
                 .forEach(kv -> this.at(ROUTE).<Map<Uri, Obj>>jvmAs().put(kv.getKey(), kv.getValue()));
     }
-
+    
     public static File staticObjToFile(final Obj obj) {
         try {
             final Space space = Router.global().getSpaceFor(obj.uriValue().basePath());

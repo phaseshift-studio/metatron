@@ -21,10 +21,7 @@ package studio.phaseshift.metatron.isa.ide;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.ide.parser.ObjJavaIDESerializer;
-import studio.phaseshift.metatron.isa.m.type.Inst;
-import studio.phaseshift.metatron.isa.m.type.InstSet;
-import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.Type;
+import studio.phaseshift.metatron.isa.m.type.*;
 
 import java.util.Map;
 
@@ -33,7 +30,9 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.TIME_TYPE;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.union_;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
+import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_FALSE;
+import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TRUE;
 import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
@@ -146,6 +145,19 @@ public class ideInstSet extends AbstractInstSet {
                                 "the project descriptor (the pom.xml of a metatron ide) — a project.mtron file at the project root",
                                 "cs_project::[name=>metatron,root=><fs:/foo>,code=>!*<fs:/foo/src>]")),
                 uri(INST), lst(
+                        instC(AS_INST_TID.dom(URI_TID).rng(IDE_PROJECT_TID), lst(IDE_PROJECT_TYPE), (lhs, inst) -> {
+                            final Rec project = inst.arg(0).isType() ? rec() : inst.arg(0).asRec();
+                            if (!project.has(CODE)) {
+                                project.at(CODE, lst(start_(lhs).repeat_(rshift_(), BOOL_FALSE, BOOL_TRUE).apply()
+                                        .stream()
+                                        .filter(e -> e.uriValue().toString().contains(".java"))
+                                        .map(e -> (Obj) auto_from_(e.uriValue()).vid(lhs.vid().extend(e.uriValue()))).toList()), MUTABLE);
+                            }
+                            if (!project.has(ROOT)) {
+                                project.at(ROOT, lhs);
+                            }
+                            return project;//.vid(inst.arg(0).vid());
+                        }),
                         instC(AS_INST_TID.dom(JAVA_TID).rng(IDE_JAVA_TID), lst(IDE_JAVA_TYPE), (lhs, inst) -> ObjJavaIDESerializer.parse(lhs.strValue())),
                         instC(AS_INST_TID.dom(REC_TID).rng(IDE_JAVA_TID), lst(IDE_JAVA_TYPE), (lhs, inst) -> lhs.tid(IDE_JAVA_TID)),
                         docWrap(cs_command(),
