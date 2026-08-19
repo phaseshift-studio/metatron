@@ -23,6 +23,9 @@ package studio.phaseshift.metatron.isa.web.space.ws;
  */
 
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
+import org.junit.jupiter.api.parallel.Isolated;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -67,6 +70,8 @@ import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
  * WebSocket round-trips against a real {@code wsSpace} (whose route table
  * registers the WS space so {@code list_space}/{@code router_info} resolve).
  */
+@Isolated
+@Execution(ExecutionMode.SAME_THREAD)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class mcp_mtron_wsHandlerTest extends AbstractMcpMtronHandlerTest {
 

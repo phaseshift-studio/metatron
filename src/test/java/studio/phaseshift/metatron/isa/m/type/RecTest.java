@@ -28,12 +28,16 @@ import studio.phaseshift.metatron.Training;
 import studio.phaseshift.metatron.algebra.AbstractAlgebraTest;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
+import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 
+import java.util.Map;
 import java.util.Set;
 
+import static java.util.Map.entry;
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.algebra.Form.PLUS_MONOID;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.update_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Poly.IMMUTABLE;
@@ -68,32 +72,32 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
             mapDesc = {"when the <<lhs>> rec is rshifted by the <<rhs>> key, what is the result?"})
     @ParameterizedTest
     @CsvSource(value = {
-            // rec                                 | key                  | value
-            "[a=>b]                                | c                    | noobj",
-            "[a=>b]                                | a                    | b",
-            "[a=>b]                                | a                    | /m/uri::b",
-            "[a=>b]                                | a/                   | a=>b",
-            "[a=>{b,c}]                            | a/                   | a=>{b,c}",
-            "[a=>noobj]                            | a/                   | noobj",
-            "[a=>noobj]                            | a                    | noobj",
-            "[=>]                                  | a                    | noobj",
-            "[1=>[2=>3]]                           | 1                    | [2=>3]",
-            "[1=>[2=>3]]                           | 2                    | noobj",
-            "[a=>[b=>c],a/b/c=>[e=>f]]             | a/b/c                | [e=>f]",
-            "[a=>[b=>c],a/b/c=>[e=>f]]             | a/b                  | c",
-            // "[a=>[b=>c],a/b=>c]               | a/b                  | {c,c}",
-            // "[a=>[b=>c],a/b/c=>[e=>f]]             | a/b/c/               | [a/b/c=>[e=>f]].>-{,}",
-            "[a=>[b=>c,d=>[e=>f]]]                 | a                    | [b=>c,d=>[e=>f]]",
-            "[a=>[b=>c,d=>[e=>f]]]                 | a/                   | a=>[b=>c,d=>[e=>f]]",
-            "[a=>[b=>c,d=>[e=>f]]]                 | a/b                  | c",
-            "[a=>[b=>c,d=>[e=>f]]]                 | a/d                  | [e=>f]",
-            "[a=>[b=>c,d=>[e=>f]]]                 | a/d/e                | f",
-            // "[a=>[b=>c,d=>[e=>f]]]                 | a/d/e/               | /m/rel::a/d/e=>f",
-            "[a=>[b=>c,d=>[e=>f]]]                 | a/#                  | {c,[e=>f]}",
-            "[a=>[b=>c,d=>[e=>f]]]                 | a/+                  | {c,[e=>f]}",
-            "[a=>[b=>c,d=>[e=>f]]]                 | a/+/e                | f",
-            "[a=>[b=>c,d=>[e=>{1,2,3,4}]]]         | a/+/e                | {1,2,3,4}"
-    }, delimiter = '|')
+            // rec                                 % key                  % value
+            "[a=>b]                                % c                    % noobj",
+            "[a=>b]                                % a                    % b",
+            "[a=>b]                                % a                    % /m/uri::b",
+            "[a=>b]                                % a/                   % a=>b",
+            "[a=>{b,c}]                            % a/                   % a=>{b,c}",
+            "[a=>noobj]                            % a/                   % noobj",
+            "[a=>noobj]                            % a                    % noobj",
+            "[=>]                                  % a                    % noobj",
+            "[1=>[2=>3]]                           % 1                    % [2=>3]",
+            "[1=>[2=>3]]                           % 2                    % noobj",
+            "[a=>[b=>c],a/b/c=>[e=>f]]             % a/b/c                % [e=>f]",
+            "[a=>[b=>c],a/b/c=>[e=>f]]             % a/b                  % c",
+            // "[a=>[b=>c],a/b=>c]               % a/b                  % {c,c}",
+            // "[a=>[b=>c],a/b/c=>[e=>f]]             % a/b/c/               % [a/b/c=>[e=>f]].>-{,}",
+            "[a=>[b=>c,d=>[e=>f]]]                 % a                    % [b=>c,d=>[e=>f]]",
+            "[a=>[b=>c,d=>[e=>f]]]                 % a/                   % a=>[b=>c,d=>[e=>f]]",
+            "[a=>[b=>c,d=>[e=>f]]]                 % a/b                  % c",
+            "[a=>[b=>c,d=>[e=>f]]]                 % a/d                  % [e=>f]",
+            "[a=>[b=>c,d=>[e=>f]]]                 % a/d/e                % f",
+            // "[a=>[b=>c,d=>[e=>f]]]                 % a/d/e/               % /m/rel::a/d/e=>f",
+            "[a=>[b=>c,d=>[e=>f]]]                 % a/#                  % {c,[e=>f]}",
+            "[a=>[b=>c,d=>[e=>f]]]                 % a/+                  % {c,[e=>f]}",
+            "[a=>[b=>c,d=>[e=>f]]]                 % a/+/e                % f",
+            "[a=>[b=>c,d=>[e=>{1,2,3,4}]]]         % a/+/e                % {1,2,3,4}"
+    }, delimiter = '%')
     public void testKeyValue(final String rec, final String key, final String value) {
         Rec r = ObjmtronSerializer.parse(rec);
         Obj k = ObjmtronSerializer.parse(key);
@@ -110,41 +114,41 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
             mapDesc = {"does the <<rhs>> rec match the <<lhs>> rec?"})
     @ParameterizedTest
     @CsvSource(value = {
-            // rec                                 | key                                        | value
-            "[=>]                                  | [a=>b]                                     | false",
-            "[a=>b]                                | [=>]                                       | true",
-            "[a=>b]                                | [a=>b]                                     | true",
-            "[a=>b,c=>d]                           | [a=>b]                                     | true",
-            "[a=>b,c=>d]                           | [a=>b,c=>e]                                | false",
-            "[a=>b,c=>[d=>2]]                      | [a=>b,c=>[d=>2]]                           | true",
-            "[a=>b,c=>[d=>[a=>b]]]                 | [a=>b,c=>[d=>get(a).is(eq(b))]]            | true",
-            "[a=>b,c=>[d=>2]]                      | [a=>b,c=>[d=>is(gt(0))]]                   | true",
-            "[a=>b,c=>[d=>2]]                      | [a=>b,c=>[d=>is(gt(3))]]                   | false",
-            "[a=>b,c=>[d=>2]]                      | [a=>b,c=>[d=>isa(int::T[is(gt(0))])]]      |   true",
-            "[a=>b,c=>[d=>2]]                      | [a=>b,c=>[d=>is(gt(10))]]                  | false",
-            "[a=>b,c=>[d=>2]]                      | [a=>b,c=>[d=>isa(int::T[is(gt(10))])]]     | false",
-            "[a=>b,c=>[d=>2]]                      | [a=>b,c=>[d=>int::T[is(gt(10))]]]          | false",
-            "[a=>b,c=>[d=>2]]                      | [a=>b,c=>[d=>int::T[is(gt(1))]]]           | true",
-            "[a=>b,c=>[d=>2]]                      | [a=>b,c=>[d=>isa(int::T)]]                 | true",
-            "[a=>b,c=>[d=>2]]                      | [a=>b,c=>[d=>isa(str::T)]]                 | false",
-            "[a=>b,c=>[d=>2]]                      | [a=>b,c=>rec::T]                           | true",
-            "[a=>b,c=>[d=>2]]                      | [a=>uri::T,c=>rec::T]                      | true",
-            "[a=>b,c=>[d=>2]]                      | [a=>uri::T[is(eq(b))],c=>rec::T]           | true",
-            "[a=>b,c=>[d=>2]]                      | [a=>str::T,c=>rec::T]                      | false",
-            "[a=>b,c=>[d=>2]]                      | rec::T                                     | true",
-            "[a=>b,c=>[d=>2]]                      | str::T                                     | false",
-            "[a=>b,c=>[d=>2]]                      | rec::T[is(rng().count().eq(2))]            | true",
-            "[a=>b,c=>[d=>2]]                      | rec::T[is(rng().count().eq(3))]            | false",
-            "noobj                                 | ?str::T                                    | false",
-            "noobj                                 | str{?}::T                                  | true",
-            "[a=>2]                                | [a=>int::T,b=>?str::T]                     | false",
-            "[a=>2]                                | [a=>int::T,uri{?}::b=>str::T]              | true",
-            "[=>]                                  | [a=>int::T,uri{?}::b=>str::T]              | false",
-            "[=>]                                  | [uri{?}::a=>int::T,uri{?}::b=>str::T]      | true",
-            "[a=>'bad']                            | [uri{?}::a=>int::T,uri{?}::b=>str::T]      | false",
-            "[a=>2,b=>0]                           | [uri{?}::a=>int::T,uri{?}::b=>str::T]      | false",
+            // rec                                 % key                                        % value
+            "[=>]                                  % [a=>b]                                     % false",
+            "[a=>b]                                % [=>]                                       % true",
+            "[a=>b]                                % [a=>b]                                     % true",
+            "[a=>b,c=>d]                           % [a=>b]                                     % true",
+            "[a=>b,c=>d]                           % [a=>b,c=>e]                                % false",
+            "[a=>b,c=>[d=>2]]                      % [a=>b,c=>[d=>2]]                           % true",
+            "[a=>b,c=>[d=>[a=>b]]]                 % [a=>b,c=>[d=>get(a).is(eq(b))]]            % true",
+            "[a=>b,c=>[d=>2]]                      % [a=>b,c=>[d=>is(gt(0))]]                   % true",
+            "[a=>b,c=>[d=>2]]                      % [a=>b,c=>[d=>is(gt(3))]]                   % false",
+            "[a=>b,c=>[d=>2]]                      % [a=>b,c=>[d=>isa(int::T[is(gt(0))])]]      %   true",
+            "[a=>b,c=>[d=>2]]                      % [a=>b,c=>[d=>is(gt(10))]]                  % false",
+            "[a=>b,c=>[d=>2]]                      % [a=>b,c=>[d=>isa(int::T[is(gt(10))])]]     % false",
+            "[a=>b,c=>[d=>2]]                      % [a=>b,c=>[d=>int::T[is(gt(10))]]]          % false",
+            "[a=>b,c=>[d=>2]]                      % [a=>b,c=>[d=>int::T[is(gt(1))]]]           % true",
+            "[a=>b,c=>[d=>2]]                      % [a=>b,c=>[d=>isa(int::T)]]                 % true",
+            "[a=>b,c=>[d=>2]]                      % [a=>b,c=>[d=>isa(str::T)]]                 % false",
+            "[a=>b,c=>[d=>2]]                      % [a=>b,c=>rec::T]                           % true",
+            "[a=>b,c=>[d=>2]]                      % [a=>uri::T,c=>rec::T]                      % true",
+            "[a=>b,c=>[d=>2]]                      % [a=>uri::T[is(eq(b))],c=>rec::T]           % true",
+            "[a=>b,c=>[d=>2]]                      % [a=>str::T,c=>rec::T]                      % false",
+            "[a=>b,c=>[d=>2]]                      % rec::T                                     % true",
+            "[a=>b,c=>[d=>2]]                      % str::T                                     % false",
+            "[a=>b,c=>[d=>2]]                      % rec::T[is(rng().count().eq(2))]            % true",
+            "[a=>b,c=>[d=>2]]                      % rec::T[is(rng().count().eq(3))]            % false",
+            "noobj                                 % ?str::T                                    % false",
+            "noobj                                 % str{?}::T                                  % true",
+            "[a=>2]                                % [a=>int::T,b=>?str::T]                     % false",
+            "[a=>2]                                % [a=>int::T,uri{?}::b=>str::T]              % true",
+            "[=>]                                  % [a=>int::T,uri{?}::b=>str::T]              % false",
+            "[=>]                                  % [uri{?}::a=>int::T,uri{?}::b=>str::T]      % true",
+            "[a=>'bad']                            % [uri{?}::a=>int::T,uri{?}::b=>str::T]      % false",
+            "[a=>2,b=>0]                           % [uri{?}::a=>int::T,uri{?}::b=>str::T]      % false",
 
-    }, delimiter = '|')
+    }, delimiter = '%')
     public void testMatches(final String recA, final String recB, final boolean matches) {
         AbstractMetatronTest.checkMatches(LOG, recA, recB, matches);
     }
@@ -365,10 +369,10 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
     @ParameterizedTest
     @CsvSource(value = {
             // MUTABLE set: mutate original in-place
-            "[a=>1,b=>2,c=>3]   | a   | 99  | 3   | 99  | true",     // existing key
-            "[a=>1,b=>2]        | c   | 42  | 3   | 42  | true",     // new key
-            "[x=>10]            | x   | -1  | 1   | -1  | true",     // overwrite
-    }, delimiter = '|')
+            "[a=>1,b=>2,c=>3]   % a   % 99  % 3   % 99  % true",     // existing key
+            "[a=>1,b=>2]        % c   % 42  % 3   % 42  % true",     // new key
+            "[x=>10]            % x   % -1  % 1   % -1  % true",     // overwrite
+    }, delimiter = '%')
     public void testMutableSet(final String recStr, final String key, final int value,
                                final int expectedCount, final int expectedVal,
                                final boolean expectSame) {
@@ -383,9 +387,9 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
     @ParameterizedTest
     @CsvSource(value = {
             // IMMUTABLE delete: return new rec, original untouched
-            "[a=>10,b=>20,c=>30]  | b   | 3   | 2",     // delete middle
-            "[x=>42]              | x   | 1   | 0",     // delete only
-    }, delimiter = '|')
+            "[a=>10,b=>20,c=>30]  % b   % 3   % 2",     // delete middle
+            "[x=>42]              % x   % 1   % 0",     // delete only
+    }, delimiter = '%')
     public void testImmutableDelete(final String recStr, final String key,
                                     final int expectedOrigCount, final int expectedCloneCount) {
         final Rec original = ObjmtronSerializer.parse(recStr);
@@ -400,10 +404,10 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
     @ParameterizedTest
     @CsvSource(value = {
             // MUTABLE delete: remove from original in-place
-            "[a=>10,b=>20,c=>30]  | b   | 2",     // delete middle
-            "[a=>10,b=>20,c=>30]  | a   | 2",     // delete first
-            "[x=>42]              | x   | 0",     // delete only → empty
-    }, delimiter = '|')
+            "[a=>10,b=>20,c=>30]  % b   % 2",     // delete middle
+            "[a=>10,b=>20,c=>30]  % a   % 2",     // delete first
+            "[x=>42]              % x   % 0",     // delete only → empty
+    }, delimiter = '%')
     public void testMutableDelete(final String recStr, final String key,
                                   final int expectedCount) {
         final Rec original = ObjmtronSerializer.parse(recStr);
@@ -857,5 +861,83 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
         final Obj result = ObjmtronSerializer.parse(expression).apply();
         final Obj expectedObj = ObjmtronSerializer.parse(expected);
         assertEquals(expectedObj, result, expression);
+    }
+
+    // ── Space-backed mutation probes ──────────────────────────────────────────
+    // Each row writes its own state (anchored via `@`), mutates via `>>=`, then
+    // reads the whole rec back and compares. Deeper nesting + mixed data types.
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            // state                     % update           % fetch % expected
+            "[l=>[1,2,3]]@x             % @x/l >>= [9,8]   % *x    % [l=>[9,8]]@x",
+            "[l=>['a','b','c']]@x        % @x/l >>= ['x','y'] % *x  % [l=>['x','y']]@x",
+            "[l=>[1,2,3]]@x             % @x/l >>= +[4,5]   % *x    % [l=>[1,2,3,4,5]]@x",
+            "[l=>['a','b']]@x            % @x/l >>= +['c','d'] % *x % [l=>['a','b','c','d']]@x",
+            "[l=>[1,2,3]]@x             % @x/l >>= [,]      % *x    % [l=>[,]]@x",
+            "[l=>[1,'a',2.5]]@x          % @x/l >>= [true,false] % *x % [l=>[true,false]]@x",
+    }, delimiter = '%')
+    void control_lstInRec(final String state, final String update, final String fetch, final String expected) {
+        final Obj stored = Router.readFromSpace(f(fetch));
+        LOG.info("stored %s => %s", fetch, stored);
+        AbstractMetatronTest.checkSpaceMutation(LOG, state, update, Map.ofEntries(entry(f("x"), expected)));
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            // state                       % update                 % fetch % expected
+            "[l=>[1,[1,2,3],3]]@x          % @x/l/1 >>= +[11,22,33] % *x    % [l=>[1,[1,2,3,11,22,33],3]]@x",
+            "[l=>['a',['b','c'],'d']]@x     % @x/l/1 >>= +['e','f']  % *x    % [l=>['a',['b','c','e','f'],'d']]@x",
+            "[l=>[1,[2,[3,4],5],6]]@x       % @x/l/1/1 >>= +[7,8]    % *x    % [l=>[1,[2,[3,4,7,8],5],6]]@x",
+            "[l=>[1,[r=>[2,3]],4]]@x        % @x/l/1/r >>= +[5]       % *x    % [l=>[1,[r=>[2,3,5]],4]]@x",
+    }, delimiter = '%')
+    void nested_lstInLstInRec_append(final String state, final String update, final String fetch, final String expected) {
+        final Obj stored = Router.readFromSpace(f(fetch));
+        LOG.info("stored %s => %s", fetch, stored);
+        AbstractMetatronTest.checkSpaceMutation(LOG, state, update, Map.ofEntries(entry(f("x"), expected)));
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            // state                       % update                % fetch % expected
+            "[m=>[[1,2,3]]]@y              % @y/m/0/1 >>= +9       % *y    % [m=>[[1,11,3]]]@y",
+            "[m=>[[[1,2,3]]]]@y            % @y/m/0/0/1 >>= +10    % *y    % [m=>[[[1,12,3]]]]@y",
+            "[m=>[[1,2,3]]]@y              % @y/m/0/1 >>= 99       % *y    % [m=>[[1,99,3]]]@y",
+            "[m=>[['a','b','c']]]@y        % @y/m/0/1 >>= 'z'      % *y    % [m=>[['a','z','c']]]@y",
+            "[m=>[[r=>[a=>1,b=>2]]]]@y     % @y/m/0/r/b >>= +5     % *y    % [m=>[[r=>[a=>1,b=>7]]]]@y",
+    }, delimiter = '%')
+    void nested_lstInLstInLstInRec_append(final String state, final String update, final String fetch, final String expected) {
+        final Obj stored = Router.readFromSpace(f(fetch));
+        LOG.info("stored %s => %s", fetch, stored);
+        AbstractMetatronTest.checkSpaceMutation(LOG, state, update, Map.ofEntries(entry(f("y"), expected)));
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            // state                       % update                    % fetch % expected
+            "[m=>[[1,2,3]]]@z              % @z/m >>= [0=>[9,8]]       % *z    % [m=>[[9,8]]]@z",
+            "[m=>[[1,2,3],[4,5,6]]]@z       % @z/m >>= [1=>[9,8]]       % *z    % [m=>[[1,2,3],[9,8]]]@z",
+            "[m=>[[1,2,3],[4,5,6]]]@z       % @z/m >>= [0=>[7],1=>[8,9]] % *z  % [m=>[[7],[8,9]]]@z",
+            "[m=>[[1,2,3]]]@z              % @z/m >>= [0=>99]           % *z    % [m=>[99]]@z",
+            "[m=>[['a','b'],['c','d']]]@z   % @z/m >>= [1=>['x','y']]    % *z    % [m=>[['a','b'],['x','y']]]@z",
+    }, delimiter = '%')
+    void nested_innerReplaceByKey(final String state, final String update, final String fetch, final String expected) {
+        final Obj stored = Router.readFromSpace(f(fetch));
+        LOG.info("stored %s => %s", fetch, stored);
+        AbstractMetatronTest.checkSpaceMutation(LOG, state, update, Map.ofEntries(entry(f("z"), expected)));
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            // state                       % update                  % expected
+            "[l=>[1,[1,2,3],3]]@r          % @r/l/1 >>= +[11,22,33]  % [1,2,3,11,22,33]",
+            "[l=>[1,[2,[3,4],5],6]]@r       % @r/l/1/1 >>= +[7,8]     % [3,4,7,8]",
+            "[l=>['a',['b','c'],'d']]@r     % @r/l/1 >>= +['e']        % ['b','c','e']",
+            "[l=>[1,[1,2,3],3]]@r          % @r/l/1 >>= [99]           % [99]",
+    }, delimiter = '%')
+    void nested_updateResultValue(final String state, final String update, final String expected) {
+        // isolate: the update RESULT (vs. what gets stored)
+        ObjmtronSerializer.parse(state).apply();
+        AbstractMetatronTest.checkCodeParseApply(LOG, update, expected);
     }
 }

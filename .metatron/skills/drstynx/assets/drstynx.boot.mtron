@@ -78,11 +78,7 @@ fsspace::[
 fsspace::[
   pattern => mfs:#,
   q       => [mimeq::[=>],lineq::[=>]],
-    route => [mfs: => <~/software/metatron/.metatron/>]]@</sys/space/fs/metatron>;  
-fsspace::[
-  pattern => src:#,
-  q       => [mimeq::[=>],lineq::[=>]],
-    route => [src: => <~/software/metatron/>]]@</sys/space/fs/src>;  
+    route => [mfs: => <~/software/metatron>]]@</sys/space/fs/metatron>;  
         [=====================]  
         [======== WEB ========]
         [=====================]              
@@ -139,7 +135,7 @@ dckrspace::[host     => <unix:///var/run/docker.sock>,
         [=====================]
 [==memspace::[pattern=>/usr/dr/#,q          => [incrq::[=>],subq::[=>]],router=>[/usr/dr/ => <>]]@/sys/space/usr/dr==]
 tblespace::[pattern    => </usr/dr/#>,
-            host       => <sqlite:/home/killswitch/.metatron/dr.sqlite>,
+            host       => <sqlite:/home/killswitch/software/metatron/.metatron/skills/drstynx/assets/drstynx.sqlite>,
             driver     => <org.sqlite.JDBC>,
             table      => [,],
             q          => [incrq::[=>],subq::[=>]],
@@ -234,8 +230,8 @@ agent::[
                        think          => [to => inst(a=>str::T){ @<think_widget>>>=[body=>+*a].display() }]],
     loop_feature:::::::[max_loop      => 100],                         
     comment_feature::::[              => ],
-    skill_feature::::::[skill         => [ mfs:skills/metatron, 
-                                           mfs:skills/mtron ]],
+    skill_feature::::::[skill         => [ <mfs:.metatron/skills/metatron>, 
+                                           <mfs:.metatron/skills/mtron> ]],
     concept_feature::::[root          => /usr/dr/concept,
                         extractor     => lucene],
     tool_feature:::::::[tool          => [!*eval,!*sql,!*codegraph]],

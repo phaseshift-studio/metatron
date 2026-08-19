@@ -20,6 +20,8 @@ package studio.phaseshift.metatron.isa.ide.parser;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
@@ -51,6 +53,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
+@Execution(ExecutionMode.SAME_THREAD)
 public class ObjJavaIDESerializerTest extends AbstractJavaSerializerTest {
 
     private final ObjJavaIDESerializer serializer = ObjJavaIDESerializer.single();

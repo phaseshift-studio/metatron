@@ -22,6 +22,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Isolated;
 import studio.phaseshift.metatron.SkipWhenPortUnavailable;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
@@ -45,6 +46,7 @@ import static studio.phaseshift.metatron.isa.web.webInstSet.JSON_TID;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
+@Isolated
 @SkipWhenPortUnavailable(value = 80)
 public class web_httpHandlerTest extends AbstractHTTPServerTest {
 
@@ -126,7 +128,7 @@ public class web_httpHandlerTest extends AbstractHTTPServerTest {
     // ========================================
     // Integration test — live HTTP
     // ========================================
-
+    
     public static class web_httpHandlerIntegrationTest extends AbstractHTTPServerIntegrationTest {
 
         private Space contentSpace;

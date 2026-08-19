@@ -91,8 +91,9 @@ public class AuditFeature extends AbstractFeature {
         if (this.trail.isEmpty()) return;
         final List<Rec> rows = this.trail;
 
-        // Persist trail as Lst
-        agent.at(AUDIT_RESULT, lst(rows.stream().map(r -> (Obj) r).toList()), MUTABLE);
+        // Persist trail as Lst under its own key, so `table`/`widget`
+        // remain siblings of the trail rather than overwriting it.
+        agent.at(res("audit", "trail"), lst(rows.stream().map(r -> (Obj) r).toList()), MUTABLE);
 
         // Build plain text table
         final StringBuilder sb = new StringBuilder();

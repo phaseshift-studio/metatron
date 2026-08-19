@@ -2,43 +2,44 @@ package studio.phaseshift.metatron.isa.llm.type;
 
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.isa.llm.type.feature.AuditFeature;
-import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Rec;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.llm.type.Agent.feat;
 import static studio.phaseshift.metatron.isa.llm.type.Agent.res;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Poly.MUTABLE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
-import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
-import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 public class AuditFeatureTest extends FeatureTest {
 
     @Test
     public void testAuditFeatureStructure() {
-        assertFeatureStructure(new AuditFeature(new LinkedHashMap<>(), feat("audit"), null) {});
+        assertFeatureStructure(new AuditFeature(new LinkedHashMap<>(), feat("audit"), null) {
+        });
     }
 
     @Test
     public void testAuditFeaturePopulatesResultBlackboard() {
-        final AuditFeature audit = new AuditFeature(new LinkedHashMap<>(), feat("audit"), null) {};
+        final AuditFeature audit = new AuditFeature(new LinkedHashMap<>(), feat("audit"), null) {
+        };
         audit.at(uri(ON_BEFORE_CHAT), instLambda((agent, ignored) ->
                 audit.onBeforeChat((Agent) agent)), MUTABLE);
         audit.at(uri(ON_TOOL_EXECUTED), instLambda((agent, i) -> {
-                audit.onToolExecuted((Agent) agent, i.arg(0));
-                return noobj();
+            audit.onToolExecuted((Agent) agent, i.arg(0));
+            return noobj();
         }), MUTABLE);
         audit.at(uri(ON_COMPLETE_RESPONSE), instLambda((agent, i) -> {
-                audit.onCompleteResponse((Agent) agent, i.arg(0).asStr());
-                return noobj();
+            audit.onCompleteResponse((Agent) agent, i.arg(0).asStr());
+            return noobj();
         }), MUTABLE);
 
         final Agent a = agentWithFeatures(audit, ObservedTestFeature.observe("audit-observer"));

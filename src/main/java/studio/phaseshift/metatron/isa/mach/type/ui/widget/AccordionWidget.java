@@ -208,7 +208,7 @@ public class AccordionWidget extends JRec<AccordionWidget> implements Widget<Acc
     @Override
     public void close() {
         if (this.lastRenderHeight > 0) {
-            Graphitty.writeToTerminal("\033[" + this.lastRenderHeight + "A\033[J");
+            Graphitty.out(Console.getTerminal().output(), "\033[" + this.lastRenderHeight + "A\033[J");
             this.lastRenderHeight = 0;
         }
     }
