@@ -330,10 +330,10 @@ public class fsSpaceTest extends AbstractSpaceTest implements LineQTest {
             // directories carry the trailing / (a branch)
             AbstractMetatronTest.checkCodeParseApply(LOG,
                     "test:treepoly >>",
-                    "{test:/treepoly/code/,<test:/treepoly/notes.md>}");
+                    "{test:treepoly/code,<test:treepoly/notes.md>}");
             AbstractMetatronTest.checkCodeParseApply(LOG,
                     "test:treepoly/code >>",
-                    "{test:/treepoly/code/main/}");
+                    "{test:treepoly/code/main}");
 
             // uri << — pure uri arithmetic, the reference side's "go up"
             AbstractMetatronTest.checkCodeParseApply(LOG,
@@ -358,18 +358,18 @@ public class fsSpaceTest extends AbstractSpaceTest implements LineQTest {
             // (the depth-N leaves, referentially the >>.>> broadcast)
             AbstractMetatronTest.checkCodeParseApply(LOG,
                     "test:treepoly >> 2",
-                    "{test:/treepoly/code/main/}");
+                    "{test:treepoly/code/main}");
             AbstractMetatronTest.checkCodeParseApply(LOG,
                     "test:treepoly >> <+/+>",
-                    "{test:/treepoly/code/main/}");
+                    "{test:treepoly/code/main}");
             // the >>.>> broadcast and the >> N walk agree — which is what makes the
             // rshift_chain rewrite (>>.>>.>> => >> 3) semantically sound
             AbstractMetatronTest.checkCodeParseApply(LOG,
                     "test:treepoly >>.>>",
-                    "test:/treepoly/code/main/");
+                    "test:treepoly/code/main");
             AbstractMetatronTest.checkCodeParseApply(LOG,
                     "test:treepoly >>.>>.>>",
-                    "<test:/treepoly/code/main/App.java>");
+                    "<test:treepoly/code/main/App.java>");
             // >> 0 is the identity — descend zero levels is the uri itself
             AbstractMetatronTest.checkCodeParseApply(LOG,
                     "test:treepoly >> 0",

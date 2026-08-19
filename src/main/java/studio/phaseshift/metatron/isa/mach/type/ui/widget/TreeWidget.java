@@ -23,7 +23,6 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Call;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.reflect.JRec;
-import studio.phaseshift.metatron.isa.m.type.reflect.JRecElement;
 import studio.phaseshift.metatron.isa.mach.type.ui.Border;
 import studio.phaseshift.metatron.isa.mach.type.ui.Widget;
 import studio.phaseshift.metatron.util.CommonUtil;
@@ -38,15 +37,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class TreeWidget extends JRec<TreeWidget> implements Widget<TreeWidget> {
-
-    @JRecElement(key = "root", rng = "/m/uri")
-    public fURI root;
-
-    @JRecElement(key = "max", rng = "/m/int")
-    public int max;
-
-    @JRecElement(key = "code", rng = "/m/inst")
-    public Call code;
 
     private final List<TreeRow> rows = new ArrayList<>();
     private Style<TreeWidget> style = Style.empty();
@@ -67,11 +57,11 @@ public class TreeWidget extends JRec<TreeWidget> implements Widget<TreeWidget> {
     public TreeWidget(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
         if (this.style.border() == Border.none) this.style.border(Border.continuous);
-        readStyle(this.jvm());
+        readStyle();
     }
 
-    private void readStyle(final Map<Obj, Obj> jvm) {
-        final Obj s = jvm.get(uri("style"));
+    private void readStyle() {
+        final Obj s = this.at(uri("style"));
         if (s != null && s.isRec()) {
             final Style<TreeWidget> st = Style.from(s.as());
             st.stylable = this;
@@ -79,34 +69,12 @@ public class TreeWidget extends JRec<TreeWidget> implements Widget<TreeWidget> {
         }
     }
 
-    private void sync() {
-        if (this.style == null) return; // construction guard
-        final Map<Obj, Obj> jvm = jvmRead();
-
-        final Obj r = jvm.get(uri(ROOT));
-        this.root = (r != null && r.isUri()) ? r.uriValue() : null;
-
-        final Obj m = jvm.get(uri(MAX));
-        this.max = (m != null && m.isInt()) ? m.asInt().intValue().intValue() : 0;
-
-        final Obj c = jvm.get(uri(CODE));
-        this.code = (c != null && c.isInst()) ? c.as() : id_().tryToInst();
-
-        this.built = false;
-    }
-
     /* ================================================================
      * Row building
      * ================================================================ */
 
-    private boolean built = false;
-
     private void ensureBuilt() {
-        this.sync();
-        if (!built) {
-            buildRows();
-            built = true;
-        }
+        this.buildRows();
     }
 
     /**
@@ -115,19 +83,24 @@ public class TreeWidget extends JRec<TreeWidget> implements Widget<TreeWidget> {
      */
     public void forceExpand(final Set<fURI> forceExpand) {
         this.forceExpand = Objects.requireNonNull(forceExpand);
-        this.built = false;
     }
 
     private void buildRows() {
         rows.clear();
-        if (null == this.root) return;
-        final boolean[] lastStack = new boolean[Math.max(this.max, 1) + 32]; // generous upper bound for expanded branches
+        final Obj r = this.at(uri(ROOT));
+        final fURI root = (r != null && r.isUri()) ? r.uriValue() : null;
+        if (null == root) return;
+        final Obj m = this.at(uri(MAX));
+        final int max = (m != null && m.isInt()) ? m.asInt().intValue().intValue() : 0;
+        final Obj c = this.at(uri(CODE));
+        final Call code = (c != null && c.isInst()) ? c.as() : id_().tryToInst();
+        final boolean[] lastStack = new boolean[Math.max(max, 1) + 32]; // generous upper bound for expanded branches
         final Border border = this.style.border();
-        CommonUtil.treeConsumer(this.root, this.max, this.forceExpand, entry -> {
+        CommonUtil.treeConsumer(root, max, this.forceExpand, entry -> {
             final int d = entry.depth();
             if (d > 0) lastStack[d - 1] = entry.isLast();
             final String prefix = treePrefix(d, lastStack, entry.isLast(), border);
-            final Obj mapped = this.code.apply(entry.obj());
+            final Obj mapped = code.apply(entry.obj());
             final String suffix = stringSuffix(mapped);
             rows.add(new TreeRow(entry, prefix, suffix));
         });
@@ -193,7 +166,6 @@ public class TreeWidget extends JRec<TreeWidget> implements Widget<TreeWidget> {
      * ================================================================ */
 
     public void refresh() {
-        built = false;
         ensureBuilt();
     }
 

@@ -21,7 +21,6 @@ package studio.phaseshift.metatron;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
-import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.Border;
@@ -29,9 +28,7 @@ import studio.phaseshift.metatron.isa.mach.type.ui.console.Console;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.mach.type.ui.widget.Selector;
-import studio.phaseshift.metatron.isa.mach.type.ui.widget.SelectorWidget;
 import studio.phaseshift.metatron.isa.mach.type.ui.widget.TableWidget;
-import studio.phaseshift.metatron.isa.mach.type.ui.widget.Utilities;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -46,7 +43,6 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -111,7 +107,7 @@ public class Generator {
         final memSpace globalSpace = memSpace.of(rec(uri(PATTERN), uri("#")), f("/sys/global"));
         final List<Type> spaceTypes = InstSet.loadInstSetProvider(f("#"))
                 .flatMap(isa -> isa.get().types().stream())
-                .filter(s -> s.asType().isRefinementOf(SPACE_TYPE) || s.asType().vid().toString().contains("space"))
+                .filter(s -> s.asType().test(SPACE_TYPE) || s.asType().vid().toString().contains("space"))
                 .toList();
         final Selector select = new Selector();
         final TableWidget spaceTable = (TableWidget) new TableWidget(List.of("", "space", "description"))

@@ -23,7 +23,6 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.reflect.JRec;
-import studio.phaseshift.metatron.isa.m.type.reflect.JRecElement;
 import studio.phaseshift.metatron.isa.mach.type.ui.Border;
 import studio.phaseshift.metatron.isa.mach.type.ui.Widget;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Highlighter;
@@ -58,12 +57,9 @@ public class PanelWidget extends JRec<PanelWidget> implements Widget<PanelWidget
                     new PanelWidget(inst.arg(0).as().jvm(), UI_PANEL_TID, inst.arg(0).vid())))
             .create();
 
-    // @JRecElement fields are metadata for mtron introspection.
-    // Java code reads from sync() which pulls from jvmRead().
-    @JRecElement(key = "title", rng = "/m/str")
-    private String title;
-    @JRecElement(key = "body", rng = "/m/str")
-    private String body;
+    private static final Obj K_TITLE = uri("title");
+    private static final Obj K_BODY = uri("body");
+
     private Style<PanelWidget> style = Style.empty();
     private int maxWidth = 0;   // 0 = no word-wrap; >0 = max chars per body line
     private Cursor cursor;
@@ -72,11 +68,11 @@ public class PanelWidget extends JRec<PanelWidget> implements Widget<PanelWidget
 
     public PanelWidget(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
-        readStyle(this.jvm());
+        readStyle();
     }
 
-    private void readStyle(final Map<Obj, Obj> jvm) {
-        final Obj s = jvm.get(uri("style"));
+    private void readStyle() {
+        final Obj s = this.at(uri("style"));
         if (s != null && s.isRec()) {
             final Style<PanelWidget> st = Style.from(s.as());
             st.stylable = this;
@@ -84,22 +80,10 @@ public class PanelWidget extends JRec<PanelWidget> implements Widget<PanelWidget
         }
     }
 
-    private void sync() {
-        if (this.style == null) return; // construction guard
-        final Map<Obj, Obj> jvm = jvmRead();
-        // Only overwrite from JVM when the key is present, so that
-        // Java-populated fields (set via convenience constructors or
-        // direct assignment) are not silently cleared.
-        if (jvm.containsKey(uri("title")))
-            this.title = jvmStr(jvm, "title");
-        if (jvm.containsKey(uri("body")))
-            this.body = jvmStr(jvm, "body");
-    }
-
     // ── convenience constructors ───────────────────────────────────
 
     public PanelWidget() {
-        this(Map.of(), UI_PANEL_TID, null);
+        this(new LinkedHashMap<>(), UI_PANEL_TID, null);
     }
 
     public PanelWidget(final String body) {
@@ -107,9 +91,9 @@ public class PanelWidget extends JRec<PanelWidget> implements Widget<PanelWidget
     }
 
     public PanelWidget(final String title, final String body) {
-        this(Map.of(), UI_PANEL_TID, null);
-        this.title = title;
-        this.body = body;
+        this(new LinkedHashMap<>(), UI_PANEL_TID, null);
+        if (null != title) jvmWrite(K_TITLE, str(title));
+        if (null != body) jvmWrite(K_BODY, str(body));
     }
 
     // ── composition ────────────────────────────────────────────────
@@ -131,7 +115,7 @@ public class PanelWidget extends JRec<PanelWidget> implements Widget<PanelWidget
     }
 
     public PanelWidget setTitle(final String title) {
-        this.title = title;
+        jvmWrite(K_TITLE, str(null != title ? title : ""));
         return this;
     }
 
@@ -161,9 +145,11 @@ public class PanelWidget extends JRec<PanelWidget> implements Widget<PanelWidget
 
     @Override
     public String format() {
-        this.sync();
-        final List<String> rawLines = Arrays.asList(
-                (null != this.body ? this.body : "").replace("\\n", "\n").split("\\r?\\n", -1));
+        final Obj t = this.at(K_TITLE);
+        final String title = null != t && t.isStr() ? t.strValue() : "";
+        final Obj b = this.at(K_BODY);
+        final String body = null != b && b.isStr() ? b.strValue() : "";
+        final List<String> rawLines = Arrays.asList(body.replace("\\n", "\n").split("\\r?\\n", -1));
 
         // Word-wrap if maxWidth is set
         final List<String> lines;
@@ -176,16 +162,16 @@ public class PanelWidget extends JRec<PanelWidget> implements Widget<PanelWidget
             lines = rawLines;
         }
 
-        final int maxLen = Stream.concat(Stream.of(this.title).filter(Objects::nonNull), lines.stream())
+        final int maxLen = Stream.concat(Stream.of(title), lines.stream())
                 .map(Highlighter::visualLength)
                 .max(Integer::compareTo).orElse(0);
 
         final StringBuilder sb = new StringBuilder();
         sb.append(this.style.prefix());
         final String top = "%s%s".formatted(
-                null == this.title ? "" : this.title,
+                title,
                 this.style.border().topSide().repeat(
-                        null == this.title ? maxLen : maxLen - Highlighter.visualLength(this.title)))
+                        title.isEmpty() ? maxLen : maxLen - Highlighter.visualLength(title)))
                 .stripTrailing();
         if (!top.isEmpty())
             sb.append(this.style.border().topLeftCorner()).append(top)

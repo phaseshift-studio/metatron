@@ -86,7 +86,6 @@ public class TableWidget extends JRec<TableWidget> implements Widget<TableWidget
     private void sync() {
         if (this.style == null) return;   // construction guard
         if (this.javaPopulated) return;   // Java API owns the data
-        final Map<Obj, Obj> jvm = jvmRead();
 
         final Obj h = this.at(HEADER);
         if (h != null && !h.isNoObj())

@@ -503,7 +503,7 @@ public class V2InstResolver implements InstResolver {
                     score += 3000;
                 }
             }
-            if (lhs.isType() && lhs.asType().isRefinementOf(apiInst.dom())) {
+            if (lhs.isType() && lhs.asType().test(apiInst.dom())) {
                 score += SCORE_REFINEMENT_MATCH;
                 if (lhsId.basePath().equals(apiDomId.basePath())) {
                     score += SCORE_EXACT_VID_MATCH;
@@ -543,7 +543,7 @@ public class V2InstResolver implements InstResolver {
                         // Exact range match — heavy bonus
                         score += 2000;
                     } else if (userFirstArg.isType()
-                            && userFirstArg.asType().isRefinementOf(apiInst.rng())) {
+                            && userFirstArg.asType().test(apiInst.rng())) {
                         // Requested type is a refinement of the API's range
                         // (e.g., reck::T refines rec::T). Bonus for close match.
                         score += 500;

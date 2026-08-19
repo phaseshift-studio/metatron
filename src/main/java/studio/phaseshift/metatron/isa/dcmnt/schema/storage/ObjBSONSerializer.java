@@ -51,6 +51,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MBytes.bytes;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
@@ -77,6 +78,14 @@ public class ObjBSONSerializer extends AbstractObjSerializer<BsonValue> {
      * Stripped on read and applied via {@link Rec#selfTID(fURI)}.
      */
     public static final String MTRON_TID_FIELD = "__mtron_tid";
+
+    /**
+     * Hidden BSON field that wraps an {@link Objs} value so it round-trips as {@code objs}
+     * rather than collapsing to {@code lst}.  BSON arrays are ambiguous between the two poly
+     * types, so an {@code Objs} is stored as {@code {__mtron_objs: [...]}} and unwrapped on
+     * read.  Mirrors {@link #MTRON_TID_FIELD} in the reserved {@code __mtron_*} namespace.
+     */
+    public static final String MTRON_OBJS_FIELD = "__mtron_objs";
 
 
     public static final ObjBSONSerializer SINGLE = new ObjBSONSerializer();
@@ -174,8 +183,13 @@ public class ObjBSONSerializer extends AbstractObjSerializer<BsonValue> {
             LOG.warn("unknown binary magic byte 0x%s — returning noobj: %s", Integer.toHexString(magic & 0xFF), bson);
             return noobj();
         }
-        if (bson.isDocument())
+        if (bson.isDocument()) {
+            final BsonDocument doc = bson.asDocument();
+            // Objs wrapper — {__mtron_objs: [...]} distinguishes objs from lst (BSON has no set type).
+            if (doc.size() == 1 && doc.containsKey(MTRON_OBJS_FIELD))
+                return objs(doc.getArray(MTRON_OBJS_FIELD).stream().map(this::read).toList());
             return this.readRec(bson);
+        }
         if (bson.isArray())
             return this.readLst(bson);
         LOG.warn("unknown bson type — returning noobj: %s", bson.getClass());
@@ -414,10 +428,10 @@ public class ObjBSONSerializer extends AbstractObjSerializer<BsonValue> {
     }
 
     @Override
-    public BsonArray writeObjs(final Objs objs) {
+    public BsonDocument writeObjs(final Objs objs) {
         final List<BsonValue> out = new ArrayList<>();
         objs.jvm().forEach(obj -> out.add(this.write(obj)));
-        return new BsonArray(out);
+        return new BsonDocument(List.of(new BsonElement(MTRON_OBJS_FIELD, new BsonArray(out))));
     }
 
     @Override

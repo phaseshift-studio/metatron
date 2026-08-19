@@ -39,7 +39,9 @@ import java.util.Map;
 public abstract class AbstractWidget<W extends AbstractWidget<W>> extends JRec<W> implements Widget<W> {
 
     public AbstractWidget() {
-        this(java.util.Map.of(), studio.phaseshift.metatron.isa.m.mInstSet.REC_TID, null);
+        // A mutable map is required so that jvmWrite() (the single source of
+        // truth for widget data) can populate it on ephemeral (vid-less) widgets.
+        this(new java.util.LinkedHashMap<>(), studio.phaseshift.metatron.isa.m.mInstSet.REC_TID, null);
     }
 
     public AbstractWidget(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {

@@ -197,6 +197,8 @@ public final class Tokens {
     public static final String OBJ = "obj";
     public static final String JDBC = "jdbc:";
     public static final String STATUS = "status";
+    public static final String ON_KEY = "on_key";
+    public static final String KEY = "key";
     public static final String ON_OPEN = "on_open";
     public static final String ON_ERROR = "on_error";
     public static final String ON_MESSAGE = "on_message";
