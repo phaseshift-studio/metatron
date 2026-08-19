@@ -28,7 +28,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
+import static studio.phaseshift.metatron.Tokens.SCHEMA;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 
 /**
  * Base class for {@link DataPath}-backed spaces (document stores, SQL tables,
@@ -179,5 +182,10 @@ public abstract class AbstractDataPathSpace<SJVM> extends AbstractSpace<SJVM> {
         if (this.isFlatWrite(relative, obj))
             return false;
         return super.enforceRootConstraint(vid, obj);
+    }
+
+
+    protected Obj getCollectionType(final fURI vid) {
+        return objs(this.at(SCHEMA).orElse(rec()).at("type").orElse(lst()).elements().filter(t -> t.vid().test(vid)));
     }
 }

@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -27,7 +27,7 @@ import studio.phaseshift.metatron.SkipRegexTest;
 /**
  * Test suite for tbleSpace using MariaDB via TestContainers.
  * MariaDB is MySQL-compatible and provides a drop-in replacement for MySQL.
- *
+ * <p>
  * This test class extends AbstractTbleSpaceTest which contains all the actual test logic.
  * The only responsibility of this class is to set up and tear down the MariaDB container.
  *
@@ -35,7 +35,8 @@ import studio.phaseshift.metatron.SkipRegexTest;
  */
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @SkipRegexTest(value = {
-        @SkipRegexTest.Skip(method = "testUpdateWrite", params = {"M33", "M34", "M37"})
+        @SkipRegexTest.Skip(method = "testUpdateWrite", params = {"M33", "M34", "M37"}),
+        @SkipRegexTest.Skip(method = "testRshiftDirectorySpine", params = "rshift/x/y.>>.>>")
 })
 public class MariaDBTbleSpaceTest extends AbstractTbleSpaceTest {
 

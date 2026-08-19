@@ -19,6 +19,9 @@
 package studio.phaseshift.metatron.isa.mach.type.ui.widget;
 
 import org.jline.terminal.Terminal;
+import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.Widget;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 
@@ -280,7 +283,13 @@ public class FloatingSurface {
         sb.append("\033[s"); // save cursor
 
         for (final var entry : this.slots.entrySet()) {
-            renderWidget(sb, entry.getKey(), entry.getValue(), termWidth, termHeight);
+            final Widget<?> widget = entry.getKey();
+            if (isDeleted(widget)) {
+                eraseSlot(sb, entry.getValue());
+                this.slots.remove(widget);
+                continue;
+            }
+            renderWidget(sb, widget, entry.getValue(), termWidth, termHeight);
         }
 
         sb.append("\033[u"); // restore cursor
@@ -329,6 +338,33 @@ public class FloatingSurface {
     // -----------------------------------------------------------------
     // Internal rendering
     // -----------------------------------------------------------------
+
+    /**
+     * True when the widget's backing space record has been deleted.
+     */
+    private boolean isDeleted(final Widget<?> widget) {
+        if (!(widget instanceof Obj obj)) return false;
+        final fURI vid = obj.vid();
+        if (null == vid) return false;
+        try {
+            return Router.global().read(vid).isNoObj();
+        } catch (final Exception e) {
+            return false;
+        }
+    }
+
+    /**
+     * Append the erase sequences for a slot's last render to {@code sb}.
+     */
+    private void eraseSlot(final StringBuilder sb, final Slot slot) {
+        if (slot.prevHeight > 0 && slot.lastRow > 0) {
+            final int col = slot.lastCol > 0 ? slot.lastCol : 1;
+            for (int r = 0; r < slot.prevHeight; r++) {
+                sb.append("\033[").append(slot.lastRow + r).append(";").append(col).append("H");
+                sb.append("\033[K");
+            }
+        }
+    }
 
     /**
      * Render a single widget at its slot position.

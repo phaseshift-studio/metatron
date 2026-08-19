@@ -24,27 +24,25 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.BaseQ;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.grph.grphInstSet;
+import studio.phaseshift.metatron.isa.grph.io.ObjTP3Serializer;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
-import studio.phaseshift.metatron.isa.grph.io.ObjTP3Serializer;
 import studio.phaseshift.metatron.util.MTronException;
 
-import java.util.LinkedHashMap;
 import java.util.Map;
 
-import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.Tokens.PATTERN;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
-import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.INCRQ_PATTERN;
 import static studio.phaseshift.metatron.furi.q.QCollection.INCRQ_TID;
+import static studio.phaseshift.metatron.isa.grph.grphInstSet.EDGE_TYPE;
+import static studio.phaseshift.metatron.isa.grph.grphInstSet.VRTX_TYPE;
 import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.grph.grphInstSet.EDGE_TYPE;
-import static studio.phaseshift.metatron.isa.grph.grphInstSet.VRTX_TYPE;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /*
@@ -92,14 +90,14 @@ public class grphIncrQ extends BaseQ {
                                 final boolean isE = "E".equals(collection);
                                 final boolean isVertex = isV
                                         || (!isE && space.schema().types().stream()
-                                                .anyMatch(t -> t.vid().name()
-                                                        .equalsIgnoreCase(collection)
-                                                        && t.isRefinementOf(VRTX_TYPE)));
+                                        .anyMatch(t -> t.vid().name()
+                                                .equalsIgnoreCase(collection)
+                                                && t.isRefinementOf(VRTX_TYPE)));
                                 final boolean isEdge = isE
                                         || (!isV && !isVertex && space.schema().types().stream()
-                                                .anyMatch(t -> t.vid().name()
-                                                        .equalsIgnoreCase(collection)
-                                                        && t.isRefinementOf(EDGE_TYPE)));
+                                        .anyMatch(t -> t.vid().name()
+                                                .equalsIgnoreCase(collection)
+                                                && t.isRefinementOf(EDGE_TYPE)));
                                 // Label unknown: default to vertex (e.g. bootstrap write)
                                 final boolean isLabelVertex = !isV && !isE
                                         && !isVertex && !isEdge;

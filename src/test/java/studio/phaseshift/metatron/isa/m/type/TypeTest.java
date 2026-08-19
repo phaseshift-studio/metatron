@@ -894,6 +894,7 @@ public class TypeTest extends AbstractMetatronTest {
         final Type typeA = ObjmtronSerializer.<Type>parse(typeAStr);
         final Type typeB = ObjmtronSerializer.<Type>parse(typeBStr);
         assertEquals(expected, typeA.isStructuralRefinementOf(typeB), description);
+        assertEquals(expected, typeA.testNominally(typeB), description);
     }
 
     @ParameterizedTest(name = "[{index}] {1}")

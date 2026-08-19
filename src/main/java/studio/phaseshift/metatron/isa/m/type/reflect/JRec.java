@@ -77,10 +77,23 @@ public class JRec<OBJECT> extends MObj implements Rec {
     }
 
     @Override
-    public <O extends Obj> O at(final Obj key) {
-        final Obj o = objs(Stream.concat(Stream.concat(this.findField(key).stream().map(f -> {
+    public Rec at(final Obj key, final Obj value) {
+        try {
+            this.jvm().put(key, value);
+            this.findField(key).forEach(f -> MTronException.wrap(() -> {
+                f.field().setAccessible(true);
+                f.field().set(this.sjvm, Obj.class.isAssignableFrom(f.field().getType()) ? value : value.jvm());
+            }));
+            return this;
+        } catch (final Exception e) {
+            throw MTronException.of(e);
+        }
+    }
+
+    private Obj atToggle(final Obj key, final boolean direct) {
+        return objs(Stream.concat(Stream.concat(this.findField(key).stream().map(f -> {
             f.field().setAccessible(true);
-            final O temp = (O) JObjFactory.single().toObj(MTronException.wrap(() -> f.field().get(this.sjvm)), f(f.annotation().rng()), null);
+            final Obj temp = JObjFactory.single().toObj(MTronException.wrap(() -> f.field().get(this.sjvm)), f(f.annotation().rng()), null);
             this.jvm().put(key, temp);
             return temp;
         }), this.findMethod(key).stream().map(m -> {
@@ -96,22 +109,17 @@ public class JRec<OBJECT> extends MObj implements Rec {
             } catch (final Exception e) {
                 throw MTronException.of(e);
             }
-        })), Rec.super.at(key).stream()));
-        return (O) o;
+        })), direct ? Rec.super.atDirect(key).stream() : Rec.super.at(key).stream()));
     }
 
     @Override
-    public Rec at(final Obj key, final Obj value) {
-        try {
-            this.jvm().put(key, value);
-            this.findField(key).forEach(f -> MTronException.wrap(() -> {
-                f.field().setAccessible(true);
-                f.field().set(this.sjvm, Obj.class.isAssignableFrom(f.field().getType()) ? value : value.jvm());
-            }));
-            return this;
-        } catch (final Exception e) {
-            throw MTronException.of(e);
-        }
+    public <OBJ extends Obj> OBJ at(final Obj key) {
+        return (OBJ) this.atToggle(key, false);
+    }
+
+    @Override
+    public <OBJ extends Obj> OBJ atDirect(final Obj key) {
+        return (OBJ) this.atToggle(key, true);
     }
 
     @Override
@@ -121,9 +129,9 @@ public class JRec<OBJECT> extends MObj implements Rec {
             return base;
         final Map<Obj, Obj> temp = new LinkedHashMap<>();
         this.findField(uri("#")).forEach(f -> {
-                f.field().setAccessible(true);
-                temp.put(uri(f.annotation().key()),
-                        JObjFactory.single().toObj(MTronException.wrap(() -> f.field().get(this.sjvm)), JRecElement.Helper.getRng(f.annotation()), null));
+            f.field().setAccessible(true);
+            temp.put(uri(f.annotation().key()),
+                    JObjFactory.single().toObj(MTronException.wrap(() -> f.field().get(this.sjvm)), JRecElement.Helper.getRng(f.annotation()), null));
         });
         this.findMethod(uri("#")).forEach(m -> {
             if (m.annotation().mimic() == JRecElement.Mimic.FIELD) {
@@ -194,42 +202,55 @@ public class JRec<OBJECT> extends MObj implements Rec {
 
     // ── typed value extractors for jvmRead() ──────────────────────
 
-    /** Extract a {@code str::T} value from a JVM map. */
+    /**
+     * Extract a {@code str::T} value from a JVM map.
+     */
     protected static String jvmStr(final Map<Obj, Obj> jvm, final String key) {
         return jvmStr(jvm, uri(key));
     }
+
     protected static String jvmStr(final Map<Obj, Obj> jvm, final Obj key) {
         final Obj o = jvm.get(key);
         return (o != null && o.isStr()) ? o.strValue() : "";
     }
 
-    /** Extract a {@code bool::T} value from a JVM map (defaults to {@code true} if absent). */
+    /**
+     * Extract a {@code bool::T} value from a JVM map (defaults to {@code true} if absent).
+     */
     protected static boolean jvmBool(final Map<Obj, Obj> jvm, final String key) {
         return jvmBool(jvm, uri(key));
     }
+
     protected static boolean jvmBool(final Map<Obj, Obj> jvm, final Obj key) {
         final Obj o = jvm.get(key);
         return o == null || !o.isBool() || o.boolValue();
     }
 
-    /** Extract an {@code int::T} value from a JVM map. */
+    /**
+     * Extract an {@code int::T} value from a JVM map.
+     */
     protected static int jvmInt(final Map<Obj, Obj> jvm, final String key, final int fallback) {
         return jvmInt(jvm, uri(key), fallback);
     }
+
     protected static int jvmInt(final Map<Obj, Obj> jvm, final Obj key, final int fallback) {
         final Obj o = jvm.get(key);
         return (o != null && o.isInt()) ? o.asInt().intValue().intValue() : fallback;
     }
 
-    /** Extract a body (str or lst-of-str) from a JVM map into a list of lines. */
+    /**
+     * Extract a body (str or lst-of-str) from a JVM map into a list of lines.
+     */
     protected static List<String> jvmBody(final Map<Obj, Obj> jvm, final String key) {
         return jvmBody(jvm, uri(key));
     }
+
     protected static List<String> jvmBody(final Map<Obj, Obj> jvm, final Obj key) {
         final List<String> lines = new java.util.ArrayList<>();
         final Obj b = jvm.get(key);
         if (b != null && !b.isNoObj()) {
-            if (b.isStr()) java.util.Arrays.asList(b.strValue().replace("\\n", "\n").split("\n", -1)).forEach(lines::add);
+            if (b.isStr())
+                java.util.Arrays.asList(b.strValue().replace("\\n", "\n").split("\n", -1)).forEach(lines::add);
             else b.stream().filter(Obj::isStr).forEach(o -> lines.add(o.strValue()));
         }
         return lines;

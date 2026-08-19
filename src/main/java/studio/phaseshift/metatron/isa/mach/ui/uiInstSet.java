@@ -91,6 +91,10 @@ public class uiInstSet extends AbstractInstSet {
     public static Type UI_SELECTOR_TYPE;
     public static final fURI UI_PANEL_TID = UI_WIDGET_TID.extend("panel");
     public static Type UI_PANEL_TYPE;
+    public static final fURI UI_LABEL_LINE_TID = UI_WIDGET_TID.extend("label_line");
+    public static Type UI_LABEL_LINE_TYPE;
+    public static final fURI UI_MENU_BAR_TID = UI_WIDGET_TID.extend("menu_bar");
+    public static Type UI_MENU_BAR_TYPE;
     public static final fURI UI_TREE_SELECT_TOOL_TID = UI_WIDGET_TID.extend("tree_select");
     public static Type UI_TREE_SELECT_TOOL_TYPE;
     public static final fURI UI_SWIPE_PANEL_TID = UI_WIDGET_TID.extend("swipe_panel");
@@ -236,6 +240,28 @@ public class uiInstSet extends AbstractInstSet {
                                         uri(TITLE), "the title of the panel",
                                         uri(BODY), "the body content of the panel"),
                                 "a simple bordered UI panel widget"),
+                        docWrap(UI_LABEL_LINE_TYPE = Type.Builder.build()
+                                        .tid(UI_WIDGET_TID)
+                                        .vid(UI_LABEL_LINE_TID)
+                                        .isaPredicate(rec(
+                                                uri(BODY).maybe().asUri(), STR_TYPE,
+                                                uri(KEY).maybe(), URI_TYPE,
+                                                uri(ON_KEY).maybe(), ALL_TYPE))
+                                        .constructor(arg -> new LabelLineWidget(arg.asRec().jvm(), UI_LABEL_LINE_TID, arg.vid()))
+                                        .create(), "maybe an obj", "a label line widget", Map.of(
+                                        uri(BODY), "the text body displayed on the label"),
+                                "a single-line text label widget"),
+                        docWrap(UI_MENU_BAR_TYPE = Type.Builder.build()
+                                        .tid(UI_WIDGET_TID)
+                                        .vid(UI_MENU_BAR_TID)
+                                        .isaPredicate(rec(
+                                                (Obj) uri("height").maybe(), INT_TYPE,
+                                                uri("lines").maybe(), LST_TYPE))
+                                        .constructor(arg -> new MenuBarWidget(arg.asRec().jvm(), UI_MENU_BAR_TID, arg.vid()))
+                                        .create(), "maybe an obj", "a menu bar widget", Map.of(
+                                        uri("height"), "the interior height of the menu bar in rows",
+                                        uri("lines"), "a lst of line widgets laid out across the bar"),
+                                "a menu bar pinned to the top of the terminal"),
                         docWrap(UI_TREE_SELECT_TOOL_TYPE = Type.Builder.build()
                                         .tid(UI_WIDGET_TID)
                                         .vid(UI_TREE_SELECT_TOOL_TID)

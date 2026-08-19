@@ -73,7 +73,14 @@ import static studio.phaseshift.metatron.isa.tble.tbleInstSet.TBLE_ISA_TID;
  */
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @SkipRegexTest(value = {
-        @SkipRegexTest.Skip(method = "testUpdateWrite", params = {"M12b", "M43", "M44", "M44b", "M48", "M32", "M45", "M46"})
+        // Remaining testUpdateWrite skips are schema-fixed incompatibilities, NOT the
+        // objs serialization bug (tble already round-trips objs losslessly as mtron
+        // strings in TEXT columns — see M48, which passes).  M12b/M43/M44/M44b: a "+"
+        // merge produces an Objs that cannot be stored in the seeded INTEGER column.
+        // M46: a mono cannot overwrite a schema-fixed table row.  M32: >>= through a
+        // !* cross-ref does not deref the target (core semantics, shared with dcmnt).
+        // M44c/M45/M48 were stale skips and now pass.
+        @SkipRegexTest.Skip(method = "testUpdateWrite", params = {"M12b", "M43", "M44:", "M44b", "M46", "M32"})
 })
 public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest implements CommonRewritesTestContract, IncrQTest {
 

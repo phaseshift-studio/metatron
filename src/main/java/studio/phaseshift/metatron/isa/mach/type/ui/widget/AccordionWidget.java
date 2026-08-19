@@ -76,7 +76,7 @@ public class AccordionWidget extends JRec<AccordionWidget> implements Widget<Acc
         if (this.style.border() == Border.none) this.style.border(Border.continuous);
         if (this.style.foreground().isEmpty()) this.style.foreground("{{g}}");
         // Pull style config (incl. float) from the JVM so run() sees it
-        readStyle(this.jvm());
+        readStyle();
     }
 
     // ── convenience constructors ───────────────────────────────────
@@ -100,7 +100,7 @@ public class AccordionWidget extends JRec<AccordionWidget> implements Widget<Acc
 
     public void expand()   { jvmWrite(K_EXP, bool(true)); }
     public void collapse() { jvmWrite(K_EXP, bool(false)); }
-    public void toggle()   { jvmWrite(K_EXP, bool(!jvmBool(jvmRead(), K_EXP))); }
+    public void toggle()   { jvmWrite(K_EXP, bool(!this.isExpanded())); }
 
     public AccordionWidget title(final String t) {
         jvmWrite(K_TITLE, str(t));
@@ -148,9 +148,8 @@ public class AccordionWidget extends JRec<AccordionWidget> implements Widget<Acc
             pending = this.pendingBuffer.toString();
             this.pendingBuffer.setLength(0);
         }
-        // I/O outside the lock — Router read + merge + write
-        final Map<Obj, Obj> jvm = jvmRead();
-        final Obj existing = jvm.get(K_BODY);
+        // I/O outside the lock — read + merge + write
+        final Obj existing = this.at(K_BODY);
         final String existingStr = (existing != null && existing.isStr()) ? existing.strValue() : "";
         final String newBody = existingStr.isEmpty() ? pending : existingStr + "\n" + pending;
         jvmWrite(K_BODY, str(newBody));
@@ -160,16 +159,18 @@ public class AccordionWidget extends JRec<AccordionWidget> implements Widget<Acc
     // ── public accessors ───────────────────────────────────────────
 
     public boolean isExpanded() {
-        return jvmBool(jvmRead(), K_EXP);
+        final Obj e = this.at(K_EXP);
+        return null == e || !e.isBool() || e.boolValue();
     }
 
     public String title() {
-        return jvmStr(jvmRead(), K_TITLE);
+        final Obj t = this.at(K_TITLE);
+        return null != t && t.isStr() ? t.strValue() : "";
     }
 
     public List<String> bodyLines() {
         flush();
-        return jvmBody(jvmRead(), K_BODY);
+        return this.readBody();
     }
 
     public AccordionWidget clearBody() {
@@ -212,26 +213,34 @@ public class AccordionWidget extends JRec<AccordionWidget> implements Widget<Acc
     @Override
     public int height() {
         flush();
-        final Map<Obj, Obj> jvm = jvmRead();
-        if (!jvmBool(jvm, K_EXP)) return 2;
-        final List<String> lines = displayLines(jvm);
+        if (!this.isExpanded()) return 2;
+        final List<String> lines = this.displayLines();
         return lines.isEmpty() ? 2 : lines.size() + 2;
     }
 
     /** Body lines after word-wrap (if floatWidth is set on the style). */
-    private List<String> displayLines(final Map<Obj, Obj> jvm) {
-        final List<String> body = jvmBody(jvm, K_BODY);
+    private List<String> displayLines() {
+        final List<String> body = this.readBody();
         final int floatW = this.style.width();
         if (floatW <= 0) return body;
         return Stylable.Style.wrapLines(body, floatW - 3);
     }
 
-    private String indicator(final Map<Obj, Obj> jvm) {
-        return jvmBool(jvm, K_EXP) ? EXPAND_INDICATOR : COLLAPSE_INDICATOR;
+    /** Read the body from the rec, resolving any auto_ expression. */
+    private List<String> readBody() {
+        final Obj b = this.at(K_BODY);
+        final List<String> lines = new ArrayList<>();
+        if (b != null && !b.isNoObj()) {
+            if (b.isStr())
+                java.util.Arrays.asList(b.strValue().replace("\\n", "\n").split("\n", -1)).forEach(lines::add);
+            else
+                b.stream().filter(Obj::isStr).forEach(o -> lines.add(o.strValue()));
+        }
+        return lines;
     }
 
-    private void readStyle(final Map<Obj, Obj> jvm) {
-        final Obj s = jvm.get(uri("style"));
+    private void readStyle() {
+        final Obj s = this.at(uri("style"));
         if (s != null && s.isRec()) {
             final Style<AccordionWidget> st = Style.from(s.as());
             st.stylable = this;
@@ -244,15 +253,14 @@ public class AccordionWidget extends JRec<AccordionWidget> implements Widget<Acc
     @Override
     public String format() {
         flush();  // persist buffered appends before rendering
-        final Map<Obj, Obj> jvm = jvmRead();          // single source read
-        final String title = jvmStr(jvm, K_TITLE);
-        final boolean expanded = jvmBool(jvm, K_EXP);
-        final List<String> body = jvmBody(jvm, K_BODY);
-        final String ind = indicator(jvm);
+        final String title = this.title();
+        final boolean expanded = this.isExpanded();
+        final List<String> body = this.readBody();
+        final String ind = expanded ? EXPAND_INDICATOR : COLLAPSE_INDICATOR;
 
         // Latch instructions and style from JVM on first render
-        if (!jvm.containsKey(K_TOGGLE)) {
-            readStyle(jvm);
+        if (!jvmRead().containsKey(K_TOGGLE)) {
+            readStyle();
             this.at(K_TOGGLE, instLambda((l, i) -> { this.toggle(); return noobj(); }), MUTABLE);
             this.at(uri("expand"), instLambda((l, i) -> { this.expand();  return noobj(); }), MUTABLE);
             this.at(uri("collapse"), instLambda((l, i) -> { this.collapse(); return noobj(); }), MUTABLE);
@@ -269,7 +277,7 @@ public class AccordionWidget extends JRec<AccordionWidget> implements Widget<Acc
 
         // Width: use floatWidth from style if set, else compute from content
         final int floatW = this.style.width();
-        final List<String> displayLines = floatW > 0 ? displayLines(jvm) : new ArrayList<>(body);
+        final List<String> displayLines = floatW > 0 ? displayLines() : new ArrayList<>(body);
         final int bodyWidth = displayLines.stream().map(Highlighter::visualLength).max(Integer::compareTo).orElse(0);
         final int titleW = Highlighter.visualLength(title) + Highlighter.visualLength(ind) + 3;
         final int width = floatW > 0 ? Math.max(titleW, Math.min(Math.max(1, floatW - 2), bodyWidth + 3))

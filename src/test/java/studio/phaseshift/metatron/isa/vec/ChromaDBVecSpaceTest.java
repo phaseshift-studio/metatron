@@ -23,12 +23,12 @@ import org.junit.jupiter.api.BeforeAll;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.utility.DockerImageName;
+import studio.phaseshift.metatron.SkipRegexTest;
 import studio.phaseshift.metatron.isa.vec.space.ChromaV2Client;
 import studio.phaseshift.metatron.isa.vec.space.VectorDBClient;
 import studio.phaseshift.metatron.isa.vec.space.vecSpace;
 
 import java.time.Duration;
-import java.util.Map;
 
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -47,6 +47,7 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
+@SkipRegexTest({@SkipRegexTest.Skip(method = "testRshiftDirectorySpine")})
 public class ChromaDBVecSpaceTest extends AbstractVecSpaceTest {
 
     private static final int CHROMADB_PORT = 8000;

@@ -102,7 +102,7 @@ public class ScoringInstResolver implements InstResolver {
         Obj fetched = noobj();
         if (lhs.isRec())
             fetched = lhs.asRec().at(basePath);
-        if (fetched.isNoObj())
+        if (null == fetched || fetched.isNoObj()) // TODO: can't figure out why grphspace is yielding a null
             fetched = Router.readFromSpace(basePath);
 
         return resolve(lhs, userInst, fetched.stream());
