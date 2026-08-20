@@ -317,31 +317,69 @@ public final class CommonUtil {
         return word;
     }
 
+    /**
+     * Split a sequence on occurrences of {@code split} that occur outside of
+     * quoted spans.  A quoted span opens with a run of N quote characters
+     * (single, triple, quadruple, ... {@code 's or "}s) and closes only on a
+     * run of the SAME quote character at least as long as the opening run —
+     * other quote characters, and shorter runs of the same character, are
+     * literal span content.  Split characters inside spans pass through
+     * untouched and are preserved in the fragments.
+     */
     public static List<String> splitOnNonQuotedSequence(final String sequence, final char split, boolean includeSplitCharacter) {
-        List<String> result = new ArrayList<>();
+        final List<String> result = new ArrayList<>();
         StringBuilder current = new StringBuilder();
-        boolean inSingleQuote = false;
-        boolean inDoubleQuote = false;
+        // Open span state: length of the delimiter run (0 = outside any span)
+        // and which quote character the span was opened with.
+        int quoteCount = 0;
+        char quoteChar = 0;
         boolean escaped = false;
 
-        for (char c : sequence.toCharArray()) {
+        final int length = sequence.length();
+        for (int i = 0; i < length; i++) {
+            final char c = sequence.charAt(i);
             if (escaped) {
                 current.append(c);
                 escaped = false;
                 continue;
-            } else if (c == '\\') {
+            }
+            if (c == '\\') {
                 escaped = true;
-            } else if (c == '\'' && !inDoubleQuote) {
-                inSingleQuote = !inSingleQuote;
-            } else if (c == '"' && !inSingleQuote) {
-                inDoubleQuote = !inDoubleQuote;
-            } else if (c == split && !inSingleQuote && !inDoubleQuote) {
+                current.append(c);
+                continue;
+            }
+            if (c == '\'' || c == '"') {
+                // Measure the full run of this quote character
+                int run = 0;
+                while (i + run < length && sequence.charAt(i + run) == c)
+                    run++;
+                if (quoteCount == 0) {
+                    // No open span. An even run (2, 4, ...) is a sequence of
+                    // self-contained empty-string literals ("", """") — it does
+                    // not open a span. Odd runs open one: 1 = '...'/"...",
+                    // 3+ = triple-quoted """...""".
+                    if (run % 2 != 0) {
+                        quoteCount = run;
+                        quoteChar = c;
+                    }
+                } else if (quoteChar == c && run >= quoteCount) {
+                    // Closing run of the same character at least as long as the opener
+                    quoteCount = 0;
+                    quoteChar = 0;
+                }
+                // Append the whole run verbatim — the splitter preserves text
+                current.append(sequence, i, i + run);
+                i += run - 1;
+                continue;
+            }
+            if (c == split && quoteCount == 0) {
                 result.add(current.toString().trim());
                 current = new StringBuilder();
+                if (includeSplitCharacter)
+                    current.append(c);
+                continue;
             }
-            if (includeSplitCharacter || c != split)
-                current.append(c);
-
+            current.append(c);
         }
         result.add(current.toString().trim());
         return result;

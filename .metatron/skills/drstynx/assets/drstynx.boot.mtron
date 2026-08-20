@@ -183,13 +183,19 @@ grphspace::[pattern   => h:#,
                dataset         => <org.apache.tinkerpop.gremlin.LoadGraphWith.GraphData.MODERN>,
                <gremlin.graph> => <org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerGraph>],
              route    => [g:   => <>]]@</sys/space/grph/local>;
-             
+        [======================]
+        [========= IDE ========]
+        [======================]         
+<mfs:src/test/resources/scratch>@</usr/marko/scratch>.as(ide:project::T).to(scratch);
+mvn_compile -> ide:command('mvn -f /${/home/killswitch/software/metatron * *scratch/root.as(rec::T)>>=[scheme=>none].as(uri::T)} compile');
+mvn_clean   -> ide:command('mvn -f /${/home/killswitch/software/metatron * *scratch/root.as(rec::T)>>=[scheme=>none].as(uri::T)} clean');
+
+*scratch/root.repeat(code=>>>,until=>has(<Greeter.java>));
         [======================]
         [======== AGENT =======]
         [======================]
 [== if the llm session already exists, continue, else create it ==]    
 [== <drdb:llm_session>.mult(print('\n what session number?: ').stdin().as(uri::T)).to(session_vid) ==]
-
 [== model::[
   provider => deepseek,
   protocol => openai,

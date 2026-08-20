@@ -255,6 +255,19 @@ public class mParserTest extends AbstractMetatronTest {
     }
 
     // ========================================
+    // eval() Statement Splitting
+    // ========================================
+
+    @Test
+    public void testEvalDoesNotSplitQuotedSemicolons() {
+        // eval() splits the whole source on ; — quoted ; must stay inside its span.
+        // A lone " inside a triple-quoted span used to defeat the old boolean-toggle
+        // splitter (early close exposed the inner ; as a statement separator).
+        assertEquals(jnt(42), mParser.eval("s -> \"\"\"a\"b;c\"\"\"; 42"));
+        assertEquals(jnt(42), mParser.eval("s -> \"a;b\"; 42"));
+    }
+
+    // ========================================
     // Comment Mid-Expression (Parameterized)
     // ========================================
 

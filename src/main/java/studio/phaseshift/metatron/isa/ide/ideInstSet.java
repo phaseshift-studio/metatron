@@ -22,6 +22,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.ide.parser.ObjJavaIDESerializer;
 import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.Map;
 
@@ -38,6 +39,7 @@ import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.web.webInstSet.JAVA_TID;
@@ -146,6 +148,8 @@ public class ideInstSet extends AbstractInstSet {
                                 "cs_project::[name=>metatron,root=><fs:/foo>,code=>!*<fs:/foo/src>]")),
                 uri(INST), lst(
                         instC(AS_INST_TID.dom(URI_TID).rng(IDE_PROJECT_TID), lst(IDE_PROJECT_TYPE), (lhs, inst) -> {
+                            if (!lhs.hasVID())
+                                throw MTronException.of("lhs must have a vid that represents the project root");
                             final Rec project = inst.arg(0).isType() ? rec() : inst.arg(0).asRec();
                             if (!project.has(CODE)) {
                                 project.at(CODE, lst(start_(lhs).repeat_(rshift_(), BOOL_FALSE, BOOL_TRUE).apply()
@@ -154,12 +158,32 @@ public class ideInstSet extends AbstractInstSet {
                                         .map(e -> (Obj) auto_from_(e.uriValue()).vid(lhs.vid().extend(e.uriValue()))).toList()), MUTABLE);
                             }
                             if (!project.has(ROOT)) {
-                                project.at(ROOT, lhs);
+                                project.at(ROOT, lhs.vid(null), MUTABLE);
                             }
                             return project;//.vid(inst.arg(0).vid());
                         }),
                         instC(AS_INST_TID.dom(JAVA_TID).rng(IDE_JAVA_TID), lst(IDE_JAVA_TYPE), (lhs, inst) -> ObjJavaIDESerializer.parse(lhs.strValue())),
+                        // the write direction — serialize the coarse rec back to java source.
+                        // writeMember composes header + body + footer, so surgical body edits
+                        // round-trip without the derived text field going stale.
+                        instC(AS_INST_TID.dom(IDE_JAVA_TID).rng(JAVA_TID), lst(STR_TYPE), (lhs, inst) -> str(ObjJavaIDESerializer.single().write(lhs.asRec()))),
                         instC(AS_INST_TID.dom(REC_TID).rng(IDE_JAVA_TID), lst(IDE_JAVA_TYPE), (lhs, inst) -> lhs.tid(IDE_JAVA_TID)),
+                        docWrap(instC(IDE_INST_TID.extend("find").dom(IDE_PROJECT_TID).rng(URI_TID.maybeSome()), lst(URI_TYPE),
+                                        // *scratch/root.repeat(code=>>>,until=>false,emit=>has(<#>)) 
+                                        (lhs, inst) -> from_(lhs.asRec().at(ROOT)).repeat_(rshift_(), BOOL_FALSE, has_(inst.arg(0))).tryToInst().apply()),
+                                "a project",
+                                "the location of found resources",
+                                Map.of(URI_TYPE, "a uri fragment to match"),
+                                "finds project resources that contain provided uri fragment",
+                                "*m_proj.find('Rec.java')"),
+                        docWrap(instC(IDE_INST_TID.extend("search").dom(IDE_PROJECT_TID).rng(URI_TID.maybeSome()), lst(STR_TYPE),
+                                        // *scratch/root.repeat(code=>>>,until=>false,emit=>has(<#>)) 
+                                        (lhs, inst) -> from_(lhs.asRec().at(ROOT)).repeat_(rshift_(), BOOL_FALSE, from_(id_()).isa_(IDE_JAVA_TYPE).has_(inst.arg(0))).tryToInst().apply()),
+                                "a project",
+                                "the location of found resources",
+                                Map.of(STR_TYPE, "a regex string to match in resource contents"),
+                                "searches project resources whose contents match provided regex",
+                                "*m_proj.search('rec()')"),
                         docWrap(cs_command(),
                                 "noobj — cs_command is a factory (the lhs is unused)",
                                 "an enriched instruction that runs the command and returns ide:result::T",
