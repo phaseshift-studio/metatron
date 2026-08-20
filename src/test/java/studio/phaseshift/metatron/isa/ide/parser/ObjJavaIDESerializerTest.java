@@ -373,4 +373,16 @@ public class ObjJavaIDESerializerTest extends AbstractJavaSerializerTest {
         assertEquals(IDE_JAVA_TID, cs.tid());
         assertFalse(cs.at(uri("classes")).isNoObj(), "must expose classes");
     }
+
+    @Test
+    public void testIDEJavaWriteDirectionRoundTrip() {
+        // the write direction — a coarse rec serializes back to source via as(web:java::T).
+        // a surgical body edit must appear in the output and the rest of the source survive.
+        eval("'public class WR { int one() { return 1; } }'.as(web:java::T).as(ide:java::T).to(wr)");
+        eval("wr/classes/0/members/0/body -> 'return 42;'");
+        final Obj out = eval("*wr.as(web:java::T)");
+        assertTrue(out.isStr(), "as(web:java::T) on a coarse rec must yield the source str — %s".formatted(out));
+        assertTrue(out.strValue().contains("return 42;"), "the edited body must appear — %s".formatted(out));
+        assertTrue(out.strValue().contains("public class WR"), "the class must survive — %s".formatted(out));
+    }
 }

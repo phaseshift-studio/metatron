@@ -71,7 +71,9 @@ public final class CommandRunner {
         final List<Obj> fails = new ArrayList<>();
         int exit = -1;
         try {
-            final Process process = new ProcessBuilder(command.trim().split("\\s+"))
+            // the command is a shell command (per the cs_command contract) — run it through
+            // sh so shell constructs (cd; chains, pipes, quoted args, env assignments) work
+            final Process process = new ProcessBuilder("sh", "-c", command.trim())
                     .redirectErrorStream(true)
                     .start();
             try (final BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {

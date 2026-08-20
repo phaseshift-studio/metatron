@@ -18,23 +18,28 @@
 
 package studio.phaseshift.metatron.isa.ide;
 
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.mach.io.space.fs.fsSpace;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.util.CommonUtil;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static studio.phaseshift.metatron.Tokens.ERROR;
-import static studio.phaseshift.metatron.Tokens.STATUS;
+import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.DOCQ;
@@ -46,6 +51,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.mach.io.space.fs.fsSpace.FS_SPACE_TYPE;
 
 /**
  * The agent IDE instset: {@code cs_project::T} (the project descriptor) and {@code cs_result::T}
@@ -59,9 +65,46 @@ public class ideInstSetTest extends AbstractMetatronTest {
 
     protected static final GraphittyLogger LOG = Graphitty.log(ideInstSetTest.class);
 
+    // lives under the build dir — /tmp is not writable in every sandbox; target/ is
+    private static final Path SEARCH_ROOT = Path.of(System.getProperty("user.dir"), "target", "ide_instset_search");
+
     @BeforeAll
-    static void loadInstSets() {
+    static void loadInstSets() throws IOException {
         InstSet.importInstSet(IDE_ISA_TID, f("ide"));
+        createSearchTree();
+        final fsSpace space = FS_SPACE_TYPE.constructor().asInst().args(lst(rec(
+                uri(PATTERN), uri("isearch:#"),
+                uri(ROUTE), rec(uri("isearch:"), uri(SEARCH_ROOT.toString()))).vid(f("/sys/space/isearch")))).apply(noobj()).as();
+        Router.global().addSpace(space);
+    }
+
+    @AfterAll
+    static void cleanSearchTree() {
+        if (Files.exists(SEARCH_ROOT))
+            CommonUtil.deleteDirectory(SEARCH_ROOT);
+    }
+
+    /**
+     * Deterministic tree for the project search inst:
+     * <pre>
+     * /tmp/ide_instset_search/
+     *   pom.xml
+     *   src/
+     *     main/
+     *       java/
+     *         com/
+     *           x/
+     *             Greeter.java
+     *             Calculator.java
+     * </pre>
+     */
+    private static void createSearchTree() throws IOException {
+        if (Files.exists(SEARCH_ROOT))
+            CommonUtil.deleteDirectory(SEARCH_ROOT);
+        Files.createDirectories(SEARCH_ROOT.resolve("src/main/java/com/x"));
+        Files.writeString(SEARCH_ROOT.resolve("src/main/java/com/x/Greeter.java"), "public class Greeter {}");
+        Files.writeString(SEARCH_ROOT.resolve("src/main/java/com/x/Calculator.java"), "public class Calculator {}");
+        Files.writeString(SEARCH_ROOT.resolve("pom.xml"), "<project/>");
     }
 
     /// ///////////////////////////////////////////////////////////////////////////////////////////
@@ -137,9 +180,13 @@ public class ideInstSetTest extends AbstractMetatronTest {
         final Obj result = enriched.asInst().apply(noobj());
         assertTrue(result.isRec(), "a failed command must still emit a cs_result::T rec --- %s".formatted(result));
         assertEquals(uri(ERROR), result.asRec().at(uri(STATUS)));
-        final Obj fails = result.asRec().at(uri(ERROR));
-        assertTrue(fails.isLst() && !fails.asLst().elements().toList().isEmpty(),
-                "a failed command must collect the exception in fails");
+        // the command runs through sh — an unknown command is the shell's problem: it reports
+        // the diagnostic on (merged) stdout and exits non-zero, so the rec carries no java
+        // fail but must carry the shell's "not found" line in output
+        final Obj output = result.asRec().at(uri("output"));
+        final String lines = output.apply(noobj()).strValue();
+        assertTrue(lines.contains("not found"),
+                "the shell's diagnostic must be captured in output — %s".formatted(lines));
     }
 
     /// ///////////////////////////////////////////////////////////////////////////////////////////
@@ -162,6 +209,29 @@ public class ideInstSetTest extends AbstractMetatronTest {
         assertTrue(viaPrefix.isInst(), "ide:command must resolve to the command inst — %s".formatted(viaPrefix));
         assertEquals(Router.readFromSpace(IDE_COMMAND_TID), viaPrefix,
                 "ide:command must equal the command inst at /m/ide/inst/command");
+    }
+
+    @Test
+    void testProjectFindFile() {
+        // ide:find — the project tree searched (repeat >> until has|isa) for a uri fragment;
+        // yields the location of the found resource
+        final Obj search = Router.readFromSpace(IDE_INST_TID.extend("find"));
+        assertTrue(search.isInst(), "ide:find must be a registered inst");
+        final Obj project = rec(uri(ROOT), uri("isearch:")).tid(IDE_PROJECT_TID);
+        final Obj found = search.asInst().args(lst(uri("Greeter.java"))).apply(project);
+        assertTrue(found.isUri(), "search must yield the location of the found resource — %s".formatted(found));
+        assertTrue(found.uriValue().toString().contains("Greeter.java"),
+                "the found location must identify the searched file — %s".formatted(found));
+    }
+
+    @Test
+    void testProjectSearchNotFound() {
+        // a fragment that is not in the tree must not fabricate a location
+        final Obj search = Router.readFromSpace(IDE_INST_TID.extend("search"));
+        final Obj project = rec(uri(ROOT), uri("isearch:")).tid(IDE_PROJECT_TID);
+        final Obj found = search.asInst().args(lst(uri("NoSuchFile.java"))).apply(project);
+        assertTrue(!found.isUri() || !found.uriValue().toString().contains("NoSuchFile.java"),
+                "a missing file must not resolve to a location — %s".formatted(found));
     }
 
     /// ///////////////////////////////////////////////////////////////////////////////////////////

@@ -511,6 +511,10 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
             return new mFluent<F>().repeat_(obj);
         }
 
+        public static <F extends mFluent<F>> F repeat_(final Obj code, final Obj until, final Obj emit) {
+            return new mFluent<F>().repeat_(code, until, emit);
+        }
+
         public static <F extends mFluent<F>> F end_() {
             return new mFluent<F>().end_();
         }
@@ -557,6 +561,10 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
 
         public static <F extends mFluent<F>> F has_(final Obj obj) {
             return new mFluent<F>().has_(obj);
+        }
+
+        public static <F extends mFluent<F>> F obj_() {
+            return new mFluent<F>().addInst(instC(M_ISA_INST_TID.addQ(MONAD), lst(), (lhs, inst) -> lhs));
         }
 
 

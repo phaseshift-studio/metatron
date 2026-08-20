@@ -339,4 +339,41 @@ public class CommonUtilTest extends AbstractMetatronTest {
         assertEquals("gradient", CommonUtil.correctSpelling("gradient", dict));
         assertEquals("attention", CommonUtil.correctSpelling("attention", dict));
     }
+
+    // =========================================================================
+    // splitOnNonQuotedSequence — quoted-span aware statement splitting
+    // =========================================================================
+
+    @ParameterizedTest(name = "{3}")
+    @CsvSource(delimiter = '%', value = {
+            "a -> 1; b -> 2%a -> 1|b -> 2%false%unquoted semicolon splits statements",
+            "t1 -> \"a;b;c\"%t1 -> \"a;b;c\"%false%double-quoted semicolon stays in the fragment",
+            "x -> 'a;b'%x -> 'a;b'%false%single-quoted semicolon stays in the fragment",
+            "y -> \"\"\"a ; b ; c\"\"\"%y -> \"\"\"a ; b ; c\"\"\"%false%triple-quoted span keeps all semicolons",
+            "z -> \"\"\" 'asdfasdf' ;;;; \"\"\"\"%z -> \"\"\" 'asdfasdf' ;;;; \"\"\"\"%false%nested single quotes and quadruple close stay in one fragment",
+            "w -> \"a\\\";b\"%w -> \"a\\\";b\"%false%escaped quote does not close the span",
+            "u -> 'a;b%u -> 'a;b%false%unterminated span still shields the semicolon",
+            "v -> '''a;b'''%v -> '''a;b'''%false%triple-single-quoted span keeps the semicolon",
+            "q -> \"\"\"a\"b;c\"\"\"%q -> \"\"\"a\"b;c\"\"\"%false%lone quote inside a triple span is literal content",
+            "x -> \"\"; y -> 42%x -> \"\"|y -> 42%false%empty string literal does not open a span",
+            "x -> \"\"\"\"; y -> 42%x -> \"\"\"\"|y -> 42%false%even quote runs are empty-string pairs, not spans",
+            "a;b%a|;b%true%included split character leads the following fragment",
+    })
+    void splitOnNonQuotedSequenceKeepsQuotedSpans(String input, String expected, String include, String desc) {
+        final List<String> actual = CommonUtil.splitOnNonQuotedSequence(input, ';', Boolean.parseBoolean(include));
+        final List<String> expectedFragments = List.of(expected.split("\\|", -1));
+        assertEquals(expectedFragments, actual, desc);
+    }
+
+    @Test
+    public void testSplitDoesNotGlueStatementsAfterEmptyString() {
+        // drsynx.boot.mtron failed to boot: `body => "",` (empty string) opened
+        // a 2-quote span that never closed, so the following statement
+        // `console::[...]` was glued into the preceding one and the parse died.
+        final String source = "agent::[feature => [body => \"\", style => 1]]@<dr>; console::[header => 1]@/usr/marko/console";
+        assertEquals(List.of(
+                "agent::[feature => [body => \"\", style => 1]]@<dr>",
+                "console::[header => 1]@/usr/marko/console"),
+                CommonUtil.splitOnNonQuotedSequence(source, ';', false));
+    }
 }
