@@ -44,6 +44,7 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 public class ThinkFeature extends AbstractFeature {
     private StringBuilder buffer = new StringBuilder();
     private StringBuilder full = new StringBuilder();
+    private String lastRendered = "";
     private final AtomicBoolean thinkDone = new AtomicBoolean(false);
 
     public ThinkFeature(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
@@ -55,18 +56,32 @@ public class ThinkFeature extends AbstractFeature {
         this.thinkDone.set(false);
         this.buffer.append(text.strValue());
         this.full.append(text.strValue());
-        if (this.buffer.length() > 25) {
-            agent.feature(THINK).asRec().at(f(THINK).extend(TO)).apply(str(buffer.toString()));
-            this.buffer = new StringBuilder();
-
+        // Templates are evaluated live with the agent as lhs, but a template
+        // split across streamed chunks must be held back until it completes —
+        // otherwise the partial renders as literal text and the closing
+        // delimiter never finds its opener.  Prose still batches at 25 chars;
+        // template presence flushes immediately so evaluations appear as they
+        // happen.
+        final String accumulated = this.buffer.toString();
+        final String tail = Str.pendingTemplateTail(accumulated);
+        final String renderable = accumulated.substring(0, accumulated.length() - tail.length());
+        final boolean hasTemplate = accumulated.indexOf("{{{") >= 0 || accumulated.indexOf("${") >= 0;
+        if (accumulated.length() > 25 || hasTemplate) {
+            if (!renderable.isEmpty()) {
+                final Str rendered = (Str) str(renderable).apply(agent);
+                if (!rendered.strValue().equals(this.lastRendered)) {
+                    agent.feature(THINK).asRec().at(f(THINK).extend(TO)).apply(rendered);
+                    this.lastRendered = rendered.strValue();
+                }
+            }
+            this.buffer = new StringBuilder(tail);
         }
     }
 
     @Override
     public void onPartialResponse(final Agent agent, final Str text) {
         if (!this.thinkDone.getAndSet(true)) {
-            this.buffer.append("\n\n");
-            agent.feature(THINK).asRec().at(f(THINK).extend(TO)).apply(str(this.buffer.toString()));
+            agent.feature(THINK).asRec().at(f(THINK).extend(TO)).apply(str(Str.Helper.cleanString(str(this.buffer.toString()).apply(agent))));
             final fURI thinkWriteURI = agent.feature(THINK).asRec().at(ROOT).orElse(agent.at(ROOT).uriValue().extend(THINK).toUri()).uriValue().extend("_").addQ(INCRQ);
             final Rec thought = rec(mutableMap(uri(TEXT), str(this.full.toString().trim())), THINKING_MESSAGE_TID, null);
             thought.recValue().put(uri(TIME), mathInstSet.nowDatetime());
@@ -75,8 +90,10 @@ public class ThinkFeature extends AbstractFeature {
             thought.recValue().put(uri(CHAT_ID), jnt(agent.chatId()));
             this.buffer = new StringBuilder();
             this.full = new StringBuilder();
+            this.lastRendered = "";
             LOG.debug("writing thought to %s", thinkWriteURI);
             Router.writeToSpace(thinkWriteURI, thought);
         }
     }
+
 }

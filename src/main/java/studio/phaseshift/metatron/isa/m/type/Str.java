@@ -53,7 +53,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 public interface Str extends Mono, PlusMonoid.O<Str> {
-    Pattern STR_TEMPLATE_PATTERN = Pattern.compile("\\$\\{([^}]+)}");
     Type STR_TYPE = Type.Builder.build().tid(STR_TID).vid(STR_TID).create();
     Str ZERO = str("");
 
@@ -76,30 +75,195 @@ public interface Str extends Mono, PlusMonoid.O<Str> {
     }
 
     /**
-     * Apply template expansion if this string contains ${...} patterns.
-     * Each ${expr} is parsed, the lhs is applied to the expr, and the result's
-     * string value replaces the ${expr} placeholder.
+     * Apply template expansion if this string contains template patterns.
+     * Both {@code ${expr}} and {@code {{{expr}}}} delimiters are supported and
+     * nest arbitrarily — each inner template is evaluated first and its result
+     * becomes literal text for the enclosing expression, so
+     * {@code {{{ ${1+2} + 3 }}}} yields {@code 6}.  The expr is parsed, the
+     * lhs is applied to it, and the result's string value replaces the
+     * placeholder.  A backslash escapes a delimiter: {@code \${x}} and
+     * {@code \{{{x}}} are emitted literally (the backslash is consumed).  A
+     * template that fails to parse or apply is left unchanged — the
+     * placeholder survives verbatim rather than failing the whole string.
      */
     @Override
     default Obj apply(final Obj lhs) {
-        if (!this.jvm().contains("${"))
+        final String value = this.strValue();
+        if (!value.contains("${") && !value.contains("{{{"))
             return this;
-        final Matcher matcher = STR_TEMPLATE_PATTERN.matcher(this.strValue());
-        final StringBuilder result = new StringBuilder();
-        while (matcher.find()) {
-            final String exprStr = matcher.group(1);
-            try {
-                final Obj templateResult = ObjmtronSerializer.parse(exprStr).apply(lhs);
-                final String strVal = templateResult.isStr() ? templateResult.strValue() : templateResult.toString();
-                matcher.appendReplacement(result, Matcher.quoteReplacement(strVal));
-            } catch (Exception e) {
-                throw MTronException.of("failed to expand template ${%s}: %s", exprStr, e.getMessage());
-                /// // On error, leave template unchanged
-                /// matcher.appendReplacement(result, Matcher.quoteReplacement(matcher.group(0)));
+        return this.jvm(expandTemplates(value, lhs));
+    }
+
+    /**
+     * Expand all templates in {@code value} from the inside out: an inner
+     * template's result is spliced in as literal text before the enclosing
+     * template's expression is evaluated.  {@code ${}} closes on {@code }},
+     * {@code {{{}}} on {@code }}}}, and braces are consumed innermost-first.
+     */
+    static String expandTemplates(final String value, final Obj lhs) {
+        final StringBuilder top = new StringBuilder();
+        final Deque<StringBuilder> contents = new ArrayDeque<>();
+        final Deque<Integer> kinds = new ArrayDeque<>(); // 0 = ${, 1 = {{{
+        final int n = value.length();
+        int i = 0;
+        while (i < n) {
+            final char c = value.charAt(i);
+            if (c == '$' && i + 1 < n && value.charAt(i + 1) == '{') {
+                if (templateEscaped(value, i)) {
+                    final StringBuilder cur = current(contents, top);
+                    cur.setLength(cur.length() - 1); // consume the escape backslash
+                    cur.append("${");
+                } else {
+                    contents.push(new StringBuilder());
+                    kinds.push(0);
+                }
+                i += 2;
+                continue;
             }
+            if (c == '{' && i + 2 < n && value.charAt(i + 1) == '{' && value.charAt(i + 2) == '{') {
+                if (templateEscaped(value, i)) {
+                    final StringBuilder cur = current(contents, top);
+                    cur.setLength(cur.length() - 1);
+                    cur.append("{{{");
+                } else {
+                    contents.push(new StringBuilder());
+                    kinds.push(1);
+                }
+                i += 3;
+                continue;
+            }
+            if (c == '}') {
+                int run = 0;
+                while (i + run < n && value.charAt(i + run) == '}')
+                    run++;
+                int remaining = run;
+                while (remaining > 0 && !kinds.isEmpty()) {
+                    if (kinds.peek() == 0) {
+                        remaining--;
+                        kinds.pop();
+                        final String expr = contents.pop().toString();
+                        appendTemplateResult(0, expr, lhs, current(contents, top));
+                    } else if (remaining >= 3) {
+                        remaining -= 3;
+                        kinds.pop();
+                        final String expr = contents.pop().toString();
+                        appendTemplateResult(1, expr, lhs, current(contents, top));
+                    } else {
+                        break; // a lone } inside {{{...}}}: literal content
+                    }
+                }
+                current(contents, top).append("}".repeat(remaining));
+                i += run;
+                continue;
+            }
+            current(contents, top).append(c);
+            i++;
         }
-        matcher.appendTail(result);
-        return this.jvm(result.toString());
+        // Reconstruct unterminated templates verbatim.
+        while (!kinds.isEmpty()) {
+            final int kind = kinds.pop();
+            final String content = contents.pop().toString();
+            current(contents, top).append(kind == 0 ? "${" : "{{{").append(content);
+        }
+        return top.toString();
+    }
+
+    private static void appendTemplateResult(final int kind, final String expr, final Obj lhs, final StringBuilder target) {
+        final String open = kind == 0 ? "${" : "{{{";
+        final String close = kind == 0 ? "}" : "}}}";
+        try {
+            final Obj parsed = ObjmtronSerializer.parse(expr);
+            try {
+                target.append(stringValueOf(parsed.apply(lhs)));
+            } catch (final Exception e1) {
+                // A complete literal expression (e.g. ${1+2}) has domain
+                // coefficient zero and cannot be applied to a concrete lhs —
+                // retry against noobj before leaving it as literal text.
+                try {
+                    target.append(stringValueOf(parsed.apply(noobj())));
+                } catch (final Exception e2) {
+                    target.append(open).append(expr).append(close);
+                }
+            }
+        } catch (final Exception e) {
+            // Leave the template literal verbatim rather than fail the string.
+            target.append(open).append(expr).append(close);
+        }
+    }
+
+    private static String stringValueOf(final Obj o) {
+        return o.isStr() ? o.strValue() : o.toString();
+    }
+
+    private static StringBuilder current(final Deque<StringBuilder> contents, final StringBuilder top) {
+        return contents.isEmpty() ? top : contents.peek();
+    }
+
+    private static boolean templateEscaped(final String value, final int start) {
+        int backslashes = 0;
+        for (int i = start - 1; i >= 0 && value.charAt(i) == '\\'; i--)
+            backslashes++;
+        return backslashes % 2 == 1;
+    }
+
+    /**
+     * Returns the suffix of {@code value} that is an incomplete template — a
+     * partial {@code ${...}} or {@code {{{...}}}} (at any nesting depth) whose
+     * closing delimiter has not yet arrived, or a trailing {@code {}/$} that
+     * could begin one.  A streamed feed holds this tail back and prepends it
+     * to the next chunk so a template split across chunks evaluates once.
+     */
+    static String pendingTemplateTail(final String value) {
+        final Deque<Integer> kinds = new ArrayDeque<>();  // 0 = ${, 1 = {{{
+        final Deque<Integer> starts = new ArrayDeque<>(); // opener index in value
+        final int n = value.length();
+        int i = 0;
+        while (i < n) {
+            final char c = value.charAt(i);
+            if (c == '$' && i + 1 < n && value.charAt(i + 1) == '{') {
+                kinds.push(0);
+                starts.push(i);
+                i += 2;
+                continue;
+            }
+            if (c == '{' && i + 2 < n && value.charAt(i + 1) == '{' && value.charAt(i + 2) == '{') {
+                kinds.push(1);
+                starts.push(i);
+                i += 3;
+                continue;
+            }
+            if (c == '}') {
+                int run = 0;
+                while (i + run < n && value.charAt(i + run) == '}')
+                    run++;
+                int remaining = run;
+                while (remaining > 0 && !kinds.isEmpty()) {
+                    if (kinds.peek() == 0) {
+                        remaining--;
+                        kinds.pop();
+                        starts.pop();
+                    } else if (remaining >= 3) {
+                        remaining -= 3;
+                        kinds.pop();
+                        starts.pop();
+                    } else {
+                        break;
+                    }
+                }
+                i += run;
+                continue;
+            }
+            i++;
+        }
+        int holdFrom = n;
+        if (!starts.isEmpty())
+            holdFrom = Math.min(holdFrom, starts.peek());
+        int j = n - 1;
+        while (j >= 0 && (value.charAt(j) == '{' || value.charAt(j) == '$'))
+            j--;
+        if (j + 1 < n)
+            holdFrom = Math.min(holdFrom, j + 1);
+        return value.substring(holdFrom);
     }
 
     @Override

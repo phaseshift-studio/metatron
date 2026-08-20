@@ -22,13 +22,13 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.ide.parser.ObjJavaIDESerializer;
 import studio.phaseshift.metatron.isa.m.type.*;
-import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SKILL_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.TIME_TYPE;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
@@ -108,7 +108,7 @@ public class ideInstSet extends AbstractInstSet {
                     uri(DESC).maybe(), STR_TYPE,
                     uri(BUILD).maybe().asUri(), rec(URI_TYPE, IDE_RESULT_TYPE),
                     uri(TEST).maybe().asUri(), rec(URI_TYPE, IDE_RESULT_TYPE),
-                    uri(CODE).maybe().asUri(), T(ALL))) // a !* ref to the source tree
+                    uri(CODE).maybe().asUri(), T(ALL)))// a !* ref to the source tree
             .create();
 
     public static final Type IDE_JAVA_TYPE = Type.Builder.build()
@@ -147,21 +147,64 @@ public class ideInstSet extends AbstractInstSet {
                                 "the project descriptor (the pom.xml of a metatron ide) — a project.mtron file at the project root",
                                 "cs_project::[name=>metatron,root=><fs:/foo>,code=>!*<fs:/foo/src>]")),
                 uri(INST), lst(
-                        instC(AS_INST_TID.dom(URI_TID).rng(IDE_PROJECT_TID), lst(IDE_PROJECT_TYPE), (lhs, inst) -> {
-                            if (!lhs.hasVID())
-                                throw MTronException.of("lhs must have a vid that represents the project root");
-                            final Rec project = inst.arg(0).isType() ? rec() : inst.arg(0).asRec();
-                            if (!project.has(CODE)) {
-                                project.at(CODE, lst(start_(lhs).repeat_(rshift_(), BOOL_FALSE, BOOL_TRUE).apply()
-                                        .stream()
-                                        .filter(e -> e.uriValue().toString().contains(".java"))
-                                        .map(e -> (Obj) auto_from_(e.uriValue()).vid(lhs.vid().extend(e.uriValue()))).toList()), MUTABLE);
-                            }
-                            if (!project.has(ROOT)) {
-                                project.at(ROOT, lhs.vid(null), MUTABLE);
-                            }
-                            return project;//.vid(inst.arg(0).vid());
-                        }),
+                        docWrap(instC(AS_INST_TID.dom(URI_TID).rng(IDE_PROJECT_TID), lst(IDE_PROJECT_TYPE), (lhs, inst) -> {
+                                    final Rec project = inst.arg(0).isType() ? rec() : inst.arg(0).asRec();
+                                    if (!project.has(CODE)) {
+                                        project.at(CODE, lst(start_(lhs).repeat_(rshift_(), BOOL_FALSE, BOOL_TRUE).apply()
+                                                .stream()
+                                                .filter(e -> e.uriValue().toString().contains(".java"))
+                                                .map(e -> (Obj) auto_from_(e.uriValue()))
+                                                .toList()), MUTABLE);
+                                    }
+                                    if (!project.has(NAME))
+                                        project.at(NAME, str(lhs.uriValue().basePath().toString()), MUTABLE);
+                                    if (!project.has(ROOT))
+                                        project.at(ROOT, lhs.vid(null), MUTABLE);
+                                    return project.selfTID(IDE_PROJECT_TID).vid(inst.arg(0).vid());
+                                }),
+                                "a project source root",
+                                "a project obj",
+                                Map.of(IDE_PROJECT_TYPE, "the project type"),
+                                "generate an project obj used to orient monads through project source"),
+                        // the as-view, not a refinement - the project keeps its mutable-workspace
+                        // lifecycle, and the LLM-facing contract keeps its stable-skill shape;
+                        // the bridge is a projection at the point of use.
+                        docWrap(instC(AS_INST_TID.dom(IDE_PROJECT_TID).rng(LLM_SKILL_TID), lst(ALL_TYPE), (lhs, inst) -> {
+                                    final Rec project = lhs.asRec();
+                                    final Rec skill = inst.arg(0).isType() ? rec() : inst.arg(0).asRec();
+                                    if (project.has(NAME))
+                                        skill.at(NAME, uri(project.at(NAME).strValue()), MUTABLE);
+                                    if (project.has(DESC))
+                                        skill.at(DESC, project.at(DESC), MUTABLE);
+                                    if (project.has(CONTENT))
+                                        skill.at(CONTENT, project.at(CONTENT), MUTABLE);
+                                    if (project.has(TOOL))
+                                        skill.at(TOOL, lst(project.at(COMMAND).asRec().valueElements().toList()), MUTABLE);
+                                    // the project files, viewed as the skill resources
+                                    // atDirect for the raw list (a toggle at() would auto-resolve the !* refs into contents)
+                                    if (project.has(CODE))
+                                        skill.at(RESOURCE, lst(project.atDirect(uri(CODE)).asLst().jvm().stream()
+                                                .map(e -> {
+                                                    final Obj text;
+                                                    final fURI fileUri;
+                                                    // a raw element: keep or mint its !* reference as the lazy text
+                                                    if (e.isUri()) {
+                                                        fileUri = e.uriValue();
+                                                        text = (Obj) auto_from_(e.uriValue());
+                                                    } else {
+                                                        fileUri = e.asCode().insts().getFirst().arg(0).uriValue();
+                                                        text = e;
+                                                    }
+                                                    return (Obj) rec(uri(URI), uri(fileUri), uri(TEXT), text);
+                                                })
+                                                .toList()), MUTABLE);
+                                    return skill;
+                                }),
+                                "a project",
+                                "the skill view of the project",
+                                Map.of(ALL_TYPE, "the skill::T target of the view"),
+                                "as engineering becomes agent-dependent, the workspace manifest is no longer \"how to build\" but \"how to work here\" — and \"how to work here\" is the skill shape; what stays distinct is the lifecycle, which is precisely why the bridge is an as-view and not a refinement.",
+                                "*scratch.as(skill::T)   [-- the project, viewed as a skill --]"),
                         instC(AS_INST_TID.dom(JAVA_TID).rng(IDE_JAVA_TID), lst(IDE_JAVA_TYPE), (lhs, inst) -> ObjJavaIDESerializer.parse(lhs.strValue())),
                         // the write direction — serialize the coarse rec back to java source.
                         // writeMember composes header + body + footer, so surgical body edits

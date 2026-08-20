@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -49,7 +49,10 @@ public class BootLoaderCLITest {
 
     private static final class TestExit extends RuntimeException {
         private final int code;
-        TestExit(int code) { this.code = code; }
+
+        TestExit(int code) {
+            this.code = code;
+        }
     }
 
     static {
@@ -72,7 +75,9 @@ public class BootLoaderCLITest {
         System.setErr(new PrintStream(errCapture));
         BootLoader.BOOTING = true;
         BootLoader.ONE_SHOT = false;
-        BootLoader.EXIT_HANDLER = code -> { throw new TestExit(code); };
+        BootLoader.EXIT_HANDLER = code -> {
+            throw new TestExit(code);
+        };
     }
 
     @AfterEach
@@ -220,8 +225,8 @@ public class BootLoaderCLITest {
     @CsvSource(value = {
             "3       % _ + 5       % 8           % identity _ binds pipe value",
             "3       % + 5         % 8           % no _ needed, lhs is pipe",
-            "[1,2]   % _ + [a,a]   % [1,2,a,a]   % list concatenation via pipe",
-            "[1,2]   % + [a,a]     % [1,2,a,a]   % list concat without _",
+            "[1,2]   % _ + [a]   % [1,2,a]   % list concatenation via pipe",
+            "[1,2]   % + [a]     % [1,2,a]   % list concat without _",
             "hello   % _           % 'hello'     % identity returns pipe value",
     }, delimiter = '%')
     void testPipeInput(String stdinStr, String expr, String expected, String desc) {

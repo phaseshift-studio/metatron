@@ -377,7 +377,7 @@ public class Agent extends MRec {
                 // ── Phase 3: Stream — write events to result blackboard, dispatch hooks ──
                 LOG.debug("processed message: %s %s", this.userMessage, this.feature(CHAT).asRec().at(FORMAT).orElse(rec(uri(FORMAT), uri("none"))));
                 waiting.setMessage("waiting for agent response...");
-                agent.chat(this.userMessage)
+                agent.chat(Str.Helper.cleanString(str(this.userMessage).apply(this)))
                         .onToolExecuted(tool -> {
                             if (this.interrupt.get()) latch.countDown();
                             isTooling.set(false);
@@ -471,7 +471,7 @@ public class Agent extends MRec {
                             // Store raw AiMessage info so ChatFeature can write it to the
                             // message ledger (text + any tool execution requests)
                             final Map<Obj, Obj> aiMap = mutableMap();
-                            aiMap.put(uri(TEXT), str(fullText));
+                            aiMap.put(uri(TEXT), str(Str.Helper.cleanString(str(fullText).apply(this))));
                             if (c.aiMessage().hasToolExecutionRequests()) {
                                 final List<Obj> toolReqs = new ArrayList<>();
                                 for (final ToolExecutionRequest req : c.aiMessage().toolExecutionRequests()) {

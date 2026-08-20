@@ -39,15 +39,14 @@ print("{{y}}loading instruction sets\n{{X}}");
 import(/m/mach/io);
 import(/m/web,web);
 import(/m/tble);
-import(/m/math);
+import(/m/math,math);
 import(/m/llm);
 import(/m/grph);
 import(/m/vec);
 import(/m/iot);
 import(/m/dckr);
-import(/m/mach/ui);
+import(/m/mach/ui,ui);
 import(/m/ide,ide);
-[== import(/m/ide); ==]
 [===================================================================]
 [===================================================================]
         [=====================]
@@ -185,12 +184,40 @@ grphspace::[pattern   => h:#,
              route    => [g:   => <>]]@</sys/space/grph/local>;
         [======================]
         [========= IDE ========]
-        [======================]         
-<mfs:src/test/resources/scratch>@</usr/marko/scratch>.as(ide:project::T).to(scratch);
-mvn_compile -> ide:command('mvn -f /${/home/killswitch/software/metatron * *scratch/root.as(rec::T)>>=[scheme=>none].as(uri::T)} compile');
-mvn_clean   -> ide:command('mvn -f /${/home/killswitch/software/metatron * *scratch/root.as(rec::T)>>=[scheme=>none].as(uri::T)} clean');
-
-*scratch/root.repeat(code=>>>,until=>has(<Greeter.java>));
+        [======================]     
+*<mfs:src/test/resources/scratch/project.ide.mtron>.
+  to(/usr/marko/scratch).
+  else(<mfs:src/test/resources/scratch>.
+        as(project::T).
+        update(+([name   =>'scratch',
+                  desc   =>'an example java/mvn project']).
+                 >>=[_=>dedup()]).
+                 to(<mfs:src/test/resources/scratch/project.ide.mtron>)).
+  to(/usr/marko/scratch).
+  -<[mvn_build => ide:command('mvn -f /home/killswitch/software/metatron/${*/usr/marko/scratch/root.as(rec::T)>>=[scheme=>none].as(uri::T)} compile'),
+     mvn_clean => ide:command('mvn -f /home/killswitch/software/metatron/${*/usr/marko/scratch/root.as(rec::T)>>=[scheme=>none].as(uri::T)} clean'),
+     code_tree => |inst?#{*}<=#{?}(max=>?int::T.else(2)){ map(tree::[root=>!*/usr/marko/scratch/root,max=>!*max]@scratch_tree).display() }].
+  to(/usr/marko/scratch/command);
+[==
+ content=>"""
+# scratch project
+scratch serves as a example project demonstrating how to use the /m/dev/ide instruction set.
+the project::T is a refinement of /m/llm/skill::T.
+          
+## project structure
+```ui:tree::T
+scratch
+├─ SKILL.md                  [-- current file                --]
+├─ assets
+│  └─ code                   [-- multi-relational code graph --] 
+├─ scripts
+│  ├─ ide:command::mvn_clean [-- clean the project cache     --] 
+│  └─ ide:command::mvn_build [-- build the project artifacts --]
+└─ references
+   └─ !*drstynx              [-- mtron trained agent         --]
+```
+"""])
+==]
         [======================]
         [======== AGENT =======]
         [======================]
@@ -204,9 +231,9 @@ mvn_clean   -> ide:command('mvn -f /${/home/killswitch/software/metatron * *scra
   llm      => <deepseek-v4-pro> 
 ]@/usr/dr/model; ==]
 model::[provider     => ollama,
-                                                                         protocol     => ollama,
-                                                                         host         => <http://ginger.local:11434>,
-                                                                         llm          => <qwen3.8:27b>]@/usr/dr/model;
+        protocol     => ollama,
+        host         => <http://ginger.local:11434>,
+        llm          => <qwen3.8:27b>]@/usr/dr/model;
 /usr/dr/agent -> |!*dr;
 [-- tag::asciidoc_tag[] --]
 agent::[
@@ -230,7 +257,7 @@ agent::[
     think_feature::::::[on_agent_ctor => inst(a=>agent::T){
                                             accordion::[title => "thoughts", 
                                                         body  => "",
-                                                        style => style::[anchor=>top_left, left=>1, top=>3,height=>10]]@<think_widget> },
+                                                        style => style::[anchor=>top_left,left=>1,top=>3,height=>10,width=80]]@<think_widget> },
                        on_before_chat => @<think_widget> >>= [body=>""],
                        root           => /usr/dr/message,
                        think          => [to => inst(a=>str::T){ @<think_widget>>>=[body=>+*a].display() }]],
@@ -257,12 +284,12 @@ agent::[
 [-- end::asciidoc_tag[] --]
 [== user console ==] 
 console::[header=>!*boot/args/header]@/usr/marko/console;
-label_line::[body   =>"[{{r}}m{{b}}]enu bar",
+[==label_line::[body   =>"[{{r}}m{{b}}]enu bar",
              key    =>alt_m,
              on_key =>@dr.chat("are you there?"),
              style  =>style::[foreground=>"{{b}}"]]@ll;
 menu_bar::::[lines  =>[!*ll],
-             style  =>[background=>"{{[k]}}"]]@menu.display();
+             style  =>[background=>"{{[k]}}"]]@menu.display();==]
 [==!(*<mfs:skills/agent/SKILL.md>.-<'/usr/agent'>-.
                                             plus(*<boot/args/internal/agent_home>.as(str::T)).
                                             sum?str<=str{*}().

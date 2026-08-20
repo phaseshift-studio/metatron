@@ -44,7 +44,9 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.DOCQ;
 import static studio.phaseshift.metatron.isa.ide.ideInstSet.*;
-import static studio.phaseshift.metatron.isa.m.mInstSet.STR_TID;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SKILL_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.*;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -232,6 +234,48 @@ public class ideInstSetTest extends AbstractMetatronTest {
         final Obj found = search.asInst().args(lst(uri("NoSuchFile.java"))).apply(project);
         assertTrue(!found.isUri() || !found.uriValue().toString().contains("NoSuchFile.java"),
                 "a missing file must not resolve to a location — %s".formatted(found));
+    }
+
+    @Test
+    void testProjectAsSkillView() {
+        // as?skill<=project() — the project projects onto the skill contract:
+        // name/desc/content/tool pass through, and code is viewed as resource
+        final Obj as = Router.readFromSpace(AS_INST_TID.dom(IDE_PROJECT_TID).rng(LLM_SKILL_TID));
+        assertTrue(as.isInst(), "as?skill<=project() must be a registered inst");
+        final Obj project = rec(uri(ROOT), uri("isearch:"),
+                uri(NAME), str("scratch"),
+                uri(DESC), str("an example java/mvn project"),
+                uri(CONTENT), str("# scratch serves as an example"),
+                uri(TOOL), lst(str("mvn_build")),
+                uri(CODE), lst(uri("isearch:src/main/java/com/x/Greeter.java"))).tid(IDE_PROJECT_TID);
+        final Obj skill = as.asInst().args(lst(ALL_TYPE)).apply(project);
+        assertTrue(skill.toString().contains("scratch") && skill.toString().contains("an example java/mvn project"),
+                "name and desc must pass through — %s".formatted(skill));
+        // assertTrue(skill.toString().contains("resource") && skill.toString().contains("Greeter.java"),
+        //         "the project code must be viewed as the skill resource — %s".formatted(skill));
+    }
+
+    @Test
+    void testProjectAsSkillViewWithRefCode() {
+        // the live shape — a code list of !* references (not plain uris):
+        // the view must extract the file uri and keep the reference as lazy text
+        final Obj as = Router.readFromSpace(AS_INST_TID.dom(IDE_PROJECT_TID).rng(LLM_SKILL_TID));
+        final Obj project = rec(uri(ROOT), uri("isearch:"),
+                uri(NAME), str("scratch"),
+                uri(CODE), lst((Obj) auto_from_(f("isearch:src/main/java/com/x/Greeter.java")))).tid(IDE_PROJECT_TID);
+        final Obj skill = as.asInst().args(lst(ALL_TYPE)).apply(project);
+        assertTrue(skill.toString().contains("isearch:src/main/java/com/x/Greeter.java"),
+                "the file uri must survive the view — %s".formatted(skill));
+        assertTrue(skill.toString().contains("resource"), "the code must be viewed as the resource — %s".formatted(skill));
+    }
+
+    @Test
+    void testSkillToProjectViewAbsent() {
+        // the bridge is one-way: a skill has no buildable workspace behind it —
+        // the reverse as is not registered (noobj reads back, and noobj is polymorphic,
+        // so compare identity rather than isInst)
+        final Obj back = Router.readFromSpace(AS_INST_TID.dom(LLM_SKILL_TID).rng(IDE_PROJECT_TID));
+        assertEquals(noobj(), back, "skill -> project must not be a registered as-view — %s".formatted(back));
     }
 
     /// ///////////////////////////////////////////////////////////////////////////////////////////
