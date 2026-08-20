@@ -289,6 +289,9 @@ public class uiInstSet extends AbstractInstSet {
                                 "a left-right swipe panel: arrow keys navigate, pgup/pgdn jump ±5, ctrl-d quits; displays each obj in a PanelWidget with docq+Highlighter formatting")),
                 uri(INST), lst(
                         instC(AS_INST_TID.dom(UI_TREE_TID).rng(STR_TID), lst(STR_TYPE), (lhs, inst) -> str(((Widget<?>) lhs).format())),
+                        docWrap(instC(AS_INST_TID.dom(UI_WIDGET_TID).rng(STR_TID), lst(STR_TYPE), (lhs, inst) -> str(((Widget<?>) lhs).format())),
+                                "map a widget to a str::T representation not anchored to a canvas. useful for embedding widget text into other objs."),
+
                         docWrap(instC(UI_INST_TID.extend("display").dom(UI_WIDGET_TID).rng(NOOBJ_TID.zero()), lst(), (lhs, inst) -> {
                             final Widget<?> widget = (Widget<?>) lhs;
                             widget.run();

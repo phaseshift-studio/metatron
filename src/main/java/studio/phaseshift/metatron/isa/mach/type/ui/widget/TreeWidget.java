@@ -115,7 +115,7 @@ public class TreeWidget extends JRec<TreeWidget> implements Widget<TreeWidget> {
         }
         final String tee = isLast ? border.bottomLeftCorner() : border.leftIntersection();
         final String arm = border.topSide();
-        sb.append(tee).append(arm).append(arm).append(" ");
+        sb.append(tee)/*.append(arm)*/.append(arm).append(" ");
         return sb.toString();
     }
 

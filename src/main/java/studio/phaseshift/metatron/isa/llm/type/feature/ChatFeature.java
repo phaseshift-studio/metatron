@@ -44,7 +44,7 @@ public class ChatFeature extends AbstractFeature {
 
         try {
             MessageBuilder.build(USER_MESSAGE_TID)
-                    .text(userMessage)
+                    .text(Str.Helper.cleanString(str(userMessage).apply()))
                     .contents(userMessage)
                     .time()
                     .session(agent.hasFeature(SESSION)
@@ -70,10 +70,7 @@ public class ChatFeature extends AbstractFeature {
         // Formatted responses are already structured Recs (parsed from JSON) —
         // store directly at res(CHAT) so the result is navigable without the
         // extra 'response' wrapper.  Free-text stays wrapped as {response=>...}.
-        if (text.isStr())
-            agent.at(res(CHAT, RESPONSE), text, MUTABLE);
-        else
-            agent.at(res(CHAT), text, MUTABLE);
+        agent.at(res(CHAT, RESPONSE), str(Str.Helper.cleanString(text.apply(agent))), MUTABLE);
         // AiMessages are persisted by SpaceChatSessionStore.updateMessages(),
         // which catches both intermediate tool_call responses (that never
         // reach TokenStream.onCompleteResponse) and the final text response.
@@ -90,9 +87,29 @@ public class ChatFeature extends AbstractFeature {
     @Override
     public Lst skill(final Agent agent) {
         return lst(rec(mutableMap(
-                uri(NAME), uri(CHAT),
+                uri(NAME), uri(LLM_CHAT_FEATURE_TID),
                 uri(DESC), str("chat with the agent"),
-                uri(CONTENT), str("send a message to the agent and receive its response"),
+                uri(CONTENT), str("""
+                                  if you are not accessing this skill via an mcp server, then you are in the metatron.
+                                  if you are an agent, note that you are located at *%s.
+                                  this means that you have native access to the uri graph and its associated objs.
+                                  any time you want to control metatron, simply use mtron str::T templates in any of your 
+                                  outputs (thoughts, responses) to invoke template expansion.
+                                  this same feature applies to human users -- chat messages can leverage str::T templates.
+                                  
+                                  There are two forms of template expansion.
+                                  
+                                  \\{\\{\\{ 1 + 2 \\}\\}\\}
+                                  
+                                  and
+                                  
+                                  $\\{ 1.-<[+2,_]>-.sum() \\}
+                                  
+                                  Both support recursive expansion where the output of the inner template will become a
+                                  literal value in the outer expansion until no more templates are left to expand.
+                                  
+                                  "The magic number {{{ 1 + {{{ 2 + {{{ 3 }}} + 4 }}} + 5 }}} wasn't so magical once I knew what it was."
+                                  """.formatted(agent.vidOrTid())),
                 uri(TOOL), lst(docWrap(instC(CHAT_INST_TID.dom(NOOBJ_TID.zero()).rng(LLM_CHAT_RESULT_TID),
                                 lst(STR_TYPE),
                                 (lhs, inst) -> agent.chat(inst.arg(0).strValue())),

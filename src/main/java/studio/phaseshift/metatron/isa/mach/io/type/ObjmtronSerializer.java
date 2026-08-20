@@ -441,7 +441,7 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
         if (!poly.isLst() && !poly.isRec())
             return false;
         final long count = poly.count();
-        return count != 1 && (count > 4 || (poly.isLst() ?
+        return count != 1 && (count > 3 || (poly.isLst() ?
                 poly.lstValue().stream() : (poly.isRel() ?
                 poly.relValue().get1().stream() :
                 poly.recValue().values().stream())).anyMatch(o ->

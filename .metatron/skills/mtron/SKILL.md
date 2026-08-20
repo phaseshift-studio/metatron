@@ -94,6 +94,9 @@ documentation of the code you are about to execute.**
 * **Full Language Ref**: `references/mtron-language-reference.md`
 * **UI Architecture (Java)**: `references/metatron-ui-architecture.md` — Widget lifecycle, JRec state bridge, Style
   system, FloatingSurface, uiInstSet registration. How to create/modify widgets.
+* **DSH Memory Bus**: `references/dhs-mtron.md` — The first inter-harness memory adapter: DSH zstd-JSONL transcripts
+  to typed message recs (`user`, `system`, `thinking`, `ai`, `tool_result`) via `assets/dsh_memory_loader.py`, loaded
+  in a live VM with `*<mfs:file>.parse()` and written `.to(/usr/<agent>/message)`.
 * **Casting/Types**: Use `.as(type::T)` for structural validation during projection.
 * **Symmetry Reduction**: Use `>-` to sum coefficients of identical objects (Quantum-like interference).
 

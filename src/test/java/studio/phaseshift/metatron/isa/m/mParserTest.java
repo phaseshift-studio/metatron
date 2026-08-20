@@ -224,6 +224,31 @@ public class mParserTest extends AbstractMetatronTest {
     }
 
     // ========================================
+    // Comments Inside String Literals
+    // ========================================
+
+    @Test
+    public void testStripCommentsIsQuoteAware() {
+        // Comments outside string literals are still stripped...
+        assertEquals("x => 1", mParser.stripComments("x => 1[-- drop --]"));
+        assertEquals("x => 1", mParser.stripComments("x => 1[== drop ==]"));
+        // ...but comment markers inside string literals survive.
+        assertEquals("\"a [-- keep --] b\"", mParser.stripComments("\"a [-- keep --] b\""));
+        assertEquals("'a [== keep ==] b'", mParser.stripComments("'a [== keep ==] b'"));
+        assertEquals("\"\"\"a [-- keep --] b\"\"\"", mParser.stripComments("\"\"\"a [-- keep --] b\"\"\""));
+        // The scratch project tree annotation the parser previously corrupted.
+        assertEquals("\"\"\"SKILL.md [-- current file --]\"\"\"",
+                mParser.stripComments("\"\"\"SKILL.md [-- current file --]\"\"\""));
+    }
+
+    @Test
+    public void testStringWithCommentMarkersSurvivesParse() {
+        final Obj str = mParser.parse("\"\"\"SKILL.md [-- current file --]\"\"\"");
+        assertTrue(str.isStr());
+        assertEquals("SKILL.md [-- current file --]", str.jvm());
+    }
+
+    // ========================================
     // Semicolon Behavior (Parameterized)
     // ========================================
 

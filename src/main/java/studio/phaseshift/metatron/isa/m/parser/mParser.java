@@ -46,6 +46,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -378,7 +379,61 @@ public class mParser {
             "\\[--.*?(--]|$)|\\[==[\\s\\S]*?==]", Pattern.MULTILINE);
 
     public static String stripComments(final String input) {
-        return MTRON_COMMENT.matcher(input).replaceAll("");
+        // Blank the interiors of quoted spans in a same-length copy so the
+        // comment regex cannot see comment markers that live inside string
+        // literals; the matched regions then delete from the original.
+        // Quote spans follow the same rules as splitOnNonQuotedSequence():
+        // an odd run opens a span ('...', "...", """..."""), an even run is
+        // empty-string literals ("") and opens nothing.
+        final char[] masked = input.toCharArray();
+        int quoteCount = 0;
+        char quoteChar = 0;
+        boolean escaped = false;
+        final int length = masked.length;
+        for (int i = 0; i < length; i++) {
+            final char c = masked[i];
+            if (escaped) {
+                if (quoteCount != 0)
+                    masked[i] = ' ';
+                escaped = false;
+                continue;
+            }
+            if (c == '\\') {
+                if (quoteCount != 0)
+                    masked[i] = ' ';
+                escaped = true;
+                continue;
+            }
+            if (c == '\'' || c == '"') {
+                int run = 0;
+                while (i + run < length && masked[i + run] == c)
+                    run++;
+                if (quoteCount == 0) {
+                    if (run % 2 != 0) {
+                        quoteCount = run;
+                        quoteChar = c;
+                    }
+                } else if (quoteChar == c && run >= quoteCount) {
+                    quoteCount = 0;
+                    quoteChar = 0;
+                }
+                i += run - 1;
+                continue;
+            }
+            if (quoteCount != 0)
+                masked[i] = ' ';
+        }
+        // Find comment regions on the masked text (identical indices), then
+        // delete them from the original back-to-front so earlier indices stay
+        // valid.
+        final List<int[]> regions = new ArrayList<>();
+        final Matcher matcher = MTRON_COMMENT.matcher(new String(masked));
+        while (matcher.find())
+            regions.add(new int[]{matcher.start(), matcher.end()});
+        final StringBuilder result = new StringBuilder(input);
+        for (int r = regions.size() - 1; r >= 0; r--)
+            result.delete(regions.get(r)[0], regions.get(r)[1]);
+        return result.toString();
     }
 
     public static Parser m_paren_wrap(final Parser parser) {

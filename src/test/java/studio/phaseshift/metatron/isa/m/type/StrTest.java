@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.m.type;
 
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
@@ -27,6 +28,7 @@ import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static studio.phaseshift.metatron.algebra.Form.PLUS_MONOID;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 
 /*
@@ -42,10 +44,24 @@ public class StrTest extends AbstractAlgebraTest<Str> {
     @CsvSource(value = {
             "1.map(\"the number: ${plus(23)}\")                                                  % \"the number: 24\"",
             "1.map(\"the number: ${+23}\")                                                       % \"the number: 24\"",
+            "1.map(\"the number: {{{plus(23)}}}\")                                               % \"the number: 24\"",
+            "1.map(\"the number: {{{+23}}}\")                                                    % \"the number: 24\"",
+            "1.map(\"nested: {{{ ${1+2} + 3 }}}\")                                               % \"nested: 6\"",
+            "1.map(\"nested: {{{ 1 + {{{ 2 }}} }}}\")                                            % \"nested: 3\"",
             //  "[1,2,3,4].map(\"list count: ${merge().count()}\")                                   % \"list count: [4]\"",
     }, delimiter = '%', quoteCharacter = '~')
     public void testTemplates(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @Test
+    public void testTemplateEscapeAndFailSoft() {
+        // A backslash escapes either delimiter — the backslash is consumed.
+        assertEquals(str("literal: ${plus(1)}"), str("literal: \\${plus(1)}").apply(noobj()));
+        assertEquals(str("literal: {{{plus(1)}}}"), str("literal: \\{{{plus(1)}}}").apply(noobj()));
+        // A template that fails to parse or apply is left unchanged, not thrown.
+        assertEquals(str("bad: ${{}"), str("bad: ${{}").apply(noobj()));
+        assertEquals(str("bad: {{{}"), str("bad: {{{}").apply(noobj()));
     }
 
     @ParameterizedTest

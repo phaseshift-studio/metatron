@@ -597,7 +597,7 @@ public interface Inst extends Call {
                                         return null;
                                     // Allow template expansion: if arg is Uri or Str with templates, always return expanded result
                                     final boolean isTemplateExpansion = (arg.isUri() && arg.asUri().hasTemplates()) ||
-                                            (arg.isStr() && arg.strValue().contains("${"));
+                                            (arg.isStr() && (arg.strValue().contains("${") || arg.strValue().contains("{{{")));
                                     if (!arg.isObjCall() && !isTemplateExpansion && !r.test(arg)) {
                                         // LOG.error("unmatched inst arg in %s: %s ({{y}}lhs{{/y}}) {{g}}=>{{/g}} %s ({{y}}arg{{/y}}) {{r}}~!>{{/r}} %s ", this, lhs, arg, r);
                                         return arg;

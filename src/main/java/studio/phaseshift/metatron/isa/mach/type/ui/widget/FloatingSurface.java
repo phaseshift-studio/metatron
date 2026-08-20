@@ -232,9 +232,28 @@ public class FloatingSurface {
 
     public void add(final Widget<?> widget, final Anchor anchor, final int width,
                     final int top, final int left) {
-        final Slot existing = this.slots.get(widget);
+        // Re-floating an anchored widget replaces any slot already pinned at the
+        // same anchor position.  Anchored widgets are re-floated on every
+        // update (e.g. @<think_widget>>>=[body=>...].display()), and each float
+        // constructs a fresh widget instance — without this, stale copies stack
+        // up and render over each other, doubling borders and never refreshing.
+        Slot replaced = null;
+        for (final Slot s : this.slots.values()) {
+            if (s.isAnchored() && s.anchor == anchor && s.offsetRow == top && s.offsetCol == left) {
+                replaced = s;
+                break;
+            }
+        }
+        if (replaced != null)
+            this.slots.values().remove(replaced);
         final Slot slot = Slot.anchored(anchor, width, top, left);
-        if (existing != null) slot.prevHeight = existing.prevHeight;
+        if (replaced != null) {
+            // Carry the previous render region so the first redraw erases the
+            // old content (a fresh slot with prevHeight 0 would leave it behind).
+            slot.prevHeight = replaced.prevHeight;
+            slot.lastRow = replaced.lastRow;
+            slot.lastCol = replaced.lastCol;
+        }
         this.slots.put(widget, slot);
     }
 
@@ -323,6 +342,13 @@ public class FloatingSurface {
      */
     public boolean isEmpty() {
         return this.slots.isEmpty();
+    }
+
+    /**
+     * @return the number of widgets currently pinned to this surface
+     */
+    int size() {
+        return this.slots.size();
     }
 
     /**
