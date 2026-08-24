@@ -24,7 +24,6 @@ import studio.phaseshift.metatron.algebra.MultMonoid;
 import studio.phaseshift.metatron.algebra.PlusMonoid;
 import studio.phaseshift.metatron.algebra.rewrite.Rewriter;
 import studio.phaseshift.metatron.furi.c.cInt;
-import studio.phaseshift.metatron.util.Tuple;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
@@ -469,6 +468,7 @@ public class mInstSet extends AbstractInstSet {
                         docWrap(INCRQ_TYPE, "internal counter increments and appends value to vid"),
                         docWrap(EMBEDQ_TYPE, "either store and retrieve obj's vector embedding"),
                         docWrap(CONSTQ_TYPE, "prevents the vid from being mutated once set"),
+                        docWrap(REFQ_TYPE, "enables uri-to-uri referencing"),
                         docWrap(LINEQ_TYPE, "read or write a str to another str at a particular line or line range",
                                 "*<mtron.txt?lineq=14>    [-- \"line 14\"                             --][-- read a single line  --]",
                                 "<mtron.txt?lineq=14>     -> \"line 14 replacement\"                     [-- write a single line --]",

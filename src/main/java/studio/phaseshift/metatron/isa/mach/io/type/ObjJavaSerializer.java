@@ -25,6 +25,7 @@ import ch.usi.si.seart.treesitter.Tree;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.m.type.Str;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -254,13 +255,20 @@ public class ObjJavaSerializer extends AbstractObjSerializer<String> {
 
     @Override
     public ByteBuffer outputBytes(final Obj obj) throws MTronException {
-        return ByteBuffer.wrap(this.write(obj).getBytes(StandardCharsets.UTF_8));
+        String output = this.write(obj);
+        while (output.startsWith("'") || output.startsWith("\"")) {
+            output = output.substring(1);
+        }
+        while (output.endsWith("'") || output.endsWith("\"")) {
+            output = output.substring(0, output.length() - 1);
+        }
+        return ByteBuffer.wrap(output.getBytes(StandardCharsets.UTF_8));
     }
 
     @Override
     public String write(final Obj obj) throws MTronException {
         if (!obj.isRec()) {
-            return obj.toString();
+            return Str.Helper.cleanString(obj);
         }
         final StringBuilder sb = new StringBuilder();
         final Rec rootRec = obj.asRec();
@@ -1087,7 +1095,7 @@ public class ObjJavaSerializer extends AbstractObjSerializer<String> {
         }
         if (obj.isStr()) return obj.strValue();
         if (obj.isUri()) return obj.uriValue().toString();
-        return obj.toString();
+        return Str.Helper.cleanString(obj);
     }
 
     private String textOf(final Rec rec) {

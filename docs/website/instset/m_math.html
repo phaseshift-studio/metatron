@@ -227,6 +227,10 @@ bin/metatron</code></pre>
                    onclick="location.href=location.href.replace(/(\/instset)?(\/[^/]*)?(\.html)?$/,'/tractatus.html');return false;">the
                     tractatus</a>
             </li>
+            <li class="nav-item">
+                <a class="nav-link" href="skills/"
+                   onclick="location.href='./skills/';">agent skills</a>
+            </li>
             <!----------------------------------------------------------------------------------------------------------
             ----------------------------------- ARTICLES DROPDOWN ------------------------------------------------------
             ----------------------------------------------------------------------------------------------------------->
@@ -319,7 +323,7 @@ bin/metatron</code></pre>
  inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
  space=&gt;[super=&gt;!*/m],
  type=&gt;[data::T,bB::T,kB::T,mB::T,gB::T,tB::T,pB::T,currency::T,usd::T,euro::T,...(5 more)],
- inst=&gt;[datetime_now?datetime&lt;=#{?}(),as?datetime&lt;=uri(uri::T),as?str&lt;=datetime(str::T),as?datetime&lt;=str(datetime::T),normalize?/m/math/time&lt;=/m/math/time(),normalize?data&lt;=data(),cos?real&lt;=#{?}(as(real::T)),sin?real&lt;=#{?}(real::T),tan?real&lt;=#{?}(real::T),sqrt?real&lt;=#{?}(real::T),...(10 more)],
+ inst=&gt;[datetime_now?datetime&lt;=#{?}(),plus?datetime&lt;=datetime(time::T),minus?datetime&lt;=datetime(time::T),minus?/m/math/time&lt;=datetime(datetime::T),as?datetime&lt;=uri(uri::T),as?str&lt;=datetime(str::T),as?datetime&lt;=str(datetime::T),normalize?/m/math/time&lt;=/m/math/time(),normalize?data&lt;=data(),cos?real&lt;=#{?}(as(real::T)),...(12 more)],
  const=&gt;[2.7183@/m/math/e?constq,3.1416@/m/math/pi?constq]]@/m/math</code></pre>
                     </div>
                 </div>
@@ -328,7 +332,7 @@ bin/metatron</code></pre>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <a href="#consts" class="btn btn-outline-primary">Consts <span class="pill-label badge bg-secondary">2</span></a><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">15</span></a><button class="btn btn-outline-secondary" disabled>Spaces <span class="pill-label badge bg-dark">0</span></button><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">17</span></a><button class="btn btn-outline-secondary" disabled>Rewrites <span class="pill-label badge bg-dark">0</span></button>
+        <a href="#consts" class="btn btn-outline-primary">Consts <span class="pill-label badge bg-secondary">2</span></a><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">15</span></a><button class="btn btn-outline-secondary" disabled>Spaces <span class="pill-label badge bg-dark">0</span></button><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">16</span></a><button class="btn btn-outline-secondary" disabled>Rewrites <span class="pill-label badge bg-dark">0</span></button>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="card">
@@ -425,9 +429,6 @@ bin/metatron</code></pre>
 </a><a href="#__m__math__data__inst__normalize?rng=__m__math__data&dom=__m__math__data" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">normalize</span>
     <span class="pill-label badge bg-success ms-2">I</span>
-</a><a href="#__m__math__inst__pow?rng=__m__real&dom=#{?}" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">pow</span>
-    <span class="pill-label badge bg-success ms-2">I</span>
 </a><a href="#__m__math__inst__round?rng=__m__int&dom=#{?}" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">round</span>
     <span class="pill-label badge bg-success ms-2">I</span>
@@ -483,7 +484,7 @@ bin/metatron</code></pre>
         </span>
         <small class="text-muted code">/m/math/currency</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">real::T@/m/math/currency</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">real::T[?real::T]@/m/math/currency</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a currency amount</p>
@@ -521,7 +522,7 @@ bin/metatron</code></pre>
         <small class="text-muted code">/m/math/currency/euro</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">currency::T@/m/math/currency/euro</code></pre></div>
-    
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__math__currency" class="code inherited-link">currency::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?real::T</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">european union currency</p>
 </div>
@@ -651,13 +652,13 @@ bin/metatron</code></pre>
         <small class="text-muted code">/m/math/currency/usd</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">currency::T@/m/math/currency/usd</code></pre></div>
-    
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__math__currency" class="code inherited-link">currency::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?real::T</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">united states currency</p>
 </div>
 </div>
 </div><div class="container-xxl mb-4" id="instructions">
-    <h3 class="text-primary mb-3">Instructions <span class="pill-label badge bg-success">17</span></h3>
+    <h3 class="text-primary mb-3">Instructions <span class="pill-label badge bg-success">16</span></h3>
     <div class="card mb-3" id="__m__math__inst__abs?rng=__m__real&dom=#{?}">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
@@ -778,17 +779,6 @@ bin/metatron</code></pre>
     </div>
     <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__data__inst__normalize?rng=__m__math__data&dom=__m__math__data-doc-0-tab').click();document.getElementById('__m__math__data__inst__normalize?rng=__m__math__data&dom=__m__math__data-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">normalize?rng=data&dom=data(){<j>}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__data__inst__normalize?rng=__m__math__data&dom=__m__math__data-doc-0-tab').click();document.getElementById('__m__math__data__inst__normalize?rng=__m__math__data&dom=__m__math__data-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">normalize?rng=<a href="#__m__math__time" data-bs-toggle="tooltip" title="domain" class="code text-info">time</a>&dom=<a href="#__m__math__time" data-bs-toggle="tooltip" title="domain" class="code text-info">time</a>(){<j>}</code></pre>
-</div>
-    
-</div><div class="card mb-3" id="__m__math__inst__pow?rng=__m__real&dom=#{?}">
-    <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
-        <span>
-            <span class="code text-primary fw-bold">pow</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><span class="code text-info">#{?}</span></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__real" data-bs-toggle="tooltip" title="range" class="code text-success">real</a></span></span>
-        </span>
-        <small class="text-muted code">/m/math/inst/pow?rng=/m/real&amp;dom=#{?}</small>
-    </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__inst__pow?rng=__m__real&dom=#{?}-doc-0-tab').click();document.getElementById('__m__math__inst__pow?rng=__m__real&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">pow?rng=real&dom=<span class="code text-info">#{?}</span>(real::T){<j>}</code></pre>
 </div>
     
 </div><div class="card mb-3" id="__m__math__inst__round?rng=__m__int&dom=#{?}">

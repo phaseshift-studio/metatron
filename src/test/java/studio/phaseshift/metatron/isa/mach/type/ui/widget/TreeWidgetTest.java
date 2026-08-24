@@ -18,18 +18,27 @@
 
 package studio.phaseshift.metatron.isa.mach.type.ui.widget;
 
+import org.jline.utils.AttributedString;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.ui.console.Highlighter;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.map_;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
@@ -64,6 +73,13 @@ public class TreeWidgetTest extends AbstractMetatronTest {
         Router.writeToSpace(f("local:projects/metatron/README.md"), str("# metatron"));
         Router.writeToSpace(f("local:projects/other"), str("other/"));
         Router.writeToSpace(f("local:projects/other/notes.txt"), str("notes"));
+        // A pure folder chain (no file children until the leaf folder) — for flatten tests.
+        Router.writeToSpace(f("local:chain"), str("chain/"));
+        Router.writeToSpace(f("local:chain/a"), str("a/"));
+        Router.writeToSpace(f("local:chain/a/b"), str("b/"));
+        Router.writeToSpace(f("local:chain/a/b/c"), str("c/"));
+        Router.writeToSpace(f("local:chain/a/b/c/File.java"), str("// file"));
+        Router.writeToSpace(f("local:chain/a/b/c/Other.java"), str("// other"));
     }
 
     @Test
@@ -73,6 +89,64 @@ public class TreeWidgetTest extends AbstractMetatronTest {
                 uri(MAX), jnt(5),
                 uri(CODE), instLambda((lhs, inst) -> jnt(lhs.as(STR_TYPE).strValue().length())).tryToInst()), UI_TREE_TID, null);
         LOG.none("\n" + tree.format() + "\n");
-        
+
+    }
+
+    @Test
+    public void testTreeWidgetDefaultNoFlatten() {
+        final TreeWidget tree = new TreeWidget(mutableMap(
+                uri(ROOT), uri("local:chain"),
+                uri(MAX), jnt(5),
+                uri(CODE), instLambda((lhs, inst) -> noobj()).tryToInst()), UI_TREE_TID, null);
+        final String expected = "chain\n"
+                + "└─ a\n"
+                + "    └─ b\n"
+                + "        └─ c\n"
+                + "            ├─ File.java\n"
+                + "            └─ Other.java";
+        assertEquals(expected, tree.format());
+    }
+
+    @Test
+    public void testTreeWidgetFlatten() {
+        final TreeWidget tree = new TreeWidget(mutableMap(
+                uri(ROOT), uri("local:chain"),
+                uri(MAX), jnt(5),
+                uri(CODE), instLambda((lhs, inst) -> noobj()).tryToInst(),
+                uri("flatten"), bool(true)), UI_TREE_TID, null);
+        final String expected = "chain\n"
+                + "└─ a/b/c\n"
+                + "    ├─ File.java\n"
+                + "    └─ Other.java";
+        assertEquals(expected, tree.format());
+    }
+
+    /**
+     * Diagnostic: find where box-drawing glyphs (├ ─ │) get downgraded to ASCII
+     * (+ - |) on the `.as(str::T)` echo path.  `.display()` writes format()
+     * raw; the REPL echo of an as-str passes through ObjConsoleSerializer and
+     * then Highlighter (JLine SyntaxHighlighter).
+     */
+    /**
+     * JLine's {@code AttributedString.toAnsi()} downgrades box-drawing glyphs
+     * (├ ─ │) to ASCII (+ - |) when the terminal lacks alternate-charset
+     * support.  Highlighter must not mangle pre-formatted tree content.
+     */
+    @Test
+    public void testHighlighterPreservesBoxDrawing() {
+        final String tree = "chain\n└─ a/b/c\n    ├─ File.java\n    └─ Other.java";
+        final String highlighted = Highlighter.format(str(tree));
+        assertTrue(highlighted.contains("├"), "Highlighter must preserve ├ (was: " + highlighted + ")");
+        assertTrue(highlighted.contains("└─"));
+    }
+
+    /**
+     * Sanity: the raw JLine toAnsi() conversion really is the mangler, so the
+     * fix above is load-bearing rather than a no-op.
+     */
+    @Test
+    public void testJLineToAnsiDowngradesBoxDrawing() {
+        assertFalse(new AttributedString("├─ │ └").toAnsi().contains("├"));
+        assertTrue(new AttributedString("├─ │ └").toAnsi().contains("+"));
     }
 }

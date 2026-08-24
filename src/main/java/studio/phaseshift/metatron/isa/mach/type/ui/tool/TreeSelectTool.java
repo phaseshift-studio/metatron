@@ -40,6 +40,7 @@ import java.util.*;
 import static org.jline.keymap.KeyMap.key;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
@@ -93,7 +94,7 @@ public class TreeSelectTool extends AbstractWidget<TreeSelectTool> {
         final int spawnRow;
         final int spawnCol;
 
-        TreeLevel(final fURI root, final int maxDepth,
+        TreeLevel(final fURI root, final int maxDepth, final boolean flatten,
                   final Set<fURI> forceExpand,
                   final Call label,
                   final int offsetX, final int offsetY,
@@ -109,7 +110,8 @@ public class TreeSelectTool extends AbstractWidget<TreeSelectTool> {
             final Map<Obj, Obj> jvm = mutableMap(
                     uri(ROOT), root.toUri(),
                     uri(MAX), jnt(maxDepth),
-                    uri(CODE), label);
+                    uri(CODE), label,
+                    uri("flatten"), bool(flatten));
             if (parentStyle != null) {
                 jvm.put(uri(STYLE), parentStyle);
             }
@@ -197,6 +199,15 @@ public class TreeSelectTool extends AbstractWidget<TreeSelectTool> {
 
     private void maxDepth(final int value) {
         jvmWrite(uri(MAX), jnt(value));
+    }
+
+    /**
+     * When true, chains of folders with no file children are rendered as a
+     * single flattened path (e.g. {@code classes/com/example/scratch}).
+     */
+    private boolean flatten() {
+        final Obj f = this.at(uri("flatten"));
+        return f.isBool() && f.asBool().jvm();
     }
 
     private Call onSelect() {
@@ -405,7 +416,7 @@ public class TreeSelectTool extends AbstractWidget<TreeSelectTool> {
                                final Set<fURI> forceExpand,
                                final int offsetX, final int offsetY,
                                final int spawnRow, final int spawnCol) {
-        stack.push(new TreeLevel(root, maxDepth, forceExpand, label(),
+        stack.push(new TreeLevel(root, maxDepth, this.flatten(), forceExpand, label(),
                 offsetX, offsetY, spawnRow, spawnCol,
                 this.getStyle()));
     }

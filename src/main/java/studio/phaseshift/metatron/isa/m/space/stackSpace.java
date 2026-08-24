@@ -66,8 +66,9 @@ public class stackSpace extends AbstractSpace<Stack<Poly<?, ?>>> {
     public stackSpace(final fURI pattern) {
         super(new Stack<>(), mutableMap(uri(PATTERN), uri(pattern)), STACK_SPACE_TID, null);
         this.root = memSpace.of(this.pattern, null);
-        this.addQ(QCollection.mintQ());
-        this.addQ(QCollection.docQ());
+        this.root.addQ(QCollection.refQ());
+        this.root.addQ(QCollection.mintQ());
+        this.root.addQ(QCollection.docQ());
     }
 
     @Override

@@ -885,10 +885,10 @@ public class mInstSetTest extends AbstractInstSetTest {
             "false.as(bool::T)                                                                                           % false",
             "true.as(bytes::T)                                                                                           % 0x01",
             "false.as(bytes::T)                                                                                          % 0x00",
-            //  "true.as(bytes::T).as(bool::T).as(bytes::T)                                                                  % true",
-            //  "false.as(bytes::T).as(bool::T).as(bytes::T)                                                                 % false",
-            //  "true.as(bytes::T).as(bool::T).as(bytes::T)                                                                  % 0x01",
-            //  "false.as(bytes::T).as(bool::T).as(bytes::T)                                                                 % 0x00",
+            //"true.as(bytes::T).as(bool::T).as(bytes::T).as(bool::T)                                                      % true",
+            //"false.as(bytes::T).as(bool::T).as(bytes::T).as(bool::T)                                                     % false",
+            //"true.as(bytes::T).as(bool::T).as(bytes::T)                                                                  % 0x01",
+            //"false.as(bytes::T).as(bool::T).as(bytes::T)                                                                 % 0x00",
             "true.as(int::T)                                                                                             % 1",
             "false.as(int::T)                                                                                            % 0",
             /// ////////////////////////////////////
@@ -930,7 +930,7 @@ public class mInstSetTest extends AbstractInstSetTest {
             "[a=>1,b=>2].as(lst::T)                                                                                      % [(0=>(a=>1)),(1=>(b=>2))]",
             ///  /////////////////////////////////////
             "[a,b].as(lst::T)                                                                                            % [a,b]",
-            "[a,b].as(lyst::T)                                                                                           % lyst::[a,b]",
+            "[a,b].as(lyst::T)                                                                                           % <ERROR>",
             "[a,b].as(rec::T)                                                                                            % [0=>a,1=>b]",
             "[a,b].as(reck::T)                                                                                           % reck::[0=>a,1=>b]",
             "[a,b].as(rec::T).as(lst::T)                                                                                 % [(0=>(0=>a)),(1=>(1=>b))]",

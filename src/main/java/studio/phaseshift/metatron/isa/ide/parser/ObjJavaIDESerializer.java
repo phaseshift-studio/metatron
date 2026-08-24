@@ -24,6 +24,7 @@ import ch.usi.si.seart.treesitter.Parser;
 import ch.usi.si.seart.treesitter.Tree;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.m.type.Str;
 import studio.phaseshift.metatron.isa.mach.io.type.AbstractObjSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjJavaSerializer;
 import studio.phaseshift.metatron.util.MTronException;
@@ -146,7 +147,7 @@ public class ObjJavaIDESerializer extends AbstractObjSerializer<String> {
 
     @Override
     public String write(final Obj obj) throws MTronException {
-        if (!obj.isRec()) return obj.toString();
+        if (!obj.isRec()) return Str.Helper.cleanString(obj);
         final Rec root = obj.asRec();
         final StringBuilder sb = new StringBuilder();
 

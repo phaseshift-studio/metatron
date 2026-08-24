@@ -23,7 +23,9 @@ import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.isa.AbstractInstSetTest;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.ui.Stylable;
+import studio.phaseshift.metatron.isa.mach.type.ui.Widget;
 import studio.phaseshift.metatron.isa.mach.type.ui.widget.AccordionWidget;
 import studio.phaseshift.metatron.isa.mach.type.ui.widget.FloatingSurface;
 
@@ -31,6 +33,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -140,6 +143,26 @@ public class uiInstSetTest extends AbstractInstSetTest {
     }
 
     // ── Accordion type ─────────────────────────────────────────────
+
+    @Test
+    public void shouldConstructAbstractWidgetsHeadless() {
+        // AbstractWidget subclasses (swipe_panel, menu_bar) must construct to a
+        // Widget even without a terminal (headless eval / MCP), so the display/as
+        // insts' (Widget<?>) cast can never hit a bare MRec.
+        for (final String code : new String[]{
+                "swipe_panel::[obj=>[1,2,3,4]]",
+                "menu_bar::[height=>1,lines=>[]]"
+        }) {
+            final Obj cd = ObjmtronSerializer.parse(code);
+            assertTrue(cd instanceof Widget, code + " should construct to a Widget without a terminal");
+        }
+        // format() and the widget-as-str inst must also be terminal-free
+        // for embedding (widget-as-str).
+        final Obj swipe = ObjmtronSerializer.parse("swipe_panel::[obj=>[1,2,3,4]]");
+        assertNotNull(((Widget) swipe).format());
+        final Obj asStr = ObjmtronSerializer.parse("swipe_panel::[obj=>[1,2,3,4]].as(str::T)").apply(noobj());
+        assertTrue(asStr.isStr(), "swipe_panel.as(str::T) should produce a str headless: " + asStr);
+    }
 
     @Test
     public void shouldCreateAccordionViaIsa() {

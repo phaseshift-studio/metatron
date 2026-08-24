@@ -227,6 +227,10 @@ bin/metatron</code></pre>
                    onclick="location.href=location.href.replace(/(\/instset)?(\/[^/]*)?(\.html)?$/,'/tractatus.html');return false;">the
                     tractatus</a>
             </li>
+            <li class="nav-item">
+                <a class="nav-link" href="skills/"
+                   onclick="location.href='./skills/';">agent skills</a>
+            </li>
             <!----------------------------------------------------------------------------------------------------------
             ----------------------------------- ARTICLES DROPDOWN ------------------------------------------------------
             ----------------------------------------------------------------------------------------------------------->
@@ -323,7 +327,8 @@ bin/metatron</code></pre>
   as?model&lt;=rec(model::T),
   as?tool&lt;=docs(tool::T),
   as?tool&lt;=inst(tool::T),
-  as?skill&lt;=dir(skill::T),
+  as?skill&lt;=uri(skill::T),
+  as?skill&lt;=agent(skill::T),
   chat?chat_result&lt;=agent(str::T),
   embed?/m/vec/vec&lt;=model(#::T),
   interrupt?noobj{0}&lt;=agent(),
@@ -457,14 +462,14 @@ bin/metatron</code></pre>
         </span>
         <small class="text-muted code">/m/llm/agent</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[{?}name=&gt;str::T,{?}desc=&gt;str::T,{?}feature=&gt;[feature::T]]][ctor?agent&lt;=#{?}(#{*}::T)]@/m/llm/agent</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[name=&gt;str::T,{?}desc=&gt;str::T,{?}feature=&gt;[feature::T]]][ctor?agent&lt;=#{?}(#{*}::T)]@/m/llm/agent</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">an agent is an llm enriched with embodied capabilities</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#desc" class="text-light">desc</a> <span class="text-light">=&gt;</span> <a href="#'a description of the agent given to the agent in their system prompt'" class="text-info">&#39;a description of the agent given to the agent in their system prompt&#39;</a>
-  <a href="#name" class="text-light">name</a> <span class="text-light">=&gt;</span> <a href="#'a convenient name for the agent'" class="text-info">&#39;a convenient name for the agent&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#name" class="text-light">name</a> <span class="text-light">=&gt;</span> <a href="#'a convenient name for the agent'" class="text-info">&#39;a convenient name for the agent&#39;</a>
+  <a href="#desc" class="text-light">desc</a> <span class="text-light">=&gt;</span> <a href="#'a description of the agent given to the agent in their system prompt'" class="text-info">&#39;a description of the agent given to the agent in their system prompt&#39;</a>
   <a href="#feature" class="text-light">feature</a> <span class="text-light">=&gt;</span> <a href="#'the ordered lst of capabilities attached to the agent'" class="text-info">&#39;the ordered lst of capabilities attached to the agent&#39;</a>
 </pre>
 </div>
@@ -520,7 +525,7 @@ bin/metatron</code></pre>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">feature::T[?[
   model=&gt;model::T,
-  response=&gt;[to=&gt;#::T],
+  {?}response=&gt;{?}[to=&gt;#::T],
   {?}format=&gt;#::T]][ctor?chat_feature&lt;=#{?}(#{*}::T)]@/m/llm/feature/chat_feature</code></pre></div>
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
  {?}skill=&gt;[skill::T],
@@ -610,7 +615,9 @@ bin/metatron</code></pre>
         </span>
         <small class="text-muted code">/m/llm/feature/cost_feature</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">feature::T[][ctor?cost_feature&lt;=#{?}(#{*}::T)]@/m/llm/feature/cost_feature</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">feature::T[?[root=&gt;uri::T,rate=&gt;[
+ in=&gt;currency::T,
+ out=&gt;currency::T]]][ctor?cost_feature&lt;=#{?}(#{*}::T)]@/m/llm/feature/cost_feature</code></pre></div>
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
  {?}skill=&gt;[skill::T],
  {?}on_agent_ctor=&gt;#::T,
@@ -623,7 +630,16 @@ bin/metatron</code></pre>
  {?}on_complete_response=&gt;#::T,
  {?}on_error=&gt;#::T]</code></div></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">tracks per-model pricing and accumulates cost during execution</p>
+    <p class="mb-0 text-light">tracks real token-based LLM costs via CostCalculator, persists in/out/total to space</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#root" class="text-light">root</a> <span class="text-light">=&gt;</span> <a href="#'the URI prefix where cost data is persisted (e.g., __usr__dr__cost)'" class="text-info">cost)&#39;</a>
+  <a href="#rate__in" class="text-light">in</a> <span class="text-light">=&gt;</span> <a href="#'cost per million input tokens'" class="text-info">&#39;cost per million input tokens&#39;</a>
+  <a href="#rate__out" class="text-light">out</a> <span class="text-light">=&gt;</span> <a href="#'cost per million output tokens'" class="text-info">&#39;cost per million output tokens&#39;</a>
+</pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">cost_feature::[root=&gt;/usr/dr/cost,cost=&gt;[in_cost=&gt;usd_currency::0.065,out_cost=&gt;usd_currency::0.001]]</code></pre>
 </div>
 </div><div class="card mb-3" id="__m__llm__feature">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -754,7 +770,11 @@ bin/metatron</code></pre>
         </span>
         <small class="text-muted code">/m/llm/feature/loop_feature</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">feature::T[?[{?}max_loop=&gt;int::T,{?}max_time=&gt;#::T,{?}delay=&gt;#::T,{?}preserve=&gt;lst::T]][ctor?loop_feature&lt;=#{?}(#{*}::T)]@/m/llm/feature/loop_feature</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">feature::T[?[
+  {?}max_loop=&gt;int::T,
+  {?}max_time=&gt;#::T,
+  {?}delay=&gt;#::T,
+  {?}preserve=&gt;lst::T]][ctor?loop_feature&lt;=#{?}(#{*}::T)]@/m/llm/feature/loop_feature</code></pre></div>
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
  {?}skill=&gt;[skill::T],
  {?}on_agent_ctor=&gt;#::T,
@@ -808,18 +828,20 @@ bin/metatron</code></pre>
   {?}api_key=&gt;str::T,
   {?}size=&gt;data::T,
   {?}quant=&gt;int::T,
-  {?}cost=&gt;{?}[in=&gt;currency::T,out=&gt;currency::T]]][ctor?model&lt;=#{?}(#{*}::T)]@/m/llm/model</code></pre></div>
+  {?}cost=&gt;{?}[
+   in=&gt;currency::T,
+   out=&gt;currency::T]]][ctor?model&lt;=#{?}(#{*}::T)]@/m/llm/model</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">populate a model reference rec using data from the ai provider&#39;s http-endpoint</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}size" class="text-light">{?}size</a> <span class="text-light">=&gt;</span> <a href="#'the size of the model'" class="text-info">&#39;the size of the model&#39;</a>
-  <a href="#{?}cost" class="text-light">{?}cost</a> <span class="text-light">=&gt;</span> <a href="#'the cost per million tokens to use this llm (in__out costs)'" class="text-info">out costs)&#39;</a>
-  <a href="#{?}provider" class="text-light">{?}provider</a> <span class="text-light">=&gt;</span> <a href="#'optional name of ai model provider'" class="text-info">&#39;optional name of ai model provider&#39;</a>
-  <a href="#{?}quant" class="text-light">{?}quant</a> <span class="text-light">=&gt;</span> <a href="#'the level of quantization of the model'" class="text-info">&#39;the level of quantization of the model&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#host" class="text-light">host</a> <span class="text-light">=&gt;</span> <a href="#"the ai model provider's http rest endpoint"" class="text-info">&quot;the ai model provider&#39;s http rest endpoint&quot;</a>
   <a href="#llm" class="text-light">llm</a> <span class="text-light">=&gt;</span> <a href="#'the name of a model offered by the ai provider'" class="text-info">&#39;the name of a model offered by the ai provider&#39;</a>
-  <a href="#host" class="text-light">host</a> <span class="text-light">=&gt;</span> <a href="#"the ai model provider's http rest endpoint"" class="text-info">&quot;the ai model provider&#39;s http rest endpoint&quot;</a>
+  <a href="#{?}quant" class="text-light">{?}quant</a> <span class="text-light">=&gt;</span> <a href="#'the level of quantization of the model'" class="text-info">&#39;the level of quantization of the model&#39;</a>
+  <a href="#{?}provider" class="text-light">{?}provider</a> <span class="text-light">=&gt;</span> <a href="#'optional name of ai model provider'" class="text-info">&#39;optional name of ai model provider&#39;</a>
+  <a href="#{?}cost" class="text-light">{?}cost</a> <span class="text-light">=&gt;</span> <a href="#'the cost per million tokens to use this llm (in__out costs)'" class="text-info">out costs)&#39;</a>
+  <a href="#{?}size" class="text-light">{?}size</a> <span class="text-light">=&gt;</span> <a href="#'the size of the model'" class="text-info">&#39;the size of the model&#39;</a>
   <a href="#protocol" class="text-light">protocol</a> <span class="text-light">=&gt;</span> <a href="#'the http rest endpoint protocol (ollama, openai, anthropic)'" class="text-info">&#39;the http rest endpoint protocol (ollama, openai, anthropic)&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
@@ -895,7 +917,16 @@ bin/metatron</code></pre>
         </span>
         <small class="text-muted code">/m/llm/feature/skill</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[name=&gt;uri::T,desc=&gt;str::T,{?}content=&gt;str::T,{?}entry=&gt;[[dir=&gt;uri::T,content=&gt;str::T]]]]@/m/llm/feature/skill</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[
+  name=&gt;uri::T,
+  desc=&gt;str::T,
+  {?}content=&gt;str::T,
+  {?}resource=&gt;[[
+ uri=&gt;uri::T,
+ {?}name=&gt;str::T,
+ {?}desc=&gt;str::T,
+ text=&gt;str::T]],
+  {?}tool=&gt;[#::T]]]@/m/llm/feature/skill</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a skill.md specification to augment llm with specialized abilities</p>
@@ -905,7 +936,8 @@ bin/metatron</code></pre>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#name" class="text-light">name</a> <span class="text-light">=&gt;</span> <a href="#'skill name'" class="text-info">&#39;skill name&#39;</a>
   <a href="#desc" class="text-light">desc</a> <span class="text-light">=&gt;</span> <a href="#'skill description'" class="text-info">&#39;skill description&#39;</a>
   <a href="#{?}content" class="text-light">{?}content</a> <span class="text-light">=&gt;</span> <a href="#'skill.md document content'" class="text-info">&#39;skill.md document content&#39;</a>
-  <a href="#{?}entry" class="text-light">{?}entry</a> <span class="text-light">=&gt;</span> <a href="#'skill assets, references, and scripts'" class="text-info">&#39;skill assets, references, and scripts&#39;</a>
+  <a href="#{?}resource" class="text-light">{?}resource</a> <span class="text-light">=&gt;</span> <a href="#'skill assets, references, and scripts'" class="text-info">&#39;skill assets, references, and scripts&#39;</a>
+  <a href="#{?}tool" class="text-light">{?}tool</a> <span class="text-light">=&gt;</span> <a href="#'skill tools'" class="text-info">&#39;skill tools&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -1041,7 +1073,11 @@ bin/metatron</code></pre>
         </span>
         <small class="text-muted code">/m/llm/feature/tool</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[inst=&gt;#::T,name=&gt;uri::T,desc=&gt;str::T,{?}arg=&gt;#::T]]@/m/llm/feature/tool</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[
+  inst=&gt;#::T,
+  name=&gt;uri::T,
+  desc=&gt;str::T,
+  {?}arg=&gt;#::T]]@/m/llm/feature/tool</code></pre></div>
     
     
 </div><div class="card mb-3" id="__m__llm__feature__tool_feature">
@@ -1073,7 +1109,11 @@ bin/metatron</code></pre>
         </span>
         <small class="text-muted code">/m/llm/message/tool_request</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">message::T[?[name=&gt;uri::T,{?}args=&gt;str::T,text=&gt;str::T,{?}contents=&gt;str::T]]@/m/llm/message/tool_request</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">message::T[?[
+  name=&gt;uri::T,
+  {?}args=&gt;str::T,
+  text=&gt;str::T,
+  {?}contents=&gt;str::T]]@/m/llm/message/tool_request</code></pre></div>
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__message" class="code inherited-link">message::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}session=&gt;uri::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a tool execution request — nested inside an ai message&#39;s tool_requests list</p>
@@ -1093,7 +1133,11 @@ bin/metatron</code></pre>
         </span>
         <small class="text-muted code">/m/llm/message/tool_result</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">message::T[?[name=&gt;uri::T,text=&gt;str::T,{?}chat=&gt;#::T,{?}id=&gt;str::T]]@/m/llm/message/tool_result</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">message::T[?[
+  name=&gt;uri::T,
+  text=&gt;str::T,
+  {?}chat=&gt;#::T,
+  {?}id=&gt;str::T]]@/m/llm/message/tool_result</code></pre></div>
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__message" class="code inherited-link">message::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}session=&gt;uri::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a tool execution result message</p>

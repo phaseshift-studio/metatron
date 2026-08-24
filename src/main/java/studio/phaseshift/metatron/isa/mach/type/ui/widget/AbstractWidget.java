@@ -47,9 +47,14 @@ public abstract class AbstractWidget<W extends AbstractWidget<W>> extends JRec<W
     public AbstractWidget(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
         this.size = null == this.terminal ? new Size() : this.terminal.getSize();
-        this.display = new Display(this.terminal, false);
-        this.display.resize(this.size.getRows(), this.size.getColumns());
         this.cursor = new Cursor(0, 0);
+        // The jline Display is terminal-bound (its ctor calls getStringCapability).
+        // Defer creating it until a terminal is actually available so headless
+        // construction (e.g. type::rec in an MCP/agent eval) still yields a Widget.
+        if (null != this.terminal) {
+            this.display = new Display(this.terminal, false);
+            this.display.resize(this.size.getRows(), this.size.getColumns());
+        }
     }
 
     protected Terminal terminal = Console.getTerminal();

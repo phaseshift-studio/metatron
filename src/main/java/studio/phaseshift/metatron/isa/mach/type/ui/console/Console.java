@@ -885,6 +885,10 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
         result.stream().filter(Obj::isFail).forEach(failObj -> {
             terminal.writer().write(Graphitty.string("{{y}}display trace tool? {{g}}[y/N]{{y}} {{X}}"));
             terminal.writer().flush();
+            // Enter raw mode so Ctrl-C / Ctrl-D arrive as bytes (0x03/0x04) rather
+            // than a swallowed SIGINT/EOF that would block the read and lock the
+            // REPL.  Restore the prior mode and drain any leftover input after.
+            final org.jline.terminal.Attributes saved = terminal.enterRawMode();
             try {
                 final int ch = terminal.reader().read();
                 if (ch == 'y' || ch == 'Y') {
@@ -905,8 +909,26 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                 }
             } catch (final Exception e) {
                 renderTrace(failObj);
+            } finally {
+                this.drainTerminalInput();
+                terminal.setAttributes(saved);
             }
         });
+    }
+
+    /**
+     * Consume any input left in the terminal buffer (e.g. the remainder of an
+     * arrow-key escape sequence after a single-byte read) so it doesn't leak
+     * into the next {@code readLine()} as garbage.  Best-effort only.
+     */
+    private void drainTerminalInput() {
+        try {
+            while (terminal.reader().ready()) {
+                if (terminal.reader().read() < 0) break;
+            }
+        } catch (final Exception ignored) {
+            // never let draining break the REPL
+        }
     }
 
     /**
@@ -970,7 +992,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
     protected void executeMtron(final String line) {
         /// /////////////////////////////////////////////////////
         AtomicReference<Obj> running = new AtomicReference<>(noobj());
-        final String fullInput = this.prefix + Str.Helper.cleanString(str(line).apply()) + this.postfix;
+        final String fullInput = this.prefix + line + this.postfix;
         if (fullInput.isBlank()) return;
 
         // 1. Parse the full input — the parser natively handles ; via end() sugar
@@ -1206,8 +1228,16 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                 final String prompt = isTypeMismatch
                         ? "{{y}}display stack trace / type table {{g}}[y/N/t]{{y}}?{{X}} "
                         : "{{y}}display stack trace {{g}}[y/N]{{y}}?{{X}} ";
-                final String response = this.reader.readLine(Highlighter.format(prompt));
-                // null → Ctrl-D / EOF at the prompt; treat as "no"
+                String response = null;
+                try {
+                    response = this.reader.readLine(Highlighter.format(prompt));
+                } catch (final UserInterruptException | EndOfFileException ignored) {
+                    // Ctrl-C / Ctrl-D at the prompt = "no".  This readLine runs
+                    // inside the catch block — letting these escape would bypass
+                    // the loop's UserInterrupt/EndOfFile handlers, kill the REPL
+                    // thread, and leave the terminal locked.
+                }
+                // null → Ctrl-C / Ctrl-D / EOF at the prompt; treat as "no"
                 if (null != response && response.trim().equalsIgnoreCase("y")) {
                     e.printStackTrace();
                 } else if (null != response && isTypeMismatch && response.trim().equalsIgnoreCase("t")) {

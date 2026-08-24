@@ -405,6 +405,8 @@ public abstract class AbstractfURI implements fURI {
         newPath.addAll(prefix);
         if (segment.endsWith("/"))
             newPath.add("");
+        if (this.path().size() == 1 && this.path().getFirst().isEmpty())
+            newPath.addFirst("");
         final fURI f = fURI.of(this.scheme(), this.host(), this.port(), newPath, this.c(), this.poly(), this.qMap(), this.templates());
         return f.hasHost() ? f.asAbsolute() : f;
     }

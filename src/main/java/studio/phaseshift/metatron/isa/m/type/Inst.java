@@ -348,13 +348,14 @@ public interface Inst extends Call {
 
         Obj rhs;
         boolean modulateC = false;
-        if (TypeCheck.inst_dom.enabled() && !isMonadicInst && !lhs.isFail() && !lhs.isCaughtFail() && !clhs.test(cinst.dom()) && clhs.unique()) {
+        if (TypeCheck.inst_dom.enabled() && !isMonadicInst && !lhs.isFail() && !lhs.isCaughtFail()
+                && !instDomRngMatch(clhs, cinst.dom()) && clhs.unique()) {
             // if (clhs.uniqueC().isOne() && !clhs.c().isOne()) { // && cinst.dom().c().within(cInt.SOME())) {
             clhs = clhs.c(cInt::one);
             cinst = this.resolve(clhs);
             modulateC = true;
             //  }
-            if (!clhs.test(cinst.dom()))
+            if (!instDomRngMatch(clhs, cinst.dom()))
                 return fail("lhs range does not match inst domain: %s => %s [%s]", clhs.rng(), cinst.dom(), cinst);
         }
         if (!clhs.isFail() || cinst.isCatch()) {
@@ -394,7 +395,8 @@ public interface Inst extends Call {
             } catch (final Exception e) {
                 rhs = fail(e);
             }
-            if (TypeCheck.inst_rng.enabled() && !isMonadicInst && !rhs.isType() && !rhs.isFail() && !clhs.isCaughtFail() && !rhs.test(cinst.rng()))
+            if (TypeCheck.inst_rng.enabled() && !isMonadicInst && !rhs.isType() && !rhs.isFail() && !clhs.isCaughtFail()
+                    && !instDomRngMatch(rhs, cinst.rng()))
                 //rhs = fail(MTronException.of("inst resolution failure: %s", cinst, fail(MTronException.of("rhs does not match inst range:\n\t%s", Poly.Helper.diffObjRecursion(rhs, cinst.rng())))));
                 rhs = fail(MTronException.of("rhs does not match inst range:\n\t%s", Poly.Helper.diffObjRecursion(rhs, cinst.rng())));
         } else {
@@ -402,6 +404,21 @@ public interface Inst extends Call {
         }
         final cInt cc = cinst.c();
         return modulateC ? rhs.c(c -> c.mult(lhs.c()).mult(cc)) : rhs.c(c -> c.mult(cc));
+    }
+
+    /**
+     * inst_dom/inst_rng dispatch check. Fast-out when the lhs's tid/vid label
+     * matches the target type (specificTypeId resolves the coefficient via
+     * fURI.test) and the coefficient/poly are consistent — trust construction-time
+     * validation. Otherwise fall back to the full structural test. Construction
+     * validation is unaffected (it routes through testObjs directly).
+     */
+    private static boolean instDomRngMatch(final Obj lhs, final Type type) {
+        if (type.tid().poly().isEmpty()
+                && Obj.Helper.specificTypeId(lhs).test(Obj.Helper.specificTypeId(type))
+                && lhs.c().within(type.c()))
+            return true;
+        return lhs.test(type);
     }
 
     default boolean isCatch() {
@@ -711,21 +728,35 @@ public interface Inst extends Call {
             return result;
         }
 
-        /** An {@code as}-graph finding: the offending instructions, the violation kind, and a human-readable reason. */
+        /**
+         * An {@code as}-graph finding: the offending instructions, the violation kind, and a human-readable reason.
+         */
         public record Violation(List<Inst> insts, Type type, String reason) {
 
             public enum Type {
-                /** two {@code as} instructions cast the same dom to the same rng — a redundant mapping */
+                /**
+                 * two {@code as} instructions cast the same dom to the same rng — a redundant mapping
+                 */
                 DUPLICATE("two `as` instructions cast the same dom to the same rng — a redundant mapping:  f, g : A → B,  f ≠ g"),
-                /** same-rng doms are incomparable yet overlap — a future input could match both with no most-specific winner */
+                /**
+                 * same-rng doms are incomparable yet overlap — a future input could match both with no most-specific winner
+                 */
                 AMBIGUOUS("same-rng doms are incomparable yet overlap — a future input could match both with no most-specific winner:  ¬(A ≤ B) ∧ ¬(B ≤ A) ∧ ∃T. T ≤ A ∧ T ≤ B"),
-                /** same-rng doms are incomparable and disjoint — no input matches both, so dispatch stays total */
+                /**
+                 * same-rng doms are incomparable and disjoint — no input matches both, so dispatch stays total
+                 */
                 INCOMPARABLE("same-rng doms are incomparable and disjoint — no input matches both, so dispatch stays total:  ¬(A ≤ B) ∧ ¬(B ≤ A) ∧ ∄T. T ≤ A ∧ T ≤ B"),
-                /** two types are directly mutually castable — a pair of opposing casts, a candidate isomorphism/retraction */
+                /**
+                 * two types are directly mutually castable — a pair of opposing casts, a candidate isomorphism/retraction
+                 */
                 COUPLING("two types are directly mutually castable (A ⇄ B) — a pair of opposing casts, a candidate isomorphism/retraction:  f : A → B,  g : B → A"),
-                /** two types are linked by a chain of couplings — connected in the reversible core of the as-graph */
+                /**
+                 * two types are linked by a chain of couplings — connected in the reversible core of the as-graph
+                 */
                 ISOCHAIN("two types are linked by a chain of couplings (A ⇄ … ⇄ B) — connected in the reversible core G∩G⁻¹, each hop an opposing pair:  a chain of candidate-isomorphisms"),
-                /** two types are mutually reachable — the round-trip is an idempotent, so each is a retract of the other */
+                /**
+                 * two types are mutually reachable — the round-trip is an idempotent, so each is a retract of the other
+                 */
                 RETRACT("two types are mutually reachable (A ⇒ B ∧ B ⇒ A) — the round-trip A⇒B⇒A is an idempotent, so A ≅ im(e), a subobject of A, not necessarily A itself:  e = A⇒B⇒A,  e∘e = e,  A ≅ { a ∈ A : e(a) = a }");
 
                 private final String description;

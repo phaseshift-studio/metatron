@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa;
 
+import studio.phaseshift.metatron.TypeCheck;
 import studio.phaseshift.metatron.furi.QProc;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
@@ -115,7 +116,7 @@ public abstract class AbstractSpace<SJVM> extends MRec implements Space {
         //   1-segment: e.g. mongo:ddd -> [...] (auto-generated document ID)
         //   2-segment: e.g. mongo:col/docId -> [...] (explicit document write)
         // Deletes (noobj) are always permitted. Sub-field writes (3+ segments) bypass this check.
-        if (!obj.isNoObj() && this.enforceRootConstraint(vid, obj)) {
+        if (!obj.isNoObj() && TypeCheck.obj_write.enabled() && this.enforceRootConstraint(vid, obj)) {
             final Obj rootConstraint = this.at(uri(ROOT)).orElse(null);
             if (rootConstraint != null && !rootConstraint.isNoObj()
                     && !vid.isBranch()

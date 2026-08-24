@@ -29,7 +29,7 @@ import java.util.regex.Pattern;
  * {@code [.legend-index]} sidebar block — a compact, floating table-of-contents
  * box — after the first {@code ==} heading.
  *
- * <p>Runs BEFORE {@link MtronDocPreprocessor} so it operates on raw adoc.</p>
+ * <p>Runs BEFORE {@link MtronPreprocessor} so it operates on raw adoc.</p>
  *
  * <h3>Heading detection</h3>
  * Matches lines of the form:

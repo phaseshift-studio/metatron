@@ -9,6 +9,8 @@ node_modules/
 *.iml
 /.venv/
 __pycache__/
+*.pyc
+*.pyo
 # Compiled class file
 *.class
 
