@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.isa.web.parser;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -196,6 +197,7 @@ public class ObjJSONSerializerTest extends AbstractSerializerTest<JsonElement> {
     // ===================================================================
 
     @Test
+    @Disabled("sse no longer supported")
     public void testMcpClientJsonRoundTrip() {
         // Skip if the MCP server port isn't available
         boolean portOpen;
