@@ -24,7 +24,6 @@ import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.mcp.client.DefaultMcpClient;
 import dev.langchain4j.mcp.client.McpClient;
 import dev.langchain4j.mcp.client.transport.McpTransport;
-import dev.langchain4j.mcp.client.transport.http.HttpMcpTransport;
 import dev.langchain4j.mcp.client.transport.http.StreamableHttpMcpTransport;
 import dev.langchain4j.mcp.client.transport.stdio.StdioMcpTransport;
 import dev.langchain4j.mcp.client.transport.websocket.WebSocketMcpTransport;
@@ -36,7 +35,6 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Str;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
-import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.sys.type.ThreadExecutor;
@@ -52,7 +50,6 @@ import static org.slf4j.event.Level.WARN;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.furi.q.QCollection.*;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_TOOL_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.BOOL_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_INST_TID;
@@ -188,14 +185,6 @@ public class mcpClient extends MRec {
                         .url(host.uriValue().toString())
                         .executor(ThreadExecutor.instance())
                         .build();
-            } else if (host.uriValue().name().equals("sse")) {  // TODO: remove when sse is no longer supported
-                return HttpMcpTransport.builder() // SSE
-                        .sseUrl(host.uriValue().toString())
-                        .logger(LOG.logger(WARN))
-                        .logRequests(false)
-                        .logResponses(false)
-                        .customHeaders(stringHeaders)
-                        .build();
             } else if (host.uriValue().scheme().equals(HTTP) || host.uriValue().scheme().equals(HTTPS)) {
                 return StreamableHttpMcpTransport.builder() // HTTP
                         .logRequests(true)
@@ -205,7 +194,6 @@ public class mcpClient extends MRec {
                         .url(host.uriValue().toString())
                         .executor(ThreadExecutor.instance())
                         .build();
-
             }
         }
         throw MTronException.of("unsupported transport for host:%s transport:%s headers:%s command:%s", host, transport, headers, command);
