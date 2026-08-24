@@ -1,0 +1,299 @@
+[== boot args ==]
+[
+ internal        =>
+  [ sys          => /sys,
+    agent_home   => /usr/dr,
+    user_home    => /usr/marko,
+    session_id   => 1,
+    typer/stage  => [inst_dom     => false,
+                     inst_rng     => false,
+                     type_ctor    => true,
+                     obj_write    => true,
+                     code_resolve => false]],
+ external     =>
+  [ web       => [ http => <http://localhost:8777>,
+                   ws   => <ws://0.0.0.0:8555> ],
+    ollama    => <http://ginger.local:11434>,
+    embedding => <http://ginger.local:8025/api/v2>,
+    knowgraph => <ws://ginger.local:8182/gremlin>,
+    session   => <sqlite:/home/killswitch/.metatron/dr.sqlite>,
+    localfs   => </home/killswitch/.hermes_clone>],
+ tracer/stage => [stack=>false],
+ header       => """
+   ______          _______ __   {{r}}PhaseShift Studio                    
+  |   _  \ .----. |   _   |  |_.--.--.-----.--.--.
+  |.  |  {{y}} \|   ___|   1___|   _|  |  |     |_   _|
+  |.  |    |__||__|____   |____|___  |{{b}}__|__|__.__|
+  |:  1    /      |:  1   |    |_____| presents ..      
+  |::.. . /       |::.. . |{{g}}       a metatron bomb                       
+  `------'        `-------'          
+ """
+]
+[===============]
+print(*boot/args/header)
+print("{{r}}----{{y}}----{{r}}----\n{{g}}*{{y}}boot/args{{X}}: ",
+      *boot/args, 
+     "\n{{y}}----{{r}}----{{y}}----{{X}}\n");
+[== instruction sets ==]
+print("{{y}}loading instruction sets\n{{X}}");
+import(/m/mach/io);
+import(/m/web,web);
+import(/m/tble);
+import(/m/math,math);
+import(/m/llm);
+import(/m/grph);
+import(/m/vec);
+import(/m/iot);
+import(/m/dckr);
+import(/m/mach/ui,ui);
+import(/m/ide,ide);
+[===================================================================]
+[===================================================================]
+        [=====================]
+        [======== HOME =======]
+        [=====================]
+memspace::[
+  pattern => </usr/marko/#>,                                 
+        q => [mintq::[=>],
+               docq::[=>],
+               subq::[=>],
+              mimeq::[=>],
+              lineq::[=>],
+              lockq::[=>],
+              refq::[=>],
+              incrq::[=>]]]@</sys/space/usr/marko>;                 
+        [=====================]  
+        [====== FILE SYS =====]
+        [=====================]    
+fsspace::[
+  pattern => root:#,
+        q => [mimeq::[=>]],
+    route => [root: => /usr/bin]]@</sys/space/fs/root>;
+fsspace::[
+  pattern => localfs:#,
+        q => [ subq::[=>],
+              mimeq::[=>],
+              safeq::[=>]],
+    route => [localfs: => <~/.hermes_clone>]]@</sys/space/fs/dr>; 
+fsspace::[
+  pattern => mfs:#,
+  q       => [mimeq::[=>],lineq::[=>]],
+    route => [mfs: => <~/software/metatron>]]@</sys/space/fs/metatron>;  
+        [=====================]  
+        [======== WEB ========]
+        [=====================]              
+httpspace::[host     => !*<boot/args/external/web/http>,
+            q        => [mimeq::[=>]],
+            pattern  => <http://#>,
+            route    => [/mcp     => mcp_mtron_http,
+                         /        => <>]]@/sys/space/web/http;   
+[==  
+*boot/args/external/ollama.mult(api/tags/models).*(_).>-.
+  =?=[capabilities=>[embedding]].
+  -<[llm     => >>name.as(uri::T),
+    protocol => ollama,
+    provider => ollama,
+    host     => *boot/args/external/ollama].
+  as(model::T).
+  to(/usr/dr/model/embedding/_?incrq)
+==]        
+[=="""
+{
+     "type": "sse",
+     "url": "http://127.0.0.1:64342/sse",
+     "headers": {
+       "IJ_MCP_SERVER_PROJECT_PATH": "/home/killswitch/software/metatron"
+     }
+   }
+""".as(json::T).as(mcp_client::T).at(abc)
+==]
+        [=====================]
+        [======= DOCKER ======]
+        [=====================]
+dckrspace::[host     => <unix:///var/run/docker.sock>,
+            pattern  => docker:#,
+            progress => progress_table::[style => style::[body          => "{{y}}={{g}}",
+                                                          pointer       => "{{g}}>{{X}}",
+                                                          border        => continuous,
+                                                          anchor        => bottom_left,
+                                                          width         => 70]],
+            route   => [docker: => <>]]@</sys/space/docker>;
+
+
+[== *docker:container/dr_sqlite.else([image   => keinos/sqlite3:latest,
+                                  user    => root,
+                                  volumes => ['/home/killswitch/.metatron:/data'],
+                                  command => ['sh', '-c', 'sqlite3 /data/dr.sqlite ".databases" && chmod 777 /data /data/dr.sqlite']].
+                                    to(docker:container/dr_sqlite)) ==]
+*docker:container/dr_sqlite.else(
+  [services => [sqlite => [image   => hibitdev/sqlite:latest,
+                           volumes => ['/home/killswitch/.metatron:/db'],
+                           command => ['tail', '-f', '/dev/null']]]]@docker:compose/dr_sqlite);
+
+        [=====================]
+        [======== HOME =======]
+        [=====================]
+[==memspace::[pattern=>/usr/dr/#,q          => [incrq::[=>],subq::[=>]],router=>[/usr/dr/ => <>]]@/sys/space/usr/dr==]
+tblespace::[pattern    => </usr/dr/#>,
+            host       => <sqlite:/home/killswitch/software/metatron/.metatron/skills/drstynx/assets/drstynx.sqlite>,
+            driver     => <org.sqlite.JDBC>,
+            table      => [,],
+            q          => [incrq::[=>],subq::[=>]],
+            route      => [/usr/dr/ => <>]]@</sys/space/usr/dr>;
+wsspace::[host     => !*<boot/args/external/web/ws>,
+          pattern  => <ws://#>,
+          route    => [/drstynx => *dr.as(skill::T).as(mcp_server::T),
+                       /mcp     => mcp_mtron_ws,
+                       /mtron   => mtron_ws]]@/sys/space/web/ws;       
+mqttspace::[host    => <mqtt://ginger.local:1883>,
+            pattern => z2m:#,
+            q       => [subq::[=>]],
+            route   => [z2m: => z2m/]]@/sys/space/iot/z2m;
+        [=====================]
+        [======== LLM ========]
+        [=====================]                
+[==            
+vecspace::[pattern     => v:#,
+           host        => !*<boot/args/external/embedding>,
+           q           => [incrq::[=>],embedq::[=>]],
+           driver      => <studio.phaseshift.metatron.isa.vec.space.ChromaV2Client>,
+           route       => [v: => <>],
+           config      => [embed => [
+ [------------------------------------^--]
+ abc => inst?lst[real]<=#{?}(doc=>#::T){ */usr/dr/model/embedding/+.=?=[llm=>embeddinggemma:latest].embed(*doc)}
+ [------------------------------------^--]                                  
+                          ]]]@/sys/space/vec/embed
+==]
+grphspace::[pattern   => h:#,
+             host     => !*<boot/args/external/knowgraph>,
+             q        => [incrq::[=>],subq::[=>]],
+             schema   => noobj,
+             config   => [
+               dataset                                    => <org.apache.tinkerpop.gremlin.LoadGraphWith.GraphData.CREW>,
+               <serializer.className>                     => <org.apache.tinkerpop.gremlin.util.ser.GraphBinaryMessageSerializerV1>,
+               <serializer.config.ioRegistries>           => [<org.janusgraph.graphdb.tinkerpop.JanusGraphIoRegistry>],
+               <gremlin.remote.remoteConnectionClass>     => <org.apache.tinkerpop.gremlin.driver.remote.DriverRemoteConnection>,
+               <gremlin.remote.remoteTraversalSourceName> => g],
+             route    => [h: => <>]]@</sys/space/grph/kg>;
+
+ grphspace::[pattern  => g:#,
+             q        => [incrq::[=>],subq::[=>]],
+             schema   => noobj,
+             config   => [
+               dataset         => <org.apache.tinkerpop.gremlin.LoadGraphWith.GraphData.MODERN>,
+               <gremlin.graph> => <org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerGraph>],
+             route    => [g:   => <>]]@</sys/space/grph/local>;
+        [======================]
+        [========= IDE ========]
+        [======================]     
+*<mfs:src/test/resources/scratch/project.ide.mtron>.
+  else(<mfs:src/test/resources/scratch>.
+        as(project::T).
+        update(+([name   =>'scratch',
+                  desc   =>'an example java/mvn project'])).
+        >>=[_=>dedup()].
+        to(<mfs:src/test/resources/scratch/project.ide.mtron>)).
+  to(/usr/marko/scratch).
+  -<[mvn_build => ide:command('mvn -f /home/killswitch/software/metatron/${*/usr/marko/scratch/root.as(rec::T)>>=[scheme=>none].as(uri::T)} compile'),
+     mvn_clean => ide:command('mvn -f /home/killswitch/software/metatron/${*/usr/marko/scratch/root.as(rec::T)>>=[scheme=>none].as(uri::T)} clean'),
+     code_tree => |inst?#{*}<=#{?}(max=>?int::T.else(2)){ map(tree::[root=>!*/usr/marko/scratch/root,max=>!*max,flatten=>true]@scratch_tree).display() }].
+  to(/usr/marko/scratch/command);
+  /usr/marko/scratch/code/#?subq -> sub::[code=> >>0.as(rec::T)>>path==[_,_,_,_,_,_].
+                                                 as?uri<=lst(uri::T).to(x).*(_).>>=[location=>none].as(web:java::T).
+                                                 to(*(*x.>>location))];
+[==
+ content=>"""
+# scratch project
+scratch serves as a example project demonstrating how to use the /m/dev/ide instruction set.
+the project::T is a refinement of /m/llm/skill::T.
+          
+## project structure
+```ui:tree::T
+scratch
+├─ SKILL.md                  [-- current file                --]
+├─ assets
+│  └─ code                   [-- multi-relational code graph --] 
+├─ scripts
+│  ├─ ide:command::mvn_clean [-- clean the project cache     --] 
+│  └─ ide:command::mvn_build [-- build the project artifacts --]
+└─ references
+   └─ !*drstynx              [-- mtron trained agent         --]
+```
+"""])
+==]
+        [======================]
+        [======== AGENT =======]
+        [======================]
+[== if the llm session already exists, continue, else create it ==]    
+[== <drdb:llm_session>.mult(print('\n what session number?: ').stdin().as(uri::T)).to(session_vid) ==]
+[== model::[
+  provider => deepseek,
+  protocol => openai,
+  host     => <https://api.deepseek.com>,
+  api_key  => !*</sys/env/DEEPSEEK_API_KEY>,
+  llm      => <deepseek-v4-pro> 
+]@/usr/dr/model; ==]
+model::[provider     => ollama,
+        protocol     => ollama,
+        host         => <http://ginger.local:11434>,
+        llm          => <qwen3.8:27b>]@/usr/dr/model;
+/usr/dr/agent -> |!*dr;
+[-- tag::asciidoc_tag[] --]
+agent::[
+  name     => 'dr.stynx',
+  desc     => 'the agent dr.stynx is here to be of use in the metatron',
+  root     => !*boot/args/internal/agent_home,
+  feature  => [
+    session_feature::::[on_agent_ctor => inst(a=>agent::T){ *</usr/dr/session/1>.else(
+                                           session::[agent     => !*boot/args/internal/agent_home,
+                                                     user      => !*boot/args/internal/user_home,
+                                                     name      => 'general chat',
+                                                     algorithm => [name=><message_window>, max=>30]]
+                                                           ==[_=>_].to(/usr/dr/session/1)) },
+                        session       => /usr/dr/session/1,
+                        tool          => [forget?noobj{0}<=noobj{0}(){ /usr/dr/message/+ -> noobj }]],
+    chat_feature:::::::[model         => !(*</usr/dr/model>.else(model::[provider     => ollama,
+                                                                         protocol     => ollama,
+                                                                         host         => <http://ginger.local:11434>,
+                                                                         llm          => <qwen3.8:27b>])),
+                        response      => [to => print(_)]],
+    think_feature::::::[on_agent_ctor => inst(a=>agent::T){
+                                            accordion::[title => "thoughts", 
+                                                        body  => "",
+                                                        style => style::[anchor=>top_left,left=>1,top=>3,height=>10,width=>80]]@<think_widget> },
+                       on_before_chat => inst(){ @<think_widget> >>= [body=>""] },
+                       root           => /usr/dr/message,
+                       think          => [to => inst(a=>str::T){ @<think_widget>>>=[body=>+*a].display() }]],
+    loop_feature:::::::[max_loop      => 100],                         
+    comment_feature::::[              => ],
+    skill_feature::::::[skill         => [ <mfs:.metatron/skills/metatron>, 
+                                           <mfs:.metatron/skills/mtron> ]],
+    concept_feature::::[root          => /usr/dr/concept,
+                        extractor     => lucene],
+    tool_feature:::::::[tool          => [!*eval,!*sql,!*codegraph]],
+    audit_feature::::::[on_agent_ctor => inst(a=>agent::T) {  
+                                           accordion::[title  => "audit", 
+                                                       body   => "",
+                                                       style  => style::[anchor=>bottom_right,width=>65,height=>30,
+                                                                         left=>-2,top=>8,foreground =>"{{y}}"]]@<audit_widget> },
+                        to            => inst(a=>str::T){ @<audit_widget>>>=[body=>+*a].display() }],
+    system_feature:::::[              => ],
+    cost_feature:::::::[root          => /usr/dr/cost,
+                        to            => inst(in_cost=>real::T,out_cost=>real::T,total_cost=>real::T){ 
+                                           /usr/marko/console/status("cost total: ${*2} [in: ${*0} out: ${*1}]") },
+                        rate          => [in  => usd_currency::0.435,
+                                          out => usd_currency::0.870]]]]@<dr>; 
+[-- end::asciidoc_tag[] --]
+[== user console ==] 
+console::[header=>!*boot/args/header]@/usr/marko/console;
+label_line::[body   =>"[{{r}}m{{b}}]enu bar",
+             key    =>alt_m,
+             on_key =>@dr.chat("are you there?"),
+             style  =>style::[foreground=>"{{b}}"]]@ll;
+menu_bar::::[lines  =>[!*ll],
+             style  =>[background=>"{{[k]}}"]]@menu.display();
+[==!(*<mfs:skills/agent/SKILL.md>.-<'/usr/agent'>-.
+                                            plus(*<boot/args/internal/agent_home>.as(str::T)).
+                                            sum?str<=str{*}().
+                                            as(markdown::T).
+                                            as(skill::T)),==]

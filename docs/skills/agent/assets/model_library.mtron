@@ -1,0 +1,22 @@
+[model::[
+  provider => deepseek,
+  protocol => openai,
+  host     => <https://api.deepseek.com>,
+  api_key  => !*</sys/env/DEEPSEEK_API_KEY>,
+  llm      => <deepseek-v4-pro> 
+],
+model::[
+  provider => sakana,
+  protocol => openai,
+  host     => <https://api.sakana.ai>,
+  api_key  => !*</sys/env/SAKANA_API_KEY>,
+  llm      => <fugu> 
+],
+model::[
+  provider => ollama,
+  protocol => ollama,
+  host     => <http://ginger.local:14434>,
+  llm      => <qwen3.8:28b>
+]]@/usr/model
+
+[== add swipe panel widget for dynamic selection of ollama models ==]

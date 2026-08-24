@@ -317,13 +317,14 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
     // Shift Operations
     // ========================================
 
-    public F lshift_(final Obj obj) {
+    public F lshift_(final Obj... obj) {
         return this.addInst(instB(mInstSet.LSHIFT_INST_TID, lst(obj)));
     }
 
-    public F rshift_(final Obj obj) {
+    public F rshift_(final Obj... obj) {
         return this.addInst(instB(mInstSet.RSHIFT_INST_TID, lst(obj)));
     }
+
 
     // ========================================
     // Type/Conversion Operations
@@ -720,16 +721,12 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
         // Shift Operations
         // ========================================
 
-        public static <F extends mFluent<F>> F lshift_(final Obj obj) {
+        public static <F extends mFluent<F>> F lshift_(final Obj... obj) {
             return new mFluent<F>().lshift_(obj);
         }
-
-        public static <F extends mFluent<F>> F rshift_(final Obj obj) {
+        
+        public static <F extends mFluent<F>> F rshift_(final Obj... obj) {
             return new mFluent<F>().rshift_(obj);
-        }
-
-        public static <F extends mFluent<F>> F rshift_() {
-            return new mFluent<F>().rshift_(noobj());
         }
 
         // ========================================

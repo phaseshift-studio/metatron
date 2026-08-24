@@ -67,14 +67,15 @@ From `to` and `from` more complex spatial read/write patterns are realized such 
 
 |===
 
-Any `obj` can be referenced by a `uri` -- from simple **mono** objs such as `bool`, `int`, etc. to complex nested **poly** objs such as `rec`, `lst`, etc. Poly objs provide another layer of addressing in that once a poly obj has a `uri` reference, the internal objs that make up the poly inherit that reference and extend it with any internal references necessary to find the objs within the poly. This inter/intra-poly sub-reference resolution is called a __cascading resolution__.
+Any `obj` can be referenced by a `uri` -- from simple **mono** objs such as `bool`, `int`, etc. to complex nested **poly** objs such as `rec`, `lst`, etc.
+Poly objs provide another layer of addressing in that once a poly obj has a `uri` reference, the internal objs that make up the poly inherit that reference and extend it with any internal references necessary to find the objs within the poly.
+This inter/intra-poly sub-reference resolution is called a __cascading resolution__.
 
 [cols="7a,7a",separator=🧱]
 |===
 
 
 .^🧱
-
 The **router** is the __space resolver__ responsible for identifying the space containing the referenced obj data.
 
 The **space** is the __obj resolver__ responsible for identifying the `obj` containing the referenced data.
@@ -149,14 +150,14 @@ a/b/c -> [x,[y=>[z=>2,zz=>!*g]]] [-- <2> --]
 <8> the uri `a/b/c/1/y/zz` cascade breaks the poly boundary yielding an inter-`obj` resolution.
 |===
 
-
 [discrete]
 === Spatial Embeddings
 
 [discrete]
 ==== The Uri Reference Ring
 
-When a nested poly structure is written to space an ambiguity emerges. This ambiguity touches at the heart of ring theory -- the relationship between latexmath:[+] and latexmath:[*] -- and provides just enough "sleight of hand wiggle room" for useful consequences to emerge in distributed computing.
+When a nested poly structure is written to space an ambiguity emerges.
+This ambiguity touches at the heart of ring theory -- the relationship between latexmath:[+] and latexmath:[*] -- and provides just enough "sleight of hand wiggle room" for useful consequences to emerge in distributed computing.
 
 [discrete]
 ===== Referential Distributivity
@@ -166,7 +167,6 @@ This section aims to demonstrate that the two data structures in the table below
 [cols="8a,8a",frame="all"]
 |===
 |
-
 [cols="5a,5a",option="header",frame="all",grid="cols"]
 !===
 ^!
@@ -200,7 +200,7 @@ a──c──⮞2
 ----
 !===
 <1> the uri ring defines multiplcation as "extension", where latexmath:[x \cdot y] is `x/y`.
-<2> the uri ring defines addition as "branching", where latexmath:[x + y] is `{x,y}`. 
+<2> the uri ring defines addition as "branching", where latexmath:[x + y] is `{x,y}`.
 
 The characteristic marks of latexmath:[\ast] are `.`,`\=>`,`\<=`. +
 The characteristic marks of latexmath:[+] are `,`, `-<`,`>-`.
@@ -255,7 +255,6 @@ a──c──⮞2
 ----
 
 .^🧱
-
 [mtron]
 ----
 x0 -> [a=>[b=>1,c=>2]]
@@ -279,7 +278,10 @@ x1 -> {[a=>[b=>1]],[a=>[c=>2]]}
 [discrete]
 ===== Referential Factoring
 
-If references form a ring, then references can be __factored__. Sub-uri decompositions maintain referential integrity. Assume that the additive branches of the running example thus far now end with a `d` entry. It stands that the following equalities hold.
+If references form a ring, then references can be __factored__.
+Sub-uri decompositions maintain referential integrity.
+Assume that the additive branches of the running example thus far now end with a `d` entry.
+It stands that the following equalities hold.
 
 [source,mtron]
 ----
@@ -299,7 +301,7 @@ The symbolic notation below reiterates what is stated diagrammatically above.
 \;         & (a \cdot b \cdot d) & + \;\; & (a \cdot c \cdot d)                &=& \; \{1,2\} \\
 a \cdot \; & ( (b \cdot d)       & + \;\; & (c \cdot d) )                      &=& \; \{1,2\} \\
 a \cdot \; & ( b                 & + \;\; & c )                   \cdot \; d   &=& \; \{1,2\} \\
-( & (a \cdot b)                    & + \;\; & (a \cdot c))       \cdot \; d   &=&  \; \{1,2\}    
+( & (a \cdot b)                    & + \;\; & (a \cdot c))       \cdot \; d   &=&  \; \{1,2\}
 \end{align}
 \]
 
@@ -337,7 +339,7 @@ Finally, the programmatic expression below captures the equivalent aforementione
 ----
 x0 -> {[a=>[b=>[d=>1]]],[a=>[c=>[d=>2]]]}
 x1 -> [a=>[b=>[d=>1],c=>[d=>2]]]
-x2 -> [a=>[b=>!*d,[c=>!*d]];d->{1,2};
+x2 -> [a=>[b=>!*d,[c=>!*d]]];d->{1,2};
 x3 -> {[a=>[b=>!*d]],[a=>[c=>!*d]]};d->{1,2}
 ----
 
@@ -353,14 +355,18 @@ x3 -> {[a=>[b=>!*d]],[a=>[c=>!*d]]};d->{1,2}
 [x0,x1]>-.-<[*(* /a/+/d)]
 ----
 
-A subsequent, practical entailment states that all ring-based addressing schemes can be transformed from a **concatenative/multiplicative** form to a **union/additive** form so as to maintain one subset of the data in a specialized space optimized for its production requirements and the other subset can be contained in another space specialized accordingly to its requirements. For example, some data can be "hot in cache" in order to satisfy demand, while some other data can be "archivally iced" when the production usage doesn't require a rapid response time and production costs can be reduced with cheaper disk storage. The fundamental mathematics and the subsequent algorithmic embodiment in metatron enables the symbolic manipulation of referentially consistent structural partitions. **Ring-theoretic references** make this possible. 
+A subsequent, practical entailment states that all ring-based addressing schemes can be transformed from a **concatenative/multiplicative** form to a **union/additive** form so as to maintain one subset of the data in a specialized space optimized for its production requirements and the other subset can be contained in another space specialized accordingly to its requirements.
+For example, some data can be "hot in cache" in order to satisfy demand, while some other data can be "archivally iced" when the production usage doesn't require a rapid response time and production costs can be reduced with cheaper disk storage.
+The fundamental mathematics and the subsequent algorithmic embodiment in metatron enables the symbolic manipulation of referentially consistent structural partitions. **Ring-theoretic references** make this possible.
 
 [discrete]
 ==== Isomorphic != Identical
 
-A _matrix_ is an latexmath:[n \times m] data structure composed of latexmath:[n] vectors/row, each with latexmath:[m] elements/columns. A relational database _table_ is an example of a matrix, where the entries typically span numeric and non-numeric data types. Three general approaches to embedding a matrix or table into a space are presented below, where each makes different space/time tradeoffs, while remaining iso-referential with respect to the structural ring algebra.
+A _matrix_ is an latexmath:[n \times m] data structure composed of latexmath:[n] vectors/row, each with latexmath:[m] elements/columns.
+A relational database _table_ is an example of a matrix, where the entries typically span numeric and non-numeric data types.
+Three general approaches to embedding a matrix or table into a space are presented below, where each makes different space/time tradeoffs, while remaining iso-referential with respect to the structural ring algebra.
 
-[cols="5,5,5",frame=none,subs="+macros",separator=🧱,grid=cols, role="center"]
+[cols="5,5,5",frame=none,subs="+macros",separator=🧱,grid=cols,role="center"]
 |===
 
 ^a🧱
@@ -459,7 +465,10 @@ m -> [[0,1,2,3],  /
 <2> Retrieve the first row of matrix `m`.
 <3> Retrieve the first column of matrix `m`.
 
-The above example demonstrates what is possible with referentially consistent structural embeddings. The platonic matrix latexmath:[m] was embedded in a space using 3 different representations: _entry-wise_, _row-wise_, and _row-column wise_. Next, each embedding was read: an _element read_, a _row read_ and a _column read_. The expression used to read from each of the three embeddings is the same (typographically verbatim) and so is the result (algebraically isomorphic).
+The above example demonstrates what is possible with referentially consistent structural embeddings.
+The platonic matrix latexmath:[m] was embedded in a space using 3 different representations: _entry-wise_, _row-wise_, and _row-column wise_.
+Next, each embedding was read: an _element read_, a _row read_ and a _column read_.
+The expression used to read from each of the three embeddings is the same (typographically verbatim) and so is the result (algebraically isomorphic).
 
 .Amortized Costs in Terms of Time
 [%header,width=50%,cols="l1,c1,c1,c1",role="small center"]
@@ -485,9 +494,16 @@ The different embeddings also have different space costs, where space is defined
 [discrete]
 === The Algebraic Structure of Data
 
-The examples thus far using algebra to construct and deconstruct data structures have been relatively basic. It's important to note that such equalities are recursive, and to demonstrate the point, a more complicated factorization will be presetented.
+The examples thus far using algebra to construct and deconstruct data structures have been relatively basic.
+It's important to note that such equalities are recursive, and to demonstrate the point, a more complicated factorization will be presetented.
 
-In mathematics, addition is denoted with a latexmath:[+] as in latexmath:[a + b]. In code, addition represented with a `,`. A `,` separates two independent `objs` as in `[a,b]`. For multiplication, mathematical notation uses latexmath:[a \cdot b] or latexmath:[a \ast b] or simply character incidence as in latexmath:[ab]. In code, `.` denotes multiplication. For instance, `a.b`. Given this rule, the following metatron `rec`
+In mathematics, addition is denoted with a latexmath:[+] as in latexmath:[a + b].
+In code, addition represented with a `,`.
+A `,` separates two independent `objs` as in `[a,b]`.
+For multiplication, mathematical notation uses latexmath:[a \cdot b] or latexmath:[a \ast b] or simply character incidence as in latexmath:[ab].
+In code, `.` denotes multiplication.
+For instance, `a.b`.
+Given this rule, the following metatron `rec`
 
 [mtron]
 ----
@@ -497,7 +513,6 @@ x0 -> [a=>[b=>[c=>1,d=>2],          /
 ----
 
 ...
-
 ++++
 <!--
 
@@ -545,7 +560,9 @@ x2 -> [a/b/c => 1,         /
 [discrete]
 === Navigating the Reference Structure
 
-Metatron is address-first: `a` answers the *address*, `*a` answers the *value*. The uri is the reference; the obj is the referent — and the same operator walks either side of the reference. The address space is first-class, obj-free navigation; the referent is what you fetch when you choose.
+Metatron is address-first: `a` answers the *address*, `*a` answers the *value*.
+The uri is the reference; the obj is the referent — and the same operator walks either side of the reference.
+The address space is first-class, obj-free navigation; the referent is what you fetch when you choose.
 
 [mtron]
 ----
@@ -557,12 +574,16 @@ a/b/c/d <<                          [-- <3> --]
 a/b/c/d/e << d/e                    [-- <4> --]
 a/b/c/d >> 0                        [-- <5> --]
 ----
+
 <1> the **edge**: `a/b/c`'s child uris, obj-less.
 <2> the **walk**: descendants exactly 2 levels deep.
 <3> **retract** one level: the parent uri.
 <4> **retract** a matching postfix.
 <5> descend zero — the uri itself (the identity).
 
-`>>` on a **poly** selects a branch — keyed on a `rec`, indexed on a `lst` (the referent walk). `>>` on a **uri** extends — descends the address tree (the reference walk, nothing resolves). `<<` is pure uri arithmetic — the uri carries its own parent in its segments, never an obj parent link. The `@` anchor collapses the bridge: `5@a` is the value *with* its address, so writes flow back (pass-by-value@reference).
+`>>` on a **poly** selects a branch — keyed on a `rec`, indexed on a `lst` (the referent walk). `>>` on a **uri** extends — descends the address tree (the reference walk, nothing resolves). `<<` is pure uri arithmetic — the uri carries its own parent in its segments, never an obj parent link.
+The `@` anchor collapses the bridge: `5@a` is the value *with* its address, so writes flow back (pass-by-value@reference).
 
-Navigation never invents an address: `uri >> <path>` returns the child only if it *exists* (it resolves through the space); otherwise `noobj`. Walking the reference is safe because the reference is real — a made-up path is not an address, it is a lie. See `docs/design/ring-uri.md` for the full theory.
+Navigation never invents an address: `uri >> <path>` returns the child only if it *exists* (it resolves through the space); otherwise `noobj`.
+Walking the reference is safe because the reference is real — a made-up path is not an address, it is a lie.
+See `docs/design/ring-uri.md` for the full theory.

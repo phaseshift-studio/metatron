@@ -44,11 +44,13 @@ public class TreeWidget extends JRec<TreeWidget> implements Widget<TreeWidget> {
     private Set<fURI> forceExpand = Set.of();
 
     /**
-     * One precomputed row in the tree.
+     * One precomputed row in the tree.  The {@code name} is what is rendered —
+     * for flattened rows it is the joined path (e.g. {@code classes/com/example/scratch});
+     * the {@code entry} remains the real node for selection/expansion.
      */
-    private record TreeRow(CommonUtil.TreeEntry entry, String prefix, String suffix) {
+    private record TreeRow(CommonUtil.TreeEntry entry, String prefix, String name, String suffix) {
         String fullLine() {
-            return prefix + entry.name() + suffix;
+            return prefix + name + suffix;
         }
     }
 
@@ -94,16 +96,112 @@ public class TreeWidget extends JRec<TreeWidget> implements Widget<TreeWidget> {
         final int max = (m != null && m.isInt()) ? m.asInt().intValue().intValue() : 0;
         final Obj c = this.at(uri(CODE));
         final Call code = (c != null && c.isInst()) ? c.as() : id_().tryToInst();
-        final boolean[] lastStack = new boolean[Math.max(max, 1) + 32]; // generous upper bound for expanded branches
         final Border border = this.style.border();
-        CommonUtil.treeConsumer(root, max, this.forceExpand, entry -> {
+
+        if (this.flatten()) {
+            final List<CommonUtil.TreeEntry> entries = new ArrayList<>();
+            CommonUtil.treeConsumer(root, max, this.forceExpand, entries::add);
+            this.buildFlattenedRows(entries, code, border);
+        } else {
+            final boolean[] lastStack = new boolean[Math.max(max, 1) + 32]; // generous upper bound for expanded branches
+            CommonUtil.treeConsumer(root, max, this.forceExpand, entry -> {
+                final int d = entry.depth();
+                if (d > 0) lastStack[d - 1] = entry.isLast();
+                final String prefix = treePrefix(d, lastStack, entry.isLast(), border);
+                final Obj mapped = code.apply(entry.obj());
+                final String suffix = stringSuffix(mapped);
+                rows.add(new TreeRow(entry, prefix, entry.name(), suffix));
+            });
+        }
+    }
+
+    private boolean flatten() {
+        final Obj f = this.at(uri("flatten"));
+        return f.isBool() && f.asBool().jvm();
+    }
+
+    /**
+     * A node is a folder when it has children of its own or its URI is a branch
+     * (trailing {@code /}).  Files — and empty branches without the marker — are
+     * not folders.
+     */
+    private static boolean isFolder(final CommonUtil.TreeEntry entry) {
+        return entry.childCount() > 0 || entry.uri().isBranch();
+    }
+
+    /**
+     * Flatten chains of folders that have no file (leaf) children into a single
+     * path row (e.g. {@code classes/com/example/scratch}).  A folder is folded
+     * into the running path when it has exactly one child that is itself a
+     * folder; the chain ends at a node with file children, multiple children,
+     * or no children.  Children of the final folder hang one level below the
+     * flattened path — never pushed right by the path's full width.
+     */
+    private void buildFlattenedRows(final List<CommonUtil.TreeEntry> entries,
+                                    final Call code, final Border border) {
+        final int maxNatural = entries.stream().mapToInt(CommonUtil.TreeEntry::depth).max().orElse(0);
+        final boolean[] lastStack = new boolean[maxNatural + 64];
+        // Active flatten offsets, one per flattened break node: {breakDepth, levelsFolded}.
+        // While inside such a subtree, each node's display depth is natural − Σ offsets.
+        final Deque<int[]> offsets = new ArrayDeque<>();
+        int delta = 0;
+        final List<String> pending = new ArrayList<>();
+        int pendingStartDisplay = 0;
+        boolean pendingIsLast = false;
+
+        for (int i = 0; i < entries.size(); i++) {
+            final CommonUtil.TreeEntry entry = entries.get(i);
             final int d = entry.depth();
-            if (d > 0) lastStack[d - 1] = entry.isLast();
-            final String prefix = treePrefix(d, lastStack, entry.isLast(), border);
-            final Obj mapped = code.apply(entry.obj());
-            final String suffix = stringSuffix(mapped);
-            rows.add(new TreeRow(entry, prefix, suffix));
-        });
+
+            // Leaving subtrees whose flattened break node is no longer active.
+            while (!offsets.isEmpty() && offsets.peek()[0] >= d) {
+                delta -= offsets.pop()[1];
+            }
+
+            final int disp = d > 0 ? Math.max(1, d - delta) : 0;
+            if (d > 0) lastStack[disp - 1] = entry.isLast();
+
+            if (d == 0) {
+                // The root is always its own row — never folded into a path.
+                final String suffix = stringSuffix(code.apply(entry.obj()));
+                rows.add(new TreeRow(entry, "", entry.name(), suffix));
+                continue;
+            }
+
+            // Fold when the node has exactly one child and that child is a folder
+            // (i.e. this node has no file children of its own).
+            final boolean flattenable = entry.childCount() == 1
+                    && i + 1 < entries.size()
+                    && entries.get(i + 1).depth() == d + 1
+                    && isFolder(entries.get(i + 1));
+
+            if (flattenable) {
+                if (pending.isEmpty()) {
+                    pendingStartDisplay = disp;
+                    pendingIsLast = entry.isLast();
+                }
+                pending.add(entry.name());
+                continue; // folded into the running path — no row yet
+            }
+
+            // Break node (or leaf): emit, carrying any accumulated path.
+            final String prefix;
+            final String name;
+            if (pending.isEmpty()) {
+                prefix = treePrefix(disp, lastStack, entry.isLast(), border);
+                name = entry.name();
+            } else {
+                prefix = treePrefix(pendingStartDisplay, lastStack, pendingIsLast, border);
+                name = String.join("/", pending) + "/" + entry.name();
+                // This node's subtree displays one level under the flattened path.
+                final int folded = pending.size();
+                offsets.push(new int[]{d, folded});
+                delta += folded;
+                pending.clear();
+            }
+            final String suffix = stringSuffix(code.apply(entry.obj()));
+            rows.add(new TreeRow(entry, prefix, name, suffix));
+        }
     }
 
     private static String treePrefix(final int depth, final boolean[] lastStack,

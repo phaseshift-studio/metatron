@@ -48,9 +48,12 @@
         <!-- SKIP BUILD PROCESSES -->
         <skipTests>false</skipTests>
         <skipDocker>true</skipDocker>
-        <skipRunner>false</skipRunner>
-        <skipAdoc>false</skipAdoc>
+        <skipAsciidoc>false</skipAsciidoc>
         <skipInstSet>false</skipInstSet>
+        <skipMarkdown>false</skipMarkdown>
+        <!-- doc-generation experiment toggles: fresh VM per file by default -->
+        <mtron.singleBoot>false</mtron.singleBoot>
+        <mtron.reverse>false</mtron.reverse>
         <buildNumber>0</buildNumber>
         <!-- metatron instset documentation -->
         <metatron.host>ws://localhost:8555/mtron</metatron.host>
@@ -544,13 +547,13 @@
                         </goals>
                     </execution>
                     <execution>
-                        <id>run-doc-runner</id>
+                        <id>run-asciidoc-runner</id>
                         <phase>site</phase>
                         <goals>
                             <goal>exec</goal>
                         </goals>
                         <configuration>
-                            <skip>${skipRunner}</skip>
+                            <skip>${skipAsciidoc}</skip>
                             <executable>java</executable>
                             <arguments>
                                 <argument>--enable-native-access=ALL-UNNAMED</argument>
@@ -576,10 +579,12 @@
                                 <argument>java.base/sun.nio.cs=ALL-UNNAMED</argument>
                                 <argument>-classpath</argument>
                                 <classpath/>
-                                <argument>studio.phaseshift.metatron.docs.DocRunner</argument>
+                                <argument>-Dmtron.singleBoot=${mtron.singleBoot}</argument>
+                                <argument>-Dmtron.reverse=${mtron.reverse}</argument>
+                                <argument>studio.phaseshift.metatron.docs.AsciiDocRunner</argument>
                                 <argument>${project.build.directory}/temp/src/adoc</argument>
                                 <argument>--copy_only</argument>
-                                <argument>${skipRunner}</argument>
+                                <argument>${skipAsciidoc}</argument>
                                 <argument>--verbose</argument>
                                 <argument>-o</argument>
                                 <argument>${project.build.directory}/temp</argument>
@@ -641,6 +646,47 @@
                                 <argument>/m/dcmnt</argument>
                                 <argument>/m/grph</argument>
                                 <argument>/m/vec</argument>
+                                <argument>/m/ide</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>run-markdown-runner</id>
+                        <phase>site</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <skip>${skipMarkdown}</skip>
+                            <executable>java</executable>
+                            <arguments>
+                                <argument>--enable-native-access=ALL-UNNAMED</argument>
+                                <argument>--add-modules</argument>
+                                <argument>jdk.incubator.vector</argument>
+                                <argument>--add-opens</argument>
+                                <argument>java.base/java.lang=ALL-UNNAMED</argument>
+                                <argument>--add-opens</argument>
+                                <argument>java.base/java.lang.invoke=ALL-UNNAMED</argument>
+                                <argument>--add-opens</argument>
+                                <argument>java.base/java.lang.reflect=ALL-UNNAMED</argument>
+                                <argument>--add-opens</argument>
+                                <argument>java.base/java.util=ALL-UNNAMED</argument>
+                                <argument>--add-opens</argument>
+                                <argument>java.base/java.util.concurrent.atomic=ALL-UNNAMED</argument>
+                                <argument>--add-opens</argument>
+                                <argument>java.base/java.io=ALL-UNNAMED</argument>
+                                <argument>--add-opens</argument>
+                                <argument>java.base/java.nio=ALL-UNNAMED</argument>
+                                <argument>--add-opens</argument>
+                                <argument>java.base/java.net=ALL-UNNAMED</argument>
+                                <argument>--add-opens</argument>
+                                <argument>java.base/sun.nio.cs=ALL-UNNAMED</argument>
+                                <argument>-classpath</argument>
+                                <classpath/>
+                                <argument>-Dmtron.singleBoot=${mtron.singleBoot}</argument>
+                                <argument>-Dmtron.reverse=${mtron.reverse}</argument>
+                                <argument>studio.phaseshift.metatron.docs.MarkdownRunner</argument>
+                                <argument>${project.basedir}/docs/skills</argument>
                             </arguments>
                         </configuration>
                     </execution>
@@ -806,7 +852,7 @@
                         <configuration>
                             <sourceDirectory>${project.build.directory}/temp</sourceDirectory>
                             <outputDirectory>${project.basedir}/docs/website</outputDirectory>
-                            <skip>${skipAdoc}</skip>
+                            <skip>${skipAsciidoc}</skip>
                             <backend>html</backend>
                             <standalone>false</standalone>
                             <resources>
@@ -837,7 +883,7 @@
                             <sourceDirectory>${project.basedir}/docs/articles</sourceDirectory>
                             <sourceDocumentName>parametric-identities-in-ring-theory.adoc</sourceDocumentName>
                             <outputDirectory>${project.basedir}/docs/website/articles</outputDirectory>
-                            <skip>${skipAdoc}</skip>
+                            <skip>${skipAsciidoc}</skip>
                             <backend>html</backend>
                         </configuration>
                     </execution>

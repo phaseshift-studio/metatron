@@ -173,6 +173,10 @@ public class MenuBarWidget extends AbstractWidget<MenuBarWidget> {
         final var surface = Console.LOCAL_INSTANCE.getFloatingSurface();
         final var terminal = Console.getTerminal();
         final int width = null != terminal ? Math.max(1, terminal.getWidth()) : 1;
+        // Menu bars are persistent chrome: give them the highest z-index so
+        // overlapping floating widgets (e.g. a tall bottom-anchored accordion
+        // that grows up into the bar's row) never paint over the bar.
+        this.style.zIndex(Integer.MAX_VALUE);
         // top=-1 pulls the bar to terminal row 1; FloatingSurface TOP anchors
         // resolve to 2 + offsetRow, leaving a buffer row above by default.
         this.floatAt(surface, FloatingSurface.Anchor.TOP_LEFT, width, -1, 0);

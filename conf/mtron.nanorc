@@ -34,8 +34,6 @@ color green "=>"
 ### bytes
 icolor yellow "0x([0-9]|[A-F]|[a-f])+"
 color yellow,underline "0x"
-### bool
-color yellow "(^|[^/])(true|false)([^/]|$)"
 # qProc keys
 icolor cyan "(|#|\+|[a-z]|-|_|\{.\})+(=|<=)(?!>)"
 icolor blue "=([a-z]|[0-9]|\.|_|-|/|#|\+)+"
@@ -63,6 +61,8 @@ color green "::"
 ### uri <>
 color blue "[<][^>]*[>]"
 color green "<" ">"
+### bool
+color yellow "(^|[^/])(true|false)([^/]|$)"
 ### uri key — overrides generic <> cyan before =>
 icolor cyan "</?(<|>|[a-z]|[0-9]|/|_|-|:|\+|#|\.|\s)*>\s*=>"
 icolor cyan "/?(<|>|\+|#|[a-z]|[0-9]|/|_|-|:|\.)*\s*=>"

@@ -227,6 +227,10 @@ bin/metatron</code></pre>
                    onclick="location.href=location.href.replace(/(\/instset)?(\/[^/]*)?(\.html)?$/,'/tractatus.html');return false;">the
                     tractatus</a>
             </li>
+            <li class="nav-item">
+                <a class="nav-link" href="skills/"
+                   onclick="location.href='./skills/';">agent skills</a>
+            </li>
             <!----------------------------------------------------------------------------------------------------------
             ----------------------------------- ARTICLES DROPDOWN ------------------------------------------------------
             ----------------------------------------------------------------------------------------------------------->
@@ -322,7 +326,11 @@ bin/metatron</code></pre>
   [remote_console=&gt;inst()]@helper,
   obj_xml::[=&gt;]@obj_xml,
   obj_html::[=&gt;]@obj_html,
-  obj_json::[density=&gt;&#39;OPAQUE&#39;,wrap_uri=&gt;true,bias_towards_uri=&gt;true,bias_towards_objs=&gt;false]@obj_json,
+  obj_json::[
+   density=&gt;&#39;OPAQUE&#39;,
+   wrap_uri=&gt;true,
+   bias_towards_uri=&gt;true,
+   bias_towards_objs=&gt;false]@obj_json,
   obj_markdown::[=&gt;]@obj_markdown,
   obj_text::[=&gt;]@obj_text,
   /m/mach/io/serializer/mtron::[
@@ -336,10 +344,14 @@ bin/metatron</code></pre>
     fail=&gt;60],
    justify=&gt;true]@/m/mach/io/serializer/string/clean,
   bytebuffer::[=&gt;]@bytebuffer,
-  obj_json::[density=&gt;&#39;TRANSPARENT&#39;,wrap_uri=&gt;true,bias_towards_uri=&gt;true,bias_towards_objs=&gt;false]@obj_json,
+  obj_json::[
+   density=&gt;&#39;TRANSPARENT&#39;,
+   wrap_uri=&gt;true,
+   bias_towards_uri=&gt;true,
+   bias_towards_objs=&gt;false]@obj_json,
   obj_bson::[=&gt;]@obj_bson],
  type=&gt;[mime::T,xml::T,html::T,json::T,yaml::T,css::T,markdown::T,java::T,serializer::T,obj_mtron::T,...(23 more)],
- inst=&gt;[ping?/m/math/time&lt;=#{?}(uri::T),format?str&lt;=markdown(),as?skill&lt;=markdown(str::T),as?rec&lt;=json(rec::T),as?rec&lt;=yaml(rec::T),as?json&lt;=rec(json::T),as?rec&lt;=xml(rec::T),as?xml&lt;=rec(xml::T),as?rec&lt;=html(rec::T),as?html&lt;=rec(html::T),...(7 more)]]@/m/web</code></pre>
+ inst=&gt;[ping?/m/math/time&lt;=#{?}(uri::T),format?str&lt;=markdown(),as?skill&lt;=markdown(str::T),as?rec&lt;=json(rec::T),as?rec&lt;=yaml(rec::T),as?json&lt;=rec(json::T),as?rec&lt;=xml(rec::T),as?xml&lt;=rec(xml::T),as?rec&lt;=html(rec::T),as?html&lt;=rec(html::T),...(9 more)]]@/m/web</code></pre>
                     </div>
                 </div>
             </div>
@@ -524,7 +536,11 @@ bin/metatron</code></pre>
         <span class="code text-secondary fw-bold">obj_json</span>
         <small class="text-muted code">/m/web/serializer/obj_json</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">obj_json::[density=&gt;&#39;TRANSPARENT&#39;,wrap_uri=&gt;true,bias_towards_uri=&gt;true,bias_towards_objs=&gt;false]@obj_json</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">obj_json::[
+ density=&gt;&#39;TRANSPARENT&#39;,
+ wrap_uri=&gt;true,
+ bias_towards_uri=&gt;true,
+ bias_towards_objs=&gt;false]@obj_json</code></pre></div>
     
 </div><div class="card mb-3" id="__m__web__serializer__obj_markdown">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -574,17 +590,10 @@ bin/metatron</code></pre>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(#{*}::T){&lt;j&gt;}]@/m/web/mime/html</code></pre></div>
     
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">a rec encoding of an html document</p>
+    <p class="mb-0 text-light">an html verified str encoding of an html document</p>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*&lt;http://metatron.phaseshift.studio&gt; [-- yields an html::T --]
-html::[html=&gt;
-       [head=&gt;
-        [title=&gt;&quot;metatron&quot;]],
-        body=&gt;
-         [out=&gt;[
-          [tag=&gt;a,href=&gt;...],
-          [tag...]]]]</code></pre>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*&lt;http://metatron.phaseshift.studio&gt; [-- yields an html::T --]</code></pre>
 </div>
 </div><div class="card mb-3" id="__m__web__mime__java">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -646,12 +655,12 @@ html::[html=&gt;
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#an mcp client type specification" class="text-info">an mcp client type specification</a> <span class="text-light">=&gt;</span> <a href="#a connection to an existing mcp server" class="text-success">a connection to an existing mcp server</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}status" class="text-light">{?}status</a> <span class="text-light">=&gt;</span> <a href="#'the current status of the mcp client__server connection'" class="text-info">server connection&#39;</a>
-  <a href="#{?}command" class="text-light">{?}command</a> <span class="text-light">=&gt;</span> <a href="#'only necessary for stdio mcp servers, where the client is the server'" class="text-info">&#39;only necessary for stdio mcp servers, where the client is the server&#39;</a>
-  <a href="#{?}host" class="text-light">{?}host</a> <span class="text-light">=&gt;</span> <a href="#'the mcp server endpoint (optional for stdio)'" class="text-info">&#39;the mcp server endpoint (optional for stdio)&#39;</a>
-  <a href="#{?}transport" class="text-light">{?}transport</a> <span class="text-light">=&gt;</span> <a href="#"specify the transport if host schema resolution isn't sufficient"" class="text-info">&quot;specify the transport if host schema resolution isn&#39;t sufficient&quot;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}tool" class="text-light">{?}tool</a> <span class="text-light">=&gt;</span> <a href="#'the tools__functions available for use on the mcp server'" class="text-info">functions available for use on the mcp server&#39;</a>
   <a href="#{?}env" class="text-light">{?}env</a> <span class="text-light">=&gt;</span> <a href="#'environment variables for the stdio server process'" class="text-info">&#39;environment variables for the stdio server process&#39;</a>
-  <a href="#{?}tool" class="text-light">{?}tool</a> <span class="text-light">=&gt;</span> <a href="#'the tools__functions available for use on the mcp server'" class="text-info">functions available for use on the mcp server&#39;</a>
+  <a href="#{?}transport" class="text-light">{?}transport</a> <span class="text-light">=&gt;</span> <a href="#"specify the transport if host schema resolution isn't sufficient"" class="text-info">&quot;specify the transport if host schema resolution isn&#39;t sufficient&quot;</a>
+  <a href="#{?}host" class="text-light">{?}host</a> <span class="text-light">=&gt;</span> <a href="#'the mcp server endpoint (optional for stdio)'" class="text-info">&#39;the mcp server endpoint (optional for stdio)&#39;</a>
+  <a href="#{?}command" class="text-light">{?}command</a> <span class="text-light">=&gt;</span> <a href="#'only necessary for stdio mcp servers, where the client is the server'" class="text-info">&#39;only necessary for stdio mcp servers, where the client is the server&#39;</a>
+  <a href="#{?}status" class="text-light">{?}status</a> <span class="text-light">=&gt;</span> <a href="#'the current status of the mcp client__server connection'" class="text-info">server connection&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -679,7 +688,7 @@ mcp_client::[host =&gt; &lt;ws://localhost:8999&gt;]@/usr/ai/mcp/mtron          
         </span>
         <small class="text-muted code">/m/web/mime</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">uri::T[?inside([
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">uri::T[?union([
  application/bson,
  application/json,
  application/ld+json,
@@ -784,7 +793,11 @@ obj_bytebuffer::[=&gt;]</code></pre>
         </span>
         <small class="text-muted code">/m/web/serializer/obj_simple_json</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">serializer::T[?[{?}wrap_uri=&gt;isa(bool::T),{?}bias_towards_uri=&gt;isa(bool::T),{?}bias_towards_objs=&gt;isa(bool::T),{?}embed_candq=&gt;isa(bool::T)]][ctor?obj_simple_json&lt;=#{?}(obj_simple_json::T)]@/m/web/serializer/obj_simple_json</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">serializer::T[?[
+  {?}wrap_uri=&gt;isa(bool::T),
+  {?}bias_towards_uri=&gt;isa(bool::T),
+  {?}bias_towards_objs=&gt;isa(bool::T),
+  {?}embed_candq=&gt;isa(bool::T)]][ctor?obj_simple_json&lt;=#{?}(obj_simple_json::T)]@/m/web/serializer/obj_simple_json</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">obj_simple_json::[wrap_uri=&gt;true]</p>
@@ -834,7 +847,7 @@ obj_bytebuffer::[=&gt;]</code></pre>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(#{*}::T){&lt;j&gt;}]@/m/web/mime/xml</code></pre></div>
     
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">a rec encoding of an xml document</p>
+    <p class="mb-0 text-light">a xml verified str encoding of an xml document</p>
 </div>
 </div><div class="card mb-3" id="__m__web__mime__yaml">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -898,7 +911,11 @@ obj_bytebuffer::[=&gt;]</code></pre>
         <small class="text-muted code">/m/web/space/httpspace</small>
     </div>
     <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[][/m/web/space/httpspace/ctor?httpspace&lt;=#{?}(rec::T)]@/m/web/space/httpspace</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m.html#__m__space" class="code inherited-link">space::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[pattern=&gt;uri::T,{?}q=&gt;[qproc{?}::T],{?}route=&gt;[uri{?}::T=&gt;uri::T],{?}schema=&gt;instset::T]</code></div></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m.html#__m__space" class="code inherited-link">space::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
+ pattern=&gt;uri::T,
+ {?}q=&gt;[qproc{?}::T],
+ {?}route=&gt;[uri{?}::T=&gt;uri::T],
+ {?}schema=&gt;instset::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a space for reading and writing web-related resources.
 for http://# patterns and remote routes, uri resolution will fetch remote web resources and httpspace will handle nested addresses client-side.
@@ -1146,7 +1163,11 @@ httpspace webserver is furi aware and will perform server-side extraction of nes
         <small class="text-muted code">/m/web/space/wsspace</small>
     </div>
     <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[?[host=&gt;uri::T]][ctor?wsspace&lt;=#{?}(wsspace::T)]@/m/web/space/wsspace</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m.html#__m__space" class="code inherited-link">space::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[pattern=&gt;uri::T,{?}q=&gt;[qproc{?}::T],{?}route=&gt;[uri{?}::T=&gt;uri::T],{?}schema=&gt;instset::T]</code></div></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m.html#__m__space" class="code inherited-link">space::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
+ pattern=&gt;uri::T,
+ {?}q=&gt;[qproc{?}::T],
+ {?}route=&gt;[uri{?}::T=&gt;uri::T],
+ {?}schema=&gt;instset::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a space for exposing and managing web socket servers.</p>
 </div><div class="card-body border-top py-2">

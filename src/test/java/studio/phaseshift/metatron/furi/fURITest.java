@@ -741,6 +741,7 @@ public class fURITest extends AbstractMetatronTest {
 
     @ParameterizedTest
     @CsvSource(value = {
+            "X                           | /b/c    | /b/c",
             "a                           | /b/     |  a/b/",
             "a                           | /b      |  a/b",
             "a                           | /       |  a/",
@@ -762,9 +763,10 @@ public class fURITest extends AbstractMetatronTest {
             "mtron://www.com:8999/b/c/d  | a/b/c   |  mtron://www.com:8999/b/c/d/a/b/c",
             "mtron://www.com/b/c/d       | /a/b/c  |  mtron://www.com/b/c/d/a/b/c",
             "mtron://www.com/b/c/d{2}    | /a/b/c  |  mtron://www.com/b/c/d/a/b/c{2}",
-    }, delimiter = '|')
-    public void testExtend(final String base, final String prepend, final String expected) {
+    }, delimiter = '|', emptyValue = "''")
+    public void testExtend(String base, final String prepend, final String expected) {
         LOG.debug("testing {{b}}%s{{X}} extend {{b}}%s{{X}} [expected: %s]", f(base), f(prepend), f(expected));
+        base = base.equals("X") ? "" : base;
         assertEquals(f(expected), f(base).extend(prepend));
         checkEquals(f(base).extend(prepend), f(expected));
     }

@@ -281,7 +281,7 @@ public class uiInstSet extends AbstractInstSet {
                                         .tid(UI_WIDGET_TID)
                                         .vid(UI_SWIPE_PANEL_TID)
                                         .isaPredicate(rec(uri(OBJ).maybe().asUri(), LST_TYPE))
-                                        .constructor(arg -> new SwipePanelWidgetTool(arg.asRec().jvm(), UI_SWIPE_PANEL_TID, arg.vid()))
+                                        .constructor(arg -> new SwipePanelWidgetTool(arg.jvm(), UI_SWIPE_PANEL_TID, arg.vid()))
                                         .create(),
                                 "lst of objs",
                                 "a swipe panel widget tool",

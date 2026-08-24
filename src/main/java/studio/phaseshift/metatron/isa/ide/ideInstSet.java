@@ -22,6 +22,9 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.ide.parser.ObjJavaIDESerializer;
 import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.util.MTronException;
+import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.Map;
 
@@ -43,6 +46,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.web.webInstSet.JAVA_TID;
+import static studio.phaseshift.metatron.isa.web.webInstSet.JAVA_TYPE;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /**
@@ -106,8 +110,7 @@ public class ideInstSet extends AbstractInstSet {
                     uri(ROOT).asUri(), URI_TYPE,
                     uri(NAME).maybe().asUri(), STR_TYPE,
                     uri(DESC).maybe(), STR_TYPE,
-                    uri(BUILD).maybe().asUri(), rec(URI_TYPE, IDE_RESULT_TYPE),
-                    uri(TEST).maybe().asUri(), rec(URI_TYPE, IDE_RESULT_TYPE),
+                    uri(COMMAND).maybe(), rec(URI_TYPE, IDE_RESULT_TYPE),
                     uri(CODE).maybe().asUri(), T(ALL)))// a !* ref to the source tree
             .create();
 
@@ -153,14 +156,16 @@ public class ideInstSet extends AbstractInstSet {
                                         project.at(CODE, lst(start_(lhs).repeat_(rshift_(), BOOL_FALSE, BOOL_TRUE).apply()
                                                 .stream()
                                                 .filter(e -> e.uriValue().toString().contains(".java"))
-                                                .map(e -> (Obj) auto_from_(e.uriValue()))
+                                                .map(e -> Tuple.Pair.with(e, Router.readFromSpace(e.uriValue())))
+                                                .map(e -> Tuple.Pair.with(e.get0(), start_(e.get1()).as_(JAVA_TYPE).apply()))
+                                                .map(e -> (Obj) start_(e.get1()).as_(IDE_JAVA_TYPE).apply().asRec().at(uri("location"), e.get0(), MUTABLE))
                                                 .toList()), MUTABLE);
                                     }
                                     if (!project.has(NAME))
-                                        project.at(NAME, str(lhs.uriValue().basePath().toString()), MUTABLE);
+                                        project.at(NAME, str(lhs.uriValue().basePath().name()), MUTABLE);
                                     if (!project.has(ROOT))
                                         project.at(ROOT, lhs.vid(null), MUTABLE);
-                                    return project.selfTID(IDE_PROJECT_TID).vid(inst.arg(0).vid());
+                                    return project.selfTID(IDE_PROJECT_TID);
                                 }),
                                 "a project source root",
                                 "a project obj",
@@ -172,33 +177,37 @@ public class ideInstSet extends AbstractInstSet {
                         docWrap(instC(AS_INST_TID.dom(IDE_PROJECT_TID).rng(LLM_SKILL_TID), lst(ALL_TYPE), (lhs, inst) -> {
                                     final Rec project = lhs.asRec();
                                     final Rec skill = inst.arg(0).isType() ? rec() : inst.arg(0).asRec();
-                                    if (project.has(NAME))
-                                        skill.at(NAME, uri(project.at(NAME).strValue()), MUTABLE);
-                                    if (project.has(DESC))
-                                        skill.at(DESC, project.at(DESC), MUTABLE);
-                                    if (project.has(CONTENT))
-                                        skill.at(CONTENT, project.at(CONTENT), MUTABLE);
-                                    if (project.has(TOOL))
-                                        skill.at(TOOL, lst(project.at(COMMAND).asRec().valueElements().toList()), MUTABLE);
-                                    // the project files, viewed as the skill resources
-                                    // atDirect for the raw list (a toggle at() would auto-resolve the !* refs into contents)
-                                    if (project.has(CODE))
-                                        skill.at(RESOURCE, lst(project.atDirect(uri(CODE)).asLst().jvm().stream()
-                                                .map(e -> {
-                                                    final Obj text;
-                                                    final fURI fileUri;
-                                                    // a raw element: keep or mint its !* reference as the lazy text
-                                                    if (e.isUri()) {
-                                                        fileUri = e.uriValue();
-                                                        text = (Obj) auto_from_(e.uriValue());
-                                                    } else {
-                                                        fileUri = e.asCode().insts().getFirst().arg(0).uriValue();
-                                                        text = e;
-                                                    }
-                                                    return (Obj) rec(uri(URI), uri(fileUri), uri(TEXT), text);
-                                                })
-                                                .toList()), MUTABLE);
-                                    return skill;
+                                    try {
+                                        if (project.has(NAME))
+                                            skill.at(NAME, uri(project.at(NAME).strValue()), MUTABLE);
+                                        if (project.has(DESC))
+                                            skill.at(DESC, project.at(DESC), MUTABLE);
+                                        if (project.has(CONTENT))
+                                            skill.at(CONTENT, project.at(CONTENT), MUTABLE);
+                                        if (project.has(TOOL))
+                                            skill.at(TOOL, project.at(TOOL), MUTABLE);
+                                        // the project files, viewed as the skill resources
+                                        // atDirect for the raw list (a toggle at() would auto-resolve the !* refs into contents)
+                                        if (project.has(CODE))
+                                            skill.at(RESOURCE, lst(project.atDirect(uri(CODE)).asLst().jvm().stream()
+                                                    .map(e -> {
+                                                        final Obj text;
+                                                        final fURI fileUri;
+                                                        // a raw element: keep or mint its !* reference as the lazy text
+                                                        if (e.isUri()) {
+                                                            fileUri = e.uriValue();
+                                                            text = (Obj) auto_from_(e.uriValue());
+                                                        } else {
+                                                            fileUri = e.asCode().insts().getFirst().arg(0).uriValue();
+                                                            text = e;
+                                                        }
+                                                        return (Obj) rec(uri(URI), uri(fileUri), uri(TEXT), text);
+                                                    })
+                                                    .toList()), MUTABLE);
+                                        return skill;
+                                    } catch (final Exception e) {
+                                        throw MTronException.of(e);
+                                    }
                                 }),
                                 "a project",
                                 "the skill view of the project",
@@ -209,19 +218,31 @@ public class ideInstSet extends AbstractInstSet {
                         // the write direction — serialize the coarse rec back to java source.
                         // writeMember composes header + body + footer, so surgical body edits
                         // round-trip without the derived text field going stale.
-                        instC(AS_INST_TID.dom(IDE_JAVA_TID).rng(JAVA_TID), lst(STR_TYPE), (lhs, inst) -> str(ObjJavaIDESerializer.single().write(lhs.asRec()))),
-                        instC(AS_INST_TID.dom(REC_TID).rng(IDE_JAVA_TID), lst(IDE_JAVA_TYPE), (lhs, inst) -> lhs.tid(IDE_JAVA_TID)),
-                        docWrap(instC(IDE_INST_TID.extend("find").dom(IDE_PROJECT_TID).rng(URI_TID.maybeSome()), lst(URI_TYPE),
+                        instC(AS_INST_TID.dom(IDE_JAVA_TID).rng(JAVA_TID), lst(JAVA_TYPE), (lhs, inst) -> str(ObjJavaIDESerializer.single().write(lhs.asRec()))),
+                        //instC(AS_INST_TID.dom(REC_TID).rng(IDE_JAVA_TID), lst(IDE_JAVA_TYPE), (lhs, inst) -> lhs.tid(IDE_JAVA_TID)),
+                        docWrap(instC(IDE_INST_TID.extend("find").dom(URI_TID).rng(URI_TID.maybeSome()), lst(URI_TYPE, T(STR_TID.maybe())),
                                         // *scratch/root.repeat(code=>>>,until=>false,emit=>has(<#>)) 
-                                        (lhs, inst) -> from_(lhs.asRec().at(ROOT)).repeat_(rshift_(), BOOL_FALSE, has_(inst.arg(0))).tryToInst().apply()),
+                                        (lhs, inst) -> {
+                                            return start_(lhs).rshift_(uri(CODE)).rshift_().
+                                                    filter_(from_(id_()).rshift_(uri("location")).has_(inst.arg(0))).
+                                                    repeat_(rec(CODE, rshift_(), EMIT, BOOL_TRUE)).
+                                                    filter_(from_(id_()).rshift_(uri(NAME)).has_(inst.arg(1).orElse(str(".*")))).tryToInst().apply();
+                                            /*return from_(uri(lhs.uriValue().extend(f(CODE).extend("/")))).
+                                                    filter_(rshift_().rshift_(uri("location")).has_(inst.arg(0))).
+                                                    split_(lst(lshift_(), rshift_(uri("location")))).
+                                                    filter_(rshift_(jnt(0)).repeat_(rec("code", rshift_(), "emit", BOOL_TRUE)).filter_(from_(id_()).rshift_(uri("name")).has_(inst.arg(0))));*/
+                                            //from_(lhs.asRec().at(ROOT)).repeat_(rshift_(), BOOL_FALSE, has_(inst.arg(0))).tryToInst().apply()
+                                        }),
                                 "a project",
                                 "the location of found resources",
                                 Map.of(URI_TYPE, "a uri fragment to match"),
                                 "finds project resources that contain provided uri fragment",
                                 "*m_proj.find('Rec.java')"),
-                        docWrap(instC(IDE_INST_TID.extend("search").dom(IDE_PROJECT_TID).rng(URI_TID.maybeSome()), lst(STR_TYPE),
+                        docWrap(instC(IDE_INST_TID.extend("search").dom(URI_TID).rng(URI_TID.maybeSome()), lst(STR_TYPE),
                                         // *scratch/root.repeat(code=>>>,until=>false,emit=>has(<#>)) 
-                                        (lhs, inst) -> from_(lhs.asRec().at(ROOT)).repeat_(rshift_(), BOOL_FALSE, from_(id_()).isa_(IDE_JAVA_TYPE).has_(inst.arg(0))).tryToInst().apply()),
+                                        //(lhs, inst) -> from_(lhs.asRec().at(ROOT)).repeat_(rshift_(), BOOL_FALSE, from_(id_()).isa_(IDE_JAVA_TYPE).has_(inst.arg(0))).tryToInst().apply()),
+                                        (lhs, inst) -> start_(lhs).repeat_(rec("code", rshift_(), "emit", BOOL_TRUE)).filter_(from_(id_()).rshift_(uri("name")).has_(inst.arg(0)))
+                                ),
                                 "a project",
                                 "the location of found resources",
                                 Map.of(STR_TYPE, "a regex string to match in resource contents"),

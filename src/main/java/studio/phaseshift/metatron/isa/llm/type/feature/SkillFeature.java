@@ -7,6 +7,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
 import studio.phaseshift.metatron.isa.llm.type.AgentServices;
 import studio.phaseshift.metatron.isa.llm.type.mSkill;
+import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.io.space.fs.fsSpace;
 import studio.phaseshift.metatron.util.MTronException;
@@ -54,13 +55,18 @@ public class SkillFeature extends AbstractFeature {
                     "a lst[lst[str,str]] of skills",
                     Map.of(),
                     "generates a lst of available skills by name and description"));
-            service.systemMessage(
+            /*service.systemMessage(
                     "\nYou have access to the following skills:\n" +
                             skills.formatAvailableSkills()
-                            + "\nWhen the user's request relates to one of these skills, activate it first using the `activate_skill` tool before proceeding.");
+                            + "\nWhen the user's request relates to one of these skills, activate it first using the `activate_skill` tool before proceeding.");*/
         } catch (final Exception e) {
             throw MTronException.of("unable to setup skills: %s", e);
         }
+    }
+
+    @Override
+    public Lst skill(final Agent agent) {
+        return lst(this.at(SKILL).elements().toList());
     }
 
     @Override
@@ -79,7 +85,7 @@ public class SkillFeature extends AbstractFeature {
         try {
             final Skills skills = new Skills.Builder().skills(allSkills).build();
             agent.addToolProvider(skills.toolProvider());
-            agent.addSystemMessage("skills accessible via calling list_skills() using the mtron eval tool");
+            agent.addSystemMessage("skills accessible by calling list_skills() using the mtron eval tool");
         } catch (final Exception e) {
             throw MTronException.of("unable to setup skills: %s", e);
         }

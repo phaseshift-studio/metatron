@@ -40,6 +40,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.QProc.QPROC_TID;
@@ -70,10 +71,13 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public final class QCollection {
-
+    public static final fURI REFQ_PATTERN = f("refq");
+    public static final fURI REFQ_TID = QPROC_TID.extend(REFQ_PATTERN);
+    public static final Type REFQ_TYPE = Type.Builder.build().tid(QPROC_TID).vid(REFQ_TID).constructor(QCollection::refQ).create();
+    //
     public static final fURI LINEQ_PATTERN = f("lineq");
     public static final fURI LINEQ_TID = QPROC_TID.extend(LINEQ_PATTERN);
-    public static final Type LINEQ_TYPE = Type.Builder.build().tid(QPROC_TID).vid(LINEQ_TID).constructor(QCollection::lineq).create();
+    public static final Type LINEQ_TYPE = Type.Builder.build().tid(QPROC_TID).vid(LINEQ_TID).constructor(QCollection::lineQ).create();
     //
     public static final fURI MIMEQ_PATTERN = f("mimeq");
     public static final fURI MIMEQ_TID = QPROC_TID.extend(MIMEQ_PATTERN);
@@ -220,7 +224,15 @@ public final class QCollection {
         return new int[]{start, stop};
     }
 
-    public static QProc lineq() {
+    public static QProc refQ() {
+        return QProc.Helper.build(REFQ_TID, REFQ_PATTERN).postRead((u, o) ->
+                        objs(Stream.of(u.q(REFQ_PATTERN).split(","))
+                                .map(fURI.Singleton::f)
+                                .map(Router::readFromSpace)).append(o))
+                .create();
+    }
+
+    public static QProc lineQ() {
         return QProc.Helper.build(LINEQ_TID, LINEQ_PATTERN)
                 .preWrite((furi, obj) -> {
                     final String objString = Str.Helper.cleanString(Router.readFromSpace(furi.removeQ(LINEQ_PATTERN)));
@@ -715,7 +727,8 @@ public final class QCollection {
 
     /// //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    private static Docs internalDocWrap(final Obj obj, final String domDesc, final String rngDesc, final Map<Obj, String> argDescription, final String description, final String... examples) {
+    private static Docs internalDocWrap(final Obj obj, final String domDesc, final String rngDesc,
+                                        final Map<Obj, String> argDescription, final String description, final String... examples) {
         if (obj.isNoObj())
             return new Docs("nothing").c(cInt.ZERO()).as();
         final fURI objID = obj.isInst() ? obj.tid() : obj.vid();
@@ -736,12 +749,14 @@ public final class QCollection {
         return doc;
     }
 
-    public static Inst docWrap(final Inst inst, final String domDesc, final String rngDesc, final Map<Obj, String> argDescription, final String description, final String... examples) {
+    public static Inst docWrap(final Inst inst, final String domDesc, final String rngDesc,
+                               final Map<Obj, String> argDescription, final String description, final String... examples) {
         internalDocWrap(inst, domDesc, rngDesc, argDescription, description, examples);
         return inst;
     }
 
-    public static Docs docWrapDocs(final Inst inst, final String domDesc, final String rngDesc, final Map<Obj, String> argDescription, final String description, final String... examples) {
+    public static Docs docWrapDocs(final Inst inst, final String domDesc, final String rngDesc,
+                                   final Map<Obj, String> argDescription, final String description, final String... examples) {
         return internalDocWrap(inst, domDesc, rngDesc, argDescription, description, examples);
     }
 
@@ -763,7 +778,8 @@ public final class QCollection {
         return obj;
     }
 
-    public static Type docWrap(final Type type, final String predicate, final String constructor, final Map<Obj, String> predicateDescription, final String description, final String... examples) {
+    public static Type docWrap(final Type type, final String predicate, final String constructor,
+                               final Map<Obj, String> predicateDescription, final String description, final String... examples) {
         internalDocWrap(type, predicate, constructor, predicateDescription, description, examples);
         return type;
     }

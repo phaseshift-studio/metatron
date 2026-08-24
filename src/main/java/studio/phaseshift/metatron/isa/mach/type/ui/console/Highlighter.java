@@ -103,10 +103,15 @@ public class Highlighter implements org.jline.reader.Highlighter {
     public String highlight(final Object object) {
         try {
             if (object instanceof Obj) {
-                final AttributedString styled = this.highlight(null, this.serializer.write((Obj) object));
+                final String serialized = this.serializer.write((Obj) object);
+                if (containsBoxDrawing(serialized))
+                    return this.preserveBoxDrawing(serialized);
+                final AttributedString styled = this.highlight(null, serialized);
                 return this.terminal != null ? styled.toAnsi(this.terminal) : styled.toAnsi();
             } else {
                 final String str = object.toString();
+                if (containsBoxDrawing(str))
+                    return this.preserveBoxDrawing(str);
                 return this.GRAPHITTY_PATTERN.matcher(str).find()
                         ? this.graphitty.writeToString(str)
                         : this.highlight(null, str).toAnsi();
@@ -114,6 +119,28 @@ public class Highlighter implements org.jline.reader.Highlighter {
         } catch (final Exception e) {
             return object.toString();
         }
+    }
+
+    /**
+     * JLine's {@link AttributedString#toAnsi()} maps box-drawing glyphs
+     * (U+2500–U+257F) to VT100 alternate-charset codepoints or ASCII
+     * ({@code ├ ─ │} → {@code + - |}) depending on terminal capabilities,
+     * mangling pre-formatted content such as tree widgets.  Such content is
+     * already terminal-ready UTF-8 — return it verbatim (expanding any
+     * Graphitty markup) rather than passing it through the ANSI converter.
+     */
+    private String preserveBoxDrawing(final String string) {
+        return this.GRAPHITTY_PATTERN.matcher(string).find()
+                ? this.graphitty.writeToString(string)
+                : string;
+    }
+
+    private static boolean containsBoxDrawing(final String string) {
+        for (int i = 0; i < string.length(); i++) {
+            final char c = string.charAt(i);
+            if (c >= 0x2500 && c <= 0x257F) return true;
+        }
+        return false;
     }
 
     @Override

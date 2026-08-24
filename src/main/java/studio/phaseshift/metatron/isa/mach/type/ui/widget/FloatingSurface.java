@@ -105,6 +105,13 @@ public class FloatingSurface {
     private final java.util.concurrent.atomic.AtomicBoolean renderQueued =
             new java.util.concurrent.atomic.AtomicBoolean(false);
 
+    /** Terminal scrolls (output newlines written at the bottom) accumulated
+     *  since the last widget render pass.  Consumed by {@link #renderInternal}
+     *  to erase each widget's previous representation where the scroll carried
+     *  it, so stale copies don't rise up the screen. */
+    private final java.util.concurrent.atomic.AtomicInteger scrollAccum =
+            new java.util.concurrent.atomic.AtomicInteger(0);
+
     {
         renderThread = new Thread(() -> {
             while (running) {
@@ -171,6 +178,11 @@ public class FloatingSurface {
      */
     public void writeToTerminal(final String text) {
         submitAndWait(() -> {
+            // Console output is written at the bottom of the terminal, so each
+            // newline scrolls the screen, carrying pinned widgets up with it.
+            // Count those scrolls so the next render pass can erase each
+            // widget's previous representation at its scrolled position.
+            this.scrollAccum.addAndGet((int) text.chars().filter(c -> c == '\n').count());
             this.terminal.writer().print(text);
             this.terminal.writer().flush();
         });
@@ -206,7 +218,10 @@ public class FloatingSurface {
             existing.lastCol = col;
         } else {
             final Slot slot = Slot.fixed(row, col);
-            if (existing != null) slot.prevHeight = existing.prevHeight;
+            if (existing != null) {
+                slot.prevHeight = existing.prevHeight;
+                slot.prevWidth = existing.prevWidth;
+            }
             this.slots.put(widget, slot);
         }
     }
@@ -251,6 +266,7 @@ public class FloatingSurface {
             // Carry the previous render region so the first redraw erases the
             // old content (a fresh slot with prevHeight 0 would leave it behind).
             slot.prevHeight = replaced.prevHeight;
+            slot.prevWidth = replaced.prevWidth;
             slot.lastRow = replaced.lastRow;
             slot.lastCol = replaced.lastCol;
         }
@@ -294,6 +310,9 @@ public class FloatingSurface {
     /** Runs on the render thread.  Builds save-cursor + widgets + restore-cursor
      *  in one StringBuilder, expands {{X}} codes, and writes atomically. */
     private void renderInternal() {
+        // Consume the scroll accumulated since the last pass so each widget's
+        // stale copy — carried up by scrolled console output — gets erased.
+        final int scroll = this.scrollAccum.getAndSet(0);
         if (this.slots.isEmpty()) return;
         final int termWidth = this.terminal.getWidth();
         final int termHeight = this.terminal.getHeight();
@@ -301,14 +320,23 @@ public class FloatingSurface {
 
         sb.append("\033[s"); // save cursor
 
-        for (final var entry : this.slots.entrySet()) {
+        // Draw lower z-index widgets first so higher z-index widgets (e.g.
+        // menu bars) render on top when their regions overlap.  Stable sort:
+        // equal-z widgets keep their current iteration order.
+        final var ordered = new java.util.ArrayList<>(this.slots.entrySet());
+        ordered.sort(java.util.Comparator.comparingInt(e -> {
+            final var s = e.getKey().getStyle();
+            return s == null ? 0 : s.zIndex();
+        }));
+
+        for (final var entry : ordered) {
             final Widget<?> widget = entry.getKey();
             if (isDeleted(widget)) {
                 eraseSlot(sb, entry.getValue());
                 this.slots.remove(widget);
                 continue;
             }
-            renderWidget(sb, widget, entry.getValue(), termWidth, termHeight);
+            renderWidget(sb, widget, entry.getValue(), termWidth, termHeight, scroll);
         }
 
         sb.append("\033[u"); // restore cursor
@@ -381,13 +409,16 @@ public class FloatingSurface {
 
     /**
      * Append the erase sequences for a slot's last render to {@code sb}.
+     * Clearing is scoped to the widget's own columns (its previous width),
+     * never to end-of-line, so widgets rendered at other columns on the
+     * same rows are left intact.
      */
     private void eraseSlot(final StringBuilder sb, final Slot slot) {
         if (slot.prevHeight > 0 && slot.lastRow > 0) {
             final int col = slot.lastCol > 0 ? slot.lastCol : 1;
             for (int r = 0; r < slot.prevHeight; r++) {
                 sb.append("\033[").append(slot.lastRow + r).append(";").append(col).append("H");
-                sb.append("\033[K");
+                sb.append(" ".repeat(Math.max(0, slot.prevWidth)));
             }
         }
     }
@@ -396,7 +427,8 @@ public class FloatingSurface {
      * Render a single widget at its slot position.
      */
     private void renderWidget(final StringBuilder sb, final Widget<?> widget,
-                              final Slot slot, final int termWidth, final int termHeight) {
+                              final Slot slot, final int termWidth, final int termHeight,
+                              final int scroll) {
         final String formatted = widget.format();
         String[] lines = formatted.split("\n", -1);
 
@@ -427,31 +459,61 @@ public class FloatingSurface {
         final int oldLastRow = slot.lastRow;
         final int oldLastCol = slot.lastCol;
         final int oldPrevHeight = slot.prevHeight;
+        final int oldPrevWidth = slot.prevWidth;
 
         slot.resolve(termHeight, termWidth, effectiveHeight);
 
         final int maxWidth = Math.max(1, termWidth - slot.lastCol + 1);
+        final int newWidth = renderedWidth(lines, maxWidth);
 
-        // Erase the old render region.  Clearing and rendering share one
-        // StringBuilder (single atomic terminal write) so there is no flicker.
-        if (oldPrevHeight > 0 && oldLastRow > 0) {
-            final int clearCol = oldLastCol > 0 ? oldLastCol : slot.lastCol;
-            for (int r = 0; r < oldPrevHeight; r++) {
-                sb.append("\033[").append(oldLastRow + r)
-                  .append(";").append(clearCol).append("H");
-                sb.append("\033[K");
+        // Scroll compensation: console output written at the bottom scrolled
+        // the terminal by `scroll` rows since this widget was last drawn,
+        // carrying its previous representation up the screen.  Erase it where
+        // it now sits — within the widget's own columns — so stale copies
+        // never rise row-by-row with each new output line.
+        if (scroll > 0 && oldPrevHeight > 0) {
+            final int staleRow = oldLastRow - scroll;
+            final int staleHeight = Math.min(oldPrevHeight, scroll);
+            if (staleRow >= 1) {
+                for (int r = 0; r < staleHeight; r++) {
+                    sb.append("\033[").append(staleRow + r).append(";").append(oldLastCol).append("H");
+                    sb.append(" ".repeat(Math.max(0, oldPrevWidth)));
+                }
             }
         }
 
-        // Buffer zone: keep the row directly above the widget clean.
+        // Erase stale content from the old footprint.  Clearing is scoped to
+        // the widget's own columns — never to end-of-line — so a widget
+        // anchored at another column on the same row (e.g. a tall BOTTOM_RIGHT
+        // widget under a TOP_LEFT widget) is never blanked.  Rows fully
+        // covered by new content are skipped; the new lines overwrite them.
+        // Clearing and rendering share one StringBuilder (single atomic
+        // terminal write) so there is no flicker.
+        if (oldPrevHeight > 0 && oldLastRow > 0) {
+            final boolean sameCol = oldLastCol == slot.lastCol;
+            for (int r = 0; r < oldPrevHeight; r++) {
+                final int row = oldLastRow + r;
+                int covered = 0;
+                if (sameCol) {
+                    final int newIndex = row - slot.lastRow;
+                    if (newIndex >= 0 && newIndex < lines.length)
+                        covered = writtenWidth(lines[newIndex], maxWidth);
+                }
+                if (covered >= oldPrevWidth) continue;
+                sb.append("\033[").append(row).append(";").append(oldLastCol).append("H");
+                sb.append(" ".repeat(Math.max(0, oldPrevWidth - covered)));
+            }
+        }
+
+        // Buffer zone: keep the row directly above the widget clean, scoped
+        // to the widget's own width so the row is never blanked beyond it.
         if (slot.lastRow > 1) {
             sb.append("\033[").append(slot.lastRow - 1).append(";").append(slot.lastCol).append("H");
-            sb.append("\033[K");
+            sb.append(" ".repeat(Math.max(0, newWidth)));
         }
 
         for (int i = 0; i < lines.length; i++) {
             sb.append("\033[").append(slot.lastRow + i).append(";").append(slot.lastCol).append("H");
-            sb.append("\033[K");
             final String line = lines[i];
             if (Graphitty.viewLength(line) <= maxWidth) {
                 sb.append(line);
@@ -462,10 +524,34 @@ public class FloatingSurface {
         }
 
         slot.prevHeight = effectiveHeight;
+        slot.prevWidth = newWidth;
     }
 
     /**
-     * Clear the terminal area occupied by a slot's last render.
+     * Visual width of the widest line actually drawn — the number of columns
+     * the widget occupies.  Clipped lines count their clipped length.
+     */
+    private static int renderedWidth(final String[] lines, final int maxWidth) {
+        int width = 0;
+        for (final String line : lines) {
+            width = Math.max(width, writtenWidth(line, maxWidth));
+        }
+        return width;
+    }
+
+    /**
+     * The number of columns {@code line} occupies when drawn: its full visual
+     * length when it fits within {@code maxWidth}, otherwise the clipped
+     * {@code maxWidth - 2} that {@link #renderWidget} actually writes.
+     */
+    private static int writtenWidth(final String line, final int maxWidth) {
+        final int len = Graphitty.viewLength(line);
+        return len <= maxWidth ? len : Math.max(0, maxWidth - 2);
+    }
+
+    /**
+     * Clear the terminal area occupied by a slot's last render.  Scoped to
+     * the widget's own columns so overlapping widgets are never blanked.
      */
     private void clearSlot(final Slot slot) {
         if (slot.prevHeight <= 0) return;
@@ -473,7 +559,7 @@ public class FloatingSurface {
             final var sb = new StringBuilder(64);
             for (int i = 0; i < slot.prevHeight; i++) {
                 sb.append("\033[").append(slot.lastRow + i).append(";").append(slot.lastCol).append("H");
-                sb.append("\033[K");
+                sb.append(" ".repeat(Math.max(0, slot.prevWidth)));
             }
             synchronized (this.terminal) {
                 this.terminal.writer().print(sb.toString());
@@ -501,6 +587,7 @@ public class FloatingSurface {
         int lastRow;
         int lastCol;
         int prevHeight;
+        int prevWidth;
 
         private Slot(final Integer fixedRow, final Integer fixedCol,
                      final Anchor anchor, final int targetWidth,

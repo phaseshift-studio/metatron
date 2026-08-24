@@ -227,6 +227,10 @@ bin/metatron</code></pre>
                    onclick="location.href=location.href.replace(/(\/instset)?(\/[^/]*)?(\.html)?$/,'/tractatus.html');return false;">the
                     tractatus</a>
             </li>
+            <li class="nav-item">
+                <a class="nav-link" href="skills/"
+                   onclick="location.href='./skills/';">agent skills</a>
+            </li>
             <!----------------------------------------------------------------------------------------------------------
             ----------------------------------- ARTICLES DROPDOWN ------------------------------------------------------
             ----------------------------------------------------------------------------------------------------------->
@@ -445,7 +449,7 @@ bin/metatron</code></pre>
         </span>
         <small class="text-muted code">/m/grph/edge</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">elmt::T@/m/grph/edge</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">elmt::T[?[OUT=&gt;[uri::T=&gt;vrtx::T],IN=&gt;[uri::T=&gt;vrtx::T]]]@/m/grph/edge</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a directed key/value attributed binary edge</p>
@@ -484,7 +488,7 @@ bin/metatron</code></pre>
         </span>
         <small class="text-muted code">/m/grph/vrtx</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">elmt::T@/m/grph/vrtx</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">elmt::T[?[{?}OUT=&gt;[uri::T=&gt;edge{*}::T],{?}IN=&gt;[uri::T=&gt;edge{*}::T]]]@/m/grph/vrtx</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a key/value attributed vertex</p>
@@ -500,7 +504,11 @@ bin/metatron</code></pre>
     <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[?[
   {?}schema=&gt;instset::T,
   {?}config=&gt;rec::T]][ctor?grphspace&lt;=#{?}(rec::T)]@/m/grph/space/grphspace</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m.html#__m__space" class="code inherited-link">space::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[pattern=&gt;uri::T,{?}q=&gt;[qproc{?}::T],{?}route=&gt;[uri{?}::T=&gt;uri::T],{?}schema=&gt;instset::T]</code></div></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m.html#__m__space" class="code inherited-link">space::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
+ pattern=&gt;uri::T,
+ {?}q=&gt;[qproc{?}::T],
+ {?}route=&gt;[uri{?}::T=&gt;uri::T],
+ {?}schema=&gt;instset::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a space for graph traversal</p>
 </div>

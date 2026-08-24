@@ -332,6 +332,21 @@ public interface Stylable<T extends Stylable<T>> {
         }
 
         /**
+         * Render order for floating widgets: higher z-index widgets are drawn
+         * later — i.e. on top of — lower ones.  Default 0.  Persistent chrome
+         * like menu bars uses {@link Integer#MAX_VALUE} so it always stays
+         * visible above overlapping widgets.
+         */
+        public int zIndex() {
+            return this.at("zIndex").orElse(jnt(0)).asInt().intValue().intValue();
+        }
+
+        public Style<T> zIndex(final int z) {
+            this.jvm().put(uri("zIndex"), jnt(z));
+            return this;
+        }
+
+        /**
          * Word-wrap a list of text lines to fit within {@code maxWidth}
          * visual characters, breaking at word boundaries.  Lines that fit
          * are passed through unchanged; overlong lines are split.

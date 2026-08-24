@@ -1010,7 +1010,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
          * Throws {@link MTronException} on failure. Does NOT trigger a space write.
          */
         public static void objTypeCheck(final Obj obj) {
-            if (TypeCheck.obj_write.enabled()) {
+            if (TypeCheck.type_ctor.enabled()) {
                 if (Router.loaded() && !obj.isInstSet() && !obj.isNoObj() && !obj.isType() && !obj.test(obj.type())) {
                     if (obj.isPoly()) {
                         final String matchDiffString = Poly.Helper.diffTypeRecursion(obj, obj.type()).toString();
@@ -1061,12 +1061,12 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                                                   final fURI vid) {
             if (null != tid) {
                 final fURI bigTID = tid.big();
-                if (TypeCheck.type_ctor.enabled() && !BASE_TYPES.contains(bigTID.basePath()) && Router.loaded()) {
+                if (!BASE_TYPES.contains(bigTID.basePath()) && Router.loaded()) {
                     Obj type = Router.readFromSpace(bigTID);
                     if (!type.isNoObj() && type.isType() && type.asType().hasConstructor()) {
                         final Obj protoObj = MObjFactory.of().toObj(jvm, null, vid, clazz);
                         final O constructedObj = type.asType().constructor().apply(protoObj).as();
-                        if (constructedObj.isFail())
+                        if (TypeCheck.type_ctor.enabled() && constructedObj.isFail())
                             throw MTronException.of("unable to construct %s::T: %s", tid, constructedObj);
                         else {
                             constructedObj.self(constructedObj.jvm(), bigTID, vid);
@@ -1287,7 +1287,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                     instC(MERGE_INST_TID.dom(A.maybeSome()).rng(LST_TID), lst(LST_TYPE), (lhs, inst) -> inst.arg(0).jvm(Stream.concat(lhs.stream(), inst.arg(0).elements()).toList())),
                     instC(MERGE_INST_TID.dom(A.maybeSome()).rng(ALL_STAR), lst(T(ALL_STAR)), (lhs, inst) -> objs(Stream.concat(inst.args().elements(), lhs.elements()))),
                     instC(MERGE_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(T(A.maybeSome())), (lhs, inst) -> objs(Stream.concat(lhs.stream(), inst.arg(0).stream()))),
-                    instC(NOT_INST_TID.dom(ALL).rng(BOOL_TID), lst(BOOL_TYPE), (lhs, inst) -> bool(!inst.arg(0).boolValue())),
+                    instC(NOT_INST_TID.dom(ALL).rng(BOOL_TID), lst(T(ALL.maybe())), (lhs, inst) -> bool(!inst.arg(0).booleanCheck())),
                     docWrap(instC(EQ_INST_TID.dom(A).rng(BOOL_TID), lst(T(A)), (lhs, inst) -> Inst.Helper.alignLHSType(lhs, inst.arg(0)).map(l -> Objects.equals(l, inst.arg(0))).map(MBool::bool).orElse(BOOL_FALSE)),
                             "any objs", "true if lhs equals rhs", Map.of(jnt(0), "the rhs obj"), "an equality function \\[ f(\\tt{lhs}) = \\left\\{ \\begin{aligned} \\tt{true} & \\quad \\text{if } \\tt{lhs} == \\tt{arg}_0 \\\\ \\tt{false} & \\quad \\text{otherwise.} \\end{aligned} \\right. \\]"),
                     docWrap(instC(NEQ_INST_TID.dom(A).rng(BOOL_TID), lst(T(A)), (lhs, inst) -> Inst.Helper.alignLHSType(lhs, inst.arg(0)).map(l -> !Objects.equals(l, inst.arg(0))).map(MBool::bool).orElse(BOOL_TRUE)),
