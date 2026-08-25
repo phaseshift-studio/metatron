@@ -132,12 +132,12 @@ mtron> {"mcpServers": {
             "intellij": {
    ...
      ^
-     unclosed '{' — missing '}'?]@/sys/fail/710
+     unclosed '{' — missing '}'?]@/sys/fail/40
 mtron> }}
 ==>fail::[parse error at line 1, col 1:
      }}
      ^
-     unexpected '}' — missing opening '{' or extra '}'?]@/sys/fail/712
+     unexpected '}' — missing opening '{' or extra '}'?]@/sys/fail/42
 ```
 For `STDIO` transport MCP servers, the same process works:
 
@@ -161,12 +161,12 @@ mtron> mcp_client::[host=>http://localhost:8777/mcp]@a
    	  \_pred │ []
    	[inst]   │ ctor?rng=mcp_client&dom=#{?}([host=>http://localhost:8777/mcp]@a){<j>}
    	 \_dom   │ #{?}::T
-   	 \_args  │ [[host=>http://localhost:8777/mcp]@a][SocketChannelImpl<399>:java.util.concurrent.ExecutionException: java.io.IOException: HTTP/1.1 header parser received no bytes[SocketChannelImpl<399>:java.util.concurrent.ExecutionException: java.io.IOException: HTTP/1.1 header parser received no bytes ← java.io.IOException: HTTP/1.1 header parser received no bytes ← HTTP/1.1 header parser received no bytes ← Connection reset] ← java.util.concurrent.ExecutionException: java.io.IOException: HTTP/1.1 header parser received no bytes ← java.io.IOException: HTTP/1.1 header parser received no bytes ← HTTP/1.1 header parser received no bytes ← ...]][java.util.concurrent.ExecutionException: java.io.IOException: HTTP/1.1 header parser received no bytes[SocketChannelImpl<399>:java.util.concurrent.ExecutionException: java.io.IOException: HTTP/1.1 header parser received no bytes ← java.io.IOException: HTTP/1.1 header parser received no bytes ← HTTP/1.1 header parser received no bytes ← Connection reset]][java.util.concurrent.ExecutionException: java.io.IOException: HTTP/1.1 header parser received no bytes][java.io.IOException: HTTP/1.1 header parser received no bytes][HTTP/1.1 header parser received no bytes][Connection reset]@/sys/fail/716]@/sys/fail/718
+   	 \_args  │ [[host=>http://localhost:8777/mcp]@a][SocketChannelImpl<204>:java.util.concurrent.ExecutionException: java.net.ConnectException[SocketChannelImpl<204>:java.util.concurrent.ExecutionException: java.net.ConnectException ← java.net.ConnectException ← (ConnectException) ← (ClosedChannelException)] ← java.util.concurrent.ExecutionException: java.net.ConnectException ← java.net.ConnectException ← (ConnectException) ← ...]][java.util.concurrent.ExecutionException: java.net.ConnectException[SocketChannelImpl<204>:java.util.concurrent.ExecutionException: java.net.ConnectException ← java.net.ConnectException ← (ConnectException) ← (ClosedChannelException)]][java.util.concurrent.ExecutionException: java.net.ConnectException][java.net.ConnectException][][]@/sys/fail/46]@/sys/fail/48
 mtron> *a>>tool
 mtron> [-- => [m_inst_eval_mtron=>tool::[inst=>..., name=>m_inst_eval_mtron, desc=>..., arg=>...], ...] --]
 mtron> [-- invoke a tool by applying its inst field --]
 mtron> a/tool/m_inst_eval_mtron/inst("1+2")
-==>fail::[unable to locate inst-f of a/tool/m_inst_eval_mtron/inst('1+2')]@/sys/fail/720
+==>fail::[unable to locate inst-f of a/tool/m_inst_eval_mtron/inst('1+2')]@/sys/fail/50
 mtron> [-- => 3 --]
 ```
 ### WebSocket

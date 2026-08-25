@@ -597,23 +597,17 @@ In metatron, the uri is called a <em>fURI</em> (<strong>functional uniform resou
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys/space/+.count()
-==&gt;10
+==&gt;6
 mtron&gt; */sys/space/+.&gt;&gt;pattern
 ==&gt;&lt;+/#&gt;
-==&gt;lmstudio:#
 ==&gt;g:#
 ==&gt;/usr/#
 ==&gt;http://#
-==&gt;/sys/#
-==&gt;area:#
-==&gt;lite:#
 ==&gt;mtronfs:#
 ==&gt;local:#
 mtron&gt; */sys/space/+.-&lt;[&gt;&gt;pattern=&gt;&gt;&gt;route]
-==&gt;{5}[=&gt;]
-==&gt;[lmstudio:#=&gt;[lmstudio:=&gt;&lt;&gt;]]
+==&gt;{3}[=&gt;]
 ==&gt;[http://#=&gt;[/=&gt;local:]]
-==&gt;[lite:#=&gt;[lite:=&gt;&lt;&gt;]]
 ==&gt;[mtronfs:#=&gt;[mtronfs:=&gt;&lt;.metatron&gt;]]
 ==&gt;[local:#=&gt;[local:=&gt;/home/killswitch/]]</code></pre>
 </div>

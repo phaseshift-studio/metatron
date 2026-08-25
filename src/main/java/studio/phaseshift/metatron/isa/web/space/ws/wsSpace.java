@@ -72,9 +72,9 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 public class wsSpace extends AbstractSpace<WebSocketServer> {
 
     public static final fURI WS_SPACE_TID = WEB_ISA_TID.extend(SPACE).extend("wsspace");
-    public static final fURI WS_WEBSOCKET_TID = WS_SPACE_TID.extend("websocket");
-    public static final fURI WS_HANDLER_TID = WS_SPACE_TID.extend("wshandler");
-    public static final fURI WS_CLIENT_TID = WS_SPACE_TID.extend("wsclient");
+    public static final fURI WS_WEBSOCKET_TID = WEB_ISA_TID.extend("ws").extend("web_socket");
+    public static final fURI WS_HANDLER_TID = WEB_ISA_TID.extend("ws").extend("ws_handler");
+    public static final fURI WS_CLIENT_TID = WEB_ISA_TID.extend("ws").extend("ws_client");
 
     public static final Type WS_WEBSOCKET_TYPE = Type.Builder.build()
             .tid(REC_TID)

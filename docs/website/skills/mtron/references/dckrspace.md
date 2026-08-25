@@ -107,7 +107,7 @@ mtron> docker:container/web -> [
     environment=>[NGINX_HOST=>localhost],
     volumes=>['myvol:/usr/share/nginx/html'],
     network=>mynet]][MTronException<127>:exit 125: docker run -d --name web -p 8080:80 -p 443:443 -e NGINX_HOST=localhost -v myvol:/usr/share/nginx/html --network mynet nginx:alpine...]][exit 125: docker run -d --name web -p 8080:80 -p 443:443 -e NGINX_HOST=localhost -v myvol:/usr/share/nginx/html --network mynet nginx:alpine
-   ]@/sys/fail/668
+   ]@/sys/fail/32
 ```
 Image pull happens automatically via `docker run`. Pull progress streams through the `progress_table::T` widget if
 configured.
@@ -126,6 +126,14 @@ configured.
 
 ```mtron
 mtron> *docker:image/+.take(5)              [-- first 5 images (keyed by repository:tag) --]
+==>[
+    containers=>1,
+    created_at=>datetime::<//2026.07:15/17/30/55/000?tz=-0600>,
+    created_since=><5 weeks ago>,
+    id=><4e5db4761e0f>,
+    repository=>nginx,
+    size=>mB::161.0000,
+    tag=>latest]
 ==>[
     containers=>1,
     created_at=>datetime::<//2026.07:15/17/57/33/000?tz=-0600>,
@@ -151,14 +159,6 @@ mtron> *docker:image/+.take(5)              [-- first 5 images (keyed by reposit
     repository=>node,
     size=>mB::227.0000,
     tag=><22-slim>]
-==>[
-    containers=>0,
-    created_at=>datetime::<//2026.07:15/17/30/55/000?tz=-0600>,
-    created_since=><5 weeks ago>,
-    id=><4e5db4761e0f>,
-    repository=>nginx,
-    size=>mB::161.0000,
-    tag=>latest]
 ==>[
     containers=>0,
     created_at=>datetime::<//2026.05:21/06/22/47/000?tz=-0600>,
@@ -188,17 +188,6 @@ mtron> *docker:container/+                  [-- all containers                  
     names=>test_sqlite-sqlite-1,
     running_for=><2 weeks ago>,
     size=>bB::0.0000,
-    ...(3 more)]
-==>[ command=></docker-entrypoint.sh nginx -g 'daemon off;>,
-    created_at=>datetime::<//2026.08:24/13/37/38/000?tz=-0600>,
-    id=><6989df803fad70c984c48dccfa14293e02aa7ffb5c78007f9d6a8f2c25ec195b>,
-    image=>!*docker:image/nginx:alpine,
-    labels=>[maintainer=>'NGINX Docker Maintainers <docker-maint@nginx.com>'],
-    local_volumes=>1,
-    names=>web,
-    running_for=><1 second ago>,
-    size=>bB::0.0000,
-    state=>created,
     ...(3 more)]
 ==>[ command=>"""/sbin/tini -g -- sh -c 'sqlite3 /data/dr.sqlite \".database...""",
     created_at=>datetime::<//2026.08:6/14/10/11/000?tz=-0600>,
@@ -242,6 +231,17 @@ mtron> *docker:container/+                  [-- all containers                  
     running_for=><2 weeks ago>,
     size=>bB::0.0000,
     ...(3 more)]
+==>[ command=></docker-entrypoint.sh nginx -g 'daemon off;>,
+    created_at=>datetime::<//2026.08:25/09/03/39/000?tz=-0600>,
+    id=><6ba5cf5bef7b750b8a3ebea828ffe5ddf27b0b9296bd14ae67739964cecd24c5>,
+    image=>!*docker:image/nginx:alpine,
+    labels=>[maintainer=>'NGINX Docker Maintainers <docker-maint@nginx.com>'],
+    local_volumes=>1,
+    names=>web,
+    running_for=><1 second ago>,
+    size=>bB::0.0000,
+    state=>created,
+    ...(3 more)]
 ==>[ command=>"""/sbin/tini -g -- sh -c 'sqlite3 /data/dr.sqlite \".database...""",
     created_at=>datetime::<//2026.08:6/13/44/53/000?tz=-0600>,
     id=><92497c549f1fea0779b32c4c8c75c86a01277c198ac063d7a880dc90bea63d40>,
@@ -253,12 +253,39 @@ mtron> *docker:container/+                  [-- all containers                  
     size=>bB::0.0000,
     state=>exited,
     ...(2 more)]
+==>[ command=></docker-entrypoint.sh nginx -g 'daemon off;>,
+    created_at=>datetime::<//2026.08:24/13/44/43/000?tz=-0600>,
+    id=>c278772a5ef8a979e3a7344a3248e4b89a7bc6aad9cd3e27f177bd3b1e04cf7e,
+    image=>!*docker:image/nginx,
+    labels=>[
+     <com.docker.compose.config-hash>=>f3bd03ea666f08645557a71e46313f367713e950177918b309e8a1e5bde8397c,
+     <com.docker.compose.container-number>=>1,
+     <com.docker.compose.image>=>sha256:4e5db4761e0ff445f7fd29aad680ad28e8abf7d204895557f145d65535abcc1c,
+     <com.docker.compose.oneoff>=>False,
+     <com.docker.compose.project.config_files>=></tmp/metatron-docker/my-stack/docker-compose.yml>,
+     <com.docker.compose.project.working_dir>=>/tmp/metatron-docker/my-stack,
+     <com.docker.compose.project>=>my-stack,
+     <com.docker.compose.service>=>web,
+     <com.docker.compose.version>=><2.40.3>,
+     maintainer=>'NGINX Docker Maintainers <docker-maint@nginx.com>'],
+    local_volumes=>0,
+    names=>my-stack-web-1,
+    ports=>'0.0.0.0:8080->80/tcp, [::]:8080->80/tcp',
+    running_for=><19 hours ago>,
+    size=>bB::0.0000,
+    ...(3 more)]
 mtron> *docker:volume/+                     [-- all volumes                              --]
 ==>[
     driver=>local,
     labels=>[=>],
     mountpoint=>/var/lib/docker/volumes/bc5af4c60140cceea92b061e4bbfcad6f9d58b7b729b3c09f790bddfeb67cf34/_data,
     name=>bc5af4c60140cceea92b061e4bbfcad6f9d58b7b729b3c09f790bddfeb67cf34,
+    scope=>local]
+==>[
+    driver=>local,
+    labels=>[=>],
+    mountpoint=>/var/lib/docker/volumes/1f7558809ec3879593daae1b898ca9d95187ccb282e8e710dcbd9c558085bf25/_data,
+    name=><1f7558809ec3879593daae1b898ca9d95187ccb282e8e710dcbd9c558085bf25>,
     scope=>local]
 ==>[
     driver=>local,
@@ -287,10 +314,10 @@ mtron> *docker:network/+                    [-- all networks                    
     ipv6=>false,
     internal=>false,
     labels=>[
-     <com.docker.compose.project>=>test_sqlite,
-     <com.docker.compose.version>=><2.40.3>,
      <com.docker.compose.config-hash>=>dcfdb94ed5044fb11e16ff38ab584fd0bda75806da995978e02547c50430328a,
-     <com.docker.compose.network>=>default],
+     <com.docker.compose.network>=>default,
+     <com.docker.compose.project>=>test_sqlite,
+     <com.docker.compose.version>=><2.40.3>],
     name=>test_sqlite_default,
     scope=>local,
     container=>[!*docker:container/test_sqlite-sqlite-1]]
@@ -312,13 +339,28 @@ mtron> *docker:network/+                    [-- all networks                    
     ipv6=>false,
     internal=>false,
     labels=>[
-     <com.docker.compose.version>=><2.40.3>,
      <com.docker.compose.config-hash>=><454211c5597511dbc4de2c2d7054ec34854741b9a0a3020c77fa2de25572c260>,
      <com.docker.compose.network>=>default,
-     <com.docker.compose.project>=>dr_sqlite],
+     <com.docker.compose.project>=>dr_sqlite,
+     <com.docker.compose.version>=><2.40.3>],
     name=>dr_sqlite_default,
     scope=>local,
     container=>[!*docker:container/dr_sqlite-sqlite-1]]
+==>[
+    created_at=>datetime::<//2026.08:24/13/44/43/678?tz=+0000>,
+    driver=>bridge,
+    id=><7c4a92730b15>,
+    ipv4=>true,
+    ipv6=>false,
+    internal=>false,
+    labels=>[
+     <com.docker.compose.config-hash>=><58c75ad45450a419e19489859bceed95b344afac255832f7cedc5ea678321155>,
+     <com.docker.compose.network>=>default,
+     <com.docker.compose.project>=>my-stack,
+     <com.docker.compose.version>=><2.40.3>],
+    name=>my-stack_default,
+    scope=>local,
+    container=>[!*docker:container/my-stack-web-1]]
 ==>[
     created_at=>datetime::<//2025.11:8/13/37/14/409?tz=+0000>,
     driver=>host,
@@ -359,8 +401,8 @@ mtron> *docker:image/nginx:alpine           [-- full image rec --]
     container=>[!*docker:container/web]]
 mtron> *docker:container/web                [-- full container rec --]
 ==>[ command=></docker-entrypoint.sh nginx -g 'daemon off;>,
-    created_at=>datetime::<//2026.08:24/13/37/38/000?tz=-0600>,
-    id=><6989df803fad70c984c48dccfa14293e02aa7ffb5c78007f9d6a8f2c25ec195b>,
+    created_at=>datetime::<//2026.08:25/09/03/39/000?tz=-0600>,
+    id=><6ba5cf5bef7b750b8a3ebea828ffe5ddf27b0b9296bd14ae67739964cecd24c5>,
     image=>!*docker:image/nginx:alpine,
     labels=>[maintainer=>'NGINX Docker Maintainers <docker-maint@nginx.com>'],
     local_volumes=>1,
@@ -431,7 +473,7 @@ mtron> docker:volume/myvol -> [driver => local]
    	  \_pred │ []
    	[inst]   │ ref?rng=#{*}&dom=#([driver=>local]){<j>}@<1>
    	 \_dom   │ #::T
-   	 \_args  │ [[driver=>local]][ProcessBuilder<1065>:fail[ProcessBuilder<1065>:(NullPointerException)] ← (NullPointerException)]][fail[ProcessBuilder<1065>:(NullPointerException)]][]@/sys/fail/670
+   	 \_args  │ [[driver=>local]][ProcessBuilder<1065>:fail[ProcessBuilder<1065>:(NullPointerException)] ← (NullPointerException)]][fail[ProcessBuilder<1065>:(NullPointerException)]][]@/sys/fail/34
 ```
 ### Remove a volume
 
@@ -450,9 +492,9 @@ mtron> docker:volume/myvol -> noobj
 ```mtron
 mtron> docker:network/mynet -> [driver => bridge]
 ==>[
-    created_at=>datetime::<//2026.08:24/13/37/49/652?tz=+0000>,
+    created_at=>datetime::<//2026.08:25/09/03/50/992?tz=+0000>,
     driver=>bridge,
-    id=><644115087a4a>,
+    id=><811e68d667b7>,
     ipv4=>true,
     ipv6=>false,
     internal=>false,
@@ -539,8 +581,8 @@ mtron> docker:container/sqlite -> [
          volumes => ['/tmp/mtron-dbs:/data']
        ]
 ==>[ command=>"""/sbin/tini -g -- sh -c 'sqlite3 /data/mydb.sqlite \".databa...""",
-    created_at=>datetime::<//2026.08:24/13/38/02/000?tz=-0600>,
-    id=><40ccdbceca4ee358ade717dd6a5e3dd283a6896add0673b19bfe52b7a20533ba>,
+    created_at=>datetime::<//2026.08:25/09/04/04/000?tz=-0600>,
+    id=><151eb5201b0ba8e3d83c45c686e34bd84c7ab8d5f3998bfebde04ed7ff45dbb4>,
     image=>!*docker:image/keinos/sqlite3:latest,
     local_volumes=>0,
     mounts=>/tmp/mtron-dbs,
@@ -605,7 +647,7 @@ mtron> *mydb:people/+.count().explain()                         [-- sql rewrite 
    	  \_pred │ []
    	[inst]   │ /m/inst/explain_compute?rng=str&dom=noobj{0}(/m/tble/inst/rewrite/sql_count?int<=#{0}(people/+)){<j>}@<0>
    	 \_dom   │ noobj
-   	 \_args  │ [/m/tble/inst/rewrite/sql_count?int<=#{0}(people/+)][MTronException<162>:fail[no stack element<0>:(ClassCastException)] ← (ClassCastException)]][fail[no stack element<0>:(ClassCastException)]][]@/sys/fail/672
+   	 \_args  │ [/m/tble/inst/rewrite/sql_count?int<=#{0}(people/+)][MTronException<162>:fail[no stack element<0>:(ClassCastException)] ← (ClassCastException)]][fail[no stack element<0>:(ClassCastException)]][]@/sys/fail/36
 ```
 ### Step 5: The container sees the same data
 

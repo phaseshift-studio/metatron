@@ -37,14 +37,14 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_SPACE_TID;
+import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class mcp_emulator_wsHandler extends mcp_wsHandler {
 
-    public static final fURI WS_MCP_EMULATOR_TID = WS_SPACE_TID.extend("mcp").extend("mcp_emulator_ws");
+    public static final fURI WS_MCP_EMULATOR_TID = WEB_ISA_TID.extend("mcp").extend("mcp_emulator_ws");
 
     public static final Type WS_MCP_EMULTATOR_TYPE = Type.Builder.build()
             .tid(WS_MCP_HANDLER_TID)

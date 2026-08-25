@@ -72,10 +72,10 @@ public class llmInstSet extends AbstractInstSet {
     public static final fURI LLM_CHAT_RESULT_TID = LLM_ISA_TID.extend("chat_result");
     public static final fURI LLM_FEATURE_TID = LLM_ISA_TID.extend(FEATURE);
     public static final fURI LLM_SPACE_TID = LLM_ISA_TID.extend(SPACE);
-    public static final fURI LLM_TOOL_TID = LLM_FEATURE_TID.extend(TOOL);
-    public static final fURI LLM_SESSION_TID = LLM_FEATURE_TID.extend(SESSION);
+    public static final fURI LLM_TOOL_TID = LLM_ISA_TID.extend(TOOL);
+    public static final fURI LLM_SESSION_TID = LLM_ISA_TID.extend(SESSION);
     public static final fURI LLM_ITERATION_TID = LLM_ISA_TID.extend(ITERATION);
-    public static final fURI LLM_SKILL_TID = LLM_FEATURE_TID.extend(SKILL);
+    public static final fURI LLM_SKILL_TID = LLM_ISA_TID.extend(SKILL);
     public static final fURI MESSAGE_TID = LLM_ISA_TID.extend(MESSAGE);
     public static final fURI AI_MESSAGE_TID = MESSAGE_TID.extend(AI);
     public static final fURI USER_MESSAGE_TID = MESSAGE_TID.extend(USER);

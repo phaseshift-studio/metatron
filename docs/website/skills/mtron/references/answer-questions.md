@@ -33,14 +33,17 @@ Use this to understand unfamiliar instructions or explain them to users.
 
 ```mtron
 mtron> */sys/space/+                                  [-- list spaces                --]
-==>stack::[pattern=><+/#>,q=>[
-    mintq::[pattern=>mintq,pre_write=>inst?#{*}<=#{?}(uri::T,#::T)],
-    docq::[
-     pattern=>docq,
-     pre_read=>inst?#{*}<=#{?}(uri::T),
-     pre_write=>inst?#{*}<=#{?}(uri::T,#::T),
-     obj=>memspace::[pattern=><#>],
-     inst=>instset::[pattern=><#>]]]]
+==>stack::[
+    pattern=><+/#>,
+    q=>[
+     refq::[pattern=>refq,post_read=>inst?#{*}<=#{?}(uri::T,#::T)],
+     mintq::[pattern=>mintq,pre_write=>inst?#{*}<=#{?}(uri::T,#::T)],
+     docq::[
+      pattern=>docq,
+      pre_read=>inst?#{*}<=#{?}(uri::T),
+      pre_write=>inst?#{*}<=#{?}(uri::T,#::T),
+      obj=>memspace::[pattern=><#>],
+      inst=>instset::[pattern=><#>]]]]
 ==>memspace::[
     pattern=>/usr/#,
     q=>[
@@ -63,47 +66,6 @@ mtron> */sys/space/+                                  [-- list spaces           
       qless_write=>inst?#{*}<=#{?}(uri::T,#::T),
       obj=>[,]],
      incrq::[pattern=>incrq,pre_write=>inst?#{*}<=#{?}(uri::T,#::T)]]]@/sys/space/usr
-==>memspace::[
-    pattern=>/sys/#,
-    q=>[
-     docq::[
-      pattern=>docq,
-      pre_read=>inst?#{*}<=#{?}(uri::T),
-      pre_write=>inst?#{*}<=#{?}(uri::T,#::T),
-      obj=>memspace::[pattern=><#>],
-      inst=>instset::[pattern=><#>]],
-     subq::[
-      pattern=>subq,
-      pre_read=>inst?#{*}<=#{?}(uri::T),
-      pre_write=>inst?#{*}<=#{?}(uri::T,#::T),
-      qless_write=>inst?#{*}<=#{?}(uri::T,#::T),
-      obj=>[,]],
-     incrq::[pattern=>incrq,pre_write=>inst?#{*}<=#{?}(uri::T,#::T)],
-     mimeq::[pattern=>mimeq,post_read=>inst?#{*}<=#{?}(uri::T,#::T)],
-     lockq::[
-      pattern=>lockq,
-      pre_read=>inst?#{*}<=#{?}(uri::T),
-      pre_write=>inst?#{*}<=#{?}(uri::T,#::T),
-      qless_write=>inst?#{*}<=#{?}(uri::T,#::T),
-      obj=>[,]]],
-    space=>[sub=>!*/sys/space/mydb/instset]]@/sys/space/sys
-==>dckrspace::[pattern=>docker:#,route=>[docker:=><>],progress=>progress_table::[=>]]@/sys/space/docker
-==>tblespace::[
-    pattern=>mydb:#,
-    host=><sqlite:/tmp/mtron-dbs/mydb.sqlite>,
-    table=>[,],
-    route=>[mydb:=><>],
-    driver=><org.sqlite.JDBC>,
-    schema=>instset::[
-     pattern=>/sys/space/mydb/instset/#,
-     type=>[people::T],
-     q=>[docq::[
-    pattern=>docq,
-    pre_read=>inst?#{*}<=#{?}(uri::T),
-    pre_write=>inst?#{*}<=#{?}(uri::T,#::T),
-    obj=>memspace::[pattern=><#>],
-    inst=>instset::[pattern=><#>]]],
-     space=>[super=>!*/sys/space/sys]]@/sys/space/mydb/instset]@/sys/space/mydb
 ==>fsspace::[pattern=>mtronfs:#,route=>[mtronfs:=><.metatron>]]@/sys/space/mtronfs
 ==>fsspace::[pattern=>local:#,route=>[local:=>/home/killswitch/],script=>!*boot/script]@/sys/space/fs
 mtron> */sys/space/sys                                [-- sys space details          --]
@@ -123,15 +85,15 @@ mtron> */sys/env/+/.filter(not(<<.has(API))).take(5)  [-- first 5 environmental 
 ```mtron
 mtron> [-- SQL table (if pattern is "acme:#") --]
 mtron> *acme:${table}.*(_).limit(10)
-==>fail::[unable to locate inst-f of limit(10)@<2>]@/sys/fail/688
+==>fail::[unable to locate inst-f of limit(10)@<2>]@/sys/fail/46
 mtron> [-- Document collection (if pattern is "mongo:#") --]
 mtron> *mongo:${collection}.*(_).limit(10)
-==>fail::[unable to locate inst-f of limit(10)@<2>]@/sys/fail/692
+==>fail::[unable to locate inst-f of limit(10)@<2>]@/sys/fail/50
 mtron> [-- Graph vertices/edges (if pattern is "g:#") --]
 mtron> *g:V.*(_).limit(10)
-==>fail::[unable to locate inst-f of limit(10)@<2>]@/sys/fail/696
+==>fail::[unable to locate inst-f of limit(10)@<2>]@/sys/fail/54
 mtron> *g:E.*(_).limit(10)
-==>fail::[unable to locate inst-f of limit(10)@<2>]@/sys/fail/700
+==>fail::[unable to locate inst-f of limit(10)@<2>]@/sys/fail/58
 mtron> [-- File system (if pattern is "local:#") --]
 mtron> *<local:path/to/file>                    [-- Read file --]
 mtron> *<local:path/#>                          [-- List recursively --]
