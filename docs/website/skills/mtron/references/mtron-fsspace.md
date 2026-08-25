@@ -93,7 +93,7 @@ mtron> *<local:index.html?mimeq=application/x-mtron>
 ```mtron
 mtron> [-- Read a file (returns typed string by default) --]
 mtron> *<local:test.md>
-==>markdown::"'## new content'"
+==>markdown::'## new content'
 mtron> [-- Write a string to a file --]
 mtron> <local:test.md> -> "## new content"
 ==>'## new content'

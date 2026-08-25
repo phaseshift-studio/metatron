@@ -2854,7 +2854,7 @@ The predicate component of the type definition tests an <code>int</code> to dete
 <div class="paragraph">
 <p>While every <code>type</code> is an <code>obj</code>, not every <code>obj</code> is a <code>type</code>.
 Those <code>objs</code> that are not <code>types</code> are <em>instances</em> of some <code>type</code>.
-This is the foundation for all other <code>objs</code> in {{y}}M{{r}}E{{g}}t{{m}}a{{c}}T{{b}}R{{c}}o{{b}}N{{X}}.</p>
+This is the foundation for all other <code>objs</code> in {{r}}m{{g}}e{{r}}t{{r}}A{{g}}T{{m}}r{{y}}o{{c}}N{{X}}.</p>
 </div>
 <h4 id="sec-cascading-type-constructions" class="discrete">cascading type constructions</h4>
 <h3 id="sec-mono-types" class="discrete">mono types</h3>
@@ -6857,10 +6857,10 @@ mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T).as(str::T)     ​5​
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; bin:bash('-c',df)
 ==&gt;'Filesystem     1K-blocks      Used Available Use% Mounted on'
-==&gt;'tmpfs            6356184      6252   6349932   1% /run'
+==&gt;'tmpfs            6356184      6188   6349996   1% /run'
 ==&gt;'efivarfs             128        42        82  34% /sys/firmware/efi/efivars'
-==&gt;'/dev/nvme1n1p2 959786032 494523792 416434032  55% /'
-==&gt;'tmpfs           31780908    690624  31090284   3% /dev/shm'
+==&gt;'/dev/nvme1n1p2 959786032 494604920 416352904  55% /'
+==&gt;'tmpfs           31780908    772520  31008388   3% /dev/shm'
 ==&gt;'tmpfs               5120        20      5100   1% /run/lock'
 ==&gt;'tmpfs           31780908       220  31780688   1% /run/qemu'
 ==&gt;'/dev/nvme1n1p1    523248      6288    516960   2% /boot/efi'
@@ -7081,7 +7081,7 @@ mtron&gt; gB::1.0.lt(kB::12000000.0)
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; datetime_now()     ​1​
-==&gt;datetime::&lt;//2026.08:25/08/58/01/075?tz=-0600&gt;
+==&gt;datetime::&lt;//2026.08:25/09/25/52/839?tz=-0600&gt;
 mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;?datetime::T     ​2​
 ==&gt;&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;
 mtron&gt; datetime::&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;&gt;&gt;year     ​3​
@@ -9859,9 +9859,11 @@ mtron&gt; lite:person/2 -&gt; [name=&gt;'grant', age=&gt;25]     ​3​
 mtron&gt; *lite:person     ​4​
 mtron&gt; *lite:person/+/name     ​5​
 ==&gt;'grant'
+==&gt;'alex'
 ==&gt;'marko'
 mtron&gt; *lite:person/+/id     ​6​
 ==&gt;1
+==&gt;3
 ==&gt;2</code></pre>
 </div>
 </div>
