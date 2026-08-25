@@ -38,6 +38,8 @@ import java.util.regex.Pattern;
 
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
+import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_FALSE;
+import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TRUE;
 import static studio.phaseshift.metatron.isa.m.type.Code.CODE_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Inst.INST_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -91,35 +93,44 @@ public class ObjJSONSerializer extends AbstractObjSerializer<JsonElement> {
      */
     public static ObjJSONSerializer simple() {
         ObjJSONSerializer s = new ObjJSONSerializer();
-        s.at(KEY_DENSITY, str("TRANSPARENT"), Poly.MUTABLE);
-        s.at(KEY_BIAS_URI, bool(true), Poly.MUTABLE);
-        s.at(KEY_BIAS_OBJS, bool(false), Poly.MUTABLE);
+        s.at(KEY_DENSITY, uri("TRANSPARENT"), Poly.MUTABLE);
+        s.at(KEY_BIAS_URI, BOOL_TRUE, Poly.MUTABLE);
+        s.at(KEY_BIAS_OBJS, BOOL_FALSE, Poly.MUTABLE);
+        return s;
+    }
+
+    public static ObjJSONSerializer web() {
+        ObjJSONSerializer s = new ObjJSONSerializer();
+        s.at(KEY_DENSITY, uri("TRANSPARENT"), Poly.MUTABLE);
+        s.at(KEY_WRAP_URI, BOOL_FALSE, Poly.MUTABLE);
+        s.at(KEY_BIAS_URI, BOOL_FALSE, Poly.MUTABLE);
+        s.at(KEY_BIAS_OBJS, BOOL_FALSE, Poly.MUTABLE);
         return s;
     }
 
     public ObjJSONSerializer() {
         super(OBJ_JSON_SERIALIZER_TID, OBJ_JSON_SERIALIZER_VID);
-        this.at(KEY_DENSITY, str("OPAQUE"), Poly.MUTABLE);
-        this.at(KEY_WRAP_URI, bool(true), Poly.MUTABLE);
-        this.at(KEY_BIAS_URI, bool(true), Poly.MUTABLE);
-        this.at(KEY_BIAS_OBJS, bool(false), Poly.MUTABLE);
+        this.at(KEY_DENSITY, uri("OPAQUE"), Poly.MUTABLE);
+        this.at(KEY_WRAP_URI, BOOL_TRUE, Poly.MUTABLE);
+        this.at(KEY_BIAS_URI, BOOL_TRUE, Poly.MUTABLE);
+        this.at(KEY_BIAS_OBJS, BOOL_FALSE, Poly.MUTABLE);
     }
 
     private Density getDensity() {
-        String d = this.at(KEY_DENSITY).orElse(str("OPAQUE")).strValue();
+        String d = this.at(KEY_DENSITY).orElse(uri("OPAQUE")).uriValue().toString();
         return "TRANSPARENT".equalsIgnoreCase(d) ? Density.TRANSPARENT : Density.OPAQUE;
     }
 
     private boolean isWrapURI() {
-        return this.at(KEY_WRAP_URI).orElse(bool(true)).boolValue();
+        return this.at(KEY_WRAP_URI).orElse(BOOL_TRUE).boolValue();
     }
 
     private boolean biasTowardsUri() {
-        return this.at(KEY_BIAS_URI).orElse(bool(true)).boolValue();
+        return this.at(KEY_BIAS_URI).orElse(BOOL_TRUE).boolValue();
     }
 
     private boolean biasTowardsObjs() {
-        return this.at(KEY_BIAS_OBJS).orElse(bool(false)).boolValue();
+        return this.at(KEY_BIAS_OBJS).orElse(BOOL_FALSE).boolValue();
     }
 
     @Override

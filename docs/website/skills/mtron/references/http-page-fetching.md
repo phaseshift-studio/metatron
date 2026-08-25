@@ -10,9 +10,8 @@ description: |
 
 ## Architecture
 
-`httpSpace` uses Jsoup to fetch URLs and returns **typed strings** by default (e.g., `html::"..."`).
-The `html::T` type refines `str::T` — the MIME type is a **predicate** on the string content, not a
-structural transformation.
+`httpSpace` uses Jsoup to fetch URLs and returns **typed strings** by default (e.g., `html::"..."`). The `html::T` type
+refines `str::T` — the MIME type is a **predicate** on the string content, not a structural transformation.
 
 ```
 http:// url  →  httpSpace.directReader()  →  Jsoup fetch  →  html::"<html>...</html>"  (typed str)
@@ -23,8 +22,8 @@ http:// url  →  httpSpace.directReader()  →  Jsoup fetch  →  html::"<html>
                                                               rec::T  (DOM tree)
 ```
 
-The space pattern is `<http://#>`, so any `http://` URI routes through the httpSpace.  The space
-should have `mimeq` mounted so `?mimeq=` query parameters work:
+The space pattern is `<http://#>`, so any `http://` URI routes through the httpSpace. The space should have `mimeq`
+mounted so `?mimeq=` query parameters work:
 
 ```mtron
 mtron> httpspace::[
@@ -33,6 +32,7 @@ mtron> httpspace::[
          q       => [mimeq::[=>]],          [-- enables ?mimeq= query processor --]
          route   => [/ => <local:web>]]
 ```
+
 ## Basic Dereference — Typed String (default)
 
 Default reads return a typed `html::"..."` string with `tid = /m/web/mime/html`:
@@ -49,6 +49,7 @@ mtron> *<http://example.com>
 mtron> *<http://example.com>.test(html::T)
 ==>fail::[unable to locate inst-f of test(html::T)@<1>]@/sys/fail/642
 ```
+
 The string is predicate-validated: `html::T`'s predicate checks that the content is valid HTML.
 
 ## Structural Parse — rec::T DOM Tree
@@ -75,10 +76,11 @@ mtron> *<http://example.com>.as(rec::T)
    	 \_dom   │ #{?}::T
    	 \_args  │ [<http://example.com>][MTronException<127>:no active space supports pattern <http://example.com>]][no active space supports pattern <http://example.com>]@/sys/fail/646
 ```
-The `?mimeq=application/x-mtron` query is handled by `QCollection.mimeQ()` postRead processor,
-which (1) probes the content type from the response headers or URI extension, (2) tags the string
-with the correct TID (triggering predicate validation), and (3) if `application/x-mtron` is requested,
-runs the content-type-specific serializer (`ObjHTMLSerializer` for HTML) to produce the `rec::T` DOM tree.
+
+The `?mimeq=application/x-mtron` query is handled by `QCollection.mimeQ()` postRead processor, which (1) probes the
+content type from the response headers or URI extension, (2) tags the string with the correct TID (triggering predicate
+validation), and (3) if `application/x-mtron` is requested, runs the content-type-specific serializer
+(`ObjHTMLSerializer` for HTML) to produce the `rec::T` DOM tree.
 
 ## HTML Rec Structure
 
@@ -118,8 +120,7 @@ When converted to `rec::T`, the parsed HTML is a nested rec:
 
 ## Tree Walking (requires rec::T)
 
-Tree walking into the DOM tree requires the structural `rec::T` form. Use `.as(rec::T)` first,
-then walk the tree:
+Tree walking into the DOM tree requires the structural `rec::T` form. Use `.as(rec::T)` first, then walk the tree:
 
 ```mtron
 mtron> [-- Cast to rec first, then walk --]
@@ -139,6 +140,7 @@ mtron> *<http://example.com>.as(rec::T)/html/body/out/+/out/+/out  [-- grandchil
                                      ^
      could not parse at '/']@/sys/fail/652
 ```
+
 ### With `+` wildcards
 
 The `+` wildcard enters each list element, producing a stream/set:
@@ -155,6 +157,7 @@ mtron> *page.as(rec::T)/html/body/out/+/out/+/out  [-- all grandchildren --]
                      ^
      could not parse at '/']@/sys/fail/656
 ```
+
 ### Filtering with `where()`
 
 ```mtron
@@ -165,6 +168,7 @@ mtron> *page.as(rec::T)/html/body/out/+/out/+/out/+>.where([tag=>a])>>href
                      ^
      could not parse at '/']@/sys/fail/658
 ```
+
 ## Converting Back — rec::T → html::T
 
 Serialize a `rec::T` DOM tree back to an HTML string with `.as(html::T)`:
@@ -179,6 +183,7 @@ mtron> *<http://example.com>.as(rec::T)
                                                 ^
      could not parse at '.']@/sys/fail/660
 ```
+
 `ObjHTMLSerializer.write()` handles both `str::T` (pass-through via `Jsoup.parse()`) and `rec::T` (DOM rendering).
 
 ## Other MIME Types
@@ -211,19 +216,20 @@ mtron> *<http://example.com/data.json>.as(rec::T)
    	 \_dom   │ #{?}::T
    	 \_args  │ [<http://example.com/data.json>][MTronException<127>:no active space supports pattern <http://example.com/data.json>]][no active space supports pattern <http://example.com/data.json>]@/sys/fail/666
 ```
+
 ## MIME Type → TID Mapping
 
 `MIME.MIMEType.toTid()` provides the reverse mapping used by the `mimeq` query processor:
 
-| MIME Type | TID |
-|---|---|
-| `text/html` | `/m/web/mime/html` (`HTML_TID`) |
-| `text/markdown` | `/m/web/mime/markdown` (`MARKDOWN_TID`) |
-| `application/json` | `/m/web/mime/json` (`JSON_TID`) |
-| `application/xml` | `/m/web/mime/xml` (`XML_TID`) |
-| `text/css` | `/m/web/mime/css` (`CSS_TID`) |
-| `text/x-java` | `/m/web/mime/java` (`JAVA_TID`) |
-| `application/x-mtron` | `null` (structural parse gate) |
+| MIME Type             | TID                                     |
+|-----------------------|-----------------------------------------|
+| `text/html`           | `/m/web/mime/html` (`HTML_TID`)         |
+| `text/markdown`       | `/m/web/mime/markdown` (`MARKDOWN_TID`) |
+| `application/json`    | `/m/web/mime/json` (`WEB_JSON_TID`)     |
+| `application/xml`     | `/m/web/mime/xml` (`XML_TID`)           |
+| `text/css`            | `/m/web/mime/css` (`CSS_TID`)           |
+| `text/x-java`         | `/m/web/mime/java` (`JAVA_TID`)         |
+| `application/x-mtron` | `null` (structural parse gate)          |
 
 ## Important Notes
 

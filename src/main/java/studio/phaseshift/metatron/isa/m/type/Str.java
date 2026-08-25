@@ -22,7 +22,6 @@ import studio.phaseshift.metatron.algebra.PlusMonoid;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.impl.MStr;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.ProjectionFailureException;
 
 import java.nio.ByteBuffer;
@@ -292,6 +291,16 @@ public interface Str extends Mono, PlusMonoid.O<Str> {
                     string.contains("'"))
                 return str(string);
             return uriFallback ? uri(string) : str(string);
+        }
+
+        public static String stripQuotes(String string) {
+            while (string.startsWith("'") || string.startsWith("\"")) {
+                string = string.substring(1);
+            }
+            while (string.endsWith("'") || string.endsWith("\"")) {
+                string = string.substring(0, string.length() - 1);
+            }
+            return string;
         }
 
         public static String cleanString(final Obj obj) {

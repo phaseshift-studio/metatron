@@ -110,16 +110,16 @@ public final class CommandPalette extends MRec {
                     /// ///////////////////////////////////////////////////////////////////////////////////////
                     .addRow(List.of("{{[g]&w}}mtron", "{{[g]&w}}"))
                     .addRow(List.of(kc("<tab>"), "tabular view of the current code"))
-                    .addRow(List.of(cc(":check [stages]"), "show or enable/disable type checking stages (+stage/-stage)"))
-                    .addRow(List.of(kc("<alt>+t") + "  " + cc(":cycle-check"), "cycle type check activations"))
-                    .addRow(List.of(cc(":trace [on|off]"), "toggle Java stack trace dump on fail"))
+                    .addRow(List.of(cc(":typer [stages]"), "show or enable/disable type checking stages (+stage/-stage)"))
+                    .addRow(List.of(kc("<alt>+t") + "  " + cc(":typer-cycle"), "cycle type check activations"))
+                    .addRow(List.of(cc(":tracer [on|off]"), "toggle Java stack trace dump on fail"))
                     /// ///////////////////////////////////////////////////////////////////////////////////////
                     .addRow(List.of("{{[g]&w}}console", "{{[g]&w}}"))
                     .addRow(List.of(kc("<ctrl>+q") + "  " + cc(":quit"), "exit the console"))
                     .addRow(List.of(cc(":reset"), "reboot the metatron vm"))
                     .addRow(List.of(cc(":clear"), "clear the console"))
                     .addRow(List.of(cc(":header [name]"), "print random or named metatron header"))
-                    .addRow(List.of(cc(":log [level] [pane]"), "show or set log level and target pane"))
+                    .addRow(List.of(cc(":logger [level] [pane]"), "show or set log level and target pane"))
                     .addRow(List.of(cc(":redirect/input [inst]"), "redirect console input via inst (noobj for default)"))
                     .addRow(List.of(cc(":prefix [text]"), "prefix input with text"))
                     .addRow(List.of(cc(":postfix [text]"), "postfix input with text"))
@@ -203,20 +203,20 @@ public final class CommandPalette extends MRec {
             console.getStatus().refresh();
             return noobj();
         }), MUTABLE);
-        // ===== log =====
-        this.at("log", instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(NOOBJ_TID), lst(), (lhs, inst) -> {
+        // ===== logger =====
+        this.at("logger", instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(NOOBJ_TID), lst(), (lhs, inst) -> {
             if (lhs.isStr() && !lhs.strValue().isBlank()) {
                 final String[] args = lhs.strValue().split(" ");
                 LogObj.setSLF4J(args[0]);
                 if (args.length > 1)
                     GraphittyLogger.setDefaultTargetPane(Integer.parseInt(args[1]));
             }
-            LOG.info("log level: %s [target pane: %s]", LogObj.getSLF4J().toString().toLowerCase(), GraphittyLogger.getDefaultTargetPane());
+            LOG.info("logger level: %s [target pane: %s]", LogObj.getSLF4J().toString().toLowerCase(), GraphittyLogger.getDefaultTargetPane());
             return noobj();
         }), MUTABLE);
 
         // ===== check =====
-        this.at("check", instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(NOOBJ_TID), lst(), (lhs, inst) -> {
+        this.at("typer", instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(NOOBJ_TID), lst(), (lhs, inst) -> {
             if (lhs.isStr() && !lhs.strValue().isBlank()) {
                 Arrays.stream(lhs.strValue().split(" ")).forEach(s -> {
                     if (!s.trim().isEmpty()) {
@@ -227,7 +227,7 @@ public final class CommandPalette extends MRec {
                     }
                 });
             }
-            LOG.info("type check stages {{%s}}%s{{X}}", TypeCheck.colorLevel(), TypeCheck.getEnabled());
+            LOG.info("typer stages {{%s}}%s{{X}}", TypeCheck.colorLevel(), TypeCheck.getEnabled());
             return noobj();
         }), MUTABLE);
 
@@ -273,14 +273,14 @@ public final class CommandPalette extends MRec {
             return noobj();
         }), MUTABLE);
 
-        // ===== trace =====
-        this.at("trace", instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(NOOBJ_TID), lst(), (lhs, inst) -> {
+        // ===== tracer =====
+        this.at("tracer", instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(NOOBJ_TID), lst(), (lhs, inst) -> {
             final boolean newState = lhs.isStr() && !lhs.strValue().isBlank()
                     ? lhs.strValue().trim().equalsIgnoreCase("on")
                     : !Tracer.stack.enabled();
             if (newState) Tracer.enable(Tracer.stack);
             else Tracer.disable(Tracer.stack);
-            LOG.info("trace {{%s}}%s{{X}}", newState ? "g" : "r", newState ? "ON" : "OFF");
+            LOG.info("tracer {{%s}}%s{{X}}", newState ? "g" : "r", newState ? "ON" : "OFF");
             return noobj();
         }), MUTABLE);
 
@@ -455,8 +455,8 @@ public final class CommandPalette extends MRec {
             return noobj();
         }), MUTABLE);
 
-        // ===== cycle-check (Ctrl+T) =====
-        this.at("cycle-check", instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(NOOBJ_TID), lst(), (lhs, inst) -> {
+        // ===== typer-cycle (Ctrl+T) =====
+        this.at("typer-cycle", instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(NOOBJ_TID), lst(), (lhs, inst) -> {
             if (TypeCheck.level() == 0)
                 TypeCheck.enable(TypeCheck.values());
             else
@@ -464,7 +464,7 @@ public final class CommandPalette extends MRec {
             StatusLine.message(str("typer: " + TypeCheck.getEnabled()));
             return noobj();
         }), MUTABLE);
-        bindKey("cycle-check", alt('t'));
+        bindKey("typer-cycle", alt('t'));
 
         // ===== editor (Ctrl+Y) =====
         this.at("editor", instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(NOOBJ_TID), lst(), (lhs, inst) -> {

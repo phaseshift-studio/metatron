@@ -119,7 +119,7 @@ public class MIME {
             final fURI basePath = Obj.Helper.specificTypeId(obj).basePath();
             if (basePath.equals(HTML_TID)) return TEXT_HTML;
             if (basePath.equals(MARKDOWN_TID)) return TEXT_MARKDOWN;
-            if (basePath.equals(JSON_TID)) return APPLICATION_JSON;
+            if (basePath.equals(WEB_JSON_TID)) return APPLICATION_JSON;
             if (basePath.equals(XML_TID)) return APPLICATION_XML;
             if (basePath.equals(CSS_TID)) return TEXT_CSS;
             if (basePath.equals(JAVA_TID)) return TEXT_JAVA;
@@ -178,7 +178,7 @@ public class MIME {
             return switch (this) {
                 case TEXT_HTML -> HTML_TID;
                 case TEXT_MARKDOWN -> MARKDOWN_TID;
-                case APPLICATION_JSON -> JSON_TID;
+                case APPLICATION_JSON -> WEB_JSON_TID;
                 case APPLICATION_XML -> XML_TID;
                 case TEXT_CSS -> CSS_TID;
                 case TEXT_JAVA -> JAVA_TID;
@@ -225,15 +225,13 @@ public class MIME {
 
         public ObjSerializer<?> serializer() {
             if (this.isMtron()) return ObjmtronSerializer.singleNoClip();
-            if (this.isJson()) return ObjJSONSerializer.simple();
+            if (this.isJson()) return ObjJSONSerializer.web();
             if (this.isYaml()) return ObjYAMLSerializer.single();
             if (this.isHtml()) return ObjHTMLSerializer.single();
             if (this.isXml()) return ObjXMLSerializer.single();
             if (this.isMarkdown()) return ObjMarkdownSerializer.single();
             if (this.isJava()) return ObjJavaSerializer.single();
             if (this.isBSON()) return ObjBSONSerializer.single();
-            if (this.isShell()) return ObjPlainTextSerializer.single();
-            if (this.isPlain()) return ObjPlainTextSerializer.single();
             return ObjPlainTextSerializer.single();
         }
 
@@ -259,10 +257,9 @@ public class MIME {
         }
 
         public Obj fromBytes(final byte[] data) {
-            final Obj obj = Optional.ofNullable(this.serializer())
+            return Optional.ofNullable(this.serializer())
                     .map(s -> s.inputBytes(ByteBuffer.wrap(data)))
                     .orElseThrow(() -> MTronException.of("no serializer for %s", this.value));
-            return obj;
         }
 
         public byte[] toBytes(final Obj obj) {
