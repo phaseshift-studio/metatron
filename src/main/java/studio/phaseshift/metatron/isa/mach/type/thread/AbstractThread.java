@@ -31,6 +31,7 @@ import java.io.Closeable;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -142,6 +143,13 @@ public abstract class AbstractThread extends MRec implements mThread, Closeable 
      */
     public Obj source() {
         return this.jvm().getOrDefault(uri(SOURCE), noobj());
+    }
+
+    /**
+     * @return the vid of the thread that spawned this thread, or empty uri if unset
+     */
+    public Optional<fURI> sourceVid() {
+        return Obj.Helper.getAutoPointer(this.source());
     }
 
     public Uri state() {

@@ -73,10 +73,9 @@ public class stackSpace extends AbstractSpace<Stack<Poly<?, ?>>> {
     }
 
     @Override
-    public stackSpace addQ(final QProc q) {
-        super.addQ(q);
+    public Space addQ(final QProc q) {
         this.root.addQ(q);
-        return this;
+        return super.addQ(q);
     }
 
     @Override

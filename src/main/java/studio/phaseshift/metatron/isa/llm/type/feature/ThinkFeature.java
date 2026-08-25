@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.isa.llm.type.feature;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
+import studio.phaseshift.metatron.isa.llm.type.ChatResult;
 import studio.phaseshift.metatron.isa.m.math.mathInstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
@@ -46,6 +47,8 @@ public class ThinkFeature extends AbstractFeature {
     private StringBuilder full = new StringBuilder();
     private String lastRendered = "";
     private final AtomicBoolean thinkDone = new AtomicBoolean(false);
+    /** The thought row persisted for the current chat — attached to the chat_result as a ref. */
+    private Obj lastThink;
 
     public ThinkFeature(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
@@ -85,15 +88,20 @@ public class ThinkFeature extends AbstractFeature {
             final fURI thinkWriteURI = agent.feature(THINK).asRec().at(ROOT).orElse(agent.at(ROOT).uriValue().extend(THINK).toUri()).uriValue().extend("_").addQ(INCRQ);
             final Rec thought = rec(mutableMap(uri(TEXT), str(this.full.toString().trim())), THINKING_MESSAGE_TID, null);
             thought.recValue().put(uri(TIME), mathInstSet.nowDatetime());
-            thought.recValue().put(uri(SESSION), agent.feature(SESSION).asRec().at(SESSION));
+            thought.recValue().put(uri(SESSION), agent.feature(SESSION).orElse(rec()).at(SESSION));
             thought.recValue().put(uri(DEPTH), jnt(agent.chatDepth()));
             thought.recValue().put(uri(CHAT_ID), jnt(agent.chatId()));
             this.buffer = new StringBuilder();
             this.full = new StringBuilder();
             this.lastRendered = "";
             LOG.debug("writing thought to %s", thinkWriteURI);
-            Router.writeToSpace(thinkWriteURI, thought);
+            this.lastThink = Router.writeToSpace(thinkWriteURI, thought);
         }
+    }
+
+    @Override
+    public void onCompleteResponse(final Agent agent, final ChatResult result) {
+        result.putRef("think", this.lastThink);
     }
 
 }

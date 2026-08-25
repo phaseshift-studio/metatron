@@ -1,19 +1,36 @@
+/*
+ * metatron: a distributed virtual machine and language
+ *  Copyright (C) 2025- PhaseShift Studio, LLC
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package studio.phaseshift.metatron.isa.llm.type.feature;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
+import studio.phaseshift.metatron.isa.llm.type.ChatResult;
 import studio.phaseshift.metatron.isa.m.type.*;
-import studio.phaseshift.metatron.isa.mach.type.ui.Border;
-import studio.phaseshift.metatron.isa.mach.type.ui.widget.PanelWidget;
-import studio.phaseshift.metatron.isa.mach.type.ui.widget.Selector;
-import studio.phaseshift.metatron.isa.mach.type.ui.widget.TableWidget;
+import studio.phaseshift.metatron.isa.mach.type.Router;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.isa.llm.type.Agent.res;
+import static studio.phaseshift.metatron.furi.q.QCollection.INCRQ;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -21,16 +38,20 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
- * Captures agent state at every lifecycle hook and produces an audit
- * trail in the result blackboard at {@code res("audit")}.  The trail
- * is a Lst of {@code [phase=>..., detail=>...]} Recs, plus both a
- * plain text table string and an interactive {@link TableWidget}
- * for terminal rendering.
+ * Captures agent state at every lifecycle hook and produces an audit trail.
+ * The trail is a Lst of {@code [phase=>..., detail=>...]} Recs persisted to the
+ * feature's {@code root} space and attached to the {@code chat_result::T} as a
+ * reference.  A plain-text table rendering of the trail is stored alongside it.
+ * <p>
+ * Absorbed from the deleted StageFeature: the streaming hooks now count partial
+ * response/thinking events, recorded in the final snapshot rather than as
+ * per-chunk rows — the trail stays phase-granular.
  */
 public class AuditFeature extends AbstractFeature {
 
-    private static final fURI AUDIT_RESULT = res("audit");
-    private static final List<String> HEADERS = List.of("phase", "detail");
+    /** Counts of streamed events (from StageFeature) — recorded, not per-chunk rows. */
+    private int partialResponses;
+    private int partialThinkings;
 
     public AuditFeature(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
@@ -41,15 +62,27 @@ public class AuditFeature extends AbstractFeature {
     @Override
     public Obj onBeforeChat(final Agent agent) {
         this.trail.clear();
-        agent.at(AUDIT_RESULT, noobj(), MUTABLE);
+        this.partialResponses = 0;
+        this.partialThinkings = 0;
         snapshot(agent, "before_chat",
                 rec(uri("features"), jnt(agent.features().lstValue().size()),
-                        uri("systemMsgs"), jnt(agent.getSystemMessages().size())));
+                        uri("systemMsgs"), jnt(agent.getSystemMessages().size()),
+                        uri("userMessage"), str(null == agent.userMessage() ? "" : agent.userMessage())));
         agent.feature(AUDIT).asRec().at(TO).apply(str("""
                                                       {{_}}{{g}}system{{/g}}{{/_}}: %s
                                                       {{_}}{{g}}prompt{{/g}}{{/_}}: %s
                                                       """.formatted(agent.getSystemMessages().stream().collect(Collectors.joining()), agent.userMessage())));
         return noobj();
+    }
+
+    @Override
+    public void onPartialResponse(final Agent agent, final Str text) {
+        this.partialResponses++;
+    }
+
+    @Override
+    public void onPartialThinking(final Agent agent, final Str text) {
+        this.partialThinkings++;
     }
 
     @Override
@@ -65,10 +98,14 @@ public class AuditFeature extends AbstractFeature {
     }
 
     @Override
-    public void onCompleteResponse(final Agent agent, final Str response) {
+    public void onCompleteResponse(final Agent agent, final ChatResult result) {
+        final Obj chatObj = result.at(uri(CHAT));
+        final int chatLen = chatObj.isStr() ? chatObj.strValue().length() : 0;
         snapshot(agent, "complete",
-                rec(uri("chatLen"), jnt(response.strValue().length())));
-        render(agent);
+                rec(uri("chatLen"), jnt(chatLen),
+                        uri("partialResponses"), jnt(this.partialResponses),
+                        uri("partialThinkings"), jnt(this.partialThinkings)));
+        render(agent, result);
     }
 
     @Override
@@ -85,15 +122,11 @@ public class AuditFeature extends AbstractFeature {
         this.trail.add(rec(uri("phase"), str(phase), uri("detail"), detail));
     }
 
-    // ── Render (table widget + text) ───────────────────────────────
+    // ── Render (persist trail + terminal table) ────────────────────
 
-    private void render(final Agent agent) {
+    private void render(final Agent agent, final ChatResult result) {
         if (this.trail.isEmpty()) return;
         final List<Rec> rows = this.trail;
-
-        // Persist trail as Lst under its own key, so `table`/`widget`
-        // remain siblings of the trail rather than overwriting it.
-        agent.at(res("audit", "trail"), lst(rows.stream().map(r -> (Obj) r).toList()), MUTABLE);
 
         // Build plain text table
         final StringBuilder sb = new StringBuilder();
@@ -118,20 +151,21 @@ public class AuditFeature extends AbstractFeature {
         }
         sb.append('└').append(repeat('─', widths[0]))
                 .append('┴').append(repeat('─', widths[1])).append('┘').append("\n");
-        agent.at(res("audit", "table"), str(sb.toString()), MUTABLE);
 
-        // Build interactive TableWidget
-        final TableWidget table = new TableWidget(HEADERS).style().border(Border.continuous.foreground("{{y}}")).divider(Border.continuous.leftSide()).applyStyle();
-        for (final Rec row : rows)
-            table.addRow(List.of(
-                    row.at(uri("phase")).strValue(),
-                    fmt(row.at(uri("detail")))));
-        agent.at(res("audit", "widget"), table, MUTABLE);
-        final Selector selector = new Selector().style().attachment(table, true).pointer("{{r}}>").applyStyle()
-                .onSelect((s, r, c) -> {
-                    new PanelWidget(table.entry(r, c).toString(), table.row(r).toString()).run();
-                });
-        agent.at(res("audit", "widget"), selector, MUTABLE);
+        // Persist the trail (+ its table rendering) to the feature's root and
+        // attach a reference on the chat_result.
+        final Obj root = this.at(ROOT);
+        if (!root.isNoObj()) {
+            try {
+                final Map<Obj, Obj> row = new LinkedHashMap<>();
+                row.put(uri("trail"), lst(rows.stream().map(r -> (Obj) r).toList()));
+                row.put(uri("table"), str(sb.toString()));
+                final Obj written = Router.writeToSpace(root.uriValue().extend("_").addQ(INCRQ), rec(row, null, null));
+                result.putRef("audit", written);
+            } catch (final Exception e) {
+                LOG.warn("failed to persist audit trail: %s", e.getMessage());
+            }
+        }
     }
 
     // ── Formatting helpers ─────────────────────────────────────────

@@ -22,6 +22,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
+import studio.phaseshift.metatron.isa.llm.type.ChatResult;
 import studio.phaseshift.metatron.isa.llm.type.feature.*;
 import studio.phaseshift.metatron.isa.llm.type.feature.Feature;
 import studio.phaseshift.metatron.isa.llm.type.mSkill;
@@ -94,7 +95,6 @@ public class llmInstSet extends AbstractInstSet {
     public static final fURI LLM_EMBED_FEATURE_TID = LLM_FEATURE_TID.extend("embed_feature");
     public static final fURI LLM_SKILL_FEATURE_TID = LLM_FEATURE_TID.extend("skill_feature");
     public static final fURI LLM_THINK_FEATURE_TID = LLM_FEATURE_TID.extend("think_feature");
-    public static final fURI LLM_STAGE_FEATURE_TID = LLM_FEATURE_TID.extend("stage_feature");
     public static final fURI LLM_CONCEPT_FEATURE_TID = LLM_FEATURE_TID.extend("concept_feature");
     public static final fURI LLM_COMMENT_FEATURE_TID = LLM_FEATURE_TID.extend("comment_feature");
     public static final fURI LLM_COST_FEATURE_TID = LLM_FEATURE_TID.extend("cost_feature");
@@ -202,8 +202,8 @@ public class llmInstSet extends AbstractInstSet {
                                         .tid(REC_TID)
                                         .vid(LLM_CHAT_RESULT_TID)
                                         .isaPredicate(rec(
-                                                uri(CHAT), ALL_TYPE,
-                                                uri(TIME), TIME_TYPE,
+                                                uri(CHAT).maybe().asUri(), ALL_TYPE,
+                                                uri(TIME).maybe(), TIME_TYPE,
                                                 uri(ERROR).maybe(), FAIL_TYPE))
                                         .create(),
                                 null, null, mutableMap(
@@ -314,7 +314,8 @@ public class llmInstSet extends AbstractInstSet {
                                         .vid(LLM_FEATURE_TID)
                                         .isaPredicate(rec(
                                                 // hook fields — each is an optional inst a feature can override
-                                                uri(SKILL).maybe().asUri(), lst(LLM_SKILL_TYPE),
+                                                uri(ROOT).maybe().asUri(), URI_TYPE,
+                                                uri(SKILL).maybe(), lst(LLM_SKILL_TYPE),
                                                 uri(ON_AGENT_CTOR).maybe(), ALL_TYPE,
                                                 uri(ON_BEFORE_CHAT).maybe(), ALL_TYPE,
                                                 uri(ON_PARTIAL_RESPONSE).maybe(), ALL_TYPE,
@@ -326,6 +327,7 @@ public class llmInstSet extends AbstractInstSet {
                                                 uri(ON_ERROR).maybe(), ALL_TYPE))
                                         .create(),
                                 null, null, mutableMap(
+                                        uri(ROOT).maybe(), "the root uri location of feature data",
                                         uri(SKILL).maybe(), "skills associated with the feature",
                                         uri(ON_AGENT_CTOR).maybe(), "inst?noobj<=agent(){ [-- one time setup --] }",
                                         uri(ON_BEFORE_CHAT).maybe(), "inst?#{?}<=agent(){ [-- non-noobj to short-circuit --] }",
@@ -334,7 +336,7 @@ public class llmInstSet extends AbstractInstSet {
                                         uri(ON_PARTIAL_TOOL_CALL).maybe(), "inst?noobj<=agent(request=>call::T)",
                                         uri(BEFORE_TOOL_EXECUTION).maybe(), "inst?noobj<=agent(request=>call::T)",
                                         uri(ON_TOOL_EXECUTED).maybe(), "inst?noobj<=agent(result=>call::T)",
-                                        uri(ON_COMPLETE_RESPONSE).maybe(), "inst?noobj<=agent(response=>str::T)",
+                                        uri(ON_COMPLETE_RESPONSE).maybe(), "inst?noobj<=agent(result=>chat_result::T)",
                                         uri(ON_ERROR).maybe(), "inst?noobj<=agent(fail=>fail::T)"),
                                 "each concrete feature refines llm_feature::T with its own hook implementations"),
                         LLM_AGENT_TYPE = docWrap(Type.Builder.build()
@@ -396,14 +398,6 @@ public class llmInstSet extends AbstractInstSet {
                                 null, null,
                                 mutableMap(),
                                 "think feature captures thinking text during response generation"),
-                        docWrap(Type.Builder.build()
-                                        .tid(LLM_FEATURE_TID)
-                                        .vid(LLM_STAGE_FEATURE_TID)
-                                        .constructor(arg -> createStageLambdas(new StageFeature(arg.asRec().jvm(), LLM_STAGE_FEATURE_TID, arg.vid())))
-                                        .create(),
-                                null, null,
-                                mutableMap(),
-                                "appends typed stage entries to res(stages). purely observational — no configuration needed."),
                         docWrap(Type.Builder.build()
                                         .tid(LLM_FEATURE_TID)
                                         .vid(LLM_CONCEPT_FEATURE_TID)
@@ -516,7 +510,7 @@ public class llmInstSet extends AbstractInstSet {
                         // CHAT INSTRUCTION
                         docWrap(instC(LLM_INST_TID.extend("chat").dom(LLM_AGENT_TID).rng(LLM_CHAT_RESULT_TID), lst(STR_TYPE), (lhs, inst) -> agent(lhs.asRec()).chat(inst.arg(0).strValue())),
                                 "a model to chat with",  // dom
-                                "chat result rec [chat=>..., time=>..., ?cost=>..., ?stages=>..., ?error=>...]", // rng
+                                "chat result rec — monos inline (chat, user, time), feature outputs as !* refs", // rng
                                 mutableMap(jnt(0), "the message to send the model"), // args
                                 "communicate with an llm that may be enriched with a tool, skill, etc.", // desc
                                 "*<ollama:qwen3:latest>+[response=>[to=>print(_)],think=>to(/ai/thoughts/_?incrq)].chat('what is a database?')"),
@@ -632,9 +626,9 @@ public class llmInstSet extends AbstractInstSet {
                         f.onToolExecuted((Agent) agent, i.arg(0));
                         return noobj();
                     })),
-            new StageDef(ON_COMPLETE_RESPONSE, "onCompleteResponse", new Class<?>[]{Agent.class, Str.class},
+            new StageDef(ON_COMPLETE_RESPONSE, "onCompleteResponse", new Class<?>[]{Agent.class, ChatResult.class},
                     f -> instLambda(ALL.maybe(), NOOBJ_TID.zero(), (agent, i) -> {
-                        f.onCompleteResponse((Agent) agent, i.arg(0).asStr());
+                        f.onCompleteResponse((Agent) agent, (ChatResult) i.arg(0));
                         return noobj();
                     })),
             new StageDef(ON_ERROR, "onError", new Class<?>[]{Agent.class, Fail.class},

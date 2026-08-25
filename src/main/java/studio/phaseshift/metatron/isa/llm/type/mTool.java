@@ -154,7 +154,9 @@ public class mTool extends MRec {
     }
 
     public static Rec mtronDocToTool(final QCollection.Docs doc) {
-        final Inst inst = doc.at(INST);
+        // atDirect — the Docs stores the inst at OBJ (not INST) and at() would
+        // auto-resolve it; it must be read raw.
+        final Inst inst = doc.atDirect(uri(OBJ));
         return rec(mutableMap(uri(INST), inst, uri(NAME), uri(inst.tid().basePath()), uri(DESC), str(doc.description()), uri(ARG), doc.args()), LLM_TOOL_TID, null);
     }
 
@@ -199,7 +201,7 @@ public class mTool extends MRec {
                 argDescs.put(uri(name), null == sub.description() || sub.description().isBlank() ? "<no description>" : sub.description());
             });
         }
-        final Inst inst = instC(f(spec.name()).rng(STR_TID.maybeSome()), rec(argTypes), (lhs, i) -> {
+        final Inst inst = instC(f(spec.name()).dom(ALL.maybe()).rng(STR_TID.maybeSome()), rec(argTypes), (lhs, i) -> {
             final String argsJson = i.args().isNoObj() ? "{}" :
                     new String(ObjJSONSerializer.simple().outputBytes(i.args()).array(), StandardCharsets.UTF_8);
             final String result = executor.execute(ToolExecutionRequest.builder().name(spec.name()).arguments(argsJson).build(), null);

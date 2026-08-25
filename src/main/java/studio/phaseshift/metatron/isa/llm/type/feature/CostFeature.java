@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.isa.llm.type.feature;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.CostCalculator;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
+import studio.phaseshift.metatron.isa.llm.type.ChatResult;
 import studio.phaseshift.metatron.isa.m.type.Fail;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Real;
@@ -59,6 +60,8 @@ public class CostFeature extends AbstractFeature {
     private final fURI currencyTID;
     private final CostCalculator calculator;
     private fURI sessionVID;
+    /** The cost row written for the current chat — attached to the chat_result as a ref. */
+    private Obj lastCost;
 
     private record Cost(Real in, Real out, Real total) {
     }
@@ -80,8 +83,9 @@ public class CostFeature extends AbstractFeature {
 
 
     @Override
-    public void onCompleteResponse(final Agent agent, final Str response) {
+    public void onCompleteResponse(final Agent agent, final ChatResult result) {
         final Cost cost = persistCost();
+        result.putRef("cost", this.lastCost);
         LOG.debug("running cost: %s => %s", cost, this.at(TO));
         if (!this.at(TO).isNoObj())
             this.at(TO).asInst().args(lst(cost.in(), cost.out(), cost.total())).apply(jnt(1));
@@ -107,7 +111,7 @@ public class CostFeature extends AbstractFeature {
         final Real totalCost = real(this.calculator.getTotalCost(), this.currencyTID, null);
         try {
             // Write in/out/total to space so other features (e.g., AuditFeature) can read it
-            Router.writeToSpace(this.at(ROOT).uriValue().extend("_").addQ(INCRQ), rec(uri(SESSION), uri(this.sessionVID), uri(IN), inCost, uri(OUT), outCost, uri(TOTAL), totalCost));
+            this.lastCost = Router.writeToSpace(this.at(ROOT).uriValue().extend("_").addQ(INCRQ), rec(uri(SESSION), uri(this.sessionVID), uri(IN), inCost, uri(OUT), outCost, uri(TOTAL), totalCost));
             LOG.debug("persisted cost to %s: in=%.4f, out=%.4f, total=%.4f", root.toString(), inCost.realValue(), outCost.realValue(), totalCost.realValue());
         } catch (final Exception e) {
             LOG.warn("failed to persist cost data: %s", e.getMessage());

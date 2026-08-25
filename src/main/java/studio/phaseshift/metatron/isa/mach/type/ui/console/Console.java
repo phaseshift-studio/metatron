@@ -42,6 +42,7 @@ import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.machine.SwarmMachine;
+import studio.phaseshift.metatron.isa.mach.type.thread.AbstractThread;
 import studio.phaseshift.metatron.isa.mach.type.thread.FutureObj;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
@@ -128,6 +129,11 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
             Paths.get(System.getProperty("user.home"), ".metatron") // user-specific settings
     );
     public static Console LOCAL_INSTANCE = null;
+    /**
+     * The vid of the console's repl VirtualThread — the root of console-owned
+     * evaluation.  Set when the console binds its repl thread.
+     */
+    public static volatile fURI CONSOLE_THREAD_VID = null;
     public Machine machine = null;
     public static AtomicBoolean userMode = new AtomicBoolean(false);
 
@@ -331,6 +337,25 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
 
     public static Terminal getTerminal() {
         return Console.terminal;
+    }
+
+    /**
+     * @return true when the current thread is the console's repl thread or a
+     *         thread it directly spawned (e.g. the per-line SwarmMachine evaluating
+     *         an inline {@code @agent.chat(...)}).  False for detached threads such
+     *         as {@code virtual::[code=>...]} forks, so background chats don't
+     *         animate console spinners.
+     */
+    public static boolean isConsoleOwned() {
+        final AbstractThread current = BootLoader.CURRENT_THREAD.get();
+        if (null == current)
+            return true;
+        final fURI consoleVid = CONSOLE_THREAD_VID;
+        if (null == consoleVid)
+            return true;
+        if (consoleVid.equals(current.vid()))
+            return true;
+        return current.sourceVid().map(consoleVid::equals).orElse(true);
     }
 
     public LineReader getReader() {

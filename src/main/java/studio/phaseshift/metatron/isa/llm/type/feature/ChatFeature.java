@@ -3,10 +3,12 @@ package studio.phaseshift.metatron.isa.llm.type.feature;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.MessageBuilder;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
+import studio.phaseshift.metatron.isa.llm.type.ChatResult;
 import studio.phaseshift.metatron.isa.llm.type.Model;
 import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Str;
+import studio.phaseshift.metatron.isa.mach.type.Router;
 
 import java.util.Map;
 
@@ -15,7 +17,6 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.INCRQ;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
-import static studio.phaseshift.metatron.isa.llm.type.Agent.res;
 import static studio.phaseshift.metatron.isa.m.mInstSet.NOOBJ_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
@@ -65,15 +66,22 @@ public class ChatFeature extends AbstractFeature {
         agent.feature(CHAT).asRec().at(f(RESPONSE).extend(TO)).apply(text);
     }
 
-    @Override
-    public void onCompleteResponse(final Agent agent, final Str text) {
-        // Formatted responses are already structured Recs (parsed from JSON) —
-        // store directly at res(CHAT) so the result is navigable without the
-        // extra 'response' wrapper.  Free-text stays wrapped as {response=>...}.
-        agent.at(res(CHAT, RESPONSE), str(Str.Helper.cleanString(text.apply(agent))), MUTABLE);
-        // AiMessages are persisted by SpaceChatSessionStore.updateMessages(),
-        // which catches both intermediate tool_call responses (that never
-        // reach TokenStream.onCompleteResponse) and the final text response.
+    /**
+     * Write the assembled {@code chat_result::T} to the chat feature's root
+     * space (e.g. {@code /usr/dr/chat_result/_?incrq}).  Called by
+     * {@code Agent.chat()} after every feature's {@code onCompleteResponse}
+     * hook has run — the Agent owns the chat_result lifecycle, this feature
+     * owns the persist logic and the {@code root} the result is stored at.
+     */
+    public void persist(final Agent agent, final ChatResult result) {
+        final Obj root = this.at(ROOT);
+        if (root.isNoObj())
+            return;
+        try {
+            Router.writeToSpace(root.uriValue().extend("_").addQ(INCRQ), result);
+        } catch (final Exception e) {
+            this.logger().warn("failed to persist chat_result: %s", e.getMessage());
+        }
     }
 
     private static final fURI CHAT_INST_TID = LLM_CHAT_FEATURE_TID.extend(INST).extend("agent_chat");

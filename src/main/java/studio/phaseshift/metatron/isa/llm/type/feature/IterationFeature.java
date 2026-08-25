@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.isa.llm.type.feature;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.space.SpaceChatSessionStore;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
+import studio.phaseshift.metatron.isa.llm.type.ChatResult;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 
@@ -32,7 +33,6 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_ITERATION_FEATURE_TID;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_ITERATION_TID;
-import static studio.phaseshift.metatron.isa.llm.type.Agent.res;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
@@ -84,6 +84,9 @@ public class IterationFeature extends AbstractFeature {
     private static final fURI PREV_INST_TID = LLM_ITERATION_FEATURE_TID.extend(INST).extend("prev");
     private static final fURI NEXT_INST_TID = LLM_ITERATION_FEATURE_TID.extend(INST).extend("next");
 
+    /** The iteration record created for the current chat — attached to the chat_result as a ref. */
+    private fURI iterationVid;
+
     public IterationFeature(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
     }
@@ -104,7 +107,7 @@ public class IterationFeature extends AbstractFeature {
             final SessionFeature sessionFeature = agent.feature(SESSION).as();
             final fURI sessionVID = sessionFeature.at(SESSION).uriValue();
             final Rec iteration = createIteration(sessionVID);
-            agent.at(res(ITERATION), uri(iteration.vid()), Poly.MUTABLE);
+            this.iterationVid = iteration.vid();
             LOG.debug("created iteration %s for session %s", iteration.vid(), sessionVID);
         } catch (final Exception e) {
             LOG.warn("iteration feature onBeforeChat failed: %s", e.getMessage());
@@ -118,7 +121,7 @@ public class IterationFeature extends AbstractFeature {
      * persisted by {@link SpaceChatSessionStore#updateMessages}.
      */
     @Override
-    public void onCompleteResponse(final Agent agent, final Str response) {
+    public void onCompleteResponse(final Agent agent, final ChatResult result) {
         if (!agent.hasFeature(SESSION)) return;
         try {
             final SessionFeature sessionFeature = agent.feature(SESSION).as();
@@ -128,10 +131,10 @@ public class IterationFeature extends AbstractFeature {
             final Set<fURI> messageVIDs = store.getCurrentMessages();
             if (messageVIDs.isEmpty()) return;
 
-            final Obj iterationObj = agent.at(res(ITERATION));
-            if (iterationObj.isNoObj()) return;
+            final fURI iterationVID = this.iterationVid;
+            if (null == iterationVID) return;
 
-            final fURI iterationVID = iterationObj.uriValue();
+            result.putRef("iteration", iterationVID);
             linkMessages(iterationVID, messageVIDs);
             LOG.debug("linked %d messages to iteration %s", messageVIDs.size(), iterationVID);
         } catch (final Exception e) {

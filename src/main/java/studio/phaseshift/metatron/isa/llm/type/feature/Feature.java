@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.isa.llm.type.feature;
 
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
+import studio.phaseshift.metatron.isa.llm.type.ChatResult;
 import studio.phaseshift.metatron.isa.m.type.*;
 
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -111,7 +112,15 @@ public interface Feature {
 
     // ── Completion ───────────────────────────────────────────────
 
-    default void onCompleteResponse(final Agent agent, final Str response) {
+    /**
+     * Fired after the final response is received.  The {@code result} is the
+     * per-chat {@code chat_result::T} being assembled — features attach their
+     * outputs here (e.g. {@code result.putRef("cost", writtenCost)}), so
+     * future features plug in without the Agent knowing about them.  The
+     * result is persisted to the chat feature's root space by Agent after all
+     * hooks have run.
+     */
+    default void onCompleteResponse(final Agent agent, final ChatResult result) {
     }
 
     // ── Error ────────────────────────────────────────────────────

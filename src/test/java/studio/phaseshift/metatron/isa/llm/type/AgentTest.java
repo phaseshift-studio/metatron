@@ -48,7 +48,6 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
 import static studio.phaseshift.metatron.isa.llm.type.Agent.feat;
-import static studio.phaseshift.metatron.isa.llm.type.Agent.res;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -319,51 +318,30 @@ public class AgentTest extends AbstractMetatronTest {
     }
 
     @Test
-    public void testTimeFieldInResultAssembly() {
-        // Simulate what Agent.chat() does: write time to res("time"),
-        // then read it back in Phase 4 result assembly.
-        final Map<Obj, Obj> map = new LinkedHashMap<>();
-        map.put(uri(NAME), str("time-test-agent"));
-        final Agent a = Agent.agent(rec(map, LLM_AGENT_TID, null));
-
-        // Phase 3 (onCompleteResponse Lambda): write time to blackboard
-        a.at(res("time"), jnt(1523), MUTABLE);
-
-        // Verify time is readable from the blackboard
-        final Obj timeFromBlackboard = a.at(res("time"));
-        assertFalse(timeFromBlackboard.isNoObj(),
-                "time should be stored at res(time), got noobj");
-
-        // Phase 4: result assembly — must include time
-        final Map<Obj, Obj> resultMap = new LinkedHashMap<>();
-        resultMap.put(uri(CHAT), str("test chat"));
-        resultMap.put(uri(TIME), a.at(res("time")));
-        final Rec result = rec(resultMap);
-
-        assertFalse(result.at(uri(TIME)).isNoObj(),
-                "result should have a time field, got noobj");
+    public void testChatResultShape() {
+        // Agent.chat() builds a chat_result with monos inline (chat, user, time).
+        final ChatResult result = ChatResult.chatResult()
+                .put("chat", str("bare response"))
+                .put("user", str("test prompt"))
+                .put("time", jnt(100));
+        assertNotNull(result, "chat_result must be a rec");
+        assertEquals(LLM_CHAT_RESULT_TID, result.tid(), "chat_result must have the chat_result tid");
+        assertEquals("bare response", result.at(uri(CHAT)).strValue());
+        assertEquals(100L, result.at(uri(TIME)).intValue());
     }
 
     @Test
-    public void testResultBlackboardShapeWithoutFeatures() {
-        // Bare agent with no features — result should still have chat, time, error
-        final Map<Obj, Obj> map = new LinkedHashMap<>();
-        map.put(uri(NAME), str("bare-agent"));
-        final Agent a = Agent.agent(rec(map, LLM_AGENT_TID, null));
-
-        a.at(res(CHAT), str("bare response"), MUTABLE);
-        a.at(res(TIME), jnt(100), MUTABLE);
-        a.at(res(ERROR), noobj(), MUTABLE);
-
-        final Map<Obj, Obj> resultMap = new LinkedHashMap<>();
-        resultMap.put(uri(CHAT), a.at(res(CHAT)));
-        resultMap.put(uri(TIME), a.at(res(TIME)));
-        resultMap.put(uri(ERROR), a.at(res(ERROR)));
-        final Rec result = rec(resultMap);
-
-        assertEquals("bare response", result.at(uri(CHAT)).strValue());
-        assertEquals(100L, result.at(uri(TIME)).intValue());
-        assertTrue(result.at(uri("audit")).isNoObj(), "no audit without AuditFeature");
+    public void testChatResultRefHelper() {
+        // Feature outputs are attached as !* auto_from refs, not copied.
+        final ChatResult result = ChatResult.chatResult()
+                .put("chat", str("response"))
+                .putRef("cost", f("/usr/test/cost/1"));
+        // atDirect — at() would auto-resolve the ref; we want the raw inst.
+        final Obj costRef = result.atDirect(uri("cost"));
+        assertFalse(costRef.isNoObj(), "ref should be attached");
+        assertTrue(costRef.isInst(), "ref should be an auto_from inst");
+        assertEquals(f("/usr/test/cost/1"), Obj.Helper.getAutoPointer(costRef).orElse(null),
+                "ref should target the persisted cost vid");
     }
 
     // ========================================================================
