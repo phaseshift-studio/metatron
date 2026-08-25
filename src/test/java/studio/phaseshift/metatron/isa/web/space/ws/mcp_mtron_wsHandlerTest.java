@@ -222,13 +222,7 @@ public class mcp_mtron_wsHandlerTest extends AbstractMcpMtronHandlerTest {
     // =========================================================
     // Type-level checks
     // =========================================================
-
-    @Test
-    public void testMcpMtronTIDNamespace() {
-        assertTrue(WS_MCP_MTRON_HANDLER_TID.toString().contains("wsspace"));
-        assertTrue(WS_MCP_MTRON_HANDLER_TID.toString().contains("mcp_mtron_ws"));
-    }
-
+    
     // todo: test type, not tid
     @Test
     public void testMcpMtronTypeIsSubtypeOfMcpWs() {

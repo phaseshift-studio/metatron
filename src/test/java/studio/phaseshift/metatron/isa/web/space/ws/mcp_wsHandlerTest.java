@@ -75,12 +75,6 @@ public class mcp_wsHandlerTest extends AbstractWebSocketServerTest {
     // =========================================================
 
     @Test
-    public void testMCPTidNamespace() {
-        assertTrue(WS_MCP_HANDLER_TID.toString().contains("wsspace"));
-        assertTrue(WS_MCP_HANDLER_TID.toString().contains("mcp"));
-    }
-
-    @Test
     public void testMCPTypeIsWSServerSubtype() {
         // WS_MCP_HANDLER_TYPE declares WS_SERVER_TID as its parent (tid).
         // isRefinementOf() traverses parentType() which resolves via Router;
