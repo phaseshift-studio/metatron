@@ -106,7 +106,7 @@ if [ -d "${BUILD_DIR}" ]; then
     git pull
 else
     git clone "${REPO_URL}"
-    cd "{$BUILD_DIR}"
+    cd "${BUILD_DIR}"
 fi
 
 # Build the project with Maven
