@@ -10,9 +10,8 @@ description: |
 
 ## Architecture
 
-`httpSpace` uses Jsoup to fetch URLs and returns **typed strings** by default (e.g., `html::"..."`).
-The `html::T` type refines `str::T` — the MIME type is a **predicate** on the string content, not a
-structural transformation.
+`httpSpace` uses Jsoup to fetch URLs and returns **typed strings** by default (e.g., `html::"..."`). The `html::T` type
+refines `str::T` — the MIME type is a **predicate** on the string content, not a structural transformation.
 
 ```
 http:// url  →  httpSpace.directReader()  →  Jsoup fetch  →  html::"<html>...</html>"  (typed str)
@@ -23,8 +22,8 @@ http:// url  →  httpSpace.directReader()  →  Jsoup fetch  →  html::"<html>
                                                               rec::T  (DOM tree)
 ```
 
-The space pattern is `<http://#>`, so any `http://` URI routes through the httpSpace.  The space
-should have `mimeq` mounted so `?mimeq=` query parameters work:
+The space pattern is `<http://#>`, so any `http://` URI routes through the httpSpace. The space should have `mimeq`
+mounted so `?mimeq=` query parameters work:
 
 ```mtron_pre
 httpspace::[/
@@ -58,10 +57,10 @@ To get the rich `rec::T` DOM representation, use `?mimeq=application/x-mtron` or
 *<http://example.com>.as(rec::T)
 ```
 
-The `?mimeq=application/x-mtron` query is handled by `QCollection.mimeQ()` postRead processor,
-which (1) probes the content type from the response headers or URI extension, (2) tags the string
-with the correct TID (triggering predicate validation), and (3) if `application/x-mtron` is requested,
-runs the content-type-specific serializer (`ObjHTMLSerializer` for HTML) to produce the `rec::T` DOM tree.
+The `?mimeq=application/x-mtron` query is handled by `QCollection.mimeQ()` postRead processor, which (1) probes the
+content type from the response headers or URI extension, (2) tags the string with the correct TID (triggering predicate
+validation), and (3) if `application/x-mtron` is requested, runs the content-type-specific serializer
+(`ObjHTMLSerializer` for HTML) to produce the `rec::T` DOM tree.
 
 ## HTML Rec Structure
 
@@ -101,8 +100,7 @@ When converted to `rec::T`, the parsed HTML is a nested rec:
 
 ## Tree Walking (requires rec::T)
 
-Tree walking into the DOM tree requires the structural `rec::T` form. Use `.as(rec::T)` first,
-then walk the tree:
+Tree walking into the DOM tree requires the structural `rec::T` form. Use `.as(rec::T)` first, then walk the tree:
 
 ```mtron_pre
 [-- Cast to rec first, then walk --]
@@ -153,15 +151,15 @@ The same pattern applies to JSON, XML, Markdown, etc.:
 
 `MIME.MIMEType.toTid()` provides the reverse mapping used by the `mimeq` query processor:
 
-| MIME Type | TID |
-|---|---|
-| `text/html` | `/m/web/mime/html` (`HTML_TID`) |
-| `text/markdown` | `/m/web/mime/markdown` (`MARKDOWN_TID`) |
-| `application/json` | `/m/web/mime/json` (`JSON_TID`) |
-| `application/xml` | `/m/web/mime/xml` (`XML_TID`) |
-| `text/css` | `/m/web/mime/css` (`CSS_TID`) |
-| `text/x-java` | `/m/web/mime/java` (`JAVA_TID`) |
-| `application/x-mtron` | `null` (structural parse gate) |
+| MIME Type             | TID                                     |
+|-----------------------|-----------------------------------------|
+| `text/html`           | `/m/web/mime/html` (`HTML_TID`)         |
+| `text/markdown`       | `/m/web/mime/markdown` (`MARKDOWN_TID`) |
+| `application/json`    | `/m/web/mime/json` (`WEB_JSON_TID`)     |
+| `application/xml`     | `/m/web/mime/xml` (`XML_TID`)           |
+| `text/css`            | `/m/web/mime/css` (`CSS_TID`)           |
+| `text/x-java`         | `/m/web/mime/java` (`JAVA_TID`)         |
+| `application/x-mtron` | `null` (structural parse gate)          |
 
 ## Important Notes
 

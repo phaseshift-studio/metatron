@@ -134,7 +134,7 @@ public class ObjJavaSerializer extends AbstractObjSerializer<String> {
 
     @Override
     public Obj inputBytes(final ByteBuffer bytes) throws MTronException {
-        return read(new String(bytes.array(), StandardCharsets.UTF_8));
+        return read(Str.Helper.stripQuotes(new String(bytes.array(), StandardCharsets.UTF_8)));
     }
 
     @Override
@@ -255,14 +255,7 @@ public class ObjJavaSerializer extends AbstractObjSerializer<String> {
 
     @Override
     public ByteBuffer outputBytes(final Obj obj) throws MTronException {
-        String output = this.write(obj);
-        while (output.startsWith("'") || output.startsWith("\"")) {
-            output = output.substring(1);
-        }
-        while (output.endsWith("'") || output.endsWith("\"")) {
-            output = output.substring(0, output.length() - 1);
-        }
-        return ByteBuffer.wrap(output.getBytes(StandardCharsets.UTF_8));
+        return ByteBuffer.wrap(Str.Helper.stripQuotes(this.write(obj)).getBytes(StandardCharsets.UTF_8));
     }
 
     @Override

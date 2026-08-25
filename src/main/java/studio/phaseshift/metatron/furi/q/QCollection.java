@@ -458,18 +458,24 @@ public final class QCollection {
                 .obj(f(INST), INST_DOCS)
                 .obj(f(OBJ), OBJ_DOCS)
                 .preWrite((vid, obj) -> {
+                    final fURI vidBig = vid.big();
+                    if (!vidBig.equals(vid))
+                        return Router.writeToSpace(vidBig, obj);
                     final Rec doc = obj.tid().equals(DOCS_TID) ? obj.asRec() : new Docs(obj.toCleanString());
                     if (vid.hasRng()) {
-                        INST_DOCS.write(vid.removeQ(DOCQ), doc);
+                        INST_DOCS.write(vidBig.removeQ(DOCQ), doc);
                     } else {
-                        OBJ_DOCS.write(vid.removeQ(DOCQ), doc);
+                        OBJ_DOCS.write(vidBig.removeQ(DOCQ), doc);
                     }
                     return doc;
                 })
                 .preRead((vid) -> {
-                    final Obj instDoc = INST_DOCS.read(vid.removeQ(DOCQ));
+                    final fURI vidBig = vid.big();
+                    if (!vidBig.equals(vid))
+                        return Router.readFromSpace(vidBig);
+                    final Obj instDoc = INST_DOCS.read(vidBig.removeQ(DOCQ));
                     final Obj doc = instDoc.isNoObj() ?
-                            OBJ_DOCS.read(vid.removeQ(DOCQ)).orElse(NO_DOCS.plus(rec(uri(OBJ), Router.global().read(vid.removeQ(DOCQ))))) :
+                            OBJ_DOCS.read(vidBig.removeQ(DOCQ)).orElse(NO_DOCS.plus(rec(uri(OBJ), Router.global().read(vidBig.removeQ(DOCQ))))) :
                             instDoc;
                     // dual-mode interface doc: a doc carrying 'build' (how to implement) alongside
                     // 'desc' (how to use).  The branch is implementation status: an interface inst's
@@ -477,9 +483,9 @@ public final class QCollection {
                     // write — so implemented iff the live inst is no longer the interface.  Unimplemented
                     // → surface the build docs; implemented → surface the use docs.
                     if (doc.isRec() && doc.asRec().has(DOC_BUILD)) {
-                        final Obj live = Router.global().read(vid.removeQ(DOCQ));
+                        final Obj live = Router.global().read(vidBig.removeQ(DOCQ));
                         final boolean implemented = !live.isNoObj() && live.isInst() &&
-                                !live.<Inst>as().tid().basePath().equals(vid.removeQ(DOCQ));
+                                !live.<Inst>as().tid().basePath().equals(vidBig.removeQ(DOCQ));
                         if (!implemented)
                             return ((Obj) doc.asRec().at(DESC, doc.asRec().at(DOC_BUILD))).tid(DOCS_TID);
                     }
@@ -488,7 +494,7 @@ public final class QCollection {
                 .create();
         if (!initialDocs.isNoObj()) {
             initialDocs.asRec().elements().forEach(doc -> {
-                docq.onWrite().get().preWrite(doc.first().uriValue().addQ("docq"), doc.second());
+                docq.onWrite().get().preWrite(doc.first().uriValue().big().addQ(DOCQ), doc.second());
             });
         }
         return docq;

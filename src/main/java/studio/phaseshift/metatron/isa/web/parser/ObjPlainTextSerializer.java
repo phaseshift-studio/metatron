@@ -25,6 +25,7 @@ import studio.phaseshift.metatron.isa.mach.io.type.AbstractObjSerializer;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.web.webInstSet.OBJ_PLAINTEXT_SERIALIZER_TID;
@@ -48,12 +49,12 @@ public class ObjPlainTextSerializer extends AbstractObjSerializer<String> {
 
     @Override
     public Obj inputBytes(final ByteBuffer bytes) throws MTronException {
-        return str(new String(bytes.array()));
+        return str(Str.Helper.stripQuotes(new String(bytes.array(), StandardCharsets.UTF_8)));
     }
 
     @Override
     public ByteBuffer outputBytes(final Obj obj) throws MTronException {
-        return ByteBuffer.wrap(Str.Helper.cleanString(obj).getBytes());
+        return ByteBuffer.wrap(Str.Helper.cleanString(obj, true).getBytes());
     }
 
     @Override

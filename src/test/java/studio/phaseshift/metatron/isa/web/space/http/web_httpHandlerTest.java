@@ -37,7 +37,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.web.webInstSet.HTML_TID;
-import static studio.phaseshift.metatron.isa.web.webInstSet.JSON_TID;
+import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_JSON_TID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -149,7 +149,7 @@ public class web_httpHandlerTest extends AbstractHTTPServerTest {
             Router.writeToSpace(f("mem:test-pages/about.html"),
                     str("<html><body><h1>About</h1></body></html>", HTML_TID, null));
             Router.writeToSpace(f("mem:test-pages/data.json"),
-                    str("{\"key\":\"value\"}", JSON_TID, null));
+                    str("{\"key\":\"value\"}", WEB_JSON_TID, null));
             super.setupHTTPSpace();
         }
 

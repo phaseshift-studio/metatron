@@ -87,7 +87,7 @@ public class fsSpace extends AbstractSpace<FileSystem> {
                         uri(kv.getValue().toString().replace("~", System.getProperty(USER_HOME)))))
                 .forEach(kv -> this.at(ROUTE).<Map<Uri, Obj>>jvmAs().put(kv.getKey(), kv.getValue()));
     }
-    
+
     public static File staticObjToFile(final Obj obj) {
         try {
             final Space space = Router.global().getSpaceFor(obj.uriValue().basePath());
@@ -175,10 +175,11 @@ public class fsSpace extends AbstractSpace<FileSystem> {
     }
 
     public Obj objToFile(final fURI vid, final Obj obj) {
-        final MIME.MIMEType mimeType = vid.hasQ(MIMEQ_PATTERN) ?
+        MIME.MIMEType mimeType = vid.hasQ(MIMEQ_PATTERN) ?
                 MIME.MIMEType.of(vid.q(MIMEQ_PATTERN.toString())) :
                 MIME.MIMEType.fromType(obj, MIME.MIMEType.APPLICATION_MTRON);
         final File file = new File(this.redirect(vid.qLess(), true).toString());
+        mimeType = MIME.MIMEType.fromProbe(file, mimeType);
         if (file.isDirectory())
             throw MTronException.of("unable to write obj to an existing directory with same vid: %s", vid);
         LOG.debug("writing %s to %s [mime:%s]", obj, file.getPath(), mimeType.value);

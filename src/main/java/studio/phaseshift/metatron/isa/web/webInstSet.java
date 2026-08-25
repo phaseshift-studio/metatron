@@ -98,8 +98,7 @@ public class webInstSet extends AbstractInstSet {
     public static final fURI MIME_TYPE_TID = WEB_ISA_TID.extend("mime");
     public static final fURI XML_TID = MIME_TYPE_TID.extend("xml");
     public static final fURI HTML_TID = MIME_TYPE_TID.extend("html");
-    public static final fURI JSON_TID = MIME_TYPE_TID.extend("json");
-    public static final fURI JSON_STR_TID = MIME_TYPE_TID.extend("json_str");
+    public static final fURI WEB_JSON_TID = MIME_TYPE_TID.extend("json");
     public static final fURI CSS_TID = MIME_TYPE_TID.extend("css");
     public static final fURI MARKDOWN_TID = MIME_TYPE_TID.extend("markdown");
     public static final fURI JAVA_TID = MIME_TYPE_TID.extend("java");
@@ -160,9 +159,9 @@ public class webInstSet extends AbstractInstSet {
                     return noobj();
                 }
             }).create();
-    public static final Type JSON_TYPE = Type.Builder.build()
+    public static final Type WEB_JSON_TYPE = Type.Builder.build()
             .tid(STR_TID)
-            .vid(JSON_TID)
+            .vid(WEB_JSON_TID)
             .predicate((lhs, inst) -> {
                 try {
                     JsonParser.parseString(inst.arg(0).strValue());
@@ -207,10 +206,6 @@ public class webInstSet extends AbstractInstSet {
     public static Type OBJ_BYTE_BUFFER_SERIALIZER_TYPE;
     public static final fURI MCP_SERVER_TID = WEB_ISA_TID.extend("mcp").extend("mcp_server");
     public static final fURI MCP_CLIENT_TID = WEB_ISA_TID.extend("mcp").extend("mcp_client");
-    // public static final fURI CLIENT_TID = WEB_ISA_TID.extend("client");
-    // public static Type CLIENT_TYPE;
-    // public static final fURI SERVER_TID = WEB_ISA_TID.extend("server");
-    // public static Type SERVER_TYPE;
     public static Type MCP_CLIENT_TYPE;
     public static Type MCP_SERVER_TYPE;
 
@@ -231,7 +226,6 @@ public class webInstSet extends AbstractInstSet {
                         ObjHTMLSerializer.single(),
                         ObjJSONSerializer.single(),
                         ObjMarkdownSerializer.single(),
-                        //ObjJavaSerializer.single(),
                         ObjPlainTextSerializer.single(),
                         ObjmtronSerializer.single(),
                         ObjByteBufferSerializer.singleton(),
@@ -242,13 +236,15 @@ public class webInstSet extends AbstractInstSet {
                         docWrap(XML_TYPE, "a xml verified str encoding of an xml document"),
                         docWrap(HTML_TYPE, "an html verified str encoding of an html document",
                                 "*<http://metatron.phaseshift.studio> [-- yields an html::T --]"),
-                        docWrap(JSON_TYPE, "a json document"),
+                        docWrap(WEB_JSON_TYPE, "a json document"),
                         docWrap(YAML_TYPE, "a yaml document"),
                         docWrap(CSS_TYPE, "a rec encoding of a css document"),
                         docWrap(MARKDOWN_TYPE, "a rec encoding of a markdown document"),
                         docWrap(JAVA_TYPE, "a rec encoding of a java source file"),
                         docWrap(OBJ_SERIALIZER_TYPE = Type.Builder.build()
-                                        .tid(OBJ_SERIALIZER_TID).vid(OBJ_SERIALIZER_TID).create(),
+                                        .tid(OBJ_SERIALIZER_TID)
+                                        .vid(OBJ_SERIALIZER_TID)
+                                        .create(),
                                 "a serializer for converting objs to/from external formats"),
                         docWrap(OBJ_MTRON_SERIALIZER_TYPE = Type.Builder.build()
                                         .tid(OBJ_SERIALIZER_TID)
@@ -285,24 +281,26 @@ public class webInstSet extends AbstractInstSet {
                                         .isaPredicate(rec(
                                                 uri("wrap_uri").maybe().asUri(), isa_(BOOL_TYPE).orElse(BOOL_TRUE),
                                                 uri("bias_towards_uri").maybe(), isa_(BOOL_TYPE).orElse(BOOL_TRUE),
-                                                uri("bias_towards_objs").maybe(), isa_(BOOL_TYPE).orElse(BOOL_FALSE),
-                                                uri("embed_candq").maybe(), isa_(BOOL_TYPE).orElse(BOOL_FALSE)))
+                                                uri("bias_towards_objs").maybe(), isa_(BOOL_TYPE).orElse(BOOL_FALSE)))
                                         .constructor(instC(INST_CTOR_TID.rng(OBJ_SIMPLE_JSON_SERIALIZER_TID), lst(T(OBJ_SIMPLE_JSON_SERIALIZER_TID)), (lhs, inst) -> MObj.of(inst.arg(0).asRec().jvm(), OBJ_JSON_SERIALIZER_TID, inst.arg(0).vid(), ObjJSONSerializer.class)))
                                         .create(), "simple json serializer",
                                 "a serializer for converting objs to/from a simple json format",
                                 mutableMap(
                                         uri("wrap_uri").maybe().asUri(), "whether to wrap uris in angle brackets",
                                         uri("bias_towards_uri").maybe().asUri(), "whether to bias ambiguous values towards URI",
-                                        uri("bias_towards_objs").maybe().asUri(), "whether to parse arrays as objs instead of lst",
-                                        uri("embed_candq").maybe().asUri(), "whether to embed tid coefficient and quality metadata"),
+                                        uri("bias_towards_objs").maybe().asUri(), "whether to parse arrays as objs instead of lst"),
                                 "obj_simple_json::[wrap_uri=>true]"),
                         docWrap(OBJ_BSON_SERIALIZER_TYPE = Type.Builder.build()
-                                        .tid(OBJ_SERIALIZER_TID).vid(OBJ_BSON_SERIALIZER_TID).create(),
+                                        .tid(OBJ_SERIALIZER_TID)
+                                        .vid(OBJ_BSON_SERIALIZER_TID)
+                                        .create(),
                                 "a serializer for converting objs to/from bson format"),
                         docWrap(OBJ_YAML_SERIALIZER_TYPE = Type.Builder.build()
-                                        .tid(OBJ_SERIALIZER_TID).vid(OBJ_YAML_SERIALIZER_TID).
-                                        constructor(instC(INST_CTOR_TID.rng(OBJ_YAML_SERIALIZER_TID), lst(T(OBJ_YAML_SERIALIZER_TID)),
-                                                (lhs, inst) -> ObjYAMLSerializer.of(inst.arg(0).jvm()))).create(),
+                                        .tid(OBJ_SERIALIZER_TID)
+                                        .vid(OBJ_YAML_SERIALIZER_TID)
+                                        .constructor(instC(INST_CTOR_TID.rng(OBJ_YAML_SERIALIZER_TID), lst(T(OBJ_YAML_SERIALIZER_TID)),
+                                                (lhs, inst) -> ObjYAMLSerializer.of(inst.arg(0).jvm())))
+                                        .create(),
                                 "a serializer for converting objs to/from yaml format"),
                         docWrap(OBJ_BYTE_BUFFER_SERIALIZER_TYPE = Type.Builder.build()
                                         .tid(OBJ_SERIALIZER_TID)
@@ -356,7 +354,13 @@ public class webInstSet extends AbstractInstSet {
                                                 uri(RESOURCE).maybe().asUri(), T(ALL),
                                                 uri(PROMPT).maybe().asUri(), T(ALL)))
                                         .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(MCP_SERVER_TID), lst(T(REC_TID)), (lhs, inst) ->
-                                                new mcpServer(new LinkedHashMap<>(inst.arg(0).asRec().jvm()), MCP_SERVER_TID, inst.arg(0).vid()))).create(),
+                                                new mcpServer(new LinkedHashMap<>(inst.arg(0).asRec().jvm()), MCP_SERVER_TID, inst.arg(0).vid())))
+                                        .create(),
+                                "an mcp server specification", "a transport-agnostic mcp server",
+                                Map.of(
+                                        uri(TOOL).maybe(), "a collection of inst::T, tool::T, or skill::T objs",
+                                        uri(RESOURCE).maybe(), "a collection of obj references (various obj types handled accordingly)",
+                                        uri(PROMPT).maybe(), "a collection of prompts (various obj types handled accordingly"),
                                 "transport-agnostic mcp json-rpc protocol handler"),
                         docWrap(MCP_CLIENT_TYPE = Type.Builder.build()
                                         .tid(REC_TID)
@@ -400,9 +404,9 @@ public class webInstSet extends AbstractInstSet {
                                 "virtual::[code=>ping(localhost:8777)-<{@x+*0,@y+1},loop=>second::2.0]"),
                         instC(WEB_ISA_TID.extend("inst/format").dom(MARKDOWN_TID).rng(STR_TID), lst(), (lhs, inst) -> str(ObjMarkdownSerializer.format(ObjMarkdownSerializer.single().write(lhs).getChars().toString()))),
                         instC(AS_INST_TID.dom(MARKDOWN_TID).rng(LLM_SKILL_TID), lst(STR_TYPE), (lhs, inst) -> mSkill.of(lhs.asStr())),
-                        instC(AS_INST_TID.dom(JSON_TID).rng(REC_TID), lst(REC_TYPE), (lhs, inst) -> ObjJSONSerializer.simple().inputBytes(lhs.strValue())),
+                        instC(AS_INST_TID.dom(WEB_JSON_TID).rng(REC_TID), lst(REC_TYPE), (lhs, inst) -> ObjJSONSerializer.simple().inputBytes(lhs.strValue())),
                         instC(AS_INST_TID.dom(YAML_TID).rng(REC_TID), lst(REC_TYPE), (lhs, inst) -> ObjYAMLSerializer.single().inputBytes(lhs.strValue())),
-                        instC(AS_INST_TID.dom(REC_TID).rng(JSON_TID), lst(JSON_TYPE), (lhs, inst) -> str(new String(ObjJSONSerializer.simple().outputBytes(lhs).array(), StandardCharsets.UTF_8), JSON_TID, null)),
+                        instC(AS_INST_TID.dom(REC_TID).rng(WEB_JSON_TID), lst(WEB_JSON_TYPE), (lhs, inst) -> str(new String(ObjJSONSerializer.web().outputBytes(lhs).array(), StandardCharsets.UTF_8), WEB_JSON_TID, null)),
                         instC(AS_INST_TID.dom(XML_TID).rng(REC_TID), lst(REC_TYPE), (lhs, inst) -> ObjXMLSerializer.parse(lhs.strValue())),
                         instC(AS_INST_TID.dom(REC_TID).rng(XML_TID), lst(XML_TYPE), (lhs, inst) -> str(new String(ObjXMLSerializer.single().outputBytes(lhs).array(), StandardCharsets.UTF_8), XML_TID, null)),
                         docWrap(instC(AS_INST_TID.dom(HTML_TID).rng(REC_TID), lst(REC_TYPE), (lhs, inst) -> ObjHTMLSerializer.parse(lhs.strValue())), """
@@ -423,7 +427,7 @@ public class webInstSet extends AbstractInstSet {
                         // cast.  as?cs_java<=java(cs_java::T) parses a dereferenced java::T str into
                         // the coarse rec; the rec↔cs_java paths re-tag (rec::T <-> cs_java::T).
                         instC(AS_INST_TID.dom(MARKDOWN_TID).rng(HTML_TID), lst(HTML_TYPE), (lhs, inst) -> str(ObjMarkdownSerializer.single().toHTML(ObjMarkdownSerializer.single().write(lhs)), HTML_TID, null)),
-                        instC(AS_INST_TID.dom(MCP_CLIENT_TID).rng(JSON_TID), lst(JSON_TYPE), (lhs, inst) -> {
+                        instC(AS_INST_TID.dom(MCP_CLIENT_TID).rng(WEB_JSON_TID), lst(WEB_JSON_TYPE), (lhs, inst) -> {
                             final mcpClient client = (mcpClient) lhs;
                             final Map<Obj, Obj> configMap = new LinkedHashMap<>();
                             // type
@@ -439,9 +443,9 @@ public class webInstSet extends AbstractInstSet {
                                 configMap.put(uri(HEADERS), client.jvm().get(uri(HEADERS)));
                             final Rec configRec = rec(configMap, REC_TID, null);
                             final byte[] jsonBytes = ObjJSONSerializer.simple().outputBytes(configRec).array();
-                            return str(new String(jsonBytes, StandardCharsets.UTF_8), JSON_TID, null);
+                            return str(new String(jsonBytes, StandardCharsets.UTF_8), WEB_JSON_TID, null);
                         }),
-                        instC(AS_INST_TID.dom(JSON_TID).rng(MCP_CLIENT_TID.some()), lst(MCP_CLIENT_TYPE), (lhs, inst) -> {
+                        instC(AS_INST_TID.dom(WEB_JSON_TID).rng(MCP_CLIENT_TID.some()), lst(MCP_CLIENT_TYPE), (lhs, inst) -> {
                             final Rec parse = ObjJSONSerializer.simple().inputBytes(lhs.strValue()).asRec();
                             List<Rec> servers = new ArrayList<>();
                             if (parse.has(MCP_SERVERS)) {
@@ -486,7 +490,6 @@ public class webInstSet extends AbstractInstSet {
         docWrap(this,
                 "the world of the web widens metatron",
                 "/usr/idea -> *<http://metatron.phaseshift.studio/html/head/title>");
-
         super.setup();
     }
 }

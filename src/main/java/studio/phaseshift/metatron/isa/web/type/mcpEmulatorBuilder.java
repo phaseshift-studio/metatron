@@ -100,8 +100,8 @@ public class mcpEmulatorBuilder {
                                         mcpServers.at("mcpServers").orElse(rec0()).elements().forEach(server -> {
                                             final String serverName = Str.Helper.cleanString(server.first());
                                             final Rec serverConfig = server.second().asRec();
-                                            final Obj jsonServerConfig = str(ObjJSONSerializer.simple().write(serverConfig).toString()).as(JSON_TYPE);
-                                            final Inst asInst = Router.readFromSpace(AS_INST_TID.dom(JSON_TID).rng(MCP_CLIENT_TID)).stream().findFirst().orElse(noobj()).asInst();
+                                            final Obj jsonServerConfig = str(ObjJSONSerializer.simple().write(serverConfig).toString()).as(WEB_JSON_TYPE);
+                                            final Inst asInst = Router.readFromSpace(AS_INST_TID.dom(WEB_JSON_TID).rng(MCP_CLIENT_TID)).stream().findFirst().orElse(noobj()).asInst();
                                             LOG.debug("serverConfig: %s\njsonServerConfig: %s\nas-inst: %s", serverConfig, jsonServerConfig, asInst);
                                             final Obj mcpClient = asInst.apply(jsonServerConfig);
                                             LOG.debug("mcpClient: %s", mcpClient);

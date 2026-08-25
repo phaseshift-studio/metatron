@@ -194,9 +194,11 @@ grphspace::[pattern   => h:#,
         >>=[_=>dedup()].
         to(<mfs:src/test/resources/scratch/project.ide.mtron>)).
   to(/usr/marko/scratch).
-  -<[mvn_build => ide:command('mvn -f /home/killswitch/software/metatron/${*/usr/marko/scratch/root.as(rec::T)>>=[scheme=>none].as(uri::T)} compile'),
-     mvn_clean => ide:command('mvn -f /home/killswitch/software/metatron/${*/usr/marko/scratch/root.as(rec::T)>>=[scheme=>none].as(uri::T)} clean'),
-     code_tree => |inst?#{*}<=#{?}(max=>?int::T.else(2)){ map(tree::[root=>!*/usr/marko/scratch/root,max=>!*max,flatten=>true]@scratch_tree).display() }].
+  side(temp -> "/home/killswitch/software/metatron/${*/usr/marko/scratch/root.as(rec::T)>>=[scheme=>none].as(uri::T)}")
+  -<[mvn_build => mvn_build -> ide:command('mvn -f ${*temp} compile'),
+     mvn_clean => mvn_clean -> ide:command('mvn -f ${*temp} clean'),
+     mvn_exec  => mvn_exec  -> ide:command('mvn -f ${*temp} compile exec:java'),
+     code_tree => |inst?#{*}<=#{?}(max=>?int::T.else(2)){ *max.-<tree_select::[root=>!*/usr/marko/scratch/root,max=>_,flatten=>true]@scratch_tree }].
   to(/usr/marko/scratch/command);
   /usr/marko/scratch/code/#?subq -> sub::[code=> >>0.as(rec::T)>>path==[_,_,_,_,_,_].
                                                  as?uri<=lst(uri::T).to(x).*(_).>>=[location=>none].as(web:java::T).

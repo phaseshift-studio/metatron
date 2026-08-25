@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.m.space;
 
+import studio.phaseshift.metatron.furi.QProc;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.AbstractSpace;
@@ -66,9 +67,16 @@ public class stackSpace extends AbstractSpace<Stack<Poly<?, ?>>> {
     public stackSpace(final fURI pattern) {
         super(new Stack<>(), mutableMap(uri(PATTERN), uri(pattern)), STACK_SPACE_TID, null);
         this.root = memSpace.of(this.pattern, null);
-        this.root.addQ(QCollection.refQ());
-        this.root.addQ(QCollection.mintQ());
-        this.root.addQ(QCollection.docQ());
+        this.addQ(QCollection.refQ());
+        this.addQ(QCollection.mintQ());
+        this.addQ(QCollection.docQ());
+    }
+
+    @Override
+    public stackSpace addQ(final QProc q) {
+        super.addQ(q);
+        this.root.addQ(q);
+        return this;
     }
 
     @Override

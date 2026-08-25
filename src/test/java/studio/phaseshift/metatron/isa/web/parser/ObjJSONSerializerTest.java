@@ -48,12 +48,12 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.web.webInstSet.JSON_TID;
+import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_JSON_TID;
 
 public class ObjJSONSerializerTest extends AbstractSerializerTest<JsonElement> {
 
     public ObjJSONSerializerTest() {
-        super(new ObjJSONSerializer(), JSON_TID, "json");
+        super(new ObjJSONSerializer(), WEB_JSON_TID, "json");
     }
 
     // ===================================================================
@@ -179,7 +179,7 @@ public class ObjJSONSerializerTest extends AbstractSerializerTest<JsonElement> {
     @Test
     public void testAsInst() {
         final Str jsonStr = eval("'{\"a\":[1,2,3],\"b\":true}'.as(json::T)").as();
-        assertEquals(JSON_TID, jsonStr.tid());
+        assertEquals(WEB_JSON_TID, jsonStr.tid());
         assertTrue(jsonStr.isStr());
 
         final Rec jsonRec = eval("'" + jsonStr.strValue() + "'.as(json::T).as(rec::T)").as();
@@ -188,7 +188,7 @@ public class ObjJSONSerializerTest extends AbstractSerializerTest<JsonElement> {
 
         // rec->json round-trip
         final Str jsonStr2 = eval("'" + jsonStr.strValue() + "'.as(json::T).as(rec::T).as(json::T)").as();
-        assertEquals(JSON_TID, jsonStr2.tid());
+        assertEquals(WEB_JSON_TID, jsonStr2.tid());
         assertTrue(jsonStr2.isStr());
     }
 
@@ -231,7 +231,7 @@ public class ObjJSONSerializerTest extends AbstractSerializerTest<JsonElement> {
 
         // mcp_client -> json (reverse)
         final Str jsonStr = eval("'" + configJson + "'.as(json::T).as(mcp_client::T).as(json::T)").as();
-        assertEquals(JSON_TID, jsonStr.tid(), "must be tagged as json::T");
+        assertEquals(WEB_JSON_TID, jsonStr.tid(), "must be tagged as json::T");
         assertTrue(jsonStr.isStr());
 
         // semantic round-trip: re-parse both JSON strings, key fields must match
