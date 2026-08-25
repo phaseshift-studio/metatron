@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -48,14 +48,14 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.web.space.http.httpSpace.HTTP_HANDLER_TID;
-import static studio.phaseshift.metatron.isa.web.space.http.httpSpace.HTTP_SPACE_TID;
+import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class web_httpHandler extends HttpRec {
 
-    public static final fURI WEB_HTTP_TID = HTTP_SPACE_TID.extend("web_http");
+    public static final fURI WEB_HTTP_TID = WEB_ISA_TID.extend("http").extend("web_http");
 
     public static final Type WEB_HTTP_HANDLER_TYPE = Type.Builder.build()
             .tid(HTTP_HANDLER_TID)
@@ -272,8 +272,10 @@ public class web_httpHandler extends HttpRec {
         }));
     }
 
-    /** Checks whether an object is noobj or a directory — used by DEFAULT_PAGE fallback.
-     *  A directory derefs to its own uri (no content), so a uri result means "not content." */
+    /**
+     * Checks whether an object is noobj or a directory — used by DEFAULT_PAGE fallback.
+     * A directory derefs to its own uri (no content), so a uri result means "not content."
+     */
     private static boolean isNoobjOrDir(final Obj requestObj) {
         return requestObj.isNoObj() || requestObj.isUri();
     }

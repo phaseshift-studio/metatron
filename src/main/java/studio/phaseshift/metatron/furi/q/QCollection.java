@@ -73,40 +73,76 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 public final class QCollection {
     public static final fURI REFQ_PATTERN = f("refq");
     public static final fURI REFQ_TID = QPROC_TID.extend(REFQ_PATTERN);
-    public static final Type REFQ_TYPE = Type.Builder.build().tid(QPROC_TID).vid(REFQ_TID).constructor(QCollection::refQ).create();
+    public static final Type REFQ_TYPE = Type.Builder.build()
+            .tid(QPROC_TID)
+            .vid(REFQ_TID)
+            .constructor(QCollection::refQ)
+            .create();
     //
     public static final fURI LINEQ_PATTERN = f("lineq");
     public static final fURI LINEQ_TID = QPROC_TID.extend(LINEQ_PATTERN);
-    public static final Type LINEQ_TYPE = Type.Builder.build().tid(QPROC_TID).vid(LINEQ_TID).constructor(QCollection::lineQ).create();
+    public static final Type LINEQ_TYPE = Type.Builder.build()
+            .tid(QPROC_TID)
+            .vid(LINEQ_TID)
+            .constructor(QCollection::lineQ)
+            .create();
     //
     public static final fURI MIMEQ_PATTERN = f("mimeq");
     public static final fURI MIMEQ_TID = QPROC_TID.extend(MIMEQ_PATTERN);
-    public static final Type MIMEQ_TYPE = Type.Builder.build().tid(QPROC_TID).vid(MIMEQ_TID).constructor(QCollection::mimeQ).create();
+    public static final Type MIMEQ_TYPE = Type.Builder.build()
+            .tid(QPROC_TID)
+            .vid(MIMEQ_TID)
+            .constructor(QCollection::mimeQ)
+            .create();
     //
     public static final fURI MINTQ_PATTERN = f("mintq");
     public static final fURI MINTQ_TID = QPROC_TID.extend(MINTQ_PATTERN);
-    public static final Type MINTQ_TYPE = Type.Builder.build().tid(QPROC_TID).vid(MINTQ_TID).constructor(QCollection::mintQ).create();
+    public static final Type MINTQ_TYPE = Type.Builder.build()
+            .tid(QPROC_TID)
+            .vid(MINTQ_TID)
+            .constructor(QCollection::mintQ)
+            .create();
     //
     public static final fURI CONSTQ_PATTERN = f("constq");
     public static final fURI CONSTQ_TID = QPROC_TID.extend(CONSTQ_PATTERN);
-    public static final Type CONSTQ_TYPE = Type.Builder.build().tid(QPROC_TID).vid(CONSTQ_TID).constructor(QCollection::constQ).create();
+    public static final Type CONSTQ_TYPE = Type.Builder.build()
+            .tid(QPROC_TID)
+            .vid(CONSTQ_TID)
+            .constructor(QCollection::constQ)
+            .create();
     //
     public static final fURI SHORTQ_PATTERN = f("shortq");
     public static final fURI SHORTQ_TID = QPROC_TID.extend(SHORTQ_PATTERN);
-    public static final Type SHORTQ_TYPE = Type.Builder.build().tid(QPROC_TID).vid(SHORTQ_TID).constructor(QCollection::shortQ).create();
+    public static final Type SHORTQ_TYPE = Type.Builder.build()
+            .tid(QPROC_TID)
+            .vid(SHORTQ_TID)
+            .constructor(QCollection::shortQ)
+            .create();
     //
     public static final fURI SAFEQ_PATTERN = f("safeq");
     public static final fURI SAFEQ_TID = QPROC_TID.extend(SAFEQ_PATTERN);
-    public static final Type SAFEQ_TYPE = Type.Builder.build().tid(QPROC_TID).vid(SAFEQ_TID).constructor(QCollection::safeQ).create();
+    public static final Type SAFEQ_TYPE = Type.Builder.build()
+            .tid(QPROC_TID)
+            .vid(SAFEQ_TID)
+            .constructor(QCollection::safeQ)
+            .create();
     //
     public static final String INCRQ = "incrq";
     public static final fURI INCRQ_PATTERN = f("incrq");
     public static final fURI INCRQ_TID = QPROC_TID.extend(INCRQ_PATTERN);
-    public static final Type INCRQ_TYPE = Type.Builder.build().tid(QPROC_TID).vid(INCRQ_TID).constructor(QCollection::incrQ).create();
+    public static final Type INCRQ_TYPE = Type.Builder.build()
+            .tid(QPROC_TID)
+            .vid(INCRQ_TID)
+            .constructor(QCollection::incrQ)
+            .create();
     //
     public static final fURI EMBEDQ_PATTERN = f("embedq");
     public static final fURI EMBEDQ_TID = QPROC_TID.extend(EMBEDQ_PATTERN);
-    public static final Type EMBEDQ_TYPE = Type.Builder.build().tid(QPROC_TID).vid(EMBEDQ_TID).constructor(QCollection::embedQ).create();
+    public static final Type EMBEDQ_TYPE = Type.Builder.build()
+            .tid(QPROC_TID)
+            .vid(EMBEDQ_TID)
+            .constructor(QCollection::embedQ)
+            .create();
     //
     public static final String DOCQ = "docq";
     public static final fURI DOCQ_PATTERN = f(DOCQ);
@@ -140,7 +176,11 @@ public final class QCollection {
     //
     public static final fURI TYPEQ_PATTERN = f("T");
     public static final fURI TYPEQ_TID = QPROC_TID.extend("typeq");
-    public static final Type TYPEQ_TYPE = Type.Builder.build().tid(QPROC_TID).vid(TYPEQ_TID).constructor(QCollection::typeQ).create();
+    public static final Type TYPEQ_TYPE = Type.Builder.build()
+            .tid(QPROC_TID)
+            .vid(TYPEQ_TID)
+            .constructor(QCollection::typeQ)
+            .create();
     //
     public static final fURI SUBQ_PATTERN = f("subq");
     public static final fURI SUBQ_TID = QPROC_TID.extend(SUBQ_PATTERN);
@@ -151,7 +191,11 @@ public final class QCollection {
     public static final fURI LOCKQ_PATTERN = f("lockq");
     public static final fURI LOCKQ_TID = QPROC_TID.extend(LOCKQ_PATTERN);
     public static final fURI LOCKQ_LOCK_TID = LOCKQ_TID.extend("lock");
-    public static final Type LOCKQ_TYPE = Type.Builder.build().tid(QPROC_TID).vid(LOCKQ_TID).constructor(QCollection::lockQ).create();
+    public static final Type LOCKQ_TYPE = Type.Builder.build()
+            .tid(QPROC_TID)
+            .vid(LOCKQ_TID)
+            .constructor(QCollection::lockQ)
+            .create();
     public static final Type LOCK_TYPE =
             docWrap(Type.Builder.build()
                             .tid(REC_TID)
