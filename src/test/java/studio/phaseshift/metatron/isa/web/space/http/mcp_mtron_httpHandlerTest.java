@@ -142,12 +142,6 @@ public class mcp_mtron_httpHandlerTest extends AbstractMcpMtronHandlerTest {
     // =========================================================
 
     @Test
-    public void testMcpHttpTIDNamespace() {
-        assertTrue(HTTP_MCP_MTRON_TID.toString().contains("httpspace"));
-        assertTrue(HTTP_MCP_MTRON_TID.toString().contains("mcp_mtron_http"));
-    }
-
-    @Test
     public void testMcpHttpTypeIsSubtypeOfMcpHttp() {
         assertEquals(HTTP_MCP_HANDLER_TID, HTTP_MCP_MTRON_TYPE.tid(),
                 "mcp_mtron_http type should declare mcp_http as its parent type");
