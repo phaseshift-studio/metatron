@@ -37,6 +37,8 @@ import org.apache.lucene.util.BytesRef;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
 import studio.phaseshift.metatron.isa.llm.type.AgentServices;
+import studio.phaseshift.metatron.isa.llm.type.Model;
+import studio.phaseshift.metatron.isa.llm.type.ChatResult;
 import studio.phaseshift.metatron.isa.llm.type.mSkill;
 import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -62,7 +64,6 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.*;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
-import static studio.phaseshift.metatron.isa.llm.type.Agent.res;
 import static studio.phaseshift.metatron.isa.m.mInstSet.LST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.STR_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
@@ -449,15 +450,18 @@ public class ConceptFeature extends AbstractFeature {
     }
 
     @Override
-    public void onCompleteResponse(final Agent agent, final Str text) {
-        final Set<fURI> newConcepts = this.processConcepts(agent, text != null ? text.strValue() : "", false);
+    public void onCompleteResponse(final Agent agent, final ChatResult result) {
+        final Obj chatObj = result.at(uri(CHAT));
+        final String text = chatObj.isStr() ? chatObj.strValue() : "";
+        final Set<fURI> newConcepts = this.processConcepts(agent, text, false);
 
-        // Extract <<concept:>> tags from the agent's thinking text.
+        // Extract <<concept:>> tags from the agent's thinking block.
         // Thoughts are never run through automatic TF-IDF extraction — only
         // explicit annotations count.  This lets the agent bookmark semantic
         // insights discovered during reasoning without surfacing them in the
         // final response.
-        final Obj thinking = agent.at(res(THINKING));
+        final Obj blocks = result.at(uri("blocks"));
+        final Obj thinking = blocks.isNoObj() ? noobj() : blocks.asRec().at(uri("thinking"));
         if (!thinking.isNoObj() && !thinking.strValue().isBlank()) {
             final Set<String> thoughtConcepts = new TaggingExtractor().extract(agent, thinking.strValue(), false);
             if (!thoughtConcepts.isEmpty()) {
@@ -524,40 +528,31 @@ public class ConceptFeature extends AbstractFeature {
     // =========================================================================
 
     private class AgentExtractor implements Extractor {
-        private Agent translatorAgent;
-
         @Override
         public Set<String> extract(final Agent agent, final String text, final boolean blocking) {
-            if (this.translatorAgent == null && agent.feature(CONCEPT).asRec().has(MODEL)) {
-                this.translatorAgent = new Agent(mutableMap(
-                        uri(FEATURE), lst(new ChatFeature(mutableMap(
-                                uri(MODEL), agent.feature(CONCEPT).asRec().at(MODEL),
-                                uri(RESPONSE), rec(uri(TO), id_().tryToInst())),
-                                LLM_CHAT_FEATURE_TID, null))), LLM_AGENT_TID, null);
-                LOG.debug("created translator agent: %s", this.translatorAgent);
-            }
-            if (null == this.translatorAgent)
+            if (!agent.feature(CONCEPT).asRec().has(MODEL))
                 return Set.of();
+            final Model model = Model.model(agent.feature(CONCEPT).asRec().at(MODEL).asRec());
             final Set<String> conceptStrings = new LinkedHashSet<>();
             try {
                 LOG.info("using agent to extract concepts from text length=%d", text.length());
                 final CoreThread thread = CoreThread.core(instLambda((lhs, inst) -> {
-                    final Obj result = this.translatorAgent.chat("""
-                                                                 Rewrite the following text where key concepts are wrapped in <<concept:a key concept>> tags.
-                                                                 For instance, if the text is:
-                                                                    "An agent's context window can be indexed like a database."
-                                                                 It should be rewritten as:
-                                                                    "An agent's <<concept:context window>> can be <<concept:indexed>> like a <<concept:database>>."
-                                                                 
-                                                                 IMPORTANT:
-                                                                   1. Do not wrap common words nor stop words.
-                                                                   2. Do not remove spaces (e.g. context window should not be mapped to contextwindow).
-                                                                 Finally, it's better to have fewer, highly specific concepts then many general concepts.
-                                                                 Thus, if the text has no significant concepts, then simply return the text as is, no changes needed.
-                                                                 
-                                                                 The text to rewrite is:
-                                                                 
-                                                                 """ + text);
+                    final Obj result = Agent.Helper.miniTask(model, """
+                                                                   Rewrite the following text where key concepts are wrapped in <<concept:a key concept>> tags.
+                                                                   For instance, if the text is:
+                                                                      "An agent's context window can be indexed like a database."
+                                                                   It should be rewritten as:
+                                                                      "An agent's <<concept:context window>> can be <<concept:indexed>> like a <<concept:database>>."
+
+                                                                   IMPORTANT:
+                                                                     1. Do not wrap common words nor stop words.
+                                                                     2. Do not remove spaces (e.g. context window should not be mapped to contextwindow).
+                                                                   Finally, it's better to have fewer, highly specific concepts then many general concepts.
+                                                                   Thus, if the text has no significant concepts, then simply return the text as is, no changes needed.
+
+                                                                   The text to rewrite is:
+
+                                                                   """ + text);
                     LOG.debug("agent translation: %s", result);
                     final Matcher matcher = CONCEPT_PATTERN.matcher(Str.Helper.cleanString(result));
                     while (matcher.find()) {

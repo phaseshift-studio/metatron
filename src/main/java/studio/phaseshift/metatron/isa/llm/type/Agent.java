@@ -18,7 +18,6 @@
 
 package studio.phaseshift.metatron.isa.llm.type;
 
-import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.data.segment.TextSegment;
@@ -41,6 +40,7 @@ import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Str;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.ui.console.Console;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.StatusLine;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
@@ -67,6 +67,7 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_MILLIS_TID;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.id_;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TRUE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
@@ -122,6 +123,11 @@ public class Agent extends MRec {
     private int currentDepth = 0;
 
     int currentChatId = 0;
+
+    /**
+     * The chat_result::T being assembled for the current chat — features mutate it in onCompleteResponse.
+     */
+    private ChatResult currentResult;
 
     public void setCurrentChatId(final int chatId) {
         this.currentChatId = chatId;
@@ -204,6 +210,38 @@ public class Agent extends MRec {
         return new Agent(config.jvm(), LLM_AGENT_TID, config.vid());
     }
 
+    // ── Mini-task helper ────────────────────────────────────────────
+
+    /**
+     * Utility methods for delegating a one-off "mini-task" to a translator agent.
+     */
+    public static class Helper {
+        private Helper() {
+            // do nothing
+        }
+
+        /**
+         * Direct a dedicated translator agent (a single {@link ChatFeature} over the
+         * given model) to perform a one-off task and return its {@link ChatResult}.
+         * <p>
+         * The translator agent is constructed fresh per call and executes synchronously —
+         * threading is the caller's concern.  If an async (or fire-and-forget) invocation
+         * is desired, wrap this call in a {@code CoreThread} / {@code virtual} as needed.
+         *
+         * @param model  the {@code model::T} the translator agent should use
+         * @param prompt the task instruction sent to the translator agent
+         * @return the resulting {@code chat_result::T} as a {@link ChatResult}
+         */
+        public static ChatResult miniTask(final Model model, final String prompt) {
+            final Agent translator = new Agent(mutableMap(
+                    uri(FEATURE), lst(new ChatFeature(mutableMap(
+                            uri(MODEL), model,
+                            uri(RESPONSE), rec(uri(TO), id_().tryToInst())),
+                            LLM_CHAT_FEATURE_TID, null))), LLM_AGENT_TID, null);
+            return translator.chat(prompt);
+        }
+    }
+
     // ── Feature query (generic, no feature is privileged) ──────────
 
     public boolean hasFeature(final String feature) {
@@ -231,17 +269,7 @@ public class Agent extends MRec {
     }
 
     /**
-     * Result blackboard namespace: {@code /result/...}
-     */
-    public static fURI res(final String... segments) {
-        fURI path = f(RESULT);
-        for (final String segment : segments)
-            path = path.extend(segment);
-        return path;
-    }
-
-    /**
-     * Matches {@code <<TYPE:KEY>>...<</TYPE:KEY>>} blocks for LLM-to-blackboard signaling.
+     * Matches {@code <<TYPE:KEY>>...<</TYPE:KEY>>} blocks for LLM-to-feature signaling.
      */
     private static final Pattern MTRON_BLOCK =
             Pattern.compile("<<(\\w+):(\\w+)>>\\s*(.+?)\\s*<</\\1:\\2>>\\s*$", Pattern.DOTALL);
@@ -294,17 +322,17 @@ public class Agent extends MRec {
 
     // ── Chat ───────────────────────────────────────────────────────
 
-    public Obj chat(final String message) {
+    public ChatResult chat(final String message) {
         return this.chat(message, noobjRec());
     }
 
-    public Obj chat(final String message, final Rec responseFormat) {
+    public ChatResult chat(final String message, final Rec responseFormat) {
         this.interrupt.set(false);
         final fURI sessionVID = resolveSessionVID();
         final String depthKey = sessionVID != null ? sessionVID.toString() : this.tid().toString();
         final AtomicInteger counter = depthMap.computeIfAbsent(depthKey, k -> new AtomicInteger(0));
         this.currentDepth = counter.incrementAndGet();
-        final CommonUtil.Spinner waiting = CommonUtil.spinner("initializing agent...", true);
+        final CommonUtil.Spinner waiting = Console.isConsoleOwned() ? CommonUtil.spinner("initializing agent...", true) : null;
         try {
             if (this.first.getAndSet(false))
                 this.features().elements().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_AGENT_CTOR, this));
@@ -318,13 +346,8 @@ public class Agent extends MRec {
                 if (message.isBlank())
                     throw MTronException.of("no message provided: %s", this.vid());
 
-                // ── Phase 1: onBeforeChat — features push state to Agent blackboard ──
+                // ── Phase 1: onBeforeChat — features prepare per-chat state ──
                 this.userMessage = message;
-                // Clear result blackboard for this execution
-                this.at(res(CHAT), noobj(), MUTABLE);
-                this.at(res(COST), noobj(), MUTABLE);
-                this.at(res("stages"), noobj(), MUTABLE);
-                this.at(res(ERROR), noobj(), MUTABLE);
 
                 for (final Obj feat : features) {
                     final Obj result = feat instanceof Feature ?
@@ -332,7 +355,7 @@ public class Agent extends MRec {
                             feat.asPoly().at(uri(ON_BEFORE_CHAT)).apply(this);
                     if (!result.isNoObj()) {
                         LOG.info("feature short-circuited: %s", result);
-                        return result;
+                        return ChatResult.chatResult().put(CHAT, result);
                     }
                 }
                 this.feature(CHAT).ifPresent(chat -> chat.asRec().at(FORMAT, (responseFormat.isNoObj() || responseFormat.asRec().isEmpty()) ? noobj() : responseFormat, MUTABLE));
@@ -376,7 +399,7 @@ public class Agent extends MRec {
                                 chat.at(uri(FORMAT)))).build();
                 // ── Phase 3: Stream — write events to result blackboard, dispatch hooks ──
                 LOG.debug("processed message: %s %s", this.userMessage, this.feature(CHAT).asRec().at(FORMAT).orElse(rec(uri(FORMAT), uri("none"))));
-                waiting.setMessage("waiting for agent response...");
+                spinnerMessage(waiting, "waiting for agent response...");
                 agent.chat(Str.Helper.cleanString(str(this.userMessage).apply(this)))
                         .onToolExecuted(tool -> {
                             if (this.interrupt.get()) latch.countDown();
@@ -386,7 +409,6 @@ public class Agent extends MRec {
                                     uri(TOOL_ARGUMENTS), str(tool.request().arguments()),
                                     uri(RESULT), str(tool.result()),
                                     uri(CONTENTS), str(tool.request().id()));
-                            this.at(res("tool_executed"), toolRec, MUTABLE);
                             features.stream().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_TOOL_EXECUTED, toolRec));
                         })
                         .onPartialToolCall(partialToolCall -> {
@@ -402,7 +424,7 @@ public class Agent extends MRec {
                             features.stream().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_PARTIAL_TOOL_CALL));
                         })
                         .onPartialResponse(s -> {
-                            waiting.close();
+                            closeSpinner(waiting);
                             if (this.interrupt.get()) {
                                 latch.countDown();
                                 return;
@@ -412,7 +434,7 @@ public class Agent extends MRec {
                             features.stream().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_PARTIAL_RESPONSE, str(s)));
                         })
                         .onPartialThinking(t -> {
-                            waiting.close();
+                            closeSpinner(waiting);
                             if (this.interrupt.get()) {
                                 latch.countDown();
                                 return;
@@ -421,17 +443,16 @@ public class Agent extends MRec {
                             features.stream().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_PARTIAL_THINKING, str(t.text())));
                         })
                         .onError(e -> {
-                            waiting.close();
+                            closeSpinner(waiting);
                             final fURI currentFeature = this.currentHook.get().get0();
                             final fURI currentStage = this.currentHook.get().get1();
                             final String errorMessage = "[" + currentFeature + "][" + currentStage + "]";
                             LOG.error("%s: %s", errorMessage, e);
                             isError.set(MTronException.of("%s: %s", errorMessage, e));
-                            this.at(res(ERROR), str(e.getMessage()), MUTABLE);
                             features.stream().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_ERROR));
                             latch.countDown();
                         }).onCompleteResponse(c -> {
-                            waiting.close();
+                            closeSpinner(waiting);
                             if (this.interrupt.get()) {
                                 latch.countDown();
                                 return;
@@ -440,11 +461,13 @@ public class Agent extends MRec {
                             Router.global().stats().ioStats().incrBytesRecv(fullText.getBytes().length);
                             // Parse response format if requested
                             final boolean formatted = !responseFormat.isNoObj();
-                            final Obj chatResult;
+                            final Obj chatObj;
+                            final Map<Obj, Obj> blocks = new LinkedHashMap<>();
                             if (formatted) {
-                                chatResult = ObjJSONSerializer.simple().inputBytes(fullText);
+                                chatObj = ObjJSONSerializer.simple().inputBytes(fullText);
                             } else {
-                                // Parse <<TYPE:KEY>>...<</TYPE:KEY>> blocks into res(KEY), strip from chat
+                                // Parse <<TYPE:KEY>>...<</TYPE:KEY>> blocks into the result's
+                                // blocks rec (features read them there), strip from chat
                                 final Matcher blockMatcher = MTRON_BLOCK.matcher(fullText);
                                 final StringBuilder cleaned = new StringBuilder(fullText);
                                 int stripped = 0;
@@ -455,7 +478,7 @@ public class Agent extends MRec {
                                     try {
                                         final MIME.MIMEType mime = mimeForTag(tag);
                                         final Obj parsed = mime.fromBytes(body.getBytes(StandardCharsets.UTF_8));
-                                        this.at(res(key), parsed, MUTABLE);
+                                        blocks.put(uri(key), parsed);
                                         // Strip block from visible text
                                         final int start = blockMatcher.start() - stripped;
                                         final int end = blockMatcher.end() - stripped;
@@ -465,39 +488,26 @@ public class Agent extends MRec {
                                         LOG.warn("failed to parse <<%s:%s>> block: %s", tag, key, e.getMessage());
                                     }
                                 }
-                                final String cleanText = cleaned.toString().stripTrailing();
-                                chatResult = str(cleanText);
+                                chatObj = str(cleaned.toString().stripTrailing());
                             }
-                            // Store raw AiMessage info so ChatFeature can write it to the
-                            // message ledger (text + any tool execution requests)
-                            final Map<Obj, Obj> aiMap = mutableMap();
-                            aiMap.put(uri(TEXT), str(Str.Helper.cleanString(str(fullText).apply(this))));
-                            if (c.aiMessage().hasToolExecutionRequests()) {
-                                final List<Obj> toolReqs = new ArrayList<>();
-                                for (final ToolExecutionRequest req : c.aiMessage().toolExecutionRequests()) {
-                                    final Map<Obj, Obj> trMap = mutableMap();
-                                    trMap.put(uri(NAME), uri(req.name()));
-                                    if (req.arguments() != null && !req.arguments().isBlank())
-                                        trMap.put(uri(TOOL_ARGUMENTS), str(req.arguments()));
-                                    if (req.id() != null && !req.id().isBlank())
-                                        trMap.put(uri(CONTENTS), str(req.id()));
-                                    trMap.put(uri(TEXT), str(req.name() + "(" + req.arguments() + ")"));
-                                    toolReqs.add(rec(trMap, TOOL_REQUEST_MESSAGE_TID, null));
-                                }
-                                aiMap.put(uri(TOOL_REQUESTS), lst(toolReqs));
-                            }
-                            this.at(res("ai_message"), rec(aiMap, AI_MESSAGE_TID, null), MUTABLE);
-
-                            // Elapsed time — written before hook dispatch so features can read it
+                            // Build the chat_result — monos inline (chat, user, time), the
+                            // parsed <<TYPE:KEY>> blocks on a blocks rec; feature outputs are
+                            // attached by the features themselves in their onCompleteResponse.
                             final long elapsed = (System.nanoTime() - startNanos) / 1_000_000;
-                            this.at(res(TIME), mathInstSet.normalizeTime(real((double) elapsed, MATH_MILLIS_TID, null)), MUTABLE);
+                            final ChatResult result = ChatResult.chatResult()
+                                    .put("chat", chatObj)
+                                    .put("user", str(this.userMessage))
+                                    .put("time", mathInstSet.normalizeTime(real((double) elapsed, MATH_MILLIS_TID, null)));
+                            if (!blocks.isEmpty())
+                                result.put("blocks", rec(blocks, null, null));
+                            this.currentResult = result;
                             this.logger().none("\n");
-                            features.stream().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_COMPLETE_RESPONSE, chatResult));
-                            // Signal main thread AFTER all blackboard writes complete
+                            features.stream().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_COMPLETE_RESPONSE, result));
+                            // Signal the waiting thread after all hooks have mutated the result
                             latch.countDown();
                         }).start();
                 latch.await();
-                waiting.close();
+                closeSpinner(waiting);
                 if (this.interrupt.get()) {
                     final fURI currentFeature = this.currentHook.get().get0();
                     final fURI currentStage = this.currentHook.get().get1();
@@ -509,30 +519,41 @@ public class Agent extends MRec {
                     throw isError.get();
             } catch (final InterruptedException e) {
                 Thread.currentThread().interrupt();
-                return rec(mutableMap(uri(STOP), BOOL_TRUE), LLM_CHAT_RESULT_TID, null);
+                return ChatResult.chatResult().put(STOP, BOOL_TRUE);
             } catch (final Exception e) {
                 throw MTronException.of(e);
             }
-            // ── Phase 4: Assemble result Rec from blackboard ──
-            final Map<Obj, Obj> resultMap = new LinkedHashMap<>();
-            final Obj chatResult = this.at(res(CHAT));
-            resultMap.put(uri(CHAT), chatResult);
-            resultMap.put(uri(TIME), this.at(res(TIME)));
-            if (!this.at(res(COST)).isNoObj()) resultMap.put(uri(COST), this.at(res(COST)));
-            if (!this.at(res("stages")).isNoObj()) resultMap.put(uri("stages"), this.at(res("stages")));
-            resultMap.put(uri(ERROR), this.at(res(ERROR)));
-            if (!this.at(res(AUDIT)).isNoObj()) resultMap.put(uri(AUDIT), this.at(res(AUDIT)));
-            if (!this.at(res("loop_results")).isNoObj())
-                resultMap.put(uri("loop_results"), this.at(res("loop_results")));
+            // ── Phase 4: persist + return the chat_result ──
+            final ChatResult result = this.currentResult;
+            this.currentResult = null;
             this.currentHook.set(null);
-            return rec(resultMap, LLM_CHAT_RESULT_TID, null);
+            if (null != result) {
+                this.feature(CHAT).ifPresent(chat -> {
+                    if (chat.asRec() instanceof ChatFeature cf)
+                        cf.persist(this, result);
+                });
+                return result;
+            }
+            return ChatResult.chatResult();
         } finally {
-            waiting.close();
+            closeSpinner(waiting);
             this.systemMessages.clear();
             counter.decrementAndGet();
             this.currentDepth = 0;
 
         }
+    }
+
+    // ── Console spinner helpers ─
+
+    private static void closeSpinner(final CommonUtil.Spinner spinner) {
+        if (null != spinner)
+            spinner.close();
+    }
+
+    private static void spinnerMessage(final CommonUtil.Spinner spinner, final String format, final Object... args) {
+        if (null != spinner)
+            spinner.setMessage(format, args);
     }
 
     // ── Embed ──────────────────────────────────────────────────────

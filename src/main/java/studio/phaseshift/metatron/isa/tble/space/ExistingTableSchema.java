@@ -1549,7 +1549,12 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
                 final fURI refURI = val.asInst().arg(0).uriValue();
                 final String refTable;
                 if (refURI.test(space.pattern())) {
-                    refTable = refURI.segments().getFirst();
+                    // Route the ref through the space (strips the pattern prefix,
+                    // e.g. /usr/dr/) so the DataPath collection is the referenced
+                    // table — /usr/dr/cost/1 → cost.  The URI's first segment is
+                    // NOT the table: the space base may be nested.
+                    final fURI routed = Space.Helper.routeFromSpace(refURI, space.routes());
+                    refTable = DataPath.withoutDB(routed).collection();
                 } else {
                     refTable = refURI.segments(List.of(refURI.segments().getFirst())).toString();
                 }

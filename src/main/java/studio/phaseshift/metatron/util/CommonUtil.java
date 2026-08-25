@@ -34,6 +34,7 @@ import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collector;
@@ -745,7 +746,7 @@ public final class CommonUtil {
         private static final long INTERVAL_MS = 120;
         private String message;
 
-        private final java.util.concurrent.atomic.AtomicBoolean running = new java.util.concurrent.atomic.AtomicBoolean(true);
+        private final AtomicBoolean running = new AtomicBoolean(true);
         private final Thread thread;
 
         private Spinner(final String message, final String frameStyle, final boolean rainbow) {

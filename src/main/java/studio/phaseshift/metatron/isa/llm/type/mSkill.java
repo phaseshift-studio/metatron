@@ -89,10 +89,11 @@ public class mSkill extends MRec {
         DefaultSkill.Builder skill = new DefaultSkill.Builder();
         if (this.has(NAME))
             skill = skill.name(this.at(NAME).uriValue().toString());
-        if (this.has(DESC))
-            skill = skill.description(this.at(DESC).strValue());
-        if (this.has(CONTENT))
-            skill = skill.content(this.at(CONTENT).strValue());
+        // LC4j's DefaultSkill requires non-blank description and content — supply
+        // safe defaults when the mtron skill rec omits them (e.g. a feature's
+        // skill that carries only name/desc/tools).
+        skill = skill.description(this.has(DESC) ? this.at(DESC).strValue() : "<no description>");
+        skill = skill.content(this.has(CONTENT) ? this.at(CONTENT).strValue() : "<no content>");
         if (this.has(RESOURCE))
             skill = skill.resources(this.at(RESOURCE).asLst().elements()
                     .map(Obj::asRec)
@@ -102,7 +103,9 @@ public class mSkill extends MRec {
                             .build())
                     .toList());
         if (this.has(TOOL)) {
-            final Map<ToolSpecification, ToolExecutor> tools = this.at(TOOL).asLst().elements().map(i -> mTool.mtronInstToTool(i.asInst())).map(mTool::mtronInstToolSpecification).collect(Collectors.toMap(Tuple.Pair::get0, Tuple.Pair::get1));
+            // atDirect — at() would auto-resolve (apply) the tool insts; they are
+            // specifications and must be read raw.
+            final Map<ToolSpecification, ToolExecutor> tools = this.atDirect(uri(TOOL)).asLst().elements().map(i -> mTool.mtronInstToTool(i.asInst())).map(mTool::mtronInstToolSpecification).collect(Collectors.toMap(Tuple.Pair::get0, Tuple.Pair::get1));
             skill = skill.tools(tools);
         }
         if (null != this.skill && !this.skill.toolProviders().isEmpty())
@@ -220,7 +223,7 @@ public class mSkill extends MRec {
     public Lst tools() {
         final List<Obj> tools = new ArrayList<>();
         if (this.has(TOOL))
-            tools.addAll(this.at(TOOL).asLst().elements().toList());
+            tools.addAll(this.atDirect(uri(TOOL)).asLst().elements().toList());
         if (null != this.skill) {
             for (final ToolProvider provider : this.skill.toolProviders()) {
                 try {

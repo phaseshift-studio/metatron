@@ -164,12 +164,19 @@ distill_feature::[
 
 The `AgentExtractor` prompt is *already* a distill prompt ("better to have fewer, highly specific
 concepts than many general ones; do not wrap stop words; if no significant concepts, return the
-text unchanged"). Extending it to emit YAML claims/threads is the natural evolution: keep the
+text unchanged"). Extending it to emit YAML claims/loose ends is the natural evolution: keep the
 lucene index as the fast noun layer, promote the agent-mode extractor to the slow semantic layer.
 The seam already exists — `on_complete_response` fires per chat completion and the ledger is
 already there to read.
 
-### 3.2 `thread::T` — open problems carried across sessions
+### 3.2 `loose_end::T` — open problems carried across sessions (Thalamus's "Thread")
+
+**Name collision, resolved.** metatron already owns `thread::T` — the *execution* thread at
+`/m/mach/thread` (with `core` and `virtual` subtypes; `CoreThread` / `VirtualThread` run the
+agent's async hooks). Thalamus's "Thread" is a different thing — an *open problem*, not a unit
+of execution — so the metatron-native type takes a synonym: **`loose_end::T`**. A loose end is
+"a loose end threaded through history" — the metaphor Thalamus's name reaches for, without
+clobbering the VM's thread type.
 
 metatron has `loop_feature` (within-session iteration) but no explicit *open-problem* node that
 survives a session boundary. The continuation behavior already *emerges* (the agent remembered
@@ -177,15 +184,20 @@ the scratch project); making it a first-class structure turns an emergent behavi
 queryable one.
 
 ```mtron
-thread::T[?[
-  title      => str::T,
-  status     => enum::T[open, closed],
-  last_claim => {uri::T},
-  touched    => datetime::T]]@/m/llm/memory/thread
+loose_end::T[?[
+  title   => str::T,
+  desc    => str::T,
+  status  => enum::T[open, in_progress, resolved, abandoned],
+  claim   => {uri::T},                         [-- the claims that define/resolve it --]
+  touched => datetime::T]]@/usr/dr/loose_end
 ```
 
+Thalamus's reopen rule carries over: a prematurely-closed loose end comes back under the *same*
+id (`open` is a settable status) — a duplicate id would hide the reopening, and how often a close
+does not hold is the only check on closes being made too easily.
+
 The `session_feature.on_agent_ctor` hook is the natural resume point: on agent construction,
-surface open threads as a system message — "where you left off," as data. This mirrors how
+surface open loose ends as a system message — "where you left off," as data. This mirrors how
 `concept_feature.onBeforeChat` already injects recent concepts into the system message.
 
 ### 3.3 Trust tiers as a structural floor
@@ -236,7 +248,7 @@ graph is identical regardless of extractor; only the source of the strings diffe
 The honest position: **Thalamus is a summary; ConceptFeature is an index.** Thalamus distills the
 whole session once into structured propositions; ConceptFeature extracts every turn into an
 accumulating co-location graph. They are complementary altitudes — and the claim layer is where
-they meet: give `AgentExtractor` a richer output schema (claims/threads with `external`
+they meet: give `AgentExtractor` a richer output schema (claims/loose ends with `external`
 provenance) and a session-end trigger, reusing the existing `Extractor` seam, the `concept ⇄
 message` storage contract, and the blocking/async machinery.
 
@@ -270,7 +282,7 @@ message` storage contract, and the blocking/async machinery.
 | Claim layer reuses the `Extractor` seam | `AgentExtractor` already does LLM extraction; claims = richer schema + session-end trigger, not a new engine |
 | Trust as a type predicate | metatron's invariants live in the type system; `?` predicates already enforce structure at write |
 | Keep lucene as the noun layer | Fast, indexable, already live; claims are the slow semantic layer above it |
-| Threads anchored per-agent (`/usr/dr/thread`) | Same scoping as the rest of the agent's memory; spaces-as-data composition |
+| Loose ends anchored per-agent (`/usr/dr/loose_end`) | Same scoping as the rest of the agent's memory; spaces-as-data composition |
 | Provenance decided at read, not by the model | Thalamus labels `[EXTERNAL CONTENT]` at render time; metatron tags `external` on the ledger read, same principle |
 
 ---
@@ -289,9 +301,9 @@ message` storage contract, and the blocking/async machinery.
   unchanged? The latter reuses more machinery.
 - **(D) Trust source.** Where do tiers come from initially — message kind (tool_result > thinking
   > ai?) or explicit annotation? The floor predicate needs a tier assignment rule.
-- **(E) `grphSpace` residency.** Claims/threads as typed recs in a `memSpace` (like `/usr/dr`),
+- **(E) `grphSpace` residency.** Claims/loose ends as typed recs in a `memSpace` (like `/usr/dr`),
   or as vertices in `grphSpace` with real `DERIVED_FROM` edges? The former is simplest and
-  matches `/usr/dr`; the latter buys graph traversal at the cost of the grphSpace write path.
+  matches `/usr/dr`; the latter buys graph traversal at the cost of the grphSpace write path. The `loose_end` reopen-under-same-id rule argues for a space (write-idempotent) over a graph (edge-heavy).
 - **(F) Cross-agent memory.** Currently all under `/usr/dr/`. Thalamus federates by scope — do we
   want `/usr/{agent}/claim` + a shared `/shared/claim` for multi-agent distillation?
 
@@ -308,3 +320,142 @@ message` storage contract, and the blocking/async machinery.
 - `src/main/java/studio/phaseshift/metatron/isa/grph/` — `grphSpace`, the in-process TinkerPop store
 - [Thalamus repo](https://github.com/Ybx-jp/thalamus) — reference for the claims/threads/trust model;
   `src/thalamus/harness/extraction.py` is the distillation pipeline (render → prompt → parse → merge)
+
+---
+
+## 8. The SummarizeFeature design
+
+The concrete shape that pulls §3 through §6 into one implementable feature. SummarizeFeature is
+a feature hook like the other 11 — a rec of insts on the agent — that adds the two memory types,
+the `summarize()` trigger, and the retrieval hook.
+
+### 8.1 The types
+
+```mtron
+claim::T[?[
+  text     => str::T,                          [-- the proposition --]
+  kind     => enum::T[decision, problem, solution, observation],
+  source   => {uri::T},                        [-- message vids distilled from (DERIVED_FROM) --]
+  concept  => {uri::T},                        [-- links into the concept graph --]
+  tier     => nat::T,                          [-- trust floor source --]
+  external => bool::T]]@/usr/dr/claim          [-- web-derived provenance --]
+
+loose_end::T[?[
+  title   => str::T,
+  desc    => str::T,
+  status  => enum::T[open, in_progress, resolved, abandoned],
+  claim   => {uri::T},                         [-- the claims that define/resolve it --]
+  touched => datetime::T]]@/usr/dr/loose_end
+```
+
+Two types, not Thalamus's four (decisions/problems/solutions collapse into `claim::T[?kind=>...]`).
+The session-level summary is a `summary` field on the existing `session::T`, not a third type.
+Both types register in the space's `schema/type` automatically.
+
+### 8.2 The `summarize()` inst
+
+`*dr/session/1.summarize()` — an inst anchored at the session (thus a tool via the MCP route):
+
+```mtron
+inst?{uri::T}<=session::T(){
+  [-- 1. collect this session's messages: /usr/dr/message/+ filtered by session vid --]
+  [-- 2. run AgentExtractor with the distill prompt (§8.4) --]
+  [-- 3. parse -> claim::T recs, loose_end::T recs --]
+  [-- 4. anchor each claim at /usr/dr/claim/<n>, source => {message vids} --]
+  [-- 5. link claims -> concepts (spell-correct toward existing names) --]
+  [-- 6. update session::T summary + touched --]
+}@summarize
+```
+
+Links are four-way: `source` → message vids (provenance), `concept` → the concept graph (so
+`concepts(c1)` / `messages(c1)` retrieval finds claims), `loose_end.claim` → defining claims,
+`session.summary` → the session. Without the `concept` link, claims and concepts are two
+disconnected graphs; with it, the existing retrieval machinery gets richer for free.
+
+### 8.3 The consume side — the point of the feature
+
+- **`on_agent_ctor` retrieval hook:** read `/usr/dr/loose_end` where `status=>open`, inject into
+  the system message ("where you left off, as data"). This is Thalamus's "served into the next
+  session's entrypoint" — without it, the feature is write-only.
+- **Auto-trigger alongside the manual inst:** `on_complete_response` fires `summarize()` on
+  session-close, so the last claim gets resolved without the agent remembering to call it.
+- **MCP surface:** `claims(c1, c2)`, `loose_ends()`, `summary()` become queryable tools on the
+  drstynx route — usable from Claude Code directly.
+
+### 8.4 The metatron-adapted distill prompt
+
+Thalamus's `_PROMPT_TEMPLATE` (§1.1), adapted: digest comes from `/usr/dr/message/+` instead of a
+rendered archive; `{known_claims}` / `{open_loose_ends}` are derefs into the spaces; the four YAML
+sections collapse into a `kind` enum; `external` is decided at the ledger read (message provenance),
+not by the model.
+
+```text
+You are distilling graph memory from a PAST metatron session. The deterministic facts (which
+messages were exchanged, when, which tools ran) are already in the ledger — do NOT re-derive
+them. Your job is judgement: what was decided and why, what went wrong, how it was fixed, and
+what is still owed. Output ONLY a fenced YAML block conforming to the schema below. Be terse —
+1-3 sentences per description.
+
+Rules:
+1. claims — propositions. A decision without a rationale is not worth recording.
+2. loose_ends — a continuation point a DIFFERENT session could pick up COLD. The test: could
+   a session with no access to this transcript act on it? Most sessions justify 0-2. If you
+   are writing a third, you are recording rather than continuing.
+3. loose_end_refs — if this session continued or resolved an EXISTING OPEN LOOSE END below,
+   reference it by its exact id with the new status. Reopen under the same id, never respawn.
+4. Convergence: claims are content-addressed on (kind, description). If you re-assert one of
+   the KNOWN CLAIMS below, copy its description EXACTLY. Only reword when the assertion differs.
+5. Do NOT emit session_id, timestamp, message vids, or tier — those are stamped from the record.
+6. Anything resting on fetched external content (messages marked external) carries
+   external: true. What a web page asserts is that page's claim, not this session's experience.
+   Claims about what the agent DID with such content stay first-party.
+
+Schema:
+summary: "<1-3 sentence summary>"
+claims:
+  - description: "<proposition>"
+    kind: "decision|problem|solution|observation"
+    rationale: "<why, for decisions>"
+    concept: ["<existing concept names>"]
+    external: false
+loose_ends:
+  - id: "<stable-slug>"
+    title: "<short actionable title>"
+    description: "<what needs to happen and why>"
+    status: "open"
+loose_end_refs:
+  - id: "<existing loose end id>"
+    status: "open|in_progress|resolved|abandoned"
+    notes: "<progress made>"
+
+### Existing open loose ends
+{open_loose_ends}
+### Known claims (re-assert by copying the description exactly)
+{known_claims}
+### Session metadata
+Session: {session_vid}  Agent: {agent_vid}
+### Ledger digest
+{digest}
+```
+
+### 8.5 Design decisions (and why)
+
+| Decision | Why |
+|---|---|
+| `loose_end::T`, not `thread::T` | `thread::T` is already the VM's execution thread (`/m/mach/thread`, `CoreThread`/`VirtualThread`); a second `thread::T` would collide in the type space |
+| `kind` enum, not four types | decisions/problems/solutions are structurally identical; one type + `?kind=>...` filter |
+| Claims link to concepts, not just messages | keeps the two memory altitudes on one query surface; `concepts(c1)` finds claims |
+| Summary is a field on `session::T`, not a type | it's session-scoped metadata; a third type is over-modeling |
+| `summarize()` is an inst (→ MCP tool) | reuses the agent-as-server route; any client can trigger distillation |
+| Retrieval hook in `on_agent_ctor` | the whole point is feeding the next session; write-only memory is not memory |
+
+### 8.6 Open questions
+
+- **(G) Distill granularity.** Per-turn incremental (like ConceptFeature) vs session-end one-shot
+  (like Thalamus)? Incremental feeds mid-session recall; one-shot gives the "where you left off."
+- **(H) Claim output format.** YAML (Thalamus) vs mtron-native `<<mtron:claim>>` markup the
+  existing `TaggingExtractor` regex + `AgentExtractor` translator can both consume unchanged?
+  The latter reuses more machinery.
+- **(I) `loose_end` status transitions.** Who sets `in_progress` / `resolved`? The summarizing
+  session's `thread_refs`, or an explicit agent action mid-session? Thalamus only sets status at
+  distill time; metatron could support live transitions via `loose_end` derefs.

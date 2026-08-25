@@ -24,12 +24,12 @@ import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.llm.type.Agent.feat;
-import static studio.phaseshift.metatron.isa.llm.type.Agent.res;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -46,7 +46,8 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  */
 public class ObservedTestFeature extends AbstractFeature {
 
-    private static final fURI AUDIT = res("_audit");
+    /** The recorded hook invocations — feature-local (not the Agent blackboard). */
+    private final List<Rec> trail = new ArrayList<>();
 
     public ObservedTestFeature(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
@@ -102,30 +103,24 @@ public class ObservedTestFeature extends AbstractFeature {
     // ── Audit trail ────────────────────────────────────────────────
 
     private Obj audit(final Agent agent, final String phase, final Obj... args) {
-        final Obj trail = agent.at(AUDIT);
-        final Lst list = trail.isNoObj() ? lst() : trail.asLst();
-        final Rec entry = rec(uri("phase"), str(phase), uri("args"), lst(args));
-        agent.at(AUDIT, list.add(entry, MUTABLE), MUTABLE);
+        this.trail.add(rec(uri("phase"), str(phase), uri("args"), lst(args)));
         return noobj();
     }
 
     // ── Audit accessor ─────────────────────────────────────────────
 
-    /**
-     * Read the full audit trail from the Agent's result blackboard.
-     */
-    public static List<Rec> auditTrail(final Agent agent) {
-        final Obj trail = agent.at(AUDIT);
-        if (trail.isNoObj()) return List.of();
-        return trail.asLst().lstValue().stream().map(Obj::asRec).toList();
+    public List<Rec> trail() {
+        return this.trail;
     }
 
     /**
-     * Read the audit trail from a chat result Rec.
+     * Read the full audit trail from every observer feature in the agent's
+     * feature list, concatenated.
      */
-    public static List<Rec> auditTrail(final Rec result) {
-        final Obj trail = result.at(AUDIT);
-        if (trail.isNoObj()) return List.of();
-        return trail.asLst().lstValue().stream().map(Obj::asRec).toList();
+    public static List<Rec> auditTrail(final Agent agent) {
+        return agent.features().lstValue().stream()
+                .filter(f -> f instanceof ObservedTestFeature)
+                .flatMap(f -> ((ObservedTestFeature) f).trail().stream())
+                .toList();
     }
 }

@@ -24,6 +24,7 @@ import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
+import studio.phaseshift.metatron.isa.mach.type.thread.VirtualThread;
 import studio.phaseshift.metatron.isa.mach.type.ui.Stylable;
 import studio.phaseshift.metatron.isa.mach.type.ui.Widget;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Console;
@@ -122,10 +123,12 @@ public class uiInstSet extends AbstractInstSet {
                                     final CommandPalette palette = new CommandPalette(console);
                                     palette.attach(rec());
                                     palette.bindKeys(console.getWidgets());
-                                    docWrap(virtual(instLambda((_lhs, inst2) -> {
+                                    final VirtualThread repl = virtual(instLambda((_lhs, inst2) -> {
                                         console.run();
                                         return noobj();
-                                    })), "console repl").applyAsync();
+                                    }));
+                                    Console.CONSOLE_THREAD_VID = repl.vid();
+                                    docWrap(repl, "console repl").applyAsync();
                                     return docWrap(console, "a user terminal repl", ":help");
                                 }).create(), "a terminal user interface"),
                         docWrap(UI_ANCHOR_TYPE = Type.Builder.build()

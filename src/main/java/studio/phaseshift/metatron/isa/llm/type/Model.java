@@ -32,6 +32,7 @@ import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.m.type.Str.str0;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst0;
 import static studio.phaseshift.metatron.isa.vec.type.MVec.vec;
 
 /*
@@ -67,6 +68,22 @@ public class Model extends MRec {
 
     public Str apiKey() {
         return this.at(API_KEY).orElse(str0()).asStr();
+    }
+
+    public Obj size() {
+        return this.at(SIZE);
+    }
+
+    public Obj quant() {
+        return this.at(QUANT);
+    }
+
+    public Rec cost() {
+        return this.at(COST).orElse(rec0());
+    }
+
+    public Lst skill() {
+        return this.at(SKILL).orElse(lst0());
     }
 
     public Lst embed(final Obj toEmbed) {

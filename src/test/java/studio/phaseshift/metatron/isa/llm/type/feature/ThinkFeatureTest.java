@@ -19,16 +19,30 @@
 package studio.phaseshift.metatron.isa.llm.type.feature;
 
 import org.junit.jupiter.api.Test;
-import studio.phaseshift.metatron.AbstractMetatronTest;
-import studio.phaseshift.metatron.isa.m.type.Str;
+import studio.phaseshift.metatron.isa.llm.type.ChatResult;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static studio.phaseshift.metatron.isa.llm.type.Agent.feat;
 import static studio.phaseshift.metatron.isa.m.type.Str.pendingTemplateTail;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class ThinkFeatureTest extends AbstractMetatronTest {
+public class ThinkFeatureTest extends AbstractFeatureTest {
+
+    @Override
+    protected ThinkFeature feature() {
+        return new ThinkFeature(mutableMap(uri("root"), uri("/usr/test/think")), feat("think"), null);
+    }
+
+    @Test
+    public void testLifecycleAttachesThinkRef() {
+        final ChatResult result = runLifecycle(feature());
+        assertFalse(result.at(uri("think")).isNoObj(), "chat_result should carry a think ref");
+    }
 
     @Test
     public void testPendingTemplateTail() {
