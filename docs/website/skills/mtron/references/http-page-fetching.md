@@ -32,7 +32,6 @@ mtron> httpspace::[
          q       => [mimeq::[=>]],          [-- enables ?mimeq= query processor --]
          route   => [/ => <local:web>]]
 ```
-
 ## Basic Dereference — Typed String (default)
 
 Default reads return a typed `html::"..."` string with `tid = /m/web/mime/html`:
@@ -45,11 +44,10 @@ mtron> *<http://example.com>
    	  \_pred │ []
    	[inst]   │ *<http://example.com>
    	 \_dom   │ #{?}::T
-   	 \_args  │ [<http://example.com>][MTronException<127>:no active space supports pattern <http://example.com>]][no active space supports pattern <http://example.com>]@/sys/fail/638
+   	 \_args  │ [<http://example.com>][MTronException<127>:no active space supports pattern <http://example.com>]][no active space supports pattern <http://example.com>]@/sys/fail/32
 mtron> *<http://example.com>.test(html::T)
-==>fail::[unable to locate inst-f of test(html::T)@<1>]@/sys/fail/642
+==>fail::[unable to locate inst-f of test(html::T)@<1>]@/sys/fail/36
 ```
-
 The string is predicate-validated: `html::T`'s predicate checks that the content is valid HTML.
 
 ## Structural Parse — rec::T DOM Tree
@@ -65,7 +63,7 @@ mtron> *<http://example.com?mimeq=application/x-mtron>
    	  \_pred │ []
    	[inst]   │ *<http://example.com?mimeq=application/x-mtron>
    	 \_dom   │ #{?}::T
-   	 \_args  │ [<http://example.com?mimeq=application/x-mtron>][MTronException<127>:no active space supports pattern <http://example.com?mimeq=application/x-mtron>]][no active space supports pattern <http://example.com?mimeq=application/x-mtron>]@/sys/fail/644
+   	 \_args  │ [<http://example.com?mimeq=application/x-mtron>][MTronException<127>:no active space supports pattern <http://example.com?mimeq=application/x-mtron>]][no active space supports pattern <http://example.com?mimeq=application/x-mtron>]@/sys/fail/38
 mtron> [-- via .as(rec::T) on a typed string --]
 mtron> *<http://example.com>.as(rec::T)
 ==>fail::[apply failure:
@@ -74,9 +72,8 @@ mtron> *<http://example.com>.as(rec::T)
    	  \_pred │ []
    	[inst]   │ *<http://example.com>
    	 \_dom   │ #{?}::T
-   	 \_args  │ [<http://example.com>][MTronException<127>:no active space supports pattern <http://example.com>]][no active space supports pattern <http://example.com>]@/sys/fail/646
+   	 \_args  │ [<http://example.com>][MTronException<127>:no active space supports pattern <http://example.com>]][no active space supports pattern <http://example.com>]@/sys/fail/40
 ```
-
 The `?mimeq=application/x-mtron` query is handled by `QCollection.mimeQ()` postRead processor, which (1) probes the
 content type from the response headers or URI extension, (2) tags the string with the correct TID (triggering predicate
 validation), and (3) if `application/x-mtron` is requested, runs the content-type-specific serializer
@@ -128,19 +125,18 @@ mtron> *<http://example.com>.as(rec::T)/html/body/out           [-- body's child
 ==>fail::[parse error at line 1, col 33:
      *<http://example.com>.as(rec::T)/html/body/out           
                                      ^
-     could not parse at '/']@/sys/fail/648
+     could not parse at '/']@/sys/fail/42
 mtron> *<http://example.com>.as(rec::T)/html/body/out/+/out      [-- first child's children (h1, p, p) --]
 ==>fail::[parse error at line 1, col 33:
      *<http://example.com>.as(rec::T)/html/body/out/+/out      
                                      ^
-     could not parse at '/']@/sys/fail/650
+     could not parse at '/']@/sys/fail/44
 mtron> *<http://example.com>.as(rec::T)/html/body/out/+/out/+/out  [-- grandchild (a tag) --]
 ==>fail::[parse error at line 1, col 33:
      *<http://example.com>.as(rec::T)/html/body/out/+/out/+/out  
                                      ^
-     could not parse at '/']@/sys/fail/652
+     could not parse at '/']@/sys/fail/46
 ```
-
 ### With `+` wildcards
 
 The `+` wildcard enters each list element, producing a stream/set:
@@ -150,14 +146,13 @@ mtron> *page.as(rec::T)/html/body/out/+/out        [-- all children of all body 
 ==>fail::[parse error at line 1, col 17:
      *page.as(rec::T)/html/body/out/+/out        
                      ^
-     could not parse at '/']@/sys/fail/654
+     could not parse at '/']@/sys/fail/48
 mtron> *page.as(rec::T)/html/body/out/+/out/+/out  [-- all grandchildren --]
 ==>fail::[parse error at line 1, col 17:
      *page.as(rec::T)/html/body/out/+/out/+/out  
                      ^
-     could not parse at '/']@/sys/fail/656
+     could not parse at '/']@/sys/fail/50
 ```
-
 ### Filtering with `where()`
 
 ```mtron
@@ -166,9 +161,8 @@ mtron> *page.as(rec::T)/html/body/out/+/out/+/out/+>.where([tag=>a])>>href
 ==>fail::[parse error at line 1, col 17:
      *page.as(rec::T)/html/body/out/+/out/+/out/+>.where([tag...
                      ^
-     could not parse at '/']@/sys/fail/658
+     could not parse at '/']@/sys/fail/52
 ```
-
 ## Converting Back — rec::T → html::T
 
 Serialize a `rec::T` DOM tree back to an HTML string with `.as(html::T)`:
@@ -181,9 +175,8 @@ mtron> *<http://example.com>.as(rec::T)
      ...http://example.com>.as(rec::T)
             .at(html/body/out -> [/* modified childr...
                                                 ^
-     could not parse at '.']@/sys/fail/660
+     could not parse at '.']@/sys/fail/54
 ```
-
 `ObjHTMLSerializer.write()` handles both `str::T` (pass-through via `Jsoup.parse()`) and `rec::T` (DOM rendering).
 
 ## Other MIME Types
@@ -198,7 +191,7 @@ mtron> *<http://example.com/data.json>
    	  \_pred │ []
    	[inst]   │ *<http://example.com/data.json>
    	 \_dom   │ #{?}::T
-   	 \_args  │ [<http://example.com/data.json>][MTronException<127>:no active space supports pattern <http://example.com/data.json>]][no active space supports pattern <http://example.com/data.json>]@/sys/fail/662
+   	 \_args  │ [<http://example.com/data.json>][MTronException<127>:no active space supports pattern <http://example.com/data.json>]][no active space supports pattern <http://example.com/data.json>]@/sys/fail/56
 mtron> *<http://example.com/data.json?mimeq=application/x-mtron>
 ==>fail::[apply failure:
    	[lhs]    │ noobj
@@ -206,7 +199,7 @@ mtron> *<http://example.com/data.json?mimeq=application/x-mtron>
    	  \_pred │ []
    	[inst]   │ *<http://example.com/data.json?mimeq=application/x-mtron>
    	 \_dom   │ #{?}::T
-   	 \_args  │ [<http://example.com/data.json?mimeq=application/x-mtron>][MTronException<127>:no active space supports pattern <http://example.com/data.json?mimeq=application/x-mtron>]][no active space supports pattern <http://example.com/data.json?mimeq=application/x-mtron>]@/sys/fail/664
+   	 \_args  │ [<http://example.com/data.json?mimeq=application/x-mtron>][MTronException<127>:no active space supports pattern <http://example.com/data.json?mimeq=application/x-mtron>]][no active space supports pattern <http://example.com/data.json?mimeq=application/x-mtron>]@/sys/fail/58
 mtron> *<http://example.com/data.json>.as(rec::T)
 ==>fail::[apply failure:
    	[lhs]    │ noobj
@@ -214,9 +207,8 @@ mtron> *<http://example.com/data.json>.as(rec::T)
    	  \_pred │ []
    	[inst]   │ *<http://example.com/data.json>
    	 \_dom   │ #{?}::T
-   	 \_args  │ [<http://example.com/data.json>][MTronException<127>:no active space supports pattern <http://example.com/data.json>]][no active space supports pattern <http://example.com/data.json>]@/sys/fail/666
+   	 \_args  │ [<http://example.com/data.json>][MTronException<127>:no active space supports pattern <http://example.com/data.json>]][no active space supports pattern <http://example.com/data.json>]@/sys/fail/60
 ```
-
 ## MIME Type → TID Mapping
 
 `MIME.MIMEType.toTid()` provides the reverse mapping used by the `mimeq` query processor:

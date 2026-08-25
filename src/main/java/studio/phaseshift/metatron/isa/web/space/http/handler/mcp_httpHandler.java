@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -44,8 +44,8 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.web.space.http.httpSpace.HTTP_SPACE_TID;
 import static studio.phaseshift.metatron.isa.web.type.MIME.MIMEType.APPLICATION_JSON;
+import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
 
 /**
  * Streamable HTTP MCP transport handler. Composes a {@link mcpServer} for JSON-RPC
@@ -59,7 +59,7 @@ import static studio.phaseshift.metatron.isa.web.type.MIME.MIMEType.APPLICATION_
  */
 public class mcp_httpHandler extends HttpRec {
 
-    public static final fURI HTTP_MCP_HANDLER_TID = HTTP_SPACE_TID.extend("mcp").extend("mcp_http");
+    public static final fURI HTTP_MCP_HANDLER_TID = WEB_ISA_TID.extend("mcp").extend("mcp_http");
 
     public static final Type HTTP_MCP_HANDLER_TYPE = Type.Builder.build()
             .tid(HTTP_REC_TID)

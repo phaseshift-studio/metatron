@@ -75,10 +75,10 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 public class httpSpace extends AbstractSpace<HttpServer> {
 
-    public static final fURI HTTP_SPACE_TID = WEB_ISA_TID.extend("space/httpspace");
-    public static final fURI HTTP_SOCKET_TID = HTTP_SPACE_TID.extend("socket");
-    public static final fURI HTTP_HANDLER_TID = HTTP_SPACE_TID.extend("http_handler");
-    public static final fURI HTTP_CLIENT_TID = HTTP_SPACE_TID.extend("http_client");
+    public static final fURI HTTP_SPACE_TID = WEB_ISA_TID.extend("space").extend("httpspace");
+    public static final fURI HTTP_SOCKET_TID = WEB_ISA_TID.extend("http").extend("http_socket");
+    public static final fURI HTTP_HANDLER_TID = WEB_ISA_TID.extend("http").extend("http_handler");
+    public static final fURI HTTP_CLIENT_TID = WEB_ISA_TID.extend("http").extend("http_client");
 
     public static final Rec CONFIG = rec(uri(PATTERN), T(URI_TID), uri(HOST), T(URI_TID), uri(ROUTE), T(REC_TID));
     public static final Type HTTP_SPACE_TYPE = Type.Builder.build()

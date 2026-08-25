@@ -365,6 +365,15 @@ bin/metatron</code></pre>
 </a><a href="#__m__llm__model" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">model</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__llm__session" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">session</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__llm__skill" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">skill</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__llm__tool" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">tool</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
 </a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">feature</small></div><div class="d-flex flex-wrap"><a href="#__m__llm__feature__audit_feature" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">audit_feature</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
@@ -392,14 +401,8 @@ bin/metatron</code></pre>
 </a><a href="#__m__llm__feature__recall_feature" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">recall_feature</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
-</a><a href="#__m__llm__feature__session" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">session</span>
-    <span class="pill-label badge bg-primary ms-2">T</span>
 </a><a href="#__m__llm__feature__session_feature" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">session_feature</span>
-    <span class="pill-label badge bg-primary ms-2">T</span>
-</a><a href="#__m__llm__feature__skill" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">skill</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a><a href="#__m__llm__feature__skill_feature" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">skill_feature</span>
@@ -412,9 +415,6 @@ bin/metatron</code></pre>
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a><a href="#__m__llm__feature__think_feature" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">think_feature</span>
-    <span class="pill-label badge bg-primary ms-2">T</span>
-</a><a href="#__m__llm__feature__tool" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">tool</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a><a href="#__m__llm__feature__tool_feature" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">tool_feature</span>
@@ -469,8 +469,8 @@ bin/metatron</code></pre>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#name" class="text-light">name</a> <span class="text-light">=&gt;</span> <a href="#'a convenient name for the agent'" class="text-info">&#39;a convenient name for the agent&#39;</a>
-  <a href="#desc" class="text-light">desc</a> <span class="text-light">=&gt;</span> <a href="#'a description of the agent given to the agent in their system prompt'" class="text-info">&#39;a description of the agent given to the agent in their system prompt&#39;</a>
   <a href="#feature" class="text-light">feature</a> <span class="text-light">=&gt;</span> <a href="#'the ordered lst of capabilities attached to the agent'" class="text-info">&#39;the ordered lst of capabilities attached to the agent&#39;</a>
+  <a href="#desc" class="text-light">desc</a> <span class="text-light">=&gt;</span> <a href="#'a description of the agent given to the agent in their system prompt'" class="text-info">&#39;a description of the agent given to the agent in their system prompt&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__llm__message__ai">
@@ -836,13 +836,13 @@ bin/metatron</code></pre>
     <p class="mb-0 text-light">populate a model reference rec using data from the ai provider&#39;s http-endpoint</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#host" class="text-light">host</a> <span class="text-light">=&gt;</span> <a href="#"the ai model provider's http rest endpoint"" class="text-info">&quot;the ai model provider&#39;s http rest endpoint&quot;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}quant" class="text-light">{?}quant</a> <span class="text-light">=&gt;</span> <a href="#'the level of quantization of the model'" class="text-info">&#39;the level of quantization of the model&#39;</a>
   <a href="#llm" class="text-light">llm</a> <span class="text-light">=&gt;</span> <a href="#'the name of a model offered by the ai provider'" class="text-info">&#39;the name of a model offered by the ai provider&#39;</a>
-  <a href="#{?}quant" class="text-light">{?}quant</a> <span class="text-light">=&gt;</span> <a href="#'the level of quantization of the model'" class="text-info">&#39;the level of quantization of the model&#39;</a>
-  <a href="#{?}provider" class="text-light">{?}provider</a> <span class="text-light">=&gt;</span> <a href="#'optional name of ai model provider'" class="text-info">&#39;optional name of ai model provider&#39;</a>
-  <a href="#{?}cost" class="text-light">{?}cost</a> <span class="text-light">=&gt;</span> <a href="#'the cost per million tokens to use this llm (in__out costs)'" class="text-info">out costs)&#39;</a>
-  <a href="#{?}size" class="text-light">{?}size</a> <span class="text-light">=&gt;</span> <a href="#'the size of the model'" class="text-info">&#39;the size of the model&#39;</a>
+  <a href="#host" class="text-light">host</a> <span class="text-light">=&gt;</span> <a href="#"the ai model provider's http rest endpoint"" class="text-info">&quot;the ai model provider&#39;s http rest endpoint&quot;</a>
   <a href="#protocol" class="text-light">protocol</a> <span class="text-light">=&gt;</span> <a href="#'the http rest endpoint protocol (ollama, openai, anthropic)'" class="text-info">&#39;the http rest endpoint protocol (ollama, openai, anthropic)&#39;</a>
+  <a href="#{?}size" class="text-light">{?}size</a> <span class="text-light">=&gt;</span> <a href="#'the size of the model'" class="text-info">&#39;the size of the model&#39;</a>
+  <a href="#{?}cost" class="text-light">{?}cost</a> <span class="text-light">=&gt;</span> <a href="#'the cost per million tokens to use this llm (in__out costs)'" class="text-info">out costs)&#39;</a>
+  <a href="#{?}provider" class="text-light">{?}provider</a> <span class="text-light">=&gt;</span> <a href="#'optional name of ai model provider'" class="text-info">&#39;optional name of ai model provider&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -869,15 +869,15 @@ bin/metatron</code></pre>
  {?}on_complete_response=&gt;#::T,
  {?}on_error=&gt;#::T]</code></div></div>
     
-</div><div class="card mb-3" id="__m__llm__feature__session">
+</div><div class="card mb-3" id="__m__llm__session">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">session::T</span>
             <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__rec" class="instset-doc-small-code text-info code">/m/rec::T</a></span>
         </span>
-        <small class="text-muted code">/m/llm/feature/session</small>
+        <small class="text-muted code">/m/llm/session</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[agent=&gt;uri{+}::T,user=&gt;uri{+}::T,algorithm=&gt;rec::T]]@/m/llm/feature/session</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[agent=&gt;uri{+}::T,user=&gt;uri{+}::T,algorithm=&gt;rec::T]]@/m/llm/session</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">llm session session policy with algorithm config and a resolved lst of messages from sub-path */msg/*</p>
@@ -909,13 +909,13 @@ bin/metatron</code></pre>
  {?}on_complete_response=&gt;#::T,
  {?}on_error=&gt;#::T]</code></div></div>
     
-</div><div class="card mb-3" id="__m__llm__feature__skill">
+</div><div class="card mb-3" id="__m__llm__skill">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">skill::T</span>
             <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__rec" class="instset-doc-small-code text-info code">/m/rec::T</a></span>
         </span>
-        <small class="text-muted code">/m/llm/feature/skill</small>
+        <small class="text-muted code">/m/llm/skill</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[
   name=&gt;uri::T,
@@ -926,7 +926,7 @@ bin/metatron</code></pre>
  {?}name=&gt;str::T,
  {?}desc=&gt;str::T,
  text=&gt;str::T]],
-  {?}tool=&gt;[#::T]]]@/m/llm/feature/skill</code></pre></div>
+  {?}tool=&gt;[#::T]]]@/m/llm/skill</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a skill.md specification to augment llm with specialized abilities</p>
@@ -1065,19 +1065,19 @@ bin/metatron</code></pre>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#text" class="text-light">text</a> <span class="text-light">=&gt;</span> <a href="#"the model's internal reasoning text"" class="text-info">&quot;the model&#39;s internal reasoning text&quot;</a>
 </pre>
 </div>
-</div><div class="card mb-3" id="__m__llm__feature__tool">
+</div><div class="card mb-3" id="__m__llm__tool">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">tool::T</span>
             <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__rec" class="instset-doc-small-code text-info code">/m/rec::T</a></span>
         </span>
-        <small class="text-muted code">/m/llm/feature/tool</small>
+        <small class="text-muted code">/m/llm/tool</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[
   inst=&gt;#::T,
   name=&gt;uri::T,
   desc=&gt;str::T,
-  {?}arg=&gt;#::T]]@/m/llm/feature/tool</code></pre></div>
+  {?}arg=&gt;#::T]]@/m/llm/tool</code></pre></div>
     
     
 </div><div class="card mb-3" id="__m__llm__feature__tool_feature">

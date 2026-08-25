@@ -11,12 +11,13 @@ description: mtron type system fundamentals — vid/tid, base types, coefficient
 
 Every type in mtron is defined by two URIs:
 
-| Component | Meaning | Example |
-|---|---|---|
-| **tid** | The **type being refined** (its base) | `rec` in `rec::T[?[age=>int::T]]` |
-| **vid** | The **type being defined/named** | `person` in `rec::T[?[...]]@person` |
+| Component | Meaning                               | Example                             |
+|-----------|---------------------------------------|-------------------------------------|
+| **tid**   | The **type being refined** (its base) | `rec` in `rec::T[?[age=>int::T]]`   |
+| **vid**   | The **type being defined/named**      | `person` in `rec::T[?[...]]@person` |
 
 For **values** (instances), the roles are analogous:
+
 - **tid** = the value's type (what kind of thing it is)
 - **vid** = the value's location in space (its address/identity)
 
@@ -28,52 +29,60 @@ person::[name=>'marko',age=>29]@marko
 
 ### The `::T` suffix
 
-`::T` lifts an object to the **type-of** that object. `int::T` means "the type of integers." `person::T` means "the type named person."
+`::T` lifts an object to the **type-of** that object. `int::T` means "the type of integers." `person::T` means "the type
+named person."
 
-Without `::T`, `int` is a value (the integer zero). `int::0` is a typed value (an integer zero). `int::T` is the integer type itself.
+Without `::T`, `int` is a value (the integer zero). `int::0` is a typed value (an integer zero). `int::T` is the integer
+type itself.
 
 ### Base types (nominal)
 
-The built-in primitive types. Every type ultimately refines one of these. Base types are **nominal** — their tid equals their vid (e.g., `int::T` = `int::T@int`). There is nothing structural distinguishing an `int` from a `str` save the name:
+The built-in primitive types. Every type ultimately refines one of these. Base types are **nominal** — their tid equals
+their vid (e.g., `int::T` = `int::T@int`). There is nothing structural distinguishing an `int` from a `str` save the
+name:
 
-| Type | URI | Cardinality | Description |
-|---|---|---|---|
-| `int::T` | `/m/int` | 1 | 64-bit signed integer |
-| `real::T` | `/m/real` | 1 | 64-bit IEEE 754 float |
-| `str::T` | `/m/str` | 1 | UTF-8 string |
-| `bool::T` | `/m/bool` | 1 | true / false |
-| `uri::T` | `/m/uri` | 1 | fURI reference |
-| `bytes::T` | `/m/bytes` | 1 | raw byte array |
-| `rec::T` | `/m/rec` | 1 | record (key-value map) |
-| `lst::T` | `/m/lst` | 1 | list (ordered collection) |
-| `rel::T` | `/m/rel` | 1 | relation (key=>value pair) |
-| `inst::T` | `/m/inst` | 1 | instruction (function) |
-| `code::T` | `/m/code` | 1 | multi-instruction block |
-| `objs::T` | `/m/objs` | any | heterogeneous bag |
-| `fail::T` | `/m/fail` | ? | error/failure |
-| `noobj::T` | `noobj` | 0 | nothing / empty |
+| Type       | URI        | Cardinality | Description                |
+|------------|------------|-------------|----------------------------|
+| `int::T`   | `/m/int`   | 1           | 64-bit signed integer      |
+| `real::T`  | `/m/real`  | 1           | 64-bit IEEE 754 float      |
+| `str::T`   | `/m/str`   | 1           | UTF-8 string               |
+| `bool::T`  | `/m/bool`  | 1           | true / false               |
+| `uri::T`   | `/m/uri`   | 1           | fURI reference             |
+| `bytes::T` | `/m/bytes` | 1           | raw byte array             |
+| `rec::T`   | `/m/rec`   | 1           | record (key-value map)     |
+| `lst::T`   | `/m/lst`   | 1           | list (ordered collection)  |
+| `rel::T`   | `/m/rel`   | 1           | relation (key=>value pair) |
+| `inst::T`  | `/m/inst`  | 1           | instruction (function)     |
+| `code::T`  | `/m/code`  | 1           | multi-instruction block    |
+| `objs::T`  | `/m/objs`  | any         | heterogeneous bag          |
+| `fail::T`  | `/m/fail`  | ?           | error/failure              |
+| `noobj::T` | `noobj`    | 0           | nothing / empty            |
 
 ## Coefficients (cardinality)
 
-Every type has a **coefficient** — a `[min,max]` range constraining cardinality. Written with braces: `type{min,max}::T`.
+Every type has a **coefficient** — a `[min,max]` range constraining cardinality. Written with braces:
+`type{min,max}::T`.
 
-| Syntax | cInt range | Meaning |
-|---|---|---|
-| `int::T` | `{1,1}` | exactly one (default) |
-| `int{2}::T` | `{2,2}` | exactly two integers |
-| `int{2,5}::T` | `{2,5}` | two to five integers |
-| `int{?}::T` | `{0,1}` | zero or one (maybe) |
-| `int{*}::T` | `{0,∞}` | zero or more (maybe some) |
-| `int{+}::T` | `{1,∞}` | one or more (some) |
-| `int{#}::T` | `{-∞,∞}` | any cardinality |
-| `int{0}::T` | `{0,0}` | zero (noobj) |
-| `int{**,}::T` | `{-∞,0}` | zero or negative |
+| Syntax        | cInt range | Meaning                   |
+|---------------|------------|---------------------------|
+| `int::T`      | `{1,1}`    | exactly one (default)     |
+| `int{2}::T`   | `{2,2}`    | exactly two integers      |
+| `int{2,5}::T` | `{2,5}`    | two to five integers      |
+| `int{?}::T`   | `{0,1}`    | zero or one (maybe)       |
+| `int{*}::T`   | `{0,∞}`    | zero or more (maybe some) |
+| `int{+}::T`   | `{1,∞}`    | one or more (some)        |
+| `int{#}::T`   | `{-∞,∞}`   | any cardinality           |
+| `int{0}::T`   | `{0,0}`    | zero (noobj)              |
+| `int{**,}::T` | `{-∞,0}`   | zero or negative          |
 
-Coefficients compose through multiplication (`mult`), addition (`plus`), and spanning (`span`). Two types combine their coefficients when their values are combined — e.g., appending an `int{2}` to an `int{3}` yields `int{5}`.
+Coefficients compose through multiplication (`mult`), addition (`plus`), and spanning (`span`). Two types combine their
+coefficients when their values are combined — e.g., appending an `int{2}` to an `int{3}` yields `int{5}`.
 
 ## Universal type
 
-`#{*}::T` is the **universal type** — the root of the type hierarchy. `#` matches any type VID (polymorphic wildcard), and `{*}` matches any cardinality (0 to ∞). Every value and every type is a `#{*}::T`. It has no predicate and accepts everything.
+`#{*}::T` is the **universal type** — the root of the type hierarchy. `#` matches any type VID (polymorphic wildcard),
+and `{*}` matches any cardinality (0 to ∞). Every value and every type is a `#{*}::T`. It has no predicate and accepts
+everything.
 
 Shorthand: `#::T` is often used when cardinality is known to be `{1}` (the default). `/+/+::T` is an alternate spelling.
 
@@ -93,7 +102,8 @@ mtron> nat -> int::T[?>0][-<|[is(lt(0)) => * -1, _ => _]>>]@nat
 mtron> [-- bignat refines nat, further constraining to > 100 --]
 mtron> bignat -> nat::T[is(gt(100))]@bignat
 ```
-The `->` syntax defines a type in the current space. The right side is the full type definition; the left side is the name under which it is stored.
+The `->` syntax defines a type in the current space. The right side is the full type definition; the left side is the
+name under which it is stored.
 
 ### Instantiation
 
@@ -125,11 +135,13 @@ mtron> [-- team requires a flag (2-char str) and at least one member --]
 mtron> team -> rec::T[?[flag=>str{2}::T, member=>being{+}::T]]
 ```
 Field types can be optional with `?`:
+
 ```mtron
 mtron> [-- address is optional (maybe present) --]
 mtron> rec::T[?[name=>str::T, address=>str{?}::T]]
 ```
 **Multi-level stacking**: a type inherits all isa constraints from its ancestors:
+
 ```mtron
 mtron> [-- mortal inherits being?[age=>int::T] from person --]
 mtron> mortal -> person::T[?<120]  [-- adds a non-isa constraint on top --]
@@ -150,16 +162,19 @@ mtron> int::T[?=42]
 mtron> [-- composition: value must be > 0 AND < 120 --]
 mtron> int::T[?>0.?<120]
 ```
-The `.` operator chains predicates: `p1.p2` means "apply p1, then apply p2 to the result." Both must succeed (AND semantics).
+The `.` operator chains predicates: `p1.p2` means "apply p1, then apply p2 to the result." Both must succeed (AND
+semantics).
 
 **OR semantics** use split/merge:
+
 ```mtron
 mtron> [-- value must be > 0 OR < 120 --]
 mtron> int::T[-<[?>0,?<120]>-]
 ```
 ### Predicate vs no predicate
 
-A type **without** a predicate is the most general type at its level — it accepts any value with the correct base type and coefficient:
+A type **without** a predicate is the most general type at its level — it accepts any value with the correct base type
+and coefficient:
 
 ```mtron
 mtron> int::T        [-- accepts any integer --]
@@ -167,7 +182,8 @@ mtron> int::T[?>0]   [-- only accepts positive integers --]
 ```
 ### Type constructors
 
-A type can also define a **constructor** — an instruction that transforms any value of the base type into a valid value of the defined type. The constructor sits alongside the predicate in the type definition:
+A type can also define a **constructor** — an instruction that transforms any value of the base type into a valid value
+of the defined type. The constructor sits alongside the predicate in the type definition:
 
 ```
 int::T[?>0][abs]@nat
@@ -196,7 +212,9 @@ mtron> -2.as(nat::T)         [-- nat::2  (constructor applied: abs) --]
    	 \_dom   │ int::T
    	 \_args  │ [int::T][MTronException<127>:-2 is not a int::T[is(gt(0))][choose([is(lt(0))=>mult(-1),id()=>id()]).rshift()] [structural]]][-2 is not a int::T[is(gt(0))][choose([is(lt(0))=>mult(-1),id()=>id()]).rshift()] [structural]]@/sys/fail/44
 ```
-The `as()` instruction applies the constructor. If the predicate passes, the value is returned as-is. If not, the constructor runs. If the constructor's result passes the predicate, the transformed value is returned. Otherwise, it fails.
+The `as()` instruction applies the constructor. If the predicate passes, the value is returned as-is. If not, the
+constructor runs. If the constructor's result passes the predicate, the transformed value is returned. Otherwise, it
+fails.
 
 A type with no constructor is a pure constraint — values must already satisfy the predicate to be members.
 
@@ -204,21 +222,27 @@ A type with no constructor is a pure constraint — values must already satisfy 
 
 The distinction depends solely on the existence of a **predicate**:
 
-| Kind | Has predicate? | Has vid? | Example |
-|---|---|---|---|
-| **Structural** | yes | optional | `int::T[?>0]@nat` — constraint defines membership |
-| **Nominal** | no | yes (tid ≠ vid) | `int::T@age` — label defines membership |
-| **Base type** (nominal) | no | yes (tid == vid) | `int::T` (= `int::T@int`) — primitive |
+| Kind                    | Has predicate? | Has vid?         | Example                                           |
+|-------------------------|----------------|------------------|---------------------------------------------------|
+| **Structural**          | yes            | optional         | `int::T[?>0]@nat` — constraint defines membership |
+| **Nominal**             | no             | yes (tid ≠ vid)  | `int::T@age` — label defines membership           |
+| **Base type** (nominal) | no             | yes (tid == vid) | `int::T` (= `int::T@int`) — primitive             |
 
-- **Structural** = any type with a predicate. The predicate specifies the structural requirements a value must satisfy. Isa predicates (`?[...]`) constrain record fields; non-isa predicates (`is(gt(0))`) constrain by computation.
-- **Nominal** (no predicate) = type distinguished purely by name/vid. When `B::T == A::T` structurally (same values) but have different vids, there exists only a nominal difference. A value of `int::T@age` is not the same type as a value of `int::T@zipcode`.
+- **Structural** = any type with a predicate. The predicate specifies the structural requirements a value must satisfy.
+  Isa predicates (`?[...]`) constrain record fields; non-isa predicates (`is(gt(0))`) constrain by computation.
+- **Nominal** (no predicate) = type distinguished purely by name/vid. When `B::T == A::T` structurally (same values) but
+  have different vids, there exists only a nominal difference. A value of `int::T@age` is not the same type as a value
+  of `int::T@zipcode`.
 - **Base types** are nominal: `int::T` = `int::T@int`. An `int` is an `int` because it is named `int`.
 
-A type can carry **both** a predicate and a VID: `rec::T[?[age=>int::T]]@person`. This type is structural (has a predicate) AND named (has a VID). The predicate determines which values qualify; the vid allows nominal discrimination from other structurally-identical types.
+A type can carry **both** a predicate and a VID: `rec::T[?[age=>int::T]]@person`. This type is structural (has a
+predicate) AND named (has a VID). The predicate determines which values qualify; the vid allows nominal discrimination
+from other structurally-identical types.
 
 ### Why nominal types matter
 
-Structural types alone can over-match. A `rec::T` with name and age could represent both a human and a chicken. Nominal types prevent this:
+Structural types alone can over-match. A `rec::T` with name and age could represent both a human and a chicken. Nominal
+types prevent this:
 
 ```mtron
 mtron> being -> rec::T[?[name=>str::T,age=>int::T]]@being
@@ -234,7 +258,8 @@ mtron>  human::[name=>'marko',age=>29].as(chicken::T)
    	 \_dom   │ rec::T
    	 \_args  │ [chicken::T][MTronException<127>:human::[name=>'marko',age=>29] is not a being::T@chicken [nominal]]][human::[name=>'marko',age=>29] is not a being::T@chicken [nominal]]@/sys/fail/46
 ```
-This is the difference between **experiential knowledge** (structural — what can be observed) and **authoritative knowledge** (nominal — what has been declared).
+This is the difference between **experiential knowledge** (structural — what can be observed) and **authoritative
+knowledge** (nominal — what has been declared).
 
 ## Type hierarchy and refinement
 
@@ -252,16 +277,17 @@ mortal::T  →  person::T  →  being::T  →  rec::T  →  #{*}::T
 
 URIs with wildcards create **pattern types** that match multiple concrete types:
 
-| Pattern | Matches |
-|---|---|
-| `#{*}::T` | everything (universal: any vid × any cardinality) |
-| `#::T` | any type vid (default cardinality {1}) |
-| `/m/+::T` | any base type under `/m/` |
-| `/m/+/+::T` | any type two levels under `/m/` |
-| `int{*}::T` | integers of any cardinality |
-| `int{?}::T` | zero or one integer |
+| Pattern     | Matches                                           |
+|-------------|---------------------------------------------------|
+| `#{*}::T`   | everything (universal: any vid × any cardinality) |
+| `#::T`      | any type vid (default cardinality {1})            |
+| `/m/+::T`   | any base type under `/m/`                         |
+| `/m/+/+::T` | any type two levels under `/m/`                   |
+| `int{*}::T` | integers of any cardinality                       |
+| `int{?}::T` | zero or one integer                               |
 
 **Generic types** use polymorphic URIs:
+
 ```mtron
 mtron> [-- a function from any type to maybe some of any type --]
 mtron> /m/inst?#{*}<=#{?}(#::T)
@@ -277,24 +303,61 @@ mtron> /m/inst?#{*}<=#{?}(#::T)
 Tests whether a value satisfies a type's predicate (and nominal ancestry):
 
 ```mtron
-mtron> [-- Value vs type --]
-mtron> 1.test(int::T)           [-- true --]
-==>fail::[unable to locate inst-f of test(int::T)@<1>]@/sys/fail/50
-mtron> 'a string'.test(int::T)  [-- false --]
-==>fail::[unable to locate inst-f of test(int::T)@<1>]@/sys/fail/52
-mtron> int::2.test(nat::T)      [-- true (2 > 0) --]
-==>fail::[unable to locate inst-f of test(int::T)@<1>]@/sys/fail/54
-mtron> int::-1.test(nat::T)     [-- false (-1 is not > 0) --]
-==>fail::[unable to locate inst-f of test(int::T)@<1>]@/sys/fail/56
-mtron> [-- Type vs type (refinement check) --]
-mtron> nat::T.test(int::T)      [-- true (nat is-a int) --]
-==>fail::[unable to locate inst-f of test(int::T)@<1>]@/sys/fail/58
-mtron> int::T.test(nat::T)      [-- false (int is not-a nat) --]
-==>fail::[unable to locate inst-f of test(int::T)@<1>]@/sys/fail/60
+mtron> [-- value vs type --]
+mtron> 1.is(int::T)           [-- true --]
+==>fail::[apply failure:
+   	[lhs]    │ 1
+   	 \_type  │ /m/int
+   	  \_pred │ []
+   	[inst]   │ is?rng=int{?}&dom=int{?}(1){<j>}@<1>
+   	 \_dom   │ int{?}::T
+   	 \_args  │ [1][Obj$ObjType<1264>:unable to convert int::T to bool[Obj$ObjType<1264>:class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Bool (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Bool are in unnamed module of loader 'app')] ← class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Bool (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Bool are in unnamed module of loader 'app')]][unable to convert int::T to bool[Obj$ObjType<1264>:class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Bool (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Bool are in unnamed module of loader 'app')]][class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Bool (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Bool are in unnamed module of loader 'app')]@/sys/fail/50
+mtron> 'a string'.is(int::T)  [-- false --]
+==>fail::[apply failure:
+   	[lhs]    │ 'a string'
+   	 \_type  │ /m/str
+   	  \_pred │ []
+   	[inst]   │ is?rng=str{?}&dom=str{?}(int::T){<j>}@<1>
+   	 \_dom   │ str{?}::T
+   	 \_args  │ [int::T][Obj$ObjType<1264>:unable to convert type to bool[Obj$ObjType<1264>:class studio.phaseshift.metatron.isa.m.type.impl.MType cannot be cast to class studio.phaseshift.metatron.isa.m.type.Bool (studio.phaseshift.metatron.isa.m.type.impl.MType and studio.phaseshift.metatron.isa.m.type.Bool are in unnamed module of loader 'app')] ← class studio.phaseshift.metatron.isa.m.type.impl.MType cannot be cast to class studio.phaseshift.metatron.isa.m.type.Bool (studio.phaseshift.metatron.isa.m.type.impl.MType and studio.phaseshift.metatron.isa.m.type.Bool are in unnamed module of loader 'app')]][unable to convert type to bool[Obj$ObjType<1264>:class studio.phaseshift.metatron.isa.m.type.impl.MType cannot be cast to class studio.phaseshift.metatron.isa.m.type.Bool (studio.phaseshift.metatron.isa.m.type.impl.MType and studio.phaseshift.metatron.isa.m.type.Bool are in unnamed module of loader 'app')]][class studio.phaseshift.metatron.isa.m.type.impl.MType cannot be cast to class studio.phaseshift.metatron.isa.m.type.Bool (studio.phaseshift.metatron.isa.m.type.impl.MType and studio.phaseshift.metatron.isa.m.type.Bool are in unnamed module of loader 'app')]@/sys/fail/52
+mtron> 2.is(nat::T)           [-- true (2 > 0) --]
+==>fail::[apply failure:
+   	[lhs]    │ 2
+   	 \_type  │ /m/int
+   	  \_pred │ []
+   	[inst]   │ is?rng=int{?}&dom=int{?}(2){<j>}@<1>
+   	 \_dom   │ int{?}::T
+   	 \_args  │ [2][Obj$ObjType<1264>:unable to convert int::T to bool[Obj$ObjType<1264>:class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Bool (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Bool are in unnamed module of loader 'app')] ← class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Bool (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Bool are in unnamed module of loader 'app')]][unable to convert int::T to bool[Obj$ObjType<1264>:class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Bool (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Bool are in unnamed module of loader 'app')]][class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Bool (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Bool are in unnamed module of loader 'app')]@/sys/fail/54
+mtron> -1.is(nat::T)          [-- false (-1 is not > 0) --]
+==>fail::[apply failure:
+   	[lhs]    │ -1
+   	 \_type  │ /m/int
+   	  \_pred │ []
+   	[inst]   │ is?rng=int{?}&dom=int{?}(int::T){<j>}@<1>
+   	 \_dom   │ int{?}::T
+   	 \_args  │ [int::T][Obj$ObjType<1264>:unable to convert type to bool[Obj$ObjType<1264>:class studio.phaseshift.metatron.isa.m.type.impl.MType cannot be cast to class studio.phaseshift.metatron.isa.m.type.Bool (studio.phaseshift.metatron.isa.m.type.impl.MType and studio.phaseshift.metatron.isa.m.type.Bool are in unnamed module of loader 'app')] ← class studio.phaseshift.metatron.isa.m.type.impl.MType cannot be cast to class studio.phaseshift.metatron.isa.m.type.Bool (studio.phaseshift.metatron.isa.m.type.impl.MType and studio.phaseshift.metatron.isa.m.type.Bool are in unnamed module of loader 'app')]][unable to convert type to bool[Obj$ObjType<1264>:class studio.phaseshift.metatron.isa.m.type.impl.MType cannot be cast to class studio.phaseshift.metatron.isa.m.type.Bool (studio.phaseshift.metatron.isa.m.type.impl.MType and studio.phaseshift.metatron.isa.m.type.Bool are in unnamed module of loader 'app')]][class studio.phaseshift.metatron.isa.m.type.impl.MType cannot be cast to class studio.phaseshift.metatron.isa.m.type.Bool (studio.phaseshift.metatron.isa.m.type.impl.MType and studio.phaseshift.metatron.isa.m.type.Bool are in unnamed module of loader 'app')]@/sys/fail/56
+mtron> [-- type vs type (refinement check) --]
+mtron> nat::T.is(int::T)      [-- true (nat is-a int) --]
+==>fail::[apply failure:
+   	[lhs]    │ int::T[is(gt(0))][choose([is(lt(0))=>mult(-1),id()=>id()]).rshift()]
+   	 \_type  │ /m/int
+   	  \_pred │ [is(gt(0))]
+   	[inst]   │ is?rng=int{?}&dom=int{?}(int::T){<j>}@<1>
+   	 \_dom   │ int{?}::T
+   	 \_args  │ [int::T][Obj$ObjType<1264>:unable to convert type to bool[Obj$ObjType<1264>:class studio.phaseshift.metatron.isa.m.type.impl.MType cannot be cast to class studio.phaseshift.metatron.isa.m.type.Bool (studio.phaseshift.metatron.isa.m.type.impl.MType and studio.phaseshift.metatron.isa.m.type.Bool are in unnamed module of loader 'app')] ← class studio.phaseshift.metatron.isa.m.type.impl.MType cannot be cast to class studio.phaseshift.metatron.isa.m.type.Bool (studio.phaseshift.metatron.isa.m.type.impl.MType and studio.phaseshift.metatron.isa.m.type.Bool are in unnamed module of loader 'app')]][unable to convert type to bool[Obj$ObjType<1264>:class studio.phaseshift.metatron.isa.m.type.impl.MType cannot be cast to class studio.phaseshift.metatron.isa.m.type.Bool (studio.phaseshift.metatron.isa.m.type.impl.MType and studio.phaseshift.metatron.isa.m.type.Bool are in unnamed module of loader 'app')]][class studio.phaseshift.metatron.isa.m.type.impl.MType cannot be cast to class studio.phaseshift.metatron.isa.m.type.Bool (studio.phaseshift.metatron.isa.m.type.impl.MType and studio.phaseshift.metatron.isa.m.type.Bool are in unnamed module of loader 'app')]@/sys/fail/58
+mtron> int::T.is(nat::T)      [-- false (int is not-a nat) --]
+==>fail::[apply failure:
+   	[lhs]    │ int::T
+   	 \_type  │ /m/int
+   	  \_pred │ []
+   	[inst]   │ is?rng=int{?}&dom=int{?}(int::T){<j>}@<1>
+   	 \_dom   │ int{?}::T
+   	 \_args  │ [int::T][Obj$ObjType<1264>:unable to convert type to bool[Obj$ObjType<1264>:class studio.phaseshift.metatron.isa.m.type.impl.MType cannot be cast to class studio.phaseshift.metatron.isa.m.type.Bool (studio.phaseshift.metatron.isa.m.type.impl.MType and studio.phaseshift.metatron.isa.m.type.Bool are in unnamed module of loader 'app')] ← class studio.phaseshift.metatron.isa.m.type.impl.MType cannot be cast to class studio.phaseshift.metatron.isa.m.type.Bool (studio.phaseshift.metatron.isa.m.type.impl.MType and studio.phaseshift.metatron.isa.m.type.Bool are in unnamed module of loader 'app')]][unable to convert type to bool[Obj$ObjType<1264>:class studio.phaseshift.metatron.isa.m.type.impl.MType cannot be cast to class studio.phaseshift.metatron.isa.m.type.Bool (studio.phaseshift.metatron.isa.m.type.impl.MType and studio.phaseshift.metatron.isa.m.type.Bool are in unnamed module of loader 'app')]][class studio.phaseshift.metatron.isa.m.type.impl.MType cannot be cast to class studio.phaseshift.metatron.isa.m.type.Bool (studio.phaseshift.metatron.isa.m.type.impl.MType and studio.phaseshift.metatron.isa.m.type.Bool are in unnamed module of loader 'app')]@/sys/fail/68
 ```
 ### `.as()` — constructor application
 
-Applies the type's constructor to coerce a value into the type. If the value already satisfies the predicate, it is returned as-is. Otherwise, the constructor transforms it:
+Applies the type's constructor to coerce a value into the type. If the value already satisfies the predicate, it is
+returned as-is. Otherwise, the constructor transforms it:
 
 ```mtron
 mtron> [-- nat has constructor: absolute value --]
@@ -307,7 +370,7 @@ mtron> -2.as(nat::T)            [-- nat::2  (constructor applied) --]
    	  \_pred │ []
    	[inst]   │ as?rng=int&dom=int(int::T){<j>}@<1>
    	 \_dom   │ int::T
-   	 \_args  │ [int::T][MTronException<127>:-2 is not a int::T[is(gt(0))][choose([is(lt(0))=>mult(-1),id()=>id()]).rshift()] [structural]]][-2 is not a int::T[is(gt(0))][choose([is(lt(0))=>mult(-1),id()=>id()]).rshift()] [structural]]@/sys/fail/62
+   	 \_args  │ [int::T][MTronException<127>:-2 is not a int::T[is(gt(0))][choose([is(lt(0))=>mult(-1),id()=>id()]).rshift()] [structural]]][-2 is not a int::T[is(gt(0))][choose([is(lt(0))=>mult(-1),id()=>id()]).rshift()] [structural]]@/sys/fail/70
 mtron> [-- Without a constructor, .as() is a pure test --]
 mtron>  -2.as(int::T[?>0])  [-- fails: no constructor to rescue --]
 ==>fail::[apply failure:
@@ -316,9 +379,10 @@ mtron>  -2.as(int::T[?>0])  [-- fails: no constructor to rescue --]
    	  \_pred │ []
    	[inst]   │ as?rng=int&dom=int(int::T){<j>}@<1>
    	 \_dom   │ int::T
-   	 \_args  │ [int::T][MTronException<127>:-2 is not a int::T[is(gt(0))] [structural]]][-2 is not a int::T[is(gt(0))] [structural]]@/sys/fail/64
+   	 \_args  │ [int::T][MTronException<127>:-2 is not a int::T[is(gt(0))] [structural]]][-2 is not a int::T[is(gt(0))] [structural]]@/sys/fail/72
 ```
 `.as()` is also used for nominal type casting:
+
 ```mtron
 mtron> [name=>'fuzzy feet',age=>2].as(chicken::T)    [-- ok: structurally a chicken --]
 ==>chicken::[name=>'fuzzy feet',age=>2]
@@ -329,7 +393,7 @@ mtron> human::[name=>'marko',age=>29].as(chicken::T) [-- ERROR: nominally not a 
    	  \_pred │ [isa([name=>str::T,age=>int::T])]
    	[inst]   │ as?rng=chicken&dom=rec(chicken::T){<j>}@<1>
    	 \_dom   │ rec::T
-   	 \_args  │ [chicken::T][MTronException<127>:human::[name=>'marko',age=>29] is not a being::T@chicken [nominal]]][human::[name=>'marko',age=>29] is not a being::T@chicken [nominal]]@/sys/fail/66
+   	 \_args  │ [chicken::T][MTronException<127>:human::[name=>'marko',age=>29] is not a being::T@chicken [nominal]]][human::[name=>'marko',age=>29] is not a being::T@chicken [nominal]]@/sys/fail/74
 ```
 ## LCD (Lowest Common Denominator)
 
@@ -344,7 +408,7 @@ mtron> int::T[?>0] + int::T[?<120]
    	  \_pred │ [is(gt(0))]
    	[inst]   │ plus?rng=int&dom=int(int::T){<j>}@<1>
    	 \_dom   │ int::T
-   	 \_args  │ [int::T][MTronException<127>:int::T[is(gt(0))] [type] unable to convert int::T]][int::T[is(gt(0))] [type] unable to convert int::T]@/sys/fail/68
+   	 \_args  │ [int::T][MTronException<127>:int::T[is(gt(0))] [type] unable to convert int::T]][int::T[is(gt(0))] [type] unable to convert int::T]@/sys/fail/76
 mtron> [-- Record with isa predicates: merge fields structurally --]
 mtron> rec::T[?[age=>int::T,name=>str::T]]@person
 mtron> + rec::T[?[age=>int::T]]@artifact
@@ -357,5 +421,5 @@ mtron> int::T + str::T [-- {*}::T --]
    	  \_pred │ []
    	[inst]   │ plus?rng=str&dom=int(str::T){<j>}
    	 \_dom   │ int::T
-   	 \_args  │ [str::T][MTronException<127>:int::T [int::T] unable to convert str::T]][int::T [int::T] unable to convert str::T]@/sys/fail/70
+   	 \_args  │ [str::T][MTronException<127>:int::T [int::T] unable to convert str::T]][int::T [int::T] unable to convert str::T]@/sys/fail/78
 ```
