@@ -27,6 +27,7 @@ import java.util.Map;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.q.QCollection.DOCQ;
 import static studio.phaseshift.metatron.furi.q.QCollection.INCRQ;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_TOOL_FEATURE_TID;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.TOOL_RESULT_MESSAGE_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
@@ -72,7 +73,8 @@ public class ToolFeature extends AbstractFeature {
 
     @Override
     public Lst skill(final Agent agent) {
-        return lst(rec(uri(NAME), uri("tool"),
+        return lst(rec(
+                uri(NAME), uri(LLM_TOOL_FEATURE_TID.name()),
                 uri(DESC), str("tool extensions intended for llm use"),
                 uri(CONTENT), str("any mtron inst can be added to tool feature and it will be mapped to an mcp tool"),
                 uri(TOOL), this.at(TOOL)));

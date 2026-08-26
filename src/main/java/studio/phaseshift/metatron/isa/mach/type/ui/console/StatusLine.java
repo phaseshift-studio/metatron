@@ -128,7 +128,7 @@ public class StatusLine implements Runnable {
                 capped = false;
             this.line.add(new AttributedString(Graphitty.string("{{%s&[%s]}}%s%s{{[%s]}}", fore, back, cap, w, back)));
         }
-        this.line.add(new AttributedString(Graphitty.string("{{%s&[%s]}}%s.".formatted(fore, back, " ".repeat(Console.getTerminal().getWidth())))));
+        this.line.add(new AttributedString(Graphitty.string("{{%s&[%s]}}%s.{{X}}".formatted(fore, back, " ".repeat(Console.getTerminal().getWidth())))));
 
         final AttributedStringBuilder builder = new AttributedStringBuilder();
         for (final AttributedString s : this.line) {

@@ -28,6 +28,8 @@ import studio.phaseshift.metatron.isa.mach.type.ui.Widget;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Highlighter;
 
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
@@ -166,8 +168,18 @@ public class PanelWidget extends JRec<PanelWidget> implements Widget<PanelWidget
                 .map(Highlighter::visualLength)
                 .max(Integer::compareTo).orElse(0);
 
+        // A leading color code in the body (e.g. "{{y}}") is the body's own
+        // text color, distinct from the style foreground that colors the
+        // border.  It is re-applied on every line because each body line ends
+        // with a {{X}} reset that would otherwise drop it after the first line.
+        final String bodyLead = lines.isEmpty() ? "" : leadingCodes(lines.get(0));
+
         final StringBuilder sb = new StringBuilder();
-        sb.append(this.style.prefix());
+        // Style background/foreground are re-applied on every line because each
+        // body line ends with a {{X}} reset (background+foreground, TableWidget
+        // order, so a foreground code wins when both are fg codes).
+        final String color = this.style.background() + this.style.foreground();
+        sb.append(this.style.prefix()).append(color);
         final String top = "%s%s".formatted(
                 title,
                 this.style.border().topSide().repeat(
@@ -175,21 +187,41 @@ public class PanelWidget extends JRec<PanelWidget> implements Widget<PanelWidget
                 .stripTrailing();
         if (!top.isEmpty())
             sb.append(this.style.border().topLeftCorner()).append(top)
-                    .append(this.style.border().topRightCorner()).append('\n');
-        for (final String line : lines) {
-            sb.append(this.style.border().leftSide()).append(line)
+                    .append(this.style.border().topRightCorner()).append("{{X}}\n");
+        for (int i = 0; i < lines.size(); i++) {
+            final String line = lines.get(i);
+            // Line 0 already carries its own leading codes; re-apply them to
+            // the subsequent lines so a multi-line body keeps one text color.
+            final String lead = i == 0 ? "" : bodyLead;
+            sb.append(color)
+                    .append(this.style.border().leftSide())
+                    .append(lead).append(line)
                     .append(" ".repeat(maxLen - Highlighter.visualLength(line)))
+                    .append(color)  // re-assert so the right border matches the style color, not the body's
                     .append(this.style.border().rightSide()).append("{{X}}\n");
         }
         final String bottom = this.style.border().bottomSide().repeat(maxLen).stripTrailing();
         if (!bottom.isEmpty())
-            sb.append(this.style.border().bottomLeftCorner()).append(bottom)
-                    .append(this.style.border().bottomRightCorner()).append("\n");
+            sb.append(color)
+                    .append(this.style.border().bottomLeftCorner()).append(bottom)
+                    .append(this.style.border().bottomRightCorner()).append("{{X}}\n");
+        // The final {{X}} above is load-bearing: a colored panel must not leave
+        // the terminal with background/foreground active, or the FloatingSurface's
+        // erase/buffer-zone spaces in the next render pass get painted with the
+        // leaked color — showing up as a stray colored blank line above widgets.
         return sb.toString();
     }
 
     private static List<String> wrapLine(final String line, final int maxW) {
         return Utilities.wordWrap(line, maxW);
+    }
+
+    /** Regex to capture leading Graphitty codes (e.g. "{{y}}{{b}}") from a line. */
+    private static final Pattern LEADING_CODES = Pattern.compile("^(\\{\\{[^}]*}})*");
+
+    private static String leadingCodes(final String line) {
+        final Matcher m = LEADING_CODES.matcher(line);
+        return m.find() ? m.group() : "";
     }
 
     @Override public String toString() { return this.format(); }

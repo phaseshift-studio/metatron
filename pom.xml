@@ -505,6 +505,7 @@
                 <directory>src/main/resources</directory>
                 <includes>
                     <include>studio/phaseshift/metatron/util/dictionary_en.txt</include>
+                    <include>emoji.txt</include>
                 </includes>
             </resource>
             <!-- META-INF/services handled via bin/metatron classpath (src/main/resources) -->

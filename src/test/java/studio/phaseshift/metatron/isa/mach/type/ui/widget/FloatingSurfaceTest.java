@@ -76,6 +76,13 @@ public class FloatingSurfaceTest extends AbstractMetatronTest {
         assertEquals(FloatingSurface.Anchor.TOP_RIGHT, FloatingSurface.Anchor.parse("middle_center"));
     }
 
+    @Test
+    public void shouldParseMiddleAnchor() {
+        assertEquals(FloatingSurface.Anchor.MIDDLE, FloatingSurface.Anchor.parse("middle"));
+        assertEquals(FloatingSurface.Anchor.MIDDLE, FloatingSurface.Anchor.parse("m"));
+        assertEquals(FloatingSurface.Anchor.MIDDLE, FloatingSurface.Anchor.parse("MIDDLE"));
+    }
+
     // ── Slot.resolve — top anchors (lastRow is fixed) ──────────────
 
     @Test
@@ -209,6 +216,41 @@ public class FloatingSurfaceTest extends AbstractMetatronTest {
                 "bottom-left expanded: should be flush with terminal bottom");
     }
 
+    // ── Slot.resolve — middle anchor, vertically+horizontally centered ──
+
+    @Test
+    public void shouldResolveMiddleCentered() {
+        final FloatingSurface.Slot slot = FloatingSurface.Slot.anchored(
+                FloatingSurface.Anchor.MIDDLE, 40, 0, 0);
+        slot.resolve(TERM_HEIGHT, TERM_WIDTH, 10);
+        // lastRow = (40 - 10) / 2 + 1 = 16 → rows 16–25, widget center = 20.5
+        assertEquals((TERM_HEIGHT - 10) / 2 + 1, slot.lastRow,
+                "middle: lastRow should center the widget vertically");
+        // lastCol = (120 - 40) / 2 = 40 → columns 40–79, widget center = 59.5
+        assertEquals((TERM_WIDTH - 40) / 2, slot.lastCol,
+                "middle: lastCol should center the widget horizontally");
+    }
+
+    @Test
+    public void shouldResolveMiddleWithOffsets() {
+        final FloatingSurface.Slot slot = FloatingSurface.Slot.anchored(
+                FloatingSurface.Anchor.MIDDLE, 40, 3, 5);
+        slot.resolve(TERM_HEIGHT, TERM_WIDTH, 10);
+        assertEquals((TERM_HEIGHT - 10) / 2 + 1 + 3, slot.lastRow,
+                "middle top=3: positive top pushes DOWN (away from center, top edge)");
+        assertEquals((TERM_WIDTH - 40) / 2 + 5, slot.lastCol,
+                "middle left=5: pushed right (away from left edge)");
+    }
+
+    @Test
+    public void shouldClampMiddleToTopForTallWidget() {
+        // Widget taller than terminal → lastRow clamped to 1
+        final FloatingSurface.Slot slot = FloatingSurface.Slot.anchored(
+                FloatingSurface.Anchor.MIDDLE, 40, 0, 0);
+        slot.resolve(TERM_HEIGHT, TERM_WIDTH, 100);
+        assertEquals(1, slot.lastRow, "middle: widget taller than terminal clamps to row 1");
+    }
+
     // ── Fixed (non-anchored) slots ─────────────────────────────────
 
     @Test
@@ -226,6 +268,32 @@ public class FloatingSurfaceTest extends AbstractMetatronTest {
         final FloatingSurface.Slot fixed = FloatingSurface.Slot.fixed(5, 10);
         assertTrue(anchored.isAnchored());
         assertFalse(fixed.isAnchored());
+    }
+
+    // ── Anchored widget render ──────────────────────────────────────
+
+    @Test
+    public void surfaceRenderResetsColorBeforeDrawing() throws Exception {
+        // The surface's erase/buffer-zone spaces must never inherit a
+        // background left active by prior console output (e.g. the status
+        // line's trailing bg) — otherwise they render as a stray colored
+        // blank line above floating widgets.  renderInternal must reset SGR
+        // right after saving the cursor.
+        final java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+        final Terminal diagTerm = TerminalBuilder.builder().dumb(true)
+                .size(new org.jline.terminal.Size(40, 120))
+                .streams(new java.io.ByteArrayInputStream(new byte[0]), out).build();
+        final FloatingSurface diagSurface = new FloatingSurface(diagTerm);
+        final AccordionWidget accordion = new AccordionWidget("thoughts");
+        accordion.style().floatAt(FloatingSurface.Anchor.TOP_LEFT, 80, 3, 0).applyStyle();
+        diagSurface.add(accordion, FloatingSurface.Anchor.TOP_LEFT, 80, 3, 0);
+        diagSurface.render();
+        Thread.sleep(300);
+        final String rendered = out.toString();
+        assertTrue(rendered.startsWith("\033[s\033[m"),
+                "render should reset SGR right after save-cursor so buffer-zone spaces are never painted: "
+                        + rendered.replace("\033", "<ESC>"));
+        diagTerm.close();
     }
 
     // ── FloatingSurface API (with dumb terminal) ────────────────────

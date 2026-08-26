@@ -43,20 +43,18 @@ A distributed data-oriented computing language and virtual machine built in Java
 
 ### Build Environment (this container)
 
-The root filesystem is read-only (`HOME=/root`, `/usr` not writable), so the
-toolchain lives inside the repo under `.build/` (git-ignored):
+The root filesystem is read-only (`HOME=/root`, `/usr` not writable), so the toolchain lives inside the repo under
+`.build/` (git-ignored):
 
-- **`./mvnw` is patched to self-configure — just run it.** When `JAVA_HOME` is
-  unset it falls back to `.build/jdk` (Temurin 24, matching CI), keeps Maven
-  caches under `.build/m2/`, and passes `.build/m2/settings.xml` which redirects
+- **`./mvnw` is patched to self-configure — just run it.** When `JAVA_HOME` is unset it falls back to `.build/jdk`
+  (Temurin 24, matching CI), keeps Maven caches under `.build/m2/`, and passes `.build/m2/settings.xml` which redirects
   the local repository into the workspace. No env setup needed.
 - **`bin/metatron` is patched the same way** (uses `./mvnw` and
   `.build/jdk/bin/java`).
 - To put the JDK on PATH explicitly (e.g. running `java`/`javac` directly),
   `source build-env.sh`.
-- `.build/jdk21` exists for reference, but **tests must run on the default
-  JDK 24**: the pom's surefire `argLine` includes `--sun-misc-unsafe-memory-access=allow`,
-  a JDK 23+ flag that JDK 21 rejects (this is why CI uses JDK 24).
+- `.build/jdk21` exists for reference, but **tests must run on the default JDK 24**: the pom's surefire `argLine`
+  includes `--sun-misc-unsafe-memory-access=allow`, a JDK 23+ flag that JDK 21 rejects (this is why CI uses JDK 24).
 
 ### Code Style
 
@@ -65,6 +63,7 @@ toolchain lives inside the repo under `.build/` (git-ignored):
 - `final` all variables and method arguments. Rarely should non-final variables be used.
 - `this.` should be used when referencing fields.
 - Leverage existing `XXXUtil`, `XXX.Helper`, etc. style static method providers for common algorithms.
+- Don't use "Hello World" or "foo bar" in examples and test cases. Come up with something more clever and unique.
 
 ### Test Framework
 
@@ -251,6 +250,13 @@ and `<uri> -> <obj>` reference).
 - dom/rng: `inst?a<=b()` is an instruction that maps objs of type `b` to objs of type `a` (note reverse arrow `<=`).
   ultimately compiles to the URI `inst?dom=b&rng=a`.
 
+**mtron language**
+
+- Don't get overwhelmed by the barrage of syntax sugar shortcuts used in examples, docs, and test cases. Realize that
+  every mtron expression (when desugar'd) is a fluent chain of nested functions (called instructions). e.g.
+  `f(a(b(1),2).g().h(3)`.
+- Append `.explain()` to any expression to see it's unsugar'd form.
+
 ### Boot Loader Lifecycle
 
 1. `BootLoader.main()` → parses args, optionally loads boot file
@@ -261,11 +267,11 @@ and `<uri> -> <obj>` reference).
 
 ## CI/CD
 
-|                `.github/workflows/maven.yml` |                `.github/workflows/docker.yml` |
-|--------------------------------------------:|------------------------------------------------:|
-|                         Push/PR to `main` |      Push to `main`, `v*` tags, `workflow_dispatch` |
-|                                 Oracle JDK 24 |                        Temurin JDK 25 (uber-jar) |
-| `./mvnw install -Dtest='!httpSpaceTest,!fsSpaceTest'` | `mvn package` → build & push image to GHCR |
+|                         `.github/workflows/maven.yml` |                 `.github/workflows/docker.yml` |
+|------------------------------------------------------:|-----------------------------------------------:|
+|                                     Push/PR to `main` | Push to `main`, `v*` tags, `workflow_dispatch` |
+|                                         Oracle JDK 24 |                      Temurin JDK 25 (uber-jar) |
+| `./mvnw install -Dtest='!httpSpaceTest,!fsSpaceTest'` |     `mvn package` → build & push image to GHCR |
 
 Docker images are built and published to GHCR (`ghcr.io/phaseshift-studio/metatron`) by the
 `docker.yml` workflow — the Maven build itself does not touch Docker.

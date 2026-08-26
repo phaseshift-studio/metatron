@@ -106,6 +106,18 @@ httpspace::[host     => !*<boot/args/external/web/http>,
      }
    }
 """.as(json::T).as(mcp_client::T).at(abc)
+"""
+{
+  "mcpServers": {
+    "codegraph": {
+      "command": "codegraph",
+      "args": [
+        "serve",
+        "--mcp"
+      ]
+    }
+  }
+}""".as(json::T).as(mcp_client::T).to(codegraph)
 ==]
         [=====================]
         [======= DOCKER ======]
@@ -258,7 +270,12 @@ agent::[
                                                                          protocol     => ollama,
                                                                          host         => <http://ginger.local:11434>,
                                                                          llm          => <qwen3.8:27b>])),
-                        response      => [to => print(_)],
+                        response      => [complete => -<modal::[title => '{{r}}agent response{{/r}}',
+                                                                body  => "{{y}}${>>chat}",
+                                                                style => style::[border    =>continuous,
+                                                                                 background=>"{{[k]}}",
+                                                                                 foreground=>"{{b}}",
+                                                                                 zIndex    => 100]].display()],
                         root          => /usr/dr/chat_result],
     think_feature::::::[on_agent_ctor => inst(a=>agent::T){
                                             accordion::[title => "thoughts", 

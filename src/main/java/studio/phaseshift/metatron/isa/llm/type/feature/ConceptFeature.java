@@ -236,7 +236,7 @@ public class ConceptFeature extends AbstractFeature {
             case null, default -> null;
         };
         if (content == null) return lst();
-        final Lst skills = lst(rec(mutableMap(uri(NAME), uri(CONCEPT),
+        final Lst skills = lst(rec(mutableMap(uri(NAME), uri(LLM_CONCEPT_FEATURE_TID.name()),
                 uri(DESC), str("in situ concept graph construction w/ spreading activation recommendation"),
                 uri(CONTENT), str(content),
                 uri(TOOL), lst(

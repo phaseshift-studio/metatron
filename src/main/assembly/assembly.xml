@@ -84,6 +84,13 @@
             </includes>
         </fileSet>
         <fileSet>
+            <directory>${project.basedir}/src/main/resources</directory>
+            <outputDirectory>/</outputDirectory>
+            <includes>
+                <include>emoji.txt</include>
+            </includes>
+        </fileSet>
+        <fileSet>
             <directory>${project.basedir}/bin</directory>
             <outputDirectory>bin</outputDirectory>
             <includes>

@@ -1,11 +1,13 @@
 # Builds and publishes the metatron container image to GHCR.
-# Pushes to `main` publish the `main` tag; `v*` tags also publish `latest`.
+# `main` pushes publish `main` + `latest` (rolling until a stable release);
+# `v*` tags also publish the versioned tag.  PRs build without pushing.
 name: Docker
 
 on:
   push:
     branches: [main]
     tags: ['v*']
+  pull_request:
   workflow_dispatch:
 
 env:
@@ -19,10 +21,10 @@ jobs:
       contents: read
       packages: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Set up JDK 25
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           java-version: '25'
           distribution: 'temurin'
@@ -47,6 +49,7 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Log in to GHCR
+        if: github.event_name != 'pull_request'
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
@@ -56,10 +59,9 @@ jobs:
       - name: Compute image tags
         id: meta
         run: |
-          TAGS="${{ env.REGISTRY }}/${{ env.IMAGE }}:main"
+          TAGS="${{ env.REGISTRY }}/${{ env.IMAGE }}:main,${{ env.REGISTRY }}/${{ env.IMAGE }}:latest"
           if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
             TAGS="${TAGS},${{ env.REGISTRY }}/${{ env.IMAGE }}:${GITHUB_REF#refs/tags/}"
-            TAGS="${TAGS},${{ env.REGISTRY }}/${{ env.IMAGE }}:latest"
           fi
           echo "tags=${TAGS}" >> "$GITHUB_OUTPUT"
 
@@ -69,7 +71,9 @@ jobs:
           context: .
           file: dist/docker/Dockerfile
           platforms: linux/amd64,linux/arm64
-          push: true
+          push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           build-args: |
             METATRON_VERSION=${{ steps.version.outputs.version }}

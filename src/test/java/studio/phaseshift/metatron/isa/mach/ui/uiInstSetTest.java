@@ -26,6 +26,8 @@ import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.ui.Stylable;
 import studio.phaseshift.metatron.isa.mach.type.ui.Widget;
+import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.mach.type.ui.tool.ModalTool;
 import studio.phaseshift.metatron.isa.mach.type.ui.widget.AccordionWidget;
 import studio.phaseshift.metatron.isa.mach.type.ui.widget.FloatingSurface;
 
@@ -142,6 +144,16 @@ public class uiInstSetTest extends AbstractInstSetTest {
         assertTrue(hasFloat.hasFloat(), "style with anchor and width should have float");
     }
 
+    @Test
+    public void shouldResolveMiddleAnchorViaMtron() {
+        final Obj styleObj = ObjmtronSerializer.parse("style::[anchor=>middle,width=>40]");
+        assertTrue(styleObj instanceof Stylable.Style, "style::[anchor=>middle,...] should construct: " + styleObj);
+        final Stylable.Style<?> style = (Stylable.Style<?>) styleObj;
+        assertEquals(FloatingSurface.Anchor.MIDDLE, style.anchor(),
+                "anchor=>middle should resolve to MIDDLE");
+        assertTrue(style.hasFloat(), "style with anchor=>middle should have float");
+    }
+
     // ── Accordion type ─────────────────────────────────────────────
 
     @Test
@@ -151,7 +163,8 @@ public class uiInstSetTest extends AbstractInstSetTest {
         // insts' (Widget<?>) cast can never hit a bare MRec.
         for (final String code : new String[]{
                 "swipe_panel::[obj=>[1,2,3,4]]",
-                "menu_bar::[height=>1,lines=>[]]"
+                "menu_bar::[height=>1,lines=>[]]",
+                "modal::[title=>'hello',body=>'world']"
         }) {
             final Obj cd = ObjmtronSerializer.parse(code);
             assertTrue(cd instanceof Widget, code + " should construct to a Widget without a terminal");
@@ -162,6 +175,81 @@ public class uiInstSetTest extends AbstractInstSetTest {
         assertNotNull(((Widget) swipe).format());
         final Obj asStr = ObjmtronSerializer.parse("swipe_panel::[obj=>[1,2,3,4]].as(str::T)").apply(noobj());
         assertTrue(asStr.isStr(), "swipe_panel.as(str::T) should produce a str headless: " + asStr);
+    }
+
+    // ── Modal type ─────────────────────────────────────────────────
+
+    @Test
+    public void shouldCreateModalViaIsa() {
+        final ModalTool modal = (ModalTool) ObjmtronSerializer
+                .parse("modal::[title=>'ISA Test',body=>'Created via ISA type']");
+        final String formatted = modal.format();
+        assertTrue(formatted.contains("ISA Test"), "modal format should carry the title: " + formatted);
+        assertTrue(formatted.contains("Created via ISA type"),
+                "modal format should carry the body: " + formatted);
+        assertTrue(formatted.contains("┌"), "modal should render with a visible border: " + formatted);
+    }
+
+    @Test
+    public void shouldSetModalZIndexFromMtron() {
+        final ModalTool modal = (ModalTool) ObjmtronSerializer.parse(
+                "modal::[title=>'x',body=>'y',style=>style::[anchor=>middle,zIndex=>100]]");
+        assertEquals(100, modal.getStyle().zIndex(),
+                "the modal's own style should carry zIndex so the FloatingSurface sorts it on top");
+        assertEquals(FloatingSurface.Anchor.MIDDLE, modal.getStyle().anchor(),
+                "the modal's own style should mirror the anchor too");
+    }
+
+    @Test
+    public void shouldRenderStyledModalColors() {
+        final ModalTool modal = (ModalTool) ObjmtronSerializer.parse(
+                "modal::[title => 'agent response',\n" +
+                        "        body  => 'x',\n" +
+                        "        style => style::[border    =>continuous,\n" +
+                        "                         background=>\"{{[k]}}\",\n" +
+                        "                         foreground=>\"{{b}}\",\n" +
+                        "                         zIndex    => 100,\n" +
+                        "                         anchor    =>middle]]");
+        // 1. the raw style rec survives in the modal's jvm
+        final Obj styleRec = modal.at(uri("style"));
+        assertTrue(styleRec != null && styleRec.isRec(), "style rec should survive: " + styleRec);
+        // 2. the parsed style carries the user's fields
+        final Stylable.Style<?> s = Stylable.Style.from(styleRec.asRec());
+        assertEquals("{{[k]}}", s.background());
+        assertEquals("{{b}}", s.foreground());
+        assertEquals(100, s.zIndex());
+        assertEquals(FloatingSurface.Anchor.MIDDLE, s.anchor());
+        // 3. format() carries the color codes and they render to ANSI color escapes
+        final String format = modal.format();
+        assertTrue(format.contains("{{[k]}}{{b}}"), "format should carry bg+fg codes: " + format);
+        final String ansi = Graphitty.string(format);
+        assertTrue(ansi.contains("[40"), "background {{[k]}} should render ANSI black bg: " + ansi.replace("", "<ESC>"));
+        assertTrue(ansi.contains("[34"), "foreground {{b}} should render ANSI blue fg: " + ansi.replace("", "<ESC>"));
+    }
+
+    @Test
+    public void shouldReadZIndexFromMtronStyle() {
+        final Obj styleObj = ObjmtronSerializer.parse("style::[zIndex=>100]");
+        assertTrue(styleObj instanceof Stylable.Style, "style::[zIndex=>...] should construct: " + styleObj);
+        assertEquals(100, ((Stylable.Style<?>) styleObj).zIndex());
+    }
+
+    @Test
+    public void shouldApplyModalStyleFromMtron() {
+        for (final String code : new String[]{
+                "modal::[title=>'x',body=>'y',style=>style::[border=>continuous,anchor=>middle]]",
+                "modal::[title=>'x',body=>'y',style=>[border=>continuous,anchor=>middle]]"
+        }) {
+            final Obj obj = ObjmtronSerializer.parse(code);
+            assertTrue(obj instanceof ModalTool,
+                    "style form should construct to a ModalTool: " + code + " -> " + obj);
+            final Obj style = ((ModalTool) obj).at(uri("style"));
+            assertTrue(style != null && style.isRec(),
+                    "style field should survive construction: " + code + " -> " + style);
+            final Stylable.Style<?> parsed = Stylable.Style.from(style.asRec());
+            assertEquals(FloatingSurface.Anchor.MIDDLE, parsed.anchor(),
+                    "anchor=>middle should resolve to MIDDLE: " + code);
+        }
     }
 
     @Test

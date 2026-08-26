@@ -30,6 +30,7 @@ import studio.phaseshift.metatron.isa.mach.type.ui.Widget;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Console;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Editor;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.menu.CommandPalette;
+import studio.phaseshift.metatron.isa.mach.type.ui.tool.ModalTool;
 import studio.phaseshift.metatron.isa.mach.type.ui.tool.SwipePanelWidgetTool;
 import studio.phaseshift.metatron.isa.mach.type.ui.tool.TreeSelectTool;
 import studio.phaseshift.metatron.isa.mach.type.ui.widget.*;
@@ -100,6 +101,8 @@ public class uiInstSet extends AbstractInstSet {
     public static Type UI_TREE_SELECT_TOOL_TYPE;
     public static final fURI UI_SWIPE_PANEL_TID = UI_WIDGET_TID.extend("swipe_panel");
     public static Type UI_SWIPE_PANEL_TYPE;
+    public static final fURI UI_MODAL_TID = UI_WIDGET_TID.extend("modal");
+    public static Type UI_MODAL_TYPE;
     public static final fURI UI_ANCHOR_TID = UI_ISA_TID.extend("anchor");
     public static Type UI_ANCHOR_TYPE;
     public static final fURI UI_CONSOLE_TID = UI_ISA_TID.extend("console");
@@ -155,7 +158,8 @@ public class uiInstSet extends AbstractInstSet {
                                                 uri("anchor").maybe(), UI_ANCHOR_TYPE,
                                                 uri("width").maybe(), INT_TYPE,
                                                 uri("top").maybe(), INT_TYPE,
-                                                uri("left").maybe(), INT_TYPE))
+                                                uri("left").maybe(), INT_TYPE,
+                                                uri("zIndex").maybe(), INT_TYPE))
                                         .constructor(arg -> Stylable.Style.from(arg.asRec()))
                                         .create(), "maybe an obj", "a style obj", mutableMap(
                                         uri("border").maybe().asUri(), "the border style of the widget (e.g. border::none, border::simple, etc.)",
@@ -168,10 +172,11 @@ public class uiInstSet extends AbstractInstSet {
                                         uri("rightMargin").maybe(), "the right margin of the widget",
                                         uri("topMargin").maybe(), "the top margin of the widget",
                                         uri("bottomMargin").maybe(), "the bottom margin of the widget",
-                                        uri("anchor").maybe(), "float anchor: top_left, top_middle, top_right, bottom_left, bottom_middle, bottom_right",
+                                        uri("anchor").maybe(), "float anchor: top_left, top_middle, top_right, middle, bottom_left, bottom_middle, bottom_right",
                                         uri("width").maybe(), "display width override in columns (0 = natural)",
                                         uri("top").maybe(), "row offset from anchor edge (CSS top)",
-                                        uri("left").maybe(), "col offset from anchor edge (CSS left)"),
+                                        uri("left").maybe(), "col offset from anchor edge (CSS left)",
+                                        uri("zIndex").maybe(), "render order among floating widgets: higher = drawn later (on top); default 0"),
                                 "a widget style specification"),
                         docWrap(UI_WIDGET_TYPE = Type.Builder.build()
                                         .tid(REC_TID)
@@ -289,7 +294,18 @@ public class uiInstSet extends AbstractInstSet {
                                 "lst of objs",
                                 "a swipe panel widget tool",
                                 Map.of(uri(OBJ), "the list of objs to swipe through"),
-                                "a left-right swipe panel: arrow keys navigate, pgup/pgdn jump ±5, ctrl-d quits; displays each obj in a PanelWidget with docq+Highlighter formatting")),
+                                "a left-right swipe panel: arrow keys navigate, pgup/pgdn jump ±5, ctrl-d quits; displays each obj in a PanelWidget with docq+Highlighter formatting"),
+                        docWrap(UI_MODAL_TYPE = Type.Builder.build()
+                                .tid(UI_WIDGET_TID)
+                                .vid(UI_MODAL_TID)
+                                .isaPredicate(rec(
+                                        uri(TITLE).maybe().asUri(), STR_TYPE,
+                                        uri(BODY).maybe(), T(STR_TID.maybeSome())))
+                                .constructor(arg -> new ModalTool(arg.jvm(), UI_MODAL_TID, arg.vid()))
+                                .create(), "rec", "modal", Map.of(
+                                uri(TITLE), "the title of the modal",
+                                uri(BODY), "the body content of the modal"),
+                                "a modal popup panel: space/enter/ctrl-d dismisses")),
                 uri(INST), lst(
                         docWrap(instC(AS_INST_TID.dom(UI_WIDGET_TID).rng(STR_TID), lst(STR_TYPE), (lhs, inst) -> str(((Widget<?>) lhs).format())),
                                 "map a widget to a str::T representation not anchored to a canvas. useful for embedding widget text into other objs."),

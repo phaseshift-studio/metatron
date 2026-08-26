@@ -49,6 +49,7 @@ isa.mach.type.ui.tool
   TypeDiffTool.java        ← type diff visualizer
   TreeSelectTool.java      ← interactive tree browser with nested obj inspection
   SwipePanelWidgetTool.java ← left-right swipe panel for browsing a stream of objs
+  ModalTool.java          ← modal popup panel (title + body), dismiss on space/enter/ctrl-d
 isa.mach.ui
   uiInstSet.java            ← mtron type/instruction registration for all UI types
 isa.m.type.reflect
@@ -217,7 +218,7 @@ Style is a JVM-backed rec. Fields:
 | `divider`       | str             | Column/row divider char                                                                                                                          |
 | `headerDivider` | str             | Header divider char                                                                                                                              |
 | `pointer`       | str             | Selection pointer e.g. `{{r}}>`                                                                                                                  |
-| `anchor`        | uri (coproduct) | top_left, top_middle, top_right, bottom_left, bottom_middle, bottom_right                                                                        |
+| `anchor`        | uri (coproduct) | top_left, top_middle, top_right, middle, bottom_left, bottom_middle, bottom_right                                                                |
 | `width`         | int             | Display width in columns; 0 = natural                                                                                                            |
 | `top`           | int             | Row offset from anchor edge (CSS top)                                                                                                            |
 | `left`          | int             | Column offset from anchor edge (CSS left)                                                                                                        |
@@ -634,6 +635,7 @@ private void redrawStack() {
 | `fURISelectorTool`     | `SelectorWidget` → `TableWidget` (URI pairs)                     |
 | `TreeSelectTool`       | `TreeWidget` (navigable tree) + `PanelWidget` (detail panel)     |
 | `SwipePanelWidgetTool` | `PanelWidget` (obj display panel, docq + Highlighter formatting) |
+| `ModalTool`            | `PanelWidget` (title + body popup panel)                          |
 
 **Important:** These tools populate their `TableWidget`s via Java API (`addRow()`,
 `addMetadata()`). They rely on the `sync()` guard pattern (section 2) to prevent data corruption — without it,
