@@ -125,12 +125,12 @@
                     <li>
                         <div class="terminal-box">
                             <span class="badge bg-danger">only linux tested</span>
-                            <pre><code>curl -fsSL https://metatron.phaseshift.studio/install.sh | bash</code></pre>
+                            <pre><code class="language-bash">curl -fsSL https://metatron.phaseshift.studio/install.sh | bash</code></pre>
                         </div>
                     </li>
                     <li>
                         <div class="terminal-box">
-                            <pre><code>docker pull ghcr.io/phaseshift-studio/metatron:main</code></pre>
+                            <pre><code class="language-bash">docker pull ghcr.io/phaseshift-studio/metatron:latest</code></pre>
                         </div>
                     </li>
                 </ul>
@@ -1740,7 +1740,12 @@ Over the remainder of this documentation, each of the components of Dr.Stynx&#82
                                                                          protocol     =&gt; ollama,
                                                                          host         =&gt; &lt;http://ginger.local:11434&gt;,
                                                                          llm          =&gt; &lt;qwen3.8:27b&gt;])),
-                        response      =&gt; [to =&gt; print(_)],
+                        response      =&gt; [complete =&gt; -&lt;modal::[title =&gt; '{{r}}agent response{{/r}}',
+                                                                body  =&gt; "{{y}}${&gt;&gt;chat}",
+                                                                style =&gt; style::[border    =&gt;continuous,
+                                                                                 background=&gt;"{{[k]}}",
+                                                                                 foreground=&gt;"{{b}}",
+                                                                                 zIndex    =&gt; 100]].display()],
                         root          =&gt; /usr/dr/chat_result],
     think_feature::::::[on_agent_ctor =&gt; inst(a=&gt;agent::T){
                                             accordion::[title =&gt; "thoughts", 
@@ -2847,7 +2852,7 @@ The predicate component of the type definition tests an <code>int</code> to dete
 <div class="paragraph">
 <p>While every <code>type</code> is an <code>obj</code>, not every <code>obj</code> is a <code>type</code>.
 Those <code>objs</code> that are not <code>types</code> are <em>instances</em> of some <code>type</code>.
-This is the foundation for all other <code>objs</code> in {{r}}M{{g}}E{{c}}t{{r}}a{{g}}T{{b}}r{{m}}o{{c}}N{{X}}.</p>
+This is the foundation for all other <code>objs</code> in {{r}}M{{r}}E{{c}}t{{g}}a{{m}}T{{y}}R{{b}}O{{y}}n{{X}}.</p>
 </div>
 <h4 id="sec-cascading-type-constructions" class="discrete">cascading type constructions</h4>
 <h3 id="sec-mono-types" class="discrete">mono types</h3>
@@ -6788,13 +6793,13 @@ mtron&gt; *&lt;fs:m/bin/metatron&gt;     ​3​
 ==&gt;{2}'⠹ resolving dependencies'
 ==&gt;{2}'⠸ resolving dependencies'
 ==&gt;{2}'⠼ resolving dependencies'
-==&gt;{2}'⠴ resolving dependencies'
-==&gt;{2}'⠦ resolving dependencies'
+==&gt;'⠴ resolving dependencies'
+==&gt;'⠦ resolving dependencies'
 ==&gt;'⠧ resolving dependencies'
 ==&gt;'⠇ resolving dependencies'
 ==&gt;'⠏ resolving dependencies'
 ==&gt;'⠋ resolving dependencies'
-==&gt;'⠧ resolving dependencies[?12l[?25h'
+==&gt;'⠴ resolving dependencies[?12l[?25h'
 ==&gt;'[K[0;32m✓[0m resolving dependencies'
 ==&gt;null
 mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T)     ​4​
@@ -6857,14 +6862,14 @@ mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T).as(str::T)     ​5​
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; bin:bash('-c',df)
 ==&gt;'Filesystem     1K-blocks      Used Available Use% Mounted on'
-==&gt;'tmpfs            6356184      6116   6350068   1% /run'
+==&gt;'tmpfs            6356184      6184   6350000   1% /run'
 ==&gt;'efivarfs             128        42        82  34% /sys/firmware/efi/efivars'
-==&gt;'/dev/nvme1n1p2 959786032 496003744 414954080  55% /'
-==&gt;'tmpfs           31780908   1782984  29997924   6% /dev/shm'
+==&gt;'/dev/nvme1n1p2 959786032 495620696 415337128  55% /'
+==&gt;'tmpfs           31780908   2000332  29780576   7% /dev/shm'
 ==&gt;'tmpfs               5120        20      5100   1% /run/lock'
 ==&gt;'tmpfs           31780908       220  31780688   1% /run/qemu'
 ==&gt;'/dev/nvme1n1p1    523248      6288    516960   2% /boot/efi'
-==&gt;'tmpfs            6356180       240   6355940   1% /run/user/1000'
+==&gt;'tmpfs            6356180       252   6355928   1% /run/user/1000'
 ==&gt;'/dev/nvme0n1p2 976744444 251306824 725437620  26% /media/hdd0'
 mtron&gt; bin:bash('-c',ls)
 ==&gt;'AGENTS.md'
@@ -7079,7 +7084,7 @@ mtron&gt; gB::1.0.lt(kB::12000000.0)
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; datetime_now()     ​1​
-==&gt;datetime::&lt;//2026.08:26/03/10/27/769?tz=-0600&gt;
+==&gt;datetime::&lt;//2026.08:26/06/40/02/403?tz=-0600&gt;
 mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;?datetime::T     ​2​
 ==&gt;&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;
 mtron&gt; datetime::&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;&gt;&gt;year     ​3​
@@ -9858,11 +9863,9 @@ mtron&gt; lite:person/2 -&gt; [name=&gt;'grant', age=&gt;25]     ​3​
 mtron&gt; *lite:person     ​4​
 mtron&gt; *lite:person/+/name     ​5​
 ==&gt;'grant'
-==&gt;'alex'
 ==&gt;'marko'
 mtron&gt; *lite:person/+/id     ​6​
 ==&gt;1
-==&gt;3
 ==&gt;2</code></pre>
 </div>
 </div>

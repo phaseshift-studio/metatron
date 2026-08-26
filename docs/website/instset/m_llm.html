@@ -126,12 +126,12 @@
                     <li>
                         <div class="terminal-box">
                             <span class="badge bg-danger">only linux tested</span>
-                            <pre><code>curl -fsSL https://metatron.phaseshift.studio/install.sh | bash</code></pre>
+                            <pre><code class="language-bash">curl -fsSL https://metatron.phaseshift.studio/install.sh | bash</code></pre>
                         </div>
                     </li>
                     <li>
                         <div class="terminal-box">
-                            <pre><code>docker pull ghcr.io/phaseshift-studio/metatron:main</code></pre>
+                            <pre><code class="language-bash">docker pull ghcr.io/phaseshift-studio/metatron:latest</code></pre>
                         </div>
                     </li>
                 </ul>
@@ -521,7 +521,7 @@
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">feature::T[?[
   model=&gt;model::T,
-  {?}response=&gt;{?}[to=&gt;#::T],
+  {?}response=&gt;{?}[{?}to=&gt;#::T,{?}complete=&gt;#::T],
   {?}format=&gt;#::T]][ctor?chat_feature&lt;=#{?}(#{*}::T)]@/m/llm/feature/chat_feature</code></pre></div>
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[ {?}root=&gt;uri::T,
  {?}skill=&gt;[skill::T],
