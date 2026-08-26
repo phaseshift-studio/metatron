@@ -264,7 +264,13 @@ public class Graphitty {
                     // Characters above ASCII 126 are not Graphitty control codes
                     // ({}, {{}}, \n, \t are all <= 126).  Write them as UTF-8 so
                     // they survive the ByteArrayOutputStream → toString() round-trip.
-                    this.out.write(Character.toString(buffer.charAt(i)).getBytes(StandardCharsets.UTF_8));
+                    // Surrogate pairs (emoji) must be written as ONE code point —
+                    // a lone UTF-16 surrogate encodes to a '?' replacement via
+                    // getBytes(UTF_8), so a char-by-char write corrupts 🐿 to "??".
+                    final int cp = buffer.codePointAt(i);
+                    final int width = Character.charCount(cp);
+                    this.out.write(new String(Character.toChars(cp)).getBytes(StandardCharsets.UTF_8));
+                    i += width - 1;
                     continue;
                 }
                 if (buffer.charAt(i) == '\\' && i + 1 < bufferLength) {
@@ -316,6 +322,24 @@ public class Graphitty {
                                                 this.parseDSL(reset);
                                         }
                                     } else {
+                                        // {{:beer:}} → GitHub shortcode → Unicode emoji.  Emitted as
+                                        // whole-string UTF-8 (emoji are surrogate pairs in Java, so
+                                        // the per-char >126 branch would corrupt them).  No rewrite-
+                                        // stack push, so {{:beer:&b}} composes with color rules.
+                                        if (rulePiece.length() > 2
+                                                && rulePiece.charAt(0) == ':'
+                                                && rulePiece.charAt(rulePiece.length() - 1) == ':') {
+                                            final String name = rulePiece.substring(1, rulePiece.length() - 1);
+                                            final String emoji = EmojiTable.get(name);
+                                            try {
+                                                // Unknown shortcodes render the literal ":name:" text
+                                                // (Slack/GitHub convention) so typos stay visible.
+                                                this.out.write((null != emoji ? emoji : rulePiece).getBytes(StandardCharsets.UTF_8));
+                                            } catch (final Exception e) {
+                                                throw MTronException.of(e);
+                                            }
+                                            return;
+                                        }
                                         this.rewriteStack.push(rulePiece);
                                         String r = this.rewrites.get(rulePiece);
                                         while (null != r && r.startsWith("{{") && r.endsWith("}}"))

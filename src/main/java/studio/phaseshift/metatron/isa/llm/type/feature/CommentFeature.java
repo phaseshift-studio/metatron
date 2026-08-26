@@ -32,6 +32,7 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_COMMENT_FEATURE_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.NOOBJ_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.STR_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -85,7 +86,7 @@ public class CommentFeature extends AbstractFeature {
 
     @Override
     public Lst skill(final Agent agent) {
-        return lst(rec(mutableMap(uri(NAME), uri("comment"),
+        return lst(rec(mutableMap(uri(NAME), uri(LLM_COMMENT_FEATURE_TID.name()),
                 uri(DESC), str("inject a note to the agent mid-interaction"),
                 uri(CONTENT), str("""
                                   allows an agent to receive and read comments left by a user mid-interaction.

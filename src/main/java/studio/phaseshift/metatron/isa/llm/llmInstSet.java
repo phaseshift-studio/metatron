@@ -467,7 +467,9 @@ public class llmInstSet extends AbstractInstSet {
                                 .vid(LLM_CHAT_FEATURE_TID)
                                 .isaPredicate(rec(
                                         uri(MODEL), LLM_MODEL_TYPE,
-                                        uri(RESPONSE).maybe(), rec(uri(TO), ALL_TYPE).maybe(),
+                                        uri(RESPONSE).maybe(), rec(
+                                                uri(TO).maybe().asUri(), ALL_TYPE,
+                                                uri("complete").maybe(), ALL_TYPE).maybe(),
                                         uri(FORMAT).maybe(), ALL_TYPE))
                                 .constructor(arg -> createStageLambdas(new ChatFeature(arg.asRec().jvm(), LLM_CHAT_FEATURE_TID, arg.vid())))
                                 .create(),

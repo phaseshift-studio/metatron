@@ -67,17 +67,19 @@ public class FloatingSurface {
         TOP_LEFT,
         TOP_MIDDLE,
         TOP_RIGHT,
+        MIDDLE,
         BOTTOM_LEFT,
         BOTTOM_MIDDLE,
         BOTTOM_RIGHT;
 
-        /** Parse a short name (e.g. "top_right", "tr", "bottom_middle", "bm"). */
+        /** Parse a short name (e.g. "top_right", "tr", "middle", "m"). */
         public static Anchor parse(final String name) {
             if (name == null || name.isEmpty()) return TOP_RIGHT;
             return switch (name.toLowerCase()) {
                 case "top_left", "tl"        -> TOP_LEFT;
                 case "top_middle", "tm"      -> TOP_MIDDLE;
                 case "top_right", "tr"       -> TOP_RIGHT;
+                case "middle", "m"           -> MIDDLE;
                 case "bottom_left", "bl"     -> BOTTOM_LEFT;
                 case "bottom_middle", "bm"   -> BOTTOM_MIDDLE;
                 case "bottom_right", "br"    -> BOTTOM_RIGHT;
@@ -319,6 +321,11 @@ public class FloatingSurface {
         final var sb = new StringBuilder(512);
 
         sb.append("\033[s"); // save cursor
+        // Reset SGR: the erase/buffer-zone spaces written below must never
+        // inherit a background/foreground left active by prior console output
+        // (e.g. the status line's trailing bg) — otherwise they show up as a
+        // stray colored blank line above floating widgets.
+        sb.append("\033[m");
 
         // Draw lower z-index widgets first so higher z-index widgets (e.g.
         // menu bars) render on top when their regions overlap.  Stable sort:
@@ -557,6 +564,12 @@ public class FloatingSurface {
         if (slot.prevHeight <= 0) return;
         submitAndWait(() -> {
             final var sb = new StringBuilder(64);
+            // Reset SGR before writing clear-spaces — this runs outside the
+            // render pass, so any background left active by output written
+            // while the widget was live (status line, agent text, the widget's
+            // own bg) would otherwise paint the cleared area as a colored
+            // rectangle that lingers above the widget's next render.
+            sb.append("\033[m");
             for (int i = 0; i < slot.prevHeight; i++) {
                 sb.append("\033[").append(slot.lastRow + i).append(";").append(slot.lastCol).append("H");
                 sb.append(" ".repeat(Math.max(0, slot.prevWidth)));
@@ -626,11 +639,12 @@ public class FloatingSurface {
 
             this.lastRow = switch (this.anchor) {
                 case TOP_LEFT, TOP_MIDDLE, TOP_RIGHT -> 2 + this.offsetRow;
+                case MIDDLE -> Math.max(1, (termHeight - widgetHeight) / 2 + 1 + this.offsetRow);
                 case BOTTOM_LEFT, BOTTOM_MIDDLE, BOTTOM_RIGHT -> Math.max(1, termHeight - widgetHeight + 1 - this.offsetRow);
             };
             this.lastCol = switch (this.anchor) {
                 case TOP_LEFT, BOTTOM_LEFT -> 1 + this.offsetCol;
-                case TOP_MIDDLE, BOTTOM_MIDDLE -> Math.max(1, (termWidth - this.targetWidth) / 2 + this.offsetCol);
+                case TOP_MIDDLE, BOTTOM_MIDDLE, MIDDLE -> Math.max(1, (termWidth - this.targetWidth) / 2 + this.offsetCol);
                 case TOP_RIGHT, BOTTOM_RIGHT -> Math.max(1, termWidth - this.targetWidth + 1 + this.offsetCol);
             };
         }

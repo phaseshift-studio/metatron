@@ -68,6 +68,11 @@ public class ChatFeature extends AbstractFeature {
         agent.feature(CHAT).asRec().at(f(RESPONSE).extend(TO)).apply(text);
     }
 
+    @Override
+    public void onCompleteResponse(final Agent agent, final ChatResult result) {
+        agent.feature(CHAT).asRec().at(f(RESPONSE).extend("complete")).apply(result);
+    }
+
     /**
      * Write the assembled {@code chat_result::T} to the chat feature's root
      * space (e.g. {@code /usr/dr/chat_result/_?incrq}).  Called by
